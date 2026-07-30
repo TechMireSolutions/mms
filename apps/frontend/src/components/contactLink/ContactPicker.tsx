@@ -1,12 +1,10 @@
 import React, {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useId,
-  type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
 import { X, Search, Plus, User, Mail, Phone, Camera } from "lucide-react";
@@ -34,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
+import { useAnchorMenuStyle } from "./useAnchorMenuStyle";
 
 const PICKER_PAGE_SIZE = 8;
 
@@ -59,48 +58,6 @@ export interface ContactPickerProps {
   error?: boolean;
   id?: string;
   name?: string;
-}
-
-function useAnchorMenuStyle(
-  open: boolean,
-  anchorRef: React.RefObject<HTMLElement | null>,
-): CSSProperties {
-  const [style, setStyle] = useState<CSSProperties>({});
-
-  useLayoutEffect(() => {
-    if (!open) return;
-
-    const update = (): void => {
-      const anchor = anchorRef.current;
-      if (!anchor) return;
-      const rect = anchor.getBoundingClientRect();
-      const gap = 6;
-      const maxHeight = 240;
-      const spaceBelow = window.innerHeight - rect.bottom - gap;
-      const placeAbove = spaceBelow < 160 && rect.top > spaceBelow;
-      setStyle({
-        position: "fixed",
-        left: rect.left,
-        width: rect.width,
-        zIndex: 70,
-        maxHeight,
-        ...(placeAbove
-          ? { bottom: window.innerHeight - rect.top + gap, top: "auto" }
-          : { top: rect.bottom + gap, bottom: "auto" }),
-      });
-    };
-
-    update();
-    window.addEventListener("resize", update);
-    // Capture scroll inside modals / overflow containers.
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [open, anchorRef]);
-
-  return style;
 }
 
 export default function ContactPicker({

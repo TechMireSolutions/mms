@@ -6,6 +6,12 @@ export const changePasswordBodySchema = z.object({
   newPassword: z.string().min(6),
 });
 
+export const verifyPasswordBodySchema = z.object({
+  password: z.string().min(1),
+  /** Optional guard so a step-up check can assert the account it was collected for. */
+  email: z.string().email().optional(),
+});
+
 export const requestLoginEmailChangeBodySchema = z.object({
   newLoginEmail: z.string().email(),
   currentPassword: z.string().min(1),

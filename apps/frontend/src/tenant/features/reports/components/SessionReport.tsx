@@ -1,74 +1,20 @@
-import React, { useMemo, useState } from "react";
-import { CalendarCheck, Users, TrendingUp, BarChart2, Filter, X } from "lucide-react";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  LineChart, Line,
-} from "recharts";
-import { Card } from "@/components/ui/card";
-import { SectionCard } from "@/components/ui/SectionCard";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { useMemo, useState } from "react";
+import { CalendarCheck, Users, TrendingUp, BarChart2 } from "lucide-react";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { formatMonthName } from '@mms/shared';
 import { StatCard } from "@/components/ui/StatCard";
-import { ExportToolbar } from "@/components/ui/ExportToolbar";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Button } from "@/components/ui/button";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { SessionReportCharts } from "./SessionReportCharts";
+import { SessionReportDashboardWidgets } from "./SessionReportDashboardWidgets";
+import { SessionReportFilterBanner } from "./SessionReportFilterBanner";
+import { SessionReportTable } from "./SessionReportTable";
 
-import SessionsTable from "@/components/dashboard-widgets/SessionsTable";
+import type { CapacityBarDatum, EnrollmentTrendItem, SessionCapacityItem, SessionReportProps } from "./sessionReportTypes";
 
-/** Active filter state passed down from the parent report view. */
-interface SessionReportFilters {
-  /** Selected session ID or "all" for no filter. */
-  session: string;
-}
-
-/** Props for the SessionReport component. */
-interface SessionReportProps {
-  /** Active report filters. */
-  filters: SessionReportFilters;
-  /** Optional callback to open the visualizer with an existing config. */
-  onEditVisual?: (config: unknown) => void;
-}
-
-export interface SessionCapacityItem {
-  sessionId: string;
-  classId: string;
-  session: string;
-  class: string;
-  enrolled: number;
-  capacity: number;
-  rate: number;
-  status: string;
-}
-
-export interface EnrollmentTrendItem {
-  month: string;
-  students: number;
-  sessionName: string | null;
-}
-
-/** Bar chart data shape derived from session capacity records. */
-interface CapacityBarDatum {
-  class: string;
-  enrolled: number;
-  available: number;
-}
-
-/**
- * Returns the appropriate colour class for a utilisation rate progress bar.
- *
- * @param rate - The utilisation percentage (0–100).
- * @returns A Tailwind background colour class.
- */
-function utilisationColour(rate: number): string {
-  if (rate >= 80) return "bg-success";
-  if (rate >= 50) return "bg-warning";
-  return "bg-destructive";
-}
+export type { EnrollmentTrendItem, SessionCapacityItem, SessionReportFilters, SessionReportProps } from "./sessionReportTypes";
 
 /**
  * Renders session utilisation and capacity reports with stacked bar and
@@ -191,241 +137,28 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
         <StatCard icon={TrendingUp}    label={t("sessions.report.avgUtilisation")}  value={`${averageUtilization}%`} color="green"   />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SectionCard title={t("sessions.report.capacityByClass")}>
-          <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart
-              data={capacityChartData}
-              barSize={28}
-              onClick={(state) => {
-                const className = (state as { activeLabel?: string } | undefined)?.activeLabel;
-                if (typeof className === "string" && className.length > 0) toggleClassFilter(className);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="class" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="enrolled"  fill="hsl(var(--primary))" stackId="a" name={t("sessions.report.enrolledLabel")}  radius={[0, 0, 0, 0]} />
-              <Bar dataKey="available" fill="hsl(var(--muted))"   stackId="a" name={t("sessions.report.availableLabel")} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </SafeResponsiveContainer>
-        </SectionCard>
-
-        <SectionCard title={t("sessions.report.enrollmentTrend")}>
-          <SafeResponsiveContainer width="100%" height={180}>
-            <LineChart
-              data={enrollmentTrends}
-              onClick={(state) => {
-                const trendPayload = (state as { activePayload?: Array<{ payload?: EnrollmentTrendItem }> } | undefined)?.activePayload?.[0]?.payload;
-                if (trendPayload?.sessionName) toggleSessionFilter(trendPayload.sessionName);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Line type="monotone" dataKey="students" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} name={t("sessions.report.studentsLabel")} />
-            </LineChart>
-          </SafeResponsiveContainer>
-        </SectionCard>
-      </div>
-
-      {(selectedSession || selectedClass) && (
-        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-primary" />
-            {selectedSession && (
-              <>
-                <span className="font-medium text-foreground">{t("sessions.report.sessionFilterLabel")}</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
-                  {selectedSession}
-                </span>
-              </>
-            )}
-            {selectedClass && (
-              <>
-                <span className="font-medium text-foreground">{t("sessions.report.classFilterLabel")}</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
-                  {selectedClass}
-                </span>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            {selectedSession && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedSession(null)}
-                className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-3 h-3 me-1" />
-                {t("sessions.report.clearSessionFilter")}
-              </Button>
-            )}
-            {selectedClass && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedClass(null)}
-                className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-3 h-3 me-1" />
-                {t("sessions.report.clearClassFilter")}
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Table */}
-      <ExportToolbar 
-        title={t("sessions.report.capacityReportTitle")} 
-        data={sessionCapacityData}
-        headers={[
-          t("sessions.report.colSession"),
-          t("sessions.report.colClass"),
-          t("sessions.report.colEnrolled"),
-          t("sessions.report.colCapacity"),
-          t("sessions.report.colUtilisation"),
-          t("sessions.report.colStatus"),
-        ]}
+      <SessionReportCharts
+        capacityChartData={capacityChartData}
+        enrollmentTrends={enrollmentTrends}
+        onToggleClassFilter={toggleClassFilter}
+        onToggleSessionFilter={toggleSessionFilter}
       />
-      {sessionCapacityData.length === 0 ? (
-        <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />
-      ) : (
-        <Card className="overflow-hidden">
-          <div className="space-y-3 p-3 md:hidden">
-            {sessionCapacityData.map((sessionCapacity) => (
-              <article
-                key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`}
-                className="space-y-3 rounded-xl border border-border bg-card p-3"
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => toggleSessionFilter(sessionCapacity.session)}
-                      className="h-auto min-h-11 max-w-full truncate px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
-                    >
-                      {sessionCapacity.session}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => toggleClassFilter(sessionCapacity.class)}
-                      className="h-auto min-h-11 px-0 py-0 text-xs font-normal text-muted-foreground hover:text-primary"
-                    >
-                      {sessionCapacity.class}
-                    </Button>
-                  </div>
-                  <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
-                </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colEnrolled")}</dt>
-                    <dd className="font-semibold text-foreground">{sessionCapacity.enrolled}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colCapacity")}</dt>
-                    <dd className="text-muted-foreground">{sessionCapacity.capacity}</dd>
-                  </div>
-                  <div className="col-span-2">
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("sessions.report.colUtilisation")}</dt>
-                    <dd>
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 flex-1 rounded-full bg-muted">
-                          <div
-                            className={`h-1.5 rounded-full ${utilisationColour(sessionCapacity.rate)}`}
-                            style={{ width: `${sessionCapacity.rate}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-foreground">{sessionCapacity.rate}%</span>
-                      </div>
-                    </dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                {[
-                  t("sessions.report.colSession"),
-                  t("sessions.report.colClass"),
-                  t("sessions.report.colEnrolled"),
-                  t("sessions.report.colCapacity"),
-                  t("sessions.report.colUtilisation"),
-                  t("sessions.report.colStatus"),
-                ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {sessionCapacityData.map((sessionCapacity) => (
-                <tr key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium max-w-[11.25rem] truncate">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => toggleSessionFilter(sessionCapacity.session)}
-                      className="h-auto px-0 py-0 max-w-[11.25rem] truncate font-medium text-foreground hover:text-primary"
-                    >
-                      {sessionCapacity.session}
-                    </Button>
-                  </td>
-                  <td className="px-3 py-2.5 text-muted-foreground">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => toggleClassFilter(sessionCapacity.class)}
-                      className="h-auto px-0 py-0 font-normal text-muted-foreground hover:text-primary"
-                    >
-                      {sessionCapacity.class}
-                    </Button>
-                  </td>
-                  <td className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</td>
-                  <td className="px-3 py-2.5 w-36">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-muted">
-                        <div
-                          className={`h-1.5 rounded-full ${utilisationColour(sessionCapacity.rate)}`}
-                          style={{ width: `${sessionCapacity.rate}%` }}
-                        />
-                      </div>
-                      <span className="text-xs font-bold text-foreground">{sessionCapacity.rate}%</span>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </Card>
-      )}
 
-      {/* Dashboard widgets preview */}
-      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-start">
-        <div>
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("sessions.report.dashboardWidgetTitle")}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("sessions.report.dashboardWidgetSubtitle")}</p>
-        </div>
-        <SessionsTable />
-      </div>
+      <SessionReportFilterBanner
+        selectedSession={selectedSession}
+        selectedClass={selectedClass}
+        onClearSessionFilter={() => setSelectedSession(null)}
+        onClearClassFilter={() => setSelectedClass(null)}
+      />
+
+      <SessionReportTable
+        sessionCapacityData={sessionCapacityData}
+        sessionStatusConfig={sessionStatusConfig}
+        onToggleSessionFilter={toggleSessionFilter}
+        onToggleClassFilter={toggleClassFilter}
+      />
+
+      <SessionReportDashboardWidgets />
     </div>
   );
 }

@@ -4,29 +4,24 @@ import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { UserPlus, School } from 'lucide-react';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ActionButton } from '@/components/ui/ActionButton';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
-import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
-import { TeachersSettings as TeachersSettingsPanel } from "@/tenant/features/teachers/components/TeachersSettings";
+import { TeachersModalLayer } from "@/tenant/features/teachers/components/TeachersModalLayer";
+import { TeachersReportsTier } from "@/tenant/features/teachers/components/TeachersReportsTier";
+import { TeachersSetupTier } from "@/tenant/features/teachers/components/TeachersSetupTier";
 import { TeachersWorkTier } from "@/tenant/features/teachers/components/TeachersWorkTier";
 import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST, type TeacherRecord, toMessagingRecipient } from '@mms/shared';
-import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
-import KPISummary from '@/tenant/features/reports/components/KPISummary';
+import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
-import { useTeachersPaginated, useTeacherMutations } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useTeachersPageActions } from "@/tenant/features/teachers/hooks/useTeachersPageActions";
 import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
 import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
-import { notify } from '@/lib/notify';
-import { useMessageComposerState } from '@/hooks/useMessageComposerState';
-
-const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
 /**
  * Teachers — faculty roster and profiles. Standard 3-tier layout (Work | Reports | Setup).
@@ -46,15 +41,6 @@ export default function Teachers(): React.JSX.Element {
   });
 
   const { data: serverCount } = useTeacherCount();
-  const {
-    createTeacher,
-    updateTeacher,
-    deleteTeacher,
-    bulkDeleteTeachers,
-    restoreTeacher,
-    bulkRestoreTeachers,
-    bulkUpdateTeacherStatus,
-  } = useTeacherMutations();
   const [listPage, setListPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
@@ -89,25 +75,19 @@ export default function Teachers(): React.JSX.Element {
     },
   });
 
-  const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
-
-  const toTeacherRecipients = (teachersList: Teacher[]) =>
-    teachersList.map((teacher) => toMessagingRecipient(teacher));
-
-  const handleWhatsApp = (teachersList: Teacher[]) => {
-    if (!canWriteMessaging) return;
-    openComposer('whatsapp', toTeacherRecipients(teachersList));
-  };
-
-  const handleSms = (teachersList: Teacher[]) => {
-    if (!canWriteMessaging) return;
-    openComposer('sms', toTeacherRecipients(teachersList));
-  };
-
-  const handleEmail = (teachersList: Teacher[]) => {
-    if (!canWriteMessaging) return;
-    openComposer('email', toTeacherRecipients(teachersList));
-  };
+  const {
+    messagingTarget,
+    closeComposer,
+    handleWhatsApp,
+    handleSms,
+    handleEmail,
+    handleSaveTeacher,
+    handleDelete,
+    handleRestore,
+    handleBulkDelete,
+    handleBulkRestore,
+    handleBulkStatusChange,
+  } = useTeachersPageActions({ editTeacher });
 
   const useServerWork = activeTab === 'work';
   const {
@@ -146,91 +126,6 @@ export default function Teachers(): React.JSX.Element {
         ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
         : [...selectedStatuses, status],
     );
-
-  const handleSaveTeacher = async (teacherToSave: Teacher) => {
-    if (editTeacher) {
-      await updateTeacher.mutateAsync({
-        id: String(teacherToSave.id),
-        teacher: teacherToSave as unknown as TeacherRecord,
-      });
-      notify.success(t('teachers.toast.updated'));
-    } else {
-      await createTeacher.mutateAsync(teacherToSave as unknown as TeacherRecord);
-      notify.success(t('teachers.toast.created'));
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    deleteTeacher.mutate(id, {
-      onSuccess: () => notify.info(t('teachers.toast.deleted')),
-      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleRestore = (id: string) => {
-    restoreTeacher.mutate(id, {
-      onSuccess: () => notify.success(t('teachers.restoreSuccess')),
-      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleBulkDelete = (ids: string[]) => {
-    bulkDeleteTeachers.mutate(ids, {
-      onSuccess: (result) => {
-        if (result.failed > 0) {
-          notify.error(t('teachers.toast.bulkPartial', {
-            succeeded: result.succeeded,
-            failed: result.failed,
-          }));
-        } else {
-          notify.info(t('teachers.toast.deleted'));
-        }
-      },
-      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleBulkRestore = (ids: string[]) => {
-    bulkRestoreTeachers.mutate(ids, {
-      onSuccess: (result) => {
-        if (result.failed > 0) {
-          notify.error(t('teachers.toast.bulkPartial', {
-            succeeded: result.succeeded,
-            failed: result.failed,
-          }));
-        } else {
-          notify.success(t('teachers.restoreSuccess'));
-        }
-      },
-      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleBulkStatusChange = (ids: string[], status: string) => {
-    bulkUpdateTeacherStatus.mutate({ ids, status }, {
-      onSuccess: (result) => {
-        if (result.failed > 0) {
-          notify.error(t('teachers.toast.bulkPartial', {
-            succeeded: result.succeeded,
-            failed: result.failed,
-          }));
-        } else {
-          notify.success(t('teachers.toast.statusUpdated'));
-        }
-      },
-      onError: (err) => notify.error(t('settings.serverSaveFailed'), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
 
   return (
     <ModulePageShell
@@ -315,55 +210,22 @@ export default function Teachers(): React.JSX.Element {
               onPageChange={setListPage}
             />
           ) : activeTab === 'reports' ? (
-            <motion.div
-              key="reports"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-            >
-              <ErrorBoundary>
-                <div className="space-y-4">
-                  <KPISummary category="teachers" />
-                  <ModuleReports category="teachers" />
-                </div>
-              </ErrorBoundary>
-            </motion.div>
+            <TeachersReportsTier />
           ) : activeTab === 'setup' ? (
-            <motion.div
-              key="setup"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-            >
-              <ErrorBoundary>
-                <TeachersSettingsPanel />
-              </ErrorBoundary>
-            </motion.div>
+            <TeachersSetupTier />
           ) : null}
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <AnimatePresence>
-        {showForm && canWrite && (
-          <TeacherForm
-            teacher={editTeacher ?? undefined}
-            onClose={() => { setShowForm(false); setEditTeacher(null); }}
-            onSave={handleSaveTeacher}
-          />
-        )}
-      </AnimatePresence>
-
-      {messagingTarget && (
-        <React.Suspense fallback={null}>
-          <MessageComposer
-            channel={messagingTarget.channel}
-            recipients={messagingTarget.recipients}
-            onClose={closeComposer}
-          />
-        </React.Suspense>
-      )}
+      <TeachersModalLayer
+        showForm={showForm}
+        canWrite={canWrite}
+        editTeacher={editTeacher}
+        messagingTarget={messagingTarget}
+        onCloseForm={() => { setShowForm(false); setEditTeacher(null); }}
+        onSaveTeacher={handleSaveTeacher}
+        onCloseComposer={closeComposer}
+      />
     </ModulePageShell>
   );
 }

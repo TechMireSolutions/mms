@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -11,33 +11,23 @@ import {
 } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { ChartOfAccounts } from "@/tenant/features/accounting/components/ChartOfAccounts";
-import { JournalEntries } from "@/tenant/features/accounting/components/JournalEntries";
-import { GeneralLedger } from "@/tenant/features/accounting/components/GeneralLedger";
-import { TrialBalance } from "@/tenant/features/accounting/components/TrialBalance";
-import { FinancialReports } from "@/tenant/features/accounting/components/FinancialReports";
-import { AccountingSettings } from "@/tenant/features/accounting/components/AccountingSettings";
-import { AccountingDashboard } from "@/tenant/features/accounting/components/AccountingDashboard";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { AccountingReportsTier } from "@/tenant/features/accounting/components/AccountingReportsTier";
+import { AccountingSetupTier } from "@/tenant/features/accounting/components/AccountingSetupTier";
+import { AccountingWorkTier } from "@/tenant/features/accounting/components/AccountingWorkTier";
 import { AccountingCommandMetrics } from "@/tenant/features/accounting/components/AccountingCommandMetrics";
 import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
-import { ACCOUNTING_MODULE_MANIFEST, type Account, type JournalEntry, type FiscalYear } from "@mms/shared";
+import { ACCOUNTING_MODULE_MANIFEST } from "@mms/shared";
 import {
   useAccountingAccounts,
   useAccountingEntries,
   useAccountingFiscalYears,
-  useAccountingMutations,
-  NotifiedAccountingMutationError,
 } from "@/tenant/features/accounting/hooks/useAccountingApi";
-import { notify } from "@/lib/notify";
+import { useAccountingPageActions } from "@/tenant/features/accounting/hooks/useAccountingPageActions";
 
 const SUB_TAB_IDS = ["overview", "journal", "ledger", "trial", "coa"] as const;
 type SubTabId = (typeof SUB_TAB_IDS)[number];
@@ -96,113 +86,14 @@ export default function Accounting() {
   const accountColumnLayout = useAccountingAccountColumnLayout();
 
   const {
-    replaceAccounts,
-    replaceEntries,
-    replaceFiscalYears,
-    deleteEntry,
-    restoreEntry,
-    bulkDeleteEntries,
-    bulkRestoreEntries,
-  } = useAccountingMutations();
-
-  const notifySaveFailure = useCallback((error: unknown) => {
-    if (error instanceof NotifiedAccountingMutationError) return;
-    notify.error(t("accounting.settings.saveEntriesFailed"), {
-      description: error instanceof Error ? error.message : String(error),
-    });
-  }, [t]);
-
-  const setAccounts = useCallback(async (updater: Account[] | ((prev: Account[]) => Account[])) => {
-    const nextAccounts = typeof updater === "function" ? updater(accounts) : updater;
-    try {
-      await replaceAccounts.mutateAsync(nextAccounts);
-    } catch (error: unknown) {
-      notifySaveFailure(error);
-      throw error;
-    }
-  }, [accounts, replaceAccounts, notifySaveFailure]);
-
-  const setEntries = useCallback(async (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => {
-    const nextJournalEntries = typeof updater === "function" ? updater(journalEntries) : updater;
-    try {
-      await replaceEntries.mutateAsync(nextJournalEntries);
-    } catch (error: unknown) {
-      notifySaveFailure(error);
-      throw error;
-    }
-  }, [journalEntries, replaceEntries, notifySaveFailure]);
-
-  const setFiscalYears = useCallback(async (updater: FiscalYear[] | ((prev: FiscalYear[]) => FiscalYear[])) => {
-    const nextFiscalYears = typeof updater === "function" ? updater(fiscalYears) : updater;
-    try {
-      await replaceFiscalYears.mutateAsync(nextFiscalYears);
-    } catch (error: unknown) {
-      notifySaveFailure(error);
-      throw error;
-    }
-  }, [fiscalYears, replaceFiscalYears, notifySaveFailure]);
-
-  const handleDeleteEntry = useCallback(async (id: string) => {
-    try {
-      await deleteEntry.mutateAsync(id);
-      notify.success(t("accounting.trash.deleted"));
-    } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }, [deleteEntry, t]);
-
-  const handleRestoreEntry = useCallback(async (id: string) => {
-    try {
-      await restoreEntry.mutateAsync(id);
-      notify.success(t("accounting.trash.restored"));
-    } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }, [restoreEntry, t]);
-
-  const handleBulkDeleteEntries = useCallback(async (ids: string[]) => {
-    try {
-      const result = await bulkDeleteEntries.mutateAsync(ids);
-      if (result.failed > 0) {
-        notify.warning(t("accounting.trash.bulkPartial", {
-          succeeded: result.succeeded,
-          failed: result.failed,
-        }));
-      } else {
-        notify.success(t("accounting.trash.deleted"));
-      }
-    } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }, [bulkDeleteEntries, t]);
-
-  const handleBulkRestoreEntries = useCallback(async (ids: string[]) => {
-    try {
-      const result = await bulkRestoreEntries.mutateAsync(ids);
-      if (result.failed > 0) {
-        notify.warning(t("accounting.trash.bulkPartial", {
-          succeeded: result.succeeded,
-          failed: result.failed,
-        }));
-      } else {
-        notify.success(t("accounting.trash.restored"));
-      }
-    } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }, [bulkRestoreEntries, t]);
+    setAccounts,
+    setEntries,
+    setFiscalYears,
+    handleDeleteEntry,
+    handleRestoreEntry,
+    handleBulkDeleteEntries,
+    handleBulkRestoreEntries,
+  } = useAccountingPageActions({ accounts, journalEntries, fiscalYears });
 
   useEffect(() => {
     if (activeSubTab === "journal" || activeSubTab === "coa") return;
@@ -260,28 +151,6 @@ export default function Accounting() {
         onTabChange={setActiveTab}
         panelIdPrefix="accounting-tab"
       >
-      {activeTab === "work" && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <SubTabBar
-            tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={activeSubTab}
-            onChange={(next) => {
-              setActiveSubTab(next);
-              if (next !== "journal") setShowDeleted(false);
-            }}
-          />
-          {activeSubTab === "journal" && canDelete && (
-            <ModuleTrashToggle
-              showDeleted={showDeleted}
-              onToggle={() => setShowDeleted((prev) => !prev)}
-              showActiveLabel={t("accounting.trash.showActive")}
-              showDeletedLabel={t("accounting.trash.showDeleted")}
-              className="gap-1.5 shrink-0"
-            />
-          )}
-        </div>
-      )}
-
       <AnimatePresence mode="wait">
         <motion.div key={activeTab + "-" + activeSubTab + "-" + String(showDeleted)}
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -290,81 +159,71 @@ export default function Accounting() {
 
           <ErrorBoundary>
           {activeTab === "reports" && (
-            <div className="space-y-4">
-              <KPISummary category="accounting" />
-              <FinancialReports
-                accounts={accounts}
-                entries={journalEntries}
-                fiscalYears={fiscalYears}
-                settings={settings}
-              />
-            </div>
+            <AccountingReportsTier
+              accounts={accounts}
+              entries={journalEntries}
+              fiscalYears={fiscalYears}
+              settings={settings}
+            />
           )}
 
-          {activeTab === "work" && listLoadFailed && (
-            <ErrorState
-              title={t("accounting.loadFailed")}
+          {activeTab === "work" && (
+            <AccountingWorkTier
+              accounts={accounts}
+              entries={journalEntries}
+              fiscalYears={fiscalYears}
+              settings={settings}
+              activeSubTab={activeSubTab}
+              subTabs={SUB_TABS}
+              showDeleted={showDeleted}
+              canWrite={canWrite}
+              canDelete={canDelete}
+              listLoadFailed={listLoadFailed}
+              createJournalRequestKey={createJournalRequestKey}
+              onSubTabChange={(next) => {
+                setActiveSubTab(next);
+                if (next !== "journal") setShowDeleted(false);
+              }}
+              onShowDeletedChange={() => setShowDeleted((prev) => !prev)}
               onRetry={() => {
                 void accountsResult.queryResult.refetch();
                 void entriesResult.queryResult.refetch();
               }}
+              onAccountsChange={setAccounts}
+              onEntriesChange={setEntries}
+              onFilteredCountChange={setFilteredCount}
+              onDeleteEntry={handleDeleteEntry}
+              onRestoreEntry={handleRestoreEntry}
+              onBulkDeleteEntries={handleBulkDeleteEntries}
+              onBulkRestoreEntries={handleBulkRestoreEntries}
+              journalColumnProps={{
+                isColumnVisible: journalColumnLayout.isColumnVisible,
+                getColumnWidth: journalColumnLayout.getColumnWidth,
+                onColumnResize: journalColumnLayout.setColumnWidth,
+                columnCustomizer: {
+                  columnRegistry: journalColumnLayout.columnRegistry,
+                  updateUserColumnLayout: journalColumnLayout.updateUserColumnLayout,
+                  labels: journalColumnLayout.customizerLabels,
+                },
+              }}
+              accountColumnProps={{
+                isColumnVisible: accountColumnLayout.isColumnVisible,
+                getColumnWidth: accountColumnLayout.getColumnWidth,
+                onColumnResize: accountColumnLayout.setColumnWidth,
+                columnCustomizer: {
+                  columnRegistry: accountColumnLayout.columnRegistry,
+                  updateUserColumnLayout: accountColumnLayout.updateUserColumnLayout,
+                  labels: accountColumnLayout.customizerLabels,
+                },
+              }}
+              showActiveLabel={t("accounting.trash.showActive")}
+              showDeletedLabel={t("accounting.trash.showDeleted")}
+              loadFailedTitle={t("accounting.loadFailed")}
             />
           )}
 
-          {activeTab === "work" && !listLoadFailed && activeSubTab === "overview" && (
-            <AccountingDashboard accounts={accounts} entries={journalEntries} settings={settings} fiscalYears={fiscalYears} />
-          )}
-
-          {activeTab === "work" && !listLoadFailed && activeSubTab === "journal" && (
-            <JournalEntries
-              entries={journalEntries}
-              accounts={accounts}
-              settings={settings}
-              fiscalYears={fiscalYears}
-              onChange={setEntries}
-              onFilteredCountChange={setFilteredCount}
-              canWrite={canWrite}
-              canDelete={canDelete}
-              showDeleted={showDeleted}
-              createRequestKey={createJournalRequestKey}
-              onDelete={handleDeleteEntry}
-              onRestore={handleRestoreEntry}
-              onBulkDelete={handleBulkDeleteEntries}
-              onBulkRestore={handleBulkRestoreEntries}
-              isColumnVisible={journalColumnLayout.isColumnVisible}
-              getColumnWidth={journalColumnLayout.getColumnWidth}
-              onColumnResize={journalColumnLayout.setColumnWidth}
-              columnCustomizer={{
-                columnRegistry: journalColumnLayout.columnRegistry,
-                updateUserColumnLayout: journalColumnLayout.updateUserColumnLayout,
-                labels: journalColumnLayout.customizerLabels,
-              }}
-            />
-          )}
-          {activeTab === "work" && !listLoadFailed && activeSubTab === "ledger" && (
-            <GeneralLedger accounts={accounts} entries={journalEntries} />
-          )}
-          {activeTab === "work" && !listLoadFailed && activeSubTab === "trial" && (
-            <TrialBalance accounts={accounts} entries={journalEntries} fiscalYears={fiscalYears} />
-          )}
-          {activeTab === "work" && !listLoadFailed && activeSubTab === "coa" && (
-            <ChartOfAccounts
-              accounts={accounts}
-              onChange={setAccounts}
-              onFilteredCountChange={setFilteredCount}
-              canWrite={canWrite}
-              isColumnVisible={accountColumnLayout.isColumnVisible}
-              getColumnWidth={accountColumnLayout.getColumnWidth}
-              onColumnResize={accountColumnLayout.setColumnWidth}
-              columnCustomizer={{
-                columnRegistry: accountColumnLayout.columnRegistry,
-                updateUserColumnLayout: accountColumnLayout.updateUserColumnLayout,
-                labels: accountColumnLayout.customizerLabels,
-              }}
-            />
-          )}
           {activeTab === "setup" && (
-            <AccountingSettings
+            <AccountingSetupTier
               accounts={accounts}
               fiscalYears={fiscalYears}
               onSaveFiscalYears={setFiscalYears}

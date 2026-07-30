@@ -1,25 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
-import { DollarSign, TrendingUp, AlertCircle, Tag, Filter, X } from "lucide-react";
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend,
-} from "recharts";
-import { Card } from "@/components/ui/card";
-import { SectionCard } from "@/components/ui/SectionCard";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { AlertCircle, DollarSign, Tag, TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { StatCard } from "@/components/ui/StatCard";
-import { ExportToolbar } from "@/components/ui/ExportToolbar";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Button } from "@/components/ui/button";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-
-import RevenueChart from "@/components/dashboard-widgets/charts/RevenueChart";
-import FeeCollectionSummary from "@/components/dashboard-widgets/FeeCollectionSummary";
-import OutstandingFeesTable from "@/components/dashboard-widgets/OutstandingFeesTable";
-import OverdueObligationsWidget from "@/components/dashboard-widgets/OverdueObligationsWidget";
+import {
+  FinancialMonthFilterBanner,
+  FinancialReportCharts,
+  type DiscountUsageByTypeItem,
+  type MonthlyFeeCollectionItem,
+} from "./FinancialReportSections";
+import { FinancialDashboardWidgets, FinancialInvoiceTable } from "./FinancialReportTable";
+import { formatMonthYear, getCollectedAmountForInvoice, getOutstandingAmountForInvoice } from "@mms/shared";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 /** Active filter state passed down from the parent report view. */
 interface FinancialReportFilters {
@@ -36,10 +29,6 @@ interface FinancialReportProps {
   /** Optional callback to open the visualizer with an existing config. */
   onEditVisual?: (config: unknown) => void;
 }
-
-import { formatMonthYear, formatDate, getCollectedAmountForInvoice, getOutstandingAmountForInvoice } from "@mms/shared";
-import { useFinanceCurrency } from "@/hooks/useCurrency";
-
 
 /**
  * Renders the financial reports and charts including revenue trends,
@@ -59,7 +48,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   );
   const financeInvoices = useFinanceInvoicesCollection();
 
-  const monthlyFeeCollection = useMemo(() => {
+  const monthlyFeeCollection = useMemo<MonthlyFeeCollectionItem[]>(() => {
     // Generate monthly aggregation
     const monthlyTotals: Record<string, { collected: number, outstanding: number, total: number }> = {};
     financeInvoices.forEach((invoice) => {
@@ -84,7 +73,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
     })).sort((firstMonth, secondMonth) => new Date(firstMonth.month).getTime() - new Date(secondMonth.month).getTime()).slice(-6); // Last 6 months
   }, [financeInvoices]);
 
-  const discountUsageByType = useMemo(() => {
+  const discountUsageByType = useMemo<DiscountUsageByTypeItem[]>(() => {
     const discountTotalsByType: Record<string, { count: number, totalDiscounted: number }> = {};
     let totalDiscountAmount = 0;
 
@@ -143,229 +132,16 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
         <StatCard icon={Tag}         label={t("finance.report.totalDiscounted")} value={formatCurrency(totalDiscounted)}                  color="amber"   />
       </div>
 
-      {/* Revenue trend */}
-      <SectionCard title={t("finance.report.chartTitle")}>
-        <SafeResponsiveContainer width="100%" height={200}>
-          <AreaChart
-            data={monthlyFeeCollection}
-            onClick={(state) => {
-              const month = (state as { activeLabel?: string } | undefined)?.activeLabel;
-              if (typeof month === "string" && month.length > 0) toggleMonthFilter(month);
-            }}
-            style={{ cursor: "pointer" }}
-          >
-            <defs>
-              <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(value: number) => value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`} />
-            <Tooltip formatter={(value) => value !== undefined ? formatCurrency(Number(value)) : ""} />
-            <Area type="monotone" dataKey="collected"   stroke="hsl(var(--primary))" fill="url(#colorCollected)" strokeWidth={2} name={t("finance.report.collected")}   />
-            <Area type="monotone" dataKey="outstanding" stroke={palette.charts[0]} fill="transparent" strokeWidth={2} strokeDasharray="4 2" name={t("finance.report.outstandingLabel")} />
-          </AreaChart>
-        </SafeResponsiveContainer>
-      </SectionCard>
-
-      {/* Two-column: collection table + discount pie */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SectionCard title={t("finance.report.collectionRateTitle")}>
-          <div className="space-y-2">
-            {monthlyFeeCollection.map((monthTotals) => (
-              <Button
-                key={monthTotals.month}
-                type="button"
-                variant="ghost"
-                onClick={() => toggleMonthFilter(monthTotals.month)}
-                aria-pressed={selectedMonth === monthTotals.month}
-                className={`flex min-h-11 h-auto w-full items-center gap-3 px-2 py-1.5 justify-start ${
-                  selectedMonth === monthTotals.month ? "bg-primary/10 text-primary" : ""
-                }`}
-              >
-                <span className="text-xs text-muted-foreground w-20 shrink-0 text-start">{monthTotals.month}</span>
-                <div className="flex-1 h-2 rounded-full bg-muted">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: `${monthTotals.rate}%` }} />
-                </div>
-                <span className="text-xs font-bold text-foreground w-10 text-end">{monthTotals.rate}%</span>
-              </Button>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard title={t("finance.report.discountDistributionTitle")}>
-          <SafeResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie
-                data={discountUsageByType}
-                dataKey="totalDiscounted"
-                nameKey="type"
-                cx="50%"
-                cy="50%"
-                outerRadius={70}
-                label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
-                labelLine={false}
-              >
-                {discountUsageByType.map((_, index) => (
-                  <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(v) => v !== undefined ? formatCurrency(Number(v)) : ""} />
-              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-            </PieChart>
-          </SafeResponsiveContainer>
-        </SectionCard>
-      </div>
-
-      {selectedMonth && (
-        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-primary" />
-            <span className="font-medium text-foreground">{t("finance.report.monthFilterLabel")}</span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
-              {selectedMonth}
-            </span>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedMonth(null)}
-            className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-3 h-3 me-1" />
-            {t("finance.report.clearMonthFilter")}
-          </Button>
-        </div>
-      )}
-
-      <ExportToolbar 
-        title={t("finance.report.invoiceReportTitle")} 
-        data={invoices}
-        headers={[
-          t("finance.columns.invoice"),
-          t("finance.columns.student"),
-          t("finance.report.classColumn"),
-          t("finance.columns.baseFee"),
-          t("finance.columns.discount"),
-          t("finance.columns.final"),
-          t("finance.columns.dueDate"),
-          t("finance.columns.status"),
-        ]}
+      <FinancialReportCharts
+        monthlyFeeCollection={monthlyFeeCollection}
+        discountUsageByType={discountUsageByType}
+        pieColors={PIE_COLORS}
+        selectedMonth={selectedMonth}
+        onToggleMonthFilter={toggleMonthFilter}
       />
-      {invoices.length === 0 ? (
-        <EmptyState icon={DollarSign} title={t("finance.report.noInvoicesMatch")} compact />
-      ) : (
-        <Card className="overflow-hidden">
-          <div className="space-y-3 p-3 md:hidden">
-            {invoices.map((inv) => (
-              <article key={inv.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h4 className="truncate text-sm font-semibold text-foreground">{inv.studentName}</h4>
-                    <p className="font-mono text-xs text-muted-foreground">{inv.id}</p>
-                  </div>
-                  <StatusBadge
-                    status={inv.status}
-                    config={{
-                      paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
-                      pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
-                      overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
-                      partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
-                      cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
-                    }}
-                  />
-                </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.report.classColumn")}</dt>
-                    <dd className="text-foreground">{inv.class}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.dueDate")}</dt>
-                    <dd className="text-muted-foreground">{formatDate(inv.dueDate)}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.baseFee")}</dt>
-                    <dd className="text-muted-foreground">{formatCurrency(inv.baseFee)}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.discount")}</dt>
-                    <dd className="text-warning">{inv.discountAmt > 0 ? `-${formatCurrency(inv.discountAmt)}` : "—"}</dd>
-                  </div>
-                  <div className="col-span-2">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.final")}</dt>
-                    <dd className="text-base font-semibold text-foreground">{formatCurrency(inv.finalAmt)}</dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                {[
-                  t("finance.columns.invoice"),
-                  t("finance.columns.student"),
-                  t("finance.report.classColumn"),
-                  t("finance.columns.baseFee"),
-                  t("finance.columns.discount"),
-                  t("finance.columns.final"),
-                  t("finance.columns.dueDate"),
-                  t("finance.columns.status"),
-                ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {invoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{inv.id}</td>
-                  <td className="px-3 py-2.5 font-medium">{inv.studentName}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{inv.class}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{formatCurrency(inv.baseFee)}</td>
-                  <td className="px-3 py-2.5 text-warning">{inv.discountAmt > 0 ? `-${formatCurrency(inv.discountAmt)}` : "—"}</td>
-                  <td className="px-3 py-2.5 font-semibold text-foreground">{formatCurrency(inv.finalAmt)}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{formatDate(inv.dueDate)}</td>
-                  <td className="px-3 py-2.5">
-                    <StatusBadge
-                      status={inv.status}
-                      config={{
-                        paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
-                        pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
-                        overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
-                        partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
-                        cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </Card>
-      )}
-
-      {/* Dashboard widgets preview */}
-      <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-start">
-        <div>
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("finance.report.dashboardWidgetsTitle")}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("finance.report.dashboardWidgetsSubtitle")}</p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RevenueChart />
-          <FeeCollectionSummary />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <OutstandingFeesTable />
-          <OverdueObligationsWidget />
-        </div>
-      </div>
+      <FinancialMonthFilterBanner selectedMonth={selectedMonth} onClear={() => setSelectedMonth(null)} />
+      <FinancialInvoiceTable invoices={invoices} />
+      <FinancialDashboardWidgets />
     </div>
   );
 }

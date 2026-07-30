@@ -1,13 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Calendar, DollarSign } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { Field } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT } from "@/components/ui/formStyles";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -15,6 +8,11 @@ import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { notify } from "@/lib/notify";
 import { Session, SESSION_TYPES } from "@/lib/data/sessionsData";
 import { toTitleCase, AppTranslationKey, todayISO, DEFAULT_CURRENCIES } from "@mms/shared";
+import {
+  SessionDetailsSection,
+  SessionFinancialSection,
+  type SessionSelectOption,
+} from "@/tenant/features/sessions/components/SessionFormSections";
 
 interface SessionFormProps {
   open?: boolean;
@@ -47,7 +45,7 @@ export function SessionForm({
   const defaultCurrency = activeCurrency.code;
 
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
-  const statusOptions = statuses.length > 0 ? statuses : [...SESSION_STATUSES];
+  const statusValues = statuses.length > 0 ? statuses : [...SESSION_STATUSES];
   const defaultType = typeOptions.includes(settings.defaultSessionType)
     ? settings.defaultSessionType
     : (typeOptions[0] || "Hifz");
@@ -157,6 +155,17 @@ export function SessionForm({
     [typeOptions, t],
   );
 
+  const statusOptions = useMemo<SessionSelectOption[]>(
+    () =>
+      statusValues.map((statusOption) => {
+        const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
+        const translated = t(translationKey);
+        const label = translated === translationKey ? toTitleCase(statusOption) : translated;
+        return { value: statusOption, label };
+      }),
+    [statusValues, t],
+  );
+
   const footerStart = sessionDraft.name ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
@@ -199,103 +208,21 @@ export function SessionForm({
       footerStart={footerStart}
     >
       <div className="space-y-4">
-        <div className="space-y-4 text-start">
-          <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm text-start">
-            <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-              <Calendar className="w-4 h-4 text-primary/70 transition-colors" />
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("sessions.form.sectionDetails")}</h3>
-            </div>
-
-            <Field label={t("sessions.form.name")} required error={errors.name}>
-              <div className="relative flex items-center group/input">
-                <Calendar className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  value={sessionDraft.name || ""}
-                  onChange={(event) => updateDraft({ name: event.target.value })}
-                  placeholder={t("sessions.form.namePlaceholder")}
-                  className={`${FORM_INPUT} ps-10`}
-                />
-              </div>
-            </Field>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label={t("sessions.form.type")}>
-                <FormSelect
-                  value={sessionDraft.type || defaultType}
-                  onChange={(val) => updateDraft({ type: val })}
-                  options={sessionTypeOptions}
-                />
-              </Field>
-
-              <Field label={t("sessions.form.status")}>
-                <FormSelect
-                  value={sessionDraft.status || "active"}
-                  onChange={(val) => updateDraft({ status: val })}
-                  options={statusOptions.map((statusOption) => {
-                    const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
-                    const translated = t(translationKey);
-                    const label = translated === translationKey ? toTitleCase(statusOption) : translated;
-                    return { value: statusOption, label };
-                  })}
-                />
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label={t("sessions.form.startDate")} required error={errors.startDate}>
-                <DatePicker
-                  value={sessionDraft.startDate || undefined}
-                  onChange={(dateStr) => updateDraft({ startDate: dateStr })}
-                />
-              </Field>
-
-              <Field label={t("sessions.form.endDate")} required error={errors.endDate}>
-                <DatePicker
-                  value={sessionDraft.endDate || undefined}
-                  onChange={(dateStr) => updateDraft({ endDate: dateStr })}
-                />
-              </Field>
-            </div>
-
-            <Field label={t("sessions.form.description")}>
-              <Textarea
-                value={sessionDraft.description || ""}
-                onChange={(event) => updateDraft({ description: event.target.value })}
-                placeholder={t("sessions.form.descriptionPlaceholder")}
-                className="min-h-[5rem]"
-              />
-            </Field>
-          </Card>
-        </div>
-
-        <div className="space-y-4 text-start">
-          <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm text-start">
-            <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-              <DollarSign className="w-4 h-4 text-primary/70 transition-colors" />
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("sessions.form.sectionFinancial")}</h3>
-            </div>
-
-            <Field label={t("sessions.form.baseFee")}>
-              <div className="relative flex items-center group/input">
-                <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  type="number"
-                  value={sessionDraft.baseFee ?? 0}
-                  onChange={(event) => updateDraft({ baseFee: Number(event.target.value) })}
-                  className={`${FORM_INPUT} ps-10`}
-                />
-              </div>
-            </Field>
-
-            <Field label={t("sessions.form.currency")}>
-              <FormSelect
-                value={sessionDraft.currency || defaultCurrency}
-                onChange={(val) => updateDraft({ currency: val })}
-                options={CURRENCIES}
-              />
-            </Field>
-          </Card>
-        </div>
+        <SessionDetailsSection
+          sessionDraft={sessionDraft}
+          errors={errors}
+          defaultType={defaultType}
+          sessionTypeOptions={sessionTypeOptions}
+          statusOptions={statusOptions}
+          onDraftChange={updateDraft}
+        />
+        <SessionFinancialSection
+          sessionDraft={sessionDraft}
+          errors={errors}
+          currencyOptions={CURRENCIES}
+          defaultCurrency={defaultCurrency}
+          onDraftChange={updateDraft}
+        />
       </div>
     </FormModal>
   );

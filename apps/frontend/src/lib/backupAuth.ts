@@ -1,26 +1,23 @@
 import { apiFetch } from '@/lib/apiClient';
 
-/** Confirms admin password before encrypting a backup (accepts 2FA-pending as valid). */
+/** Confirms the signed-in admin's password before encrypting or restoring a backup. */
 export async function verifyAdminBackupPassword(
   email: string,
   password: string,
 ): Promise<{ ok: true } | { ok: false; errorKey: 'backup.invalidAdminPassword' | 'backup.serverFetchFailed' }> {
   try {
-    const response = await apiFetch('/api/auth/login', {
+    const response = await apiFetch('/api/auth/verify-password', {
       method: 'POST',
-      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      body: JSON.stringify({ password, email: email.trim().toLowerCase() }),
     });
 
-    const authProbeResponse = (await response.json()) as {
-      requires2FA?: boolean;
-      type?: string;
-    };
-
-    if (response.ok || authProbeResponse.requires2FA === true) {
+    if (response.ok) {
       return { ok: true };
     }
-
-    return { ok: false, errorKey: 'backup.invalidAdminPassword' };
+    if (response.status === 401) {
+      return { ok: false, errorKey: 'backup.invalidAdminPassword' };
+    }
+    return { ok: false, errorKey: 'backup.serverFetchFailed' };
   } catch {
     return { ok: false, errorKey: 'backup.serverFetchFailed' };
   }

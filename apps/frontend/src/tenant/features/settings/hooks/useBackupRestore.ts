@@ -104,13 +104,23 @@ export function useBackupRestore({
   );
 
   const queuePlaintextRestore = useCallback(
-    (jsonText: string, credentials: BackupCredentials, fileName?: string): void => {
+    (
+      jsonText: string,
+      credentials: BackupCredentials,
+      meta?: { fileName?: string; backupId?: string },
+    ): void => {
       const preview = summarizeWorkspaceBackup(jsonText, storagePrefix);
       if (!preview.ok) {
         notify.error(t('backup.restoreFailed'), { description: t(preview.errorKey) });
         return;
       }
-      setPendingRestore({ jsonText, summary: preview.summary, fileName, credentials });
+      setPendingRestore({
+        jsonText,
+        summary: preview.summary,
+        fileName: meta?.fileName,
+        backupId: meta?.backupId,
+        credentials,
+      });
     },
     [storagePrefix, t],
   );
@@ -129,20 +139,21 @@ export function useBackupRestore({
   const beginRestore = useCallback(
     async (payload: PendingRestore): Promise<void> => {
       setSafetyStep(true);
-      setRestoreId('active');
+      setRestoreId(payload.backupId ?? 'active');
       try {
         await downloadSafetyBackup(payload.credentials);
         await importDatabase(payload.jsonText);
         notify.success(t('backup.restoreSuccess'), { description: t('backup.restoreSuccessDesc') });
+        setPendingRestore(null);
+        setSelectedFileName(null);
         window.location.reload();
       } catch (err) {
+        // Keep the pending restore so a transient failure does not force a re-upload.
         const error = err as Error;
         notify.error(t('backup.restoreFailed'), { description: errorDescription(error.message) });
         setRestoreId(null);
       } finally {
         setSafetyStep(false);
-        setPendingRestore(null);
-        setSelectedFileName(null);
       }
     },
     [downloadSafetyBackup, errorDescription, t],
@@ -236,13 +247,23 @@ export function useBackupRestore({
           setSelectedFileName(fileName);
         }
 
-        queuePlaintextRestore(plaintext, credentials, fileName);
+        const backupId =
+          pendingDecrypt.kind === 'history'
+            ? pendingDecrypt.backup.id
+            : pendingDecrypt.kind === 'plaintext'
+              ? pendingDecrypt.backupId
+              : undefined;
+
+        queuePlaintextRestore(plaintext, credentials, { fileName, backupId });
         setPendingDecrypt(null);
+      } catch (err) {
+        const error = err as Error;
+        notify.error(t('backup.restoreFailed'), { description: errorDescription(error.message) });
       } finally {
         setDecryptLoading(false);
       }
     },
-    [pendingDecrypt, queuePlaintextRestore, t],
+    [errorDescription, pendingDecrypt, queuePlaintextRestore, t],
   );
 
   const processImportFile = useCallback(
@@ -312,6 +333,7 @@ export function useBackupRestore({
         kind: 'plaintext',
         jsonText: backup.data,
         fileName: backup.fileName ?? backup.name,
+        backupId: backup.id,
       });
     },
     [t],

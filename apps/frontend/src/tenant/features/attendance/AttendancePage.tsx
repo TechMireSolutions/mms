@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -6,36 +6,26 @@ import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCheck, ClipboardEdit, BookOpen, BarChart2,
-  ShieldCheck, ClipboardList,
+  ClipboardList,
 } from "lucide-react";
-import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_MANIFEST, toMessagingRecipient } from "@mms/shared";
+import { resolveModuleTierTab, todayISO, ATTENDANCE_MODULE_MANIFEST } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import { AttendanceFilters } from "@/tenant/features/attendance/components/AttendanceFilters";
-import { MarkAttendance } from "@/tenant/features/attendance/components/MarkAttendance";
-import { AttendanceRecords } from "@/tenant/features/attendance/components/AttendanceRecords";
-import { AttendanceAnalytics } from "@/tenant/features/attendance/components/AttendanceAnalytics";
-import { AttendanceSettings } from "@/tenant/features/attendance/components/AttendanceSettings";
-import { AuditLog } from "@/tenant/features/attendance/components/AuditLog";
 import { AttendanceCommandMetrics } from "@/tenant/features/attendance/components/AttendanceCommandMetrics";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
+import { AttendanceReportsTier } from "@/tenant/features/attendance/components/AttendanceReportsTier";
+import { AttendanceSetupTier } from "@/tenant/features/attendance/components/AttendanceSetupTier";
+import { AttendanceWorkTier } from "@/tenant/features/attendance/components/AttendanceWorkTier";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { notify } from "@/lib/notify";
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import {
   useAttendanceRecords,
   useAttendancePaginated,
-  useAttendanceMutations,
 } from '@/tenant/features/attendance/hooks/useAttendance';
+import { useAttendancePageActions } from "@/tenant/features/attendance/hooks/useAttendancePageActions";
 import { useAttendanceColumnLayout } from '@/tenant/features/attendance/hooks/useAttendanceColumnLayout';
 import { useViewerRole } from "@/tenant/hooks/useViewerRole";
 import { usePermissions, useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -67,12 +57,6 @@ export default function Attendance() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [showDeleted, setShowDeleted] = useState(false);
   const attendanceCollectionQuery = useAttendanceRecords();
-  const {
-    bulkUpsert,
-    updateRecord,
-    deleteRecord,
-    restoreRecord,
-  } = useAttendanceMutations();
   const attendancePageQuery = useAttendancePaginated({
     page: 1,
     limit: ATTENDANCE_MODULE_MANIFEST.maxPageSize,
@@ -83,27 +67,15 @@ export default function Attendance() {
   const workAttendanceRecords = attendancePageQuery.data?.records ?? [];
   const attendanceRecords = activeTab === "work" ? workAttendanceRecords : activeAttendanceRecords;
   const columnLayout = useAttendanceColumnLayout();
-  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
-
-  const handleMessageAttendance = (channel: 'sms' | 'whatsapp' | 'email', attRecords: AttendanceRecord[]) => {
-    openComposer(
-      channel,
-      attRecords.map((record) =>
-        toMessagingRecipient(
-          {
-            id: record.studentId || record.id,
-            name: record.studentName || t("attendance.messaging.student"),
-            phone: typeof (record as { phone?: string }).phone === 'string'
-              ? (record as { phone?: string }).phone
-              : '',
-            email: typeof (record as { email?: string }).email === 'string'
-              ? (record as { email?: string }).email
-              : '',
-          },
-        ),
-      ),
-    );
-  };
+  const {
+    messagingTarget,
+    closeComposer,
+    handleMessageAttendance,
+    persistRecords,
+    handleUpdateRecord,
+    handleDeleteRecord,
+    handleRestoreRecord,
+  } = useAttendancePageActions();
 
   const pageFilteredCount = useMemo(() => {
     return attendanceRecords.filter((attendanceRecord) => {
@@ -112,37 +84,6 @@ export default function Attendance() {
       return true;
     }).length;
   }, [attendanceRecords, filters.classId, filters.date]);
-
-  const persistRecords = useCallback(async (recordsForClassDate: AttendanceRecord[]) => {
-    await bulkUpsert.mutateAsync(recordsForClassDate);
-  }, [bulkUpsert]);
-
-  const handleUpdateRecord = useCallback(async (record: AttendanceRecord) => {
-    await updateRecord.mutateAsync({ id: record.id, record });
-  }, [updateRecord]);
-
-  const handleDeleteRecord = useCallback(async (id: string) => {
-    try {
-      await deleteRecord.mutateAsync(id);
-      notify.success(t("attendance.toast.archived"));
-    } catch (error) {
-      notify.error(t("attendance.toast.saveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }, [deleteRecord, t]);
-
-  const handleRestoreRecord = useCallback(async (id: string) => {
-    try {
-      await restoreRecord.mutateAsync(id);
-      notify.success(t("attendance.toast.restored"));
-    } catch (error) {
-      notify.error(t("attendance.toast.saveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }, [restoreRecord, t]);
-
 
   const canSeeAttendanceAnalytics = canAnalyticsView
     && (can("users.manage") || canWriteAttendance || can("enrollments.write") || !can("finance.write"));
@@ -187,68 +128,57 @@ export default function Attendance() {
   const renderContent = () => {
     if (!effectiveTab) return null;
     if (effectiveTab === "setup") {
-      return (
-        <AttendanceSettings />
-      );
+      return <AttendanceSetupTier />;
     }
 
     if (effectiveTab === "reports") {
       return (
-        <div className="space-y-5">
-          <KPISummary category="attendance" role={role} />
-          <SubTabBar
-            tabs={visibleAnalyticsTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={effectiveAnalyticsTab}
-            onChange={setActiveAnalyticsTab}
-          />
-
-          {effectiveAnalyticsTab === "charts" ? (
-            <AttendanceAnalytics filters={filters} records={attendanceRecords} />
-          ) : (
-            <ModuleReports category="attendance" />
-          )}
-        </div>
+        <AttendanceReportsTier
+          role={role}
+          filters={filters}
+          records={attendanceRecords}
+          analyticsTabs={visibleAnalyticsTabs}
+          activeAnalyticsTab={effectiveAnalyticsTab}
+          onAnalyticsTabChange={setActiveAnalyticsTab}
+        />
       );
     }
 
-    // Work tier
     return (
-      <div className="space-y-5">
-        {visibleOperationsTabs.length > 1 && (
-          <SubTabBar
-            tabs={visibleOperationsTabs.map((tab) => ({ key: tab.id, label: tab.label, icon: tab.icon }))}
-            value={effectiveOpsTab}
-            onChange={setActiveOpsTab}
-          />
-        )}
-
-        {(() => {
-          switch (effectiveOpsTab) {
-            case "mark":    return <MarkAttendance filters={filters} role={role} records={activeAttendanceRecords} persistBatch={persistRecords} />;
-            case "records": return (
-              <AttendanceRecords
-                filters={filters}
-                records={attendanceRecords}
-                onUpdateRecord={handleUpdateRecord}
-                onDeleteRecord={handleDeleteRecord}
-                onRestoreRecord={handleRestoreRecord}
-                showDeleted={showDeleted}
-                isColumnVisible={columnLayout.isColumnVisible}
-                getColumnWidth={columnLayout.getColumnWidth}
-                onColumnResize={columnLayout.setColumnWidth}
-                columnCustomizer={{
-                  columnRegistry: columnLayout.columnRegistry,
-                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
-                  labels: columnLayout.customizerLabels,
-                }}
-                onMessage={handleMessageAttendance}
-              />
-            );
-            case "audit":   return <AuditLog filters={filters} />;
-            default:        return null;
-          }
-        })()}
-      </div>
+      <AttendanceWorkTier
+        filters={filters}
+        role={role}
+        records={attendanceRecords}
+        activeRecords={activeAttendanceRecords}
+        activeOpsTab={effectiveOpsTab}
+        operationsTabs={visibleOperationsTabs}
+        showDeleted={showDeleted}
+        canDeleteAttendance={canDeleteAttendance}
+        showRoleBanner={!can("users.manage")}
+        roleLabel={t("attendance.roleBanner.label", { role })}
+        teacherRoleText={can("attendance.write") && !can("finance.write") && t("attendance.roleBanner.teacher")}
+        accountantRoleText={can("finance.write") && !can("attendance.write") && t("attendance.roleBanner.accountant")}
+        showActiveLabel={t("attendance.showActive")}
+        showDeletedLabel={t("attendance.showDeleted")}
+        onFiltersChange={setFilters}
+        onOpsTabChange={setActiveOpsTab}
+        onShowDeletedToggle={() => setShowDeleted((current) => !current)}
+        onPersistRecords={persistRecords}
+        onUpdateRecord={handleUpdateRecord}
+        onDeleteRecord={handleDeleteRecord}
+        onRestoreRecord={handleRestoreRecord}
+        onMessage={handleMessageAttendance}
+        columnProps={{
+          isColumnVisible: columnLayout.isColumnVisible,
+          getColumnWidth: columnLayout.getColumnWidth,
+          onColumnResize: columnLayout.setColumnWidth,
+          columnCustomizer: {
+            columnRegistry: columnLayout.columnRegistry,
+            updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+            labels: columnLayout.customizerLabels,
+          },
+        }}
+      />
     );
   };
 
@@ -288,29 +218,6 @@ export default function Attendance() {
         hideWhenSingle
         panelIdPrefix="attendance-tab"
       >
-      {effectiveTab !== "setup" && !can("users.manage") && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-muted text-muted-foreground border border-border">
-          <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-          <span className="font-bold capitalize">{t("attendance.roleBanner.label", { role })}</span>
-          {can("attendance.write") && !can("finance.write") && t("attendance.roleBanner.teacher")}
-          {can("finance.write") && !can("attendance.write") && t("attendance.roleBanner.accountant")}
-        </div>
-      )}
-
-      {effectiveTab !== "setup" && (
-        <AttendanceFilters filters={filters} onChange={setFilters} />
-      )}
-
-      {effectiveTab === "work" && effectiveOpsTab === "records" && canDeleteAttendance && (
-        <ModuleTrashToggle
-          showDeleted={showDeleted}
-          onToggle={() => setShowDeleted((current) => !current)}
-          showActiveLabel={t("attendance.showActive")}
-          showDeletedLabel={t("attendance.showDeleted")}
-          className="min-h-11 border border-border"
-        />
-      )}
-
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         <motion.div

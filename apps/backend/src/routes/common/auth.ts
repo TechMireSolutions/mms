@@ -21,7 +21,7 @@ import {
 } from '../../middleware/authenticatePlatform.js';
 import { deleteAuthArtifact } from '../../services/auth/authArtifactService.js';
 import { getJwtExpiresIn } from '../../services/globalSettingsService.js';
-import { getPublicUserById, getTenantUserProfile, updateOwnLinkedContact, changeTenantUserPassword } from '../../services/auth/userService.js';
+import { getPublicUserById, getTenantUserProfile, updateOwnLinkedContact, changeTenantUserPassword, verifyUserPassword } from '../../services/auth/userService.js';
 import { runWithTenant } from '../../lib/tenantContext.js';
 import { rotateRefreshToken, validateRefreshToken } from '../../services/auth/twoFactorService.js';
 import { onboardBodySchema } from '../../validation/authSchemas.js';
@@ -36,6 +36,7 @@ import {
   confirmLoginEmailChangeBodySchema,
   ownContactPatchBodySchema,
   requestLoginEmailChangeBodySchema,
+  verifyPasswordBodySchema,
 } from '../../validation/profileSchemas.js';
 import {
   confirmLoginEmailChange,
@@ -244,6 +245,30 @@ export default async function authRoutes(
           message: err.message,
         });
       }
+    });
+
+    // Step-up check for sensitive in-session actions (e.g. encrypted backup export).
+    // Never route these through `/login` — that rotates cookies and can trigger a 2FA challenge.
+    inner.post('/verify-password', { preHandler: authenticateTenant }, async (request, reply) => {
+      const user = request.user as User;
+      const parsed = parseRequest(verifyPasswordBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const claimedEmail = parsed.data.email?.trim().toLowerCase();
+      const sessionEmail = (user.loginEmail ?? user.email ?? '').trim().toLowerCase();
+      if (claimedEmail && claimedEmail !== sessionEmail) {
+        return reply.status(401).send({
+          type: 'invalid_credentials',
+          message: 'Password is incorrect',
+        });
+      }
+      const valid = await verifyUserPassword(user.id, parsed.data.password);
+      if (!valid) {
+        return reply.status(401).send({
+          type: 'invalid_credentials',
+          message: 'Password is incorrect',
+        });
+      }
+      return reply.send({ valid: true });
     });
 
     inner.post('/login-email/request', { preHandler: authenticateTenant }, async (request, reply) => {

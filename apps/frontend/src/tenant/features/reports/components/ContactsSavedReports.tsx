@@ -1,17 +1,11 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { Bookmark, Trash2, Play, Plus, Clock, User, AlertTriangle, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { ContactsSavedReport, ContactsSavedReportShareScope, ContactsWorkDrillDown } from "@mms/shared";
 import {
-  canDeleteContactsSavedReport,
   formatDate,
   validateContactsSavedReportDrillDown,
 } from "@mms/shared";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { FormModal } from "@/components/ui/FormModal";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -20,70 +14,11 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactsSavedReportsSource } from "@/tenant/hooks/collections/contacts";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 import { notify } from "@/lib/notify";
-import { useUsersCollection } from "@/tenant/hooks/collections/users";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { ContactsSavedReportsEditor } from "./ContactsSavedReportsEditor";
+import { ContactsSavedReportsList } from "./ContactsSavedReportsList";
 
 interface ContactsSavedReportsProps {
   suggestedDrillDown?: ContactsWorkDrillDown;
-}
-
-function ContactsSavedReportUserPicker({
-  value,
-  onChange,
-}: {
-  value: string[];
-  onChange: (userIds: string[]) => void;
-}): React.JSX.Element {
-  const { t } = useTranslation();
-  const users = useUsersCollection();
-
-  const options = useMemo(
-    () => users.slice().sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
-    [users],
-  );
-
-  const toggle = (userId: string) => {
-    if (value.includes(userId)) {
-      onChange(value.filter((selectedUserId) => selectedUserId !== userId));
-    } else {
-      onChange([...value, userId]);
-    }
-  };
-
-  return (
-    <div className="space-y-1.5">
-      <Label>{t("contacts.savedReports.usersPickerLabel")}</Label>
-      <div className="max-h-40 overflow-y-auto rounded-lg border border-border divide-y divide-border">
-        {options.length === 0 ? (
-          <p className="px-3 py-2 text-xs text-muted-foreground">{t("common.loading")}</p>
-        ) : (
-          options.map((user) => (
-            <label
-              key={user.id}
-              className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
-            >
-              <Checkbox
-                checked={value.includes(String(user.id))}
-                onCheckedChange={() => toggle(String(user.id))}
-              />
-              <span className="truncate">{user.name || user.email}</span>
-            </label>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-function formatDrillDownSummary(
-  drillDown: ContactsWorkDrillDown,
-  searchLabel: string,
-): string {
-  const parts: string[] = [];
-  if (drillDown.gender) parts.push(drillDown.gender);
-  if (drillDown.search?.trim()) parts.push(`${searchLabel}: ${drillDown.search.trim()}`);
-  return parts.join(" · ") || "—";
 }
 
 const SHARE_SCOPES: ContactsSavedReportShareScope[] = ["private", "roles", "users", "global"];
@@ -228,152 +163,42 @@ export default function ContactsSavedReports({
         )}
       </div>
 
-      {isError ? (
-        <ErrorState
-          title={t("errors.state.generic")}
-          description={t("common.retry")}
-          onRetry={retry}
-          compact
-        />
-      ) : isLoading ? (
-        <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
-      ) : reports.length === 0 ? (
-        <EmptyState
-          icon={Bookmark}
-          title={t("contacts.savedReports.emptyTitle")}
-          description={t("contacts.savedReports.emptyDescription")}
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {reports.map((savedReport) => {
-            const issues = validateContactsSavedReportDrillDown(savedReport.drillDown, {
-              genders: genders,
-            });
-            const canDelete = Boolean(
-              user &&
-              canDeleteContactsSavedReport(savedReport, {
-                id: String(user.id),
-                role: role ?? "",
-                isAdmin,
-              }),
-            );
-            return (
-              <div
-                key={savedReport.id}
-                className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-start"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h4 className="text-sm font-semibold text-foreground">{savedReport.name}</h4>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDrillDownSummary(savedReport.drillDown, searchLabel)}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                        <Users className="w-3 h-3" />
-                        {shareLabel(savedReport.shareScope)}
-                      </span>
-                      {issues.length > 0 && (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
-                          <AlertTriangle className="w-3 h-3" />
-                          {t("contacts.savedReports.staleBadge")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Bookmark className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatLastRun(savedReport.lastRunAt)}
-                  </span>
-                  {(savedReport.createdByName || savedReport.createdBy) && (
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      {savedReport.createdByName || savedReport.createdBy}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 pt-1 border-t border-border">
-                  <Button
-                    type="button"
-                    variant="link"
-                    onClick={() => void handleRun(savedReport)}
-                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline min-h-11 px-2 shadow-none"
-                  >
-                    <Play className="w-3 h-3" />
-                    {t("contacts.savedReports.run")}
-                  </Button>
-                  {canDelete && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => void handleDelete(savedReport.id)}
-                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors ms-auto min-h-11 px-2 hover:bg-transparent shadow-none"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      {t("contacts.savedReports.delete")}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <ContactsSavedReportsList
+        reports={reports}
+        isLoading={isLoading}
+        isError={isError}
+        genders={genders}
+        searchLabel={searchLabel}
+        userId={user ? String(user.id) : null}
+        role={role}
+        isAdmin={isAdmin}
+        shareLabel={shareLabel}
+        formatLastRun={formatLastRun}
+        onRetry={retry}
+        onRun={(savedReport) => void handleRun(savedReport)}
+        onDelete={(id) => void handleDelete(id)}
+      />
 
-      <FormModal
+      <ContactsSavedReportsEditor
         open={saveOpen}
-        onClose={() => setSaveOpen(false)}
-        title={t("contacts.savedReports.saveDialogTitle")}
-        size="sm"
-        cancelLabel={t("common.cancel")}
-        saveLabel={t("contacts.savedReports.save")}
-        onSave={() => void handleSave()}
+        name={name}
+        search={search}
+        shareScope={shareScope}
+        shareScopeOptions={shareScopeOptions}
+        sharedWithUserIds={sharedWithUserIds}
         saving={saving}
-        saveDisabled={!name.trim() || (shareScope === "users" && sharedWithUserIds.length === 0)}
-      >
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="saved-report-name">{t("contacts.savedReports.nameLabel")}</Label>
-            <Input
-              id="saved-report-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={t("contacts.savedReports.namePlaceholder")}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="saved-report-search">{searchLabel}</Label>
-            <Input
-              id="saved-report-search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t("contacts.savedReports.searchPlaceholder")}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="saved-report-share-scope">{t("contacts.savedReports.shareScopeLabel")}</Label>
-            <FormSelect
-              id="saved-report-share-scope"
-              value={shareScope}
-              onChange={(v) => {
-                setShareScope(v as ContactsSavedReportShareScope);
-                if (v !== "users") setSharedWithUserIds([]);
-              }}
-              options={shareScopeOptions.map((scope) => ({
-                value: scope,
-                label: shareLabel(scope),
-              }))}
-            />
-          </div>
-          {shareScope === "users" && (
-            <ContactsSavedReportUserPicker value={sharedWithUserIds} onChange={setSharedWithUserIds} />
-          )}
-        </div>
-      </FormModal>
+        searchLabel={searchLabel}
+        shareLabel={shareLabel}
+        onClose={() => setSaveOpen(false)}
+        onNameChange={setName}
+        onSearchChange={setSearch}
+        onShareScopeChange={(value) => {
+          setShareScope(value);
+          if (value !== "users") setSharedWithUserIds([]);
+        }}
+        onSharedWithUserIdsChange={setSharedWithUserIds}
+        onSave={() => void handleSave()}
+      />
     </div>
   );
 }

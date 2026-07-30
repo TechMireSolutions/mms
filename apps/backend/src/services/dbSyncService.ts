@@ -8,6 +8,12 @@ import {
   resetTenantData as dbResetTenantData,
   runInTransaction
 } from '../db/database.js';
+import { loadRelationalSnapshotCollections } from '../db/relationalSnapshot.js';
+import {
+  sortCollectionNamesForRestore,
+  withCompleteRelationalRestoreCollections,
+} from '../db/relationalReplaceMapping.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 /**
  * Retrieves a snapshot of all database collections and objects.
@@ -19,6 +25,26 @@ export async function fetchDatabaseSnapshot(): Promise<TenantDatabaseSnapshot> {
 }
 
 /**
+ * Retrieves a full-fidelity workspace snapshot for backup export.
+ *
+ * Overlays the authoritative relational tables on top of the legacy document store,
+ * which is stale for every REST-migrated module.
+ *
+ * @returns {Promise<TenantDatabaseSnapshot>} The backup snapshot.
+ */
+export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
+  const snapshot = await dbGetAllData();
+  const tenant = getRequestTenant();
+  if (!tenant) return snapshot;
+
+  const relational = await loadRelationalSnapshotCollections(tenant);
+  return {
+    ...snapshot,
+    collections: { ...(snapshot.collections ?? {}), ...relational },
+  };
+}
+
+/**
  * Performs a synchronized batch write of collections and objects.
  * Uses a single database transaction block to guarantee atomicity and speed up bulk inserts.
  *
@@ -26,15 +52,15 @@ export async function fetchDatabaseSnapshot(): Promise<TenantDatabaseSnapshot> {
  * @returns {Promise<void>}
  */
 export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<void> {
-  const { collections, objects } = payload;
-  
+  const collections = withCompleteRelationalRestoreCollections(payload.collections);
+  const { objects } = payload;
+
   await runInTransaction(async () => {
-    if (collections) {
-      for (const [name, collectionItems] of Object.entries(collections)) {
-        if (Array.isArray(collectionItems)) {
-          // Admin bulk restore: intentionally replace mirrored relational tables.
-          await dbSaveCollection(name, collectionItems, { mirrorRelationalReplace: true });
-        }
+    for (const name of sortCollectionNamesForRestore(Object.keys(collections))) {
+      const collectionItems = collections[name];
+      if (Array.isArray(collectionItems)) {
+        // Admin bulk restore: intentionally replace mirrored relational tables.
+        await dbSaveCollection(name, collectionItems, { mirrorRelationalReplace: true });
       }
     }
 

@@ -1,0 +1,226 @@
+import type React from "react";
+import { Loader2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import {
+  LLM_PROVIDERS_META,
+  type LlmConfig,
+  type LlmProviderType,
+  type LlmTestResult,
+} from "@mms/shared";
+
+export interface LlmConfigModalBodyProps {
+  editingConfig: LlmConfig | null;
+  formName: string;
+  setFormName: (value: string) => void;
+  formProvider: LlmProviderType;
+  setFormProvider: (value: LlmProviderType) => void;
+  formModel: string;
+  setFormModel: (value: string) => void;
+  formBaseUrl: string;
+  setFormBaseUrl: (value: string) => void;
+  formApiKey: string;
+  setFormApiKey: (value: string) => void;
+  formIsDefaultText: boolean;
+  setFormIsDefaultText: (value: boolean) => void;
+  formTemperature: number;
+  setFormTemperature: (value: number) => void;
+  formMaxTokens: number;
+  setFormMaxTokens: (value: number) => void;
+  formTopP: number;
+  setFormTopP: (value: number) => void;
+  fetchedModels: string[];
+  fetchingModels: boolean;
+  showCustomModelInput: boolean;
+  setShowCustomModelInput: (value: boolean) => void;
+  selectedProviderDefaultModel?: string;
+  modalTestResult: LlmTestResult | null;
+  modalTesting: boolean;
+  setModalOpen: (open: boolean) => void;
+  handleModalTestConnection: () => Promise<void>;
+  formatLlmSpeed: (wordCount: number, latencyMs: number) => string;
+  t: TranslationFunction;
+}
+
+export function LlmConfigModalBody({
+  editingConfig,
+  formName,
+  setFormName,
+  formProvider,
+  setFormProvider,
+  formModel,
+  setFormModel,
+  formBaseUrl,
+  setFormBaseUrl,
+  formApiKey,
+  setFormApiKey,
+  formIsDefaultText,
+  setFormIsDefaultText,
+  formTemperature,
+  setFormTemperature,
+  formMaxTokens,
+  setFormMaxTokens,
+  formTopP,
+  setFormTopP,
+  fetchedModels,
+  fetchingModels,
+  showCustomModelInput,
+  setShowCustomModelInput,
+  selectedProviderDefaultModel,
+  modalTestResult,
+  modalTesting,
+  setModalOpen,
+  handleModalTestConnection,
+  formatLlmSpeed,
+  t,
+}: LlmConfigModalBodyProps): React.JSX.Element {
+  return (
+    <>
+      <div className="mb-4 max-h-[50vh] min-h-0 flex-1 space-y-4 overflow-y-auto pe-1">
+        <div className="space-y-2">
+          <Label htmlFor="configName">{t("settings.llmModalName")}</Label>
+          <Input id="configName" value={formName} onChange={(event) => setFormName(event.target.value)} placeholder={t("settings.llmModalNamePlaceholder")} />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="provider">{t("settings.llmModalProvider")}</Label>
+            <FormSelect
+              id="provider"
+              value={formProvider}
+              onChange={(providerValue) => {
+                setFormProvider(providerValue as LlmProviderType);
+                const meta = LLM_PROVIDERS_META[providerValue as LlmProviderType];
+                if (meta) setFormModel(meta.defaultModel);
+              }}
+              options={Object.values(LLM_PROVIDERS_META).map((provider) => ({ value: provider.value, label: provider.label }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold">
+              <Label htmlFor="model" className="flex items-center gap-1.5">
+                {t("settings.llmModalModelSelect")}
+                {fetchingModels && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+              </Label>
+              {fetchedModels.length > 0 && (
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => setShowCustomModelInput(!showCustomModelInput)}
+                  className="min-h-11 px-2 text-xs font-normal text-primary hover:underline"
+                >
+                  {showCustomModelInput ? t("settings.llmModalSelectFromList") : t("settings.llmModalTypeManually")}
+                </Button>
+              )}
+            </div>
+            {!showCustomModelInput && fetchedModels.length > 0 ? (
+              <FormSelect id="model" value={formModel} onChange={setFormModel} options={fetchedModels.map((model) => ({ value: model, label: model }))} />
+            ) : (
+              <Input id="model" value={formModel} onChange={(event) => setFormModel(event.target.value)} placeholder={selectedProviderDefaultModel} />
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="baseUrl" className="flex items-center gap-2">
+            {t("settings.llmModalBaseUrl")}
+            <span className="rounded bg-muted px-2 py-1 text-xs font-normal text-muted-foreground">{t("settings.llmModalOptional")}</span>
+          </Label>
+          <Input id="baseUrl" value={formBaseUrl} onChange={(event) => setFormBaseUrl(event.target.value)} placeholder={t("settings.llmModalBaseUrlPlaceholder")} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="apiKey">{t("settings.llmModalApiKey")}</Label>
+          <Input
+            id="apiKey"
+            type="password"
+            value={formApiKey}
+            onChange={(event) => setFormApiKey(event.target.value)}
+            placeholder={editingConfig?.apiKey ? t("settings.llmModalApiKeyPlaceholderSaved") : t("settings.llmModalApiKeyPlaceholderEmpty")}
+          />
+        </div>
+
+        <div className="space-y-4 border-t border-border pt-4">
+          <h5 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("settings.llmModalHyperparameters")}</h5>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <Label htmlFor="temperature">{t("settings.llmModalTemperature")}</Label>
+                <span className="font-mono text-xs text-muted-foreground/80">{formTemperature.toFixed(1)}</span>
+              </div>
+              <Slider id="temperature" min={0.0} max={2.0} step={0.1} value={[formTemperature]} onValueChange={(val) => setFormTemperature(val[0])} />
+              <p className="text-xs text-muted-foreground">{t("settings.llmModalTemperatureDesc")}</p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="maxTokens" className="text-xs font-semibold">{t("settings.llmModalMaxTokens")}</Label>
+                <Input id="maxTokens" type="number" min={1} max={16384} value={formMaxTokens} onChange={(event) => setFormMaxTokens(parseInt(event.target.value, 10) || 2048)} />
+                <p className="text-xs text-muted-foreground">{t("settings.llmModalMaxTokensDesc")}</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <Label htmlFor="topP">{t("settings.llmModalTopP")}</Label>
+                  <span className="font-mono text-xs text-muted-foreground/80">{formTopP.toFixed(2)}</span>
+                </div>
+                <Slider id="topP" min={0.0} max={1.0} step={0.05} value={[formTopP]} onValueChange={(val) => setFormTopP(val[0])} />
+                <p className="text-xs text-muted-foreground">{t("settings.llmModalTopPDesc")}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-xl border bg-muted/10 p-4">
+          <div className="space-y-1">
+            <Label htmlFor="isDefault" className="text-sm font-semibold">{t("settings.llmModalSetDefault")}</Label>
+            <p className="text-xs text-muted-foreground">{t("settings.llmModalSetDefaultDesc")}</p>
+          </div>
+          <Switch id="isDefault" checked={formIsDefaultText} onCheckedChange={setFormIsDefaultText} />
+        </div>
+
+        {modalTestResult && (
+          <div className={`mt-3 rounded-xl border p-4 text-xs ${modalTestResult.success ? "border-success/20 bg-success/5 text-success" : "border-destructive/20 bg-destructive/5 text-destructive-foreground"}`}>
+            <p className="mb-1 font-semibold">{modalTestResult.success ? t("settings.llmTestSuccess") : t("settings.llmTestFailed")}</p>
+            <p className="mb-3 whitespace-pre-wrap font-mono text-xs leading-relaxed opacity-90">
+              {modalTestResult.success ? modalTestResult.response : modalTestResult.message}
+            </p>
+            {modalTestResult.success && modalTestResult.metrics && (
+              <div className="flex items-center gap-4 border-t border-success/10 pt-2 text-xs font-semibold text-success/80">
+                <span>{t("settings.llmLatency")}: {modalTestResult.metrics.latencyMs} ms</span>
+                <span>{t("settings.llmWordCount")}: {modalTestResult.metrics.wordCount}</span>
+                <span>{t("settings.llmSpeed")}: {formatLlmSpeed(modalTestResult.metrics.wordCount, modalTestResult.metrics.latencyMs)}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex shrink-0 flex-wrap justify-end gap-2.5 border-t border-border bg-card pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void handleModalTestConnection()}
+          disabled={modalTesting || (formApiKey.trim() === "" && !editingConfig)}
+          className="min-h-11 w-full px-4 text-xs sm:w-auto"
+        >
+          {modalTesting ? <Loader2 className="me-2 h-3 w-3 animate-spin" /> : null}
+          {t("settings.llmModalTestDraft")}
+        </Button>
+        <div className="hidden flex-1 sm:block" />
+        <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="min-h-11 w-full px-4 text-xs sm:w-auto">
+          {t("common.cancel")}
+        </Button>
+        <Button type="submit" disabled={!formName.trim()} className="min-h-11 w-full px-4 text-xs sm:w-auto">
+          {t("settings.llmModalApplyChanges")}
+        </Button>
+      </div>
+    </>
+  );
+}

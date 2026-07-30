@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import {
+  fetchBackupSnapshot,
   fetchDatabaseSnapshot,
   synchronizeData,
   resetToDefaults,
@@ -94,6 +95,17 @@ export default async function dbRoutes(
   // JWT + tenant binding for all db routes
   fastify.addHook('preHandler', authenticateTenant);
 
+  function sanitizeSnapshot(snapshot: TenantDatabaseSnapshot, user: User): TenantDatabaseSnapshot {
+    if (snapshot.collections) {
+      delete snapshot.collections[WORKSPACES_COLLECTION];
+      sanitizeUserCollections(snapshot.collections, user.id);
+    }
+    if (snapshot.objects) {
+      delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
+    }
+    return snapshot;
+  }
+
   // Bulk sync download: admin only
   fastify.get('/sync', async (request, reply) => {
     const user = request.user as User;
@@ -101,17 +113,22 @@ export default async function dbRoutes(
       return sendForbidden(reply, 'Only administrators can download a database snapshot');
     }
     try {
-      const snapshot = await fetchDatabaseSnapshot();
-      if (snapshot.collections) {
-        delete snapshot.collections[WORKSPACES_COLLECTION];
-        sanitizeUserCollections(snapshot.collections, user.id);
-      }
-      if (snapshot.objects) {
-        delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
-      }
-      return reply.send(snapshot);
+      return reply.send(sanitizeSnapshot(await fetchDatabaseSnapshot(), user));
     } catch (error: unknown) {
       return sendDatabaseError(reply, 'Failed to retrieve database snapshot', error);
+    }
+  });
+
+  // Backup export: admin only — document store plus authoritative relational tables
+  fastify.get('/backup', async (request, reply) => {
+    const user = request.user as User;
+    if (!canDownloadBulkSync(user)) {
+      return sendForbidden(reply, 'Only administrators can download a workspace backup');
+    }
+    try {
+      return reply.send(sanitizeSnapshot(await fetchBackupSnapshot(), user));
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, 'Failed to build workspace backup snapshot', error);
     }
   });
 
@@ -175,10 +192,16 @@ export default async function dbRoutes(
         });
         return reply.send({ success: true });
       } catch (error: unknown) {
-        const err = error as Error & { statusCode?: number };
+        const err = error as Error & { statusCode?: number; type?: string };
         if (err.statusCode === 408) {
           return reply.status(408).send({
             type: 'server_error',
+            message: err.message,
+          });
+        }
+        if (typeof err.message === 'string' && err.message.startsWith('backup.')) {
+          return reply.status(err.statusCode ?? 400).send({
+            type: err.type ?? 'validation_error',
             message: err.message,
           });
         }

@@ -1,26 +1,21 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, Check, Sparkles, Wand2 } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 import {
-  BRANDING_THEME_PRESETS,
   brandingTokenToHex,
   buildBrandingCssVariables,
-  brandingTokenToCss,
   getContrastRatio,
   meetsWcagAaTextContrast,
   meetsWcagAaUiContrast,
   normalizeBrandingHex,
-  resolveBrandingChartPaletteHex,
   suggestSecondaryColor,
-  type AppTranslationKey,
   type BrandingThemeMode,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
-import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { BrandDerivedTokens, BrandPresetPicker, BrandSemanticPreview } from '@/tenant/features/settings/components/branding/BrandColorPanelSections';
 
 interface ColorFieldProps {
   id: string;
@@ -92,28 +87,6 @@ interface BrandColorPanelProps {
   onApplyPreset: (primary: string, secondary: string) => void;
 }
 
-const DERIVED_SWATCHES: { labelKey: AppTranslationKey; token: keyof ReturnType<typeof buildBrandingCssVariables> }[] = [
-  { labelKey: 'theme.tokenPrimary', token: '--primary' },
-  { labelKey: 'theme.tokenAccent', token: '--secondary' },
-  { labelKey: 'theme.tokenMuted', token: '--muted' },
-  { labelKey: 'theme.tokenBorder', token: '--border' },
-  { labelKey: 'theme.tokenSuccess', token: '--success' },
-  { labelKey: 'theme.tokenChart1', token: '--chart-1' },
-  { labelKey: 'theme.tokenChart2', token: '--chart-2' },
-  { labelKey: 'theme.tokenSidebar', token: '--sidebar-background' },
-];
-
-function presetPrimaryContrast(
-  primaryHex: string,
-  secondaryHex: string,
-  previewMode: BrandingThemeMode,
-): number | null {
-  const tokens = buildBrandingCssVariables(primaryHex, secondaryHex, previewMode);
-  const bgHex = brandingTokenToHex(tokens['--primary'] ?? '');
-  const fgHex = brandingTokenToHex(tokens['--primary-foreground'] ?? '');
-  return getContrastRatio(fgHex, bgHex);
-}
-
 /**
  * Brand colour editor — paired palettes, accessibility checks, and semantic preview.
  */
@@ -132,20 +105,12 @@ export default function BrandColorPanel({
     [primaryColor, secondaryColor, previewMode],
   );
 
-  const chartPalette = useMemo(
-    () => resolveBrandingChartPaletteHex(primaryColor, secondaryColor, previewMode),
-    [primaryColor, secondaryColor, previewMode],
-  );
-
   const onPrimaryBg = brandingTokenToHex(tokens['--primary'] ?? '', primaryColor);
   const onPrimaryFg = brandingTokenToHex(tokens['--primary-foreground'] ?? '', '#ffffff');
   const onSecondaryBg = brandingTokenToHex(tokens['--secondary'] ?? '', secondaryColor);
   const onSecondaryFg = brandingTokenToHex(tokens['--secondary-foreground'] ?? '', '#ffffff');
   const primaryContrast = getContrastRatio(onPrimaryFg, onPrimaryBg);
   const secondaryContrast = getContrastRatio(onSecondaryFg, onSecondaryBg);
-
-  const isPresetActive = (primary: string, secondary: string): boolean =>
-    primaryColor === primary && secondaryColor === secondary;
 
   const primaryContrastLabel =
     primaryContrast !== null
@@ -160,65 +125,12 @@ export default function BrandColorPanel({
 
   return (
     <div className="space-y-5">
-      <div className="space-y-2">
-        <Label>{t('theme.palettesTitle')}</Label>
-        <p className="text-xs text-muted-foreground">{t('theme.palettesDesc')}</p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {BRANDING_THEME_PRESETS.map((preset) => {
-            const active = isPresetActive(preset.primaryColor, preset.secondaryColor);
-            const presetContrast = presetPrimaryContrast(
-              preset.primaryColor,
-              preset.secondaryColor,
-              previewMode,
-            );
-            const lowContrast =
-              presetContrast !== null && !meetsWcagAaUiContrast(presetContrast);
-            return (
-              <Button
-                key={preset.id}
-                type="button"
-                variant="ghost"
-                onClick={() => onApplyPreset(preset.primaryColor, preset.secondaryColor)}
-                className={cn(
-                  'h-auto flex items-center gap-2.5 rounded-xl border p-2.5 text-start transition-all hover:border-primary/40',
-                  active ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-muted/20',
-                )}
-              >
-                <span
-                  className="relative h-9 w-9 shrink-0 rounded-full border border-white/20 shadow-sm"
-                  style={{ backgroundColor: preset.primaryColor }}
-                >
-                  <span
-                    className="absolute -bottom-0.5 -end-0.5 h-3.5 w-3.5 rounded-full border-2 border-background"
-                    style={{ backgroundColor: preset.secondaryColor }}
-                    aria-hidden
-                  />
-                  {active ? (
-                    <Check
-                      className="absolute inset-0 m-auto h-4 w-4 text-background drop-shadow-sm"
-                      aria-hidden
-                    />
-                  ) : null}
-                  {lowContrast ? (
-                    <AlertTriangle
-                      className="absolute -start-1 -top-1 h-3 w-3 text-warning drop-shadow-sm dark:text-warning"
-                      aria-label={t('theme.presetContrastLow')}
-                    />
-                  ) : null}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-xs font-semibold text-foreground">
-                    {t(preset.labelKey)}
-                  </span>
-                  <span className="block truncate font-mono text-xs text-muted-foreground">
-                    {preset.primaryColor}
-                  </span>
-                </span>
-              </Button>
-            );
-          })}
-        </div>
-      </div>
+      <BrandPresetPicker
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+        previewMode={previewMode}
+        onApplyPreset={onApplyPreset}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ColorField
@@ -265,123 +177,18 @@ export default function BrandColorPanel({
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border">
-        <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-2">
-          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-          <p className="text-xs font-semibold text-foreground">{t('theme.semanticPreviewTitle')}</p>
-          <p className="text-xs text-muted-foreground">{t('theme.semanticPreviewDesc')}</p>
-          <span className="ms-auto">
-            <SettingsMetaBadge variant="muted">
-              {t(previewMode === 'dark' ? 'global.themeDark' : 'global.themeLight')}
-            </SettingsMetaBadge>
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-3 border-b border-border p-4 md:border-b-0 md:border-e">
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full h-auto rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm"
-              style={{ backgroundColor: onPrimaryBg, color: onPrimaryFg }}
-            >
-              {t('theme.previewPrimaryAction')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full h-auto rounded-lg border px-4 py-2.5 text-sm font-semibold"
-              style={{ backgroundColor: onSecondaryBg, color: onSecondaryFg, borderColor: onSecondaryBg }}
-            >
-              {t('theme.previewAccentAction')}
-            </Button>
-            <div className="flex flex-wrap gap-2">
-              <span
-                className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                style={{ backgroundColor: `${primaryColor}22`, color: primaryColor }}
-              >
-                {t('theme.previewStatusBadge')}
-              </span>
-              <span
-                className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                style={{ backgroundColor: `${secondaryColor}22`, color: secondaryColor }}
-              >
-                {t('theme.previewAccentBadge')}
-              </span>
-            </div>
-          </div>
-          <div className="space-y-3 p-4">
-            <div
-              className="rounded-lg border p-3"
-              style={{
-                backgroundColor: brandingTokenToCss(tokens['--muted']!),
-                borderColor: brandingTokenToCss(tokens['--border']!),
-              }}
-            >
-              <p
-                className="text-xs font-medium"
-                style={{ color: brandingTokenToCss(tokens['--foreground']!) }}
-              >
-                {t('theme.previewCardTitle')}
-              </p>
-              <p
-                className="mt-1 text-xs"
-                style={{ color: brandingTokenToCss(tokens['--muted-foreground']!) }}
-              >
-                {t('theme.previewCardBody')}
-              </p>
-            </div>
-            <div
-              className="flex items-center justify-between rounded-lg px-3 py-2"
-              style={{ backgroundColor: brandingTokenToCss(tokens['--sidebar-background']!) }}
-            >
-              <span
-                className="text-xs font-medium"
-                style={{ color: brandingTokenToCss(tokens['--sidebar-foreground']!) }}
-              >
-                {t('theme.previewSidebar')}
-              </span>
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: brandingTokenToCss(tokens['--sidebar-primary']!) }}
-                aria-hidden
-              />
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">{t('theme.chartPreviewTitle')}</p>
-              <div className="flex gap-1">
-                {chartPalette.charts.map((hex, index) => (
-                  <span
-                    key={`chart-${index}`}
-                    className="h-6 flex-1 rounded-md border border-border"
-                    style={{ backgroundColor: hex }}
-                    aria-label={t('theme.chartPreviewSwatch', { index: index + 1 })}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <BrandSemanticPreview
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+        previewMode={previewMode}
+        tokens={tokens}
+        onPrimaryBg={onPrimaryBg}
+        onPrimaryFg={onPrimaryFg}
+        onSecondaryBg={onSecondaryBg}
+        onSecondaryFg={onSecondaryFg}
+      />
 
-      <div className="space-y-2">
-        <Label>{t('theme.derivedTokensTitle')}</Label>
-        <p className="text-xs text-muted-foreground">{t('theme.derivedTokensDesc')}</p>
-        <div className="flex flex-wrap gap-2">
-          {DERIVED_SWATCHES.map((swatch) => (
-            <div
-              key={swatch.labelKey}
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-card/40 px-2 py-1.5"
-            >
-              <span
-                className="h-5 w-5 shrink-0 rounded-md border border-border"
-                style={{ backgroundColor: brandingTokenToCss(tokens[swatch.token]!) }}
-                aria-hidden
-              />
-              <span className="text-xs font-medium text-muted-foreground">{t(swatch.labelKey)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <BrandDerivedTokens tokens={tokens} />
     </div>
   );
 }

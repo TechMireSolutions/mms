@@ -1,13 +1,11 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Scale, Plus,
-} from "lucide-react";
+import { Scale } from "lucide-react";
 import {
   OBLIGATIONS_MODULE_MANIFEST,
   resolveModuleTierTab,
@@ -17,16 +15,11 @@ import {
 } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
-import { ActionButton } from "@/components/ui/ActionButton";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { ObligationsSummary as ObligationsSummaryComponent } from "@/tenant/features/obligations/components/ObligationsSummary";
-import { ObligationCollectionList } from "@/tenant/features/obligations/components/ObligationCollectionList";
-import { ObligationCollectionForm } from "@/tenant/features/obligations/components/ObligationCollectionForm";
-import { ObligationCollectionDetail } from "@/tenant/features/obligations/components/ObligationCollectionDetail";
-import { ObligationTypeManager } from "@/tenant/features/obligations/components/ObligationTypeManager";
-import { MujtahidManager } from "@/tenant/features/obligations/components/MujtahidManager";
-import { WakalaTypeManager } from "@/tenant/features/obligations/components/WakalaTypeManager";
+import { ObligationsModalLayer } from "@/tenant/features/obligations/components/ObligationsModalLayer";
+import { ObligationsPageActions } from "@/tenant/features/obligations/components/ObligationsPageActions";
+import { ObligationsReportsTier } from "@/tenant/features/obligations/components/ObligationsReportsTier";
+import { ObligationsSetupTier } from "@/tenant/features/obligations/components/ObligationsSetupTier";
+import { ObligationsWorkTier } from "@/tenant/features/obligations/components/ObligationsWorkTier";
 import {
   useObligationsTypes,
   useObligationsMujtahids,
@@ -37,13 +30,10 @@ import {
   useObligationsMutations,
   NotifiedObligationsMutationError,
 } from "@/tenant/features/obligations/hooks/useObligationsApi";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ObligationsCommandMetrics } from "@/tenant/features/obligations/components/ObligationsCommandMetrics";
 import { useObligationColumnLayout } from "@/tenant/features/obligations/hooks/useObligationColumnLayout";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { notify } from "@/lib/notify";
-
-const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof OBLIGATIONS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
   types: "obligations.types",
@@ -167,31 +157,21 @@ export default function Obligations() {
   };
 
   const handleDelete = async (id: string) => {
-    try {
+    await runTrashAction(async () => {
       await deleteCollection.mutateAsync(id);
       notify.success(t("obligations.trash.deleted"));
-    } catch (error: unknown) {
-      notify.error(t("obligations.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    });
   };
 
   const handleRestore = async (id: string) => {
-    try {
+    await runTrashAction(async () => {
       await restoreCollection.mutateAsync(id);
       notify.success(t("obligations.trash.restored"));
-    } catch (error: unknown) {
-      notify.error(t("obligations.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    });
   };
 
   const handleBulkDelete = async (ids: string[]) => {
-    try {
+    await runTrashAction(async () => {
       const result = await bulkDeleteCollections.mutateAsync(ids);
       if (result.failed > 0) {
         notify.warning(t("obligations.trash.bulkPartial", {
@@ -201,16 +181,11 @@ export default function Obligations() {
       } else {
         notify.success(t("obligations.trash.deleted"));
       }
-    } catch (error: unknown) {
-      notify.error(t("obligations.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    });
   };
 
   const handleBulkRestore = async (ids: string[]) => {
-    try {
+    await runTrashAction(async () => {
       const result = await bulkRestoreCollections.mutateAsync(ids);
       if (result.failed > 0) {
         notify.warning(t("obligations.trash.bulkPartial", {
@@ -220,10 +195,25 @@ export default function Obligations() {
       } else {
         notify.success(t("obligations.trash.restored"));
       }
+    });
+  };
+
+  const runTrashAction = async (action: () => Promise<void>): Promise<void> => {
+    try {
+      await action();
     } catch (error: unknown) {
       notify.error(t("obligations.trash.actionFailed"), {
         description: error instanceof Error ? error.message : String(error),
       });
+      throw error;
+    }
+  };
+
+  const runSetupSave = async (save: () => Promise<unknown>): Promise<void> => {
+    try {
+      await save();
+    } catch (error: unknown) {
+      notifySaveFailure(error);
       throw error;
     }
   };
@@ -243,15 +233,11 @@ export default function Obligations() {
       headerTitle={t("nav.obligations")}
       headerSubtitle={t("page.obligations.subtitle")}
       headerActions={
-        canWrite && !showDeleted ? (
-          <ActionButton
-            variant="primary"
-            icon={Plus}
-            onClick={() => setShowForm(true)}
-          >
-            {t("obligations.newCollection")}
-          </ActionButton>
-        ) : undefined
+        <ObligationsPageActions
+          canWrite={canWrite}
+          showDeleted={showDeleted}
+          onCreate={() => setShowForm(true)}
+        />
       }
       metricsStrip={
         <ObligationsCommandMetrics total={collections.length} shown={filteredCount} />
@@ -263,23 +249,14 @@ export default function Obligations() {
         onTabChange={setActiveTab}
         panelIdPrefix="obligations-tab"
       >
-      {effectiveTab === "setup" && (
-        <SubTabBar
-          tabs={CONFIG_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={effectiveConfigTab}
-          onChange={setActiveConfigTab}
-        />
-      )}
-
       <AnimatePresence mode="wait">
         <motion.div key={effectiveTab + "-" + (effectiveTab === "setup" ? effectiveConfigTab : String(showDeleted))}
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
           className="space-y-4">
 
-          <ErrorBoundary>
           {effectiveTab === "reports" && (
-            <ObligationsSummaryComponent
+            <ObligationsReportsTier
               collections={collections}
               obligationTypes={obligationTypes}
               reps={reps}
@@ -289,151 +266,70 @@ export default function Obligations() {
             />
           )}
 
-          {effectiveTab === "work" && listLoadFailed && (
-            <ErrorState
-              title={t("obligations.loadFailed")}
-              onRetry={() => { void collectionsResult.queryResult.refetch(); }}
-            />
-          )}
-
-          {effectiveTab === "work" && !listLoadFailed && (
-            <div className="space-y-4">
-              <ObligationCollectionList
-                collections={collections}
-                obligationTypes={obligationTypes}
-                reps={reps}
-                mujtahids={mujtahids}
-                onAddNew={() => setShowForm(true)}
-                onView={setViewCollection}
-                onFilteredCountChange={setFilteredCount}
-                canWrite={canWrite}
-                canDelete={canDelete}
-                showDeleted={showDeleted}
-                onToggleShowDeleted={() => setShowDeleted((prev) => !prev)}
-                onDelete={handleDelete}
-                onRestore={handleRestore}
-                onBulkDelete={handleBulkDelete}
-                onBulkRestore={handleBulkRestore}
-                isColumnVisible={columnLayout.isColumnVisible}
-                getColumnWidth={columnLayout.getColumnWidth}
-                onColumnResize={columnLayout.setColumnWidth}
-                columnCustomizer={{
-                  columnRegistry: columnLayout.columnRegistry,
-                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
-                  labels: columnLayout.customizerLabels,
-                }}
-                onMessage={canWriteMessaging && !showDeleted ? handleMessageCollections : undefined}
-              />
-            </div>
-          )}
-
-          {effectiveTab === "setup" && !canEditSetup && (
-            <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-              {t("obligations.setup.readOnly")}
-            </p>
-          )}
-
-          {effectiveTab === "setup" && canEditSetup && effectiveConfigTab === "types" && (
-            <ObligationTypeManager
-              types={obligationTypes}
-              onChange={async (next) => {
-                try {
-                  await replaceTypes.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
-            />
-          )}
-
-          {effectiveTab === "setup" && canEditSetup && effectiveConfigTab === "mujtahids" && (
-            <MujtahidManager
-              mujtahids={mujtahids}
-              reps={reps}
-              onChangeMujtahids={async (next) => {
-                try {
-                  await replaceMujtahids.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
-              onChangeReps={async (next) => {
-                try {
-                  await replaceReps.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
-            />
-          )}
-
-          {effectiveTab === "setup" && canEditSetup && effectiveConfigTab === "wakala" && (
-            <WakalaTypeManager
-              wakalaTypes={wakalaTypes}
-              distributions={distributions}
+          {effectiveTab === "work" && (
+            <ObligationsWorkTier
+              collections={collections}
               obligationTypes={obligationTypes}
               reps={reps}
               mujtahids={mujtahids}
-              onChangeWakala={async (next) => {
-                try {
-                  await replaceWakala.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
-              onChangeDistributions={async (next) => {
-                try {
-                  await replaceDistributions.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
+              listLoadFailed={listLoadFailed}
+              canWrite={canWrite}
+              canDelete={canDelete}
+              showDeleted={showDeleted}
+              canWriteMessaging={canWriteMessaging}
+              columnLayout={columnLayout}
+              onAddNew={() => setShowForm(true)}
+              onView={setViewCollection}
+              onFilteredCountChange={setFilteredCount}
+              onToggleShowDeleted={() => setShowDeleted((prev) => !prev)}
+              onDelete={handleDelete}
+              onRestore={handleRestore}
+              onBulkDelete={handleBulkDelete}
+              onBulkRestore={handleBulkRestore}
+              onRetry={() => { void collectionsResult.queryResult.refetch(); }}
+              onMessage={handleMessageCollections}
             />
           )}
-          </ErrorBoundary>
+
+          {effectiveTab === "setup" && (
+            <ObligationsSetupTier
+              tabs={CONFIG_SUB_TABS}
+              activeTab={effectiveConfigTab}
+              canEditSetup={canEditSetup}
+              obligationTypes={obligationTypes}
+              mujtahids={mujtahids}
+              reps={reps}
+              wakalaTypes={wakalaTypes}
+              distributions={distributions}
+              onTabChange={setActiveConfigTab}
+              onChangeTypes={(next) => runSetupSave(() => replaceTypes.mutateAsync(next))}
+              onChangeMujtahids={(next) => runSetupSave(() => replaceMujtahids.mutateAsync(next))}
+              onChangeReps={(next) => runSetupSave(() => replaceReps.mutateAsync(next))}
+              onChangeWakala={(next) => runSetupSave(() => replaceWakala.mutateAsync(next))}
+              onChangeDistributions={(next) => runSetupSave(() => replaceDistributions.mutateAsync(next))}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <AnimatePresence>
-        {showForm && canWrite && !showDeleted && (
-          <ObligationCollectionForm
-            obligationTypes={obligationTypes}
-            reps={reps}
-            mujtahids={mujtahids}
-            wakalaTypes={wakalaTypes}
-            existingCollections={collections}
-            onSave={handleSaveCollection}
-            onClose={() => setShowForm(false)}
-          />
-        )}
-        {viewCollection && (
-          <ObligationCollectionDetail
-            collection={viewCollection}
-            obligationTypes={obligationTypes}
-            reps={reps}
-            mujtahids={mujtahids}
-            wakalaTypes={wakalaTypes}
-            distributions={distributions}
-            onClose={() => setViewCollection(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {messagingTarget && (
-        <React.Suspense fallback={null}>
-          <MessageComposer
-            channel={messagingTarget.channel}
-            recipients={messagingTarget.recipients}
-            onClose={closeComposer}
-          />
-        </React.Suspense>
-      )}
+      <ObligationsModalLayer
+        showForm={showForm}
+        canWrite={canWrite}
+        showDeleted={showDeleted}
+        viewCollection={viewCollection}
+        obligationTypes={obligationTypes}
+        reps={reps}
+        mujtahids={mujtahids}
+        wakalaTypes={wakalaTypes}
+        distributions={distributions}
+        collections={collections}
+        messagingTarget={messagingTarget}
+        onSaveCollection={handleSaveCollection}
+        onCloseForm={() => setShowForm(false)}
+        onCloseDetail={() => setViewCollection(null)}
+        onCloseComposer={closeComposer}
+      />
     </ModulePageShell>
   );
 }

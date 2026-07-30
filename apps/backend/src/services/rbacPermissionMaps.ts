@@ -52,6 +52,7 @@ export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   custom_tabs: 'configuration.view',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.read,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.read,
+  saved_reports: 'analytics.view',
 };
 
 export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
@@ -86,6 +87,7 @@ export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   custom_tabs: 'settings.global.write',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.write,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.write,
+  saved_reports: 'settings.global.write',
 };
 
 /** Distinct delete permission when the module manifest defines one; else write. */
@@ -217,6 +219,9 @@ export const ALLOWED_COLLECTIONS = new Set([
   'studentDiscountTypes',
   'backups',
   'custom_tabs',
+  'message_templates',
+  'message_logs',
+  'saved_reports',
 ]);
 
 export const ALLOWED_OBJECTS = new Set([

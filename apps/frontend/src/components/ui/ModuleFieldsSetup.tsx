@@ -3,11 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Info, Layout, GripVertical, Plus, Trash2, Pencil } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FormModal } from "@/components/ui/FormModal";
 import { CoreFieldEditorList } from "@/components/ui/CoreFieldEditorList";
 import { CustomFieldsBuilder, type CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
+import { ModuleFieldsSetupTabModals } from "@/components/ui/ModuleFieldsSetupTabModals";
 import { type FieldDefinition, type TabDefinition, toTitleCase } from "@mms/shared";
 
 interface UseFieldsEditorResult {
@@ -263,69 +262,18 @@ export function ModuleFieldsSetup({
         </div>
       </div>
 
-      {/* Add Tab Modal */}
-      <FormModal
-        open={isAddTabModalOpen}
-        onClose={() => {
-          setIsAddTabModalOpen(false);
-          setNewTabLabel("");
-        }}
-        title={t("contacts.setup.addCustomTab")}
-        icon={Plus}
-        onSave={() => {
-          handleAddTabLocal(newTabLabel);
-          setIsAddTabModalOpen(false);
-          setNewTabLabel("");
-        }}
-        saveDisabled={!newTabLabel.trim()}
-        saveLabel={t("contacts.setup.addTab")}
-      >
-        <div className="space-y-3 text-start">
-          <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">
-            {t("contacts.setup.customTabName")} *
-          </label>
-          <Input
-            id="newTabLabel"
-            value={newTabLabel}
-            onChange={(event) => setNewTabLabel(event.target.value)}
-            placeholder={t("contacts.setup.addCustomTabPlaceholder")}
-            autoFocus
-          />
-        </div>
-      </FormModal>
-
-      {/* Rename Tab Modal */}
-      <FormModal
-        open={renamingTabKey !== null}
-        onClose={() => {
-          setRenamingTabKey(null);
-          setRenameTabLabel("");
-        }}
-        title={t("contacts.setup.renameTab")}
-        icon={Pencil}
-        onSave={() => {
-          if (renamingTabKey) {
-            handleRenameTabLocal(renamingTabKey, renameTabLabel);
-          }
-          setRenamingTabKey(null);
-          setRenameTabLabel("");
-        }}
-        saveDisabled={!renameTabLabel.trim()}
-        saveLabel={t("contacts.setup.renameTabButton")}
-      >
-        <div className="space-y-3 text-start">
-          <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">
-            {t("contacts.setup.customTabName")} *
-          </label>
-          <Input
-            id="renameTabLabel"
-            value={renameTabLabel}
-            onChange={(event) => setRenameTabLabel(event.target.value)}
-            placeholder={t("contacts.setup.addCustomTabPlaceholder")}
-            autoFocus
-          />
-        </div>
-      </FormModal>
+      <ModuleFieldsSetupTabModals
+        isAddTabModalOpen={isAddTabModalOpen}
+        setIsAddTabModalOpen={setIsAddTabModalOpen}
+        newTabLabel={newTabLabel}
+        setNewTabLabel={setNewTabLabel}
+        onAddTab={handleAddTabLocal}
+        renamingTabKey={renamingTabKey}
+        setRenamingTabKey={setRenamingTabKey}
+        renameTabLabel={renameTabLabel}
+        setRenameTabLabel={setRenameTabLabel}
+        onRenameTab={handleRenameTabLocal}
+      />
     </div>
   );
 }

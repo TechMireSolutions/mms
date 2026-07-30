@@ -1873,6 +1873,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "backup.historyCount": "{count} من {max} تصديرات محفوظة",
   "backup.invalidFormat": "الملف ليس نسخة MMS صالحة.",
   "backup.missingAdminUser": "الملف الاحتياطي لا يحتوي على أي مستخدم بصلاحية مسؤول. استعادة هذا قد تؤدي إلى قفل حسابك.",
+  "backup.missingUserCredentials": "لا يمكن إكمال الاستعادة لأن بعض المستخدمين لا يملكون كلمة مرور قابلة للاسترداد في مساحة العمل هذه. استعد في نفس مساحة العمل التي أنشأت النسخة، أو أعد تعيين كلمات المرور يدوياً.",
   "backup.securityViolation": "فشل فحص الأمان. يحتوي ملف النسخة الاحتياطية على مفاتيح غير صالحة أو بيانات غير مسموح بها.",
   "backup.emptyBackup": "ملف النسخة لا يحتوي بيانات.",
   "backup.noData": "لا توجد بيانات نسخة",

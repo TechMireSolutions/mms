@@ -1,17 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { Download, FileSpreadsheet, FileText, Printer, Settings as SettingsIcon } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { formatDate, todayISO, buildCsvContent } from "@mms/shared";
-import { triggerFileDownload } from "@/lib/download";
+import {
+  exportExcel,
+  exportPdf,
+  type ExportColumn,
+} from "@/components/ui/exportToolbarUtils";
 
 
-export interface ExportColumn {
-  header: string;
-  key: string;
-}
+export type { ExportColumn } from "@/components/ui/exportToolbarUtils";
 
 export interface ExportToolbarProps {
   title: string;
@@ -27,38 +26,6 @@ export interface ExportToolbarProps {
   headers?: string[];
   // Layout variant
   variant?: "default" | "compact";
-}
-
-function downloadExcelFallback(columns: ExportColumn[], rows: Record<string, unknown>[], filename: string) {
-  const { headers, data } = extractExportTable(columns, rows);
-  const csv = buildCsvContent([headers, ...data]);
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  triggerFileDownload(blob, `${filename}.csv`);
-}
-
-function extractExportTable(
-  columns?: ExportColumn[],
-  rows: Record<string, unknown>[] = [],
-  headers?: string[]
-) {
-  if (columns && columns.length > 0) {
-    const tableHeaders = columns.map((col) => col.header);
-    const tableData = rows.map((row) =>
-      columns.map((col) => (row[col.key] != null ? (row[col.key] as string | number | boolean) : ""))
-    );
-    const mappedObjects = rows.map((row) => {
-      const obj: Record<string, unknown> = {};
-      columns.forEach((col) => {
-        obj[col.header] = row[col.key] ?? "";
-      });
-      return obj;
-    });
-    return { headers: tableHeaders, data: tableData, mappedObjects };
-  }
-
-  const tableHeaders = headers || (rows.length > 0 ? Object.keys(rows[0]) : []);
-  const tableData = rows.map((row) => Object.values(row) as (string | number | boolean)[]);
-  return { headers: tableHeaders, data: tableData, mappedObjects: rows };
 }
 
 export function ExportToolbar({
@@ -113,73 +80,29 @@ export function ExportToolbar({
   };
 
   const handleExcelExport = async (): Promise<void> => {
-    if (finalRows.length === 0) return;
-
-    if (moduleId) {
-      runGridCsvExportJob({
-        moduleId,
-        label: exportLabel || title,
-        filename: resolvedFilename,
-        columns: finalColumns,
-        rows: finalRows,
-      });
-      return;
-    }
-
-    try {
-      const XLSX = await import("xlsx");
-      const { mappedObjects } = extractExportTable(columns, finalRows, headers);
-      const worksheet = XLSX.utils.json_to_sheet(mappedObjects);
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-      XLSX.writeFile(workbook, `${resolvedFilename}_${todayISO()}.xlsx`);
-    } catch {
-      // Fallback to local CSV download if xlsx chunk fails to load
-      downloadExcelFallback(finalColumns, finalRows, resolvedFilename);
-    }
+    await exportExcel({
+      title,
+      columns: finalColumns,
+      rows: finalRows,
+      filename: resolvedFilename,
+      moduleId,
+      exportLabel,
+      sourceColumns: columns,
+      sourceHeaders: headers,
+    });
   };
 
   const handlePdfExport = async (): Promise<void> => {
-    if (finalRows.length === 0) return;
-
-    const [jsPDFModule, autoTableModule] = await Promise.all([
-      import("jspdf"),
-      import("jspdf-autotable"),
-    ]);
-    const jsPDF = jsPDFModule.default;
-    const autoTable = autoTableModule.default;
-
-    // Use landscape default for compact variant ( ObligationsSummary default )
-    const resolvedOrientation = resolvedVariant === "compact" ? "landscape" : orientation;
-
-    const doc = new jsPDF({
-      orientation: resolvedOrientation as "p" | "l" | "portrait" | "landscape",
-      unit: "mm",
-      format: formatSize,
+    await exportPdf({
+      title,
+      rows: finalRows,
+      filename: resolvedFilename,
+      orientation,
+      formatSize,
+      variant: resolvedVariant,
+      sourceColumns: columns,
+      sourceHeaders: headers,
     });
-
-    // Draw Title & Metadata
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    doc.text(title, 14, 14);
-
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(120);
-    doc.text(`Generated: ${formatDate(new Date())}  |  ${finalRows.length} record${finalRows.length !== 1 ? "s" : ""}`, 14, 20);
-    doc.setTextColor(0);
-
-    const { headers: tableHeaders, data: tableData } = extractExportTable(columns, finalRows, headers);
-
-    autoTable(doc, {
-      head: [tableHeaders],
-      body: tableData as (string | number | boolean)[][],
-      startY: 26,
-      styles: { fontSize: resolvedOrientation === "l" || resolvedOrientation === "landscape" ? 8 : 10 },
-    });
-
-    doc.save(`${resolvedFilename}_${todayISO()}.pdf`);
   };
 
 

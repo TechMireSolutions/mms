@@ -4,41 +4,24 @@ import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  UserPlus, GraduationCap, Filter, ChevronDown, Users, RotateCcw,
-} from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { UserPlus, GraduationCap } from "lucide-react";
 import { notify } from "@/lib/notify";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-  DropdownMenuRadioGroup, DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SearchBar } from "@/components/ui/SearchBar";
-import { FilterChips } from "@/components/ui/FilterChips";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ErrorState } from "@/components/ui/ErrorState";
 
-import StudentList from "@/tenant/features/students/components/StudentList";
 import StudentForm from "@/tenant/features/students/components/StudentForm";
-import StudentsSettings from "@/tenant/features/students/components/StudentsSettings";
-import { type Student, STUDENTS_MODULE_MANIFEST, toTitleCase, resolveStudentStatuses } from "@mms/shared";
-import { studentStatusLabel } from "@/lib/students/studentStatusUi";
+import { type Student, STUDENTS_MODULE_MANIFEST, resolveStudentStatuses } from "@mms/shared";
 
 
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import { useStudentCount } from "@/tenant/features/students/hooks/useStudentCount";
 import { useStudentsPaginated, useStudentMutations, type StudentRecord } from "@/tenant/features/students/hooks/useStudents";
 import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
-import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { TableSkeleton } from "@/components/ui/LoadingState";
+import { StudentsReportsTier } from "@/tenant/features/students/components/StudentsReportsTier";
+import { StudentsSetupTier } from "@/tenant/features/students/components/StudentsSetupTier";
+import { StudentsWorkTier } from "@/tenant/features/students/components/StudentsWorkTier";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useGrMigration } from "@/tenant/features/students/hooks/useGrMigration";
 
@@ -78,14 +61,7 @@ export default function Students() {
 
   useGrMigration(settings, updateStudent, activeTab, canWrite);
 
-  const {
-    columnRegistry,
-    isColumnVisible,
-    getColumnWidth,
-    setColumnWidth,
-    updateUserColumnLayout,
-    customizerLabels,
-  } = useStudentColumnLayout(settings);
+  const columnLayout = useStudentColumnLayout(settings);
 
   const [studentSearch, setStudentSearch] = useState("");
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
@@ -151,17 +127,6 @@ export default function Students() {
         : [...selectedStatuses, status],
     );
 
-  const studentFilterChips = [
-    ...studentFilterStatus.map((status) => ({
-      key: status,
-      label: studentStatusLabel(t, status),
-      onRemove: () => toggleStudentStatus(status),
-    })),
-    ...(studentFilterGender
-      ? [{ key: "gender", label: toTitleCase(studentFilterGender), onRemove: () => setStudentFilterGender("") }]
-      : []),
-  ];
-
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t("nav.students")}`}
@@ -196,225 +161,56 @@ export default function Students() {
       >
       <AnimatePresence mode="wait">
         {activeTab === "work" ? (
-          <motion.div
-            key="work"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="space-y-5"
-          >
-            <div className="flex flex-col sm:flex-row gap-3 bg-card/40 backdrop-blur-xl border border-border/50 p-3 rounded-2xl shadow-sm">
-              <SearchBar
-                value={studentSearch}
-                onChange={setStudentSearch}
-                placeholder={t("students.searchPlaceholder")}
-                className="flex-1"
-              />
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${
-                      studentFilterStatus.length > 0
-                        ? "border-primary/30 bg-primary/5 text-primary"
-                        : "border-border bg-card text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <Filter className="w-3.5 h-3.5" /> {t("students.columns.status")}
-                    {studentFilterStatus.length > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                        {studentFilterStatus.length}
-                      </span>
-                    )}
-                    <ChevronDown className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuLabel className="text-xs">{t("students.filterByStatus")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {studentFilterStatus.length > 0 && (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => setStudentFilterStatus([])}
-                        className="text-xs text-muted-foreground hover:text-foreground cursor-pointer flex items-center justify-between"
-                      >
-                        <span>{t("students.clearAllFilters")}</span>
-                        <RotateCcw className="w-3 h-3 ms-1" />
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </>
-                  )}
-                  {studentStatusOptions.map((status) => (
-                    <DropdownMenuCheckboxItem
-                      key={status}
-                      checked={studentFilterStatus.includes(status)}
-                      onCheckedChange={() => toggleStudentStatus(status)}
-                    >
-                      {studentStatusLabel(t, status)}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${
-                      studentFilterGender
-                        ? "border-primary/30 bg-primary/5 text-primary"
-                        : "border-border bg-card text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <Users className="w-3.5 h-3.5" />
-                    {studentFilterGender
-                      ? toTitleCase(studentFilterGender)
-                      : t("students.gender")}
-                    <ChevronDown className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-36">
-                  <DropdownMenuRadioGroup
-                    value={studentFilterGender}
-                    onValueChange={setStudentFilterGender}
-                  >
-                    {["", ...genderFilters].map((genderFilter) => (
-                      <DropdownMenuRadioItem key={genderFilter || "all"} value={genderFilter}>
-                        {genderFilter ? toTitleCase(genderFilter) : t("students.allGenders")}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {canDelete && (
-                <ModuleTrashToggle
-                  showDeleted={showDeleted}
-                  onToggle={() => setShowDeleted((previous) => !previous)}
-                  showActiveLabel={t("students.showActive")}
-                  showDeletedLabel={t("students.showDeleted")}
-                  className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-                    showDeleted
-                      ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
-                  }`}
-                />
-              )}
-
-              <ModuleColumnCustomizer
-                columnRegistry={columnRegistry}
-                updateUserColumnLayout={updateUserColumnLayout}
-                labels={customizerLabels}
-              />
-            </div>
-
-            <FilterChips
-              chips={studentFilterChips}
-              onClearAll={() => {
-                setStudentFilterStatus([]);
-                setStudentFilterGender("");
-              }}
-            />
-
-            {workTruncated && (
-              <p className="text-xs text-muted-foreground px-1">
-                {t("students.workTruncated", {
-                  limit: workLimit,
-                  total: shownCount,
-                })}
-              </p>
-            )}
-
-            <ErrorBoundary>
-              {isWorkPageLoading ? (
-                <TableSkeleton rows={6} cols={columnRegistry.length} />
-              ) : isWorkPageError ? (
-                <ErrorState
-                  title={t("students.loadFailed")}
-                  onRetry={() => void refetchWorkPage()}
-                />
-              ) : (
-                <>
-                  <StudentList
-                    students={workStudents}
-                    layout={settings.defaultViewLayout}
-                    isColumnVisible={isColumnVisible}
-                    getColumnWidth={getColumnWidth}
-                    onColumnResize={setColumnWidth}
-                    showDeleted={showDeleted}
-                    canWrite={canWrite}
-                    canDelete={canDelete}
-                    serverPagination={
-                      isListView && workPageData && !showDeleted
-                        ? {
-                            total: workPageData.total,
-                            page: workPageData.page,
-                            limit: workPageData.limit,
-                            hasMore: workPageData.hasMore,
-                          }
-                        : undefined
-                    }
-                    onEdit={(studentToEdit: Student) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
-                    onDelete={(studentId: string) => deleteStudent.mutate(String(studentId))}
-                    onRestore={(studentId: string) => {
-                      restoreStudent.mutate(String(studentId), {
-                        onSuccess: () => notify.success(t("students.restoreSuccess")),
-                      });
-                    }}
-                    onBulkDelete={(studentIds) => bulkDeleteStudents.mutate(studentIds.map(String))}
-                    onBulkRestore={(studentIds) => {
-                      bulkRestoreStudents.mutate(studentIds.map(String), {
-                        onSuccess: () => notify.success(t("students.restoreSuccess")),
-                      });
-                    }}
-                    onBulkStatusChange={(studentIds, status) => bulkUpdateStudentStatus.mutate({ ids: studentIds.map(String), status })}
-                  />
-                  {useServerWork && isListView && workPageData && !showDeleted && (
-                    <ListPagination
-                      page={workPageData.page}
-                      total={workPageData.total}
-                      limit={workPageData.limit}
-                      hasMore={workPageData.hasMore}
-                      onPageChange={setListPage}
-                      i18nNamespace="students"
-                      variant="range"
-                    />
-                  )}
-                  {useServerWork && isWorkPageFetching && (
-                    <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
-                  )}
-                </>
-              )}
-            </ErrorBoundary>
-          </motion.div>
+          <StudentsWorkTier
+            studentSearch={studentSearch}
+            studentFilterStatus={studentFilterStatus}
+            studentFilterGender={studentFilterGender}
+            studentStatusOptions={studentStatusOptions}
+            genderFilters={genderFilters}
+            showDeleted={showDeleted}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            workStudents={workStudents}
+            workPageData={workPageData}
+            isWorkPageLoading={isWorkPageLoading}
+            isWorkPageError={isWorkPageError}
+            isWorkPageFetching={isWorkPageFetching}
+            useServerWork={useServerWork}
+            isListView={isListView}
+            workLimit={workLimit}
+            shownCount={shownCount}
+            workTruncated={workTruncated}
+            defaultViewLayout={settings.defaultViewLayout}
+            columnLayout={columnLayout}
+            onSearchChange={setStudentSearch}
+            onToggleStatus={toggleStudentStatus}
+            onGenderChange={setStudentFilterGender}
+            onToggleDeleted={() => setShowDeleted((previous) => !previous)}
+            onClearFilters={() => {
+              setStudentFilterStatus([]);
+              setStudentFilterGender("");
+            }}
+            onRetry={() => void refetchWorkPage()}
+            onPageChange={setListPage}
+            onEdit={(studentToEdit) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
+            onDelete={(studentId) => deleteStudent.mutate(String(studentId))}
+            onRestore={(studentId) => {
+              restoreStudent.mutate(String(studentId), {
+                onSuccess: () => notify.success(t("students.restoreSuccess")),
+              });
+            }}
+            onBulkDelete={(studentIds) => bulkDeleteStudents.mutate(studentIds.map(String))}
+            onBulkRestore={(studentIds) => {
+              bulkRestoreStudents.mutate(studentIds.map(String), {
+                onSuccess: () => notify.success(t("students.restoreSuccess")),
+              });
+            }}
+            onBulkStatusChange={(studentIds, status) => bulkUpdateStudentStatus.mutate({ ids: studentIds.map(String), status })}
+          />
         ) : activeTab === "reports" ? (
-          <motion.div
-            key="reports"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            <ErrorBoundary>
-              <ModuleReports category="students" />
-            </ErrorBoundary>
-          </motion.div>
+          <StudentsReportsTier />
         ) : activeTab === "setup" ? (
-          <motion.div
-            key="setup"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            <ErrorBoundary>
-              <StudentsSettings />
-            </ErrorBoundary>
-          </motion.div>
+          <StudentsSetupTier />
         ) : null}
       </AnimatePresence>
       </ResponsiveAccordionTabs>

@@ -1,28 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Info } from "lucide-react";
-import { Session, Class } from "@/lib/data/sessionsData";
 import { METADATA_FIELDS } from "@/tenant/features/reports/components/reportMetadata";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
-import { FORM_LABEL } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
 import { useWidgetCollections } from "@/lib/reports/useReportCollections";
-import { isListSummaryWidgetType } from "@/components/dashboard-widgets/registry";
-import {
-  WidgetBuilderCardRoleOptions,
-  WidgetBuilderCardTextOptions,
-  WidgetBuilderIconPicker,
-  type WidgetBuilderIconTab,
-} from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderCardOptions";
-import {
-  WidgetBuilderSwitchOptions,
-  type SwitchRecordOption,
-} from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderSwitchOptions";
-import { WidgetBuilderThresholdOptions } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderThresholdOptions";
+import { type WidgetBuilderIconTab } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderCardOptions";
 import { WidgetBuilderPreview } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderPreview";
-import { WidgetBuilderTypeSelector } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderTypeSelector";
-import { WidgetBuilderMetricOptions } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderMetricOptions";
-import { WidgetBuilderColorOptions } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderColorOptions";
+import { WidgetBuilderHeader } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderHeader";
+import { WidgetBuilderOptionsPanel } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderOptionsPanel";
+import { useWidgetBuilderRecordOptions } from "@/tenant/features/reports/components/pinnedWidgets/useWidgetBuilderRecordOptions";
 
 interface WidgetBuilderProps {
   initialCollection: CustomWidget["collection"];
@@ -150,26 +135,7 @@ export function WidgetBuilder({
     }
   }, [editWidgetConfig, initialCollection, t]);
 
-  // Load record options for DB Record switch selector
-  const dbRecordsList = useMemo<SwitchRecordOption[]>(() => {
-    if (switchCollection === "sessions") {
-      const sessionRecords = (collections.sessions || []) as Session[];
-      return sessionRecords.flatMap((session: Session) => 
-        (session.classes || []).map((sessionClass: Class) => ({ id: sessionClass.id, label: `${session.name} - ${sessionClass.name}` }))
-      );
-    }
-    const collectionRecords = (collections[switchCollection] || []) as { id?: string | number; name?: string; studentName?: string; invoiceNo?: string }[];
-    return collectionRecords.map((collectionRecord) => ({
-      id: String(collectionRecord.id),
-      label: String(collectionRecord.name || collectionRecord.studentName || collectionRecord.invoiceNo || collectionRecord.id)
-    }));
-  }, [switchCollection, collections]);
-
-  useEffect(() => {
-    if (dbRecordsList.length > 0 && !switchRecordId) {
-      setSwitchRecordId(dbRecordsList[0].id);
-    }
-  }, [dbRecordsList, switchRecordId]);
+  const dbRecordsList = useWidgetBuilderRecordOptions({ collections, switchCollection, switchRecordId, setSwitchRecordId });
 
   // Update builder fields when collection changes
   useEffect(() => {
@@ -267,132 +233,30 @@ export function WidgetBuilder({
     });
   };
 
+  const titleState = { builderTitle, setBuilderTitle };
+  const metricState = { builderCollection, setBuilderCollection, builderOperation, setBuilderOperation, builderTargetField, setBuilderTargetField, builderFilterField, setBuilderFilterField, builderFilterOperator, setBuilderFilterOperator, builderFilterValue, setBuilderFilterValue, builderColor, setBuilderColor };
+  const thresholdState = { thresholdEnabled, setThresholdEnabled, thresholdCondition, setThresholdCondition, thresholdValue, setThresholdValue, thresholdColor, setThresholdColor };
+  const switchState = { switchActionType, setSwitchActionType, switchStateKey, setSwitchStateKey, switchCollection, setSwitchCollection, switchRecordId, setSwitchRecordId, switchLabelOn, setSwitchLabelOn, switchLabelOff, setSwitchLabelOff };
+  const cardState = { builderIcon, setBuilderIcon, subTextType, setSubTextType, fixedSubText, setFixedSubText, trend, setTrend, trendType, setTrendType, builderRole, setBuilderRole };
+  const iconState = { iconSearch, setIconSearch, activeIconTab, setActiveIconTab };
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-lg p-6 space-y-4 font-sans text-start">
-      {/* Builder Header Warning banner detailing Single-Metric rule */}
-      <div className="pb-3 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <h4 className="text-sm font-bold text-foreground font-sans">{t("reports.widgets.builder.title")}</h4>
-          <p className="text-xs text-muted-foreground">{t("reports.widgets.builder.subtitle")}</p>
-        </div>
-        <div className="flex items-start gap-2 bg-primary/10 border border-primary/20 p-2.5 rounded-xl max-w-sm">
-          <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-normal">
-            <span className="font-black text-primary uppercase block mb-0.5">{t("reports.widgets.builder.singleMetricRule")}</span>
-            {t("reports.widgets.builder.singleMetricRuleDesc")}
-          </p>
-        </div>
-      </div>
+      <WidgetBuilderHeader />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
-        {/* Architect Inputs Column */}
-        <div className="lg:col-span-2 space-y-4">
-          
-          <WidgetBuilderTypeSelector
-            builderCollection={builderCollection}
-            widgetType={widgetType}
-            setWidgetType={setWidgetType}
-            setBuilderOperation={setBuilderOperation}
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Title field */}
-            <div className="space-y-1">
-              <label className={FORM_LABEL}>{t("reports.widgets.builder.labelTitle")}</label>
-              <Input
-                type="text"
-                value={builderTitle}
-                onChange={(event) => setBuilderTitle(event.target.value)}
-                placeholder={t("reports.widgets.builder.placeholderTitle")}
-                className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
-              />
-            </div>
-
-            {widgetType === "card" && mode === "dashboard" && (
-              <WidgetBuilderCardRoleOptions
-                builderRole={builderRole}
-                setBuilderRole={setBuilderRole}
-              />
-            )}
-
-            {widgetType !== "switch" && !isListSummaryWidgetType(widgetType) ? (
-              <WidgetBuilderMetricOptions
-                builderCollection={builderCollection}
-                setBuilderCollection={setBuilderCollection}
-                builderOperation={builderOperation}
-                setBuilderOperation={setBuilderOperation}
-                builderTargetField={builderTargetField}
-                setBuilderTargetField={setBuilderTargetField}
-                builderFilterField={builderFilterField}
-                setBuilderFilterField={setBuilderFilterField}
-                builderFilterOperator={builderFilterOperator}
-                setBuilderFilterOperator={setBuilderFilterOperator}
-                builderFilterValue={builderFilterValue}
-                setBuilderFilterValue={setBuilderFilterValue}
-              >
-                {widgetType === "card" && (
-                  <WidgetBuilderCardTextOptions
-                    subTextType={subTextType}
-                    setSubTextType={setSubTextType}
-                    fixedSubText={fixedSubText}
-                    setFixedSubText={setFixedSubText}
-                    trend={trend}
-                    setTrend={setTrend}
-                    trendType={trendType}
-                    setTrendType={setTrendType}
-                  />
-                )}
-              </WidgetBuilderMetricOptions>
-            ) : (
-              <WidgetBuilderSwitchOptions
-                switchActionType={switchActionType}
-                setSwitchActionType={setSwitchActionType}
-                switchStateKey={switchStateKey}
-                setSwitchStateKey={setSwitchStateKey}
-                switchCollection={switchCollection}
-                setSwitchCollection={setSwitchCollection}
-                switchRecordId={switchRecordId}
-                setSwitchRecordId={setSwitchRecordId}
-                switchLabelOn={switchLabelOn}
-                setSwitchLabelOn={setSwitchLabelOn}
-                switchLabelOff={switchLabelOff}
-                setSwitchLabelOff={setSwitchLabelOff}
-                dbRecordsList={dbRecordsList}
-              />
-            )}
-          </div>
-
-          {/* Threshold alerts options for KPI/Progress */}
-          {widgetType !== "switch" && !isListSummaryWidgetType(widgetType) && (
-            <WidgetBuilderThresholdOptions
-              thresholdEnabled={thresholdEnabled}
-              setThresholdEnabled={setThresholdEnabled}
-              thresholdCondition={thresholdCondition}
-              setThresholdCondition={setThresholdCondition}
-              thresholdValue={thresholdValue}
-              setThresholdValue={setThresholdValue}
-              thresholdColor={thresholdColor}
-              setThresholdColor={setThresholdColor}
-            />
-          )}
-
-          <WidgetBuilderColorOptions
-            builderColor={builderColor}
-            setBuilderColor={setBuilderColor}
-          />
-
-          {widgetType === "card" && (
-            <WidgetBuilderIconPicker
-              builderIcon={builderIcon}
-              setBuilderIcon={setBuilderIcon}
-              iconSearch={iconSearch}
-              setIconSearch={setIconSearch}
-              activeIconTab={activeIconTab}
-              setActiveIconTab={setActiveIconTab}
-            />
-          )}
-
-        </div>
+        <WidgetBuilderOptionsPanel
+          mode={mode}
+          widgetType={widgetType}
+          setWidgetType={setWidgetType}
+          titleState={titleState}
+          metricState={metricState}
+          thresholdState={thresholdState}
+          switchState={switchState}
+          cardState={cardState}
+          iconState={iconState}
+          dbRecordsList={dbRecordsList}
+        />
 
         <WidgetBuilderPreview
           previewWidget={previewWidget}

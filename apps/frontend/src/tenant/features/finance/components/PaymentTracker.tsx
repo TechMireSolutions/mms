@@ -1,18 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { CreditCard, RotateCcw, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Payment } from '@/lib/data/financeData';
 import { PAYMENT_METHOD_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { formatDate, type AppTranslationKey } from "@mms/shared";
+import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { type AppTranslationKey } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { PaymentTrackerList, type PaymentTrackerVisibleColumns } from "@/tenant/features/finance/components/PaymentTrackerList";
+import { PaymentMethodSummary, PaymentSelectionBar } from "@/tenant/features/finance/components/PaymentTrackerToolbar";
 
 const METHOD_LABEL_KEYS: Record<string, AppTranslationKey> = {
   Cash: "finance.paymentMethod.cash",
@@ -62,27 +58,33 @@ export function PaymentTracker({
   useEffect(() => setSelectedIds([]), [selectionResetKey, showDeleted]);
   const totalPaid = payments.reduce((sum, payment) => sum + payment.amount, 0);
 
-  const paymentsByMethod = payments.reduce((amountByMethod, payment) => {
-    amountByMethod[payment.method] = (amountByMethod[payment.method] || 0) + payment.amount;
+  const paymentsByMethod = payments.reduce<Record<string, { amount: number; count: number }>>((amountByMethod, payment) => {
+    const current = amountByMethod[payment.method] ?? { amount: 0, count: 0 };
+    amountByMethod[payment.method] = {
+      amount: current.amount + payment.amount,
+      count: current.count + 1,
+    };
     return amountByMethod;
-  }, {} as Record<string, number>);
+  }, {});
 
-  const showDate = isColumnVisible ? isColumnVisible("date") : true;
-  const showStudent = isColumnVisible ? isColumnVisible("student") : true;
-  const showInvoice = isColumnVisible ? isColumnVisible("invoice") : true;
-  const showAmount = isColumnVisible ? isColumnVisible("amount") : true;
-  const showMethod = isColumnVisible ? isColumnVisible("method") : true;
-  const showReceivedBy = isColumnVisible ? isColumnVisible("receivedBy") : true;
-  const showNote = isColumnVisible ? isColumnVisible("note") : true;
+  const visibleColumns: PaymentTrackerVisibleColumns = {
+    date: isColumnVisible ? isColumnVisible("date") : true,
+    student: isColumnVisible ? isColumnVisible("student") : true,
+    invoice: isColumnVisible ? isColumnVisible("invoice") : true,
+    amount: isColumnVisible ? isColumnVisible("amount") : true,
+    method: isColumnVisible ? isColumnVisible("method") : true,
+    receivedBy: isColumnVisible ? isColumnVisible("receivedBy") : true,
+    note: isColumnVisible ? isColumnVisible("note") : true,
+  };
 
   const visibleColCount =
-    (showDate ? 1 : 0) +
-    (showStudent ? 1 : 0) +
-    (showInvoice ? 1 : 0) +
-    (showAmount ? 1 : 0) +
-    (showMethod ? 1 : 0) +
-    (showReceivedBy ? 1 : 0) +
-    (showNote ? 1 : 0) +
+    (visibleColumns.date ? 1 : 0) +
+    (visibleColumns.student ? 1 : 0) +
+    (visibleColumns.invoice ? 1 : 0) +
+    (visibleColumns.amount ? 1 : 0) +
+    (visibleColumns.method ? 1 : 0) +
+    (visibleColumns.receivedBy ? 1 : 0) +
+    (visibleColumns.note ? 1 : 0) +
     (canDelete ? 2 : 0);
   const allSelected = payments.length > 0 && payments.every((payment) => selectedIds.includes(payment.id));
 
@@ -99,227 +101,33 @@ export function PaymentTracker({
 
   return (
     <section aria-label={t("finance.payments")} className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" aria-label={t("finance.paymentsByMethod")}>
-        {Object.entries(paymentsByMethod).map(([method, amount]) => (
-          <Card key={method} className="p-3">
-            <StatusBadge status={method} config={methodConfig} size="sm" />
-            <p className="text-base font-bold text-foreground mt-2 m-0">{formatCurrency(amount)}</p>
-            <p className="text-xs text-muted-foreground m-0">
-              {t("finance.paymentCount", { count: payments.filter((payment) => payment.method === method).length })}
-            </p>
-          </Card>
-        ))}
-      </div>
-      {canDelete && selectedIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-          <span className="text-sm font-medium">{t("finance.trash.selected", { count: selectedIds.length })}</span>
-          <Button type="button" variant={showDeleted ? "outline" : "destructive"} onClick={() => setConfirmBulkOpen(true)}>
-            {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
-            {showDeleted ? t("finance.trash.restore") : t("common.delete")}
-          </Button>
-        </div>
+      <PaymentMethodSummary paymentsByMethod={paymentsByMethod} methodConfig={methodConfig} formatCurrency={formatCurrency} />
+      {canDelete && (
+        <PaymentSelectionBar
+          selectedCount={selectedIds.length}
+          showDeleted={showDeleted}
+          onOpenBulkConfirm={() => setConfirmBulkOpen(true)}
+        />
       )}
-
-      <Card accentColor="primary" className="p-0 overflow-hidden">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 bg-muted/20 px-4 py-3 ps-6.5">
-          <div className="flex items-center gap-2 min-w-0">
-            <CreditCard className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-            <h3 className="text-sm font-bold text-foreground m-0">{t("finance.paymentLog")}</h3>
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-success">{t("finance.paymentTotal", { amount: formatCurrency(totalPaid) })}</span>
-            {columnCustomizer && (
-              <ModuleColumnCustomizer
-                columnRegistry={columnCustomizer.columnRegistry}
-                updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-                labels={columnCustomizer.labels}
-              />
-            )}
-          </div>
-        </header>
-        <div className="space-y-3 p-3 md:hidden">
-          {payments.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">{t("finance.empty.payments")}</p>
-          ) : (
-            payments.map((payment, index) => (
-              <motion.article
-                key={payment.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.03 }}
-                className="space-y-3 rounded-xl border border-border bg-card p-3"
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    {showStudent && <h4 className="truncate text-sm font-semibold text-foreground">{payment.studentName}</h4>}
-                    {showInvoice && <p className="truncate font-mono text-xs text-muted-foreground">{payment.invoiceId}</p>}
-                  </div>
-                  {showAmount && <span className="shrink-0 text-sm font-bold text-success">{formatCurrency(payment.amount)}</span>}
-                </div>
-                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                  {showDate && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.paymentDate")}</dt>
-                      <dd className="text-foreground">{formatDate(payment.date)}</dd>
-                    </div>
-                  )}
-                  {showMethod && (
-                    <div>
-                      <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("finance.columns.method")}</dt>
-                      <dd><StatusBadge status={payment.method} config={methodConfig} size="sm" /></dd>
-                    </div>
-                  )}
-                  {showReceivedBy && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.receivedBy")}</dt>
-                      <dd className="break-words text-foreground">{payment.receivedBy || "—"}</dd>
-                    </div>
-                  )}
-                  {showNote && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.note")}</dt>
-                      <dd className="break-words text-foreground">{payment.note || "—"}</dd>
-                    </div>
-                  )}
-                </dl>
-                {canDelete && (
-                  <div className="flex items-center justify-between border-t border-border pt-2">
-                    <Checkbox
-                      checked={selectedIds.includes(payment.id)}
-                      onCheckedChange={(checked) => setSelectedIds((ids) => checked ? [...ids, payment.id] : ids.filter((id) => id !== payment.id))}
-                      aria-label={t("finance.trash.selectPayment", { id: payment.id })}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => showDeleted ? onRestore?.(payment.id) : setPendingDeleteId(payment.id)}
-                      aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
-                    >
-                      {showDeleted ? <RotateCcw className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                )}
-              </motion.article>
-            ))
-          )}
-        </div>
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm table-fixed">
-            <caption className="sr-only">{t("finance.paymentLog")}</caption>
-            <thead>
-              <tr className="border-b border-border/50">
-                {canDelete && (
-                  <th scope="col" className="w-10 px-3 py-2.5">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={(checked) => setSelectedIds(checked ? payments.map((payment) => payment.id) : [])}
-                      aria-label={t("finance.trash.selectAll")}
-                    />
-                  </th>
-                )}
-                {showDate && (
-                  <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {t("finance.columns.paymentDate")}
-                  </ResizableTableHead>
-                )}
-                {showStudent && (
-                  <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {t("finance.columns.student")}
-                  </ResizableTableHead>
-                )}
-                {showInvoice && (
-                  <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {t("finance.columns.invoice")}
-                  </ResizableTableHead>
-                )}
-                {showAmount && (
-                  <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {t("finance.columns.amount")}
-                  </ResizableTableHead>
-                )}
-                {showMethod && (
-                  <ResizableTableHead columnKey="method" width={getColumnWidth?.("method")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {t("finance.columns.method")}
-                  </ResizableTableHead>
-                )}
-                {showReceivedBy && (
-                  <ResizableTableHead columnKey="receivedBy" width={getColumnWidth?.("receivedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {t("finance.columns.receivedBy")}
-                  </ResizableTableHead>
-                )}
-                {showNote && (
-                  <ResizableTableHead columnKey="note" width={getColumnWidth?.("note")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                    {t("finance.columns.note")}
-                  </ResizableTableHead>
-                )}
-                {canDelete && <th scope="col" className="w-12 px-3 py-2.5"><span className="sr-only">{t("common.actions")}</span></th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {payments.length === 0 ? (
-                <tr><td colSpan={visibleColCount || 1} className="py-10 text-center text-sm text-muted-foreground">{t("finance.empty.payments")}</td></tr>
-              ) : (
-                payments.map((payment, index) => (
-                  <motion.tr
-                    key={payment.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.03 }}
-                    className="hover:bg-muted/20 transition-colors"
-                  >
-                    {canDelete && (
-                      <td className="px-3 py-3">
-                        <Checkbox
-                          checked={selectedIds.includes(payment.id)}
-                          onCheckedChange={(checked) => setSelectedIds((ids) => checked ? [...ids, payment.id] : ids.filter((id) => id !== payment.id))}
-                          aria-label={t("finance.trash.selectPayment", { id: payment.id })}
-                        />
-                      </td>
-                    )}
-                    {showDate && (
-                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>
-                    )}
-                    {showStudent && (
-                      <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>
-                    )}
-                    {showInvoice && (
-                      <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{payment.invoiceId}</td>
-                    )}
-                    {showAmount && (
-                      <td className="px-4 py-3 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</td>
-                    )}
-                    {showMethod && (
-                      <td className="px-4 py-3">
-                        <StatusBadge status={payment.method} config={methodConfig} size="sm" />
-                      </td>
-                    )}
-                    {showReceivedBy && (
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{payment.receivedBy || "—"}</td>
-                    )}
-                    {showNote && (
-                      <td className="px-4 py-3 text-sm text-muted-foreground max-w-[10rem] truncate">{payment.note || "—"}</td>
-                    )}
-                    {canDelete && (
-                      <td className="px-3 py-3">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => showDeleted ? onRestore?.(payment.id) : setPendingDeleteId(payment.id)}
-                          aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
-                        >
-                          {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
-                        </Button>
-                      </td>
-                    )}
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <PaymentTrackerList
+        payments={payments}
+        selectedIds={selectedIds}
+        visibleColumns={visibleColumns}
+        visibleColCount={visibleColCount}
+        allSelected={allSelected}
+        canDelete={canDelete}
+        showDeleted={showDeleted}
+        totalPaid={totalPaid}
+        methodConfig={methodConfig}
+        columnCustomizer={columnCustomizer}
+        formatCurrency={formatCurrency}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={onColumnResize}
+        onTogglePayment={(paymentId, checked) => setSelectedIds((ids) => checked ? [...ids, paymentId] : ids.filter((id) => id !== paymentId))}
+        onToggleAll={(checked) => setSelectedIds(checked ? payments.map((payment) => payment.id) : [])}
+        onRequestDelete={setPendingDeleteId}
+        onRestore={onRestore}
+      />
       <ConfirmAlertDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}

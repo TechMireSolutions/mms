@@ -2017,6 +2017,7 @@ export const APP_TRANSLATIONS_EN = {
   "backup.historyCount": "{count} of {max} stored exports",
   "backup.invalidFormat": "The file is not a valid MMS workspace backup.",
   "backup.missingAdminUser": "The backup does not contain any user with the Administrator role. Restoring this would lock you out of the workspace.",
+  "backup.missingUserCredentials": "Restore cannot continue because one or more users have no recoverable password for this workspace. Restore into the same workspace that created the backup, or reset passwords after a manual user recreate.",
   "backup.securityViolation": "Security audit failed. The backup contains invalid keys or illegal payload data.",
   "backup.emptyBackup": "The backup file contains no data.",
   "backup.noData": "No backup data",

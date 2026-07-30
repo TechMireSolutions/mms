@@ -63,6 +63,63 @@ describe('tenant JWT binding', () => {
     await app.close();
   });
 
+  it('rejects backup export without auth', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/db/backup',
+      headers: { host: 'demo.localhost' },
+    });
+    expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('rejects backup export for non-admin', async () => {
+    const app = await buildApp();
+    const token = signTenantToken(app, { role: 'teacher', id: 'u1' });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/db/backup',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${token}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    await app.close();
+  });
+
+  it('rejects backup password step-up without auth', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/verify-password',
+      headers: { host: 'demo.localhost' },
+      payload: { password: 'whatever' },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ type: 'auth_required' });
+    await app.close();
+  });
+
+  it('rejects backup password step-up for another account', async () => {
+    const app = await buildApp();
+    const token = adminToken(app);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/verify-password',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${token}`,
+      },
+      payload: { password: 'whatever', email: 'someone.else@demo.local' },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ type: 'invalid_credentials' });
+    await app.close();
+  });
+
   it('rejects contacts write without auth', async () => {
     const app = await buildApp();
     const res = await app.inject({

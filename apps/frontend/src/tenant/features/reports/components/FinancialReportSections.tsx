@@ -1,0 +1,187 @@
+import React from "react";
+import { Filter, X } from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { Button } from "@/components/ui/button";
+import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { useTranslation } from "@/hooks/useTranslation";
+
+export interface MonthlyFeeCollectionItem {
+  month: string;
+  collected: number;
+  outstanding: number;
+  total: number;
+  rate: number;
+}
+
+export interface DiscountUsageByTypeItem {
+  type: string;
+  count: number;
+  totalDiscounted: number;
+  percentage: number;
+}
+
+interface FinancialReportChartsProps {
+  monthlyFeeCollection: MonthlyFeeCollectionItem[];
+  discountUsageByType: DiscountUsageByTypeItem[];
+  pieColors: string[];
+  selectedMonth: string | null;
+  onToggleMonthFilter: (month: string) => void;
+}
+
+export function FinancialReportCharts({
+  monthlyFeeCollection,
+  discountUsageByType,
+  pieColors,
+  selectedMonth,
+  onToggleMonthFilter,
+}: FinancialReportChartsProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const { formatCurrency } = useFinanceCurrency();
+
+  return (
+    <>
+      <SectionCard title={t("finance.report.chartTitle")}>
+        <SafeResponsiveContainer width="100%" height={200}>
+          <AreaChart
+            data={monthlyFeeCollection}
+            onClick={(state) => {
+              const month = (state as { activeLabel?: string } | undefined)?.activeLabel;
+              if (typeof month === "string" && month.length > 0) onToggleMonthFilter(month);
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <defs>
+              <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+            <YAxis
+              tick={{ fontSize: 11 }}
+              tickFormatter={(value: number) =>
+                value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`
+              }
+            />
+            <Tooltip formatter={(value) => (value !== undefined ? formatCurrency(Number(value)) : "")} />
+            <Area
+              type="monotone"
+              dataKey="collected"
+              stroke="hsl(var(--primary))"
+              fill="url(#colorCollected)"
+              strokeWidth={2}
+              name={t("finance.report.collected")}
+            />
+            <Area
+              type="monotone"
+              dataKey="outstanding"
+              stroke="var(--color-chart-1)"
+              fill="transparent"
+              strokeWidth={2}
+              strokeDasharray="4 2"
+              name={t("finance.report.outstandingLabel")}
+            />
+          </AreaChart>
+        </SafeResponsiveContainer>
+      </SectionCard>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionCard title={t("finance.report.collectionRateTitle")}>
+          <div className="space-y-2">
+            {monthlyFeeCollection.map((monthTotals) => (
+              <Button
+                key={monthTotals.month}
+                type="button"
+                variant="ghost"
+                onClick={() => onToggleMonthFilter(monthTotals.month)}
+                aria-pressed={selectedMonth === monthTotals.month}
+                className={`flex min-h-11 h-auto w-full items-center gap-3 px-2 py-1.5 justify-start ${
+                  selectedMonth === monthTotals.month ? "bg-primary/10 text-primary" : ""
+                }`}
+              >
+                <span className="text-xs text-muted-foreground w-20 shrink-0 text-start">{monthTotals.month}</span>
+                <div className="flex-1 h-2 rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-primary" style={{ width: `${monthTotals.rate}%` }} />
+                </div>
+                <span className="text-xs font-bold text-foreground w-10 text-end">{monthTotals.rate}%</span>
+              </Button>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard title={t("finance.report.discountDistributionTitle")}>
+          <SafeResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie
+                data={discountUsageByType}
+                dataKey="totalDiscounted"
+                nameKey="type"
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+                label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
+                labelLine={false}
+              >
+                {discountUsageByType.map((_, index) => (
+                  <Cell key={index} fill={pieColors[index % pieColors.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => (value !== undefined ? formatCurrency(Number(value)) : "")} />
+              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+            </PieChart>
+          </SafeResponsiveContainer>
+        </SectionCard>
+      </div>
+    </>
+  );
+}
+
+interface FinancialMonthFilterBannerProps {
+  selectedMonth: string | null;
+  onClear: () => void;
+}
+
+export function FinancialMonthFilterBanner({
+  selectedMonth,
+  onClear,
+}: FinancialMonthFilterBannerProps): React.JSX.Element | null {
+  const { t } = useTranslation();
+  if (!selectedMonth) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Filter className="w-3.5 h-3.5 text-primary" />
+        <span className="font-medium text-foreground">{t("finance.report.monthFilterLabel")}</span>
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
+          {selectedMonth}
+        </span>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onClear}
+        className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+      >
+        <X className="w-3 h-3 me-1" />
+        {t("finance.report.clearMonthFilter")}
+      </Button>
+    </div>
+  );
+}
+

@@ -7,32 +7,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ClipboardList, Plus, UserCheck } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { EnrollmentWizard } from "@/tenant/features/enrollments/components/EnrollmentWizard";
-import { EnrollmentList } from "@/tenant/features/enrollments/components/EnrollmentList";
 import { EnrollmentsCommandMetrics } from "@/tenant/features/enrollments/components/EnrollmentsCommandMetrics";
-import { EnrollmentDetail } from "@/tenant/features/enrollments/components/EnrollmentDetail";
-import { EligibilityCheck } from "@/tenant/features/enrollments/components/EligibilityCheck";
-import { EnrollmentReports } from "@/tenant/features/enrollments/components/EnrollmentReports";
-import { EnrollmentsSettings } from "@/tenant/features/enrollments/components/EnrollmentsSettings";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
+import { EnrollmentsModalLayer } from "@/tenant/features/enrollments/components/EnrollmentsModalLayer";
+import { EnrollmentsReportsTier } from "@/tenant/features/enrollments/components/EnrollmentsReportsTier";
+import { EnrollmentsSetupTier } from "@/tenant/features/enrollments/components/EnrollmentsSetupTier";
+import { EnrollmentsWorkTier } from "@/tenant/features/enrollments/components/EnrollmentsWorkTier";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { FormModal } from "@/components/ui/FormModal";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import {
   useEnrollments,
   useEnrollmentsPaginated,
-  useEnrollmentMutations,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
-import { useStudentMutations, type StudentRecord } from "@/tenant/hooks/collections/students";
-import { apiJson } from "@/lib/apiClient";
-import { notify } from "@/lib/notify";
-import { STUDENTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
-import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
+import { ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
+import { useEnrollmentsPageActions } from "@/tenant/features/enrollments/hooks/useEnrollmentsPageActions";
 import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/useEnrollmentColumnLayout";
 
 /**
@@ -56,7 +45,6 @@ export default function EnrollmentsPage() {
   const TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const [tab, setTab]                 = usePersistedTabState<string>("enrollments_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("list");
-  const role = useEnrollmentViewerRole();
   const [showDeleted, setShowDeleted] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const activeEnrollmentsResult = useEnrollments();
@@ -79,13 +67,6 @@ export default function EnrollmentsPage() {
   const enrollments = showDeleted
     ? ((deletedPage?.enrollments ?? []) as Enrollment[])
     : activeEnrollments;
-  const {
-    createEnrollment,
-    updateEnrollment,
-    deleteEnrollment,
-    restoreEnrollment,
-  } = useEnrollmentMutations();
-  const { updateStudent } = useStudentMutations();
   const [viewing, setViewing]         = useState<Enrollment | null>(null);
   const [showWizard, setShowWizard]   = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
@@ -105,110 +86,18 @@ export default function EnrollmentsPage() {
     },
   });
 
-  const handleComplete = async (enrollment: Enrollment) => {
-    try {
-      await createEnrollment.mutateAsync(enrollment);
-      try {
-        const studentsResponse = await apiJson<{ students: StudentRecord[] }>(
-          `${STUDENTS_MODULE_MANIFEST.restBasePath}/resolve`,
-          {
-            method: 'POST',
-            body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
-          },
-        );
-        const student = studentsResponse.students[0];
-        if (student) {
-          const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
-          if (!enrolled.includes(enrollment.sessionId)) {
-            updateStudent.mutate({
-              id: String(student.id),
-              student: { ...student, enrolledSessions: [...enrolled, enrollment.sessionId] },
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Failed to update student enrolled sessions', error);
-      }
-      notify.success(t("enrollments.toast.created"));
-      setActiveSubTab("list");
-    } catch (error) {
-      notify.error(t("enrollments.toast.saveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  };
-
-  const handleCancel = (id: string) => {
-    const enrollment = enrollments.find((candidate) => candidate.id === id);
-    if (!enrollment) return;
-    updateEnrollment.mutate({
-      id,
-      enrollment: {
-        ...enrollment,
-        status: "cancelled" as const,
-        timeline: [
-          ...(enrollment.timeline || []),
-          { ts: new Date().toISOString(), event: t("enrollments.timeline.cancelled"), by: role },
-        ],
-      },
-    }, {
-      onSuccess: () => notify.info(t("enrollments.toast.cancelled")),
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleDelete = (id: string) => {
-    deleteEnrollment.mutate(id, {
-      onSuccess: () => {
-        notify.info(t("enrollments.toast.deleted"));
-        if (viewing?.id === id) setViewing(null);
-      },
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleRestore = (id: string) => {
-    restoreEnrollment.mutate(id, {
-      onSuccess: () => notify.success(t("enrollments.toast.restored")),
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleStatusChange = (id: string, newStatus: Enrollment["status"]) => {
-    const enrollment = enrollments.find((candidate) => candidate.id === id);
-    if (!enrollment) return;
-    const updated: Enrollment = {
-      ...enrollment,
-      status: newStatus,
-      timeline: [
-        ...(enrollment.timeline || []),
-        {
-          ts: new Date().toISOString(),
-          event: t("enrollments.timeline.statusChange", { status: newStatus }),
-          by: role,
-        },
-      ],
-    };
-    updateEnrollment.mutate({
-      id,
-      enrollment: updated,
-    }, {
-      onSuccess: () => {
-        if (viewing?.id === id) setViewing(updated);
-        notify.success(t("enrollments.toast.updated"));
-      },
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
+  const {
+    handleComplete,
+    handleCancel,
+    handleDelete,
+    handleRestore,
+    handleStatusChange,
+  } = useEnrollmentsPageActions({
+    enrollments,
+    viewing,
+    onViewingChange: setViewing,
+    onActiveSubTabChange: setActiveSubTab,
+  });
 
   useEffect(() => {
     setFilteredCount(enrollments.length);
@@ -244,16 +133,6 @@ export default function EnrollmentsPage() {
         onTabChange={setTab}
         panelIdPrefix="enrollments-tab"
       >
-      {tab === "work" && (
-        <SubTabBar
-          tabs={SUB_TABS
-            .filter((item) => canWriteEnrollments || item.id !== "eligibility")
-            .map((item) => ({ key: item.id, label: item.label }))}
-          value={activeSubTab}
-          onChange={setActiveSubTab}
-        />
-      )}
-
       <AnimatePresence mode="wait">
         <motion.div key={tab + "-" + activeSubTab + (showDeleted ? "-trash" : "")}
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -262,99 +141,67 @@ export default function EnrollmentsPage() {
         >
           {tab === "reports" && (
             <ErrorBoundary>
-              <div className="space-y-4">
-                <KPISummary category="enrollments" />
-                <EnrollmentReports enrollments={activeEnrollments} />
-              </div>
-            </ErrorBoundary>
-          )}
-          {tab === "work" && activeSubTab === "list" && (
-            <ErrorBoundary>
-              {isWorkListError ? (
-                <ErrorState
-                  title={t("enrollments.loadFailed")}
-                  onRetry={() => void retryWorkList()}
-                />
-              ) : (
-                <EnrollmentList
-                  enrollments={enrollments}
-                  canWrite={canWriteEnrollments}
-                  canDelete={canDelete}
-                  showDeleted={showDeleted}
-                  onShowDeletedChange={setShowDeleted}
-                  onView={(enrollment: Enrollment) => setViewing(enrollment)}
-                  onCancel={handleCancel}
-                  onDelete={(id) => setPendingDeleteId(id)}
-                  onRestore={handleRestore}
-                  onFilteredCountChange={setFilteredCount}
-                  isColumnVisible={columnLayout.isColumnVisible}
-                  getColumnWidth={columnLayout.getColumnWidth}
-                  onColumnResize={columnLayout.setColumnWidth}
-                  columnCustomizer={{
-                    columnRegistry: columnLayout.columnRegistry,
-                    updateUserColumnLayout: columnLayout.updateUserColumnLayout,
-                    labels: columnLayout.customizerLabels,
-                  }}
-                />
-              )}
+              <EnrollmentsReportsTier enrollments={activeEnrollments} />
             </ErrorBoundary>
           )}
 
-          {tab === "work" && activeSubTab === "eligibility" && (
-            <ErrorBoundary>
-              <EligibilityCheck />
-            </ErrorBoundary>
+          {tab === "work" && (
+            <EnrollmentsWorkTier
+              activeSubTab={activeSubTab}
+              subTabs={SUB_TABS}
+              enrollments={enrollments}
+              canWrite={canWriteEnrollments}
+              canDelete={canDelete}
+              showDeleted={showDeleted}
+              isWorkListError={isWorkListError}
+              loadFailedTitle={t("enrollments.loadFailed")}
+              onSubTabChange={setActiveSubTab}
+              onRetry={() => void retryWorkList()}
+              onShowDeletedChange={setShowDeleted}
+              onView={setViewing}
+              onCancel={handleCancel}
+              onDeleteRequest={setPendingDeleteId}
+              onRestore={handleRestore}
+              onFilteredCountChange={setFilteredCount}
+              columnProps={{
+                isColumnVisible: columnLayout.isColumnVisible,
+                getColumnWidth: columnLayout.getColumnWidth,
+                onColumnResize: columnLayout.setColumnWidth,
+                columnCustomizer: {
+                  columnRegistry: columnLayout.columnRegistry,
+                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+                  labels: columnLayout.customizerLabels,
+                },
+              }}
+            />
           )}
 
           {tab === "setup" && (
             <ErrorBoundary>
-              <EnrollmentsSettings />
+              <EnrollmentsSetupTier />
             </ErrorBoundary>
           )}
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <AnimatePresence>
-        {viewing && !showDeleted && (
-          <ErrorBoundary>
-            <EnrollmentDetail
-              enrollment={viewing}
-              canWrite={canWriteEnrollments}
-              onClose={() => setViewing(null)}
-              onStatusChange={handleStatusChange}
-            />
-          </ErrorBoundary>
-        )}
-      </AnimatePresence>
-
-      <FormModal
-        open={showWizard}
-        onClose={() => setShowWizard(false)}
-        title={t("enrollments.new")}
-        size="xl"
-        hideFooter
-        panelClassName="h-[88vh] max-h-[43.75rem]"
-      >
-        <ErrorBoundary>
-          <EnrollmentWizard
-            onComplete={handleComplete}
-            onCancel={() => setShowWizard(false)}
-          />
-        </ErrorBoundary>
-      </FormModal>
-
-      <ConfirmAlertDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
-        title={t("enrollments.confirmDeleteTitle")}
-        description={t("enrollments.confirmDeleteDescription")}
+      <EnrollmentsModalLayer
+        viewing={viewing}
+        canWrite={canWriteEnrollments}
+        showDeleted={showDeleted}
+        showWizard={showWizard}
+        pendingDeleteId={pendingDeleteId}
+        wizardTitle={t("enrollments.new")}
+        confirmDeleteTitle={t("enrollments.confirmDeleteTitle")}
+        confirmDeleteDescription={t("enrollments.confirmDeleteDescription")}
         confirmLabel={t("common.delete")}
         cancelLabel={t("common.cancel")}
-        onConfirm={() => {
-          if (pendingDeleteId) handleDelete(pendingDeleteId);
-          setPendingDeleteId(null);
-        }}
+        onCloseViewing={() => setViewing(null)}
+        onStatusChange={handleStatusChange}
+        onCloseWizard={() => setShowWizard(false)}
+        onCompleteWizard={handleComplete}
+        onPendingDeleteChange={setPendingDeleteId}
+        onConfirmDelete={handleDelete}
       />
     </ModulePageShell>
   );

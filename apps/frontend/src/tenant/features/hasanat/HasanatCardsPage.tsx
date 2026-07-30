@@ -9,20 +9,11 @@ import { LayoutDashboard, Star, Package, Send, Gift } from "lucide-react";
 import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, toMessagingRecipient, type AppTranslationKey } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { HasanatDashboard } from "@/tenant/features/hasanat/components/HasanatDashboard";
-import { DenominationsManager } from "@/tenant/features/hasanat/components/DenominationsManager";
-import { StockManager } from "@/tenant/features/hasanat/components/StockManager";
-import { DistributionManager } from "@/tenant/features/hasanat/components/DistributionManager";
-import { RedemptionTracker } from "@/tenant/features/hasanat/components/RedemptionTracker";
-import { HasanatSettings } from "@/tenant/features/hasanat/components/HasanatSettings";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { HasanatCommandMetrics } from "@/tenant/features/hasanat/components/HasanatCommandMetrics";
+import { HasanatReportsTier } from "@/tenant/features/hasanat/components/HasanatReportsTier";
+import { HasanatSetupTier } from "@/tenant/features/hasanat/components/HasanatSetupTier";
+import { HasanatWorkTier } from "@/tenant/features/hasanat/components/HasanatWorkTier";
 import { useHasanatDistributionColumnLayout } from "@/tenant/features/hasanat/hooks/useHasanatDistributionColumnLayout";
 import { useHasanatRedemptionColumnLayout } from "@/tenant/features/hasanat/hooks/useHasanatRedemptionColumnLayout";
 import {
@@ -205,6 +196,15 @@ export default function HasanatCards() {
     }
   };
 
+  const runHasanatSave = async (save: () => Promise<unknown>): Promise<void> => {
+    try {
+      await save();
+    } catch (error: unknown) {
+      notifySaveFailure(error);
+      throw error;
+    }
+  };
+
   const listLoadFailed = distributionsResult.queryResult.isError;
 
   return (
@@ -239,28 +239,6 @@ export default function HasanatCards() {
         onTabChange={setActiveTab}
         panelIdPrefix="hasanat-tab"
       >
-      {effectiveTab === "work" && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <SubTabBar
-            tabs={SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={effectiveSubTab}
-            onChange={(next) => {
-              setActiveSubTab(next);
-              if (next !== "distribute") setShowDeleted(false);
-            }}
-          />
-          {effectiveSubTab === "distribute" && canDelete && (
-            <ModuleTrashToggle
-              showDeleted={showDeleted}
-              onToggle={() => setShowDeleted((prev) => !prev)}
-              showActiveLabel={t("hasanat.trash.showActive")}
-              showDeletedLabel={t("hasanat.trash.showDeleted")}
-              className="shrink-0"
-            />
-          )}
-        </div>
-      )}
-
       <AnimatePresence mode="wait">
         <motion.div
           key={effectiveTab + "-" + effectiveSubTab + "-" + String(showDeleted)}
@@ -270,130 +248,49 @@ export default function HasanatCards() {
           transition={{ duration: 0.2 }}
           className="space-y-4"
         >
-          <ErrorBoundary>
           {effectiveTab === "reports" && (
-            <div className="space-y-4">
-              <KPISummary category="hasanat" />
-              <ModuleReports category="hasanat" />
-            </div>
+            <HasanatReportsTier />
           )}
           {effectiveTab === "setup" && (
-            <div className="space-y-4">
-              <SubTabBar
-                tabs={SETUP_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-                value={effectiveConfigTab}
-                onChange={setConfigSubTab}
-              />
-              {!canEditSetup ? (
-                <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-                  {t("hasanat.setup.readOnly")}
-                </p>
-              ) : (
-                <>
-                  {effectiveConfigTab === "denominations" && (
-                    <DenominationsManager
-                      denoms={denoms}
-                      onUpdate={async (next) => {
-                        try {
-                          await replaceDenoms.mutateAsync(next);
-                        } catch (error: unknown) {
-                          notifySaveFailure(error);
-                          throw error;
-                        }
-                      }}
-                      canWrite={canWrite}
-                    />
-                  )}
-                  {(effectiveConfigTab === "fields" || effectiveConfigTab === "preferences") && (
-                    <HasanatSettings mode={effectiveConfigTab} />
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {effectiveTab === "work" && listLoadFailed && (
-            <ErrorState
-              title={t("hasanat.loadFailed")}
-              onRetry={() => { void distributionsResult.queryResult.refetch(); }}
-            />
-          )}
-
-          {effectiveTab === "work" && !listLoadFailed && effectiveSubTab === "overview" && (
-            <HasanatDashboard denoms={denoms} batches={batches} distributions={distributions} />
-          )}
-          {effectiveTab === "work" && !listLoadFailed && effectiveSubTab === "stock" && (
-            <StockManager
-              batches={batches}
-              denoms={denoms}
-              onUpdate={async (next) => {
-                try {
-                  await replaceBatches.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
+            <HasanatSetupTier
+              tabs={SETUP_TABS}
+              activeTab={effectiveConfigTab}
+              canEditSetup={canEditSetup}
               canWrite={canWrite}
+              denoms={denoms}
+              onTabChange={setConfigSubTab}
+              onUpdateDenoms={(next) => runHasanatSave(() => replaceDenoms.mutateAsync(next))}
             />
           )}
-          {effectiveTab === "work" && !listLoadFailed && effectiveSubTab === "distribute" && (
-            <DistributionManager
-              distributions={distributions}
-              denoms={denoms}
-              batches={batches}
-              onUpdate={async (next) => {
-                try {
-                  await replaceDistributions.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
-              onFilteredCountChange={setFilteredCount}
+
+          {effectiveTab === "work" && (
+            <HasanatWorkTier
+              tabs={SUB_TABS}
+              activeSubTab={effectiveSubTab}
+              showDeleted={showDeleted}
+              listLoadFailed={listLoadFailed}
               canWrite={canWrite}
               canDelete={canDelete}
-              showDeleted={showDeleted}
-              createRequestKey={createDistributeKey}
+              canWriteMessaging={canWriteMessaging}
+              createDistributeKey={createDistributeKey}
+              denoms={denoms}
+              batches={batches}
+              distributions={distributions}
+              distributionColumnLayout={distributionColumnLayout}
+              redemptionColumnLayout={redemptionColumnLayout}
+              onSubTabChange={setActiveSubTab}
+              onToggleDeleted={() => setShowDeleted((prev) => !prev)}
+              onRetry={() => { void distributionsResult.queryResult.refetch(); }}
+              onUpdateBatches={(next) => runHasanatSave(() => replaceBatches.mutateAsync(next))}
+              onUpdateDistributions={(next) => runHasanatSave(() => replaceDistributions.mutateAsync(next))}
+              onFilteredCountChange={setFilteredCount}
               onDelete={handleDeleteDistribution}
               onRestore={handleRestoreDistribution}
               onBulkDelete={handleBulkDelete}
               onBulkRestore={handleBulkRestore}
-              isColumnVisible={distributionColumnLayout.isColumnVisible}
-              getColumnWidth={distributionColumnLayout.getColumnWidth}
-              onColumnResize={distributionColumnLayout.setColumnWidth}
-              columnCustomizer={{
-                columnRegistry: distributionColumnLayout.columnRegistry,
-                updateUserColumnLayout: distributionColumnLayout.updateUserColumnLayout,
-                labels: distributionColumnLayout.customizerLabels,
-              }}
-              onMessage={canWriteMessaging && !showDeleted ? handleMessageDistributions : undefined}
+              onMessage={handleMessageDistributions}
             />
           )}
-          {effectiveTab === "work" && !listLoadFailed && effectiveSubTab === "redemptions" && (
-            <RedemptionTracker
-              distributions={distributions}
-              onUpdateDistributions={async (next) => {
-                try {
-                  await replaceDistributions.mutateAsync(next);
-                } catch (error: unknown) {
-                  notifySaveFailure(error);
-                  throw error;
-                }
-              }}
-              onFilteredCountChange={setFilteredCount}
-              canWrite={canWrite}
-              isColumnVisible={redemptionColumnLayout.isColumnVisible}
-              getColumnWidth={redemptionColumnLayout.getColumnWidth}
-              onColumnResize={redemptionColumnLayout.setColumnWidth}
-              columnCustomizer={{
-                columnRegistry: redemptionColumnLayout.columnRegistry,
-                updateUserColumnLayout: redemptionColumnLayout.updateUserColumnLayout,
-                labels: redemptionColumnLayout.customizerLabels,
-              }}
-            />
-          )}
-          </ErrorBoundary>
         </motion.div>
       </AnimatePresence>
       </ResponsiveAccordionTabs>

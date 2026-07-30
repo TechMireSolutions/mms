@@ -1,46 +1,17 @@
-import React, { useMemo, useState } from "react";
-import { UserCheck, Users, AlertTriangle, Award, Filter, X } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
-import { Card } from "@/components/ui/card";
-import { SectionCard } from "@/components/ui/SectionCard";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { useMemo, useState } from "react";
+import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { StatCard } from "@/components/ui/StatCard";
-import { ExportToolbar } from "@/components/ui/ExportToolbar";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Button } from "@/components/ui/button";
+import { AttendanceReportCharts } from "./AttendanceReportCharts";
+import { AttendanceReportDashboardWidgets } from "./AttendanceReportDashboardWidgets";
+import { AttendanceReportFilterBanner } from "./AttendanceReportFilterBanner";
+import { AttendanceReportTables } from "./AttendanceReportTables";
 
-import { AttendanceChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
-import TodayAttendanceWidget from "@/components/dashboard-widgets/TodayAttendanceWidget";
-import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
+import type { AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceItem } from "./attendanceReportTypes";
 
-interface AttendanceReportProps {
-  filters: {
-    class: string;
-    student: string;
-  };
-  onEditVisual: (config: VisualizerConfig) => void;
-}
-
-export interface AttendanceSummaryItem {
-  class: string;
-  total: number;
-  avgRate: number;
-  perfectAttendance: number;
-  belowThreshold: number;
-}
-
-export interface StudentAttendanceItem {
-  studentName: string;
-  class: string;
-  present: number;
-  absent: number;
-  late: number;
-  total: number;
-  rate: number;
-}
+export type { AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceItem } from "./attendanceReportTypes";
 
 /**
  * Renders the attendance reports and metrics.
@@ -178,246 +149,15 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
         <StatCard icon={AlertTriangle} label={t("attendance.report.belowThreshold")} value={belowThreshold} color="red" />
       </div>
 
-      {/* Chart */}
-      {filteredSummary.length > 0 && (
-        <SectionCard title={t("attendance.report.rateByClass")}>
-          <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart
-              data={filteredSummary}
-              barSize={36}
-              onClick={(state) => {
-                const className = (state as { activeLabel?: string } | undefined)?.activeLabel;
-                if (typeof className === "string" && className.length > 0) toggleClassFilter(className);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="class" tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(value) => value !== undefined ? `${value}%` : ""} />
-              <Bar dataKey="avgRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </SafeResponsiveContainer>
-        </SectionCard>
-      )}
-
-      {selectedClass && (
-        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-muted/40 border border-border text-xs text-muted-foreground">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-primary" />
-            <span className="font-medium text-foreground">{t("attendance.report.classFilterLabel")}</span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
-              {selectedClass}
-            </span>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedClass(null)}
-            className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-3 h-3 me-1" />
-            {t("attendance.report.clearClassFilter")}
-          </Button>
-        </div>
-      )}
-
-      {/* Class Summary Table */}
-      <ExportToolbar 
-        title={t("attendance.report.summaryTitle")} 
-        data={filteredSummary}
-        headers={[
-          t("attendance.report.colClass"),
-          t("attendance.report.colTotalStudents"),
-          t("attendance.report.colAvgRate"),
-          t("attendance.report.colPerfectAttendance"),
-          t("attendance.report.colBelowThreshold"),
-        ]}
+      <AttendanceReportCharts summary={filteredSummary} onToggleClassFilter={toggleClassFilter} />
+      <AttendanceReportFilterBanner selectedClass={selectedClass} onClearClassFilter={() => setSelectedClass(null)} />
+      <AttendanceReportTables
+        summary={filteredSummary}
+        studentAttendanceRows={filteredStudentAttendanceRows}
+        rateBar={rateBar}
+        onToggleClassFilter={toggleClassFilter}
       />
-      {filteredSummary.length === 0 ? (
-        <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
-      ) : (
-        <Card className="overflow-hidden">
-          <div className="space-y-3 p-3 md:hidden">
-            {filteredSummary.map((summaryRow) => (
-              <article key={summaryRow.class} className="space-y-3 rounded-xl border border-border bg-card p-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => toggleClassFilter(summaryRow.class)}
-                  className="h-auto min-h-11 px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
-                >
-                  {summaryRow.class}
-                </Button>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotalStudents")}</dt>
-                    <dd className="text-foreground">{summaryRow.total}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAvgRate")}</dt>
-                    <dd>{rateBar(summaryRow.avgRate)}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPerfectAttendance")}</dt>
-                    <dd>
-                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">{summaryRow.perfectAttendance}</span>
-                    </dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colBelowThreshold")}</dt>
-                    <dd>
-                      <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">{summaryRow.belowThreshold}</span>
-                    </dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                {[
-                  t("attendance.report.colClass"),
-                  t("attendance.report.colTotalStudents"),
-                  t("attendance.report.colAvgRate"),
-                  t("attendance.report.colPerfectAttendance"),
-                  t("attendance.report.colBelowThreshold"),
-                ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredSummary.map((summaryRow) => (
-                <tr key={summaryRow.class} className="hover:bg-muted/30">
-                  <td className="px-3 py-3 font-medium text-foreground">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => toggleClassFilter(summaryRow.class)}
-                      className="h-auto px-0 py-0 font-medium text-foreground hover:text-primary"
-                    >
-                      {summaryRow.class}
-                    </Button>
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">{summaryRow.total}</td>
-                  <td className="px-3 py-3 w-44">{rateBar(summaryRow.avgRate)}</td>
-                  <td className="px-3 py-3">
-                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-semibold">{summaryRow.perfectAttendance}</span>
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold">{summaryRow.belowThreshold}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </Card>
-      )}
-
-      {/* Student Attendance */}
-      <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-foreground">{t("attendance.report.studentDetailTitle")}</h3>
-        <ExportToolbar 
-          title={t("attendance.report.studentDetailTitle")} 
-          data={filteredStudentAttendanceRows}
-          headers={[
-            t("attendance.report.colStudent"),
-            t("attendance.report.colStudentClass"),
-            t("attendance.report.colPresent"),
-            t("attendance.report.colAbsent"),
-            t("attendance.report.colLate"),
-            t("attendance.report.colTotal"),
-            t("attendance.report.colRate"),
-          ]}
-        />
-      </div>
-      {filteredStudentAttendanceRows.length === 0 ? (
-        <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
-      ) : (
-        <Card className="overflow-hidden">
-          <div className="space-y-3 p-3 md:hidden">
-            {filteredStudentAttendanceRows.map((studentAttendance) => (
-              <article key={studentAttendance.studentName} className="space-y-3 rounded-xl border border-border bg-card p-3">
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <h4 className="truncate text-sm font-semibold text-foreground">{studentAttendance.studentName}</h4>
-                  <div className="w-24 shrink-0">{rateBar(studentAttendance.rate)}</div>
-                </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colStudentClass")}</dt>
-                    <dd className="text-foreground">{studentAttendance.class}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotal")}</dt>
-                    <dd className="text-muted-foreground">{studentAttendance.total}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPresent")}</dt>
-                    <dd className="font-medium text-success">{studentAttendance.present}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAbsent")}</dt>
-                    <dd className="font-medium text-destructive">{studentAttendance.absent}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colLate")}</dt>
-                    <dd className="font-medium text-warning">{studentAttendance.late}</dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                {[
-                  t("attendance.report.colStudent"),
-                  t("attendance.report.colStudentClass"),
-                  t("attendance.report.colPresent"),
-                  t("attendance.report.colAbsent"),
-                  t("attendance.report.colLate"),
-                  t("attendance.report.colTotal"),
-                  t("attendance.report.colRate"),
-                ].map((headerLabel) => (
-                  <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredStudentAttendanceRows.map((studentAttendance) => (
-                <tr key={studentAttendance.studentName} className="hover:bg-muted/30">
-                  <td className="px-3 py-2.5 font-medium text-foreground">{studentAttendance.studentName}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.class}</td>
-                  <td className="px-3 py-2.5 text-success font-medium">{studentAttendance.present}</td>
-                  <td className="px-3 py-2.5 text-destructive font-medium">{studentAttendance.absent}</td>
-                  <td className="px-3 py-2.5 text-warning font-medium">{studentAttendance.late}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.total}</td>
-                  <td className="px-3 py-2.5 w-32">{rateBar(studentAttendance.rate)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </Card>
-      )}
-
-      {/* Dashboard widgets preview */}
-      <div className="border-t border-border/50 pt-6 mt-6 space-y-4">
-        <div>
-          <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("attendance.report.dashboardWidgetsTitle")}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("attendance.report.dashboardWidgetsSubtitle")}</p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <AttendanceChart />
-          <TodayAttendanceWidget />
-        </div>
-      </div>
+      <AttendanceReportDashboardWidgets />
     </div>
   );
 }

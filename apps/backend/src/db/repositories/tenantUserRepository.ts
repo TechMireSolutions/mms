@@ -1,6 +1,7 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type StoredTenantUser, resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
 import { getDb } from '../dbClient.js';
+import { activeDb } from '../dbConnection.js';
 import { tenantUsers } from '../schema.js';
 
 export type TenantUserRow = StoredTenantUser & Record<string, unknown>;
@@ -125,6 +126,18 @@ export async function listTenantUsersByWorkspace(
   return rows.map(rowToTenantUser);
 }
 
+/** Every workspace row, active and soft-deleted — backup snapshots and restore merges. */
+export async function listAllTenantUsersByWorkspace(
+  workspaceSubdomain: string,
+): Promise<TenantUserRow[]> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const rows = await activeDb()
+    .select()
+    .from(tenantUsers)
+    .where(eq(tenantUsers.workspaceSubdomain, subdomain));
+  return rows.map(rowToTenantUser);
+}
+
 export async function findTenantUserRowById(id: string): Promise<TenantUserRow | null> {
   const rows = await getDb().select().from(tenantUsers).where(eq(tenantUsers.id, id));
   const row = rows[0];
@@ -158,18 +171,45 @@ export async function replaceTenantUsersForWorkspace(
   users: TenantUserRow[],
 ): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const db = getDb();
+  const db = activeDb();
+
+  // Backup payloads never carry password hashes, so keep the current credential
+  // for any account the payload still contains — a restore must not lock admins out.
+  const existingRows = await listAllTenantUsersByWorkspace(subdomain);
+  const hashById = new Map<string, string>();
+  const hashByLoginEmail = new Map<string, string>();
+  for (const row of existingRows) {
+    const hash = typeof row.passwordHash === 'string' ? row.passwordHash : '';
+    if (!hash) continue;
+    hashById.set(String(row.id), hash);
+    if (row.loginEmail) hashByLoginEmail.set(row.loginEmail.trim().toLowerCase(), hash);
+  }
+
+  const values = users.map((user) => {
+    const { columns } = splitProfileFields({ ...user, workspaceSubdomain: subdomain });
+    if (!columns.passwordHash) {
+      columns.passwordHash =
+        hashById.get(columns.id) ??
+        hashByLoginEmail.get(columns.loginEmail.trim().toLowerCase()) ??
+        '';
+    }
+    if (!columns.passwordHash) {
+      const err = new Error('backup.missingUserCredentials') as Error & {
+        statusCode?: number;
+        type?: string;
+      };
+      err.statusCode = 400;
+      err.type = 'validation_error';
+      throw err;
+    }
+    return columns;
+  });
 
   await db.delete(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, subdomain));
 
-  if (users.length === 0) return;
+  if (values.length === 0) return;
 
-  await db.insert(tenantUsers).values(
-    users.map((user) => {
-      const { columns } = splitProfileFields({ ...user, workspaceSubdomain: subdomain });
-      return columns;
-    }),
-  );
+  await db.insert(tenantUsers).values(values);
 }
 
 function omitUndefinedColumns<T extends Record<string, unknown>>(columns: T): Partial<T> {

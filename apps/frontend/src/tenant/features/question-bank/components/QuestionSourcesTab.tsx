@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { BookOpen, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   QUESTION_SOURCE_FIELD_TO_KEY,
   createQuestionSourceBook,
   getBookCitationFieldIds,
-  getBookDefinitionFieldIds,
   isQuestionSourceFieldId,
   type AppTranslationKey,
   type ModuleFieldDef,
@@ -18,12 +17,11 @@ import {
   persistQuestionSourceBook,
   removeQuestionSourceBook,
 } from '@/lib/data/questionBankSourceBooks';
-import { FormModal } from '@/components/ui/FormModal';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { Textarea } from '@/components/ui/textarea';
+import { QuestionSourceBooksSection } from "@/tenant/features/question-bank/components/QuestionSourceBooksSection";
+import { QuestionSourceInput } from "@/tenant/features/question-bank/components/QuestionSourceInput";
 
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
@@ -37,42 +35,6 @@ interface QuestionSourcesTabProps {
   onBooksUpdated: () => void;
   fieldLabel: (fieldId: string, fallback?: string) => string;
   translate?: TranslateFn;
-}
-
-function renderSourceInput(
-  field: ModuleFieldDef,
-  value: string,
-  onChange: (value: string) => void,
-  label: string,
-  inputId: string,
-  required?: boolean,
-): React.ReactNode {
-  const requiredMark = required ? ' *' : '';
-  if (field.type === 'textarea') {
-    return (
-      <div key={field.id} className="sm:col-span-2">
-        <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
-        <Textarea
-          id={inputId}
-          name={field.id}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </div>
-    );
-  }
-  return (
-    <div key={field.id}>
-      <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
-      <Input
-        id={inputId}
-        type={field.type === 'date' ? 'date' : 'text'}
-        className={FORM_INPUT}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </div>
-  );
 }
 
 export function QuestionSourcesTab({
@@ -184,124 +146,27 @@ export function QuestionSourcesTab({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-3 rounded-xl border border-border/70 bg-muted/10 p-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            <BookOpen className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-            <h3 className="min-w-0 truncate text-sm font-bold text-foreground">{t('questionBank.sourceBooksTitle')}</h3>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={startNewBook}
-            className="min-h-11 w-full rounded-lg border border-border px-3 text-xs font-semibold hover:bg-muted sm:w-auto"
-          >
-            {t('questionBank.addSourceBook')}
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground">{t('questionBank.sourceBooksHint')}</p>
-
-        {sourceBooks.length === 0 ? (
-          <p className="text-xs text-muted-foreground">{t('questionBank.noSourceBooks')}</p>
-        ) : (
-          <ul className="space-y-2">
-            {sourceBooks.map((book) => (
-              <li
-                key={book.id}
-                className="flex flex-col gap-2 rounded-lg border border-border bg-card px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">{book.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('questionBank.sourceBookFieldCount', { count: book.fieldIds.length })}
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-1 self-end sm:self-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => startEditBook(book)}
-                    className="min-h-11 rounded-lg border border-border px-2 text-xs font-semibold hover:bg-muted"
-                  >
-                    {t('questionBank.editSourceBook')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => deleteBook(book.id)}
-                    className="rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-destructive"
-                    aria-label={t('questionBank.deleteSourceBook', { name: book.name })}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {showBookForm && draftBook && (
-          <FormModal
-            open
-            onClose={() => {
-              setShowBookForm(false);
-              setDraftBook(null);
-              setEditingBookId(null);
-            }}
-            title={editingBookId ? t('questionBank.editSourceBook') : t('questionBank.addSourceBook')}
-            icon={BookOpen}
-            cancelLabel={t('questionBank.cancel')}
-            saveLabel={t('questionBank.saveSourceBook')}
-            onSave={saveBook}
-            saveDisabled={!draftBook.metadata.bookName?.trim() && !draftBook.name.trim()}
-          >
-            <div className="space-y-4">
-              <div>
-                <span className={FORM_LABEL}>{t('questionBank.selectBookFields')}</span>
-                <div className="flex flex-wrap gap-2">
-                  {availableFieldIds.map((fieldId) => {
-                    const selected = draftBook.fieldIds.includes(fieldId);
-                    return (
-                      <Button
-                        key={fieldId}
-                        type="button"
-                        variant="outline"
-                        onClick={() => fieldId !== 'sourceBookName' && toggleBookField(fieldId)}
-                        disabled={fieldId === 'sourceBookName'}
-                        className={`min-h-11 rounded-full border px-2.5 text-xs font-semibold ${
-                          selected
-                            ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary'
-                            : 'border-border text-muted-foreground hover:bg-muted'
-                        }`}
-                      >
-                        {fieldLabel(fieldId)}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {getBookDefinitionFieldIds(draftBook).map((fieldId) => {
-                  const field = fieldById.get(fieldId);
-                  if (!field) return null;
-                  const key = QUESTION_SOURCE_FIELD_TO_KEY[fieldId];
-                  const value = String(draftBook.metadata[key] ?? '');
-                  return renderSourceInput(
-                    field,
-                    value,
-                    (next) => updBookMeta(fieldId, next),
-                    fieldLabel(fieldId, field.label),
-                    `qb-book-${fieldId}`,
-                    fieldId === 'sourceBookName',
-                  );
-                })}
-              </div>
-            </div>
-          </FormModal>
-        )}
-      </section>
+      <QuestionSourceBooksSection
+        sourceBooks={sourceBooks}
+        availableFieldIds={availableFieldIds}
+        draftBook={draftBook}
+        editingBookId={editingBookId}
+        showBookForm={showBookForm}
+        fieldById={fieldById}
+        fieldLabel={fieldLabel}
+        t={t}
+        onStartNew={startNewBook}
+        onStartEdit={startEditBook}
+        onDeleteBook={deleteBook}
+        onToggleBookField={toggleBookField}
+        onUpdateBookMeta={updBookMeta}
+        onSaveBook={saveBook}
+        onCloseBookForm={() => {
+          setShowBookForm(false);
+          setDraftBook(null);
+          setEditingBookId(null);
+        }}
+      />
 
       <section className="space-y-3">
         <p className="text-xs text-muted-foreground">{t('questionBank.citationsForQuestionHint')}</p>
@@ -355,12 +220,15 @@ export function QuestionSourcesTab({
                       if (!field || !isQuestionSourceFieldId(fieldId)) return null;
                       const key = QUESTION_SOURCE_FIELD_TO_KEY[fieldId];
                       const value = String(entry.citation[key] ?? '');
-                      return renderSourceInput(
-                        field,
-                        value,
-                        (next) => updCitationField(index, key, next),
-                        fieldLabel(fieldId, field.label),
-                        `qb-citation-${index}-${fieldId}`,
+                      return (
+                        <QuestionSourceInput
+                          key={field.id}
+                          field={field}
+                          value={value}
+                          onChange={(next) => updCitationField(index, key, next)}
+                          label={fieldLabel(fieldId, field.label)}
+                          inputId={`qb-citation-${index}-${fieldId}`}
+                        />
                       );
                     })}
                   </div>

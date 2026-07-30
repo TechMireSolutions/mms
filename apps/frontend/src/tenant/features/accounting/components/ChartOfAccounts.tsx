@@ -1,17 +1,14 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Pencil, Download, EyeOff, Eye } from "lucide-react";
-import { SearchBar } from "@/components/ui/SearchBar";
 import { AnimatePresence } from "framer-motion";
-import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
+import { ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
+import { ChartOfAccountsToolbar } from "@/tenant/features/accounting/components/ChartOfAccountsToolbar";
+import { ChartOfAccountsTreeTable } from "@/tenant/features/accounting/components/ChartOfAccountsTreeTable";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/FormSelect";
+import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { type AppTranslationKey } from "@mms/shared";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 
@@ -121,274 +118,35 @@ export function ChartOfAccounts({
 
   return (
     <section aria-label={t("accounting.coa.aria")} className="space-y-4">
-      {/* Toolbar */}
-      <nav aria-label={t("accounting.coa.controlsAria")} className="flex flex-wrap gap-2 items-center">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder={t("accounting.coa.searchAccounts")}
-          className="flex-1 min-w-[11.25rem]"
-        />
-        <FormSelect 
-          aria-label={t("accounting.coa.filterTypeAria")}
-          value={typeFilter} 
-          onChange={(accountTypeValue) => setTypeFilter(accountTypeValue as AccountType | "all")}
-          options={[{ value: "all", label: t("accounting.ledger.allTypes") }, ...ACCOUNT_TYPES.map((type) => ({ value: type, label: t(`accounting.type.${type}` as AppTranslationKey) }))]}
-        />
-        <Button 
-          type="button"
-          variant={showInactive ? "secondary" : "outline"}
-          aria-pressed={showInactive}
-          onClick={() => setShowInactive(!showInactive)}
-          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
-        >
-          {showInactive ? <Eye className="w-3.5 h-3.5" aria-hidden="true" /> : <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}
-          {showInactive ? t("accounting.coa.showingAll") : t("accounting.coa.showInactive")}
-        </Button>
-        <Button 
-          type="button"
-          variant="outline"
-          onClick={exportCSV}
-          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
-        >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
-        </Button>
-        {columnCustomizer && (
-          <ModuleColumnCustomizer
-            columnRegistry={columnCustomizer.columnRegistry}
-            updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-            labels={columnCustomizer.labels}
-          />
-        )}
-        {canWrite && (
-          <Button 
-            type="button"
-            variant="default"
-            onClick={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
-            className="flex items-center gap-1.5 rounded-xl text-sm font-semibold ms-auto"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.coa.addAccount")}
-          </Button>
-        )}
-      </nav>
+      <ChartOfAccountsToolbar
+        search={search}
+        setSearch={setSearch}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        showInactive={showInactive}
+        setShowInactive={setShowInactive}
+        onExportCsv={exportCSV}
+        onAddAccount={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
+        canWrite={canWrite}
+        columnCustomizer={columnCustomizer}
+      />
 
-      {/* Summary stats */}
-      <div className="flex flex-wrap gap-2" aria-label={t("accounting.coa.countsAria")}>
-        {ACCOUNT_TYPES.map((type) => {
-          const count = accounts.filter((account) => account.type === type && account.isActive !== false).length;
-          if (count === 0) return null;
-          return (
-            <span key={type} className={`px-2.5 py-1 rounded-full text-xs font-bold border ${ACCOUNT_TYPE_META[type]?.color}`}>
-              <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t(`accounting.type.${type}` as AppTranslationKey)}: {count}
-            </span>
-          );
-        })}
-      </div>
-
-      {/* Grouped by type */}
-      {ACCOUNT_TYPES.map((type) => {
-        const accountTypeRows = filtered.filter((account) => account.type === type);
-        if (accountTypeRows.length === 0) return null;
-        return (
-          <article key={type} className="rounded-xl border border-border overflow-hidden">
-            <header className={`px-4 py-2.5 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex min-w-0 items-center justify-between gap-2`}>
-              <h3 className="min-w-0 truncate text-xs font-bold uppercase tracking-wide m-0">
-                <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey) })}
-              </h3>
-              <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-                {t("accounting.coa.groupMeta", {
-                  normal: ACCOUNT_TYPE_META[type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr"),
-                  count: accountTypeRows.length
-                })}
-              </span>
-            </header>
-            <div className="space-y-3 p-3 md:hidden">
-              {accountTypeRows.map((account) => (
-                <article
-                  key={account.id}
-                  className={`space-y-3 rounded-xl border border-border bg-card p-3 ${account.isActive === false ? "opacity-50" : ""}`}
-                >
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      {showCode && <p className="font-mono text-xs font-bold text-muted-foreground m-0">{account.code}</p>}
-                      {showName && (
-                        <h4 className="text-sm font-semibold text-foreground m-0 mt-0.5">
-                          {account.name}
-                          {account.isActive === false && <span className="ms-2 text-xs text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
-                        </h4>
-                      )}
-                    </div>
-                    {showNormalBalance && (
-                      <StatusBadge
-                        status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
-                        config={balanceConfig}
-                        size="sm"
-                      />
-                    )}
-                  </div>
-                  <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                    {showSubtype && (
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.subtype")}</dt>
-                        <dd className="text-foreground">{account.subtype || "—"}</dd>
-                      </div>
-                    )}
-                    {showDescription && (
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.description")}</dt>
-                        <dd className="break-words text-foreground">{account.description || "—"}</dd>
-                      </div>
-                    )}
-                  </dl>
-                  {canWrite && (
-                    <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={t("accounting.coa.editAria", { name: account.name })}
-                        onClick={() => setModal({ ...account })}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                      </Button>
-                      {account.isActive === false ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t("accounting.coa.reactivateAria", { name: account.name })}
-                          onClick={() => handleReactivate(account.id)}
-                          className="text-muted-foreground hover:text-success"
-                        >
-                          <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t("accounting.coa.deactivateAria", { name: account.name })}
-                          onClick={() => handleDelete(account.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </article>
-              ))}
-            </div>
-            <div className="hidden overflow-x-auto md:block">
-              <table className="w-full text-sm table-fixed">
-                <caption className="sr-only">{t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    {showCode && (
-                      <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
-                        {t("accounting.columns.account.code")}
-                      </ResizableTableHead>
-                    )}
-                    {showName && (
-                      <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
-                        {t("accounting.columns.account.name")}
-                      </ResizableTableHead>
-                    )}
-                    {showSubtype && (
-                      <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">
-                        {t("accounting.columns.account.subtype")}
-                      </ResizableTableHead>
-                    )}
-                    {showDescription && (
-                      <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
-                        {t("accounting.columns.account.description")}
-                      </ResizableTableHead>
-                    )}
-                    {showNormalBalance && (
-                      <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
-                        {t("accounting.columns.account.normalBalance")}
-                      </ResizableTableHead>
-                    )}
-                    <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">
-                      {t("accounting.columns.actions")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {accountTypeRows.map((account) => (
-                    <tr key={account.id} className={`hover:bg-muted/20 transition-colors ${account.isActive === false ? "opacity-50" : ""}`}>
-                      {showCode && (
-                        <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{account.code}</td>
-                      )}
-                      {showName && (
-                        <td className="px-4 py-2.5">
-                          <span className="font-semibold text-foreground">{account.name}</span>
-                          {account.isActive === false && <span className="ms-2 text-xs text-muted-foreground font-semibold bg-muted px-1.5 py-0.5 rounded-full">{t("accounting.coa.inactive")}</span>}
-                        </td>
-                      )}
-                      {showSubtype && (
-                        <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{account.subtype || "—"}</td>
-                      )}
-                      {showDescription && (
-                        <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[12.5rem] truncate">{account.description || "—"}</td>
-                      )}
-                      {showNormalBalance && (
-                        <td className="px-4 py-2.5">
-                          <StatusBadge
-                            status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
-                            config={balanceConfig}
-                            size="sm"
-                          />
-                        </td>
-                      )}
-                      <td className="px-4 py-2.5 text-end">
-                        <div className="flex items-center justify-end gap-1">
-                          {canWrite && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={t("accounting.coa.editAria", { name: account.name })}
-                              onClick={() => setModal({ ...account })}
-                              className="text-muted-foreground hover:text-foreground"
-                            >
-                              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
-                          )}
-                          {canWrite && (account.isActive === false ? (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={t("accounting.coa.reactivateAria", { name: account.name })}
-                              onClick={() => handleReactivate(account.id)}
-                              className="text-muted-foreground hover:text-success"
-                            >
-                              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={t("accounting.coa.deactivateAria", { name: account.name })}
-                              onClick={() => handleDelete(account.id)}
-                              className="text-muted-foreground hover:text-destructive"
-                            >
-                              <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
-                            </Button>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </article>
-        );
-      })}
+      <ChartOfAccountsTreeTable
+        accounts={accounts}
+        filteredAccounts={filtered}
+        balanceConfig={balanceConfig}
+        canWrite={canWrite}
+        showCode={showCode}
+        showName={showName}
+        showSubtype={showSubtype}
+        showDescription={showDescription}
+        showNormalBalance={showNormalBalance}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={onColumnResize}
+        onEdit={(account) => setModal({ ...account })}
+        onDelete={handleDelete}
+        onReactivate={handleReactivate}
+      />
 
       <p className="text-xs text-muted-foreground" aria-live="polite">{t("accounting.coa.accountsShown", { count: filtered.length })}</p>
 

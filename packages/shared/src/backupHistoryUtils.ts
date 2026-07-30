@@ -27,13 +27,15 @@ export interface PendingRestore {
   jsonText: string;
   summary: WorkspaceBackupSummary;
   fileName?: string;
+  /** History entry the restore came from — drives the per-row progress state. */
+  backupId?: string;
   credentials: BackupCryptoCredentials;
 }
 
 export type PendingDecrypt =
   | { kind: 'file'; encryptedText: string; fileName: string; adminEmail: string }
   | { kind: 'history'; backup: WorkspaceBackupRecord }
-  | { kind: 'plaintext'; jsonText: string; fileName: string };
+  | { kind: 'plaintext'; jsonText: string; fileName: string; backupId?: string };
 
 /**
  * Checks if an error message string matches a localized backup translation key format.

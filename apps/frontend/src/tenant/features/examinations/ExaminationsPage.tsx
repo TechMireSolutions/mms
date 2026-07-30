@@ -5,24 +5,16 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, FileText, PenTool, Layers, Plus } from "lucide-react";
+import { BookOpen, FileText, Layers } from "lucide-react";
 import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey } from "@mms/shared";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { SubTabBar } from "@/components/ui/SubTabBar";
-import { FormModal } from "@/components/ui/FormModal";
-import { ActionButton } from "@/components/ui/ActionButton";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import ExamsList from "@/tenant/features/examinations/components/ExamsList";
-import ExamForm from "@/tenant/features/examinations/components/ExamForm";
-import { EnterMarks } from "@/tenant/features/examinations/components/EnterMarks";
-import { ResultsView } from "@/tenant/features/examinations/components/ResultsView";
-import { ExaminationsSettings } from "@/tenant/features/examinations/components/ExaminationsSettings";
 import { ExaminationsCommandMetrics } from "@/tenant/features/examinations/components/ExaminationsCommandMetrics";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
+import { ExaminationsModalLayer } from "@/tenant/features/examinations/components/ExaminationsModalLayer";
+import { ExaminationsPageActions } from "@/tenant/features/examinations/components/ExaminationsPageActions";
+import { ExaminationsReportsTier } from "@/tenant/features/examinations/components/ExaminationsReportsTier";
+import { ExaminationsSetupTier } from "@/tenant/features/examinations/components/ExaminationsSetupTier";
+import { ExaminationsWorkTier } from "@/tenant/features/examinations/components/ExaminationsWorkTier";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { useExaminationExamColumnLayout } from "@/tenant/features/examinations/hooks/useExaminationExamColumnLayout";
 import { useExaminationResultsColumnLayout } from "@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout";
@@ -221,32 +213,18 @@ export default function Examinations(): React.JSX.Element {
       headerTitle={t("nav.examinations")}
       headerSubtitle={t("page.examinations.subtitle")}
       headerActions={
-        <div className="flex items-center gap-2">
-          {canWrite && !showDeleted ? (
-            <ActionButton
-              variant="ghost"
-              icon={PenTool}
-              onClick={() => setShowMarksModal(true)}
-            >
-              {t("examinations.marks")}
-            </ActionButton>
-          ) : null}
-          {canWrite && !showDeleted ? (
-            <ActionButton
-              variant="primary"
-              icon={Plus}
-              onClick={() => {
-                setActiveTab("work");
-                setActiveSubTab("exams");
-                setEditExam(null);
-                setShowExamForm(true);
-                setCreateExamKey((key) => key + 1);
-              }}
-            >
-              {t("examinations.newExam")}
-            </ActionButton>
-          ) : null}
-        </div>
+        <ExaminationsPageActions
+          canWrite={canWrite}
+          showDeleted={showDeleted}
+          onEnterMarks={() => setShowMarksModal(true)}
+          onCreateExam={() => {
+            setActiveTab("work");
+            setActiveSubTab("exams");
+            setEditExam(null);
+            setShowExamForm(true);
+            setCreateExamKey((key) => key + 1);
+          }}
+        />
       }
       metricsStrip={
         <ExaminationsCommandMetrics total={exams.length} shown={filteredCount} />
@@ -258,144 +236,78 @@ export default function Examinations(): React.JSX.Element {
         onTabChange={setActiveTab}
         panelIdPrefix="examinations-tab"
       >
-        {effectiveTab === "work" && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <SubTabBar
-              tabs={OPS_SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-              value={effectiveSubTab}
-              onChange={(next) => {
-                setActiveSubTab(next);
-                if (next !== "exams") setShowDeleted(false);
-              }}
-            />
-            {effectiveSubTab === "exams" && canDelete && (
-              <ModuleTrashToggle
-                showDeleted={showDeleted}
-                onToggle={() => setShowDeleted((prev) => !prev)}
-                showActiveLabel={t("examinations.trash.showActive")}
-                showDeletedLabel={t("examinations.trash.showDeleted")}
-                className="gap-1.5 shrink-0"
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${effectiveTab}-${effectiveSubTab}-${String(showDeleted)}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
+          >
+            {effectiveTab === "setup" && (
+              <ExaminationsSetupTier
+                tabs={SETUP_TABS}
+                activeTab={effectiveConfigTab}
+                canEditSetup={canEditSetup}
+                onTabChange={setConfigSubTab}
               />
             )}
-          </div>
-        )}
 
-        <ErrorBoundary>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${effectiveTab}-${effectiveSubTab}-${String(showDeleted)}`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="space-y-4"
-            >
-              {effectiveTab === "setup" && (
-                <div className="space-y-4">
-                  <SubTabBar
-                    tabs={SETUP_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-                    value={effectiveConfigTab}
-                    onChange={setConfigSubTab}
-                  />
-                  {!canEditSetup ? (
-                    <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-                      {t("examinations.setup.readOnly")}
-                    </p>
-                  ) : (
-                    <ExaminationsSettings mode={effectiveConfigTab} />
-                  )}
-                </div>
-              )}
+            {effectiveTab === "reports" && <ExaminationsReportsTier />}
 
-              {effectiveTab === "reports" && (
-                <div className="space-y-4">
-                  <KPISummary category="examinations" />
-                  <ModuleReports category="examinations" />
-                </div>
-              )}
-
-              {effectiveTab === "work" && listLoadFailed && (
-                <ErrorState
-                  title={t("examinations.loadFailed")}
-                  onRetry={() => { void examsResult.queryResult.refetch(); }}
-                />
-              )}
-
-              {effectiveTab === "work" && !listLoadFailed && effectiveSubTab === "exams" && (
-                <ExamsList
-                  exams={exams}
-                  listLayout={listLayout}
-                  canWrite={canWrite}
-                  canDelete={canDelete}
-                  showDeleted={showDeleted}
-                  createRequestKey={createExamKey}
-                  onDelete={handleDeleteExam}
-                  onRestore={handleRestoreExam}
-                  onBulkDelete={handleBulkDelete}
-                  onBulkRestore={handleBulkRestore}
-                  onNew={() => {
-                    setEditExam(null);
-                    setShowExamForm(true);
-                  }}
-                  onEdit={(exam: Exam) => {
-                    setEditExam(exam);
-                    setShowExamForm(true);
-                  }}
-                  onFilteredCountChange={setFilteredCount}
-                  isColumnVisible={examColumnLayout.isColumnVisible}
-                  getColumnWidth={examColumnLayout.getColumnWidth}
-                  onColumnResize={examColumnLayout.setColumnWidth}
-                  columnCustomizer={{
-                    columnRegistry: examColumnLayout.columnRegistry,
-                    updateUserColumnLayout: examColumnLayout.updateUserColumnLayout,
-                    labels: examColumnLayout.customizerLabels,
-                  }}
-                />
-              )}
-              {effectiveTab === "work" && !listLoadFailed && effectiveSubTab === "results" && (
-                <ResultsView
-                  exams={exams}
-                  results={examResults}
-                  onFilteredCountChange={setFilteredCount}
-                  isColumnVisible={resultsColumnLayout.isColumnVisible}
-                  columnCustomizer={{
-                    columnRegistry: resultsColumnLayout.columnRegistry,
-                    updateUserColumnLayout: resultsColumnLayout.updateUserColumnLayout,
-                    labels: resultsColumnLayout.customizerLabels,
-                  }}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </ErrorBoundary>
+            {effectiveTab === "work" && (
+              <ExaminationsWorkTier
+                tabs={OPS_SUB_TABS}
+                activeSubTab={effectiveSubTab}
+                showDeleted={showDeleted}
+                listLoadFailed={listLoadFailed}
+                listLayout={listLayout}
+                canWrite={canWrite}
+                canDelete={canDelete}
+                createExamKey={createExamKey}
+                exams={exams}
+                examResults={examResults}
+                examColumnLayout={examColumnLayout}
+                resultsColumnLayout={resultsColumnLayout}
+                onSubTabChange={setActiveSubTab}
+                onToggleDeleted={() => setShowDeleted((prev) => !prev)}
+                onRetry={() => { void examsResult.queryResult.refetch(); }}
+                onDelete={handleDeleteExam}
+                onRestore={handleRestoreExam}
+                onBulkDelete={handleBulkDelete}
+                onBulkRestore={handleBulkRestore}
+                onNew={() => {
+                  setEditExam(null);
+                  setShowExamForm(true);
+                }}
+                onEdit={(exam) => {
+                  setEditExam(exam);
+                  setShowExamForm(true);
+                }}
+                onFilteredCountChange={setFilteredCount}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <AnimatePresence>
-        {showExamForm && canWrite && !showDeleted && (
-          <ExamForm
-            open={showExamForm}
-            exam={editExam}
-            onClose={() => {
-              setShowExamForm(false);
-              setEditExam(null);
-            }}
-            onSave={handleSaveExam}
-          />
-        )}
-      </AnimatePresence>
-
-      {canWrite && !showDeleted && (
-        <FormModal
-          open={showMarksModal}
-          onClose={() => setShowMarksModal(false)}
-          title={t("examinations.marks")}
-          size="xl"
-          hideFooter
-          panelClassName="h-[88vh] max-h-[43.75rem]"
-        >
-          <EnterMarks exams={exams} results={examResults} onSaveResults={handleSaveResults} />
-        </FormModal>
-      )}
+      <ExaminationsModalLayer
+        canWrite={canWrite}
+        showDeleted={showDeleted}
+        showExamForm={showExamForm}
+        showMarksModal={showMarksModal}
+        editExam={editExam}
+        exams={exams}
+        examResults={examResults}
+        onCloseExamForm={() => {
+          setShowExamForm(false);
+          setEditExam(null);
+        }}
+        onSaveExam={handleSaveExam}
+        onCloseMarks={() => setShowMarksModal(false)}
+        onSaveResults={handleSaveResults}
+      />
     </ModulePageShell>
   );
 }

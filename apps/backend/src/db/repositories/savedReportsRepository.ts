@@ -138,3 +138,55 @@ export async function touchSavedReportRunByOwner(
     return rows[0] ? toGenericSavedReport(rows[0]) : null;
   });
 }
+
+/** Every saved-report preset for a workspace — admin backup snapshots. */
+export async function listAllSavedReportsByWorkspace(
+  workspaceSubdomain: string,
+): Promise<GenericSavedReport[]> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  return withTenantTransaction(tenant, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(savedReports)
+      .where(eq(savedReports.workspaceSubdomain, tenant))
+      .orderBy(desc(savedReports.createdAt));
+    return rows.map(toGenericSavedReport);
+  });
+}
+
+/** Wipe+replace saved-report presets — admin restore only. */
+export async function replaceSavedReportsForWorkspace(
+  workspaceSubdomain: string,
+  reports: GenericSavedReport[],
+): Promise<void> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  await withTenantTransaction(tenant, async (tx) => {
+    await tx.delete(savedReports).where(eq(savedReports.workspaceSubdomain, tenant));
+    if (reports.length === 0) return;
+
+    const seen = new Set<string>();
+    const values = [];
+    for (const report of reports) {
+      const id = String(report.id);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const lastRunAt = new Date(report.lastRun);
+      const createdAt = new Date(report.createdAt);
+      values.push({
+        id,
+        workspaceSubdomain: tenant,
+        category: report.category,
+        name: report.name,
+        filters: report.filters,
+        lastRunAt: Number.isNaN(lastRunAt.getTime()) ? new Date() : lastRunAt,
+        createdBy: report.createdBy,
+        createdByName: report.createdByName,
+        createdAt: Number.isNaN(createdAt.getTime()) ? new Date() : createdAt,
+        updatedAt: new Date(),
+      });
+    }
+    if (values.length > 0) {
+      await tx.insert(savedReports).values(values);
+    }
+  });
+}

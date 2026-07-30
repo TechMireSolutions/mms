@@ -20,8 +20,8 @@ import {
   syncToServer,
 } from "@/lib/dbStorageCore.js";
 
-export async function fetchTenantSnapshot(): Promise<TenantDatabaseSnapshot> {
-  const response = await apiFetch("/api/db/sync", {
+async function fetchSnapshot(path: string): Promise<TenantDatabaseSnapshot> {
+  const response = await apiFetch(path, {
     headers: getHeaders(),
   });
 
@@ -33,6 +33,18 @@ export async function fetchTenantSnapshot(): Promise<TenantDatabaseSnapshot> {
   }
 
   return (await response.json()) as TenantDatabaseSnapshot;
+}
+
+export async function fetchTenantSnapshot(): Promise<TenantDatabaseSnapshot> {
+  return fetchSnapshot("/api/db/sync");
+}
+
+/**
+ * Full-fidelity snapshot for backup export — includes the relational tables that
+ * own REST-migrated module data, which `/api/db/sync` does not carry.
+ */
+export async function fetchTenantBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
+  return fetchSnapshot("/api/db/backup");
 }
 
 /**
@@ -65,11 +77,10 @@ export async function syncDatabase(): Promise<void> {
 
 /**
  * Exports a full tenant backup from the server (PostgreSQL), not browser cache alone.
- * Refreshes localStorage from the server snapshot before building the file.
+ * The local cache is left untouched — a full workspace can exceed the localStorage quota.
  */
 export async function exportTenantBackup(): Promise<string> {
-  const snapshot = await fetchTenantSnapshot();
-  applySnapshotToLocalCache(snapshot);
+  const snapshot = await fetchTenantBackupSnapshot();
 
   const prefix = getStoragePrefix();
   const keys = buildStorageKeysFromSnapshot(snapshot, prefix);
@@ -91,15 +102,18 @@ export async function importDatabase(jsonString: string): Promise<void> {
     // Pushes backup bulk sync to backend first. If this fails, the local cache remains untouched.
     const result = await syncToServer("/api/db/sync", { collections, objects });
     if (!result.ok) {
-      throw new Error("backup.serverRestoreFailed");
+      throw new Error(result.errorKey ?? "backup.serverRestoreFailed");
     }
 
-    // Clear old client cache only after backend success
+    // Drop the stale local cache. Do not rewrite the full relational dump into
+    // localStorage — it can exceed quota, and the page reload rehydrates via REST.
     clearByPrefix(prefix);
 
-    // Populate new client cache
-    for (const [key, value] of Object.entries(validated.data)) {
-      safeSetItem(key, value);
+    // Keep settings/singleton objects cached so the first paint after reload is coherent.
+    if (objects) {
+      for (const [logicalKey, value] of Object.entries(objects)) {
+        safeSetItem(`${prefix}${logicalKey}`, JSON.stringify(value));
+      }
     }
 
     dispatchLocalDatabaseUpdate();

@@ -9,17 +9,29 @@ const mockSelectWhere = vi.fn();
 const mockSelectFrom = vi.fn().mockReturnValue({ where: mockSelectWhere });
 const mockSelect = vi.fn().mockReturnValue({ from: mockSelectFrom });
 
+const mockDeleteWhere = vi.fn().mockResolvedValue(undefined);
+const mockDelete = vi.fn().mockReturnValue({ where: mockDeleteWhere });
+
 const mockDb = {
   select: mockSelect,
   update: mockUpdate,
   insert: mockInsert,
+  delete: mockDelete,
 };
 
 vi.mock('../db/dbClient.js', () => ({
   getDb: () => mockDb,
 }));
 
-import { upsertTenantUserRow } from '../db/repositories/tenantUserRepository.js';
+vi.mock('../db/dbConnection.js', () => ({
+  activeDb: () => mockDb,
+  getRootDb: () => mockDb,
+}));
+
+import {
+  replaceTenantUsersForWorkspace,
+  upsertTenantUserRow,
+} from '../db/repositories/tenantUserRepository.js';
 
 const existingDbRow = {
   id: 'u-1',
@@ -110,5 +122,86 @@ describe('upsertTenantUserRow', () => {
         loginEmail: 'new.login@workspace.local',
       }),
     );
+  });
+});
+
+describe('replaceTenantUsersForWorkspace', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSelect.mockReturnValue({ from: mockSelectFrom });
+    mockSelectFrom.mockReturnValue({ where: mockSelectWhere });
+    mockInsert.mockReturnValue({ values: mockInsertValues });
+    mockDelete.mockReturnValue({ where: mockDeleteWhere });
+    mockSelectWhere.mockResolvedValue([existingDbRow]);
+  });
+
+  it('carries the stored password hash forward when the backup payload omits it', async () => {
+    await replaceTenantUsersForWorkspace('dar-ul-quran', [
+      {
+        id: 'u-1',
+        workspaceSubdomain: 'dar-ul-quran',
+        loginEmail: 'teacher@workspace.local',
+        name: 'Existing Teacher',
+        role: 'teacher',
+      },
+    ]);
+
+    expect(mockDelete).toHaveBeenCalledTimes(1);
+    const inserted = mockInsertValues.mock.calls[0]?.[0] as Array<{ passwordHash: string }>;
+    expect(inserted[0].passwordHash).toBe('salt:existing-hash');
+  });
+
+  it('matches by login email when the backup carries a different user id', async () => {
+    await replaceTenantUsersForWorkspace('dar-ul-quran', [
+      {
+        id: 'u-restored',
+        workspaceSubdomain: 'dar-ul-quran',
+        loginEmail: 'Teacher@Workspace.local',
+        name: 'Existing Teacher',
+        role: 'teacher',
+      },
+    ]);
+
+    const inserted = mockInsertValues.mock.calls[0]?.[0] as Array<{ passwordHash: string }>;
+    expect(inserted[0].passwordHash).toBe('salt:existing-hash');
+  });
+
+  it('keeps an explicit password hash from the payload', async () => {
+    await replaceTenantUsersForWorkspace('dar-ul-quran', [
+      {
+        id: 'u-1',
+        workspaceSubdomain: 'dar-ul-quran',
+        loginEmail: 'teacher@workspace.local',
+        passwordHash: 'salt:payload-hash',
+        name: 'Existing Teacher',
+        role: 'teacher',
+      },
+    ]);
+
+    const inserted = mockInsertValues.mock.calls[0]?.[0] as Array<{ passwordHash: string }>;
+    expect(inserted[0].passwordHash).toBe('salt:payload-hash');
+  });
+
+  it('rejects restore when no recoverable password hash exists for a user', async () => {
+    mockSelectWhere.mockResolvedValue([]);
+
+    await expect(
+      replaceTenantUsersForWorkspace('dar-ul-quran', [
+        {
+          id: 'u-new',
+          workspaceSubdomain: 'dar-ul-quran',
+          loginEmail: 'new@workspace.local',
+          name: 'New User',
+          role: 'teacher',
+        },
+      ]),
+    ).rejects.toMatchObject({
+      message: 'backup.missingUserCredentials',
+      statusCode: 400,
+      type: 'validation_error',
+    });
+
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockInsertValues).not.toHaveBeenCalled();
   });
 });

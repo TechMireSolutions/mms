@@ -1873,6 +1873,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "backup.historyCount": "{count} میں سے {max} محفوظ ایکسپورٹ",
   "backup.invalidFormat": "یہ فائل درست MMS ورک سپیس بیک اپ نہیں ہے۔",
   "backup.missingAdminUser": "بیک اپ میں کوئی ایڈمنسٹریٹر صارف موجود نہیں ہے۔ اسے بحال کرنے سے آپ لاک آؤٹ ہو سکتے ہیں۔",
+  "backup.missingUserCredentials": "بحالی جاری نہیں رہ سکتی کیونکہ ایک یا زیادہ صارفین کا پاس ورڈ اس ورک اسپیس میں قابلِ بازیافت نہیں۔ اسی ورک اسپیس میں بحال کریں جہاں بیک اپ بنایا گیا تھا، یا دستی طور پر پاس ورڈ ری سیٹ کریں۔",
   "backup.securityViolation": "سیکورٹی آڈٹ ناکام ہو گیا۔ بیک اپ میں غیر معتبر کیز یا غیر قانونی ڈیٹا پایا گیا ہے۔",
   "backup.emptyBackup": "بیک اپ فائل میں کوئی ڈیٹا نہیں۔",
   "backup.noData": "بیک اپ ڈیٹا نہیں",

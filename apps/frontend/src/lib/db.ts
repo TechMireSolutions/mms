@@ -10,6 +10,7 @@ export {
 } from "@/lib/dbStorageCore.js";
 export {
   fetchTenantSnapshot,
+  fetchTenantBackupSnapshot,
   applySnapshotToLocalCache,
   syncDatabase,
   exportTenantBackup,

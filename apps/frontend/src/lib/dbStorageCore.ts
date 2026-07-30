@@ -54,6 +54,8 @@ export function getHeaders(): Record<string, string> {
 export interface ServerSyncResult {
   ok: boolean;
   status?: number;
+  /** Translation key when the API returns a `backup.*` message. */
+  errorKey?: string;
 }
 
 export async function syncToServer(url: string, body: unknown, method: string = "POST"): Promise<ServerSyncResult> {
@@ -71,7 +73,16 @@ export async function syncToServer(url: string, body: unknown, method: string = 
         console.warn(`Sync to server failed for ${url} (status: ${response.status})`);
       }
       setSyncStatus(expectedPreAuth ? 'idle' : 'error');
-      return { ok: false, status: response.status };
+      let errorKey: string | undefined;
+      try {
+        const payload = (await response.json()) as { message?: unknown };
+        if (typeof payload.message === 'string' && payload.message.startsWith('backup.')) {
+          errorKey = payload.message;
+        }
+      } catch {
+        // Ignore non-JSON error bodies.
+      }
+      return { ok: false, status: response.status, errorKey };
     }
     setSyncStatus('idle');
     return { ok: true };

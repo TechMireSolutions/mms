@@ -115,6 +115,82 @@ export async function deleteCustomTabRow(
   });
 }
 
+/** Backup-friendly custom tab rows (workspace-scoped, no internal PK remapping). */
+export interface CustomTabBackupRow {
+  id: string;
+  moduleId: string;
+  key: string;
+  label: string;
+  icon?: string | null;
+  enabled?: boolean;
+  sortOrder?: number;
+  permissions?: string[] | null;
+  description?: string | null;
+  color?: string | null;
+  isSystem?: boolean;
+}
+
+/** Every custom tab for a workspace — admin backup snapshots. */
+export async function listAllCustomTabsByWorkspace(
+  workspaceSubdomain: string,
+): Promise<CustomTabBackupRow[]> {
+  const rows = await listCustomTabsByWorkspace(workspaceSubdomain);
+  return rows.map((row) => ({
+    id: row.id,
+    moduleId: row.moduleId,
+    key: row.key,
+    label: row.label,
+    icon: row.icon,
+    enabled: row.enabled,
+    sortOrder: row.sortOrder,
+    permissions: (row.permissions as string[] | null) ?? null,
+    description: row.description,
+    color: row.color,
+    isSystem: row.isSystem,
+  }));
+}
+
+/** Wipe+replace custom tabs — admin restore only. */
+export async function replaceCustomTabsForWorkspace(
+  workspaceSubdomain: string,
+  tabs: CustomTabBackupRow[],
+): Promise<void> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  await withTenantTransaction(subdomain, async (tx) => {
+    await tx.delete(customTabs).where(eq(customTabs.workspaceSubdomain, subdomain));
+    if (tabs.length === 0) return;
+
+    const seen = new Set<string>();
+    const values = [];
+    for (const [index, tab] of tabs.entries()) {
+      const moduleId = String(tab.moduleId || '').trim();
+      const key = String(tab.key || '').trim();
+      if (!moduleId || !key) continue;
+      const id = String(tab.id || `${subdomain}:${moduleId}:${key}`);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      values.push({
+        id,
+        workspaceSubdomain: subdomain,
+        moduleId,
+        key,
+        label: String(tab.label || key),
+        icon: tab.icon ?? null,
+        enabled: tab.enabled !== false,
+        sortOrder: tab.sortOrder ?? index,
+        permissions: tab.permissions ?? null,
+        description: tab.description ?? null,
+        color: tab.color ?? null,
+        isSystem: tab.isSystem === true,
+        updatedAt: new Date(),
+      });
+    }
+    if (values.length > 0) {
+      await tx.insert(customTabs).values(values);
+    }
+  });
+}
+
 /** Upsert tabs for a module — never wipe rows absent from the payload. */
 export async function bulkUpsertCustomTabsForModule(
   workspaceSubdomain: string,

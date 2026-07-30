@@ -3,19 +3,16 @@ import { Link } from "react-router-dom";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { motion } from "framer-motion";
 import { getOutstandingAmountForInvoice } from "@mms/shared";
-import { AlertCircle, MessageCircle, Send } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import MessageComposer from "@/components/ui/MessageComposer";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
@@ -28,99 +25,12 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import {
+  MotionTableRow,
+  OutstandingFeeMessagingActions,
+  OutstandingFeeOverdueBadge,
+} from "@/components/dashboard-widgets/OutstandingFeesTableParts";
 
-const MotionTableRow = motion.create(TableRow);
-
-interface OutstandingFeeRow {
-  id: string;
-  studentId: string;
-  student: string;
-  class: string;
-  amount: number;
-  months: number;
-  contact: string;
-  email: string;
-  dueDate: string;
-}
-
-type OpenComposer = ReturnType<typeof useMessageComposerState>["openComposer"];
-
-function OutstandingFeeMessagingActions({
-  row,
-  openComposer,
-  t,
-  className,
-}: {
-  row: Pick<OutstandingFeeRow, "studentId" | "student" | "contact" | "email" | "amount" | "dueDate">;
-  openComposer: OpenComposer;
-  t: TranslationFunction;
-  className?: string;
-}) {
-  const recipient = [{
-    id: row.studentId,
-    name: row.student,
-    phone: row.contact,
-    email: row.email,
-    amount: row.amount,
-    dueDate: row.dueDate,
-  }];
-
-  return (
-    <div className={className ?? "flex items-center justify-end gap-1.5"}>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={`${t("contacts.whatsapp.open")} ${row.student}`}
-        title={t("contacts.whatsapp.open")}
-        className="rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shadow-none cursor-pointer"
-        disabled={!row.contact}
-        onClick={() => openComposer("whatsapp", recipient)}
-      >
-        <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={`${t("dashboard.widgets.sendReminder")} ${row.student}`}
-        title={t("dashboard.widgets.sendReminder")}
-        className="rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer"
-        disabled={!row.contact}
-        onClick={() => openComposer("sms", recipient)}
-      >
-        <Send className="w-3.5 h-3.5" aria-hidden="true" />
-      </Button>
-    </div>
-  );
-}
-
-function OutstandingFeeOverdueBadge({
-  months,
-  t,
-}: {
-  months: number;
-  t: TranslationFunction;
-}) {
-  return (
-    <StatusBadge
-      status={months >= 3 ? "overdue" : "warning"}
-      config={{
-        overdue: {
-          label: t("dashboard.widgets.overdueStatus", { count: months }),
-          cls: SEMANTIC_BADGE.destructive,
-        },
-        warning: {
-          label: t("dashboard.widgets.overdueStatus", { count: months }),
-          cls: SEMANTIC_BADGE.warning,
-        },
-      }}
-      size="sm"
-    />
-  );
-}
-
-/**
- * Outstanding fees table widget with optional messaging CTAs.
- */
 export default function OutstandingFeesTable({ title }: { title?: string }) {
   const { t } = useTranslation();
   const invoices = useFinanceInvoicesCollection();

@@ -70,9 +70,12 @@ export async function saveCollection(
         if (mapping) {
           const repoModule = await import(mapping.importPath);
           const replaceFn = repoModule[mapping.fnName];
-          if (typeof replaceFn === 'function') {
-            await replaceFn(parsed.subdomain, processedData);
+          if (typeof replaceFn !== 'function') {
+            throw new Error(
+              `Relational replace helper "${mapping.fnName}" missing for collection "${parsed.logicalKey}"`,
+            );
           }
+          await replaceFn(parsed.subdomain, processedData);
         }
       }
     }

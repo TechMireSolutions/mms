@@ -892,6 +892,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "backup.invalidAdminPassword": "ایمیل یا رمز عبور مدیر نادرست است.",
   "backup.invalidFormat": "فایل انتخاب شده یک نسخه پشتیبان معتبر از فضای کار MMS نیست.",
   "backup.missingAdminUser": "فایل پشتیبان حاوی هیچ کاربری با نقش مدیر نیست. بازیابی این فایل شما را از سیستم خارج خواهد کرد.",
+  "backup.missingUserCredentials": "بازیابی ادامه نمی‌یابد چون یک یا چند کاربر در این فضای کاری گذرواژه قابل بازیابی ندارند. در همان فضای کاری که پشتیبان ساخته شده بازیابی کنید یا گذرواژه‌ها را دستی بازنشانی کنید.",
   "backup.metadataOnly": "فقط متا دیتای داده‌ها — برای بازیابی، فایل JSON اصلی را آپلود یا دانلود کنید.",
   "backup.badgeStudentsAndTeachers": "دانش‌آموزان و معلمان",
   "backup.badgeFinanceAndFees": "مالی و هزینه‌ها",
