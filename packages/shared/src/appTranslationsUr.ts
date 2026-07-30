@@ -36,6 +36,11 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "nav.closeSidebar": "سائڈبار بند کریں",
   "nav.openMenu": "نیویگیشن مینو کھولیں",
   "nav.globalSearchPlaceholder": "طلباء، سیشن تلاش کریں…",
+  "common.searchPlaceholder": "تلاش کریں…",
+  "common.formPleaseFixErrors": "براہ کرم درج ذیل غلطیاں درست کریں",
+  "customFields.title": "حسبِ ضرورت فیلڈز",
+  "customFields.description": "اپنے فیلڈز شامل کریں۔ وہ اس ٹیب کے اندرونی فیلڈز کے نیچے ظاہر ہوں گے۔",
+  "customFields.add": "فیلڈ شامل کریں",
 
   "settings.title": "ترتیبات",
   "settings.searchPlaceholder": "ترتیبات تلاش کریں...",
@@ -115,6 +120,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "settings.llmSpeed": "رفتار",
   "settings.llmSandboxInputPlaceholder": "سینڈ باکس پیغام ٹائپ کریں...",
   "settings.llmModalRepositionDesc": "اس پینل کی پوزیشن تبدیل کرنے کے لیے ہیڈر کو ڈریگ کریں",
+  "settings.llmModalDescription": "فراہم کنندہ، ماڈل، اسناد اور ڈیفالٹ جنریشن ترتیبات سیٹ کریں۔",
   "settings.llmModalHyperparameters": "ہائپر پیرامیٹرز",
   "settings.llmModalTemperatureDesc": "تخلیقی صلاحیت/بے ترتیبی کو کنٹرول کرتا ہے: کم اقدار درست ہوتی ہیں، اعلیٰ اقدار تخلیقی ہوتی ہے۔",
   "settings.llmModalMaxTokensDesc": "تخلیق شدہ جواب کی لمبائی کی بالائی حد۔",
@@ -133,6 +139,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "onboarding.madrasa.addressTitle": "ورک سپیس کا پتہ",
   "onboarding.madrasa.addressSubtitle": "اپنے ٹیننٹ ورک سپیس کے لیے منفرد رسائی سب ڈومین متعین کریں",
   "onboarding.madrasa.subdomainLabel": "ورک سپیس کا سب ڈومین",
+  "onboarding.madrasa.subdomainPlaceholder": "al-noor",
   "onboarding.madrasa.yourUrl": "آپ کا لنک:",
 
   "global.general": "عمومی",

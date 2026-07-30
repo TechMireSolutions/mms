@@ -68,6 +68,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
             </div>
             <Input
               id="onboarding-name"
+              name="madrasaName"
               value={data.name}
               maxLength={NAME_MAX}
               placeholder={t("branding.madrasaNamePlaceholder")}
@@ -86,6 +87,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
             </div>
             <Input
               id="onboarding-tagline"
+              name="madrasaTagline"
               value={data.tagline}
               maxLength={TAGLINE_MAX}
               placeholder={t("branding.taglinePlaceholder")}
@@ -99,6 +101,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
             <Label htmlFor="onboarding-country">{t("branding.country")}</Label>
             <FormSelect
               id="onboarding-country"
+              name="madrasaCountry"
               value={data.country}
               onChange={(val) => updateField("country", val)}
               options={countryOptions}
@@ -110,6 +113,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
             <Label htmlFor="onboarding-province">{t("contacts.setup.defaultProvince")}</Label>
             <Input
               id="onboarding-province"
+              name="madrasaProvince"
               value={data.province}
               placeholder={t("contacts.setup.defaultProvincePlaceholder")}
               onChange={(event) => updateField("province", event.target.value)}
@@ -120,6 +124,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
             <Label htmlFor="onboarding-city">{t("contacts.setup.defaultCity")}</Label>
             <Input
               id="onboarding-city"
+              name="madrasaCity"
               value={data.city}
               placeholder={t("contacts.setup.defaultCityPlaceholder")}
               onChange={(event) => updateField("city", event.target.value)}
@@ -128,7 +133,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
 
           <div className="space-y-2">
             <Label htmlFor="onboarding-subdomain">
-              {t("onboarding.madrasa.subdomainLabel")} <span className="text-destructive">*</span>
+              {t("onboarding.madrasa.subdomainLabel")} <span className="text-destructive" aria-hidden>*</span>
             </Label>
             <div className="flex items-center overflow-hidden rounded-lg border border-border focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
               <div className="flex items-center gap-1.5 border-e border-border bg-muted px-3 py-2.5">
@@ -136,8 +141,10 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
               </div>
               <Input
                 id="onboarding-subdomain"
+                name="madrasaSubdomain"
                 value={data.subdomain}
-                placeholder="al-noor"
+                placeholder={t("onboarding.madrasa.subdomainPlaceholder")}
+                required
                 className="border-0 rounded-none focus-visible:ring-0"
                 onChange={(event) => handleSubdomainChange(event.target.value)}
               />

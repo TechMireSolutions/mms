@@ -7,8 +7,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { Field } from '@/components/ui/FormPrimitives';
 import { Card } from '@/components/ui/card';
-import { FORM_LABEL, FORM_ERROR } from '@/components/ui/formStyles';
 import { ObligationCollectionWakalaSection } from '@/tenant/features/obligations/components/ObligationCollectionWakalaSection';
 
 export interface ObligationCollectionFormState {
@@ -49,13 +49,9 @@ export function ObligationCollectionFormFields({
   const currencies = DEFAULT_CURRENCIES;
 
   const formField = (key: keyof ObligationCollectionFormState, label: string, required: boolean, children: React.ReactNode) => (
-    <div>
-      <label htmlFor={`form-${key}`} className={FORM_LABEL}>
-        {label}{required ? ' *' : ''}
-      </label>
-      {React.cloneElement(children as React.ReactElement<{ id?: string; 'aria-invalid'?: boolean }>, { id: `form-${key}`, 'aria-invalid': !!errors[key] })}
-      {errors[key] && <p className={FORM_ERROR} role="alert">{t(errors[key]!)}</p>}
-    </div>
+    <Field id={`form-${key}`} label={label} required={required} error={errors[key] ? t(errors[key]!) : undefined}>
+      {children}
+    </Field>
   );
 
   return (

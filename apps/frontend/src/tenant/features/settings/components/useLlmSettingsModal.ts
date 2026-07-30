@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useDragControls } from 'framer-motion';
 import { apiJson } from '@/lib/apiClient';
 import {
   LLM_PROVIDERS_META,
@@ -9,7 +8,6 @@ import {
   type LlmProviderType,
   type LlmTestResult,
 } from '@mms/shared';
-import { useOverlayBehavior } from '@/hooks/useOverlayBehavior';
 import { useLlmModelFetch } from './useLlmModelFetch';
 
 interface UseLlmSettingsModalOptions {
@@ -21,11 +19,6 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<LlmConfig | null>(null);
 
-  const modalRef = useOverlayBehavior<HTMLDivElement>({
-    open: modalOpen,
-    onClose: () => setModalOpen(false),
-  });
-
   const [formName, setFormName] = useState('');
   const [formProvider, setFormProvider] = useState<LlmProviderType>('gemini');
   const [formModel, setFormModel] = useState('');
@@ -35,7 +28,6 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
   const [formTemperature, setFormTemperature] = useState(0.7);
   const [formMaxTokens, setFormMaxTokens] = useState(2048);
   const [formTopP, setFormTopP] = useState(0.9);
-  const dragControls = useDragControls();
   const [modalTesting, setModalTesting] = useState(false);
   const [modalTestResult, setModalTestResult] = useState<LlmTestResult | null>(null);
 
@@ -173,8 +165,6 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
 
   return {
     modalOpen,
-    modalRef,
-    dragControls,
     editingConfig,
     formName,
     setFormName,

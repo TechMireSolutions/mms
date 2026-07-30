@@ -14,6 +14,12 @@ const SESSION_DETAIL_TRANSLATIONS_FA = Object.fromEntries(
  */
 export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   ...SESSION_DETAIL_TRANSLATIONS_FA,
+  "common.searchPlaceholder": "جستجو…",
+  "common.formPleaseFixErrors": "لطفاً خطاهای زیر را برطرف کنید",
+  "customFields.title": "فیلدهای سفارشی",
+  "customFields.description": "فیلدهای دلخواه خود را اضافه کنید. آن‌ها زیر فیلدهای داخلی این زبانه نمایش داده می‌شوند.",
+  "customFields.add": "افزودن فیلد",
+  "settings.llmModalDescription": "ارائه‌دهنده، مدل، اطلاعات ورود و تنظیمات پیش‌فرض تولید را پیکربندی کنید.",
   "account.changeLoginEmail": "تغییر ایمیل ورود",
   "account.changePassword": "تغییر رمز عبور",
   "account.changePhoto": "تغییر تصویر",
@@ -3380,6 +3386,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "onboarding.madrasa.addressSubtitle": "زیردامنه دسترسی یکتا برای فضای کار مدرسه خود را مشخص کنید",
   "onboarding.madrasa.addressTitle": "آدرس فضای کار",
   "onboarding.madrasa.subdomainLabel": "زیردامنه فضای کار",
+  "onboarding.madrasa.subdomainPlaceholder": "al-noor",
   "onboarding.madrasa.yourUrl": "آدرس اختصاصی شما:",
   "onboarding.openWorkspace": "باز کردن {subdomain}.{domain}",
   "onboarding.redirecting": "در حال هدایت به فضای کار شما…",

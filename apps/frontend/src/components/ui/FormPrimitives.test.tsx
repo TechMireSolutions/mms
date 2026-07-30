@@ -1,8 +1,11 @@
 import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { Input } from './input';
 import {
   CardTypeLabel,
   CardRemoveButton,
+  Field,
   INPUT,
   SELECT,
   TEXTAREA,
@@ -28,6 +31,22 @@ describe('FormPrimitives', () => {
       const element = CardRemoveButton({ onClick, label: 'Remove item' });
       expect(element.props['aria-label']).toBe('Remove item');
       expect(element.props.onClick).toBe(onClick);
+    });
+  });
+
+  describe('Field', () => {
+    it('associates its label with an explicitly identified nested control', () => {
+      const markup = renderToStaticMarkup(
+        <Field label="Amount" required>
+          <div>
+            <Input id="payment-amount" name="amount" />
+          </div>
+        </Field>,
+      );
+
+      expect(markup).toContain('for="payment-amount"');
+      expect(markup).toContain('id="payment-amount"');
+      expect(markup).toContain('name="amount"');
     });
   });
 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Clock } from "lucide-react";
 import { DAYS, ACTIVITY_TYPES, type TimetableItem } from '@/lib/data/sessionsData';
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -41,7 +42,7 @@ export function TimetableAddActivityModal({ open, onClose, onSave, saving }: Tim
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="activity-name">{t("sessions.timetable.form.name")} *</label>
+          <label className={FORM_LABEL} htmlFor="activity-name">{t("sessions.timetable.form.name")}<RequiredMark /></label>
           <Input id="activity-name" value={activityDraft.activity || ""} onChange={(event) => updateActivityDraft("activity", event.target.value)} placeholder={t("sessions.timetable.form.namePlaceholder")} required />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

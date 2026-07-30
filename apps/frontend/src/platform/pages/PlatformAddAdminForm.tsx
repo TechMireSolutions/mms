@@ -61,7 +61,7 @@ export function PlatformAddAdminForm(): React.JSX.Element {
             <label htmlFor="admin-name" className={FORM_LABEL}>{t('platform.adminName')}</label>
             <div className="relative">
               <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-              <Input id="admin-name" type="text" required value={name} onChange={(event) => setName(event.target.value)} className="ps-9 min-h-11" disabled={addAdmin.isPending} />
+              <Input id="admin-name" name="adminName" type="text" required value={name} onChange={(event) => setName(event.target.value)} className="ps-9 min-h-11" disabled={addAdmin.isPending} />
             </div>
           </div>
 
@@ -69,12 +69,13 @@ export function PlatformAddAdminForm(): React.JSX.Element {
             <label htmlFor="admin-email" className={FORM_LABEL}>{t('platform.adminEmail')}</label>
             <div className="relative">
               <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-              <Input id="admin-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="ps-9 min-h-11" disabled={addAdmin.isPending} />
+              <Input id="admin-email" name="adminEmail" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="ps-9 min-h-11" disabled={addAdmin.isPending} />
             </div>
           </div>
 
           <PasswordInput
             id="admin-password"
+            name="adminPassword"
             label={t('platform.adminPassword')}
             autoComplete="new-password"
             required

@@ -36,6 +36,11 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "nav.closeSidebar": "إغلاق الشريط الجانبي",
   "nav.openMenu": "فتح قائمة التنقل",
   "nav.globalSearchPlaceholder": "ابحث عن الطلاب والجلسات…",
+  "common.searchPlaceholder": "بحث…",
+  "common.formPleaseFixErrors": "يرجى تصحيح الأخطاء التالية",
+  "customFields.title": "الحقول المخصصة",
+  "customFields.description": "أضف حقولك الخاصة. تظهر أسفل الحقول المدمجة في علامة التبويب هذه.",
+  "customFields.add": "إضافة حقل",
 
   "settings.title": "الإعدادات",
   "settings.searchPlaceholder": "ابحث في الإعدادات...",
@@ -115,6 +120,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "settings.llmSpeed": "السرعة",
   "settings.llmSandboxInputPlaceholder": "اكتب رسالة للبيئة التجريبية...",
   "settings.llmModalRepositionDesc": "اسحب العنوان لتغيير موضع هذه اللوحة",
+  "settings.llmModalDescription": "اضبط المزوّد والنموذج وبيانات الاعتماد وإعدادات التوليد الافتراضية.",
   "settings.llmModalHyperparameters": "المعلمات الفائقة",
   "settings.llmModalTemperatureDesc": "التحكم في الإبداع/العشوائية: القيم المنخفضة دقيقة، والمرتفعة إبداعية.",
   "settings.llmModalMaxTokensDesc": "الحد الأقصى لطول استجابة التوليد.",
@@ -133,6 +139,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "onboarding.madrasa.addressTitle": "عنوان مساحة العمل",
   "onboarding.madrasa.addressSubtitle": "حدد النطاق الفرعي الفريد للوصول إلى مساحة عمل المستأجر الخاصة بك",
   "onboarding.madrasa.subdomainLabel": "النطاق الفرعي لمساحة العمل",
+  "onboarding.madrasa.subdomainPlaceholder": "al-noor",
   "onboarding.madrasa.yourUrl": "رابطك:",
 
   "global.general": "عام",

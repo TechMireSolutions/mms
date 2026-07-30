@@ -8,7 +8,7 @@ import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Session } from "@/lib/data/sessionsData";
+import type { SessionFormDraft } from "@/tenant/features/sessions/components/sessionFormShared";
 
 export interface SessionSelectOption {
   value: string;
@@ -16,9 +16,9 @@ export interface SessionSelectOption {
 }
 
 interface SessionSectionBaseProps {
-  sessionDraft: Partial<Session>;
+  sessionDraft: SessionFormDraft;
   errors: Record<string, string>;
-  onDraftChange: (patch: Partial<Session>) => void;
+  onDraftChange: (patch: Partial<SessionFormDraft>) => void;
 }
 
 interface SessionDetailsSectionProps extends SessionSectionBaseProps {
@@ -130,8 +130,8 @@ export function SessionFinancialSection({
             <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
               type="number"
-              value={sessionDraft.baseFee ?? 0}
-              onChange={(event) => onDraftChange({ baseFee: Number(event.target.value) })}
+              value={sessionDraft.baseFee}
+              onChange={(event) => onDraftChange({ baseFee: event.target.value })}
               className={`${FORM_INPUT} ps-10`}
             />
           </div>

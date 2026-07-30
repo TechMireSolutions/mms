@@ -9,7 +9,7 @@ export interface FormModalFooterProps {
   saveLabel: string;
   savedLabel?: string;
   onClose: () => void;
-  onSave?: () => void;
+  onSave?: () => void | Promise<void>;
   saving: boolean;
   saveDisabled: boolean;
   saved: boolean;

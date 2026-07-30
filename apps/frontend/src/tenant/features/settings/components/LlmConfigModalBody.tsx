@@ -41,7 +41,6 @@ export interface LlmConfigModalBodyProps {
   selectedProviderDefaultModel?: string;
   modalTestResult: LlmTestResult | null;
   modalTesting: boolean;
-  setModalOpen: (open: boolean) => void;
   handleModalTestConnection: () => Promise<void>;
   formatLlmSpeed: (wordCount: number, latencyMs: number) => string;
   t: TranslationFunction;
@@ -74,7 +73,6 @@ export function LlmConfigModalBody({
   selectedProviderDefaultModel,
   modalTestResult,
   modalTesting,
-  setModalOpen,
   handleModalTestConnection,
   formatLlmSpeed,
   t,
@@ -84,7 +82,7 @@ export function LlmConfigModalBody({
       <div className="mb-4 max-h-[50vh] min-h-0 flex-1 space-y-4 overflow-y-auto pe-1">
         <div className="space-y-2">
           <Label htmlFor="configName">{t('settings.llmModalName')}</Label>
-          <Input id="configName" value={formName} onChange={(event) => setFormName(event.target.value)} placeholder={t('settings.llmModalNamePlaceholder')} />
+          <Input id="configName" name="configName" value={formName} onChange={(event) => setFormName(event.target.value)} placeholder={t('settings.llmModalNamePlaceholder')} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -92,6 +90,7 @@ export function LlmConfigModalBody({
             <Label htmlFor="provider">{t('settings.llmModalProvider')}</Label>
             <FormSelect
               id="provider"
+              name="provider"
               value={formProvider}
               onChange={(providerValue) => {
                 setFormProvider(providerValue as LlmProviderType);
@@ -120,9 +119,9 @@ export function LlmConfigModalBody({
               )}
             </div>
             {!showCustomModelInput && fetchedModels.length > 0 ? (
-              <FormSelect id="model" value={formModel} onChange={setFormModel} options={fetchedModels.map((model) => ({ value: model, label: model }))} />
+              <FormSelect id="model" name="model" value={formModel} onChange={setFormModel} options={fetchedModels.map((model) => ({ value: model, label: model }))} />
             ) : (
-              <Input id="model" value={formModel} onChange={(event) => setFormModel(event.target.value)} placeholder={selectedProviderDefaultModel} />
+              <Input id="model" name="model" value={formModel} onChange={(event) => setFormModel(event.target.value)} placeholder={selectedProviderDefaultModel} />
             )}
           </div>
         </div>
@@ -132,13 +131,14 @@ export function LlmConfigModalBody({
             {t('settings.llmModalBaseUrl')}
             <span className="rounded bg-muted px-2 py-1 text-xs font-normal text-muted-foreground">{t('settings.llmModalOptional')}</span>
           </Label>
-          <Input id="baseUrl" value={formBaseUrl} onChange={(event) => setFormBaseUrl(event.target.value)} placeholder={t('settings.llmModalBaseUrlPlaceholder')} />
+          <Input id="baseUrl" name="baseUrl" value={formBaseUrl} onChange={(event) => setFormBaseUrl(event.target.value)} placeholder={t('settings.llmModalBaseUrlPlaceholder')} />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="apiKey">{t('settings.llmModalApiKey')}</Label>
           <Input
             id="apiKey"
+            name="apiKey"
             type="password"
             value={formApiKey}
             onChange={(event) => setFormApiKey(event.target.value)}
@@ -161,7 +161,7 @@ export function LlmConfigModalBody({
             <Label htmlFor="isDefault" className="text-sm font-semibold">{t('settings.llmModalSetDefault')}</Label>
             <p className="text-xs text-muted-foreground">{t('settings.llmModalSetDefaultDesc')}</p>
           </div>
-          <Switch id="isDefault" checked={formIsDefaultText} onCheckedChange={setFormIsDefaultText} />
+          <Switch id="isDefault" name="isDefault" checked={formIsDefaultText} onCheckedChange={setFormIsDefaultText} />
         </div>
 
         {modalTestResult && (
@@ -181,7 +181,7 @@ export function LlmConfigModalBody({
         )}
       </div>
 
-      <div className="flex shrink-0 flex-wrap justify-end gap-2.5 border-t border-border bg-card pt-4">
+      <div className="flex shrink-0 justify-end border-t border-border bg-card pt-4">
         <Button
           type="button"
           variant="outline"
@@ -191,13 +191,6 @@ export function LlmConfigModalBody({
         >
           {modalTesting ? <Loader2 className="me-2 h-3 w-3 animate-spin" /> : null}
           {t('settings.llmModalTestDraft')}
-        </Button>
-        <div className="hidden flex-1 sm:block" />
-        <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="min-h-11 w-full px-4 text-xs sm:w-auto">
-          {t('common.cancel')}
-        </Button>
-        <Button type="submit" disabled={!formName.trim()} className="min-h-11 w-full px-4 text-xs sm:w-auto">
-          {t('settings.llmModalApplyChanges')}
         </Button>
       </div>
     </>

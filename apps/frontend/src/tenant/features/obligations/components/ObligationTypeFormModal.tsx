@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { DESIGNATED_FOR_OPTIONS } from '@/lib/data/obligationsData';
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
@@ -57,7 +58,7 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="type-name" className={FORM_LABEL}>{t("obligations.types.colName")} *</label>
+          <label htmlFor="type-name" className={FORM_LABEL}>{t("obligations.types.colName")}<RequiredMark /></label>
           <Input
             id="type-name"
             value={form.name || ""}
@@ -67,7 +68,7 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
           />
         </div>
         <div>
-          <label htmlFor="type-designated" className={FORM_LABEL}>{t("obligations.types.colDesignated")} *</label>
+          <label htmlFor="type-designated" className={FORM_LABEL}>{t("obligations.types.colDesignated")}<RequiredMark /></label>
           <FormSelect
             id="type-designated"
             value={form.designated_for || ""}

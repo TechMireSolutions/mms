@@ -4,8 +4,8 @@ import { z } from 'zod';
 export const accountRecordSchema = z
   .object({
     id: z.string(),
-    code: z.string(),
-    name: z.string(),
+    code: z.string().trim().min(1, 'accounting.coa.validation.codeRequired'),
+    name: z.string().trim().min(1, 'accounting.coa.validation.nameRequired'),
     type: z.enum(['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']),
     subtype: z.string(),
     description: z.string(),

@@ -69,6 +69,18 @@ export function normalizeToE164(countryCode: string, number: string): string {
 }
 
 /**
+ * Normalizes a scalar phone input to E.164 using the configured default country code.
+ */
+export function normalizePhoneInput(
+  rawNumber: string | null | undefined,
+  defaultCountryCode = "+92",
+): string {
+  if (!rawNumber?.trim()) return "";
+  const parsed = parsePhoneNumber(rawNumber, defaultCountryCode);
+  return normalizeToE164(parsed.countryCode, parsed.number);
+}
+
+/**
  * Canonical helper to format any phone number string or contact phone entry with a country code (DRY).
  * E.g., "+923001234567" -> "+92 3001234567"
  * E.g., "03001234567" with default "+92" -> "+92 3001234567"

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -49,7 +50,7 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="dist-name" className={FORM_LABEL}>{t("obligations.wakala.distName")} *</label>
+          <label htmlFor="dist-name" className={FORM_LABEL}>{t("obligations.wakala.distName")}<RequiredMark /></label>
           <Input
             id="dist-name"
             value={form.name || ""}
@@ -59,7 +60,7 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
           />
         </div>
         <div>
-          <label htmlFor="dist-type" className={FORM_LABEL}>{t("obligations.wakala.distType")} *</label>
+          <label htmlFor="dist-type" className={FORM_LABEL}>{t("obligations.wakala.distType")}<RequiredMark /></label>
           <FormSelect
             id="dist-type"
             value={form.type || ""}
@@ -71,7 +72,7 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
           />
         </div>
         <div>
-          <label htmlFor="dist-pct" className={FORM_LABEL}>{t("obligations.wakala.distPct")} *</label>
+          <label htmlFor="dist-pct" className={FORM_LABEL}>{t("obligations.wakala.distPct")}<RequiredMark /></label>
           <Input
             id="dist-pct"
             type="number"

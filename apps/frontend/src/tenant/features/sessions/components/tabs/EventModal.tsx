@@ -3,6 +3,7 @@ import { Calendar } from 'lucide-react';
 import { EVENT_TYPES, type SessionEvent } from '@/lib/data/sessionsData';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { FormModal } from '@/components/ui/FormModal';
+import { RequiredMark } from '@/components/ui/FormPrimitives';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,7 +54,7 @@ export function EventModal({ open, event, onClose, onSave, saving }: EventModalP
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="event-title">{t('sessions.events.form.title')} *</label>
+          <label className={FORM_LABEL} htmlFor="event-title">{t('sessions.events.form.title')}<RequiredMark /></label>
           <Input
             id="event-title"
             value={eventDraft.title || ''}
@@ -64,7 +65,7 @@ export function EventModal({ open, event, onClose, onSave, saving }: EventModalP
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="event-date">{t('sessions.events.form.date')} *</label>
+            <label className={FORM_LABEL} htmlFor="event-date">{t('sessions.events.form.date')}<RequiredMark /></label>
             <DatePicker
               id="event-date"
               value={eventDraft.date || ''}

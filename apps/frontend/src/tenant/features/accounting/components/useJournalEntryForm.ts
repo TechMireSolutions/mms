@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { generateJERef, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useTranslation } from "@/hooks/useTranslation";
-import { todayISO } from "@mms/shared";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { journalEntryRecordSchema, todayISO } from "@mms/shared";
 import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
 
 const EMPTY_LINE = (): DraftLine => ({ id: `l${Date.now()}_${Math.random()}`, account_id: "", debit: "", credit: "", description: "" });
@@ -17,6 +18,7 @@ interface UseJournalEntryFormOptions {
 
 export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears }: UseJournalEntryFormOptions) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const isEdit = !!initial?.id;
   const activeFiscalYear = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
 
@@ -36,7 +38,7 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
           attachments: [],
           fiscal_year: activeFiscalYear,
           lines: [EMPTY_LINE(), EMPTY_LINE()],
-          created_by: "Admin"
+          created_by: user?.name ?? ""
         }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -59,11 +61,11 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
             attachments: [],
             fiscal_year: activeFiscalYear,
             lines: [EMPTY_LINE(), EMPTY_LINE()],
-            created_by: "Admin"
+            created_by: user?.name ?? ""
           }
     );
     setErrors({});
-  }, [initial, activeFiscalYear]);
+  }, [initial, activeFiscalYear, user?.name]);
 
   const totalDebit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0);
   const totalCredit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0);
@@ -110,20 +112,26 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     const journalReference = isEdit ? form.ref : generateJERef(entries);
+    const candidate = {
+      ...form,
+      id: isEdit ? form.id : `je${Date.now()}`,
+      ref: journalReference,
+      status: saveAs || form.status,
+      created_by: form.created_by || user?.name || "system",
+      lines: form.lines.map((journalLine) => ({
+        ...journalLine,
+        debit: typeof journalLine.debit === "string" ? Number(journalLine.debit) || 0 : journalLine.debit,
+        credit: typeof journalLine.credit === "string" ? Number(journalLine.credit) || 0 : journalLine.credit,
+      })),
+    };
+    const parsed = journalEntryRecordSchema.safeParse(candidate);
+    if (!parsed.success) {
+      setErrors({ schema: t("common.formPleaseFixErrors") });
+      return;
+    }
     setSubmitting(true);
     try {
-      await onSave({
-        ...form,
-        id: isEdit ? form.id : `je${Date.now()}`,
-        ref: journalReference,
-        status: saveAs || form.status,
-        created_by: form.created_by || "system",
-        lines: form.lines.map((journalLine) => ({
-          ...journalLine,
-          debit: typeof journalLine.debit === "string" ? parseFloat(journalLine.debit) || 0 : journalLine.debit,
-          credit: typeof journalLine.credit === "string" ? parseFloat(journalLine.credit) || 0 : journalLine.credit,
-        })),
-      } as JournalEntry);
+      await onSave(parsed.data);
     } finally {
       setSubmitting(false);
     }

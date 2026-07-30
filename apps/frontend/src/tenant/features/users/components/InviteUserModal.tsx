@@ -2,7 +2,17 @@ import React, { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { USER_STATUS_VALUES, toTitleCase, type SystemUser, getInitials, todayISO, getPrimaryEmail, getPrimaryPhone } from '@mms/shared';
+import {
+  USER_STATUS_VALUES,
+  inviteWorkspaceUserSchema,
+  toTitleCase,
+  type InviteWorkspaceUserInput,
+  type SystemUser,
+  getInitials,
+  todayISO,
+  getPrimaryEmail,
+  getPrimaryPhone,
+} from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { useContactById } from '@/tenant/hooks/collections/contacts';
@@ -18,7 +28,6 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form';
-import { inviteUserSchema, type InviteUserFormValues } from '@/lib/forms/userSchemas';
 import { firstZodFieldError } from '@/lib/forms/translateZodError';
 import { TranslatedFormMessage } from '@/lib/forms/TranslatedFormMessage';
 import { notify } from '@/lib/notify';
@@ -43,8 +52,8 @@ export function InviteUserModal({
     [existingContactIds],
   );
 
-  const form = useForm<InviteUserFormValues>({
-    resolver: zodResolver(inviteUserSchema),
+  const form = useForm<InviteWorkspaceUserInput>({
+    resolver: zodResolver(inviteWorkspaceUserSchema),
     defaultValues: {
       contactId: '',
       role: '',

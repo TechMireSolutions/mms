@@ -107,8 +107,10 @@ export function WidgetBuilderOptionsPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div className="space-y-1">
-          <label className={FORM_LABEL}>{t("reports.widgets.builder.labelTitle")}</label>
+          <label htmlFor="widget-builder-title" className={FORM_LABEL}>{t("reports.widgets.builder.labelTitle")}</label>
           <Input
+            id="widget-builder-title"
+            name="widgetTitle"
             type="text"
             value={builderTitle}
             onChange={(event) => setBuilderTitle(event.target.value)}

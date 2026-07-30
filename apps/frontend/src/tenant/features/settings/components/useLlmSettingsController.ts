@@ -63,8 +63,6 @@ export function useLlmSettingsController() {
     },
     modalProps: {
       modalOpen: modal.modalOpen,
-      modalRef: modal.modalRef,
-      dragControls: modal.dragControls,
       editingConfig: modal.editingConfig,
       formName: modal.formName,
       setFormName: modal.setFormName,

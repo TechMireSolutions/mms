@@ -3,6 +3,7 @@ import { GraduationCap } from "lucide-react";
 import { type AppTranslationKey, type Teacher, TEACHERS_MODULE_MANIFEST } from "@mms/shared";
 
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
@@ -92,7 +93,7 @@ export function ClassModal({ open, sessionClass, onClose, onSave, saving }: Clas
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="class-name">{t("sessions.classes.form.name")} *</label>
+          <label className={FORM_LABEL} htmlFor="class-name">{t("sessions.classes.form.name")}<RequiredMark /></label>
           <Input id="class-name" value={classDraft.name || ""} onChange={(event) => updateClassDraft("name", event.target.value)} placeholder={t("sessions.classes.form.namePlaceholder")} required />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

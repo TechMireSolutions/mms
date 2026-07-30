@@ -9,6 +9,7 @@ import {
   TEACHER_STATUS_VALUES,
   TEACHER_SPECIALIZATION_VALUES,
   AppTranslationKey,
+  teacherCoreSchema,
   todayISO,
   toTitleCase,
 } from "@mms/shared";
@@ -127,13 +128,13 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     }
     for (const field of customFields) {
       if (field.required && !customValues[field.id]?.trim()) {
-        newErrors[`custom:${field.id}`] = t("contacts.form.pleaseFixErrors");
+        newErrors[`custom:${field.id}`] = t("common.formPleaseFixErrors");
       }
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      notify.error(t("contacts.form.pleaseFixErrors"));
+      notify.error(t("common.formPleaseFixErrors"));
       return;
     }
 
@@ -146,7 +147,13 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
         contactId: String(teacherDraft.contactId || ""),
         ...(teacher?.id != null ? { id: teacher.id } : {}),
       } as Teacher;
-      await onSave(payload);
+      const parsed = teacherCoreSchema.safeParse(payload);
+      if (!parsed.success) {
+        setErrors({ schema: t("common.formPleaseFixErrors") });
+        notify.error(t("common.formPleaseFixErrors"));
+        return;
+      }
+      await onSave(parsed.data as Teacher);
       onClose();
     } catch (err: unknown) {
       notify.error(t("teachers.toast.saveFailed"), {

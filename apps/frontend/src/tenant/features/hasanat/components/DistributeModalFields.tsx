@@ -3,6 +3,7 @@ import { User, Users2 } from "lucide-react";
 
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
@@ -43,7 +44,7 @@ export function DistributeModalFields({
         if (field.id === "denominationId") {
           return (
             <div key="denominationId" className="sm:col-span-2">
-              <label htmlFor="denom" className={FORM_LABEL}>{t("hasanat.form.denomination")} *</label>
+              <label htmlFor="denom" className={FORM_LABEL}>{t("hasanat.form.denomination")}<RequiredMark /></label>
               <FormSelect
                 id="denom"
                 value={data.denominationId || ""}
@@ -70,7 +71,7 @@ export function DistributeModalFields({
         if (field.id === "recipientType") {
           return (
             <div key="recipientType" className="sm:col-span-2">
-              <label className={FORM_LABEL}>{t("hasanat.form.recipientType")} *</label>
+              <span className={FORM_LABEL}>{t("hasanat.form.recipientType")}<RequiredMark /></span>
               <div className="flex gap-2">
                 {([
                   { id: "student" as const, label: t("hasanat.form.recipientType.student"), icon: User },
@@ -135,7 +136,10 @@ export function DistributeModalFields({
           const isRequired = !!fields[field.id]?.required;
           return (
             <div key="recipientClass">
-              <label htmlFor="recp-class" className={FORM_LABEL}>{data.recipientType === "student" ? t("hasanat.form.classLabel") : t("hasanat.form.departmentLabel")} {isRequired ? "*" : ""}</label>
+              <label htmlFor="recp-class" className={FORM_LABEL}>
+                {data.recipientType === "student" ? t("hasanat.form.classLabel") : t("hasanat.form.departmentLabel")}
+                {isRequired ? <RequiredMark /> : null}
+              </label>
               <Input id="recp-class" className={FORM_INPUT} value={data.recipientClass || ""} onChange={(event) => updateField("recipientClass", event.target.value)} placeholder={t("hasanat.form.recipientClassPlaceholder")} required={isRequired} />
             </div>
           );
@@ -144,7 +148,7 @@ export function DistributeModalFields({
         if (field.id === "quantity") {
           return (
             <div key="quantity">
-              <label htmlFor="qty" className={FORM_LABEL}>{t("hasanat.form.quantity")} *</label>
+              <label htmlFor="qty" className={FORM_LABEL}>{t("hasanat.form.quantity")}<RequiredMark /></label>
               <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || 1} onChange={(event) => updateField("quantity", Math.min(+event.target.value, totalAvailable))} min={1} max={totalAvailable} required />
             </div>
           );
@@ -153,7 +157,7 @@ export function DistributeModalFields({
         if (field.id === "issuedDate") {
           return (
             <div key="issuedDate">
-              <label htmlFor="issue-date" className={FORM_LABEL}>{t("hasanat.form.issuedDate")} *</label>
+              <label htmlFor="issue-date" className={FORM_LABEL}>{t("hasanat.form.issuedDate")}<RequiredMark /></label>
               <DatePicker id="issue-date" value={data.issuedDate || ""} onChange={(value) => updateField("issuedDate", value)} required />
             </div>
           );
@@ -162,7 +166,7 @@ export function DistributeModalFields({
         if (field.id === "reason") {
           return (
             <div key="reason" className="sm:col-span-2">
-              <label htmlFor="reason" className={FORM_LABEL}>{t("hasanat.form.reason")} *</label>
+              <label htmlFor="reason" className={FORM_LABEL}>{t("hasanat.form.reason")}<RequiredMark /></label>
               <Input id="reason" className={FORM_INPUT} value={data.reason || ""} onChange={(event) => updateField("reason", event.target.value)} placeholder={t("hasanat.form.reasonPlaceholder")} required />
             </div>
           );

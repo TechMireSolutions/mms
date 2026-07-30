@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Lock, Mail } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/button';
+import { FormModal } from '@/components/ui/FormModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SettingsCallout } from '@/components/ui/SettingsShell';
@@ -42,33 +41,26 @@ export default function BackupCredentialsModal({
     mode === 'export' ? t('backup.encryptExportDesc') : t('backup.decryptDesc');
 
   return (
-    <Modal
+    <FormModal
       open={open}
       onClose={onClose}
       title={title}
       subtitle={subtitle}
       icon={Lock}
       size="sm"
-      footer={
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-            {t('backup.confirmCancel')}
-          </Button>
-          <Button
-            type="button"
-            onClick={() => onSubmit(password, email)}
-            disabled={loading || !password.trim() || !email.trim()}
-          >
-            {loading
-              ? mode === 'export'
-                ? t('backup.creating')
-                : t('backup.decrypting')
-              : mode === 'export'
-                ? t('backup.createButton')
-                : t('backup.decryptAction')}
-          </Button>
-        </div>
+      cancelLabel={t('backup.confirmCancel')}
+      saveLabel={
+        loading
+          ? mode === 'export'
+            ? t('backup.creating')
+            : t('backup.decrypting')
+          : mode === 'export'
+            ? t('backup.createButton')
+            : t('backup.decryptAction')
       }
+      onSave={() => onSubmit(password, email)}
+      saving={loading}
+      saveDisabled={!password.trim() || !email.trim()}
     >
       <div className="space-y-4">
         <SettingsCallout>{t('backup.encryptNote')}</SettingsCallout>
@@ -78,6 +70,7 @@ export default function BackupCredentialsModal({
             <Mail className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="backup-admin-email"
+              name="backupAdminEmail"
               type="email"
               value={email}
               readOnly={emailReadOnly}
@@ -92,6 +85,7 @@ export default function BackupCredentialsModal({
           <Label htmlFor="backup-admin-password">{t('backup.adminPasswordLabel')}</Label>
           <Input
             id="backup-admin-password"
+            name="backupAdminPassword"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -100,6 +94,6 @@ export default function BackupCredentialsModal({
           />
         </div>
       </div>
-    </Modal>
+    </FormModal>
   );
 }

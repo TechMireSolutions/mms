@@ -11,7 +11,7 @@ import {
   NAME_MAX,
   TAGLINE_MAX,
 } from '@/tenant/features/settings/components/branding/BrandingShared';
-import type { BrandingSettings } from '@mms/shared';
+import { normalizePhoneInput, type BrandingSettings } from '@mms/shared';
 
 interface BrandingSettingsProfileSectionProps {
   data: BrandingSettings;
@@ -116,6 +116,7 @@ export function BrandingSettingsContactSection({
             <Mail className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input
               id="branding-email"
+              name="brandingEmail"
               type="email"
               inputMode="email"
               autoComplete="email"
@@ -132,6 +133,7 @@ export function BrandingSettingsContactSection({
             <Phone className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input
               id="branding-phone"
+              name="brandingPhone"
               type="tel"
               inputMode="tel"
               autoComplete="tel"
@@ -139,6 +141,7 @@ export function BrandingSettingsContactSection({
               placeholder={t('branding.phonePlaceholder')}
               className="ps-9"
               onChange={(event) => upd('phone', event.target.value)}
+              onBlur={() => upd('phone', normalizePhoneInput(data.phone))}
             />
           </div>
         </div>
@@ -148,6 +151,7 @@ export function BrandingSettingsContactSection({
             <Globe className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input
               id="branding-website"
+              name="brandingWebsite"
               type="url"
               inputMode="url"
               value={data.website}

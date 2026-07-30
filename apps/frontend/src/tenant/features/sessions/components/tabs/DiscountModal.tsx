@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Tag } from "lucide-react";
 import { Discount } from '@/lib/data/sessionsData';
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +45,7 @@ export function DiscountModal({ open, discount, onClose, onSave, saving }: Disco
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="discount-name">{t("sessions.discounts.form.name")} *</label>
+          <label className={FORM_LABEL} htmlFor="discount-name">{t("sessions.discounts.form.name")}<RequiredMark /></label>
           <Input id="discount-name" value={discountDraft.name || ""} onChange={(event) => updateDiscountDraft("name", event.target.value)} placeholder={t("sessions.discounts.form.namePlaceholder")} required />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

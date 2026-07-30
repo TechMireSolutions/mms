@@ -4,11 +4,12 @@ import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, Account, AccountTyp
 import { useAccountingConfig } from '@/hooks/useStandardModuleConfig';
 import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/hooks/useTranslation';
-import { type AppTranslationKey } from '@mms/shared';
+import { accountRecordSchema, type AppTranslationKey } from '@mms/shared';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormPrimitives';
 import { AccountModalCustomField } from '@/tenant/features/accounting/components/AccountModalCustomField';
+import { mapZodFormErrors } from '@/lib/forms/mapZodFormErrors';
 
 interface AccountModalProps {
   initial: Account | null;
@@ -28,29 +29,39 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
   const subtypes = type ? (ACCOUNT_SUBTYPES[type] || []) : [];
   const { fields, orderedFields, isFieldEnabled } = useAccountingConfig();
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (!form.code?.trim()) e.code = t('accounting.coa.validation.codeRequired');
-    else if (!isEdit && existingCodes.includes(form.code.trim())) e.code = t('accounting.coa.validation.codeExists');
-    if (!form.name?.trim()) e.name = t('accounting.coa.validation.nameRequired');
-    if (!form.type) e.type = t('accounting.coa.validation.typeRequired');
-    return e;
-  };
-
   const saveAccount = async () => {
-    const e = validate();
-    if (Object.keys(e).length) {
-      setErrors(e);
+    const candidate = {
+      ...form,
+      id: isEdit ? form.id : `a${Date.now()}`,
+      code: form.code?.trim() ?? '',
+      name: form.name?.trim() ?? '',
+      type: form.type ?? 'Asset',
+      subtype: form.subtype ?? '',
+      description: form.description ?? '',
+      isActive: form.isActive ?? true,
+    };
+    const parsed = accountRecordSchema.safeParse(candidate);
+    const validationErrors = parsed.success
+      ? {}
+      : mapZodFormErrors(parsed.error, (message) => t(message as AppTranslationKey));
+
+    if (!isEdit && existingCodes.includes(candidate.code)) {
+      validationErrors.code = t('accounting.coa.validation.codeExists');
+    }
+    for (const field of orderedFields) {
+      const candidateValue = (candidate as Record<string, unknown>)[field.id];
+      if (fields[field.id]?.required && !String(candidateValue ?? '').trim()) {
+        validationErrors[field.id] = t('common.formPleaseFixErrors');
+      }
+    }
+
+    if (!parsed.success || Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
       return;
     }
     setSubmitting(true);
     try {
-      await onSave({
-        ...form,
-        code: form.code!.trim(),
-        name: form.name!.trim(),
-        id: isEdit ? form.id : `a${Date.now()}`,
-      } as Account);
+      await onSave(parsed.data as Account);
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +80,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
       icon={BookOpen}
       cancelLabel={t('common.cancel')}
       saveLabel={t('common.save')}
-      onSave={() => { void saveAccount(); }}
+      onSave={saveAccount}
       saving={submitting}
       error={errorMessages}
     >
@@ -80,17 +91,15 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
 
           if (field.id === 'code') {
             return (
-              <div key="code">
-                <label htmlFor="account-code" className={FORM_LABEL}>{t('accounting.coa.fields.code')}</label>
+              <Field key="code" id="account-code" label={t('accounting.coa.fields.code')} required error={errors.code}>
                 <Input id="account-code" name="code" value={form.code || ''} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder={t('accounting.coa.fields.codePlaceholder')} required />
-              </div>
+              </Field>
             );
           }
 
           if (field.id === 'type') {
             return (
-              <div key="type">
-                <label htmlFor="account-type" className={FORM_LABEL}>{t('accounting.coa.fields.type')}</label>
+              <Field key="type" id="account-type" label={t('accounting.coa.fields.type')} required error={errors.type}>
                 <FormSelect
                   id="account-type"
                   name="type"
@@ -100,15 +109,16 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                   }
                   options={ACCOUNT_TYPES.map((accType) => ({ value: accType, label: t(`accounting.type.${accType}` as AppTranslationKey) }))}
                 />
-              </div>
+              </Field>
             );
           }
 
           if (field.id === 'name') {
             return (
               <div key="name" className="sm:col-span-2">
-                <label htmlFor="account-name" className={FORM_LABEL}>{t('accounting.coa.fields.name')}</label>
+                <Field id="account-name" label={t('accounting.coa.fields.name')} required error={errors.name}>
                 <Input id="account-name" name="name" value={form.name || ''} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={t('accounting.coa.fields.namePlaceholder')} required />
+                </Field>
               </div>
             );
           }
@@ -117,15 +127,16 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             const isRequired = !!fields[field.id]?.required;
             return (
               <div key="subtype" className="sm:col-span-2">
-                <label htmlFor="account-subtype" className={FORM_LABEL}>{t('accounting.coa.fields.subtype')} {isRequired ? '*' : ''}</label>
-                <FormSelect
-                  id="account-subtype"
-                  name="subtype"
-                  value={form.subtype || ''}
-                  onChange={(val) => setForm({ ...form, subtype: val })}
-                  options={subtypes}
-                  placeholder={t('accounting.journal.form.none')}
-                />
+                <Field id="account-subtype" label={t('accounting.coa.fields.subtype')} required={isRequired} error={errors.subtype}>
+                  <FormSelect
+                    id="account-subtype"
+                    name="subtype"
+                    value={form.subtype || ''}
+                    onChange={(val) => setForm({ ...form, subtype: val })}
+                    options={subtypes}
+                    placeholder={t('accounting.journal.form.none')}
+                  />
+                </Field>
               </div>
             );
           }
@@ -134,8 +145,9 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             const isRequired = !!fields[field.id]?.required;
             return (
               <div key="description" className="sm:col-span-2">
-                <label htmlFor="account-description" className={FORM_LABEL}>{t('accounting.coa.fields.description')} {isRequired ? '*' : ''}</label>
-                <Input id="account-description" name="description" value={form.description || ''} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder={t('accounting.coa.fields.descriptionPlaceholder')} required={isRequired} />
+                <Field id="account-description" label={t('accounting.coa.fields.description')} required={isRequired} error={errors.description}>
+                  <Input id="account-description" name="description" value={form.description || ''} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder={t('accounting.coa.fields.descriptionPlaceholder')} required={isRequired} />
+                </Field>
               </div>
             );
           }

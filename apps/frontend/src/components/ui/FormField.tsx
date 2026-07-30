@@ -11,6 +11,42 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
+interface InputLikeProps {
+  id?: string;
+  name?: string;
+  children?: React.ReactNode;
+  onChange?: unknown;
+  onCheckedChange?: unknown;
+}
+
+function findFirstInputLike(node: React.ReactNode): InputLikeProps | undefined {
+  if (!React.isValidElement(node)) return undefined;
+
+  const props = node.props as InputLikeProps;
+  const isNativeInput =
+    typeof node.type === "string" && ["input", "textarea", "select"].includes(node.type);
+  const isCustomControl =
+    typeof node.type !== "string" &&
+    (props.id !== undefined ||
+      props.name !== undefined ||
+      "onChange" in props ||
+      "onCheckedChange" in props);
+  const isInputLike = isNativeInput || isCustomControl;
+
+  if (isInputLike) return props;
+
+  for (const child of React.Children.toArray(props.children)) {
+    const inputLike = findFirstInputLike(child);
+    if (inputLike) return inputLike;
+  }
+
+  return undefined;
+}
+
+export function RequiredMark(): React.JSX.Element {
+  return <span className="text-destructive ms-0.5" aria-hidden="true">*</span>;
+}
+
 export function Field({ label, required = false, hint = undefined, error = undefined, id, children }: FieldProps): React.JSX.Element {
   const fallbackId = React.useId();
   const instanceIdSuffix = React.useId().replace(/:/g, "");
@@ -18,7 +54,11 @@ export function Field({ label, required = false, hint = undefined, error = undef
     ? label.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/[-\s]+/g, "-")
     : "";
   const baseId = id || slugified || fallbackId;
-  const resolvedId = `${baseId}-${instanceIdSuffix}`;
+  const existingControl = React.Children.toArray(children)
+    .map(findFirstInputLike)
+    .find(Boolean);
+  const resolvedId = id || existingControl?.id || `${baseId}-${instanceIdSuffix}`;
+  const resolvedName = existingControl?.name || id || baseId;
   const errorId = `${resolvedId}-error`;
   const hintId = `${resolvedId}-hint`;
   const describedBy = error ? errorId : (hint ? hintId : undefined);
@@ -36,7 +76,7 @@ export function Field({ label, required = false, hint = undefined, error = undef
     if (isInputLike) {
       return React.cloneElement(element, {
         id: props.id || resolvedId,
-        name: props.name || baseId,
+        name: props.name || resolvedName,
         "aria-invalid": props["aria-invalid"] ?? Boolean(error),
         "aria-describedby": props["aria-describedby"] || describedBy,
       });
@@ -59,7 +99,7 @@ export function Field({ label, required = false, hint = undefined, error = undef
     <div id={id ? `${id}-container` : undefined} data-field-key={id}>
       <label htmlFor={resolvedId} className={LABEL}>
         {label}
-        {required && <span className="text-destructive ms-0.5" aria-hidden="true">*</span>}
+        {required && <RequiredMark />}
       </label>
       {enhancedChildren}
       {error ? (

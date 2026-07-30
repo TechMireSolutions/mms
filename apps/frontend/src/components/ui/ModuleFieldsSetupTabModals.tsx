@@ -3,6 +3,7 @@ import { Plus, Pencil } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { FormModal } from "@/components/ui/FormModal";
+import { Field } from "@/components/ui/FormPrimitives";
 
 export interface ModuleFieldsSetupTabModalsProps {
   isAddTabModalOpen: boolean;
@@ -49,17 +50,18 @@ export function ModuleFieldsSetupTabModals({
         saveDisabled={!newTabLabel.trim()}
         saveLabel={t("contacts.setup.addTab")}
       >
-        <div className="space-y-3 text-start">
-          <label htmlFor="newTabLabel" className="text-xs font-semibold text-foreground">
-            {t("contacts.setup.customTabName")} *
-          </label>
+        <div className="text-start">
+          <Field id="newTabLabel" label={t("contacts.setup.customTabName")} required>
           <Input
             id="newTabLabel"
+            name="newTabLabel"
             value={newTabLabel}
             onChange={(event) => setNewTabLabel(event.target.value)}
             placeholder={t("contacts.setup.addCustomTabPlaceholder")}
             autoFocus
+            required
           />
+          </Field>
         </div>
       </FormModal>
 
@@ -81,17 +83,18 @@ export function ModuleFieldsSetupTabModals({
         saveDisabled={!renameTabLabel.trim()}
         saveLabel={t("contacts.setup.renameTabButton")}
       >
-        <div className="space-y-3 text-start">
-          <label htmlFor="renameTabLabel" className="text-xs font-semibold text-foreground">
-            {t("contacts.setup.customTabName")} *
-          </label>
+        <div className="text-start">
+          <Field id="renameTabLabel" label={t("contacts.setup.customTabName")} required>
           <Input
             id="renameTabLabel"
+            name="renameTabLabel"
             value={renameTabLabel}
             onChange={(event) => setRenameTabLabel(event.target.value)}
             placeholder={t("contacts.setup.addCustomTabPlaceholder")}
             autoFocus
+            required
           />
+          </Field>
         </div>
       </FormModal>
     </>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FormModal } from "@/components/ui/FormModal";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import type { Mujtahid, MujtahidRep } from "@/tenant/features/obligations/components/mujtahidManagerTypes";
 
@@ -36,16 +36,16 @@ export function NameFormModal({ initial, onSave, onClose, label, title }: NameFo
       onSave={handleSave}
       error={error || undefined}
     >
-      <div>
-        <label htmlFor="name-form-input" className={FORM_LABEL}>{label} *</label>
+      <Field id="name-form-input" label={label} required error={error || undefined}>
         <Input
           id="name-form-input"
+          name="name"
           value={form.name || ""}
           onChange={(event) => setForm({ ...form, name: event.target.value })}
-          className={FORM_INPUT}
           aria-invalid={!!error}
+          required
         />
-      </div>
+      </Field>
     </FormModal>
   );
 }

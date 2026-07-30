@@ -7,7 +7,7 @@ import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
 import { Session, SESSION_TYPES } from '@/lib/data/sessionsData';
-import { toTitleCase, AppTranslationKey } from '@mms/shared';
+import { SessionSchema, toTitleCase, AppTranslationKey } from '@mms/shared';
 import {
   SessionDetailsSection,
   SessionFinancialSection,
@@ -18,6 +18,7 @@ import {
   SESSION_STATUSES,
   SESSION_TYPE_LABEL_KEYS,
   buildSessionDraftFromRecord,
+  type SessionFormDraft,
 } from '@/tenant/features/sessions/components/sessionFormShared';
 import { SessionFormFooter } from '@/tenant/features/sessions/components/SessionFormFooter';
 
@@ -48,14 +49,14 @@ export function SessionForm({
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sessionDraft, setSessionDraft] = useState<Partial<Session>>(() => buildSessionDraftFromRecord(session, defaultType, defaultCurrency));
+  const [sessionDraft, setSessionDraft] = useState<SessionFormDraft>(() => buildSessionDraftFromRecord(session, defaultType, defaultCurrency));
 
   useEffect(() => {
     setSessionDraft(buildSessionDraftFromRecord(session, defaultType, defaultCurrency));
     setErrors({});
   }, [session, defaultCurrency, defaultType]);
 
-  const updateDraft = (patch: Partial<Session>) => {
+  const updateDraft = (patch: Partial<SessionFormDraft>) => {
     setSessionDraft((prev) => ({ ...prev, ...patch }));
   };
 
@@ -75,22 +76,28 @@ export function SessionForm({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      notify.error(t('contacts.form.pleaseFixErrors'));
+      notify.error(t('common.formPleaseFixErrors'));
       return;
     }
 
     setSaving(true);
     try {
       const name = toTitleCase(sessionDraft.name?.trim() || '');
-      const saved = {
+      const candidate = {
         ...sessionDraft,
         id: session?.id ?? `sess-${Date.now()}`,
         name,
         baseFee: Number(sessionDraft.baseFee) || 0,
         _blueprintId: '1.0',
-      } as Session;
+      };
+      const parsed = SessionSchema.safeParse(candidate);
+      if (!parsed.success) {
+        setErrors({ schema: t('common.formPleaseFixErrors') });
+        notify.error(t('common.formPleaseFixErrors'));
+        return;
+      }
 
-      await onSave(saved);
+      await onSave(parsed.data as Session);
       onClose();
     } catch (err: unknown) {
       notify.error(t('sessions.toast.saveFailed'), {

@@ -21,6 +21,11 @@ export const APP_TRANSLATIONS_EN = {
   "nav.closeSidebar": "Close sidebar",
   "nav.openMenu": "Open navigation menu",
   "nav.globalSearchPlaceholder": "Search students, sessions\u2026",
+  "common.searchPlaceholder": "Search…",
+  "common.formPleaseFixErrors": "Please fix the following errors",
+  "customFields.title": "Custom Fields",
+  "customFields.description": "Add your own fields. They appear below the built-in fields in this tab.",
+  "customFields.add": "Add Field",
 
   "settings.title": "Settings",
   "settings.searchPlaceholder": "Search settings...",
@@ -100,6 +105,7 @@ export const APP_TRANSLATIONS_EN = {
   "settings.llmSpeed": "Speed",
   "settings.llmSandboxInputPlaceholder": "Type sandbox message...",
   "settings.llmModalRepositionDesc": "Drag header to reposition this panel",
+  "settings.llmModalDescription": "Configure the provider, model, credentials, and generation defaults.",
   "settings.llmModalHyperparameters": "Hyperparameters",
   "settings.llmModalTemperatureDesc": "Controls creativity/randomness: lower values are precise, higher values are creative.",
   "settings.llmModalMaxTokensDesc": "Upper limit on generation response length.",
@@ -118,6 +124,7 @@ export const APP_TRANSLATIONS_EN = {
   "onboarding.madrasa.addressTitle": "Workspace Address",
   "onboarding.madrasa.addressSubtitle": "Specify the unique access subdomain for your tenant workspace",
   "onboarding.madrasa.subdomainLabel": "Workspace subdomain",
+  "onboarding.madrasa.subdomainPlaceholder": "al-noor",
   "onboarding.madrasa.yourUrl": "Your URL:",
 
   "global.general": "General",

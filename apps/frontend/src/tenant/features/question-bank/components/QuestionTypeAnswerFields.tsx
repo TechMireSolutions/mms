@@ -1,5 +1,6 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
+import { RequiredMark } from '@/components/ui/FormPrimitives';
 import {
   countFillBlankMarkers,
   joinQuestionCompoundAnswer,
@@ -98,7 +99,7 @@ export function QuestionTypeAnswerFields({
     return (
       <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
         <div>
-          <label htmlFor="qb-numeric-answer" className={FORM_LABEL}>{t('questionBank.numericAnswer')} *</label>
+          <label htmlFor="qb-numeric-answer" className={FORM_LABEL}>{t('questionBank.numericAnswer')}<RequiredMark /></label>
           <Input
             id="qb-numeric-answer"
             type="number"

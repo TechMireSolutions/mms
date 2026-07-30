@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Gift } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,7 +44,7 @@ export function TabarrukModal({ open, entry, onClose, onSave, saving }: Tabarruk
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="tabarruk-item">{t("sessions.tabarruk.form.item")} *</label>
+          <label className={FORM_LABEL} htmlFor="tabarruk-item">{t("sessions.tabarruk.form.item")}<RequiredMark /></label>
           <Input id="tabarruk-item" value={tabarrukDraft.item || ""} onChange={(event) => updateTabarrukDraft("item", event.target.value)} placeholder={t("sessions.tabarruk.form.itemPlaceholder")} required />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

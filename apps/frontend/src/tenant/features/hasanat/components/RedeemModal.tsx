@@ -3,6 +3,7 @@ import { Gift } from "lucide-react";
 import { Redemption, Distribution } from "@/lib/data/hasanatData";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -78,7 +79,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="dist-sel" className={FORM_LABEL}>{t("hasanat.fieldRecipient")} *</label>
+          <label htmlFor="dist-sel" className={FORM_LABEL}>{t("hasanat.fieldRecipient")}<RequiredMark /></label>
           <FormSelect
             id="dist-sel"
             value={data.distributionId || ""}
@@ -93,12 +94,12 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
           )}
         </div>
         <div>
-          <label htmlFor="reward-given" className={FORM_LABEL}>{t("hasanat.columns.redemption.reward")} *</label>
+          <label htmlFor="reward-given" className={FORM_LABEL}>{t("hasanat.columns.redemption.reward")}<RequiredMark /></label>
           <Input id="reward-given" className={FORM_INPUT} value={data.reward} onChange={(event) => updateField("reward", event.target.value)} placeholder={t("hasanat.rewardPlaceholder")} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label htmlFor="pts-used" className={FORM_LABEL}>{t("hasanat.columns.redemption.pointsUsed")} *</label>
+            <label htmlFor="pts-used" className={FORM_LABEL}>{t("hasanat.columns.redemption.pointsUsed")}<RequiredMark /></label>
             <Input id="pts-used" type="number" className={FORM_INPUT} value={data.pointsUsed || ""} onChange={(event) => updateField("pointsUsed", Number(event.target.value))} placeholder="0" min={1} />
           </div>
           <div>

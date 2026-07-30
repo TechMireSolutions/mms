@@ -55,10 +55,12 @@ export function CustomReportBuilderConfigPanel({
   return (
     <div className="space-y-5 lg:col-span-1">
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+        <label htmlFor="report-builder-name" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
           {t("reports.builder.reportTitleLabel")}
         </label>
         <Input
+          id="report-builder-name"
+          name="reportName"
           type="text"
           value={reportName}
           onChange={(event) => setReportName(event.target.value)}
@@ -68,10 +70,12 @@ export function CustomReportBuilderConfigPanel({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+        <label htmlFor="report-builder-source" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
           {t("reports.builder.queryDataSource")}
         </label>
         <FormSelect
+          id="report-builder-source"
+          name="reportSource"
           value={source}
           onChange={(value) => {
             const newSource = value as DataSource;
@@ -94,9 +98,9 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="space-y-1.5">
         <div className="flex justify-between items-center ms-1">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
             {t("reports.builder.schemaFieldsPicker")}
-          </label>
+          </span>
           <span className="text-xs text-muted-foreground font-black uppercase bg-primary/10 px-1.5 py-0.5 rounded-md text-primary">
             {t("reports.builder.availableCount", { count: availableFields.length })}
           </span>
@@ -126,10 +130,12 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <label htmlFor="report-builder-aggregate" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
             {t("reports.builder.aggregatorFunction")}
           </label>
           <FormSelect
+            id="report-builder-aggregate"
+            name="reportAggregate"
             value={aggregate}
             onChange={(value) => setAggregate(value as AggregateFn)}
             options={AGGREGATE_FNS.map((aggregateName) => {
@@ -146,10 +152,12 @@ export function CustomReportBuilderConfigPanel({
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <label htmlFor="report-builder-group-by" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
             {t("reports.builder.groupCategory")}
           </label>
           <FormSelect
+            id="report-builder-group-by"
+            name="reportGroupBy"
             value={groupBy}
             disabled={aggregate === "None"}
             onChange={(value) => setGroupBy(value)}
@@ -167,9 +175,9 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
             {t("reports.builder.docAlignment")}
-          </label>
+          </span>
           <div className="flex gap-1 p-1 bg-muted/30 border border-border/50 rounded-xl">
             <Button
               onClick={() => setOrientation("p")}
@@ -190,10 +198,12 @@ export function CustomReportBuilderConfigPanel({
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <label htmlFor="report-builder-page-size" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
             {t("reports.builder.exportLayoutFormat")}
           </label>
           <FormSelect
+            id="report-builder-page-size"
+            name="reportPageSize"
             value={pageSize}
             onChange={(value) => setPageSize(value)}
             options={[

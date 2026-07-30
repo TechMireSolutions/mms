@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type Mujtahid, type MujtahidRep, type ObligationType, type WakalaType } from "@/lib/data/obligationsData";
@@ -53,7 +54,7 @@ export function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onS
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="wakala-rep" className={FORM_LABEL}>{t("obligations.wakala.repLabel")} *</label>
+          <label htmlFor="wakala-rep" className={FORM_LABEL}>{t("obligations.wakala.repLabel")}<RequiredMark /></label>
           <FormSelect
             id="wakala-rep"
             value={form.mujtahid_representative_id || ""}
@@ -66,7 +67,7 @@ export function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onS
           />
         </div>
         <div>
-          <label htmlFor="wakala-type" className={FORM_LABEL}>{t("obligations.wakala.obTypeLabel")} *</label>
+          <label htmlFor="wakala-type" className={FORM_LABEL}>{t("obligations.wakala.obTypeLabel")}<RequiredMark /></label>
           <FormSelect
             id="wakala-type"
             value={form.obligation_type_id || ""}

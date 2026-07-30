@@ -36,7 +36,7 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<v
   });
   if (zodErrors) {
     input.setValidationErrors(zodErrors);
-    notify.error(input.t("contacts.form.pleaseFixErrors"));
+    notify.error(input.t("common.formPleaseFixErrors"));
     return;
   }
 

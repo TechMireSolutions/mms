@@ -1,6 +1,6 @@
 import type React from "react";
 import { Loader2, ShieldCheck, User } from "lucide-react";
-import type { TenantUserProfile } from "@mms/shared";
+import { normalizePhoneInput, type TenantUserProfile } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,7 @@ export function AccountProfileContactTab({
               <Label htmlFor="profile-name" className="text-xs font-semibold text-muted-foreground">{t("account.fieldName")}</Label>
               <Input
                 id="profile-name"
+                name="profileName"
                 value={name}
                 onChange={(event) => onNameChange(event.target.value)}
                 required
@@ -76,8 +77,11 @@ export function AccountProfileContactTab({
               <Label htmlFor="profile-phone" className="text-xs font-semibold text-muted-foreground">{t("account.fieldPhone")}</Label>
               <Input
                 id="profile-phone"
+                name="profilePhone"
+                type="tel"
                 value={phone}
                 onChange={(event) => onPhoneChange(event.target.value)}
+                onBlur={() => onPhoneChange(normalizePhoneInput(phone))}
                 required
                 autoComplete="tel"
                 className="min-h-11"
@@ -87,6 +91,7 @@ export function AccountProfileContactTab({
               <Label htmlFor="profile-contact-email" className="text-xs font-semibold text-muted-foreground">{t("account.contactEmail")}</Label>
               <Input
                 id="profile-contact-email"
+                name="profileContactEmail"
                 type="email"
                 value={contactEmail}
                 onChange={(event) => onContactEmailChange(event.target.value)}

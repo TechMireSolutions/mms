@@ -3,6 +3,7 @@ import { Package } from 'lucide-react';
 import { Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { FormModal } from '@/components/ui/FormModal';
+import { RequiredMark } from '@/components/ui/FormPrimitives';
 import { UserActorSelect } from '@/components/ui/UserActorSelect';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
@@ -74,7 +75,7 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
     >
       <div className="space-y-4">
         <div>
-          <label htmlFor="denom" className={FORM_LABEL}>{t('hasanat.form.denomination')} *</label>
+          <label htmlFor="denom" className={FORM_LABEL}>{t('hasanat.form.denomination')}<RequiredMark /></label>
           <FormSelect
             id="denom"
             value={data.denominationId || ''}
@@ -92,7 +93,7 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label htmlFor="qty" className={FORM_LABEL}>{t('hasanat.form.quantity')} *</label>
+            <label htmlFor="qty" className={FORM_LABEL}>{t('hasanat.form.quantity')}<RequiredMark /></label>
             <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || ''} onChange={(event) => updateField('quantity', Number(event.target.value))} placeholder="0" min={1} />
           </div>
           <div>

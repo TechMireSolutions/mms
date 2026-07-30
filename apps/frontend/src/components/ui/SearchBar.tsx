@@ -1,5 +1,8 @@
 import React from "react";
 import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface SearchBarProps {
   value: string;
@@ -19,11 +22,12 @@ export interface SearchBarProps {
 export function SearchBar({
   value,
   onChange,
-  placeholder = "Search…",
+  placeholder,
   className = "",
   id,
   name,
 }: SearchBarProps): React.ReactElement {
+  const { t } = useTranslation();
   const fallbackId = React.useId();
   const resolvedId = id || `search-input-${fallbackId.replace(/:/g, "")}`;
   const resolvedName = name || `searchQuery-${fallbackId.replace(/:/g, "")}`;
@@ -31,24 +35,26 @@ export function SearchBar({
   return (
     <div className={`relative ${className}`}>
       <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-      <input
+      <Input
         type="text"
         id={resolvedId}
         name={resolvedName}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className="w-full min-h-11 ps-10 pe-11 py-2.5 rounded-xl border border-border text-sm bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all"
+        placeholder={placeholder ?? t("common.searchPlaceholder")}
+        className="rounded-xl bg-card ps-10 pe-11"
       />
       {value && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => onChange("")}
-          aria-label="Clear search"
-          className="absolute end-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={t("common.clearSearch")}
+          className="absolute end-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
         >
           <X className="w-3.5 h-3.5" />
-        </button>
+        </Button>
       )}
     </div>
   );

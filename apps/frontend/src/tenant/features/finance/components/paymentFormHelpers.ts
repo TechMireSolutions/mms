@@ -3,7 +3,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { AppTranslationKey, todayISO, type PaymentCreateInput } from "@mms/shared";
 
 export interface PaymentFormDraft {
-  amount: number;
+  amount: string;
   method: string;
   date: string;
   receivedByUserId: string;
@@ -17,7 +17,7 @@ export function validatePaymentFormDraft(
 ): Record<string, string> {
   const newErrors: Record<string, string> = {};
 
-  if (!draft.amount || Number(draft.amount) <= 0) {
+  if (!draft.amount.trim() || Number(draft.amount) <= 0) {
     newErrors.amount = t("finance.amountRequired");
   } else if (Number(draft.amount) > balance) {
     newErrors.amount = t("finance.amountExceedsBalance");
@@ -37,7 +37,7 @@ export function validatePaymentFormDraft(
 
 export function buildInitialPaymentDraft(balance: number, receivedByUserId: string): PaymentFormDraft {
   return {
-    amount: balance,
+    amount: balance > 0 ? String(balance) : "",
     method: "Cash",
     date: todayISO(),
     receivedByUserId,

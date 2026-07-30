@@ -109,7 +109,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       saveLabel={t("finance.recordPayment")}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={!paymentDraft.amount || Number(paymentDraft.amount) <= 0}
+      saveDisabled={!paymentDraft.amount.trim() || Number(paymentDraft.amount) <= 0}
       footerStart={footerStart || undefined}
     >
       <div className="space-y-5 text-start">
@@ -136,7 +136,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <Field label={`${t("finance.columns.amount")} (${activeCurrency.code}) *`} error={errors.amount}>
+              <Field label={`${t("finance.columns.amount")} (${activeCurrency.code})`} required error={errors.amount}>
                 <div className="relative flex items-center group/input">
                   <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
@@ -144,8 +144,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                     name="amount"
                     type="number"
                     className="ps-10"
-                    value={paymentDraft.amount || ""}
-                    onChange={(event) => updateDraft({ amount: event.target.value === "" ? 0 : Number(event.target.value) })}
+                    value={paymentDraft.amount}
+                    onChange={(event) => updateDraft({ amount: event.target.value })}
                     max={balance}
                     min={1}
                     required
@@ -159,7 +159,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               </Field>
             </div>
 
-            <Field label={`${t("finance.columns.method")} *`} error={errors.method}>
+            <Field label={t("finance.columns.method")} required error={errors.method}>
               <FormSelect
                 id="payment-method"
                 name="method"
@@ -169,7 +169,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               />
             </Field>
 
-            <Field label={`${t("finance.columns.paymentDate")} *`} error={errors.date}>
+            <Field label={t("finance.columns.paymentDate")} required error={errors.date}>
               <DatePicker
                 value={paymentDraft.date || ""}
                 onChange={(val) => updateDraft({ date: val })}

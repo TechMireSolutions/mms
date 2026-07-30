@@ -3,6 +3,7 @@ import { TrendingDown, TrendingUp } from "lucide-react";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/lib/data/sessionsData';
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
+import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -65,7 +66,7 @@ export function BudgetTransactionModal({ open, type, currency, onClose, onSave, 
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className={FORM_LABEL} htmlFor="tx-amount">{t("sessions.budget.form.amount", { currency })} *</label>
+            <label className={FORM_LABEL} htmlFor="tx-amount">{t("sessions.budget.form.amount", { currency })}<RequiredMark /></label>
             <Input id="tx-amount" type="number" value={transactionDraft.amount} onChange={(event) => updateTransactionDraft("amount", event.target.value)} placeholder="0" min={0} required />
           </div>
           <div>

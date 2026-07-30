@@ -1,6 +1,7 @@
 import React from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
+import { normalizePhoneInput } from "@mms/shared";
+import type { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -101,6 +102,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           autoComplete="tel"
           value={data.phone || ""}
           onChange={(event) => update("phone", event.target.value)}
+          onBlur={() => update("phone", normalizePhoneInput(data.phone))}
           placeholder={t("onboarding.admin.phonePlaceholder")}
           className="h-11"
         />
@@ -119,6 +121,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
       >
         <Checkbox
           id="terms"
+          name="terms"
           checked={data.agreedTerms || false}
           onCheckedChange={(checked) => update("agreedTerms", checked === true)}
           className="mt-0.5"

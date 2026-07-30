@@ -3,6 +3,33 @@ import type { Permission } from './permissions.js';
 
 export const userStatusSchema = z.enum(['active', 'inactive', 'suspended']);
 
+const userFormContactIdSchema = z.union([
+  z.string().trim().min(1, 'users.addErrorContact'),
+  z.number(),
+]);
+
+/** Shared form contract for editing a workspace user. */
+export const editWorkspaceUserSchema = z.object({
+  contactId: userFormContactIdSchema,
+  role: z.string().min(1, 'users.errorRoleRequired'),
+  status: userStatusSchema,
+  twoFactorEnabled: z.boolean(),
+});
+
+/** Values accepted by the workspace user edit form. */
+export type EditWorkspaceUserInput = z.infer<typeof editWorkspaceUserSchema>;
+
+/** Shared form contract for inviting a workspace user. */
+export const inviteWorkspaceUserSchema = z.object({
+  contactId: userFormContactIdSchema,
+  role: z.string().min(1, 'users.errorRoleRequired'),
+  status: userStatusSchema,
+  sendEmail: z.boolean(),
+});
+
+/** Values accepted by the workspace user invite form. */
+export type InviteWorkspaceUserInput = z.infer<typeof inviteWorkspaceUserSchema>;
+
 export const workspaceUserRecordSchema = z.object({
   id: z.string(),
   contactId: z.union([z.string(), z.number()]).optional(),

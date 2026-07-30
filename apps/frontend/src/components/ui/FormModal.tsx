@@ -30,7 +30,7 @@ export interface FormModalProps<K extends string = string> {
   dir?: 'ltr' | 'rtl';
   cancelLabel?: string;
   saveLabel?: string;
-  onSave?: () => void;
+  onSave?: () => void | Promise<void>;
   saving?: boolean;
   saveDisabled?: boolean;
   saved?: boolean;

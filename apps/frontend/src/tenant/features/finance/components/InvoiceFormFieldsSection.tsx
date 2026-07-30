@@ -114,6 +114,8 @@ export function InvoiceFormFieldsSection({
             {t("finance.columns.dueDate")}
           </label>
           <DatePicker
+            id="invoice-due-date"
+            name="dueDate"
             value={draft.dueDate}
             onChange={(value) => onFieldChange("dueDate", value)}
             required
