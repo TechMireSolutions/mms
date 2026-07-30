@@ -1,6 +1,7 @@
+import { USER_EXPORT_ARTIFACTS_OBJECT_KEY } from '@mms/shared';
 import { fetchObject, persistObject } from './dbSyncService.js';
 
-const STORAGE_KEY = 'user_export_artifacts';
+const STORAGE_KEY = USER_EXPORT_ARTIFACTS_OBJECT_KEY;
 const ARTIFACT_TTL_MS = 24 * 60 * 60 * 1000;
 
 interface ExportArtifact {

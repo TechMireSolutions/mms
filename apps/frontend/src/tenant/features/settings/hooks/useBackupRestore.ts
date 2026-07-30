@@ -368,7 +368,13 @@ export function useBackupRestore({
   );
 
   const tips = useMemo(
-    () => [t('backup.tipRegular'), t('backup.tipOffsite'), t('backup.tipVerify'), t('backup.tipHistoryLimit')],
+    () => [
+      t('backup.tipRegular'),
+      t('backup.tipOffsite'),
+      t('backup.tipVerify'),
+      t('backup.tipHistoryLimit'),
+      t('backup.tipScope'),
+    ],
     [t],
   );
 

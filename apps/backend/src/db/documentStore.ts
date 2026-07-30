@@ -4,6 +4,7 @@ export {
   getCollection,
   getCollectionForUpdate,
   saveCollection,
+  deleteCollection,
   type SaveCollectionOptions,
 } from './documentStoreCollections.js';
 export {
@@ -18,5 +19,7 @@ export {
   deleteCollectionByStorageName,
   deleteObjectByStorageKey,
   listObjectStorageKeys,
+  listTenantObjectLogicalKeys,
+  listTenantCollectionLogicalKeys,
   getObjectByStorageKey,
 } from './documentStoreAdmin.js';

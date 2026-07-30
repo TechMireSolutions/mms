@@ -54,6 +54,13 @@ function sanitizeUserCollections(collections: Record<string, unknown[]>, userId:
   }
 }
 
+/** Drop server-only object keys so older backups cannot 403 a full restore. */
+function stripServerOnlyObjects(objects: Record<string, unknown>): void {
+  for (const key of Object.keys(objects)) {
+    if (isServerOnlyObjectKey(key)) delete objects[key];
+  }
+}
+
 /**
  * Runs collection-specific validation/normalization if defined.
  * Returns the normalized rows on success, or null if validation fails.
@@ -98,10 +105,14 @@ export default async function dbRoutes(
   function sanitizeSnapshot(snapshot: TenantDatabaseSnapshot, user: User): TenantDatabaseSnapshot {
     if (snapshot.collections) {
       delete snapshot.collections[WORKSPACES_COLLECTION];
-      sanitizeUserCollections(snapshot.collections, user.id);
+      // Per-collection GET still scopes DMs; admin backup/sync keep every user inbox.
+      if (!canBulkSync(user)) {
+        sanitizeUserCollections(snapshot.collections, user.id);
+      }
     }
     if (snapshot.objects) {
       delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];
+      stripServerOnlyObjects(snapshot.objects);
     }
     return snapshot;
   }
@@ -167,16 +178,15 @@ export default async function dbRoutes(
           payload.collections.contacts = validated;
         }
         if (payload.collections) {
-          sanitizeUserCollections(payload.collections, user.id);
+          // Admin bulk restore keeps every per-user inbox; prune handles leftovers.
           const disallowedCollection = Object.keys(payload.collections).find((key) => !canWriteCollection(user, key));
           if (disallowedCollection) {
             return sendForbidden(reply, `Sync payload contains unsupported collection "${disallowedCollection}"`);
           }
         }
         if (payload.objects) {
-          const disallowedObject = Object.keys(payload.objects).find((key) =>
-            isServerOnlyObjectKey(key) || !canWriteObject(user, key),
-          );
+          stripServerOnlyObjects(payload.objects);
+          const disallowedObject = Object.keys(payload.objects).find((key) => !canWriteObject(user, key));
           if (disallowedObject) {
             return sendForbidden(reply, `Sync payload contains unsupported object "${disallowedObject}"`);
           }

@@ -1,6 +1,5 @@
+import { CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY } from '@mms/shared';
 import { fetchObject, persistObject } from './dbSyncService.js';
-
-const CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY = 'contact_google_sync_by_user';
 
 export interface ContactGoogleSyncConfig {
   clientId?: string;

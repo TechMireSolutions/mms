@@ -142,3 +142,16 @@ export async function clearFinishedUserBackgroundJobs(userId: string): Promise<n
 
   return cleared.length;
 }
+
+/** Wipe every queued/finished/running job for the request tenant (full restore). */
+export async function clearTenantBackgroundJobs(): Promise<number> {
+  const { activeDb } = await import('../db/dbConnection.js');
+  const tenantId = getRequestTenant();
+  if (!tenantId) return 0;
+
+  const cleared = await activeDb().delete(backgroundJobs)
+    .where(eq(backgroundJobs.tenantId, tenantId))
+    .returning({ id: backgroundJobs.id });
+
+  return cleared.length;
+}

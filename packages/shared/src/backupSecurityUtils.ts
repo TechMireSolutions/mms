@@ -34,8 +34,7 @@ export function isRestrictedKey(logicalKey: string): boolean {
     lower === '__proto__' ||
     lower === 'constructor' ||
     lower === 'prototype' ||
-    lower.startsWith('platform_') ||
-    isServerOnlyObjectKey(logicalKey)
+    lower.startsWith('platform_')
   );
 }
 
@@ -71,7 +70,14 @@ export function validateAndNormalizeSnapshot(
   }
 
   const collections = snapshot.collections ? { ...snapshot.collections } : {};
-  const objects = snapshot.objects ? { ...snapshot.objects } : {};
+  const objects: Record<string, unknown> = {};
+  if (snapshot.objects) {
+    for (const [key, value] of Object.entries(snapshot.objects)) {
+      // Older backups may still carry ephemeral/secret keys — drop, don't reject.
+      if (isServerOnlyObjectKey(key)) continue;
+      objects[key] = value;
+    }
+  }
 
   for (const [colName, rows] of Object.entries(collections)) {
     if (Array.isArray(rows)) {

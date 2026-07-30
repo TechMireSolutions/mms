@@ -367,6 +367,25 @@ describe('backupTypes', () => {
       expect(validateAndNormalizeSnapshot(badSnapshot).ok).toBe(false);
     });
 
+    it('strips server-only object keys instead of rejecting the restore', () => {
+      const snapshot = {
+        collections: {
+          users: [{ id: 'u-1', role: 'admin' }],
+        },
+        objects: {
+          branding: { madrasaName: 'Test' },
+          user_export_artifacts: { u1: {} },
+          email_integration_secrets: { smtpPassword: 'secret' },
+          contact_google_sync_by_user: { u1: { clientSecret: 'x' } },
+        },
+      };
+      const result = validateAndNormalizeSnapshot(snapshot);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.objects).toEqual({ branding: { madrasaName: 'Test' } });
+      }
+    });
+
     it('deduplicates collection items by id', () => {
       const snapshot = {
         collections: {

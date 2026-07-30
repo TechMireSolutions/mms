@@ -77,6 +77,42 @@ export async function listObjectStorageKeys(): Promise<string[]> {
   return objRows.map((row) => row.key);
 }
 
+/**
+ * Lists the request tenant's object logical keys, mirroring the filters `getAllData`
+ * applies to backup exports so restore can prune whatever the backup does not carry.
+ */
+export async function listTenantObjectLogicalKeys(): Promise<string[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const objRows = await activeDb().select({ key: schema.objects.key }).from(schema.objects);
+  const logicalKeys: string[] = [];
+  for (const row of objRows) {
+    const parsed = parseTenantScopedStorageKey(row.key);
+    if (!parsed || parsed.subdomain !== tenant) continue;
+    if (isServerOnlyObjectKey(parsed.logicalKey)) continue;
+    logicalKeys.push(parsed.logicalKey);
+  }
+  return logicalKeys;
+}
+
+/**
+ * Lists the request tenant's collection logical keys (same scoping as `getAllData`).
+ * Includes per-user `messages_u:*` / `whatsappTemplates_u:*` rows.
+ */
+export async function listTenantCollectionLogicalKeys(): Promise<string[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const colRows = await activeDb().select({ name: schema.collections.name }).from(schema.collections);
+  const logicalKeys: string[] = [];
+  for (const row of colRows) {
+    if (row.name === WORKSPACES_COLLECTION) continue;
+    const parsed = parseTenantScopedStorageKey(row.name);
+    if (!parsed || parsed.subdomain !== tenant) continue;
+    logicalKeys.push(parsed.logicalKey);
+  }
+  return logicalKeys;
+}
+
 /** Reads an object by exact storage key (no tenant prefixing). */
 export async function getObjectByStorageKey(key: string): Promise<unknown | null> {
   const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, key));

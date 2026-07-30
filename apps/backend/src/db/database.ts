@@ -6,6 +6,7 @@ export {
 } from './dbConnection.js';
 export {
   deleteCollectionByStorageName,
+  deleteCollection,
   deleteObject,
   deleteObjectByStorageKey,
   getAllData,
@@ -16,6 +17,8 @@ export {
   getObjectByStorageKey,
   listCollectionStorageNames,
   listObjectStorageKeys,
+  listTenantObjectLogicalKeys,
+  listTenantCollectionLogicalKeys,
   saveCollection,
   saveObject,
   type SaveCollectionOptions,

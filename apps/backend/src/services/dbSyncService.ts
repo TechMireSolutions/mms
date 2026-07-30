@@ -1,11 +1,19 @@
-import { isServerOnlyObjectKey, type TenantDatabaseSnapshot } from '@mms/shared';
+import {
+  isServerOnlyObjectKey,
+  BACKUP_EPHEMERAL_OBJECT_KEYS,
+  type TenantDatabaseSnapshot,
+} from '@mms/shared';
 import {
   getCollection as dbGetCollection,
   saveCollection as dbSaveCollection,
+  deleteCollection as dbDeleteCollection,
   getObject as dbGetObject,
   saveObject as dbSaveObject,
   getAllData as dbGetAllData,
   resetTenantData as dbResetTenantData,
+  deleteObject as dbDeleteObject,
+  listTenantObjectLogicalKeys as dbListTenantObjectLogicalKeys,
+  listTenantCollectionLogicalKeys as dbListTenantCollectionLogicalKeys,
   runInTransaction
 } from '../db/database.js';
 import { loadRelationalSnapshotCollections } from '../db/relationalSnapshot.js';
@@ -14,6 +22,7 @@ import {
   withCompleteRelationalRestoreCollections,
 } from '../db/relationalReplaceMapping.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { clearTenantBackgroundJobs } from './backgroundJobService.js';
 
 /**
  * Retrieves a snapshot of all database collections and objects.
@@ -54,20 +63,53 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
 export async function synchronizeData(payload: TenantDatabaseSnapshot): Promise<void> {
   const collections = withCompleteRelationalRestoreCollections(payload.collections);
   const { objects } = payload;
+  // Only a full workspace backup carries users; partial syncs must not prune.
+  const isFullRestore = Array.isArray(payload.collections?.users);
 
   await runInTransaction(async () => {
+    if (isFullRestore) {
+      // Jobs race mid-restore and export artifacts are not in the envelope.
+      await clearTenantBackgroundJobs();
+    }
+
+    const restoredCollectionKeys = new Set<string>();
     for (const name of sortCollectionNamesForRestore(Object.keys(collections))) {
       const collectionItems = collections[name];
       if (Array.isArray(collectionItems)) {
         // Admin bulk restore: intentionally replace mirrored relational tables.
         await dbSaveCollection(name, collectionItems, { mirrorRelationalReplace: true });
+        restoredCollectionKeys.add(name);
+      }
+    }
+
+    if (isFullRestore) {
+      for (const key of await dbListTenantCollectionLogicalKeys()) {
+        if (!restoredCollectionKeys.has(key)) await dbDeleteCollection(key);
       }
     }
 
     if (objects) {
+      const restoredKeys = new Set<string>();
       for (const [key, objectValue] of Object.entries(objects)) {
         if (isServerOnlyObjectKey(key)) continue;
         await dbSaveObject(key, objectValue);
+        restoredKeys.add(key);
+      }
+
+      if (isFullRestore) {
+        // Settings created after the backup must not survive a full restore.
+        for (const key of await dbListTenantObjectLogicalKeys()) {
+          if (!restoredKeys.has(key)) await dbDeleteObject(key);
+        }
+        // Ephemeral caches/artifacts are never exported — drop them on full restore.
+        // Credential stores (email secrets, Google sync tokens) stay on the server.
+        for (const key of BACKUP_EPHEMERAL_OBJECT_KEYS) {
+          await dbDeleteObject(key);
+        }
+      }
+    } else if (isFullRestore) {
+      for (const key of BACKUP_EPHEMERAL_OBJECT_KEYS) {
+        await dbDeleteObject(key);
       }
     }
   });

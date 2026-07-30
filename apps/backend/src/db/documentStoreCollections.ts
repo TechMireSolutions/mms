@@ -90,3 +90,14 @@ export async function saveCollection(
     throw error;
   }
 }
+
+/** Deletes a tenant-scoped collection by logical key (JSON document store only). */
+export async function deleteCollection(name: string): Promise<void> {
+  const storageName = resolveCollectionStorageName(name);
+  await activeDb().delete(schema.collections).where(eq(schema.collections.name, storageName));
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const { broadcastTenantUpdate } = await import('../services/websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', name);
+  }
+}

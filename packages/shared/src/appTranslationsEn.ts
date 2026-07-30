@@ -2051,6 +2051,7 @@ export const APP_TRANSLATIONS_EN = {
   "backup.tipOffsite": "Store backups securely off this device (cloud drive or encrypted storage).",
   "backup.tipVerify": "After restore, verify key records and allow sync to complete before continuing work.",
   "backup.tipHistoryLimit": "Large exports may download but not keep inline data in on-device history.",
+  "backup.tipScope": "Backups cover workspace records and settings. The audit trail, sign-in credentials, uploaded files, and queued background jobs stay on the server and are not restored.",
   "backup.metadataOnly": "Metadata only — re-download or upload the JSON file to restore.",
   "backup.badgeStudentsAndTeachers": "Students & Teachers",
   "backup.badgeFinanceAndFees": "Finance & Fees",

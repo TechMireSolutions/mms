@@ -6,9 +6,33 @@ export const EMAIL_INTEGRATION_OBJECT_KEY = 'email_integration' as const;
 /** Backend-only — never synced to the browser. */
 export const EMAIL_INTEGRATION_SECRETS_KEY = 'email_integration_secrets' as const;
 
-/** Object keys withheld from `/api/db/sync` and direct object reads. */
+/** Per-user export download handles — ephemeral, not restorable. */
+export const USER_EXPORT_ARTIFACTS_OBJECT_KEY = 'user_export_artifacts' as const;
+
+/** Dedup-scan cache — ephemeral, not restorable. */
+export const CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY = 'contacts_duplicate_scan_cache' as const;
+
+/** Google Contacts OAuth tokens/secrets — never leave the server via backup. */
+export const CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY = 'contact_google_sync_by_user' as const;
+
+/**
+ * Object keys withheld from backup export and browser object reads.
+ * Inbound sync strips these instead of rejecting the whole restore.
+ */
 export const SERVER_ONLY_OBJECT_KEYS: readonly string[] = [
   EMAIL_INTEGRATION_SECRETS_KEY,
+  USER_EXPORT_ARTIFACTS_OBJECT_KEY,
+  CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY,
+  CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY,
+] as const;
+
+/**
+ * Server-only keys that must be deleted on a full workspace restore
+ * (ephemeral caches/artifacts). Credential stores stay on the server.
+ */
+export const BACKUP_EPHEMERAL_OBJECT_KEYS: readonly string[] = [
+  USER_EXPORT_ARTIFACTS_OBJECT_KEY,
+  CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY,
 ] as const;
 
 export function isServerOnlyObjectKey(key: string): boolean {

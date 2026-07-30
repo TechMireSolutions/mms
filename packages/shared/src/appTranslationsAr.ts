@@ -1907,6 +1907,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "backup.tipOffsite": "احفظ النسخ بأمان خارج هذا الجهاز (سحابة أو تخزين مشفّر).",
   "backup.tipVerify": "بعد الاستعادة، تحقق من السجلات واترك المزامنة تكتمل قبل متابعة العمل.",
   "backup.tipHistoryLimit": "قد تُنزَّل النسخ الكبيرة دون حفظ البيانات داخل سجل الجهاز.",
+  "backup.tipScope": "تشمل النسخ الاحتياطية سجلات مساحة العمل والإعدادات. أما سجل التدقيق وبيانات تسجيل الدخول والملفات المرفوعة والمهام الخلفية في قائمة الانتظار فتبقى على الخادم ولا تتم استعادتها.",
   "backup.metadataOnly": "بيانات وصفية فقط — أعد التنزيل أو ارفع ملف JSON للاستعادة.",
   "backup.badgeStudentsAndTeachers": "الطلاب والمعلمون",
   "backup.badgeFinanceAndFees": "المالية والرسوم",

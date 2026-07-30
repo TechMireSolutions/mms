@@ -2,6 +2,7 @@ import {
   filterActiveContacts,
   findContactDuplicatePairs,
   paginateContactDuplicatePairs,
+  CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY,
   type Contact,
   type ContactDuplicatePair,
   type ContactsDuplicatePairsPageResult,
@@ -10,7 +11,7 @@ import { deletePersistedObject, fetchObject, persistObject } from './dbSyncServi
 import { loadContactPreferences } from './contactPreferencesService.js';
 import { loadContacts } from './contactService.js';
 
-const CACHE_KEY = 'contacts_duplicate_scan_cache';
+const CACHE_KEY = CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY;
 
 export interface ContactDuplicateScanCache {
   computedAt: string;

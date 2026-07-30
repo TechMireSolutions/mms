@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const dbSaveCollection = vi.fn();
 const dbSaveObject = vi.fn();
 const dbGetAllData = vi.fn();
+const dbDeleteObject = vi.fn();
+const dbDeleteCollection = vi.fn();
+const dbListTenantObjectLogicalKeys = vi.fn(async () => [] as string[]);
+const dbListTenantCollectionLogicalKeys = vi.fn(async () => [] as string[]);
+const clearTenantBackgroundJobs = vi.fn(async () => 0);
 const runInTransaction = vi.fn(async (fn: () => Promise<void>) => fn());
 const loadRelationalSnapshotCollections = vi.fn();
 const getRequestTenant = vi.fn();
@@ -11,12 +16,15 @@ vi.mock('../db/database.js', () => ({
   getCollection: vi.fn(),
   saveCollection: (name: string, data: unknown[], options?: unknown) =>
     dbSaveCollection(name, data, options),
+  deleteCollection: (name: string) => dbDeleteCollection(name),
   getObject: vi.fn(),
   saveObject: (key: string, data: unknown) => dbSaveObject(key, data),
   getAllData: () => dbGetAllData(),
   resetTenantData: vi.fn(),
   runInTransaction: (fn: () => Promise<void>) => runInTransaction(fn),
-  deleteObject: vi.fn(),
+  deleteObject: (key: string) => dbDeleteObject(key),
+  listTenantObjectLogicalKeys: () => dbListTenantObjectLogicalKeys(),
+  listTenantCollectionLogicalKeys: () => dbListTenantCollectionLogicalKeys(),
 }));
 
 vi.mock('../db/relationalSnapshot.js', () => ({
@@ -28,9 +36,16 @@ vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => getRequestTenant(),
 }));
 
+vi.mock('../services/backgroundJobService.js', () => ({
+  clearTenantBackgroundJobs: () => clearTenantBackgroundJobs(),
+}));
+
 describe('dbSyncService collection persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dbListTenantObjectLogicalKeys.mockResolvedValue([]);
+    dbListTenantCollectionLogicalKeys.mockResolvedValue([]);
+    clearTenantBackgroundJobs.mockResolvedValue(0);
   });
 
   it('persistCollection writes JSON only without relational replace', async () => {
@@ -58,6 +73,7 @@ describe('dbSyncService collection persistence', () => {
     expect(dbSaveCollection).toHaveBeenCalledWith('message_logs', [], {
       mirrorRelationalReplace: true,
     });
+    expect(clearTenantBackgroundJobs).toHaveBeenCalledTimes(1);
   });
 
   it('synchronizeData does not expand partial payloads without users', async () => {
@@ -67,6 +83,65 @@ describe('dbSyncService collection persistence', () => {
       objects: {},
     });
     expect(dbSaveCollection.mock.calls.map((call) => call[0])).toEqual(['students']);
+    expect(clearTenantBackgroundJobs).not.toHaveBeenCalled();
+    expect(dbDeleteCollection).not.toHaveBeenCalled();
+  });
+
+  it('prunes tenant objects the full backup does not carry', async () => {
+    dbListTenantObjectLogicalKeys.mockResolvedValue([
+      'branding',
+      'global_settings',
+      'students_settings',
+    ]);
+    const { synchronizeData } = await import('../services/dbSyncService.js');
+    await synchronizeData({
+      collections: { users: [{ id: 'u-1' }] },
+      objects: { branding: { madrasaName: 'Dar ul Quran' } },
+    });
+
+    expect(dbSaveObject).toHaveBeenCalledWith('branding', { madrasaName: 'Dar ul Quran' });
+    expect(dbDeleteObject.mock.calls.map((call) => call[0]).sort()).toEqual([
+      'contacts_duplicate_scan_cache',
+      'global_settings',
+      'students_settings',
+      'user_export_artifacts',
+    ]);
+  });
+
+  it('prunes stale document-store collections on full restore', async () => {
+    dbListTenantCollectionLogicalKeys.mockResolvedValue([
+      'genders',
+      'phoneLabels',
+      'users',
+      'messages_u:peer',
+    ]);
+    const { synchronizeData } = await import('../services/dbSyncService.js');
+    await synchronizeData({
+      collections: {
+        users: [{ id: 'u-1' }],
+        genders: [{ id: 'g-1' }],
+        'messages_u:admin': [{ id: 'm-1' }],
+      },
+      objects: { branding: {} },
+    });
+
+    expect(dbDeleteCollection.mock.calls.map((call) => call[0]).sort()).toEqual([
+      'messages_u:peer',
+      'phoneLabels',
+    ]);
+  });
+
+  it('never prunes objects for a partial sync without users', async () => {
+    dbListTenantObjectLogicalKeys.mockResolvedValue(['branding', 'global_settings']);
+    dbListTenantCollectionLogicalKeys.mockResolvedValue(['genders']);
+    const { synchronizeData } = await import('../services/dbSyncService.js');
+    await synchronizeData({
+      collections: { students: [{ id: 's-1' }] },
+      objects: { branding: { madrasaName: 'Dar ul Quran' } },
+    });
+
+    expect(dbDeleteObject).not.toHaveBeenCalled();
+    expect(dbDeleteCollection).not.toHaveBeenCalled();
   });
 });
 
