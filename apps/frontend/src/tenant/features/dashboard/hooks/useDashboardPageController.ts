@@ -11,6 +11,7 @@ import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
 import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
+import { scrollDocumentToTop } from '@/lib/routing/scrollDocumentToTop';
 
 export function useDashboardPageController() {
   const { t } = useTranslation();
@@ -55,7 +56,7 @@ export function useDashboardPageController() {
       setEditingWidget(widget);
       setWidgetBuilderType(type);
       setIsWidgetBuilderOpen(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollDocumentToTop({ behavior: 'smooth' });
     },
     [canCustomize, isEditMode],
   );

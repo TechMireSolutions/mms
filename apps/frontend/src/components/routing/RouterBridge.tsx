@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { registerAppNavigate, unregisterAppNavigate } from "@/lib/routing/appNavigate";
 import { applyAppTheme } from "@/lib/brandingTheme";
 import { revertSettingsPreviews } from "@/lib/settingsPreview";
+import { useScrollToTopOnNavigate } from "@/lib/routing/useScrollToTopOnNavigate";
 
 /**
  * Registers React Router navigate for imperative redirects (logout, etc.)
@@ -11,6 +12,7 @@ import { revertSettingsPreviews } from "@/lib/settingsPreview";
 export default function RouterBridge(): null {
   const navigate = useNavigate();
   const location = useLocation();
+  useScrollToTopOnNavigate();
 
   useEffect(() => {
     registerAppNavigate((path, options) => {

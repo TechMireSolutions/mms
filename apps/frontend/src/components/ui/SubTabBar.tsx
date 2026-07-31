@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useScrollSurfaceOnChange } from "@/lib/routing/useScrollSurfaceOnChange";
 
 export interface SubTab<K extends string = string> {
   key: K;
@@ -18,6 +19,11 @@ interface SubTabBarProps<K extends string> {
   className?: string;
   children?: React.ReactNode;
   panelIdPrefix?: string;
+  /**
+   * Reset the page surface when the active sub-tab changes.
+   * Disable inside drawers/overlays that should not scroll the page behind them.
+   */
+  resetScrollOnChange?: boolean;
 }
 
 /**
@@ -31,13 +37,15 @@ export function SubTabBar<K extends string>({
   className = "",
   children,
   panelIdPrefix = "subtab-panel",
+  resetScrollOnChange = true,
 }: SubTabBarProps<K>): React.JSX.Element {
   const sectionRefs = useRef<Partial<Record<string, HTMLElement | null>>>({});
 
-  useEffect(() => {
-    if (!children || typeof window === "undefined" || window.innerWidth >= 1024) return;
-    sectionRefs.current[value]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [value, children]);
+  useScrollSurfaceOnChange(value, {
+    enabled: resetScrollOnChange,
+    block: children ? "nearest" : "start",
+    resolveMobileTarget: children ? (key) => sectionRefs.current[key] : undefined,
+  });
 
   if (tabs.length <= 1 && !children) {
     return <></>;

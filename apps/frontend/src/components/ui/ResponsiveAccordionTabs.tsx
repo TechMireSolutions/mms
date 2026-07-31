@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useScrollSurfaceOnChange } from "@/lib/routing/useScrollSurfaceOnChange";
 import { TabTrigger } from "@/components/ui/ResponsiveAccordionTabTrigger";
 import { ResponsiveAccordionTabsDesktop } from "@/components/ui/ResponsiveAccordionTabsDesktop";
 import type { ResponsiveAccordionTabsProps } from "@/components/ui/ResponsiveAccordionTabsTypes";
@@ -38,11 +39,9 @@ export function ResponsiveAccordionTabs({
     [activeTab, collapsible, onTabChange],
   );
 
-  useEffect(() => {
-    if (typeof window === "undefined" || window.innerWidth >= 1024) return;
-    if (!activeTab) return;
-    sectionRefs.current[activeTab]?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [activeTab]);
+  useScrollSurfaceOnChange(activeTab, {
+    resolveMobileTarget: (key) => sectionRefs.current[key],
+  });
 
   const panelContent = collapsible && !activeTab ? null : children;
 

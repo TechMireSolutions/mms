@@ -49,6 +49,7 @@ export function ContactDetailDrawerTabBar({
         onChange={onTabChange}
         panelIdPrefix="contact-detail-drawer"
         className="w-full"
+        resetScrollOnChange={false}
       />
     </div>
   );

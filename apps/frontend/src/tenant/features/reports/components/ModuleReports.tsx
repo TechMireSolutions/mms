@@ -4,6 +4,7 @@ import { BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard, B
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card } from "@/components/ui/card";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
+import { scrollDocumentToTop } from "@/lib/routing/scrollDocumentToTop";
 import ReportFilters from "@/tenant/features/reports/components/ReportFilters";
 import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
 import {
@@ -64,7 +65,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
   const handleEditVisual = (config: unknown) => {
     setVisualizerEditConfig(config as VisualizerConfig);
     setActiveTab("visualizer");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollDocumentToTop({ behavior: "smooth" });
   };
 
   const renderReport = () => {
