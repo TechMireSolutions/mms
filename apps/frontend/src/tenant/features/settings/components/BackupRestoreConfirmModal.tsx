@@ -156,6 +156,12 @@ export default function BackupRestoreConfirmModal({
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && password && workspaceMatches && !busy && !safetyReady) {
+                event.preventDefault();
+                onCreateSafetyBackup(password);
+              }
+            }}
             autoComplete="current-password"
             disabled={busy || safetyReady}
           />
@@ -193,7 +199,7 @@ export default function BackupRestoreConfirmModal({
             onChange={(event) => setTyped(event.target.value)}
             placeholder={t('backup.confirmTypePlaceholder')}
             autoComplete="off"
-            disabled={busy || !safetyReady}
+            disabled={busy}
           />
         </div>
       </div>

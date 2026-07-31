@@ -102,7 +102,11 @@ export function validateAndNormalizeSnapshot(
 
   if (collections.users) {
     const hasAdmin = collections.users.some(
-      (u: unknown) => u && typeof u === 'object' && 'role' in u && u.role === 'admin',
+      (u: unknown) =>
+        u &&
+        typeof u === 'object' &&
+        (('role' in u && u.role === 'admin') ||
+          ('roles' in u && Array.isArray(u.roles) && (u.roles as string[]).includes('admin'))),
     );
     if (!hasAdmin) {
       return { ok: false, errorKey: 'backup.missingAdminUser' };

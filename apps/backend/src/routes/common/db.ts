@@ -191,17 +191,6 @@ export default async function dbRoutes(
         }
 
         const payload = validatedSnapshot.data;
-        if (payload.collections?.contacts) {
-          const validated = await validateAndNormalizeCollectionIfRequired(
-            'contacts',
-            payload.collections.contacts,
-            request,
-            reply,
-            user.role,
-          );
-          if (!validated) return;
-          payload.collections.contacts = validated;
-        }
         if (payload.collections) {
           // Admin bulk restore keeps every per-user inbox; prune handles leftovers.
           // Legacy/unsupported lookup keys are dropped so older backups still restore.

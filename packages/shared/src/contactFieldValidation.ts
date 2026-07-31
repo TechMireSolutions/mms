@@ -167,9 +167,12 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
   }
 
   if (TEXT_LIKE_FIELD_TYPES.has(fieldDefinition.type)) {
-    return baseSchema.refine(
-      (value) => typeof value === "string" && value.trim() !== "",
-      { message: `${fieldDefinition.label} is required.` },
+    return z.preprocess(
+      (value) => (typeof value === "string" ? value.trim() : value),
+      baseSchema.refine(
+        (value) => typeof value === "string" && value.trim() !== "",
+        { message: `${fieldDefinition.label} is required.` },
+      ),
     );
   }
   if (fieldDefinition.type === "multiselect" || fieldDefinition.type === "multi_select") {

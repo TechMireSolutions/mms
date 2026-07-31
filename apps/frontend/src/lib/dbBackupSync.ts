@@ -96,7 +96,6 @@ export async function importDatabase(jsonString: string): Promise<void> {
     const validated = validateWorkspaceBackupJson(
       jsonString,
       prefix,
-      getCurrentSubdomain(),
     );
     if (!validated.ok) {
       throw new Error(validated.errorKey);

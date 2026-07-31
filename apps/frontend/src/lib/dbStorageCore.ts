@@ -75,9 +75,11 @@ export async function syncToServer(url: string, body: unknown, method: string = 
       setSyncStatus(expectedPreAuth ? 'idle' : 'error');
       let errorKey: string | undefined;
       try {
-        const payload = (await response.json()) as { message?: unknown };
-        if (typeof payload.message === 'string' && payload.message.startsWith('backup.')) {
+        const payload = (await response.json()) as { message?: unknown; error?: unknown };
+        if (typeof payload.message === 'string' && payload.message.trim().length > 0) {
           errorKey = payload.message;
+        } else if (typeof payload.error === 'string' && payload.error.trim().length > 0) {
+          errorKey = payload.error;
         }
       } catch {
         // Ignore non-JSON error bodies.
