@@ -9,6 +9,7 @@ import {
 import { getTenantUrlOptions } from "@/lib/config/tenantConfig";
 import { useDeploymentAppDomain } from "@/tenant/hooks/useDeploymentAppDomain";
 import {
+  isWorkspaceNotFoundError,
   useWorkspaceBySubdomain,
   type PublicWorkspace,
 } from "@/tenant/hooks/useWorkspaceBySubdomain";
@@ -24,7 +25,10 @@ export interface TenantContextValue {
   workspaceLoading: boolean;
   /** True when the subdomain host has no registered workspace (404 / empty). */
   workspaceMissing: boolean;
+  /** True when workspace lookup failed for a non-404 reason (network / 5xx). */
+  workspaceLookupFailed: boolean;
   workspaceUrl: string | null;
+  refetchWorkspace: () => void;
   redirectToApex: (path?: string) => void;
   redirectToTenant: (subdomain: string, path?: string) => void;
 }
@@ -46,21 +50,32 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const tenantLookupEnabled = !isApex && Boolean(subdomain);
   const {
     data: workspaceLookup,
+    error: workspaceError,
     isPending,
     isFetching,
     isError,
     isFetched,
+    refetch,
   } = useWorkspaceBySubdomain(subdomain, tenantLookupEnabled);
   const workspaceLoading = tenantLookupEnabled && (isPending || isFetching);
   const workspace = workspaceLookup?.workspace ?? null;
+  const notFound = isWorkspaceNotFoundError(workspaceError);
   const workspaceMissing =
-    tenantLookupEnabled && !workspaceLoading && (isError || (isFetched && workspace === null));
+    tenantLookupEnabled &&
+    !workspaceLoading &&
+    (notFound || (isFetched && !isError && workspace === null));
+  const workspaceLookupFailed =
+    tenantLookupEnabled && !workspaceLoading && isError && !notFound;
   // Missing tenants hard-redirect to apex Tenant Not Found — skip branding fetch.
   const publicBranding = workspaceLookup?.branding ?? null;
 
   const workspaceUrl = subdomain
     ? buildTenantUrl(subdomain, "/", getTenantUrlOptions())
     : null;
+
+  const refetchWorkspace = () => {
+    void refetch();
+  };
 
   const redirectToApex = (path = "/") => {
     window.location.href = buildApexUrl(path, getTenantUrlOptions());
@@ -78,7 +93,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     publicBranding,
     workspaceLoading,
     workspaceMissing,
+    workspaceLookupFailed,
     workspaceUrl,
+    refetchWorkspace,
     redirectToApex,
     redirectToTenant,
   };

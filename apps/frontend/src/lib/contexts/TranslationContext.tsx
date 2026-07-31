@@ -35,6 +35,7 @@ function resolveUiLanguage(options: {
   isApex: boolean;
   workspaceLoading: boolean;
   workspace: { enabled?: boolean } | null;
+  workspaceLookupFailed: boolean;
   pathname: string;
   settingsLanguage: string;
 }): string {
@@ -43,6 +44,7 @@ function resolveUiLanguage(options: {
       isApex: options.isApex,
       workspaceLoading: options.workspaceLoading,
       workspace: options.workspace,
+      workspaceLookupFailed: options.workspaceLookupFailed,
     })
   ) {
     return 'en';
@@ -57,12 +59,13 @@ function resolveUiLanguage(options: {
 export function TranslationProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const settings = useGlobalSettings();
   const { pathname } = useLocation();
-  const { isApex, workspace, workspaceLoading } = useTenant();
+  const { isApex, workspace, workspaceLoading, workspaceLookupFailed } = useTenant();
 
   const language = resolveUiLanguage({
     isApex,
     workspaceLoading,
     workspace,
+    workspaceLookupFailed,
     pathname,
     settingsLanguage: settings.language,
   });

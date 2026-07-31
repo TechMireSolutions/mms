@@ -9,6 +9,9 @@ import WorkspaceDisabledScreen from "@/tenant/components/WorkspaceDisabledScreen
 import AppLayout from "@/tenant/components/layout/AppLayout";
 import PageNotFound from "@/tenant/components/PageNotFound";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { AuthPageFrame } from "@/components/entry";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Dashboard = React.lazy(() => import("@/tenant/features/dashboard/DashboardPage"));
 const Contacts = React.lazy(() => import("@/tenant/features/contacts/ContactsPage"));
@@ -46,7 +49,15 @@ function RedirectToApex({ path }: { path: string }): React.JSX.Element {
  * `/tenant-not-found?subdomain=` page — never leave the browser on the bad host.
  */
 function TenantBootGate({ children }: { children: React.ReactNode }): React.JSX.Element {
-  const { workspaceLoading, workspaceMissing, workspace, subdomain } = useTenant();
+  const { t } = useTranslation();
+  const {
+    workspaceLoading,
+    workspaceMissing,
+    workspaceLookupFailed,
+    workspace,
+    subdomain,
+    refetchWorkspace,
+  } = useTenant();
   const location = useLocation();
 
   if (workspaceLoading) {
@@ -55,6 +66,21 @@ function TenantBootGate({ children }: { children: React.ReactNode }): React.JSX.
 
   if (workspaceMissing && subdomain) {
     return <RedirectToApex path={tenantNotFoundPath(subdomain)} />;
+  }
+
+  if (workspaceLookupFailed) {
+    return (
+      <AuthPageFrame dir="ltr">
+        <div className="relative z-10 mx-auto w-full max-w-md">
+          <ErrorState
+            type="network"
+            title={t("errors.boundary.title")}
+            description={t("errors.boundary.description")}
+            onRetry={refetchWorkspace}
+          />
+        </div>
+      </AuthPageFrame>
+    );
   }
 
   if (workspace && workspace.enabled === false) {

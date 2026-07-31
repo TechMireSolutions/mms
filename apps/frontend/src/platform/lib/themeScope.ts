@@ -30,15 +30,23 @@ export function isTenantHost(): boolean {
 }
 
 /**
- * Platform apex is always English/LTR. Same lock applies on tenant hosts when the
- * workspace is missing or disabled (platform-themed status screens).
+ * Platform apex is always English/LTR. Same lock applies on tenant hosts for
+ * platform status screens (missing, disabled, or non-404 lookup failure).
+ *
+ * While a tenant workspace is still loading, do not force English so enabled
+ * RTL tenants keep their stored language on first paint. Once lookup settles,
+ * only a confirmed enabled workspace keeps the tenant locale.
  */
 export function shouldForcePlatformEnglish(options: {
   isApex: boolean;
   workspaceLoading: boolean;
   workspace: { enabled?: boolean } | null;
+  /** Non-404 workspace lookup failure — stay on tenant host with platform theme. */
+  workspaceLookupFailed?: boolean;
 }): boolean {
   if (options.isApex) return true;
+  if (options.workspaceLookupFailed) return true;
+  if (options.workspace?.enabled === true) return false;
   if (options.workspaceLoading) return false;
-  return options.workspace === null || options.workspace.enabled === false;
+  return true;
 }

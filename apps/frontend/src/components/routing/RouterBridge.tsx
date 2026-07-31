@@ -15,7 +15,7 @@ import { shouldForcePlatformEnglish } from "@/platform/lib/themeScope";
 export default function RouterBridge(): null {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isApex, workspace, workspaceLoading, workspaceMissing } = useTenant();
+  const { isApex, workspace, workspaceLoading, workspaceMissing, workspaceLookupFailed } = useTenant();
   useScrollToTopOnNavigate();
 
   useEffect(() => {
@@ -30,14 +30,26 @@ export default function RouterBridge(): null {
       revertSettingsPreviews();
     }
     if (
-      shouldForcePlatformEnglish({ isApex, workspaceLoading, workspace }) ||
+      shouldForcePlatformEnglish({
+        isApex,
+        workspaceLoading,
+        workspace,
+        workspaceLookupFailed,
+      }) ||
       workspaceMissing
     ) {
       applyApexPlatformTheme("en");
       return;
     }
     applyAppTheme(location.pathname);
-  }, [location.pathname, isApex, workspace, workspaceLoading, workspaceMissing]);
+  }, [
+    location.pathname,
+    isApex,
+    workspace,
+    workspaceLoading,
+    workspaceMissing,
+    workspaceLookupFailed,
+  ]);
 
   return null;
 }

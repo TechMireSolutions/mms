@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { PublicBranding } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
+import { apiJson, isApiError } from '@/lib/apiClient';
 
 export interface PublicWorkspace {
   subdomain: string;
@@ -15,6 +15,11 @@ export interface WorkspaceLookupResult {
 }
 
 export const WORKSPACE_BY_SUBDOMAIN_KEY = ['workspace', 'by-subdomain'] as const;
+
+/** True when the workspace-by-subdomain API confirms the tenant does not exist. */
+export function isWorkspaceNotFoundError(error: unknown): boolean {
+  return isApiError(error) && (error.status === 404 || error.type === 'not_found');
+}
 
 async function fetchWorkspaceBySubdomain(subdomain: string): Promise<WorkspaceLookupResult> {
   const workspaceResponse = await apiJson<{
