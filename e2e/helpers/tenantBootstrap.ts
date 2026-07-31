@@ -87,10 +87,8 @@ export async function bootstrapAuthenticatedTenant(
 
   const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
   const signInEmailInput = page.locator('#platform-email');
-  await Promise.race([
-    expect(platformConsoleHeading).toBeVisible({ timeout: 20_000 }),
-    expect(signInEmailInput).toBeVisible({ timeout: 20_000 }),
-  ]);
+  // Wait for either the console to appear (auto-login after OTP) or the sign-in screen
+  await platformConsoleHeading.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
 
   if (await signInEmailInput.isVisible()) {
     await signInEmailInput.fill(platformEmail);

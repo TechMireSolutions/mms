@@ -94,10 +94,8 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     // Verification auto-logs in. Check if platform console or sign-in appears.
     const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
     const signInEmailInput = page.locator('#platform-email');
-    await Promise.race([
-      expect(platformConsoleHeading).toBeVisible({ timeout: 20_000 }),
-      expect(signInEmailInput).toBeVisible({ timeout: 20_000 }),
-    ]);
+    // locator.or() resolves as soon as either element is visible — safe alternative to Promise.race
+    await platformConsoleHeading.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
 
     if (await signInEmailInput.isVisible()) {
       console.log('Redirected to Platform Sign-In screen. Logging in with new platform credentials...');
@@ -495,7 +493,11 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
       );
     }
     await expect(classDialog).toBeHidden({ timeout: 20_000 });
-    await expect(page.getByText(/Tajweed a/i).first()).toBeVisible({ timeout: 15_000 });
+    // AnimatePresence keeps the exiting motion.article briefly in DOM with opacity:0 — scope to a
+    // visible article so we don't pick up the hidden exit clone.
+    await expect(
+      page.locator('article:visible h4').filter({ hasText: /Tajweed a/i }).first(),
+    ).toBeVisible({ timeout: 15_000 });
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Enrollment wizard: Jane Doe → Afternoon Tajweed 2026
