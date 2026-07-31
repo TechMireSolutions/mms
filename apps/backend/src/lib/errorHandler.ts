@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyInstance } from 'fastify';
+import { PlatformError } from '../services/platform/platformErrorService.js';
 
 export function registerErrorHandlers(app: FastifyInstance, isProd: boolean): void {
   app.setErrorHandler((error: FastifyError, request, reply) => {
@@ -6,6 +7,13 @@ export function registerErrorHandlers(app: FastifyInstance, isProd: boolean): vo
       return reply.status(400).send({
         type: 'validation_error',
         message: 'Invalid request',
+      });
+    }
+
+    if (error instanceof PlatformError) {
+      return reply.status(error.statusCode).send({
+        type: error.code,
+        message: error.message,
       });
     }
 

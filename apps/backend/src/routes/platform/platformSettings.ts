@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import rateLimit from '@fastify/rate-limit';
 import { platformSettingsUpdateSchema, resetDatabaseSchema } from '@mms/shared';
 import {
   authenticatePlatform,
@@ -16,6 +17,7 @@ import { verifyPlatformUserPassword } from '../../services/platform/platformUser
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { sendDatabaseError } from '../../lib/httpErrors.js';
+import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 
 export default async function platformSettingsRoutes(
   fastify: FastifyInstance,
@@ -53,44 +55,48 @@ export default async function platformSettingsRoutes(
     },
   );
 
-  fastify.post(
-    '/reset-database',
-    { preHandler: [authenticatePlatform, requireSuperUser] },
-    async (request, reply) => {
-      const parsed = parseRequest(resetDatabaseSchema, request.body ?? {});
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+  await fastify.register(async function platformResetDatabaseRateLimited(inner) {
+    await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
-      const { platformUser } = request as PlatformAuthenticatedRequest;
-      const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
-      if (!passwordOk) {
-        return reply.status(401).send({
-          type: 'invalid_current_password',
-          message: 'Current password is incorrect',
-        });
-      }
+    inner.post(
+      '/reset-database',
+      { preHandler: [authenticatePlatform, requireSuperUser] },
+      async (request, reply) => {
+        const parsed = parseRequest(resetDatabaseSchema, request.body ?? {});
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-      try {
-        // Audit outside the wiped schema — platform_activity_logs is destroyed by the reset.
-        console.error(
-          JSON.stringify({
-            level: 'audit',
-            action: 'reset_database',
-            userId: platformUser.id,
-            userEmail: platformUser.email,
-            ipAddress: request.ip,
-            at: new Date().toISOString(),
-          }),
-        );
+        const { platformUser } = request as PlatformAuthenticatedRequest;
+        const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
+        if (!passwordOk) {
+          return reply.status(401).send({
+            type: 'invalid_current_password',
+            message: 'Current password is incorrect',
+          });
+        }
 
-        await resetAndReseedDatabase();
-        clearPlatformAccessCookie(reply);
-        return reply.send({
-          success: true,
-          message: 'Database wiped, migrated, and re-seeded successfully.',
-        });
-      } catch (error) {
-        return sendDatabaseError(reply, 'Failed to reset database', error);
-      }
-    },
-  );
+        try {
+          // Audit outside the wiped schema — platform_activity_logs is destroyed by the reset.
+          console.error(
+            JSON.stringify({
+              level: 'audit',
+              action: 'reset_database',
+              userId: platformUser.id,
+              userEmail: platformUser.email,
+              ipAddress: request.ip,
+              at: new Date().toISOString(),
+            }),
+          );
+
+          await resetAndReseedDatabase();
+          clearPlatformAccessCookie(reply);
+          return reply.send({
+            success: true,
+            message: 'Database wiped, migrated, and re-seeded successfully.',
+          });
+        } catch (error) {
+          return sendDatabaseError(reply, 'Failed to reset database', error);
+        }
+      },
+    );
+  });
 }

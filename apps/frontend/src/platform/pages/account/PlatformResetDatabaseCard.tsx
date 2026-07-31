@@ -1,5 +1,6 @@
 import React, { useState, useId } from "react";
 import { Loader2 } from "lucide-react";
+import { RESET_DATABASE_CONFIRM } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
   const confirmInputId = useId();
 
   const handleResetDatabase = async (): Promise<void> => {
-    if (confirmText.trim() !== "RESET_ALL_DATABASE_DATA" || !password.trim()) return;
+    if (confirmText.trim() !== RESET_DATABASE_CONFIRM || !password.trim()) return;
     setResetError(null);
     try {
       await resetDbMutation.mutateAsync({
@@ -41,7 +42,6 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
       setConfirmText("");
       setPassword("");
       await platformLogout();
-      // Full reload after logout so migrations + cleared client cache take effect.
       setTimeout(() => {
         window.location.href = ROUTES.home;
       }, 800);
@@ -82,7 +82,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
           </AlertDialogHeader>
           <div className="space-y-3 my-2 text-start">
             <label htmlFor={confirmInputId} className="block text-xs text-muted-foreground font-semibold cursor-pointer">
-              {t("platform.profileDestroyDatabasePrompt")}
+              {t("platform.profileDestroyDatabasePrompt", { confirm: RESET_DATABASE_CONFIRM })}
             </label>
             <Input
               id={confirmInputId}
@@ -93,7 +93,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
                 setConfirmText(event.target.value);
                 if (resetError) setResetError(null);
               }}
-              placeholder="RESET_ALL_DATABASE_DATA"
+              placeholder={RESET_DATABASE_CONFIRM}
               disabled={resetDbMutation.isPending}
               className="min-h-11"
             />
@@ -122,7 +122,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
               variant="destructive"
               disabled={
                 resetDbMutation.isPending
-                || confirmText.trim() !== "RESET_ALL_DATABASE_DATA"
+                || confirmText.trim() !== RESET_DATABASE_CONFIRM
                 || !password.trim()
               }
               onClick={handleResetDatabase}

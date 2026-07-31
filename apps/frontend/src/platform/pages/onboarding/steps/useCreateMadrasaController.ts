@@ -13,7 +13,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   NAME_MAX,
   defaultFooterForMadrasa,
-} from "@/tenant/features/settings/components/branding/BrandingShared";
+} from "@/components/branding/BrandingShared";
 
 export function useCreateMadrasaController(
   data: OnboardingData,

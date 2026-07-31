@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import rateLimit from '@fastify/rate-limit';
 import {
   authenticatePlatform,
   requireSuperUser,
@@ -7,17 +8,23 @@ import {
 import { listPlatformUsers } from '../../db/repositories/platformUserRepository.js';
 import {
   createVerifiedPlatformUser,
+  deletePlatformAdmin,
+  setPlatformAdminDisabled,
   setPlatformAdminPermissions,
   toPlatformUserProfile,
+  verifyPlatformUserPassword,
 } from '../../services/platform/platformUserService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import {
+  platformAdminDisabledBodySchema,
   platformCreateAdminBodySchema,
+  platformDeleteAdminBodySchema,
   platformUpdateAdminPermissionsBodySchema,
 } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { PlatformError } from '../../services/platform/platformErrorService.js';
+import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 
 export default async function platformUsersRoutes(
   fastify: FastifyInstance,
@@ -97,5 +104,95 @@ export default async function platformUsersRoutes(
       }
       throw error;
     }
+  });
+
+  await fastify.register(async function platformAdminDestructiveRateLimited(inner) {
+    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+
+    inner.patch('/:id/disabled', async (request, reply) => {
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const { id } = request.params as { id: string };
+      const parsed = parseRequest(platformAdminDisabledBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+      if (id === platformUser.id) {
+        return reply.status(403).send({
+          type: 'forbidden',
+          message: 'Cannot disable your own platform account',
+        });
+      }
+
+      const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
+      if (!passwordOk) {
+        return reply.status(401).send({
+          type: 'invalid_current_password',
+          message: 'Current password is incorrect',
+        });
+      }
+
+      try {
+        const user = await setPlatformAdminDisabled(id, parsed.data.disabled);
+
+        await insertPlatformActivityLog({
+          userId: platformUser.id,
+          userEmail: platformUser.email,
+          action: parsed.data.disabled ? 'disable_admin' : 'enable_admin',
+          details: {
+            adminId: id,
+            adminEmail: user.email,
+            disabled: parsed.data.disabled,
+          },
+          ipAddress: request.ip,
+        });
+
+        return reply.send({ user });
+      } catch (error: unknown) {
+        if (error instanceof PlatformError) {
+          return reply.status(error.statusCode).send({ type: error.code, message: error.message });
+        }
+        throw error;
+      }
+    });
+
+    inner.delete('/:id', async (request, reply) => {
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const { id } = request.params as { id: string };
+      const parsed = parseRequest(platformDeleteAdminBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+      if (id === platformUser.id) {
+        return reply.status(403).send({
+          type: 'forbidden',
+          message: 'Cannot delete your own platform account',
+        });
+      }
+
+      const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
+      if (!passwordOk) {
+        return reply.status(401).send({
+          type: 'invalid_current_password',
+          message: 'Current password is incorrect',
+        });
+      }
+
+      try {
+        await deletePlatformAdmin(id);
+
+        await insertPlatformActivityLog({
+          userId: platformUser.id,
+          userEmail: platformUser.email,
+          action: 'delete_admin',
+          details: { adminId: id },
+          ipAddress: request.ip,
+        });
+
+        return reply.send({ deleted: true, id });
+      } catch (error: unknown) {
+        if (error instanceof PlatformError) {
+          return reply.status(error.statusCode).send({ type: error.code, message: error.message });
+        }
+        throw error;
+      }
+    });
   });
 }

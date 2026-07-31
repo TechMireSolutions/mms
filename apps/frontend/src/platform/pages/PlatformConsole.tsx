@@ -4,6 +4,7 @@ import { ArrowRight, Plus, Globe, Building2, Ban, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/StatCard";
@@ -26,12 +27,14 @@ function WorkspaceListFallback(): React.JSX.Element {
  */
 export default function PlatformConsole(): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const { platformUser, isSuperUser, canWorkspaces, canOnboard } = usePlatformPermissions();
-  const { data: workspaces } = usePlatformWorkspaces();
+  const { data: workspaces, isLoading: workspacesLoading } = usePlatformWorkspaces();
 
   const totalWorkspaces = workspaces?.length ?? 0;
   const activeWorkspaces = workspaces?.filter((w) => w.enabled).length ?? 0;
-  const disabledWorkspaces = workspaces?.filter((w) => !w.enabled).length ?? 0;
+  const disabledWorkspaces = workspaces?.filter((w) => w.enabled === false).length ?? 0;
+  const metricsReady = !workspacesLoading && workspaces !== undefined;
 
   const headerActions = canOnboard ? (
     <Button
@@ -53,7 +56,7 @@ export default function PlatformConsole(): React.JSX.Element {
     <PlatformPageShell width="7xl">
       <motion.div
         variants={containerVariants}
-        initial="hidden"
+        initial={reducedMotion ? false : "hidden"}
         animate="show"
         className="space-y-8"
       >
@@ -72,27 +75,33 @@ export default function PlatformConsole(): React.JSX.Element {
         {canWorkspaces ? (
           <>
             <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <StatCard
-                label={t("platform.manageMadrasas")}
-                value={totalWorkspaces}
-                icon={Building2}
-                accent="primary"
-                delayIndex={0}
-              />
-              <StatCard
-                label={t("platform.workspaceActive")}
-                value={activeWorkspaces}
-                icon={Globe}
-                accent="success"
-                delayIndex={1}
-              />
-              <StatCard
-                label={t("platform.workspaceInactive")}
-                value={disabledWorkspaces}
-                icon={Ban}
-                accent="destructive"
-                delayIndex={2}
-              />
+              {metricsReady ? (
+                <>
+                  <StatCard
+                    label={t("platform.manageMadrasas")}
+                    value={totalWorkspaces}
+                    icon={Building2}
+                    accent="primary"
+                    delayIndex={0}
+                  />
+                  <StatCard
+                    label={t("platform.workspaceActive")}
+                    value={activeWorkspaces}
+                    icon={Globe}
+                    accent="success"
+                    delayIndex={1}
+                  />
+                  <StatCard
+                    label={t("platform.workspaceInactive")}
+                    value={disabledWorkspaces}
+                    icon={Ban}
+                    accent="destructive"
+                    delayIndex={2}
+                  />
+                </>
+              ) : (
+                <CardSkeleton count={3} className="col-span-full grid-cols-1 sm:grid-cols-3" />
+              )}
             </motion.div>
 
             <motion.div

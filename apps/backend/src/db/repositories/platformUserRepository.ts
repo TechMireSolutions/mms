@@ -27,6 +27,7 @@ function rowToStored(row: typeof platformUsers.$inferSelect): StoredPlatformUser
     sessionVersion: row.sessionVersion ?? 0,
     createdAt: row.createdAt.toISOString(),
     emailVerifiedAt: row.emailVerifiedAt?.toISOString(),
+    disabledAt: row.disabledAt?.toISOString() ?? null,
   };
 }
 
@@ -72,6 +73,7 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
     permissions,
     sessionVersion: processedUser.sessionVersion ?? 0,
     emailVerifiedAt: processedUser.emailVerifiedAt ? new Date(processedUser.emailVerifiedAt) : null,
+    disabledAt: processedUser.disabledAt ? new Date(processedUser.disabledAt) : null,
     createdAt: new Date(processedUser.createdAt),
   });
 }
@@ -81,7 +83,13 @@ export async function updatePlatformUserRow(
   patch: Partial<
     Pick<
       StoredPlatformUser,
-      'name' | 'passwordHash' | 'emailVerifiedAt' | 'role' | 'permissions' | 'sessionVersion'
+      | 'name'
+      | 'passwordHash'
+      | 'emailVerifiedAt'
+      | 'role'
+      | 'permissions'
+      | 'sessionVersion'
+      | 'disabledAt'
     >
   >,
 ): Promise<StoredPlatformUser | null> {
@@ -97,6 +105,8 @@ export async function updatePlatformUserRow(
         ? normalizePlatformAdminPermissions(processedPatch.permissions)
         : existing.permissions,
     sessionVersion: processedPatch.sessionVersion ?? existing.sessionVersion,
+    disabledAt:
+      processedPatch.disabledAt !== undefined ? processedPatch.disabledAt : existing.disabledAt,
   };
 
   if (next.role === 'super_user') {
@@ -112,6 +122,7 @@ export async function updatePlatformUserRow(
       permissions: next.permissions,
       sessionVersion: next.sessionVersion,
       emailVerifiedAt: next.emailVerifiedAt ? new Date(next.emailVerifiedAt) : null,
+      disabledAt: next.disabledAt ? new Date(next.disabledAt) : null,
       updatedAt: new Date(),
     })
     .where(eq(platformUsers.id, userId));
@@ -126,4 +137,11 @@ export async function updatePlatformUserPermissions(
   return updatePlatformUserRow(userId, {
     permissions: normalizePlatformAdminPermissions(permissions),
   });
+}
+
+export async function deletePlatformUserRow(userId: string): Promise<boolean> {
+  const existing = await findPlatformUserRowById(userId);
+  if (!existing) return false;
+  await getDb().delete(platformUsers).where(eq(platformUsers.id, userId));
+  return true;
 }

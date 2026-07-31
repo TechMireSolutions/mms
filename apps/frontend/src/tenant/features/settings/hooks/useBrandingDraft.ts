@@ -12,7 +12,7 @@ import {
   mergeBrandingIdentityForSave,
   retainThemeDraftAfterIdentitySave,
 } from '@/lib/brandingIdentityDraft';
-import { loadBranding } from '@/tenant/features/settings/components/branding/BrandingShared';
+import { loadBranding } from '@/components/branding/BrandingShared';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';

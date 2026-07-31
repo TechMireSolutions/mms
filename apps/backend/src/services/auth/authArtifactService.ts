@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { eq, lt } from 'drizzle-orm';
+import { and, eq, lt } from 'drizzle-orm';
 import { authArtifacts } from '../../db/schema.js';
 import { getDb } from '../../db/dbClient.js';
 
@@ -18,6 +18,14 @@ export interface AuthArtifactRecord<T> {
   expiresAt: Date;
 }
 
+export interface PutAuthArtifactOptions {
+  id?: string;
+  /** Opaque indexed lookup (refresh token hash). */
+  lookupKey?: string | null;
+  /** Indexed revoke scope (`user:{id}` or `ws:{subdomain}`). */
+  scopeKey?: string | null;
+}
+
 function db() {
   return getDb();
 }
@@ -26,12 +34,23 @@ export function createArtifactId(): string {
   return randomBytes(24).toString('hex');
 }
 
+export function authArtifactUserScopeKey(userId: string): string {
+  return `user:${userId}`;
+}
+
+export function authArtifactWorkspaceScopeKey(subdomain: string): string {
+  return `ws:${subdomain.trim().toLowerCase()}`;
+}
+
 export async function putAuthArtifact<T>(
   kind: AuthArtifactKind,
   payload: T,
   ttlMs: number,
-  id: string = createArtifactId(),
+  idOrOptions: string | PutAuthArtifactOptions = {},
 ): Promise<string> {
+  const options: PutAuthArtifactOptions =
+    typeof idOrOptions === 'string' ? { id: idOrOptions } : idOrOptions;
+  const id = options.id ?? createArtifactId();
   const expiresAt = new Date(Date.now() + ttlMs);
   await db()
     .insert(authArtifacts)
@@ -39,6 +58,8 @@ export async function putAuthArtifact<T>(
       id,
       kind,
       payload: payload as unknown as Record<string, unknown>,
+      lookupKey: options.lookupKey ?? null,
+      scopeKey: options.scopeKey ?? null,
       expiresAt,
     });
   return id;
@@ -97,38 +118,68 @@ export async function purgeExpiredAuthArtifacts(): Promise<void> {
   await db().delete(authArtifacts).where(lt(authArtifacts.expiresAt, new Date()));
 }
 
-/** Finds a non-expired refresh-token artifact by its stored hash. */
+/** Finds a non-expired refresh-token artifact by its stored hash (indexed lookup_key). */
 export async function findRefreshTokenByHash<T>(
   tokenHash: string,
 ): Promise<AuthArtifactRecord<T> | null> {
   const rows = await db()
     .select()
     .from(authArtifacts)
-    .where(eq(authArtifacts.kind, 'refresh_token'));
+    .where(and(eq(authArtifacts.kind, 'refresh_token'), eq(authArtifacts.lookupKey, tokenHash)))
+    .limit(1);
 
-  for (const row of rows) {
-    if (row.expiresAt.getTime() < Date.now()) continue;
-    const payload = row.payload as T & { tokenHash?: string };
-    if ((payload as { tokenHash: string }).tokenHash === tokenHash) {
-      return {
-        id: row.id,
-        kind: row.kind as AuthArtifactKind,
-        payload: payload as T,
-        expiresAt: row.expiresAt,
-      };
+  const row = rows[0];
+  if (!row) {
+    // Legacy rows written before lookup_key existed — fall back once.
+    const legacy = await db()
+      .select()
+      .from(authArtifacts)
+      .where(eq(authArtifacts.kind, 'refresh_token'));
+    for (const candidate of legacy) {
+      if (candidate.expiresAt.getTime() < Date.now()) continue;
+      const payload = candidate.payload as T & { tokenHash?: string };
+      if (payload.tokenHash === tokenHash) {
+        return {
+          id: candidate.id,
+          kind: candidate.kind as AuthArtifactKind,
+          payload: payload as T,
+          expiresAt: candidate.expiresAt,
+        };
+      }
     }
+    return null;
   }
-  return null;
+
+  if (row.expiresAt.getTime() < Date.now()) {
+    await db().delete(authArtifacts).where(eq(authArtifacts.id, row.id));
+    return null;
+  }
+
+  return {
+    id: row.id,
+    kind: row.kind as AuthArtifactKind,
+    payload: row.payload as T,
+    expiresAt: row.expiresAt,
+  };
 }
 
 /** Revokes all refresh-token sessions for a workspace user (e.g. after login email change). */
 export async function deleteRefreshTokensForUser(userId: string): Promise<void> {
-  const rows = await db()
+  await db()
+    .delete(authArtifacts)
+    .where(
+      and(
+        eq(authArtifacts.kind, 'refresh_token'),
+        eq(authArtifacts.scopeKey, authArtifactUserScopeKey(userId)),
+      ),
+    );
+
+  // Legacy rows without scope_key.
+  const legacy = await db()
     .select()
     .from(authArtifacts)
     .where(eq(authArtifacts.kind, 'refresh_token'));
-
-  for (const row of rows) {
+  for (const row of legacy) {
     const payload = row.payload as { userId?: string };
     if (payload.userId === userId) {
       await db().delete(authArtifacts).where(eq(authArtifacts.id, row.id));
@@ -138,16 +189,23 @@ export async function deleteRefreshTokensForUser(userId: string): Promise<void> 
 
 /** Deletes all authentication and session artifacts associated with a workspace subdomain. */
 export async function deleteAuthArtifactsForWorkspace(subdomain: string): Promise<void> {
+  const scopeKey = authArtifactWorkspaceScopeKey(subdomain);
+  await db().delete(authArtifacts).where(eq(authArtifacts.scopeKey, scopeKey));
+
+  // Legacy rows without scope_key.
   const normalized = subdomain.trim().toLowerCase();
   const rows = await db().select().from(authArtifacts);
   for (const row of rows) {
     try {
       const payload = row.payload as Record<string, unknown>;
-      const userObj = payload.user && typeof payload.user === 'object' ? (payload.user as Record<string, unknown>) : null;
+      const userObj =
+        payload.user && typeof payload.user === 'object'
+          ? (payload.user as Record<string, unknown>)
+          : null;
       if (
-        payload.workspaceSubdomain === normalized ||
-        payload.subdomain === normalized ||
-        (userObj && userObj.workspaceSubdomain === normalized)
+        payload.workspaceSubdomain === normalized
+        || payload.subdomain === normalized
+        || (userObj && userObj.workspaceSubdomain === normalized)
       ) {
         await db().delete(authArtifacts).where(eq(authArtifacts.id, row.id));
       }

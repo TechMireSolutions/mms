@@ -12,7 +12,7 @@ import { uploadImageFile } from "@/lib/imageUpload";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { FieldHint } from "@/tenant/features/settings/components/branding/BrandingFieldHint";
+import { FieldHint } from "@/components/branding/BrandingFieldHint";
 
 const MAX_FILE_BYTES = IMAGE_UPLOAD_MAX_INPUT_BYTES;
 

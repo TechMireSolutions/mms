@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { hashRefreshToken } from '../services/auth/authCookieService.js';
 import { signTenantToken } from './helpers/tokens.js';
 
@@ -44,6 +44,11 @@ const mockUpdatePlatformUserPassword = vi.fn();
 const mockGetStoredPlatformUserById = vi.fn();
 const mockListPlatformWorkspaces = vi.fn();
 const mockSetPlatformAdminPermissions = vi.fn();
+const mockSetPlatformAdminDisabled = vi.fn();
+const mockDeletePlatformAdmin = vi.fn();
+const mockVerifyPlatformUserPassword = vi.fn();
+const mockDeleteWorkspace = vi.fn();
+const mockIsPlatformSmtpConfigured = vi.fn().mockReturnValue(false);
 const mockGetPlatformUserProfile = vi.fn().mockImplementation(async (id: string) => {
   const stored = await mockGetStoredPlatformUserById(id);
   if (!stored) return null;
@@ -55,6 +60,15 @@ const mockGetPlatformUserProfile = vi.fn().mockImplementation(async (id: string)
     permissions: stored.permissions ?? { workspaces: false, onboard: false },
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
+    disabledAt: stored.disabledAt ?? null,
+  };
+});
+
+vi.mock('../services/platform/platformEmailService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/platform/platformEmailService.js')>();
+  return {
+    ...actual,
+    isPlatformSmtpConfigured: (...args: unknown[]) => mockIsPlatformSmtpConfigured(...args),
   };
 });
 
@@ -67,6 +81,9 @@ vi.mock('../services/platform/platformUserService.js', () => ({
   countPlatformUsers: vi.fn(),
   createVerifiedPlatformUser: vi.fn(),
   setPlatformAdminPermissions: (...args: unknown[]) => mockSetPlatformAdminPermissions(...args),
+  setPlatformAdminDisabled: (...args: unknown[]) => mockSetPlatformAdminDisabled(...args),
+  deletePlatformAdmin: (...args: unknown[]) => mockDeletePlatformAdmin(...args),
+  verifyPlatformUserPassword: (...args: unknown[]) => mockVerifyPlatformUserPassword(...args),
   updatePlatformUserPassword: (...args: unknown[]) => mockUpdatePlatformUserPassword(...args),
   updatePlatformUserName: vi.fn(),
   changePlatformUserPassword: vi.fn(),
@@ -80,6 +97,7 @@ vi.mock('../services/platform/platformUserService.js', () => ({
     permissions: stored.permissions ?? { workspaces: false, onboard: false },
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
+    disabledAt: stored.disabledAt ?? null,
   }),
   toPublicPlatformUser: (user: Record<string, unknown>) => ({
     id: user.id,
@@ -105,6 +123,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
       subdomain === 'demo' ? demoWorkspace : null,
     ),
     listPlatformWorkspaces: (...args: unknown[]) => mockListPlatformWorkspaces(...args),
+    deleteWorkspace: (...args: unknown[]) => mockDeleteWorkspace(...args),
   };
 });
 
@@ -126,6 +145,7 @@ describe('auth routes', () => {
     mockValidatePlatformCredentials.mockReset();
     mockHasPlatformUsers.mockReset().mockResolvedValue(true);
     mockFindPlatformUserByEmail.mockReset().mockResolvedValue(null);
+    mockIsPlatformSmtpConfigured.mockReset().mockReturnValue(false);
     mockGetStoredPlatformUserById.mockReset().mockResolvedValue({
       id: 'p1',
       email: 'platform@test.com',
@@ -138,10 +158,16 @@ describe('auth routes', () => {
     mockUpdatePlatformUserPassword.mockReset();
     mockListPlatformWorkspaces.mockReset().mockResolvedValue([]);
     mockSetPlatformAdminPermissions.mockReset();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    mockSetPlatformAdminDisabled.mockReset();
+    mockDeletePlatformAdmin.mockReset();
+    mockVerifyPlatformUserPassword.mockReset().mockResolvedValue(true);
+    mockDeleteWorkspace.mockReset().mockResolvedValue({
+      id: 'ws-demo',
+      subdomain: 'demo',
+      madrasaName: 'Demo Madrasa',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      enabled: true,
+    });
   });
 
   it('POST /api/auth/login rejects apex host without subdomain', async () => {
@@ -384,6 +410,7 @@ describe('platform auth routes', () => {
       passwordHash: 'hash',
       role: 'super_user',
       permissions: { workspaces: true, onboard: true },
+      sessionVersion: 0,
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     mockGetJwtExpiresIn.mockReset().mockResolvedValue('15m');
@@ -412,6 +439,7 @@ describe('platform auth routes', () => {
       passwordHash: 'hash',
       createdAt: '2026-01-01T00:00:00.000Z',
     });
+    mockIsPlatformSmtpConfigured.mockReturnValue(false);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -440,6 +468,8 @@ describe('platform auth routes', () => {
 
   it('POST /api/platform/auth/setup/register starts verification when no users exist', async () => {
     mockHasPlatformUsers.mockResolvedValue(false);
+    // Non-production: allow register without SMTP (devCode path).
+    mockIsPlatformSmtpConfigured.mockReturnValue(false);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -473,11 +503,17 @@ describe('platform auth routes', () => {
   });
 
   it('POST /api/platform/auth/login sets platform session cookie on apex', async () => {
-    mockValidatePlatformCredentials.mockResolvedValue({
+    mockFindPlatformUserByEmail.mockResolvedValue({
       id: 'p1',
       email: 'platform@test.com',
       name: 'Platform Admin',
+      passwordHash: 'hash',
+      role: 'super_user',
+      permissions: { workspaces: true, onboard: true },
+      sessionVersion: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
     });
+    mockVerifyPlatformUserPassword.mockResolvedValue(true);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -490,6 +526,31 @@ describe('platform auth routes', () => {
     const platformCookie = res.cookies.find((c) => c.name === PLATFORM_ACCESS_COOKIE);
     expect(platformCookie).toBeTruthy();
     expect(platformCookie?.maxAge).toBeUndefined();
+    await app.close();
+  });
+
+  it('POST /api/platform/auth/login returns account_disabled for disabled admin with valid password', async () => {
+    mockFindPlatformUserByEmail.mockResolvedValue({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      passwordHash: 'hash',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: false },
+      sessionVersion: 0,
+      disabledAt: '2026-07-01T00:00:00.000Z',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    mockVerifyPlatformUserPassword.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/platform/auth/login',
+      headers: { host: 'localhost' },
+      payload: { email: 'operator@test.com', password: 'password123' },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ type: 'account_disabled' });
     await app.close();
   });
 
@@ -546,6 +607,7 @@ describe('platform auth routes', () => {
       passwordHash: 'hash',
       role: 'admin',
       permissions: { workspaces: true, onboard: false },
+      sessionVersion: 0,
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     const app = await buildApp();
@@ -582,6 +644,7 @@ describe('platform auth routes', () => {
       passwordHash: 'hash',
       role: 'admin',
       permissions: { workspaces: false, onboard: true },
+      sessionVersion: 0,
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     const app = await buildApp();
@@ -612,6 +675,7 @@ describe('platform auth routes', () => {
       passwordHash: 'hash',
       role: 'admin',
       permissions: { workspaces: true, onboard: false },
+      sessionVersion: 0,
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     const app = await buildApp();
@@ -641,6 +705,7 @@ describe('platform auth routes', () => {
       passwordHash: 'hash',
       role: 'admin',
       permissions: { workspaces: true, onboard: true },
+      sessionVersion: 0,
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     const app = await buildApp();
@@ -754,6 +819,203 @@ describe('platform auth routes', () => {
       cookies: { mms_access: token },
     });
     expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('GET /api/platform/auth/me rejects stale sessionVersion', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      passwordHash: 'hash',
+      role: 'super_user',
+      permissions: { workspaces: true, onboard: true },
+      sessionVersion: 2,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p1',
+      tokenType: 'platform_access',
+      sessionVersion: 0,
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/auth/me',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ type: 'session_revoked', message: 'Platform session has been revoked' });
+    await app.close();
+  });
+
+  it('GET /api/platform/auth/me rejects disabled platform admin', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      passwordHash: 'hash',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: true },
+      sessionVersion: 0,
+      disabledAt: '2026-07-01T00:00:00.000Z',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p-admin',
+      tokenType: 'platform_access',
+      sessionVersion: 0,
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/auth/me',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ type: 'account_disabled' });
+    await app.close();
+  });
+
+  it('POST /api/platform/auth/setup/register requires SMTP in production', async () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousJwt = process.env.JWT_SECRET;
+    try {
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_SECRET = 'test-secret-must-be-at-least-32-chars!!';
+      mockIsPlatformSmtpConfigured.mockReturnValue(false);
+      mockHasPlatformUsers.mockResolvedValue(false);
+      mockPutAuthArtifact.mockClear();
+
+      const app = await buildApp();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/platform/auth/setup/register',
+        headers: { host: 'localhost' },
+        payload: {
+          name: 'Platform Admin',
+          email: 'admin@example.com',
+          password: 'SecurePass1',
+        },
+      });
+      expect(res.statusCode).toBe(503);
+      expect(res.json()).toMatchObject({ type: 'smtp_required' });
+      expect(mockPutAuthArtifact).not.toHaveBeenCalled();
+      await app.close();
+    } finally {
+      process.env.NODE_ENV = previousNodeEnv;
+      process.env.JWT_SECRET = previousJwt ?? 'test-secret';
+    }
+  });
+
+  it('POST /api/platform/auth/password/forgot requires SMTP in production', async () => {
+    const previousNodeEnv = process.env.NODE_ENV;
+    const previousJwt = process.env.JWT_SECRET;
+    try {
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_SECRET = 'test-secret-must-be-at-least-32-chars!!';
+      mockIsPlatformSmtpConfigured.mockReturnValue(false);
+      mockPutAuthArtifact.mockClear();
+
+      const app = await buildApp();
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/platform/auth/password/forgot',
+        headers: { host: 'localhost' },
+        payload: { email: 'admin@example.com' },
+      });
+      expect(res.statusCode).toBe(503);
+      expect(res.json()).toMatchObject({ type: 'smtp_required' });
+      expect(mockPutAuthArtifact).not.toHaveBeenCalled();
+      await app.close();
+    } finally {
+      process.env.NODE_ENV = previousNodeEnv;
+      process.env.JWT_SECRET = previousJwt ?? 'test-secret';
+    }
+  });
+
+  it('DELETE /api/platform/workspaces/:subdomain requires password and confirmSubdomain', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      passwordHash: 'hash',
+      role: 'super_user',
+      permissions: { workspaces: true, onboard: true },
+      sessionVersion: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p1',
+      tokenType: 'platform_access',
+      sessionVersion: 0,
+    });
+
+    const badConfirm = await app.inject({
+      method: 'DELETE',
+      url: '/api/platform/workspaces/demo',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: { password: 'TestPassword123!', confirmSubdomain: 'other' },
+    });
+    expect(badConfirm.statusCode).toBe(400);
+    expect(mockDeleteWorkspace).not.toHaveBeenCalled();
+
+    mockVerifyPlatformUserPassword.mockResolvedValueOnce(false);
+    const badPassword = await app.inject({
+      method: 'DELETE',
+      url: '/api/platform/workspaces/demo',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: { password: 'wrong', confirmSubdomain: 'demo' },
+    });
+    expect(badPassword.statusCode).toBe(401);
+    expect(mockDeleteWorkspace).not.toHaveBeenCalled();
+
+    mockVerifyPlatformUserPassword.mockResolvedValueOnce(true);
+    const ok = await app.inject({
+      method: 'DELETE',
+      url: '/api/platform/workspaces/demo',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: { password: 'TestPassword123!', confirmSubdomain: 'demo' },
+    });
+    expect(ok.statusCode).toBe(200);
+    expect(mockDeleteWorkspace).toHaveBeenCalledWith('demo');
+    await app.close();
+  });
+
+  it('DELETE /api/platform/users/:id deletes admin after password check', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      passwordHash: 'hash',
+      role: 'super_user',
+      permissions: { workspaces: true, onboard: true },
+      sessionVersion: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    mockDeletePlatformAdmin.mockResolvedValue(undefined);
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p1',
+      tokenType: 'platform_access',
+      sessionVersion: 0,
+    });
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/platform/users/p-target',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: { password: 'TestPassword123!' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeletePlatformAdmin).toHaveBeenCalledWith('p-target');
     await app.close();
   });
 });

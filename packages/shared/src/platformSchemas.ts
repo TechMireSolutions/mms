@@ -126,3 +126,16 @@ export const platformUpdateAdminPermissionsBodySchema = z.object({
 export type PlatformUpdateAdminPermissionsInput = z.infer<
   typeof platformUpdateAdminPermissionsBodySchema
 >;
+
+export const platformAdminDisabledBodySchema = z.object({
+  disabled: z.boolean(),
+  password: z.string().min(1),
+});
+
+export type PlatformAdminDisabledInput = z.infer<typeof platformAdminDisabledBodySchema>;
+
+export const platformDeleteAdminBodySchema = z.object({
+  password: z.string().min(1),
+});
+
+export type PlatformDeleteAdminInput = z.infer<typeof platformDeleteAdminBodySchema>;

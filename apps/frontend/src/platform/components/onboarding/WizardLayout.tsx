@@ -1,10 +1,13 @@
 import React, { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { AuthPageBackdrop } from "@/components/entry/AuthPageShell";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
+import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/lib/config/routes";
 import { cn } from "@/lib/utils";
 
 export interface WizardStepConfig {
@@ -53,9 +56,17 @@ export default function WizardLayout({
           </span>
         </div>
 
-        <span className="text-xs font-semibold text-muted-foreground" aria-live="polite">
-          {stepLabel}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold text-muted-foreground" aria-live="polite">
+            {stepLabel}
+          </span>
+          <Button asChild variant="ghost" size="sm" className="min-h-11 gap-1.5 rounded-lg">
+            <Link to={ROUTES.home}>
+              <X className="h-4 w-4" aria-hidden />
+              {t("onboarding.exitToConsole")}
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <div

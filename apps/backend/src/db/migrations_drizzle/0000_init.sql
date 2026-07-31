@@ -62,8 +62,18 @@ CREATE TABLE "auth_artifacts" (
 	"id" text PRIMARY KEY NOT NULL,
 	"kind" text NOT NULL,
 	"payload" jsonb NOT NULL,
+	"lookup_key" text,
+	"scope_key" text,
 	"expires_at" timestamp NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "auth_artifacts_kind_check" CHECK ("kind" IN (
+		'handoff',
+		'two_factor_challenge',
+		'refresh_token',
+		'platform_setup',
+		'platform_password_reset',
+		'login_email_change'
+	))
 );
 --> statement-breakpoint
 CREATE TABLE "background_jobs" (
@@ -269,7 +279,7 @@ CREATE TABLE "obligation_types" (
 --> statement-breakpoint
 CREATE TABLE "platform_activity_logs" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" text NOT NULL,
+	"user_id" text,
 	"user_email" text NOT NULL,
 	"action" text NOT NULL,
 	"details" jsonb NOT NULL,
@@ -294,8 +304,10 @@ CREATE TABLE "platform_users" (
 	"role" text DEFAULT 'admin' NOT NULL,
 	"permissions" jsonb DEFAULT '{"workspaces":false,"onboard":false}'::jsonb NOT NULL,
 	"session_version" integer DEFAULT 0 NOT NULL,
+	"disabled_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "platform_users_role_check" CHECK ("role" IN ('super_user', 'admin'))
 );
 --> statement-breakpoint
 CREATE TABLE "questions" (
@@ -427,7 +439,7 @@ ALTER TABLE "mujtahids" ADD CONSTRAINT "mujtahids_workspace_subdomain_workspaces
 ALTER TABLE "obligation_collections" ADD CONSTRAINT "obligation_collections_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "obligation_distributions" ADD CONSTRAINT "obligation_distributions_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "obligation_types" ADD CONSTRAINT "obligation_types_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "platform_activity_logs" ADD CONSTRAINT "platform_activity_logs_user_id_platform_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."platform_users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "platform_activity_logs" ADD CONSTRAINT "platform_activity_logs_user_id_platform_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."platform_users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "questions" ADD CONSTRAINT "questions_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "saved_reports" ADD CONSTRAINT "saved_reports_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -453,6 +465,9 @@ CREATE INDEX "audit_log_entries_custom_data_gin_idx" ON "audit_log_entries" USIN
 CREATE INDEX "audit_logs_workspace_changed_idx" ON "audit_logs" USING btree ("workspace_subdomain","changed_at");--> statement-breakpoint
 CREATE INDEX "audit_logs_table_record_idx" ON "audit_logs" USING btree ("table_name","record_id");--> statement-breakpoint
 CREATE INDEX "auth_artifacts_kind_expires_idx" ON "auth_artifacts" USING btree ("kind","expires_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "auth_artifacts_lookup_key_uidx" ON "auth_artifacts" USING btree ("lookup_key") WHERE "lookup_key" IS NOT NULL;--> statement-breakpoint
+CREATE INDEX "auth_artifacts_scope_key_idx" ON "auth_artifacts" USING btree ("scope_key") WHERE "scope_key" IS NOT NULL;--> statement-breakpoint
+CREATE INDEX "platform_activity_logs_created_at_idx" ON "platform_activity_logs" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX "background_jobs_tenant_user_idx" ON "background_jobs" USING btree ("tenant_id","user_id");--> statement-breakpoint
 CREATE INDEX "background_jobs_status_idx" ON "background_jobs" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "contacts_workspace_subdomain_idx" ON "contacts" USING btree ("workspace_subdomain");--> statement-breakpoint

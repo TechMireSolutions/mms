@@ -18,6 +18,7 @@ export async function requireMainDomain(
 ): Promise<void> {
   if (getRequestTenant()) {
     sendForbidden(reply, 'Platform actions are only available on the main domain');
+    return;
   }
 }
 
@@ -57,8 +58,13 @@ export async function authenticatePlatform(
     return;
   }
 
+  if (stored.disabledAt) {
+    sendUnauthorized(reply, 'Platform account has been disabled', 'account_disabled');
+    return;
+  }
+
   if ((payload.sessionVersion ?? 0) !== stored.sessionVersion) {
-    sendUnauthorized(reply, 'Platform session has been revoked');
+    sendUnauthorized(reply, 'Platform session has been revoked', 'session_revoked');
     return;
   }
 

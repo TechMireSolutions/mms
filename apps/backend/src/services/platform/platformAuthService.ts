@@ -6,6 +6,12 @@ import { clearPlatformAccessCookie, setPlatformAccessCookie } from './platformCo
 
 const PLATFORM_ACCESS_TTL = '8h';
 
+export type PlatformLoginFailure = 'invalid_credentials' | 'account_disabled';
+
+export type PlatformLoginResult =
+  | { ok: true; user: PlatformUser }
+  | { ok: false; type: PlatformLoginFailure };
+
 export function issuePlatformSession(
   user: PlatformUser,
   jwtSigner: JWT,
@@ -14,10 +20,10 @@ export function issuePlatformSession(
 ): PlatformUser {
   clearAuthCookies(reply);
 
+  // Minimal claims only — role/permissions reload from DB on each authenticatePlatform.
   const accessToken = jwtSigner.sign(
     {
-      ...user,
-      role: user.role,
+      id: user.id,
       tokenType: 'platform_access',
       sessionVersion,
     },
@@ -32,14 +38,34 @@ export async function loginPlatformUser(
   password: string,
   jwtSigner: JWT,
   reply: FastifyReply,
-): Promise<PlatformUser | null> {
-  const { findPlatformUserByEmail, validatePlatformCredentials } =
-    await import('./platformUserService.js');
+): Promise<PlatformLoginResult> {
+  const {
+    findPlatformUserByEmail,
+    toPublicPlatformUser,
+    verifyPlatformUserPassword,
+  } = await import('./platformUserService.js');
+
   const stored = await findPlatformUserByEmail(email);
-  if (!stored) return null;
-  const user = await validatePlatformCredentials(email, password);
-  if (!user) return null;
-  return issuePlatformSession(user, jwtSigner, reply, stored.sessionVersion);
+  if (!stored) {
+    return { ok: false, type: 'invalid_credentials' };
+  }
+
+  const passwordOk = await verifyPlatformUserPassword(stored.id, password);
+  if (!passwordOk) {
+    return { ok: false, type: 'invalid_credentials' };
+  }
+
+  if (stored.disabledAt) {
+    return { ok: false, type: 'account_disabled' };
+  }
+
+  const user = issuePlatformSession(
+    toPublicPlatformUser(stored),
+    jwtSigner,
+    reply,
+    stored.sessionVersion,
+  );
+  return { ok: true, user };
 }
 
 export function logoutPlatformUser(reply: FastifyReply): void {

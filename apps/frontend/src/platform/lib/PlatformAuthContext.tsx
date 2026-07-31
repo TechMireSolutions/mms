@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { PlatformUser } from '@mms/shared';
+import type { PlatformUser, PlatformUserProfile } from '@mms/shared';
 import { normalizePlatformAdminPermissions } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useTenant } from '@/lib/contexts/TenantContext';
@@ -20,7 +20,7 @@ function PlatformSessionTimeoutWatcher({
   return null;
 }
 
-function normalizeSessionUser(user: PlatformUser): PlatformUser {
+function normalizeSessionUser(user: PlatformUserProfile): PlatformUserProfile {
   return {
     ...user,
     permissions: normalizePlatformAdminPermissions(user.permissions),
@@ -28,6 +28,7 @@ function normalizeSessionUser(user: PlatformUser): PlatformUser {
 }
 
 export interface PlatformAuthContextType {
+  /** Session user; may include profile fields from `/me` (e.g. `disabledAt`). */
   platformUser: PlatformUser | null;
   isPlatformAuthenticated: boolean;
   /** True while probing existing session (`/me`) on boot. */
@@ -44,7 +45,7 @@ const PlatformAuthContext = createContext<PlatformAuthContextType | undefined>(u
 
 export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isApex } = useTenant();
-  const [platformUser, setPlatformUser] = useState<PlatformUser | null>(null);
+  const [platformUser, setPlatformUser] = useState<PlatformUserProfile | null>(null);
   const [isPlatformAuthenticated, setIsPlatformAuthenticated] = useState(false);
   const [isCheckingPlatformAuth, setIsCheckingPlatformAuth] = useState(false);
   const [isPlatformLoginSubmitting, setIsPlatformLoginSubmitting] = useState(false);
@@ -62,7 +63,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // post-setup / password-reset flows restore auth without a sessionStorage gate.
     setIsCheckingPlatformAuth(true);
     try {
-      const platformSession = await apiJson<{ user: PlatformUser }>('/api/platform/auth/me');
+      const platformSession = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me');
       markPlatformBrowserSession();
       setPlatformUser(normalizeSessionUser(platformSession.user));
       setIsPlatformAuthenticated(true);
@@ -79,7 +80,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const platformLogin = useCallback(async (email: string, password: string): Promise<void> => {
     setIsPlatformLoginSubmitting(true);
     try {
-      const platformSession = await apiJson<{ user: PlatformUser }>('/api/platform/auth/login', {
+      const platformSession = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });

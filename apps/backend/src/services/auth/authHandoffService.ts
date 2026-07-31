@@ -1,5 +1,10 @@
 import type { AuthResult } from './authService.js';
-import { putAuthArtifact, takeAuthArtifact, createArtifactId } from './authArtifactService.js';
+import {
+  authArtifactWorkspaceScopeKey,
+  putAuthArtifact,
+  takeAuthArtifact,
+  createArtifactId,
+} from './authArtifactService.js';
 
 const HANDOFF_TTL_MS = 2 * 60 * 1000;
 
@@ -8,7 +13,11 @@ const HANDOFF_TTL_MS = 2 * 60 * 1000;
  */
 export async function createAuthHandoff(result: AuthResult): Promise<string> {
   const code = createArtifactId();
-  await putAuthArtifact('handoff', result, HANDOFF_TTL_MS, code);
+  const subdomain = result.user?.workspaceSubdomain;
+  await putAuthArtifact('handoff', result, HANDOFF_TTL_MS, {
+    id: code,
+    scopeKey: subdomain ? authArtifactWorkspaceScopeKey(subdomain) : null,
+  });
   return code;
 }
 

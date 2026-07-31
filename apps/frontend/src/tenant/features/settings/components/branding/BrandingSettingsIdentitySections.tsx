@@ -10,7 +10,7 @@ import {
   ImageUploadField,
   NAME_MAX,
   TAGLINE_MAX,
-} from '@/tenant/features/settings/components/branding/BrandingShared';
+} from '@/components/branding/BrandingShared';
 import { normalizePhoneInput, type BrandingSettings } from '@mms/shared';
 
 interface BrandingSettingsProfileSectionProps {

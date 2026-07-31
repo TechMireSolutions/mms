@@ -9,7 +9,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import ThemeModeSelector from '@/tenant/features/settings/components/ThemeModeSelector';
 import CornerStyleSelector from '@/tenant/features/settings/components/CornerStyleSelector';
-import { FieldHint } from '@/tenant/features/settings/components/branding/BrandingShared';
+import { FieldHint } from '@/components/branding/BrandingShared';
 import {
   SettingsColoursBadge,
   SettingsMetaBadge,

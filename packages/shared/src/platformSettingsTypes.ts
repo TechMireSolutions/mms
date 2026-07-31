@@ -23,9 +23,11 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   certbotEmail: '',
 };
 
+export const RESET_DATABASE_CONFIRM = 'RESET_ALL_DATABASE_DATA' as const;
+
 export const resetDatabaseSchema = z.object({
-  confirm: z.literal('RESET_ALL_DATABASE_DATA', {
-    message: 'Confirmation string must be "RESET_ALL_DATABASE_DATA"',
+  confirm: z.literal(RESET_DATABASE_CONFIRM, {
+    message: `Confirmation string must be "${RESET_DATABASE_CONFIRM}"`,
   }),
   password: z.string().min(1),
 });

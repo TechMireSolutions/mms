@@ -2,7 +2,7 @@ import React from 'react';
 import { Palette, ImageIcon, Loader2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
-import BrandColorPanel from '@/tenant/features/settings/components/branding/BrandColorPanel';
+import BrandColorPanel from '@/components/branding/BrandColorPanel';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { BrandingThemeMode } from '@mms/shared';
 

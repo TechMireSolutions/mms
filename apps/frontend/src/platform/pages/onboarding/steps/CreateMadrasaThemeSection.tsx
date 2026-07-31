@@ -4,12 +4,12 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import BrandColorPanel from "@/tenant/features/settings/components/branding/BrandColorPanel";
+import BrandColorPanel from "@/components/branding/BrandColorPanel";
 import {
   FieldHint,
   FOOTER_MAX,
   defaultFooterForMadrasa,
-} from "@/tenant/features/settings/components/branding/BrandingShared";
+} from "@/components/branding/BrandingShared";
 import type { CreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 
 interface CreateMadrasaThemeSectionProps {

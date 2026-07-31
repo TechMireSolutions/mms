@@ -13,6 +13,7 @@ import {
   usePlatformSetupResend,
   usePlatformSetupVerify,
 } from "@/platform/hooks/usePlatformAuthActions";
+import { ApiError } from "@/lib/apiClient";
 
 type SetupStep = "register" | "verify";
 
@@ -93,6 +94,11 @@ export function usePlatformSetupController(smtpConfigured: boolean) {
       await checkPlatformAuth({ force: true });
     } catch (err) {
       setError(getPlatformErrorMessage(err, t));
+      if (err instanceof ApiError && (err.type === 'too_many_attempts' || err.type === 'invalid_setup')) {
+        setSetupSession(null);
+        setStep('register');
+        setCode(createEmptyOtp());
+      }
     }
   };
 
@@ -106,6 +112,11 @@ export function usePlatformSetupController(smtpConfigured: boolean) {
       setResendCycle((value) => value + 1);
     } catch (err) {
       setError(getPlatformErrorMessage(err, t));
+      if (err instanceof ApiError && (err.type === 'too_many_attempts' || err.type === 'invalid_setup')) {
+        setSetupSession(null);
+        setStep('register');
+        setCode(createEmptyOtp());
+      }
     }
   };
 

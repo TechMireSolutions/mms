@@ -4,14 +4,17 @@ import { motion } from 'framer-motion';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { tenantUrl } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
-import { isApiError } from '@/lib/apiClient';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import WorkspaceLogo from '@/platform/components/WorkspaceLogo';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { PlatformWorkspaceDeleteDialog } from '@/platform/components/PlatformWorkspaceDeleteDialog';
+import { cardVariants } from '@/platform/lib/animations';
 
 interface PlatformWorkspaceRowProps {
   workspace: PlatformWorkspaceRowData;
@@ -31,6 +34,7 @@ export const PlatformWorkspaceRow = memo(function PlatformWorkspaceRow({
   onDelete,
 }: PlatformWorkspaceRowProps): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const tenantLink = tenantUrl(workspace.subdomain, '/');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -59,20 +63,18 @@ export const PlatformWorkspaceRow = memo(function PlatformWorkspaceRow({
     void onDelete({ password, confirmSubdomain: confirmSubdomain.trim() })
       .then(() => setConfirmOpen(false))
       .catch((error: unknown) => {
-        if (isApiError(error) && error.type === 'invalid_current_password') {
-          setPasswordError(t('platform.profileWrongPassword'));
-        }
+        setPasswordError(getPlatformErrorMessage(error, t));
       });
   };
 
   return (
     <>
       <motion.li
-        layout
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+        layout={!reducedMotion}
+        variants={cardVariants}
+        initial={reducedMotion ? false : 'hidden'}
+        animate="show"
+        exit={reducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
         className="h-full"
       >
         <Card
@@ -100,7 +102,7 @@ export const PlatformWorkspaceRow = memo(function PlatformWorkspaceRow({
                     config={{
                       disabled: {
                         label: t('platform.workspaceDisabledBadge'),
-                        cls: 'bg-destructive/15 text-destructive border-destructive/20',
+                        cls: SEMANTIC_BADGE.destructiveStrong,
                       },
                     }}
                     size="sm"
@@ -125,11 +127,11 @@ export const PlatformWorkspaceRow = memo(function PlatformWorkspaceRow({
                 config={{
                   active: {
                     label: t('platform.workspaceActive'),
-                    cls: 'bg-success/10 text-success border-success/20',
+                    cls: SEMANTIC_BADGE.success,
                   },
                   inactive: {
                     label: t('platform.workspaceInactive'),
-                    cls: 'bg-destructive/10 text-destructive border-destructive/20',
+                    cls: SEMANTIC_BADGE.destructive,
                   },
                 }}
                 size="sm"

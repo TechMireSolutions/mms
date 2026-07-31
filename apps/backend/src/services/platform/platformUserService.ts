@@ -18,6 +18,7 @@ import {
   insertPlatformUser,
   updatePlatformUserRow,
   updatePlatformUserPermissions,
+  deletePlatformUserRow,
 } from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
 import { PlatformError } from './platformErrorService.js';
@@ -39,6 +40,7 @@ export function toPlatformUserProfile(stored: StoredPlatformUser): PlatformUserP
     permissions: stored.permissions,
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
+    disabledAt: stored.disabledAt ?? null,
   };
 }
 
@@ -161,6 +163,46 @@ export async function setPlatformAdminPermissions(
   return toPlatformUserProfile(updated);
 }
 
+/** Soft-disable or re-enable a platform admin. Super-users cannot be disabled. */
+export async function setPlatformAdminDisabled(
+  userId: string,
+  disabled: boolean,
+): Promise<PlatformUserProfile> {
+  const stored = await getStoredPlatformUserById(userId);
+  if (!stored) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+  if (stored.role === 'super_user') {
+    throw new PlatformError('forbidden', 'Cannot disable a platform super-user');
+  }
+
+  const updated = await updatePlatformUserRow(userId, {
+    disabledAt: disabled ? new Date().toISOString() : null,
+    // Revoke any active sessions when disabling.
+    sessionVersion: disabled ? stored.sessionVersion + 1 : stored.sessionVersion,
+  });
+  if (!updated) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+  return toPlatformUserProfile(updated);
+}
+
+/** Permanently remove a platform admin. Super-users cannot be deleted. */
+export async function deletePlatformAdmin(userId: string): Promise<void> {
+  const stored = await getStoredPlatformUserById(userId);
+  if (!stored) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+  if (stored.role === 'super_user') {
+    throw new PlatformError('forbidden', 'Cannot delete a platform super-user');
+  }
+
+  const removed = await deletePlatformUserRow(userId);
+  if (!removed) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+}
+
 export async function updatePlatformUserPassword(
   userId: string,
   passwordHash: string,
@@ -215,6 +257,10 @@ export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
   };
 }
 
+/**
+ * Password-only credential check. Does not reject disabled accounts —
+ * callers that need that distinction use `loginPlatformUser`.
+ */
 export async function validatePlatformCredentials(
   email: string,
   password: string,
@@ -259,6 +305,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
     sessionVersion: 0,
     createdAt: new Date().toISOString(),
+    emailVerifiedAt: new Date().toISOString(),
   };
   await insertPlatformUser(user);
   console.log(`Platform super-user seeded from env for ${user.email}`);

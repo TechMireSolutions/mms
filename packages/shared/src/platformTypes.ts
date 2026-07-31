@@ -44,6 +44,8 @@ export interface PlatformUser {
 export interface PlatformUserProfile extends PlatformUser {
   createdAt?: string;
   emailVerifiedAt?: string;
+  /** ISO timestamp when a super-user disabled this admin; omitted/null when active. */
+  disabledAt?: string | null;
 }
 
 export interface StoredPlatformUser extends PlatformUser {
@@ -52,6 +54,8 @@ export interface StoredPlatformUser extends PlatformUser {
   sessionVersion: number;
   createdAt: string;
   emailVerifiedAt?: string;
+  /** Soft-disable — login and platform sessions rejected while set. */
+  disabledAt?: string | null;
 }
 
 /**
@@ -98,6 +102,9 @@ export interface PlatformSetupRegisterResult {
 export const PLATFORM_SETUP_CODE_TTL_MINUTES = 15;
 
 export const PLATFORM_PASSWORD_RESET_TTL_MINUTES = 15;
+
+/** Max failed OTP verifies per setup/reset artifact before the session is invalidated. */
+export const PLATFORM_OTP_MAX_ATTEMPTS = 5;
 
 export const PLATFORM_MIN_PASSWORD_LENGTH = 10;
 

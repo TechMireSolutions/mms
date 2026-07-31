@@ -1,6 +1,7 @@
 import { resolveBackendListenPort } from '@mms/shared';
 import { buildApp } from './app.js';
 import { closeDatabase } from './db/database.js';
+import { startAuthArtifactPurgeScheduler } from './services/auth/authArtifactPurgeScheduler.js';
 
 /**
  * Boots the Fastify server by building the app and listening on the configured port.
@@ -13,9 +14,12 @@ async function startServer(): Promise<void> {
   await app.listen({ port, host });
   app.log.info(`Backend server listening on http://${host}:${port}`);
 
+  const stopArtifactPurge = startAuthArtifactPurgeScheduler(app.log);
+
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, 'shutting down');
     try {
+      stopArtifactPurge();
       await app.close();
       await closeDatabase();
       process.exit(0);

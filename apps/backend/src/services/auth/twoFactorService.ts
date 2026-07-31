@@ -3,6 +3,8 @@ import type { JWT } from '@fastify/jwt';
 import type { User } from '@mms/shared';
 import { resolveNotificationChannel } from '@mms/shared';
 import {
+  authArtifactUserScopeKey,
+  authArtifactWorkspaceScopeKey,
   createArtifactId,
   deleteAuthArtifact,
   findRefreshTokenByHash,
@@ -50,7 +52,10 @@ export async function createTwoFactorChallenge(user: User): Promise<string> {
       codeHash: hashOtpCode(code),
     },
     CHALLENGE_TTL_MS,
-    challengeId,
+    {
+      id: challengeId,
+      scopeKey: authArtifactWorkspaceScopeKey(user.workspaceSubdomain),
+    },
   );
   await dispatchTwoFactorCode(user.email, code);
   return challengeId;
@@ -63,7 +68,10 @@ export async function resendTwoFactorChallenge(challengeId: string): Promise<boo
   const code = generateOtpCode();
   entry.payload.codeHash = hashOtpCode(code);
   await deleteAuthArtifact(challengeId);
-  await putAuthArtifact('two_factor_challenge', entry.payload, CHALLENGE_TTL_MS, challengeId);
+  await putAuthArtifact('two_factor_challenge', entry.payload, CHALLENGE_TTL_MS, {
+    id: challengeId,
+    scopeKey: authArtifactWorkspaceScopeKey(entry.payload.workspaceSubdomain),
+  });
   await dispatchTwoFactorCode(entry.payload.email, code);
   return true;
 }
@@ -104,15 +112,20 @@ async function dispatchTwoFactorCode(email: string, code: string): Promise<void>
 
 export async function issueRefreshToken(user: User): Promise<string> {
   const refreshToken = createRefreshTokenValue();
+  const tokenHash = hashRefreshToken(refreshToken);
   await putAuthArtifact<RefreshTokenPayload>(
     'refresh_token',
     {
       userId: user.id,
       workspaceSubdomain: user.workspaceSubdomain,
-      tokenHash: hashRefreshToken(refreshToken),
+      tokenHash,
     },
     REFRESH_TTL_MS,
-    randomBytes(16).toString('hex'),
+    {
+      id: randomBytes(16).toString('hex'),
+      lookupKey: tokenHash,
+      scopeKey: authArtifactUserScopeKey(user.id),
+    },
   );
   return refreshToken;
 }

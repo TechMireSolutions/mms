@@ -4,7 +4,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { FieldHint, FOOTER_MAX } from '@/tenant/features/settings/components/branding/BrandingShared';
+import { FieldHint, FOOTER_MAX } from '@/components/branding/BrandingShared';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 
 export interface ThemeSettingsFooterSectionProps {

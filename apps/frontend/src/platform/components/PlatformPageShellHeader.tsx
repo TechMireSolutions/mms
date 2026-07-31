@@ -12,8 +12,9 @@ import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions'
 export function PlatformPageShellHeader(): React.JSX.Element | null {
   const { t } = useTranslation();
   const { platformUser, platformLogout } = usePlatformAuth();
-  const { isPlatformAuthenticated, isSuperUser } = usePlatformPermissions();
+  const { isPlatformAuthenticated, isSuperUser, canWorkspaces } = usePlatformPermissions();
   const location = useLocation();
+  const homeNavLabel = canWorkspaces ? t('platform.manageMadrasas') : t('platform.consoleTitle');
 
   if (!isPlatformAuthenticated) return null;
 
@@ -43,7 +44,7 @@ export function PlatformPageShellHeader(): React.JSX.Element | null {
           )}>
             <Link to={ROUTES.home}>
               <LayoutDashboard className="w-4 h-4 me-1.5" aria-hidden />
-              {t('platform.manageMadrasas')}
+              {homeNavLabel}
             </Link>
           </Button>
 
@@ -116,7 +117,7 @@ export function PlatformPageShellHeader(): React.JSX.Element | null {
           )}
         >
           <LayoutDashboard className="w-4 h-4" aria-hidden />
-          <span className="break-words">{t('platform.manageMadrasas')}</span>
+          <span className="break-words">{homeNavLabel}</span>
         </Link>
         {isSuperUser && (
           <Link

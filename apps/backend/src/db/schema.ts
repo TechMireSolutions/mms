@@ -20,10 +20,20 @@ export const authArtifacts = pgTable('auth_artifacts', {
   id: text('id').primaryKey(),
   kind: text('kind').notNull(),
   payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+  /** Indexed opaque key (e.g. refresh token hash) for O(1) lookup. */
+  lookupKey: text('lookup_key'),
+  /** Indexed scope (e.g. user:{id} or ws:{subdomain}) for bulk revoke. */
+  scopeKey: text('scope_key'),
   expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   index('auth_artifacts_kind_expires_idx').on(table.kind, table.expiresAt),
+  uniqueIndex('auth_artifacts_lookup_key_uidx')
+    .on(table.lookupKey)
+    .where(sql`${table.lookupKey} is not null`),
+  index('auth_artifacts_scope_key_idx')
+    .on(table.scopeKey)
+    .where(sql`${table.scopeKey} is not null`),
 ]);
 
 /** Apex workspaces registry — not tenant-scoped. */
@@ -53,6 +63,7 @@ export const platformUsers = pgTable('platform_users', {
     .notNull()
     .default(DEFAULT_PLATFORM_ADMIN_PERMISSIONS),
   sessionVersion: integer('session_version').notNull().default(0),
+  disabledAt: timestamp('disabled_at', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -60,6 +71,7 @@ export const platformUsers = pgTable('platform_users', {
   uniqueIndex('platform_users_single_super_user_idx')
     .on(table.role)
     .where(sql`${table.role} = 'super_user'`),
+  // CHECK enforced in SQL migrations (platform_users_role_check).
 ]);
 
 /** Apex platform settings — single row (id = 'global') for TLS & Certbot settings. */
@@ -517,13 +529,16 @@ export const savedReports = pgTable('saved_reports', {
 
 export const platformActivityLogs = pgTable('platform_activity_logs', {
   id: serial('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => platformUsers.id, { onDelete: 'cascade' }),
+  /** Nullable so deleting a platform user retains audit history (ON DELETE SET NULL). */
+  userId: text('user_id').references(() => platformUsers.id, { onDelete: 'set null' }),
   userEmail: text('user_email').notNull(),
-  action: text('action').notNull(), // 'reset_database' | 'toggle_workspace' | 'delete_workspace' | 'create_admin'
+  action: text('action').notNull(),
   details: jsonb('details').$type<Record<string, unknown>>().notNull(),
   ipAddress: text('ip_address'),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-});
+}, (table) => [
+  index('platform_activity_logs_created_at_idx').on(table.createdAt),
+]);
 
 export const messageTemplates = pgTable('message_templates', {
   id: text('id').notNull(),

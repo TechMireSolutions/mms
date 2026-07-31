@@ -36,9 +36,9 @@ export function loadBranding(): BrandingSettings {
   return getScopedBrandingSettings();
 }
 
-export { FieldHint } from "@/tenant/features/settings/components/branding/BrandingFieldHint";
-export { ImageUploadField } from "@/tenant/features/settings/components/branding/BrandingImageUploadField";
-export { SocialLinksEditor } from "@/tenant/features/settings/components/branding/BrandingSocialLinksEditor";
+export { FieldHint } from "@/components/branding/BrandingFieldHint";
+export { ImageUploadField } from "@/components/branding/BrandingImageUploadField";
+export { SocialLinksEditor } from "@/components/branding/BrandingSocialLinksEditor";
 export { SettingsStatusBadges } from '@/components/ui/SettingsShell';
 
 export function defaultFooterForMadrasa(madrasaName: string, language = 'en'): string {

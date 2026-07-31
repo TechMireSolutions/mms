@@ -16,6 +16,7 @@ import {
   usePlatformPasswordResetResend,
 } from "@/platform/hooks/usePlatformAuthActions";
 import { focusAuthField, validateAuthEmail } from "@/components/entry";
+import { ApiError } from "@/lib/apiClient";
 
 export function usePlatformForgotPasswordController() {
   const { t } = useTranslation();
@@ -111,6 +112,15 @@ export function usePlatformForgotPasswordController() {
       navigate(ROUTES.home, { replace: true });
     } catch (err) {
       setError(getPlatformErrorMessage(err, t));
+      if (
+        err instanceof ApiError
+        && (err.type === 'too_many_attempts' || err.type === 'invalid_reset')
+      ) {
+        setResetId('');
+        setCode(createEmptyOtp());
+        setSent(false);
+        navigate(ROUTES.platformForgotPassword, { replace: true });
+      }
     }
   };
 
@@ -125,6 +135,15 @@ export function usePlatformForgotPasswordController() {
       setResendCycle((value) => value + 1);
     } catch (err) {
       setError(getPlatformErrorMessage(err, t));
+      if (
+        err instanceof ApiError
+        && (err.type === 'too_many_attempts' || err.type === 'invalid_reset')
+      ) {
+        setResetId('');
+        setCode(createEmptyOtp());
+        setSent(false);
+        navigate(ROUTES.platformForgotPassword, { replace: true });
+      }
     }
   };
 

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { platformSettingsUpdateSchema, resetDatabaseSchema } from '../platformSettingsTypes.js';
+import { describe, it, expect } from 'vitest';
+import { platformSettingsUpdateSchema, resetDatabaseSchema, RESET_DATABASE_CONFIRM } from '../platformSettingsTypes.js';
 
 describe('platformSettingsValidation', () => {
   describe('platformSettingsUpdateSchema', () => {
@@ -32,14 +32,14 @@ describe('platformSettingsValidation', () => {
   });
 
   describe('resetDatabaseSchema', () => {
-    it('accepts exact confirmation string RESET_ALL_DATABASE_DATA with password', () => {
-      const valid = { confirm: 'RESET_ALL_DATABASE_DATA', password: 'secret' };
+    it('accepts exact confirmation string with password', () => {
+      const valid = { confirm: RESET_DATABASE_CONFIRM, password: 'secret' };
       const result = resetDatabaseSchema.safeParse(valid);
       expect(result.success).toBe(true);
     });
 
     it('rejects missing password', () => {
-      const invalid = { confirm: 'RESET_ALL_DATABASE_DATA' };
+      const invalid = { confirm: RESET_DATABASE_CONFIRM };
       const result = resetDatabaseSchema.safeParse(invalid);
       expect(result.success).toBe(false);
     });

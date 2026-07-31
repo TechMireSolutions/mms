@@ -4,13 +4,13 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/ui/FormSelect";
-import BrandingIdentityPreview from "@/tenant/features/settings/components/branding/BrandingIdentityPreview";
+import BrandingIdentityPreview from "@/components/branding/BrandingIdentityPreview";
 import {
   FieldHint,
   ImageUploadField,
   NAME_MAX,
   TAGLINE_MAX,
-} from "@/tenant/features/settings/components/branding/BrandingShared";
+} from "@/components/branding/BrandingShared";
 import type { CreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 
 interface CreateMadrasaIdentitySectionProps {

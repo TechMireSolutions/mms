@@ -128,14 +128,20 @@ export default async function platformAuthRoutes(
       const parsed = parseRequest(platformLoginBodySchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
       const { email, password } = parsed.data;
-      const user = await loginPlatformUser(email, password, fastify.jwt, reply);
-      if (!user) {
+      const result = await loginPlatformUser(email, password, fastify.jwt, reply);
+      if (!result.ok) {
+        if (result.type === 'account_disabled') {
+          return reply.status(401).send({
+            type: 'account_disabled',
+            message: 'Platform account has been disabled',
+          });
+        }
         return reply.status(401).send({
           type: 'invalid_credentials',
           message: 'Invalid platform credentials',
         });
       }
-      return reply.send({ user });
+      return reply.send({ user: result.user });
     });
   });
 

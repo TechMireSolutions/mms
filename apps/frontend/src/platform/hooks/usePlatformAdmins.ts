@@ -75,3 +75,61 @@ export function useUpdatePlatformAdminPermissions() {
     },
   });
 }
+
+/** Soft-disable or re-enable a platform admin (password re-auth). */
+export function useSetPlatformAdminDisabled() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: async ({
+      adminId,
+      disabled,
+      password,
+    }: {
+      adminId: string;
+      disabled: boolean;
+      password: string;
+    }) =>
+      apiJson<{ user: PlatformUserProfile }>(
+        `/api/platform/users/${encodeURIComponent(adminId)}/disabled`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ disabled, password }),
+        },
+      ),
+    onSuccess: (_response, variables) => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
+      notify.success(
+        t(variables.disabled ? 'platform.disableAdminSuccess' : 'platform.enableAdminSuccess'),
+      );
+    },
+  });
+}
+
+/** Permanently delete a platform admin (password re-auth). */
+export function useDeletePlatformAdmin() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: async ({
+      adminId,
+      password,
+    }: {
+      adminId: string;
+      password: string;
+    }) =>
+      apiJson<{ deleted: true; id: string }>(
+        `/api/platform/users/${encodeURIComponent(adminId)}`,
+        {
+          method: 'DELETE',
+          body: JSON.stringify({ password }),
+        },
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
+      notify.success(t('platform.deleteAdminSuccess'));
+    },
+  });
+}

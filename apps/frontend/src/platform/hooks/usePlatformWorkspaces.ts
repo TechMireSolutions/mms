@@ -5,6 +5,7 @@ import { WORKSPACE_REGISTRY_QUERY_KEY } from '@/platform/hooks/useWorkspaceRegis
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
+import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 
 export const PLATFORM_WORKSPACES_QUERY_KEY = ['platform', 'workspaces'] as const;
 
@@ -84,7 +85,7 @@ export function useDeleteWorkspace() {
       if (isApiError(error) && error.type === 'invalid_current_password') {
         return;
       }
-      notify.error(t('platform.workspaceDeleteFailed'));
+      notify.error(getPlatformErrorMessage(error, t));
     },
   });
 }

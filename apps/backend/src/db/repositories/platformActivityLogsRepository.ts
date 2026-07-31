@@ -2,7 +2,7 @@ import { getDb } from '../dbClient.js';
 import { platformActivityLogs } from '../schema.js';
 
 export interface InsertPlatformActivityLog {
-  userId: string;
+  userId?: string | null;
   userEmail: string;
   action: string;
   details: Record<string, unknown>;
@@ -11,7 +11,7 @@ export interface InsertPlatformActivityLog {
 
 export async function insertPlatformActivityLog(log: InsertPlatformActivityLog): Promise<void> {
   await getDb().insert(platformActivityLogs).values({
-    userId: log.userId,
+    userId: log.userId ?? null,
     userEmail: log.userEmail,
     action: log.action,
     details: log.details,

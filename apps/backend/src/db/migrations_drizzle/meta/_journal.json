@@ -15,6 +15,20 @@
       "when": 1785487000000,
       "tag": "0001_platform_session_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785488000000,
+      "tag": "0002_platform_admin_disabled",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785490000000,
+      "tag": "0003_platform_db_hardening",
+      "breakpoints": true
     }
   ]
 }

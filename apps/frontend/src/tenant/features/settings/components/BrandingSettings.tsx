@@ -6,9 +6,9 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
-import BrandingIdentityPreview from '@/tenant/features/settings/components/branding/BrandingIdentityPreview';
+import BrandingIdentityPreview from '@/components/branding/BrandingIdentityPreview';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
-import { SocialLinksEditor } from '@/tenant/features/settings/components/branding/BrandingShared';
+import { SocialLinksEditor } from '@/components/branding/BrandingShared';
 import {
   BrandingSettingsContactSection,
   BrandingSettingsProfileSection,

@@ -9,7 +9,7 @@ import {
 } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
 import { getAppDomain } from "@/lib/config/tenantConfig";
-import { defaultFooterForMadrasa } from "@/tenant/features/settings/components/branding/BrandingShared";
+import { defaultFooterForMadrasa } from "@/components/branding/BrandingShared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
