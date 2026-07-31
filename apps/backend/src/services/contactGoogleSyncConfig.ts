@@ -1,13 +1,12 @@
-import { CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY } from '@mms/shared';
-import { fetchObject, persistObject } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  deleteContactGoogleSyncCredentials,
+  findContactGoogleSyncCredentials,
+  upsertContactGoogleSyncCredentials,
+  type ContactGoogleSyncCredentialRecord,
+} from '../db/repositories/contactGoogleSyncRepository.js';
 
-export interface ContactGoogleSyncConfig {
-  clientId?: string;
-  clientSecret?: string;
-  accessToken?: string;
-  refreshToken?: string;
-  updatedAt?: string;
-}
+export type ContactGoogleSyncConfig = ContactGoogleSyncCredentialRecord;
 
 export interface ContactGoogleSyncConfigClient {
   clientId?: string;
@@ -17,43 +16,28 @@ export interface ContactGoogleSyncConfigClient {
   isConnected: boolean;
 }
 
-type UserGoogleSyncMap = Record<string, ContactGoogleSyncConfig>;
-
-async function loadContactGoogleSyncConfigMap(): Promise<UserGoogleSyncMap> {
-  const raw = await fetchObject(CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY);
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-    return raw as UserGoogleSyncMap;
-  }
-  return {};
-}
-
-async function saveContactGoogleSyncConfigMap(configByUser: UserGoogleSyncMap): Promise<void> {
-  await persistObject(CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY, configByUser);
+function requireTenant(): string {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  return tenant;
 }
 
 export async function getContactGoogleSyncConfig(userId: string): Promise<ContactGoogleSyncConfig> {
-  const configByUser = await loadContactGoogleSyncConfigMap();
-  return configByUser[userId] ?? {};
+  return findContactGoogleSyncCredentials(requireTenant(), userId);
 }
 
 export async function setContactGoogleSyncConfig(
   userId: string,
   config: ContactGoogleSyncConfig,
 ): Promise<ContactGoogleSyncConfig> {
-  const configByUser = await loadContactGoogleSyncConfigMap();
-  const updatedConfig: ContactGoogleSyncConfig = {
+  return upsertContactGoogleSyncCredentials(requireTenant(), userId, {
     ...config,
     updatedAt: new Date().toISOString(),
-  };
-  configByUser[userId] = updatedConfig;
-  await saveContactGoogleSyncConfigMap(configByUser);
-  return updatedConfig;
+  });
 }
 
 export async function clearContactGoogleSyncConfig(userId: string): Promise<void> {
-  const configByUser = await loadContactGoogleSyncConfigMap();
-  delete configByUser[userId];
-  await saveContactGoogleSyncConfigMap(configByUser);
+  await deleteContactGoogleSyncCredentials(requireTenant(), userId);
 }
 
 export async function clearGoogleSyncTokens(userId: string): Promise<ContactGoogleSyncConfigClient> {

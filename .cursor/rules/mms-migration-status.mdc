@@ -20,12 +20,13 @@ Rules describe **target architecture**. Fix open gaps only when the task covers 
 | Status chart palettes | Most StatusBadge on SEMANTIC_BADGE | All semantic tokens |
 | Automated tests | Broad onboard + module E2E; responsive Work/public smoke | Remaining write flows; responsive depth (platform `md` nav, Reports/Setup builders) — `mms-ui-ux-design.mdc` §7 |
 | Global a11y | Partial | WCAG baseline on new UI |
-| Report drill-down / saved reports | Partial (Contacts + several modules) | Remaining niche panels + per-module saved logic |
+| Report drill-down / saved reports | Contacts on typed `saved_reports` + share scopes; other modules vary | Remaining niche panels + per-module drill-down parity — `mms-reports.mdc` |
 | Background job queue | Async workers + tray exports | Dedicated Redis/worker for multi-instance |
 | Secure HTTP headers / CSP | Partial | Helmet + SPA-safe CSP — `mms-auth-security.mdc` |
 | React Compiler / memo hygiene | Ad-hoc memo still appears | Compiler-first — `antigravity-global.mdc` |
 | Query-first reports | Some live-collection panels remain | Server aggregates + Query — `mms-reports.mdc` |
-| FORCE RLS on new tables | Messaging FORCE RLS; older tables may vary | Composite PK + RLS + FORCE — `mms-data-layer.mdc` |
+| Document-store settings / prefs | Prefs, field config, lookup lists still in `objects` | Prefer typed tables + FORCE RLS for new secrets / shareable presets — `mms-data-layer.mdc` |
+| Full SQL pagination for JSONB entities | Soft-delete filtered in SQL; search/sort still in-memory for contacts | Push page/filter into SQL where indexes allow — `mms-data-layer.mdc` |
 
 ## Do not reintroduce (themes)
 
@@ -40,3 +41,9 @@ Keep these regressions out of new work (details historically resolved — do not
 - FormModal for entity forms; Modal for confirm/preview; Design-system primitives + semantic tokens
 - Messaging: soft-archive log clear; composite PK + RLS; session-forced `userId`
 - Mobile-first shells: no page-level horizontal overflow; 44×44 touch floors on primitives; tenant nav collapse `< lg`; platform nav collapse `< md`; tables in `overflow-x-auto` — `mms-ui-ux-design.mdc` §7
+- **FORCE RLS** on new tenant tables (Messaging + Contacts/students/teachers/sessions + `contact_google_sync_credentials` / `saved_reports` pattern)
+- **OAuth / long-lived secrets** in FORCE-RLS tenant tables — never in unscoped `objects` KV (legacy `contact_google_sync_by_user` is strip-only)
+- **Client soft-delete fields** on create/update bodies — strip via write schema + `stripContactClientSoftDeleteFields`; only dedicated soft-delete helpers set them
+- **Server-persisted imports** must not be re-upserted from the FE after bulkSave (invalidate Query keys only)
+- Contacts saved reports live in typed `saved_reports` (`category: 'contacts'`); do not resurrect `contacts_saved_reports` object writes
+- Typed `deleted_at` is the SQL soft-delete source of truth for list filters; do not rely on JSONB `deletedAt` alone

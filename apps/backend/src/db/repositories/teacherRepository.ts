@@ -4,6 +4,7 @@ import { createGenericRepository } from './genericRepository.js';
 
 const repo = createGenericRepository<Teacher, typeof teachers>(teachers, {
   conflictTarget: [teachers.workspaceSubdomain, teachers.id],
+  syncDeletedAtColumn: true,
 });
 
 export const listTeachersByWorkspace = repo.listByWorkspace;

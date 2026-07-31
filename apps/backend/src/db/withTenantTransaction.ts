@@ -3,6 +3,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as schema from './schema.js';
 import { getDb } from './dbClient.js';
 import { activeDb, getRootDb } from './dbConnection.js';
+import { getRequestUserId } from '../lib/tenantContext.js';
 
 type AppDb = NodePgDatabase<typeof schema>;
 
@@ -15,6 +16,9 @@ async function applyTenantRls(tx: AppDb, workspaceSubdomain: string | null): Pro
     await tx.execute(sql`SELECT set_config('app.rls_bypass', 'on', true)`);
     await tx.execute(sql`SELECT set_config('app.current_tenant', '', true)`);
   }
+
+  const userId = getRequestUserId();
+  await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId ?? ''}, true)`);
 }
 
 /**

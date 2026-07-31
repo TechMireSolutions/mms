@@ -77,13 +77,18 @@ describe('contactService emergency reciprocal mapping', () => {
   });
 
   it('returns only deleted contacts for trash pages', async () => {
-    mockListContactsByWorkspace.mockResolvedValue([
-      contact({ id: 'active' }),
-      contact({ id: 'deleted', deletedAt: '2026-07-27T00:00:00.000Z' }),
-    ]);
+    mockListContactsByWorkspace.mockImplementation((_tenant: string, options?: { deleted?: string }) => {
+      if (options?.deleted === 'deleted') {
+        return Promise.resolve([
+          contact({ id: 'deleted', deletedAt: '2026-07-27T00:00:00.000Z' }),
+        ]);
+      }
+      return Promise.resolve([contact({ id: 'active' })]);
+    });
 
     const page = await loadContactsPage({ page: 1, limit: 50, includeDeleted: true });
 
+    expect(mockListContactsByWorkspace).toHaveBeenCalledWith('demo', { deleted: 'deleted' });
     expect(page.contacts.map((entry) => entry.id)).toEqual(['deleted']);
     expect(page.total).toBe(1);
   });
@@ -613,5 +618,60 @@ describe('contactService emergency reciprocal mapping', () => {
         emergencyContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
       }),
     ]));
+  });
+
+  it('merges PUT updates onto the existing contact without wiping collections', async () => {
+    mockFindContactById.mockResolvedValue(
+      contact({
+        id: 'a',
+        firstName: 'Ahmed',
+        phones: [{ label: 'Mobile', number: '3001234567', countryCode: '+92', isPrimary: true }],
+        emails: [{ label: 'Home', address: 'ahmed@example.com' }],
+        notes: 'Keep me',
+      }),
+    );
+
+    await updateContactById('a', {
+      id: 'a',
+      firstName: 'Ali',
+      name: 'Ali',
+      lastName: '',
+      emergencyContacts: [],
+      relationships: [],
+    } as Contact);
+
+    expect(mockSaveContact).toHaveBeenCalledWith(
+      'demo',
+      expect.objectContaining({
+        id: 'a',
+        firstName: 'Ali',
+        phones: [expect.objectContaining({ countryCode: '+92', number: '3001234567' })],
+        emails: [{ label: 'Home', address: 'ahmed@example.com' }],
+        notes: 'Keep Me',
+      }),
+    );
+  });
+
+  it('strips client soft-delete fields from prepare/upsert payloads', async () => {
+    mockFindContactById.mockResolvedValue(null);
+
+    await upsertContact(
+      contact({
+        id: 'a',
+        firstName: 'Ahmed',
+        deletedAt: '2026-01-01T00:00:00.000Z',
+        deletedBy: 'attacker',
+        deletionReason: 'forged',
+      }),
+    );
+
+    expect(mockSaveContact).toHaveBeenCalledWith(
+      'demo',
+      expect.not.objectContaining({
+        deletedAt: '2026-01-01T00:00:00.000Z',
+        deletedBy: 'attacker',
+        deletionReason: 'forged',
+      }),
+    );
   });
 });

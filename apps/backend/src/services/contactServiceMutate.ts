@@ -1,6 +1,9 @@
 import {
   applyTitleCaseToContact,
+  mergeContacts as mergeContactRecords,
+  normalizeToE164,
   parsePhoneNumber,
+  stripContactClientSoftDeleteFields,
   stripContactRetiredClassificationFields,
   type Contact,
   type User,
@@ -20,6 +23,34 @@ import {
 import {
   loadContactRuntimeDefaults,
 } from './contactServiceLoad.js';
+
+export {
+  CONTACT_CLIENT_SOFT_DELETE_KEYS as CLIENT_SOFT_DELETE_KEYS,
+} from '@mms/shared';
+
+export function stripClientSoftDeleteFields(contact: Contact): Contact {
+  return stripContactClientSoftDeleteFields(contact as unknown as Record<string, unknown>) as Contact;
+}
+
+export class ContactPermissionError extends Error {
+  readonly code = 'forbidden' as const;
+
+  constructor(message = 'Permission denied') {
+    super(message);
+    this.name = 'ContactPermissionError';
+  }
+}
+
+/** Merge a client patch onto an existing contact, ignoring undefined keys. */
+export function mergeContactPatch(existing: Contact, patch: Contact): Contact {
+  const next: Contact = { ...existing };
+  for (const [key, value] of Object.entries(patch) as [keyof Contact, Contact[keyof Contact]][]) {
+    if (value !== undefined) {
+      (next as Record<string, unknown>)[key as string] = value;
+    }
+  }
+  return next;
+}
 
 export async function normalizeContactPhones(contact: Contact): Promise<Contact> {
   let phones = contact.phones;
@@ -43,7 +74,9 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
     phones: phones.map((phone) => {
       const fallbackCode = phone.countryCode || defaultPhoneCountryCode;
       const trimmedNumber = (phone.number || '').trim();
-      const parsed = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
+      const parsedRaw = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
+      const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
+      const parsed = parsePhoneNumber(e164, parsedRaw.countryCode, knownCodes);
       return {
         ...phone,
         countryCode: parsed.countryCode,
@@ -54,7 +87,8 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
 }
 
 export async function prepareContactRecord(contact: Contact, id?: string | number): Promise<Contact> {
-  const withPhones = await normalizeContactPhones(contact);
+  const stripped = stripClientSoftDeleteFields(contact);
+  const withPhones = await normalizeContactPhones(stripped);
   const resolvedId = id ?? withPhones.id ?? `temp-${Date.now()}`;
   const titled = applyTitleCaseToContact({ ...withPhones, id: resolvedId }) as Contact;
   return stripContactRetiredClassificationFields({ ...titled }) as Contact;
@@ -76,8 +110,7 @@ export async function upsertContact(
   return runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
-    const contactWithId = await prepareContactRecord(contact, contact.id);
-    const existing = await findContactById(tenant, String(contactWithId.id));
+    const existing = await findContactById(tenant, String(contact.id ?? ''));
     const created = !existing;
     const restoredFromDelete = existing && Boolean(existing.deletedAt);
 
@@ -86,19 +119,24 @@ export async function upsertContact(
 
     if (restoredFromDelete) {
       if (explicitCanRestore === false) {
-        throw new Error('Permission denied: Restoring soft-deleted contacts requires delete permissions');
+        throw new ContactPermissionError('Restoring soft-deleted contacts requires delete permissions');
       }
       if (user && !canDeleteContacts(user)) {
-        throw new Error('Permission denied: Restoring soft-deleted contacts requires delete permissions');
+        throw new ContactPermissionError('Restoring soft-deleted contacts requires delete permissions');
       }
     }
 
-    let saved: Contact;
-    if (created) {
-      saved = contactWithId;
-    } else {
-      saved = { ...existing, ...contactWithId, deletedAt: undefined, deletedBy: undefined };
-    }
+    const stripped = stripClientSoftDeleteFields(contact);
+    const mergedInput = existing ? mergeContactPatch(existing, stripped) : stripped;
+    const contactWithId = await prepareContactRecord(mergedInput, contact.id ?? existing?.id);
+    const saved: Contact = created
+      ? contactWithId
+      : {
+          ...contactWithId,
+          deletedAt: undefined,
+          deletedBy: undefined,
+          deletionReason: undefined,
+        };
 
     await saveContact(tenant, saved);
     await applyContactRelationshipInference(tenant, saved);
@@ -115,11 +153,68 @@ export async function updateContactById(id: string, contact: Contact): Promise<C
     if (!existing || existing.deletedAt) {
       return null;
     }
-    const contactWithId = await prepareContactRecord({ ...contact, id }, id);
-    await saveContact(tenant, contactWithId);
-    await applyContactRelationshipInference(tenant, contactWithId);
+    const stripped = stripClientSoftDeleteFields({ ...contact, id });
+    const contactWithId = await prepareContactRecord(mergeContactPatch(existing, stripped), id);
+    const saved: Contact = {
+      ...contactWithId,
+      id,
+      deletedAt: existing.deletedAt,
+      deletedBy: existing.deletedBy,
+      deletionReason: existing.deletionReason,
+    };
+    await saveContact(tenant, saved);
+    await applyContactRelationshipInference(tenant, saved);
     await invalidateDuplicateScanCache();
-    return contactWithId;
+    return saved;
+  });
+}
+
+export async function mergeContactsById(
+  keepId: string,
+  deleteId: string,
+  mergedInput: Contact | undefined,
+  deletedBy: string,
+): Promise<Contact> {
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) throw new Error('Tenant context required');
+    if (String(keepId) === String(deleteId)) {
+      throw new Error('Cannot merge a contact into itself');
+    }
+
+    const keep = await findContactById(tenant, keepId);
+    const other = await findContactById(tenant, deleteId);
+    if (!keep || keep.deletedAt) throw new Error('Keep contact not found');
+    if (!other || other.deletedAt) throw new Error('Delete contact not found');
+
+    const mergedSource = mergedInput
+      ? { ...mergedInput, id: keepId }
+      : mergeContactRecords(keep, other);
+    const prepared = await prepareContactRecord(mergedSource, keepId);
+    const saved: Contact = {
+      ...keep,
+      ...prepared,
+      id: keepId,
+      deletedAt: undefined,
+      deletedBy: undefined,
+      deletionReason: undefined,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await saveContact(tenant, saved);
+    await applyContactRelationshipInference(tenant, saved);
+
+    const now = new Date().toISOString();
+    await saveContact(tenant, {
+      ...other,
+      deletedAt: now,
+      deletedBy,
+      deletionReason: `Merged into ${keepId}`,
+      updatedAt: now,
+    });
+
+    await invalidateDuplicateScanCache();
+    return saved;
   });
 }
 

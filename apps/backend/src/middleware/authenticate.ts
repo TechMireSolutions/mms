@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { User } from '@mms/shared';
 import { isWorkspaceEnabled } from '@mms/shared';
-import { getRequestTenant } from '../lib/tenantContext.js';
+import { bindRequestUserId, getRequestTenant } from '../lib/tenantContext.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
 
@@ -62,4 +62,6 @@ export async function authenticateTenant(
     });
     return;
   }
+
+  bindRequestUserId(user.id ? String(user.id) : null);
 }

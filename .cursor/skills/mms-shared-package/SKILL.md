@@ -31,8 +31,9 @@ packages/shared/src/
 | Do | Don't |
 |----|-------|
 | Named barrel exports | Subpath imports |
-| Shared Zod DTOs used by FE + BE | Fork the same shape in both apps |
-| `formatDate` / `formatMoney` / `parsePhoneNumber` | Ad-hoc `toLocale*` / currency prefixes |
+| Shared Zod DTOs used by FE + BE (write vs read when needed) | Fork the same shape in both apps |
+| `formatDate` / `formatMoney` / `parsePhoneNumber` / `normalizeToE164` | Ad-hoc `toLocale*` / currency prefixes |
+| Soft-delete strip helpers (`stripContactClientSoftDeleteFields`) | Accepting client `deletedAt` on write DTOs |
 | Pure functions only | React, Fastify, DB, `localStorage`, DOM |
 
 ## Move logic from app

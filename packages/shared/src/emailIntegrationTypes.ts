@@ -12,7 +12,9 @@ export const USER_EXPORT_ARTIFACTS_OBJECT_KEY = 'user_export_artifacts' as const
 /** Dedup-scan cache — ephemeral, not restorable. */
 export const CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY = 'contacts_duplicate_scan_cache' as const;
 
-/** Google Contacts OAuth tokens/secrets — never leave the server via backup. */
+/** Google Contacts OAuth tokens/secrets — legacy objects key only.
+ * Runtime storage is `contact_google_sync_credentials` (FORCE RLS).
+ * Kept in SERVER_ONLY_OBJECT_KEYS so old backups still strip this object. */
 export const CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY = 'contact_google_sync_by_user' as const;
 
 /**

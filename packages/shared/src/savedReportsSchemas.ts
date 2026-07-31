@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const CONTACTS_SAVED_REPORT_CATEGORY = 'contacts' as const;
+
 /** Report categories supported by the generic saved-reports REST resource. */
 export const GENERIC_SAVED_REPORT_CATEGORIES = [
   'students',
@@ -19,11 +21,14 @@ export const genericSavedReportCategorySchema = z.enum(GENERIC_SAVED_REPORT_CATE
 /** A category supported by the generic saved-reports REST resource. */
 export type GenericSavedReportCategory = z.infer<typeof genericSavedReportCategorySchema>;
 
+/** Categories persisted in `saved_reports` (includes Contacts share presets). */
+export type PersistedSavedReportCategory = GenericSavedReportCategory | typeof CONTACTS_SAVED_REPORT_CATEGORY;
+
 /** Validates a persisted generic saved-report preset returned by the API. */
 export const genericSavedReportSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(200),
-  category: genericSavedReportCategorySchema,
+  category: z.union([genericSavedReportCategorySchema, z.literal(CONTACTS_SAVED_REPORT_CATEGORY)]),
   filters: z.record(z.string(), z.unknown()),
   lastRun: z.iso.datetime(),
   createdBy: z.string().min(1),

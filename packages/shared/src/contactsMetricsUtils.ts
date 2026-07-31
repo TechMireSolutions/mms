@@ -1,7 +1,7 @@
 import type { Contact, ContactPreferences, FieldConfig } from './contactTypes.js';
 import { isContactDeleted } from './contactSoftDelete.js';
 import { findContactDuplicatePairs } from './contactDuplicateUtils.js';
-import { calculateProfileCompleteness } from './contactProfileCompleteness.js';
+import { isContactProfileIncomplete } from './contactProfileCompleteness.js';
 import { hasWhatsApp } from './utils.js';
 
 /** Default period for "new records" command-centre metrics (globle1 §2.1). */
@@ -30,6 +30,16 @@ export function countContactsCreatedSince(contacts: Contact[], days: number): nu
   }).length;
 }
 
+/** Pairs that share a phone and/or email — name-only collisions are excluded from command metrics. */
+export function countActionableDuplicatePairs(
+  contacts: Contact[],
+  preferences: Parameters<typeof findContactDuplicatePairs>[1] = {},
+): number {
+  return findContactDuplicatePairs(contacts, preferences).filter(
+    (pair) => pair.reasonKey !== 'name',
+  ).length;
+}
+
 /** Server/client command-centre metric bundle (globle1 §2.1). */
 export function computeContactsCommandMetrics(
   contacts: Contact[],
@@ -55,7 +65,12 @@ export function computeContactsCommandMetrics(
     total: activeContacts.length,
     newThisPeriod: countContactsCreatedSince(activeContacts, periodDays),
     whatsappCount: activeContacts.filter((contact) => hasWhatsApp(contact)).length,
-    incompleteCount: activeContacts.filter((contact) => calculateProfileCompleteness(contact, options.fieldConfig) < 100).length,
-    duplicatePairCount: findContactDuplicatePairs(activeContacts, options.duplicateDetectionPreferences ?? {}).length,
+    incompleteCount: activeContacts.filter((contact) =>
+      isContactProfileIncomplete(contact, options.fieldConfig),
+    ).length,
+    duplicatePairCount: countActionableDuplicatePairs(
+      activeContacts,
+      options.duplicateDetectionPreferences ?? {},
+    ),
   };
 }

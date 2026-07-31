@@ -63,7 +63,7 @@ export function ContactBasicAvatarSection({
 
       <div className="text-center sm:text-start flex-1 min-w-0">
         <h3 className="text-base font-bold text-foreground truncate">
-          {contactDraft.name || t("contacts.form.createNewContact")}
+          {contactDraft.name || t("contacts.form.draftHeading")}
         </h3>
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
           {contactDraft.gender && contactDraft.gender !== "unspecified" && (

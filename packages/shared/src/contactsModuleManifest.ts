@@ -1,5 +1,6 @@
 import type { Permission } from './permissions.js';
 import { DEFAULT_SETTINGS_SUB_TABS } from './contactTypes.js';
+import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
 import { z } from 'zod';
 
 export const phoneNumberSchema = z
@@ -98,6 +99,19 @@ export const contactRecordSchema = z
   })
   .passthrough();
 
+/** Client write payloads — soft-delete metadata is set only by dedicated helpers. */
+export const contactWriteSchema = z.preprocess(
+  (raw) =>
+    raw && typeof raw === 'object' && !Array.isArray(raw)
+      ? stripContactClientSoftDeleteFields(raw as Record<string, unknown>)
+      : raw,
+  contactRecordSchema.omit({
+    deletedAt: true,
+    deletedBy: true,
+    deletionReason: true,
+  }),
+);
+
 export const contactListSchema = z.array(contactRecordSchema);
 
 
@@ -112,6 +126,7 @@ export const CONTACTS_MODULE_MANIFEST = {
   configObjectKey: 'contact_field_config',
   preferencesObjectKey: 'contact_preferences',
   columnPreferencesObjectKey: 'contact_user_column_preferences',
+  /** @deprecated Legacy objects key — migrated to typed `saved_reports` (category `contacts`). Do not allow document-store writes. */
   savedReportsObjectKey: 'contacts_saved_reports',
   restBasePath: '/api/contacts',
   analyticsCategory: 'contacts',

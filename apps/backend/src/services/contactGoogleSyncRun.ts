@@ -1,10 +1,16 @@
 import type { Contact } from '@mms/shared';
 import { normalizeToE164, parsePhoneNumber } from '@mms/shared';
-import { loadContactRuntimeDefaults, loadContacts, type ContactRuntimeDefaults } from './contactService.js';
+import {
+  loadContactRuntimeDefaults,
+  loadContacts,
+  prepareContactRecord,
+  type ContactRuntimeDefaults,
+} from './contactService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { bulkSaveContacts } from '../db/repositories/contactRepository.js';
 import { getContactGoogleSyncConfig } from './contactGoogleSyncConfig.js';
 import { GoogleSyncError, refreshGoogleAccessToken } from './contactGoogleSyncOAuth.js';
+import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
 
 const GOOGLE_PEOPLE_FIELDS =
   'names,emailAddresses,phoneNumbers,organizations,birthdays,addresses,biographies';
@@ -155,7 +161,11 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
 
   const tenant = getRequestTenant();
   if (tenant && fresh.length > 0) {
-    await bulkSaveContacts(tenant, fresh);
+    const prepared = await Promise.all(
+      fresh.map((contact) => prepareContactRecord(contact, contact.id)),
+    );
+    await bulkSaveContacts(tenant, prepared);
+    await invalidateDuplicateScanCache();
   }
 
   return {

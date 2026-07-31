@@ -14,10 +14,14 @@ export {
 } from './contactServiceLoad.js';
 export type { UpsertContactOptions } from './contactServiceMutate.js';
 export {
+  ContactPermissionError,
   normalizeContactPhones,
   prepareContactRecord,
+  stripClientSoftDeleteFields,
+  mergeContactPatch,
   upsertContact,
   updateContactById,
+  mergeContactsById,
   restoreContactById,
   bulkRestoreContacts,
   softDeleteContactById,

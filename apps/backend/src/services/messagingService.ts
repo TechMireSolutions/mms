@@ -163,14 +163,14 @@ export async function loadMessagingRecipients(
   const pageSize = query.pageSize ?? 50;
   const search = query.search?.trim() || undefined;
 
-  const allContacts = filterActiveContacts(await listContactsByWorkspace(subdomain));
+  const allContacts = filterActiveContacts(await listContactsByWorkspace(subdomain, { deleted: 'active' }));
   let scoped: Contact[] = allContacts;
 
   if (role === 'students') {
-    const students = (await listStudentsByWorkspace(subdomain)).filter((row) => !row.deletedAt);
+    const students = await listStudentsByWorkspace(subdomain, { deleted: 'active' });
     scoped = orderContactsByIds(collectStudentLinkedContactIds(students), allContacts);
   } else if (role === 'teachers') {
-    const teachers = (await listTeachersByWorkspace(subdomain)).filter((row) => !row.deletedAt);
+    const teachers = await listTeachersByWorkspace(subdomain, { deleted: 'active' });
     scoped = orderContactsByIds(collectTeacherLinkedContactIds(teachers), allContacts);
   } else if (role === 'staff') {
     const users = await listTenantUsersByWorkspace(subdomain);
@@ -179,8 +179,8 @@ export async function loadMessagingRecipients(
       .map((user) => user.contactId as string | number);
     scoped = orderContactsByIds(staffIds, allContacts);
   } else if (role === 'contacts') {
-    const students = (await listStudentsByWorkspace(subdomain)).filter((row) => !row.deletedAt);
-    const teachers = (await listTeachersByWorkspace(subdomain)).filter((row) => !row.deletedAt);
+    const students = await listStudentsByWorkspace(subdomain, { deleted: 'active' });
+    const teachers = await listTeachersByWorkspace(subdomain, { deleted: 'active' });
     const excluded = new Set([
       ...collectStudentLinkedContactIds(students),
       ...collectTeacherLinkedContactIds(teachers),

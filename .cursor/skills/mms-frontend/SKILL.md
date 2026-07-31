@@ -46,7 +46,9 @@ const { students } = await apiJson<{ students: Student[] }>('/api/students');
 ```
 
 - Cookie session via `credentials: 'include'` — no `localStorage` token reads in `apiClient`
-- Exception: third-party URLs (Google OAuth in `ContactSyncPanel.tsx`)
+- Exception: third-party URLs (Google OAuth popup in Contacts sync UI)
+- After a server route already persists imports (`bulkSave`), **invalidate** Query keys only — do not loop client `upsert` for the same rows (Contacts Google sync)
+- Route / tier / SubTabBar scroll: shared helpers (`scrollDocumentToTop`, `useScrollSurfaceOnChange`) — do not fork per-page `window.scrollTo`
 
 ## Data layer decision
 
@@ -149,7 +151,9 @@ Re-export from the original entry file for stable imports.
 | Contacts `uiStrings` | Legacy — migrate to `t('contacts.*')` when touching |
 | Soft-delete FE trash | Remaining REST modules without Contacts/Students/Teachers parity |
 | Inline status colours | Chart color maps — KPI/PinnedWidgets palettes |
-| Report drill-down / saved reports | Contacts-mature; other modules lag |
+| Report drill-down / saved reports | Contacts on typed `saved_reports`; other modules lag |
+| Document-store prefs / field config | Still `objects` for many settings; new secrets use FORCE-RLS tables |
+| Full SQL pagination (JSONB entities) | Soft-delete SQL-filtered; search/sort may still be in-memory |
 
 Full register: `mms-migration-status.mdc`. Skill: `mms-migration-fixes`.
 

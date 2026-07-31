@@ -5,19 +5,19 @@ import {
   CONTACTS_GOOGLE_SYNC_QUERY_KEY,
 } from "@/tenant/features/contacts/hooks/useContacts";
 import { useGoogleContactsOAuth } from "@/tenant/features/contacts/hooks/useGoogleContactsOAuth";
+import { useInvalidateContactsQueries } from "@/tenant/features/contacts/hooks/useContactMutations";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type Contact, type ContactGoogleSyncConfigClient } from "@mms/shared";
+import { type ContactGoogleSyncConfigClient } from "@mms/shared";
 import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/queryClient";
 
 export function useGoogleContactsSync({
-  onImport,
   canWrite = true,
 }: {
-  onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }) {
   const { t } = useTranslation();
+  const invalidateContacts = useInvalidateContactsQueries();
   const { data: serverConfig, isLoading: configLoading } = useContactGoogleSyncConfig();
   const { saveConfig, logSyncAudit, exchangeOAuth, runGoogleSync } = useContactGoogleSyncMutations();
   const [config, setConfig] = useState<ContactGoogleSyncConfigClient>({});
@@ -75,7 +75,7 @@ export function useGoogleContactsSync({
       setError("");
       void logSyncAudit.mutateAsync({ action: "credentials_saved" });
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : String(saveError));
+      setError(saveError instanceof Error ? saveError.message : t("contacts.sync.oauthError"));
     }
   };
 
@@ -86,16 +86,27 @@ export function useGoogleContactsSync({
     setError("");
     try {
       const result = await runGoogleSync.mutateAsync();
-      await onImport(result.contacts);
+      // Server already persisted imports via bulkSave — invalidate, do not re-upsert.
+      invalidateContacts();
+      await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
       setSyncResult({ total: result.total, imported: result.imported, skipped: result.skipped });
+      void logSyncAudit.mutateAsync({
+        action: "sync_complete",
+        imported: result.imported,
+        total: result.total,
+        skipped: result.skipped,
+      });
     } catch (syncError) {
       if (isApiError(syncError) && syncError.type === "session_expired") {
         await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
         setError(t("contacts.sync.sessionExpired"));
         return;
       }
-      const message = syncError instanceof Error ? syncError.message : String(syncError);
-      setError(message);
+      if (isApiError(syncError) && syncError.type === "oauth_error") {
+        setError(syncError.message || t("contacts.sync.oauthError"));
+        return;
+      }
+      setError(syncError instanceof Error ? syncError.message : t("contacts.sync.oauthError"));
     } finally {
       setSyncing(false);
     }
@@ -117,7 +128,7 @@ export function useGoogleContactsSync({
       setShowAuthCode(false);
       setAuthCode("");
     } catch (disconnectError) {
-      setError(disconnectError instanceof Error ? disconnectError.message : String(disconnectError));
+      setError(disconnectError instanceof Error ? disconnectError.message : t("contacts.sync.oauthError"));
     }
   };
 

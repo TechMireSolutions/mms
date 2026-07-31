@@ -56,3 +56,10 @@ Chart segment / summary row → Work directory with equivalent filters (URL/sear
 ## Saved reports
 
 Save **report logic** (filters, columns, aggregates), not a data snapshot. Re-run against current authorised data. If a saved field/tab is archived, show an explicit error — do not fail silently.
+
+| Pattern | Storage | API |
+|---------|---------|-----|
+| Generic modules | Typed `saved_reports` + FORCE RLS | `/api/saved-reports?category=` (`GENERIC_SAVED_REPORT_CATEGORIES`) |
+| Contacts (share scopes) | Same table, `category: 'contacts'`; share fields inside `filters` JSONB | `/api/contacts/saved-reports` — **not** generic category enum; **not** `objects` key `contacts_saved_reports` |
+
+Do not add `'contacts'` to the generic saved-reports public category enum without also implementing share-aware list/delete semantics.

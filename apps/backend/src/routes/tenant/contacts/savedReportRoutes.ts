@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST, roleHasPermission } from '@mms/shared';
 import {
   createContactsSavedReport,
   deleteContactsSavedReport,
@@ -31,7 +32,10 @@ export const contactSavedReportRoutes: FastifyPluginAsync = async (fastify) => {
     const parsed = parseRequest(contactsSavedReportCreateSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const scope = parsed.data.shareScope ?? 'private';
-    if (scope === 'global' && user.role !== 'admin') {
+    if (
+      scope === 'global' &&
+      !roleHasPermission(user.role, CONTACTS_MODULE_MANIFEST.permissions.setupWrite)
+    ) {
       return sendForbidden(reply);
     }
     if (scope === 'users' && !(parsed.data.sharedWithUserIds?.length)) {

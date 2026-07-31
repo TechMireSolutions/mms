@@ -1,20 +1,22 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { BackgroundJobRecord, User } from '@mms/shared';
-import { CONTACTS_MODULE_MANIFEST, roleHasPermission } from '@mms/shared';
+import type { BackgroundJobRecord, Contact, User } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST, getDisplayName, roleHasPermission } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
-import { sendForbidden } from '../../../lib/httpErrors.js';
+import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { enqueueBackgroundJob } from '../../../services/backgroundJobWorkerService.js';
-import { canReadContacts, canWriteContacts } from '../../../services/rbacService.js';
+import { canReadContacts, canWriteContacts, canDeleteContacts } from '../../../services/rbacService.js';
+import { mergeContactsById } from '../../../services/contactService.js';
 import {
   contactExportAuditSchema,
   contactMergeAuditSchema,
+  contactMergeBodySchema,
   contactSetupAuditSchema,
   contactsCsvExportBodySchema,
 } from '../../../validation/contactSchemas.js';
-import { auditContact } from './contactRouteHelpers.js';
+import { auditContact, sanitizeOneForUser } from './contactRouteHelpers.js';
 
-/** Contact CSV export queue and audit logging routes. */
+/** Contact CSV export queue, merge, and audit logging routes. */
 export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/export/csv', async (request, reply) => {
     const user = request.user as User;
@@ -63,6 +65,45 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ success: true });
   });
 
+  fastify.post('/merge', {
+    bodyLimit: 1048576,
+    schema: { body: { type: 'object', additionalProperties: true } },
+  }, async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteContacts(user) || !canDeleteContacts(user)) {
+      return sendForbidden(reply);
+    }
+
+    const parsed = parseRequest(contactMergeBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+    const keepId = String(parsed.data.keepId);
+    const deleteId = String(parsed.data.deleteId);
+    try {
+      const merged = await mergeContactsById(
+        keepId,
+        deleteId,
+        parsed.data.merged as Contact | undefined,
+        String(user.id),
+      );
+      await auditContact(
+        user,
+        'contact.merge',
+        `Merged contact ${deleteId} into ${keepId} → "${getDisplayName(merged)}"`,
+        keepId,
+      );
+      return reply.send({
+        success: true,
+        contact: await sanitizeOneForUser(merged, user),
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error && /not found/i.test(error.message)) {
+        return sendNotFound(reply, error.message);
+      }
+      return sendDatabaseError(reply, 'Failed to merge contacts', error);
+    }
+  });
+
   fastify.post('/merge-audit', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteContacts(user)) return sendForbidden(reply);
@@ -84,7 +125,9 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/setup-audit', async (request, reply) => {
     const user = request.user as User;
-    if (!roleHasPermission(user.role, CONTACTS_MODULE_MANIFEST.permissions.setupWrite)) return sendForbidden(reply);
+    if (!roleHasPermission(user.role, CONTACTS_MODULE_MANIFEST.permissions.setupWrite)) {
+      return sendForbidden(reply);
+    }
 
     const parsed = parseRequest(contactSetupAuditSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);

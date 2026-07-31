@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import { loadServerConfig } from '../config/serverConfig.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
+import { getRequestTenant, getRequestUserId } from '../lib/tenantContext.js';
 import { getDb, setDb } from './dbClient.js';
 import * as schema from './schema.js';
 
@@ -90,6 +90,8 @@ async function runTransaction<T>(cb: () => Promise<T>, readSnapshot: boolean): P
     } else {
       await tx.execute(sql`SELECT set_config('app.rls_bypass', 'on', true)`);
     }
+    const userId = getRequestUserId();
+    await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId ?? ''}, true)`);
     return await txStorage.run(tx, cb);
   }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
 }

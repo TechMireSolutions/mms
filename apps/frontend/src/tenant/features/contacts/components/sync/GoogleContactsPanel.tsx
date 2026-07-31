@@ -5,7 +5,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type Contact } from "@mms/shared";
 import { useGoogleContactsSync } from "@/tenant/features/contacts/hooks/useGoogleContactsSync";
 import {
   GoogleContactsConnectStep,
@@ -15,16 +14,15 @@ import {
 } from "@/tenant/features/contacts/components/sync/GoogleContactsPanelSections";
 
 export interface GoogleContactsPanelProps {
-  onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }
 
 /**
  * GoogleContactsPanel component to configure and run Google Contacts synchronization.
  */
-export function GoogleContactsPanel({ onImport, canWrite = true }: GoogleContactsPanelProps): React.JSX.Element {
+export function GoogleContactsPanel({ canWrite = true }: GoogleContactsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const sync = useGoogleContactsSync({ onImport, canWrite });
+  const sync = useGoogleContactsSync({ canWrite });
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">

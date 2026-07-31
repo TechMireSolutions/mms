@@ -36,7 +36,7 @@ export function ContactBasicTab({
   return (
     <div className="space-y-4 text-start">
       <SectionCard
-        title={t("contacts.form.createNewContact")}
+        title={t("contacts.form.tabBasic")}
         icon={User}
         accentColor="primary"
       >

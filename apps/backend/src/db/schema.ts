@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial, primaryKey, foreignKey } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import type { GenericSavedReportCategory, PlatformRole } from '@mms/shared';
+import type { PersistedSavedReportCategory, PlatformRole } from '@mms/shared';
 
 export const collections = pgTable('collections', {
   name: text('name').primaryKey(),
@@ -108,6 +108,19 @@ export const contacts = pgTable('contacts', {
   index('contacts_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('contacts_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('contacts_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+/** Per-user Google Contacts OAuth credentials — never stored in objects KV. */
+export const contactGoogleSyncCredentials = pgTable('contact_google_sync_credentials', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  clientId: text('client_id'),
+  clientSecret: text('client_secret'),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
 ]);
 
 export const students = pgTable('students', {
@@ -472,11 +485,11 @@ export const customTabs = pgTable('custom_tabs', {
   index('custom_tabs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
-/** Personal report presets for non-Contacts module report categories. */
+/** Report presets — generic modules + Contacts (`category = 'contacts'`). */
 export const savedReports = pgTable('saved_reports', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  category: text('category').$type<GenericSavedReportCategory>().notNull(),
+  category: text('category').$type<PersistedSavedReportCategory>().notNull(),
   name: text('name').notNull(),
   filters: jsonb('filters').$type<Record<string, unknown>>().notNull(),
   lastRunAt: timestamp('last_run_at', { mode: 'date' }).notNull(),

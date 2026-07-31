@@ -50,6 +50,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] `enabled: isAuthenticated` on tenant REST hooks
 - [ ] Mutations invalidate affected queries (list + count keys)
 - [ ] No duplicate data path (Query mutations + parallel `saveCollection` for same write)
+- [ ] After server `bulkSave` imports (e.g. Google sync), invalidate only — do not re-upsert the same rows
 - [ ] Hybrid reads use `useXxxCollection()` — not raw `useLiveCollection` on REST pages
 
 ### UI / config
@@ -72,9 +73,11 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ### Soft delete (when entity supports it)
 - [ ] `DELETE` soft-deletes; `POST :id/restore` restores
-- [ ] List supports `includeDeleted`; Work default excludes deleted
+- [ ] List supports `includeDeleted`; Work default excludes deleted; BE SQL-filters `deleted_at`
+- [ ] Create/update write schemas strip client soft-delete fields
 - [ ] FE trash UI or documented intentional hard-delete / manifest variant
 - [ ] Soft-delete modules: trash toggle + restore omit Add/messaging in archive mode
+- [ ] Entity merge (if any) is atomic server endpoint — not FE dual-write
 
 ### Gold-standard module parity (`mms-module-architecture.mdc` §7)
 - [ ] Bulk PUT upsert-only — no `replaceForWorkspace` wipe on API write paths

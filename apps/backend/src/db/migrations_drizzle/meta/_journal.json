@@ -225,6 +225,20 @@
       "when": 1785366000000,
       "tag": "0031_saved_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1785476400000,
+      "tag": "0032_force_rls_contacts_persons",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1785476500000,
+      "tag": "0033_contacts_db_hardening",
+      "breakpoints": true
     }
   ]
 }

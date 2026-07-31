@@ -21,6 +21,8 @@ All frontend requests to backend resources must use `apiFetch` or `apiJson` from
 - **Session Transport**: Session states are managed entirely via browser cookies. The `apiClient` must include `credentials: 'include'`. Directly reading or parsing tokens via client `localStorage` is forbidden.
 - **REST Trajectory**: New features must implement resource-specific endpoints (e.g. `GET /api/students`, `POST /api/contacts`) instead of relying on the generic collections sync API.
 - **Data Types**: All data transfer objects (DTOs) and request body structures must be shared via the `@mms/shared` package.
+- **Write vs read schemas**: Prefer dedicated write schemas for create/update (strip server-owned fields such as soft-delete metadata) while response/list schemas may include them.
+- **Destructive merges**: Entity merge (e.g. Contacts) must be an atomic server transaction (`POST …/merge`) — ban FE-only dual delete+upsert for the durable write.
 
 ---
 
@@ -44,6 +46,7 @@ Apply the tenant hook to all protected workspace endpoints. Do not call raw `jwt
 1. Access token is verified from the httpOnly `mms_access` cookie or standard Bearer authorization header.
 2. Tenant subdomain resolved on the request matches the user's `workspaceSubdomain`.
 3. 2FA OTP verification is complete (`twoFactorVerified` is true).
+4. After success, bind `app.current_user_id` for the request (`bindRequestUserId`) so tenant transactions can attribute audit triggers.
 
 ---
 

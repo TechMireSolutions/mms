@@ -5,6 +5,7 @@ import { createGenericRepository } from './genericRepository.js';
 const repo = createGenericRepository<Contact, typeof contacts>(contacts, {
   updateStrategy: 'overwrite',
   conflictTarget: [contacts.workspaceSubdomain, contacts.id],
+  syncDeletedAtColumn: true,
 });
 
 export const listContactsByWorkspace = repo.listByWorkspace;

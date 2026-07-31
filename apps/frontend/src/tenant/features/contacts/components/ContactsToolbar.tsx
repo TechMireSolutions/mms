@@ -65,7 +65,7 @@ export default function ContactsToolbar({
   return (
     <div className="space-y-2.5">
       <div className="sr-only" role="status" aria-live="polite">
-        {shownCount != null ? t("contacts.selectedCount", { count: shownCount }) : ""}
+        {shownCount != null ? t("contacts.shownCount", { count: shownCount }) : ""}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">

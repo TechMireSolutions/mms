@@ -67,10 +67,12 @@ import {
 | GET | `/api/db/sync` | **Admin only** |
 | POST | `/api/db/sync` | **Admin only** |
 | GET/POST | `/api/db/collections/:name` | POST → `canWriteCollection` |
-| GET/POST | `/api/db/objects/:key` | POST → `canWriteObject`; server-only keys blocked |
+| GET/POST | `/api/db/objects/:key` | POST → `canWriteObject`; server-only keys blocked; obsolete keys must leave `ALLOWED_OBJECTS` after typed-table migrations |
 | POST | `/api/db/reset` | Admin — tenant-scoped minimal reseed |
 
 REST resources (pilots): `GET/POST/PUT/DELETE /api/students`, `/api/contacts`.
+
+**Do not** store long-lived OAuth secrets in `objects` — use FORCE-RLS tenant tables (`mms-data-layer.mdc`). Admin backup snapshots must not include credential tables.
 
 ## Add new collection (legacy path)
 

@@ -1,11 +1,9 @@
 import { useCallback } from "react";
 import type { Contact, AppTranslationKey } from "@mms/shared";
-import { getDisplayName } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
-import { safeAudit } from "@/tenant/features/contacts/hooks/useContactsCrudNotify";
 
 type NotifyBulkResult = (
   succeeded: number,
@@ -23,7 +21,7 @@ export function useContactsCrudWriteActions({
   handleError: (err: unknown, scope: string, messageKey?: AppTranslationKey) => void;
   notifyBulkResult: NotifyBulkResult;
 }) {
-  const { upsertContact, updateContact, deleteContact, logMergeAudit } = useContactMutations();
+  const { upsertContact, updateContact, mergeContacts: mergeContactsMutation } = useContactMutations();
 
   const saveContact = useCallback(
     async (contact: Contact, isNew: boolean): Promise<void> => {
@@ -44,16 +42,11 @@ export function useContactsCrudWriteActions({
   const mergeContacts = useCallback(
     async (keepId: string | number, deleteId: string | number, merged: Contact): Promise<void> => {
       try {
-        await updateContact.mutateAsync({ id: String(keepId), contact: merged });
-        await deleteContact.mutateAsync({ id: String(deleteId) });
-        safeAudit(
-          logMergeAudit.mutateAsync({
-            keepId,
-            deleteId,
-            mergedName: getDisplayName(merged),
-          }),
-          "contacts.merge_audit",
-        );
+        await mergeContactsMutation.mutateAsync({
+          keepId,
+          deleteId,
+          merged,
+        });
         notify.success(t("contacts.mergeSuccessTitle"), {
           description: t("contacts.mergeSuccessDesc"),
         });
@@ -62,7 +55,7 @@ export function useContactsCrudWriteActions({
         throw err;
       }
     },
-    [updateContact, deleteContact, logMergeAudit, t, handleError],
+    [mergeContactsMutation, t, handleError],
   );
 
   const importContacts = useCallback(

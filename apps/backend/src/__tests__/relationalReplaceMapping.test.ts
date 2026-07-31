@@ -89,6 +89,7 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
   it('covers every tenant business table that belongs in a full workspace backup', () => {
     // Keep this list in sync with apps/backend/src/db/schema.ts tenant tables.
     // Intentional non-backup tables: audit_log_entries, audit_logs, background_jobs,
+    // contact_google_sync_credentials (OAuth secrets — never snapshot),
     // plus platform/global tables (workspaces, platform_*, auth_artifacts, data_migrations).
     const tenantBusinessTables = [
       'tenant_users',

@@ -9,8 +9,6 @@ import {
   DEFAULT_ENABLED_TABS,
   DEFAULT_FORM_TABS,
   DEFAULT_REQUIRED_TABS,
-  filterActiveContacts,
-  isContactDeleted,
   paginateContacts,
   type Contact,
   type ContactsCommandMetricsSnapshot,
@@ -25,6 +23,7 @@ import {
 } from '@mms/shared';
 import { fetchCollection } from './dbSyncService.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
+import { loadContactPreferences } from './contactPreferencesService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listContactsByWorkspace,
@@ -43,21 +42,20 @@ export interface ContactRuntimeDefaults {
 export async function loadContacts(options?: { includeDeleted?: boolean }): Promise<Contact[]> {
   const tenant = getRequestTenant();
   if (!tenant) return [];
-  const contactsList = await listContactsByWorkspace(tenant);
-  return options?.includeDeleted ? contactsList : filterActiveContacts(contactsList);
+  const deleted = options?.includeDeleted ? 'deleted' : 'active';
+  return listContactsByWorkspace(tenant, { deleted });
 }
 
 export async function loadContactsPage(query: ContactsListQuery): Promise<ContactsListPageResult> {
   const tenant = getRequestTenant();
-  const all = await loadContacts({ includeDeleted: query.includeDeleted });
-  const scoped = query.includeDeleted ? all.filter(isContactDeleted) : all;
+  const scoped = await loadContacts({ includeDeleted: query.includeDeleted });
   const excludeIds = [...(query.excludeIds ?? [])];
   if (tenant && query.excludeLinkedModules?.includes('students')) {
-    const students = (await listStudentsByWorkspace(tenant)).filter((row) => !row.deletedAt);
+    const students = await listStudentsByWorkspace(tenant, { deleted: 'active' });
     excludeIds.push(...collectStudentLinkedContactIds(students));
   }
   if (tenant && query.excludeLinkedModules?.includes('teachers')) {
-    const teachers = (await listTeachersByWorkspace(tenant)).filter((row) => !row.deletedAt);
+    const teachers = await listTeachersByWorkspace(tenant, { deleted: 'active' });
     excludeIds.push(...collectTeacherLinkedContactIds(teachers));
   }
   const { excludeLinkedModules: _excludeLinkedModules, ...pageQuery } = query;
@@ -80,8 +78,14 @@ function metricsFieldConfig(fieldConfig: FieldConfig | null): FieldConfig {
 
 export async function loadContactsCommandMetrics(): Promise<ContactsCommandMetricsSnapshot> {
   const contacts = await loadContacts();
-  const fieldConfig = metricsFieldConfig(await loadContactFieldConfig());
-  return computeContactsCommandMetrics(contacts, { fieldConfig });
+  const [fieldConfig, preferences] = await Promise.all([
+    loadContactFieldConfig(),
+    loadContactPreferences(),
+  ]);
+  return computeContactsCommandMetrics(contacts, {
+    fieldConfig: metricsFieldConfig(fieldConfig),
+    duplicateDetectionPreferences: preferences ?? undefined,
+  });
 }
 
 function firstString(value: unknown): string {

@@ -28,7 +28,7 @@ export default function ContactSyncPanel({ contacts = [], onImport, canWrite = f
         </div>
       </div>
 
-      <GoogleContactsPanel onImport={onImport} canWrite={canWrite} />
+      <GoogleContactsPanel canWrite={canWrite} />
       <AppleContactsPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
     </div>
   );

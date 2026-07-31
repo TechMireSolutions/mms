@@ -32,6 +32,8 @@ useLiveCollection('finance_invoices', SEED)
 3. Module-aware filters only.
 4. Drill-down target: chart/summary → Work with equivalent filters (URL params when practical).
 5. Saved reports: save **logic** (filters/columns/aggregates), not snapshots.
+   - Generic modules → `/api/saved-reports?category=` (typed `saved_reports` table).
+   - Contacts (share scopes) → `/api/contacts/saved-reports` only; category `contacts` in the same table — never resurrect `contacts_saved_reports` objects.
 
 ## Export
 

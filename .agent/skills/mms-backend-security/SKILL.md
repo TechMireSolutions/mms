@@ -78,7 +78,9 @@ CORS: `credentials: true`; production requires explicit `ALLOWED_ORIGIN`.
 
 ## Secrets & logging
 
-Never log: passwords, JWTs, refresh tokens, OTP codes, `passwordHash`, bulk PII payloads.
+Never log: passwords, JWTs, refresh tokens, OTP codes, `passwordHash`, OAuth client secrets / access tokens, bulk PII payloads.
+
+Long-lived secrets (Google Contacts OAuth, etc.) live in tenant FORCE-RLS tables — not `objects`. Keep legacy secret object keys in `SERVER_ONLY_OBJECT_KEYS` for backup strip only. After migrating a logical object to a typed table, remove it from `ALLOWED_OBJECTS` / object permission maps.
 
 ## Security test matrix
 
@@ -95,13 +97,14 @@ cd apps/backend && pnpm test
 
 ## Route audit checklist (new PR)
 
-1. Is the route tenant-scoped? → `authenticateTenant`
+1. Is the route tenant-scoped? → `authenticateTenant` (+ `bindRequestUserId`)
 2. Is it a mutation **or** sensitive read? → `rbacService` / `canReadCollection` / `requireAdmin`
-3. Is body validated? → Zod via `parseRequest` before service layer
+3. Is body validated? → Zod via `parseRequest` before service layer (write schema strips soft-delete when applicable)
 4. Never trust body `workspaceSubdomain` / authz `userId` — session only
 5. Does it touch auth or messaging send? → rate limit preserved
 6. Prod cookies `Secure`; prefer Helmet/secure headers when touching `app.ts`
 7. Integration test with wrong-subdomain host returns `403`?
+8. New secret store? → FORCE-RLS table + exclude from backup snapshots
 
 ## Rules
 

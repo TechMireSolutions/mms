@@ -13,6 +13,7 @@ import {
   type EmergencyContact,
 } from "./contactTypes.js";
 import { parsePhoneNumber } from "./phoneUtils.js";
+import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 
 /**
  * Strips blank or empty items from contact phones, emails, addresses, socials, and emergency contacts.
@@ -20,7 +21,7 @@ import { parsePhoneNumber } from "./phoneUtils.js";
  * @returns Cleaned partial contact record.
  */
 export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
-  const result = { ...draft };
+  const result = stripContactClientSoftDeleteFields({ ...draft } as Record<string, unknown>) as Partial<Contact>;
 
   if (Array.isArray(result.phones)) {
     result.phones = result.phones.filter((phone) => (phone.number || "").trim().length > 0);

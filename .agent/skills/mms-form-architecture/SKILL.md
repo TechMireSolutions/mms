@@ -11,19 +11,22 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 
 1. Use `FormModal` for create/edit/builders; raw `Modal` only for confirm/preview.
 2. Bind inputs via design-system primitives + `formStyles` (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`).
-3. Validate with the same Zod schema from `@mms/shared` that BE `parseRequest` uses.
-4. Initialize fields: strings `""`, numbers/dates `null`, lists `[]` (React 19 uncontrolled→controlled safety).
-5. Money/decimals as **strings** — no float math.
-6. Phones: single `type="tel"`; parse with `parsePhoneNumber` on blur.
-7. Persist via REST mutations (`mutateAsync`); tenant writes use RLS `SET LOCAL` — `mms-data-layer.md`.
-8. S3: presigned upload + backend `HEAD` before metadata save.
+3. Validate with the same Zod schema from `@mms/shared` that BE `parseRequest` uses — prefer **write** schemas that strip server-owned fields (soft-delete metadata).
+4. Map Zod issues with shared `mapZodFormErrors`; chrome via `formStyles.ts`.
+5. Initialize fields: strings `""`, numbers/dates `null`, lists `[]` (React 19 uncontrolled→controlled safety).
+6. Money/decimals as **strings** — no float math.
+7. Phones: single `type="tel"`; parse/normalize with `parsePhoneNumber` + `normalizeToE164`.
+8. Persist via REST mutations (`mutateAsync`); tenant writes use RLS `SET LOCAL` — `mms-data-layer.md`.
+9. Soft-delete only via DELETE/restore routes — never from the form body.
+10. S3: presigned upload + backend `HEAD` before metadata save.
 
 ## Checklist
 
 ```
 - [ ] FormModal (not ad-hoc dialog) for entity forms
-- [ ] Shared Zod DTO — no forked FE/BE shapes
-- [ ] Primitives + DatePicker; no raw <input type="date">
+- [ ] Shared Zod write/read DTOs — no forked FE/BE shapes; soft-delete stripped on write
+- [ ] formStyles + primitives + DatePicker; no raw <input type="date">
+- [ ] mapZodFormErrors for field errors
 - [ ] name + id on every control (useId fallback)
 - [ ] Logical CSS for RTL
 - [ ] Mobile-usable: `FORM_INPUT` / controls `min-h-11`; FormModal tab chrome may switch at `md` (intentional vs module `lg` — `mms-ui-ux-design.md` §7)
@@ -35,6 +38,7 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 
 - Reintroduce blueprint/`compileZodFromBlueprint` engines
 - Dual-write Query + `saveCollection` on save
+- Accept client `deletedAt` / `deletedBy` / `deletionReason` on create/update
 - Hardcoded labels — use `t()` / `labelKey`
 
 ## Done

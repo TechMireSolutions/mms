@@ -1,5 +1,7 @@
 import type { Contact, ContactsSavedReportViewer, User } from '@mms/shared';
 import {
+  CONTACTS_MODULE_MANIFEST,
+  roleHasPermission,
   sanitizeContactForViewer,
   sanitizeContactsForViewer,
 } from '@mms/shared';
@@ -10,7 +12,7 @@ export function savedReportViewer(user: User): ContactsSavedReportViewer {
   return {
     id: String(user.id),
     role: user.role,
-    isAdmin: user.role === 'admin',
+    isAdmin: roleHasPermission(user.role, CONTACTS_MODULE_MANIFEST.permissions.setupWrite),
   };
 }
 

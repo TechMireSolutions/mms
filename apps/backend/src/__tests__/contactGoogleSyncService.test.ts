@@ -1,18 +1,36 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockFetchObject = vi.fn();
-const mockPersistObject = vi.fn();
+const mockFindCredentials = vi.fn();
+const mockUpsertCredentials = vi.fn();
+const mockDeleteCredentials = vi.fn();
+const mockGetRequestTenant = vi.fn();
 const mockLoadContacts = vi.fn();
 const mockLoadContactRuntimeDefaults = vi.fn();
+const mockBulkSaveContacts = vi.fn();
+const mockInvalidateDuplicateScanCache = vi.fn();
 
-vi.mock('../services/dbSyncService.js', () => ({
-  fetchObject: (...args: unknown[]) => mockFetchObject(...args),
-  persistObject: (...args: unknown[]) => mockPersistObject(...args),
+vi.mock('../lib/tenantContext.js', () => ({
+  getRequestTenant: () => mockGetRequestTenant(),
+}));
+
+vi.mock('../db/repositories/contactGoogleSyncRepository.js', () => ({
+  findContactGoogleSyncCredentials: (...args: unknown[]) => mockFindCredentials(...args),
+  upsertContactGoogleSyncCredentials: (...args: unknown[]) => mockUpsertCredentials(...args),
+  deleteContactGoogleSyncCredentials: (...args: unknown[]) => mockDeleteCredentials(...args),
 }));
 
 vi.mock('../services/contactService.js', () => ({
   loadContacts: (...args: unknown[]) => mockLoadContacts(...args),
   loadContactRuntimeDefaults: (...args: unknown[]) => mockLoadContactRuntimeDefaults(...args),
+  prepareContactRecord: async (contact: unknown) => contact,
+}));
+
+vi.mock('../db/repositories/contactRepository.js', () => ({
+  bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
+}));
+
+vi.mock('../services/contactDuplicateScanService.js', () => ({
+  invalidateDuplicateScanCache: (...args: unknown[]) => mockInvalidateDuplicateScanCache(...args),
 }));
 
 import {
@@ -25,9 +43,18 @@ import {
 
 describe('contactGoogleSyncService', () => {
   beforeEach(() => {
-    mockFetchObject.mockReset().mockResolvedValue({});
-    mockPersistObject.mockReset().mockResolvedValue(undefined);
+    mockGetRequestTenant.mockReturnValue('demo');
+    mockFindCredentials.mockReset().mockResolvedValue({});
+    mockUpsertCredentials.mockReset().mockImplementation(
+      async (_tenant: string, _userId: string, config: Record<string, unknown>) => ({
+        ...config,
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+    mockDeleteCredentials.mockReset().mockResolvedValue(undefined);
     mockLoadContacts.mockReset().mockResolvedValue([]);
+    mockBulkSaveContacts.mockReset().mockResolvedValue(undefined);
+    mockInvalidateDuplicateScanCache.mockReset().mockResolvedValue(undefined);
     mockLoadContactRuntimeDefaults.mockReset().mockResolvedValue({
       defaultPhoneCountryCode: '+92',
       phoneLabel: 'Work',
@@ -41,6 +68,10 @@ describe('contactGoogleSyncService', () => {
   });
 
   it('exchanges OAuth code server-side and stores tokens', async () => {
+    mockFindCredentials.mockResolvedValue({
+      clientId: 'client-id',
+      clientSecret: 'client-secret',
+    });
     await setContactGoogleSyncConfig('u1', {
       clientId: 'client-id',
       clientSecret: 'client-secret',
@@ -71,6 +102,10 @@ describe('contactGoogleSyncService', () => {
   });
 
   it('surfaces Google OAuth errors', async () => {
+    mockFindCredentials.mockResolvedValue({
+      clientId: 'client-id',
+      clientSecret: 'client-secret',
+    });
     await setContactGoogleSyncConfig('u1', {
       clientId: 'client-id',
       clientSecret: 'client-secret',
@@ -86,6 +121,12 @@ describe('contactGoogleSyncService', () => {
   });
 
   it('syncs Google contacts and skips existing names', async () => {
+    mockFindCredentials.mockResolvedValue({
+      clientId: 'client-id',
+      clientSecret: 'client-secret',
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+    });
     await setContactGoogleSyncConfig('u1', {
       clientId: 'client-id',
       clientSecret: 'client-secret',
@@ -120,6 +161,12 @@ describe('contactGoogleSyncService', () => {
   });
 
   it('refreshes access token after People API 401', async () => {
+    mockFindCredentials.mockResolvedValue({
+      clientId: 'client-id',
+      clientSecret: 'client-secret',
+      accessToken: 'expired-token',
+      refreshToken: 'refresh-1',
+    });
     await setContactGoogleSyncConfig('u1', {
       clientId: 'client-id',
       clientSecret: 'client-secret',

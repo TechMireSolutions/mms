@@ -93,7 +93,7 @@ export default async function savedReportsRoutes(
         createdBy: String(user.id),
         createdByName: user.name || user.email,
       });
-      await auditSavedReport(user, 'create', report.category, report.id, `Saved report "${report.name}"`);
+      await auditSavedReport(user, 'create', body.data.category, report.id, `Saved report "${report.name}"`);
       return reply.status(201).send({ report });
     } catch (error: unknown) {
       return sendDatabaseError(reply, 'Failed to save report', error);
@@ -143,7 +143,7 @@ export default async function savedReportsRoutes(
         String(user.id),
       );
       if (!report) return sendNotFound(reply, 'Saved report not found');
-      await auditSavedReport(user, 'run', report.category, report.id, `Ran saved report "${report.name}"`);
+      await auditSavedReport(user, 'run', query.data.category, report.id, `Ran saved report "${report.name}"`);
       return reply.send({ report });
     } catch (error: unknown) {
       return sendDatabaseError(reply, 'Failed to run saved report', error);

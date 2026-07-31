@@ -4,7 +4,9 @@ import type {
   GenericSavedReport,
   GenericSavedReportCategory,
   GenericSavedReportCreateInput,
+  PersistedSavedReportCategory,
 } from '@mms/shared';
+import { CONTACTS_SAVED_REPORT_CATEGORY } from '@mms/shared';
 import { savedReports } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 
@@ -13,13 +15,24 @@ export interface CreateSavedReportRecord extends GenericSavedReportCreateInput {
   createdByName: string;
 }
 
+export interface CreatePersistedSavedReportRecord {
+  id?: string;
+  name: string;
+  category: PersistedSavedReportCategory;
+  filters: Record<string, unknown>;
+  createdBy: string;
+  createdByName: string;
+  lastRunAt?: Date;
+  createdAt?: Date;
+}
+
 type SavedReportRow = typeof savedReports.$inferSelect;
 
 function toGenericSavedReport(row: SavedReportRow): GenericSavedReport {
   return {
     id: row.id,
     name: row.name,
-    category: row.category,
+    category: row.category as GenericSavedReport['category'],
     filters: row.filters,
     lastRun: row.lastRunAt.toISOString(),
     createdBy: row.createdBy,
@@ -48,6 +61,24 @@ export async function listSavedReportsByOwner(
   });
 }
 
+export async function listSavedReportsByCategory(
+  workspaceSubdomain: string,
+  category: PersistedSavedReportCategory,
+): Promise<GenericSavedReport[]> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  return withTenantTransaction(tenant, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(savedReports)
+      .where(and(
+        eq(savedReports.workspaceSubdomain, tenant),
+        eq(savedReports.category, category),
+      ))
+      .orderBy(desc(savedReports.createdAt));
+    return rows.map(toGenericSavedReport);
+  });
+}
+
 export async function findSavedReportByOwner(
   workspaceSubdomain: string,
   id: string,
@@ -70,22 +101,49 @@ export async function findSavedReportByOwner(
   });
 }
 
+export async function findSavedReportById(
+  workspaceSubdomain: string,
+  id: string,
+  category: PersistedSavedReportCategory,
+): Promise<GenericSavedReport | null> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  return withTenantTransaction(tenant, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(savedReports)
+      .where(and(
+        eq(savedReports.workspaceSubdomain, tenant),
+        eq(savedReports.id, id),
+        eq(savedReports.category, category),
+      ))
+      .limit(1);
+    return rows[0] ? toGenericSavedReport(rows[0]) : null;
+  });
+}
+
 export async function createSavedReportForOwner(
   workspaceSubdomain: string,
   input: CreateSavedReportRecord,
 ): Promise<GenericSavedReport> {
+  return createPersistedSavedReport(workspaceSubdomain, input);
+}
+
+export async function createPersistedSavedReport(
+  workspaceSubdomain: string,
+  input: CreatePersistedSavedReportRecord,
+): Promise<GenericSavedReport> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
   const now = new Date();
   const values = {
-    id: randomUUID(),
+    id: input.id ?? randomUUID(),
     workspaceSubdomain: tenant,
     category: input.category,
     name: input.name,
     filters: input.filters,
-    lastRunAt: now,
+    lastRunAt: input.lastRunAt ?? now,
     createdBy: input.createdBy,
     createdByName: input.createdByName,
-    createdAt: now,
+    createdAt: input.createdAt ?? now,
     updatedAt: now,
   };
 
@@ -116,6 +174,25 @@ export async function deleteSavedReportByOwner(
   });
 }
 
+export async function deleteSavedReportById(
+  workspaceSubdomain: string,
+  id: string,
+  category: PersistedSavedReportCategory,
+): Promise<boolean> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  return withTenantTransaction(tenant, async (tx) => {
+    const rows = await tx
+      .delete(savedReports)
+      .where(and(
+        eq(savedReports.workspaceSubdomain, tenant),
+        eq(savedReports.id, id),
+        eq(savedReports.category, category),
+      ))
+      .returning({ id: savedReports.id });
+    return rows.length > 0;
+  });
+}
+
 export async function touchSavedReportRunByOwner(
   workspaceSubdomain: string,
   id: string,
@@ -133,6 +210,27 @@ export async function touchSavedReportRunByOwner(
         eq(savedReports.id, id),
         eq(savedReports.category, category),
         eq(savedReports.createdBy, createdBy),
+      ))
+      .returning();
+    return rows[0] ? toGenericSavedReport(rows[0]) : null;
+  });
+}
+
+export async function touchSavedReportRunById(
+  workspaceSubdomain: string,
+  id: string,
+  category: PersistedSavedReportCategory,
+): Promise<GenericSavedReport | null> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  const now = new Date();
+  return withTenantTransaction(tenant, async (tx) => {
+    const rows = await tx
+      .update(savedReports)
+      .set({ lastRunAt: now, updatedAt: now })
+      .where(and(
+        eq(savedReports.workspaceSubdomain, tenant),
+        eq(savedReports.id, id),
+        eq(savedReports.category, category),
       ))
       .returning();
     return rows[0] ? toGenericSavedReport(rows[0]) : null;
@@ -190,3 +288,5 @@ export async function replaceSavedReportsForWorkspace(
     }
   });
 }
+
+export { CONTACTS_SAVED_REPORT_CATEGORY };

@@ -21,6 +21,7 @@ import {
   normalizePhoneItem,
   normalizeSocialItem,
 } from "./contactItemNormalize.js";
+import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 
 /**
  * Normalizes a full Contact object for form edit and display operations.
@@ -160,7 +161,7 @@ export function normalizeContactForEdit(
   }
 
   return {
-    ...merged,
+    ...stripContactClientSoftDeleteFields(merged as Record<string, unknown>),
     firstName,
     lastName,
     name: fullName || (lastName ? `${firstName} ${lastName}`.trim() : firstName),
@@ -169,7 +170,7 @@ export function normalizeContactForEdit(
     addresses,
     socials,
     emergencyContacts,
-  };
+  } as Partial<Contact>;
 }
 
 /**

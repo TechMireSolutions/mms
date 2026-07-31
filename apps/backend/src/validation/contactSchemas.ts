@@ -10,6 +10,7 @@ import {
   activitySchema,
   attachmentSchema,
   contactRecordSchema,
+  contactWriteSchema,
   contactListSchema,
   contactsListQuerySchema,
 } from '@mms/shared';
@@ -24,6 +25,7 @@ export {
   activitySchema,
   attachmentSchema,
   contactRecordSchema,
+  contactWriteSchema,
   contactListSchema,
   contactsListQuerySchema,
 };
@@ -44,6 +46,12 @@ export const contactMergeAuditSchema = z.object({
   keepId: z.union([z.string(), z.number()]),
   deleteId: z.union([z.string(), z.number()]),
   mergedName: z.string().optional(),
+});
+
+export const contactMergeBodySchema = z.object({
+  keepId: z.union([z.string(), z.number()]),
+  deleteId: z.union([z.string(), z.number()]),
+  merged: contactWriteSchema.optional(),
 });
 
 export const contactsWorkDrillDownSchema = z.object({
@@ -124,5 +132,5 @@ export const contactFieldUsageParamsSchema = z.object({
 });
 
 export const contactDuplicateCheckBodySchema = z.object({
-  contact: contactRecordSchema,
+  contact: contactWriteSchema,
 });

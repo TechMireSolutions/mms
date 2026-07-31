@@ -96,17 +96,22 @@ export function useContactMutations() {
     onSuccess: invalidate,
   });
 
-  const logExportAudit = useMutation({
-    mutationFn: async (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) =>
-      apiJson<{ success: boolean }>(`${CONTACTS_API}/export-audit`, {
+  const mergeContacts = useMutation({
+    mutationFn: async (payload: {
+      keepId: string | number;
+      deleteId: string | number;
+      merged?: Contact;
+    }) =>
+      apiJson<{ success: boolean; contact: Contact }>(`${CONTACTS_API}/merge`, {
         method: 'POST',
         body: JSON.stringify(payload),
       }),
+    onSuccess: invalidate,
   });
 
-  const logMergeAudit = useMutation({
-    mutationFn: async (payload: { keepId: string | number; deleteId: string | number; mergedName?: string }) =>
-      apiJson<{ success: boolean }>(`${CONTACTS_API}/merge-audit`, {
+  const logExportAudit = useMutation({
+    mutationFn: async (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) =>
+      apiJson<{ success: boolean }>(`${CONTACTS_API}/export-audit`, {
         method: 'POST',
         body: JSON.stringify(payload),
       }),
@@ -127,8 +132,8 @@ export function useContactMutations() {
     bulkDeleteContacts,
     bulkRestoreContacts,
     restoreContact,
+    mergeContacts,
     logExportAudit,
-    logMergeAudit,
     logSetupAudit,
   };
 }

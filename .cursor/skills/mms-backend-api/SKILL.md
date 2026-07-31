@@ -39,12 +39,17 @@ app.ts
 
 ## Soft delete on REST resources
 
+## Soft delete on REST resources
+
 When the entity supports archives (Contacts / Students / Teachers pattern — also Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations):
 
 - Prefer `registerStandardTenantRoutes` with `deleteFn` + `restoreFn` (`POST :id/restore`)
-- List queries accept `includeDeleted`; default responses exclude soft-deleted rows
+- List queries accept `includeDeleted`; **SQL-filter** typed `deleted_at` (`active` vs `deleted`) — do not load full tenant then filter only in memory for Work/trash
+- Default responses exclude soft-deleted rows; trash mode returns deleted-only
 - FE Work trash UI is required for full parity (skill `mms-module-work`) — do not leave restore API orphaned without UI when shipping soft-delete
 - Document intentional variants in `{Module}ModuleManifest.softDelete` (Messaging log clear; QB papers/results upsert-only)
+- Create/update bodies use write schemas that strip soft-delete fields; only soft-delete helpers set them
+- Entity merge (Contacts): atomic `POST /api/contacts/merge` inside a tenant transaction — not FE dual-write
 
 ## Bulk PUT semantics
 
@@ -159,7 +164,7 @@ await app.inject({
 });
 ```
 
-Tenant writes must use `withTenantTransaction` / SET LOCAL RLS (`mms-data-layer.mdc`). New tables: composite tenant PK + FORCE RLS. Bulk PUT upsert only — never `replaceForWorkspace` wipe. Messaging REST: `routes/tenant/messaging.ts`.
+Tenant writes must use `withTenantTransaction` / SET LOCAL RLS (`mms-data-layer.mdc`), including `app.current_user_id` for audit triggers. New tables: composite tenant PK + FORCE RLS. Bulk PUT upsert only — never `replaceForWorkspace` wipe. OAuth/API secrets: FORCE-RLS credential tables — not `objects` KV. Messaging REST: `routes/tenant/messaging.ts`.
 
 ## Rules
 

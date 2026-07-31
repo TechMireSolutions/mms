@@ -3,10 +3,24 @@ import { parseTenantFromHost, resolveAppDomainForRequest } from '@mms/shared';
 import { requestHostname } from './requestHost.js';
 
 const tenantStorage = new AsyncLocalStorage<string | null>();
+const requestUserIdStorage = new AsyncLocalStorage<string | null>();
 
 /** Returns the active tenant subdomain for the current async request, if any. */
 export function getRequestTenant(): string | null {
   return tenantStorage.getStore() ?? null;
+}
+
+/** Authenticated user id for the current request (audit GUCs), if any. */
+export function getRequestUserId(): string | null {
+  return requestUserIdStorage.getStore() ?? null;
+}
+
+/**
+ * Binds the authenticated user id for the remainder of the request.
+ * Prefer `enterWith` from auth middleware so nested transactions can set `app.current_user_id`.
+ */
+export function bindRequestUserId(userId: string | null): void {
+  requestUserIdStorage.enterWith(userId);
 }
 
 /** Runs a callback with tenant context bound (used during onboarding on apex). */

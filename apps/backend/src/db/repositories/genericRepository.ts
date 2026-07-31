@@ -1,17 +1,27 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { AnyPgColumn, AnyPgTable } from 'drizzle-orm/pg-core';
-import { applyTitleCaseRecursive } from '@mms/shared';
+import { applyTitleCaseRecursive, stripContactClientSoftDeleteFields } from '@mms/shared';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 
 export interface GenericRepoOptions {
   updateStrategy?: 'merge' | 'overwrite';
   /** Required for bulkSave on composite-PK tenant tables. */
   conflictTarget?: AnyPgColumn | AnyPgColumn[];
+  /** When true, mirrors record.deletedAt into the table's deleted_at column. */
+  syncDeletedAtColumn?: boolean;
+}
+
+/** Soft-delete scope for list queries on tables with a typed deleted_at column. */
+export type SoftDeleteListFilter = 'active' | 'deleted' | 'all';
+
+export interface ListByWorkspaceOptions {
+  deleted?: SoftDeleteListFilter;
 }
 
 type GenericTableRow = {
   id: string | number;
   customData: unknown;
+  deletedAt?: Date | null;
 };
 
 type GenericTable = AnyPgTable & {
@@ -19,29 +29,77 @@ type GenericTable = AnyPgTable & {
   workspaceSubdomain: AnyPgColumn;
   customData: AnyPgColumn;
   updatedAt: AnyPgColumn;
+  deletedAt?: AnyPgColumn;
 };
 
+function deletedAtFromRecord(record: { deletedAt?: unknown }): Date | null {
+  const raw = record.deletedAt;
+  if (raw == null || raw === '') return null;
+  if (raw instanceof Date) return Number.isNaN(raw.getTime()) ? null : raw;
+  const parsed = new Date(String(raw));
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function createGenericRepository<
-  T extends { id: string | number },
+  T extends { id: string | number; deletedAt?: unknown },
   Table extends GenericTable,
 >(table: Table, options: GenericRepoOptions = {}) {
-  const { updateStrategy = 'merge' } = options;
+  const { updateStrategy = 'merge', syncDeletedAtColumn = false } = options;
   const dbTable: AnyPgTable = table;
+  const shouldSyncDeletedAt = Boolean(syncDeletedAtColumn && table.deletedAt);
 
   function rowToRecord(row: GenericTableRow): T {
-    return {
+    const data = {
       ...(row.customData as Omit<T, 'id'>),
       id: row.id,
     } as T;
+
+    if (shouldSyncDeletedAt) {
+      if (row.deletedAt instanceof Date) {
+        (data as { deletedAt?: string }).deletedAt = row.deletedAt.toISOString();
+      } else {
+        delete (data as { deletedAt?: unknown }).deletedAt;
+        delete (data as { deletedBy?: unknown }).deletedBy;
+        delete (data as { deletionReason?: unknown }).deletionReason;
+      }
+    }
+
+    return data;
   }
 
-  async function listByWorkspace(workspaceSubdomain: string): Promise<T[]> {
+  function columnPayload(record: T, extra: Record<string, unknown>): Record<string, unknown> {
+    const customData = shouldSyncDeletedAt
+      ? stripContactClientSoftDeleteFields(extra)
+      : extra;
+    const payload: Record<string, unknown> = {
+      customData,
+      updatedAt: new Date(),
+    };
+    if (shouldSyncDeletedAt) {
+      payload.deletedAt = deletedAtFromRecord(record);
+    }
+    return payload;
+  }
+
+  async function listByWorkspace(
+    workspaceSubdomain: string,
+    listOptions?: ListByWorkspaceOptions,
+  ): Promise<T[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
+    const deleted = listOptions?.deleted ?? 'all';
     return withTenantTransaction(subdomain, async (tx) => {
+      const conditions = [eq(table.workspaceSubdomain, subdomain)];
+      if (shouldSyncDeletedAt && table.deletedAt) {
+        if (deleted === 'active') {
+          conditions.push(isNull(table.deletedAt));
+        } else if (deleted === 'deleted') {
+          conditions.push(isNotNull(table.deletedAt));
+        }
+      }
       const rows = await tx
         .select()
         .from(dbTable)
-        .where(eq(table.workspaceSubdomain, subdomain));
+        .where(and(...conditions));
       return (rows as GenericTableRow[]).map(rowToRecord);
     });
   }
@@ -75,6 +133,7 @@ export function createGenericRepository<
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const id = String(processedRecord.id);
     const { id: _, ...extra } = processedRecord;
+    const setPayload = columnPayload(processedRecord, extra as Record<string, unknown>);
 
     await withTenantTransaction(subdomain, async (tx) => {
       const existing = await tx
@@ -86,17 +145,15 @@ export function createGenericRepository<
         if (updateStrategy === 'overwrite') {
           await tx
             .update(dbTable)
-            .set({
-              customData: extra,
-              updatedAt: new Date(),
-            })
+            .set(setPayload)
             .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
         } else {
+          const mergeData = setPayload.customData;
           await tx
             .update(dbTable)
             .set({
-              customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || ${JSON.stringify(extra)}::jsonb`,
-              updatedAt: new Date(),
+              ...setPayload,
+              customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || ${JSON.stringify(mergeData)}::jsonb`,
             })
             .where(and(eq(table.workspaceSubdomain, subdomain), eq(table.id, id)));
         }
@@ -104,8 +161,7 @@ export function createGenericRepository<
         await tx.insert(dbTable).values({
           id,
           workspaceSubdomain: subdomain,
-          customData: extra,
-          updatedAt: new Date(),
+          ...setPayload,
         });
       }
     });
@@ -125,10 +181,17 @@ export function createGenericRepository<
       return {
         id,
         workspaceSubdomain: subdomain,
-        customData: extra,
-        updatedAt: new Date(),
+        ...columnPayload(record, extra as Record<string, unknown>),
       };
     });
+
+    const conflictSet: Record<string, unknown> = {
+      customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || excluded.custom_data`,
+      updatedAt: sql`excluded.updated_at`,
+    };
+    if (shouldSyncDeletedAt) {
+      conflictSet.deletedAt = sql`excluded.deleted_at`;
+    }
 
     await withTenantTransaction(subdomain, async (tx) => {
       await tx
@@ -136,10 +199,7 @@ export function createGenericRepository<
         .values(values)
         .onConflictDoUpdate({
           target: options.conflictTarget!,
-          set: {
-            customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || excluded.custom_data`,
-            updatedAt: sql`excluded.updated_at`,
-          },
+          set: conflictSet,
         });
     });
   }
@@ -175,8 +235,7 @@ export function createGenericRepository<
         values.push({
           id,
           workspaceSubdomain: subdomain,
-          customData: extra,
-          updatedAt: new Date(),
+          ...columnPayload(record, extra as Record<string, unknown>),
         });
       }
 
