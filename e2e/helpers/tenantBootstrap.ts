@@ -85,11 +85,20 @@ export async function bootstrapAuthenticatedTenant(
 
   await completePlatformSetupOtp(page);
 
-  await page.waitForSelector('#platform-email');
-  await page.fill('#platform-email', platformEmail);
-  await page.fill('#platform-password', platformPassword);
-  await page.click('button[type="submit"]');
-  await expect(page.locator('h1')).toContainText('Platform console', { timeout: 20_000 });
+  const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
+  const signInEmailInput = page.locator('#platform-email');
+  await Promise.race([
+    expect(platformConsoleHeading).toBeVisible({ timeout: 20_000 }),
+    expect(signInEmailInput).toBeVisible({ timeout: 20_000 }),
+  ]);
+
+  if (await signInEmailInput.isVisible()) {
+    await signInEmailInput.fill(platformEmail);
+    await page.fill('#platform-password', platformPassword);
+    await page.click('button[type="submit"]');
+  }
+
+  await expect(platformConsoleHeading).toBeVisible({ timeout: 20_000 });
 
   await page.click('a[href="/onboarding"]');
   await page.waitForURL('**/onboarding');

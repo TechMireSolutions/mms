@@ -91,14 +91,20 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     await completePlatformSetupOtp(page);
 
-    // 2. Wait for redirect to Platform Sign-In screen
-    await page.waitForSelector('#platform-email');
-    console.log('Redirected to Platform Sign-In screen. Logging in with new platform credentials...');
-    
-    // Fill out login credentials
-    await page.fill('#platform-email', platformEmail);
-    await page.fill('#platform-password', platformPassword);
-    await page.click('button[type="submit"]');
+    // Verification auto-logs in. Check if platform console or sign-in appears.
+    const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
+    const signInEmailInput = page.locator('#platform-email');
+    await Promise.race([
+      expect(platformConsoleHeading).toBeVisible({ timeout: 20_000 }),
+      expect(signInEmailInput).toBeVisible({ timeout: 20_000 }),
+    ]);
+
+    if (await signInEmailInput.isVisible()) {
+      console.log('Redirected to Platform Sign-In screen. Logging in with new platform credentials...');
+      await signInEmailInput.fill(platformEmail);
+      await page.fill('#platform-password', platformPassword);
+      await page.click('button[type="submit"]');
+    }
 
     // Wait until either the Platform Console is loaded or an error alert appears
     console.log('Waiting for login to complete or error to appear...');
