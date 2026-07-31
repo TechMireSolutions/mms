@@ -75,10 +75,21 @@ export async function initDb(): Promise<void> {
       try {
         await migrate(migrateDb, { migrationsFolder });
       } catch (err: unknown) {
-        const pgErr = err as { code?: string; cause?: { code?: string } };
-        if (pgErr?.code === '42P07' || pgErr?.cause?.code === '42P07') {
+        const pgErr = err as {
+          code?: string;
+          message?: string;
+          cause?: { code?: string; message?: string };
+        };
+        const code = pgErr?.code || pgErr?.cause?.code;
+        const msg = pgErr?.message || pgErr?.cause?.message || String(err);
+        if (
+          code === '42P07' ||
+          code === '42710' ||
+          code === '42P06' ||
+          msg.includes('already exists')
+        ) {
           console.warn(
-            '[dbInit] Pre-existing relations detected (42P07), continuing startup cleanly...',
+            `[dbInit] Pre-existing schema relations or constraints detected (${code ?? 'already exists'}), continuing startup cleanly...`,
           );
         } else {
           throw err;
