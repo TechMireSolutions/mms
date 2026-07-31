@@ -1,15 +1,28 @@
 import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
-import type { PlatformUser } from '@mms/shared';
+import type { PlatformUser, PlatformUserProfile } from '@mms/shared';
+import { verifyPassword } from '../auth/passwordService.js';
 import { clearAuthCookies } from '../auth/authCookieService.js';
+import {
+  findPlatformUserByEmail,
+  toPlatformUserProfile,
+  toPublicPlatformUser,
+} from './platformUserService.js';
 import { clearPlatformAccessCookie, setPlatformAccessCookie } from './platformCookieService.js';
 
 const PLATFORM_ACCESS_TTL = '8h';
 
+/** Minimal JWT claims for platform access cookies. */
+export interface PlatformAccessTokenPayload {
+  id: string;
+  tokenType: 'platform_access';
+  sessionVersion?: number;
+}
+
 export type PlatformLoginFailure = 'invalid_credentials' | 'account_disabled';
 
 export type PlatformLoginResult =
-  | { ok: true; user: PlatformUser }
+  | { ok: true; user: PlatformUserProfile }
   | { ok: false; type: PlatformLoginFailure };
 
 export function issuePlatformSession(
@@ -26,7 +39,7 @@ export function issuePlatformSession(
       id: user.id,
       tokenType: 'platform_access',
       sessionVersion,
-    },
+    } satisfies PlatformAccessTokenPayload,
     { expiresIn: PLATFORM_ACCESS_TTL },
   );
   setPlatformAccessCookie(reply, accessToken);
@@ -39,18 +52,12 @@ export async function loginPlatformUser(
   jwtSigner: JWT,
   reply: FastifyReply,
 ): Promise<PlatformLoginResult> {
-  const {
-    findPlatformUserByEmail,
-    toPublicPlatformUser,
-    verifyPlatformUserPassword,
-  } = await import('./platformUserService.js');
-
   const stored = await findPlatformUserByEmail(email);
   if (!stored) {
     return { ok: false, type: 'invalid_credentials' };
   }
 
-  const passwordOk = await verifyPlatformUserPassword(stored.id, password);
+  const passwordOk = await verifyPassword(password, stored.passwordHash);
   if (!passwordOk) {
     return { ok: false, type: 'invalid_credentials' };
   }
@@ -59,13 +66,8 @@ export async function loginPlatformUser(
     return { ok: false, type: 'account_disabled' };
   }
 
-  const user = issuePlatformSession(
-    toPublicPlatformUser(stored),
-    jwtSigner,
-    reply,
-    stored.sessionVersion,
-  );
-  return { ok: true, user };
+  issuePlatformSession(toPublicPlatformUser(stored), jwtSigner, reply, stored.sessionVersion);
+  return { ok: true, user: toPlatformUserProfile(stored) };
 }
 
 export function logoutPlatformUser(reply: FastifyReply): void {

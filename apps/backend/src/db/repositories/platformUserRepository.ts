@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import {
   type StoredPlatformUser,
   type PlatformRole,
@@ -32,8 +32,8 @@ function rowToStored(row: typeof platformUsers.$inferSelect): StoredPlatformUser
 }
 
 export async function countPlatformUserRows(): Promise<number> {
-  const rows = await getDb().select({ id: platformUsers.id }).from(platformUsers);
-  return rows.length;
+  const rows = await getDb().select({ value: count() }).from(platformUsers);
+  return Number(rows[0]?.value ?? 0);
 }
 
 export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {

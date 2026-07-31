@@ -16,7 +16,7 @@ import { resetAndReseedDatabase } from '../../services/platform/platformDatabase
 import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
-import { sendDatabaseError } from '../../lib/httpErrors.js';
+import { sendDatabaseError, sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 
 export default async function platformSettingsRoutes(
@@ -68,10 +68,7 @@ export default async function platformSettingsRoutes(
         const { platformUser } = request as PlatformAuthenticatedRequest;
         const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
         if (!passwordOk) {
-          return reply.status(401).send({
-            type: 'invalid_current_password',
-            message: 'Current password is incorrect',
-          });
+          return sendInvalidCurrentPassword(reply);
         }
 
         try {

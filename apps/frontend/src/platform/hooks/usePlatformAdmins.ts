@@ -70,7 +70,7 @@ export function useUpdatePlatformAdminPermissions() {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(t('platform.adminAccessUpdated'));
       if (platformUser?.id === response.user.id) {
-        await checkPlatformAuth({ force: true });
+        await checkPlatformAuth();
       }
     },
   });

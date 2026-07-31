@@ -20,7 +20,7 @@ import {
 } from '../auth/authCookieService.js';
 import { hashPassword } from '../auth/passwordService.js';
 import { isPlatformSmtpConfigured, resolvePlatformAppOrigin } from './platformEmailService.js';
-import { PlatformError, type PlatformErrorCode } from './platformErrorService.js';
+import { PlatformError } from './platformErrorService.js';
 import { dispatchPlatformOtp } from './platformOtpService.js';
 import {
   findPlatformUserByEmail,
@@ -41,8 +41,6 @@ export interface PlatformPasswordResetPayload {
   attempts: number;
 }
 
-export type PlatformPasswordResetErrorCode = PlatformErrorCode;
-export const PlatformPasswordResetError = PlatformError;
 
 function buildResetUrl(resetId: string): string {
   const origin = resolvePlatformAppOrigin();
@@ -67,7 +65,7 @@ async function dispatchResetCode(email: string, code: string, resetId: string): 
 function assertResetEmailDeliverable(dispatch: { sent: boolean; devCode?: string }): void {
   if (dispatch.sent) return;
   if (process.env.NODE_ENV !== 'production' && dispatch.devCode) return;
-  throw new PlatformPasswordResetError(
+  throw new PlatformError(
     'email_send_failed',
     'Failed to send password reset email. Configure PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',
   );
@@ -75,7 +73,7 @@ function assertResetEmailDeliverable(dispatch: { sent: boolean; devCode?: string
 
 function assertPlatformSmtpReady(): void {
   if (process.env.NODE_ENV === 'production' && !isPlatformSmtpConfigured()) {
-    throw new PlatformPasswordResetError(
+    throw new PlatformError(
       'smtp_required',
       'Platform email is not configured. Set PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',
     );
@@ -123,7 +121,7 @@ export async function resendPlatformPasswordReset(resetId: string): Promise<Plat
 
   const entry = await getAuthArtifact<PlatformPasswordResetPayload>(resetId, 'platform_password_reset');
   if (!entry) {
-    throw new PlatformPasswordResetError('invalid_reset', 'Password reset session expired or not found');
+    throw new PlatformError('invalid_reset', 'Password reset session expired or not found');
   }
 
   const code = generateOtpCode();
@@ -154,7 +152,7 @@ export async function completePlatformPasswordReset(
 
   const entry = await getAuthArtifact<PlatformPasswordResetPayload>(resetId, 'platform_password_reset');
   if (!entry) {
-    throw new PlatformPasswordResetError('invalid_reset', 'Password reset session expired or not found');
+    throw new PlatformError('invalid_reset', 'Password reset session expired or not found');
   }
 
   const normalizedCode = code.replace(/\s/g, '');
@@ -162,7 +160,7 @@ export async function completePlatformPasswordReset(
     const attempts = (entry.payload.attempts ?? 0) + 1;
     if (attempts >= PLATFORM_OTP_MAX_ATTEMPTS) {
       await deleteAuthArtifact(resetId);
-      throw new PlatformPasswordResetError(
+      throw new PlatformError(
         'too_many_attempts',
         'Too many invalid verification attempts. Request a new code.',
       );
@@ -174,7 +172,7 @@ export async function completePlatformPasswordReset(
       RESET_TTL_MS,
       resetId,
     );
-    throw new PlatformPasswordResetError('invalid_code', 'Invalid verification code');
+    throw new PlatformError('invalid_code', 'Invalid verification code');
   }
 
   await deleteAuthArtifact(resetId);

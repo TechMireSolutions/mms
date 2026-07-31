@@ -25,7 +25,7 @@ import {
   hasPlatformUsers,
 } from './platformUserService.js';
 import { isPlatformSmtpConfigured } from './platformEmailService.js';
-import { PlatformError, type PlatformErrorCode } from './platformErrorService.js';
+import { PlatformError } from './platformErrorService.js';
 import { dispatchPlatformOtp } from './platformOtpService.js';
 import {
   enforcePlatformEmail,
@@ -44,8 +44,6 @@ export interface PlatformSetupPayload {
   attempts: number;
 }
 
-export type PlatformSetupErrorCode = PlatformErrorCode;
-export const PlatformSetupError = PlatformError;
 
 export async function getPlatformSetupStatus(): Promise<PlatformSetupStatus> {
   const needsSetup = !(await hasPlatformUsers());
@@ -69,7 +67,7 @@ async function dispatchSetupCode(email: string, code: string): Promise<{ sent: b
 function assertSetupEmailDeliverable(dispatch: { sent: boolean; devCode?: string }): void {
   if (dispatch.sent) return;
   if (process.env.NODE_ENV !== 'production' && dispatch.devCode) return;
-  throw new PlatformSetupError(
+  throw new PlatformError(
     'email_send_failed',
     'Failed to send verification email. Configure PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',
   );
@@ -81,11 +79,11 @@ export async function startPlatformSetup(input: {
   password: string;
 }): Promise<PlatformSetupRegisterResult> {
   if (await hasPlatformUsers()) {
-    throw new PlatformSetupError('setup_not_needed', 'Platform administrator already exists');
+    throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
   }
 
   if (process.env.NODE_ENV === 'production' && !isPlatformSmtpConfigured()) {
-    throw new PlatformSetupError(
+    throw new PlatformError(
       'smtp_required',
       'Platform email is not configured. Set PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',
     );
@@ -125,12 +123,12 @@ export async function startPlatformSetup(input: {
 
 export async function resendPlatformSetupCode(setupId: string): Promise<PlatformSetupRegisterResult> {
   if (await hasPlatformUsers()) {
-    throw new PlatformSetupError('setup_not_needed', 'Platform administrator already exists');
+    throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
   }
 
   const entry = await getAuthArtifact<PlatformSetupPayload>(setupId, 'platform_setup');
   if (!entry) {
-    throw new PlatformSetupError('invalid_setup', 'Setup session expired or not found');
+    throw new PlatformError('invalid_setup', 'Setup session expired or not found');
   }
 
   const code = generateOtpCode();
@@ -158,7 +156,7 @@ export async function verifyPlatformSetup(
 ): Promise<StoredPlatformUser> {
   const entry = await getAuthArtifact<PlatformSetupPayload>(setupId, 'platform_setup');
   if (!entry) {
-    throw new PlatformSetupError('invalid_setup', 'Setup session expired or not found');
+    throw new PlatformError('invalid_setup', 'Setup session expired or not found');
   }
 
   const normalizedCode = code.replace(/\s/g, '');
@@ -166,7 +164,7 @@ export async function verifyPlatformSetup(
     const attempts = (entry.payload.attempts ?? 0) + 1;
     if (attempts >= PLATFORM_OTP_MAX_ATTEMPTS) {
       await deleteAuthArtifact(setupId);
-      throw new PlatformSetupError(
+      throw new PlatformError(
         'too_many_attempts',
         'Too many invalid verification attempts. Start setup again.',
       );
@@ -178,7 +176,7 @@ export async function verifyPlatformSetup(
       SETUP_TTL_MS,
       setupId,
     );
-    throw new PlatformSetupError('invalid_code', 'Invalid verification code');
+    throw new PlatformError('invalid_code', 'Invalid verification code');
   }
 
   await deleteAuthArtifact(setupId);

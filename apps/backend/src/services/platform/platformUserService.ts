@@ -258,21 +258,6 @@ export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
 }
 
 /**
- * Password-only credential check. Does not reject disabled accounts —
- * callers that need that distinction use `loginPlatformUser`.
- */
-export async function validatePlatformCredentials(
-  email: string,
-  password: string,
-): Promise<PlatformUser | null> {
-  const stored = await findPlatformUserByEmail(email);
-  if (!stored) return null;
-  const ok = await verifyPassword(password, stored.passwordHash);
-  if (!ok) return null;
-  return toPublicPlatformUser(stored);
-}
-
-/**
  * Optional dev bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
  * Requires explicit PLATFORM_ADMIN_EMAIL + PLATFORM_ADMIN_PASSWORD (or SEED_DEV_PASSWORD).
  * Production / clean first-run presents the interactive setup screen instead.

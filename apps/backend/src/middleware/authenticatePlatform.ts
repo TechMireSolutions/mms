@@ -3,6 +3,11 @@ import type { PlatformAdminPermissionKey, PlatformUser } from '@mms/shared';
 import { platformUserCan } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
+import type { PlatformAccessTokenPayload } from '../services/platform/platformAuthService.js';
+import {
+  getStoredPlatformUserById,
+  toPublicPlatformUser,
+} from '../services/platform/platformUserService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
 
 export interface PlatformAuthenticatedRequest extends FastifyRequest {
@@ -43,15 +48,12 @@ export async function authenticatePlatform(
     return;
   }
 
-  const payload = request.user as PlatformUser & { tokenType?: string; sessionVersion?: number };
+  const payload = request.user as PlatformAccessTokenPayload;
   if (payload.tokenType !== 'platform_access') {
     sendUnauthorized(reply, 'Invalid platform session');
     return;
   }
 
-  const { getStoredPlatformUserById, toPublicPlatformUser } = await import(
-    '../services/platform/platformUserService.js'
-  );
   const stored = await getStoredPlatformUserById(payload.id);
   if (!stored) {
     sendUnauthorized(reply, 'User no longer exists');

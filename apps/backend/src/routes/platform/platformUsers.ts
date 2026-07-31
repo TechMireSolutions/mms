@@ -23,7 +23,7 @@ import {
 } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
-import { PlatformError } from '../../services/platform/platformErrorService.js';
+import { sendForbidden, sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 
 export default async function platformUsersRoutes(
@@ -45,35 +45,28 @@ export default async function platformUsersRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const { name, email, password, permissions } = parsed.data;
 
-    try {
-      const passwordHash = await hashPassword(password);
-      const stored = await createVerifiedPlatformUser({
-        name: name.trim(),
-        email,
-        passwordHash,
-        role: 'admin',
+    const passwordHash = await hashPassword(password);
+    const stored = await createVerifiedPlatformUser({
+      name: name.trim(),
+      email,
+      passwordHash,
+      role: 'admin',
+      permissions,
+    });
+
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'create_admin',
+      details: {
+        adminEmail: email,
+        adminName: name.trim(),
         permissions,
-      });
+      },
+      ipAddress: request.ip,
+    });
 
-      await insertPlatformActivityLog({
-        userId: platformUser.id,
-        userEmail: platformUser.email,
-        action: 'create_admin',
-        details: {
-          adminEmail: email,
-          adminName: name.trim(),
-          permissions,
-        },
-        ipAddress: request.ip,
-      });
-
-      return reply.send({ user: toPlatformUserProfile(stored) });
-    } catch (error: unknown) {
-      if (error instanceof PlatformError) {
-        return reply.status(error.statusCode).send({ type: error.code, message: error.message });
-      }
-      throw error;
-    }
+    return reply.send({ user: toPlatformUserProfile(stored) });
   });
 
   fastify.patch('/:id/permissions', async (request, reply) => {
@@ -82,28 +75,21 @@ export default async function platformUsersRoutes(
     const parsed = parseRequest(platformUpdateAdminPermissionsBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    try {
-      const user = await setPlatformAdminPermissions(id, parsed.data.permissions);
+    const user = await setPlatformAdminPermissions(id, parsed.data.permissions);
 
-      await insertPlatformActivityLog({
-        userId: platformUser.id,
-        userEmail: platformUser.email,
-        action: 'update_admin_permissions',
-        details: {
-          adminId: id,
-          adminEmail: user.email,
-          permissions: parsed.data.permissions,
-        },
-        ipAddress: request.ip,
-      });
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'update_admin_permissions',
+      details: {
+        adminId: id,
+        adminEmail: user.email,
+        permissions: parsed.data.permissions,
+      },
+      ipAddress: request.ip,
+    });
 
-      return reply.send({ user });
-    } catch (error: unknown) {
-      if (error instanceof PlatformError) {
-        return reply.status(error.statusCode).send({ type: error.code, message: error.message });
-      }
-      throw error;
-    }
+    return reply.send({ user });
   });
 
   await fastify.register(async function platformAdminDestructiveRateLimited(inner) {
@@ -116,42 +102,29 @@ export default async function platformUsersRoutes(
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
       if (id === platformUser.id) {
-        return reply.status(403).send({
-          type: 'forbidden',
-          message: 'Cannot disable your own platform account',
-        });
+        return sendForbidden(reply, 'Cannot disable your own platform account');
       }
 
       const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
       if (!passwordOk) {
-        return reply.status(401).send({
-          type: 'invalid_current_password',
-          message: 'Current password is incorrect',
-        });
+        return sendInvalidCurrentPassword(reply);
       }
 
-      try {
-        const user = await setPlatformAdminDisabled(id, parsed.data.disabled);
+      const user = await setPlatformAdminDisabled(id, parsed.data.disabled);
 
-        await insertPlatformActivityLog({
-          userId: platformUser.id,
-          userEmail: platformUser.email,
-          action: parsed.data.disabled ? 'disable_admin' : 'enable_admin',
-          details: {
-            adminId: id,
-            adminEmail: user.email,
-            disabled: parsed.data.disabled,
-          },
-          ipAddress: request.ip,
-        });
+      await insertPlatformActivityLog({
+        userId: platformUser.id,
+        userEmail: platformUser.email,
+        action: parsed.data.disabled ? 'disable_admin' : 'enable_admin',
+        details: {
+          adminId: id,
+          adminEmail: user.email,
+          disabled: parsed.data.disabled,
+        },
+        ipAddress: request.ip,
+      });
 
-        return reply.send({ user });
-      } catch (error: unknown) {
-        if (error instanceof PlatformError) {
-          return reply.status(error.statusCode).send({ type: error.code, message: error.message });
-        }
-        throw error;
-      }
+      return reply.send({ user });
     });
 
     inner.delete('/:id', async (request, reply) => {
@@ -161,38 +134,25 @@ export default async function platformUsersRoutes(
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
       if (id === platformUser.id) {
-        return reply.status(403).send({
-          type: 'forbidden',
-          message: 'Cannot delete your own platform account',
-        });
+        return sendForbidden(reply, 'Cannot delete your own platform account');
       }
 
       const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
       if (!passwordOk) {
-        return reply.status(401).send({
-          type: 'invalid_current_password',
-          message: 'Current password is incorrect',
-        });
+        return sendInvalidCurrentPassword(reply);
       }
 
-      try {
-        await deletePlatformAdmin(id);
+      await deletePlatformAdmin(id);
 
-        await insertPlatformActivityLog({
-          userId: platformUser.id,
-          userEmail: platformUser.email,
-          action: 'delete_admin',
-          details: { adminId: id },
-          ipAddress: request.ip,
-        });
+      await insertPlatformActivityLog({
+        userId: platformUser.id,
+        userEmail: platformUser.email,
+        action: 'delete_admin',
+        details: { adminId: id },
+        ipAddress: request.ip,
+      });
 
-        return reply.send({ deleted: true, id });
-      } catch (error: unknown) {
-        if (error instanceof PlatformError) {
-          return reply.status(error.statusCode).send({ type: error.code, message: error.message });
-        }
-        throw error;
-      }
+      return reply.send({ deleted: true, id });
     });
   });
 }

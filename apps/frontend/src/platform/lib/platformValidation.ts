@@ -12,7 +12,7 @@ type TranslateFn = (key: AppTranslationKey, params?: Record<string, string>) => 
 /**
  * Validates platform setup email and returns translated error message, or null if valid.
  */
-export function getPlatformEmailError(email: string, t: TranslateFn): string | null {
+function getPlatformEmailError(email: string, t: TranslateFn): string | null {
   const key = validatePlatformSetupEmail(email);
   return key ? t(key) : null;
 }

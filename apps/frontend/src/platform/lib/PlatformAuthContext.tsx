@@ -1,13 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { PlatformUser, PlatformUserProfile } from '@mms/shared';
+import type { PlatformUserProfile } from '@mms/shared';
 import { normalizePlatformAdminPermissions } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useTenant } from '@/lib/contexts/TenantContext';
-import usePlatformSessionTimeout from '@/platform/hooks/usePlatformSessionTimeout';
-import {
-  clearPlatformBrowserSession,
-  markPlatformBrowserSession,
-} from '@/platform/lib/platformBrowserSession';
+import { usePlatformSessionTimeout } from '@/platform/hooks/usePlatformSessionTimeout';
 
 function PlatformSessionTimeoutWatcher({
   enabled,
@@ -28,8 +24,7 @@ function normalizeSessionUser(user: PlatformUserProfile): PlatformUserProfile {
 }
 
 export interface PlatformAuthContextType {
-  /** Session user; may include profile fields from `/me` (e.g. `disabledAt`). */
-  platformUser: PlatformUser | null;
+  platformUser: PlatformUserProfile | null;
   isPlatformAuthenticated: boolean;
   /** True while probing existing session (`/me`) on boot. */
   isCheckingPlatformAuth: boolean;
@@ -38,7 +33,7 @@ export interface PlatformAuthContextType {
   platformAuthChecked: boolean;
   platformLogin: (email: string, password: string) => Promise<void>;
   platformLogout: () => Promise<void>;
-  checkPlatformAuth: (options?: { force?: boolean }) => Promise<void>;
+  checkPlatformAuth: () => Promise<void>;
 }
 
 const PlatformAuthContext = createContext<PlatformAuthContextType | undefined>(undefined);
@@ -51,7 +46,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isPlatformLoginSubmitting, setIsPlatformLoginSubmitting] = useState(false);
   const [platformAuthChecked, setPlatformAuthChecked] = useState(false);
 
-  const checkPlatformAuth = useCallback(async (_options?: { force?: boolean }): Promise<void> => {
+  const checkPlatformAuth = useCallback(async (): Promise<void> => {
     if (!isApex) {
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
@@ -64,11 +59,9 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setIsCheckingPlatformAuth(true);
     try {
       const platformSession = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me');
-      markPlatformBrowserSession();
       setPlatformUser(normalizeSessionUser(platformSession.user));
       setIsPlatformAuthenticated(true);
     } catch {
-      clearPlatformBrowserSession();
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
     } finally {
@@ -85,12 +78,10 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         body: JSON.stringify({ email, password }),
       });
       localStorage.removeItem('mms_user');
-      markPlatformBrowserSession();
       setPlatformUser(normalizeSessionUser(platformSession.user));
       setIsPlatformAuthenticated(true);
       setPlatformAuthChecked(true);
     } catch (error) {
-      clearPlatformBrowserSession();
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
       throw error;
@@ -106,7 +97,6 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       /* clear client session even if logout request fails */
     } finally {
       localStorage.removeItem('mms_user');
-      clearPlatformBrowserSession();
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
       setPlatformAuthChecked(true);

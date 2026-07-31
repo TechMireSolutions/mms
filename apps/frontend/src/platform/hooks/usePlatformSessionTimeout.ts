@@ -34,5 +34,3 @@ export function usePlatformSessionTimeout({
   });
 }
 
-export default usePlatformSessionTimeout;
-

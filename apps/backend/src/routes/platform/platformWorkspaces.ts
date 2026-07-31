@@ -17,7 +17,7 @@ import {
   workspaceEnabledPatchBodySchema,
 } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { sendNotFound } from '../../lib/httpErrors.js';
+import { sendInvalidCurrentPassword, sendNotFound } from '../../lib/httpErrors.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 
@@ -70,10 +70,7 @@ export default async function platformWorkspaceRoutes(
 
       const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.data.password);
       if (!passwordOk) {
-        return reply.status(401).send({
-          type: 'invalid_current_password',
-          message: 'Current password is incorrect',
-        });
+        return sendInvalidCurrentPassword(reply);
       }
 
       if (body.data.confirmSubdomain.trim().toLowerCase() !== params.data.subdomain.toLowerCase()) {

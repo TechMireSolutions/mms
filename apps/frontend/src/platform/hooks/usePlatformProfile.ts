@@ -38,7 +38,7 @@ export function useUpdatePlatformProfileName() {
     },
     onSuccess: async (user) => {
       queryClient.setQueryData(PLATFORM_PROFILE_QUERY_KEY, user);
-      await checkPlatformAuth({ force: true });
+      await checkPlatformAuth();
     },
   });
 }

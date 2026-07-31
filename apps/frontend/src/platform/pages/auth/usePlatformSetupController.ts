@@ -91,7 +91,7 @@ export function usePlatformSetupController(smtpConfigured: boolean) {
         code: code.join(""),
       });
       invalidateSetupStatus();
-      await checkPlatformAuth({ force: true });
+      await checkPlatformAuth();
     } catch (err) {
       setError(getPlatformErrorMessage(err, t));
       if (err instanceof ApiError && (err.type === 'too_many_attempts' || err.type === 'invalid_setup')) {

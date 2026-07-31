@@ -1,7 +1,10 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
-import type { PlatformUser } from '@mms/shared';
-import { authenticatePlatform, requireMainDomain } from '../../middleware/authenticatePlatform.js';
+import {
+  authenticatePlatform,
+  requireMainDomain,
+  type PlatformAuthenticatedRequest,
+} from '../../middleware/authenticatePlatform.js';
 import {
   issuePlatformSession,
   loginPlatformUser,
@@ -39,15 +42,13 @@ import {
 import { loginBodySchema as platformLoginBodySchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
-
-
 export default async function platformAuthRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', requireMainDomain);
 
-  fastify.get('/setup/status', async (request, reply) => {
+  fastify.get('/setup/status', async (_request, reply) => {
     return reply.send(await getPlatformSetupStatus());
   });
 
@@ -151,8 +152,8 @@ export default async function platformAuthRoutes(
   });
 
   fastify.get('/me', { preHandler: authenticatePlatform }, async (request, reply) => {
-    const payload = request.user as PlatformUser & { tokenType?: string };
-    const profile = await getPlatformUserProfile(payload.id);
+    const { platformUser } = request as PlatformAuthenticatedRequest;
+    const profile = await getPlatformUserProfile(platformUser.id);
     if (!profile) {
       return reply.status(404).send({ type: 'user_not_found', message: 'Platform user not found' });
     }
@@ -165,8 +166,8 @@ export default async function platformAuthRoutes(
     async (request, reply) => {
       const parsed = parseRequest(platformProfilePatchBodySchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const payload = request.user as PlatformUser;
-      const profile = await updatePlatformUserProfile(payload.id, parsed.data.name);
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const profile = await updatePlatformUserProfile(platformUser.id, parsed.data.name);
       const stored = await getStoredPlatformUserById(profile.id);
       issuePlatformSession(
         {
@@ -193,9 +194,9 @@ export default async function platformAuthRoutes(
       async (request, reply) => {
         const parsed = parseRequest(platformChangePasswordBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
-        const payload = request.user as PlatformUser;
+        const { platformUser } = request as PlatformAuthenticatedRequest;
         const stored = await updatePlatformUserPassword(
-          payload.id,
+          platformUser.id,
           parsed.data.currentPassword,
           parsed.data.newPassword,
         );

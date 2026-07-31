@@ -108,7 +108,7 @@ export function usePlatformForgotPasswordController() {
         code: code.join(""),
         password,
       });
-      await checkPlatformAuth({ force: true });
+      await checkPlatformAuth();
       navigate(ROUTES.home, { replace: true });
     } catch (err) {
       setError(getPlatformErrorMessage(err, t));

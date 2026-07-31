@@ -37,7 +37,7 @@ vi.mock('../services/globalSettingsService.js', async (importOriginal) => {
   };
 });
 
-const mockValidatePlatformCredentials = vi.fn();
+const mockVerifyPassword = vi.fn();
 const mockHasPlatformUsers = vi.fn();
 const mockFindPlatformUserByEmail = vi.fn();
 const mockUpdatePlatformUserPassword = vi.fn();
@@ -72,8 +72,15 @@ vi.mock('../services/platform/platformEmailService.js', async (importOriginal) =
   };
 });
 
+vi.mock('../services/auth/passwordService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/auth/passwordService.js')>();
+  return {
+    ...actual,
+    verifyPassword: (...args: unknown[]) => mockVerifyPassword(...args),
+  };
+});
+
 vi.mock('../services/platform/platformUserService.js', () => ({
-  validatePlatformCredentials: (...args: unknown[]) => mockValidatePlatformCredentials(...args),
   ensurePlatformSuperUserFromEnv: vi.fn().mockResolvedValue(undefined),
   findPlatformUserByEmail: (...args: unknown[]) => mockFindPlatformUserByEmail(...args),
   getStoredPlatformUserById: (...args: unknown[]) => mockGetStoredPlatformUserById(...args),
@@ -142,10 +149,10 @@ describe('auth routes', () => {
     mockPutAuthArtifact.mockReset().mockResolvedValue('new-artifact-id');
     mockGetPublicUserById.mockReset();
     mockGetJwtExpiresIn.mockReset().mockResolvedValue('15m');
-    mockValidatePlatformCredentials.mockReset();
     mockHasPlatformUsers.mockReset().mockResolvedValue(true);
     mockFindPlatformUserByEmail.mockReset().mockResolvedValue(null);
     mockIsPlatformSmtpConfigured.mockReset().mockReturnValue(false);
+    mockVerifyPassword.mockReset().mockResolvedValue(true);
     mockGetStoredPlatformUserById.mockReset().mockResolvedValue({
       id: 'p1',
       email: 'platform@test.com',
@@ -400,9 +407,9 @@ describe('auth routes', () => {
 describe('platform auth routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
-    mockValidatePlatformCredentials.mockReset();
     mockHasPlatformUsers.mockReset().mockResolvedValue(true);
     mockFindPlatformUserByEmail.mockReset().mockResolvedValue(null);
+    mockVerifyPassword.mockReset().mockResolvedValue(true);
     mockGetStoredPlatformUserById.mockReset().mockResolvedValue({
       id: 'p1',
       email: 'platform@test.com',
@@ -513,7 +520,7 @@ describe('platform auth routes', () => {
       sessionVersion: 0,
       createdAt: '2026-01-01T00:00:00.000Z',
     });
-    mockVerifyPlatformUserPassword.mockResolvedValue(true);
+    mockVerifyPassword.mockResolvedValue(true);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -541,7 +548,7 @@ describe('platform auth routes', () => {
       disabledAt: '2026-07-01T00:00:00.000Z',
       createdAt: '2026-01-01T00:00:00.000Z',
     });
-    mockVerifyPlatformUserPassword.mockResolvedValue(true);
+    mockVerifyPassword.mockResolvedValue(true);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
