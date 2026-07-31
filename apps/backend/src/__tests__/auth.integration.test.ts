@@ -43,6 +43,7 @@ const mockFindPlatformUserByEmail = vi.fn();
 const mockUpdatePlatformUserPassword = vi.fn();
 const mockGetStoredPlatformUserById = vi.fn();
 const mockListPlatformWorkspaces = vi.fn();
+const mockSetPlatformAdminPermissions = vi.fn();
 const mockGetPlatformUserProfile = vi.fn().mockImplementation(async (id: string) => {
   const stored = await mockGetStoredPlatformUserById(id);
   if (!stored) return null;
@@ -51,6 +52,7 @@ const mockGetPlatformUserProfile = vi.fn().mockImplementation(async (id: string)
     email: stored.email,
     name: stored.name,
     role: stored.role,
+    permissions: stored.permissions ?? { workspaces: false, onboard: false },
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
   };
@@ -64,6 +66,7 @@ vi.mock('../services/platform/platformUserService.js', () => ({
   hasPlatformUsers: (...args: unknown[]) => mockHasPlatformUsers(...args),
   countPlatformUsers: vi.fn(),
   createVerifiedPlatformUser: vi.fn(),
+  setPlatformAdminPermissions: (...args: unknown[]) => mockSetPlatformAdminPermissions(...args),
   updatePlatformUserPassword: (...args: unknown[]) => mockUpdatePlatformUserPassword(...args),
   updatePlatformUserName: vi.fn(),
   changePlatformUserPassword: vi.fn(),
@@ -74,6 +77,7 @@ vi.mock('../services/platform/platformUserService.js', () => ({
     email: stored.email,
     name: stored.name,
     role: stored.role,
+    permissions: stored.permissions ?? { workspaces: false, onboard: false },
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
   }),
@@ -82,6 +86,7 @@ vi.mock('../services/platform/platformUserService.js', () => ({
     email: user.email,
     name: user.name,
     role: user.role,
+    permissions: user.permissions ?? { workspaces: false, onboard: false },
   }),
 }));
 
@@ -103,6 +108,10 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
+vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
+  insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { buildApp } from '../app.js';
 import { PLATFORM_ACCESS_COOKIE } from '../services/platform/platformCookieService.js';
 
@@ -122,10 +131,13 @@ describe('auth routes', () => {
       email: 'platform@test.com',
       name: 'Platform Admin',
       passwordHash: 'hash',
+      role: 'super_user',
+      permissions: { workspaces: true, onboard: true },
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     mockUpdatePlatformUserPassword.mockReset();
     mockListPlatformWorkspaces.mockReset().mockResolvedValue([]);
+    mockSetPlatformAdminPermissions.mockReset();
   });
 
   afterEach(() => {
@@ -370,6 +382,8 @@ describe('platform auth routes', () => {
       email: 'platform@test.com',
       name: 'Platform Admin',
       passwordHash: 'hash',
+      role: 'super_user',
+      permissions: { workspaces: true, onboard: true },
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     mockGetJwtExpiresIn.mockReset().mockResolvedValue('15m');
@@ -524,7 +538,16 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('POST /api/auth/onboard rejects non-super-user platform sessions', async () => {
+  it('POST /api/auth/onboard rejects platform admin without onboard permission', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      passwordHash: 'hash',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: false },
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
     const app = await buildApp();
     const token = app.jwt.sign({
       id: 'p-admin',
@@ -551,7 +574,16 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('GET /api/platform/workspaces rejects non-super-user platform sessions', async () => {
+  it('GET /api/platform/workspaces rejects platform admin without workspaces permission', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      passwordHash: 'hash',
+      role: 'admin',
+      permissions: { workspaces: false, onboard: true },
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
     const app = await buildApp();
     const token = app.jwt.sign({
       id: 'p-admin',
@@ -569,6 +601,104 @@ describe('platform auth routes', () => {
     expect(res.statusCode).toBe(403);
     expect(res.json()).toMatchObject({ type: 'forbidden' });
     expect(mockListPlatformWorkspaces).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/platform/workspaces allows platform admin with workspaces permission', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      passwordHash: 'hash',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: false },
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      role: 'admin',
+      tokenType: 'platform_access',
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockListPlatformWorkspaces).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('PATCH /api/platform/users/:id/permissions rejects non-super platform admin', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      passwordHash: 'hash',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: true },
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      role: 'admin',
+      tokenType: 'platform_access',
+    });
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/platform/users/p-target/permissions',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: { permissions: { workspaces: true, onboard: false } },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockSetPlatformAdminPermissions).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('PATCH /api/platform/users/:id/permissions allows super_user', async () => {
+    mockSetPlatformAdminPermissions.mockResolvedValue({
+      id: 'p-target',
+      email: 'admin@test.com',
+      name: 'Target Admin',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: false },
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      role: 'super_user',
+      tokenType: 'platform_access',
+    });
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/platform/users/p-target/permissions',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+      payload: { permissions: { workspaces: true, onboard: false } },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockSetPlatformAdminPermissions).toHaveBeenCalledWith('p-target', {
+      workspaces: true,
+      onboard: false,
+    });
+    expect(res.json()).toMatchObject({
+      user: {
+        id: 'p-target',
+        permissions: { workspaces: true, onboard: false },
+      },
+    });
     await app.close();
   });
 

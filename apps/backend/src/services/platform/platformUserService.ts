@@ -1,11 +1,23 @@
 import { randomBytes } from 'node:crypto';
-import type { PlatformUser, StoredPlatformUser, PlatformRole, PlatformUserProfile } from '@mms/shared';
+import type {
+  PlatformUser,
+  StoredPlatformUser,
+  PlatformRole,
+  PlatformUserProfile,
+  PlatformAdminPermissions,
+} from '@mms/shared';
+import {
+  DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
+  FULL_PLATFORM_ADMIN_PERMISSIONS,
+  normalizePlatformAdminPermissions,
+} from '@mms/shared';
 import {
   countPlatformUserRows,
   findPlatformUserRowByEmail,
   findPlatformUserRowById,
   insertPlatformUser,
   updatePlatformUserRow,
+  updatePlatformUserPermissions,
 } from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
 import { PlatformError } from './platformErrorService.js';
@@ -24,6 +36,7 @@ export function toPlatformUserProfile(stored: StoredPlatformUser): PlatformUserP
     email: stored.email,
     name: stored.name,
     role: stored.role,
+    permissions: stored.permissions,
     createdAt: stored.createdAt,
     emailVerifiedAt: stored.emailVerifiedAt,
   };
@@ -77,6 +90,7 @@ export async function createVerifiedPlatformUser(input: {
   name: string;
   passwordHash: string;
   role?: PlatformRole;
+  permissions?: PlatformAdminPermissions;
 }): Promise<StoredPlatformUser> {
   const existing = await findPlatformUserByEmail(input.email);
   if (existing) {
@@ -85,6 +99,12 @@ export async function createVerifiedPlatformUser(input: {
 
   const count = await countPlatformUsers();
   const role = input.role ?? (count === 0 ? 'super_user' : 'admin');
+  const permissions =
+    role === 'super_user'
+      ? FULL_PLATFORM_ADMIN_PERMISSIONS
+      : normalizePlatformAdminPermissions(
+          input.permissions ?? DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
+        );
 
   const user: StoredPlatformUser = {
     id: randomBytes(8).toString('hex'),
@@ -92,11 +112,34 @@ export async function createVerifiedPlatformUser(input: {
     name: input.name,
     passwordHash: input.passwordHash,
     role,
+    permissions,
     createdAt: new Date().toISOString(),
     emailVerifiedAt: new Date().toISOString(),
   };
   await insertPlatformUser(user);
   return user;
+}
+
+export async function setPlatformAdminPermissions(
+  userId: string,
+  permissions: PlatformAdminPermissions,
+): Promise<PlatformUserProfile> {
+  const stored = await getStoredPlatformUserById(userId);
+  if (!stored) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+  if (stored.role === 'super_user') {
+    throw new PlatformError('forbidden', 'Cannot change permissions for a platform super-user');
+  }
+
+  const updated = await updatePlatformUserPermissions(
+    userId,
+    normalizePlatformAdminPermissions(permissions),
+  );
+  if (!updated) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+  return toPlatformUserProfile(updated);
 }
 
 export async function updatePlatformUserPassword(
@@ -137,7 +180,13 @@ export async function verifyPlatformUserPassword(userId: string, password: strin
 }
 
 export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
-  return { id: user.id, email: user.email, name: user.name, role: user.role };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    permissions: user.permissions,
+  };
 }
 
 export async function validatePlatformCredentials(
@@ -174,6 +223,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     name,
     passwordHash: await hashPassword(password),
     role: 'super_user',
+    permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
     createdAt: new Date().toISOString(),
   };
   await insertPlatformUser(user);

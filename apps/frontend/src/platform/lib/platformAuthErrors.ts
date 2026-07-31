@@ -27,8 +27,10 @@ export function mapPlatformAuthError(apiError: ApiError, t: TranslateFn): string
       return t("platform.profileWrongPassword");
     case "invalid_credentials":
       return t("platform.invalidCredentials");
+    case "setup_not_needed":
+      return t("platform.setupNotNeeded");
     default:
-      return apiError.message || t("errors.boundary.description");
+      return t("errors.boundary.description");
   }
 }
 
@@ -36,9 +38,6 @@ export function mapPlatformAuthError(apiError: ApiError, t: TranslateFn): string
 export function getPlatformErrorMessage(error: unknown, t: TranslateFn): string {
   if (error instanceof ApiError) {
     return mapPlatformAuthError(error, t);
-  }
-  if (error instanceof Error && error.message) {
-    return error.message;
   }
   return t("errors.boundary.description");
 }

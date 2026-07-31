@@ -58,7 +58,7 @@ export function PlatformLogoMark({
       }
       aria-hidden
     >
-      <span className={isSm ? 'font-display text-sm font-black text-white' : 'font-display text-2xl font-black text-white'}>
+      <span className={isSm ? 'font-display text-sm font-black text-primary-foreground' : 'font-display text-2xl font-black text-primary-foreground'}>
         م
       </span>
     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import {
@@ -26,18 +26,14 @@ export function useCreateMadrasaController(
     onChange((prev) => ({ ...prev, [field]: fieldValue }));
   };
 
-  const previewBranding = useMemo(
-    () =>
-      mergeBrandingSettings({
-        madrasaName: data.name,
-        tagline: data.tagline,
-        logoUrl: data.logoUrl || "",
-        faviconUrl: data.logoUrl || "",
-        country: data.country,
-        website: data.subdomain ? `https://${data.subdomain}.${appDomain}` : "",
-      }),
-    [data.name, data.tagline, data.logoUrl, data.country, data.subdomain, appDomain],
-  );
+  const previewBranding = mergeBrandingSettings({
+    madrasaName: data.name,
+    tagline: data.tagline,
+    logoUrl: data.logoUrl || "",
+    faviconUrl: data.logoUrl || "",
+    country: data.country,
+    website: data.subdomain ? `https://${data.subdomain}.${appDomain}` : "",
+  });
 
   const resolvedFooter =
     data.footerText.trim() || defaultFooterForMadrasa(data.name, 'en');
@@ -65,12 +61,10 @@ export function useCreateMadrasaController(
     }));
   };
 
-  const countryOptions = useMemo(() => {
-    return COUNTRY_CODES.map((c) => ({
-      value: c.country,
-      label: `${c.country} (${c.code})`,
-    }));
-  }, []);
+  const countryOptions = COUNTRY_CODES.map((c) => ({
+    value: c.country,
+    label: `${c.country} (${c.code})`,
+  }));
 
   return {
     t,

@@ -1,16 +1,17 @@
 import React, { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Plus, Globe, Building2, Ban } from "lucide-react";
+import { ArrowRight, Plus, Globe, Building2, Ban, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
-import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/StatCard";
 import { usePlatformWorkspaces } from "@/platform/hooks/usePlatformWorkspaces";
+import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions";
 import { CardSkeleton } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 import { containerVariantsConsole as containerVariants, itemVariants } from "@/platform/lib/animations";
 
@@ -21,19 +22,18 @@ function WorkspaceListFallback(): React.JSX.Element {
 }
 
 /**
- * Authenticated apex console — super-user provisions new madrasa workspaces.
+ * Authenticated apex console — workspace ops and onboarding gated by permissions.
  */
 export default function PlatformConsole(): React.JSX.Element {
   const { t } = useTranslation();
-  const { platformUser } = usePlatformAuth();
+  const { platformUser, isSuperUser, canWorkspaces, canOnboard } = usePlatformPermissions();
   const { data: workspaces } = usePlatformWorkspaces();
-  const isSuperUser = platformUser?.role === "super_user";
 
   const totalWorkspaces = workspaces?.length ?? 0;
   const activeWorkspaces = workspaces?.filter((w) => w.enabled).length ?? 0;
   const disabledWorkspaces = workspaces?.filter((w) => !w.enabled).length ?? 0;
 
-  const headerActions = isSuperUser ? (
+  const headerActions = canOnboard ? (
     <Button
       asChild
       className="h-11 rounded-xl font-bold px-5 shadow-sm shadow-primary/20 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer self-start sm:self-auto"
@@ -60,47 +60,75 @@ export default function PlatformConsole(): React.JSX.Element {
         <motion.div variants={itemVariants}>
           <PageHeader
             title={t("platform.consoleTitle")}
-            subtitle={t("platform.consoleSubtitle", { name: platformUser?.name ?? "" })}
+            subtitle={
+              isSuperUser
+                ? t("platform.consoleSubtitle", { name: platformUser?.name ?? "" })
+                : t("platform.adminConsoleSubtitle", { name: platformUser?.name ?? "" })
+            }
             actions={headerActions}
           />
         </motion.div>
 
-        {/* Dashboard Statistics Grid */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            label={t("platform.manageMadrasas")}
-            value={totalWorkspaces}
-            icon={Building2}
-            accent="primary"
-            delayIndex={0}
-          />
-          <StatCard
-            label={t("platform.workspaceActive")}
-            value={activeWorkspaces}
-            icon={Globe}
-            accent="success"
-            delayIndex={1}
-          />
-          <StatCard
-            label={t("platform.workspaceInactive")}
-            value={disabledWorkspaces}
-            icon={Ban}
-            accent="destructive"
-            delayIndex={2}
-          />
-        </motion.div>
+        {canWorkspaces ? (
+          <>
+            <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <StatCard
+                label={t("platform.manageMadrasas")}
+                value={totalWorkspaces}
+                icon={Building2}
+                accent="primary"
+                delayIndex={0}
+              />
+              <StatCard
+                label={t("platform.workspaceActive")}
+                value={activeWorkspaces}
+                icon={Globe}
+                accent="success"
+                delayIndex={1}
+              />
+              <StatCard
+                label={t("platform.workspaceInactive")}
+                value={disabledWorkspaces}
+                icon={Ban}
+                accent="destructive"
+                delayIndex={2}
+              />
+            </motion.div>
 
-        {/* Workspaces List Section */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-card/30 border border-border/40 rounded-2xl p-6 backdrop-blur-sm shadow-sm space-y-6"
-        >
-          <Suspense fallback={<WorkspaceListFallback />}>
-            <PlatformWorkspaceList />
-          </Suspense>
-        </motion.div>
+            <motion.div
+              variants={itemVariants}
+              className="bg-card/30 border border-border/40 rounded-2xl p-6 backdrop-blur-sm shadow-sm space-y-6"
+            >
+              <Suspense fallback={<WorkspaceListFallback />}>
+                <PlatformWorkspaceList />
+              </Suspense>
+            </motion.div>
+          </>
+        ) : (
+          <motion.div variants={itemVariants}>
+            <EmptyState
+              icon={User}
+              title={t("platform.adminNoCapabilities")}
+              description={
+                canOnboard
+                  ? t("platform.permOnboardDesc")
+                  : t("platform.adminLimitedDescription")
+              }
+              action={
+                canOnboard ? (
+                  <Button asChild className="min-h-11">
+                    <Link to={ROUTES.onboarding}>{t("auth.createMadrasa")}</Link>
+                  </Button>
+                ) : (
+                  <Button asChild className="min-h-11">
+                    <Link to={ROUTES.platformAccount}>{t("platform.myAccount")}</Link>
+                  </Button>
+                )
+              }
+            />
+          </motion.div>
+        )}
       </motion.div>
     </PlatformPageShell>
   );
 }
-

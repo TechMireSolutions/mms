@@ -5,8 +5,8 @@ import { useTenant } from "@/lib/contexts/TenantContext";
 
 export const PLATFORM_SETUP_STATUS_QUERY_KEY = ["platform", "setup", "status"] as const;
 
-async function fetchPlatformSetupStatus(): Promise<PlatformSetupStatus> {
-  return apiJson<PlatformSetupStatus>("/api/platform/auth/setup/status");
+async function fetchPlatformSetupStatus(signal?: AbortSignal): Promise<PlatformSetupStatus> {
+  return apiJson<PlatformSetupStatus>("/api/platform/auth/setup/status", { signal });
 }
 
 /** First-run platform super-user setup status (apex only). */
@@ -20,7 +20,7 @@ export function usePlatformSetupStatus(): {
 
   const query = useQuery({
     queryKey: PLATFORM_SETUP_STATUS_QUERY_KEY,
-    queryFn: fetchPlatformSetupStatus,
+    queryFn: ({ signal }) => fetchPlatformSetupStatus(signal),
     enabled: isApex,
     staleTime: 60_000,
     retry: 5,

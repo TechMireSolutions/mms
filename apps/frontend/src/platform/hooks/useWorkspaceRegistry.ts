@@ -5,8 +5,10 @@ import { useTenant } from "@/lib/contexts/TenantContext";
 
 export const WORKSPACE_REGISTRY_QUERY_KEY = ["workspace", "registry"] as const;
 
-async function fetchWorkspaceRegistry(): Promise<PublicWorkspaceSummary[]> {
-  const registryResponse = await apiJson<WorkspaceRegistryResponse>("/api/workspace/registry");
+async function fetchWorkspaceRegistry(signal?: AbortSignal): Promise<PublicWorkspaceSummary[]> {
+  const registryResponse = await apiJson<WorkspaceRegistryResponse>("/api/workspace/registry", {
+    signal,
+  });
   return registryResponse.workspaces;
 }
 
@@ -16,7 +18,7 @@ export function useWorkspaceRegistry(options?: { enabled?: boolean }) {
 
   return useQuery({
     queryKey: WORKSPACE_REGISTRY_QUERY_KEY,
-    queryFn: fetchWorkspaceRegistry,
+    queryFn: ({ signal }) => fetchWorkspaceRegistry(signal),
     enabled: options?.enabled ?? isApex,
     staleTime: 60_000,
   });

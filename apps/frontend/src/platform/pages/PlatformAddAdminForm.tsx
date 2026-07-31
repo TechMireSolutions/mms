@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2, Mail, User, UserPlus } from 'lucide-react';
+import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS, type PlatformAdminPermissions } from '@mms/shared';
 import { Alert } from '@/components/ui/Alert';
 import PasswordInput from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { getPlatformRegisterError } from '@/platform/lib/platformValidation';
 import { useAddPlatformAdmin } from '@/platform/hooks/usePlatformAdmins';
+import { PlatformAdminPermissionsFields } from '@/platform/components/PlatformAdminPermissionsFields';
 
 export function PlatformAddAdminForm(): React.JSX.Element {
   const { t } = useTranslation();
@@ -17,6 +19,9 @@ export function PlatformAddAdminForm(): React.JSX.Element {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [permissions, setPermissions] = useState<PlatformAdminPermissions>(
+    DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleAddAdmin = async (event: React.FormEvent): Promise<void> => {
@@ -34,10 +39,12 @@ export function PlatformAddAdminForm(): React.JSX.Element {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
+        permissions,
       });
       setName('');
       setEmail('');
       setPassword('');
+      setPermissions(DEFAULT_PLATFORM_ADMIN_PERMISSIONS);
     } catch (err) {
       setSubmitError(getPlatformErrorMessage(err, t));
     }
@@ -81,6 +88,12 @@ export function PlatformAddAdminForm(): React.JSX.Element {
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            disabled={addAdmin.isPending}
+          />
+
+          <PlatformAdminPermissionsFields
+            value={permissions}
+            onChange={setPermissions}
             disabled={addAdmin.isPending}
           />
 

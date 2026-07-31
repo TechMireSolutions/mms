@@ -159,7 +159,13 @@ export default async function platformAuthRoutes(
       const payload = request.user as PlatformUser;
       const profile = await updatePlatformUserProfile(payload.id, parsed.data.name);
       issuePlatformSession(
-        { id: profile.id, email: profile.email, name: profile.name, role: profile.role },
+        {
+          id: profile.id,
+          email: profile.email,
+          name: profile.name,
+          role: profile.role,
+          permissions: profile.permissions,
+        },
         fastify.jwt,
         reply,
       );

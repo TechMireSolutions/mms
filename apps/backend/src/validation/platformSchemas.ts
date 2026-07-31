@@ -10,4 +10,5 @@ export {
   workspaceEnabledPatchBodySchema,
   workspaceDeleteBodySchema,
   platformCreateAdminBodySchema,
+  platformUpdateAdminPermissionsBodySchema,
 } from '@mms/shared';

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   DEFAULT_BRANDING_SETTINGS,
@@ -14,6 +14,7 @@ import { applyBrandingTheme } from "@/lib/brandingTheme";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { isApiError } from "@/lib/apiClient";
+import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import {
   ONBOARDING_INITIAL_DATA,
   ONBOARDING_STEP_DEFS,
@@ -28,11 +29,9 @@ export function useOnboardingWizardController() {
   const [data, setData] = useState<OnboardingData>(ONBOARDING_INITIAL_DATA);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showSignInLink, setShowSignInLink] = useState(false);
 
-  const wizardSteps = useMemo(
-    () => ONBOARDING_STEP_DEFS.map((def) => ({ id: def.id, label: t(def.labelKey) })),
-    [t],
-  );
+  const wizardSteps = ONBOARDING_STEP_DEFS.map((def) => ({ id: def.id, label: t(def.labelKey) }));
 
   useEffect(() => {
     return () => {
@@ -62,6 +61,7 @@ export function useOnboardingWizardController() {
 
   const handleFinish = async (): Promise<void> => {
     setSubmitError(null);
+    setShowSignInLink(false);
 
     const stepError = validateCurrentStep();
     if (stepError) {
@@ -76,7 +76,7 @@ export function useOnboardingWizardController() {
 
     const policyCheck = validatePasswordPolicy(data.password, DEFAULT_GLOBAL_SETTINGS.passwordPolicy);
     if (!policyCheck.valid) {
-      setSubmitError(policyCheck.errorKey ? t(policyCheck.errorKey) : policyCheck.message);
+      setSubmitError(policyCheck.errorKey ? t(policyCheck.errorKey) : t("onboarding.submitFailed"));
       return;
     }
 
@@ -104,12 +104,12 @@ export function useOnboardingWizardController() {
 
       navigate(ROUTES.home, { replace: true });
     } catch (err: unknown) {
-      const message = isApiError(err)
-        ? err.message
-        : err instanceof Error
-          ? err.message
-          : t("onboarding.submitFailed");
-      setSubmitError(message);
+      if (isApiError(err) && err.type === "conflict") {
+        setSubmitError(t("onboarding.workspaceConflict"));
+        setShowSignInLink(true);
+      } else {
+        setSubmitError(getPlatformErrorMessage(err, t));
+      }
     } finally {
       setLoading(false);
     }
@@ -119,9 +119,11 @@ export function useOnboardingWizardController() {
     const stepError = validateCurrentStep();
     if (stepError) {
       setSubmitError(stepError);
+      setShowSignInLink(false);
       return;
     }
     setSubmitError(null);
+    setShowSignInLink(false);
 
     if (!isLastStep) {
       setStep((value) => value + 1);
@@ -129,8 +131,6 @@ export function useOnboardingWizardController() {
     }
     void handleFinish();
   };
-
-  const showSignInLink = Boolean(submitError?.toLowerCase().includes("already exists"));
 
   return {
     t,

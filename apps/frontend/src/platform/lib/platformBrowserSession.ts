@@ -1,26 +1,19 @@
+/** Cross-tab hint that a platform cookie session may exist (logout / failure clear). */
 const PLATFORM_BROWSER_SESSION_KEY = 'mms_platform_browser_session';
 
 export function markPlatformBrowserSession(): void {
   try {
-    sessionStorage.setItem(PLATFORM_BROWSER_SESSION_KEY, '1');
+    localStorage.setItem(PLATFORM_BROWSER_SESSION_KEY, '1');
   } catch {
-    /* sessionStorage unavailable */
+    /* localStorage unavailable */
   }
 }
 
 export function clearPlatformBrowserSession(): void {
   try {
+    localStorage.removeItem(PLATFORM_BROWSER_SESSION_KEY);
     sessionStorage.removeItem(PLATFORM_BROWSER_SESSION_KEY);
   } catch {
-    /* sessionStorage unavailable */
+    /* storage unavailable */
   }
 }
-
-export function hasPlatformBrowserSession(): boolean {
-  try {
-    return sessionStorage.getItem(PLATFORM_BROWSER_SESSION_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-

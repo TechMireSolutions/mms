@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail } from 'lucide-react';
-import { formatDate } from '@mms/shared';
+import { formatDate, type PlatformUserProfile } from '@mms/shared';
 import { Card } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { containerVariants, cardVariants } from '@/platform/lib/animations';
-import type { PlatformUserProfile } from '@mms/shared';
+import { PlatformEditAdminAccessDialog } from '@/platform/components/PlatformEditAdminAccessDialog';
 
 interface PlatformAdminsListProps {
   admins: PlatformUserProfile[] | undefined;
@@ -24,6 +25,7 @@ export function PlatformAdminsList({
   onRetry,
 }: PlatformAdminsListProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [editingAdmin, setEditingAdmin] = useState<PlatformUserProfile | null>(null);
 
   return (
     <div className="lg:col-span-2 space-y-4 text-start">
@@ -60,12 +62,58 @@ export function PlatformAdminsList({
                       <Mail className="w-4 h-4 shrink-0 opacity-80" aria-hidden />
                       <span className="min-w-0 truncate">{admin.email}</span>
                     </div>
+                    {admin.role === 'admin' ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {admin.permissions?.workspaces ? (
+                          <StatusBadge
+                            status="workspaces"
+                            config={{
+                              workspaces: {
+                                label: t('platform.permWorkspaces'),
+                                cls: 'bg-primary/10 text-primary border-primary/20',
+                              },
+                            }}
+                            size="sm"
+                          />
+                        ) : null}
+                        {admin.permissions?.onboard ? (
+                          <StatusBadge
+                            status="onboard"
+                            config={{
+                              onboard: {
+                                label: t('platform.permOnboard'),
+                                cls: 'bg-primary/10 text-primary border-primary/20',
+                              },
+                            }}
+                            size="sm"
+                          />
+                        ) : null}
+                        {!admin.permissions?.workspaces && !admin.permissions?.onboard ? (
+                          <span className="text-xs text-muted-foreground">{t('platform.adminNoCapabilities')}</span>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
-                  {admin.createdAt ? (
-                    <p className="text-xs text-muted-foreground/60 font-semibold pt-2 border-t border-border/40 mt-2">
-                      {t('platform.profileMemberSince')}: {formatDate(admin.createdAt)}
-                    </p>
-                  ) : null}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 mt-2">
+                    {admin.createdAt ? (
+                      <p className="text-xs text-muted-foreground/60 font-semibold">
+                        {t('platform.profileMemberSince')}: {formatDate(admin.createdAt)}
+                      </p>
+                    ) : (
+                      <span />
+                    )}
+                    {admin.role === 'admin' ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="min-h-11"
+                        onClick={() => setEditingAdmin(admin)}
+                      >
+                        {t('platform.editAdminAccess')}
+                      </Button>
+                    ) : null}
+                  </div>
                 </Card>
               </motion.div>
             ))}
@@ -76,6 +124,16 @@ export function PlatformAdminsList({
           <p className="text-sm text-muted-foreground">{t('platform.noAdmins')}</p>
         </div>
       )}
+
+      {editingAdmin ? (
+        <PlatformEditAdminAccessDialog
+          admin={editingAdmin}
+          open={Boolean(editingAdmin)}
+          onOpenChange={(open) => {
+            if (!open) setEditingAdmin(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

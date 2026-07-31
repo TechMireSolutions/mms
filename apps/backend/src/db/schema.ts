@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, serial, primaryKey, foreignKey } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import type { PersistedSavedReportCategory, PlatformRole } from '@mms/shared';
+import type { PersistedSavedReportCategory, PlatformAdminPermissions, PlatformRole } from '@mms/shared';
+import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS } from '@mms/shared';
 
 export const collections = pgTable('collections', {
   name: text('name').primaryKey(),
@@ -47,6 +48,10 @@ export const platformUsers = pgTable('platform_users', {
   passwordHash: text('password_hash').notNull(),
   emailVerifiedAt: timestamp('email_verified_at', { mode: 'date' }),
   role: text('role').$type<PlatformRole>().notNull().default('admin'),
+  permissions: jsonb('permissions')
+    .$type<PlatformAdminPermissions>()
+    .notNull()
+    .default(DEFAULT_PLATFORM_ADMIN_PERMISSIONS),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [

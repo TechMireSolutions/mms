@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { PlatformUser, PlatformRole } from '@mms/shared';
+import type { PlatformAdminPermissionKey, PlatformUser } from '@mms/shared';
+import { platformUserCan } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
@@ -21,7 +22,8 @@ export async function requireMainDomain(
 }
 
 /**
- * Apex-only JWT for platform super-users (separate from tenant madrasa sessions).
+ * Apex-only JWT for platform operators (separate from tenant madrasa sessions).
+ * Reloads role + permissions from DB so permission edits apply without re-login.
  */
 export async function authenticatePlatform(
   request: FastifyRequest,
@@ -46,19 +48,16 @@ export async function authenticatePlatform(
     return;
   }
 
-  const { getStoredPlatformUserById } = await import('../services/platform/platformUserService.js');
-  const userExists = await getStoredPlatformUserById(payload.id);
-  if (!userExists) {
+  const { getStoredPlatformUserById, toPublicPlatformUser } = await import(
+    '../services/platform/platformUserService.js'
+  );
+  const stored = await getStoredPlatformUserById(payload.id);
+  if (!stored) {
     sendUnauthorized(reply, 'User no longer exists');
     return;
   }
 
-  (request as PlatformAuthenticatedRequest).platformUser = {
-    id: payload.id,
-    email: payload.email,
-    name: payload.name,
-    role: payload.role as PlatformRole,
-  };
+  (request as PlatformAuthenticatedRequest).platformUser = toPublicPlatformUser(stored);
 }
 
 /**
@@ -72,4 +71,19 @@ export async function requireSuperUser(
   if (!req.platformUser || req.platformUser.role !== 'super_user') {
     sendForbidden(reply, 'Only platform super-users can access this resource');
   }
+}
+
+/**
+ * Allows super-users always, or admins with the given grantable permission.
+ */
+export function requirePlatformPermission(permission: PlatformAdminPermissionKey) {
+  return async function requirePlatformPermissionHook(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> {
+    const req = request as PlatformAuthenticatedRequest;
+    if (!platformUserCan(req.platformUser, permission)) {
+      sendForbidden(reply, `Missing platform permission: ${permission}`);
+    }
+  };
 }

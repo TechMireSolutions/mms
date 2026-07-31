@@ -47,6 +47,9 @@ describe('platformSchemas', () => {
       password: 'Password123456',
     });
     expect(valid.success).toBe(true);
+    if (valid.success) {
+      expect(valid.data.permissions).toEqual({ workspaces: false, onboard: false });
+    }
     expect(PLATFORM_MIN_PASSWORD_LENGTH).toBeGreaterThanOrEqual(10);
   });
 

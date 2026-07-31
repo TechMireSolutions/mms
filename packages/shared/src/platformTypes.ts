@@ -6,12 +6,38 @@ export const PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES = 30;
 
 export type PlatformRole = 'super_user' | 'admin';
 
+/** Grantable platform admin capabilities (super_user ignores and has all). */
+export type PlatformAdminPermissionKey = 'workspaces' | 'onboard';
+
+/**
+ * Per-admin capability flags assigned by a platform super-user.
+ * `workspaces` — list / enable / disable / delete madrasas.
+ * `onboard` — create new madrasas via onboarding.
+ */
+export interface PlatformAdminPermissions {
+  workspaces: boolean;
+  onboard: boolean;
+}
+
+/** Default for new admins — account self-service only until a super-user grants access. */
+export const DEFAULT_PLATFORM_ADMIN_PERMISSIONS: PlatformAdminPermissions = {
+  workspaces: false,
+  onboard: false,
+};
+
+/** Full grants used for super_user rows / JWT hydration convenience. */
+export const FULL_PLATFORM_ADMIN_PERMISSIONS: PlatformAdminPermissions = {
+  workspaces: true,
+  onboard: true,
+};
+
 /** Public platform operator — separate from tenant `User`. */
 export interface PlatformUser {
   id: string;
   email: string;
   name: string;
   role: PlatformRole;
+  permissions: PlatformAdminPermissions;
 }
 
 /** Platform super-user profile returned from `/api/platform/auth/me`. */
@@ -24,6 +50,33 @@ export interface StoredPlatformUser extends PlatformUser {
   passwordHash: string;
   createdAt: string;
   emailVerifiedAt?: string;
+}
+
+/**
+ * Whether a platform operator may perform a grantable capability.
+ * Super-users always can; admins use their stored permission flags.
+ */
+export function platformUserCan(
+  user: Pick<PlatformUser, 'role' | 'permissions'> | null | undefined,
+  permission: PlatformAdminPermissionKey,
+): boolean {
+  if (!user) return false;
+  if (user.role === 'super_user') return true;
+  return Boolean(user.permissions?.[permission]);
+}
+
+/** Normalize partial/unknown JSON into a full permissions object. */
+export function normalizePlatformAdminPermissions(
+  value: unknown,
+): PlatformAdminPermissions {
+  if (!value || typeof value !== 'object') {
+    return { ...DEFAULT_PLATFORM_ADMIN_PERMISSIONS };
+  }
+  const record = value as Record<string, unknown>;
+  return {
+    workspaces: record.workspaces === true,
+    onboard: record.onboard === true,
+  };
 }
 
 /** Public setup status for apex first-run wizard. */

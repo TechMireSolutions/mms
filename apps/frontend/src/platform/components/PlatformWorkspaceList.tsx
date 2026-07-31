@@ -67,7 +67,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         />
         <SubTabBar
           tabs={[
-            { key: 'all', label: t('attendance.filter.all') },
+            { key: 'all', label: t('platform.filterAll') },
             { key: 'active', label: t('platform.workspaceActive'), icon: Globe },
             { key: 'inactive', label: t('platform.workspaceInactive'), icon: Ban },
           ]}
@@ -79,8 +79,11 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
       {filteredItems.length === 0 ? (
         <EmptyState
           icon={Globe}
-          title={search ? t('platform.noAdmins') : t('apex.noMadrasasYet')}
-          description={search ? t('platform.noSearchResults') : undefined}
+          title={
+            search || statusFilter !== 'all'
+              ? t('platform.noSearchResults')
+              : t('apex.noMadrasasYet')
+          }
           compact
         />
       ) : (

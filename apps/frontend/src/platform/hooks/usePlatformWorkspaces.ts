@@ -2,25 +2,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PlatformWorkspaceListResponse, PlatformWorkspaceRow } from '@mms/shared';
 import { apiJson, isApiError } from '@/lib/apiClient';
 import { WORKSPACE_REGISTRY_QUERY_KEY } from '@/platform/hooks/useWorkspaceRegistry';
-import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 
 export const PLATFORM_WORKSPACES_QUERY_KEY = ['platform', 'workspaces'] as const;
 
-async function fetchPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
-  const workspacesResponse = await apiJson<PlatformWorkspaceListResponse>('/api/platform/workspaces');
+async function fetchPlatformWorkspaces(signal?: AbortSignal): Promise<PlatformWorkspaceRow[]> {
+  const workspacesResponse = await apiJson<PlatformWorkspaceListResponse>('/api/platform/workspaces', {
+    signal,
+  });
   return workspacesResponse.workspaces;
 }
 
-/** Platform super-user list of all madrasas (includes disabled). */
+/** Platform workspace list — super-user or admin with `workspaces` permission. */
 export function usePlatformWorkspaces() {
-  const { platformUser, isPlatformAuthenticated } = usePlatformAuth();
+  const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
 
   return useQuery({
     queryKey: PLATFORM_WORKSPACES_QUERY_KEY,
-    queryFn: fetchPlatformWorkspaces,
-    enabled: isPlatformAuthenticated && platformUser?.role === 'super_user',
+    queryFn: ({ signal }) => fetchPlatformWorkspaces(signal),
+    enabled: isPlatformAuthenticated && canWorkspaces,
     staleTime: 60_000,
   });
 }

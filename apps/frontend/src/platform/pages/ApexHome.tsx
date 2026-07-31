@@ -10,7 +10,13 @@ const PlatformSignIn = lazy(() => import("@/platform/pages/auth/PlatformSignIn")
 const PlatformSetup = lazy(() => import("@/platform/pages/auth/PlatformSetup"));
 const PlatformConsole = lazy(() => import("@/platform/pages/PlatformConsole"));
 
-/** Apex home: first-run setup, platform sign-in, or authenticated console. */
+/**
+ * Apex home decision tree:
+ * 1. Wait for platform session probe + setup status
+ * 2. Authenticated → console
+ * 3. No platform users (`needsSetup`) → force create first super-user
+ * 4. Otherwise → platform sign-in
+ */
 export default function ApexHome(): React.JSX.Element {
   const { t } = useTranslation();
   const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
@@ -20,6 +26,7 @@ export default function ApexHome(): React.JSX.Element {
     return <RouteStatusFallback fullScreen />;
   }
 
+  // Prefer session over stale needsSetup after OTP verify (invalidate is async).
   if (isPlatformAuthenticated) {
     return (
       <Suspense fallback={<RouteStatusFallback fullScreen />}>

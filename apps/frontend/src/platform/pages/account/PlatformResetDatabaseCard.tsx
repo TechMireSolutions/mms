@@ -7,6 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useResetPlatformDatabase } from "@/platform/hooks/usePlatformSettings";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
+import { ROUTES } from "@/lib/config/routes";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -33,11 +34,10 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
       await resetDbMutation.mutateAsync(confirmText.trim());
       setResetDialogOpen(false);
       setConfirmText("");
-      platformLogout();
-      // Force a full page reload after a short delay to let the backend migrations complete
-      // and ensure the client-side state/cache is completely cleared.
+      await platformLogout();
+      // Full reload after logout so migrations + cleared client cache take effect.
       setTimeout(() => {
-        window.location.href = "/platform";
+        window.location.href = ROUTES.home;
       }, 800);
     } catch (err) {
       setResetError(getPlatformErrorMessage(err, t));

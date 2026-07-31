@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ROUTES, TENANT_APP_PATHS } from '@/lib/config/routes';
 import PlatformBootGate, { PlatformFallbackRoute } from '@/platform/components/PlatformBootGate';
+import { PlatformFirstRunGate } from '@/platform/components/PlatformFirstRunGate';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 
 const ApexHome = React.lazy(() => import('@/platform/pages/ApexHome'));
@@ -18,6 +19,7 @@ const apexTenantGate = (
 
 /**
  * Platform apex route tree — public entry routes vs platform-auth-protected admin routes.
+ * First-run (`needsSetup`) forces create-first-super-user on `/` via {@link ApexHome}.
  */
 export default function ApexRoutes(): React.JSX.Element {
   return (
@@ -30,7 +32,9 @@ export default function ApexRoutes(): React.JSX.Element {
         path={ROUTES.forgotPassword}
         element={<ApexWorkspaceGate variant="forgotPassword" showWorkspaceList />}
       />
-      <Route path={ROUTES.platformForgotPassword} element={<PlatformForgotPassword />} />
+      <Route element={<PlatformFirstRunGate />}>
+        <Route path={ROUTES.platformForgotPassword} element={<PlatformForgotPassword />} />
+      </Route>
       <Route
         path={ROUTES.twoFactor}
         element={<ApexWorkspaceGate variant="twoFactor" showWorkspaceList={false} />}
@@ -40,12 +44,14 @@ export default function ApexRoutes(): React.JSX.Element {
         <Route key={path} path={path} element={apexTenantGate} />
       ))}
 
-      {/* Protected platform routes */}
+      {/* Protected platform routes — BootGate sends unauthenticated users to `/` (setup or sign-in) */}
       <Route element={<PlatformBootGate requireAuth />}>
         <Route path={ROUTES.platformAccount} element={<PlatformAccount />} />
       </Route>
-      <Route element={<PlatformBootGate requireAuth requireSuperUser />}>
+      <Route element={<PlatformBootGate requireAuth requirePermission="onboard" />}>
         <Route path={ROUTES.onboarding} element={<OnboardingWizard />} />
+      </Route>
+      <Route element={<PlatformBootGate requireAuth requireSuperUser />}>
         <Route path={ROUTES.platformAdmins} element={<PlatformAdmins />} />
       </Route>
 

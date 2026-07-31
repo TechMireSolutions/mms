@@ -90,7 +90,7 @@ export function usePlatformSetupController(smtpConfigured: boolean) {
         code: code.join(""),
       });
       invalidateSetupStatus();
-      await checkPlatformAuth();
+      await checkPlatformAuth({ force: true });
     } catch (err) {
       setError(getPlatformErrorMessage(err, t));
     }

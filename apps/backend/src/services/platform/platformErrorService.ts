@@ -11,7 +11,8 @@ export type PlatformErrorCode =
   | 'user_exists'
   | 'invalid_reset'
   | 'invalid_current_password'
-  | 'user_not_found';
+  | 'user_not_found'
+  | 'forbidden';
 
 const PLATFORM_ERROR_STATUSES: Record<PlatformErrorCode, number> = {
   setup_not_needed: 409,
@@ -27,6 +28,7 @@ const PLATFORM_ERROR_STATUSES: Record<PlatformErrorCode, number> = {
   invalid_reset: 404,
   invalid_current_password: 401,
   user_not_found: 404,
+  forbidden: 403,
 };
 
 export class PlatformError<TCode extends PlatformErrorCode = PlatformErrorCode> extends Error {

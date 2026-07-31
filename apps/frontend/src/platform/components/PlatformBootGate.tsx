@@ -1,5 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import type { PlatformAdminPermissionKey } from '@mms/shared';
+import { platformUserCan } from '@mms/shared';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { ROUTES } from '@/lib/config/routes';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
@@ -9,6 +11,8 @@ interface PlatformBootGateProps {
   /** When true, unauthenticated users are redirected to apex home. */
   requireAuth?: boolean;
   requireSuperUser?: boolean;
+  /** Grantable capability required (super_user always passes). */
+  requirePermission?: PlatformAdminPermissionKey;
 }
 
 /**
@@ -17,6 +21,7 @@ interface PlatformBootGateProps {
 export default function PlatformBootGate({
   requireAuth = true,
   requireSuperUser = false,
+  requirePermission,
 }: PlatformBootGateProps): React.JSX.Element {
   const {
     platformUser,
@@ -34,6 +39,10 @@ export default function PlatformBootGate({
   }
 
   if (requireSuperUser && platformUser?.role !== 'super_user') {
+    return <Navigate to={ROUTES.home} replace />;
+  }
+
+  if (requirePermission && !platformUserCan(platformUser, requirePermission)) {
     return <Navigate to={ROUTES.home} replace />;
   }
 
@@ -55,4 +64,3 @@ export function PlatformFallbackRoute(): React.JSX.Element {
 
   return <ApexPageNotFound />;
 }
-

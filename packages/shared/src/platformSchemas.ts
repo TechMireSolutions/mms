@@ -1,10 +1,17 @@
 import { z } from 'zod';
-import { PLATFORM_MIN_PASSWORD_LENGTH } from './platformTypes.js';
+import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS } from './platformTypes.js';
 import {
   validatePlatformSetupEmail,
   validatePlatformSetupName,
   validatePlatformSetupPassword,
 } from './platformSetupValidation.js';
+
+export const platformAdminPermissionsSchema = z.object({
+  workspaces: z.boolean(),
+  onboard: z.boolean(),
+});
+
+export type PlatformAdminPermissionsInput = z.infer<typeof platformAdminPermissionsSchema>;
 
 export const platformSetupRegisterBodySchema = z.object({
   name: z.string().refine((val: string) => !validatePlatformSetupName(val), {
@@ -106,6 +113,15 @@ export const platformCreateAdminBodySchema = z.object({
       message: 'Password must be at least 10 characters long and contain both letters and numbers',
     },
   ),
+  permissions: platformAdminPermissionsSchema.default(DEFAULT_PLATFORM_ADMIN_PERMISSIONS),
 });
 
 export type PlatformCreateAdminInput = z.infer<typeof platformCreateAdminBodySchema>;
+
+export const platformUpdateAdminPermissionsBodySchema = z.object({
+  permissions: platformAdminPermissionsSchema,
+});
+
+export type PlatformUpdateAdminPermissionsInput = z.infer<
+  typeof platformUpdateAdminPermissionsBodySchema
+>;

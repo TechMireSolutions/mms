@@ -26,6 +26,7 @@ describe('platformSettings REST API routes', () => {
         name: 'Super Admin',
         passwordHash: 'dummy-hash',
         role: 'super_user',
+        permissions: { workspaces: true, onboard: true },
         createdAt: new Date().toISOString(),
       }).catch(() => {});
 
@@ -35,6 +36,7 @@ describe('platformSettings REST API routes', () => {
         name: 'Normal Admin',
         passwordHash: 'dummy-hash',
         role: 'admin',
+        permissions: { workspaces: false, onboard: false },
         createdAt: new Date().toISOString(),
       }).catch(() => {});
     } catch {

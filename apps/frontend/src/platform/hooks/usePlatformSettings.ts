@@ -7,8 +7,10 @@ import { notify } from '@/lib/notify';
 
 export const PLATFORM_SETTINGS_QUERY_KEY = ['platform', 'settings'] as const;
 
-async function fetchPlatformSettings(): Promise<PlatformSettings> {
-  const response = await apiJson<{ settings: PlatformSettings }>('/api/platform/settings');
+async function fetchPlatformSettings(signal?: AbortSignal): Promise<PlatformSettings> {
+  const response = await apiJson<{ settings: PlatformSettings }>('/api/platform/settings', {
+    signal,
+  });
   return response.settings;
 }
 
@@ -18,7 +20,7 @@ export function usePlatformSettings() {
 
   return useQuery({
     queryKey: PLATFORM_SETTINGS_QUERY_KEY,
-    queryFn: fetchPlatformSettings,
+    queryFn: ({ signal }) => fetchPlatformSettings(signal),
     enabled: isPlatformAuthenticated && platformUser?.role === 'super_user',
     staleTime: 60_000,
   });

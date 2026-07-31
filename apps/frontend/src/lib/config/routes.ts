@@ -58,11 +58,20 @@ export function tenantNotFoundPath(subdomain: string): string {
   return `${ROUTES.tenantNotFound}?${params.toString()}`;
 }
 
-/** Platform paths that require platform super-user authentication. */
+/** Platform paths that require any authenticated platform user. */
+export const PLATFORM_AUTH_PATHS: readonly string[] = [ROUTES.platformAccount];
+
+/** Platform paths that require an authenticated platform super-user. */
+export const PLATFORM_SUPER_USER_PATHS: readonly string[] = [ROUTES.platformAdmins];
+
+/** Platform paths that require the onboard permission (or super-user). */
+export const PLATFORM_ONBOARD_PATHS: readonly string[] = [ROUTES.onboarding];
+
+/** All platform paths that require a platform session (auth and/or elevated access). */
 export const PLATFORM_PROTECTED_PATHS: readonly string[] = [
-  ROUTES.onboarding,
-  ROUTES.platformAccount,
-  ROUTES.platformAdmins,
+  ...PLATFORM_AUTH_PATHS,
+  ...PLATFORM_ONBOARD_PATHS,
+  ...PLATFORM_SUPER_USER_PATHS,
 ];
 
 /**

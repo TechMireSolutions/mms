@@ -7,14 +7,15 @@ import { ROUTES } from '@/lib/config/routes';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
+
 export function PlatformPageShellHeader(): React.JSX.Element | null {
   const { t } = useTranslation();
-  const { isPlatformAuthenticated, platformUser, platformLogout } = usePlatformAuth();
+  const { platformUser, platformLogout } = usePlatformAuth();
+  const { isPlatformAuthenticated, isSuperUser } = usePlatformPermissions();
   const location = useLocation();
 
   if (!isPlatformAuthenticated) return null;
-
-  const isSuperUser = platformUser?.role === 'super_user';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md shadow-sm transition-all duration-300">
@@ -91,7 +92,9 @@ export function PlatformPageShellHeader(): React.JSX.Element | null {
           <Button
             variant="ghost"
             size="icon"
-            onClick={platformLogout}
+            onClick={() => {
+              void platformLogout();
+            }}
             className="min-h-11 min-w-11 h-11 w-11 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-105 active:scale-95 transition-all"
             title={t('platform.signOut')}
             aria-label={t('platform.signOut')}
@@ -101,7 +104,10 @@ export function PlatformPageShellHeader(): React.JSX.Element | null {
         </div>
       </div>
 
-      <div className="grid w-full auto-cols-fr grid-flow-col border-t border-border/40 bg-card/60 px-2 py-1 backdrop-blur-sm md:hidden">
+      <nav
+        className="grid w-full auto-cols-fr grid-flow-col border-t border-border/40 bg-card/60 px-2 py-1 backdrop-blur-sm md:hidden"
+        aria-label={t('platform.navAria')}
+      >
         <Link
           to={ROUTES.home}
           className={cn(
@@ -134,7 +140,7 @@ export function PlatformPageShellHeader(): React.JSX.Element | null {
           <User className="w-4 h-4" aria-hidden />
           <span className="break-words">{t('platform.myAccount')}</span>
         </Link>
-      </div>
+      </nav>
     </header>
   );
 }

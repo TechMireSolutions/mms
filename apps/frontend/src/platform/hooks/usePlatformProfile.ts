@@ -5,8 +5,10 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 
 export const PLATFORM_PROFILE_QUERY_KEY = ['platform', 'profile'] as const;
 
-async function fetchPlatformProfile(): Promise<PlatformUserProfile> {
-  const profileResponse = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me');
+async function fetchPlatformProfile(signal?: AbortSignal): Promise<PlatformUserProfile> {
+  const profileResponse = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me', {
+    signal,
+  });
   return profileResponse.user;
 }
 
@@ -16,7 +18,7 @@ export function usePlatformProfile(options?: { enabled?: boolean }) {
 
   return useQuery({
     queryKey: PLATFORM_PROFILE_QUERY_KEY,
-    queryFn: fetchPlatformProfile,
+    queryFn: ({ signal }) => fetchPlatformProfile(signal),
     enabled: (options?.enabled ?? true) && isPlatformAuthenticated,
     staleTime: 60_000,
   });
@@ -36,7 +38,7 @@ export function useUpdatePlatformProfileName() {
     },
     onSuccess: async (user) => {
       queryClient.setQueryData(PLATFORM_PROFILE_QUERY_KEY, user);
-      await checkPlatformAuth();
+      await checkPlatformAuth({ force: true });
     },
   });
 }

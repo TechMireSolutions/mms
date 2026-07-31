@@ -3,6 +3,7 @@ import { hashPassword } from '../services/auth/passwordService.js';
 import { insertPlatformUser, findPlatformUserRowByEmail, updatePlatformUserRow } from '../db/repositories/platformUserRepository.js';
 import { initDb, closeDatabase } from '../db/database.js';
 import { randomBytes } from 'node:crypto';
+import { FULL_PLATFORM_ADMIN_PERMISSIONS } from '@mms/shared';
 
 loadBackendEnv();
 
@@ -25,6 +26,7 @@ async function seed() {
       name,
       passwordHash: await hashPassword(password),
       role: 'super_user',
+      permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
       createdAt: new Date().toISOString(),
     });
     console.log(`✅ Platform super-user seeded successfully for ${email}`);

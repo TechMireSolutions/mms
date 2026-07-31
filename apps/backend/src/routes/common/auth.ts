@@ -17,7 +17,7 @@ import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../../services
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import {
   authenticatePlatform,
-  type PlatformAuthenticatedRequest,
+  requirePlatformPermission,
 } from '../../middleware/authenticatePlatform.js';
 import { deleteAuthArtifact } from '../../services/auth/authArtifactService.js';
 import { getJwtExpiresIn } from '../../services/globalSettingsService.js';
@@ -103,13 +103,8 @@ export default async function authRoutes(
 
     inner.post(
       '/onboard',
-      { preHandler: authenticatePlatform },
+      { preHandler: [authenticatePlatform, requirePlatformPermission('onboard')] },
       async (request, reply) => {
-        const { platformUser } = request as PlatformAuthenticatedRequest;
-        if (platformUser.role !== 'super_user') {
-          return sendForbidden(reply, 'Only platform super-users can create madrasas');
-        }
-
         const parsed = parseRequest(onboardBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
         const body = parsed.data;

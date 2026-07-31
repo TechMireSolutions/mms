@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import {
   authenticatePlatform,
-  requireSuperUser,
+  requirePlatformPermission,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import {
@@ -24,7 +24,7 @@ export default async function platformWorkspaceRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticatePlatform);
-  fastify.addHook('preHandler', requireSuperUser);
+  fastify.addHook('preHandler', requirePlatformPermission('workspaces'));
 
   fastify.get('/', async (request, reply) => {
     const workspaces = await listPlatformWorkspaces();
