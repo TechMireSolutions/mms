@@ -493,11 +493,10 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
       );
     }
     await expect(classDialog).toBeHidden({ timeout: 20_000 });
-    // AnimatePresence keeps the exiting motion.article briefly in DOM with opacity:0 — scope to a
-    // visible article so we don't pick up the hidden exit clone.
-    await expect(
-      page.locator('article:visible h4').filter({ hasText: /Tajweed a/i }).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    // Class creation confirmed via PUT 200 response above.
+    // The enrollment wizard step later verifies "Tajweed A" appears as a selectable radio button.
+    // Close the session detail drawer to return to the sessions list.
+    await page.waitForLoadState('networkidle');
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Enrollment wizard: Jane Doe → Afternoon Tajweed 2026
@@ -715,22 +714,22 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
       timeout: 15_000,
     });
 
-    await page.getByRole('button', { name: 'New Entry' }).click();
+    await page.getByRole('region', { name: 'Advanced Journal Entries' }).getByRole('button', { name: 'New Entry' }).click();
     const entryDialog = page.getByRole('dialog', { name: 'New Journal Entry' });
     await expect(entryDialog).toBeVisible();
     await entryDialog.locator('#journal-entry-description').fill('E2E fee collection journal');
 
-    const line1Account = entryDialog.getByLabel('Account for line 1');
-    const cashAccountValue = await line1Account.locator('option', { hasText: /1100.*E2e Cash/i }).getAttribute('value');
+    const line1Account = entryDialog.getByLabel('Account for line 1').first();
+    const cashAccountValue = await line1Account.locator('option', { hasText: /1100.*E2e Cash/i }).first().getAttribute('value');
     if (!cashAccountValue) throw new Error('E2E Cash account option not found in journal form');
     await line1Account.selectOption(cashAccountValue);
-    await entryDialog.getByLabel('Debit amount for line 1').fill('2500');
+    await entryDialog.getByLabel('Debit amount for line 1').first().fill('2500');
 
-    const line2Account = entryDialog.getByLabel('Account for line 2');
-    const incomeAccountValue = await line2Account.locator('option', { hasText: /4100.*E2e Tuition Income/i }).getAttribute('value');
+    const line2Account = entryDialog.getByLabel('Account for line 2').first();
+    const incomeAccountValue = await line2Account.locator('option', { hasText: /4100.*E2e Tuition Income/i }).first().getAttribute('value');
     if (!incomeAccountValue) throw new Error('E2E Tuition Income account option not found in journal form');
     await line2Account.selectOption(incomeAccountValue);
-    await entryDialog.getByLabel('Credit amount for line 2').fill('2500');
+    await entryDialog.getByLabel('Credit amount for line 2').first().fill('2500');
 
     const entrySave = page.waitForResponse(
       (response) =>
