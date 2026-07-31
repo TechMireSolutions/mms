@@ -35,25 +35,22 @@ export function resetPlatformUsers(): void {
 }
 
 /**
- * Reads the platform setup OTP from the warning status banner (not the resend countdown).
+ * Legacy OTP helper. Platform setup now logs in directly without OTP verification.
  */
 export async function completePlatformSetupOtp(page: Page): Promise<void> {
   const otpInputs = page.locator('[id^="platform-otp-"]');
-  await expect(otpInputs.first()).toBeVisible({ timeout: 20_000 });
-
-  const devHint = page.getByRole('status').filter({ hasText: /\b\d{6}\b/ });
-  await expect(devHint).toBeVisible({ timeout: 20_000 });
-  const devHintText = await devHint.textContent();
-  const codeMatch = devHintText?.match(/\b\d{6}\b/);
-  if (!codeMatch) {
-    throw new Error(`Failed to extract verification code from hint text: "${devHintText}"`);
+  if (await otpInputs.first().isVisible().catch(() => false)) {
+    const devHint = page.getByRole('status').filter({ hasText: /\b\d{6}\b/ });
+    await expect(devHint).toBeVisible({ timeout: 10_000 });
+    const devHintText = await devHint.textContent();
+    const codeMatch = devHintText?.match(/\b\d{6}\b/);
+    if (codeMatch) {
+      for (let index = 0; index < codeMatch[0].length; index += 1) {
+        await page.fill(`#platform-otp-${index}`, codeMatch[0][index]);
+      }
+      await page.click('button[type="submit"]');
+    }
   }
-
-  const otpCode = codeMatch[0];
-  for (let index = 0; index < otpCode.length; index += 1) {
-    await page.fill(`#platform-otp-${index}`, otpCode[index]);
-  }
-  await page.click('button[type="submit"]');
 }
 
 /**
@@ -83,11 +80,8 @@ export async function bootstrapAuthenticatedTenant(
   await page.fill('#platform-setup-password', platformPassword);
   await page.click('button[type="submit"]');
 
-  await completePlatformSetupOtp(page);
-
   const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
   const signInEmailInput = page.locator('#platform-email');
-  // Wait for either the console to appear (auto-login after OTP) or the sign-in screen
   await platformConsoleHeading.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
 
   if (await signInEmailInput.isVisible()) {

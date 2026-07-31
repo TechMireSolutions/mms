@@ -89,9 +89,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await page.fill('#platform-setup-password', platformPassword);
     await page.click('button[type="submit"]');
 
-    await completePlatformSetupOtp(page);
-
-    // Verification auto-logs in. Check if platform console or sign-in appears.
+    // Direct registration auto-logs in. Check if platform console or sign-in appears.
     const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
     const signInEmailInput = page.locator('#platform-email');
     // locator.or() resolves as soon as either element is visible — safe alternative to Promise.race
