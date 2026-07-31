@@ -5,6 +5,7 @@
 export {
   getWorkspaceLocalStoragePrefix,
   getSyncStatus,
+  clearAllClientStorage,
   type SyncStatus,
   type ServerSyncResult,
 } from "@/lib/dbStorageCore.js";

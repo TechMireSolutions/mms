@@ -129,6 +129,20 @@ export function clearByPrefix(prefix: string): void {
   keysToRemove.forEach((k) => localStorage.removeItem(k));
 }
 
+/**
+ * Wipes all application localStorage and sessionStorage keys.
+ * Called when platform database reset or full workspace wipes occur to guarantee zero client cache leaks.
+ */
+export function clearAllClientStorage(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch (err) {
+    console.warn("Failed to clear client storage:", err);
+  }
+}
+
 
 /**
  * Writes a server snapshot into the scoped localStorage cache.

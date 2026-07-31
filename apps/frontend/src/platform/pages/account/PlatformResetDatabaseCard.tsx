@@ -10,6 +10,7 @@ import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useResetPlatformDatabase } from "@/platform/hooks/usePlatformSettings";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
+import { clearAllClientStorage } from "@/lib/db";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -41,6 +42,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
       setResetDialogOpen(false);
       setConfirmText("");
       setPassword("");
+      clearAllClientStorage();
       await platformLogout();
       setTimeout(() => {
         window.location.href = ROUTES.home;

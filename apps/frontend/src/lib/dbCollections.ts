@@ -59,6 +59,7 @@ const BUSINESS_COLLECTIONS = new Set([
   "sessionStatuses",
   "sessionTypes",
   "attendanceStatuses",
+  "backups",
 ]);
 
 /**

@@ -81,13 +81,16 @@ export async function synchronizeData(
   // Only a full workspace backup carries users; partial syncs must not prune.
   const isFullRestore = Array.isArray(payload.collections?.users);
 
+  const restoredCollectionKeys = new Set<string>();
+
   await runInTransaction(async () => {
     if (isFullRestore) {
       // Jobs race mid-restore and export artifacts are not in the envelope.
       await clearTenantBackgroundJobs();
+      // Ephemeral workspace log — do not populate target workspace with source backup history.
+      collections.backups = [];
     }
 
-    const restoredCollectionKeys = new Set<string>();
     for (const name of sortCollectionNamesForRestore(Object.keys(collections))) {
       throwIfSyncAborted(signal);
       const collectionItems = collections[name];

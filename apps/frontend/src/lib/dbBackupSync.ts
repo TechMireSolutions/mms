@@ -52,6 +52,7 @@ export async function fetchTenantBackupSnapshot(): Promise<TenantDatabaseSnapsho
  */
 export function applySnapshotToLocalCache(snapshot: TenantDatabaseSnapshot): void {
   const prefix = getStoragePrefix();
+  clearByPrefix(prefix);
   const keys = buildStorageKeysFromSnapshot(snapshot, prefix);
   for (const [key, value] of Object.entries(keys)) {
     safeSetItem(key, value);
