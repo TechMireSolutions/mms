@@ -719,17 +719,17 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await expect(entryDialog).toBeVisible();
     await entryDialog.locator('#journal-entry-description').fill('E2E fee collection journal');
 
-    const line1Account = entryDialog.getByLabel('Account for line 1').first();
+    const line1Account = entryDialog.locator('select[aria-label="Account for line 1"]:visible');
     const cashAccountValue = await line1Account.locator('option', { hasText: /1100.*E2e Cash/i }).first().getAttribute('value');
     if (!cashAccountValue) throw new Error('E2E Cash account option not found in journal form');
     await line1Account.selectOption(cashAccountValue);
-    await entryDialog.getByLabel('Debit amount for line 1').first().fill('2500');
+    await entryDialog.locator('[aria-label="Debit amount for line 1"]:visible').fill('2500');
 
-    const line2Account = entryDialog.getByLabel('Account for line 2').first();
+    const line2Account = entryDialog.locator('select[aria-label="Account for line 2"]:visible');
     const incomeAccountValue = await line2Account.locator('option', { hasText: /4100.*E2e Tuition Income/i }).first().getAttribute('value');
     if (!incomeAccountValue) throw new Error('E2E Tuition Income account option not found in journal form');
     await line2Account.selectOption(incomeAccountValue);
-    await entryDialog.getByLabel('Credit amount for line 2').first().fill('2500');
+    await entryDialog.locator('[aria-label="Credit amount for line 2"]:visible').fill('2500');
 
     const entrySave = page.waitForResponse(
       (response) =>
