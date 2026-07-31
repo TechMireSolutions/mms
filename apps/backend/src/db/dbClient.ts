@@ -3,7 +3,7 @@ import * as schema from './schema.js';
 
 let _db: NodePgDatabase<typeof schema> | null = null;
 
-export function setDb(instance: NodePgDatabase<typeof schema>): void {
+export function setDb(instance: NodePgDatabase<typeof schema> | null): void {
   _db = instance;
 }
 

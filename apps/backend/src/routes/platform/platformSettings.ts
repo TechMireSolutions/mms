@@ -14,6 +14,7 @@ import { clearPlatformAccessCookie } from '../../services/platform/platformCooki
 import { resetAndReseedDatabase } from '../../services/platform/platformDatabaseService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
+import { sendDatabaseError } from '../../lib/httpErrors.js';
 
 export default async function platformSettingsRoutes(
   fastify: FastifyInstance,
@@ -59,21 +60,24 @@ export default async function platformSettingsRoutes(
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
       const { platformUser } = request as PlatformAuthenticatedRequest;
-      await insertPlatformActivityLog({
-        userId: platformUser.id,
-        userEmail: platformUser.email,
-        action: 'reset_database',
-        details: {},
-        ipAddress: request.ip,
-      });
+      try {
+        await insertPlatformActivityLog({
+          userId: platformUser.id,
+          userEmail: platformUser.email,
+          action: 'reset_database',
+          details: {},
+          ipAddress: request.ip,
+        });
 
-      await resetAndReseedDatabase();
-      clearPlatformAccessCookie(reply);
-      return reply.send({
-        success: true,
-        message: 'Database wiped, migrated, and re-seeded successfully.',
-      });
+        await resetAndReseedDatabase();
+        clearPlatformAccessCookie(reply);
+        return reply.send({
+          success: true,
+          message: 'Database wiped, migrated, and re-seeded successfully.',
+        });
+      } catch (error) {
+        return sendDatabaseError(reply, 'Failed to reset database', error);
+      }
     },
   );
 }
-

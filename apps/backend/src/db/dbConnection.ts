@@ -10,16 +10,19 @@ import * as schema from './schema.js';
 export type DbClient = NodePgDatabase<typeof schema>;
 
 const txStorage = new AsyncLocalStorage<DbClient>();
-let pool: pg.Pool;
-let rootDb: DbClient;
+let pool: pg.Pool | null = null;
+let rootDb: DbClient | null = null;
 
 export function initializeDatabaseConnection(): void {
+  if (pool) return;
+
   const config = loadServerConfig();
   pool = new pg.Pool({
     connectionString: config.databaseUrl,
     max: config.pgPoolMax,
   });
   pool.on('error', (error) => {
+    // Idle clients can be terminated during platform DB reset; log and continue.
     console.error('Unexpected database pool client error:', error);
   });
 
@@ -44,7 +47,7 @@ export function getPool(): pg.Pool {
 /** Lightweight DB connectivity check for `/ready`. */
 export async function pingDatabase(): Promise<boolean> {
   try {
-    if (!pool) return false;
+    if (!pool || !rootDb) return false;
     await rootDb.execute(sql`SELECT 1`);
     return true;
   } catch {
@@ -52,10 +55,17 @@ export async function pingDatabase(): Promise<boolean> {
   }
 }
 
-/** Gracefully close the database on shutdown. */
+/** Gracefully close the database on shutdown or before a full schema wipe. */
 export async function closeDatabase(): Promise<void> {
-  if (pool) {
-    await pool.end();
+  if (!pool) return;
+  const ending = pool;
+  pool = null;
+  rootDb = null;
+  setDb(null);
+  try {
+    await ending.end();
+  } catch (error) {
+    console.error('Error closing database pool:', error);
   }
 }
 

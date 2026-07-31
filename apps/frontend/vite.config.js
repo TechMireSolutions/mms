@@ -19,6 +19,8 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:3000',
         changeOrigin: true,
+        timeout: 600_000,
+        proxyTimeout: 600_000,
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq, req) => {
             const host = req.headers.host;

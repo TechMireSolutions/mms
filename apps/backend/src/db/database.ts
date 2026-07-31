@@ -1,6 +1,7 @@
 export {
   closeDatabase,
   getPool,
+  initializeDatabaseConnection,
   pingDatabase,
   runInReadSnapshotTransaction,
   runInTransaction,
