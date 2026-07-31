@@ -97,8 +97,12 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
                 togglePending={setEnabled.isPending && setEnabled.variables?.subdomain === workspace.subdomain}
                 deletePending={deleteWorkspace.isPending && deleteWorkspace.variables?.subdomain === workspace.subdomain}
                 onToggle={(enabled) => setEnabled.mutate({ subdomain: workspace.subdomain, enabled })}
-                onDelete={(password) =>
-                  deleteWorkspace.mutateAsync({ subdomain: workspace.subdomain, password })
+                onDelete={({ password, confirmSubdomain }) =>
+                  deleteWorkspace.mutateAsync({
+                    subdomain: workspace.subdomain,
+                    password,
+                    confirmSubdomain,
+                  })
                 }
               />
             ))}

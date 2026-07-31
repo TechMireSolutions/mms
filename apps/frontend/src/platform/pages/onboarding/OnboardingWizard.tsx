@@ -39,6 +39,7 @@ export default function OnboardingWizard(): React.JSX.Element {
         loading={loading}
         submitError={submitError}
         showSignInLink={showSignInLink}
+        conflictSubdomain={data.subdomain}
         isLastStep={isLastStep}
         onBack={() => setStep((value) => value - 1)}
         onNext={handleNext}

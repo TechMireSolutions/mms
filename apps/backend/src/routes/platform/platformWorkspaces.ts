@@ -71,6 +71,13 @@ export default async function platformWorkspaceRoutes(
       });
     }
 
+    if (body.data.confirmSubdomain.trim().toLowerCase() !== params.data.subdomain.toLowerCase()) {
+      return reply.status(400).send({
+        type: 'validation_error',
+        message: 'Confirmation subdomain does not match the workspace being deleted',
+      });
+    }
+
     const removed = await deleteWorkspace(params.data.subdomain);
     if (!removed) {
       return sendNotFound(reply, 'Workspace not found');

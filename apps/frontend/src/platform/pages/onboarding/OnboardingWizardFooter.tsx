@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/config/routes";
+import { tenantUrl } from "@/lib/config/tenantConfig";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface OnboardingWizardFooterProps {
@@ -11,6 +11,7 @@ interface OnboardingWizardFooterProps {
   loading: boolean;
   submitError: string | null;
   showSignInLink: boolean;
+  conflictSubdomain: string;
   isLastStep: boolean;
   onBack: () => void;
   onNext: () => void;
@@ -22,10 +23,16 @@ export function OnboardingWizardFooter({
   loading,
   submitError,
   showSignInLink,
+  conflictSubdomain,
   isLastStep,
   onBack,
   onNext,
 }: OnboardingWizardFooterProps) {
+  const signInHref =
+    showSignInLink && conflictSubdomain.trim()
+      ? tenantUrl(conflictSubdomain.trim().toLowerCase(), ROUTES.login)
+      : null;
+
   return (
     <>
       {submitError ? (
@@ -34,10 +41,13 @@ export function OnboardingWizardFooter({
           message={
             <>
               {submitError}{" "}
-              {showSignInLink ? (
-                <Link to={ROUTES.home} className="inline-flex min-h-11 items-center font-semibold underline">
+              {signInHref ? (
+                <a
+                  href={signInHref}
+                  className="inline-flex min-h-11 items-center font-semibold underline"
+                >
                   {t("onboarding.signInInstead")}
-                </Link>
+                </a>
               ) : null}
             </>
           }

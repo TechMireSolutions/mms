@@ -52,10 +52,14 @@ export const platformUsers = pgTable('platform_users', {
     .$type<PlatformAdminPermissions>()
     .notNull()
     .default(DEFAULT_PLATFORM_ADMIN_PERMISSIONS),
+  sessionVersion: integer('session_version').notNull().default(0),
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   uniqueIndex('platform_users_email_idx').on(table.email),
+  uniqueIndex('platform_users_single_super_user_idx')
+    .on(table.role)
+    .where(sql`${table.role} = 'super_user'`),
 ]);
 
 /** Apex platform settings — single row (id = 'global') for TLS & Certbot settings. */

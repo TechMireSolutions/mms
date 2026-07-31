@@ -4,17 +4,28 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformSetupStatus } from '@/platform/hooks/usePlatformSetupStatus';
 import { ROUTES } from '@/lib/config/routes';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * When the platform has no users yet, force first-run super-user setup on `/`.
  * Blocks alternate apex auth entry (e.g. forgot-password) until setup completes.
  */
 export function PlatformFirstRunGate(): React.JSX.Element {
+  const { t } = useTranslation();
   const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
-  const { setupStatus, isLoadingSetup } = usePlatformSetupStatus();
+  const { setupStatus, isLoadingSetup, isError, refetch } = usePlatformSetupStatus();
 
   if (!platformAuthChecked || isCheckingPlatformAuth || isLoadingSetup) {
     return <RouteStatusFallback fullScreen />;
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center p-6">
+        <ErrorState title={t('apex.loadError')} onRetry={() => void refetch()} />
+      </div>
+    );
   }
 
   if (!isPlatformAuthenticated && setupStatus?.needsSetup) {

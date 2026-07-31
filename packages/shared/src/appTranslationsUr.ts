@@ -436,6 +436,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
     "یہ {name} ({subdomain}.{domain}) اور اس کا تمام ڈیٹا بشمول صارفین، رابطے اور ترتیبات مستقل طور پر حذف کر دے گا۔ یہ عمل واپس نہیں لیا جا سکتا۔",
   "platform.deleteWorkspaceConfirm": "مستقل حذف",
   "platform.deleteWorkspacePasswordHint": "حذف کی تصدیق کے لیے اپنے پلیٹ فارم منتظم کا پاس ورڈ درج کریں۔",
+  "platform.deleteWorkspaceConfirmSubdomain": "تصدیق کے لیے سب ڈومین \"{subdomain}\" ٹائپ کریں",
+  "platform.deleteWorkspaceConfirmSubdomainMismatch": "سب ڈومین کی تصدیق مماثل نہیں ہے۔",
   "platform.workspaceDeletedToast": "مدرسہ حذف ہو گیا",
   "platform.workspaceDeleteFailed": "مدرسہ حذف نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
   "platform.profileTitle": "پلیٹ فارم اکاؤنٹ",

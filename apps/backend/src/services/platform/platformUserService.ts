@@ -78,6 +78,7 @@ export async function changePlatformUserPassword(
 
   const updated = await updatePlatformUserRow(userId, {
     passwordHash: await hashPassword(newPassword),
+    sessionVersion: stored.sessionVersion + 1,
   });
   if (!updated) {
     throw new PlatformError('user_not_found', 'Platform user not found');
@@ -98,6 +99,10 @@ export async function createVerifiedPlatformUser(input: {
   }
 
   const count = await countPlatformUsers();
+  if (input.role === undefined && count > 0) {
+    throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
+  }
+
   const role = input.role ?? (count === 0 ? 'super_user' : 'admin');
   const permissions =
     role === 'super_user'
@@ -113,10 +118,24 @@ export async function createVerifiedPlatformUser(input: {
     passwordHash: input.passwordHash,
     role,
     permissions,
+    sessionVersion: 0,
     createdAt: new Date().toISOString(),
     emailVerifiedAt: new Date().toISOString(),
   };
-  await insertPlatformUser(user);
+
+  try {
+    await insertPlatformUser(user);
+  } catch (error: unknown) {
+    // Unique index platform_users_single_super_user_idx blocks concurrent dual super_users.
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String((error as { code: unknown }).code)
+        : '';
+    if (code === '23505' && role === 'super_user') {
+      throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
+    }
+    throw error;
+  }
   return user;
 }
 
@@ -146,7 +165,14 @@ export async function updatePlatformUserPassword(
   userId: string,
   passwordHash: string,
 ): Promise<StoredPlatformUser> {
-  const updated = await updatePlatformUserRow(userId, { passwordHash });
+  const existing = await findPlatformUserRowById(userId);
+  if (!existing) {
+    throw new PlatformError('user_not_found', 'Platform user not found');
+  }
+  const updated = await updatePlatformUserRow(userId, {
+    passwordHash,
+    sessionVersion: existing.sessionVersion + 1,
+  });
   if (!updated) {
     throw new PlatformError('user_not_found', 'Platform user not found');
   }
@@ -202,6 +228,7 @@ export async function validatePlatformCredentials(
 
 /**
  * Optional dev bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
+ * Requires explicit PLATFORM_ADMIN_EMAIL + PLATFORM_ADMIN_PASSWORD (or SEED_DEV_PASSWORD).
  * Production / clean first-run presents the interactive setup screen instead.
  */
 export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
@@ -211,11 +238,17 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     return;
   }
 
-  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim() || 'syedaalin@gmail.com';
-  const password = process.env.PLATFORM_ADMIN_PASSWORD?.trim()
-    ?? process.env.SEED_DEV_PASSWORD?.trim()
-    ?? 'Pa$$w0rd11111';
-  const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Syeda Alin';
+  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim();
+  const password =
+    process.env.PLATFORM_ADMIN_PASSWORD?.trim() ?? process.env.SEED_DEV_PASSWORD?.trim();
+  const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Platform Admin';
+
+  if (!email || !password) {
+    console.warn(
+      '[MMS] PLATFORM_ALLOW_ENV_BOOTSTRAP=true but PLATFORM_ADMIN_EMAIL and PLATFORM_ADMIN_PASSWORD (or SEED_DEV_PASSWORD) are required — skipping bootstrap',
+    );
+    return;
+  }
 
   const user: StoredPlatformUser = {
     id: randomBytes(8).toString('hex'),
@@ -224,6 +257,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     passwordHash: await hashPassword(password),
     role: 'super_user',
     permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
+    sessionVersion: 0,
     createdAt: new Date().toISOString(),
   };
   await insertPlatformUser(user);

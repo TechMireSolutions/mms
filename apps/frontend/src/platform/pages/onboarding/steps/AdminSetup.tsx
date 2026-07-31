@@ -102,7 +102,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
           autoComplete="tel"
           value={data.phone || ""}
           onChange={(event) => update("phone", event.target.value)}
-          onBlur={() => update("phone", normalizePhoneInput(data.phone))}
+          onBlur={(event) => update("phone", normalizePhoneInput(event.target.value))}
           placeholder={t("onboarding.admin.phonePlaceholder")}
           className="h-11"
         />

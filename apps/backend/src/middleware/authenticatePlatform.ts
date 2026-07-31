@@ -42,7 +42,7 @@ export async function authenticatePlatform(
     return;
   }
 
-  const payload = request.user as PlatformUser & { tokenType?: string };
+  const payload = request.user as PlatformUser & { tokenType?: string; sessionVersion?: number };
   if (payload.tokenType !== 'platform_access') {
     sendUnauthorized(reply, 'Invalid platform session');
     return;
@@ -57,6 +57,11 @@ export async function authenticatePlatform(
     return;
   }
 
+  if ((payload.sessionVersion ?? 0) !== stored.sessionVersion) {
+    sendUnauthorized(reply, 'Platform session has been revoked');
+    return;
+  }
+
   (request as PlatformAuthenticatedRequest).platformUser = toPublicPlatformUser(stored);
 }
 
@@ -67,6 +72,7 @@ export async function requireSuperUser(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
+  if (reply.sent) return;
   const req = request as PlatformAuthenticatedRequest;
   if (!req.platformUser || req.platformUser.role !== 'super_user') {
     sendForbidden(reply, 'Only platform super-users can access this resource');
@@ -81,6 +87,7 @@ export function requirePlatformPermission(permission: PlatformAdminPermissionKey
     request: FastifyRequest,
     reply: FastifyReply,
   ): Promise<void> {
+    if (reply.sent) return;
     const req = request as PlatformAuthenticatedRequest;
     if (!platformUserCan(req.platformUser, permission)) {
       sendForbidden(reply, `Missing platform permission: ${permission}`);

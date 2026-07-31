@@ -3453,6 +3453,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "platform.deleteWorkspaceDesc":
     "این اقدام {name} ({subdomain}.{domain}) و تمام داده‌های آن شامل کاربران، مخاطبین و تنظیمات را به طور دائمی حذف خواهد کرد. این عملیات قابل بازگشت نیست.",
   "platform.deleteWorkspacePasswordHint": "برای تأیید حذف، رمز عبور مدیر پلتفرم خود را وارد کنید.",
+  "platform.deleteWorkspaceConfirmSubdomain": "برای تأیید، زیردامنه \"{subdomain}\" را وارد کنید",
+  "platform.deleteWorkspaceConfirmSubdomainMismatch": "تأیید زیردامنه مطابقت ندارد.",
   "platform.deleteWorkspaceTitle": "مدرسه برای همیشه حذف شود؟",
   "platform.forgotConfirmPassword": "تأیید رمز عبور جدید",
   "platform.forgotDevResetHint": "حالت توسعه: کد {code} — شناسه بازنشانی {resetId}",

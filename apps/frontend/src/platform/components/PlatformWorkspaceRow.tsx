@@ -19,7 +19,7 @@ interface PlatformWorkspaceRowProps {
   togglePending: boolean;
   deletePending: boolean;
   onToggle: (enabled: boolean) => void;
-  onDelete: (password: string) => Promise<unknown>;
+  onDelete: (input: { password: string; confirmSubdomain: string }) => Promise<unknown>;
 }
 
 export const PlatformWorkspaceRow = memo(function PlatformWorkspaceRow({
@@ -34,23 +34,29 @@ export const PlatformWorkspaceRow = memo(function PlatformWorkspaceRow({
   const tenantLink = tenantUrl(workspace.subdomain, '/');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [password, setPassword] = useState('');
+  const [confirmSubdomain, setConfirmSubdomain] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const busy = togglePending || deletePending;
 
   useEffect(() => {
     if (!confirmOpen) {
       setPassword('');
+      setConfirmSubdomain('');
       setPasswordError(null);
     }
   }, [confirmOpen]);
 
   const handleDelete = (): void => {
+    if (confirmSubdomain.trim().toLowerCase() !== workspace.subdomain.toLowerCase()) {
+      setPasswordError(t('platform.deleteWorkspaceConfirmSubdomainMismatch'));
+      return;
+    }
     if (!password.trim()) {
       setPasswordError(t('platform.deleteWorkspacePasswordHint'));
       return;
     }
     setPasswordError(null);
-    void onDelete(password)
+    void onDelete({ password, confirmSubdomain: confirmSubdomain.trim() })
       .then(() => setConfirmOpen(false))
       .catch((error: unknown) => {
         if (isApiError(error) && error.type === 'invalid_current_password') {
@@ -171,6 +177,11 @@ export const PlatformWorkspaceRow = memo(function PlatformWorkspaceRow({
         password={password}
         onPasswordChange={(value) => {
           setPassword(value);
+          if (passwordError) setPasswordError(null);
+        }}
+        confirmSubdomain={confirmSubdomain}
+        onConfirmSubdomainChange={(value) => {
+          setConfirmSubdomain(value);
           if (passwordError) setPasswordError(null);
         }}
         passwordError={passwordError}

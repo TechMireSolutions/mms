@@ -96,6 +96,7 @@ export type WorkspaceEnabledPatchInput = z.infer<typeof workspaceEnabledPatchBod
 
 export const workspaceDeleteBodySchema = z.object({
   password: z.string().min(1),
+  confirmSubdomain: z.string().min(1),
 });
 
 export type WorkspaceDeleteInput = z.infer<typeof workspaceDeleteBodySchema>;

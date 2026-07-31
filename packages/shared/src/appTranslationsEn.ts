@@ -421,6 +421,8 @@ export const APP_TRANSLATIONS_EN = {
     "This will permanently delete {name} ({subdomain}.{domain}) and all its data including users, contacts, and settings. This cannot be undone.",
   "platform.deleteWorkspaceConfirm": "Delete permanently",
   "platform.deleteWorkspacePasswordHint": "Enter your platform administrator password to confirm deletion.",
+  "platform.deleteWorkspaceConfirmSubdomain": "Type the subdomain \"{subdomain}\" to confirm",
+  "platform.deleteWorkspaceConfirmSubdomainMismatch": "Subdomain confirmation does not match.",
   "platform.workspaceDeletedToast": "Madrasa deleted",
   "platform.workspaceDeleteFailed": "Could not delete madrasa. Try again.",
   "platform.profileTitle": "Platform account",

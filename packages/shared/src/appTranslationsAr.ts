@@ -436,6 +436,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
     "سيؤدي هذا إلى حذف {name} ({subdomain}.{domain}) وجميع بياناتها بما في ذلك المستخدمين وجهات الاتصال والإعدادات. لا يمكن التراجع عن هذا الإجراء.",
   "platform.deleteWorkspaceConfirm": "حذف نهائي",
   "platform.deleteWorkspacePasswordHint": "أدخل كلمة مرور مسؤول المنصة لتأكيد الحذف.",
+  "platform.deleteWorkspaceConfirmSubdomain": "اكتب النطاق الفرعي \"{subdomain}\" للتأكيد",
+  "platform.deleteWorkspaceConfirmSubdomainMismatch": "تأكيد النطاق الفرعي غير متطابق.",
   "platform.workspaceDeletedToast": "تم حذف المدرسة",
   "platform.workspaceDeleteFailed": "تعذّر حذف المدرسة. حاول مرة أخرى.",
   "platform.profileTitle": "حساب المنصة",

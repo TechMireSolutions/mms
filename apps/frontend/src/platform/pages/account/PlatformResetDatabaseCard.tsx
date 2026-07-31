@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PasswordInput from "@/components/ui/PasswordInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useResetPlatformDatabase } from "@/platform/hooks/usePlatformSettings";
@@ -24,16 +25,21 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
   const resetDbMutation = useResetPlatformDatabase();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [password, setPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
   const confirmInputId = useId();
 
   const handleResetDatabase = async (): Promise<void> => {
-    if (confirmText.trim() !== "RESET_ALL_DATABASE_DATA") return;
+    if (confirmText.trim() !== "RESET_ALL_DATABASE_DATA" || !password.trim()) return;
     setResetError(null);
     try {
-      await resetDbMutation.mutateAsync(confirmText.trim());
+      await resetDbMutation.mutateAsync({
+        confirm: confirmText.trim(),
+        password,
+      });
       setResetDialogOpen(false);
       setConfirmText("");
+      setPassword("");
       await platformLogout();
       // Full reload after logout so migrations + cleared client cache take effect.
       setTimeout(() => {
@@ -58,6 +64,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
           onClick={() => {
             setResetError(null);
             setConfirmText("");
+            setPassword("");
             setResetDialogOpen(true);
           }}
         >
@@ -90,6 +97,18 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
               disabled={resetDbMutation.isPending}
               className="min-h-11"
             />
+            <PasswordInput
+              id="reset-db-password"
+              name="resetDbPassword"
+              label={t("platform.profileCurrentPassword")}
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                if (resetError) setResetError(null);
+              }}
+              disabled={resetDbMutation.isPending}
+            />
             {resetError ? (
               <p className="text-xs text-destructive font-bold" role="alert">
                 {resetError}
@@ -101,7 +120,11 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
             <Button
               type="button"
               variant="destructive"
-              disabled={resetDbMutation.isPending || confirmText.trim() !== "RESET_ALL_DATABASE_DATA"}
+              disabled={
+                resetDbMutation.isPending
+                || confirmText.trim() !== "RESET_ALL_DATABASE_DATA"
+                || !password.trim()
+              }
               onClick={handleResetDatabase}
             >
               {resetDbMutation.isPending ? (

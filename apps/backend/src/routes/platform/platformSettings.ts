@@ -12,6 +12,7 @@ import {
 } from '../../services/platform/platformSettingsService.js';
 import { clearPlatformAccessCookie } from '../../services/platform/platformCookieService.js';
 import { resetAndReseedDatabase } from '../../services/platform/platformDatabaseService.js';
+import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { sendDatabaseError } from '../../lib/httpErrors.js';
@@ -24,7 +25,7 @@ export default async function platformSettingsRoutes(
 
   fastify.get(
     '/',
-    { preHandler: authenticatePlatform },
+    { preHandler: [authenticatePlatform, requireSuperUser] },
     async (_request, reply) => {
       const settings = getPlatformSettings();
       return reply.send({ settings });
@@ -60,14 +61,26 @@ export default async function platformSettingsRoutes(
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
       const { platformUser } = request as PlatformAuthenticatedRequest;
-      try {
-        await insertPlatformActivityLog({
-          userId: platformUser.id,
-          userEmail: platformUser.email,
-          action: 'reset_database',
-          details: {},
-          ipAddress: request.ip,
+      const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
+      if (!passwordOk) {
+        return reply.status(401).send({
+          type: 'invalid_current_password',
+          message: 'Current password is incorrect',
         });
+      }
+
+      try {
+        // Audit outside the wiped schema — platform_activity_logs is destroyed by the reset.
+        console.error(
+          JSON.stringify({
+            level: 'audit',
+            action: 'reset_database',
+            userId: platformUser.id,
+            userEmail: platformUser.email,
+            ipAddress: request.ip,
+            at: new Date().toISOString(),
+          }),
+        );
 
         await resetAndReseedDatabase();
         clearPlatformAccessCookie(reply);

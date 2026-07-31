@@ -48,6 +48,8 @@ export interface PlatformUserProfile extends PlatformUser {
 
 export interface StoredPlatformUser extends PlatformUser {
   passwordHash: string;
+  /** Incremented on password change/reset to invalidate existing platform JWTs. */
+  sessionVersion: number;
   createdAt: string;
   emailVerifiedAt?: string;
 }

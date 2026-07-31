@@ -1,7 +1,6 @@
 import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import type { PlatformUser } from '@mms/shared';
-import { validatePlatformCredentials } from './platformUserService.js';
 import { clearAuthCookies } from '../auth/authCookieService.js';
 import { clearPlatformAccessCookie, setPlatformAccessCookie } from './platformCookieService.js';
 
@@ -11,6 +10,7 @@ export function issuePlatformSession(
   user: PlatformUser,
   jwtSigner: JWT,
   reply: FastifyReply,
+  sessionVersion = 0,
 ): PlatformUser {
   clearAuthCookies(reply);
 
@@ -19,6 +19,7 @@ export function issuePlatformSession(
       ...user,
       role: user.role,
       tokenType: 'platform_access',
+      sessionVersion,
     },
     { expiresIn: PLATFORM_ACCESS_TTL },
   );
@@ -32,9 +33,13 @@ export async function loginPlatformUser(
   jwtSigner: JWT,
   reply: FastifyReply,
 ): Promise<PlatformUser | null> {
+  const { findPlatformUserByEmail, validatePlatformCredentials } =
+    await import('./platformUserService.js');
+  const stored = await findPlatformUserByEmail(email);
+  if (!stored) return null;
   const user = await validatePlatformCredentials(email, password);
   if (!user) return null;
-  return issuePlatformSession(user, jwtSigner, reply);
+  return issuePlatformSession(user, jwtSigner, reply, stored.sessionVersion);
 }
 
 export function logoutPlatformUser(reply: FastifyReply): void {

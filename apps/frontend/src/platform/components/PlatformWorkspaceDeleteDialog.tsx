@@ -2,6 +2,8 @@ import { Loader2 } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -20,6 +22,8 @@ interface PlatformWorkspaceDeleteDialogProps {
   onOpenChange: (open: boolean) => void;
   password: string;
   onPasswordChange: (value: string) => void;
+  confirmSubdomain: string;
+  onConfirmSubdomainChange: (value: string) => void;
   passwordError: string | null;
   deletePending: boolean;
   onConfirm: () => void;
@@ -32,11 +36,14 @@ export function PlatformWorkspaceDeleteDialog({
   onOpenChange,
   password,
   onPasswordChange,
+  confirmSubdomain,
+  onConfirmSubdomainChange,
   passwordError,
   deletePending,
   onConfirm,
 }: PlatformWorkspaceDeleteDialogProps): React.JSX.Element {
   const { t } = useTranslation();
+  const confirmId = `delete-subdomain-${workspace.subdomain}`;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -51,7 +58,22 @@ export function PlatformWorkspaceDeleteDialog({
             })}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="space-y-2.5 my-2">
+        <div className="space-y-2.5 my-2 text-start">
+          <div className="space-y-1.5">
+            <label htmlFor={confirmId} className={FORM_LABEL}>
+              {t('platform.deleteWorkspaceConfirmSubdomain', { subdomain: workspace.subdomain })}
+            </label>
+            <Input
+              id={confirmId}
+              name="confirmSubdomain"
+              type="text"
+              value={confirmSubdomain}
+              onChange={(event) => onConfirmSubdomainChange(event.target.value)}
+              disabled={deletePending}
+              className="min-h-11"
+              autoComplete="off"
+            />
+          </div>
           <PasswordInput
             id={`delete-pw-${workspace.subdomain}`}
             label={t('platform.profileCurrentPassword')}
@@ -72,7 +94,11 @@ export function PlatformWorkspaceDeleteDialog({
           <Button
             type="button"
             variant="destructive"
-            disabled={deletePending || !password.trim()}
+            disabled={
+              deletePending
+              || !password.trim()
+              || confirmSubdomain.trim().toLowerCase() !== workspace.subdomain.toLowerCase()
+            }
             onClick={onConfirm}
           >
             {deletePending ? (

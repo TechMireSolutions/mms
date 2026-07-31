@@ -27,6 +27,7 @@ export const resetDatabaseSchema = z.object({
   confirm: z.literal('RESET_ALL_DATABASE_DATA', {
     message: 'Confirmation string must be "RESET_ALL_DATABASE_DATA"',
   }),
+  password: z.string().min(1),
 });
 
 export type ResetDatabaseInput = z.infer<typeof resetDatabaseSchema>;

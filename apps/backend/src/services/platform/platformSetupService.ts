@@ -20,7 +20,6 @@ import {
 } from '../auth/authCookieService.js';
 import { hashPassword } from '../auth/passwordService.js';
 import {
-  countPlatformUsers,
   createVerifiedPlatformUser,
   hasPlatformUsers,
 } from './platformUserService.js';
@@ -65,6 +64,15 @@ async function dispatchSetupCode(email: string, code: string): Promise<{ sent: b
   });
 }
 
+function assertSetupEmailDeliverable(dispatch: { sent: boolean; devCode?: string }): void {
+  if (dispatch.sent) return;
+  if (process.env.NODE_ENV !== 'production' && dispatch.devCode) return;
+  throw new PlatformSetupError(
+    'email_send_failed',
+    'Failed to send verification email. Configure PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',
+  );
+}
+
 export async function startPlatformSetup(input: {
   name: string;
   email: string;
@@ -72,6 +80,13 @@ export async function startPlatformSetup(input: {
 }): Promise<PlatformSetupRegisterResult> {
   if (await hasPlatformUsers()) {
     throw new PlatformSetupError('setup_not_needed', 'Platform administrator already exists');
+  }
+
+  if (process.env.NODE_ENV === 'production' && !isPlatformSmtpConfigured()) {
+    throw new PlatformSetupError(
+      'smtp_required',
+      'Platform email is not configured. Set PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',
+    );
   }
 
   enforcePlatformEmail(input.email);
@@ -96,6 +111,7 @@ export async function startPlatformSetup(input: {
   );
 
   const dispatch = await dispatchSetupCode(email, code);
+  assertSetupEmailDeliverable(dispatch);
 
   return buildSetupRegisterResult(dispatch, setupId, email);
 }
@@ -119,6 +135,7 @@ export async function resendPlatformSetupCode(setupId: string): Promise<Platform
   await putAuthArtifact('platform_setup', updated, SETUP_TTL_MS, setupId);
 
   const dispatch = await dispatchSetupCode(entry.payload.email, code);
+  assertSetupEmailDeliverable(dispatch);
 
   return buildSetupRegisterResult(dispatch, setupId, entry.payload.email);
 }
@@ -127,10 +144,6 @@ export async function verifyPlatformSetup(
   setupId: string,
   code: string,
 ): Promise<StoredPlatformUser> {
-  if ((await countPlatformUsers()) > 0) {
-    throw new PlatformSetupError('setup_not_needed', 'Platform administrator already exists');
-  }
-
   const entry = await getAuthArtifact<PlatformSetupPayload>(setupId, 'platform_setup');
   if (!entry) {
     throw new PlatformSetupError('invalid_setup', 'Setup session expired or not found');

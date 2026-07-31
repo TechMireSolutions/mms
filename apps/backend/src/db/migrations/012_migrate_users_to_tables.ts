@@ -61,6 +61,7 @@ export async function runMigration012(): Promise<void> {
           passwordHash: user.passwordHash,
           role: (user.role ?? 'super_user') as PlatformRole,
           permissions: user.permissions ?? { workspaces: true, onboard: true },
+          sessionVersion: user.sessionVersion ?? 0,
           createdAt: user.createdAt ?? new Date().toISOString(),
           emailVerifiedAt: user.emailVerifiedAt,
         });

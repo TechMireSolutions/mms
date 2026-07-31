@@ -9,14 +9,20 @@ loadBackendEnv();
 
 async function seed() {
   await initDb();
-  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim() || 'syedaalin@gmail.com';
-  const password = process.env.PLATFORM_ADMIN_PASSWORD?.trim() || 'Pa$$w0rd11111';
-  const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Syeda Alin';
+  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim();
+  const password = process.env.PLATFORM_ADMIN_PASSWORD?.trim();
+  const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Platform Admin';
+
+  if (!email || !password) {
+    console.error('PLATFORM_ADMIN_EMAIL and PLATFORM_ADMIN_PASSWORD are required');
+    process.exit(1);
+  }
 
   const existing = await findPlatformUserRowByEmail(email);
   if (existing) {
     await updatePlatformUserRow(existing.id, {
       passwordHash: await hashPassword(password),
+      sessionVersion: existing.sessionVersion + 1,
     });
     console.log(`✅ Refreshed credentials for platform super-user ${email}.`);
   } else {
@@ -27,6 +33,7 @@ async function seed() {
       passwordHash: await hashPassword(password),
       role: 'super_user',
       permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
+      sessionVersion: 0,
       createdAt: new Date().toISOString(),
     });
     console.log(`✅ Platform super-user seeded successfully for ${email}`);

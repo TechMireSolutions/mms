@@ -24,6 +24,7 @@ function rowToStored(row: typeof platformUsers.$inferSelect): StoredPlatformUser
     passwordHash: row.passwordHash,
     role,
     permissions,
+    sessionVersion: row.sessionVersion ?? 0,
     createdAt: row.createdAt.toISOString(),
     emailVerifiedAt: row.emailVerifiedAt?.toISOString(),
   };
@@ -69,6 +70,7 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
     passwordHash: processedUser.passwordHash,
     role: processedUser.role,
     permissions,
+    sessionVersion: processedUser.sessionVersion ?? 0,
     emailVerifiedAt: processedUser.emailVerifiedAt ? new Date(processedUser.emailVerifiedAt) : null,
     createdAt: new Date(processedUser.createdAt),
   });
@@ -77,7 +79,10 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
 export async function updatePlatformUserRow(
   userId: string,
   patch: Partial<
-    Pick<StoredPlatformUser, 'name' | 'passwordHash' | 'emailVerifiedAt' | 'role' | 'permissions'>
+    Pick<
+      StoredPlatformUser,
+      'name' | 'passwordHash' | 'emailVerifiedAt' | 'role' | 'permissions' | 'sessionVersion'
+    >
   >,
 ): Promise<StoredPlatformUser | null> {
   const existing = await findPlatformUserRowById(userId);
@@ -91,6 +96,7 @@ export async function updatePlatformUserRow(
       processedPatch.permissions !== undefined
         ? normalizePlatformAdminPermissions(processedPatch.permissions)
         : existing.permissions,
+    sessionVersion: processedPatch.sessionVersion ?? existing.sessionVersion,
   };
 
   if (next.role === 'super_user') {
@@ -104,7 +110,9 @@ export async function updatePlatformUserRow(
       passwordHash: next.passwordHash,
       role: next.role,
       permissions: next.permissions,
+      sessionVersion: next.sessionVersion,
       emailVerifiedAt: next.emailVerifiedAt ? new Date(next.emailVerifiedAt) : null,
+      updatedAt: new Date(),
     })
     .where(eq(platformUsers.id, userId));
 

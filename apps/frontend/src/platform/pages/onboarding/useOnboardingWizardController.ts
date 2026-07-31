@@ -85,7 +85,7 @@ export function useOnboardingWizardController() {
     try {
       const appDomain = getAppDomain();
       await onboard({
-        madrasaName: data.name || "MMS",
+        madrasaName: data.name.trim(),
         tagline: data.tagline.trim() || DEFAULT_BRANDING_SETTINGS.tagline,
         adminName: `${data.firstName} ${data.lastName}`.trim(),
         email: data.email,

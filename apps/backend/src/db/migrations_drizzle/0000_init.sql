@@ -293,6 +293,7 @@ CREATE TABLE "platform_users" (
 	"email_verified_at" timestamp,
 	"role" text DEFAULT 'admin' NOT NULL,
 	"permissions" jsonb DEFAULT '{"workspaces":false,"onboard":false}'::jsonb NOT NULL,
+	"session_version" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -492,6 +493,7 @@ CREATE INDEX "obligation_distributions_custom_data_gin_idx" ON "obligation_distr
 CREATE INDEX "obligation_types_workspace_subdomain_idx" ON "obligation_types" USING btree ("workspace_subdomain");--> statement-breakpoint
 CREATE INDEX "obligation_types_custom_data_gin_idx" ON "obligation_types" USING gin ("custom_data");--> statement-breakpoint
 CREATE UNIQUE INDEX "platform_users_email_idx" ON "platform_users" USING btree ("email");--> statement-breakpoint
+CREATE UNIQUE INDEX "platform_users_single_super_user_idx" ON "platform_users" USING btree ("role") WHERE "role" = 'super_user';--> statement-breakpoint
 CREATE INDEX "questions_workspace_subdomain_idx" ON "questions" USING btree ("workspace_subdomain");--> statement-breakpoint
 CREATE INDEX "questions_custom_data_gin_idx" ON "questions" USING gin ("custom_data");--> statement-breakpoint
 CREATE INDEX "saved_reports_workspace_category_creator_idx" ON "saved_reports" USING btree ("workspace_subdomain","category","created_by");--> statement-breakpoint
@@ -513,4 +515,41 @@ CREATE INDEX "user_activity_logs_workspace_subdomain_idx" ON "user_activity_logs
 CREATE INDEX "user_activity_logs_custom_data_gin_idx" ON "user_activity_logs" USING gin ("custom_data");--> statement-breakpoint
 CREATE INDEX "wakala_types_workspace_subdomain_idx" ON "wakala_types" USING btree ("workspace_subdomain");--> statement-breakpoint
 CREATE INDEX "wakala_types_custom_data_gin_idx" ON "wakala_types" USING gin ("custom_data");--> statement-breakpoint
-CREATE UNIQUE INDEX "workspaces_subdomain_idx" ON "workspaces" USING btree ("subdomain");
+CREATE UNIQUE INDEX "workspaces_subdomain_idx" ON "workspaces" USING btree ("subdomain");--> statement-breakpoint
+-- Tenant RLS: ENABLE + exact-match policy (or app.rls_bypass) on all workspace_subdomain tables.
+-- FORCE on tables that always write through withTenantTransaction.
+DO $$
+DECLARE
+    tbl text;
+BEGIN
+    FOR tbl IN
+        SELECT c.table_name
+        FROM information_schema.columns c
+        WHERE c.table_schema = 'public'
+          AND c.column_name = 'workspace_subdomain'
+          AND c.table_name NOT IN ('tenant_users')
+    LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY;', tbl);
+        EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON %I;', tbl);
+        EXECUTE format(
+            'CREATE POLICY tenant_isolation_policy ON %I FOR ALL USING (
+                current_setting(''app.rls_bypass'', true) = ''on''
+                OR workspace_subdomain = NULLIF(current_setting(''app.current_tenant'', true), '''')
+            ) WITH CHECK (
+                current_setting(''app.rls_bypass'', true) = ''on''
+                OR workspace_subdomain = NULLIF(current_setting(''app.current_tenant'', true), '''')
+            );',
+            tbl
+        );
+    END LOOP;
+END $$;
+--> statement-breakpoint
+ALTER TABLE "message_templates" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "message_logs" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "custom_tabs" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "contacts" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "students" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "teachers" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "sessions" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "saved_reports" FORCE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "contact_google_sync_credentials" FORCE ROW LEVEL SECURITY;

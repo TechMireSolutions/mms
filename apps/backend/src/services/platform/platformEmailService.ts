@@ -140,7 +140,15 @@ export interface PlatformVerificationEmailInput {
   logLabel: string;
 }
 
-/** Sends a platform OTP email or returns a dev-only code when email is not configured. */
+function isProductionNodeEnv(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
+/**
+ * Sends a platform OTP email.
+ * Production: never returns or logs the OTP — callers must fail closed when `sent` is false.
+ * Non-production: may return `devCode` so local setup works without SMTP.
+ */
 export async function dispatchPlatformVerificationEmail(
   input: PlatformVerificationEmailInput,
 ): Promise<{ sent: boolean; devCode?: string }> {
@@ -164,14 +172,29 @@ export async function dispatchPlatformVerificationEmail(
       return { sent: true };
     }
 
-    // Fallback: Log the verification code and return it so registration isn't blocked by email failure
+    const detail = result.message || 'unknown';
+    if (isProductionNodeEnv()) {
+      console.warn(
+        `[MMS] ${input.logLabel} email delivery failed for ${input.email} (${detail})`,
+      );
+      return { sent: false };
+    }
+
     console.warn(
-      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery failed: ${result.message || 'unknown'})`,
+      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery failed: ${detail})`,
     );
     return { sent: false, devCode: input.code };
   } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    if (isProductionNodeEnv()) {
+      console.warn(
+        `[MMS] ${input.logLabel} email delivery threw for ${input.email} (${detail})`,
+      );
+      return { sent: false };
+    }
+
     console.warn(
-      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery threw: ${error instanceof Error ? error.message : error})`,
+      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery threw: ${detail})`,
     );
     return { sent: false, devCode: input.code };
   }

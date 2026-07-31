@@ -59,12 +59,20 @@ export function useDeleteWorkspace() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: async ({ subdomain, password }: { subdomain: string; password: string }) =>
+    mutationFn: async ({
+      subdomain,
+      password,
+      confirmSubdomain,
+    }: {
+      subdomain: string;
+      password: string;
+      confirmSubdomain: string;
+    }) =>
       apiJson<{ deleted: true; subdomain: string }>(
         `/api/platform/workspaces/${encodeURIComponent(subdomain)}`,
         {
           method: 'DELETE',
-          body: JSON.stringify({ password }),
+          body: JSON.stringify({ password, confirmSubdomain }),
         },
       ),
     onSuccess: (_deleteMutationResponse, variables) => {

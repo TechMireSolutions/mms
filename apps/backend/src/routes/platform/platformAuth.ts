@@ -16,6 +16,7 @@ import {
 import {
   toPublicPlatformUser,
   getPlatformUserProfile,
+  getStoredPlatformUserById,
   changePlatformUserPassword as updatePlatformUserPassword,
   updatePlatformUserProfile,
 } from '../../services/platform/platformUserService.js';
@@ -71,6 +72,7 @@ export default async function platformAuthRoutes(
         toPublicPlatformUser(stored),
         fastify.jwt,
         reply,
+        stored.sessionVersion,
       );
       return reply.send({ user });
     });
@@ -105,6 +107,7 @@ export default async function platformAuthRoutes(
         toPublicPlatformUser(stored),
         fastify.jwt,
         reply,
+        stored.sessionVersion,
       );
       return reply.send({ user });
     });
@@ -158,6 +161,7 @@ export default async function platformAuthRoutes(
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
       const payload = request.user as PlatformUser;
       const profile = await updatePlatformUserProfile(payload.id, parsed.data.name);
+      const stored = await getStoredPlatformUserById(profile.id);
       issuePlatformSession(
         {
           id: profile.id,
@@ -168,6 +172,7 @@ export default async function platformAuthRoutes(
         },
         fastify.jwt,
         reply,
+        stored?.sessionVersion ?? 0,
       );
       return reply.send({ user: profile });
     },
@@ -183,10 +188,16 @@ export default async function platformAuthRoutes(
         const parsed = parseRequest(platformChangePasswordBodySchema, request.body);
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
         const payload = request.user as PlatformUser;
-        await updatePlatformUserPassword(
+        const stored = await updatePlatformUserPassword(
           payload.id,
           parsed.data.currentPassword,
           parsed.data.newPassword,
+        );
+        issuePlatformSession(
+          toPublicPlatformUser(stored),
+          fastify.jwt,
+          reply,
+          stored.sessionVersion,
         );
         return reply.send({ success: true });
       },

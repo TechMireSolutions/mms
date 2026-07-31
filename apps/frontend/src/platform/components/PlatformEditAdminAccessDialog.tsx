@@ -1,21 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Shield } from 'lucide-react';
 import type { PlatformAdminPermissions, PlatformUserProfile } from '@mms/shared';
 import { normalizePlatformAdminPermissions } from '@mms/shared';
-import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { useUpdatePlatformAdminPermissions } from '@/platform/hooks/usePlatformAdmins';
 import { PlatformAdminPermissionsFields } from '@/platform/components/PlatformAdminPermissionsFields';
-import { Alert } from '@/components/ui/Alert';
 
 interface PlatformEditAdminAccessDialogProps {
   admin: PlatformUserProfile;
@@ -35,13 +26,12 @@ export function PlatformEditAdminAccessDialog({
   );
   const [error, setError] = useState<string | null>(null);
 
-  const handleOpenChange = (next: boolean): void => {
-    if (next) {
+  useEffect(() => {
+    if (open) {
       setPermissions(normalizePlatformAdminPermissions(admin.permissions));
       setError(null);
     }
-    onOpenChange(next);
-  };
+  }, [open, admin]);
 
   const handleSave = async (): Promise<void> => {
     setError(null);
@@ -57,35 +47,26 @@ export function PlatformEditAdminAccessDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t('platform.editAdminAccessTitle')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {admin.name} · {admin.email}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-
-        {error ? <Alert message={error} /> : null}
-
-        <PlatformAdminPermissionsFields
-          value={permissions}
-          onChange={setPermissions}
-          disabled={updatePermissions.isPending}
-        />
-
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={updatePermissions.isPending}>{t('common.cancel')}</AlertDialogCancel>
-          <Button
-            type="button"
-            className="min-h-11"
-            disabled={updatePermissions.isPending}
-            onClick={() => void handleSave()}
-          >
-            {t('platform.editAdminAccessSave')}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <FormModal
+      open={open}
+      onClose={() => onOpenChange(false)}
+      title={t('platform.editAdminAccessTitle')}
+      subtitle={`${admin.name} · ${admin.email}`}
+      icon={Shield}
+      size="sm"
+      error={error ?? undefined}
+      cancelLabel={t('common.cancel')}
+      saveLabel={t('platform.editAdminAccessSave')}
+      onSave={handleSave}
+      saving={updatePermissions.isPending}
+      dir="ltr"
+      lang="en"
+    >
+      <PlatformAdminPermissionsFields
+        value={permissions}
+        onChange={setPermissions}
+        disabled={updatePermissions.isPending}
+      />
+    </FormModal>
   );
 }

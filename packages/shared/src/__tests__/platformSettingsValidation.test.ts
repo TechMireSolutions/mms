@@ -32,14 +32,20 @@ describe('platformSettingsValidation', () => {
   });
 
   describe('resetDatabaseSchema', () => {
-    it('accepts exact confirmation string RESET_ALL_DATABASE_DATA', () => {
-      const valid = { confirm: 'RESET_ALL_DATABASE_DATA' };
+    it('accepts exact confirmation string RESET_ALL_DATABASE_DATA with password', () => {
+      const valid = { confirm: 'RESET_ALL_DATABASE_DATA', password: 'secret' };
       const result = resetDatabaseSchema.safeParse(valid);
       expect(result.success).toBe(true);
     });
 
+    it('rejects missing password', () => {
+      const invalid = { confirm: 'RESET_ALL_DATABASE_DATA' };
+      const result = resetDatabaseSchema.safeParse(invalid);
+      expect(result.success).toBe(false);
+    });
+
     it('rejects invalid confirmation string', () => {
-      const invalid = { confirm: 'RESET' };
+      const invalid = { confirm: 'RESET', password: 'secret' };
       const result = resetDatabaseSchema.safeParse(invalid);
       expect(result.success).toBe(false);
     });
