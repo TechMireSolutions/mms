@@ -6,12 +6,36 @@ loadBackendEnv();
 
 async function resetAndRecreateDb() {
   const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mms';
-  console.log('[1/2] Connecting to PostgreSQL to drop public schema...');
+  console.log('[1/2] Clearing database objects...');
   const pool = new pg.Pool({ connectionString });
   const client = await pool.connect();
   try {
-    await client.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public; DROP SCHEMA IF EXISTS drizzle CASCADE;');
-    console.log('[1/2] Schema dropped and recreated.');
+    // Drop views, tables, and enums individually (privilege-safe) — mirrors platformDatabaseService.ts
+    await client.query(`
+      DO $$ DECLARE
+          r RECORD;
+      BEGIN
+          FOR r IN (SELECT viewname FROM pg_views WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP VIEW IF EXISTS public.' || quote_ident(r.viewname) || ' CASCADE';
+          END LOOP;
+
+          FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+          END LOOP;
+
+          FOR r IN (
+              SELECT typname
+              FROM pg_type t
+              JOIN pg_namespace n ON n.oid = t.typnamespace
+              WHERE n.nspname = 'public'
+                AND t.typtype = 'e'
+          ) LOOP
+              EXECUTE 'DROP TYPE IF EXISTS public.' || quote_ident(r.typname) || ' CASCADE';
+          END LOOP;
+      END $$;
+    `);
+    await client.query('DROP SCHEMA IF EXISTS drizzle CASCADE;');
+    console.log('[1/2] All objects cleared.');
   } finally {
     client.release();
     await pool.end();
