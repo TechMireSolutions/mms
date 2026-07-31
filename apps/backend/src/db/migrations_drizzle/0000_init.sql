@@ -1,4 +1,4 @@
-CREATE TABLE "accounting_accounts" (
+CREATE TABLE IF NOT EXISTS "accounting_accounts" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE "accounting_accounts" (
 	CONSTRAINT "accounting_accounts_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "accounting_entries" (
+CREATE TABLE IF NOT EXISTS "accounting_entries" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "accounting_entries" (
 	CONSTRAINT "accounting_entries_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "accounting_fiscal_years" (
+CREATE TABLE IF NOT EXISTS "accounting_fiscal_years" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE "accounting_fiscal_years" (
 	CONSTRAINT "accounting_fiscal_years_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "assessment_results" (
+CREATE TABLE IF NOT EXISTS "assessment_results" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE "assessment_results" (
 	CONSTRAINT "assessment_results_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "attendance" (
+CREATE TABLE IF NOT EXISTS "attendance" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE "attendance" (
 	CONSTRAINT "attendance_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "audit_log_entries" (
+CREATE TABLE IF NOT EXISTS "audit_log_entries" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE "audit_log_entries" (
 	CONSTRAINT "audit_log_entries_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "audit_logs" (
+CREATE TABLE IF NOT EXISTS "audit_logs" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"workspace_subdomain" text,
 	"table_name" text NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE "audit_logs" (
 	"changed_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "auth_artifacts" (
+CREATE TABLE IF NOT EXISTS "auth_artifacts" (
 	"id" text PRIMARY KEY NOT NULL,
 	"kind" text NOT NULL,
 	"payload" jsonb NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE "auth_artifacts" (
 	))
 );
 --> statement-breakpoint
-CREATE TABLE "background_jobs" (
+CREATE TABLE IF NOT EXISTS "background_jobs" (
 	"id" text PRIMARY KEY NOT NULL,
 	"tenant_id" text NOT NULL,
 	"user_id" text NOT NULL,
@@ -95,13 +95,13 @@ CREATE TABLE "background_jobs" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "collections" (
+CREATE TABLE IF NOT EXISTS "collections" (
 	"name" text PRIMARY KEY NOT NULL,
 	"data" jsonb NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "contact_google_sync_credentials" (
+CREATE TABLE IF NOT EXISTS "contact_google_sync_credentials" (
 	"workspace_subdomain" text NOT NULL,
 	"user_id" text NOT NULL,
 	"client_id" text,
@@ -112,7 +112,7 @@ CREATE TABLE "contact_google_sync_credentials" (
 	CONSTRAINT "contact_google_sync_credentials_workspace_subdomain_user_id_pk" PRIMARY KEY("workspace_subdomain","user_id")
 );
 --> statement-breakpoint
-CREATE TABLE "contacts" (
+CREATE TABLE IF NOT EXISTS "contacts" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -121,7 +121,7 @@ CREATE TABLE "contacts" (
 	CONSTRAINT "contacts_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "custom_tabs" (
+CREATE TABLE IF NOT EXISTS "custom_tabs" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"module_id" text NOT NULL,
@@ -138,12 +138,12 @@ CREATE TABLE "custom_tabs" (
 	CONSTRAINT "custom_tabs_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "data_migrations" (
+CREATE TABLE IF NOT EXISTS "data_migrations" (
 	"id" text PRIMARY KEY NOT NULL,
 	"applied_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "enrollments" (
+CREATE TABLE IF NOT EXISTS "enrollments" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE "enrollments" (
 	CONSTRAINT "enrollments_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "exam_results" (
+CREATE TABLE IF NOT EXISTS "exam_results" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -159,7 +159,7 @@ CREATE TABLE "exam_results" (
 	CONSTRAINT "exam_results_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "exams" (
+CREATE TABLE IF NOT EXISTS "exams" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -167,7 +167,7 @@ CREATE TABLE "exams" (
 	CONSTRAINT "exams_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "finance_invoices" (
+CREATE TABLE IF NOT EXISTS "finance_invoices" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE "finance_invoices" (
 	CONSTRAINT "finance_invoices_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "finance_payments" (
+CREATE TABLE IF NOT EXISTS "finance_payments" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE "finance_payments" (
 	CONSTRAINT "finance_payments_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "hasanat_batches" (
+CREATE TABLE IF NOT EXISTS "hasanat_batches" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE "hasanat_batches" (
 	CONSTRAINT "hasanat_batches_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "hasanat_denoms" (
+CREATE TABLE IF NOT EXISTS "hasanat_denoms" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -199,7 +199,7 @@ CREATE TABLE "hasanat_denoms" (
 	CONSTRAINT "hasanat_denoms_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "hasanat_distributions" (
+CREATE TABLE IF NOT EXISTS "hasanat_distributions" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -207,7 +207,7 @@ CREATE TABLE "hasanat_distributions" (
 	CONSTRAINT "hasanat_distributions_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "hasanat_redemptions" (
+CREATE TABLE IF NOT EXISTS "hasanat_redemptions" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -215,7 +215,7 @@ CREATE TABLE "hasanat_redemptions" (
 	CONSTRAINT "hasanat_redemptions_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "message_logs" (
+CREATE TABLE IF NOT EXISTS "message_logs" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -223,7 +223,7 @@ CREATE TABLE "message_logs" (
 	CONSTRAINT "message_logs_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "message_templates" (
+CREATE TABLE IF NOT EXISTS "message_templates" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -231,7 +231,7 @@ CREATE TABLE "message_templates" (
 	CONSTRAINT "message_templates_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "mujtahid_reps" (
+CREATE TABLE IF NOT EXISTS "mujtahid_reps" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -239,7 +239,7 @@ CREATE TABLE "mujtahid_reps" (
 	CONSTRAINT "mujtahid_reps_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "mujtahids" (
+CREATE TABLE IF NOT EXISTS "mujtahids" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -247,13 +247,13 @@ CREATE TABLE "mujtahids" (
 	CONSTRAINT "mujtahids_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "objects" (
+CREATE TABLE IF NOT EXISTS "objects" (
 	"key" text PRIMARY KEY NOT NULL,
 	"data" jsonb NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "obligation_collections" (
+CREATE TABLE IF NOT EXISTS "obligation_collections" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -261,7 +261,7 @@ CREATE TABLE "obligation_collections" (
 	CONSTRAINT "obligation_collections_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "obligation_distributions" (
+CREATE TABLE IF NOT EXISTS "obligation_distributions" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -269,7 +269,7 @@ CREATE TABLE "obligation_distributions" (
 	CONSTRAINT "obligation_distributions_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "obligation_types" (
+CREATE TABLE IF NOT EXISTS "obligation_types" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -277,7 +277,7 @@ CREATE TABLE "obligation_types" (
 	CONSTRAINT "obligation_types_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "platform_activity_logs" (
+CREATE TABLE IF NOT EXISTS "platform_activity_logs" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" text,
 	"user_email" text NOT NULL,
@@ -287,7 +287,7 @@ CREATE TABLE "platform_activity_logs" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "platform_settings" (
+CREATE TABLE IF NOT EXISTS "platform_settings" (
 	"id" text PRIMARY KEY DEFAULT 'global' NOT NULL,
 	"sync_tls_on_create" boolean DEFAULT true NOT NULL,
 	"tls_extra_sans" text DEFAULT '' NOT NULL,
@@ -295,7 +295,7 @@ CREATE TABLE "platform_settings" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "platform_users" (
+CREATE TABLE IF NOT EXISTS "platform_users" (
 	"id" text PRIMARY KEY NOT NULL,
 	"email" text NOT NULL,
 	"name" text NOT NULL,
@@ -310,7 +310,7 @@ CREATE TABLE "platform_users" (
 	CONSTRAINT "platform_users_role_check" CHECK ("role" IN ('super_user', 'admin'))
 );
 --> statement-breakpoint
-CREATE TABLE "questions" (
+CREATE TABLE IF NOT EXISTS "questions" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -318,7 +318,7 @@ CREATE TABLE "questions" (
 	CONSTRAINT "questions_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "saved_reports" (
+CREATE TABLE IF NOT EXISTS "saved_reports" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"category" text NOT NULL,
@@ -332,7 +332,7 @@ CREATE TABLE "saved_reports" (
 	CONSTRAINT "saved_reports_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "sessions" (
+CREATE TABLE IF NOT EXISTS "sessions" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -341,7 +341,7 @@ CREATE TABLE "sessions" (
 	CONSTRAINT "sessions_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "students" (
+CREATE TABLE IF NOT EXISTS "students" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -350,7 +350,7 @@ CREATE TABLE "students" (
 	CONSTRAINT "students_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "teachers" (
+CREATE TABLE IF NOT EXISTS "teachers" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -359,7 +359,7 @@ CREATE TABLE "teachers" (
 	CONSTRAINT "teachers_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "tenant_users" (
+CREATE TABLE IF NOT EXISTS "tenant_users" (
 	"id" text PRIMARY KEY NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"login_email" text NOT NULL,
@@ -377,7 +377,7 @@ CREATE TABLE "tenant_users" (
 	"profile_json" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "tests" (
+CREATE TABLE IF NOT EXISTS "tests" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -385,7 +385,7 @@ CREATE TABLE "tests" (
 	CONSTRAINT "tests_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "user_activity_logs" (
+CREATE TABLE IF NOT EXISTS "user_activity_logs" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -393,7 +393,7 @@ CREATE TABLE "user_activity_logs" (
 	CONSTRAINT "user_activity_logs_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "wakala_types" (
+CREATE TABLE IF NOT EXISTS "wakala_types" (
 	"id" text NOT NULL,
 	"workspace_subdomain" text NOT NULL,
 	"custom_data" jsonb NOT NULL,
@@ -401,7 +401,7 @@ CREATE TABLE "wakala_types" (
 	CONSTRAINT "wakala_types_workspace_subdomain_id_pk" PRIMARY KEY("workspace_subdomain","id")
 );
 --> statement-breakpoint
-CREATE TABLE "workspaces" (
+CREATE TABLE IF NOT EXISTS "workspaces" (
 	"id" text PRIMARY KEY NOT NULL,
 	"subdomain" text NOT NULL,
 	"madrasa_name" text NOT NULL,
@@ -450,86 +450,86 @@ ALTER TABLE "tenant_users" ADD CONSTRAINT "tenant_users_workspace_subdomain_cont
 ALTER TABLE "tests" ADD CONSTRAINT "tests_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_activity_logs" ADD CONSTRAINT "user_activity_logs_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "wakala_types" ADD CONSTRAINT "wakala_types_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "accounting_accounts_workspace_subdomain_idx" ON "accounting_accounts" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "accounting_accounts_custom_data_gin_idx" ON "accounting_accounts" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "accounting_entries_workspace_subdomain_idx" ON "accounting_entries" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "accounting_entries_custom_data_gin_idx" ON "accounting_entries" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "accounting_fiscal_years_workspace_subdomain_idx" ON "accounting_fiscal_years" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "accounting_fiscal_years_custom_data_gin_idx" ON "accounting_fiscal_years" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "assessment_results_workspace_subdomain_idx" ON "assessment_results" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "assessment_results_custom_data_gin_idx" ON "assessment_results" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "attendance_workspace_subdomain_idx" ON "attendance" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "attendance_custom_data_gin_idx" ON "attendance" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "audit_log_entries_workspace_subdomain_idx" ON "audit_log_entries" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "audit_log_entries_custom_data_gin_idx" ON "audit_log_entries" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "audit_logs_workspace_changed_idx" ON "audit_logs" USING btree ("workspace_subdomain","changed_at");--> statement-breakpoint
-CREATE INDEX "audit_logs_table_record_idx" ON "audit_logs" USING btree ("table_name","record_id");--> statement-breakpoint
-CREATE INDEX "auth_artifacts_kind_expires_idx" ON "auth_artifacts" USING btree ("kind","expires_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "accounting_accounts_workspace_subdomain_idx" ON "accounting_accounts" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "accounting_accounts_custom_data_gin_idx" ON "accounting_accounts" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "accounting_entries_workspace_subdomain_idx" ON "accounting_entries" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "accounting_entries_custom_data_gin_idx" ON "accounting_entries" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "accounting_fiscal_years_workspace_subdomain_idx" ON "accounting_fiscal_years" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "accounting_fiscal_years_custom_data_gin_idx" ON "accounting_fiscal_years" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "assessment_results_workspace_subdomain_idx" ON "assessment_results" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "assessment_results_custom_data_gin_idx" ON "assessment_results" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "attendance_workspace_subdomain_idx" ON "attendance" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "attendance_custom_data_gin_idx" ON "attendance" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_log_entries_workspace_subdomain_idx" ON "audit_log_entries" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_log_entries_custom_data_gin_idx" ON "audit_log_entries" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_workspace_changed_idx" ON "audit_logs" USING btree ("workspace_subdomain","changed_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_table_record_idx" ON "audit_logs" USING btree ("table_name","record_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "auth_artifacts_kind_expires_idx" ON "auth_artifacts" USING btree ("kind","expires_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "auth_artifacts_lookup_key_uidx" ON "auth_artifacts" USING btree ("lookup_key") WHERE "lookup_key" IS NOT NULL;--> statement-breakpoint
-CREATE INDEX "auth_artifacts_scope_key_idx" ON "auth_artifacts" USING btree ("scope_key") WHERE "scope_key" IS NOT NULL;--> statement-breakpoint
-CREATE INDEX "platform_activity_logs_created_at_idx" ON "platform_activity_logs" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "background_jobs_tenant_user_idx" ON "background_jobs" USING btree ("tenant_id","user_id");--> statement-breakpoint
-CREATE INDEX "background_jobs_status_idx" ON "background_jobs" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "contacts_workspace_subdomain_idx" ON "contacts" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "contacts_workspace_deleted_idx" ON "contacts" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
-CREATE INDEX "contacts_custom_data_gin_idx" ON "contacts" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "auth_artifacts_scope_key_idx" ON "auth_artifacts" USING btree ("scope_key") WHERE "scope_key" IS NOT NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "platform_activity_logs_created_at_idx" ON "platform_activity_logs" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "background_jobs_tenant_user_idx" ON "background_jobs" USING btree ("tenant_id","user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "background_jobs_status_idx" ON "background_jobs" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "contacts_workspace_subdomain_idx" ON "contacts" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "contacts_workspace_deleted_idx" ON "contacts" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "contacts_custom_data_gin_idx" ON "contacts" USING gin ("custom_data");--> statement-breakpoint
 CREATE UNIQUE INDEX "custom_tabs_workspace_module_key_idx" ON "custom_tabs" USING btree ("workspace_subdomain","module_id","key");--> statement-breakpoint
-CREATE INDEX "custom_tabs_workspace_idx" ON "custom_tabs" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "enrollments_workspace_subdomain_idx" ON "enrollments" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "enrollments_custom_data_gin_idx" ON "enrollments" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "exam_results_workspace_subdomain_idx" ON "exam_results" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "exam_results_custom_data_gin_idx" ON "exam_results" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "exams_workspace_subdomain_idx" ON "exams" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "exams_custom_data_gin_idx" ON "exams" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "finance_invoices_workspace_subdomain_idx" ON "finance_invoices" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "finance_invoices_custom_data_gin_idx" ON "finance_invoices" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "finance_payments_workspace_subdomain_idx" ON "finance_payments" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "finance_payments_custom_data_gin_idx" ON "finance_payments" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "hasanat_batches_workspace_subdomain_idx" ON "hasanat_batches" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "hasanat_batches_custom_data_gin_idx" ON "hasanat_batches" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "hasanat_denoms_workspace_subdomain_idx" ON "hasanat_denoms" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "hasanat_denoms_custom_data_gin_idx" ON "hasanat_denoms" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "hasanat_distributions_workspace_subdomain_idx" ON "hasanat_distributions" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "hasanat_distributions_custom_data_gin_idx" ON "hasanat_distributions" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "hasanat_redemptions_workspace_subdomain_idx" ON "hasanat_redemptions" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "hasanat_redemptions_custom_data_gin_idx" ON "hasanat_redemptions" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "message_logs_workspace_subdomain_idx" ON "message_logs" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "message_logs_custom_data_gin_idx" ON "message_logs" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "message_templates_workspace_subdomain_idx" ON "message_templates" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "message_templates_custom_data_gin_idx" ON "message_templates" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "mujtahid_reps_workspace_subdomain_idx" ON "mujtahid_reps" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "mujtahid_reps_custom_data_gin_idx" ON "mujtahid_reps" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "mujtahids_workspace_subdomain_idx" ON "mujtahids" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "mujtahids_custom_data_gin_idx" ON "mujtahids" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "obligation_collections_workspace_subdomain_idx" ON "obligation_collections" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "obligation_collections_custom_data_gin_idx" ON "obligation_collections" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "obligation_distributions_workspace_subdomain_idx" ON "obligation_distributions" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "obligation_distributions_custom_data_gin_idx" ON "obligation_distributions" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "obligation_types_workspace_subdomain_idx" ON "obligation_types" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "obligation_types_custom_data_gin_idx" ON "obligation_types" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "custom_tabs_workspace_idx" ON "custom_tabs" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "enrollments_workspace_subdomain_idx" ON "enrollments" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "enrollments_custom_data_gin_idx" ON "enrollments" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "exam_results_workspace_subdomain_idx" ON "exam_results" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "exam_results_custom_data_gin_idx" ON "exam_results" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "exams_workspace_subdomain_idx" ON "exams" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "exams_custom_data_gin_idx" ON "exams" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "finance_invoices_workspace_subdomain_idx" ON "finance_invoices" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "finance_invoices_custom_data_gin_idx" ON "finance_invoices" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "finance_payments_workspace_subdomain_idx" ON "finance_payments" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "finance_payments_custom_data_gin_idx" ON "finance_payments" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_batches_workspace_subdomain_idx" ON "hasanat_batches" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_batches_custom_data_gin_idx" ON "hasanat_batches" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_denoms_workspace_subdomain_idx" ON "hasanat_denoms" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_denoms_custom_data_gin_idx" ON "hasanat_denoms" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_distributions_workspace_subdomain_idx" ON "hasanat_distributions" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_distributions_custom_data_gin_idx" ON "hasanat_distributions" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_redemptions_workspace_subdomain_idx" ON "hasanat_redemptions" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "hasanat_redemptions_custom_data_gin_idx" ON "hasanat_redemptions" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "message_logs_workspace_subdomain_idx" ON "message_logs" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "message_logs_custom_data_gin_idx" ON "message_logs" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "message_templates_workspace_subdomain_idx" ON "message_templates" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "message_templates_custom_data_gin_idx" ON "message_templates" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "mujtahid_reps_workspace_subdomain_idx" ON "mujtahid_reps" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "mujtahid_reps_custom_data_gin_idx" ON "mujtahid_reps" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "mujtahids_workspace_subdomain_idx" ON "mujtahids" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "mujtahids_custom_data_gin_idx" ON "mujtahids" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "obligation_collections_workspace_subdomain_idx" ON "obligation_collections" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "obligation_collections_custom_data_gin_idx" ON "obligation_collections" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "obligation_distributions_workspace_subdomain_idx" ON "obligation_distributions" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "obligation_distributions_custom_data_gin_idx" ON "obligation_distributions" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "obligation_types_workspace_subdomain_idx" ON "obligation_types" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "obligation_types_custom_data_gin_idx" ON "obligation_types" USING gin ("custom_data");--> statement-breakpoint
 CREATE UNIQUE INDEX "platform_users_email_idx" ON "platform_users" USING btree ("email");--> statement-breakpoint
 CREATE UNIQUE INDEX "platform_users_single_super_user_idx" ON "platform_users" USING btree ("role") WHERE "role" = 'super_user';--> statement-breakpoint
-CREATE INDEX "questions_workspace_subdomain_idx" ON "questions" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "questions_custom_data_gin_idx" ON "questions" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "saved_reports_workspace_category_creator_idx" ON "saved_reports" USING btree ("workspace_subdomain","category","created_by");--> statement-breakpoint
-CREATE INDEX "sessions_workspace_subdomain_idx" ON "sessions" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "sessions_workspace_deleted_idx" ON "sessions" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
-CREATE INDEX "sessions_custom_data_gin_idx" ON "sessions" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "students_workspace_subdomain_idx" ON "students" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "students_workspace_deleted_idx" ON "students" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
-CREATE INDEX "students_custom_data_gin_idx" ON "students" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "teachers_workspace_subdomain_idx" ON "teachers" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "teachers_workspace_deleted_idx" ON "teachers" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
-CREATE INDEX "teachers_custom_data_gin_idx" ON "teachers" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "questions_workspace_subdomain_idx" ON "questions" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "questions_custom_data_gin_idx" ON "questions" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "saved_reports_workspace_category_creator_idx" ON "saved_reports" USING btree ("workspace_subdomain","category","created_by");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "sessions_workspace_subdomain_idx" ON "sessions" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "sessions_workspace_deleted_idx" ON "sessions" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "sessions_custom_data_gin_idx" ON "sessions" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "students_workspace_subdomain_idx" ON "students" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "students_workspace_deleted_idx" ON "students" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "students_custom_data_gin_idx" ON "students" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "teachers_workspace_subdomain_idx" ON "teachers" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "teachers_workspace_deleted_idx" ON "teachers" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "teachers_custom_data_gin_idx" ON "teachers" USING gin ("custom_data");--> statement-breakpoint
 CREATE UNIQUE INDEX "tenant_users_workspace_login_email_active_idx" ON "tenant_users" USING btree ("workspace_subdomain","login_email") WHERE "tenant_users"."deleted_at" is null;--> statement-breakpoint
-CREATE INDEX "tenant_users_workspace_idx" ON "tenant_users" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "tenant_users_workspace_deleted_idx" ON "tenant_users" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
-CREATE INDEX "tests_workspace_subdomain_idx" ON "tests" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "tests_custom_data_gin_idx" ON "tests" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "user_activity_logs_workspace_subdomain_idx" ON "user_activity_logs" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "user_activity_logs_custom_data_gin_idx" ON "user_activity_logs" USING gin ("custom_data");--> statement-breakpoint
-CREATE INDEX "wakala_types_workspace_subdomain_idx" ON "wakala_types" USING btree ("workspace_subdomain");--> statement-breakpoint
-CREATE INDEX "wakala_types_custom_data_gin_idx" ON "wakala_types" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tenant_users_workspace_idx" ON "tenant_users" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tenant_users_workspace_deleted_idx" ON "tenant_users" USING btree ("workspace_subdomain","deleted_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tests_workspace_subdomain_idx" ON "tests" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tests_custom_data_gin_idx" ON "tests" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_activity_logs_workspace_subdomain_idx" ON "user_activity_logs" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_activity_logs_custom_data_gin_idx" ON "user_activity_logs" USING gin ("custom_data");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "wakala_types_workspace_subdomain_idx" ON "wakala_types" USING btree ("workspace_subdomain");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "wakala_types_custom_data_gin_idx" ON "wakala_types" USING gin ("custom_data");--> statement-breakpoint
 CREATE UNIQUE INDEX "workspaces_subdomain_idx" ON "workspaces" USING btree ("subdomain");--> statement-breakpoint
 -- Tenant RLS: ENABLE + exact-match policy (or app.rls_bypass) on all workspace_subdomain tables.
 -- FORCE on tables that always write through withTenantTransaction.

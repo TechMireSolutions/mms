@@ -72,7 +72,18 @@ export async function initDb(): Promise<void> {
     try {
       await migrateClient.query(`SELECT set_config('app.rls_bypass', 'on', false)`);
       const migrateDb = drizzle(migrateClient, { schema });
-      await migrate(migrateDb, { migrationsFolder });
+      try {
+        await migrate(migrateDb, { migrationsFolder });
+      } catch (err: unknown) {
+        const pgErr = err as { code?: string; cause?: { code?: string } };
+        if (pgErr?.code === '42P07' || pgErr?.cause?.code === '42P07') {
+          console.warn(
+            '[dbInit] Pre-existing relations detected (42P07), continuing startup cleanly...',
+          );
+        } else {
+          throw err;
+        }
+      }
     } finally {
       migrateClient.release();
     }
