@@ -2,16 +2,20 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { registerAppNavigate, unregisterAppNavigate } from "@/lib/routing/appNavigate";
 import { applyAppTheme } from "@/lib/brandingTheme";
+import { applyApexPlatformTheme } from "@/lib/brandingThemeCore";
 import { revertSettingsPreviews } from "@/lib/settingsPreview";
 import { useScrollToTopOnNavigate } from "@/lib/routing/useScrollToTopOnNavigate";
+import { useTenant } from "@/lib/contexts/TenantContext";
+import { shouldForcePlatformEnglish } from "@/platform/lib/themeScope";
 
 /**
  * Registers React Router navigate for imperative redirects (logout, etc.)
- * and reapplies document language when crossing entry vs app routes.
+ * and reapplies document theme/language when the host or route scope changes.
  */
 export default function RouterBridge(): null {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isApex, workspace, workspaceLoading, workspaceMissing } = useTenant();
   useScrollToTopOnNavigate();
 
   useEffect(() => {
@@ -25,8 +29,15 @@ export default function RouterBridge(): null {
     if (!location.pathname.startsWith("/settings")) {
       revertSettingsPreviews();
     }
+    if (
+      shouldForcePlatformEnglish({ isApex, workspaceLoading, workspace }) ||
+      workspaceMissing
+    ) {
+      applyApexPlatformTheme("en");
+      return;
+    }
     applyAppTheme(location.pathname);
-  }, [location.pathname]);
+  }, [location.pathname, isApex, workspace, workspaceLoading, workspaceMissing]);
 
   return null;
 }

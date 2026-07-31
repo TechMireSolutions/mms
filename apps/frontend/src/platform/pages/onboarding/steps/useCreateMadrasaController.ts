@@ -19,7 +19,7 @@ export function useCreateMadrasaController(
   data: OnboardingData,
   onChange: Dispatch<SetStateAction<OnboardingData>>,
 ) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const appDomain = getAppDomain();
 
   const updateField = <K extends keyof OnboardingData>(field: K, fieldValue: OnboardingData[K]) => {
@@ -40,7 +40,7 @@ export function useCreateMadrasaController(
   );
 
   const resolvedFooter =
-    data.footerText.trim() || defaultFooterForMadrasa(data.name, language);
+    data.footerText.trim() || defaultFooterForMadrasa(data.name, 'en');
 
   useEffect(() => {
     applyBrandingTheme({
@@ -74,7 +74,6 @@ export function useCreateMadrasaController(
 
   return {
     t,
-    language,
     appDomain,
     data,
     onChange,

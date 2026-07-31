@@ -1,25 +1,32 @@
 import React from "react";
-import { ShieldAlert } from "lucide-react";
-import { ROUTES } from "@/lib/config/routes";
-import { apexUrl, getAppDomain } from "@/lib/config/tenantConfig";
+import { getAppDomain } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { AuthCardShell, AuthPageFrame } from "@/components/entry/AuthPageShell";
-import { AuthStatusHeader } from "@/components/entry/AuthStatusBanner";
-import { Button } from "@/components/ui/button";
+import {
+  AuthCardShell,
+  AuthFormHeading,
+  AuthMutedPanel,
+  AuthPageFrame,
+  AuthStatusBanner,
+} from "@/components/entry";
+import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 
 interface WorkspaceDisabledScreenProps {
   madrasaName: string;
   subdomain: string;
 }
 
-/** Shown when a madrasa workspace exists but has been disabled by the platform administrator. */
+/**
+ * Disabled tenant host — platform-themed English status screen.
+ * Theme/language are locked by RouterBridge + TranslationProvider.
+ */
 export default function WorkspaceDisabledScreen({
   madrasaName,
   subdomain,
 }: WorkspaceDisabledScreenProps): React.JSX.Element {
   const { t } = useTranslation();
   const appDomain = getAppDomain();
+  const hostLabel = `${subdomain}.${appDomain}`;
 
   return (
     <>
@@ -27,27 +34,32 @@ export default function WorkspaceDisabledScreen({
         title={formatEntryTitle(t("platform.workspaceDisabledTitle"), t("entry.productName"))}
         description={t("entry.meta.workspaceDisabled")}
       />
-      <AuthPageFrame>
+      <AuthPageFrame dir="ltr">
         <AuthCardShell
           className="max-w-md"
           header={
-            <AuthStatusHeader
-              icon={ShieldAlert}
-              tone="destructive"
-              title={t("platform.workspaceDisabledTitle")}
-              description={t("platform.workspaceDisabledMessage", {
-                name: madrasaName,
-                subdomain,
-                domain: appDomain,
-              })}
-            />
+            <div className="space-y-4">
+              <PlatformLogoMark />
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                {t("entry.productName")}
+              </p>
+              <AuthFormHeading
+                title={t("platform.workspaceDisabledTitle")}
+                subtitle={t("platform.workspaceDisabledMessage", {
+                  name: madrasaName,
+                  subdomain,
+                  domain: appDomain,
+                })}
+              />
+            </div>
           }
         >
-          <Button asChild size="lg" className="h-11 w-full rounded-xl font-semibold">
-            <a href={apexUrl(ROUTES.home)}>
-              {t("platform.contactSuperAdmin")}
-            </a>
-          </Button>
+          <div className="space-y-4">
+            <AuthMutedPanel align="center" className="font-mono text-xs sm:text-sm">
+              <span className="break-all text-foreground">{hostLabel}</span>
+            </AuthMutedPanel>
+            <AuthStatusBanner variant="warning" message={t("platform.contactSuperAdmin")} />
+          </div>
         </AuthCardShell>
       </AuthPageFrame>
     </>

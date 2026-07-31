@@ -19,10 +19,19 @@ main.tsx → App.tsx → AppProviders (providers/AppProviders.tsx)
     AuthenticatedApp → RouterBridge + Suspense → HostRoutes (apex OR tenant tree)
 ```
 
-| Host | Routes |
-|------|--------|
-| Apex | Landing, onboarding, workspace gate |
-| Tenant | `ProtectedRoute` → `AppLayout` → module pages |
+| Host | Routes | Language |
+|------|--------|----------|
+| Apex (platform) | Landing, onboarding, console, admins, account, **tenant-not-found** | **English/LTR only** (`shouldForcePlatformEnglish`) |
+| Tenant | `ProtectedRoute` → `AppLayout` → module pages | Workspace language (en/ar/ur/fa); auth entry English |
+
+Platform theme: `MMS_PLATFORM_BRANDING` / `applyApexPlatformTheme('en')`.
+
+### Missing tenant host (required)
+- Unregistered subdomain → `TenantBootGate` **hard-redirects** (`RedirectToApex` / `apexUrl`) to apex `ROUTES.tenantNotFound` via `tenantNotFoundPath(subdomain)` → `/tenant-not-found?subdomain=…` (`TenantNotFoundPage`).
+- Browser **must leave** the bad tenant host (path-only normalize on the same host is a regression).
+- **Never** mount `/settings`, login, or other tenant routes for a missing workspace.
+- No create-madrasa / settings / apex-list CTAs — contact MMS platform admin only.
+- Disabled workspaces: `WorkspaceDisabledScreen` on the tenant host (not apex redirect).
 
 ## Before editing
 

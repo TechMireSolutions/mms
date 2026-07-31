@@ -3,6 +3,7 @@ import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useLocation } from 'react-router-dom';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { isEntryPath } from '@/lib/config/routes';
+import { shouldForcePlatformEnglish } from '@/platform/lib/themeScope';
 import {
   translateAppParams,
   registerLanguagePack,
@@ -30,14 +31,43 @@ interface TranslationContextType {
 
 export const TranslationContext = createContext<TranslationContextType | null>(null);
 
+function resolveUiLanguage(options: {
+  isApex: boolean;
+  workspaceLoading: boolean;
+  workspace: { enabled?: boolean } | null;
+  pathname: string;
+  settingsLanguage: string;
+}): string {
+  if (
+    shouldForcePlatformEnglish({
+      isApex: options.isApex,
+      workspaceLoading: options.workspaceLoading,
+      workspace: options.workspace,
+    })
+  ) {
+    return 'en';
+  }
+  // Tenant auth entry (login / 2FA / forgot) stays English before workspace language applies.
+  if (isEntryPath(options.pathname, { isApex: false })) {
+    return 'en';
+  }
+  return options.settingsLanguage;
+}
+
 export function TranslationProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const settings = useGlobalSettings();
   const { pathname } = useLocation();
-  const { isApex } = useTenant();
+  const { isApex, workspace, workspaceLoading } = useTenant();
 
-  const language = isEntryPath(pathname, { isApex }) ? "en" : settings.language;
+  const language = resolveUiLanguage({
+    isApex,
+    workspaceLoading,
+    workspace,
+    pathname,
+    settingsLanguage: settings.language,
+  });
   const [loadedLanguages, setLoadedLanguages] = useState<Record<string, boolean>>({ en: true });
-  const [activeLanguage, setActiveLanguage] = useState<AppLanguageCode>("en");
+  const [activeLanguage, setActiveLanguage] = useState<AppLanguageCode>('en');
   const [isLoading, setIsLoading] = useState(false);
 
   const isLanguageLoaded = !!loadedLanguages[language];
@@ -45,7 +75,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (isLanguageLoaded) {
-      setActiveLanguage(language);
+      setActiveLanguage(language as AppLanguageCode);
       return;
     }
 
@@ -62,7 +92,6 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         registerLanguagePack('ur', translationModule.APP_TRANSLATIONS_UR);
       });
     } else if (language === 'fa') {
-      // Farsi overrides are merged on top of Arabic translations
       promise = Promise.all([
         import('@mms/shared/translations/ar'),
         import('@mms/shared/translations/fa'),
@@ -82,7 +111,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
       .then(() => {
         if (!active) return;
         setLoadedLanguages((currentLoadedLanguages) => ({ ...currentLoadedLanguages, [language]: true }));
-        setActiveLanguage(language);
+        setActiveLanguage(language as AppLanguageCode);
         setIsLoading(false);
       })
       .catch((translationError) => {
@@ -97,7 +126,6 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   }, [language, isLanguageLoaded]);
 
   useEffect(() => {
-    // Sync document attributes (lang, dir, fonts) whenever activeLanguage changes
     applyDocumentLanguage(activeLanguage);
     ensureLocaleFontsLoaded(activeLanguage);
   }, [activeLanguage]);
@@ -134,4 +162,3 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     </TranslationContext.Provider>
   );
 }
-

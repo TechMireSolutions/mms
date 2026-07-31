@@ -2,8 +2,11 @@ import { useContext } from "react";
 import { TranslationContext, type TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 /**
- * Reactive app-wide UI translations from global language preference.
- * Entry routes (login, 2FA, onboarding, apex home) always resolve to English.
+ * Reactive app-wide UI translations.
+ * - Platform apex: always English (LTR).
+ * - Missing/disabled tenant hosts: always English (platform status screens).
+ * - Tenant auth entry (login / 2FA / forgot): English.
+ * - Authenticated tenant app: workspace language preference.
  */
 export function useTranslation(): {
   language: string;

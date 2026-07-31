@@ -57,7 +57,7 @@ export default function ApexWorkspaceGate({
         title={formatEntryTitle(gateTitle, t("entry.productName"))}
         description={t(META_DESC_KEYS[variant])}
       />
-      <AuthPageFrame>
+      <AuthPageFrame dir="ltr">
         <AuthCardShell
           className="max-w-lg"
           header={

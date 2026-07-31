@@ -352,7 +352,7 @@ export const APP_TRANSLATIONS_EN = {
   "entry.meta.tenantForgot": "Request a password reset link for your madrasa workspace account.",
   "entry.meta.tenantTwoFactor": "Enter your verification code to complete sign-in to your madrasa workspace.",
   "entry.meta.userNotRegistered": "Your account is signed in but not registered for this workspace.",
-  "entry.meta.workspaceNotFound": "No madrasa workspace is registered at this subdomain.",
+  "entry.meta.workspaceNotFound": "This tenant does not exist. Contact the MMS platform administrator.",
   "entry.meta.workspaceDisabled": "This madrasa workspace has been disabled by the platform administrator.",
   "entry.meta.apexNotFound": "The requested platform page could not be found.",
 
@@ -578,10 +578,9 @@ export const APP_TRANSLATIONS_EN = {
   "apex.goToForgotPicker": "Choose your madrasa to reset password",
   "apex.resetPasswordAt": "Reset password at {name}",
   "apex.backToSignInPicker": "Back to madrasa sign-in list",
-  "apex.workspaceNotFoundTitle": "Workspace not found",
-  "apex.workspaceNotFoundMessage": "No madrasa is registered at {subdomain}.",
-  "apex.workspaceNotFoundCreate": "Create your madrasa",
-  "apex.workspaceNotFoundViewAll": "View all madrasa links",
+  "apex.workspaceNotFoundTitle": "Tenant does not exist",
+  "apex.workspaceNotFoundMessage": "No madrasa workspace is registered at {subdomain}.{domain}.",
+  "apex.workspaceNotFoundContactAdmin": "Contact the MMS platform administrator for access.",
 
   "page.notFound.title": "Page not found",
   "page.notFound.message": "No route exists for {path}",

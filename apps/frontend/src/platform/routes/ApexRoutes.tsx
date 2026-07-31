@@ -6,6 +6,7 @@ import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 
 const ApexHome = React.lazy(() => import('@/platform/pages/ApexHome'));
 const ApexWorkspaceGate = React.lazy(() => import('@/platform/pages/ApexWorkspaceGate'));
+const TenantNotFoundPage = React.lazy(() => import('@/platform/pages/TenantNotFoundPage'));
 const OnboardingWizard = React.lazy(() => import('@/platform/pages/onboarding/OnboardingWizard'));
 const PlatformAccount = React.lazy(() => import('@/platform/pages/PlatformAccount'));
 const PlatformAdmins = React.lazy(() => import('@/platform/pages/PlatformAdmins'));
@@ -24,6 +25,7 @@ export default function ApexRoutes(): React.JSX.Element {
       {/* Entry — no platform session required */}
       <Route path={ROUTES.home} element={<ApexHome />} />
       <Route path={ROUTES.login} element={<Navigate to={ROUTES.home} replace />} />
+      <Route path={ROUTES.tenantNotFound} element={<TenantNotFoundPage />} />
       <Route
         path={ROUTES.forgotPassword}
         element={<ApexWorkspaceGate variant="forgotPassword" showWorkspaceList />}

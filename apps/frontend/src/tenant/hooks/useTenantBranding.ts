@@ -1,14 +1,11 @@
 import { useTenant } from "@/lib/contexts/TenantContext";
-import { usePublicBranding } from "@/tenant/hooks/usePublicBranding";
 
 /**
  * Blocks tenant auth UI until workspace branding has been fetched from the server.
- * Apex hosts skip the wait; failed workspace lookups fall back to `/public-branding`.
+ * Apex hosts and missing-tenant hosts skip the wait (platform theme owns those screens).
  */
 export function useTenantBranding(): { ready: boolean } {
-  const { isApex, workspaceLoading, workspace } = useTenant();
-  const needsFallback = !isApex && !workspaceLoading && workspace === null;
-  const { isPending, isFetching, isFetched } = usePublicBranding(needsFallback);
+  const { isApex, workspaceLoading } = useTenant();
 
   if (isApex) {
     return { ready: true };
@@ -18,11 +15,6 @@ export function useTenantBranding(): { ready: boolean } {
     return { ready: false };
   }
 
-  if (workspace !== null) {
-    return { ready: true };
-  }
-
-  const ready = !needsFallback || (isFetched && !isPending && !isFetching);
-  return { ready };
+  // Missing or loaded tenant — AuthLayout applies public branding when present.
+  return { ready: true };
 }
-

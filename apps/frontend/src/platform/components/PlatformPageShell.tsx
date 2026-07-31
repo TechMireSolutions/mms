@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { cn } from '@/lib/utils';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
@@ -10,12 +9,11 @@ interface PlatformPageShellProps {
   width?: 'md' | 'lg' | 'xl' | '7xl';
 }
 
-/** Shared apex platform page layout (LTR/RTL card shell or wide dashboard). */
+/** Shared apex platform page layout — English/LTR only. */
 export function PlatformPageShell({
   children,
   width = 'lg',
 }: PlatformPageShellProps): React.JSX.Element {
-  const { dir } = useTranslation();
   const { isPlatformAuthenticated } = usePlatformAuth();
 
   const maxClass = isPlatformAuthenticated
@@ -30,7 +28,8 @@ export function PlatformPageShell({
 
   return (
     <div
-      dir={dir}
+      dir="ltr"
+      lang="en"
       className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden flex-col bg-background selection:bg-primary/10 selection:text-primary"
     >
       <PlatformPageShellHeader />

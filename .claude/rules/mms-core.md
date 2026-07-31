@@ -108,6 +108,8 @@ No hardcoded user-facing strings, labels, colours, formats, or statuses.
 | Field/tab/status labels | Registries + `labelKey` / `StatusBadge` — **`mms-fields.md`**, **`mms-settings-i18n.md`** |
 | Theme colours | `branding` / CSS variables — **`mms-ui-ux-design.md`** |
 | Module prefs & formats | `@mms/shared` `DEFAULT_*` + settings getters — **`mms-settings-i18n.md`** |
+| Platform apex locale | **English/LTR only** — `shouldForcePlatformEnglish` — **`mms-settings-i18n.md`** |
+| Unknown tenant host | Hard-redirect to apex `/tenant-not-found?subdomain=…` — **never** stay on bad host or open `/settings` — **`mms-settings-i18n.md`**, **`mms-ui-ux-design.md`** §8 |
 
 Contacts legacy `uiStrings` is migration debt — new copy uses `appTranslations` (`mms-migration-status.md`).
 

@@ -367,7 +367,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "entry.meta.tenantForgot": "اطلب رابط إعادة تعيين كلمة المرور لحساب مساحة عمل مدرستك.",
   "entry.meta.tenantTwoFactor": "أدخل رمز التحقق لإكمال تسجيل الدخول إلى مساحة عمل مدرستك.",
   "entry.meta.userNotRegistered": "حسابك مسجّل الدخول لكنه غير مسجّل في مساحة العمل هذه.",
-  "entry.meta.workspaceNotFound": "لا توجد مساحة عمل مسجّلة على هذا النطاق الفرعي.",
+  "entry.meta.workspaceNotFound": "هذا المستأجر غير موجود. تواصل مع مسؤول منصة MMS.",
   "entry.meta.workspaceDisabled": "تم تعطيل مساحة عمل هذه المدرسة من مسؤول المنصة.",
   "entry.meta.apexNotFound": "تعذّر العثور على صفحة المنصة المطلوبة.",
 
@@ -594,10 +594,9 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "apex.goToForgotPicker": "اختر مدرستك لإعادة تعيين كلمة المرور",
   "apex.resetPasswordAt": "إعادة تعيين كلمة المرور في {name}",
   "apex.backToSignInPicker": "العودة إلى قائمة تسجيل الدخول",
-  "apex.workspaceNotFoundTitle": "مساحة العمل غير موجودة",
-  "apex.workspaceNotFoundMessage": "لا توجد مدرسة مسجّلة على {subdomain}.",
-  "apex.workspaceNotFoundCreate": "أنشئ مدرستك",
-  "apex.workspaceNotFoundViewAll": "عرض كل روابط المدارس",
+  "apex.workspaceNotFoundTitle": "المستأجر غير موجود",
+  "apex.workspaceNotFoundMessage": "لا توجد مساحة عمل مسجّلة على {subdomain}.{domain}.",
+  "apex.workspaceNotFoundContactAdmin": "تواصل مع مسؤول منصة MMS للحصول على الوصول.",
 
   "page.notFound.title": "الصفحة غير موجودة",
   "page.notFound.message": "لا يوجد مسار لـ {path}",

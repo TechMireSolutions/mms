@@ -1,7 +1,6 @@
 import {
   BRANDING_THEME_VARIABLES,
   buildBrandingCssVariables,
-  isApexHost,
   normalizeBrandingCornerStyle,
   resolveBrandingCornerRadius,
   type BrandingSettings,
@@ -12,7 +11,6 @@ import {
   getScopedBrandingSettings,
   getScopedGlobalSettings,
 } from '@/lib/settingsPreviewStore';
-import { getAppDomain } from '@/lib/config/tenantConfig';
 import { isEntryPath } from '@/lib/config/routes';
 import { isTenantHost, MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
 import {
@@ -25,15 +23,10 @@ import {
 
 export { applyApexPlatformTheme, applyTenantEntryTheme } from '@/lib/brandingThemeCore';
 
-function resolveDocumentLanguage(storedLanguage: string, pathname: string): string {
-  const isApex =
-    typeof window !== 'undefined'
-      ? isApexHost(window.location.hostname, getAppDomain())
-      : true;
-  return isEntryPath(pathname, { isApex }) ? 'en' : storedLanguage;
+function resolveTenantDocumentLanguage(storedLanguage: string, pathname: string): string {
+  // Tenant auth entry stays English; authenticated app uses workspace language.
+  return isEntryPath(pathname, { isApex: false }) ? 'en' : storedLanguage;
 }
-
-
 
 /**
  * Applies branding colours to CSS variables.
@@ -77,14 +70,14 @@ export type AppThemeOverrides = Partial<Pick<GlobalSettings, 'theme' | 'language
 
 /**
  * Applies global theme class plus branding tokens for the active host scope.
+ * Apex (platform) is always English + MMS platform branding.
  */
 export function applyAppTheme(pathname?: string, overrides?: AppThemeOverrides): void {
   const activePath =
     pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
 
   if (!isTenantHost()) {
-    const language = isEntryPath(activePath, { isApex: true }) ? 'en' : MMS_PLATFORM_GLOBAL_SETTINGS.language;
-    applyApexPlatformTheme(language);
+    applyApexPlatformTheme('en');
     return;
   }
 
@@ -100,7 +93,7 @@ export function applyAppTheme(pathname?: string, overrides?: AppThemeOverrides):
     root.classList.remove('dark');
   }
 
-  applyDocumentLanguageWithFonts(resolveDocumentLanguage(settings.language, activePath));
+  applyDocumentLanguageWithFonts(resolveTenantDocumentLanguage(settings.language, activePath));
 
   applyBrandingTheme(undefined, activeTheme);
 }

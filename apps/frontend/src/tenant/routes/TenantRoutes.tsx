@@ -1,11 +1,10 @@
 import React from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { useTenant } from "@/lib/contexts/TenantContext";
-import { ROUTES } from "@/lib/config/routes";
+import { ROUTES, tenantNotFoundPath } from "@/lib/config/routes";
 import { apexUrl } from "@/lib/config/tenantConfig";
 import ProtectedRoute from "@/tenant/components/guards/ProtectedRoute";
 import GuestRoute from "@/tenant/components/guards/GuestRoute";
-import TenantNotFoundScreen from "@/tenant/components/TenantNotFoundScreen";
 import WorkspaceDisabledScreen from "@/tenant/components/WorkspaceDisabledScreen";
 import AppLayout from "@/tenant/components/layout/AppLayout";
 import PageNotFound from "@/tenant/components/PageNotFound";
@@ -41,18 +40,27 @@ function RedirectToApex({ path }: { path: string }): React.JSX.Element {
   return <RouteStatusFallback fullScreen />;
 }
 
+/**
+ * Blocks all tenant app routes (including `/settings`) when the host subdomain
+ * has no registered workspace. Hard-redirects to the apex platform
+ * `/tenant-not-found?subdomain=` page — never leave the browser on the bad host.
+ */
 function TenantBootGate({ children }: { children: React.ReactNode }): React.JSX.Element {
-  const { workspaceLoading, workspace, subdomain } = useTenant();
+  const { workspaceLoading, workspaceMissing, workspace, subdomain } = useTenant();
+  const location = useLocation();
 
   if (workspaceLoading) {
     return <RouteStatusFallback fullScreen />;
   }
 
-  if (!workspace && subdomain) {
-    return <TenantNotFoundScreen subdomain={subdomain} />;
+  if (workspaceMissing && subdomain) {
+    return <RedirectToApex path={tenantNotFoundPath(subdomain)} />;
   }
 
   if (workspace && workspace.enabled === false) {
+    if (location.pathname !== ROUTES.home) {
+      return <Navigate to={ROUTES.home} replace />;
+    }
     return (
       <WorkspaceDisabledScreen
         madrasaName={workspace.madrasaName}
@@ -83,7 +91,7 @@ function TenantRoutesInner(): React.JSX.Element {
           <Route path={ROUTES.forcePasswordChange} element={<ForcePasswordChange />} />
           <Route element={<AppLayout />}>
             <Route path={ROUTES.home} element={<Dashboard />} />
-             <Route path={ROUTES.contacts} element={<Contacts />} />
+            <Route path={ROUTES.contacts} element={<Contacts />} />
             <Route path={ROUTES.messaging} element={<Messaging />} />
             <Route path={ROUTES.students} element={<Students />} />
             <Route path={ROUTES.teachers} element={<Teachers />} />

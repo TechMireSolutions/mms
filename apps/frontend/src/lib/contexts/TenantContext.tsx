@@ -8,7 +8,6 @@ import {
 } from "@mms/shared";
 import { getTenantUrlOptions } from "@/lib/config/tenantConfig";
 import { useDeploymentAppDomain } from "@/tenant/hooks/useDeploymentAppDomain";
-import { usePublicBranding } from "@/tenant/hooks/usePublicBranding";
 import {
   useWorkspaceBySubdomain,
   type PublicWorkspace,
@@ -23,6 +22,8 @@ export interface TenantContextValue {
   workspace: PublicWorkspace | null;
   publicBranding: PublicBranding | null;
   workspaceLoading: boolean;
+  /** True when the subdomain host has no registered workspace (404 / empty). */
+  workspaceMissing: boolean;
   workspaceUrl: string | null;
   redirectToApex: (path?: string) => void;
   redirectToTenant: (subdomain: string, path?: string) => void;
@@ -43,15 +44,19 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 
   const tenantLookupEnabled = !isApex && Boolean(subdomain);
-  const { data: workspaceLookup, isPending, isFetching } = useWorkspaceBySubdomain(
-    subdomain,
-    tenantLookupEnabled,
-  );
+  const {
+    data: workspaceLookup,
+    isPending,
+    isFetching,
+    isError,
+    isFetched,
+  } = useWorkspaceBySubdomain(subdomain, tenantLookupEnabled);
   const workspaceLoading = tenantLookupEnabled && (isPending || isFetching);
   const workspace = workspaceLookup?.workspace ?? null;
-  const needsBrandingFallback = tenantLookupEnabled && !workspaceLoading && workspace === null;
-  const { data: fallbackBranding = null } = usePublicBranding(needsBrandingFallback);
-  const publicBranding = workspaceLookup?.branding ?? fallbackBranding;
+  const workspaceMissing =
+    tenantLookupEnabled && !workspaceLoading && (isError || (isFetched && workspace === null));
+  // Missing tenants hard-redirect to apex Tenant Not Found — skip branding fetch.
+  const publicBranding = workspaceLookup?.branding ?? null;
 
   const workspaceUrl = subdomain
     ? buildTenantUrl(subdomain, "/", getTenantUrlOptions())
@@ -72,6 +77,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     workspace,
     publicBranding,
     workspaceLoading,
+    workspaceMissing,
     workspaceUrl,
     redirectToApex,
     redirectToTenant,

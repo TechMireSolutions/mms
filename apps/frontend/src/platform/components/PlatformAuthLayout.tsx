@@ -9,7 +9,7 @@ export interface PlatformAuthLayoutProps {
   footer?: React.ReactNode;
 }
 
-/** Apex platform auth shell — product mark, no tenant branding block. */
+/** Apex platform auth shell — English/LTR, product mark, no tenant branding. */
 export default function PlatformAuthLayout({
   children,
   title,
@@ -17,7 +17,7 @@ export default function PlatformAuthLayout({
   footer,
 }: PlatformAuthLayoutProps): React.JSX.Element {
   return (
-    <AuthPageFrame>
+    <AuthPageFrame dir="ltr">
       <AuthCardShell
         footer={footer}
         header={

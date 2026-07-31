@@ -17,7 +17,7 @@ interface CreateMadrasaThemeSectionProps {
 }
 
 export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSectionProps): React.ReactElement {
-  const { t, language, data, onChange, updateField, resolvedFooter } = controller;
+  const { t, data, onChange, updateField, resolvedFooter } = controller;
 
   return (
     <>
@@ -51,7 +51,7 @@ export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSect
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => updateField("footerText", defaultFooterForMadrasa(data.name, language))}
+            onClick={() => updateField("footerText", defaultFooterForMadrasa(data.name, "en"))}
           >
             <Wand2 className="h-3.5 w-3.5" />
             {t("theme.footerGenerate")}
@@ -70,7 +70,7 @@ export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSect
             value={data.footerText}
             maxLength={FOOTER_MAX}
             rows={2}
-            placeholder={defaultFooterForMadrasa(data.name, language)}
+            placeholder={defaultFooterForMadrasa(data.name, "en")}
             aria-describedby="onboarding-footer-hint"
             onChange={(event) => updateField("footerText", event.target.value)}
           />

@@ -29,8 +29,9 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 
 ### Tenant Resolution
 - **Subdomain Routing**: Hosts are resolved dynamically:
-  - **Apex Host** (`localhost`, `madrasa.app`): Marketing and new workspace onboard.
+  - **Apex Host** (`localhost`, `madrasa.app`): Marketing, platform console, onboarding, and **tenant-not-found**.
   - **Tenant Host** (`{slug}.localhost`): Full workspace instance.
+- **Unknown tenant SPA gate**: If the FE resolves no registered workspace for the host subdomain, **hard-redirect** to apex `/tenant-not-found?subdomain=…` — never mount tenant `/settings` or leave the user on the unregistered host (`mms-settings-i18n.md`, `mms-ui-ux-design.md` §8).
 - **Request Context**: Backend parses tenant from `Host` or `X-Forwarded-Host` headers (never from client JSON bodies) and starts an AsyncLocalStorage scope (`tenantStorage`).
 - **Endpoint Protection**: Tenant API routes require **`authenticateTenant`** which validates that the JWT payload `workspaceSubdomain` matches the resolved request subdomain. Apex requests to tenant routes return `403`.
 

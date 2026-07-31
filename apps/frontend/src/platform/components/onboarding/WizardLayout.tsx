@@ -21,7 +21,7 @@ interface WizardLayoutProps {
 }
 
 /**
- * Layout wrapper for platform onboarding wizard.
+ * Layout wrapper for platform onboarding wizard — English/LTR only.
  */
 export default function WizardLayout({
   currentStep,
@@ -30,7 +30,7 @@ export default function WizardLayout({
   title,
   subtitle,
 }: WizardLayoutProps): React.JSX.Element {
-  const { t, dir, isRtl } = useTranslation();
+  const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const stepLabel = t("onboarding.stepOf", {
     current: String(currentStep),
@@ -39,7 +39,8 @@ export default function WizardLayout({
 
   return (
     <div
-      dir={dir}
+      dir="ltr"
+      lang="en"
       className="relative flex min-h-dvh flex-col overflow-hidden bg-background selection:bg-primary/10 selection:text-primary"
     >
       <AuthPageBackdrop />
@@ -117,7 +118,7 @@ export default function WizardLayout({
 
         <motion.section
           key={currentStep}
-          initial={reducedMotion ? false : { opacity: 0, x: isRtl ? -16 : 16 }}
+          initial={reducedMotion ? false : { opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={reducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
           className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/25"

@@ -66,6 +66,8 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] New settings section: registered in `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`
 - [ ] Settings footer labels via `t()` — no hardcoded save-state strings in `SettingsFormActions`
 - [ ] Brand colour previews use derived tokens (`brandingTheme`) — not raw hex on surfaces
+- [ ] **Platform apex English-only**: no tenant `settings.language` / RTL on apex; use `shouldForcePlatformEnglish` + `applyApexPlatformTheme('en')`; platform shells `dir="ltr"`
+- [ ] **Missing tenant host**: hard-redirect to apex `/tenant-not-found?subdomain=…` (`tenantNotFoundPath`) — never mount `/settings` or stay on the bad host; contact platform admin copy only
 
 ### RBAC (frontend)
 - [ ] Module pages use `useModulePermissions(X_MODULE_MANIFEST)` (or `can()`) — not `role ===` / `disabled={role === '…'}`

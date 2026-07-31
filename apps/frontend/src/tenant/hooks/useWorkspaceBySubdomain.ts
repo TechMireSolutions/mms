@@ -36,6 +36,6 @@ export function useWorkspaceBySubdomain(subdomain: string | null, enabled: boole
     queryFn: () => fetchWorkspaceBySubdomain(subdomain!),
     enabled: enabled && Boolean(subdomain),
     staleTime: 60_000,
-    retry: 1,
+    retry: false,
   });
 }

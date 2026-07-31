@@ -25,7 +25,7 @@ export default function ApexPageNotFound(): React.JSX.Element {
         title={formatEntryTitle(t("page.notFound.title"), t("entry.productName"))}
         description={t("entry.meta.apexNotFound")}
       />
-      <AuthPageFrame>
+      <AuthPageFrame dir="ltr">
         <AuthCardShell
           className="max-w-md"
           header={

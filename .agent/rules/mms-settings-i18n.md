@@ -61,3 +61,17 @@ MMS supports four languages configured in `languageUtils.ts` (`APP_LANGUAGES`):
 - **Settings-Aware `Intl` Formatting**: Dates/money via settings-aware `formatDate` / `formatMoney` (+ `Intl`), not ad-hoc string math.
 - **Error Codes Mapping**: Map API `type` to `t('errors.{type}')`.
 
+### Platform apex = English only
+- **Entire platform host** (apex: console, onboarding, account, admins, auth, **tenant-not-found**) is **English + LTR** — never follow tenant `settings.language`.
+- Lock via `shouldForcePlatformEnglish()` in `themeScope.ts` + `TranslationProvider` + `applyApexPlatformTheme('en')`.
+- Do **not** expand `isPlatformEntryPath` to “fake” English for the console — host-level lock is the SSOT.
+- Platform shells (`PlatformPageShell`, onboarding `WizardLayout`) hardcode `dir="ltr"` / `lang="en"`.
+- Tenant authenticated app remains multilingual (en/ar/ur/fa).
+
+### Unknown / missing tenant host
+- If the browser host is a **non-existent tenant subdomain** (lookup 404 / empty), **never** mount tenant app routes — especially **`/settings`**, login, or modules.
+- `TenantBootGate` must **hard-redirect** (`window.location` via `apexUrl` / `RedirectToApex`) to apex `ROUTES.tenantNotFound` — path helper `tenantNotFoundPath(subdomain)` → `/tenant-not-found?subdomain=…`.
+- The address bar **must leave** the bad tenant host (e.g. `foo.localhost` → `localhost/tenant-not-found?subdomain=foo`). Do **not** only normalize the path on the same host.
+- Apex `TenantNotFoundPage` (`platform/pages/TenantNotFoundPage.tsx`) is a `PLATFORM_ENTRY_PATHS` route: English “Tenant does not exist” + contact MMS platform administrator only — no Settings, onboarding, workspace-picker, or create-madrasa CTAs.
+- Disabled (registered but `enabled === false`) workspaces stay on the tenant host with `WorkspaceDisabledScreen` (path-normalize to `/`; no settings).
+

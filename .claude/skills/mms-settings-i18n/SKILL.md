@@ -76,6 +76,19 @@ MMS supports four languages configured in `languageUtils.ts` (`APP_LANGUAGES`):
   Use these fields to adjust icon orientations (e.g., chevron rotation) or absolute element positions.
 - **Typography & Font Stacking**: Language-specific font stacks are applied to the document root element (`<html>`) dynamically (`applyDocumentLanguage`). Ensure standard CSS variables (`--font-sans`, `--font-display`) resolve to appropriate fonts (e.g., Noto Nastaliq Urdu for `ur`) to prevent layout shifts (CLS).
 
+### Platform apex = English only
+- **Entire platform host** (console, onboarding, account, admins, auth, **tenant-not-found**) is **English + LTR** — never follow tenant `settings.language`.
+- Lock via `shouldForcePlatformEnglish()` (`themeScope.ts`) + `TranslationProvider` + `applyApexPlatformTheme('en')`.
+- Do **not** expand `isPlatformEntryPath` to simulate English for the console — host-level lock is the SSOT.
+- Platform shells (`PlatformPageShell`, onboarding `WizardLayout`) hardcode `dir="ltr"` / `lang="en"`.
+- Tenant authenticated app remains multilingual (en/ar/ur/fa).
+
+### Unknown / missing tenant host
+- Non-existent tenant subdomain → `TenantBootGate` **hard-redirects** to apex `/tenant-not-found?subdomain=…` (`tenantNotFoundPath`); **never** open `/settings` or keep the bad host URL.
+- Apex `TenantNotFoundPage`: English “Tenant does not exist” + contact MMS platform administrator only.
+- Do not link to Settings, onboarding, or workspace-create CTAs from that page.
+- Disabled workspaces stay on tenant host with `WorkspaceDisabledScreen`.
+
 ### Settings-Aware Native Formatting
 Never format dates, times, numbers, or currencies using raw strings or ad-hoc formatters. Use settings-aware hooks/helpers that wrap browser-native `Intl` APIs:
 - **Dates**: Resolves via settings-aware `formatDate()` or `formatDateTime()` helpers using active locale codes (e.g., `ur-PK`, `fa-IR`).

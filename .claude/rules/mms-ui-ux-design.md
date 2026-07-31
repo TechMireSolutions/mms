@@ -159,3 +159,12 @@ Before declaring any layout implementation complete, verify:
 - Breakpoints: tenant shell + module tabs use mobile-default + `lg:`; platform chrome uses `md:`; FormModal tab chrome may use `md:` — avoid `max-lg:` / `max-md:` for layout width.
 - Auth e2e selectors: platform setup/sign-in and force-password-change keep **stable** field ids (`#platform-setup-email`, `#platform-email`, `#current-password`, …) — do not replace with `useId()` on those screens.
 - Regression tests: `e2e/tests/responsive-shell.spec.ts`, `e2e/tests/responsive-authenticated.spec.ts`.
+
+## 8. Missing / unknown tenant hosts
+
+- Unregistered subdomain hosts must **not** render tenant app chrome (`AppLayout`, `/settings`, login, modules).
+- `TenantBootGate` **hard-redirects** off the bad host to the apex URL `/tenant-not-found?subdomain=…` (`ROUTES.tenantNotFound` + `tenantNotFoundPath`, page `TenantNotFoundPage`).
+- Browser URL must change host (e.g. `missing.localhost:5173/settings` → `localhost:5173/tenant-not-found?subdomain=missing`). Path-only replace on the tenant host is a regression.
+- Copy: English “Tenant does not exist” + contact MMS platform administrator. No Settings / onboarding / create CTAs.
+- Disabled workspaces use `WorkspaceDisabledScreen` on the tenant host with path normalize to `/`.
+- Owner rule for copy/locale + routing SSOT: `mms-settings-i18n.md`.

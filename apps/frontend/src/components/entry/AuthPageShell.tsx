@@ -62,10 +62,14 @@ export function AuthCardShell({
 /** Outer page frame for pre-auth screens (platform + tenant). */
 export function AuthPageFrame({
   children,
+  dir: dirOverride,
 }: {
   children: React.ReactNode;
+  /** Force document direction (e.g. platform-themed host screens stay LTR). */
+  dir?: "ltr" | "rtl";
 }): React.JSX.Element {
-  const { dir } = useTranslation();
+  const { dir: translationDir } = useTranslation();
+  const dir = dirOverride ?? translationDir;
 
   return (
     <main

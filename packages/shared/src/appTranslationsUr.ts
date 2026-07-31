@@ -367,7 +367,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "entry.meta.tenantForgot": "اپنے مدرسہ ورک اسپیس اکاؤنٹ کے لیے پاس ورڈ ری سیٹ لنک طلب کریں۔",
   "entry.meta.tenantTwoFactor": "اپنے مدرسہ ورک اسپیس میں سائن ان مکمل کرنے کے لیے تصدیقی کوڈ درج کریں۔",
   "entry.meta.userNotRegistered": "آپ سائن ان ہیں لیکن اس ورک اسپیس کے لیے رجسٹرڈ نہیں۔",
-  "entry.meta.workspaceNotFound": "اس سب ڈومین پر کوئی مدرسہ ورک اسپیس رجسٹرڈ نہیں۔",
+  "entry.meta.workspaceNotFound": "یہ ٹیننٹ موجود نہیں۔ MMS پلیٹ فارم منتظم سے رابطہ کریں۔",
   "entry.meta.workspaceDisabled": "اس مدرسہ ورک اسپیس کو پلیٹ فارم منتظم نے غیر فعال کر دیا ہے۔",
   "entry.meta.apexNotFound": "مطلوبہ پلیٹ فارم صفحہ نہیں ملا۔",
 
@@ -594,10 +594,9 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "apex.goToForgotPicker": "پاس ورڈ ری سیٹ کے لیے اپنا مدرسہ منتخب کریں",
   "apex.resetPasswordAt": "{name} پر پاس ورڈ ری سیٹ کریں",
   "apex.backToSignInPicker": "مدرسہ سائن ان فہرست پر واپس",
-  "apex.workspaceNotFoundTitle": "ورک اسپیس نہیں ملی",
-  "apex.workspaceNotFoundMessage": "{subdomain} پر کوئی مدرسہ رجسٹر نہیں۔",
-  "apex.workspaceNotFoundCreate": "اپنا مدرسہ بنائیں",
-  "apex.workspaceNotFoundViewAll": "تمام مدرسہ لنکس دیکھیں",
+  "apex.workspaceNotFoundTitle": "ٹیننٹ موجود نہیں",
+  "apex.workspaceNotFoundMessage": "{subdomain}.{domain} پر کوئی مدرسہ ورک اسپیس رجسٹر نہیں۔",
+  "apex.workspaceNotFoundContactAdmin": "رسائی کے لیے MMS پلیٹ فارم منتظم سے رابطہ کریں۔",
 
   "page.notFound.title": "صفحہ نہیں ملا",
   "page.notFound.message": "{path} کے لیے کوئی راستہ نہیں",

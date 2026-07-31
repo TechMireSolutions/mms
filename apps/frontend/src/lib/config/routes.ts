@@ -28,6 +28,8 @@ export const ROUTES = {
   platformAdmins: "/platform/admins",
   twoFactor: "/2fa",
   onboarding: "/onboarding",
+  /** Apex-only: unknown tenant host redirected here with `?subdomain=` */
+  tenantNotFound: "/tenant-not-found",
 } as const;
 
 /** Paths that do not require tenant authentication */
@@ -47,7 +49,14 @@ export const PLATFORM_ENTRY_PATHS: readonly string[] = [
   ROUTES.forgotPassword,
   ROUTES.platformForgotPassword,
   ROUTES.twoFactor,
+  ROUTES.tenantNotFound,
 ];
+
+/** Apex path (+ query) for an unregistered tenant subdomain redirect. */
+export function tenantNotFoundPath(subdomain: string): string {
+  const params = new URLSearchParams({ subdomain });
+  return `${ROUTES.tenantNotFound}?${params.toString()}`;
+}
 
 /** Platform paths that require platform super-user authentication. */
 export const PLATFORM_PROTECTED_PATHS: readonly string[] = [
@@ -93,6 +102,11 @@ export function isPlatformProtectedPath(pathname: string): boolean {
   );
 }
 
+/**
+ * Path-based English lock for **tenant auth entry** (login / 2FA / forgot).
+ * Platform apex English is host-level via `shouldForcePlatformEnglish` — do not
+ * overload this helper to cover the authenticated platform console.
+ */
 export function isEntryPath(
   pathname: string,
   options?: { isApex?: boolean }
