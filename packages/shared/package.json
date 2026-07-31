@@ -9,26 +9,32 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./tenantUtils": {
       "import": "./dist/tenantUtils.js",
+      "default": "./dist/tenantUtils.js",
       "types": "./dist/tenantUtils.d.ts"
     },
     "./translations/en": {
       "import": "./dist/appTranslationsEn.js",
+      "default": "./dist/appTranslationsEn.js",
       "types": "./dist/appTranslationsEn.d.ts"
     },
     "./translations/ar": {
       "import": "./dist/appTranslationsAr.js",
+      "default": "./dist/appTranslationsAr.js",
       "types": "./dist/appTranslationsAr.d.ts"
     },
     "./translations/ur": {
       "import": "./dist/appTranslationsUr.js",
+      "default": "./dist/appTranslationsUr.js",
       "types": "./dist/appTranslationsUr.d.ts"
     },
     "./translations/fa": {
       "import": "./dist/appTranslationsFa.js",
+      "default": "./dist/appTranslationsFa.js",
       "types": "./dist/appTranslationsFa.d.ts"
     }
   },

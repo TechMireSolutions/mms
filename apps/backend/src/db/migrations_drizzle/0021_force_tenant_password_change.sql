@@ -1,1 +1,0 @@
-ALTER TABLE "tenant_users" ADD COLUMN IF NOT EXISTS "must_change_password" boolean DEFAULT false NOT NULL;
