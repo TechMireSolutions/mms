@@ -80,13 +80,27 @@ vi.mock('../services/auth/passwordService.js', async (importOriginal) => {
   };
 });
 
+const mockCreateVerifiedPlatformUser = vi.fn().mockImplementation(
+  async (input: { email: string; name: string; passwordHash: string }) => ({
+    id: 'p-superuser-1',
+    email: input.email,
+    name: input.name,
+    passwordHash: input.passwordHash,
+    role: 'super_user',
+    permissions: { workspaces: true, onboard: true },
+    sessionVersion: 0,
+    createdAt: new Date().toISOString(),
+    emailVerifiedAt: new Date().toISOString(),
+  }),
+);
+
 vi.mock('../services/platform/platformUserService.js', () => ({
   ensurePlatformSuperUserFromEnv: vi.fn().mockResolvedValue(undefined),
   findPlatformUserByEmail: (...args: unknown[]) => mockFindPlatformUserByEmail(...args),
   getStoredPlatformUserById: (...args: unknown[]) => mockGetStoredPlatformUserById(...args),
   hasPlatformUsers: (...args: unknown[]) => mockHasPlatformUsers(...args),
   countPlatformUsers: vi.fn(),
-  createVerifiedPlatformUser: vi.fn(),
+  createVerifiedPlatformUser: (...args: unknown[]) => mockCreateVerifiedPlatformUser(...args),
   setPlatformAdminPermissions: (...args: unknown[]) => mockSetPlatformAdminPermissions(...args),
   setPlatformAdminDisabled: (...args: unknown[]) => mockSetPlatformAdminDisabled(...args),
   deletePlatformAdmin: (...args: unknown[]) => mockDeletePlatformAdmin(...args),
@@ -473,10 +487,8 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('POST /api/platform/auth/setup/register starts verification when no users exist', async () => {
+  it('POST /api/platform/auth/setup/register creates superuser and issues session directly when no users exist', async () => {
     mockHasPlatformUsers.mockResolvedValue(false);
-    // Non-production: allow register without SMTP (devCode path).
-    mockIsPlatformSmtpConfigured.mockReturnValue(false);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -489,11 +501,9 @@ describe('platform auth routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    const body = res.json() as { setupId: string; email: string; devCode?: string };
-    expect(body.email).toBe('admin@example.com');
-    expect(body.setupId).toBeTruthy();
-    expect(body.devCode).toMatch(/^\d{6}$/);
-    expect(mockPutAuthArtifact).toHaveBeenCalled();
+    const body = res.json() as { user: { email: string; role: string } };
+    expect(body.user.email).toBe('admin@example.com');
+    expect(body.user.role).toBe('super_user');
     await app.close();
   });
 
@@ -886,15 +896,14 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('POST /api/platform/auth/setup/register requires SMTP in production', async () => {
+  it('POST /api/platform/auth/setup/register creates superuser without requiring SMTP in production', async () => {
     const previousNodeEnv = process.env.NODE_ENV;
     const previousJwt = process.env.JWT_SECRET;
     try {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'test-secret-must-be-at-least-32-chars!!';
-      mockIsPlatformSmtpConfigured.mockReturnValue(false);
       mockHasPlatformUsers.mockResolvedValue(false);
-      mockPutAuthArtifact.mockClear();
+      mockIsPlatformSmtpConfigured.mockReturnValue(false);
 
       const app = await buildApp();
       const res = await app.inject({
@@ -907,15 +916,16 @@ describe('platform auth routes', () => {
           password: 'SecurePass1',
         },
       });
-      expect(res.statusCode).toBe(503);
-      expect(res.json()).toMatchObject({ type: 'smtp_required' });
-      expect(mockPutAuthArtifact).not.toHaveBeenCalled();
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ user: { email: 'admin@example.com', role: 'super_user' } });
       await app.close();
     } finally {
       process.env.NODE_ENV = previousNodeEnv;
       process.env.JWT_SECRET = previousJwt ?? 'test-secret';
     }
   });
+
+
 
   it('POST /api/platform/auth/password/forgot requires SMTP in production', async () => {
     const previousNodeEnv = process.env.NODE_ENV;

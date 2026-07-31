@@ -12,9 +12,7 @@ import {
 } from '../../services/platform/platformAuthService.js';
 import {
   getPlatformSetupStatus,
-  resendPlatformSetupCode,
   startPlatformSetup,
-  verifyPlatformSetup,
 } from '../../services/platform/platformSetupService.js';
 import {
   toPublicPlatformUser,
@@ -36,8 +34,6 @@ import {
   platformPasswordResetBodySchema,
   platformProfilePatchBodySchema,
   platformSetupRegisterBodySchema,
-  platformSetupResendBodySchema,
-  platformSetupVerifyBodySchema,
 } from '../../validation/platformSchemas.js';
 import { loginBodySchema as platformLoginBodySchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
@@ -59,16 +55,7 @@ export default async function platformAuthRoutes(
       const parsed = parseRequest(platformSetupRegisterBodySchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-      const result = await startPlatformSetup(parsed.data);
-      return reply.send(result);
-    });
-
-    inner.post('/setup/verify', async (request, reply) => {
-      const parsed = parseRequest(platformSetupVerifyBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const { setupId, code } = parsed.data;
-
-      const stored = await verifyPlatformSetup(setupId, code);
+      const stored = await startPlatformSetup(parsed.data);
       const user = issuePlatformSession(
         toPublicPlatformUser(stored),
         fastify.jwt,
@@ -76,14 +63,6 @@ export default async function platformAuthRoutes(
         stored.sessionVersion,
       );
       return reply.send({ user });
-    });
-
-    inner.post('/setup/resend', async (request, reply) => {
-      const parsed = parseRequest(platformSetupResendBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-      const result = await resendPlatformSetupCode(parsed.data.setupId);
-      return reply.send(result);
     });
   });
 

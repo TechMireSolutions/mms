@@ -1,7 +1,5 @@
 export {
   platformSetupRegisterBodySchema,
-  platformSetupVerifyBodySchema,
-  platformSetupResendBodySchema,
   platformPasswordForgotBodySchema,
   platformPasswordResetBodySchema,
   platformPasswordResendBodySchema,

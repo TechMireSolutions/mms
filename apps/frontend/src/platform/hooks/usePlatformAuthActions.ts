@@ -20,28 +20,6 @@ export function usePlatformSetupRegister() {
   });
 }
 
-/** Hook to verify platform setup OTP code. */
-export function usePlatformSetupVerify() {
-  return useMutation({
-    mutationFn: async ({ setupId, code }: { setupId: string; code: string }) =>
-      apiJson<{ user: PlatformUser }>('/api/platform/auth/setup/verify', {
-        method: 'POST',
-        body: JSON.stringify({ setupId, code }),
-      }),
-  });
-}
-
-/** Hook to resend platform setup verification code. */
-export function usePlatformSetupResend() {
-  return useMutation({
-    mutationFn: async (setupId: string) =>
-      apiJson<PlatformSetupRegisterResult>('/api/platform/auth/setup/resend', {
-        method: 'POST',
-        body: JSON.stringify({ setupId }),
-      }),
-  });
-}
-
 /** Hook to request a platform password reset code. */
 export function usePlatformPasswordForgot() {
   return useMutation({

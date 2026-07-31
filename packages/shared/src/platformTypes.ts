@@ -92,9 +92,10 @@ export interface PlatformSetupStatus {
 }
 
 export interface PlatformSetupRegisterResult {
-  setupId: string;
-  email: string;
-  emailSent: boolean;
+  user?: PlatformUser;
+  setupId?: string;
+  email?: string;
+  emailSent?: boolean;
   /** Dev-only OTP when SMTP is not configured. */
   devCode?: string;
 }

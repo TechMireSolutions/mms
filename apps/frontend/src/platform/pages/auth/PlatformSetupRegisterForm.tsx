@@ -42,9 +42,6 @@ export function PlatformSetupRegisterForm({
   return (
     <PlatformAuthLayout title={t("platform.setupTitle")} subtitle={t("platform.setupSubtitle")}>
       <form onSubmit={(event) => void onRegister(event)} className="space-y-4" noValidate aria-busy={loading}>
-        {!smtpConfigured && import.meta.env.PROD ? (
-          <AuthStatusBanner variant="warning" message={t("platform.setupSmtpRequired")} />
-        ) : null}
         {error ? <AuthStatusBanner message={error} /> : null}
 
         <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">

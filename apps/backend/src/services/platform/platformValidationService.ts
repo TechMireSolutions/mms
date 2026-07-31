@@ -3,10 +3,8 @@ import {
   validatePlatformSetupName,
   validatePlatformSetupPassword,
   type PlatformPasswordForgotResult,
-  type PlatformSetupRegisterResult,
 } from '@mms/shared';
 import { PlatformError } from './platformErrorService.js';
-import { getDevOtpCode } from './platformOtpService.js';
 
 /**
  * Validates platform setup/admin email and throws PlatformError if invalid.
@@ -55,19 +53,4 @@ export function buildDevForgotResult(
   return result;
 }
 
-/**
- * Normalizes OTP dispatching results for non-production environments to avoid code duplication in setup flows.
- * Production never includes `devCode`.
- */
-export function buildSetupRegisterResult(
-  dispatch: { sent: boolean; devCode?: string },
-  setupId: string,
-  email: string,
-): PlatformSetupRegisterResult {
-  return {
-    setupId,
-    email,
-    emailSent: dispatch.sent,
-    devCode: getDevOtpCode(dispatch),
-  };
-}
+
