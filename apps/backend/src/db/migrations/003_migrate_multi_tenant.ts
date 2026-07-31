@@ -40,7 +40,15 @@ interface LegacyStoredUser {
  * Migrates single-tenant document storage to per-subdomain prefixed keys.
  */
 export async function runMigration003(): Promise<void> {
-  const names = await listCollectionStorageNames();
+  let names: string[];
+  try {
+    names = await listCollectionStorageNames();
+  } catch (err: unknown) {
+    // Fresh schema: objects table doesn't exist yet — nothing to migrate.
+    const code = (err as { cause?: { code?: string } })?.cause?.code ?? (err as { code?: string })?.code;
+    if (code === '42P01') return;
+    throw err;
+  }
   if (names.some((name) => name.startsWith('t:'))) {
     return;
   }

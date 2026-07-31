@@ -42,7 +42,15 @@ interface SessionsSettingsRecord extends Record<string, unknown> {
  * @returns {boolean} true if any changes were written, false if the migration was a no-op.
  */
 export async function runMigration002(): Promise<boolean> {
-  const globalSettings = (await getObject('global_settings')) as LegacyGlobalSettings | null;
+  let globalSettings: LegacyGlobalSettings | null;
+  try {
+    globalSettings = (await getObject('global_settings')) as LegacyGlobalSettings | null;
+  } catch (err: unknown) {
+    // Fresh schema: objects table doesn't exist yet — nothing to migrate.
+    const code = (err as { cause?: { code?: string } })?.cause?.code ?? (err as { code?: string })?.code;
+    if (code === '42P01') return false;
+    throw err;
+  }
   if (!globalSettings) {
     // Nothing to migrate — database has not been seeded yet.
     return false;
