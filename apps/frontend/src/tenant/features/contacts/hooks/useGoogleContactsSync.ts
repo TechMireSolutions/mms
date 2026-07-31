@@ -90,12 +90,6 @@ export function useGoogleContactsSync({
       invalidateContacts();
       await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
       setSyncResult({ total: result.total, imported: result.imported, skipped: result.skipped });
-      void logSyncAudit.mutateAsync({
-        action: "sync_complete",
-        imported: result.imported,
-        total: result.total,
-        skipped: result.skipped,
-      });
     } catch (syncError) {
       if (isApiError(syncError) && syncError.type === "session_expired") {
         await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });

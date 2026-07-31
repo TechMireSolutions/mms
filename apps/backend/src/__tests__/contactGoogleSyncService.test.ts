@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockFindCredentials = vi.fn();
 const mockUpsertCredentials = vi.fn();
-const mockDeleteCredentials = vi.fn();
 const mockGetRequestTenant = vi.fn();
 const mockLoadContacts = vi.fn();
 const mockLoadContactRuntimeDefaults = vi.fn();
@@ -16,7 +15,6 @@ vi.mock('../lib/tenantContext.js', () => ({
 vi.mock('../db/repositories/contactGoogleSyncRepository.js', () => ({
   findContactGoogleSyncCredentials: (...args: unknown[]) => mockFindCredentials(...args),
   upsertContactGoogleSyncCredentials: (...args: unknown[]) => mockUpsertCredentials(...args),
-  deleteContactGoogleSyncCredentials: (...args: unknown[]) => mockDeleteCredentials(...args),
 }));
 
 vi.mock('../services/contactService.js', () => ({
@@ -51,7 +49,6 @@ describe('contactGoogleSyncService', () => {
         updatedAt: new Date().toISOString(),
       }),
     );
-    mockDeleteCredentials.mockReset().mockResolvedValue(undefined);
     mockLoadContacts.mockReset().mockResolvedValue([]);
     mockBulkSaveContacts.mockReset().mockResolvedValue(undefined);
     mockInvalidateDuplicateScanCache.mockReset().mockResolvedValue(undefined);
@@ -156,8 +153,11 @@ describe('contactGoogleSyncService', () => {
     expect(result.total).toBe(2);
     expect(result.imported).toBe(1);
     expect(result.skipped).toBe(1);
-    expect(result.contacts).toHaveLength(1);
-    expect(result.contacts[0]?.name).toBe('Sara Ahmed');
+    expect(mockBulkSaveContacts).toHaveBeenCalledWith(
+      'demo',
+      expect.arrayContaining([expect.objectContaining({ name: 'Sara Ahmed' })]),
+    );
+    expect(mockInvalidateDuplicateScanCache).toHaveBeenCalled();
   });
 
   it('refreshes access token after People API 401', async () => {
@@ -194,6 +194,7 @@ describe('contactGoogleSyncService', () => {
     const result = await runGoogleContactsSync('u1');
 
     expect(result.imported).toBe(1);
+    expect(mockBulkSaveContacts).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledTimes(3);
   });
 

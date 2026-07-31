@@ -24,11 +24,7 @@ import {
   loadContactRuntimeDefaults,
 } from './contactServiceLoad.js';
 
-export {
-  CONTACT_CLIENT_SOFT_DELETE_KEYS as CLIENT_SOFT_DELETE_KEYS,
-} from '@mms/shared';
-
-export function stripClientSoftDeleteFields(contact: Contact): Contact {
+function stripClientSoftDeleteFields(contact: Contact): Contact {
   return stripContactClientSoftDeleteFields(contact as unknown as Record<string, unknown>) as Contact;
 }
 
@@ -42,7 +38,7 @@ export class ContactPermissionError extends Error {
 }
 
 /** Merge a client patch onto an existing contact, ignoring undefined keys. */
-export function mergeContactPatch(existing: Contact, patch: Contact): Contact {
+function mergeContactPatch(existing: Contact, patch: Contact): Contact {
   const next: Contact = { ...existing };
   for (const [key, value] of Object.entries(patch) as [keyof Contact, Contact[keyof Contact]][]) {
     if (value !== undefined) {

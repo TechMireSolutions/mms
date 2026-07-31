@@ -9,7 +9,6 @@ import { canReadContacts, canWriteContacts, canDeleteContacts } from '../../../s
 import { mergeContactsById } from '../../../services/contactService.js';
 import {
   contactExportAuditSchema,
-  contactMergeAuditSchema,
   contactMergeBodySchema,
   contactSetupAuditSchema,
   contactsCsvExportBodySchema,
@@ -102,25 +101,6 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
       }
       return sendDatabaseError(reply, 'Failed to merge contacts', error);
     }
-  });
-
-  fastify.post('/merge-audit', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
-
-    const parsed = parseRequest(contactMergeAuditSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-    const keepId = String(parsed.data.keepId);
-    const deleteId = String(parsed.data.deleteId);
-    const namePart = parsed.data.mergedName ? ` → "${parsed.data.mergedName}"` : '';
-    await auditContact(
-      user,
-      'contact.merge',
-      `Merged contact ${deleteId} into ${keepId}${namePart}`,
-      keepId,
-    );
-    return reply.send({ success: true });
   });
 
   fastify.post('/setup-audit', async (request, reply) => {

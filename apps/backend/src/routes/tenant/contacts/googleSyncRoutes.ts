@@ -120,15 +120,11 @@ export const contactGoogleSyncRoutes: FastifyPluginAsync = async (fastify) => {
     if (!canWriteContacts(user)) return sendForbidden(reply);
     const parsed = parseRequest(contactGoogleSyncAuditSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    const { action, imported, total, skipped } = parsed.data;
-    const summaryParts = [action.replace(/_/g, ' ')];
-    if (total != null) summaryParts.push(`total ${total}`);
-    if (imported != null) summaryParts.push(`imported ${imported}`);
-    if (skipped != null) summaryParts.push(`skipped ${skipped}`);
+    const { action } = parsed.data;
     await auditContact(
       user,
       `contact.google_sync.${action}`,
-      summaryParts.join(' · '),
+      action.replace(/_/g, ' '),
       'google-sync',
     );
     return reply.send({ success: true });

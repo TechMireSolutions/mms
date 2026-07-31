@@ -37,6 +37,7 @@ const mockSoftDeleteContactById = vi.fn();
 const mockRestoreContactById = vi.fn();
 const mockBulkSoftDeleteContacts = vi.fn();
 const mockBulkRestoreContacts = vi.fn();
+const mockMergeContactsById = vi.fn();
 const mockGetUserColumnPreferences = vi.fn();
 const mockSetUserColumnPreferences = vi.fn();
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -59,6 +60,7 @@ vi.mock('../services/contactService.js', () => ({
   restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
   bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
   bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
+  mergeContactsById: (...args: unknown[]) => mockMergeContactsById(...args),
   loadContactsCommandMetrics: vi.fn(),
   loadContactsReportAnalytics: vi.fn(),
   loadContactsWidgetAggregates: vi.fn(),
@@ -135,6 +137,11 @@ describe('contacts REST routes', () => {
     mockRestoreContactById.mockReset().mockResolvedValue({ ...sampleContact, deletedAt: undefined });
     mockBulkSoftDeleteContacts.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockBulkRestoreContacts.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
+    mockMergeContactsById.mockReset().mockResolvedValue({
+      ...sampleContact,
+      id: 'c1',
+      name: 'Merged Person',
+    });
     mockGetUserColumnPreferences.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferences.mockReset().mockResolvedValue(undefined);
     mockListContactsSavedReports.mockReset().mockResolvedValue([]);
@@ -546,27 +553,35 @@ describe('contacts REST routes', () => {
     await app.close();
   });
 
-  it('POST /api/contacts/merge-audit records merge audit for write roles', async () => {
+  it('POST /api/contacts/merge merges contacts for roles with write+delete', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/contacts/merge-audit',
+      url: '/api/contacts/merge',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
-      payload: { keepId: 'c1', deleteId: 'c2', mergedName: 'Merged Person' },
+      payload: { keepId: 'c1', deleteId: 'c2' },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ success: true });
+    expect(res.json()).toEqual({
+      success: true,
+      contact: expect.objectContaining({ id: 'c1', name: 'Merged Person' }),
+    });
+    expect(mockMergeContactsById).toHaveBeenCalledWith('c1', 'c2', undefined, 'u-admin');
+    expect(mockRecordAudit).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'contact.merge',
+      entityId: 'c1',
+    }));
     await app.close();
   });
 
-  it('POST /api/contacts/merge-audit returns 403 for viewer', async () => {
+  it('POST /api/contacts/merge returns 403 for viewer', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/contacts/merge-audit',
+      url: '/api/contacts/merge',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${viewerToken(app)}`,
@@ -574,6 +589,23 @@ describe('contacts REST routes', () => {
       payload: { keepId: 'c1', deleteId: 'c2' },
     });
     expect(res.statusCode).toBe(403);
+    expect(mockMergeContactsById).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts/merge returns 403 when role lacks delete', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/merge',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: { keepId: 'c1', deleteId: 'c2' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockMergeContactsById).not.toHaveBeenCalled();
     await app.close();
   });
 

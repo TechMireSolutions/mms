@@ -126,8 +126,6 @@ export const CONTACTS_MODULE_MANIFEST = {
   configObjectKey: 'contact_field_config',
   preferencesObjectKey: 'contact_preferences',
   columnPreferencesObjectKey: 'contact_user_column_preferences',
-  /** @deprecated Legacy objects key — migrated to typed `saved_reports` (category `contacts`). Do not allow document-store writes. */
-  savedReportsObjectKey: 'contacts_saved_reports',
   restBasePath: '/api/contacts',
   analyticsCategory: 'contacts',
   tiers: ['work', 'reports', 'setup'] as const,

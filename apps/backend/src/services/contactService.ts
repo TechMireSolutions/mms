@@ -17,8 +17,6 @@ export {
   ContactPermissionError,
   normalizeContactPhones,
   prepareContactRecord,
-  stripClientSoftDeleteFields,
-  mergeContactPatch,
   upsertContact,
   updateContactById,
   mergeContactsById,

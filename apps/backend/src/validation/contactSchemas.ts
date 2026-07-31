@@ -42,12 +42,6 @@ export const contactExportAuditSchema = z.object({
   scope: z.enum(['all', 'filtered', 'selection']).optional(),
 });
 
-export const contactMergeAuditSchema = z.object({
-  keepId: z.union([z.string(), z.number()]),
-  deleteId: z.union([z.string(), z.number()]),
-  mergedName: z.string().optional(),
-});
-
 export const contactMergeBodySchema = z.object({
   keepId: z.union([z.string(), z.number()]),
   deleteId: z.union([z.string(), z.number()]),
@@ -75,11 +69,9 @@ export const contactGoogleSyncConfigSchema = z.object({
   clearTokens: z.boolean().optional(),
 });
 
+/** Client-initiated Google sync audits (run/oauth exchange audit server-side). */
 export const contactGoogleSyncAuditSchema = z.object({
-  action: z.enum(['credentials_saved', 'oauth_connected', 'sync_complete', 'disconnected']),
-  imported: z.number().int().min(0).optional(),
-  total: z.number().int().min(0).optional(),
-  skipped: z.number().int().min(0).optional(),
+  action: z.enum(['credentials_saved', 'disconnected']),
 });
 
 export const contactGoogleSyncExchangeSchema = z.object({

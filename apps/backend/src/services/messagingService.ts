@@ -163,7 +163,7 @@ export async function loadMessagingRecipients(
   const pageSize = query.pageSize ?? 50;
   const search = query.search?.trim() || undefined;
 
-  const allContacts = filterActiveContacts(await listContactsByWorkspace(subdomain, { deleted: 'active' }));
+  const allContacts = await listContactsByWorkspace(subdomain, { deleted: 'active' });
   let scoped: Contact[] = allContacts;
 
   if (role === 'students') {

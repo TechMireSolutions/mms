@@ -1,6 +1,5 @@
 import {
   CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY,
-  CONTACTS_MODULE_MANIFEST,
   CONTACTS_SAVED_REPORT_CATEGORY,
   parseTenantScopedStorageKey,
   tenantObjectKey,
@@ -21,6 +20,9 @@ import {
   findSavedReportById,
   listSavedReportsByCategory,
 } from '../repositories/savedReportsRepository.js';
+
+/** Legacy objects key — migrated to typed `saved_reports` (category `contacts`). */
+const LEGACY_CONTACTS_SAVED_REPORTS_OBJECT_KEY = 'contacts_saved_reports';
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
   const subdomains = new Set<string>();
@@ -62,7 +64,7 @@ async function migrateGoogleSyncForTenant(subdomain: string): Promise<void> {
 }
 
 async function migrateContactsSavedReportsForTenant(subdomain: string): Promise<void> {
-  const storageKey = tenantObjectKey(subdomain, CONTACTS_MODULE_MANIFEST.savedReportsObjectKey);
+  const storageKey = tenantObjectKey(subdomain, LEGACY_CONTACTS_SAVED_REPORTS_OBJECT_KEY);
   const raw = await getObjectByStorageKey(storageKey);
   if (!Array.isArray(raw) || raw.length === 0) return;
 

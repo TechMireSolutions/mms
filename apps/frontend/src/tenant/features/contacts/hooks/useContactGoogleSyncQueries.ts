@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ContactGoogleSyncConfigClient, GoogleContactsSyncRunResult } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { apiJson } from '@/lib/apiClient';
 import { CONTACTS_API, CONTACTS_GOOGLE_SYNC_QUERY_KEY } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 
 export function useContactGoogleSyncConfig() {
@@ -29,18 +29,9 @@ export function useContactGoogleSyncMutations() {
       queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, configResponse.config);
     },
   });
-  const clearConfig = useMutation({
-    mutationFn: async () => apiFetch(`${CONTACTS_API}/google-sync`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, {});
-    },
-  });
   const logSyncAudit = useMutation({
     mutationFn: async (auditPayload: {
-      action: 'credentials_saved' | 'oauth_connected' | 'sync_complete' | 'disconnected';
-      imported?: number;
-      total?: number;
-      skipped?: number;
+      action: 'credentials_saved' | 'disconnected';
     }) =>
       apiJson<{ success: boolean }>(`${CONTACTS_API}/google-sync/audit`, {
         method: 'POST',
@@ -63,5 +54,5 @@ export function useContactGoogleSyncMutations() {
         method: 'POST',
       }),
   });
-  return { saveConfig, clearConfig, logSyncAudit, exchangeOAuth, runGoogleSync };
+  return { saveConfig, logSyncAudit, exchangeOAuth, runGoogleSync };
 }

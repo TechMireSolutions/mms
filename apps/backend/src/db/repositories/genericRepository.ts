@@ -58,9 +58,7 @@ export function createGenericRepository<
       if (row.deletedAt instanceof Date) {
         (data as { deletedAt?: string }).deletedAt = row.deletedAt.toISOString();
       } else {
-        delete (data as { deletedAt?: unknown }).deletedAt;
-        delete (data as { deletedBy?: unknown }).deletedBy;
-        delete (data as { deletionReason?: unknown }).deletionReason;
+        return stripContactClientSoftDeleteFields(data as Record<string, unknown>) as T;
       }
     }
 

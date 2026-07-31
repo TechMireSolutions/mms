@@ -94,20 +94,7 @@ export async function deleteContactGoogleSyncCredentials(
   });
 }
 
-/** Admin/migration: every credential row for a workspace. */
-export async function listContactGoogleSyncCredentialsByWorkspace(
-  workspaceSubdomain: string,
-): Promise<Array<{ userId: string } & ContactGoogleSyncCredentialRecord>> {
-  const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
-    const rows = await tx
-      .select()
-      .from(contactGoogleSyncCredentials)
-      .where(eq(contactGoogleSyncCredentials.workspaceSubdomain, tenant));
-    return rows.map((row) => ({ userId: row.userId, ...toRecord(row) }));
-  });
-}
-
+/** Admin/migration: replace every credential row for a workspace. */
 export async function replaceContactGoogleSyncCredentialsForWorkspace(
   workspaceSubdomain: string,
   entries: Array<{ userId: string } & ContactGoogleSyncCredentialRecord>,

@@ -1,4 +1,4 @@
-import type { Contact } from '@mms/shared';
+import type { Contact, GoogleContactsSyncRunResult } from '@mms/shared';
 import { normalizeToE164, parsePhoneNumber } from '@mms/shared';
 import {
   loadContactRuntimeDefaults,
@@ -31,12 +31,7 @@ interface GooglePeopleResponse {
   error?: { message?: string };
 }
 
-export interface GoogleContactsSyncRunResult {
-  contacts: Contact[];
-  total: number;
-  imported: number;
-  skipped: number;
-}
+export type { GoogleContactsSyncRunResult };
 
 function mapGoogleConnectionToContact(person: GoogleConnection, defaults: ContactRuntimeDefaults): Contact | null {
   const nameObj = person.names?.[0];
@@ -169,7 +164,6 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
   }
 
   return {
-    contacts: fresh,
     total: mapped.length,
     imported: fresh.length,
     skipped: mapped.length - fresh.length,
