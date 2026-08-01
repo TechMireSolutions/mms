@@ -16,7 +16,6 @@ const MINIMAL_SEEDED_COLLECTIONS = new Set([
   'studentGenderFilters',
   'studentDiscountTypes',
   'socialPlatforms',
-  'relationships',
   'whatsappTemplates',
   'phoneLabels',
   'emailLabels',
@@ -41,6 +40,7 @@ export async function getMinimalCollectionsForSeed(): Promise<Record<string, unk
       minimal[name] = [];
     }
   }
+  minimal['relationships'] = [];
   minimal['questions'] = [];
   minimal['tests'] = [];
   minimal['assessment_results'] = [];
