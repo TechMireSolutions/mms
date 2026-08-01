@@ -50,6 +50,52 @@ export function applyModuleColumnOverlay(
   });
 }
 
+/**
+ * Merge server column prefs with device-local prefs so resized widths are not wiped
+ * when the server payload omits `width` (stale GET / older saves).
+ * Server wins for enabled/order; width prefers this device's local value, then server.
+ */
+export function mergeModuleColumnPreferences(
+  serverPreferences: ModuleColumnPreference[] | null | undefined,
+  localPreferences: ModuleColumnPreference[] | null | undefined,
+): ModuleColumnPreference[] | null {
+  if (!serverPreferences?.length && !localPreferences?.length) return null;
+  if (!serverPreferences?.length) return localPreferences ?? null;
+  if (!localPreferences?.length) return serverPreferences;
+
+  const localByKey = new Map(localPreferences.map((preference) => [preference.key, preference]));
+  const mergedKeys = new Set<string>();
+  const merged: ModuleColumnPreference[] = serverPreferences.map((serverPreference) => {
+    mergedKeys.add(serverPreference.key);
+    const localPreference = localByKey.get(serverPreference.key);
+    const next: ModuleColumnPreference = {
+      key: serverPreference.key,
+      enabled: serverPreference.enabled,
+      order: serverPreference.order,
+    };
+    const width = localPreference?.width ?? serverPreference.width;
+    if (typeof width === 'number') {
+      next.width = clampModuleColumnWidth(width);
+    }
+    return next;
+  });
+
+  for (const localPreference of localPreferences) {
+    if (mergedKeys.has(localPreference.key)) continue;
+    const next: ModuleColumnPreference = {
+      key: localPreference.key,
+      enabled: localPreference.enabled,
+      order: localPreference.order,
+    };
+    if (typeof localPreference.width === 'number') {
+      next.width = clampModuleColumnWidth(localPreference.width);
+    }
+    merged.push(next);
+  }
+
+  return merged;
+}
+
 /** Resolve stored pixel width for a Work column key. */
 export function getModuleColumnWidth(
   registry: ModuleColumnRegistryEntry[],

@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { type ContactColumnPreference, type ColumnRegistryEntry } from "@mms/shared";
+import {
+  mergeModuleColumnPreferences,
+  type ContactColumnPreference,
+  type ColumnRegistryEntry,
+} from "@mms/shared";
 import {
   loadModuleColumnPreferences,
   saveModuleColumnPreferenceList,
@@ -30,20 +34,25 @@ export function useContactConfigColumnPrefs(userId: string | number | undefined)
   const migratedLocalColumnPrefs = useRef(false);
   const [localUserColumnOverlay, setLocalUserColumnOverlay] =
     useState<ContactColumnPreference[] | null>(null);
+  const saveServerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const rawUserColumnOverlay = useMemo(() => {
     if (localUserColumnOverlay) {
       return localUserColumnOverlay;
     }
-    if (columnPrefsLoaded && serverColumnPrefs && serverColumnPrefs.length > 0) {
-      return serverColumnPrefs;
-    }
     const scopedUserId = userId ? String(userId) : "";
-    if (scopedUserId) {
-      return loadModuleColumnPreferences("contacts", scopedUserId);
+    const local = scopedUserId ? loadModuleColumnPreferences("contacts", scopedUserId) : null;
+    if (columnPrefsLoaded && serverColumnPrefs && serverColumnPrefs.length > 0) {
+      return mergeModuleColumnPreferences(serverColumnPrefs, local) ?? serverColumnPrefs;
     }
-    return null;
+    return local;
   }, [columnPrefsLoaded, localUserColumnOverlay, serverColumnPrefs, userId]);
+
+  useEffect(() => {
+    return () => {
+      if (saveServerTimerRef.current) clearTimeout(saveServerTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!userId) {
@@ -54,12 +63,14 @@ export function useContactConfigColumnPrefs(userId: string | number | undefined)
     if (!columnPrefsLoaded) return;
 
     const scopedUserId = String(userId);
+    const local = loadModuleColumnPreferences("contacts", scopedUserId);
+
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
-      saveModuleColumnPreferenceList("contacts", scopedUserId, serverColumnPrefs);
+      const merged = mergeModuleColumnPreferences(serverColumnPrefs, local) ?? serverColumnPrefs;
+      saveModuleColumnPreferenceList("contacts", scopedUserId, merged);
       return;
     }
 
-    const local = loadModuleColumnPreferences("contacts", scopedUserId);
     if (local?.length && !migratedLocalColumnPrefs.current) {
       migratedLocalColumnPrefs.current = true;
       saveColumnPrefs(local);
@@ -74,7 +85,11 @@ export function useContactConfigColumnPrefs(userId: string | number | undefined)
       saveModuleColumnRegistry("contacts", scopedUserId, columnRegistry);
       const preferences = toContactColumnPreferences(columnRegistry);
       setLocalUserColumnOverlay(preferences);
-      saveColumnPrefs(preferences);
+      if (saveServerTimerRef.current) clearTimeout(saveServerTimerRef.current);
+      saveServerTimerRef.current = setTimeout(() => {
+        saveColumnPrefs(preferences);
+        saveServerTimerRef.current = null;
+      }, 300);
     },
     [saveColumnPrefs, userId],
   );
