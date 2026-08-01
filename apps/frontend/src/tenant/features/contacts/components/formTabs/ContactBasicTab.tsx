@@ -3,6 +3,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import type { Contact } from "@mms/shared";
 import { ContactBasicAvatarSection } from "@/tenant/features/contacts/components/formTabs/ContactBasicAvatarSection";
 import { ContactBasicIdentityFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicIdentityFields";
+import { ContactQuickFamilyButtons } from "@/tenant/features/contacts/components/ContactQuickFamilyButtons";
 
 export interface ContactBasicTabProps {
   contactDraft: Partial<Contact>;
@@ -16,6 +17,7 @@ export interface ContactBasicTabProps {
   onUpdateGenders: (genders: string[]) => void;
   lockGender: boolean;
   handleAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onAddQuickRelation?: (relationship: "Father" | "Mother" | "Guardian") => void;
 }
 
 export function ContactBasicTab({
@@ -30,6 +32,7 @@ export function ContactBasicTab({
   onUpdateGenders,
   lockGender,
   handleAvatarChange,
+  onAddQuickRelation,
 }: ContactBasicTabProps): JSX.Element {
   return (
     <div className="space-y-4 text-start">
@@ -54,6 +57,13 @@ export function ContactBasicTab({
           onUpdateGenders={onUpdateGenders}
           lockGender={lockGender}
         />
+
+        {onAddQuickRelation && (
+          <ContactQuickFamilyButtons
+            onAddRelation={onAddQuickRelation}
+            className="mt-5 border-t border-border/40 pt-4"
+          />
+        )}
       </SectionCard>
     </div>
   );

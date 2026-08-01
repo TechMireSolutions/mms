@@ -17,6 +17,7 @@ export function ContactFormTabContent({
   defaultCountry,
   defaultCity,
   defaultProvince,
+  onAddQuickRelation,
 }: {
   tab: string;
   draft: FormDraft;
@@ -24,6 +25,7 @@ export function ContactFormTabContent({
   defaultCountry: string;
   defaultCity: string;
   defaultProvince: string;
+  onAddQuickRelation?: (relationship: "Father" | "Mother" | "Guardian") => void;
 }): JSX.Element | null {
   switch (tab) {
     case "basic":
@@ -40,6 +42,7 @@ export function ContactFormTabContent({
           onUpdateGenders={draft.updateGenders}
           lockGender={lockGender}
           handleAvatarChange={draft.handleAvatarChange}
+          onAddQuickRelation={onAddQuickRelation}
         />
       );
     case "phones":
