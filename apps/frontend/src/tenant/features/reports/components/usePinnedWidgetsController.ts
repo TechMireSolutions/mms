@@ -36,7 +36,6 @@ export function usePinnedWidgetsController(category: string) {
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
-  const collections = useWidgetCollections();
   const [sectionSettings, setSectionSettings] = useState<Record<string, boolean>>(() => {
     return getObject<Record<string, boolean>>("dashboard_section_settings", DEFAULT_SECTION_SETTINGS);
   });
@@ -54,6 +53,15 @@ export function usePinnedWidgetsController(category: string) {
   const filteredWidgets = useMemo(() => {
     return widgets.filter((widget) => widget.category === category);
   }, [widgets, category]);
+
+  const requiredCollections = useMemo(() => {
+    const required = new Set(filteredWidgets.map((widget) => widget.collection));
+    return required;
+  }, [filteredWidgets]);
+  const collections = useWidgetCollections({
+    enabled: filteredWidgets.length > 0,
+    requiredCollections,
+  });
 
   useContactsWidgetAggregates(filteredWidgets);
   useStudentsWidgetAggregates(filteredWidgets);

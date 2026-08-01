@@ -27,7 +27,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
     filteredFacultyWorkload,
     totalFaculty,
     totalStudents,
-    totalHours,
+    totalClasses,
     avgStudents,
     toggleFacultyFilter,
   } = useFacultyReportData();
@@ -38,7 +38,7 @@ export default function FacultyReport({ filters: _filters }: FacultyReportProps)
         t={t}
         totalFaculty={totalFaculty}
         totalStudents={totalStudents}
-        totalHours={totalHours}
+        totalClasses={totalClasses}
         avgStudents={avgStudents}
       />
 

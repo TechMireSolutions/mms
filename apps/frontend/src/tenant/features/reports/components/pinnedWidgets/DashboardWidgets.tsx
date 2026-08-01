@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { getObject, saveObject } from '@/lib/db';
 import {
@@ -6,6 +6,7 @@ import {
   persistWidgetRecordToggle,
 } from '@/lib/reports/widgetRecordToggle';
 import { useWidgetCollections } from '@/lib/reports/useReportCollections';
+import type { ReportCollection } from '@/lib/reports/reportMetadata';
 import type { CustomWidget } from '@/tenant/features/reports/components/pinnedWidgets/types';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { WidgetDrilldownModal } from '@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer';
@@ -39,7 +40,6 @@ export function DashboardWidgets({
   const { t } = useTranslation();
   const { gridMode, updatePref } = useDashboardConfig();
   const [localWidgets, setLocalWidgets] = useState<CustomWidget[]>([]);
-  const collections = useWidgetCollections();
 
   const [drilldownWidget, setDrilldownWidget] = useState<CustomWidget | null>(null);
 
@@ -67,6 +67,18 @@ export function DashboardWidgets({
   }, [widgets, t]);
 
   const activeWidgets = widgets ?? localWidgets;
+  const requiredCollections = useMemo(() => {
+    const required = new Set<ReportCollection>();
+    for (const widget of activeWidgets) {
+      required.add(widget.collection);
+    }
+    return required;
+  }, [activeWidgets]);
+  const collections = useWidgetCollections({
+    enabled: activeWidgets.length > 0,
+    requiredCollections,
+  });
+
   useContactsWidgetAggregates(activeWidgets);
   useStudentsWidgetAggregates(activeWidgets);
   useTeachersWidgetAggregates(activeWidgets);

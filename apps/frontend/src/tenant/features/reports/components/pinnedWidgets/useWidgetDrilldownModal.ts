@@ -7,12 +7,17 @@ import {
   persistWidgetRecordToggle,
 } from "@/lib/reports/widgetRecordToggle";
 import { useWidgetCollections } from "@/lib/reports/useReportCollections";
+import type { ReportCollection } from "@/lib/reports/reportMetadata";
 import { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { getFilteredRecords } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
 
 export function useWidgetDrilldownModal(widget: CustomWidget) {
   const { t } = useTranslation();
-  const collections = useWidgetCollections();
+  const requiredCollections = useMemo(
+    () => new Set<ReportCollection>([widget.collection, "students"]),
+    [widget.collection],
+  );
+  const collections = useWidgetCollections({ requiredCollections });
 
   const widgetRecords = useMemo(() => getFilteredRecords(widget, collections), [widget, collections]);
 

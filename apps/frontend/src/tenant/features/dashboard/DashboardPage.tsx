@@ -38,7 +38,7 @@ export default function Dashboard() {
     visibleDashboardMetricCards,
     pinnedDashboardWidgetCount,
     notifications,
-    sessions,
+    activeSessionsCount,
     studentMetricsActive,
   } = useDashboardPageController();
 
@@ -49,7 +49,7 @@ export default function Dashboard() {
     >
       <WelcomeBanner
         dashboardRole={dashboardRole}
-        sessions={sessions}
+        activeSessionsCount={activeSessionsCount}
         activeStudentCount={studentMetricsActive}
       />
 

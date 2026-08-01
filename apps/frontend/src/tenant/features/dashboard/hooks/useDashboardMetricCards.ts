@@ -30,37 +30,8 @@ export function useDashboardMetricCards({
   data,
   t,
 }: UseDashboardMetricCardsArgs): StatItem[] {
-  const {
-    studentsTotal,
-    teachersTotal,
-    sessions,
-    invoices,
-    attendanceRecords,
-    hasanatDistributions,
-    denoms,
-    contactsTotal,
-    questions,
-    tests,
-    assessmentResults,
-    studentMetricsNew,
-    teacherMetricsNew,
-    contactMetricsNew,
-  } = data;
-
   return useMemo(() => {
-    const trends = computeDashboardMetricTrends({
-      studentsTotal,
-      studentMetricsNew,
-      teachersTotal,
-      teacherMetricsNew,
-      contactsTotal,
-      contactMetricsNew,
-      attendanceRecords,
-      invoices,
-      hasanatDistributions,
-      denoms,
-      sessions,
-    });
+    const trends = computeDashboardMetricTrends(data);
 
     const dashboardCardWidgets = customWidgets.filter(
       (widget) => widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole),
@@ -71,25 +42,5 @@ export function useDashboardMetricCards({
     );
 
     return enabledDashboardCardWidgets.map((widget) => buildDashboardMetricCard({ widget, data, trends, t }));
-  }, [
-    dashboardRole,
-    enabledModules,
-    customWidgets,
-    studentsTotal,
-    studentMetricsNew,
-    teachersTotal,
-    teacherMetricsNew,
-    sessions,
-    invoices,
-    attendanceRecords,
-    hasanatDistributions,
-    denoms,
-    contactsTotal,
-    contactMetricsNew,
-    questions,
-    tests,
-    assessmentResults,
-    data,
-    t,
-  ]);
+  }, [dashboardRole, enabledModules, customWidgets, data, t]);
 }

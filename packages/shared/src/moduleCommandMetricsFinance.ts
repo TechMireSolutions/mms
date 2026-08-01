@@ -19,6 +19,11 @@ export interface AccountingCommandMetricsSnapshot {
   inactiveAccounts: number;
   newThisPeriod: number;
   postedVolume: number;
+  revenue: number;
+  expenses: number;
+  surplus: number;
+  assets: number;
+  liabilities: number;
 }
 
 export interface HasanatCommandMetricsSnapshot {
@@ -29,6 +34,9 @@ export interface HasanatCommandMetricsSnapshot {
   active: number;
   returned: number;
   denominations: number;
+  totalPointsDistributed: number;
+  pointsThisWeek: number;
+  pointsLastWeek: number;
 }
 
 type ObligationCollectionMetricRecord = {
@@ -53,9 +61,9 @@ export function computeObligationsCommandMetrics(
   };
 }
 
-type JournalLineMetric = { debit?: number; credit?: number };
+type JournalLineMetric = { debit?: number; credit?: number; account_id?: string };
 type JournalEntryMetricRecord = StatusRecord & { date?: string; lines?: JournalLineMetric[] };
-type AccountMetricRecord = { isActive?: boolean };
+type AccountMetricRecord = { id?: string; isActive?: boolean; type?: string };
 
 export function computeAccountingCommandMetrics(
   entries: JournalEntryMetricRecord[],
@@ -68,6 +76,26 @@ export function computeAccountingCommandMetrics(
     return sum + lineTotal;
   }, 0);
   const activeAccounts = accounts.filter((account) => account.isActive !== false).length;
+
+  const accountById = new Map(accounts.map((account) => [account.id, account] as const));
+  let assets = 0;
+  let liabilities = 0;
+  let revenue = 0;
+  let expenses = 0;
+  for (const entry of postedEntries) {
+    for (const line of entry.lines ?? []) {
+      const account = accountById.get(line.account_id);
+      if (!account?.type) continue;
+      const debit = line.debit ?? 0;
+      const credit = line.credit ?? 0;
+      const net = debit - credit;
+      if (account.type === 'Asset') assets += net;
+      else if (account.type === 'Liability') liabilities -= net;
+      else if (account.type === 'Revenue') revenue -= net;
+      else if (account.type === 'Expense') expenses += net;
+    }
+  }
+
   return {
     totalEntries: entries.length,
     posted: postedEntries.length,
@@ -76,12 +104,46 @@ export function computeAccountingCommandMetrics(
     inactiveAccounts: accounts.length - activeAccounts,
     newThisPeriod: countRecordsSinceDate(entries, (record) => record.date, periodDays),
     postedVolume,
+    revenue,
+    expenses,
+    surplus: revenue - expenses,
+    assets,
+    liabilities,
   };
 }
 
 type HasanatBatchMetricRecord = { quantity?: number; remaining?: number };
-type HasanatDistributionMetricRecord = StatusRecord & { quantity?: number };
-type HasanatDenomMetricRecord = { active?: boolean };
+type HasanatDistributionMetricRecord = StatusRecord & {
+  quantity?: number;
+  denominationId?: string;
+  date?: string;
+  distributedAt?: string;
+};
+type HasanatDenomMetricRecord = { id?: string; active?: boolean; points?: number };
+
+function sumHasanatPointsInWindow(
+  distributions: HasanatDistributionMetricRecord[],
+  pointsByDenom: Map<string, number>,
+  daysStart: number,
+  daysEnd: number,
+): number {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - daysStart);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  end.setDate(end.getDate() - daysEnd);
+  let total = 0;
+  for (const distribution of distributions) {
+    const raw = distribution.date ?? distribution.distributedAt;
+    if (!raw) continue;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime()) || parsed < start || parsed > end) continue;
+    const points = pointsByDenom.get(distribution.denominationId ?? '') ?? 0;
+    total += points * (distribution.quantity ?? 0);
+  }
+  return total;
+}
 
 export function computeHasanatCommandMetrics(
   batches: HasanatBatchMetricRecord[],
@@ -95,6 +157,13 @@ export function computeHasanatCommandMetrics(
     distributions
       .filter((record) => record.status === status)
       .reduce((sum, record) => sum + (record.quantity ?? 0), 0);
+  const pointsByDenom = new Map(
+    denoms.map((denom) => [denom.id ?? '', denom.points ?? 0] as const),
+  );
+  const totalPointsDistributed = distributions.reduce((sum, record) => {
+    const points = pointsByDenom.get(record.denominationId ?? '') ?? 0;
+    return sum + points * (record.quantity ?? 0);
+  }, 0);
   return {
     totalStock,
     available,
@@ -103,5 +172,8 @@ export function computeHasanatCommandMetrics(
     active: sumByStatus('active'),
     returned: sumByStatus('returned'),
     denominations: denoms.filter((denom) => denom.active !== false).length,
+    totalPointsDistributed,
+    pointsThisWeek: sumHasanatPointsInWindow(distributions, pointsByDenom, 6, 0),
+    pointsLastWeek: sumHasanatPointsInWindow(distributions, pointsByDenom, 13, 7),
   };
 }

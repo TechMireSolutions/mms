@@ -57,16 +57,28 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
   const { can } = usePermissions();
   const { formatCurrency } = useFinanceCurrency();
   const dashboardRole = resolveDashboardRole(can);
-  const { invoices, attendanceRecords, studentMetricsInactive } = useDashboardData([], dashboardRole);
+  const {
+    financeMetrics,
+    attendanceMetrics,
+    studentMetricsInactive,
+  } = useDashboardData([], dashboardRole);
 
   const notifications = React.useMemo(() => {
     return buildDashboardNotifications(
       dashboardRole,
-      { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
+      {
+        outstandingInvoiceCount: financeMetrics?.outstanding ?? 0,
+        outstandingBalance: financeMetrics?.outstandingBalance ?? 0,
+        attendanceRate:
+          attendanceMetrics?.selectedDatePresentRate
+          ?? attendanceMetrics?.overallPresentRate
+          ?? null,
+        inactiveStudents: studentMetricsInactive,
+      },
       t,
       formatCurrency,
     );
-  }, [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t, formatCurrency]);
+  }, [dashboardRole, financeMetrics, attendanceMetrics, studentMetricsInactive, t, formatCurrency]);
 
   const unreadCount = notifications.length;
 

@@ -50,8 +50,14 @@ export default async function hasanatRoutes(
       const denoms = await loadDenoms();
       return computeHasanatCommandMetrics(
         batches as Array<{ quantity?: number; remaining?: number }>,
-        distributions as Array<{ status?: string; quantity?: number }>,
-        denoms as Array<{ active?: boolean }>,
+        distributions as Array<{
+          status?: string;
+          quantity?: number;
+          denominationId?: string;
+          date?: string;
+          distributedAt?: string;
+        }>,
+        denoms as Array<{ id?: string; active?: boolean; points?: number }>,
       );
     },
     errorMessagePrefix: 'hasanat',

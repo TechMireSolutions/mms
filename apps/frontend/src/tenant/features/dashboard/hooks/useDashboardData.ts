@@ -7,45 +7,33 @@ import { getRequiredDashboardCollections } from '@/lib/dashboardCollections';
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
-import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
-import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
-import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from '@/tenant/hooks/collections/hasanat';
-import { useQuestionBankQuestionsCollection, useQuestionBankTestsCollection, useQuestionBankResultsCollection } from '@/tenant/hooks/collections/questionBank';
-import type { Invoice } from '@/lib/data/financeData';
-import type { Distribution, Denomination } from '@/lib/data/hasanatData';
-import type { Student } from '@/lib/data/studentsData';
-import type { Session } from '@/lib/data/sessionsData';
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import type {
-  QuestionBankQuestion,
-  QuestionBankTest,
-  QuestionBankResult,
-  Teacher,
-  Contact,
-} from '@mms/shared';
+import { useSessionsMetrics } from '@/tenant/hooks/collections/sessions';
+import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';
+import { useFinanceMetrics } from '@/tenant/features/finance/hooks/useFinanceMetrics';
+import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
+import { useQuestionBankMetrics } from '@/tenant/hooks/collections/questionBank';
+import { useAccountingMetrics } from '@/tenant/hooks/collections/accounting';
+import { todayISO, type StudentsCommandMetricsSnapshot, type TeachersCommandMetricsSnapshot, type ContactsCommandMetricsSnapshot, type SessionsCommandMetricsSnapshot, type AttendanceCommandMetricsSnapshot, type FinanceCommandMetricsSnapshot, type HasanatCommandMetricsSnapshot, type QuestionBankCommandMetricsSnapshot, type AccountingCommandMetricsSnapshot } from '@mms/shared';
 
 export interface DashboardCollectionData {
-  students: Student[];
   studentsTotal: number;
-  teachers: Teacher[];
   teachersTotal: number;
-  sessions: Session[];
-  invoices: Invoice[];
-  attendanceRecords: AttendanceRecord[];
-  hasanatDistributions: Distribution[];
-  denoms: Denomination[];
-  contacts: Contact[];
   contactsTotal: number;
-  questions: QuestionBankQuestion[];
-  tests: QuestionBankTest[];
-  assessmentResults: QuestionBankResult[];
-  dataVolume: number;
   studentMetricsInactive: number;
   studentMetricsActive: number;
   studentMetricsNew: number;
   teacherMetricsNew: number;
   contactMetricsNew: number;
+  dataVolume: number;
+  studentMetrics?: StudentsCommandMetricsSnapshot;
+  teacherMetrics?: TeachersCommandMetricsSnapshot;
+  contactMetrics?: ContactsCommandMetricsSnapshot;
+  sessionsMetrics?: SessionsCommandMetricsSnapshot;
+  attendanceMetrics?: AttendanceCommandMetricsSnapshot;
+  financeMetrics?: FinanceCommandMetricsSnapshot;
+  hasanatMetrics?: HasanatCommandMetricsSnapshot;
+  questionBankMetrics?: QuestionBankCommandMetricsSnapshot;
+  accountingMetrics?: AccountingCommandMetricsSnapshot;
 }
 
 function filterDashboardWidgetsByCollection(
@@ -60,7 +48,7 @@ function filterDashboardWidgetsByCollection(
   );
 }
 
-/** Loads only collections referenced by dashboard cards and pinned widgets. */
+/** Loads server metrics for dashboard cards — no full collection dumps for KPI values. */
 export function useDashboardData(
   widgets: CustomWidget[],
   dashboardRole: DashboardRole,
@@ -75,6 +63,31 @@ export function useDashboardData(
   const shouldLoadContacts = requiresCollection('contacts');
   const shouldLoadStudents = requiresCollection('students') || dashboardRole === 'admin';
   const shouldLoadTeachers = requiresCollection('teachers');
+  // Role shell needs: teacher banner (sessions), admin/accountant notifications (finance + attendance).
+  const shouldLoadSessions =
+    requiresCollection('sessions') || dashboardRole === 'teacher';
+  const shouldLoadAttendance =
+    requiresCollection('attendance_records') ||
+    dashboardRole === 'admin' ||
+    dashboardRole === 'accountant' ||
+    dashboardRole === 'teacher';
+  const shouldLoadFinance =
+    requiresCollection('finance_invoices') ||
+    dashboardRole === 'admin' ||
+    dashboardRole === 'accountant';
+  const shouldLoadHasanat = requiresCollection('hasanat_distributions');
+  const shouldLoadQuestionBank =
+    requiresCollection('questions') ||
+    requiresCollection('tests') ||
+    requiresCollection('assessment_results');
+  const shouldLoadAccounting = widgets.some(
+    (widget) =>
+      (widget.widgetType === 'card' &&
+        widgetMatchesDashboardRole(widget.role, dashboardRole) &&
+        widget.category === 'accounting') ||
+      widget.id.includes('accountant-revenue') ||
+      widget.id.includes('accountant-expenses'),
+  );
 
   const contactWidgets = useMemo(
     () => filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole),
@@ -94,69 +107,49 @@ export function useDashboardData(
   useTeachersWidgetAggregates(teacherWidgets, { enabled: shouldLoadTeachers });
 
   const { data: studentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents });
-  const studentsTotal = studentMetrics?.total ?? 0;
-  const studentMetricsInactive = studentMetrics?.inactive ?? 0;
-
   const { data: teacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers });
-  const teachersTotal = teacherMetrics?.total ?? 0;
-  const sessions = useSessionsCollection({ enabled: requiresCollection('sessions') });
-  const invoices = useFinanceInvoicesCollection({
-    enabled: requiresCollection('finance_invoices'),
-  });
-  const attendanceRecords = useAttendanceRecordsCollection({
-    enabled: requiresCollection('attendance_records'),
-  });
-  const hasanatDistributions = useHasanatDistributionsCollection({
-    enabled: requiresCollection('hasanat_distributions'),
-  });
-  const denoms = useHasanatDenomsCollection({
-    enabled: requiresCollection('hasanat_distributions'),
-  });
   const { data: contactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts });
+  const { data: sessionsMetrics } = useSessionsMetrics({ enabled: shouldLoadSessions });
+  const { data: attendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: shouldLoadAttendance });
+  const { data: financeMetrics } = useFinanceMetrics({ enabled: shouldLoadFinance });
+  const { data: hasanatMetrics } = useHasanatMetrics({ enabled: shouldLoadHasanat });
+  const { data: questionBankMetrics } = useQuestionBankMetrics({ enabled: shouldLoadQuestionBank });
+  const { data: accountingMetrics } = useAccountingMetrics({ enabled: shouldLoadAccounting });
+
+  const studentsTotal = studentMetrics?.total ?? 0;
+  const teachersTotal = teacherMetrics?.total ?? 0;
   const contactsTotal = contactMetrics?.total ?? 0;
-  const questions = useQuestionBankQuestionsCollection({
-    enabled: requiresCollection('questions'),
-  });
-  const tests = useQuestionBankTestsCollection({
-    enabled: requiresCollection('tests'),
-  });
-  const assessmentResults = useQuestionBankResultsCollection({
-    enabled: requiresCollection('assessment_results'),
-  });
 
   const dataVolume = useMemo(
     () =>
       studentsTotal +
       teachersTotal +
-      sessions.length +
-      invoices.length +
-      attendanceRecords.length +
-      hasanatDistributions.length +
-      contactsTotal,
-    [studentsTotal, teachersTotal, sessions, invoices, attendanceRecords, hasanatDistributions, contactsTotal],
+      contactsTotal +
+      (sessionsMetrics?.total ?? 0) +
+      (financeMetrics?.totalInvoices ?? 0) +
+      (attendanceMetrics?.total ?? 0) +
+      (hasanatMetrics?.distributed ?? 0),
+    [studentsTotal, teachersTotal, contactsTotal, sessionsMetrics, financeMetrics, attendanceMetrics, hasanatMetrics],
   );
 
   return {
-    students: [] as Student[],
     studentsTotal,
-    studentMetricsInactive,
-    studentMetricsActive: studentMetrics?.active ?? 0,
-    teachers: [] as Teacher[],
     teachersTotal,
-    sessions,
-    invoices,
-    attendanceRecords,
-    hasanatDistributions,
-    denoms,
-    contacts: [] as Contact[],
     contactsTotal,
-    questions,
-    tests,
-    assessmentResults,
-    dataVolume,
+    studentMetricsInactive: studentMetrics?.inactive ?? 0,
+    studentMetricsActive: studentMetrics?.active ?? 0,
     studentMetricsNew: studentMetrics?.newThisPeriod ?? 0,
     teacherMetricsNew: teacherMetrics?.newThisPeriod ?? 0,
     contactMetricsNew: contactMetrics?.newThisPeriod ?? 0,
+    dataVolume,
+    studentMetrics,
+    teacherMetrics,
+    contactMetrics,
+    sessionsMetrics,
+    attendanceMetrics,
+    financeMetrics,
+    hasanatMetrics,
+    questionBankMetrics,
+    accountingMetrics,
   };
 }
-

@@ -1,41 +1,33 @@
 import React, { useMemo } from "react";
 import { Users as UsersIcon, ShieldAlert, ShieldCheck, UserCheck, KeyRound, Radio } from "lucide-react";
+import type { UsersCommandMetricsSnapshot } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
-import type { SystemUser } from "@mms/shared";
+import { useUsersMetrics } from "@/tenant/features/users/hooks/useUsersApi";
 
 interface UsersCommandMetricsProps {
-  users: SystemUser[];
   shown: number;
 }
 
-export function UsersCommandMetrics({ users, shown }: UsersCommandMetricsProps): React.JSX.Element {
+export function UsersCommandMetrics({ shown }: UsersCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { data: metrics } = useUsersMetrics();
 
-  const stats = useMemo(() => {
-    let active = 0;
-    let suspended = 0;
-    let twoFa = 0;
-    let activeSessions = 0;
-    let admins = 0;
-
-    for (const u of users) {
-      if (u.status === "active") active++;
-      if (u.status === "suspended") suspended++;
-      if (u.twoFactorEnabled) twoFa++;
-      activeSessions += u.activeSessions || 0;
-      if (u.role === "admin") admins++;
-    }
-
-    return { active, suspended, twoFa, activeSessions, admins };
-  }, [users]);
+  const snapshot: UsersCommandMetricsSnapshot = metrics ?? {
+    total: 0,
+    active: 0,
+    suspended: 0,
+    admins: 0,
+    twoFaEnabled: 0,
+    activeSessions: 0,
+  };
 
   const items = useMemo(
     () => [
       {
         icon: UsersIcon,
         label: t("users.stats.total"),
-        value: users.length,
+        value: snapshot.total,
         accent: "primary" as const,
       },
       {
@@ -47,35 +39,35 @@ export function UsersCommandMetrics({ users, shown }: UsersCommandMetricsProps):
       {
         icon: UserCheck,
         label: t("users.status.active"),
-        value: stats.active,
+        value: snapshot.active,
         accent: "success" as const,
       },
       {
         icon: ShieldAlert,
         label: t("users.status.suspended"),
-        value: stats.suspended,
+        value: snapshot.suspended,
         accent: "destructive" as const,
       },
       {
         icon: ShieldCheck,
         label: t("users.stats.admin"),
-        value: stats.admins,
+        value: snapshot.admins,
         accent: "info" as const,
       },
       {
         icon: KeyRound,
         label: t("users.stats.twoFa"),
-        value: stats.twoFa,
+        value: snapshot.twoFaEnabled,
         accent: "secondary" as const,
       },
       {
         icon: Radio,
         label: t("users.stats.sessions"),
-        value: stats.activeSessions,
+        value: snapshot.activeSessions,
         accent: "info" as const,
       },
     ],
-    [t, users.length, shown, stats]
+    [t, shown, snapshot],
   );
 
   return <ModuleCommandMetricsGrid items={items} />;

@@ -282,11 +282,16 @@ describe('accounting REST routes', () => {
     expect(res.json()).toEqual({
       metrics: {
         activeAccounts: 1,
+        assets: 100,
         draft: 0,
+        expenses: 0,
         inactiveAccounts: 0,
+        liabilities: 0,
         newThisPeriod: 1,
         posted: 1,
         postedVolume: 100,
+        revenue: 0,
+        surplus: 0,
         totalEntries: 1,
       },
     });

@@ -2,16 +2,11 @@ import {
   type AppTranslationKey,
   type Permission,
   formatMoney,
-  getOutstandingAmountForInvoice,
-  isOpenInvoiceStatus,
   FINANCE_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
   ATTENDANCE_MODULE_MANIFEST,
 } from '@mms/shared';
 import type { DashboardRole } from '@/lib/dashboardRole';
-import type { Invoice } from '@/lib/data/financeData';
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import { getLatestAttendanceRate } from '@/tenant/features/dashboard/hooks/dashboardMetricUtils';
 
 export interface DashboardNotificationItem {
   id: string;
@@ -29,29 +24,24 @@ export const DASHBOARD_LOW_ATTENDANCE_THRESHOLD = 75;
 /** Mark low-attendance notification urgent below this percent. */
 export const DASHBOARD_URGENT_ATTENDANCE_THRESHOLD = 60;
 
-function sumOutstanding(invoices: Invoice[]): number {
-  return invoices.reduce((sum, invoice) => sum + getOutstandingAmountForInvoice(invoice), 0);
-}
-
-function countOpenInvoices(invoices: Invoice[]): number {
-  return invoices.filter((invoice) => isOpenInvoiceStatus(invoice.status)).length;
+export interface DashboardNotificationMetrics {
+  outstandingInvoiceCount: number;
+  outstandingBalance: number;
+  attendanceRate: number | null;
+  inactiveStudents: number;
 }
 
 export function buildDashboardNotifications(
   dashboardRole: DashboardRole,
-  dashboardNotificationInput: {
-    invoices: Invoice[];
-    attendanceRecords: AttendanceRecord[];
-    inactiveStudents: number;
-  },
+  dashboardNotificationInput: DashboardNotificationMetrics,
   t: Translate,
   formatCurrency?: (amount: number | string | null | undefined) => string,
   can?: (permission: Permission) => boolean,
 ): DashboardNotificationItem[] {
   const dashboardNotifications: DashboardNotificationItem[] = [];
-  const unpaidCount = countOpenInvoices(dashboardNotificationInput.invoices);
-  const outstandingTotal = sumOutstanding(dashboardNotificationInput.invoices);
-  const attendanceRate = getLatestAttendanceRate(dashboardNotificationInput.attendanceRecords);
+  const unpaidCount = dashboardNotificationInput.outstandingInvoiceCount;
+  const outstandingTotal = dashboardNotificationInput.outstandingBalance;
+  const attendanceRate = dashboardNotificationInput.attendanceRate;
 
   const canFinance = can ? can(FINANCE_MODULE_MANIFEST.permissions.write) : true;
   const canStudents = can ? can(STUDENTS_MODULE_MANIFEST.permissions.read) : true;

@@ -1,8 +1,12 @@
 import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from '@mms/shared';
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import type { Invoice } from '@/lib/data/financeData';
-import type { Distribution } from '@/lib/data/hasanatData';
-import type { Session } from '@/lib/data/sessionsData';
+import type {
+  AttendanceCommandMetricsSnapshot,
+  FinanceCommandMetricsSnapshot,
+  HasanatCommandMetricsSnapshot,
+  SessionsCommandMetricsSnapshot,
+  ExaminationsCommandMetricsSnapshot,
+  QuestionBankCommandMetricsSnapshot,
+} from '@mms/shared';
 import type {
   ContactKPIAnalytics,
   EntityKPIMetrics,
@@ -14,12 +18,12 @@ export interface PrimaryVolumeInputs {
   studentMetrics?: EntityKPIMetrics;
   teacherMetrics?: TeacherKPIMetrics;
   contactAnalytics?: ContactKPIAnalytics;
-  attendanceRecords: AttendanceRecord[];
-  invoices: Invoice[];
-  distributions: Distribution[];
-  sessions: Session[];
-  examResults: unknown[];
-  exams: unknown[];
+  attendanceMetrics?: AttendanceCommandMetricsSnapshot;
+  financeMetrics?: FinanceCommandMetricsSnapshot;
+  hasanatMetrics?: HasanatCommandMetricsSnapshot;
+  sessionsMetrics?: SessionsCommandMetricsSnapshot;
+  examinationsMetrics?: ExaminationsCommandMetricsSnapshot;
+  questionBankMetrics?: QuestionBankCommandMetricsSnapshot;
   questionBankQuestions: QuestionBankQuestion[];
   questionBankTests: QuestionBankTest[];
   questionBankResults: QuestionBankResult[];
@@ -32,12 +36,12 @@ export function computePrimaryVolume(inputs: PrimaryVolumeInputs): number {
     studentMetrics,
     teacherMetrics,
     contactAnalytics,
-    attendanceRecords,
-    invoices,
-    distributions,
-    sessions,
-    examResults,
-    exams,
+    attendanceMetrics,
+    financeMetrics,
+    hasanatMetrics,
+    sessionsMetrics,
+    examinationsMetrics,
+    questionBankMetrics,
     questionBankQuestions,
     questionBankTests,
     questionBankResults,
@@ -46,15 +50,18 @@ export function computePrimaryVolume(inputs: PrimaryVolumeInputs): number {
   switch (category) {
     case 'students': return studentMetrics?.total ?? 0;
     case 'contacts': return contactAnalytics?.total ?? 0;
-    case 'attendance': return attendanceRecords.length;
+    case 'attendance': return attendanceMetrics?.total ?? 0;
     case 'financial':
-    case 'accounting': return invoices.length;
-    case 'hasanat': return distributions.length;
-    case 'sessions': return sessions.length;
-    case 'examinations': return examResults.length + exams.length;
+    case 'accounting': return financeMetrics?.totalInvoices ?? 0;
+    case 'hasanat': return hasanatMetrics?.distributed ?? 0;
+    case 'sessions': return sessionsMetrics?.total ?? 0;
+    case 'examinations':
+      return (examinationsMetrics?.totalResults ?? 0) + (examinationsMetrics?.total ?? 0);
     case 'questionBank':
-      return questionBankQuestions.length + questionBankTests.length + questionBankResults.length;
-    case 'enrollments': return (studentMetrics?.total ?? 0) + sessions.length;
+      return (questionBankMetrics?.total ?? questionBankQuestions.length)
+        + (questionBankMetrics?.totalTests ?? questionBankTests.length)
+        + (questionBankMetrics?.totalResults ?? questionBankResults.length);
+    case 'enrollments': return (studentMetrics?.total ?? 0) + (sessionsMetrics?.total ?? 0);
     case 'teachers':
     case 'faculty': return teacherMetrics?.total ?? 0;
     default: return 0;

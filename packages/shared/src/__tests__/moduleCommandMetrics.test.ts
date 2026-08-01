@@ -11,6 +11,7 @@ import {
   computeAttendanceCommandMetrics,
   computeExaminationsCommandMetrics,
   computeQuestionBankCommandMetrics,
+  computeUsersCommandMetrics,
 } from '../moduleCommandMetrics.js';
 
 describe('moduleCommandMetrics', () => {
@@ -47,10 +48,10 @@ describe('moduleCommandMetrics', () => {
 
   it('computes finance metrics breakdown correctly', () => {
     const invoices = [
-      { status: 'paid' },
-      { status: 'overdue' },
-      { status: 'pending' },
-      { status: 'partial' },
+      { status: 'paid', finalAmt: 100, paidAmt: 100, paidDate: '2026-08-01', discountAmt: 5 },
+      { status: 'overdue', finalAmt: 50, dueDate: '2026-07-01' },
+      { status: 'pending', finalAmt: 25, dueDate: '2026-08-15' },
+      { status: 'partial', finalAmt: 40, paidAmt: 10, paidDate: '2026-08-02', dueDate: '2026-08-20' },
     ];
     const payments = [{ id: 'p-1' }, { id: 'p-2' }];
 
@@ -60,12 +61,16 @@ describe('moduleCommandMetrics', () => {
     expect(metrics.overdue).toBe(1);
     expect(metrics.outstanding).toBe(3); // pending, overdue, partial
     expect(metrics.totalPayments).toBe(2);
+    expect(metrics.collectedTotal).toBe(110); // 100 + 10
+    expect(metrics.outstandingBalance).toBe(105); // 50 + 25 + 30
+    expect(metrics.discountTotal).toBe(5);
   });
 
   it('computes sessions metrics and total capacity/enrollments', () => {
     const sessions = [
       {
         status: 'active',
+        startDate: new Date().toISOString(),
         classes: [
           { enrolled: 15, capacity: 20 },
           { enrolled: 10, capacity: 15 },
@@ -83,6 +88,7 @@ describe('moduleCommandMetrics', () => {
     expect(metrics.upcoming).toBe(1);
     expect(metrics.totalEnrolled).toBe(30);
     expect(metrics.totalCapacity).toBe(45);
+    expect(metrics.totalClasses).toBe(3);
   });
 
   it('computes enrollments metrics and total revenue', () => {
@@ -118,5 +124,21 @@ describe('moduleCommandMetrics', () => {
     expect(metrics.activeAccounts).toBe(2);
     expect(metrics.inactiveAccounts).toBe(1);
     expect(metrics.postedVolume).toBe(1000);
+  });
+
+  it('computes users metrics breakdown correctly', () => {
+    const users = [
+      { status: 'active', role: 'admin', twoFactorEnabled: true, activeSessions: 2 },
+      { status: 'active', role: 'staff', twoFactorEnabled: false, activeSessions: 1 },
+      { status: 'suspended', role: 'admin', twoFactorEnabled: true, activeSessions: 0 },
+    ];
+
+    const metrics = computeUsersCommandMetrics(users);
+    expect(metrics.total).toBe(3);
+    expect(metrics.active).toBe(2);
+    expect(metrics.suspended).toBe(1);
+    expect(metrics.admins).toBe(2);
+    expect(metrics.twoFaEnabled).toBe(2);
+    expect(metrics.activeSessions).toBe(3);
   });
 });

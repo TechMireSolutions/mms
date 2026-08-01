@@ -1,9 +1,12 @@
 import { formatNumber } from '@mms/shared';
+import type {
+  AttendanceCommandMetricsSnapshot,
+  FinanceCommandMetricsSnapshot,
+  HasanatCommandMetricsSnapshot,
+  SessionsCommandMetricsSnapshot,
+  ExaminationsCommandMetricsSnapshot,
+} from '@mms/shared';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import type { Invoice } from '@/lib/data/financeData';
-import type { Session } from '@/lib/data/sessionsData';
-import type { Denomination, Distribution } from '@/lib/data/hasanatData';
 import type { ContactKPIAnalytics, EntityKPIMetrics } from './kpiSummaryTypes';
 
 interface DerivedKpiMetrics {
@@ -22,6 +25,30 @@ interface DerivedKpiMetrics {
   totalStudentsSub: string;
   totalStudentsTrend: 'up' | 'down' | 'flat';
   totalStudentsVelocity?: string;
+  attendanceTrend: 'up' | 'down' | 'flat';
+  feesTrend: 'up' | 'down' | 'flat';
+  outstandingTrend: 'up' | 'down' | 'flat';
+  hasanatTrend: 'up' | 'down' | 'flat';
+  sessionsTrend: 'up' | 'down' | 'flat';
+  hasAttendanceData: boolean;
+  hasFinanceData: boolean;
+  hasHasanatData: boolean;
+  hasExamData: boolean;
+  hasSessionsData: boolean;
+}
+
+function trendFromDelta(delta: number): 'up' | 'down' | 'flat' {
+  if (delta > 0) return 'up';
+  if (delta < 0) return 'down';
+  return 'flat';
+}
+
+function trendFromChange(current: number, previous: number): 'up' | 'down' | 'flat' {
+  if (previous > 0) {
+    const delta = current - previous;
+    return trendFromDelta(delta);
+  }
+  return current > 0 ? 'up' : 'flat';
 }
 
 interface ComputeDerivedKpiMetricsOptions {
@@ -29,13 +56,11 @@ interface ComputeDerivedKpiMetricsOptions {
   contactAnalytics?: ContactKPIAnalytics;
   studentMetrics?: EntityKPIMetrics;
   auxiliaryStudentMetrics?: EntityKPIMetrics;
-  attendanceRecords: AttendanceRecord[];
-  invoices: Invoice[];
-  exams: Array<{ id: string; passingMarks: number }>;
-  examResults: Array<{ examId: string; marksObtained: number }>;
-  sessions: Session[];
-  distributions: Distribution[];
-  denominations: Denomination[];
+  attendanceMetrics?: AttendanceCommandMetricsSnapshot;
+  financeMetrics?: FinanceCommandMetricsSnapshot;
+  hasanatMetrics?: HasanatCommandMetricsSnapshot;
+  sessionsMetrics?: SessionsCommandMetricsSnapshot;
+  examinationsMetrics?: ExaminationsCommandMetricsSnapshot;
   t: TranslationFunction;
 }
 
@@ -44,13 +69,11 @@ export function computeDerivedKpiMetrics({
   contactAnalytics,
   studentMetrics,
   auxiliaryStudentMetrics,
-  attendanceRecords,
-  invoices,
-  exams,
-  examResults,
-  sessions,
-  distributions,
-  denominations,
+  attendanceMetrics,
+  financeMetrics,
+  hasanatMetrics,
+  sessionsMetrics,
+  examinationsMetrics,
   t,
 }: ComputeDerivedKpiMetricsOptions): DerivedKpiMetrics {
   const isStudentsCategory = category === 'students';
@@ -76,38 +99,19 @@ export function computeDerivedKpiMetrics({
     totalStudentsTrend = (metrics?.newThisPeriod ?? 0) > 0 ? 'up' : 'flat';
   }
 
-  const presentCount = attendanceRecords.filter((record) => record.status === 'present' || record.status === 'late').length;
-  const attendanceRate = attendanceRecords.length > 0 ? Math.round((presentCount / attendanceRecords.length) * 100) : 0;
-  const collected = invoices.filter((invoice) => invoice.status === 'paid').reduce((sum, invoice) => sum + invoice.finalAmt, 0);
-  const outstandingInvoices = invoices.filter((invoice) => invoice.status !== 'paid' && invoice.status !== 'cancelled');
-  const outstanding = outstandingInvoices.reduce((sum, invoice) => sum + (invoice.finalAmt - (invoice.paidAmt || 0)), 0);
-  const totalHasanat = distributions.reduce((sum, distribution) => {
-    const denominationName = (distribution.denominationName || '').toLowerCase();
-    const denomination = denominations.find((option) => option.id === distribution.denominationId);
-    const points = denomination?.points ?? (
-      denominationName.includes('silver') ? 150
-        : denominationName.includes('gold') ? 500
-          : denominationName.includes('platinum') ? 1000
-            : denominationName.includes('diamond') ? 2500 : 50
-    );
-    return sum + (distribution.quantity || 1) * points;
-  }, 0);
+  const attendanceRate = attendanceMetrics?.overallPresentRate
+    ?? attendanceMetrics?.selectedDatePresentRate
+    ?? 0;
+  const collected = financeMetrics?.collectedTotal ?? 0;
+  const outstanding = financeMetrics?.outstandingBalance ?? 0;
+  const outstandingInvoiceCount = financeMetrics?.outstanding ?? 0;
+  const totalHasanat = hasanatMetrics?.totalPointsDistributed ?? 0;
+  const passRate = examinationsMetrics?.passRate ?? 0;
 
-  let passCount = 0;
-  let resultCount = 0;
-  examResults.forEach((result) => {
-    const exam = exams.find((option) => option.id === result.examId);
-    if (!exam) return;
-    resultCount += 1;
-    if (result.marksObtained >= exam.passingMarks) passCount += 1;
-  });
-  const passRate = resultCount > 0 ? Math.round((passCount / resultCount) * 100) : 0;
-
-  const activeSessions = sessions.filter((session) => session.status === 'active');
-  const classes = activeSessions.flatMap((session) => session.classes || []);
-  const enrolled = classes.reduce((sum, sessionClass) => sum + (sessionClass.enrolled || 0), 0);
-  const capacity = classes.reduce((sum, sessionClass) => sum + (sessionClass.capacity || 0), 0);
+  const capacity = sessionsMetrics?.totalCapacity ?? 0;
+  const enrolled = sessionsMetrics?.totalEnrolled ?? 0;
   const capacityUsed = capacity > 0 ? Math.round((enrolled / capacity) * 100) : 0;
+  const classesCount = sessionsMetrics?.totalClasses ?? 0;
 
   let growthValue = '+0%';
   let growthTrend: DerivedKpiMetrics['growthTrend'] = 'flat';
@@ -131,11 +135,11 @@ export function computeDerivedKpiMetrics({
     attendanceRate,
     collected,
     outstanding,
-    outstandingInvoiceCount: outstandingInvoices.length,
+    outstandingInvoiceCount,
     totalHasanat,
     passRate,
     capacityUsed,
-    classesCount: classes.length,
+    classesCount,
     growthValue,
     growthTrend,
     growthSub,
@@ -143,6 +147,31 @@ export function computeDerivedKpiMetrics({
     totalStudentsSub,
     totalStudentsTrend,
     totalStudentsVelocity,
+    attendanceTrend: trendFromDelta(
+      (attendanceMetrics?.selectedDatePresentRate ?? 0)
+      - (attendanceMetrics?.priorDatePresentRate ?? 0),
+    ),
+    feesTrend: trendFromChange(
+      financeMetrics?.collectedThisMonth ?? 0,
+      financeMetrics?.collectedPrevMonth ?? 0,
+    ),
+    outstandingTrend: trendFromChange(
+      financeMetrics?.outstandingThisMonth ?? 0,
+      financeMetrics?.outstandingPrevMonth ?? 0,
+    ),
+    hasanatTrend: trendFromChange(
+      hasanatMetrics?.pointsThisWeek ?? 0,
+      hasanatMetrics?.pointsLastWeek ?? 0,
+    ),
+    sessionsTrend: trendFromChange(
+      sessionsMetrics?.sessionsThisWeek ?? 0,
+      sessionsMetrics?.sessionsLastWeek ?? 0,
+    ),
+    hasAttendanceData: (attendanceMetrics?.total ?? 0) > 0,
+    hasFinanceData: (financeMetrics?.totalInvoices ?? 0) > 0,
+    hasHasanatData: (hasanatMetrics?.distributed ?? 0) > 0 || totalHasanat > 0,
+    hasExamData: (examinationsMetrics?.totalResults ?? 0) > 0 && (examinationsMetrics?.total ?? 0) > 0,
+    hasSessionsData: (sessionsMetrics?.total ?? 0) > 0,
   };
 }
 

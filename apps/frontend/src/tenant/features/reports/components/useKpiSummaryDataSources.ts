@@ -1,13 +1,15 @@
-import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
-import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
-import { useExaminationsExamsCollection, useExaminationsResultsCollection } from '@/tenant/hooks/collections/examinations';
-import { useHasanatDenomsCollection, useHasanatDistributionsCollection } from '@/tenant/hooks/collections/hasanat';
+import { todayISO } from '@mms/shared';
+import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';
+import { useFinanceMetrics } from '@/tenant/features/finance/hooks/useFinanceMetrics';
+import { useExaminationsMetrics } from '@/tenant/hooks/collections/examinations';
+import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
 import {
+  useQuestionBankMetrics,
   useQuestionBankQuestionsCollection,
   useQuestionBankResultsCollection,
   useQuestionBankTestsCollection,
 } from '@/tenant/hooks/collections/questionBank';
-import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useSessionsMetrics } from '@/tenant/hooks/collections/sessions';
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
 import { useStudentsMetrics } from '@/tenant/hooks/collections/students';
 import { useTeachersMetrics } from '@/tenant/hooks/collections/teachers';
@@ -15,8 +17,20 @@ import type { KpiCategoryFlags } from './kpiSummaryCategoryFlags';
 
 export type KpiSummaryDataSources = ReturnType<typeof useKpiSummaryDataSources>;
 
+/**
+ * Loads server `/metrics` for standard report KPIs.
+ * Question Bank collections load only for avg-score (not available on metrics yet).
+ * Other non-person dumps live in `useKpiSummaryCustomCards` when custom cards need them.
+ */
 export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFlags) {
   const { isContactsCategory, isStudentsCategory, isTeachersCategory, needsContactAnalytics } = flags;
+
+  const isAttendance = category === 'attendance';
+  const isFinancial = category === 'financial' || category === 'accounting';
+  const isHasanat = category === 'hasanat';
+  const isSessions = category === 'sessions' || category === 'enrollments';
+  const isExaminations = category === 'examinations' || category === 'students';
+  const isQuestionBank = category === 'questionBank';
 
   const { data: contactsReportData } = useContactsReportAnalytics({ enabled: needsContactAnalytics });
   const { data: studentMetrics } = useStudentsMetrics({ enabled: isStudentsCategory || category === 'enrollments' });
@@ -28,16 +42,16 @@ export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFla
     enabled: !isTeachersCategory && category !== 'enrollments',
   });
 
-  const attendanceRecords = useAttendanceRecordsCollection();
-  const invoices = useFinanceInvoicesCollection();
-  const exams = useExaminationsExamsCollection();
-  const examResults = useExaminationsResultsCollection();
-  const sessions = useSessionsCollection();
-  const distributions = useHasanatDistributionsCollection();
-  const denominations = useHasanatDenomsCollection();
-  const questionBankQuestions = useQuestionBankQuestionsCollection();
-  const questionBankTests = useQuestionBankTestsCollection();
-  const questionBankResults = useQuestionBankResultsCollection();
+  const { data: attendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: isAttendance });
+  const { data: financeMetrics } = useFinanceMetrics({ enabled: isFinancial });
+  const { data: hasanatMetrics } = useHasanatMetrics({ enabled: isHasanat });
+  const { data: sessionsMetrics } = useSessionsMetrics({ enabled: isSessions });
+  const { data: examinationsMetrics } = useExaminationsMetrics({ enabled: isExaminations });
+  const { data: questionBankMetrics } = useQuestionBankMetrics({ enabled: isQuestionBank });
+
+  const questionBankQuestions = useQuestionBankQuestionsCollection({ enabled: isQuestionBank });
+  const questionBankTests = useQuestionBankTestsCollection({ enabled: isQuestionBank });
+  const questionBankResults = useQuestionBankResultsCollection({ enabled: isQuestionBank });
 
   const contactAnalytics = contactsReportData?.analytics;
   const auxiliaryStudentMetrics = category === 'enrollments' ? studentMetrics : crossStudentMetrics;
@@ -49,13 +63,12 @@ export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFla
     teacherMetrics,
     auxiliaryStudentMetrics,
     auxiliaryTeacherMetrics,
-    attendanceRecords,
-    invoices,
-    exams,
-    examResults,
-    sessions,
-    distributions,
-    denominations,
+    attendanceMetrics,
+    financeMetrics,
+    hasanatMetrics,
+    sessionsMetrics,
+    examinationsMetrics,
+    questionBankMetrics,
     questionBankQuestions,
     questionBankTests,
     questionBankResults,

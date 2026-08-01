@@ -3,6 +3,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { METADATA_FIELDS } from "@/tenant/features/reports/components/reportMetadata";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { useWidgetCollections } from "@/lib/reports/useReportCollections";
+import type { ReportCollection } from "@/lib/reports/reportMetadata";
 import { type WidgetBuilderIconTab } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderCardOptions";
 import { useWidgetBuilderRecordOptions } from "@/tenant/features/reports/components/pinnedWidgets/useWidgetBuilderRecordOptions";
 import { buildWidgetBuilderPreview, buildWidgetSavePayload } from "@/tenant/features/reports/components/pinnedWidgets/widgetBuilderStateHelpers";
@@ -25,7 +26,6 @@ export function useWidgetBuilderState({
   initialWidgetType = "kpi",
   onSaveWidget,
 }: UseWidgetBuilderStateOptions) {
-  const collections = useWidgetCollections();
   const { t } = useTranslation();
 
   const [widgetType, setWidgetType] = useState<CustomWidget["widgetType"]>(() => {
@@ -60,6 +60,15 @@ export function useWidgetBuilderState({
   const [iconSearch, setIconSearch] = useState("");
   const [activeIconTab, setActiveIconTab] = useState<WidgetBuilderIconTab>("all");
   const [scalerSize, setScalerSize] = useState(180);
+
+  const requiredCollections = useMemo(() => {
+    const required = new Set<ReportCollection>([builderCollection]);
+    if (widgetType === "switch" && switchActionType === "db_record") {
+      required.add(switchCollection);
+    }
+    return required;
+  }, [builderCollection, widgetType, switchActionType, switchCollection]);
+  const collections = useWidgetCollections({ requiredCollections });
 
   useWidgetBuilderHydration({
     editWidgetConfig,

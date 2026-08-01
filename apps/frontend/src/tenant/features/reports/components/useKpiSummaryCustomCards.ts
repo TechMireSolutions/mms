@@ -2,6 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
+import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
+import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
+import {
+  useHasanatDenomsCollection,
+  useHasanatDistributionsCollection,
+} from '@/tenant/hooks/collections/hasanat';
+import {
+  useQuestionBankQuestionsCollection,
+  useQuestionBankResultsCollection,
+  useQuestionBankTestsCollection,
+} from '@/tenant/hooks/collections/questionBank';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { CustomCard } from './reportMetadata';
 import { computeCustomCardItems } from './kpiSummaryCardHandlers';
@@ -37,14 +49,9 @@ export function useKpiSummaryCustomCards(
 ) {
   const { isContactsCategory, isStudentsCategory, isTeachersCategory } = flags;
   const {
-    sessions,
-    invoices,
-    attendanceRecords,
-    distributions,
-    denominations,
-    questionBankQuestions,
-    questionBankTests,
-    questionBankResults,
+    questionBankQuestions: qbFromMetricsPath,
+    questionBankTests: qbTestsFromMetricsPath,
+    questionBankResults: qbResultsFromMetricsPath,
   } = dataSources;
 
   const [customCards, setCustomCards] = useState<CustomCard[]>(() => loadCustomCardsForCategory(category));
@@ -65,6 +72,16 @@ export function useKpiSummaryCustomCards(
   const hasContactCustomCards = customCards.some((card) => card.collection === 'contacts');
   const hasStudentCustomCards = customCards.some((card) => card.collection === 'students');
   const hasTeacherCustomCards = customCards.some((card) => card.collection === 'teachers');
+  const needsSessions = customCards.some((card) => card.collection === 'sessions');
+  const needsFinance = customCards.some((card) => card.collection === 'finance_invoices');
+  const needsAttendance = customCards.some((card) => card.collection === 'attendance_records');
+  const needsHasanat = customCards.some((card) => card.collection === 'hasanat_distributions');
+  const needsQuestionBank = customCards.some(
+    (card) =>
+      card.collection === 'questions'
+      || card.collection === 'tests'
+      || card.collection === 'assessment_results',
+  );
 
   const { data: contactWidgetAggregates } = useContactsWidgetAggregates(customCardWidgetInputs, {
     enabled: isContactsCategory && hasContactCustomCards,
@@ -75,6 +92,15 @@ export function useKpiSummaryCustomCards(
   const { data: teacherWidgetAggregates } = useTeachersWidgetAggregates(customCardWidgetInputs, {
     enabled: isTeachersCategory && hasTeacherCustomCards,
   });
+
+  const sessions = useSessionsCollection({ enabled: needsSessions });
+  const invoices = useFinanceInvoicesCollection({ enabled: needsFinance });
+  const attendanceRecords = useAttendanceRecordsCollection({ enabled: needsAttendance });
+  const distributions = useHasanatDistributionsCollection({ enabled: needsHasanat });
+  const denominations = useHasanatDenomsCollection({ enabled: needsHasanat });
+  const questionBankQuestions = useQuestionBankQuestionsCollection({ enabled: needsQuestionBank });
+  const questionBankTests = useQuestionBankTestsCollection({ enabled: needsQuestionBank });
+  const questionBankResults = useQuestionBankResultsCollection({ enabled: needsQuestionBank });
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -101,9 +127,9 @@ export function useKpiSummaryCustomCards(
         attendance_records: attendanceRecords,
         hasanat_distributions: distributions,
         hasanat_denoms: denominations,
-        questions: questionBankQuestions,
-        tests: questionBankTests,
-        assessment_results: questionBankResults,
+        questions: needsQuestionBank ? questionBankQuestions : qbFromMetricsPath,
+        tests: needsQuestionBank ? questionBankTests : qbTestsFromMetricsPath,
+        assessment_results: needsQuestionBank ? questionBankResults : qbResultsFromMetricsPath,
       },
     ),
     [
@@ -117,9 +143,13 @@ export function useKpiSummaryCustomCards(
       attendanceRecords,
       distributions,
       denominations,
+      needsQuestionBank,
       questionBankQuestions,
       questionBankTests,
       questionBankResults,
+      qbFromMetricsPath,
+      qbTestsFromMetricsPath,
+      qbResultsFromMetricsPath,
       t,
     ],
   );

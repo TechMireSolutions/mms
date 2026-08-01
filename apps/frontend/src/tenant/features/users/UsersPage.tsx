@@ -39,7 +39,7 @@ export default function Users(): React.JSX.Element {
         ) : undefined
       }
       metricsStrip={
-        <UsersCommandMetrics users={controller.users} shown={controller.users.length} />
+        <UsersCommandMetrics shown={controller.users.length} />
       }
     >
       <ResponsiveAccordionTabs

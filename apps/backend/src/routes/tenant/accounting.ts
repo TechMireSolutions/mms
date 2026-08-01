@@ -90,8 +90,12 @@ export default async function accountingRoutes(
       const entries = await loadEntries();
       const accounts = await loadAccounts();
       return computeAccountingCommandMetrics(
-        entries as Array<{ status?: string; date?: string; lines?: Array<{ debit?: number; credit?: number }> }>,
-        accounts as Array<{ isActive?: boolean }>,
+        entries as Array<{
+          status?: string;
+          date?: string;
+          lines?: Array<{ debit?: number; credit?: number; account_id?: string }>;
+        }>,
+        accounts as Array<{ id?: string; isActive?: boolean; type?: string }>,
       );
     },
     errorMessagePrefix: 'accounting',

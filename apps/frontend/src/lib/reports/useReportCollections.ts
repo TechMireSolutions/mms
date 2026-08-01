@@ -47,33 +47,48 @@ export type ReportCollectionsSnapshot = {
 /**
  * Live Query-backed collections for dashboard widgets / report builders.
  * Prefer this over sync `getWidgetCollections()` + localStorage.
+ * Pass `requiredCollections` to fetch only the collections pinned widgets need.
  */
-export function useWidgetCollections(options?: { enabled?: boolean }): ReportCollectionsSnapshot {
+export function useWidgetCollections(options?: {
+  enabled?: boolean;
+  requiredCollections?: ReadonlySet<ReportCollection> | readonly ReportCollection[];
+}): ReportCollectionsSnapshot {
   const enabled = options?.enabled ?? true;
   const { isAuthenticated } = useAuth();
   const queryEnabled = isAuthenticated && enabled;
+  const required = options?.requiredCollections
+    ? new Set(options.requiredCollections)
+    : null;
+  const needs = (collection: ReportCollection): boolean =>
+    queryEnabled && (required === null || required.has(collection));
 
-  const contacts = useContactsCollection({ enabled: queryEnabled });
-  const sessions = useSessionsCollection({ enabled: queryEnabled });
-  const financeInvoices = useFinanceInvoicesCollection({ enabled: queryEnabled });
-  const attendanceRecords = useAttendanceRecordsCollection({ enabled: queryEnabled });
-  const hasanatDistributions = useHasanatDistributionsCollection({ enabled: queryEnabled });
-  const hasanatDenoms = useHasanatDenomsCollection({ enabled: queryEnabled });
-  const questions = useQuestionBankQuestionsCollection({ enabled: queryEnabled });
-  const tests = useQuestionBankTestsCollection({ enabled: queryEnabled });
-  const assessmentResults = useQuestionBankResultsCollection({ enabled: queryEnabled });
+  const contacts = useContactsCollection({ enabled: needs('contacts') });
+  const sessions = useSessionsCollection({ enabled: needs('sessions') });
+  const financeInvoices = useFinanceInvoicesCollection({ enabled: needs('finance_invoices') });
+  const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
+  const hasanatDistributions = useHasanatDistributionsCollection({
+    enabled: needs('hasanat_distributions'),
+  });
+  const hasanatDenoms = useHasanatDenomsCollection({
+    enabled: needs('hasanat_distributions'),
+  });
+  const questions = useQuestionBankQuestionsCollection({ enabled: needs('questions') });
+  const tests = useQuestionBankTestsCollection({ enabled: needs('tests') });
+  const assessmentResults = useQuestionBankResultsCollection({
+    enabled: needs('assessment_results'),
+  });
 
   const studentsQuery = useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'report-all'] as const,
     queryFn: () => fetchAllStudentsForQuery({}),
-    enabled: queryEnabled,
+    enabled: needs('students'),
     staleTime: 30_000,
   });
 
   const teachersQuery = useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'report-all'] as const,
     queryFn: () => fetchAllTeachersForQuery({}),
-    enabled: queryEnabled,
+    enabled: needs('teachers'),
     staleTime: 30_000,
   });
 

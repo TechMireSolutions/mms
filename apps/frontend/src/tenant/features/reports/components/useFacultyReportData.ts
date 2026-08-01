@@ -10,7 +10,6 @@ export interface FacultyWorkloadItem {
   classes: number;
   sessions: number;
   totalStudents: number;
-  hoursPerWeek: number;
 }
 
 export function useFacultyReportData() {
@@ -26,16 +25,17 @@ export function useFacultyReportData() {
   }, [teachers, t]);
 
   const facultyWorkload = useMemo<FacultyWorkloadItem[]>(() => {
-    const workloadByTeacherName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
+    const workloadByTeacherName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number }> = {};
     sessions.forEach((session) => {
        (session.classes || []).forEach((sessionClass) => {
          const teacherName = resolveClassTeacher(sessionClass.teacherId, sessionClass.teacherName ?? '');
-         if (!workloadByTeacherName[teacherName]) workloadByTeacherName[teacherName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
+         if (!workloadByTeacherName[teacherName]) {
+           workloadByTeacherName[teacherName] = { classes: new Set(), sessions: new Set(), students: 0 };
+         }
 
          workloadByTeacherName[teacherName].classes.add(sessionClass.id);
          workloadByTeacherName[teacherName].sessions.add(session.id);
          workloadByTeacherName[teacherName].students += sessionClass.enrolled;
-         workloadByTeacherName[teacherName].hours += 2;
        });
     });
 
@@ -44,13 +44,12 @@ export function useFacultyReportData() {
       classes: workload.classes.size,
       sessions: workload.sessions.size,
       totalStudents: workload.students,
-      hoursPerWeek: workload.hours
     })).sort((firstFaculty, secondFaculty) => secondFaculty.totalStudents - firstFaculty.totalStudents);
   }, [sessions, resolveClassTeacher]);
 
   const totalFaculty = facultyWorkload.length;
   const totalStudents = facultyWorkload.reduce((total, faculty) => total + faculty.totalStudents, 0);
-  const totalHours = facultyWorkload.reduce((total, faculty) => total + faculty.hoursPerWeek, 0);
+  const totalClasses = facultyWorkload.reduce((total, faculty) => total + faculty.classes, 0);
   const avgStudents = totalFaculty
     ? (totalStudents / totalFaculty).toFixed(1)
     : 0;
@@ -75,7 +74,7 @@ export function useFacultyReportData() {
     filteredFacultyWorkload,
     totalFaculty,
     totalStudents,
-    totalHours,
+    totalClasses,
     avgStudents,
     toggleFacultyFilter,
   };

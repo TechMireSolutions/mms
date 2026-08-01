@@ -3,7 +3,6 @@ import {
   getPeriodBoundaries,
   percentChange,
   getAttendanceRateForDate,
-  getLatestAttendanceRate,
 } from '@/tenant/features/dashboard/hooks/dashboardMetricUtils';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
@@ -37,13 +36,5 @@ describe('dashboardMetricUtils', () => {
     ] as AttendanceRecord[];
     expect(getAttendanceRateForDate(records, '2026-07-01')).toBeCloseTo(66.666, 1);
     expect(getAttendanceRateForDate(records, '2026-07-03')).toBeNull();
-  });
-
-  it('getLatestAttendanceRate falls back to most recent day', () => {
-    const records = [
-      { date: '2026-01-01', status: 'present' },
-      { date: '2026-01-01', status: 'absent' },
-    ] as AttendanceRecord[];
-    expect(getLatestAttendanceRate(records)).toBe(50);
   });
 });

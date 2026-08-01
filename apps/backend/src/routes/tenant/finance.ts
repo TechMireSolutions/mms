@@ -52,7 +52,14 @@ export default async function financeRoutes(
       const invoices = await loadInvoices();
       const payments = await loadPayments();
       return computeFinanceCommandMetrics(
-        invoices as Array<{ status?: string }>,
+        invoices as Array<{
+          status?: string;
+          finalAmt?: number;
+          paidAmt?: number;
+          paidDate?: string;
+          dueDate?: string;
+          discountAmt?: number;
+        }>,
         payments as Array<{ id?: string | number }>,
       );
     },

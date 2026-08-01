@@ -13,6 +13,7 @@ import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/card';
 import { useAccountingDashboardModel } from '@/tenant/features/accounting/components/useAccountingDashboardModel';
+import { useAccountingMetrics } from '@/tenant/features/accounting/hooks/useAccountingApi';
 
 interface AccountingDashboardProps {
   accounts: Account[];
@@ -22,20 +23,21 @@ interface AccountingDashboardProps {
 }
 
 /**
- * Accounting Dashboard component.
+ * Accounting Dashboard — P&L StatCards prefer server `/metrics`; charts use journal collections.
  */
 export function AccountingDashboard({ accounts, entries, settings: _settings, fiscalYears: _fiscalYears }: AccountingDashboardProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const { primary, secondary, charts } = useBrandPalette();
   const pieColors = useMemo(() => [...charts], [charts]);
+  const { data: serverMetrics } = useAccountingMetrics();
 
   const {
-    revenue,
-    expenses,
-    netSurplus,
-    assets,
-    liabilities,
+    revenue: modelRevenue,
+    expenses: modelExpenses,
+    netSurplus: modelSurplus,
+    assets: modelAssets,
+    liabilities: modelLiabilities,
     equity,
     netCashFlow,
     postedEntries,
@@ -44,6 +46,14 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
     expenseBreakdown,
     recentEntries,
   } = useAccountingDashboardModel(accounts, entries);
+
+  const revenue = serverMetrics?.revenue ?? modelRevenue;
+  const expenses = serverMetrics?.expenses ?? modelExpenses;
+  const netSurplus = serverMetrics?.surplus ?? modelSurplus;
+  const assets = serverMetrics?.assets ?? modelAssets;
+  const liabilities = serverMetrics?.liabilities ?? modelLiabilities;
+  const postedCount = serverMetrics?.posted ?? postedEntries.length;
+  const draftCount = serverMetrics?.draft ?? draftEntries.length;
 
   const bsData = [
     { id: 'Assets', name: t('accounting.dashboard.assets'), value: Math.max(0, assets) },
@@ -65,8 +75,8 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label={t('accounting.dashboard.totalLiabilities')} value={formatCurrency(liabilities)} icon={Scale} accent="muted" delayIndex={4} />
         <StatCard label={t('accounting.dashboard.netCashFlow')} value={formatCurrency(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? t('accounting.dashboard.positive') : t('accounting.dashboard.negative')} icon={TrendingUp} accent="primary" delayIndex={5} />
-        <StatCard label={t('accounting.dashboard.postedEntries')} value={postedEntries.length} icon={CheckCircle2} accent="success" delayIndex={6} />
-        <StatCard label={t('accounting.dashboard.pendingDrafts')} value={draftEntries.length} icon={Clock} accent={draftEntries.length > 0 ? 'warning' : 'muted'} delayIndex={7} />
+        <StatCard label={t('accounting.dashboard.postedEntries')} value={postedCount} icon={CheckCircle2} accent="success" delayIndex={6} />
+        <StatCard label={t('accounting.dashboard.pendingDrafts')} value={draftCount} icon={Clock} accent={draftCount > 0 ? 'warning' : 'muted'} delayIndex={7} />
       </div>
 
       <motion.div

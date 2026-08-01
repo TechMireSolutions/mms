@@ -37,9 +37,9 @@ export function useDashboardPageController() {
 
   const dashboardData = useDashboardData(customWidgets, dashboardRole);
   const {
-    invoices,
-    attendanceRecords,
-    sessions,
+    financeMetrics,
+    attendanceMetrics,
+    sessionsMetrics,
     studentMetricsInactive,
     studentMetricsActive,
   } = dashboardData;
@@ -134,12 +134,20 @@ export function useDashboardPageController() {
     () =>
       buildDashboardNotifications(
         dashboardRole,
-        { invoices, attendanceRecords, inactiveStudents: studentMetricsInactive },
+        {
+          outstandingInvoiceCount: financeMetrics?.outstanding ?? 0,
+          outstandingBalance: financeMetrics?.outstandingBalance ?? 0,
+          attendanceRate:
+            attendanceMetrics?.selectedDatePresentRate
+            ?? attendanceMetrics?.overallPresentRate
+            ?? null,
+          inactiveStudents: studentMetricsInactive,
+        },
         t,
         formatCurrency,
         can,
       ),
-    [dashboardRole, invoices, attendanceRecords, studentMetricsInactive, t, formatCurrency, can],
+    [dashboardRole, financeMetrics, attendanceMetrics, studentMetricsInactive, t, formatCurrency, can],
   );
 
   return {
@@ -168,7 +176,7 @@ export function useDashboardPageController() {
     visibleDashboardMetricCards,
     pinnedDashboardWidgetCount,
     notifications,
-    sessions,
+    activeSessionsCount: sessionsMetrics?.active ?? 0,
     studentMetricsActive,
   };
 }

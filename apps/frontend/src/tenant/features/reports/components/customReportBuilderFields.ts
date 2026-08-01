@@ -15,7 +15,7 @@ export const ALL_FIELDS: Record<Exclude<DataSource, "contacts">, readonly string
   academic:   ["Student Name", "Class", "Subject", "Marks", "Total", "Grade", "Rank", "Exam Name", "Date"],
   hasanat:    ["Student Name", "Class", "Faculty", "Distributed", "Redeemed", "Balance", "Reason", "Last Awarded"],
   sessions:   ["Session", "Class", "Type", "Teacher", "Room", "Time", "Days", "Enrolled", "Capacity", "Utilisation %", "Status", "Start Date", "End Date"],
-  faculty:    ["Faculty Name", "Classes", "Sessions", "Total Students", "Hours/Week", "Specialization"],
+  faculty:    ["Faculty Name", "Classes", "Sessions", "Total Students", "Specialization"],
 };
 
 /** Map of legacy selectable fields to translation keys. */
@@ -75,7 +75,7 @@ export const FIELD_KEY_MAP: Record<string, string> = {
   "Classes": "reports.fields.classes",
   "Sessions": "reports.fields.sessions",
   "Total Students": "reports.fields.totalStudents",
-  "Hours/Week": "reports.fields.hoursWeek",
+  "Hours/Week": "reports.fields.classes",
   "Specialization": "reports.fields.specialization"
 };
 
@@ -108,7 +108,7 @@ export function getInitialSelectedFields(initialSource?: string): string[] {
   if (initialSource === "academic") return ["Student Name", "Class", "Subject", "Marks", "Grade"];
   if (initialSource === "hasanat") return ["Student Name", "Class", "Faculty", "Distributed", "Balance"];
   if (initialSource === "sessions") return ["Session", "Class", "Teacher", "Enrolled", "Capacity"];
-  if (initialSource === "faculty") return ["Faculty Name", "Classes", "Sessions", "Total Students", "Hours/Week"];
+  if (initialSource === "faculty") return ["Faculty Name", "Classes", "Sessions", "Total Students"];
   return ["Name", "Class", "Session", "Status"];
 }
 
@@ -119,7 +119,7 @@ export function getSelectedFieldsForSource(source: DataSource): string[] {
   if (source === "academic") return ["Student Name", "Class", "Subject", "Marks", "Grade"];
   if (source === "hasanat") return ["Student Name", "Class", "Distributed", "Balance"];
   if (source === "sessions") return ["Session", "Class", "Teacher", "Enrolled"];
-  if (source === "faculty") return ["Faculty Name", "Classes", "Sessions", "Hours/Week"];
+  if (source === "faculty") return ["Faculty Name", "Classes", "Sessions", "Total Students"];
   return ["Name", "Class", "Session", "Status"];
 }
 

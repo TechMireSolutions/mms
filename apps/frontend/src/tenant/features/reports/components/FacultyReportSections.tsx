@@ -1,5 +1,5 @@
 import React from "react";
-import { GraduationCap, BookOpen, Users, Clock, Filter, X } from "lucide-react";
+import { GraduationCap, BookOpen, Users, Layers, Filter, X } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
@@ -40,8 +40,8 @@ export function FacultyReportChartSection({ t, facultyWorkload, onBarClick }: Fa
           <XAxis type="number" tick={{ fontSize: 11 }} />
           <YAxis dataKey="faculty" type="category" tick={{ fontSize: 11 }} width={120} />
           <Tooltip />
-          <Bar dataKey="totalStudents" fill="hsl(var(--primary))"  name={t("teachers.report.studentsLabel")}   radius={[0, 4, 4, 0]} />
-          <Bar dataKey="hoursPerWeek"  fill="hsl(var(--chart-2))"  name={t("teachers.report.hoursWeekLabel")} radius={[0, 4, 4, 0]} />
+          <Bar dataKey="totalStudents" fill="hsl(var(--primary))" name={t("teachers.report.studentsLabel")} radius={[0, 4, 4, 0]} />
+          <Bar dataKey="classes" fill="hsl(var(--chart-2))" name={t("teachers.report.colClasses")} radius={[0, 4, 4, 0]} />
         </BarChart>
       </SafeResponsiveContainer>
     </SectionCard>
@@ -52,17 +52,17 @@ interface FacultyReportKpiSectionProps {
   t: TranslationFunction;
   totalFaculty: number;
   totalStudents: number;
-  totalHours: number;
+  totalClasses: number;
   avgStudents: string | number;
 }
 
-export function FacultyReportKpiSection({ t, totalFaculty, totalStudents, totalHours, avgStudents }: FacultyReportKpiSectionProps): React.JSX.Element {
+export function FacultyReportKpiSection({ t, totalFaculty, totalStudents, totalClasses, avgStudents }: FacultyReportKpiSectionProps): React.JSX.Element {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <StatCard icon={GraduationCap} label={t("teachers.report.totalFaculty")}        value={totalFaculty}          color="primary" />
-      <StatCard icon={Users}         label={t("teachers.report.totalStudents")}        value={totalStudents}         color="blue"    />
-      <StatCard icon={Clock}         label={t("teachers.report.weeklyHours")}          value={`${totalHours}h`}      color="violet"  />
-      <StatCard icon={BookOpen}      label={t("teachers.report.avgStudentsFaculty")}  value={avgStudents}           color="green"   />
+      <StatCard icon={GraduationCap} label={t("teachers.report.totalFaculty")} value={totalFaculty} color="primary" />
+      <StatCard icon={Users} label={t("teachers.report.totalStudents")} value={totalStudents} color="blue" />
+      <StatCard icon={Layers} label={t("teachers.report.totalClasses")} value={totalClasses} color="violet" />
+      <StatCard icon={BookOpen} label={t("teachers.report.avgStudentsFaculty")} value={avgStudents} color="green" />
     </div>
   );
 }
@@ -120,7 +120,6 @@ export function FacultyReportExportSection({
           t("teachers.report.colClasses"),
           t("teachers.report.colSessions"),
           t("teachers.report.colStudents"),
-          t("teachers.report.colHoursWeek"),
         ]}
       />
       {filteredFacultyWorkload.length === 0 ? (

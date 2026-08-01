@@ -2,10 +2,12 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import {
   USERS_MODULE_MANIFEST,
+  computeUsersCommandMetrics,
   workspaceUserListSchema,
   activityLogListSchema,
 } from '@mms/shared';
 import { registerBulkRoutes, registerSoftDeletableBulkRoutes } from '../../lib/crudRouter.js';
+import { registerMetricsRoute } from '../../lib/crudQueryRoutes.js';
 import { bulkStringIdsBodySchema } from '../../validation/commonSchemas.js';
 
 import {
@@ -30,6 +32,15 @@ export default async function usersRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  registerMetricsRoute(fastify, {
+    collection: USERS_COLLECTION,
+    errorMessagePrefix: 'workspace users',
+    loadMetricsFn: async () => {
+      const users = await loadWorkspaceUsers();
+      return computeUsersCommandMetrics(users);
+    },
+  });
 
   registerSoftDeletableBulkRoutes(fastify, {
     path: '/',

@@ -3,6 +3,7 @@ import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { AlertCircle, DollarSign, Tag, TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
+import { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
 import { StatCard } from "@/components/ui/StatCard";
 import {
   FinancialMonthFilterBanner,
@@ -47,6 +48,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
     [palette],
   );
   const financeInvoices = useFinanceInvoicesCollection();
+  const { data: financeMetrics } = useFinanceMetrics();
 
   const monthlyFeeCollection = useMemo<MonthlyFeeCollectionItem[]>(() => {
     // Generate monthly aggregation
@@ -95,9 +97,12 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
     }));
   }, [financeInvoices]);
 
-  const totalCollected = monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.collected, 0);
-  const totalOutstanding = monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.outstanding, 0);
-  const totalDiscounted = discountUsageByType.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
+  const totalCollected = financeMetrics?.collectedTotal
+    ?? monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.collected, 0);
+  const totalOutstanding = financeMetrics?.outstandingBalance
+    ?? monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.outstanding, 0);
+  const totalDiscounted = financeMetrics?.discountTotal
+    ?? discountUsageByType.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
 
   const invoices = useMemo(() => {
     let filteredInvoices = financeInvoices;

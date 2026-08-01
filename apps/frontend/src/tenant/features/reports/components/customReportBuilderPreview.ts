@@ -47,19 +47,18 @@ function getSourceRows(
   if (source === "hasanat") return collections.hasanat;
   if (source === "academic") return collections.academic;
 
-  const workloadByFacultyName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number, hours: number }> = {};
+  const workloadByFacultyName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number }> = {};
   collections.sessions.forEach((session) => {
     const classes = session.classes as { id: string; teacherName?: string; enrolled: number }[] | undefined;
     if (classes) {
       classes.forEach((sessionClass) => {
         const facultyName = sessionClass.teacherName || translate("reports.builder.unassigned");
         if (!workloadByFacultyName[facultyName]) {
-          workloadByFacultyName[facultyName] = { classes: new Set(), sessions: new Set(), students: 0, hours: 0 };
+          workloadByFacultyName[facultyName] = { classes: new Set(), sessions: new Set(), students: 0 };
         }
         workloadByFacultyName[facultyName].classes.add(sessionClass.id);
         workloadByFacultyName[facultyName].sessions.add(String(session.id));
         workloadByFacultyName[facultyName].students += Number(sessionClass.enrolled || 0);
-        workloadByFacultyName[facultyName].hours += 2; // Assuming 2 hours per class workload
       });
     }
   });
@@ -69,7 +68,8 @@ function getSourceRows(
     classes: workload.classes.size,
     sessions: workload.sessions.size,
     totalStudents: workload.students,
-    hoursWeek: workload.hours,
+    // Legacy "Hours/Week" column maps to class count — hours are not tracked.
+    hoursWeek: workload.classes.size,
     specialization: translate("reports.builder.generalStudies"),
   }));
 }

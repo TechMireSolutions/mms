@@ -6,12 +6,11 @@ import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DashboardRole } from '@/lib/dashboardRole';
-import type { Session } from '@/lib/data/sessionsData';
 
 interface WelcomeBannerProps {
   dashboardRole: DashboardRole;
-  /** Active sessions from dashboard data (avoids a second Query fetch). */
-  sessions: Session[];
+  /** Active sessions from server metrics (teacher subtitle). */
+  activeSessionsCount: number;
   /** Active student count from student metrics (admin subtitle). */
   activeStudentCount: number;
 }
@@ -34,7 +33,7 @@ const DATE_CHIP_CLASS =
 /** Dashboard welcome header with dashboardRole-specific messaging and localized date. */
 export default function WelcomeBanner({
   dashboardRole,
-  sessions,
+  activeSessionsCount,
   activeStudentCount,
 }: WelcomeBannerProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -44,21 +43,13 @@ export default function WelcomeBanner({
   const gregDate = useMemo(() => formatLongDate(new Date()), []);
   const hijriDate = useMemo(() => formatHijriDate(new Date()), []);
 
-  const userId = user?.id ?? '';
   const userName = user?.name ?? '';
 
   const subtitle = useMemo(() => {
     if (dashboardRole === 'teacher') {
-      const teacherSessionsCount = sessions.filter((session) =>
-        (session.classes || []).some(
-          (sessionClass) =>
-            sessionClass.teacherId === userId ||
-            (userName && String(sessionClass.teacherName || '').toLowerCase() === userName.toLowerCase()),
-        ),
-      ).length;
-      return teacherSessionsCount === 1
+      return activeSessionsCount === 1
         ? t('dashboard.sessionsTodayOne')
-        : t('dashboard.sessionsToday', { count: teacherSessionsCount });
+        : t('dashboard.sessionsToday', { count: activeSessionsCount });
     }
     if (dashboardRole === 'admin' && activeStudentCount > 0) {
       return t('dashboard.overviewActiveStudents', { count: activeStudentCount });
@@ -67,7 +58,7 @@ export default function WelcomeBanner({
       return t('dashboard.accountantOverview');
     }
     return t('dashboard.overview');
-  }, [dashboardRole, sessions, userId, userName, activeStudentCount, t]);
+  }, [dashboardRole, activeSessionsCount, activeStudentCount, t]);
 
   return (
     <motion.header
