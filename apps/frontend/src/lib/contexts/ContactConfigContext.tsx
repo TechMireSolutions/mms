@@ -67,6 +67,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     genders,
     socialPlatforms,
     relationships,
+    relationshipPairs,
     phoneLabels,
     emailLabels,
     addressLabels,
@@ -76,6 +77,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     updateGenders,
     updateSocialPlatforms,
     updateRelationships,
+    updateRelationshipPairs,
     updatePhoneLabels,
     updateEmailLabels,
     updateAddressLabels,
@@ -119,6 +121,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     genders,
     socialPlatforms,
     relationships,
+    relationshipPairs,
     phoneLabels,
     emailLabels,
     addressLabels,
@@ -130,6 +133,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     updateGenders,
     updateSocialPlatforms,
     updateRelationships,
+    updateRelationshipPairs,
     updatePhoneLabels,
     updateEmailLabels,
     updateAddressLabels,
@@ -138,6 +142,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     updateUserColumnLayout,
     getColumnWidth,
     setColumnWidth,
+
     systemSortOptions,
   });
 

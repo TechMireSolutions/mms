@@ -1,12 +1,15 @@
 import { AlertTriangle, Users, Copy } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ContactsCountryCodesSection } from "@/tenant/features/contacts/components/ContactsCountryCodesSection";
+import { ContactsRelationshipPairsSection } from "@/tenant/features/contacts/components/ContactsRelationshipPairsSection";
+
 
 const DUPLICATE_DETECTION_FIELD_OPTIONS = [
   { id: "name", labelKey: "contacts.setup.duplicateFieldName" as const },
@@ -35,9 +38,11 @@ export function ContactsPreferencesSection({
   onUpdateCountryCodes,
 }: ContactsPreferencesSectionProps): JSX.Element {
   const { t } = useTranslation();
+  const { relationshipPairs, updateRelationshipPairs } = useContactConfig();
   const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email"];
 
   const toggleDetectionField = (fieldId: string, enabled: boolean) => {
+
     const next = enabled
       ? Array.from(new Set([...detectionFields, fieldId]))
       : detectionFields.filter((field) => field !== fieldId);
@@ -185,6 +190,15 @@ export function ContactsPreferencesSection({
           </div>
         </div>
       </section>
+
+      <ContactsRelationshipPairsSection
+        pairs={prefs.relationshipPairs ?? relationshipPairs}
+        onUpdatePairs={(pairs) => {
+          onUpdatePreference("relationshipPairs", pairs);
+          updateRelationshipPairs(pairs);
+        }}
+      />
     </>
   );
 }
+

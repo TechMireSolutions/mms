@@ -4807,6 +4807,12 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.setup.defaultCityPlaceholder": "مثال: لاهور",
   "contacts.setup.countryCodes": "الدول ورموز الاتصال",
   "contacts.setup.countryCodesDesc": "تُستخدم لبلد العنوان ورموز اتصال الهاتف في نموذج جهة الاتصال.",
+  "contacts.setup.relationshipPairsTitle": "أزواج العلاقات ثنائية الاتجاه",
+  "contacts.setup.relationshipPairsDesc": "تحديد أزواج العلاقات المتبادلة المخصصة. عند ربط جهة اتصال بالعلاقة المباشرة، ينشئ النظام تلقائيًا العلاقة المتبادلة على جهة الاتصال المرتبطة.",
+  "contacts.setup.forwardRelationship": "العلاقة المباشرة",
+  "contacts.setup.reciprocalRelationship": "العلاقة المتبادلة / العكسية",
+  "contacts.setup.noPairsDefined": "لم يتم تحديد أزواج علاقات مخصصة.",
+
   "contacts.setup.countryName": "البلد",
   "contacts.setup.dialCode": "رمز الاتصال",
   "contacts.setup.countryNamePlaceholder": "مثال: باكستان",

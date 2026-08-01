@@ -4953,6 +4953,12 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.setup.defaultCityPlaceholder": "e.g. Lahore",
   "contacts.setup.countryCodes": "Countries & dial codes",
   "contacts.setup.countryCodesDesc": "Used for address country and phone dial codes on the contact form.",
+  "contacts.setup.relationshipPairsTitle": "2-Sided Relationship Pairs",
+  "contacts.setup.relationshipPairsDesc": "Define custom 2-sided relationship pairs. When a contact is linked with the forward relationship, the system automatically creates the reciprocal relationship on the linked contact.",
+  "contacts.setup.forwardRelationship": "Forward Relationship",
+  "contacts.setup.reciprocalRelationship": "Reciprocal / Inverse",
+  "contacts.setup.noPairsDefined": "No custom relationship pairs defined.",
+
   "contacts.setup.countryName": "Country",
   "contacts.setup.dialCode": "Dial code",
   "contacts.setup.countryNamePlaceholder": "e.g. Pakistan",

@@ -1,5 +1,7 @@
-import { type Contact, type ContactRelationship, type EmergencyContact } from '@mms/shared';
+import { type Contact, type ContactRelationship, type EmergencyContact, type RelationshipPair } from '@mms/shared';
 import { bulkSaveContacts, findContactsByIds } from '../db/repositories/contactRepository.js';
+import { loadContactPreferences } from './contactPreferencesService.js';
+
 import {
   DIRECT_RELATIONSHIP_PRIORITY,
   INFERRED_RELATIONSHIP_PRIORITY,
@@ -8,9 +10,11 @@ import {
   inverseRole,
   relationshipLabel,
   relationshipRole,
+  resolveInverseRelationship,
   type PlannedRelationship,
   type RelationshipLink,
 } from './contactRelationshipRules.js';
+
 
 function linksForContact(contact: Contact): RelationshipLink[] {
   const collect = (entry: EmergencyContact | ContactRelationship): RelationshipLink | null => {
@@ -72,10 +76,16 @@ function collectContactIds(contacts: Contact[]): string[] {
   );
 }
 
-export async function applyContactRelationshipInference(tenant: string, sourceContact: Contact): Promise<void> {
+export async function applyContactRelationshipInference(
+  tenant: string,
+  sourceContact: Contact,
+  customPairs?: RelationshipPair[],
+): Promise<void> {
   const sourceId = String(sourceContact.id);
   const sourceLinks = linksForContact(sourceContact).filter((entry) => entry.contactId !== sourceId);
   if (sourceLinks.length === 0) return;
+
+  const resolvedPairs = customPairs ?? (await loadContactPreferences())?.relationshipPairs;
 
   const firstIds = Array.from(new Set(sourceLinks.map((entry) => entry.contactId)));
   const firstContacts = await findContactsByIds(tenant, firstIds);
@@ -99,11 +109,16 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
     const target = contactsById.get(sourceLink.contactId);
     if (!target || target.deletedAt) continue;
 
-    const inverseDirectRole = inverseRole(sourceLink.role);
+    const reciprocalLabel = resolveInverseRelationship(
+      sourceLink.relationship ?? '',
+      sourceContact,
+      resolvedPairs,
+    );
+
     planRelationship(planned, {
       ownerId: sourceLink.contactId,
       contactId: sourceId,
-      relationship: relationshipLabel(inverseDirectRole, sourceContact),
+      relationship: reciprocalLabel,
       overwriteExisting: true,
       priority: DIRECT_RELATIONSHIP_PRIORITY,
       inferredFromContactId: sourceId,
@@ -111,6 +126,7 @@ export async function applyContactRelationshipInference(tenant: string, sourceCo
     });
 
     if (!PRIMARY_TRIGGER_ROLES.has(sourceLink.role)) continue;
+
 
     for (const targetLink of linksForContact(target)) {
       if (targetLink.contactId === sourceId) continue;

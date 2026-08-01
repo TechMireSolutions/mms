@@ -1,5 +1,7 @@
 /** Contact field/tab/column schema types and preference contracts. */
 import type { AppTranslationKey } from './appTranslations.js';
+import type { RelationshipPair } from './contactEntityTypes.js';
+
 
 /** Schema metadata for dynamic custom and standard contact fields. */
 export interface FieldDefinition {
@@ -106,7 +108,9 @@ export interface ContactPreferences {
   showDetailedSolarAge?: boolean;
   showLunarDob?: boolean;
   showDetailedLunarAge?: boolean;
+  relationshipPairs?: RelationshipPair[];
 }
+
 
 /** WhatsApp quick template preset for campaign messaging. */
 export interface WhatsAppTemplate {

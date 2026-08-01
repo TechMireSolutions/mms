@@ -4807,6 +4807,12 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.setup.defaultCityPlaceholder": "مثلاً لاہور",
   "contacts.setup.countryCodes": "ممالک اور ڈائل کوڈز",
   "contacts.setup.countryCodesDesc": "رابطہ فارم پر ایڈریس ملک اور فون ڈائل کوڈز کے لیے استعمال ہوتے ہیں۔",
+  "contacts.setup.relationshipPairsTitle": "دو طرفہ تعلقات کے جوڑے",
+  "contacts.setup.relationshipPairsDesc": "کسٹم باہمی تعلقات کے جوڑے کی وضاحت کریں۔ جب کوئی رابطہ فارورڈ تعلق سے منسلک ہوتا ہے تو سسٹم خود بخود اس رابطے پر باہمی تعلق پیدا کر دیتا ہے۔",
+  "contacts.setup.forwardRelationship": "فارورڈ تعلق",
+  "contacts.setup.reciprocalRelationship": "باہمی / الٹ تعلق",
+  "contacts.setup.noPairsDefined": "کوئی کسٹم تعلقات کے جوڑے متعین نہیں ہیں۔",
+
   "contacts.setup.countryName": "ملک",
   "contacts.setup.dialCode": "ڈائل کوڈ",
   "contacts.setup.countryNamePlaceholder": "مثلاً پاکستان",

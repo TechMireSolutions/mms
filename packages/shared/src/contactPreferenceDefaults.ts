@@ -1,5 +1,8 @@
 /** Contact preference defaults, labels, palettes, and lookup lists. */
 import type { ContactPreferences, WhatsAppTemplate } from './contactFieldSchemaTypes.js';
+import type { RelationshipPair } from './contactEntityTypes.js';
+
+
 
 export const CONFIG_VERSION = 2;
 
@@ -25,6 +28,22 @@ export const COLOR_PALETTES = {
   warning: { bg: "bg-warning/10 text-warning border-warning/20 dark:bg-warning/15 dark:border-warning/25", text: "text-warning", border: "border-warning/20 dark:border-warning/25" },
   destructive: { bg: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/15 dark:border-destructive/25", text: "text-destructive", border: "border-destructive/20 dark:border-destructive/25" },
 };
+
+export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [
+  { id: "parent_child", forward: "Parent", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
+  { id: "father_child", forward: "Father", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
+  { id: "mother_child", forward: "Mother", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
+  { id: "spouse", forward: "Spouse", inverse: "Spouse" },
+  { id: "sibling", forward: "Sibling", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
+  { id: "brother_sibling", forward: "Brother", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
+  { id: "sister_sibling", forward: "Sister", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
+  { id: "guardian_dependent", forward: "Guardian", inverse: "Dependent" },
+  { id: "grandparent_grandchild", forward: "Grandparent", inverse: "Grandchild", inverseMale: "Grandson", inverseFemale: "Granddaughter" },
+  { id: "aunt_uncle", forward: "Aunt/Uncle", inverse: "Niece/Nephew", inverseMale: "Nephew", inverseFemale: "Niece" },
+  { id: "cousin", forward: "Cousin", inverse: "Cousin" },
+  { id: "inlaw", forward: "Parent-In-Law", inverse: "Child-In-Law" },
+  { id: "other", forward: "Other", inverse: "Other" },
+];
 
 export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   defaultCountry: "Pakistan",
@@ -53,7 +72,9 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   showLunarDob: false,
   showDetailedLunarAge: false,
   namePrefixesToIgnore: ["syed", "syeda"],
+  relationshipPairs: DEFAULT_RELATIONSHIP_PAIRS,
 };
+
 
 
 

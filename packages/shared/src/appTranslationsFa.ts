@@ -1670,6 +1670,12 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.setup.defaultProvincePlaceholder": "مثال: تهران",
   "contacts.setup.countryCodes": "کشورها و کدهای شماره‌گیری",
   "contacts.setup.countryCodesDesc": "برای کشور نشانی و کدهای شماره‌گیری تلفن در فرم مخاطب استفاده می‌شود.",
+  "contacts.setup.relationshipPairsTitle": "جفت‌های رابطه دوطرفه",
+  "contacts.setup.relationshipPairsDesc": "تعریف جفت‌های رابطه متقابل سفارشی. وقتی مخاطبی با رابطه مستقیم مرتبط می‌شود، سیستم به‌طور خودکار رابطه متقابل را روی مخاطب مرتبط ایجاد می‌کند.",
+  "contacts.setup.forwardRelationship": "رابطه مستقیم",
+  "contacts.setup.reciprocalRelationship": "رابطه متقابل / معکوس",
+  "contacts.setup.noPairsDefined": "هیچ جفت رابطه‌ای تعریف نشده است.",
+
   "contacts.setup.countryName": "کشور",
   "contacts.setup.dialCode": "کد شماره‌گیری",
   "contacts.setup.countryNamePlaceholder": "مثال: ایران",

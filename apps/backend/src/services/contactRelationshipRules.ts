@@ -1,4 +1,5 @@
-import type { Contact } from '@mms/shared';
+import type { Contact, RelationshipPair } from '@mms/shared';
+
 
 export type RelationshipRole =
   | 'parent'
@@ -208,3 +209,45 @@ export function inverseRole(role: RelationshipRole): RelationshipRole {
 export function composeRelationship(first: RelationshipRole, second: RelationshipRole): RelationshipRole | null {
   return RELATIONSHIP_INFERENCE_RULE_BY_PATH.get(`${first}:${second}`) ?? null;
 }
+
+/**
+  * Resolves the reciprocal (2nd side) relationship label for a source contact.
+  * Checks custom dynamic 2-side pairs, standard built-in roles, and falls back to symmetric labeling.
+  */
+export function resolveInverseRelationship(
+  relationship: string,
+  sourceContact: Contact,
+  customPairs?: RelationshipPair[],
+): string {
+  if (!relationship || !relationship.trim()) return 'Other';
+  const norm = normalizeRelationshipTerm(relationship);
+
+  // 1. Custom configured 2-sided pairs check
+  if (customPairs && customPairs.length > 0) {
+    for (const pair of customPairs) {
+      const normFwd = normalizeRelationshipTerm(pair.forward);
+      const normInv = normalizeRelationshipTerm(pair.inverse);
+      if (norm === normFwd) {
+        if (isFemale(sourceContact) && pair.inverseFemale) return pair.inverseFemale;
+        if (isMale(sourceContact) && pair.inverseMale) return pair.inverseMale;
+        return pair.inverse;
+      }
+      if (norm === normInv) {
+        if (isFemale(sourceContact) && pair.inverseFemale) return pair.forward;
+        return pair.forward;
+      }
+    }
+  }
+
+  // 2. Built-in standard relationship roles check
+  const role = relationshipRole(relationship);
+  if (role !== 'other') {
+    const invRole = inverseRole(role);
+    return relationshipLabel(invRole, sourceContact);
+  }
+
+  // 3. Fallback for unlisted dynamic relationship types: preserve symmetric reciprocal pair
+  const trimmed = relationship.trim();
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+

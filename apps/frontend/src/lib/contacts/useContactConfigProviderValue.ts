@@ -18,6 +18,7 @@ export function useContactConfigProviderValue({
   genders,
   socialPlatforms,
   relationships,
+  relationshipPairs,
   phoneLabels,
   emailLabels,
   addressLabels,
@@ -29,6 +30,7 @@ export function useContactConfigProviderValue({
   updateGenders,
   updateSocialPlatforms,
   updateRelationships,
+  updateRelationshipPairs,
   updatePhoneLabels,
   updateEmailLabels,
   updateAddressLabels,
@@ -53,6 +55,7 @@ export function useContactConfigProviderValue({
   genders: string[];
   socialPlatforms: string[];
   relationships: string[];
+  relationshipPairs: import("@mms/shared").RelationshipPair[];
   phoneLabels: string[];
   emailLabels: string[];
   addressLabels: string[];
@@ -64,6 +67,7 @@ export function useContactConfigProviderValue({
   updateGenders: (genderOptions: string[]) => void;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
   updateRelationships: (relationshipOptions: string[]) => void;
+  updateRelationshipPairs: (pairs: import("@mms/shared").RelationshipPair[]) => void;
   updatePhoneLabels: (phoneLabelOptions: string[]) => void;
   updateEmailLabels: (emailLabelOptions: string[]) => void;
   updateAddressLabels: (addressLabelOptions: string[]) => void;
@@ -95,6 +99,7 @@ export function useContactConfigProviderValue({
       genders,
       socialPlatforms,
       relationships,
+      relationshipPairs,
       phoneLabels,
       emailLabels,
       addressLabels,
@@ -107,6 +112,7 @@ export function useContactConfigProviderValue({
       updateGenders,
       updateSocialPlatforms,
       updateRelationships,
+      updateRelationshipPairs,
       updatePhoneLabels,
       updateEmailLabels,
       updateAddressLabels,
@@ -132,6 +138,7 @@ export function useContactConfigProviderValue({
       genders,
       socialPlatforms,
       relationships,
+      relationshipPairs,
       phoneLabels,
       emailLabels,
       addressLabels,
@@ -144,6 +151,7 @@ export function useContactConfigProviderValue({
       updateGenders,
       updateSocialPlatforms,
       updateRelationships,
+      updateRelationshipPairs,
       updatePhoneLabels,
       updateEmailLabels,
       updateAddressLabels,
@@ -156,3 +164,4 @@ export function useContactConfigProviderValue({
     ],
   );
 }
+

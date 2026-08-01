@@ -39,6 +39,8 @@ vi.mock('../db/database.js', () => ({
 }));
 
 import { loadContactsPage, updateContactById, upsertContact } from '../services/contactService.js';
+import { applyContactRelationshipInference } from '../services/contactRelationshipInferenceService.js';
+
 
 function contact(overrides: Partial<Contact>): Contact {
   return {
@@ -123,6 +125,64 @@ describe('contactService emergency reciprocal mapping', () => {
     ]);
     expect(mockInvalidateDuplicateScanCache).toHaveBeenCalled();
   });
+
+  it('creates reciprocal 2-sided relationship links for dynamic relationship types', async () => {
+    const source = contact({
+      id: 'a',
+      name: 'Dr. Tariq',
+      firstName: 'Tariq',
+      gender: 'Male',
+      emergencyContacts: [{ contactId: 'b', relationship: 'Mentor' }],
+    });
+    const target = contact({
+      id: 'b',
+      name: 'Zayn Ahmad',
+      firstName: 'Zayn',
+      gender: 'Male',
+      emergencyContacts: [],
+    });
+    mockFindContactsByIds.mockResolvedValue([target]);
+
+    await upsertContact(source);
+
+    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
+      expect.objectContaining({
+        id: 'b',
+        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Mentor', 1)]),
+      }),
+    ]);
+  });
+
+  it('uses configured dynamic relationship pairs for custom reciprocal link creation', async () => {
+    const source = contact({
+      id: 'a',
+      name: 'Dr. Tariq',
+      firstName: 'Tariq',
+      gender: 'Male',
+      emergencyContacts: [{ contactId: 'b', relationship: 'Mentor' }],
+    });
+    const target = contact({
+      id: 'b',
+      name: 'Zayn Ahmad',
+      firstName: 'Zayn',
+      gender: 'Male',
+      emergencyContacts: [],
+    });
+    mockFindContactsByIds.mockResolvedValue([target]);
+
+    await applyContactRelationshipInference('demo', source, [
+      { id: 'm1', forward: 'Mentor', inverse: 'Mentee' },
+    ]);
+
+    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
+      expect.objectContaining({
+        id: 'b',
+        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Mentee', 1)]),
+      }),
+    ]);
+  });
+
+
 
   it('updates the reciprocal emergency link when editing an existing contact', async () => {
     const existingSource = contact({

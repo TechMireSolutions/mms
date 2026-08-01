@@ -89,6 +89,17 @@ export interface ContactRelationship {
   notes?: string;
 }
 
+/** Definition for a 2-sided reciprocal relationship pair. */
+export interface RelationshipPair {
+  id?: string;
+  forward: string;
+  inverse: string;
+  inverseMale?: string;
+  inverseFemale?: string;
+}
+
+
+
 /** Audit log activity item recorded on a contact timeline. */
 export interface ContactActivity {
   id: string;
