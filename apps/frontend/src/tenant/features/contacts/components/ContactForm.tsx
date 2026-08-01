@@ -94,19 +94,6 @@ export default function ContactForm({
     });
   }, [draft.collectionCounts, enabledTabIds, t]);
 
-  const handleAddQuickRelation = (relationship: "Father" | "Mother" | "Guardian") => {
-    const emergencyContacts = draft.contactDraft.emergencyContacts || [];
-    const emptyIndex = emergencyContacts.findIndex(
-      (em) => (em.contactId == null || String(em.contactId).trim() === "") && (!em.relationship || em.relationship === draft.relationshipOptions[0]),
-    );
-    if (emptyIndex >= 0) {
-      draft.updateSubListItem("emergencyContacts", emptyIndex, { relationship });
-    } else {
-      draft.addSubListItem("emergencyContacts", { relationship, contactId: "" });
-    }
-    setTab("emergency");
-  };
-
   return (
     <FormModal
       open={open}
@@ -147,7 +134,6 @@ export default function ContactForm({
         defaultCountry={defaultCountry}
         defaultCity={defaultCity}
         defaultProvince={defaultProvince}
-        onAddQuickRelation={handleAddQuickRelation}
       />
     </FormModal>
   );
