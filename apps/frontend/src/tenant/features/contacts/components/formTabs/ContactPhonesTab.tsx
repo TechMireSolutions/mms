@@ -8,16 +8,14 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolvePhoneLabel } from "@/lib/contacts/contactI18n";
-import {
-  PhoneNumber,
-  DEFAULT_PHONE_LABELS,
-  parsePhoneNumber,
-} from "@mms/shared";
+import { PhoneNumber, parsePhoneNumber } from "@mms/shared";
 
 export interface ContactPhonesTabProps extends ContactSubListTabBaseProps {
   phoneLabels: string[];
+  onUpdatePhoneLabels: (labels: string[]) => void;
   defaultCountryCode: string;
   countryCodeOptions: string[];
+  onUpdateDialCodeOptions: (codes: string[]) => void;
   handlePhoneBlur: (index: number) => void;
 }
 
@@ -25,8 +23,10 @@ export function ContactPhonesTab({
   contactDraft,
   getLocalId,
   phoneLabels,
+  onUpdatePhoneLabels,
   defaultCountryCode,
   countryCodeOptions,
+  onUpdateDialCodeOptions,
   getListItemError,
   addSubListItem,
   ensureSubListItem,
@@ -73,13 +73,10 @@ export function ContactPhonesTab({
               label={`${t("contacts.form.type")}:`}
               typeSelect={
                 <EditableSelect
-                  options={
-                    phoneLabels.length > 0
-                      ? phoneLabels
-                      : (DEFAULT_PHONE_LABELS as unknown as string[])
-                  }
+                  options={phoneLabels}
                   value={resolvePhoneLabel(phone.label, phoneLabels, t)}
                   onChange={(val) => updatePhone(idx, { label: val })}
+                  onUpdateOptions={onUpdatePhoneLabels}
                   className={TYPE_SELECT_WIDTH}
                   id={`phone-label-${idx}`}
                   name={`phone-label-${idx}`}
@@ -93,6 +90,7 @@ export function ContactPhonesTab({
                   options={countryCodeOptions}
                   value={phone.countryCode || defaultCountryCode}
                   onChange={(val) => updatePhone(idx, { countryCode: val })}
+                  onUpdateOptions={onUpdateDialCodeOptions}
                   className="w-[5.625rem] shrink-0"
                   id={`phone-country-${idx}`}
                   name={`phone-country-${idx}`}

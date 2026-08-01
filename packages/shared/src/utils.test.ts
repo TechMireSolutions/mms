@@ -624,6 +624,24 @@ describe("normalizeContactForEdit", () => {
     expect(draft.socials).toEqual([{ platform: "Instagram", url: "https://instagram.com/a" }]);
     expect(draft.emergencyContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
   });
+
+  it("seeds empty rows from tenant option defaults", () => {
+    const draft = normalizeContactForEdit(undefined, undefined, "", "", "", {
+      phoneLabel: "Work",
+      emailLabel: "Office",
+      addressLabel: "Office",
+      socialPlatform: "LinkedIn",
+      relationship: "Guardian",
+      defaultPhoneCountryCode: "+1",
+    });
+    expect(draft.phones).toEqual([{ label: "Work", number: "", countryCode: "+1", isPrimary: true }]);
+    expect(draft.emails).toEqual([{ label: "Office", address: "", isPrimary: true }]);
+    expect(draft.addresses).toEqual([
+      { label: "Office", line1: "", city: "", state: "", country: "", isPrimary: true },
+    ]);
+    expect(draft.socials).toEqual([{ platform: "LinkedIn", url: "" }]);
+    expect(draft.emergencyContacts).toEqual([{ relationship: "Guardian", contactId: "" }]);
+  });
 });
 
 describe("cleanContactDraft", () => {

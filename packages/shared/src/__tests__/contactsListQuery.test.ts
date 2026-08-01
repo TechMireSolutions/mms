@@ -49,10 +49,12 @@ describe('contactsListQuerySchema', () => {
     expect(
       contactsListQuerySchema.parse({
         hasPhone: 'true',
+        hasEmail: 'true',
         hasReachable: 'false',
       }),
     ).toMatchObject({
       hasPhone: true,
+      hasEmail: true,
       hasReachable: false,
     });
   });

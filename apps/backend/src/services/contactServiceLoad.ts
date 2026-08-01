@@ -96,24 +96,38 @@ function firstCollectionString(rows: unknown[] | null): string {
   return firstString(rows?.[0]);
 }
 
-function firstCountryCode(rows: unknown[] | null): string {
-  if (!rows || !Array.isArray(rows)) return '';
-  const first = rows.find(
-    (entry): entry is { code: string } =>
-      Boolean(entry) && typeof entry === 'object' && typeof (entry as { code?: unknown }).code === 'string',
+function resolveDefaultPhoneCountryCode(
+  countryCodes: unknown[] | null,
+  defaultCountry: string,
+): string {
+  if (!countryCodes || !Array.isArray(countryCodes)) return '';
+  const entries = countryCodes.filter(
+    (entry): entry is { country: string; code: string } =>
+      Boolean(entry) &&
+      typeof entry === 'object' &&
+      typeof (entry as { country?: unknown }).country === 'string' &&
+      typeof (entry as { code?: unknown }).code === 'string',
   );
-  return first?.code ?? '';
+  if (defaultCountry) {
+    const matched = entries.find((entry) => entry.country === defaultCountry && entry.code);
+    if (matched?.code) return matched.code;
+  }
+  return entries.find((entry) => entry.code)?.code ?? '';
 }
 
 export async function loadContactRuntimeDefaults(): Promise<ContactRuntimeDefaults> {
-  const [countryCodes, phoneLabels, emailLabels] = await Promise.all([
+  const [countryCodes, phoneLabels, emailLabels, preferences] = await Promise.all([
     fetchCollection('countryCodes'),
     fetchCollection('phoneLabels'),
     fetchCollection('emailLabels'),
+    loadContactPreferences(),
   ]);
 
   return {
-    defaultPhoneCountryCode: firstCountryCode(countryCodes),
+    defaultPhoneCountryCode: resolveDefaultPhoneCountryCode(
+      countryCodes,
+      preferences?.defaultCountry?.trim() ?? '',
+    ),
     phoneLabel: firstCollectionString(phoneLabels),
     emailLabel: firstCollectionString(emailLabels),
   };

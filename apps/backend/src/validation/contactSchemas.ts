@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { softDeleteBodySchema } from './commonSchemas.js';
+import { softDeleteBodySchema, bulkIdsBodySchema } from './commonSchemas.js';
 import {
   phoneNumberSchema,
   emailAddressSchema,
@@ -30,10 +30,8 @@ export {
   contactsListQuerySchema,
 };
 
-export const contactBulkDeleteSchema = z.object({
-  ids: z.array(z.union([z.string(), z.number()])).min(1),
-  deletionReason: z.string().max(500).optional(),
-});
+/** Bulk soft-delete — shared max(500) with other module bulk id bodies. */
+export const contactBulkDeleteSchema = bulkIdsBodySchema;
 
 export const contactDeleteBodySchema = softDeleteBodySchema;
 

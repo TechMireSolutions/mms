@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { normalizeContactForEdit, type Contact } from "@mms/shared";
+import { normalizeContactForEdit, type Contact, type ContactItemNormalizeDefaults } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import {
+  mergeCountryDialCodeOptions,
+  mergeCountryNameOptions,
+  normalizeDialCode,
+} from "@/lib/contacts/countryCodeOptions";
 import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useContactFormSubLists";
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
@@ -23,6 +28,31 @@ function withEmptyCollectionRows(
       emergencyContacts.length > 0
         ? emergencyContacts
         : [{ relationship: relationshipOptions[0] ?? "", contactId: "" }],
+  };
+}
+
+function buildOptionDefaults({
+  phoneLabels,
+  emailLabels,
+  addressLabels,
+  socialPlatforms,
+  relationshipOptions,
+  defaultPhoneCountryCode,
+}: {
+  phoneLabels: string[];
+  emailLabels: string[];
+  addressLabels: string[];
+  socialPlatforms: string[];
+  relationshipOptions: string[];
+  defaultPhoneCountryCode: string;
+}): ContactItemNormalizeDefaults {
+  return {
+    phoneLabel: phoneLabels[0],
+    emailLabel: emailLabels[0],
+    addressLabel: addressLabels[0],
+    socialPlatform: socialPlatforms[0],
+    relationship: relationshipOptions[0],
+    defaultPhoneCountryCode,
   };
 }
 
@@ -58,18 +88,68 @@ export function useContactFormDraft({
     genders,
     countryCodes,
     defaultPhoneCountryCode,
+    updateGenders,
+    updatePhoneLabels,
+    updateEmailLabels,
+    updateAddressLabels,
+    updateSocialPlatforms,
+    updateRelationships,
+    updateCountryCodes,
   } = useContactConfig();
   const formInstanceId = String(contact?.id ?? "new");
   const defaultCountryCode = defaultPhoneCountryCode;
 
+  const optionDefaults = useMemo(
+    () =>
+      buildOptionDefaults({
+        phoneLabels,
+        emailLabels,
+        addressLabels,
+        socialPlatforms,
+        relationshipOptions,
+        defaultPhoneCountryCode: defaultCountryCode,
+      }),
+    [
+      phoneLabels,
+      emailLabels,
+      addressLabels,
+      socialPlatforms,
+      relationshipOptions,
+      defaultCountryCode,
+    ],
+  );
+
   const countryCodeOptions = useMemo(() => {
-    const list = (countryCodes || []).map((countryItem) => countryItem.code).filter(Boolean);
-    return Array.from(new Set([defaultCountryCode, ...list].filter(Boolean)));
+    const list = (countryCodes || [])
+      .map((countryItem) => normalizeDialCode(countryItem.code))
+      .filter(Boolean);
+    const fallback = normalizeDialCode(defaultCountryCode);
+    return Array.from(new Set([fallback, ...list].filter(Boolean)));
   }, [countryCodes, defaultCountryCode]);
+
+  const countryOptions = useMemo(() => {
+    const names = (countryCodes || []).map((entry) => entry.country).filter(Boolean);
+    return Array.from(new Set([defaultCountry, ...names].filter(Boolean)));
+  }, [countryCodes, defaultCountry]);
+
+  const updateCountryOptions = (nextCountries: string[]) => {
+    updateCountryCodes(mergeCountryNameOptions(countryCodes, nextCountries));
+  };
+
+  const updateDialCodeOptions = (nextCodes: string[]) => {
+    updateCountryCodes(mergeCountryDialCodeOptions(countryCodes, nextCodes));
+  };
 
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() =>
     withEmptyCollectionRows(
-      normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+      normalizeContactForEdit(
+        contact,
+        initialDraft,
+        defaultCity,
+        defaultProvince,
+        defaultCountry,
+        optionDefaults,
+      ),
       socialPlatforms,
       relationshipOptions,
     ),
@@ -112,18 +192,39 @@ export function useContactFormDraft({
     if (!open) return;
     setContactDraft(
       withEmptyCollectionRows(
-        normalizeContactForEdit(contact, initialDraft, defaultCity, defaultProvince, defaultCountry),
+        normalizeContactForEdit(
+          contact,
+          initialDraft,
+          defaultCity,
+          defaultProvince,
+          defaultCountry,
+          optionDefaults,
+        ),
         socialPlatforms,
         relationshipOptions,
       ),
     );
     setValidationErrors([]);
-  }, [open, contact, initialDraft, defaultCity, defaultProvince, defaultCountry, setValidationErrors]);
+  }, [
+    open,
+    contact,
+    initialDraft,
+    defaultCity,
+    defaultProvince,
+    defaultCountry,
+    optionDefaults,
+    socialPlatforms,
+    relationshipOptions,
+    setValidationErrors,
+  ]);
 
   return {
     formInstanceId,
     defaultCountryCode,
     countryCodeOptions,
+    countryOptions,
+    updateCountryOptions,
+    updateDialCodeOptions,
     saving,
     cropSrc,
     setCropSrc,
@@ -135,6 +236,12 @@ export function useContactFormDraft({
     socialPlatforms,
     relationshipOptions,
     genders,
+    updateGenders,
+    updatePhoneLabels,
+    updateEmailLabels,
+    updateAddressLabels,
+    updateSocialPlatforms,
+    updateRelationships,
     getLocalId,
     isFieldEnabled,
     getFieldError,

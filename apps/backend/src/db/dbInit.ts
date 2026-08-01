@@ -8,7 +8,6 @@ import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.
 import { initPlatformSettings } from '../services/platform/platformSettingsService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
 import {
-  activeDb,
   getPool,
   getRootDb,
   initializeDatabaseConnection,
@@ -104,17 +103,6 @@ export async function initDb(): Promise<void> {
     await ensurePlatformSuperUserFromEnv();
     await initPlatformSettings();
 
-    if (process.env.NODE_ENV === 'test') {
-      await getRootDb().insert(schema.workspaces).values({
-        id: 'ws-demo',
-        subdomain: 'demo',
-        madrasaName: 'Demo Madrasa',
-        tagline: 'Demo Madrasa Tagline',
-        country: 'US',
-        enabled: true,
-      }).onConflictDoNothing();
-    }
-
     const results = await getRootDb().select({ count: sql<number>`count(*)` }).from(schema.collections);
     const count = Number(results[0]?.count ?? 0);
     if (count === 0) {
@@ -153,17 +141,6 @@ async function runDataMigrations(): Promise<void> {
 export async function seedDatabase(): Promise<void> {
   try {
     await runInTransaction(async () => {
-      if (process.env.NODE_ENV === 'test') {
-        await activeDb().insert(schema.workspaces).values({
-          id: 'ws-demo',
-          subdomain: 'demo',
-          madrasaName: 'Demo Madrasa',
-          tagline: 'Demo Madrasa Tagline',
-          country: 'US',
-          enabled: true,
-        }).onConflictDoNothing();
-      }
-
       for (const [name, collectionItems] of Object.entries(await getMinimalCollectionsForSeed())) {
         await saveCollection(name, collectionItems as unknown[]);
       }

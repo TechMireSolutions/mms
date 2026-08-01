@@ -53,7 +53,8 @@ Before merging any new/changed field, complete all layers:
 | Storage | Write path |
 |---------|------------|
 | Settings singleton | `getBrandingSettings` / `await saveBrandingSettings`, etc. |
-| Collection entity | `saveCollection` with full row object |
+| Lookup option list | `saveCollection` / **`saveCollectionAsync`** (genders, labels, `countryCodes`, …) |
+| REST entity row (Contacts, Students, …) | Query mutations → `/api/{resource}` — **never** `saveCollection('contacts')` |
 | Registry definition | `saveObject('{module}_field_config', …)` |
 | Custom Tabs | Hydrated inside settings objects (e.g. `{module}_settings`), persisted via `saveObject` and backend-integrated extraction |
 

@@ -25,7 +25,7 @@ app.ts
   db/          → database.ts + dbSyncService for JSON documents
 ```
 
-**Never** query `pg` from route handlers. REST routes use **`dbSyncService`**, not direct `database.ts` imports.
+**Never** query `pg` from route handlers. Prefer repositories / `withTenantTransaction` for typed REST tables. Use **`dbSyncService`** only for legacy JSON document collections/objects (`/api/db/...`).
 
 ## Decision: document store vs REST
 
@@ -36,6 +36,8 @@ app.ts
 | **New domain module** | REST plugin + Zod + Query on FE |
 
 **Shipped REST:** students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, sessions, messaging (see `routes/tenant/`).
+
+Contacts (and other typed person entities) persist via **repositories + FORCE RLS tables** — not `persistCollection('contacts')`. After REST migration, remove the entity key from `ALLOWED_COLLECTIONS` and FE `BUSINESS_COLLECTIONS`.
 
 ## Soft delete on REST resources
 
@@ -123,9 +125,10 @@ Do not use `authenticateTenant` on apex-only public routes.
 
 `/api/contacts` full REST. On create/update:
 
-- E.164 normalize, title-case, persist via `dbSyncService`
+- E.164 normalize, title-case, persist via contacts **repository** (typed `contacts` table + FORCE RLS)
+- Runtime dial/label defaults from `loadContactRuntimeDefaults` (prefs `defaultCountry` + `countryCodes` / `phoneLabels`)
 - `handleContactSaveOrUpdate` enqueues WhatsApp check
-- `GET /:id/whatsapp-status` for UI indicator
+- Bulk delete bodies use shared `bulkIdsBodySchema` (`.max(500)`)
 
 `whatsAppService` → `whatsAppQueue` → `PuppeteerWhatsAppProvider` (dev only; no CI).
 

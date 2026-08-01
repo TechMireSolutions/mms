@@ -124,7 +124,7 @@ Adhere to these thresholds — they map to the Tailwind v4 tokens already define
   - **Tenant AppLayout** (`Sidebar` / `MobileSidebar` / TopBar): collapse below **`lg`** (< 1024 px) — sidebar needs the wider breakpoint; authenticated e2e asserts `Open navigation menu` when `viewport.width < 1024`.
   - **Platform console** (`PlatformPageShell`): horizontal nav at `md+`; bottom nav below **`md`** (< 768 px).
   - **Module / Setup sub-tabs** (`SubTabBar`, `ResponsiveAccordionTabs`): stacked / accordion below **`lg`**; pill or underline tabs at `lg+`.
-  - **FormModal tabs** (intentional exception): horizontal tab chrome may switch at **`md`** — do not silently align to `lg` without updating FormModal + this rule.
+  - **FormModal tabs**: layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — half-desktop and full-desktop keep the same chrome while the panel stays `max-w-2xl`.
 - **Touch targets**: Every interactive element (button, link, icon trigger) must have a minimum tap area of `44 × 44 px` — use `min-h-11 min-w-11` (or padding equivalents that preserve that floor). Prefer shared `Button` / `ActionButton` over raw `<button>` / `<a>`.
 - **Wide tables**: Use shared `Table` (already wraps `overflow-x-auto`) or wrap bare `<table>` in `overflow-x-auto max-w-full`. Prefer card-row layouts at `< md` for dense Work directories.
 
@@ -152,7 +152,7 @@ Before declaring any layout implementation complete, verify:
 - Toast chrome: toast provider/viewport use `pointer-events-none`; individual toasts keep `pointer-events-auto` so empty toast layers never block shell controls.
 - Tables: shared `Table` wraps with `overflow-x-auto`; bare `<table>` inside cards must sit in `overflow-x-auto max-w-full`.
 - Popovers: shared `PopoverContent` defaults to `w-[min(18rem,calc(100vw-1.5rem))]` so menus never exceed the viewport.
-- Breakpoints: tenant shell + module tabs use mobile-default + `lg:`; platform chrome uses `md:`; FormModal tab chrome may use `md:` — avoid `max-lg:` / `max-md:` for layout width.
+- Breakpoints: tenant shell + module tabs use mobile-default + `lg:`; platform chrome uses `md:`; FormModal in-dialog layout uses container `@md:` / `@sm:` — avoid `max-lg:` / `max-md:` for layout width.
 - Auth e2e selectors: platform setup/sign-in and force-password-change keep **stable** field ids (`#platform-setup-email`, `#platform-email`, `#current-password`, …) — do not replace with `useId()` on those screens.
 - Regression tests: `e2e/tests/responsive-shell.spec.ts`, `e2e/tests/responsive-authenticated.spec.ts`.
 

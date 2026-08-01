@@ -26,7 +26,9 @@ Source: `mms-module-architecture.md` §2–§3 and §6–§7. Rules: `mms-module
 7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
 8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash.
 9. §7: `ErrorState`+retry on list `isError`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close.
-10. Column prefs per user/module; mobile cards for dense directories; failures via `notify`.
+10. Column prefs per user/module (visibility **and width** on server PUT; local merge is cache); mobile cards for dense directories; failures via `notify`.
+11. Contacts report KPIs: `activeCount` = soft-delete-filtered roster length (form never writes `isActive`).
+12. Contacts mutations invalidate messaging resolve Query keys when person data changes.
 
 ## Checklist
 

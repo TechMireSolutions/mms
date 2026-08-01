@@ -20,19 +20,34 @@ import {
   normalizeEmergencyItem,
   normalizePhoneItem,
   normalizeSocialItem,
+  type ContactItemNormalizeDefaults,
 } from "./contactItemNormalize.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 
+export type { ContactItemNormalizeDefaults } from "./contactItemNormalize.js";
+
 /**
  * Normalizes a full Contact object for form edit and display operations.
+ * Pass `optionDefaults` from tenant ContactConfig so empty rows use dynamic lists.
  */
 export function normalizeContactForEdit(
   raw: Partial<Contact> | undefined,
   initialDraft: Partial<Contact> | undefined,
   defaultCity = "",
   defaultProvince = "",
-  defaultCountry = ""
+  defaultCountry = "",
+  optionDefaults: ContactItemNormalizeDefaults = {},
 ): Partial<Contact> {
+  const defaults: ContactItemNormalizeDefaults = {
+    phoneLabel: optionDefaults.phoneLabel || DEFAULT_PHONE_LABELS[0] || "Mobile",
+    emailLabel: optionDefaults.emailLabel || DEFAULT_EMAIL_LABELS[0] || "Personal",
+    addressLabel: optionDefaults.addressLabel || DEFAULT_ADDRESS_LABELS[0] || "Home",
+    socialPlatform: optionDefaults.socialPlatform || SOCIAL_PLATFORMS[0] || "Facebook",
+    relationship: optionDefaults.relationship || RELATIONSHIPS[0] || "Father",
+    defaultPhoneCountryCode: optionDefaults.defaultPhoneCountryCode || "",
+  };
+  const dialDefault = defaults.defaultPhoneCountryCode || "";
+
   const merged: Partial<Contact> = {
     firstName: "",
     lastName: "",
@@ -63,7 +78,7 @@ export function normalizeContactForEdit(
   }
 
   let phones: ContactPhone[] = Array.isArray(merged.phones)
-    ? merged.phones.map((item, idx) => normalizePhoneItem(item, idx))
+    ? merged.phones.map((item, idx) => normalizePhoneItem(item, idx, dialDefault, defaults))
     : [];
 
   const scalarPhone = typeof (merged as Record<string, unknown>).phone === "string"
@@ -73,40 +88,42 @@ export function normalizeContactForEdit(
     const e164Scalar = normalizeToE164("", scalarPhone);
     const exists = phones.some((p) => {
       const numTrim = (p.number || "").trim();
-      const e164Item = normalizeToE164(p.countryCode || "+92", numTrim);
+      const e164Item = normalizeToE164(p.countryCode || dialDefault, numTrim);
       return numTrim === scalarPhone || (e164Scalar && e164Item === e164Scalar);
     });
     if (!exists) {
-      phones.unshift(normalizePhoneItem(scalarPhone, 0));
+      phones.unshift(normalizePhoneItem(scalarPhone, 0, dialDefault, defaults));
     }
   }
 
   if (phones.length === 0) {
     phones = [{
-      label: DEFAULT_PHONE_LABELS[0] || "Mobile",
+      label: defaults.phoneLabel || "Mobile",
       number: "",
-      countryCode: "+92",
+      countryCode: dialDefault,
       isPrimary: true,
     }];
   }
 
   let emails: ContactEmail[] = Array.isArray(merged.emails)
-    ? merged.emails.map((item, idx) => normalizeEmailItem(item, idx))
+    ? merged.emails.map((item, idx) => normalizeEmailItem(item, idx, defaults))
     : [];
 
   const scalarEmail = typeof (merged as Record<string, unknown>).email === "string"
     ? String((merged as Record<string, unknown>).email).trim()
     : "";
   if (scalarEmail && !emails.some((e) => (e.address || "").trim().toLowerCase() === scalarEmail.toLowerCase())) {
-    emails.unshift(normalizeEmailItem(scalarEmail, 0));
+    emails.unshift(normalizeEmailItem(scalarEmail, 0, defaults));
   }
 
   if (emails.length === 0) {
-    emails = [{ label: DEFAULT_EMAIL_LABELS[0] || "Personal", address: "", isPrimary: true }];
+    emails = [{ label: defaults.emailLabel || "Personal", address: "", isPrimary: true }];
   }
 
   let addresses: ContactAddress[] = Array.isArray(merged.addresses)
-    ? merged.addresses.map((item, idx) => normalizeAddressItem(item, defaultCity, defaultProvince, defaultCountry, idx))
+    ? merged.addresses.map((item, idx) =>
+        normalizeAddressItem(item, defaultCity, defaultProvince, defaultCountry, idx, defaults),
+      )
     : [];
 
   const scalarAddress = typeof (merged as Record<string, unknown>).address === "string"
@@ -124,7 +141,7 @@ export function normalizeContactForEdit(
 
   if (scalarAddress && !addresses.some((a) => (a.line1 || "").trim() === scalarAddress)) {
     addresses.unshift({
-      label: DEFAULT_ADDRESS_LABELS[0] || "Home",
+      label: defaults.addressLabel || "Home",
       line1: scalarAddress,
       city: scalarCity,
       state: scalarState,
@@ -135,7 +152,7 @@ export function normalizeContactForEdit(
 
   if (addresses.length === 0) {
     addresses = [{
-      label: DEFAULT_ADDRESS_LABELS[0] || "Home",
+      label: defaults.addressLabel || "Home",
       line1: "",
       city: defaultCity,
       state: defaultProvince,
@@ -145,19 +162,19 @@ export function normalizeContactForEdit(
   }
 
   let socials: ContactSocial[] = Array.isArray(merged.socials)
-    ? merged.socials.map(normalizeSocialItem)
+    ? merged.socials.map((item) => normalizeSocialItem(item, defaults))
     : [];
 
   if (socials.length === 0) {
-    socials = [{ platform: SOCIAL_PLATFORMS[0] || "Facebook", url: "" }];
+    socials = [{ platform: defaults.socialPlatform || "Facebook", url: "" }];
   }
 
   let emergencyContacts: EmergencyContact[] = Array.isArray(merged.emergencyContacts)
-    ? merged.emergencyContacts.map(normalizeEmergencyItem)
+    ? merged.emergencyContacts.map((item) => normalizeEmergencyItem(item, defaults))
     : [];
 
   if (emergencyContacts.length === 0) {
-    emergencyContacts = [{ relationship: RELATIONSHIPS[0] || "Father", contactId: "" }];
+    emergencyContacts = [{ relationship: defaults.relationship || "Father", contactId: "" }];
   }
 
   return {

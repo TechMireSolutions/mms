@@ -22,7 +22,7 @@ export function ContactBasicAvatarSection({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 mb-2 border-b border-border/60">
+    <div className="mb-2 flex flex-col items-center gap-6 border-b border-border/60 pb-6 @sm:flex-row">
       {cropSrc && (
         <AvatarCropper
           src={cropSrc}
@@ -43,7 +43,7 @@ export function ContactBasicAvatarSection({
             className="w-full h-full text-2xl"
           />
 
-          <label className="absolute inset-0 bg-black/45 flex flex-col items-center justify-center cursor-pointer opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity duration-300 text-white gap-1 rounded-full">
+          <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-full bg-black/45 text-white opacity-100 transition-opacity duration-300 @md:opacity-0 @md:group-hover:opacity-100 @md:focus-within:opacity-100">
             <Camera className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
               {t("account.changePhoto")}
@@ -61,11 +61,11 @@ export function ContactBasicAvatarSection({
         </div>
       </div>
 
-      <div className="text-center sm:text-start flex-1 min-w-0">
-        <h3 className="text-base font-bold text-foreground truncate">
+      <div className="min-w-0 flex-1 text-center @sm:text-start">
+        <h3 className="truncate text-base font-bold text-foreground">
           {contactDraft.name || t("contacts.form.draftHeading")}
         </h3>
-        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1">
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2 @sm:justify-start">
           {contactDraft.gender && contactDraft.gender !== "unspecified" && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-muted text-muted-foreground border border-border/80">
               {formatContactGenderLabel(contactDraft.gender, t)}

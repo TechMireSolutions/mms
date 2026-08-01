@@ -21,6 +21,7 @@ Pattern for REST modules:
 - Export tuple `QUERY_KEY` (prefer shared key factories)
 - `apiJson` in `queryFn` with Query `signal`
 - Mutations invalidate list + count narrowly — no blanket `invalidateQueries()`
+- Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY` (messaging resolve cache)
 - Await `mutateAsync`; no dual-write via `saveCollection` in `onSuccess` (cache mirror only in legacy `useCollectionSync` → `saveCollectionCacheOnly`)
 
 ### Cross-module collection facades
@@ -33,13 +34,13 @@ Same-feature files may keep direct feature-hook imports. Shared person UI: `Cont
 
 ## `useLiveCollection(key, seed?)`
 
-Legacy localStorage reactive reads only. **Hard ban** on new use for REST-migrated entities.
+Legacy localStorage reactive reads only. **Hard ban** on new use for REST-migrated entities. Contacts entity rows are REST-only (not in FE `BUSINESS_COLLECTIONS`).
 
 ```ts
 // ✅ Legacy keys not yet on Query as primary
 const legacyRows = useLiveCollection('some_legacy_key');
 
-// ❌ Stale after external saves / REST modules
+// ❌ Contacts is REST-only — never seed entity rows from getCollection('contacts')
 const [items] = useState(() => getCollection('contacts', CONTACTS));
 ```
 

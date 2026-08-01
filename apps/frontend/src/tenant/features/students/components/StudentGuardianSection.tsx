@@ -3,11 +3,17 @@ import { Users } from "lucide-react";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
-import { GENDERS, type Contact, type Student } from "@mms/shared";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import type { Contact, Student } from "@mms/shared";
 import {
   FieldError,
   type StudentFieldErrorGetter,
 } from "@/tenant/features/students/components/StudentFormSectionShared";
+
+function resolveGenderOption(genders: string[], preferred: string, fallbackIndex: number): string {
+  const match = genders.find((option) => option.toLowerCase() === preferred.toLowerCase());
+  return match ?? genders[fallbackIndex] ?? genders[0] ?? preferred;
+}
 
 interface StudentGuardianSectionProps {
   enabled: boolean;
@@ -35,6 +41,9 @@ export function StudentGuardianSection({
   onParentSelect,
 }: StudentGuardianSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const { genders } = useContactConfig();
+  const fatherGender = resolveGenderOption(genders, "male", 0);
+  const motherGender = resolveGenderOption(genders, "female", 1);
   if (!enabled) return null;
 
   return (
@@ -52,8 +61,8 @@ export function StudentGuardianSection({
                 label={t("students.form.fatherLink")}
                 value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
                 onChange={(id, contactObj) => onParentSelect("father", id, contactObj)}
-                filterGender={GENDERS[0]}
-                createDefaults={{ gender: GENDERS[0] }}
+                filterGender={fatherGender}
+                createDefaults={{ gender: fatherGender.toLowerCase(), lockGender: true }}
                 excludeIds={fatherExcludeIds}
                 searchPlaceholder={t("contacts.picker.searchPlaceholder")}
                 emptyTitle={t("contacts.picker.emptyTitle")}
@@ -69,8 +78,8 @@ export function StudentGuardianSection({
                 label={t("students.form.motherLink")}
                 value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
                 onChange={(id, contactObj) => onParentSelect("mother", id, contactObj)}
-                filterGender={GENDERS[1]}
-                createDefaults={{ gender: GENDERS[1] }}
+                filterGender={motherGender}
+                createDefaults={{ gender: motherGender.toLowerCase(), lockGender: true }}
                 excludeIds={motherExcludeIds}
                 searchPlaceholder={t("contacts.picker.searchPlaceholder")}
                 emptyTitle={t("contacts.picker.emptyTitle")}

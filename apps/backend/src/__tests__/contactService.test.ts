@@ -27,6 +27,7 @@ vi.mock('../services/contactDuplicateScanService.js', () => ({
 
 vi.mock('../services/dbSyncService.js', () => ({
   fetchCollection: vi.fn().mockResolvedValue([]),
+  fetchObject: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('../services/contactConfigService.js', () => ({

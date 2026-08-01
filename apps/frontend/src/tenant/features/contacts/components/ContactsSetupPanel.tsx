@@ -28,6 +28,8 @@ export default function ContactsSetupPanel({
     isSaving,
     isPrefsDirty,
     countryOptions,
+    countryCodes,
+    updateCountryCodes,
     updatePreference,
     wrappedFieldsEditor,
     handleSave,
@@ -56,7 +58,9 @@ export default function ContactsSetupPanel({
           prefs={prefs}
           isPrefsDirty={isPrefsDirty}
           countryOptions={countryOptions}
+          countryCodes={countryCodes}
           onUpdatePreference={updatePreference}
+          onUpdateCountryCodes={updateCountryCodes}
         />
       )}
 

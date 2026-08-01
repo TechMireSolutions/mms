@@ -15,6 +15,7 @@ export interface ContactBasicTabProps {
   cropSrc: string | null;
   setCropSrc: (src: string | null) => void;
   genders: string[];
+  onUpdateGenders: (genders: string[]) => void;
   lockGender: boolean;
   handleAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
@@ -28,6 +29,7 @@ export function ContactBasicTab({
   cropSrc,
   setCropSrc,
   genders,
+  onUpdateGenders,
   lockGender,
   handleAvatarChange,
 }: ContactBasicTabProps): JSX.Element {
@@ -57,6 +59,7 @@ export function ContactBasicTab({
           getFieldError={getFieldError}
           updateDraft={updateDraft}
           genders={genders}
+          onUpdateGenders={onUpdateGenders}
           lockGender={lockGender}
         />
       </SectionCard>

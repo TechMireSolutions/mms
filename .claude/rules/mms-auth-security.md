@@ -68,7 +68,7 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 - **Headers**: Prefer `@fastify/helmet` (or equivalent) — at least `X-Content-Type-Options`, frame denial, HSTS in prod; CSP suitable for the SPA.
 - **IDOR**: Authorize via permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from session (Messaging log POST pattern).
 - **Secrets storage**: Long-lived OAuth/API secrets in FORCE-RLS tenant tables — never in unscoped `objects` KV. Strip legacy secret object keys from backups (`SERVER_ONLY_OBJECT_KEYS`).
-- **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps after migrating to typed tables.
+- **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables (e.g. Contacts entity rows).
 - **XSS / exports**: No unsanitized HTML; encode user content in PDF/CSV/Excel cells.
 - **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens.
 - **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes. PG row triggers read `app.current_user_id` + `app.current_tenant` (SET LOCAL in `withTenantTransaction` / `runInTransaction`).

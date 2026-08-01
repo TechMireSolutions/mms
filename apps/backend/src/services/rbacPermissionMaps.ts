@@ -176,7 +176,7 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
 };
 
 export const ALLOWED_COLLECTIONS = new Set([
-  CONTACTS_MODULE_MANIFEST.collectionKey,
+  // contacts entity rows are REST-only (typed `contacts` table) — not document-store
   STUDENTS_MODULE_MANIFEST.collectionKey,
   TEACHERS_MODULE_MANIFEST.collectionKey,
   USERS_MODULE_MANIFEST.collectionKey,

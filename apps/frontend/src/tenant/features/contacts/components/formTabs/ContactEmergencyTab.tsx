@@ -6,16 +6,18 @@ import ContactPicker from "@/components/contactLink/ContactPicker";
 import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
-import { EmergencyContact, RELATIONSHIPS } from "@mms/shared";
+import { EmergencyContact } from "@mms/shared";
 
 export interface ContactEmergencyTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
+  onUpdateRelationships: (relationships: string[]) => void;
 }
 
 export function ContactEmergencyTab({
   contactDraft,
   getLocalId,
   relationshipOptions,
+  onUpdateRelationships,
   getListItemError,
   addSubListItem,
   ensureSubListItem,
@@ -25,7 +27,7 @@ export function ContactEmergencyTab({
   const { t } = useTranslation();
   const emergencyContacts = contactDraft.emergencyContacts || [];
   const emptyEmergency = () => ({
-    relationship: relationshipOptions[0] || RELATIONSHIPS[0] || "",
+    relationship: relationshipOptions[0] || "",
     contactId: "",
   });
   const addEmergency = () => {
@@ -90,13 +92,10 @@ export function ContactEmergencyTab({
 
                 <Field label={t("contacts.form.relationshipType")} id={`emergency-relationship-${idx}`}>
                   <EditableSelect
-                    options={
-                      relationshipOptions.length > 0
-                        ? relationshipOptions
-                        : (RELATIONSHIPS as unknown as string[])
-                    }
-                    value={em.relationship || relationshipOptions[0] || RELATIONSHIPS[0] || ""}
+                    options={relationshipOptions}
+                    value={em.relationship || relationshipOptions[0] || ""}
                     onChange={(val) => updateEmergency(idx, { relationship: val })}
+                    onUpdateOptions={onUpdateRelationships}
                     className="w-full"
                     id={`emergency-relationship-${idx}`}
                     name={`emergency-relationship-${idx}`}

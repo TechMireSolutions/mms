@@ -46,6 +46,7 @@ const booleanQueryFlag = z
 export const contactsListQuerySchema = baseListQuerySchema.extend({
   gender: z.string().optional(),
   hasPhone: booleanQueryFlag,
+  hasEmail: booleanQueryFlag,
   hasReachable: booleanQueryFlag,
   quickFilter: contactsQuickFilterSchema.optional(),
   excludeIds: z
@@ -76,8 +77,8 @@ export const contactsListQuerySchema = baseListQuerySchema.extend({
 
 /**
  * Programmatic contacts query used after wire values have been transformed.
- * Its shared fields align with `contactsListQuerySchema`; the backend list router
- * normalizes `includeDeleted`, while programmatic callers may also use `hasEmail`.
+ * Its shared fields align with `contactsListQuerySchema` (including `hasEmail`).
+ * The backend list router normalizes `includeDeleted`.
  */
 export interface ContactsListQuery {
   page?: number;

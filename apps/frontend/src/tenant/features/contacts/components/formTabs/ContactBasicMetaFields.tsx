@@ -94,7 +94,7 @@ export function ContactBasicMetaFields({
       )}
 
       {isFieldEnabled("basic", "notes") && (
-        <div className="pt-2 md:col-span-2">
+        <div className="pt-2 @md:col-span-2">
           <Field
             label={t("contacts.form.notes")}
             error={getFieldError("notes")}

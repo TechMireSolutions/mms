@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
-import { Contact, GENDERS } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { ContactBasicMetaFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicMetaFields";
 
 export function ContactBasicIdentityFields({
@@ -14,6 +14,7 @@ export function ContactBasicIdentityFields({
   getFieldError,
   updateDraft,
   genders,
+  onUpdateGenders,
   lockGender,
 }: {
   contactDraft: Partial<Contact>;
@@ -22,13 +23,14 @@ export function ContactBasicIdentityFields({
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
   genders: string[];
+  onUpdateGenders: (genders: string[]) => void;
   lockGender: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
         {isFieldEnabled("basic", "firstName") && (
           <Field
             label={t("contacts.fields.firstName")}
@@ -85,9 +87,17 @@ export function ContactBasicIdentityFields({
             ) : (
               <EditableSelect
                 id={`cf-${formInstanceId}-gender`}
-                options={genders.length > 0 ? genders : (GENDERS as unknown as string[])}
-                value={contactDraft.gender || ""}
+                options={genders}
+                value={
+                  genders.find(
+                    (option) => option.toLowerCase() === (contactDraft.gender || "").toLowerCase(),
+                  ) ||
+                  contactDraft.gender ||
+                  genders[0] ||
+                  ""
+                }
                 onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
+                onUpdateOptions={onUpdateGenders}
                 placeholder={t("contacts.form.selectOption")}
                 className="w-full"
               />

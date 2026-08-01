@@ -119,8 +119,8 @@ Reference: `ContactsCommandMetrics.tsx`.
 |----------|---------|
 | Module has `/api/{resource}` | Query hooks in `hooks/use{Resource}.ts` |
 | Generic `/api/db/collections` | `useLiveCollection` + `saveCollection` |
-| Migrating to REST | Query hooks first; hybrid localStorage sync in `queryFn` if KPI widgets need it |
-| Dashboard widgets on legacy data | Query cache first (`widgetDataUtils`); `saveCollection` in `queryFn` fallback |
+| Migrating to REST | Query hooks first; **ban** hybrid localStorage dual-write for person entities (Contacts already Query-only) |
+| Dashboard widgets on legacy data | Query cache first (`widgetDataUtils`); `saveCollection` in `queryFn` fallback only for non-REST keys |
 
 ## Work tier (§3)
 
@@ -130,7 +130,7 @@ Reference: `ContactsCommandMetrics.tsx`.
 - Bulk bar — partial failure reporting for large ops
 - Soft-delete trash toggle — skill `mms-module-work`
 - Lazy-load heavy overlays (`DuplicateDetection`, messaging panels)
-- Per-user column prefs on server when REST module exists
+- Per-user column prefs on server when REST module exists (include clamped `width` on PUT; local merge is cache only)
 
 ## Reports tier (§4)
 

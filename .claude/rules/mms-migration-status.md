@@ -47,5 +47,6 @@ Keep these regressions out of new work (details historically resolved — do not
 - **Client soft-delete fields** on create/update bodies — strip via write schema + `stripContactClientSoftDeleteFields`; only dedicated soft-delete helpers set them
 - **Server-persisted imports** must not be re-upserted from the FE after bulkSave (invalidate Query keys only)
 - Contacts saved reports live in typed `saved_reports` (`category: 'contacts'`); do not resurrect `contacts_saved_reports` object writes
+- Contacts entity rows are REST-only (typed `contacts` table); do not re-add `contacts` to `ALLOWED_COLLECTIONS` or FE `BUSINESS_COLLECTIONS`
 - Typed `deleted_at` is the SQL soft-delete source of truth for list filters; do not rely on JSONB `deletedAt` alone
 - Unknown tenant host → apex hard-redirect `/tenant-not-found?subdomain=…` — never keep the bad subdomain URL or mount `/settings` there — `mms-settings-i18n.md` / `mms-ui-ux-design.md` §8

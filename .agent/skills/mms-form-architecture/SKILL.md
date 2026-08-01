@@ -29,8 +29,9 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 - [ ] mapZodFormErrors for field errors
 - [ ] name + id on every control (useId fallback)
 - [ ] Logical CSS for RTL
-- [ ] Mobile-usable: `FORM_INPUT` / controls `min-h-11`; FormModal tab chrome may switch at `md` (intentional vs module `lg` — `mms-ui-ux-design.md` §7)
+- [ ] Mobile-usable: `FORM_INPUT` / controls `min-h-11`; FormModal tab/field layout uses container `@md:` / `@sm:` (dialog width), not viewport `md:` — `mms-ui-ux-design.md` §7
 - [ ] Inline validation; focus first invalid tab
+- [ ] Contact (and similar) option dropdowns: config/registry lists + `EditableSelect` `onUpdateOptions` — ban runtime `DEFAULT_*` / `GENDERS` fallbacks in form tabs
 - [ ] No dynamic form compiler / blueprint engine
 ```
 

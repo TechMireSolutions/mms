@@ -21,7 +21,8 @@ export function useContactsSetupPanelState({
   onConfigChangeAsync?: (config: FieldConfig) => Promise<void>;
   mode?: "fields" | "preferences";
 }) {
-  const { updatePrefsAsync, prefs: contextPrefs, countryCodes } = useContactConfig();
+  const { updatePrefsAsync, prefs: contextPrefs, countryCodes, updateCountryCodes } =
+    useContactConfig();
 
   const editorConfig = useMemo(
     () => ({
@@ -137,6 +138,8 @@ export function useContactsSetupPanelState({
     isSaving,
     isPrefsDirty,
     countryOptions,
+    countryCodes,
+    updateCountryCodes,
     updatePreference,
     wrappedFieldsEditor,
     handleSave,

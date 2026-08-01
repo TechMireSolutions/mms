@@ -128,28 +128,6 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     fieldsEditor.requiredTabs,
   ]);
 
-  const saveSettings = useCallback((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
-    const enabledSet = new Set(Array.from(fieldsEditor.enabledTabs).map((t) => t.toLowerCase()));
-    const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
-      ...tab,
-      enabled: tab.key.toLowerCase() === "basic" ? true : enabledSet.has(tab.key.toLowerCase()),
-    }));
-
-    const nextSettings: T = {
-      ...settings,
-      ...settingsDraft,
-      ...(preferencesDraft ?? {}),
-      enabledTabs: Array.from(enabledSet),
-      requiredTabs: Array.from(fieldsEditor.requiredTabs).map((t) => t.toLowerCase()),
-      formTabs: updatedFormTabs,
-      fields: fieldsEditor.buildFieldsMap(),
-      ...(additionalFields ?? {}),
-    };
-
-    updateSettings(nextSettings);
-    setSaved(true);
-  }, [settings, settingsDraft, updateSettings, fieldsEditor, setSaved]);
-
   const saveSettingsAsync = useCallback(async (
     preferencesDraft?: Partial<T>,
     additionalFields?: Partial<T>,
@@ -179,6 +157,10 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     }
     if (options.markSaved !== false) setSaved(true);
   }, [settings, settingsDraft, updateSettings, updateSettingsAsync, fieldsEditor, setSaved]);
+
+  const saveSettings = useCallback((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
+    void saveSettingsAsync(preferencesDraft, additionalFields);
+  }, [saveSettingsAsync]);
 
   return {
     settings,

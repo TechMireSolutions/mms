@@ -37,6 +37,7 @@ export function ContactFormTabContent({
           cropSrc={draft.cropSrc}
           setCropSrc={draft.setCropSrc}
           genders={draft.genders}
+          onUpdateGenders={draft.updateGenders}
           lockGender={lockGender}
           handleAvatarChange={draft.handleAvatarChange}
         />
@@ -47,8 +48,10 @@ export function ContactFormTabContent({
           contactDraft={draft.contactDraft}
           getLocalId={draft.getLocalId}
           phoneLabels={draft.phoneLabels}
+          onUpdatePhoneLabels={draft.updatePhoneLabels}
           defaultCountryCode={draft.defaultCountryCode}
           countryCodeOptions={draft.countryCodeOptions}
+          onUpdateDialCodeOptions={draft.updateDialCodeOptions}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}
@@ -63,6 +66,7 @@ export function ContactFormTabContent({
           contactDraft={draft.contactDraft}
           getLocalId={draft.getLocalId}
           emailLabels={draft.emailLabels}
+          onUpdateEmailLabels={draft.updateEmailLabels}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}
@@ -76,6 +80,9 @@ export function ContactFormTabContent({
           contactDraft={draft.contactDraft}
           getLocalId={draft.getLocalId}
           addressLabels={draft.addressLabels}
+          onUpdateAddressLabels={draft.updateAddressLabels}
+          countryOptions={draft.countryOptions}
+          onUpdateCountryOptions={draft.updateCountryOptions}
           defaultCity={defaultCity}
           defaultProvince={defaultProvince}
           defaultCountry={defaultCountry}
@@ -92,6 +99,7 @@ export function ContactFormTabContent({
           contactDraft={draft.contactDraft}
           getLocalId={draft.getLocalId}
           socialPlatforms={draft.socialPlatforms}
+          onUpdateSocialPlatforms={draft.updateSocialPlatforms}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}
@@ -105,6 +113,7 @@ export function ContactFormTabContent({
           contactDraft={draft.contactDraft}
           getLocalId={draft.getLocalId}
           relationshipOptions={draft.relationshipOptions}
+          onUpdateRelationships={draft.updateRelationships}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}

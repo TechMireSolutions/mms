@@ -6,6 +6,7 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { ContactsCountryCodesSection } from "@/tenant/features/contacts/components/ContactsCountryCodesSection";
 
 const DUPLICATE_DETECTION_FIELD_OPTIONS = [
   { id: "name", labelKey: "contacts.setup.duplicateFieldName" as const },
@@ -17,17 +18,21 @@ export interface ContactsPreferencesSectionProps {
   prefs: ContactPreferences;
   isPrefsDirty: boolean;
   countryOptions: Array<{ value: string; label: string }>;
+  countryCodes: Array<{ country: string; code: string }>;
   onUpdatePreference: <K extends keyof ContactPreferences>(
     key: K,
     value: ContactPreferences[K],
   ) => void;
+  onUpdateCountryCodes: (countryCodes: Array<{ country: string; code: string }>) => void;
 }
 
 export function ContactsPreferencesSection({
   prefs,
   isPrefsDirty,
   countryOptions,
+  countryCodes,
   onUpdatePreference,
+  onUpdateCountryCodes,
 }: ContactsPreferencesSectionProps): JSX.Element {
   const { t } = useTranslation();
   const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email"];
@@ -110,6 +115,11 @@ export function ContactsPreferencesSection({
           </div>
         </div>
       </section>
+
+      <ContactsCountryCodesSection
+        countryCodes={countryCodes}
+        onUpdateCountryCodes={onUpdateCountryCodes}
+      />
 
       <section className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">

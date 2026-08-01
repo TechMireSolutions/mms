@@ -30,7 +30,7 @@ Register sub-tab ids in `{Module}ModuleManifest.setupSubTabs`.
 
 Drive Setup SubTabBar from the manifest (Hasanat / Examinations / Users pattern) — do not hardcode tab ids in the page.
 
-Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves.
+Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves. Lookup option lists (`genders`, labels, `countryCodes`) use **`saveCollectionAsync`** — await server before claiming saved.
 
 ## Contacts reference map
 
@@ -40,11 +40,12 @@ Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-o
 | Fields UI | `ContactsSettingsPanel.tsx` (mode `fields`) |
 | Field delete guard | `getContactFieldRemovalIssues()` in `@mms/shared` |
 | Preferences UI | `ContactsSettingsPanel.tsx` (mode `preferences`) |
+| Countries & dial codes | `ContactsCountryCodesSection.tsx` → `updateCountryCodes` / `countryCodes` collection |
 | Default Preferences | `preferencesStorage.ts`, `updatePreferences` |
 | Stage/Visual Colours | Lifecycle stage colours in prefs |
 | Workflow Prefs | Kanban stage changes → REST update |
 | Sync settings extra tab | `ContactSyncPanel.tsx` |
-| Config DB store | `contact_field_config`, `contact_preferences` objects |
+| Config DB store | `contact_field_config`, `contact_preferences` objects; lookup collections via ContactConfig |
 | Context Provider | `ContactConfigProvider` — **App.tsx only** |
 
 ## Workflow: add Setup Fields capability

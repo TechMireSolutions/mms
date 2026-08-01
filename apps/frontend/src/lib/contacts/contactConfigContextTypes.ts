@@ -35,13 +35,13 @@ export interface ContactConfigContextType {
   availableColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
   visibleColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
 
-  updateGenders: (genderOptions: string[]) => void;
-  updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
-  updateRelationships: (relationshipOptions: string[]) => void;
-  updatePhoneLabels: (phoneLabelOptions: string[]) => void;
-  updateEmailLabels: (emailLabelOptions: string[]) => void;
-  updateAddressLabels: (addressLabelOptions: string[]) => void;
-  updateCountryCodes: (countryCodeOptions: Array<{ country: string; code: string }>) => void;
+  updateGenders: (genderOptions: string[]) => void | Promise<void>;
+  updateSocialPlatforms: (socialPlatformOptions: string[]) => void | Promise<void>;
+  updateRelationships: (relationshipOptions: string[]) => void | Promise<void>;
+  updatePhoneLabels: (phoneLabelOptions: string[]) => void | Promise<void>;
+  updateEmailLabels: (emailLabelOptions: string[]) => void | Promise<void>;
+  updateAddressLabels: (addressLabelOptions: string[]) => void | Promise<void>;
+  updateCountryCodes: (countryCodeOptions: Array<{ country: string; code: string }>) => void | Promise<void>;
   updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
   updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
   getColumnWidth: (key: string) => number | undefined;

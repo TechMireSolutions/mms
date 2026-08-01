@@ -15,6 +15,16 @@ import {
 import { parsePhoneNumber } from "./phoneUtils.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 
+/** Optional tenant/config defaults for empty-row seeding (falls back to shared DEFAULT_*). */
+export interface ContactItemNormalizeDefaults {
+  phoneLabel?: string;
+  emailLabel?: string;
+  addressLabel?: string;
+  socialPlatform?: string;
+  relationship?: string;
+  defaultPhoneCountryCode?: string;
+}
+
 /**
  * Strips blank or empty items from contact phones, emails, addresses, socials, and emergency contacts.
  * @param draft - Partial contact record to clean.
@@ -47,18 +57,29 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
 /**
  * Normalizes a single Phone entry into a valid PhoneNumber object.
  */
-export function normalizePhoneItem(item: unknown, index = 0, defaultCode = "+92"): ContactPhone {
-  const defaultLabel = DEFAULT_PHONE_LABELS[0] || "Mobile";
-  if (!item) return { label: defaultLabel, number: "", countryCode: defaultCode, isPrimary: index === 0 };
+export function normalizePhoneItem(
+  item: unknown,
+  index = 0,
+  defaultCode = "",
+  defaults: ContactItemNormalizeDefaults = {},
+): ContactPhone {
+  const resolvedDefaultCode = defaults.defaultPhoneCountryCode || defaultCode || "";
+  const defaultLabel = defaults.phoneLabel || DEFAULT_PHONE_LABELS[0] || "Mobile";
+  if (!item) return { label: defaultLabel, number: "", countryCode: resolvedDefaultCode, isPrimary: index === 0 };
   if (typeof item === "string") {
-    const parsed = parsePhoneNumber(item.trim(), defaultCode);
-    return { label: defaultLabel, number: parsed.number || item.trim(), countryCode: parsed.countryCode || defaultCode, isPrimary: index === 0 };
+    const parsed = parsePhoneNumber(item.trim(), resolvedDefaultCode);
+    return {
+      label: defaultLabel,
+      number: parsed.number || item.trim(),
+      countryCode: parsed.countryCode || resolvedDefaultCode,
+      isPrimary: index === 0,
+    };
   }
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
     const rawNum = String(obj.number || obj.phone || obj.value || obj.num || "").trim();
     const label = String(obj.label || obj.type || defaultLabel).trim() || defaultLabel;
-    const countryCode = String(obj.countryCode || obj.code || defaultCode).trim() || defaultCode;
+    const countryCode = String(obj.countryCode || obj.code || resolvedDefaultCode).trim() || resolvedDefaultCode;
     const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
     const rawStatus = obj.whatsappStatus;
     const whatsappStatus: ContactPhone["whatsappStatus"] =
@@ -72,14 +93,18 @@ export function normalizePhoneItem(item: unknown, index = 0, defaultCode = "+92"
       whatsappStatus,
     };
   }
-  return { label: defaultLabel, number: "", countryCode: defaultCode, isPrimary: index === 0 };
+  return { label: defaultLabel, number: "", countryCode: resolvedDefaultCode, isPrimary: index === 0 };
 }
 
 /**
  * Normalizes a single Email entry into a valid EmailAddress object.
  */
-export function normalizeEmailItem(item: unknown, index = 0): ContactEmail {
-  const defaultLabel = DEFAULT_EMAIL_LABELS[0] || "Personal";
+export function normalizeEmailItem(
+  item: unknown,
+  index = 0,
+  defaults: ContactItemNormalizeDefaults = {},
+): ContactEmail {
+  const defaultLabel = defaults.emailLabel || DEFAULT_EMAIL_LABELS[0] || "Personal";
   if (!item) return { label: defaultLabel, address: "", isPrimary: index === 0 };
   if (typeof item === "string") {
     return { label: defaultLabel, address: item.trim(), isPrimary: index === 0 };
@@ -103,12 +128,29 @@ export function normalizeAddressItem(
   defaultCity = "",
   defaultProvince = "",
   defaultCountry = "",
-  index = 0
+  index = 0,
+  defaults: ContactItemNormalizeDefaults = {},
 ): ContactAddress {
-  const defaultLabel = DEFAULT_ADDRESS_LABELS[0] || "Home";
-  if (!item) return { label: defaultLabel, line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
+  const defaultLabel = defaults.addressLabel || DEFAULT_ADDRESS_LABELS[0] || "Home";
+  if (!item) {
+    return {
+      label: defaultLabel,
+      line1: "",
+      city: defaultCity,
+      state: defaultProvince,
+      country: defaultCountry,
+      isPrimary: index === 0,
+    };
+  }
   if (typeof item === "string") {
-    return { label: defaultLabel, line1: item.trim(), city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
+    return {
+      label: defaultLabel,
+      line1: item.trim(),
+      city: defaultCity,
+      state: defaultProvince,
+      country: defaultCountry,
+      isPrimary: index === 0,
+    };
   }
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
@@ -120,14 +162,24 @@ export function normalizeAddressItem(
     const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
     return { label, line1, city, state, country, isPrimary };
   }
-  return { label: defaultLabel, line1: "", city: defaultCity, state: defaultProvince, country: defaultCountry, isPrimary: index === 0 };
+  return {
+    label: defaultLabel,
+    line1: "",
+    city: defaultCity,
+    state: defaultProvince,
+    country: defaultCountry,
+    isPrimary: index === 0,
+  };
 }
 
 /**
  * Normalizes a single Social link entry into a valid SocialLink object.
  */
-export function normalizeSocialItem(item: unknown): ContactSocial {
-  const defaultPlatform = SOCIAL_PLATFORMS[0] || "Facebook";
+export function normalizeSocialItem(
+  item: unknown,
+  defaults: ContactItemNormalizeDefaults = {},
+): ContactSocial {
+  const defaultPlatform = defaults.socialPlatform || SOCIAL_PLATFORMS[0] || "Facebook";
   if (!item) return { platform: defaultPlatform, url: "" };
   if (typeof item === "string") {
     return { platform: defaultPlatform, url: item.trim() };
@@ -144,8 +196,11 @@ export function normalizeSocialItem(item: unknown): ContactSocial {
 /**
  * Normalizes a single Emergency Contact entry into a valid EmergencyContact object.
  */
-export function normalizeEmergencyItem(item: unknown): EmergencyContact {
-  const defaultRelationship = RELATIONSHIPS[0] || "Father";
+export function normalizeEmergencyItem(
+  item: unknown,
+  defaults: ContactItemNormalizeDefaults = {},
+): EmergencyContact {
+  const defaultRelationship = defaults.relationship || RELATIONSHIPS[0] || "Father";
   if (!item) return { relationship: defaultRelationship, contactId: "" };
   if (typeof item === "string" || typeof item === "number") {
     return { relationship: defaultRelationship, contactId: String(item) };

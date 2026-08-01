@@ -8,16 +8,18 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveSocialPlatformLabel } from "@/lib/contacts/contactI18n";
-import { SocialLink, DEFAULT_SOCIAL_PLATFORMS } from "@mms/shared";
+import { SocialLink } from "@mms/shared";
 
 export interface ContactSocialsTabProps extends ContactSubListTabBaseProps {
   socialPlatforms: string[];
+  onUpdateSocialPlatforms: (platforms: string[]) => void;
 }
 
 export function ContactSocialsTab({
   contactDraft,
   getLocalId,
   socialPlatforms,
+  onUpdateSocialPlatforms,
   getListItemError,
   addSubListItem,
   ensureSubListItem,
@@ -62,13 +64,10 @@ export function ContactSocialsTab({
               label={`${t("contacts.form.type")}:`}
               typeSelect={
                 <EditableSelect
-                  options={
-                    socialPlatforms.length > 0
-                      ? socialPlatforms
-                      : (DEFAULT_SOCIAL_PLATFORMS as unknown as string[])
-                  }
+                  options={socialPlatforms}
                   value={resolveSocialPlatformLabel(soc.platform, socialPlatforms, t)}
                   onChange={(val) => updateSocial(idx, { platform: val })}
+                  onUpdateOptions={onUpdateSocialPlatforms}
                   className={TYPE_SELECT_WIDTH}
                   id={`social-platform-${idx}`}
                   name={`social-platform-${idx}`}

@@ -8,16 +8,18 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveEmailLabel } from "@/lib/contacts/contactI18n";
-import { EmailAddress, DEFAULT_EMAIL_LABELS } from "@mms/shared";
+import { EmailAddress } from "@mms/shared";
 
 export interface ContactEmailsTabProps extends ContactSubListTabBaseProps {
   emailLabels: string[];
+  onUpdateEmailLabels: (labels: string[]) => void;
 }
 
 export function ContactEmailsTab({
   contactDraft,
   getLocalId,
   emailLabels,
+  onUpdateEmailLabels,
   getListItemError,
   addSubListItem,
   ensureSubListItem,
@@ -62,13 +64,10 @@ export function ContactEmailsTab({
               label={`${t("contacts.form.type")}:`}
               typeSelect={
                 <EditableSelect
-                  options={
-                    emailLabels.length > 0
-                      ? emailLabels
-                      : (DEFAULT_EMAIL_LABELS as unknown as string[])
-                  }
+                  options={emailLabels}
                   value={resolveEmailLabel(email.label, emailLabels, t)}
                   onChange={(val) => updateEmail(idx, { label: val })}
+                  onUpdateOptions={onUpdateEmailLabels}
                   className={TYPE_SELECT_WIDTH}
                   id={`email-label-${idx}`}
                   name={`email-label-${idx}`}

@@ -9,9 +9,11 @@ Simple static forms with design-system primitives — not dynamic layout engines
 ## 1. Structure & primitives
 
 - Use `FormModal` for create/edit/builders; raw `Modal` only for confirm/preview.
-- Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`) + **`formStyles.ts` SSOT** — no ad-hoc input chrome.
+- Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `EditableSelect`) + **`formStyles.ts` SSOT** — no ad-hoc input chrome.
+- **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — see `mms-ui-ux-design.md` §7. Do not reintroduce viewport `md:` chrome flips inside `FormModal`.
 - **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit.
 - Ban dynamic form compilers / visual schema generators on the FE.
+- Option lists (gender, labels, platforms, relationships, countries/dials): tenant ContactConfig / module registries — not hardcoded `@mms/shared` `DEFAULT_*` as live form options.
 - Stacked pickers need descending `z-index` so overlays are not clipped.
 - Dates: `<DatePicker>` only — never raw `<input type="date">`.
 

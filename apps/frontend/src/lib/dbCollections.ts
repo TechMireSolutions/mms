@@ -13,7 +13,6 @@ import {
 
 const BUSINESS_COLLECTIONS = new Set([
   "messages",
-  "contacts",
   "students",
   "teachers",
   "enrollments",
@@ -180,6 +179,26 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
     void syncToServer(`/api/db/collections/${key}`, dataToSave);
   } catch (error) {
     console.error(`Error writing collection "${key}" to database:`, error);
+  }
+}
+
+/**
+ * Saves a collection locally and waits for `/api/db/collections/:key` sync.
+ * Throws when the server rejects the write.
+ */
+export async function saveCollectionAsync<T>(key: string, collectionItems: T[]): Promise<void> {
+  let dataToSave = collectionItems;
+  if (key === "sessions") {
+    dataToSave = validateSessions(collectionItems) as unknown as T[];
+  }
+  dataToSave = normalizeLinkedCollection(key, dataToSave);
+  dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
+  safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
+  dispatchLocalDatabaseUpdate();
+
+  const result = await syncToServer(`/api/db/collections/${key}`, dataToSave);
+  if (!result.ok) {
+    throw new Error(`Failed to sync collection "${key}"`);
   }
 }
 

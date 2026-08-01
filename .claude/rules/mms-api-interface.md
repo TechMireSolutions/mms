@@ -64,6 +64,7 @@ API errors must resolve to a uniform JSON payload format:
 ## 5. Bulk PUT / collection replace semantics
 Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload) must **upsert** rows by composite tenant key (`bulkSave` + `conflictTarget`, or merge-by-id service helpers).
 - **Allowed**: Insert new ids; update existing ids; leave rows absent from the payload untouched.
+- **Bulk id lists**: Prefer shared `bulkIdsBodySchema` / `bulkStringIdsBodySchema` (`.max(500)`) for bulk-delete / bulk-restore — do not fork unbounded id arrays per module.
 - **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Keep replace helpers only for migrations, intentional admin clears, or documented one-shot archives (e.g. Messaging log clear after soft-archiving).
 - Frontend mutations must use `mutateAsync` and await success before closing forms or showing "saved" (`mms-data-layer.md`, `mms-module-architecture.md` §7).
 

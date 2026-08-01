@@ -28,6 +28,9 @@ export function canReadCollection(user: User, collectionName: string): boolean {
   if (collectionName === WORKSPACES_COLLECTION) {
     return false;
   }
+  if (collectionName === 'contacts') {
+    return canReadContacts(user);
+  }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
   }
@@ -59,6 +62,9 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
   }
   if (collectionName === WORKSPACES_COLLECTION) {
     return false;
+  }
+  if (collectionName === 'contacts') {
+    return canWriteContacts(user);
   }
   if (!isAllowedCollectionName(collectionName)) {
     return false;

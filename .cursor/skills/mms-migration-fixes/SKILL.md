@@ -44,6 +44,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Module gold-standard parity | Hasanat → Examinations → Users → Messaging → Question Bank: upsert bulk PUT, awaited saves, setupSubTabs, ErrorState, Cmd/Ctrl+N |
 | Onboarding E2E critical path | `e2e/tests/onboarding-login.spec.ts` |
 | Contacts FORCE RLS + typed soft-delete SQL | `0032_force_rls_contacts_persons`; list filters on `deleted_at` |
+| Contacts entity leave document-store | Removed from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`; typed `contacts` table only |
 | Google Contacts OAuth secrets table | `contact_google_sync_credentials` FORCE RLS; not `objects` |
 | Contacts saved reports → typed table | `saved_reports` category `contacts`; object key deprecated from ALLOWED_OBJECTS |
 | Audit trigger tenant + user GUCs | `log_row_change` fills `workspace_subdomain`; `app.current_user_id` SET LOCAL |

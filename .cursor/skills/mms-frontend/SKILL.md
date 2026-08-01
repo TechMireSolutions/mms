@@ -71,10 +71,12 @@ Does the module have dedicated REST routes (/api/students, /api/contacts, …)?
 
 | Pattern | Modules (examples) |
 |---------|---------|
-| Query-first / hybrid | Students, Teachers, Contacts, Attendance, Sessions, Enrollments, Users, Finance, Accounting, … |
+| Query-first (entity REST) | Contacts, Students, Teachers, Attendance, Sessions, Enrollments, Users, Finance, Accounting, … |
 | Dashboard | Hybrid + metrics endpoints |
 
-Reference: `tenant/features/students/hooks/useStudents.ts`, `tenant/features/contacts/hooks/useContacts.ts`.
+Reference: `tenant/features/contacts/hooks/useContacts.ts`, `tenant/features/students/hooks/useStudents.ts`.
+
+Contacts entity rows are **Query + `/api/contacts` only** — never `saveCollection('contacts')` / document-store dual-write. Lookup option lists (`genders`, `phoneLabels`, `countryCodes`, …) may use `saveCollection` / `saveCollectionAsync` via ContactConfig.
 
 ## New page checklist
 

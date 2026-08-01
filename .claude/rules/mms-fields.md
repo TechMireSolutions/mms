@@ -25,7 +25,7 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 
 - Free-form dynamic form compilers / visual schema generators are **banned**.
 - Custom **tabs** remain JSON-document store until table+CRUD ships (`mms-migration-status.md`).
-- Column visibility prefs: server-side user prefs — not per-component localStorage SSOT.
+- Column visibility **and width** prefs: server-side user prefs via module column-preferences PUT (include clamped `width` when set) — localStorage merge is cache only, not SSOT.
 
 ## 2. New / changed field checklist
 

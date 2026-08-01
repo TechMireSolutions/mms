@@ -51,15 +51,22 @@ function mergeContactPatch(existing: Contact, patch: Contact): Contact {
 export async function normalizeContactPhones(contact: Contact): Promise<Contact> {
   let phones = contact.phones;
   const scalarPhone = typeof contact.phone === 'string' ? contact.phone.trim() : '';
+  const { defaultPhoneCountryCode, phoneLabel } = await loadContactRuntimeDefaults();
+  const dialDefault = defaultPhoneCountryCode || '';
+  const labelDefault = phoneLabel || '';
 
   if ((!phones || !phones.length) && scalarPhone) {
-    phones = [{ label: 'Mobile', number: scalarPhone, countryCode: '+92', isPrimary: true }];
+    phones = [{
+      label: labelDefault,
+      number: scalarPhone,
+      countryCode: dialDefault,
+      isPrimary: true,
+    }];
   }
 
   if (!phones?.length) {
     return { ...contact, phones: phones || [] };
   }
-  const { defaultPhoneCountryCode } = await loadContactRuntimeDefaults();
   const countryCodes = (await fetchCollection('countryCodes')) || [];
   const knownCodes = countryCodes
     .map((row) => (row && typeof row === 'object' && typeof (row as { code?: unknown }).code === 'string' ? String((row as { code: string }).code) : ''))
@@ -68,7 +75,7 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
   return {
     ...contact,
     phones: phones.map((phone) => {
-      const fallbackCode = phone.countryCode || defaultPhoneCountryCode;
+      const fallbackCode = phone.countryCode || dialDefault;
       const trimmedNumber = (phone.number || '').trim();
       const parsedRaw = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
       const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);

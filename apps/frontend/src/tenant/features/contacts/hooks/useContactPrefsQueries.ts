@@ -5,6 +5,7 @@ import type {
   ContactsSavedReportShareScope,
   ContactsWorkDrillDown,
 } from '@mms/shared';
+import { clampModuleColumnWidth } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import {
@@ -49,11 +50,15 @@ export function useContactColumnPrefsMutation() {
           const floored = Math.floor(
             typeof columnPreference.order === 'number' ? columnPreference.order : Number(columnPreference.order),
           );
-          return {
+          const preference: ContactColumnPreference = {
             key: columnPreference.key.trim(),
             enabled: Boolean(columnPreference.enabled),
             order: Number.isSafeInteger(floored) && floored >= 0 ? floored : index,
           };
+          if (typeof columnPreference.width === 'number') {
+            preference.width = clampModuleColumnWidth(columnPreference.width);
+          }
+          return preference;
         });
       return apiJson<{ success: boolean; preferences: ContactColumnPreference[] }>(
         `${CONTACTS_API}/column-preferences`,

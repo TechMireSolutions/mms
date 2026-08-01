@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { FieldConfig } from "@mms/shared";
-import { getCollection, saveCollection } from "@/lib/db";
-import { saveFieldConfig } from "@/lib/contactFieldsStore";
+import { getCollection, saveCollectionAsync } from "@/lib/db";
+import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
 import { syncOptionsInConfig } from "@/lib/contacts/preferencesStorage";
 import {
   CONTACT_CONFIG_COLLECTION_KEYS,
@@ -71,12 +71,15 @@ export function useContactConfigCollections({
   });
 
   const syncFieldOptions = useCallback(
-    (tabId: string, fieldId: string, options: string[]) => {
+    async (tabId: string, fieldId: string, options: string[]) => {
+      let updatedConfig: FieldConfig | null = null;
       setFieldConfigState((currentConfig) => {
-        const updatedConfig = syncOptionsInConfig(currentConfig, tabId, fieldId, options);
-        saveFieldConfig(updatedConfig);
+        updatedConfig = syncOptionsInConfig(currentConfig, tabId, fieldId, options);
         return updatedConfig;
       });
+      if (updatedConfig) {
+        await saveFieldConfigAsync(updatedConfig);
+      }
     },
     [setFieldConfigState],
   );
@@ -123,9 +126,9 @@ export function useContactConfigCollections({
     "addresses",
     "label",
   );
-  const updateCountryCodes = useCallback((countryCodeOptions: CountryCodeEntry[]) => {
-    saveCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, countryCodeOptions);
+  const updateCountryCodes = useCallback(async (countryCodeOptions: CountryCodeEntry[]) => {
     setCountryCodesState(countryCodeOptions);
+    await saveCollectionAsync(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, countryCodeOptions);
   }, []);
 
   const countryCodesMap = useMemo(() => {

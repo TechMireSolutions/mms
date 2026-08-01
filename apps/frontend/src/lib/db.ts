@@ -23,6 +23,7 @@ export {
   saveCollectionCacheOnly,
   getCollection,
   saveCollection,
+  saveCollectionAsync,
 } from "@/lib/dbCollections.js";
 export {
   getObject,

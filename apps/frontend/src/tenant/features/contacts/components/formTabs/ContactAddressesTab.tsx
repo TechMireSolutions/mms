@@ -8,10 +8,13 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
-import { Address, DEFAULT_ADDRESS_LABELS } from "@mms/shared";
+import { Address } from "@mms/shared";
 
 export interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
   addressLabels: string[];
+  onUpdateAddressLabels: (labels: string[]) => void;
+  countryOptions: string[];
+  onUpdateCountryOptions: (countries: string[]) => void;
   defaultCity: string;
   defaultProvince: string;
   defaultCountry: string;
@@ -21,6 +24,9 @@ export function ContactAddressesTab({
   contactDraft,
   getLocalId,
   addressLabels,
+  onUpdateAddressLabels,
+  countryOptions,
+  onUpdateCountryOptions,
   defaultCity,
   defaultProvince,
   defaultCountry,
@@ -72,13 +78,10 @@ export function ContactAddressesTab({
               label={`${t("contacts.form.type")}:`}
               typeSelect={
                 <EditableSelect
-                  options={
-                    addressLabels.length > 0
-                      ? addressLabels
-                      : (DEFAULT_ADDRESS_LABELS as unknown as string[])
-                  }
+                  options={addressLabels}
                   value={resolveAddressLabel(addr.label, addressLabels, t)}
                   onChange={(val) => updateAddress(idx, { label: val })}
+                  onUpdateOptions={onUpdateAddressLabels}
                   className={TYPE_SELECT_WIDTH}
                   id={`address-label-${idx}`}
                   name={`address-label-${idx}`}
@@ -105,7 +108,7 @@ export function ContactAddressesTab({
                   </div>
                   <FieldInlineError message={line1Error} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-3">
                   <div>
                     <Input
                       id={`address-city-${idx}`}
@@ -126,11 +129,14 @@ export function ContactAddressesTab({
                     onChange={(e) => updateAddress(idx, { state: e.target.value })}
                     placeholder={t("contacts.fields.state")}
                   />
-                  <Input
+                  <EditableSelect
+                    options={countryOptions}
+                    value={addr.country || defaultCountry || countryOptions[0] || ""}
+                    onChange={(val) => updateAddress(idx, { country: val })}
+                    onUpdateOptions={onUpdateCountryOptions}
+                    className="w-full min-w-0"
                     id={`address-country-${idx}`}
                     name={`address-country-${idx}`}
-                    value={addr.country || ""}
-                    onChange={(e) => updateAddress(idx, { country: e.target.value })}
                     placeholder={t("contacts.fields.country")}
                   />
                 </div>

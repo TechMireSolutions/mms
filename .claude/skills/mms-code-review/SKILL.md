@@ -48,10 +48,10 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] `credentials: 'include'` via apiClient (cookie session — no new `mms_token` writes)
 - [ ] Query hooks export stable `QUERY_KEY` constants
 - [ ] `enabled: isAuthenticated` on tenant REST hooks
-- [ ] Mutations invalidate affected queries (list + count keys)
+- [ ] Mutations invalidate affected queries (list + count keys; Contacts also messaging resolve)
 - [ ] No duplicate data path (Query mutations + parallel `saveCollection` for same write)
 - [ ] After server `bulkSave` imports (e.g. Google sync), invalidate only — do not re-upsert the same rows
-- [ ] Hybrid reads use `useXxxCollection()` — not raw `useLiveCollection` on REST pages
+- [ ] REST pages use Query hooks / collection facades — not raw `useLiveCollection` for entity rows
 
 ### UI / config
 - [ ] No hardcoded labels/colours/status maps — `t()` + registries
@@ -61,7 +61,10 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] `ResponsiveAccordionTabs` / `SubTabBar` — no inline tab bars
 - [ ] Mobile-first layout: no fixed `w-[Npx]` page widths; no `max-lg:` layout forks; logical CSS for RTL
 - [ ] Tables wrapped (`Table` or `overflow-x-auto`); interactive controls ≥ 44×44 (`min-h-11 min-w-11`)
-- [ ] `FormModal` for add/edit entity dialogs when touching legacy overlays
+- [ ] `FormModal` for add/edit; in-dialog layout uses `@container` `@md:` / `@sm:` (not viewport `md:`)
+- [ ] Contact form option dropdowns from ContactConfig — not runtime `DEFAULT_*` / `GENDERS` fallbacks
+- [ ] Bulk id bodies use shared `bulkIdsBodySchema` (`.max(500)`) when applicable
+- [ ] Contacts `activeCount` = soft-delete-filtered total (not phantom `isActive`)
 - [ ] Settings panels use `useSettingsDraft` / domain draft hooks + live preview — not direct `saveObject` on change
 - [ ] New settings section: registered in `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`
 - [ ] Settings footer labels via `t()` — no hardcoded save-state strings in `SettingsFormActions`

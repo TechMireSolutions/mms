@@ -43,7 +43,8 @@ export function computeContactsReportAnalytics(
   const total = activeContacts.length;
   const whatsappCount = activeContacts.filter((contact) => hasWhatsApp(contact)).length;
   const whatsappRate = total > 0 ? Math.round((whatsappCount / total) * 100) : 0;
-  const activeCount = activeContacts.filter((contact) => contact.isActive !== false).length;
+  // Soft-delete-filtered length is the active roster — form never writes `isActive`.
+  const activeCount = total;
 
   const thirtyDaysAgo = new Date(referenceDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

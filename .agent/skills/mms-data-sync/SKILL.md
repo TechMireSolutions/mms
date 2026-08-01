@@ -10,34 +10,34 @@ description: Works with MMS localStorage layer (db.ts), useLiveCollection, TanSt
 All sync HTTP calls go through **`apiClient`** (`credentials: 'include'`) internally.
 
 ```ts
-import { getCollection, saveCollection } from './db';
+import { getCollection, saveCollection, saveCollectionAsync } from './db';
 
-// Collections — prefer empty default (no mock auto-seed)
+// Lookup / legacy collections — prefer empty default (no mock auto-seed)
 const items = getCollection<MyType>('collection_key');
-saveCollection('collection_key', updated);
+await saveCollectionAsync('collection_key', updated); // Setup option lists — await server
 
 // Reactive (localStorage modules)
 import { useLiveCollection } from '../hooks/useLiveCollection';
 const items = useLiveCollection<MyType>('collection_key');
 
-// REST modules (students, contacts, teachers)
+// REST modules — Query hooks from collection facades / feature hooks
 import {
   useStudentsPaginated,
   useStudentMutations,
   useStudentsByIds,
   useStudentsMetrics,
-} from '@/hooks/useStudents';
+} from '@/tenant/hooks/collections/students';
 import {
   useContactsPaginated,
   useContactMutations,
   useContactsByIds,
   useContactsMetrics,
-} from '@/hooks/useContacts';
+} from '@/tenant/hooks/collections/contacts';
 import {
   useTeachersPaginated,
   useTeacherMutations,
   useTeachersByIds,
-} from '@/hooks/useTeachers';
+} from '@/tenant/hooks/collections/teachers';
 ```
 
 `local-database-update` event — dispatched by saves; `useLiveCollection` subscribes. Do not duplicate listeners.
@@ -50,14 +50,15 @@ import {
 | TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/teachers`, workspace) |
 | Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch |
 | Metrics / aggregates | KPI, dashboard, reports — `useStudentsMetrics`, `useContactsReportAnalytics`, widget-aggregates |
+| Lookup option lists | `saveCollectionAsync` for genders/labels/`countryCodes` — await before claiming Setup saved |
 
-**Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` in the page for the same entity. UI saved/success state must wait for `mutateAsync` or an explicit mutation success callback; fire-and-forget `mutate()` must not immediately show "saved". Backend bulk PUT must upsert (never wipe missing rows via `replaceForWorkspace` on normal save paths — `mms-api-interface.md`).
+**Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` for the same entity. Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`. UI saved/success state must wait for `mutateAsync` or an explicit mutation success callback; fire-and-forget `mutate()` must not immediately show "saved". Backend bulk PUT must upsert (never wipe missing rows via `replaceForWorkspace` on normal save paths — `mms-api-interface.md`).
 
 ## Backend document store
 
 | Table | Content |
 |-------|---------|
-| `collections` | JSON arrays per tenant key `t:{subdomain}:{name}` |
+| `collections` | JSON arrays per tenant — **lookup lists** (not Contacts entity rows) |
 | `objects` | JSON singletons per tenant key `t:{subdomain}:{key}` |
 
 ## API (auth required — `authenticateTenant`)
@@ -70,7 +71,7 @@ import {
 | GET/POST | `/api/db/objects/:key` | POST → `canWriteObject`; server-only keys blocked; obsolete keys must leave `ALLOWED_OBJECTS` after typed-table migrations |
 | POST | `/api/db/reset` | Admin — tenant-scoped minimal reseed |
 
-REST resources (pilots): `GET/POST/PUT/DELETE /api/students`, `/api/contacts`.
+**Shipped REST:** `GET/POST/PUT/DELETE /api/students`, `/api/contacts`, `/api/teachers`, … — Contacts entity is **not** in `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`.
 
 **Do not** store long-lived OAuth secrets in `objects` — use FORCE-RLS tenant tables (`mms-data-layer.md`). Admin backup snapshots must not include credential tables.
 

@@ -30,4 +30,15 @@ describe('contactsReportAnalytics', () => {
     expect(months[2]?.count).toBe(2);
     expect(months[3]?.count).toBe(1);
   });
+
+  it('activeCount equals soft-delete-filtered total', () => {
+    const contacts = [
+      base({ id: 1 }),
+      base({ id: 2 }),
+      base({ id: 3, deletedAt: '2026-01-01' }),
+    ];
+    const analytics = computeContactsReportAnalytics(contacts);
+    expect(analytics.total).toBe(2);
+    expect(analytics.activeCount).toBe(2);
+  });
 });

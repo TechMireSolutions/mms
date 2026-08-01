@@ -12,6 +12,11 @@ interface FormModalTabsProps<K extends string = string> {
   children: React.ReactNode;
 }
 
+/**
+ * Form tabs layout tracks the FormModal container width (`@container`), not the
+ * viewport — so half-desktop and full-desktop keep the same chrome while the
+ * dialog stays max-w-2xl.
+ */
 export function FormModalTabs<K extends string = string>({
   tabs,
   activeTab,
@@ -40,9 +45,9 @@ export function FormModalTabs<K extends string = string>({
       onValueChange={(val) => onTabChange(val as K)}
       orientation="vertical"
       dir={dir}
-      className="flex flex-col md:flex-row gap-6 h-full items-stretch"
+      className="flex h-full flex-col items-stretch gap-6 @md:flex-row"
     >
-      <TabsPrimitive.List className="flex flex-row md:flex-col shrink-0 h-auto w-full md:w-auto md:min-w-[11.25rem] bg-muted/20 p-1 rounded-xl gap-0.5 md:gap-1 border border-border overflow-x-auto md:overflow-x-visible md:border-e md:border-t-0 md:border-b-0 md:border-s-0 md:pe-4">
+      <TabsPrimitive.List className="flex h-auto w-full shrink-0 flex-row gap-0.5 overflow-x-auto rounded-xl border border-border bg-muted/20 p-1 @md:w-auto @md:min-w-[11.25rem] @md:flex-col @md:gap-1 @md:overflow-x-visible @md:border-e @md:border-s-0 @md:border-t-0 @md:border-b-0 @md:pe-4">
         {tabs.map((tab) => {
           const active = activeTab === tab.key;
           const Icon = tab.icon;
@@ -57,20 +62,19 @@ export function FormModalTabs<K extends string = string>({
               aria-selected={active}
               role="tab"
               className={cn(
-                "relative flex items-center justify-center md:justify-start gap-1.5 md:gap-2 rounded-lg px-2 py-2.5 md:px-3.5 text-xs font-semibold transition-all flex-1 md:flex-initial md:w-full min-h-11 md:whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                "relative flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 @md:w-full @md:flex-initial @md:justify-start @md:gap-2 @md:whitespace-nowrap @md:px-3.5",
                 active
-                  ? "bg-card text-foreground shadow-sm border border-border/80 font-bold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                  ? "border border-border/80 bg-card font-bold text-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >
-              {Icon && <Icon className="w-4 h-4 md:w-3.5 md:h-3.5 flex-shrink-0" aria-hidden />}
-              <span className="hidden md:inline">{tab.label}</span>
+              {Icon && <Icon className="h-4 w-4 flex-shrink-0 @md:h-3.5 @md:w-3.5" aria-hidden />}
+              <span className="hidden @md:inline">{tab.label}</span>
               {tab.badge !== undefined && (
                 <span
                   aria-hidden
                   className={cn(
-                    "inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-xs font-extrabold transition-colors md:ms-auto md:min-w-0 md:h-auto md:px-1.5 md:py-0.5",
-                    "absolute top-1 end-1 md:static",
+                    "absolute top-1 end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-extrabold transition-colors @md:static @md:ms-auto @md:h-auto @md:min-w-0 @md:px-1.5 @md:py-0.5",
                     active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
                   )}
                 >
@@ -82,7 +86,7 @@ export function FormModalTabs<K extends string = string>({
         })}
       </TabsPrimitive.List>
 
-      <div ref={tabContentRef} className="flex-1 min-w-0 overflow-y-auto">
+      <div ref={tabContentRef} className="min-w-0 flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={String(activeTab)}

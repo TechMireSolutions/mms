@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useMemo } from "react";
 import { type Contact, toTitleCase } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
@@ -41,6 +42,7 @@ export default function ContactCreateModal({
   createDefaults,
 }: ContactCreateModalProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const { prefs } = useContactConfig();
   const { upsertContact } = useContactMutations();
 
   const initialDraft = useMemo(() => {
@@ -67,6 +69,9 @@ export default function ContactCreateModal({
         priority
         initialDraft={initialDraft}
         lockGender={createDefaults?.lockGender === true}
+        defaultCountry={prefs.defaultCountry || ""}
+        defaultCity={prefs.defaultCity || ""}
+        defaultProvince={prefs.defaultProvince || ""}
         onClose={onClose}
         onSave={handleSave}
       />
