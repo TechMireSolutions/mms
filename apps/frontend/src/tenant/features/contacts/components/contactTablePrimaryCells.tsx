@@ -91,33 +91,40 @@ export function renderContactPhoneCell({
 
   return (
     <td key="phone" className="px-4 py-3" style={widthStyle}>
-      <div className="flex items-center gap-2 group/phone">
+      <div className="flex flex-col items-start gap-1 group/phone">
         {primaryPhone ? (
-          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border/60">
-            {countryCode && <span className="text-xs font-semibold text-muted-foreground">{countryCode}</span>}
-            <span className="text-sm font-mono text-foreground font-medium tracking-wide">
-              {formattedNumber}
-            </span>
-          </div>
+          <>
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
+              {countryCode && <span className="text-xs font-semibold text-muted-foreground">{countryCode}</span>}
+              <span className="text-sm font-mono text-foreground font-medium tracking-wide">
+                {formattedNumber}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              {onWhatsApp && hasWa ? (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onWhatsApp([contact]);
+                  }}
+                  title={t("contacts.whatsapp")}
+                  aria-label={t("contacts.whatsapp")}
+                  variant="ghost"
+                  className="h-6 w-6 min-h-6 min-w-6 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-success hover:text-success/80 cursor-pointer"
+                  type="button"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                </Button>
+              ) : null}
+              <CopyBtn
+                text={primaryPhone}
+                className="h-6 w-6 min-h-6 min-w-6 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-muted-foreground hover:text-foreground cursor-pointer"
+              />
+            </div>
+          </>
         ) : (
           <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>
         )}
-        {primaryPhone && <CopyBtn text={primaryPhone} />}
-        {onWhatsApp && hasWa ? (
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onWhatsApp([contact]);
-            }}
-            title={t("contacts.whatsapp")}
-            aria-label={t("contacts.whatsapp")}
-            variant="ghost"
-            className="min-w-11 min-h-11 flex items-center justify-center p-0 transition-all hover:bg-transparent opacity-100 md:opacity-0 md:group-hover/phone:opacity-100 md:focus-within:opacity-100 text-success hover:text-success/80 cursor-pointer"
-            type="button"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-          </Button>
-        ) : null}
       </div>
     </td>
   );
@@ -135,9 +142,16 @@ export function renderContactEmailCell({
   const primaryEmail = getPrimaryEmail(contact);
   return (
     <td key="email" className="px-4 py-3" style={widthStyle}>
-      <div className="flex items-center gap-1 group/email">
+      <div className="flex flex-col items-start gap-1 group/email">
         <span className="text-sm text-muted-foreground">{primaryEmail || t("contacts.table.emptyDash")}</span>
-        {primaryEmail && <CopyBtn text={primaryEmail} />}
+        {primaryEmail && (
+          <div className="flex items-center gap-1">
+            <CopyBtn
+              text={primaryEmail}
+              className="h-6 w-6 min-h-6 min-w-6 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-muted-foreground hover:text-foreground cursor-pointer"
+            />
+          </div>
+        )}
       </div>
     </td>
   );
