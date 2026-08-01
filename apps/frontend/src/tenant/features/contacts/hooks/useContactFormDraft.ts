@@ -51,7 +51,7 @@ function buildOptionDefaults({
     emailLabel: emailLabels[0],
     addressLabel: addressLabels[0],
     socialPlatform: socialPlatforms[0],
-    relationship: relationshipOptions[0],
+    relationship: relationshipOptions[0] ?? "",
     defaultPhoneCountryCode,
   };
 }

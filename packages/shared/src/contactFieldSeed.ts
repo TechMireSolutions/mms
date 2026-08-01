@@ -44,6 +44,6 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   ],
   emergency: [
     { key: "contactId",    label: "Contact",      labelKey: "contacts.fields.emergencyContact", type: "text",   description: "Contact picker — links existing contacts as emergency contacts.", descriptionKey: "contacts.fields.emergencyContactDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
-    { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",     type: "select", description: "Relationship with the emergency contact (e.g. Father, Mother, Spouse).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: RELATIONSHIPS[0], permissions: [], enabled: true, order: 1, required: false },
+    { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",     type: "select", description: "Relationship with the emergency contact (e.g. Father, Mother, Spouse).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
 };
