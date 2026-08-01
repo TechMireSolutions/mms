@@ -1,8 +1,6 @@
-import React from "react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import type { ContactsQuickFilter } from "@mms/shared";
-import { ContactsQuickFilterBar } from "@/tenant/features/contacts/components/ContactsQuickFilterBar";
 import {
   ContactsClearFiltersButton,
   ContactsDeletedToggleButton,
@@ -11,15 +9,13 @@ import {
 } from "@/tenant/features/contacts/components/ContactsToolbarControls";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 
-export type QuickFilterPreset = ContactsQuickFilter;
-
 interface ContactsToolbarProps {
   search: string;
   onSearchChange: (searchValue: string) => void;
   filterGender: string;
   onGenderChange: (gender: string) => void;
-  quickFilter?: QuickFilterPreset;
-  onQuickFilterChange?: (preset: QuickFilterPreset) => void;
+  quickFilter: ContactsQuickFilter;
+  onQuickFilterChange: (preset: ContactsQuickFilter) => void;
   sortField: string;
   onSort: (field: string) => void;
   hasActiveFilters: boolean;
@@ -38,7 +34,7 @@ export default function ContactsToolbar({
   onSearchChange,
   filterGender,
   onGenderChange,
-  quickFilter = "all",
+  quickFilter,
   onQuickFilterChange,
   sortField,
   onSort,
@@ -51,7 +47,7 @@ export default function ContactsToolbar({
   viewMode = "table",
   onViewModeChange,
   shownCount,
-}: ContactsToolbarProps): React.JSX.Element {
+}: ContactsToolbarProps): JSX.Element {
   const {
     t,
     genders,
@@ -63,7 +59,7 @@ export default function ContactsToolbar({
   } = useContactsToolbarModel();
 
   return (
-    <div className="space-y-2.5">
+    <>
       <div className="sr-only" role="status" aria-live="polite">
         {shownCount != null ? t("contacts.shownCount", { count: shownCount }) : ""}
       </div>
@@ -86,6 +82,8 @@ export default function ContactsToolbar({
         <div className="flex items-center gap-2 flex-shrink-0">
           <ContactsFilterMenuButton
             activeFilterCount={activeFilterCount}
+            quickFilter={quickFilter}
+            onQuickFilterChange={onQuickFilterChange}
             filterGender={filterGender}
             genders={genders}
             onGenderChange={onGenderChange}
@@ -123,13 +121,6 @@ export default function ContactsToolbar({
           />
         </div>
       </div>
-
-      {onQuickFilterChange && !showDeletedArchives && (
-        <ContactsQuickFilterBar
-          quickFilter={quickFilter}
-          onQuickFilterChange={onQuickFilterChange}
-        />
-      )}
-    </div>
+    </>
   );
 }

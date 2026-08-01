@@ -32,7 +32,8 @@ Every standard module page (e.g., `Contacts.tsx`, `Students.tsx`) must instantia
 ---
 
 ## 3. Work Directory & Detail Drawer
-- **Search & Filter**: Search and filter operations must only target fields defined as searchable/filterable in the manifest.
+- **Search & Filter**: Search and filter operations must only target fields defined as searchable/filterable in the manifest (and shared list-query schemas).
+- **Filters UI (SSOT)**: One **Filters** control (dropdown/menu) owns Work filter dimensions (presets, gender, status, sort, …). Do **not** add a parallel always-visible preset chip/pill bar that repeats options already in that menu (Contacts gold standard: `ContactsFilterMenuButton` + `CONTACTS_QUICK_FILTER_OPTIONS` in `@mms/shared`). Active state = badge count on Filters + Clear; optional `FilterChips` only for removable **active selections** (e.g. multi-status), not a second editor for the same enums.
 - **Pagination**: Work directories use server page/filter APIs — do not load full collections client-side for REST modules.
 - **Metrics**: Command-centre KPIs come from server `/metrics` (or manifest-defined endpoints), not client reduce of full lists.
 - **Detail Drawer**: Selecting an entity row opens an in-place detail drawer (instead of page navigation) respecting the module's tab/field order, read/write permissions, and custom fields.
@@ -75,8 +76,8 @@ Align new or refactored modules with Students / Contacts as the bar. Checklist:
 | **Soft-delete** | `DELETE` + `POST :id/restore` (+ bulk when applicable); Work `showDeleted` / `includeDeleted` trash UI; manifest `softDelete` metadata. |
 | **Mutations** | `mutateAsync` + await form `onSave` / setup save; close modals only after success. |
 | **Setup** | Manifest `setupSubTabs`; `canEditSetup` gates edits (`saveSettingsAsync`); SubTabBar always visible; read-only message when view-only. |
-| **Work UX** | `ErrorState` + retry on list query failure; Cmd/Ctrl+N opens create when `canWrite` and not in trash. |
+| **Work UX** | `ErrorState` + retry on list query failure; Cmd/Ctrl+N opens create when `canWrite` and not in trash; Filters menu SSOT (no duplicate preset chip bar). |
 | **Manifest** | `setupSubTabs`, `softDelete`, `work.bulkActions`, permissions — import constants; do not hardcode tier/sub-tab ids. |
 | **i18n / RBAC** | All copy via `t()`; `useModulePermissions(manifest)` — omit forbidden CTAs. |
 
-**Do not regress**: reintroducing bulk wipe on PUT, fire-and-forget `mutate()` that closes forms before success, or soft-delete API without Work trash (unless manifest documents the intentional variant).
+**Do not regress**: reintroducing bulk wipe on PUT, fire-and-forget `mutate()` that closes forms before success, soft-delete API without Work trash (unless manifest documents the intentional variant), or a Work preset pill bar that duplicates the Filters menu.

@@ -1,14 +1,39 @@
 import { z } from 'zod';
+import type { AppTranslationKey } from './appTranslations.js';
 import { baseListQuerySchema } from './apiSchemas.js';
 import type { Contact } from './contactTypes.js';
 import { contactMatchesSearch } from './contactsSearchUtils.js';
 import { filterActiveContacts, isContactDeleted } from './contactSoftDelete.js';
 import { compareByField, getPrimaryEmail, getPrimaryPhone, hasWhatsApp, paginateArray } from './utils.js';
 
-const contactsQuickFilterSchema = z.enum(['all', 'whatsapp', 'syed', 'missingInfo']);
+/** Work-directory filter presets — SSOT for schema + Filters menu. */
+export const CONTACTS_QUICK_FILTERS = ['all', 'whatsapp', 'syed', 'missingInfo'] as const;
 
-/** Work-directory quick presets (toolbar chips). */
+const contactsQuickFilterSchema = z.enum(CONTACTS_QUICK_FILTERS);
+
+/** Work-directory quick filter preset ids. */
 export type ContactsQuickFilter = z.infer<typeof contactsQuickFilterSchema>;
+
+/** Narrow a dropdown/radio string to a Contacts quick-filter preset. */
+export function isContactsQuickFilter(value: string): value is ContactsQuickFilter {
+  return (CONTACTS_QUICK_FILTERS as readonly string[]).includes(value);
+}
+
+const CONTACTS_QUICK_FILTER_LABEL_KEYS = {
+  all: 'contacts.filtersAll',
+  whatsapp: 'contacts.filtersWhatsApp',
+  syed: 'contacts.filtersSyed',
+  missingInfo: 'contacts.filtersMissingInfo',
+} as const satisfies Record<ContactsQuickFilter, AppTranslationKey>;
+
+/** Preset options for the Contacts Work Filters menu. */
+export const CONTACTS_QUICK_FILTER_OPTIONS: ReadonlyArray<{
+  id: ContactsQuickFilter;
+  labelKey: AppTranslationKey;
+}> = CONTACTS_QUICK_FILTERS.map((id) => ({
+  id,
+  labelKey: CONTACTS_QUICK_FILTER_LABEL_KEYS[id],
+}));
 
 const booleanQueryFlag = z
   .preprocess((value) => {

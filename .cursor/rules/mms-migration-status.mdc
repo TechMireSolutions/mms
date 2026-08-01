@@ -36,6 +36,7 @@ Keep these regressions out of new work (details historically resolved — do not
 - Cookie httpOnly sessions (`mms_access` / `mms_refresh`); no localStorage JWT
 - Soft-delete Work trash pattern (Contacts-style) except documented Messaging clear + QB papers/results upsert-only
 - Gold-standard §7: upsert bulk PUT, `mutateAsync`, `setupSubTabs` / `canEditSetup`, `ErrorState`, Cmd/Ctrl+N, `t()` + `useModulePermissions`
+- Work Filters menu SSOT — no parallel preset chip/pill bar duplicating Filters options (Contacts: `ContactsFilterMenuButton` + shared `CONTACTS_QUICK_FILTER_OPTIONS`)
 - Contact-first persons; no `persona` / CRM lifecycle tags
 - `apiClient` only — no raw `fetch('/api/...')`
 - FormModal for entity forms; Modal for confirm/preview; Design-system primitives + semantic tokens

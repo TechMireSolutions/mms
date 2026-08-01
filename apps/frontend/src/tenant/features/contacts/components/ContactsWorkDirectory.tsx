@@ -2,12 +2,8 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolbar";
 import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
 import { ContactsWorkListBody } from "@/tenant/features/contacts/components/ContactsWorkListBody";
-import {
-  ContactsWorkGenderFilterChip,
-  ContactsWorkTruncatedBanner,
-} from "@/tenant/features/contacts/components/ContactsWorkDirectoryBanners";
+import { ContactsWorkTruncatedBanner } from "@/tenant/features/contacts/components/ContactsWorkTruncatedBanner";
 import type { ContactsWorkDirectoryProps } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
-import { useTranslation } from "@/hooks/useTranslation";
 
 export type { ContactsWorkDirectoryProps } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
 
@@ -54,8 +50,6 @@ export function ContactsWorkDirectory({
   workPageData,
   onPageChange,
 }: ContactsWorkDirectoryProps) {
-  const { t } = useTranslation();
-
   return (
     <div className="space-y-4">
       <ErrorBoundary>
@@ -80,13 +74,7 @@ export function ContactsWorkDirectory({
         />
       </ErrorBoundary>
 
-      {workTruncated && <ContactsWorkTruncatedBanner shownCount={shownCount} t={t} />}
-
-      <ContactsWorkGenderFilterChip
-        filterGender={filterGender}
-        onClear={() => onGenderChange("")}
-        t={t}
-      />
+      {workTruncated && <ContactsWorkTruncatedBanner shownCount={shownCount} />}
 
       <ContactsBulkActionBar
         selectedCount={selected.length}

@@ -1,4 +1,9 @@
 import { SlidersHorizontal } from "lucide-react";
+import {
+  CONTACTS_QUICK_FILTER_OPTIONS,
+  isContactsQuickFilter,
+  type ContactsQuickFilter,
+} from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import {
@@ -12,17 +17,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export function ContactsFilterMenuButton({
-  activeFilterCount,
-  filterGender,
-  genders,
-  onGenderChange,
-  sortField,
-  sortOptions,
-  onSort,
-  t,
-}: {
+export interface ContactsFilterMenuButtonProps {
   activeFilterCount: number;
+  quickFilter: ContactsQuickFilter;
+  onQuickFilterChange: (preset: ContactsQuickFilter) => void;
   filterGender: string;
   genders: string[];
   onGenderChange: (gender: string) => void;
@@ -30,7 +28,20 @@ export function ContactsFilterMenuButton({
   sortOptions: Array<{ field: string; label: string }>;
   onSort: (field: string) => void;
   t: TranslationFunction;
-}) {
+}
+
+export function ContactsFilterMenuButton({
+  activeFilterCount,
+  quickFilter,
+  onQuickFilterChange,
+  filterGender,
+  genders,
+  onGenderChange,
+  sortField,
+  sortOptions,
+  onSort,
+  t,
+}: ContactsFilterMenuButtonProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -43,7 +54,7 @@ export function ContactsFilterMenuButton({
               : "border-border bg-card text-foreground"
           }`}
         >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{t("contacts.filters")}</span>
           {activeFilterCount > 0 && (
             <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
@@ -52,7 +63,24 @@ export function ContactsFilterMenuButton({
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 bg-card border border-border">
+      <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
+        <DropdownMenuLabel className="text-xs text-foreground">
+          {t("contacts.filters")}
+        </DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={quickFilter}
+          onValueChange={(value) => {
+            if (isContactsQuickFilter(value)) onQuickFilterChange(value);
+          }}
+        >
+          {CONTACTS_QUICK_FILTER_OPTIONS.map((preset) => (
+            <DropdownMenuRadioItem key={preset.id} value={preset.id} className="text-sm">
+              {t(preset.labelKey)}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+
+        <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuLabel className="text-xs text-foreground">
           {t("contacts.genderFilter")}
         </DropdownMenuLabel>

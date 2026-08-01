@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { contactsListQuerySchema, filterContactsForQuery } from '../contactsListQuery.js';
+import {
+  CONTACTS_QUICK_FILTER_OPTIONS,
+  CONTACTS_QUICK_FILTERS,
+  contactsListQuerySchema,
+  filterContactsForQuery,
+  isContactsQuickFilter,
+} from '../contactsListQuery.js';
 import type { Contact } from '../contactTypes.js';
 
 function contact(partial: Partial<Contact> & Pick<Contact, 'id' | 'name'>): Contact {
@@ -13,6 +19,18 @@ function contact(partial: Partial<Contact> & Pick<Contact, 'id' | 'name'>): Cont
 describe('contactsListQuerySchema', () => {
   it('rejects an invalid quick filter', () => {
     expect(contactsListQuerySchema.safeParse({ quickFilter: 'unknown' }).success).toBe(false);
+  });
+
+  it('exposes filter menu options aligned with the schema enum', () => {
+    expect(CONTACTS_QUICK_FILTER_OPTIONS.map((option) => option.id)).toEqual([...CONTACTS_QUICK_FILTERS]);
+    for (const option of CONTACTS_QUICK_FILTER_OPTIONS) {
+      expect(contactsListQuerySchema.safeParse({ quickFilter: option.id }).success).toBe(true);
+    }
+  });
+
+  it('narrows valid quick-filter strings', () => {
+    expect(isContactsQuickFilter('whatsapp')).toBe(true);
+    expect(isContactsQuickFilter('unknown')).toBe(false);
   });
 
   it('transforms comma-separated exclusions', () => {
