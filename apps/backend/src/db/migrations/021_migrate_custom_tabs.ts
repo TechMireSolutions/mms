@@ -35,7 +35,8 @@ export async function runMigration021(): Promise<void> {
       continue;
     }
 
-    const tenant = parsed?.subdomain ?? 'demo'; // fallback to demo if not scoped, but all settings objects are scoped
+    const tenant = parsed?.subdomain;
+    if (!tenant) continue;
     const formTabs = data.formTabs as Record<string, unknown>[];
 
     // Delete existing custom tabs for this tenant + module

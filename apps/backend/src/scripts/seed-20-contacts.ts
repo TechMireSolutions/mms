@@ -361,7 +361,7 @@ async function main() {
   } else {
     // Seed all existing workspaces in the database
     const allWorkspaces = await db.select({ subdomain: workspaces.subdomain }).from(workspaces);
-    subdomainsToSeed = Array.from(new Set(['demo', ...allWorkspaces.map((w) => w.subdomain)]));
+    subdomainsToSeed = Array.from(new Set(allWorkspaces.map((w) => w.subdomain)));
   }
 
   for (const subdomain of subdomainsToSeed) {
