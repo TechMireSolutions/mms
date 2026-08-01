@@ -2,6 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { getObject, saveObject, getAllData, initDb } from '../db/database.js';
 import { runWithTenant } from '../lib/tenantContext.js';
 
+import { getDb } from '../db/dbClient.js';
+import { workspaces } from '../db/schema.js';
+
 describe('custom tabs relational migration and operations', () => {
   let isDbAvailable = false;
 
@@ -9,6 +12,12 @@ describe('custom tabs relational migration and operations', () => {
     process.env.JWT_SECRET = 'test-secret';
     try {
       await initDb();
+      await getDb().insert(workspaces).values({
+        id: 'ws-demo',
+        subdomain: 'demo',
+        madrasaName: 'Demo Madrasa',
+        enabled: true,
+      }).onConflictDoNothing();
       isDbAvailable = true;
     } catch (err) {
       console.warn('[WS-Sync Test] Postgres database connection failed. Skipping real database integration test.');

@@ -24,6 +24,9 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 import type { FastifyInstance } from 'fastify';
 
+import { getDb } from '../db/dbClient.js';
+import { workspaces } from '../db/schema.js';
+
 describe('custom tabs REST API routes', () => {
   let isDbAvailable = false;
   let app: FastifyInstance;
@@ -32,6 +35,12 @@ describe('custom tabs REST API routes', () => {
     process.env.JWT_SECRET = 'test-secret';
     try {
       await initDb();
+      await getDb().insert(workspaces).values({
+        id: 'ws-demo',
+        subdomain: 'demo',
+        madrasaName: 'Demo Madrasa',
+        enabled: true,
+      }).onConflictDoNothing();
       isDbAvailable = true;
       app = await buildApp();
     } catch (err) {
