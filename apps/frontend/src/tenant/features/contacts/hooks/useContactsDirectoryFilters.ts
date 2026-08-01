@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-import type { ContactsQuickFilter } from "@mms/shared";
+import { isContactsQuickFilter, type ContactsQuickFilter } from "@mms/shared";
 import {
   CONTACTS_WORK_DRILLDOWN_EVENT,
   consumeContactsWorkDrillDown,
@@ -32,6 +32,9 @@ export function useContactsDirectoryFilters({
     (filter: ContactsWorkDrillDown) => {
       if (filter.gender) setFilterGender(filter.gender);
       if (filter.search) setSearch(filter.search);
+      if (filter.quickFilter && isContactsQuickFilter(filter.quickFilter)) {
+        setQuickFilter(filter.quickFilter);
+      }
       setActiveTab("work");
     },
     [setActiveTab],
@@ -50,7 +53,8 @@ export function useContactsDirectoryFilters({
   }, [applyDrillDown]);
 
   const hasActiveFilters = !!(filterGender || search || quickFilter !== "all");
-  const activeFilterCount = (filterGender ? 1 : 0) + (quickFilter !== "all" ? 1 : 0);
+  const activeFilterCount =
+    (filterGender ? 1 : 0) + (quickFilter !== "all" ? 1 : 0) + (search.trim() ? 1 : 0);
 
   const handleSort = useCallback((field: string) => {
     if (sortField === field) setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));

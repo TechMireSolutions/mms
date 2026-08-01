@@ -27,8 +27,11 @@ export default function DuplicateDetection({
     colors,
     pairsLoading,
     pairsFetching,
+    pairsError,
+    refetchPairs,
     hasMore,
     activePairs,
+    totalPairs,
     keepIndex,
     merging,
     confirming,
@@ -47,8 +50,10 @@ export default function DuplicateDetection({
         colors={colors}
         pairsLoading={pairsLoading}
         pairsFetching={pairsFetching}
+        pairsError={pairsError}
         hasMore={hasMore}
         activePairs={activePairs}
+        totalPairs={totalPairs}
         keepIndex={keepIndex}
         totalMerged={totalMerged}
         canWrite={canWrite}
@@ -57,6 +62,9 @@ export default function DuplicateDetection({
         onDismiss={handleDismiss}
         onSelectKeep={setKeepIndexForPair}
         onLoadMore={handleLoadMoreDuplicates}
+        onRetry={() => {
+          void refetchPairs();
+        }}
       />
 
       <AnimatePresence>

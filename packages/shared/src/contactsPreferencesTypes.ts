@@ -2,6 +2,8 @@
 export interface ContactsWorkDrillDown {
   gender?: string;
   search?: string;
+  /** Work quick-filter preset id (e.g. whatsapp, missingInfo). */
+  quickFilter?: string;
 }
 
 export interface ContactColumnPreference {

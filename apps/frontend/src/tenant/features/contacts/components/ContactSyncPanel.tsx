@@ -9,12 +9,18 @@ interface ContactSyncPanelProps {
   contacts?: Contact[];
   onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
+  canEditSetup?: boolean;
 }
 
 /**
  * ContactSyncPanel component for managing Google and Apple Contacts synchronization.
  */
-export default function ContactSyncPanel({ contacts = [], onImport, canWrite = false }: ContactSyncPanelProps): React.JSX.Element {
+export default function ContactSyncPanel({
+  contacts = [],
+  onImport,
+  canWrite = false,
+  canEditSetup = false,
+}: ContactSyncPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   return (
     <div className="space-y-5 max-w-3xl text-start">
@@ -28,7 +34,7 @@ export default function ContactSyncPanel({ contacts = [], onImport, canWrite = f
         </div>
       </div>
 
-      <GoogleContactsPanel canWrite={canWrite} />
+      <GoogleContactsPanel canWrite={canWrite} canEditSetup={canEditSetup} />
       <AppleContactsPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
     </div>
   );

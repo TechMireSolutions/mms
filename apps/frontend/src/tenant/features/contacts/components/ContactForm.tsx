@@ -56,7 +56,15 @@ export default function ContactForm({
     defaultProvince,
     onSave,
     onClose,
-    onValidationTab: (tabId) => setTab(tabId as ContactFormTabKey),
+    onValidationTab: (tabId, fieldId) => {
+      setTab(tabId as ContactFormTabKey);
+      if (!fieldId) return;
+      const formInstanceId = String(contact?.id ?? "new");
+      requestAnimationFrame(() => {
+        const target = document.getElementById(`cf-${formInstanceId}-${fieldId}`);
+        if (target instanceof HTMLElement) target.focus();
+      });
+    },
   });
 
   useEffect(() => {

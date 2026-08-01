@@ -27,7 +27,7 @@ export function ContactsPageTabPanel({
     <AnimatePresence mode="wait">
       {effectiveTab === "work" ? (
         <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <ContactsWorkDirectory {...directoryProps} />
+          <ContactsWorkDirectory {...directoryProps} canWrite={canWrite} />
         </motion.div>
       ) : effectiveTab === "reports" ? (
         <motion.div

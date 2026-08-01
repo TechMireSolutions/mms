@@ -18,11 +18,11 @@ function withEmptyCollectionRows(
     socials:
       socials.length > 0
         ? socials
-        : [{ platform: socialPlatforms[0] || "Facebook", url: "" }],
+        : [{ platform: socialPlatforms[0] ?? "", url: "" }],
     emergencyContacts:
       emergencyContacts.length > 0
         ? emergencyContacts
-        : [{ relationship: relationshipOptions[0] || "Father", contactId: "" }],
+        : [{ relationship: relationshipOptions[0] ?? "", contactId: "" }],
   };
 }
 
@@ -45,7 +45,7 @@ export function useContactFormDraft({
   defaultProvince: string;
   onSave: (contact: Contact) => void | Promise<void>;
   onClose: () => void;
-  onValidationTab: (tabId: string) => void;
+  onValidationTab: (tabId: string, fieldId?: string) => void;
 }) {
   const {
     isTabFieldEnabled,

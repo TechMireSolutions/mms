@@ -24,7 +24,9 @@ export interface ContactsWorkListBodyProps {
   tableColumns: DirectoryColumn[];
   hasActiveFilters: boolean;
   viewingDeleted: boolean;
+  canWrite: boolean;
   onClearFilters: () => void;
+  onShowDeletedChange?: (show: boolean) => void;
   viewMode: ContactsWorkViewMode;
   commonDirectoryProps: React.ComponentProps<typeof ContactCards>;
   tableProps: React.ComponentProps<typeof ContactsTable>;
@@ -42,7 +44,9 @@ export function ContactsWorkListBody({
   tableColumns,
   hasActiveFilters,
   viewingDeleted,
+  canWrite,
   onClearFilters,
+  onShowDeletedChange,
   viewMode,
   commonDirectoryProps,
   tableProps,
@@ -52,12 +56,36 @@ export function ContactsWorkListBody({
 }: ContactsWorkListBodyProps): JSX.Element {
   const { t } = useTranslation();
 
+  const emptyDescription = hasActiveFilters
+    ? t("contacts.tryAdjustingFilters")
+    : viewingDeleted
+      ? t("contacts.emptyTrashHint")
+      : canWrite
+        ? t("contacts.clickAddContact")
+        : t("contacts.emptyDirectoryReadOnly");
+
+  const emptyAction = hasActiveFilters ? (
+    <Button type="button" variant="outline" size="sm" onClick={onClearFilters} className="gap-1.5">
+      <RefreshCw className="w-3 h-3" /> {t("contacts.clearFilters")}
+    </Button>
+  ) : viewingDeleted && onShowDeletedChange ? (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={() => onShowDeletedChange(false)}
+      className="gap-1.5"
+    >
+      <RefreshCw className="w-3 h-3" /> {t("contacts.showActive")}
+    </Button>
+  ) : null;
+
   return (
     <AnimatePresence mode="wait">
       {isWorkError ? (
         <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <ErrorState
-            title={t("contacts.sync.failed")}
+            title={t("contacts.loadFailed")}
             description={t("common.retry")}
             onRetry={onRetryWork}
           />
@@ -85,20 +113,8 @@ export function ContactsWorkListBody({
                       ? t("contacts.noDeletedContacts")
                       : t("contacts.noContactsYet")
                 }
-                description={
-                  hasActiveFilters
-                    ? t("contacts.tryAdjustingFilters")
-                    : viewingDeleted
-                      ? t("contacts.showActive")
-                      : t("contacts.clickAddContact")
-                }
-                action={
-                  hasActiveFilters ? (
-                    <Button type="button" variant="outline" size="sm" onClick={onClearFilters} className="gap-1.5">
-                      <RefreshCw className="w-3 h-3" /> {t("contacts.clearFilters")}
-                    </Button>
-                  ) : null
-                }
+                description={emptyDescription}
+                action={emptyAction}
               />
             </div>
           ) : (

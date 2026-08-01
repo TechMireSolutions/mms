@@ -4,7 +4,6 @@ import { formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { DETAIL_STYLES } from "./contactDetailStyles";
 
 export function ContactDetailDrawerHeaderActions({
   canWrite,
@@ -16,7 +15,7 @@ export function ContactDetailDrawerHeaderActions({
   onEdit: (contact: Contact) => void;
 }): React.JSX.Element | null {
   const { t } = useTranslation();
-  if (!canWrite) return null;
+  if (!canWrite || contact.deletedAt) return null;
 
   return (
     <Button
@@ -72,12 +71,6 @@ export function ContactDetailDrawerFooter({
             {formatDate((contact.updatedAt || contact.createdAt) as string)}
           </span>
         )}
-      </div>
-      <div className="flex items-center gap-1.5">
-        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${DETAIL_STYLES.liveIntelIndicator}`} />
-        <span className={`text-xs font-bold uppercase ${DETAIL_STYLES.liveIntelText}`}>
-          {t("contacts.detail.liveIntel")}
-        </span>
       </div>
     </>
   );

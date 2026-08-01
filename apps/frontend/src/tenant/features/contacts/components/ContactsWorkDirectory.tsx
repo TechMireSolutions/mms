@@ -33,6 +33,7 @@ export function ContactsWorkDirectory({
   canWriteMessaging,
   canExport,
   canDelete,
+  canWrite,
   onWhatsApp,
   onSms,
   onBulkExport,
@@ -101,7 +102,9 @@ export function ContactsWorkDirectory({
         tableColumns={tableColumns}
         hasActiveFilters={hasActiveFilters}
         viewingDeleted={viewingDeleted}
+        canWrite={canWrite}
         onClearFilters={onClearFilters}
+        onShowDeletedChange={onShowDeletedChange}
         viewMode={viewMode}
         commonDirectoryProps={commonDirectoryProps}
         tableProps={tableProps}

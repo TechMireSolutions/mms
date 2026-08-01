@@ -93,7 +93,12 @@ export default function ContactsSettingsPanel({
           />
         )}
         {sub === "sync" && (
-          <ContactSyncPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
+          <ContactSyncPanel
+            contacts={contacts}
+            onImport={onImport}
+            canWrite={canWrite}
+            canEditSetup={canEditSetup}
+          />
         )}
       </Suspense>
     </div>

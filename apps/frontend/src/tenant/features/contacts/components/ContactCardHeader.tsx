@@ -21,7 +21,7 @@ export function ContactCardHeader({
   const { t } = useTranslation();
 
   return (
-    <div className="flex gap-3 pe-16 items-start ms-1">
+    <div className="flex gap-3 items-start ms-1">
       <div className="flex items-center justify-center flex-shrink-0 pt-1">
         <Checkbox
           checked={isSelected}

@@ -7,9 +7,21 @@ import {
 import { useGoogleContactsOAuth } from "@/tenant/features/contacts/hooks/useGoogleContactsOAuth";
 import { useInvalidateContactsQueries } from "@/tenant/features/contacts/hooks/useContactMutations";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type ContactGoogleSyncConfigClient } from "@mms/shared";
+import { type AppTranslationKey, type ContactGoogleSyncConfigClient } from "@mms/shared";
 import { isApiError } from "@/lib/apiClient";
 import { queryClientInstance } from "@/lib/queryClient";
+
+function mapGoogleSyncError(
+  error: unknown,
+  translate: (key: AppTranslationKey) => string,
+): string {
+  if (isApiError(error)) {
+    if (error.type === "session_expired") return translate("contacts.sync.sessionExpired");
+    if (error.type === "forbidden") return translate("errors.state.permission");
+    return translate("contacts.sync.oauthError");
+  }
+  return translate("contacts.sync.oauthError");
+}
 
 export function useGoogleContactsSync({
   canWrite = true,
@@ -75,7 +87,7 @@ export function useGoogleContactsSync({
       setError("");
       void logSyncAudit.mutateAsync({ action: "credentials_saved" });
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : t("contacts.sync.oauthError"));
+      setError(mapGoogleSyncError(saveError, t));
     }
   };
 
@@ -93,14 +105,8 @@ export function useGoogleContactsSync({
     } catch (syncError) {
       if (isApiError(syncError) && syncError.type === "session_expired") {
         await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
-        setError(t("contacts.sync.sessionExpired"));
-        return;
       }
-      if (isApiError(syncError) && syncError.type === "oauth_error") {
-        setError(syncError.message || t("contacts.sync.oauthError"));
-        return;
-      }
-      setError(syncError instanceof Error ? syncError.message : t("contacts.sync.oauthError"));
+      setError(mapGoogleSyncError(syncError, t));
     } finally {
       setSyncing(false);
     }
@@ -122,7 +128,7 @@ export function useGoogleContactsSync({
       setShowAuthCode(false);
       setAuthCode("");
     } catch (disconnectError) {
-      setError(disconnectError instanceof Error ? disconnectError.message : t("contacts.sync.oauthError"));
+      setError(mapGoogleSyncError(disconnectError, t));
     }
   };
 

@@ -192,6 +192,30 @@ test.describe.serial('Authenticated tenant shell responsive layout', () => {
       }
     });
 
+    test(`${viewport.name} (${viewport.width}px) contacts Reports and Setup stay within viewport`, async ({
+      page,
+    }) => {
+      test.setTimeout(90_000);
+      await loginAndSetViewport(page, viewport);
+      await gotoReadyRoute(page, '/contacts', 'button:has-text("Add Contact"), [role="tab"], #main-content');
+
+      const reportsTab = page.getByRole('tab', { name: /Reports/i }).or(page.getByRole('button', { name: /Reports/i }));
+      if (await reportsTab.first().isVisible().catch(() => false)) {
+        await reportsTab.first().click();
+        await page.waitForLoadState('networkidle');
+        await assertNoHorizontalOverflow(page);
+        await assertPrimaryControlsMeetTouchTarget(page, { within: '#main-content' });
+      }
+
+      const setupTab = page.getByRole('tab', { name: /Setup/i }).or(page.getByRole('button', { name: /Setup/i }));
+      if (await setupTab.first().isVisible().catch(() => false)) {
+        await setupTab.first().click();
+        await page.waitForLoadState('networkidle');
+        await assertNoHorizontalOverflow(page);
+        await assertPrimaryControlsMeetTouchTarget(page, { within: '#main-content' });
+      }
+    });
+
     test(`${viewport.name} (${viewport.width}px) RTL module work views have no horizontal overflow`, async ({
       page,
     }) => {

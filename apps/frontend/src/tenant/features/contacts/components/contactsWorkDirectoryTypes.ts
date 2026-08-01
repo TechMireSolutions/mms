@@ -43,6 +43,7 @@ export interface ContactsWorkDirectoryProps {
   canWriteMessaging: boolean;
   canExport: boolean;
   canDelete: boolean;
+  canWrite: boolean;
   onWhatsApp: (targets: Contact[]) => void;
   onSms: (targets: Contact[]) => void;
   onBulkExport: () => void;

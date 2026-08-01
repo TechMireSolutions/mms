@@ -3,6 +3,7 @@ import { BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard, B
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card } from "@/components/ui/card";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { scrollDocumentToTop } from "@/lib/routing/scrollDocumentToTop";
 import ReportFilters from "@/tenant/features/reports/components/ReportFilters";
@@ -24,6 +25,8 @@ import QuestionBankReport from "@/tenant/features/reports/components/QuestionBan
 
 type ModuleReportCategory = "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
 
+type ReportsToolsTab = "dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder" | "saved";
+
 interface ModuleReportsProps {
   category: ModuleReportCategory;
 }
@@ -39,17 +42,14 @@ const DEFAULT_FILTERS = {
 
 /**
  * Reusable reporting view for specific modules.
- * 
- * @param {ModuleReportsProps} props - Component props.
- * @returns {React.JSX.Element}
  */
 export default function ModuleReports({ category }: ModuleReportsProps) {
   const { t } = useTranslation();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder" | "saved">("dashboard");
+  const [activeTab, setActiveTab] = useState<ReportsToolsTab>("dashboard");
   const [visualizerEditConfig, setVisualizerEditConfig] = useState<VisualizerConfig | undefined>(undefined);
 
-  const REPORT_TABS = useMemo<readonly SubTab<"dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder" | "saved">[]>(
+  const REPORT_TABS = useMemo<readonly SubTab<ReportsToolsTab>[]>(
     () => [
       { key: "dashboard", label: t("dashboard.title"), icon: BarChart2 },
       { key: "compare", label: t("reports.moduleTools.compare"), icon: GitCompare },
@@ -60,6 +60,11 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
       { key: "saved", label: t("reports.saved.title"), icon: Bookmark },
     ],
     [t]
+  );
+
+  const toolSelectOptions = useMemo(
+    () => REPORT_TABS.map((tab) => ({ value: tab.key, label: tab.label })),
+    [REPORT_TABS],
   );
 
   const handleEditVisual = (config: unknown) => {
@@ -101,13 +106,25 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
           </div>
         </div>
 
-        <SubTabBar
-          tabs={REPORT_TABS}
-          value={activeTab}
-          onChange={setActiveTab}
-          panelIdPrefix="reports-tools"
-          className="w-full lg:w-auto"
-        />
+        <div className="w-full min-w-0 lg:hidden">
+          <FormSelect
+            id="reports-tools-mobile"
+            value={activeTab}
+            onChange={(next) => setActiveTab(next as ReportsToolsTab)}
+            options={toolSelectOptions}
+            aria-label={t("reports.moduleTools.title")}
+          />
+        </div>
+
+        <div className="hidden w-full lg:block lg:w-auto">
+          <SubTabBar
+            tabs={REPORT_TABS}
+            value={activeTab}
+            onChange={setActiveTab}
+            panelIdPrefix="reports-tools"
+            className="w-full lg:w-auto"
+          />
+        </div>
       </div>
 
       <ModuleReportsToolPanels
@@ -132,10 +149,12 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
       />
 
       <div className="print:hidden">
-        <ReportFilters category={category} filters={filters} onChange={setFilters} />
+        {category !== "contacts" ? (
+          <ReportFilters category={category} filters={filters} onChange={setFilters} />
+        ) : null}
       </div>
 
-      <Card className="overflow-hidden shadow-xl ring-1 ring-black/[0.03]">
+      <Card className="overflow-hidden shadow-xl ring-1 ring-border/40">
         {renderReport()}
       </Card>
     </div>

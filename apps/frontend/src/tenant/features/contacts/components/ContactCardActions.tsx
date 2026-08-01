@@ -51,6 +51,7 @@ export function ContactCardActions({
         displayName={displayName}
         phone={phone}
         email={email}
+        showArchived={showArchived}
         onWhatsApp={onWhatsApp}
         onSms={onSms}
         onEmail={onEmail}

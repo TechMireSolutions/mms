@@ -1,28 +1,36 @@
-import React, { useState } from "react";
-import { Users, UserCheck, MessageCircle, Loader2 } from "lucide-react";
+import React from "react";
+import { Users, UserCheck, MessageCircle, UserPlus, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsReportAnalytics } from "@/tenant/hooks/collections/contacts";
 import { StatCard } from "@/components/ui/StatCard";
-import ContactsSavedReports from "./ContactsSavedReports";
-import type { ContactsWorkDrillDown } from "@mms/shared";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 
 interface ContactReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-
-/** Contacts CRM Report sub-tab layout. */
+/** Contacts CRM Report dashboard — KPIs only; saved reports live under Reports → Saved. */
 export default function ContactReport(props: ContactReportProps): React.JSX.Element {
   void props.onEditVisual;
 
   const { t } = useTranslation();
-  const { data, isLoading } = useContactsReportAnalytics();
+  const { data, isLoading, isError, refetch } = useContactsReportAnalytics();
   const analytics = data?.analytics;
-  const [lastDrillDown] = useState<ContactsWorkDrillDown>({});
 
-  const totalContacts = analytics?.total ?? 0;
-  const activeContacts = analytics?.activeCount ?? 0;
-  const whatsappRate = analytics?.whatsappRate ?? 0;
+  if (isError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={t("contacts.report.loadFailed")}
+          description={t("common.retry")}
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   if (isLoading && !analytics) {
     return (
@@ -33,15 +41,41 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
     );
   }
 
+  const totalContacts = analytics?.total ?? 0;
+  const activeContacts = analytics?.activeCount ?? 0;
+  const whatsappRate = analytics?.whatsappRate ?? 0;
+  const newLast30Days = analytics?.newLast30Days ?? 0;
+
   return (
     <div className="space-y-6 text-start p-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard icon={Users} label={t("contacts.report.totalContacts")} value={totalContacts} color="primary" />
-        <StatCard icon={UserCheck} label={t("contacts.report.activeContacts")} value={activeContacts} color="green" />
-        <StatCard icon={MessageCircle} label={t("contacts.report.whatsappVerified")} value={`${whatsappRate}%`} color="amber" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard
+          icon={Users}
+          label={t("contacts.report.totalContacts")}
+          value={totalContacts}
+          accent="primary"
+          onClick={() => applyContactsWorkDrillDown({})}
+        />
+        <StatCard
+          icon={UserCheck}
+          label={t("contacts.report.activeContacts")}
+          value={activeContacts}
+          accent="success"
+        />
+        <StatCard
+          icon={MessageCircle}
+          label={t("contacts.report.whatsappVerified")}
+          value={`${whatsappRate}%`}
+          accent="warning"
+          onClick={() => applyContactsWorkDrillDown({ quickFilter: "whatsapp" })}
+        />
+        <StatCard
+          icon={UserPlus}
+          label={t("contacts.report.newLast30Days")}
+          value={newLast30Days}
+          accent="secondary"
+        />
       </div>
-
-      <ContactsSavedReports suggestedDrillDown={lastDrillDown} />
     </div>
   );
 }

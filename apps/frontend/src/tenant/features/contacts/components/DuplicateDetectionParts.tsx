@@ -51,6 +51,7 @@ export function DuplicateContactCard({
     <div
       role="button"
       tabIndex={0}
+      aria-pressed={selected}
       onClick={onSelect}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {

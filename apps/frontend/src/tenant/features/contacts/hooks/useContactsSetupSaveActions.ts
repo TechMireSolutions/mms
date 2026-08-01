@@ -67,19 +67,6 @@ export function useContactsSetupSaveActions({
       const applyTitleCaseToTabs = (tabs: TabDefinition[]) =>
         tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
 
-      await saveSettingsAsync(
-        {},
-        {
-          version: CONFIG_VERSION,
-          pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
-          formTabs: applyTitleCaseToTabs(fieldsEditor.formTabs),
-          detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
-          settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
-          columnRegistry: config.columnRegistry,
-        },
-        { markSaved: false },
-      );
-
       const updatedPrefs = {
         ...prefs,
         defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
@@ -87,15 +74,32 @@ export function useContactsSetupSaveActions({
         defaultCity: prefs.defaultCity ? toTitleCase(prefs.defaultCity.trim()) : "",
       };
 
-      await updatePrefsAsync(updatedPrefs);
+      if (mode === "preferences") {
+        await updatePrefsAsync(updatedPrefs);
+        await logSetupAudit.mutateAsync({
+          area: "preferences",
+          summary: t("contacts.setup.auditSummary", { area: "preferences" }),
+        });
+        setPrefs(updatedPrefs);
+      } else {
+        await saveSettingsAsync(
+          {},
+          {
+            version: CONFIG_VERSION,
+            pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
+            formTabs: applyTitleCaseToTabs(fieldsEditor.formTabs),
+            detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
+            settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
+            columnRegistry: config.columnRegistry,
+          },
+          { markSaved: false },
+        );
+        await logSetupAudit.mutateAsync({
+          area: "fields",
+          summary: t("contacts.setup.auditSummary", { area: "fields" }),
+        });
+      }
 
-      const auditArea = mode === "preferences" ? "preferences" : "fields";
-      await logSetupAudit.mutateAsync({
-        area: auditArea,
-        summary: t("contacts.setup.auditSummary", { area: auditArea }),
-      });
-
-      setPrefs(updatedPrefs);
       setSaved(true);
     } catch {
       setSaved(false);

@@ -80,7 +80,7 @@ export default function ContactsToolbar({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
           <ContactsFilterMenuButton
             activeFilterCount={activeFilterCount}
             quickFilter={quickFilter}

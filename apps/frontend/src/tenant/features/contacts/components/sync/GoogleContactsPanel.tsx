@@ -15,14 +15,18 @@ import {
 
 export interface GoogleContactsPanelProps {
   canWrite?: boolean;
+  canEditSetup?: boolean;
 }
 
 /**
  * GoogleContactsPanel component to configure and run Google Contacts synchronization.
  */
-export function GoogleContactsPanel({ canWrite = true }: GoogleContactsPanelProps): React.JSX.Element {
+export function GoogleContactsPanel({
+  canWrite = true,
+  canEditSetup = false,
+}: GoogleContactsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const sync = useGoogleContactsSync({ canWrite });
+  const sync = useGoogleContactsSync({ canWrite: canWrite || canEditSetup });
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">
@@ -38,7 +42,7 @@ export function GoogleContactsPanel({ canWrite = true }: GoogleContactsPanelProp
             </span>
           )}
         </div>
-        {canWrite && (
+        {canEditSetup && (
           <Button
             type="button"
             variant="ghost"
@@ -57,7 +61,7 @@ export function GoogleContactsPanel({ canWrite = true }: GoogleContactsPanelProp
           <GoogleContactsSetupHint t={t} />
         )}
 
-        {canWrite && sync.showSetup && (
+        {canEditSetup && sync.showSetup && (
           <GoogleContactsSetupForm
             clientId={sync.form.clientId}
             clientSecret={sync.form.clientSecret}
@@ -73,7 +77,7 @@ export function GoogleContactsPanel({ canWrite = true }: GoogleContactsPanelProp
           />
         )}
 
-        {sync.isConfigured && !sync.isConnected && !sync.showSetup && canWrite && (
+        {sync.isConfigured && !sync.isConnected && !sync.showSetup && canEditSetup && (
           <GoogleContactsConnectStep
             showAuthCode={sync.showAuthCode}
             authCode={sync.authCode}

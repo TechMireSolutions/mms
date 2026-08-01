@@ -1,4 +1,5 @@
 import type { ContactsSavedReport, ContactsWorkDrillDown } from './contactsPreferencesTypes.js';
+import { isContactsQuickFilter } from './contactsListQuery.js';
 
 export type ContactsSavedReportShareScope = 'private' | 'roles' | 'users' | 'global';
 
@@ -9,7 +10,7 @@ export interface ContactsSavedReportViewer {
 }
 
 export interface ContactsSavedReportIssue {
-  kind: 'stale_gender';
+  kind: 'stale_gender' | 'stale_quick_filter';
   field: keyof ContactsWorkDrillDown;
   value: string;
 }
@@ -54,6 +55,13 @@ export function validateContactsSavedReportDrillDown(
       kind: 'stale_gender',
       field: 'gender',
       value: drillDown.gender,
+    });
+  }
+  if (drillDown.quickFilter && !isContactsQuickFilter(drillDown.quickFilter)) {
+    issues.push({
+      kind: 'stale_quick_filter',
+      field: 'quickFilter',
+      value: drillDown.quickFilter,
     });
   }
   return issues;

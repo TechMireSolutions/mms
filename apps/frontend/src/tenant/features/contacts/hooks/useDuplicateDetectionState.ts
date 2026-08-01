@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   applyTitleCaseToContact,
-  findContactDuplicatePairs,
   mergeContacts,
   type AppTranslationKey,
   type Contact,
@@ -36,10 +35,9 @@ function mapPairToViewModel(
 }
 
 export function useDuplicateDetectionState({
-  contacts,
   onMerge,
 }: {
-  contacts: Contact[];
+  contacts?: Contact[];
   onMerge: (keepId: string | number, deleteId: string | number, mergedData: Contact) => Promise<void>;
 }) {
   const { prefs } = useContactConfig();
@@ -50,6 +48,9 @@ export function useDuplicateDetectionState({
     data: serverPairs,
     isLoading: pairsLoading,
     isFetching: pairsFetching,
+    isError: pairsError,
+    isSuccess: pairsSuccess,
+    refetch: refetchPairs,
   } = useContactsDuplicatePairs({
     page: dupPage,
     limit: 50,
@@ -73,9 +74,10 @@ export function useDuplicateDetectionState({
   }, [serverPairs, dupPage, t]);
 
   const detectedPairs = useMemo<DuplicatePair[]>(() => {
-    if (loadedPairs.length > 0) return loadedPairs;
-    return findContactDuplicatePairs(contacts, prefs).map((pair) => mapPairToViewModel(pair, t));
-  }, [loadedPairs, contacts, prefs, t]);
+    if (pairsError) return [];
+    if (pairsSuccess || loadedPairs.length > 0) return loadedPairs;
+    return [];
+  }, [loadedPairs, pairsError, pairsSuccess]);
 
   const handleLoadMoreDuplicates = useCallback(() => {
     if (serverPairs?.hasMore) setDupPage((currentPage) => currentPage + 1);
@@ -85,6 +87,8 @@ export function useDuplicateDetectionState({
     () => detectedPairs.filter((pair) => !dismissedPairIds.has(pair.id) && !mergedPairIds.has(pair.id)),
     [detectedPairs, dismissedPairIds, mergedPairIds],
   );
+
+  const totalPairs = serverPairs?.total ?? detectedPairs.length;
 
   const handleMergeConfirm = async (): Promise<void> => {
     if (!merging || confirming) return;
@@ -121,8 +125,11 @@ export function useDuplicateDetectionState({
     colors,
     pairsLoading,
     pairsFetching,
+    pairsError,
+    refetchPairs,
     hasMore: Boolean(serverPairs?.hasMore),
     activePairs,
+    totalPairs,
     keepIndex,
     merging,
     confirming,

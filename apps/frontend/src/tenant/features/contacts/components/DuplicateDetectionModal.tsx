@@ -2,6 +2,7 @@ import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DuplicatePairCard } from "@/tenant/features/contacts/components/DuplicatePairCard";
 import {
@@ -14,8 +15,10 @@ export function DuplicateDetectionModal({
   colors,
   pairsLoading,
   pairsFetching,
+  pairsError,
   hasMore,
   activePairs,
+  totalPairs,
   keepIndex,
   totalMerged,
   canWrite,
@@ -24,13 +27,16 @@ export function DuplicateDetectionModal({
   onDismiss,
   onSelectKeep,
   onLoadMore,
+  onRetry,
 }: {
   prefs: ContactPreferences;
   colors: ReturnType<typeof getDuplicateThemeColors>;
   pairsLoading: boolean;
   pairsFetching: boolean;
+  pairsError: boolean;
   hasMore: boolean;
   activePairs: DuplicatePair[];
+  totalPairs: number;
   keepIndex: Record<string, number>;
   totalMerged: number;
   canWrite: boolean;
@@ -39,6 +45,7 @@ export function DuplicateDetectionModal({
   onDismiss: (pairId: string) => void;
   onSelectKeep: (pairId: string, contactIndex: number) => void;
   onLoadMore: () => void;
+  onRetry: () => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -47,7 +54,7 @@ export function DuplicateDetectionModal({
       open={true}
       onClose={onClose}
       title={t("contacts.duplicates.title")}
-      subtitle={t("contacts.duplicates.potentialFound", { count: activePairs.length })}
+      subtitle={t("contacts.duplicates.potentialFound", { count: totalPairs })}
       icon={AlertTriangle}
       size="lg"
       footer={
@@ -77,7 +84,13 @@ export function DuplicateDetectionModal({
           </div>
         )}
 
-        {pairsLoading ? (
+        {pairsError ? (
+          <ErrorState
+            title={t("contacts.duplicates.scanFailed")}
+            description={t("common.retry")}
+            onRetry={onRetry}
+          />
+        ) : pairsLoading ? (
           <div className="py-12 flex flex-col items-center gap-2 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin" />
             <p className="text-sm">{t("common.loading")}</p>
@@ -89,22 +102,25 @@ export function DuplicateDetectionModal({
             <p className="text-xs text-muted-foreground mt-1">{t("contacts.duplicates.listClean")}</p>
           </div>
         ) : (
-          activePairs.map((pair) => (
-            <DuplicatePairCard
-              key={pair.id}
-              pair={pair}
-              prefs={prefs}
-              selectedKeepIndex={keepIndex[pair.id] ?? 0}
-              canWrite={canWrite}
-              onMerge={() => onMergePair(pair)}
-              onDismiss={() => onDismiss(pair.id)}
-              onSelectKeep={(contactIndex) => onSelectKeep(pair.id, contactIndex)}
-              t={t}
-            />
-          ))
+          <>
+            <p className="text-xs text-muted-foreground">{t("contacts.duplicates.dismissSessionHint")}</p>
+            {activePairs.map((pair) => (
+              <DuplicatePairCard
+                key={pair.id}
+                pair={pair}
+                prefs={prefs}
+                selectedKeepIndex={keepIndex[pair.id] ?? 0}
+                canWrite={canWrite}
+                onMerge={() => onMergePair(pair)}
+                onDismiss={() => onDismiss(pair.id)}
+                onSelectKeep={(contactIndex) => onSelectKeep(pair.id, contactIndex)}
+                t={t}
+              />
+            ))}
+          </>
         )}
 
-        {hasMore && (
+        {hasMore && !pairsError && (
           <div className="flex justify-center pt-2">
             <Button
               type="button"

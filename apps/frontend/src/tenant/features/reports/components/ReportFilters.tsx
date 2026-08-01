@@ -25,19 +25,19 @@ interface ReportFiltersProps {
 const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
   attendance: ['session', 'class', 'dateFrom', 'dateTo', 'student'],
   students: ['session', 'class', 'status', 'student'],
-  contacts: ['status', 'student'],
+  /** Contacts dashboard does not consume these academic filters — omit until contact-aware filters ship. */
+  contacts: [],
   financial: ['session', 'dateFrom', 'dateTo', 'status'],
   academic: ['session', 'class', 'status', 'student'],
   hasanat: ['session', 'class', 'dateFrom', 'dateTo'],
   sessions: ['status'],
 };
 
-export default function ReportFilters({ category, filters, onChange }: ReportFiltersProps): React.JSX.Element {
+export default function ReportFilters({ category, filters, onChange }: ReportFiltersProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const [open, setOpen] = useState<boolean>(true);
-
-  const allowed = CATEGORY_FILTERS[category] || ['session', 'class', 'status', 'dateFrom', 'dateTo', 'student'];
   const rawSessions = useSessionsCollection();
+  const allowed = CATEGORY_FILTERS[category] || ['session', 'class', 'status', 'dateFrom', 'dateTo', 'student'];
 
   const sessions = useMemo(() => {
     return [{ id: 'all', name: t('reports.filters.allSessions') }, ...rawSessions.map((session) => ({ id: session.id, name: session.name }))];
@@ -48,6 +48,10 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
     rawSessions.forEach((session) => (session.classes || []).forEach((sessionClass) => uniqueClasses.add(sessionClass.name)));
     return [{ id: 'all', name: t('reports.filters.allClasses') }, ...Array.from(uniqueClasses).map((name) => ({ id: name, name }))];
   }, [rawSessions, t]);
+
+  if (allowed.length === 0) {
+    return null;
+  }
 
   const set = (key: keyof ReportFilterFields, value: string): void => {
     onChange({ ...filters, [key]: value });

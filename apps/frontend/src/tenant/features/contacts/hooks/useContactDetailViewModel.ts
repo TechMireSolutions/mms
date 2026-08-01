@@ -36,7 +36,8 @@ export function useContactDetailViewModel({
   const noteInputId = useId();
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState("");
-  const canPersistContact = canWrite && Boolean(onUpdateContact);
+  const isArchived = Boolean(contactState.deletedAt ?? initialContact.deletedAt);
+  const canPersistContact = canWrite && Boolean(onUpdateContact) && !isArchived;
 
   const detailTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.detailTabs || [];

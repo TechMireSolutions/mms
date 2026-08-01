@@ -56,9 +56,8 @@ export function useGoogleContactsOAuth({
         setShowAuthCode(false);
         setAuthCode("");
         setError("");
-      } catch (exchangeError) {
-        const message = exchangeError instanceof Error ? exchangeError.message : String(exchangeError);
-        setError(t("contacts.sync.tokenExchangeFailed", { message }));
+      } catch {
+        setError(t("contacts.sync.oauthError"));
       } finally {
         setExchanging(false);
       }

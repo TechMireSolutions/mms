@@ -15,6 +15,7 @@ export function ContactCardMessagingButtons({
   displayName,
   phone,
   email,
+  showArchived = false,
   onWhatsApp,
   onSms,
   onEmail,
@@ -23,6 +24,7 @@ export function ContactCardMessagingButtons({
   displayName: string;
   phone: string | null;
   email: string | null;
+  showArchived?: boolean;
   onWhatsApp?: (contacts: Contact[]) => void;
   onSms?: (contacts: Contact[]) => void;
   onEmail?: (contacts: Contact[]) => void;
@@ -31,7 +33,7 @@ export function ContactCardMessagingButtons({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {phone ? (
+      {!showArchived && phone ? (
         <motion.a
           href={formatTelHref(phone)}
           whileHover={{ scale: 1.05 }}
@@ -42,14 +44,7 @@ export function ContactCardMessagingButtons({
         >
           <Phone aria-hidden="true" className="w-4 h-4" />
         </motion.a>
-      ) : (
-        <div
-          className={`${messagingBtnClass} inline-flex items-center justify-center border-border/20 bg-card/20 text-muted-foreground/30 cursor-not-allowed opacity-40`}
-          title={`${t("contacts.detail.call")} - ${displayName}`}
-        >
-          <Phone aria-hidden="true" className="w-4 h-4" />
-        </div>
-      )}
+      ) : null}
 
       {onWhatsApp && hasWhatsApp(contact) && (
         <MotionButton

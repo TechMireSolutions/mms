@@ -90,13 +90,12 @@ export function ContactsBulkActionBar({
                 {t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
               </Button>
             )}
-            {bulkActions.includes("export") && (
+            {bulkActions.includes("export") && canExport && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
                 onClick={onBulkExport}
-                disabled={!canExport}
                 className="gap-1.5 font-semibold"
               >
                 <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
