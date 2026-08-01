@@ -1,5 +1,7 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
 import { initDb } from '../db/database.js';
+import { purgeTenantDataBySubdomain } from '../db/dbPurge.js';
 import { buildApp } from '../app.js';
 import { deleteCustomTab } from '../services/customTabsService.js';
 import { runWithTenant } from '../lib/tenantContext.js';
@@ -30,6 +32,16 @@ import { workspaces } from '../db/schema.js';
 describe('custom tabs REST API routes', () => {
   let isDbAvailable = false;
   let app: FastifyInstance;
+
+  afterAll(async () => {
+    if (!isDbAvailable) return;
+    try {
+      await purgeTenantDataBySubdomain('demo');
+      await getDb().delete(workspaces).where(eq(workspaces.id, 'ws-demo'));
+    } catch {
+      // Ignore cleanup errors
+    }
+  });
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';

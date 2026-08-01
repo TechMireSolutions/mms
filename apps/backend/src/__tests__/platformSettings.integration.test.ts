@@ -1,8 +1,9 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
 import {
+  deletePlatformUserRow,
   findPlatformUserRowByEmail,
   findPlatformUserRowById,
   insertPlatformUser,
@@ -21,6 +22,16 @@ describe('platformSettings REST API routes', () => {
   let superSessionVersion = 0;
   let adminUserId = 'p-admin';
   let adminSessionVersion = 0;
+
+  afterAll(async () => {
+    if (!isDbAvailable) return;
+    try {
+      await deletePlatformUserRow('p-super');
+      await deletePlatformUserRow('p-admin');
+    } catch {
+      // Ignore cleanup errors
+    }
+  });
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';

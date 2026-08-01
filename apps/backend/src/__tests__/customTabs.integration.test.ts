@@ -1,5 +1,7 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { eq } from 'drizzle-orm';
 import { getObject, saveObject, getAllData, initDb } from '../db/database.js';
+import { purgeTenantDataBySubdomain } from '../db/dbPurge.js';
 import { runWithTenant } from '../lib/tenantContext.js';
 
 import { getDb } from '../db/dbClient.js';
@@ -7,6 +9,16 @@ import { workspaces } from '../db/schema.js';
 
 describe('custom tabs relational migration and operations', () => {
   let isDbAvailable = false;
+
+  afterAll(async () => {
+    if (!isDbAvailable) return;
+    try {
+      await purgeTenantDataBySubdomain('demo');
+      await getDb().delete(workspaces).where(eq(workspaces.id, 'ws-demo'));
+    } catch {
+      // Ignore cleanup errors
+    }
+  });
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
