@@ -1,12 +1,26 @@
 import type React from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { AttendanceStatus } from "@/lib/data/attendanceData";
 
 interface AttendanceRecordsToolbarProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   handleSearchChange: (query: string) => void;
   statusFilter: string;
@@ -23,6 +37,8 @@ interface AttendanceRecordsToolbarProps {
 }
 
 export function AttendanceRecordsToolbar({
+  viewMode,
+  onViewModeChange,
   search,
   handleSearchChange,
   statusFilter,
@@ -37,6 +53,8 @@ export function AttendanceRecordsToolbar({
   columnCustomizer,
   t,
 }: AttendanceRecordsToolbarProps): React.JSX.Element {
+  const activeFilterCount = statusFilter !== "all" ? 1 : 0;
+
   return (
     <div className="flex flex-wrap gap-2 items-center">
       <SearchBar
@@ -46,27 +64,63 @@ export function AttendanceRecordsToolbar({
         className="flex-1 min-w-[11.25rem]"
       />
 
-      <div className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-bold" role="group" aria-label={t("attendance.filter.status")}>
-        <Button
-          type="button"
-          variant={statusFilter === "all" ? "default" : "ghost"}
-          onClick={() => { setStatusFilter("all"); setPage(1); }}
-          className="shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-e border-border"
-        >
-          {t("attendance.filter.all")}
-        </Button>
-        {statuses.map((status) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             type="button"
-            key={status.id}
-            variant={statusFilter === status.id ? "default" : "ghost"}
-            onClick={() => { setStatusFilter(status.id); setPage(1); }}
-            className={`shrink-0 rounded-none min-h-11 px-3 text-xs font-bold border-e border-border last:border-e-0 ${statusFilter === status.id ? `${status.bg} ${status.text}` : ""}`}
+            variant="ghost"
+            className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+              activeFilterCount > 0
+                ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
+                : "border-border bg-card text-foreground"
+            }`}
           >
-            {statusLabel(status.id)}
+            <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>{t("common.filters")}</span>
+            {activeFilterCount > 0 && (
+              <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
           </Button>
-        ))}
-      </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
+          <DropdownMenuLabel className="text-xs">{t("attendance.filter.status")}</DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value);
+              setPage(1);
+            }}
+          >
+            <DropdownMenuRadioItem value="all" className="text-sm">
+              {t("attendance.filter.all")}
+            </DropdownMenuRadioItem>
+            {statuses.map((status) => (
+              <DropdownMenuRadioItem key={status.id} value={status.id} className="text-sm">
+                {statusLabel(status.id)}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+
+          {activeFilterCount > 0 && (
+            <>
+              <DropdownMenuSeparator className="bg-border" />
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-start px-2 min-h-11 text-sm text-muted-foreground"
+                onClick={() => {
+                  setStatusFilter("all");
+                  setPage(1);
+                }}
+              >
+                {t("common.clearFilters")}
+              </Button>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <DatePicker
         id="date-from"
@@ -81,6 +135,8 @@ export function AttendanceRecordsToolbar({
         onChange={(value) => { setDateTo(value); setPage(1); }}
         className="w-full min-w-0 max-w-full text-sm rounded-xl border border-border bg-background px-3 py-2 sm:max-w-[9.375rem]"
       />
+
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
 
       {columnCustomizer && (
         <ModuleColumnCustomizer

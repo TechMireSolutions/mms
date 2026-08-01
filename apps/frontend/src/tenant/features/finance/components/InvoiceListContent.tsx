@@ -9,8 +9,7 @@ export type { InvoiceListVisibleColumns } from "@/tenant/features/finance/compon
 export function InvoiceListContent(props: InvoiceListContentProps): React.JSX.Element {
   return (
     <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-      <InvoiceListCards {...props} />
-      <InvoiceListTable {...props} />
+      {props.viewMode === "cards" ? <InvoiceListCards {...props} /> : <InvoiceListTable {...props} />}
     </Card>
   );
 }

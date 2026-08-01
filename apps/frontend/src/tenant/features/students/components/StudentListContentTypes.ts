@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from "react";
 import type { Student, toMessagingRecipient } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 export type StudentListSortField = "name" | "age" | "fatherName" | "status" | "grNumber";
 
@@ -52,7 +53,7 @@ export interface StudentListTableProps extends StudentListSelectionProps {
 
 export interface StudentListContentProps extends StudentListTableProps {
   students: Student[];
-  layout: string;
+  viewMode: WorkDirectoryViewMode;
   currentPage: number;
   pageSize: number;
   hasServerPagination: boolean;

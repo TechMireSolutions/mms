@@ -34,7 +34,7 @@ export function ExaminationsListCards(props: ExaminationsListCardsProps): React.
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-3 p-3 md:hidden" role="list" aria-label={t("examinations.exams")}>
+    <div className="space-y-3 p-3" role="list" aria-label={t("examinations.exams")}>
       {exams.map((exam, index) => {
         const { assignedClasses, studentCount } = getExamMeta(exam, classes, enrollments);
 

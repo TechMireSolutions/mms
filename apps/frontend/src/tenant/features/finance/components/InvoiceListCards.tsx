@@ -35,7 +35,7 @@ export function InvoiceListCards(props: InvoiceListCardsProps): React.JSX.Elemen
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {invoices.length === 0 ? (
         <EmptyState icon={ReceiptText} title={t("finance.empty.invoicesTitle")} description={t("finance.empty.invoicesSubtitle")} compact />
       ) : (

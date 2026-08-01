@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -23,6 +25,8 @@ interface TeachersWorkTierToolbarProps {
   columnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   customizerLabels: ModuleColumnCustomizerLabels;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
   onSpecializationChange: (value: string) => void;
@@ -40,6 +44,8 @@ export function TeachersWorkTierToolbar({
   columnRegistry,
   updateUserColumnLayout,
   customizerLabels,
+  viewMode,
+  onViewModeChange,
   onSearchChange,
   onToggleStatus,
   onSpecializationChange,
@@ -123,6 +129,8 @@ export function TeachersWorkTierToolbar({
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
 
       <ModuleColumnCustomizer
         columnRegistry={columnRegistry}

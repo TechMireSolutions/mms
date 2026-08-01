@@ -1,11 +1,12 @@
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { ContactsQuickFilter } from "@mms/shared";
+import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
 import {
   ContactsClearFiltersButton,
   ContactsDeletedToggleButton,
   ContactsFilterMenuButton,
-  ContactsViewModeToggle,
 } from "@/tenant/features/contacts/components/ContactsToolbarControls";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 
@@ -24,8 +25,8 @@ interface ContactsToolbarProps {
   showDeletedArchives?: boolean;
   onShowDeletedChange?: (show: boolean) => void;
   canViewDeleted?: boolean;
-  viewMode?: "table" | "cards";
-  onViewModeChange?: (mode: "table" | "cards") => void;
+  viewMode: ContactsWorkViewMode;
+  onViewModeChange: (mode: ContactsWorkViewMode) => void;
   shownCount?: number;
 }
 
@@ -44,7 +45,7 @@ export default function ContactsToolbar({
   showDeletedArchives = false,
   onShowDeletedChange,
   canViewDeleted = false,
-  viewMode = "table",
+  viewMode,
   onViewModeChange,
   shownCount,
 }: ContactsToolbarProps): JSX.Element {
@@ -105,13 +106,10 @@ export default function ContactsToolbar({
             />
           )}
 
-          {onViewModeChange && (
-            <ContactsViewModeToggle
-              viewMode={viewMode}
-              onViewModeChange={onViewModeChange}
-              t={t}
-            />
-          )}
+          <WorkViewModeToggle
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+          />
 
           <ModuleColumnCustomizer
             columnRegistry={columnRegistry}

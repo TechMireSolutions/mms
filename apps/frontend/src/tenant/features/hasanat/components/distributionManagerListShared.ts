@@ -1,3 +1,4 @@
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 
@@ -15,6 +16,7 @@ export interface DistributionVisibleColumns {
 }
 
 export interface DistributionManagerListProps {
+  viewMode: WorkDirectoryViewMode;
   distributions: Distribution[];
   denoms: Denomination[];
   selectedIds: string[];

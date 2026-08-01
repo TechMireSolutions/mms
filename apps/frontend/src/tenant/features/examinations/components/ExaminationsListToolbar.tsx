@@ -9,12 +9,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ChevronDown, Filter, RotateCcw, Search, Trash2 } from "lucide-react";
 
 const EXAM_STATUSES = ["upcoming", "ongoing", "completed", "scheduled", "cancelled"] as const;
 
 interface ExaminationsListToolbarProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   filterStatus: string[];
   selectedCount: number;
@@ -30,6 +34,8 @@ interface ExaminationsListToolbarProps {
 }
 
 export function ExaminationsListToolbar({
+  viewMode,
+  onViewModeChange,
   search,
   filterStatus,
   selectedCount,
@@ -84,6 +90,7 @@ export function ExaminationsListToolbar({
         </DropdownMenuContent>
       </DropdownMenu>
       <div className="flex flex-wrap items-center gap-2">
+        <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
         {columnCustomizer && (
           <ModuleColumnCustomizer
             columnRegistry={columnCustomizer.columnRegistry}

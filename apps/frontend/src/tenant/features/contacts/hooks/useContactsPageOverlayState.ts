@@ -1,8 +1,10 @@
 import { useState } from "react";
 import type { Contact } from "@mms/shared";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 /** Overlay / dialog UI state for Contacts Work (form, drawer, duplicates, bulk confirms). */
 export function useContactsPageOverlayState() {
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const [showForm, setShowForm] = useState(false);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [viewContact, setViewContact] = useState<Contact | null>(null);
@@ -11,7 +13,6 @@ export function useContactsPageOverlayState() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string | number; name?: string } | null>(null);
-  const [viewModeOverride, setViewModeOverride] = useState<"table" | "cards" | null>(null);
   const [conflictPanelOpen, setConflictPanelOpen] = useState(false);
 
   return {
@@ -31,8 +32,8 @@ export function useContactsPageOverlayState() {
     setBulkRestoreOpen,
     deleteTarget,
     setDeleteTarget,
-    viewModeOverride,
-    setViewModeOverride,
+    viewMode,
+    setViewMode,
     conflictPanelOpen,
     setConflictPanelOpen,
   };

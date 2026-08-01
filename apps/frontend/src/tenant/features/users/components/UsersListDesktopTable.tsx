@@ -47,7 +47,7 @@ export function UsersListDesktopTable({
   const { t } = useTranslation();
 
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div className="overflow-x-auto">
       <table className="w-full table-fixed text-sm">
         <thead className="border-b border-border bg-muted/60">
           <tr>

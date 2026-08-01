@@ -1,8 +1,19 @@
+import { SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/FormSelect";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ENROLLMENT_STATUSES } from "@/lib/data/enrollmentData";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -21,6 +32,8 @@ interface EnrollmentListToolbarProps {
   onStatusChange: (value: string) => void;
   onSessionChange: (value: string) => void;
   onShowDeletedChange?: (showDeleted: boolean) => void;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
 }
 
 export function EnrollmentListToolbar({
@@ -36,8 +49,12 @@ export function EnrollmentListToolbar({
   onStatusChange,
   onSessionChange,
   onShowDeletedChange,
+  viewMode,
+  onViewModeChange,
 }: EnrollmentListToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
+  const activeFilterCount =
+    (statusFilter !== "all" ? 1 : 0) + (sessionFilter !== "all" ? 1 : 0);
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
@@ -49,41 +66,70 @@ export function EnrollmentListToolbar({
       />
 
       {!showDeleted && (
-        <div className="flex max-w-full overflow-x-auto rounded-lg border border-border text-xs font-bold" role="group" aria-label={t("enrollments.filter.status")}>
-          <Button
-            variant="ghost"
-            onClick={() => onStatusChange("all")}
-            className={`shrink-0 px-3 py-2 transition-colors rounded-none min-h-11 ${statusFilter === "all" ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
-          >
-            {t("enrollments.filter.all")}
-          </Button>
-          {ENROLLMENT_STATUSES.map((status) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
-              key={status.id}
+              type="button"
               variant="ghost"
-              onClick={() => onStatusChange(status.id)}
-              className={`shrink-0 px-3 py-2 transition-colors rounded-none min-h-11 ${statusFilter === status.id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted"}`}
+              className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+                activeFilterCount > 0
+                  ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
+                  : "border-border bg-card text-foreground"
+              }`}
             >
-              {statusConfig[status.id]?.label ?? status.id}
+              <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("common.filters")}</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
             </Button>
-          ))}
-        </div>
-      )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
+            <DropdownMenuLabel className="text-xs">{t("enrollments.filter.status")}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={statusFilter} onValueChange={onStatusChange}>
+              <DropdownMenuRadioItem value="all" className="text-sm">
+                {t("enrollments.filter.all")}
+              </DropdownMenuRadioItem>
+              {ENROLLMENT_STATUSES.map((status) => (
+                <DropdownMenuRadioItem key={status.id} value={status.id} className="text-sm">
+                  {statusConfig[status.id]?.label ?? status.id}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
 
-      {!showDeleted && (
-        <div className="flex items-center gap-1.5">
-          <label htmlFor="filter-session" className="sr-only">{t("enrollments.filter.session")}</label>
-          <FormSelect
-            id="filter-session"
-            value={sessionFilter}
-            onChange={onSessionChange}
-            options={[
-              { value: "all", label: t("enrollments.filter.allSessions") },
-              ...sessions.map((session) => ({ value: session.id, label: session.name })),
-            ]}
-            className="w-full min-w-0 text-sm sm:w-48"
-          />
-        </div>
+            <DropdownMenuSeparator className="bg-border" />
+            <DropdownMenuLabel className="text-xs">{t("enrollments.filter.session")}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={sessionFilter} onValueChange={onSessionChange}>
+              <DropdownMenuRadioItem value="all" className="text-sm">
+                {t("enrollments.filter.allSessions")}
+              </DropdownMenuRadioItem>
+              {sessions.map((session) => (
+                <DropdownMenuRadioItem key={session.id} value={session.id} className="text-sm">
+                  {session.name}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+
+            {activeFilterCount > 0 && (
+              <>
+                <DropdownMenuSeparator className="bg-border" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full justify-start px-2 min-h-11 text-sm text-muted-foreground"
+                  onClick={() => {
+                    onStatusChange("all");
+                    onSessionChange("all");
+                  }}
+                >
+                  {t("common.clearFilters")}
+                </Button>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
 
       {canDelete && onShowDeletedChange && (
@@ -95,6 +141,8 @@ export function EnrollmentListToolbar({
           className={showDeleted ? "border-destructive/40 text-destructive" : undefined}
         />
       )}
+
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
 
       {columnCustomizer && !showDeleted && (
         <ModuleColumnCustomizer

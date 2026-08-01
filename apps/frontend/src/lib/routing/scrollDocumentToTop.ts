@@ -13,8 +13,9 @@ export type ScrollPageSurfaceToTopOptions = ScrollDocumentToTopOptions & {
   block?: ScrollLogicalPosition;
 };
 
+import { BREAKPOINT_LG_PX } from "@/lib/breakpoints";
+
 const MAIN_CONTENT_ID = "main-content";
-const DESKTOP_MIN_WIDTH_PX = 1024;
 
 /** Disable browser scroll restoration so SPA navigations own scroll position. */
 export function disableBrowserScrollRestoration(): void {
@@ -50,7 +51,7 @@ export function scrollPageSurfaceToTop(options: ScrollPageSurfaceToTopOptions = 
   if (typeof window === "undefined") return;
 
   const behavior = options.behavior ?? "auto";
-  if (window.innerWidth < DESKTOP_MIN_WIDTH_PX && options.mobileTarget) {
+  if (window.innerWidth < BREAKPOINT_LG_PX && options.mobileTarget) {
     options.mobileTarget.scrollIntoView({
       behavior,
       block: options.block ?? "start",

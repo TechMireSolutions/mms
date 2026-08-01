@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -33,7 +34,7 @@ export function useSessionsPageController() {
     useSessionDisplayConfig({ statuses, types, t });
 
   const columnLayout = useSessionColumnLayout();
-  const listLayout = (settings.defaultViewLayout || 'cards') === 'list';
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<SessionStatus[]>([]);
   const [filterType, setFilterType] = useState<SessionType[]>([]);
@@ -80,7 +81,7 @@ export function useSessionsPageController() {
   useEffect(() => {
     setListPage(1);
     setSelectedIds([]);
-  }, [search, filterStatus, filterType, showDeleted, sortField, sortDir, listLayout, setSelectedIds]);
+  }, [search, filterStatus, filterType, showDeleted, sortField, sortDir, viewMode, setSelectedIds]);
 
   useModuleCreateHotkey({
     enabled: canWrite && !showDeleted,
@@ -162,7 +163,8 @@ export function useSessionsPageController() {
     typeOptions,
     statusLabels,
     typeLabels,
-    listLayout,
+    viewMode,
+    setViewMode,
     columnLayout,
     showForm,
     editSession,

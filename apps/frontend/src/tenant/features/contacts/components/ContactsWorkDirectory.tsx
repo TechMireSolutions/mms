@@ -22,7 +22,7 @@ export function ContactsWorkDirectory({
   viewingDeleted,
   onShowDeletedChange,
   canViewDeleted,
-  viewModeOverride,
+  viewMode,
   onViewModeChange,
   shownCount,
   workTruncated,
@@ -68,7 +68,7 @@ export function ContactsWorkDirectory({
           showDeletedArchives={viewingDeleted}
           onShowDeletedChange={onShowDeletedChange}
           canViewDeleted={canViewDeleted}
-          viewMode={viewModeOverride ?? "table"}
+          viewMode={viewMode}
           onViewModeChange={onViewModeChange}
           shownCount={shownCount}
         />
@@ -102,7 +102,7 @@ export function ContactsWorkDirectory({
         hasActiveFilters={hasActiveFilters}
         viewingDeleted={viewingDeleted}
         onClearFilters={onClearFilters}
-        viewModeOverride={viewModeOverride}
+        viewMode={viewMode}
         commonDirectoryProps={commonDirectoryProps}
         tableProps={tableProps}
         useServerWork={useServerWork}

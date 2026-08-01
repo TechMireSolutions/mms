@@ -40,7 +40,7 @@ export function UsersListMobileCards({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {users.map((user) => (
         <motion.article
           key={user.id}

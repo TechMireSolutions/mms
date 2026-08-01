@@ -47,7 +47,8 @@ export default function Sessions() {
               typeOptions={c.typeOptions}
               statusLabels={c.statusLabels}
               typeLabels={c.typeLabels}
-              listLayout={c.listLayout}
+              viewMode={c.viewMode}
+              onViewModeChange={c.setViewMode}
               columnLayout={c.columnLayout}
               canWrite={c.canWrite}
               canDelete={c.canDelete}

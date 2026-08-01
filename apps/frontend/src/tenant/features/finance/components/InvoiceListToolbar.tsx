@@ -4,6 +4,8 @@ import { ChevronDown, Filter, X } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +19,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES } from "@/lib/data/financeData";
 
 interface InvoiceListToolbarProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   filterStatus: string[];
   columnCustomizer?: ModuleColumnCustomizerProps;
@@ -32,6 +36,8 @@ export function InvoiceListToolbar({
   onSearchChange,
   onToggleStatus,
   onClearStatuses,
+  viewMode,
+  onViewModeChange,
 }: InvoiceListToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
   const statusLabel = (status: string) => t(`finance.invoiceStatus.${status}` as AppTranslationKey);
@@ -69,6 +75,7 @@ export function InvoiceListToolbar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
         {columnCustomizer && (
           <ModuleColumnCustomizer
             columnRegistry={columnCustomizer.columnRegistry}
@@ -102,7 +109,7 @@ export function InvoiceListToolbar({
               onClick={onClearStatuses}
               className="text-xs text-muted-foreground hover:text-foreground underline min-h-11 px-2"
             >
-              {t("contacts.clearFilters")}
+              {t("common.clearFilters")}
             </Button>
           </motion.div>
         )}

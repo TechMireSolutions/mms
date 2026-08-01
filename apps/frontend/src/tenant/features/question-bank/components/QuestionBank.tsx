@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/useQuestionBankFilters';
 import type { QuestionBankQuestion as Question } from '@mms/shared';
@@ -28,7 +29,6 @@ interface QuestionBankProps {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
-  listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
@@ -51,13 +51,13 @@ export function QuestionBank({
   onRestore,
   onBulkDelete,
   onBulkRestore,
-  listLayout: _listLayout = true,
   onFilteredCountChange,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
   columnCustomizer,
 }: QuestionBankProps): React.ReactElement {
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const config = useQuestionBankConfig(questions);
   const {
     search,
@@ -124,6 +124,8 @@ export function QuestionBank({
   return (
     <div className="space-y-4">
       <QuestionBankToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         config={config}
         search={search}
         filterCats={filterCats}
@@ -146,6 +148,7 @@ export function QuestionBank({
 
       {filtered.length > 0 && (
         <QuestionBankList
+          viewMode={viewMode}
           questions={filtered}
           config={config}
           difficultyConfig={difficultyConfig}

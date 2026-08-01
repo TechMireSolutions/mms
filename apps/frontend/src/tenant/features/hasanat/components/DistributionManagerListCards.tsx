@@ -38,7 +38,7 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
   const statuses = getDistributionStatuses(statusConfig);
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {distributions.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">{t("hasanat.empty.distributions")}</p>
       ) : (

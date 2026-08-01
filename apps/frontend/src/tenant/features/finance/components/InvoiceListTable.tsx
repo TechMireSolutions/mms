@@ -38,7 +38,7 @@ export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Elemen
   const { t } = useTranslation();
 
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div className="overflow-x-auto">
       <table className="w-full text-sm table-fixed">
         <caption className="sr-only">{t("finance.invoices")}</caption>
         <thead>

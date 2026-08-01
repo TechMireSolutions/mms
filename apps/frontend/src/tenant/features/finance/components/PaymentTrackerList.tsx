@@ -1,3 +1,5 @@
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
 import { Card } from '@/components/ui/card';
 import { PaymentLogHeader } from '@/tenant/features/finance/components/PaymentTrackerToolbar';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
@@ -55,6 +57,7 @@ export function PaymentTrackerList({
   onRequestDelete,
   onRestore,
 }: PaymentTrackerListProps) {
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const listProps = {
     payments,
     selectedIds,
@@ -70,20 +73,26 @@ export function PaymentTrackerList({
 
   return (
     <Card accentColor="primary" className="overflow-hidden p-0">
-      <PaymentLogHeader totalPaid={totalPaid} formatCurrency={formatCurrency} columnCustomizer={columnCustomizer} />
-      <div className="space-y-3 p-3 md:hidden">
-        <PaymentTrackerListMobile {...listProps} />
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3">
+        <PaymentLogHeader totalPaid={totalPaid} formatCurrency={formatCurrency} columnCustomizer={columnCustomizer} />
+        <WorkViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <PaymentTrackerListTable
-          {...listProps}
-          visibleColCount={visibleColCount}
-          allSelected={allSelected}
-          getColumnWidth={getColumnWidth}
-          onColumnResize={onColumnResize}
-          onToggleAll={onToggleAll}
-        />
-      </div>
+      {viewMode === "cards" ? (
+        <div className="space-y-3 p-3">
+          <PaymentTrackerListMobile {...listProps} />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <PaymentTrackerListTable
+            {...listProps}
+            visibleColCount={visibleColCount}
+            allSelected={allSelected}
+            getColumnWidth={getColumnWidth}
+            onColumnResize={onColumnResize}
+            onToggleAll={onToggleAll}
+          />
+        </div>
+      )}
     </Card>
   );
 }

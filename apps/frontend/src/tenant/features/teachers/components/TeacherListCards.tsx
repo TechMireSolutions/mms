@@ -44,7 +44,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
   const { t } = useTranslation();
 
   return (
-      <div className="space-y-3 p-3 md:hidden">
+      <div className="space-y-3 p-3">
         {teachers.map((teacher, index) => {
           const teacherIdStr = String(teacher.id);
           const displayName = teacher.name || t('teachers.contactMissing');

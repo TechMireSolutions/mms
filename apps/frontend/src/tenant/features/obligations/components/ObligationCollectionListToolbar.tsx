@@ -3,11 +3,15 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ObligationType } from "@/lib/data/obligationsData";
 import { RotateCcw, Search, Trash2 } from "lucide-react";
 
 interface ObligationCollectionListToolbarProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   typeFilter: string;
   obligationTypes: ObligationType[];
@@ -33,6 +37,8 @@ export function ObligationCollectionListToolbar({
   onTypeFilterChange,
   onToggleShowDeleted,
   onBulkAction,
+  viewMode,
+  onViewModeChange,
 }: ObligationCollectionListToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
   const selectOptions = [
@@ -62,6 +68,7 @@ export function ObligationCollectionListToolbar({
           className="text-sm rounded-xl border border-border bg-background"
         />
       </div>
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
       {columnCustomizer && (
         <ModuleColumnCustomizer
           columnRegistry={columnCustomizer.columnRegistry}

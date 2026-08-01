@@ -36,6 +36,7 @@ Keep these regressions out of new work (details historically resolved — do not
 - Soft-delete Work trash pattern (Contacts-style) except documented Messaging clear + QB papers/results upsert-only
 - Gold-standard §7: upsert bulk PUT, `mutateAsync`, `setupSubTabs` / `canEditSetup`, `ErrorState`, Cmd/Ctrl+N, `t()` + `useModulePermissions`
 - Work Filters menu SSOT — no parallel preset chip/pill bar duplicating Filters options (Contacts: `ContactsFilterMenuButton` + shared `CONTACTS_QUICK_FILTER_OPTIONS`)
+- Work directory view mode SSOT — one resolved `viewMode` (default cards `< md`, table `md+`); no CSS dual-render + override parallel systems; Setup `defaultViewLayout` must not drive Work directory render
 - Contact-first persons; no `persona` / CRM lifecycle tags
 - `apiClient` only — no raw `fetch('/api/...')`
 - FormModal for entity forms; Modal for confirm/preview; Design-system primitives + semantic tokens

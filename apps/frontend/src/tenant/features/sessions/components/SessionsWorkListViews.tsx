@@ -1,6 +1,5 @@
 import { SessionCard } from "@/tenant/features/sessions/components/SessionCard";
 import { SessionsWorkTableDesktop } from "@/tenant/features/sessions/components/SessionsWorkTableDesktop";
-import { SessionsWorkTableMobileCards } from "@/tenant/features/sessions/components/SessionsWorkTableMobileCards";
 import type { SessionSortField } from "@/tenant/features/sessions/components/sessionPageTypes";
 import type {
   SessionsWorkColumnLayout,
@@ -58,7 +57,6 @@ interface SessionsWorkTableProps extends SessionsWorkViewProps {
 export function SessionsWorkTable(props: SessionsWorkTableProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card/45 shadow-sm backdrop-blur-xl">
-      <SessionsWorkTableMobileCards {...props} />
       <SessionsWorkTableDesktop {...props} />
     </div>
   );

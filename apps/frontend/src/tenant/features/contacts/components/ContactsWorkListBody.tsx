@@ -10,9 +10,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
+import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
 import { useTranslation } from "@/hooks/useTranslation";
 
-type ViewMode = "table" | "cards" | null;
 type DirectoryColumn = { id: string; label: string; sortField?: string; width?: number };
 
 export interface ContactsWorkListBodyProps {
@@ -25,7 +25,7 @@ export interface ContactsWorkListBodyProps {
   hasActiveFilters: boolean;
   viewingDeleted: boolean;
   onClearFilters: () => void;
-  viewModeOverride: ViewMode;
+  viewMode: ContactsWorkViewMode;
   commonDirectoryProps: React.ComponentProps<typeof ContactCards>;
   tableProps: React.ComponentProps<typeof ContactsTable>;
   useServerWork: boolean;
@@ -43,7 +43,7 @@ export function ContactsWorkListBody({
   hasActiveFilters,
   viewingDeleted,
   onClearFilters,
-  viewModeOverride,
+  viewMode,
   commonDirectoryProps,
   tableProps,
   useServerWork,
@@ -103,17 +103,12 @@ export function ContactsWorkListBody({
             </div>
           ) : (
             <ErrorBoundary>
-              {viewModeOverride === "cards" ? (
+              {viewMode === "cards" ? (
                 <ContactCards {...commonDirectoryProps} />
               ) : (
-                <>
-                  <div className="md:hidden">
-                    <ContactCards {...commonDirectoryProps} />
-                  </div>
-                  <div className="hidden space-y-2 md:block">
-                    <ContactsTable {...tableProps} />
-                  </div>
-                </>
+                <div className="space-y-2">
+                  <ContactsTable {...tableProps} />
+                </div>
               )}
               {useServerWork && workPageData && (
                 <ListPagination

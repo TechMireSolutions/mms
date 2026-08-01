@@ -58,7 +58,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
   };
 
   return (
-      <div className="hidden overflow-x-auto md:block">
+      <div className="overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-muted/40 border-b border-border/50">
             <tr>

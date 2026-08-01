@@ -5,6 +5,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { TableSkeleton } from "@/components/ui/LoadingState";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
 import StudentList from "@/tenant/features/students/components/StudentList";
@@ -26,11 +27,12 @@ interface StudentsWorkTierProps {
   isWorkPageError: boolean;
   isWorkPageFetching: boolean;
   useServerWork: boolean;
-  isListView: boolean;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
+  isTableView: boolean;
   workLimit: number;
   shownCount: number;
   workTruncated: boolean;
-  defaultViewLayout: string | undefined;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
@@ -62,11 +64,12 @@ export function StudentsWorkTier({
   isWorkPageError,
   isWorkPageFetching,
   useServerWork,
-  isListView,
+  viewMode,
+  onViewModeChange,
+  isTableView,
   workLimit,
   shownCount,
   workTruncated,
-  defaultViewLayout,
   columnLayout,
   onSearchChange,
   onToggleStatus,
@@ -112,6 +115,8 @@ export function StudentsWorkTier({
         showDeleted={showDeleted}
         canDelete={canDelete}
         columnLayout={columnLayout}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
         onSearchChange={onSearchChange}
         onToggleStatus={onToggleStatus}
         onGenderChange={onGenderChange}
@@ -139,7 +144,7 @@ export function StudentsWorkTier({
           <>
             <StudentList
               students={workStudents}
-              layout={defaultViewLayout}
+              viewMode={viewMode}
               isColumnVisible={columnLayout.isColumnVisible}
               getColumnWidth={columnLayout.getColumnWidth}
               onColumnResize={columnLayout.setColumnWidth}
@@ -147,7 +152,7 @@ export function StudentsWorkTier({
               canWrite={canWrite}
               canDelete={canDelete}
               serverPagination={
-                isListView && workPageData && !showDeleted
+                isTableView && workPageData && !showDeleted
                   ? {
                       total: workPageData.total,
                       page: workPageData.page,
@@ -163,7 +168,7 @@ export function StudentsWorkTier({
               onBulkRestore={onBulkRestore}
               onBulkStatusChange={onBulkStatusChange}
             />
-            {useServerWork && isListView && workPageData && !showDeleted && (
+            {useServerWork && isTableView && workPageData && !showDeleted && (
               <ListPagination
                 page={workPageData.page}
                 total={workPageData.total}

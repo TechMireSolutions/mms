@@ -4,6 +4,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Session } from "@/lib/data/sessionsData";
 import { SessionsWorkFilters } from "@/tenant/features/sessions/components/SessionsWorkFilters";
 import { SessionsWorkList } from "@/tenant/features/sessions/components/SessionsWorkList";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { SessionSortField, SessionStatus, SessionType } from "@/tenant/features/sessions/components/sessionPageTypes";
 
 interface SessionsColumnLayout {
@@ -23,7 +24,8 @@ interface SessionsWorkTierProps {
   typeOptions: string[];
   statusLabels: Record<string, string>;
   typeLabels: Record<string, string>;
-  listLayout: boolean;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   columnLayout: SessionsColumnLayout;
   canWrite: boolean;
   canDelete: boolean;
@@ -68,7 +70,8 @@ export function SessionsWorkTier({
   typeOptions,
   statusLabels,
   typeLabels,
-  listLayout,
+  viewMode,
+  onViewModeChange,
   columnLayout,
   canWrite,
   canDelete,
@@ -121,7 +124,8 @@ export function SessionsWorkTier({
         typeOptions={typeOptions}
         statusLabels={statusLabels}
         typeLabels={typeLabels}
-        listLayout={listLayout}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
         columnLayout={columnLayout}
         canDelete={canDelete}
         showDeleted={showDeleted}
@@ -137,7 +141,7 @@ export function SessionsWorkTier({
         isError={isError}
         isWorkLoading={isWorkLoading}
         isWorkFetching={useServerWork && isWorkFetching}
-        listLayout={listLayout}
+        viewMode={viewMode}
         showDeleted={showDeleted}
         canWrite={canWrite}
         canDelete={canDelete}

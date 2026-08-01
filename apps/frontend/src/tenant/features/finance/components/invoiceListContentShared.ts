@@ -1,3 +1,4 @@
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { StandardMessagingRecipient } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Invoice } from "@/lib/data/financeData";
@@ -15,6 +16,7 @@ export interface InvoiceListVisibleColumns {
 }
 
 export interface InvoiceListContentProps {
+  viewMode: WorkDirectoryViewMode;
   invoices: Invoice[];
   selectedIds: string[];
   visibleColumns: InvoiceListVisibleColumns;

@@ -1,3 +1,4 @@
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Mujtahid, MujtahidRep, ObligationCollection, ObligationType } from "@/lib/data/obligationsData";
 import { DEFAULT_CURRENCIES, formatMoney } from "@mms/shared";
@@ -17,6 +18,7 @@ export interface ObligationCollectionVisibleColumns {
 }
 
 export interface ObligationCollectionListContentProps {
+  viewMode: WorkDirectoryViewMode;
   collections: ObligationCollection[];
   search: string;
   typeFilter: string;

@@ -27,8 +27,11 @@ export function EnrollmentListContent(props: EnrollmentListContentProps): React.
         </div>
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
-          <EnrollmentListCards {...props} />
-          <EnrollmentListTable {...props} />
+          {props.viewMode === "cards" ? (
+            <EnrollmentListCards {...props} />
+          ) : (
+            <EnrollmentListTable {...props} />
+          )}
         </Card>
       )}
 

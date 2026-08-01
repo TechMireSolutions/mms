@@ -55,7 +55,7 @@ Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / brandi
 
 ## UI shell
 
-`useModuleTierTabs`, `useConfigSubTabs` / `usePersistedTabState`, `useTranslation`, `useBodyScrollLock` (never set `document.body.style.overflow` manually), `useSessionTimeout`, `useDebounce`, `use-mobile`.
+`useModuleTierTabs`, `useConfigSubTabs` / `usePersistedTabState`, `useTranslation`, `useBodyScrollLock` (never set `document.body.style.overflow` manually), `useSessionTimeout`, `useDebounce`, `useMediaQuery`.
 
 ## New hooks checklist
 

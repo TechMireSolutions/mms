@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
@@ -28,6 +30,8 @@ interface StudentsWorkTierToolbarProps {
   showDeleted: boolean;
   canDelete: boolean;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
   onGenderChange: (value: string) => void;
@@ -44,6 +48,8 @@ export function StudentsWorkTierToolbar({
   showDeleted,
   canDelete,
   columnLayout,
+  viewMode,
+  onViewModeChange,
   onSearchChange,
   onToggleStatus,
   onGenderChange,
@@ -148,6 +154,8 @@ export function StudentsWorkTierToolbar({
           }`}
         />
       )}
+
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
 
       <ModuleColumnCustomizer
         columnRegistry={columnLayout.columnRegistry}

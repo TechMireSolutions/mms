@@ -39,8 +39,11 @@ export function ObligationCollectionListContent(props: ObligationCollectionListC
         </div>
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
-          <ObligationCollectionListCards {...props} />
-          <ObligationCollectionListTable {...props} />
+          {props.viewMode === "cards" ? (
+            <ObligationCollectionListCards {...props} />
+          ) : (
+            <ObligationCollectionListTable {...props} />
+          )}
         </div>
       )}
       <p className="text-xs text-muted-foreground mt-2">{t("obligations.recordsShown", { count: collections.length })}</p>

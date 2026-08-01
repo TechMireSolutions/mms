@@ -68,7 +68,6 @@ export function useQuestionBankPageController() {
   const [paperBuilderOpen, setPaperBuilderOpen] = useState(false);
   const [paperBuilderTab, setPaperBuilderTab] = useState<PaperBuilderTab>('details');
   const columnLayout = useQuestionBankColumnLayout();
-  const listLayout = (questionBankConfig.settings.defaultViewLayout || 'list') === 'list';
 
   const {
     replaceQuestions,
@@ -191,7 +190,6 @@ export function useQuestionBankPageController() {
     paperBuilderTab,
     setPaperBuilderTab,
     columnLayout,
-    listLayout,
     questions,
     tests,
     questionBankResults,

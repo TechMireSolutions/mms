@@ -11,12 +11,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
+import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 
 type QuestionBankConfig = ReturnType<typeof useQuestionBankConfig>;
 
 interface QuestionBankToolbarProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   config: QuestionBankConfig;
   search: string;
   filterCats: string[];
@@ -36,6 +40,8 @@ interface QuestionBankToolbarProps {
 }
 
 export function QuestionBankToolbar({
+  viewMode,
+  onViewModeChange,
   config,
   search,
   filterCats,
@@ -177,6 +183,7 @@ export function QuestionBankToolbar({
           {showDeleted ? t('questionBank.trash.restore') : t('common.delete')} ({selectedCount})
         </Button>
       )}
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
       {columnCustomizer && (
         <ModuleColumnCustomizer
           columnRegistry={columnCustomizer.columnRegistry}

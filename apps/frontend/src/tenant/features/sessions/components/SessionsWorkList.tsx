@@ -9,6 +9,7 @@ import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { SessionSortField } from "@/tenant/features/sessions/components/sessionPageTypes";
 import type { Session } from "@/lib/data/sessionsData";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { SessionsWorkCardGrid, SessionsWorkTable } from "@/tenant/features/sessions/components/SessionsWorkListViews";
 
 interface SessionsWorkPageData {
@@ -29,7 +30,7 @@ interface SessionsWorkListProps {
   isError: boolean;
   isWorkLoading: boolean;
   isWorkFetching: boolean;
-  listLayout: boolean;
+  viewMode: WorkDirectoryViewMode;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
@@ -67,7 +68,7 @@ export function SessionsWorkList({
   isError,
   isWorkLoading,
   isWorkFetching,
-  listLayout,
+  viewMode,
   showDeleted,
   canWrite,
   canDelete,
@@ -128,7 +129,7 @@ export function SessionsWorkList({
           onRetry={onRetry}
         />
       ) : isWorkLoading ? (
-        <TableSkeleton rows={6} cols={listLayout ? 6 : 3} />
+        <TableSkeleton rows={6} cols={viewMode === 'table' ? 6 : 3} />
       ) : sessions.length === 0 ? (
         <EmptyState
           icon={BookOpen}
@@ -140,7 +141,7 @@ export function SessionsWorkList({
             </ActionButton>
           ) : undefined}
         />
-      ) : listLayout ? (
+      ) : viewMode === 'table' ? (
         <SessionsWorkTable
           sessions={sessions}
           showDeleted={showDeleted}

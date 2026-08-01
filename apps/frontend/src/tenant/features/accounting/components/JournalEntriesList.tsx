@@ -18,8 +18,11 @@ export function JournalEntriesList(props: JournalEntriesListProps): React.JSX.El
 
   return (
     <div className="rounded-xl border border-border overflow-hidden">
-      <JournalEntriesListCards {...props} />
-      <JournalEntriesListTable {...props} />
+      {props.viewMode === "cards" ? (
+        <JournalEntriesListCards {...props} />
+      ) : (
+        <JournalEntriesListTable {...props} />
+      )}
     </div>
   );
 }

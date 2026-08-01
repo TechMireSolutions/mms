@@ -4,8 +4,12 @@ import { FormSelect } from '@/components/ui/FormSelect';
 import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { useTranslation } from '@/hooks/useTranslation';
+import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
 interface UsersListFiltersProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   roleFilter: string;
   statusFilter: string;
@@ -31,6 +35,8 @@ export function UsersListFilters({
   onStatusFilterChange,
   onToggleDeleted,
   onClearSelection,
+  viewMode,
+  onViewModeChange,
 }: UsersListFiltersProps): JSX.Element {
   const { t } = useTranslation();
 
@@ -74,6 +80,7 @@ export function UsersListFilters({
         />
       ) : null}
 
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
       {canDelete ? (
         <ModuleTrashToggle
           showDeleted={showDeleted}

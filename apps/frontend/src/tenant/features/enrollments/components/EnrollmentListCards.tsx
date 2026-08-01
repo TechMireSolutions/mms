@@ -35,7 +35,7 @@ export function EnrollmentListCards(props: EnrollmentListCardsProps): React.JSX.
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {enrollments.map((enrollment) => {
         const student = findEnrollmentStudent(enrollment, students);
         const studentDisplayName = getEnrollmentStudentDisplayName(enrollment, students);

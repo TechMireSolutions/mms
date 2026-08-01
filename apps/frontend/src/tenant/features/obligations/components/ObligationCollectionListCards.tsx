@@ -39,7 +39,7 @@ export function ObligationCollectionListCards(props: ObligationCollectionListCar
   const helpers = { getContact, getRep, getMujtahid, getObligationType };
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {collections.map((collection, index) => {
         const { sender, obligationType, rep, mujtahid } = getObligationCollectionResolvedFields(collection, helpers);
         const isSelected = selectedIds.includes(collection.id);

@@ -1,3 +1,4 @@
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import type { Student, toMessagingRecipient } from "@mms/shared";
@@ -15,6 +16,7 @@ export interface EnrollmentListVisibleColumns {
 }
 
 export interface EnrollmentListContentProps {
+  viewMode: WorkDirectoryViewMode;
   enrollments: Enrollment[];
   filteredCount: number;
   page: number;

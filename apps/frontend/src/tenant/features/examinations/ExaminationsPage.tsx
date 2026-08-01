@@ -68,7 +68,6 @@ export default function Examinations(): JSX.Element {
                 activeSubTab={c.effectiveSubTab}
                 showDeleted={c.showDeleted}
                 listLoadFailed={c.listLoadFailed}
-                listLayout={c.listLayout}
                 canWrite={c.canWrite}
                 canDelete={c.canDelete}
                 createExamKey={c.createExamKey}

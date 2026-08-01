@@ -1,3 +1,4 @@
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { DistributeModal } from "./DistributeModal";
@@ -56,6 +57,7 @@ export function DistributionManager({
   columnCustomizer,
   onMessage,
 }: DistributionManagerProps) {
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const {
     t,
     statusLabels,
@@ -93,6 +95,8 @@ export function DistributionManager({
   return (
     <section aria-label={t("hasanat.distribution.aria")} className="space-y-4">
       <DistributionManagerToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         search={search}
         filterStatus={filterStatus}
         statusLabels={statusLabels}
@@ -109,6 +113,7 @@ export function DistributionManager({
       />
 
       <DistributionManagerList
+        viewMode={viewMode}
         distributions={filtered}
         denoms={denoms}
         selectedIds={selectedIds}

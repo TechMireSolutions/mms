@@ -23,8 +23,11 @@ export function ExaminationsListContent(props: ExaminationsListContentProps): Re
 
   return (
     <div className="rounded-xl border border-border overflow-hidden bg-card">
-      <ExaminationsListCards {...props} />
-      <ExaminationsListTable {...props} />
+      {props.viewMode === "cards" ? (
+        <ExaminationsListCards {...props} />
+      ) : (
+        <ExaminationsListTable {...props} />
+      )}
     </div>
   );
 }

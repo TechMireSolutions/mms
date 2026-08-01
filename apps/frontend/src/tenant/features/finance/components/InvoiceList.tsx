@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import type { Invoice } from "@/lib/data/financeData";
@@ -51,6 +52,7 @@ export function InvoiceList({
   columnCustomizer,
 }: InvoiceListProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { formatCurrency } = useFinanceCurrency();
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [search, setSearch] = useState("");
@@ -112,6 +114,8 @@ export function InvoiceList({
   return (
     <section aria-label={t("finance.invoices")} className="space-y-4">
       <InvoiceListToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         search={search}
         filterStatus={filterStatus}
         columnCustomizer={columnCustomizer}
@@ -129,6 +133,7 @@ export function InvoiceList({
       )}
 
       <InvoiceListContent
+        viewMode={viewMode}
         invoices={filtered}
         selectedIds={selectedIds}
         visibleColumns={visibleColumns}

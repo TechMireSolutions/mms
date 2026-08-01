@@ -1,6 +1,8 @@
 import { BookOpen, ChevronDown, Filter } from "lucide-react";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { Button } from "@/components/ui/button";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
@@ -34,7 +36,8 @@ interface SessionsWorkFiltersProps {
   typeOptions: string[];
   statusLabels: Record<string, string>;
   typeLabels: Record<string, string>;
-  listLayout: boolean;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   columnLayout: SessionsWorkColumnLayout;
   canDelete: boolean;
   showDeleted: boolean;
@@ -53,7 +56,8 @@ export function SessionsWorkFilters({
   typeOptions,
   statusLabels,
   typeLabels,
-  listLayout,
+  viewMode,
+  onViewModeChange,
   columnLayout,
   canDelete,
   showDeleted,
@@ -113,7 +117,8 @@ export function SessionsWorkFilters({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {listLayout && (
+        <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+        {viewMode === 'table' && (
           <ModuleColumnCustomizer
             columnRegistry={columnLayout.columnRegistry}
             updateUserColumnLayout={columnLayout.updateUserColumnLayout}

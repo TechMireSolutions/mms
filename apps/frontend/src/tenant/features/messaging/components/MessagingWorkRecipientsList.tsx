@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import {
   getDisplayName,
   getInitials,
@@ -12,6 +13,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
 
 interface MessagingWorkRecipientsListProps {
+  viewMode: WorkDirectoryViewMode;
   contacts: Contact[];
   selectedById: MessagingSelectedMap;
   allVisibleSelected: boolean;
@@ -22,6 +24,7 @@ interface MessagingWorkRecipientsListProps {
 }
 
 export function MessagingWorkRecipientsList({
+  viewMode,
   contacts,
   selectedById,
   allVisibleSelected,
@@ -34,7 +37,8 @@ export function MessagingWorkRecipientsList({
 
   return (
     <div className="max-h-[23.75rem] max-w-full overflow-y-auto rounded-lg border border-border/60">
-      <div className="space-y-3 p-3 md:hidden">
+      {viewMode === 'cards' ? (
+      <div className="space-y-3 p-3">
         {contacts.length > 0 && (
           <div className="flex items-center gap-2 border-b border-border/60 pb-2">
             <Checkbox
@@ -93,7 +97,8 @@ export function MessagingWorkRecipientsList({
           <p className="py-6 text-center text-sm text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
         )}
       </div>
-      <div className="hidden overflow-x-auto md:block">
+      ) : (
+      <div className="overflow-x-auto">
         <table className="w-full table-fixed text-start text-xs">
           <thead className="bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
             <tr className="border-b border-border/60">
@@ -165,6 +170,7 @@ export function MessagingWorkRecipientsList({
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }

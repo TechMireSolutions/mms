@@ -21,11 +21,12 @@ Source: `mms-module-architecture.mdc` §2–§3 and §6–§7. Rules: `mms-modul
 2. `PageHeader` stays visible — metrics, add, export, integrity tools live there.
 3. Work = directory/CRUD/drawer/filters/bulk only — no charts.
 4. **Filters SSOT**: one Filters menu owns presets/dimensions; no always-visible chip bar that repeats the same options. Preset ids + `labelKey`s live in `@mms/shared` next to the list-query schema (Contacts: `CONTACTS_QUICK_FILTER_OPTIONS`). Active state = badge + Clear; `FilterChips` only for removable active multi-selects.
-5. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`.
-6. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
-7. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash.
-8. §7: `ErrorState`+retry on list `isError`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close.
-9. Column prefs per user/module; mobile cards for dense directories; failures via `notify`.
+5. **View mode SSOT**: resolve one `viewMode` (`table` | `cards`) — default cards below `md`, table at `md+`; user toggle overrides. Do not dual-render with CSS breakpoints + separate override state. Setup `defaultViewLayout` must not drive Work directory render.
+6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`.
+7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
+8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash.
+9. §7: `ErrorState`+retry on list `isError`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close.
+10. Column prefs per user/module; mobile cards for dense directories; failures via `notify`.
 
 ## Checklist
 
@@ -39,6 +40,7 @@ Source: `mms-module-architecture.mdc` §2–§3 and §6–§7. Rules: `mms-modul
 - [ ] Bulk actions: eligibility + partial failure reporting
 - [ ] Export respects filters, RBAC, soft-delete policy
 - [ ] Filters menu SSOT — no duplicate preset pill bar; shared preset options when cross-layer
+- [ ] Directory viewMode SSOT — cards default `< md`, table `md+`; toggle overrides without CSS dual-render
 - [ ] Copy via t(); no raw fetch('/api/...')
 - [ ] Dense lists: card rows `< md` and/or `overflow-x-auto` tables; touch targets ≥ 44px (`mms-ui-ux-design.mdc` §7)
 ```
@@ -50,6 +52,7 @@ Source: `mms-module-architecture.mdc` §2–§3 and §6–§7. Rules: `mms-modul
 - Show forbidden actions as disabled clutter.
 - Treat `isError` as an empty directory.
 - Reintroduce a Work preset chip bar that duplicates Filters menu options.
+- Dual CSS breakpoint render + separate viewMode override for the same directory.
 
 ## Done
 

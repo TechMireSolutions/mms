@@ -45,7 +45,9 @@ export default function Students() {
     editStudent,
     setEditStudent,
     useServerWork,
-    isListView,
+    viewMode,
+    setViewMode,
+    isTableView,
     workLimit,
     workPageQuery,
     workStudents,
@@ -113,11 +115,12 @@ export default function Students() {
               isWorkPageError={workPageQuery.isError}
               isWorkPageFetching={workPageQuery.isFetching}
               useServerWork={useServerWork}
-              isListView={isListView}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              isTableView={isTableView}
               workLimit={workLimit}
               shownCount={shownCount}
               workTruncated={workTruncated}
-              defaultViewLayout={settings.defaultViewLayout}
               columnLayout={columnLayout}
               onSearchChange={setStudentSearch}
               onToggleStatus={toggleStudentStatus}

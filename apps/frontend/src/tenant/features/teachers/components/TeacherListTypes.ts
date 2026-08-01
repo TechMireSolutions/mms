@@ -1,4 +1,5 @@
 import type { Teacher } from '@/lib/data/teachersData';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
 export type TeacherSortField = 'name' | 'specialization' | 'qualification' | 'status' | 'joinDate';
 
@@ -23,4 +24,5 @@ export interface TeacherListProps {
   sortField?: TeacherSortField;
   sortDir?: 'asc' | 'desc';
   onSortChange?: (field: TeacherSortField, dir: 'asc' | 'desc') => void;
+  viewMode: WorkDirectoryViewMode;
 }

@@ -5,6 +5,7 @@ import {
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -59,6 +60,7 @@ export function ObligationCollectionList({
   onMessage,
 }: ObligationCollectionListProps) {
   const { t } = useTranslation();
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
@@ -127,6 +129,8 @@ export function ObligationCollectionList({
   return (
     <div className="space-y-4">
       <ObligationCollectionListToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         search={search}
         typeFilter={typeFilter}
         obligationTypes={obligationTypes}
@@ -141,6 +145,7 @@ export function ObligationCollectionList({
       />
 
       <ObligationCollectionListContent
+        viewMode={viewMode}
         collections={filtered}
         search={search}
         typeFilter={typeFilter}

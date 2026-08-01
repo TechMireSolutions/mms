@@ -5,6 +5,8 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { JOURNAL_TAGS } from "@/lib/data/accountingData";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -12,6 +14,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 type JournalMode = "simple" | "advanced";
 
 interface JournalEntriesAdvancedToolbarProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   mode: JournalMode;
   modeTabs: Array<{ key: JournalMode; label: string }>;
   search: string;
@@ -32,6 +36,8 @@ interface JournalEntriesAdvancedToolbarProps {
 }
 
 export function JournalEntriesAdvancedToolbar({
+  viewMode,
+  onViewModeChange,
   mode,
   modeTabs,
   search,
@@ -89,6 +95,7 @@ export function JournalEntriesAdvancedToolbar({
       >
         <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
       </Button>
+      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
       {columnCustomizer && (
         <ModuleColumnCustomizer
           columnRegistry={columnCustomizer.columnRegistry}

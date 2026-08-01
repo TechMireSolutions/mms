@@ -2,6 +2,8 @@ import { ChevronDown, Filter, Plus, RotateCcw, Search, Trash2, X } from "lucide-
 
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -18,6 +20,8 @@ import type { Distribution } from "@/lib/data/hasanatData";
 type DistributionStatus = Distribution["status"];
 
 interface DistributionManagerToolbarProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   filterStatus: DistributionStatus[];
   statusLabels: Record<DistributionStatus, string>;
@@ -47,6 +51,8 @@ export function DistributionManagerToolbar({
   onToggleStatus,
   onBulkAction,
   onOpenModal,
+  viewMode,
+  onViewModeChange,
 }: DistributionManagerToolbarProps) {
   const { t } = useTranslation();
   const statuses = Object.keys(statusConfig) as DistributionStatus[];
@@ -93,6 +99,7 @@ export function DistributionManagerToolbar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
         {columnCustomizer && (
           <ModuleColumnCustomizer
             columnRegistry={columnCustomizer.columnRegistry}

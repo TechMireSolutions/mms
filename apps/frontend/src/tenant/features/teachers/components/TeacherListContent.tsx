@@ -10,7 +10,7 @@ export type { TeacherListContentProps } from "@/tenant/features/teachers/compone
 
 export function TeacherListContent(props: TeacherListContentProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { teachers, showDeleted } = props;
+  const { teachers, showDeleted, viewMode } = props;
 
   if (teachers.length === 0) {
     return (
@@ -24,8 +24,7 @@ export function TeacherListContent(props: TeacherListContentProps): React.JSX.El
 
   return (
     <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
-      <TeacherListCards {...props} />
-      <TeacherListTable {...props} />
+      {viewMode === "cards" ? <TeacherListCards {...props} /> : <TeacherListTable {...props} />}
     </div>
   );
 }

@@ -51,6 +51,8 @@ export default function Teachers(): React.JSX.Element {
     setSortField,
     setSortDir,
     setListPage,
+    viewMode,
+    setViewMode,
   } = useTeachersPageController();
 
   const {
@@ -128,6 +130,8 @@ export default function Teachers(): React.JSX.Element {
               isWorkPageError={workPageQuery.isError}
               isWorkPageFetching={workPageQuery.isFetching}
               useServerWork={useServerWork}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
               selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}`}
               sortField={sortField}
               sortDir={sortDir}

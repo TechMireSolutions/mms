@@ -4,11 +4,13 @@ import { QuestionBankTable } from "@/tenant/features/question-bank/components/Qu
 import { QuestionBankListCards } from "@/tenant/features/question-bank/components/QuestionBankListCards";
 import type { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import type { QuestionBankQuestion as Question } from "@mms/shared";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 type QuestionBankConfig = ReturnType<typeof useQuestionBankConfig>;
 type QuestionBankField = QuestionBankConfig["orderedFields"][number];
 
 interface QuestionBankListProps {
+  viewMode: WorkDirectoryViewMode;
   questions: Question[];
   config: QuestionBankConfig;
   difficultyConfig: Record<string, StatusBadgeConfigItem>;
@@ -37,8 +39,8 @@ interface QuestionBankListProps {
 }
 
 export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
-  return (
-    <>
+  if (props.viewMode === "cards") {
+    return (
       <QuestionBankListCards
         questions={props.questions}
         config={props.config}
@@ -57,31 +59,33 @@ export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
         onTrashAction={props.onTrashAction}
         onToggleSelected={props.onToggleSelected}
       />
+    );
+  }
 
-      <QuestionBankTable
-        questions={props.questions}
-        config={props.config}
-        difficultyConfig={props.difficultyConfig}
-        typeConfig={props.typeConfig}
-        selectedIds={props.selectedIds}
-        canWrite={props.canWrite}
-        canDelete={props.canDelete}
-        canTrashRows={props.canTrashRows}
-        showDeleted={props.showDeleted}
-        showText={props.showText}
-        showCategory={props.showCategory}
-        showLanguage={props.showLanguage}
-        showType={props.showType}
-        showDifficulty={props.showDifficulty}
-        showSource={props.showSource}
-        allFilteredSelected={props.allFilteredSelected}
-        getColumnWidth={props.getColumnWidth}
-        onColumnResize={props.onColumnResize}
-        onEditQuestion={props.onEditQuestion}
-        onTrashAction={props.onTrashAction}
-        onToggleSelected={props.onToggleSelected}
-        onToggleSelectAllFiltered={props.onToggleSelectAllFiltered}
-      />
-    </>
+  return (
+    <QuestionBankTable
+      questions={props.questions}
+      config={props.config}
+      difficultyConfig={props.difficultyConfig}
+      typeConfig={props.typeConfig}
+      selectedIds={props.selectedIds}
+      canWrite={props.canWrite}
+      canDelete={props.canDelete}
+      canTrashRows={props.canTrashRows}
+      showDeleted={props.showDeleted}
+      showText={props.showText}
+      showCategory={props.showCategory}
+      showLanguage={props.showLanguage}
+      showType={props.showType}
+      showDifficulty={props.showDifficulty}
+      showSource={props.showSource}
+      allFilteredSelected={props.allFilteredSelected}
+      getColumnWidth={props.getColumnWidth}
+      onColumnResize={props.onColumnResize}
+      onEditQuestion={props.onEditQuestion}
+      onTrashAction={props.onTrashAction}
+      onToggleSelected={props.onToggleSelected}
+      onToggleSelectAllFiltered={props.onToggleSelectAllFiltered}
+    />
   );
 }

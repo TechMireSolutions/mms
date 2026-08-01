@@ -7,6 +7,7 @@ import { ListPagination } from "@/components/ui/ListPagination";
 import { type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { Teacher } from "@/lib/data/teachersData";
 import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
 import { teacherStatusLabel } from "@/tenant/features/teachers/teacherPageUtils";
@@ -53,6 +54,8 @@ interface TeachersWorkTierProps {
   onEmail?: (teachers: Teacher[]) => void;
   onSortChange: (field: TeacherSortField, dir: "asc" | "desc") => void;
   onPageChange: (page: number) => void;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
 }
 
 export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Element {
@@ -92,6 +95,8 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
         columnRegistry={props.columnRegistry}
         updateUserColumnLayout={props.updateUserColumnLayout}
         customizerLabels={props.customizerLabels}
+        viewMode={props.viewMode}
+        onViewModeChange={props.onViewModeChange}
         onSearchChange={props.onSearchChange}
         onToggleStatus={props.onToggleStatus}
         onSpecializationChange={props.onSpecializationChange}
@@ -109,6 +114,7 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           <>
             <TeacherList
               teachers={props.teachers}
+              viewMode={props.viewMode}
               onEdit={props.onEdit}
               onDelete={props.onDelete}
               onRestore={props.onRestore}

@@ -26,8 +26,8 @@ export type UseContactsPageTabPanelPropsInput = {
   setShowDeletedArchives: (next: boolean) => void;
   setSelected: (ids: Array<string | number>) => void;
   canDelete: boolean;
-  viewModeOverride: ContactsWorkViewMode;
-  setViewModeOverride: (mode: Exclude<ContactsWorkViewMode, null>) => void;
+  viewMode: ContactsWorkViewMode;
+  setViewMode: (mode: ContactsWorkViewMode) => void;
   shownCount: number;
   workTruncated: boolean;
   selected: Array<string | number>;
@@ -83,8 +83,8 @@ export function buildContactsPageTabPanelProps(
       input.setSelected([]);
     },
     canViewDeleted: input.canDelete,
-    viewModeOverride: input.viewModeOverride,
-    onViewModeChange: input.setViewModeOverride,
+    viewMode: input.viewMode,
+    onViewModeChange: input.setViewMode,
     shownCount: input.shownCount,
     workTruncated: input.workTruncated,
     selected: input.selected,

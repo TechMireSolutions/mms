@@ -2,6 +2,7 @@ import { type ReactElement } from "react";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { type Student } from "@mms/shared";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { StudentListContent } from "@/tenant/features/students/components/StudentListContent";
 import { StudentListMessageModal } from "@/tenant/features/students/components/StudentListMessageModal";
 import { StudentListProfileDrawer } from "@/tenant/features/students/components/StudentListProfileDrawer";
@@ -23,7 +24,7 @@ export interface StudentListProps {
   onBulkDelete?: (ids: string[]) => void;
   onBulkRestore?: (ids: string[]) => void;
   onBulkStatusChange?: (ids: string[], status: string) => void;
-  layout?: string;
+  viewMode: WorkDirectoryViewMode;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -41,7 +42,7 @@ export default function StudentList({
   onBulkDelete,
   onBulkRestore,
   onBulkStatusChange,
-  layout = "list",
+  viewMode,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -59,7 +60,7 @@ export default function StudentList({
         students={students}
         paginatedStudents={list.paginatedStudents}
         sessions={sessions}
-        layout={layout}
+        viewMode={viewMode}
         selectedIds={list.selectedIds}
         allSelected={list.allSelected}
         someSelected={list.someSelected}

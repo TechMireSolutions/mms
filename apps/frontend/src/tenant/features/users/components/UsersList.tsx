@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import type { SystemUser } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
@@ -45,6 +46,7 @@ export function UsersList({
   getColumnWidth,
   onColumnResize,
 }: UsersListProps): React.JSX.Element {
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
   const workspaceRoles = useWorkspaceRoles();
@@ -82,6 +84,8 @@ export function UsersList({
   return (
     <div className="space-y-4">
       <UsersListFilters
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         search={search}
         roleFilter={roleFilter}
         statusFilter={statusFilter}
@@ -107,6 +111,7 @@ export function UsersList({
       />
 
       <UsersListContent
+        viewMode={viewMode}
         users={filtered}
         selectedIds={selected}
         canWrite={canWrite}

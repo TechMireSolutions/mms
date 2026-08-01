@@ -8,6 +8,7 @@ import { JournalEntriesList } from "@/tenant/features/accounting/components/Jour
 import { JournalEntriesAdvancedToolbar, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesAdvancedToolbar";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 type JournalMode = "simple" | "advanced";
 type JournalModalMode = "new" | "edit" | "view" | null;
@@ -71,10 +72,13 @@ interface JournalEntriesAdvancedModeProps {
 
 export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProps) {
   const { t } = useTranslation();
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
   return (
     <section aria-label={t("accounting.journal.advancedAria")} className="space-y-4">
       <JournalEntriesAdvancedToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         mode={props.mode}
         modeTabs={props.modeTabs}
         search={props.search}
@@ -106,6 +110,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
       )}
 
       <JournalEntriesList
+        viewMode={viewMode}
         entries={props.filteredEntries}
         selectedIds={props.selectedIds}
         canDelete={props.canDelete}

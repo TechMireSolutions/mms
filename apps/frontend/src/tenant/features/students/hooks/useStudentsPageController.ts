@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { type Student, STUDENTS_MODULE_MANIFEST, resolveStudentStatuses } from '@mms/shared';
@@ -30,6 +31,7 @@ export function useStudentsPageController() {
   const [showStudentForm, setShowStudentForm] = useState(false);
   const [listPage, setListPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
   useGrMigration(settings, mutations.updateStudent, activeTab, canWrite);
 
@@ -49,13 +51,13 @@ export function useStudentsPageController() {
   });
 
   const useServerWork = activeTab === 'work';
-  const isListView = settings.defaultViewLayout === 'list';
-  const workLimit = isListView
+  const isTableView = viewMode === 'table';
+  const workLimit = isTableView
     ? STUDENTS_MODULE_MANIFEST.defaultPageSize
     : STUDENTS_MODULE_MANIFEST.maxPageSize;
 
   const workPageQuery = useStudentsPaginated({
-    page: isListView ? listPage : 1,
+    page: isTableView ? listPage : 1,
     limit: workLimit,
     search: studentSearch,
     status: studentFilterStatus.length > 0 ? studentFilterStatus.join(',') : undefined,
@@ -66,14 +68,14 @@ export function useStudentsPageController() {
 
   useEffect(() => {
     setListPage(1);
-  }, [studentSearch, studentFilterStatus, studentFilterGender, settings.defaultViewLayout, showDeleted]);
+  }, [studentSearch, studentFilterStatus, studentFilterGender, viewMode, showDeleted]);
 
   const workStudents = useMemo(() => {
     const rows = (workPageQuery.data?.students ?? []) as Student[];
     return showDeleted ? rows.filter((row) => Boolean(row.deletedAt)) : rows;
   }, [workPageQuery.data, showDeleted]);
   const shownCount = showDeleted ? workStudents.length : (workPageQuery.data?.total ?? 0);
-  const workTruncated = useServerWork && !isListView && Boolean(workPageQuery.data?.hasMore);
+  const workTruncated = useServerWork && !isTableView && Boolean(workPageQuery.data?.hasMore);
 
   const handleSaveStudent = async (studentToSave: Student) => {
     if (editStudent) {
@@ -118,7 +120,9 @@ export function useStudentsPageController() {
     editStudent,
     setEditStudent,
     useServerWork,
-    isListView,
+    viewMode,
+    setViewMode,
+    isTableView,
     workLimit,
     workPageQuery,
     workStudents,

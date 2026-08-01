@@ -39,7 +39,7 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
   const balanced = isJournalBalanced(grandDebit, grandCredit);
 
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div className="overflow-x-auto">
       <table className="w-full text-sm table-fixed">
         <caption className="sr-only">{t("accounting.journal.dashboard.tableCaption")}</caption>
         <thead className="bg-muted/60 border-b border-border">

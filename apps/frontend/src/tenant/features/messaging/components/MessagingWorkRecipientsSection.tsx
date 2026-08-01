@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type {
   Contact,
   MessagingGenderFilter,
@@ -62,9 +63,12 @@ export function MessagingWorkRecipientsSection({
   setColumnWidth,
   selectedCount,
 }: MessagingWorkRecipientsSectionProps): JSX.Element {
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs lg:col-span-2">
       <MessagingWorkRecipientsToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         searchContact={searchContact}
         genderFilter={genderFilter}
         roleFilter={roleFilter}
@@ -79,6 +83,7 @@ export function MessagingWorkRecipientsSection({
         onClearSelection={onClearSelection}
       />
       <MessagingWorkRecipientsList
+        viewMode={viewMode}
         contacts={contacts}
         selectedById={selectedById}
         allVisibleSelected={allVisibleSelected}

@@ -19,7 +19,6 @@ interface ExaminationsWorkTierProps {
   activeSubTab: string;
   showDeleted: boolean;
   listLoadFailed: boolean;
-  listLayout: boolean;
   canWrite: boolean;
   canDelete: boolean;
   createExamKey: number;
@@ -44,7 +43,6 @@ export function ExaminationsWorkTier({
   activeSubTab,
   showDeleted,
   listLoadFailed,
-  listLayout,
   canWrite,
   canDelete,
   createExamKey,
@@ -94,7 +92,6 @@ export function ExaminationsWorkTier({
           {activeSubTab === "exams" && (
             <ExamsList
               exams={exams}
-              listLayout={listLayout}
               canWrite={canWrite}
               canDelete={canDelete}
               showDeleted={showDeleted}

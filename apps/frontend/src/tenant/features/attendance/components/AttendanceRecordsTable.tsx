@@ -1,4 +1,5 @@
 import type React from 'react';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
@@ -19,6 +20,7 @@ export interface AttendanceVisibleColumns {
 }
 
 interface AttendanceRecordsTableProps {
+  viewMode: WorkDirectoryViewMode;
   paginatedRecords: AttendanceRecord[];
   visibleColumns: AttendanceVisibleColumns;
   visibleColCount: number;
@@ -33,6 +35,7 @@ interface AttendanceRecordsTableProps {
 }
 
 export function AttendanceRecordsTable({
+  viewMode,
   paginatedRecords,
   visibleColumns,
   visibleColCount,
@@ -55,27 +58,34 @@ export function AttendanceRecordsTable({
     notes: showNotes,
   } = visibleColumns;
 
+  if (viewMode === 'cards') {
+    return (
+      <article className="rounded-xl border border-border overflow-hidden">
+        <div className="space-y-3 p-3">
+          <AttendanceRecordsMobileList
+            paginatedRecords={paginatedRecords}
+            showDate={showDate}
+            showClass={showClass}
+            showStudent={showStudent}
+            showStatus={showStatus}
+            showTimeIn={showTimeIn}
+            showTimeOut={showTimeOut}
+            showNotes={showNotes}
+            editingRecord={editingRecord}
+            statuses={statuses}
+            updateDraft={updateDraft}
+            classLabel={classLabel}
+            renderRowActions={renderRowActions}
+            t={t}
+          />
+        </div>
+      </article>
+    );
+  }
+
   return (
     <article className="rounded-xl border border-border overflow-hidden">
-      <div className="space-y-3 p-3 md:hidden">
-        <AttendanceRecordsMobileList
-          paginatedRecords={paginatedRecords}
-          showDate={showDate}
-          showClass={showClass}
-          showStudent={showStudent}
-          showStatus={showStatus}
-          showTimeIn={showTimeIn}
-          showTimeOut={showTimeOut}
-          showNotes={showNotes}
-          editingRecord={editingRecord}
-          statuses={statuses}
-          updateDraft={updateDraft}
-          classLabel={classLabel}
-          renderRowActions={renderRowActions}
-          t={t}
-        />
-      </div>
-      <div className="hidden overflow-x-auto md:block">
+      <div className="overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-muted/60 border-b border-border">
             <tr>

@@ -38,7 +38,7 @@ export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.
   const { t } = useTranslation();
 
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div className="overflow-x-auto">
       <table className="w-full text-sm table-fixed">
         <thead className="bg-muted/20 border-b border-border/50">
           <tr>

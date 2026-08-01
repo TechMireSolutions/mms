@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import type { TeacherSortField } from '@/tenant/features/teachers/components/TeacherList';
@@ -31,6 +32,7 @@ export function useTeachersPageController() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [sortField, setSortField] = useState<TeacherSortField>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
   const { settings, statuses, specializations } = useTeacherConfig();
 
@@ -119,5 +121,7 @@ export function useTeachersPageController() {
     setSortField,
     setSortDir,
     setListPage,
+    viewMode,
+    setViewMode,
   };
 }

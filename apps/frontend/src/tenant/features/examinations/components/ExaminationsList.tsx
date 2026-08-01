@@ -8,6 +8,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ExaminationsListContent, type ExaminationsVisibleColumns } from "@/tenant/features/examinations/components/ExaminationsListContent";
 import { ExaminationsListToolbar } from "@/tenant/features/examinations/components/ExaminationsListToolbar";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 
 interface ExamsListProps {
@@ -22,7 +23,6 @@ interface ExamsListProps {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
-  listLayout?: boolean;
   onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
@@ -45,7 +45,6 @@ export default function ExamsList({
   onRestore,
   onBulkDelete,
   onBulkRestore,
-  listLayout: _listLayout = false,
   onFilteredCountChange,
   isColumnVisible,
   getColumnWidth,
@@ -53,6 +52,7 @@ export default function ExamsList({
   columnCustomizer,
 }: ExamsListProps): React.ReactElement {
   const { t } = useTranslation();
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -158,6 +158,8 @@ export default function ExamsList({
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")}>
       <ExaminationsListToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         search={search}
         filterStatus={filterStatus}
         selectedCount={selectedIds.length}
@@ -173,6 +175,7 @@ export default function ExamsList({
       />
 
       <ExaminationsListContent
+        viewMode={viewMode}
         exams={filtered}
         selectedIds={selectedIds}
         visibleColumns={visibleColumns}

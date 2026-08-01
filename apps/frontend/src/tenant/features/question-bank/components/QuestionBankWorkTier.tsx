@@ -24,7 +24,6 @@ interface QuestionBankWorkTierProps {
   editQuestion: QuestionBankQuestion | null;
   canWrite: boolean;
   canDelete: boolean;
-  listLayout: boolean;
   columnLayout: ReturnType<typeof useQuestionBankColumnLayout>;
   onSubTabChange: (tab: string) => void;
   onToggleDeleted: () => void;
@@ -50,7 +49,6 @@ export function QuestionBankWorkTier({
   editQuestion,
   canWrite,
   canDelete,
-  listLayout,
   columnLayout,
   onSubTabChange,
   onToggleDeleted,
@@ -109,7 +107,6 @@ export function QuestionBankWorkTier({
           onRestore={onRestore}
           onBulkDelete={onBulkDelete}
           onBulkRestore={onBulkRestore}
-          listLayout={listLayout}
           onFilteredCountChange={onFilteredCountChange}
           isColumnVisible={columnLayout.isColumnVisible}
           getColumnWidth={columnLayout.getColumnWidth}

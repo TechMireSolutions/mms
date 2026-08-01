@@ -9,7 +9,6 @@ import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslation
 import { Exam } from '@/lib/data/examinationData';
 import { useExaminationExamColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationExamColumnLayout';
 import { useExaminationResultsColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout';
-import { useExaminationConfig } from '@/hooks/useStandardModuleConfig';
 import {
   useExaminationsExams,
   useExaminationsResults,
@@ -71,10 +70,8 @@ export function useExaminationsPageController() {
     bulkDeleteExams,
     bulkRestoreExams,
   } = useExaminationsMutations();
-  const { settings } = useExaminationConfig();
   const examColumnLayout = useExaminationExamColumnLayout();
   const resultsColumnLayout = useExaminationResultsColumnLayout();
-  const listLayout = (settings.defaultViewLayout || 'cards') === 'list';
 
   const [showExamForm, setShowExamForm] = useState(false);
   const [showMarksModal, setShowMarksModal] = useState(false);
@@ -157,7 +154,6 @@ export function useExaminationsPageController() {
     setEditExam,
     filteredCount,
     setFilteredCount,
-    listLayout,
     exams,
     examResults,
     examColumnLayout,

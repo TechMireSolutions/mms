@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { UserPlus } from 'lucide-react';
 import type { SystemUser } from '@mms/shared';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { UsersListDesktopTable } from '@/tenant/features/users/components/UsersL
 import { UsersListMobileCards } from '@/tenant/features/users/components/UsersListMobileCards';
 
 interface UsersListContentProps {
+  viewMode: WorkDirectoryViewMode;
   users: SystemUser[];
   selectedIds: string[];
   canWrite: boolean;
@@ -49,6 +51,7 @@ export function UsersListContent({
   onResetPassword,
   getColumnWidth,
   onColumnResize,
+  viewMode,
 }: UsersListContentProps): JSX.Element {
   const { t } = useTranslation();
 
@@ -93,13 +96,16 @@ export function UsersListContent({
 
   return (
     <Card accentColor="primary" className="overflow-hidden border-border/80 bg-card/45 p-0 shadow-sm backdrop-blur-sm">
-      <UsersListMobileCards {...listProps} />
-      <UsersListDesktopTable
-        {...listProps}
-        onToggleAll={onToggleAll}
-        getColumnWidth={getColumnWidth}
-        onColumnResize={onColumnResize}
-      />
+      {viewMode === 'cards' ? (
+        <UsersListMobileCards {...listProps} />
+      ) : (
+        <UsersListDesktopTable
+          {...listProps}
+          onToggleAll={onToggleAll}
+          getColumnWidth={getColumnWidth}
+          onColumnResize={onColumnResize}
+        />
+      )}
     </Card>
   );
 }

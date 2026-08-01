@@ -88,7 +88,7 @@ export function SessionsWorkTableDesktop({
   );
 
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div className="overflow-x-auto">
       <table className="w-full table-fixed text-sm">
         <thead>
           <tr className="border-b border-border/50 bg-muted/20">

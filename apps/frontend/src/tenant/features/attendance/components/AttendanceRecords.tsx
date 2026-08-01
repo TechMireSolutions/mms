@@ -14,6 +14,7 @@ import { notify } from "@/lib/notify";
 import { AttendanceRecordRowActions } from "./AttendanceRecordRowActions";
 import { AttendanceRecordsTable } from "./AttendanceRecordsTable";
 import { AttendanceRecordsToolbar } from "./AttendanceRecordsToolbar";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 
 const PAGE_SIZE = 15;
@@ -49,6 +50,7 @@ export function AttendanceRecords({
 }: AttendanceRecordsProps) {
   const { statuses } = useAttendanceConfig();
   const { t } = useTranslation();
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const {
     canWrite: canWriteAttendance,
     canDelete: canDeleteAttendance,
@@ -147,6 +149,8 @@ export function AttendanceRecords({
   return (
     <section className="space-y-4">
       <AttendanceRecordsToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         search={search}
         handleSearchChange={handleSearchChange}
         statusFilter={statusFilter}
@@ -163,6 +167,7 @@ export function AttendanceRecords({
       />
 
       <AttendanceRecordsTable
+        viewMode={viewMode}
         paginatedRecords={paginatedRecords}
         visibleColumns={visibleColumns}
         visibleColCount={visibleColCount}

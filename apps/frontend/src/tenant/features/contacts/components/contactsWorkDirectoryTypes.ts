@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import type { Contact, ContactsQuickFilter } from "@mms/shared";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import type ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 
@@ -10,7 +11,7 @@ export type ContactsWorkDirectoryColumn = {
   width?: number;
 };
 
-export type ContactsWorkViewMode = "table" | "cards" | null;
+export type ContactsWorkViewMode = WorkDirectoryViewMode;
 
 export interface ContactsWorkDirectoryProps {
   search: string;
@@ -28,8 +29,8 @@ export interface ContactsWorkDirectoryProps {
   viewingDeleted: boolean;
   onShowDeletedChange: (next: boolean) => void;
   canViewDeleted: boolean;
-  viewModeOverride: ContactsWorkViewMode;
-  onViewModeChange: (mode: Exclude<ContactsWorkViewMode, null>) => void;
+  viewMode: ContactsWorkViewMode;
+  onViewModeChange: (mode: ContactsWorkViewMode) => void;
   shownCount: number;
   workTruncated: boolean;
   selected: Array<string | number>;

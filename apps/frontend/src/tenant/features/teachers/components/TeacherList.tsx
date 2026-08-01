@@ -29,6 +29,7 @@ export function TeacherList({
   sortField: controlledSortField,
   sortDir: controlledSortDir,
   onSortChange,
+  viewMode,
 }: TeacherListProps): React.JSX.Element {
   const {
     sorted,
@@ -73,6 +74,7 @@ export function TeacherList({
     <div className="space-y-4">
       <TeacherListContent
         teachers={sorted}
+        viewMode={viewMode}
         selectedIds={selectedIds}
         allSelected={allSelected}
         someSelected={someSelected}

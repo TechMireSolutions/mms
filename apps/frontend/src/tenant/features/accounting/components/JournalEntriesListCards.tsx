@@ -35,7 +35,7 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
   const balanced = isJournalBalanced(grandDebit, grandCredit);
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {entries.map((entry) => {
         const { totalDebit, totalCredit } = getJournalEntryLineTotals(entry);
         return (

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
@@ -53,6 +54,7 @@ export function EnrollmentList({
   columnCustomizer,
 }: EnrollmentListProps): React.ReactElement {
   const { t } = useTranslation();
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { formatCurrency } = useFinanceCurrency();
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [statusFilter, setStatus]   = useState<string>("all");
@@ -117,6 +119,8 @@ export function EnrollmentList({
   return (
     <section className="space-y-4" aria-label={t("enrollments.list")}>
       <EnrollmentListToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         search={search}
         statusFilter={statusFilter}
         sessionFilter={sessionFilter}
@@ -132,6 +136,7 @@ export function EnrollmentList({
       />
 
       <EnrollmentListContent
+          viewMode={viewMode}
         enrollments={paginatedEnrollments}
         filteredCount={filtered.length}
         page={page}

@@ -56,7 +56,7 @@ export function QuestionBankListCards({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-3 p-3 md:hidden" role="list">
+    <div className="space-y-3 p-3" role="list">
       {questions.map((question, questionIndex) => (
         <motion.article
           key={question.id}

@@ -1,3 +1,4 @@
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { ReactNode } from "react";
 import type { AppTranslationKey } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -15,6 +16,7 @@ export interface JournalEntriesVisibleColumns {
 }
 
 export interface JournalEntriesListProps {
+  viewMode: WorkDirectoryViewMode;
   entries: JournalEntry[];
   selectedIds: string[];
   canDelete: boolean;

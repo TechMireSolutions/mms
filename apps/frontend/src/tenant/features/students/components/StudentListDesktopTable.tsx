@@ -66,7 +66,7 @@ export function StudentListDesktopTable({
   const { t } = useTranslation();
 
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div className="overflow-x-auto">
       <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b border-border/50 bg-muted/20">

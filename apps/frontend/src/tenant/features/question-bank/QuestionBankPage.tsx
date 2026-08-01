@@ -80,7 +80,6 @@ export default function QuestionBankPage(): JSX.Element {
                 editQuestion={c.editQuestion}
                 canWrite={c.canWrite}
                 canDelete={c.canDelete}
-                listLayout={c.listLayout}
                 columnLayout={c.columnLayout}
                 onSubTabChange={c.setActiveSubTab}
                 onToggleDeleted={() => c.setShowDeleted((prev) => !prev)}
