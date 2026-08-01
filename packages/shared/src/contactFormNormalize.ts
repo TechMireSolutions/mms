@@ -43,7 +43,7 @@ export function normalizeContactForEdit(
     emailLabel: optionDefaults.emailLabel || DEFAULT_EMAIL_LABELS[0] || "Personal",
     addressLabel: optionDefaults.addressLabel || DEFAULT_ADDRESS_LABELS[0] || "Home",
     socialPlatform: optionDefaults.socialPlatform || SOCIAL_PLATFORMS[0] || "Facebook",
-    relationship: optionDefaults.relationship || RELATIONSHIPS[0] || "Father",
+    relationship: optionDefaults.relationship || RELATIONSHIPS[0] || "",
     defaultPhoneCountryCode: optionDefaults.defaultPhoneCountryCode || "",
   };
   const dialDefault = defaults.defaultPhoneCountryCode || "";

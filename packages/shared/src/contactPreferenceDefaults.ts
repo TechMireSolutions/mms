@@ -29,21 +29,7 @@ export const COLOR_PALETTES = {
   destructive: { bg: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/15 dark:border-destructive/25", text: "text-destructive", border: "border-destructive/20 dark:border-destructive/25" },
 };
 
-export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [
-  { id: "parent_child", forward: "Parent", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
-  { id: "father_child", forward: "Father", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
-  { id: "mother_child", forward: "Mother", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
-  { id: "spouse", forward: "Spouse", inverse: "Spouse" },
-  { id: "sibling", forward: "Sibling", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
-  { id: "brother_sibling", forward: "Brother", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
-  { id: "sister_sibling", forward: "Sister", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
-  { id: "guardian_dependent", forward: "Guardian", inverse: "Dependent" },
-  { id: "grandparent_grandchild", forward: "Grandparent", inverse: "Grandchild", inverseMale: "Grandson", inverseFemale: "Granddaughter" },
-  { id: "aunt_uncle", forward: "Aunt/Uncle", inverse: "Niece/Nephew", inverseMale: "Nephew", inverseFemale: "Niece" },
-  { id: "cousin", forward: "Cousin", inverse: "Cousin" },
-  { id: "inlaw", forward: "Parent-In-Law", inverse: "Child-In-Law" },
-  { id: "other", forward: "Other", inverse: "Other" },
-];
+export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [];
 
 export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   defaultCountry: "Pakistan",
@@ -119,11 +105,4 @@ export const COUNTRY_CODES = [
   { country: "Indonesia",             code: "+62"  },
 ];
 
-export const RELATIONSHIPS = [
-  "Father", "Mother", "Parent", "Son", "Daughter", "Child", "Brother", "Sister", "Sibling",
-  "Grandfather", "Grandmother", "Grandparent", "Grandson", "Granddaughter", "Grandchild",
-  "Uncle", "Aunt", "Aunt/Uncle", "Nephew", "Niece", "Niece/Nephew", "Cousin",
-  "Father-In-Law", "Mother-In-Law", "Parent-In-Law", "Son-In-Law", "Daughter-In-Law", "Child-In-Law",
-  "Brother-In-Law", "Sister-In-Law", "Sibling-In-Law",
-  "Guardian", "Dependent", "Spouse", "Other",
-];
+export const RELATIONSHIPS: string[] = [];

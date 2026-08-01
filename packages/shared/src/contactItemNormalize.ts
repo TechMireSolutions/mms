@@ -200,7 +200,7 @@ export function normalizeEmergencyItem(
   item: unknown,
   defaults: ContactItemNormalizeDefaults = {},
 ): EmergencyContact {
-  const defaultRelationship = defaults.relationship || RELATIONSHIPS[0] || "Father";
+  const defaultRelationship = defaults.relationship || RELATIONSHIPS[0] || "";
   if (!item) return { relationship: defaultRelationship, contactId: "" };
   if (typeof item === "string" || typeof item === "number") {
     return { relationship: defaultRelationship, contactId: String(item) };

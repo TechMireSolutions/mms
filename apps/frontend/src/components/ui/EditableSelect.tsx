@@ -45,13 +45,22 @@ export function EditableSelect({
   const resolvedId = id || fallbackId;
   const resolvedName = name || fallbackId;
 
+  const listboxId = `${resolvedId}-listbox`;
+
   const handleAdd = (): void => {
     if (!onUpdateOptions) return;
     const text = customValue.trim();
-    if (text && !options.includes(text)) {
+    if (!text) return;
+    const existing = options.find((opt) => opt.trim().toLowerCase() === text.toLowerCase());
+    if (existing) {
+      onChange(existing);
+      setOpen(false);
+      setCustomValue("");
+    } else {
       const nextOptions = [...options, text];
       onUpdateOptions(nextOptions);
       onChange(text);
+      setOpen(false);
       setCustomValue("");
     }
   };
@@ -92,6 +101,9 @@ export function EditableSelect({
         id={resolvedId}
         name={resolvedName}
         aria-label={resolvedPlaceholder}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-controls={listboxId}
         className={cn(
           "min-h-11 flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all text-start",
           className
@@ -119,13 +131,15 @@ export function EditableSelect({
           }
         }}
       >
-        <div role="listbox" className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
+        <div id={listboxId} role="listbox" className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-1">
           {options.map((option, index) => {
             const isSelected = value === option;
             const isHighlighted = index === highlightedIndex;
+            const optionId = `${resolvedId}-opt-${index}`;
             return (
               <div
                 key={option}
+                id={optionId}
                 role="option"
                 aria-selected={isSelected}
                 onMouseEnter={() => setHighlightedIndex(index)}
