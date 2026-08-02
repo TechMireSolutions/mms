@@ -16,9 +16,10 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 5. Initialize fields: strings `""`, numbers/dates `null`, lists `[]` (React 19 uncontrolled→controlled safety).
 6. Money/decimals as **strings** — no float math.
 7. Phones: single `type="tel"`; parse/normalize with `parsePhoneNumber` + `normalizeToE164`.
-8. Persist via REST mutations (`mutateAsync`); tenant writes use RLS `SET LOCAL` — `mms-data-layer.md`.
-9. Soft-delete only via DELETE/restore routes — never from the form body.
-10. S3: presigned upload + backend `HEAD` before metadata save.
+8. Collection tabs: `cleanContactDraft` before save; edit merge via `mergeContactEditSavePayload` so empty arrays clear legacy scalars (`mms-form-architecture.md` §3).
+9. Persist via REST mutations (`mutateAsync`); tenant writes use RLS `SET LOCAL` — `mms-data-layer.md`.
+10. Soft-delete only via DELETE/restore routes — never from the form body.
+11. S3: presigned upload + backend `HEAD` before metadata save.
 
 ## Checklist
 
@@ -32,6 +33,7 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 - [ ] Mobile-usable: `FORM_INPUT` / controls `min-h-11`; FormModal tab/field layout uses container `@md:` / `@sm:` (dialog width), not viewport `md:` — `mms-ui-ux-design.md` §7
 - [ ] Inline validation; focus first invalid tab
 - [ ] Contact (and similar) option dropdowns: config/registry lists + `EditableSelect` `onUpdateOptions` — ban runtime `DEFAULT_*` / `GENDERS` fallbacks in form tabs
+- [ ] Collection deletes persist: empty arrays + scalar sync; no existing-contact spread resurrection
 - [ ] No dynamic form compiler / blueprint engine
 ```
 
@@ -41,6 +43,8 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 - Dual-write Query + `saveCollection` on save
 - Accept client `deletedAt` / `deletedBy` / `deletionReason` on create/update
 - Hardcoded labels — use `t()` / `labelKey`
+- Rebuild phones/emails/addresses from legacy scalars when the collection array is explicitly `[]`
+- Spread `editContact` / existing row over a cleared draft so stale `phone` / `email` / `line1` come back
 
 ## Done
 

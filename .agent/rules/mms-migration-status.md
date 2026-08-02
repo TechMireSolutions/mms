@@ -50,3 +50,4 @@ Keep these regressions out of new work (details historically resolved — do not
 - Contacts entity rows are REST-only (typed `contacts` table); do not re-add `contacts` to `ALLOWED_COLLECTIONS` or FE `BUSINESS_COLLECTIONS`
 - Typed `deleted_at` is the SQL soft-delete source of truth for list filters; do not rely on JSONB `deletedAt` alone
 - Unknown tenant host → apex hard-redirect `/tenant-not-found?subdomain=…` — never keep the bad subdomain URL or mount `/settings` there — `mms-settings-i18n.md` / `mms-ui-ux-design.md` §8
+- Contact collection deletes: empty `phones` / `emails` / `addresses` / `socials` / `relationshipContacts` / `custom_*` arrays stay cleared — no resurrection via legacy scalars, edit-contact spread order, `normalizeContactForEdit` scalar hydrate, sync field picks, or contacts `bulkSave` JSONB `||` (use `mergeContactEditSavePayload` + `syncContactScalarFields` + `updateStrategy: 'overwrite'`) — `mms-form-architecture.md` §3, `mms-data-layer.md`

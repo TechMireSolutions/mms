@@ -17,6 +17,7 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 
 - Free-form dynamic form compilers / visual schema generators are **banned**.
 - Custom **tabs** remain JSON-document store until table+CRUD ships (`mms-migration-status.mdc`).
+- Tenant-created form tabs (`custom_*`, `isContactCustomCollectionTab`) persist as **row arrays** on the contact (like phones/emails). Blank rows strip on save via `cleanContactDraft`; emptied arrays must persist — `mms-form-architecture.mdc` §3.
 - Column visibility **and width** prefs: server-side user prefs via module column-preferences PUT — clamp with `clampModuleColumnWidth` from `@mms/shared` when persisting `width`; localStorage merge is cache only (local width may win overlay), not SSOT.
 
 ## 2. New / changed field checklist

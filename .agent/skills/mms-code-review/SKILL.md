@@ -62,6 +62,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Mobile-first layout: no fixed `w-[Npx]` page widths; no `max-lg:` layout forks; logical CSS for RTL
 - [ ] Tables wrapped (`Table` or `overflow-x-auto`); interactive controls ≥ 44×44 (`min-h-11 min-w-11`)
 - [ ] `FormModal` for add/edit; in-dialog layout uses `@container` `@md:` / `@sm:` (not viewport `md:`)
+- [ ] Contact collection deletes persist (`[]` + scalar sync; no existing-row / scalar resurrection) — `mms-form-architecture.md` §3
 - [ ] Contact form option dropdowns from ContactConfig — not runtime `DEFAULT_*` / `GENDERS` fallbacks
 - [ ] Bulk id bodies use shared `bulkIdsBodySchema` (`.max(500)`) when applicable
 - [ ] Contacts list filters use shared `contactsListQuerySchema` (`hasEmail` / `hasPhone` / `hasReachable`) — no forked Messaging flags

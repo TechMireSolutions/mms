@@ -48,13 +48,14 @@ Authoritative standards for backend databases, migrations, caching architectures
 - **DDL Changes**: Generate Drizzle migrations and ensure journal tracking (`meta/_journal.json`) is committed in the same change.
 - **TypeScript Transforms**: Implement idempotent data updates in `migrations/00N_*.ts` to execute on server startup.
 - **GIN & JSONB Indexes**: Dynamic fields are stored in a native `JSONB` column (`custom_data`). Search indexing uses `GIN` definitions or Expression Indexes in Drizzle migrations.
-- **RBAC JSONB Merging**: To prevent destroying data omitted from partial frontend payloads, always write custom fields using `||` concatenation with `COALESCE`:
-  ```typescript
-  await tx.update(students)
-    .set({ customData: sql`COALESCE(${students.customData}, '{}'::jsonb) || ${incomingPayload}::jsonb` })
-    .where(eq(students.id, studentId));
-  ```
-- **Partial PUT merges**: Merge defined patch keys onto the existing row **before** prepare/normalize so omitted collections are not wiped with `undefined` / `[]` defaults.
+- **JSONB write strategies** (`createGenericRepository`):
+  | `updateStrategy` | Single-row `save` | `bulkSave` on conflict |
+  |---|---|---|
+  | `'merge'` (default) | top-level `custom_data \|\|` patch | same `\|\|` merge |
+  | `'overwrite'` (Contacts + other full-row entities) | replace `custom_data` | replace `excluded.custom_data` — **not** `\|\|` |
+  - Use **`overwrite`** when the API persists a full prepared entity (Contacts). Empty collection keys (`phones: []`, …) must replace prior arrays; `\|\|` merge alone is not enough if bulk conflict still concatenates.
+  - Use **`merge`** only for intentionally partial JSONB patches where omitted keys must survive.
+- **Partial PUT merges**: Merge defined patch keys onto the existing row **before** prepare/normalize so **omitted** collections are not wiped. Once a collection key is present (including `[]`), it is authoritative — do not rebuild from legacy scalars (`phone` / `email` / `line1` / `address`). Contacts: `normalizeContactPhones` hydrates from scalar only when `phones` is absent; then `syncContactScalarFields` clears/syncs mirrors — `mms-form-architecture.mdc` §3.
 ---
 
 ## 2. Client Persistence & Synchronization (`db.ts` [DEPRECATED for Primary Collections])
