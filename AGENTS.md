@@ -52,7 +52,7 @@ CLAUDE.md            # Session entry (points here + sync commands)
 | `rules/mms-dry.md` | `rules/mms-dry.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
-Engineering layout & naming (file-scoped): `mms-structure-naming`.
+Engineering layout & naming (file-scoped): `mms-structure-naming` — hard ~300 / soft ~220 file-size bands, stable barrels, page controllers.
 
 | Skill | Purpose |
 |-------|---------|
@@ -63,7 +63,7 @@ Engineering layout & naming (file-scoped): `mms-structure-naming`.
 | `mms-module-work` | Command centre and Work tab — metrics, directory, drawer, bulk actions, soft-delete trash |
 | `mms-module-setup` | Module Setup tier — Fields, Preferences, audit, `setupSubTabs` / `canEditSetup` |
 | `mms-background-jobs` | Queued processing — exports, imports, dedup scans, progress, artifacts |
-| `mms-form-architecture` | Blueprint schemas, branded IDs, IEEE 754 math bypass, tenant RLS transaction, JSONB deep merge, React 19 inputs, S3 uploads |
+| `mms-form-architecture` | Static FormModal, shared Zod, React 19 inputs, tenant RLS, JSONB merge, local multipart uploads |
 | `mms-fields-registry` | Fields & tabs |
 | `mms-data-sync` | db.ts & API sync |
 | `mms-linux-compatibility` | Linux & Ubuntu VPS compatibility check (casing, line endings, PM2) |

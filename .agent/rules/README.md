@@ -9,8 +9,8 @@ Project rules for the Madrasa Management System. Cursor loads `.md` files from t
 | Rule | Purpose |
 |------|---------|
 | `antigravity-global.md` | Agent cognition, output economy, security, TS/git standards |
-| `mms-core.md` | Stack, boundaries, domain, edit discipline — **index only; details in scoped rules** |
-| `mms-migration-status.md` | Target vs current gaps + recently resolved — do not regress |
+| `mms-core.md` | Stack, boundaries, domain invariants, standards index, edit discipline |
+| `mms-migration-status.md` | Open gaps + Do not reintroduce — do not regress |
 | `mms-dependencies.md` | Latest stable Node, pnpm, and workspace dependency upgrades |
 | `mms-dry.md` | DRY — single source of truth, extraction thresholds, duplication bans, `@mms/shared` exports |
 | `mms-completion-review.md` | Self-review after code edits — verify, fix bugs, then mark done |
@@ -23,9 +23,9 @@ Project rules for the Madrasa Management System. Cursor loads `.md` files from t
 | `mms-ui-ux-design.md` | UI primitives, design tokens, forms (`FormModal`), tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (mobile-first, breakpoints, 44px touch, tables, e2e) |
 | `mms-module-architecture.md` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
 | `mms-data-layer.md` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query fetching, and deprecated localStorage caching |
-| `mms-form-architecture.md` | Static FormModal forms, shared Zod DTOs, React 19 defaults, decimal-as-string, S3 uploads |
-| `mms-structure-naming.md` | Monorepo layout, colocation, file-size splits, naming (files, folders, symbols, routes, i18n keys), and UI-to-DB casing alignment |
-| `mms-hooks.md` | Custom React hooks (live data, sorting, config contexts) |
+| `mms-form-architecture.md` | Static FormModal forms, shared Zod DTOs, React 19 defaults, decimal-as-string, local multipart uploads |
+| `mms-structure-naming.md` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, split shapes, stable barrels, naming (files, folders, symbols, routes, i18n keys), and UI-to-DB casing alignment |
+| `mms-hooks.md` | Custom React hooks (Query, live data, **page controllers / action handlers**, Work layout, config contexts) |
 | `mms-auth-security.md` | Auth, users, JWT session shapes, RBAC permissions, multi-tenant isolation, cookie policies, rate limits, and threat model |
 | `mms-settings-i18n.md` | Settings hierarchy, settings persistence and preview, navigation groups, translations/locales (en/ar/ur/fa) |
 | `mms-fields.md` | Field and tab registry |
@@ -60,10 +60,16 @@ bash .agent/scripts/sync-all.sh
 - [ ] Frontend lint if touched: `cd apps/frontend && pnpm lint`
 - [ ] No new hardcoded labels/colours — see `mms-settings-i18n.md` (en/ar/ur/fa) + registries
 - [ ] Module tiers respect isolation boundaries in `mms-module-architecture.md`
+- [ ] Work: `directoryViews: ['table','cards']`, paged list GET (no `loadAllFn`), cards share server pagination, drawer trash parity
+- [ ] Work column widths persist (local + `/column-preferences`; merge preserves device widths) — `mms-module-architecture.md` §3
+- [ ] Dashboard/report KPI cards use `/metrics` where available — no forced collection dumps for those values; widgets/visualizer use `useWidgetCollections` / `useReportCollectionRows` — `mms-reports.md`
+- [ ] Setup Fields / form: tab enablement SSOT + enabled fields render in form **and** drawer — `mms-fields.md`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
+- [ ] Touched app files stay under hard ~300 lines (prefer ~220 for FE shells); splits keep public import barrels — `mms-structure-naming.md`
 - [ ] No commit unless user requested
 - [ ] Update **all mirrors** when changing standards: `bash .agent/scripts/sync-all.sh`
-- [ ] Auth/write routes: `mms-auth-security.md`
+- [ ] Auth/write routes: `mms-auth-security.md` (do not OR entity write with `canEditSetup`)
+- [ ] Backup/restore: admin + `canBulkSync`, safety backup + password step-up, sync timeout rollback, strip secrets / exclude credential tables — `mms-settings-i18n.md` / `mms-data-layer.md` / `mms-auth-security.md`
 - [ ] New UI: `mms-ui-ux-design.md` keyboard + labels + §7 responsive checklist (375 / 768 / 1440)
 - [ ] New `@mms/shared` pure helpers: unit test per `mms-testing-observability.md`
 

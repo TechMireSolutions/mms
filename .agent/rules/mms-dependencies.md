@@ -27,7 +27,7 @@ Run only on **dedicated upgrade PRs** — not mid-feature.
 5. `pnpm audit` (or OSV review) — fix/document high+ findings; do not leave known CVEs silent
 6. Fix breaking API changes in the same change — no deferred “follow-up” pins
 
-Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution for native/binary deps (Puppeteer, etc.).
+Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution for native/binary deps when present (CI may still set `PUPPETEER_SKIP_DOWNLOAD`; WhatsApp helper is not a Puppeteer workspace package).
 
 ## Pinning rules
 

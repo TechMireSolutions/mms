@@ -11,11 +11,13 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Use `FormModal` for create/edit/builders; raw `Modal` only for confirm/preview.
 - Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `EditableSelect`) + **`formStyles.ts` SSOT** — no ad-hoc input chrome.
 - **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — see `mms-ui-ux-design.md` §7. Do not reintroduce viewport `md:` chrome flips inside `FormModal`.
-- **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit.
+- **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit. Visible tabs follow Setup enablement SSOT (`resolveContactEnabledTabIds` / module equivalent) — `mms-fields.md`.
+- **Enabled fields must render**: if dynamic/shared validation can require a registry or custom field, the form must show a control for it (and the detail drawer a read row). Ban hard-coded key allowlists that drop Setup-enabled fields.
 - Ban dynamic form compilers / visual schema generators on the FE.
 - Option lists (gender, labels, platforms, relationships, countries/dials): tenant ContactConfig / module registries — not hardcoded `@mms/shared` `DEFAULT_*` as live form options.
 - Stacked pickers need descending `z-index` so overlays are not clipped.
 - Dates: `<DatePicker>` only — never raw `<input type="date">`.
+- Gate create/edit entry and save CTAs with `canWrite` — do not toast success / close when the mutation never ran.
 
 ## 2. State & React 19 defaults
 
@@ -51,4 +53,4 @@ Simple static forms with design-system primitives — not dynamic layout engines
 
 - Tenant writes: transaction-scoped RLS — `mms-data-layer.md` (do not duplicate SET LOCAL recipes here).
 - Soft-delete only via dedicated DELETE/restore routes — never from the create/edit form body.
-- S3 uploads: presigned PUT + backend `HEAD` for `Content-Length` / `Content-Type` before persisting metadata.
+- File uploads: authenticated multipart to `/api/uploads/image` or `/api/uploads/attachment` (local disk under `/uploads/…`); resolve returned URLs via `resolveApiUrl` — no S3/presign in tree.

@@ -43,13 +43,15 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 | Expanded soft-delete Work trash | Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`) |
 | Module gold-standard parity | Hasanat → Examinations → Users → Messaging → Question Bank: upsert bulk PUT, awaited saves, setupSubTabs, ErrorState, Cmd/Ctrl+N |
 | Onboarding E2E critical path | `e2e/tests/onboarding-login.spec.ts` |
-| Contacts FORCE RLS + typed soft-delete SQL | `0032_force_rls_contacts_persons`; list filters on `deleted_at` |
+| Contacts FORCE RLS + typed soft-delete SQL | Squashed `0000_init` (+ journal forward migrations); list filters on `deleted_at` |
 | Contacts entity leave document-store | Removed from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`; typed `contacts` table only |
 | Google Contacts OAuth secrets table | `contact_google_sync_credentials` FORCE RLS; not `objects` |
 | Contacts saved reports → typed table | `saved_reports` category `contacts`; object key deprecated from ALLOWED_OBJECTS |
 | Audit trigger tenant + user GUCs | `log_row_change` fills `workspace_subdomain`; `app.current_user_id` SET LOCAL |
 | Contact write schema soft-delete strip | `contactWriteSchema` + `stripContactClientSoftDeleteFields` |
 | Atomic contact merge | `POST /api/contacts/merge`; FE invalidates after Google sync (no dual upsert) |
+| Custom tabs typed + FORCE RLS | `custom_tabs` composite PK + FORCE RLS in `0000_init`; `/api/custom-tabs` CRUD; bulk PUT upsert-only |
+| Query-first report widgets | `useWidgetCollections({ requiredCollections })` + `useReportCollectionRows`; REST toggles via `widgetRecordToggle` |
 
 ## Open priorities
 
@@ -57,7 +59,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 
 **Problem:** Messaging log clear is intentional soft-archive (not a trash browser). Question Bank tests/papers and assessment_results remain upsert-only by design. JSONB entity search/sort may still page in memory after SQL soft-delete filter.
 
-**Fix:** Do not regress Messaging clear or QB papers/results variants without an explicit product change. Users real soft-delete is shipped (`0027_tenant_users_soft_delete`). Push SQL pagination when touching list hot paths (`mms-data-layer.mdc`).
+**Fix:** Do not regress Messaging clear or QB papers/results variants without an explicit product change. Users soft-delete is in the squashed baseline (`tenant_users.deleted_at` in `0000_init` + forward migrations). Push SQL pagination when touching list hot paths (`mms-data-layer.mdc`).
 
 **Skills:** `mms-module-work`, `mms-module-page` (§7), `mms-frontend`, `mms-backend-api`
 
@@ -67,23 +69,29 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 
 **Fix:** Prefer `can()` / contract permissions when touching those UIs; do not add new tenant-module `role ===` write gates (`mms-auth-security.mdc`).
 
-### P3 — Relational custom fields / remaining document-store debt
+### P3 — Remaining document-store debt (prefs / field config / lookups)
 
-**Problem:** Document store still holds prefs, field config, and lookup lists; custom tabs still JSON-first in places.
+**Problem:** Prefs, field config, and lookup lists still live in `objects`. Custom **tabs** are already typed (`custom_tabs` + REST); Contacts Setup may still dual-write `formTabs` into `contact_field_config`.
 
-**Fix:** Prefer typed tables + FORCE RLS for new shareable/secret data; `pgTable` + migration for custom tabs per `mms-fields.mdc`.
+**Fix:** Prefer typed tables + FORCE RLS for new shareable/secret data; migrate Contacts Setup to `custom_tabs` REST SSOT (`mms-fields.mdc`). Do not reintroduce object-only custom-tab SSOT.
 
 ### P4 — Report drill-down & saved reports
 
-**Problem:** Contacts has typed saved reports + share scopes; other modules lag on drill-down / share parity.
+**Problem:** Contacts has typed saved reports + share scopes; pinned widgets/visualizer are Query-first. Other modules lag on drill-down / share parity; some niche charts still client-reduce.
 
-**Fix:** Same patterns on other module reports (`mms-reports.mdc`, skill `mms-reports-export`).
+**Fix:** Same patterns on other module reports (`mms-reports.mdc`, skill `mms-reports-export`). Prefer `/metrics` / server aggregates over full-row dumps.
 
 ### P5 — Responsive e2e depth
 
 **Problem:** Shells + Work-route smoke are green (`responsive-shell` / `responsive-authenticated`). Platform `md` bottom nav and deep Reports/Setup builders are not asserted.
 
 **Fix:** Extend those specs when touching those surfaces — `mms-ui-ux-design.mdc` §7, `mms-testing-observability.mdc`. Do not treat missing depth as license to regress shell overflow/touch floors.
+
+### P6 — FE live push
+
+**Problem:** BE broadcasts on `/api/ws` + `broadcastTenantUpdate`; FE has no subscriber.
+
+**Fix:** Subscribe and invalidate Query keys — ban new polling loops (`mms-core.mdc`).
 
 ## After each fix
 

@@ -1,6 +1,6 @@
 ---
 description: Local dev setup, environment variables, Docker, backend ports, health endpoints, Linux compatibility, and CI expectations.
-globs: package.json,pnpm-workspace.yaml,turbo.json,apps/backend/Dockerfile,restart_servers.sh,.env*,apps/backend/.env.example,scripts/**/*.sh,scripts/apache/**,apps/backend/src/index.ts,.github/workflows/**
+globs: package.json,pnpm-workspace.yaml,turbo.json,apps/backend/Dockerfile,restart_servers.sh,apps/backend/.env.example,scripts/**/*.sh,scripts/apache/**,apps/backend/src/index.ts,.github/workflows/**
 alwaysApply: false
 ---
 
@@ -9,7 +9,7 @@ alwaysApply: false
 Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
 
 ## 1. Prerequisites & Environment Setup
-- **Node.js**: Match root `package.json` `engines.node` (currently **`>=24.14.0`**). Align CI/Docker images with the same major.
+- **Node.js**: Match root `package.json` `engines.node` (currently **`>=24.14.0`**). Align CI/Docker images with the same major — do not leave Dockerfile on a newer Node/pnpm pin than `engines` / `packageManager`.
 - **pnpm**: Match root `packageManager` (currently **pnpm@11.15.1**) via Corepack (`corepack enable`).
 
 ### Workspace Commands (from repo root)
@@ -34,8 +34,8 @@ pnpm test             # Run Vitest suites for all workspaces
 ## 2. Environment Variables & Ports Configuration
 
 ### Local vs Production Ports
-- **Production Backend**: **`5002`** (defined as `MMS_PRODUCTION_BACKEND_PORT`).
-- **Local Dev Backend**: `3000` (defined as `MMS_BACKEND_PORT`).
+- **Production Backend**: **`5002`** (`MMS_PRODUCTION_BACKEND_PORT` / `MMS_PROD_BACKEND_PORT` in deploy scripts).
+- **Local Dev Backend**: `3000` (`MMS_DEV_BACKEND_PORT` in `@mms/shared`; optional env override `MMS_BACKEND_PORT` in `restart_servers.sh`).
 - **Local Dev Frontend**: `5173` (Vite dev server).
 
 > [!CRITICAL]
@@ -53,7 +53,16 @@ pnpm test             # Run Vitest suites for all workspaces
 | `JWT_SECRET` | Backend | Authentication token signature secret. Required. |
 | `PORT` | Backend | Port binding (`5002` in production; `3000` or custom in dev). |
 | `ALLOWED_ORIGIN` | Backend | Production CORS host. Must explicitly match frontend. |
+| `MMS_APP_DOMAIN` | Backend | Apex + `*.` tenant host resolution (production). |
+| `PLATFORM_APP_URL` | Backend | Apex origin for platform email links / CORS pairing with `ALLOWED_ORIGIN`. |
+| `PLATFORM_ALLOW_ENV_BOOTSTRAP` | Backend | When `true`, seed super-user from `PLATFORM_ADMIN_EMAIL` + password env — otherwise first-run UI (`mms-auth-security.mdc`). |
 | `NODE_ENV` | Backend | Run environment (`production` restricts CORS / cookie options). |
+
+### Data wipe / purge (do not invent new wipe APIs)
+- **Tenant workspace delete**: `deleteWorkspace` → `purgeTenantDataBySubdomain` then remove workspace row (platform workspaces API).
+- **Platform full reset**: `POST /api/platform/settings/reset-database` — apex + `authenticatePlatform` + `requireSuperUser` + password confirm → `resetAndReseedDatabase()`; clears platform session cookie. Not a tenant-scoped op.
+- **Auth artifacts**: scheduler / `purgeExpiredAuthArtifacts` — TTL cleanup only (`mms-auth-security.mdc`).
+- Ban ad-hoc `DROP SCHEMA` / FE-driven full DB wipes outside these paths.
 
 ---
 
@@ -70,9 +79,11 @@ To ensure seamless deployments on Ubuntu systems:
 ## 4. CI/CD & Deploy Procedures
 The GitHub Actions workflow (`.github/workflows/ci.yml`) executes on every push/PR to `main`:
 1. **pnpm install --frozen-lockfile**
-2. **pnpm typecheck**
-3. **pnpm lint** (frontend & backend)
+2. Start PostgreSQL + create `mms` DB
+3. **pnpm typecheck**
 4. **pnpm test**
+5. Playwright responsive E2E: `responsive-shell.spec.ts` + `responsive-authenticated.spec.ts`
+6. **pnpm lint** (frontend & backend)
 
 CI Node/pnpm images must match root `engines` / `packageManager`. Never commit `.env` or secrets in artifacts.
 

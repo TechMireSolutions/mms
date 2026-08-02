@@ -15,7 +15,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions, soft-delete trash (`mms-module-architecture.md` §2–§3, §6–§7) |
 | [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`mms-module-architecture.md` §4, `mms-fields.md`) |
 | [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`mms-module-architecture.md` §5) |
-| [mms-form-architecture](mms-form-architecture/SKILL.md) | Blueprint schemas, branded IDs, IEEE 754 math bypass, tenant RLS transaction, JSONB deep merge, React 19 inputs, S3 uploads |
+| [mms-form-architecture](mms-form-architecture/SKILL.md) | Static FormModal, shared Zod, React 19 inputs, tenant RLS, JSONB merge, local multipart uploads |
 | [mms-fields-registry](mms-fields-registry/SKILL.md) | Custom fields, tabs, column registry |
 | [mms-data-sync](mms-data-sync/SKILL.md) | db.ts, sync API (admin GET), REST vs collections, Query cache |
 | [mms-shared-package](mms-shared-package/SKILL.md) | `@mms/shared` types and utils |

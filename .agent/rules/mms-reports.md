@@ -10,6 +10,10 @@ trigger: model_decision
 
 - Prefer TanStack Query / server aggregates / module `/metrics` for REST-migrated modules.
 - `getCollection` / `useLiveCollection` only for legacy non-migrated report sources — never as the primary path for REST entities.
+- Dashboard widgets / builders / drilldown: `useWidgetCollections({ requiredCollections })` from `@/lib/reports/useReportCollections` — fetch only collections the pinned set needs.
+- Chart visualizer: `useReportCollectionRows(collectionKey)` — do not call `getCollection(activeMeta.dbKey)` for REST report collections.
+- Widget field toggles / Hasanat drilldown deletes: REST via `persistWidgetRecordToggle` / `persistWidgetHasanatDistributionDelete` — ban `saveCollection` for REST-authoritative keys.
+- Sync helper `getWidgetCollections()` is Query-cache read-only (no localStorage invent) — prefer the hooks in React trees.
 - No stale snapshot caches unless the user explicitly exports.
 - Hydrate cross-module ids via batch `/resolve` — ban N+1 client loops.
 
@@ -29,15 +33,24 @@ trigger: model_decision
 | Excel | `xlsx` via dynamic `import()` |
 | PDF | `jspdf` + `jspdf-autotable` — auto page size/orientation |
 
-Use shared `ExportToolbar` (`@/components/ui/ExportToolbar`) — not a deleted `ReportExportBar`. Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
+Use shared `ExportToolbar` / `ExportToolbarCompact` (`@/components/ui/ExportToolbar*`, `exportToolbarUtils.ts`) — not a deleted `ReportExportBar`. Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
 
 ## Visual
 
 Recharts + semantic colours (`StatusBadge` / design tokens). Export/print labels via `t()` — `mms-settings-i18n.md`.
 
-## Dashboard widgets
+## Dashboard & KPI SSOT
 
-`PinnedWidgets` / dashboard cards — config in `reports_*` collections or objects, not hardcoded in `Dashboard.tsx`.
+`PinnedWidgets` / dashboard cards — config via `kpi_custom_widgets` (`DASHBOARD_WIDGETS_KEY`) and typed `saved_reports` where applicable; not hardcoded in `DashboardPage.tsx`.
+
+| Surface | Data source |
+|---------|-------------|
+| Home seeded KPI cards + report standard KPIs | Category-gated `use*Metrics` / widget-aggregates — not full collection dumps |
+| Pinned widgets / builder / drilldown | `useWidgetCollections({ requiredCollections })` — Query facades only |
+| Dynamic chart visualizer | `useReportCollectionRows` (active key + denoms when Hasanat) |
+| Niche charts + date-scoped financial statements | Prefer `/metrics` / server aggregates; row-level Query reduce OK when aggregates unavailable — never localStorage-primary for REST entities |
+
+Ban fake faculty workload hours (`hours += 2`); use real class counts.
 
 ## Module-aware filters
 

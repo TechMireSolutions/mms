@@ -17,7 +17,7 @@ description: Antigravity agent cognition, behaviour, output economy, security, a
 - **Style:** Terse, functional code. No boilerplate or filler comments.
 - **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
 - **Names:** Semantic identifiers — full policy in `mms-structure-naming.md`
-- **React Compiler:** Do not add `useMemo` / `useCallback` / `React.memo` by default. Prefer `startTransition`, `useDeferredValue`, and `useEffectEvent` when appropriate.
+- **Memo hygiene (Compiler-ready):** Do not add `useMemo` / `useCallback` / `React.memo` by default — React Compiler is not enabled yet. Prefer `startTransition`, `useDeferredValue`, and `useEffectEvent` when appropriate.
 
 ## Communication (two modes)
 
@@ -32,7 +32,7 @@ Do not echo file contents already in context.
 
 - **Edits:** `search_replace` / small writes — not full-file rewrites.
 - **Tests:** After code edits, follow `mms-completion-review.md` (do not invent extra suites beyond that gate). Pure `@mms/shared` helpers still need unit tests — `mms-testing-observability.md`.
-- **JSDoc:** Required on **public exports** in `packages/shared` only. Optional elsewhere; do not add narrating comments to app code.
+- **JSDoc:** Required on **public exports** in `packages/shared` only. Omit elsewhere; do not add narrating comments to app code.
 
 ## Security & state
 

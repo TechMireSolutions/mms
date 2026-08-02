@@ -95,7 +95,7 @@ After hiding/disabling a tab or field, verify absent from:
 ## Do not
 
 - Mount module Setup under `/settings`
-- Auto-save general Setup preferences or default values without an explicit "Save" action and audit logs. (Form builder mode layout changes must auto-save immediately on change via `/api/db/objects` to sync live).
+- Auto-save Setup Fields / Preferences without an explicit Save (Contacts-style `ModuleFieldsSetup` drafts locally; Save is dirty-gated). Do not claim live `saveObject` on every field reorder/toggle — `mms-fields.md` / `mms-module-architecture.md` §4.
 - Delete seed/predefined fields without guard
 - Branch UI on `isSystem` — metadata only
 - Reintroduce Setup `uiStrings` editor

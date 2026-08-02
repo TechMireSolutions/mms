@@ -4,10 +4,12 @@ paths:
   - "apps/frontend/src/tenant/features/messaging/**"
   - "apps/frontend/src/components/ui/MessageComposer.tsx"
   - "apps/frontend/src/components/ui/MessagingVariableTokensBar.tsx"
+  - "apps/frontend/src/components/ui/messageComposer/**"
   - "apps/frontend/src/hooks/useMessaging.ts"
   - "packages/shared/src/messagingModuleManifest.ts"
   - "packages/shared/src/messagingSchemas.ts"
   - "apps/backend/src/routes/tenant/messaging.ts"
+  - "apps/backend/src/routes/tenant/messaging/**"
   - "apps/backend/src/db/repositories/messagingRepository.ts"
 ---
 

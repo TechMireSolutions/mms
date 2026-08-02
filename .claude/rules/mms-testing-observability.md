@@ -18,9 +18,9 @@ Governs testing patterns (unit, API integration, E2E), system diagnostics, loggi
 ## 1. Testing Strategy & Environments
 `pnpm test` executes Vitest across the monorepo workspaces:
 - **`@mms/shared`**: Unit tests for validation schemas, pure utilities, and permission calculations.
-- **`mms-backend`**: Integration tests utilizing Fastify's `inject()`. Focus on authentication endpoints, token rotation, RBAC constraints, and tenant context resolution.
+- **`mms-backend`**: Integration tests utilizing Fastify's `inject()`. Cover tenant auth/RBAC/token rotation **and** apex platform auth/settings/workspaces allow+deny (wrong host → `403`, cookie session, `super_user` / permission gates, reset-database validation).
 - **`mms-frontend`**: Client and hook tests run in a **`happy-dom`** environment (configured in `vitest.config.ts`) to support `localStorage` and DOM mocks. Mock API endpoints at the network boundary.
-- **E2E Playwright**: Critical UI flows live in `e2e/tests/*.spec.ts` (e.g. `onboarding-login.spec.ts` for platform setup → tenant onboard → contacts → student → attendance; Contacts UI and navigation specs). Layout: `responsive-shell.spec.ts` (public apex + tenant login — overflow, 44px touch, RTL at 375/768/1440); `responsive-authenticated.spec.ts` (tenant bootstrap → AppLayout hamburger `< lg`, dashboard RTL/overflow, Work-route sweep with table wrappers). Run via `pnpm exec playwright test` or `pnpm test:e2e`. Prefer `getByLabel` / role queries; after bumping `@playwright/test`, run `pnpm exec playwright install`. Auth states may be seeded via scripts (e.g. `reset-platform-users.ts`) rather than recreating every login step.
+- **E2E Playwright**: Critical UI flows in `e2e/tests/*.spec.ts`: `onboarding-login.spec.ts` (platform setup → tenant onboard → …); `tenant-settings-navigation.spec.ts`; `messaging-campaign.spec.ts`; `responsive-shell.spec.ts` (public apex + tenant login — overflow, 44px touch, RTL at 375/768/1440); `responsive-authenticated.spec.ts` (tenant bootstrap → AppLayout hamburger `< lg`, dashboard RTL/overflow, Work-route sweep with table wrappers). Run via `pnpm exec playwright test` or `pnpm test:e2e`. Prefer `getByLabel` / role queries; after bumping `@playwright/test`, run `pnpm exec playwright install`. Auth states may be seeded via scripts (e.g. `reset-platform-users.ts`) rather than recreating every login step.
 
 ### When to Write Tests
 1. **Shared Package**: All new non-trivial pure function exports in `@mms/shared` must include unit tests.
@@ -49,7 +49,7 @@ APIs must return a structured JSON response on failures:
 ```json
 { "type": "validation_error", "message": "Development debug detail" }
 ```
-*Constraint*: Never leak raw PostgreSQL database queries, stack traces, or ORM errors in production payloads. The client maps `type` identifiers to localized translations using `t('errors.{type}')`.
+*Constraint*: Never leak raw PostgreSQL database queries, stack traces, or ORM errors in production payloads. Tenant UI maps `type` via `t('errors.{type}')`. Platform UI uses `mapPlatformAuthError` / `platform.*` keys (`mms-api-interface.md`, `mms-auth-security.md`).
 
 ---
 

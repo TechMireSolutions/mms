@@ -10,7 +10,7 @@ alwaysApply: true
 ---
 
 ## 1. Proactive Search & Duplication Audits
-- **Search First**: BEFORE writing any helper function, component, validation schema, utility hook, or CSS style, search `@mms/shared`, `apps/frontend/src/hooks/`, `apps/frontend/src/tenant/hooks/collections/`, `apps/frontend/src/lib/reports/`, and `apps/frontend/src/components/ui/` for existing equivalents.
+- **Search First**: BEFORE writing any helper function, component, validation schema, utility hook, or CSS style, search `@mms/shared` (including `platformApiErrors` / platform Zod schemas), `apps/frontend/src/lib/config/` (`routes.ts`, `navConfig.tsx`, `settingsNavConfig.ts`), `apps/frontend/src/hooks/`, `apps/frontend/src/tenant/hooks/`, `apps/frontend/src/tenant/hooks/collections/`, `apps/frontend/src/tenant/features/`, `apps/frontend/src/tenant/pages/`, `apps/frontend/src/tenant/components/`, `apps/frontend/src/platform/`, `apps/frontend/src/lib/reports/`, and `apps/frontend/src/components/ui/` for existing equivalents.
 - **Extend, Don't Fork**: If an existing helper almost fits your use case, extend its parameters rather than copying it or creating a near-duplicate function.
 - **Scan & Refactor**: When editing code, actively scan the surrounding files for duplicate blocks and refactor them into a unified local utility.
 - **Zod SSOT**: Do not duplicate the same request/response shape in FE and BE — export once from `@mms/shared`.
@@ -25,14 +25,21 @@ Extract logic to a shared layer (e.g., `@mms/shared` or a local hook/component) 
 
 *Constraint*: Keep code inlined if it is truly unique and used only once. Premature abstraction is prohibited.
 
+### File-split DRY (same module)
+When a single file exceeds the thresholds in `mms-structure-naming.mdc`, extract **by concern** inside the same feature folder — this is still DRY (one authority per concern), not a new abstraction layer.
+- Preserve behavior and public barrels / import paths.
+- Prefer controllers + presentational siblings over copy-paste “utils” that hide duplicates.
+- Do not invent parallel APIs or rename public symbols during a split-only change.
+
 ---
 
 ## 3. Monorepo Layer Boundaries
 Ensure clear separation of concerns to prevent domain logic from leaking into infrastructure:
 
 ```
-@mms/shared     Pure validation schemas, types, constants, default configs, and I/O-free formatters.
-apps/*/services Hooks, UI components, API route controllers, and database schemas/queries.
+@mms/shared              Pure validation schemas, types, constants, default configs, and I/O-free formatters.
+apps/frontend/src/*      Hooks, UI, providers, Query clients (no backend imports).
+apps/backend/src/*       Fastify routes, services, Drizzle schema/queries.
 ```
 
 ### Shared Package (`@mms/shared`) Standards

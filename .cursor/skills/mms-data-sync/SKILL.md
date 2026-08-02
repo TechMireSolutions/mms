@@ -49,7 +49,8 @@ import {
 | `useLiveCollection` + `saveCollection` | Legacy module CRUD via `/api/db/collections/*` |
 | TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/teachers`, workspace) |
 | Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch |
-| Metrics / aggregates | KPI, dashboard, reports — `useStudentsMetrics`, `useContactsReportAnalytics`, widget-aggregates |
+| Metrics / aggregates | KPI, dashboard, reports — `use*Metrics` from `@/tenant/hooks/collections/*`, widget-aggregates; ban full-list reduce for KPI values already on `/metrics` |
+| Column preferences | `useModuleColumnLayout` / Contacts column prefs — localStorage + `PUT …/column-preferences`; merge with `mergeModuleColumnPreferences` (local width wins) |
 | Lookup option lists | `saveCollectionAsync` for genders/labels/`countryCodes` — await before claiming Setup saved |
 
 **Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` for the same entity. Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`. UI saved/success state must wait for `mutateAsync` or an explicit mutation success callback; fire-and-forget `mutate()` must not immediately show "saved". Backend bulk PUT must upsert (never wipe missing rows via `replaceForWorkspace` on normal save paths — `mms-api-interface.mdc`).
@@ -65,15 +66,16 @@ import {
 
 | Method | Path | RBAC |
 |--------|------|------|
-| GET | `/api/db/sync` | **Admin only** |
-| POST | `/api/db/sync` | **Admin only** |
+| GET | `/api/db/backup` | **Admin** + `canBulkSync` — full-fidelity snapshot (document store + relational) via `fetchBackupSnapshot` in `runInReadSnapshotTransaction` (REPEATABLE READ) |
+| GET | `/api/db/sync` | **Admin only** — lighter sync snapshot |
+| POST | `/api/db/sync` | **Admin** + `canBulkSync` — wipe-restore via `synchronizeData(payload, signal)` under `withSyncTimeout`; abort → rollback + `408` / `backup.syncTimeout` |
 | GET/POST | `/api/db/collections/:name` | POST → `canWriteCollection` |
 | GET/POST | `/api/db/objects/:key` | POST → `canWriteObject`; server-only keys blocked; obsolete keys must leave `ALLOWED_OBJECTS` after typed-table migrations |
 | POST | `/api/db/reset` | Admin — tenant-scoped minimal reseed |
 
 **Shipped REST:** `GET/POST/PUT/DELETE /api/students`, `/api/contacts`, `/api/teachers`, … — Contacts entity is **not** in `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`.
 
-**Do not** store long-lived OAuth secrets in `objects` — use FORCE-RLS tenant tables (`mms-data-layer.mdc`). Admin backup snapshots must not include credential tables.
+**Do not** store long-lived OAuth secrets in `objects` — use FORCE-RLS tenant tables (`mms-data-layer.mdc`). Admin backup snapshots must not include credential tables (`relationalReplaceMapping`); strip `SERVER_ONLY_OBJECT_KEYS` on restore. Envelope helpers SSOT in `@mms/shared` (`buildWorkspaceBackupEnvelope`, `remapBackupKeysToPrefix`, `validateWorkspaceBackupJson`). After server restore: clear local collection cache by prefix — do not dump full relational snapshot into localStorage.
 
 ## Add new collection (legacy path)
 

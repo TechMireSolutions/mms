@@ -77,6 +77,14 @@ const fields = useSortedFields(registry, tabKey);
 
 Tables: column registry `{ key, label, enabled, order, sortable, width }`.
 
+**Form + drawer parity:** every enabled registry/custom field that validation can require must render a control (form) and a read row (drawer). Ban hard-coded key switches that `return null` for unknown Setup fields.
+
+## Tab enablement SSOT (Contacts)
+
+- Prefer `resolveContactEnabledTabIds` — when `formTabs` exist they win; do not blind-union `DEFAULT_ENABLED_TABS`.
+- Locked tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic`, `custom`) + `useModuleSettingsEditor({ lockedEnabledTabs })` on save/sync.
+- Fields Save: dirty-gated; sync `columnRegistry` via `syncContactColumnRegistryWithFields` on Fields save.
+
 ## Target Architecture & Form Specification
 
 All custom field configurations, registries, and dynamic form behaviors must conform to the **MMS Dynamic Form Architecture**. Refer to [mms-form-architecture.md](../rules/mms-form-architecture.md) (or the corresponding Cursor rule `mms-form-architecture.md`) for the full specifications on:

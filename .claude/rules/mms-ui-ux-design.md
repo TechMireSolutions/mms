@@ -4,7 +4,7 @@ paths:
   - "apps/frontend/src/**/*.tsx"
   - "apps/frontend/src/components/ui/**"
   - "apps/frontend/src/index.css"
-  - "apps/frontend/src/hooks/useBranding.ts"
+  - "apps/frontend/src/tenant/hooks/useBranding.ts"
   - "apps/frontend/src/lib/notify.ts"
 ---
 
@@ -27,9 +27,16 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `DetailDrawerShell` (`@/components/ui/DetailDrawerShell`)
   - `DataTable` (`@/components/ui/DataTable`)
   - `StatCard` (`@/components/ui/StatCard`)
+  - `ErrorState` (`@/components/ui/ErrorState`) — title + **hint** description + retry
   - `ExportToolbar` (`@/components/ui/ExportToolbar`)
   - `SafeResponsiveContainer` (`@/components/ui/SafeResponsiveContainer`)
 - Extend central primitives safely when custom variations are needed. Do not implement ad-hoc primitives in feature folders.
+
+### Detail drawers
+- Use `DetailDrawerShell` for entity profiles (Contacts / Students / Teachers pattern).
+- Soft-deleted rows: archive banner + Restore; hide Call / WhatsApp / SMS / Email (and other outbound messaging) — `mms-module-architecture.md` §3.
+- Header Edit, close, and per-row icon actions must meet the `min-h-11` / `min-w-11` touch floor (do not ship bare `size="icon"` without it).
+- Render all enabled registry/custom fields — no hard-coded key allowlists that drop Setup fields — `mms-fields.md`.
 
 ### Design Token Strictness
 - **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
@@ -49,7 +56,7 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 - Long forms and builder workflows should split major tasks into `FormModal` tabs instead of placing every control in one tall scrolling surface. Keep each tab purposeful (details, saved drafts, sections, picker, preview) and preserve form state across tab switches.
 
 ### Overlays & Scroll Controls
-- **Stable Heights**: Tabbed forms must not shift height dynamically. Enforce fixed boundaries with `FormModal(tall)` (`h-[88vh] max-h-[43.75rem]` with scrollable body `flex-1 overflow-y-auto`).
+- **Stable Heights**: Tabbed forms must not shift height dynamically. Enforce fixed boundaries with `<FormModal tall>` (`h-[88vh] max-h-[43.75rem]` with scrollable body `flex-1 overflow-y-auto`).
 - **Scroll Containment**: Lock parent body scrolls using `useBodyScrollLock()` and apply `overscroll-contain` to scrollable modal boxes.
 - **Mobile-First Builders**: Wide builder forms may pass explicit `panelClassName` sizing to `FormModal`, but controls must remain usable at phone widths before desktop grids are introduced.
 
@@ -58,7 +65,7 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 ## 3. Tab Navigation & metrics
 
 ### Module Tier Accordion
-Use `useModuleTierTabs()` to render exactly three tabs: `work` (operational list/drawer), `reports` (KPIs/charts), and `setup` (fields/prefs).
+Use `useFilteredModuleTierTabs({ canViewSetup, canViewReports })` so forbidden tiers are omitted (`work` / `reports` / `setup`).
 - Render only **enabled** tabs in the exact order defined in the registry.
 - Retrieve tab icons/colors from the registry (no hardcoded Tailwind accents per-tab).
 

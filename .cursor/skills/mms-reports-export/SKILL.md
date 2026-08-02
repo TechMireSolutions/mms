@@ -17,13 +17,21 @@ Reports tab **inside** each module — no standalone `/reports` page. Shared UI:
 // ✅ REST modules — Query / server aggregates / /metrics
 const { data, isError } = useModuleReportQuery(...)
 
+// ✅ Dashboard widgets / visualizer
+useWidgetCollections({ requiredCollections })
+useReportCollectionRows(collectionKey)
+
 // ❌ Do not use as primary for REST entities
 useLiveCollection('finance_invoices', SEED)
+getCollection('finance_invoices') // primary read
+saveCollection('students', rows)  // widget toggle
 ```
 
 - Module category must be module-specific — never `category="academic"`.
 - Cross-module ids via batch `/resolve` — no N+1 hydrate loops.
 - Charts: `lazy` + `SafeResponsiveContainer`.
+- Widget toggles: `persistWidgetRecordToggle` — not `saveCollection`.
+- **Dashboard / KPI SSOT**: home seeded cards + report standard KPIs → category-gated `use*Metrics` / widget-aggregates. Gate `useWidgetCollections({ requiredCollections })` for pinned widgets / builder / drilldown; visualizer → `useReportCollectionRows`. Niche charts/statements may Query-reduce rows when aggregates unavailable — never localStorage-primary for REST. Ban fake faculty hours (`hours += 2`); use real class counts.
 
 ## Add / change a report
 
@@ -49,6 +57,8 @@ Use shared `ExportToolbar` — not a deleted `ReportExportBar`. Escape formula-p
 
 ```
 - [ ] Query/server data for REST modules
+- [ ] KPI StatCards on `/metrics` where available — no forced collection dumps for those values
+- [ ] Widget collections gated with requiredCollections
 - [ ] No academic category on module reports
 - [ ] lazy charts + SafeResponsiveContainer
 - [ ] Tables / drill-down grids in `overflow-x-auto`; no page-level horizontal scroll at 375px

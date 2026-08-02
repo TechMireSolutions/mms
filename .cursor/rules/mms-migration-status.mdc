@@ -13,42 +13,41 @@ Rules describe **target architecture**. Fix open gaps only when the task covers 
 |------|---------|--------|
 | Residual hardcoded niche copy | Major shells localized | Full `t()` + registries — `mms-settings-i18n.mdc` |
 | Permission matrix | Manifests on major writes; some setup/role UIs special-case | Full registry-driven matrix — `mms-auth-security.mdc` |
-| Residual `role ===` | Platform console, chat roles, metrics aliases | Prefer `can()` / contract permissions |
-| Custom tab provisioning | JSON document store only | Table + migration + CRUD — `mms-fields.mdc` |
-| WebSockets / SSE | Not implemented | Replace polling for live push — `mms-core.mdc` |
-| Residual deep sub-tab bars | ComparisonMode + JournalEntries on `SubTabBar`; niche leftovers | `SubTabBar` everywhere — `mms-ui-ux-design.mdc` |
+| Residual `role ===` | Platform still uses `super_user` for admin-management gates (+ `platformUserCan` for `workspaces`/`onboard`); chat roles; metrics aliases | Tenant modules: `can()` / manifests. Platform: keep `platformUserCan` + intentional `super_user` checks — do not invent tenant permission strings |
+| Custom tab FE dual-write | Typed `custom_tabs` (composite PK + FORCE RLS) + `/api/custom-tabs` upsert CRUD shipped; Contacts Setup may still persist `formTabs` via `contact_field_config` objects | FE Setup uses `custom_tabs` REST as SSOT — drop object `formTabs` dual-write — `mms-fields.mdc` |
+| WebSockets / SSE | BE `@fastify/websocket` + `/api/ws` + `broadcastTenantUpdate`; no FE subscriber; SSE absent | FE subscribe → Query invalidation; optional SSE — `mms-core.mdc` |
+| Residual deep sub-tab bars | `AccountProfileSettingsTabs` still uses Radix `TabsList` (not `SubTabBar`) | `SubTabBar` everywhere — `mms-ui-ux-design.mdc` |
 | Status chart palettes | Most StatusBadge on SEMANTIC_BADGE | All semantic tokens |
 | Automated tests | Broad onboard + module E2E; responsive Work/public smoke | Remaining write flows; responsive depth (platform `md` nav, Reports/Setup builders) — `mms-ui-ux-design.mdc` §7 |
 | Global a11y | Partial | WCAG baseline on new UI |
 | Report drill-down / saved reports | Contacts on typed `saved_reports` + share scopes; other modules vary | Remaining niche panels + per-module drill-down parity — `mms-reports.mdc` |
 | Background job queue | Async workers + tray exports | Dedicated Redis/worker for multi-instance |
-| Secure HTTP headers / CSP | Partial | Helmet + SPA-safe CSP — `mms-auth-security.mdc` |
-| React Compiler / memo hygiene | Ad-hoc memo still appears | Compiler-first — `antigravity-global.mdc` |
-| Query-first reports | Some live-collection panels remain | Server aggregates + Query — `mms-reports.mdc` |
-| Document-store settings / prefs | Prefs, field config, lookup lists still in `objects` | Prefer typed tables + FORCE RLS for new secrets / shareable presets — `mms-data-layer.mdc` |
-| Full SQL pagination for JSONB entities | Soft-delete filtered in SQL; search/sort still in-memory for contacts | Push page/filter into SQL where indexes allow — `mms-data-layer.mdc` |
+| Secure HTTP headers / CSP | `@fastify/helmet` on; `contentSecurityPolicy: false` | SPA-safe CSP — `mms-auth-security.mdc` |
+| Memo hygiene | Ad-hoc `useMemo` / `useCallback` / `React.memo` still appears | Prefer Compiler-ready patterns (no default memo) — `antigravity-global.mdc` |
+| Query-first reports | Home/KPI StatCards on `/metrics`; pinned widgets + `DynamicChartVisualizer` on `useWidgetCollections` / `useReportCollectionRows` (Query); some niche chart/statement panels still client-reduce full rows | Server aggregates + Query for remaining chart/statement paths — `mms-reports.mdc` |
+| Document-store settings / prefs | Prefs, field config, lookup lists still in `objects` (FORCE RLS shipped for Messaging/Contacts/`custom_tabs`/credentials/`saved_reports`) | Prefer typed tables for remaining prefs / field config / lookups; FORCE RLS for any new secrets / shareable presets — `mms-data-layer.mdc` |
+| Full SQL pagination for JSONB entities | Contacts: soft-delete + page/search in SQL path; Students list still largely in-memory after load | Push page/filter/sort into SQL where indexes allow — `mms-data-layer.mdc` |
+| Students Work REST parity | Cards `maxPageSize` dump; manifest `directoryViews: ['list','cards']` (should be `['table','cards']`); `loadAllFn` unpaged GET; trash FE-filters `deletedAt` | Contacts Work parity (table\|cards, paged GET, SQL trash totals) — `mms-module-architecture.mdc` §3/§7 |
+| Students detail drawer | No trash chrome; hard-coded field keys drop Setup customs | Archive banner + Restore; render all enabled registry fields — `mms-module-architecture.mdc` §3 |
+| Residual oversized FE shells | Most feature/UI files under ~220; Contacts form/setup/detail + a few report/layout shells still ~220–275 | Concern splits behind stable barrels (controllers / sections / utils) — soft target ~220, hard ~300 — `mms-structure-naming.mdc`, `mms-dry.mdc` |
 
 ## Do not reintroduce (themes)
 
-Keep these regressions out of new work (details historically resolved — do not expand this list opportunistically):
+Keep these regressions out of new work. Details live in owning scoped rules — do not expand this list opportunistically.
 
-- Per-entity REST + TanStack Query as primary; no mutation dual-write via `saveCollection`
-- Cookie httpOnly sessions (`mms_access` / `mms_refresh`); no localStorage JWT
-- Soft-delete Work trash pattern (Contacts-style) except documented Messaging clear + QB papers/results upsert-only
-- Gold-standard §7: upsert bulk PUT, `mutateAsync`, `setupSubTabs` / `canEditSetup`, `ErrorState`, Cmd/Ctrl+N, `t()` + `useModulePermissions`
-- Work Filters menu SSOT — no parallel preset chip/pill bar duplicating Filters options (Contacts: `ContactsFilterMenuButton` + shared `CONTACTS_QUICK_FILTER_OPTIONS`)
-- Work directory view mode SSOT — one resolved `viewMode` (default cards `< md`, table `md+`); no CSS dual-render + override parallel systems; Setup `defaultViewLayout` must not drive Work directory render
-- Contact-first persons; no `persona` / CRM lifecycle tags
-- `apiClient` only — no raw `fetch('/api/...')`
-- FormModal for entity forms; Modal for confirm/preview; Design-system primitives + semantic tokens
-- Messaging: soft-archive log clear; composite PK + RLS; session-forced `userId`
-- Mobile-first shells: no page-level horizontal overflow; 44×44 touch floors on primitives; tenant nav collapse `< lg`; platform nav collapse `< md`; tables in `overflow-x-auto` — `mms-ui-ux-design.mdc` §7
-- **FORCE RLS** on new tenant tables (Messaging + Contacts/students/teachers/sessions + `contact_google_sync_credentials` / `saved_reports` pattern)
-- **OAuth / long-lived secrets** in FORCE-RLS tenant tables — never in unscoped `objects` KV (legacy `contact_google_sync_by_user` is strip-only)
-- **Client soft-delete fields** on create/update bodies — strip via write schema + `stripContactClientSoftDeleteFields`; only dedicated soft-delete helpers set them
-- **Server-persisted imports** must not be re-upserted from the FE after bulkSave (invalidate Query keys only)
-- Contacts saved reports live in typed `saved_reports` (`category: 'contacts'`); do not resurrect `contacts_saved_reports` object writes
-- Contacts entity rows are REST-only (typed `contacts` table); do not re-add `contacts` to `ALLOWED_COLLECTIONS` or FE `BUSINESS_COLLECTIONS`
-- Typed `deleted_at` is the SQL soft-delete source of truth for list filters; do not rely on JSONB `deletedAt` alone
-- Unknown tenant host → apex hard-redirect `/tenant-not-found?subdomain=…` — never keep the bad subdomain URL or mount `/settings` there — `mms-settings-i18n.mdc` / `mms-ui-ux-design.mdc` §8
-- Contact collection deletes: empty `phones` / `emails` / `addresses` / `socials` / `relationshipContacts` / `custom_*` arrays stay cleared — no resurrection via legacy scalars, edit-contact spread order, `normalizeContactForEdit` scalar hydrate, sync field picks, or contacts `bulkSave` JSONB `||` (use `mergeContactEditSavePayload` + `syncContactScalarFields` + `updateStrategy: 'overwrite'`) — `mms-form-architecture.mdc` §3, `mms-data-layer.mdc`
+| Theme | Never reintroduce | Owner |
+|-------|-------------------|--------|
+| Data authority | Mutation dual-write via `saveCollection`; `getCollection` as primary for REST; unpaged `loadAllFn` / `maxPageSize` card dumps | `mms-data-layer.mdc` |
+| Sessions | localStorage JWT; skip platform `/me` probe; resurrect deleted apex chrome | `mms-auth-security.mdc` |
+| Soft-delete | Work trash without drawer archive chrome; JSONB-only `deletedAt` when typed columns exist; client soft-delete on create/update bodies | `mms-module-architecture.mdc` §6–§7 |
+| Gold-standard §7 | Bulk wipe PUT; fire-and-forget `mutate()` closes forms; missing `ErrorState` / Cmd+N / `canEditSetup` | `mms-module-architecture.mdc` §7 |
+| Work UX | Parallel Filters chip bar; `directoryViews: ['list']` when Work is table\|cards; server prefs overwriting local column widths | `mms-module-architecture.mdc` §3 |
+| Fields / forms | Hard-coded field allowlists dropping Setup customs; object-only custom tabs; unlocked `basic`/`custom` tabs; Save enabled when not dirty | `mms-fields.mdc`, `mms-form-architecture.mdc` |
+| Contacts | Persona/CRM tags; `ALLOWED_COLLECTIONS` contacts; resurrect emptied collection arrays; Google sync OR `canEditSetup` | `mms-core.mdc`, `mms-form-architecture.mdc` |
+| Messaging | Contacts schemas in composer; replace wipe on template/log PUT; SQL echo; client authz `userId` | `mms-messaging.mdc` |
+| Reports | Full-collection KPI dumps when `/metrics` exists; widget primary via `getCollection`/`saveCollection` | `mms-reports.mdc` |
+| Security / RLS | Secrets in unscoped `objects`; skip FORCE RLS on new tenant tables; unbounded backup KDF / foreign subdomain remap | `mms-auth-security.mdc`, `mms-data-layer.mdc` |
+| UI / a11y | Page horizontal overflow; touch targets < 44px; custom deep tab bars where `SubTabBar` is required | `mms-ui-ux-design.mdc` §7 |
+| Structure | Mega-files past ~300 lines without split; rename barrels during size-only refactors | `mms-structure-naming.mdc`, `mms-hooks.mdc` |
+| Live push | Parallel polling loops or alternate WS protocols — use BE `/api/ws` + `broadcastTenantUpdate` | `mms-core.mdc` |
+| Migrations | Pre-squash Drizzle history; payload-only `auth_artifacts` scans without indexed keys | `mms-ops-infrastructure.mdc`, `mms-data-layer.mdc` |

@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Hooks
 
-Colocate in `apps/frontend/src/hooks/` or `tenant/features/{module}/hooks/`. Pure logic used in 2+ modules → `@mms/shared`, keep the hook as a thin wrapper. Exhaustive hook catalogs go stale — follow patterns below; discover hooks via feature folders / `@/tenant/hooks/collections/*`.
+Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), or `tenant/features/{module}/hooks/`. Pure logic used in 2+ modules → `@mms/shared`, keep the hook as a thin wrapper. Exhaustive hook catalogs go stale — follow patterns below; discover hooks via feature folders / `@/tenant/hooks/collections/*`.
 
 ## Server state (TanStack Query)
 
@@ -56,7 +56,28 @@ Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / brandi
 
 ## UI shell
 
-`useModuleTierTabs`, `useConfigSubTabs` / `usePersistedTabState`, `useTranslation`, `useBodyScrollLock` (never set `document.body.style.overflow` manually), `useSessionTimeout`, `useDebounce`, `useMediaQuery`.
+`useFilteredModuleTierTabs` (prefer over bare `useModuleTierTabs`), `useConfigSubTabs` / `usePersistedTabState`, `useTranslation`, `useBodyScrollLock` (never set `document.body.style.overflow` manually), `useSessionTimeout`, `useDebounce`, `useMediaQuery`.
+
+## Page / panel controllers
+
+Large feature pages and settings panels should keep JSX thin:
+
+| Pattern | Name | Owns |
+|---------|------|------|
+| Page orchestrator | `use{Module}PageController` | Tabs, permissions wiring, list/trash state, command-centre handlers |
+| Panel / form state | `use{Thing}State` / `use{Thing}Draft` | Local draft + derived options |
+| Action clusters | `use{Thing}Actions` / `*ActionHandlers` | Save, restore, bulk, decrypt — called from the orchestrator |
+
+Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Do not add `useMemo` / `useCallback` by default — `antigravity-global.md`.
+
+## Work directory layout
+
+| Hook / component | Use |
+|------------------|-----|
+| `useWorkDirectoryViewMode` + `WorkViewModeToggle` | Single resolved `viewMode` (`table` \| `cards`) — `mms-module-architecture.md` §3 |
+| `useModuleColumnLayout` | Column visibility **and** width; localStorage + `/column-preferences`; `mergeModuleColumnPreferences` |
+| Contacts column prefs | `useContactConfigColumnPrefs` / `useContactColumnRegistry` via `ContactConfigContext` |
+| Command / dashboard metrics | `use*Metrics` from `@/tenant/hooks/collections/*` — ban client-reduce of full lists for KPI values |
 
 ## New hooks checklist
 
@@ -65,4 +86,5 @@ Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / brandi
 - [ ] Export query keys when using Query; pass `signal`
 - [ ] `enabled: isAuthenticated` for tenant REST
 - [ ] No new `useLiveCollection` for REST-migrated entities
+- [ ] Controllers stay under soft ~220 lines when split — extract action/presentational siblings rather than growing one mega-hook
 - [ ] Test pure wrappers where ROI is high (`mms-testing-observability.md`)

@@ -34,6 +34,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] No frontend → backend direct imports
 - [ ] Backend: routes → services → database (no `pg` in routes)
 - [ ] Correct data layer: Query for REST resources, `useLiveCollection` for legacy modules
+- [ ] Touched app files under hard ~300 lines (prefer ~220 FE shells); splits keep public barrels — `mms-structure-naming.mdc`
 
 ### Backend API
 - [ ] Tenant protected routes use **`authenticateTenant`** — not raw `jwtVerify`
@@ -52,6 +53,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] No duplicate data path (Query mutations + parallel `saveCollection` for same write)
 - [ ] After server `bulkSave` imports (e.g. Google sync), invalidate only — do not re-upsert the same rows
 - [ ] REST pages use Query hooks / collection facades — not raw `useLiveCollection` for entity rows
+- [ ] Report widgets/visualizer: `useWidgetCollections` / `useReportCollectionRows` — no `getCollection`/`saveCollection` primary for REST entities
 
 ### UI / config
 - [ ] No hardcoded labels/colours/status maps — `t()` + registries
@@ -87,7 +89,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Entity merge (if any) is atomic server endpoint — not FE dual-write
 
 ### Gold-standard module parity (`mms-module-architecture.mdc` §7)
-- [ ] Bulk PUT upsert-only — no `replaceForWorkspace` wipe on API write paths
+- [ ] Bulk PUT upsert-only — no `replaceForWorkspace` / wipe-missing-rows (incl. custom-tabs) on API write paths
 - [ ] Forms/setup use `mutateAsync` / await; close only after success
 - [ ] Manifest `setupSubTabs` + `softDelete` metadata when applicable
 - [ ] Setup gated by `canEditSetup`; Work shows `ErrorState` on list failure

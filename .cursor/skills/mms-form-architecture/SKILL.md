@@ -1,6 +1,6 @@
 ---
 name: mms-form-architecture
-description: Implements static FormModal forms with shared Zod DTOs, React 19 defaults, decimal-as-string money, tenant RLS saves, and zero-trust S3 uploads. Use when building or auditing create/edit forms, FormModal tabs, DatePicker/phone fields, or upload flows.
+description: Implements static FormModal forms with shared Zod DTOs, React 19 defaults, decimal-as-string money, tenant RLS saves, and authenticated multipart uploads. Use when building or auditing create/edit forms, FormModal tabs, DatePicker/phone fields, or upload flows.
 ---
 
 # MMS Form Architecture Skill
@@ -19,7 +19,7 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 8. Collection tabs: `cleanContactDraft` before save; edit merge via `mergeContactEditSavePayload` so empty arrays clear legacy scalars (`mms-form-architecture.mdc` §3).
 9. Persist via REST mutations (`mutateAsync`); tenant writes use RLS `SET LOCAL` — `mms-data-layer.mdc`.
 10. Soft-delete only via DELETE/restore routes — never from the form body.
-11. S3: presigned upload + backend `HEAD` before metadata save.
+11. Uploads: authenticated multipart `/api/uploads/image|attachment` (local disk); resolve URLs via `resolveApiUrl` — no S3/presign.
 
 ## Checklist
 

@@ -10,22 +10,30 @@ description: Governs application-wide settings panels (/settings), settings prev
 App-wide settings reside solely on the `/settings` path and are controlled by in-page active tab tracking via `SettingsTabContext`.
 
 ### Registered Sections
-Only the following five section IDs are allowed on `/settings`:
+Only the following section IDs are allowed on `/settings` (`SETTINGS_SECTIONS`):
 1. `global`: System languages, timezone format, date formats, and notifications.
 2. `modules`: System module toggles (`enabledModules` map).
 3. `branding`: Identity parameters (name, tagline, address, logo).
 4. `theme`: Color configurations, display mode, and footer overrides.
-5. `backup`: Backup triggers and database export lists.
+5. `backup`: Admin workspace export/import (`BackupRestore` + `useBackupRestore*`) — not Postgres ops backups.
+6. `llm`: LLM / AI integration settings.
 
 > [!IMPORTANT]
 > **Separation of Concerns**: Never add module-specific preferences (e.g., student cutoff times or grading systems) to `/settings`. Place them in the respective module's **Setup → Preferences** sub-tab.
+
+### Workspace backup & restore
+- Export encrypted `.mmsbak` from `GET /api/db/backup` (not browser cache alone).
+- Restore is **two-step**: `createSafetyBackup` (password step-up) → `safetyReady`, then `beginRestore`. Confirm modal must not close while busy.
+- Early-reject encrypted file subdomain ≠ current tenant (`backup.workspaceMismatch`) before decrypt.
+- Disable history download when `!backup.data` (metadata-only). Map `408` / `backup.syncTimeout` via `backup.*` keys (en/ar/ur/fa).
+- Sync/credential mechanics: `mms-data-layer.mdc` / `mms-auth-security.mdc`.
 
 ---
 
 ## 2. Systems Modules Navigation Registry
 
 - **Sidebar Integration**: The sidebar layout retrieves navigation links dynamically from `NAV_ITEMS` in `navConfig.tsx`.
-- **Academics Dropdown**: Academic features (`students`, `teachers`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`) must be grouped inside the Academics submenu.
+- **Academics Dropdown**: Academic features (`students`, `teachers`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`, `questionBank`) must be grouped inside the Academics submenu (match `SYSTEM_MODULE_NAV` / `NAV_ITEMS[].moduleId`).
 - **Registry & Defaults**: Toggles reside in `SystemModulesSettings` mapping `SYSTEM_MODULE_NAV`. Standalone modules render in pairs, and the Academics group displays as a bordered panel with a `BookOpen` icon.
 
 ---

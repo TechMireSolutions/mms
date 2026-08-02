@@ -27,8 +27,10 @@ Keep in sync when editing: `bash .agent/scripts/sync-all.sh`
 | `rules/mms-core.md` | MMS stack & boundaries |
 | `rules/mms-migration-status.md` | Known tech debt — don't fix opportunistically |
 | `rules/mms-dependencies.md` | Node/pnpm/workspace dependency upgrades |
-| `rules/mms-dry.md` | DRY policy and extraction thresholds |
+| `rules/mms-dry.md` | DRY policy, extraction thresholds, file-split DRY |
 | `rules/mms-completion-review.md` | Self-review after code edits — verify, then mark done |
+
+Scoped when editing large modules: `mms-structure-naming` (file-size bands + barrels), `mms-hooks` (page controllers).
 
 ## Priority skills (daily)
 

@@ -11,17 +11,43 @@ Governs user authentication, sessions, tenant isolation, role-based authorizatio
 ## 1. Authentication & Session Management
 
 ### Session Cookies Shape
+
+**Tenant workspace**
 - **Access Token**: httpOnly cookie `mms_access` (15-minute JWT, `SameSite=Lax`).
 - **Refresh Token**: httpOnly cookie `mms_refresh` (7-day opaque token rotated on refresh).
-- **Client Configuration**: The frontend `apiClient` must specify `credentials: 'include'`. Directly writing or reading session tokens via client `localStorage` is forbidden.
-- **Verification Hook**: Backend `attachAccessTokenFromCookie` copies `mms_access` to the `Authorization` header before verification.
+- **Verification Hook**: On tenant hosts, `attachAccessTokenFromCookie` copies `mms_access` to `Authorization` before verification.
+
+**Platform apex** (separate from tenant — do not reuse `mms_access` / `mms_refresh`)
+- **Access Token**: httpOnly cookie `mms_platform_access` — browser **session** cookie (no `maxAge`; cleared when the browser closes).
+- **JWT**: Sign only `{ id, tokenType: 'platform_access', sessionVersion }` (`PlatformAccessTokenPayload`); ~8h `expiresIn`. Do **not** embed role/permissions/email — reload via DB in `authenticatePlatform`.
+- **No platform refresh cookie** — expired/revoked sessions require re-login. FE idle timeout (`PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES`, 30) also signs out.
+- **Verification**: On apex, `attachPlatformTokenFromCookie` binds the cookie. `authenticatePlatform` runs `requireMainDomain`, **deletes** any client `Authorization` header, then re-attaches from cookie only (Bearer injection is not trusted).
+- **Mutual exclusion**: Issuing or clearing a platform session also clears tenant auth cookies (and logout clears both).
+
+**Client Configuration**
+- `apiClient` must use `credentials: 'include'`. Never store JWTs in `localStorage`. Clearing legacy `mms_user` on platform login/logout is OK (tenant cache hygiene), not a session store.
+
+### Platform FE session probe
+- On apex boot, `PlatformAuthProvider` **always** calls `GET /api/platform/auth/me` (no sessionStorage gate).
+- **401 / failure is expected when logged out** — treat as unauthenticated; do not toast or trigger tenant `/api/auth/refresh`.
+- Never reintroduce a sessionStorage (or similar) gate that skips the `/me` probe on new tabs / deep links / post-setup / password-reset.
+
+### Platform session revoke & soft-disable
+- **`sessionVersion`**: Compare JWT claim to `platform_users.session_version`. Mismatch → `401` `{ type: 'session_revoked' }`. Bump on password change/reset and admin **disable** (re-issue cookie after self password change). Re-enable does **not** bump.
+- **Soft-disable**: `platform_users.disabled_at` (API `disabledAt`). Non-null → login (after password verifies) and middleware `401` `{ type: 'account_disabled' }`. Super-users cannot be disabled/deleted; cannot disable/delete self; destructive admin ops require current-password re-auth (`sendInvalidCurrentPassword`).
+- Missing/invalid JWT → default `auth_required` (`sendUnauthorized`).
+
+### Platform error SSOT
+- All platform API `type` strings live in `@mms/shared` `platformApiErrors.ts` (`PLATFORM_API_ERROR_TYPES` / `PlatformApiErrorType`). BE `PlatformError` uses `PLATFORM_SERVICE_ERROR_STATUSES`; FE maps via `mapPlatformAuthError` / `getPlatformErrorMessage` — do not invent ad-hoc platform `type` strings.
 
 ### Authentication Artifacts (`auth_artifacts` PG Table)
 Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-memory):
-- `handoff` (2 min TTL): Subdomain session exchange.
-- `two_factor_challenge` (10 min TTL): OTP hashes.
-- `refresh_token` (7 days TTL): Token rotation hashes.
+- `handoff` (2 min TTL): Subdomain session exchange (prefer `scope_key` `ws:{subdomain}`).
+- `two_factor_challenge` (10 min TTL): OTP hashes (prefer workspace `scope_key`).
+- `refresh_token` (7 days TTL): Token rotation hashes — store opaque hash in indexed `lookup_key` and `user:{id}` in `scope_key` (not payload-only scans).
 - `login_email_change` (10 min TTL): Verification hashes.
+- `platform_password_reset`: Apex password-reset OTP artifacts (platform TTLs via shared constants). Do **not** reintroduce unused `platform_setup` artifact kind — first-run uses interactive setup when no users exist.
+- **Purge**: Startup + scheduled `purgeExpiredAuthArtifacts` (API process) — TTL hygiene only; see `mms-ops-infrastructure.md` for wipe/reset paths.
 
 ---
 
@@ -29,11 +55,18 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 
 ### Tenant Resolution
 - **Subdomain Routing**: Hosts are resolved dynamically:
-  - **Apex Host** (`localhost`, `madrasa.app`): Marketing, platform console, onboarding, and **tenant-not-found**.
-  - **Tenant Host** (`{slug}.localhost`): Full workspace instance.
+  - **Apex Host** (`localhost` in dev, or configured `MMS_APP_DOMAIN`): Marketing, platform console, onboarding, and **tenant-not-found**.
+  - **Tenant Host** (`{slug}.localhost` / `{slug}.{MMS_APP_DOMAIN}`): Full workspace instance.
 - **Unknown tenant SPA gate**: If the FE resolves no registered workspace for the host subdomain, **hard-redirect** to apex `/tenant-not-found?subdomain=…` — never mount tenant `/settings` or leave the user on the unregistered host (`mms-settings-i18n.md`, `mms-ui-ux-design.md` §8).
 - **Request Context**: Backend parses tenant from `Host` or `X-Forwarded-Host` headers (never from client JSON bodies) and starts an AsyncLocalStorage scope (`tenantStorage`).
-- **Endpoint Protection**: Tenant API routes require **`authenticateTenant`** which validates that the JWT payload `workspaceSubdomain` matches the resolved request subdomain. Apex requests to tenant routes return `403`.
+- **Endpoint Protection**: Tenant API routes require **`authenticateTenant`**: JWT from cookie **or** Bearer (does **not** strip client `Authorization`) → workspace enabled → `workspaceSubdomain` match → reject `refresh` / `platform_access` → `twoFactorVerified !== false` → `bindRequestUserId`. Apex requests to tenant routes return `403`.
+
+### Platform API protection
+- All `/api/platform/*` routes: apex-only (`requireMainDomain` inside `authenticatePlatform` and on public platform plugins — tenant subdomain → `403`).
+- **`authenticatePlatform`** (not `authenticateTenant`): cookie-only trust → `tokenType === 'platform_access'` → load user → `disabledAt` / `sessionVersion` → `request.platformUser`. Prefer hydrated `platformUser` over JWT claims for email/role.
+- Capability gates: `requireSuperUser` for super-user-only admin management; `requirePlatformPermission('workspaces'|'onboard')` / shared `platformUserCan` for grantable admin caps. Do not invent tenant `can()` strings for platform ops.
+- **OTP delivery (platform)**: Production fail-closed — no `devCode` / proceed when email `sent === false` (`email_send_failed`); prod without SMTP → `smtp_required`. Non-prod may surface `devCode` / `devReset`.
+- **Env bootstrap**: Seed platform super-user only when `PLATFORM_ALLOW_ENV_BOOTSTRAP=true` **and** `PLATFORM_ADMIN_EMAIL` + password env (`PLATFORM_ADMIN_PASSWORD` or `SEED_DEV_PASSWORD`) are set; otherwise first-run UI.
 
 ---
 
@@ -41,21 +74,25 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 
 ### Permissions Matrix
 - **Permissions Hook**: Frontend gates use `can('permission.string')` via `usePermissions`, or **`useModulePermissions(X_MODULE_MANIFEST)`** for module pages (resolves `canWrite` / `canDelete` / `canExport` / `canViewSetup` / reports from the manifest).
+- **Do not widen write gates with Setup**: entity sync / mutate paths that need `contacts.write` (or module `canWrite`) must not OR with `canEditSetup` (Google Contacts sync pattern — Setup configures; write permission performs).
 - **Module pages**: Prefer contract-driven gates + `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`. Do not introduce new `role === 'admin'|'teacher'|…` write gates on tenant modules.
+- **Platform console**: Use `platformUserCan` / `requirePlatformPermission` for grantable caps; keep intentional `super_user` checks for admin-management gates — do not invent tenant permission strings.
 - **DOM Rendering**: Forbidden elements must be omitted from rendering entirely; do not render disabled placeholders for unauthorized actions.
 - **Backend Enforcement**: Enforce permission checks inside route preHandlers (e.g. `canWriteCollection(user, 'students')`). Denied operations must return `403` with a stable `type: 'forbidden'` payload.
 
 ---
 
 ## 4. Threat Mitigations & Security Checklist
-- **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse.
-- **Password Security**: Hash with `scrypt`. Enforce onboarding password policy. Verify with `timingSafeEqual`.
+- **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse (`type: 'rate_limit_exceeded'` where configured).
+- **Platform `AUTH_RATE_LIMIT`**: Auth-sensitive + destructive platform routes (login/setup/password flows; admin disable/delete; workspace delete; database reset) — do not ship those mutations without the limit + password confirm where already required.
+- **Password Security**: Hash with `scrypt`. Enforce onboarding / platform password policy. Verify with `timingSafeEqual`.
 - **OTP Generation**: `crypto.randomInt()` only — `Math.random()` forbidden.
 - **CORS**: Explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` forbidden.
 - **Cookies (prod)**: Set `Secure` on session cookies under HTTPS / `NODE_ENV=production`.
-- **Headers**: Prefer `@fastify/helmet` (or equivalent) — at least `X-Content-Type-Options`, frame denial, HSTS in prod; CSP suitable for the SPA.
+- **Headers**: `@fastify/helmet` is registered (frame denial, `X-Content-Type-Options`, HSTS in prod). Remaining gap: enable SPA-safe `contentSecurityPolicy` (currently `false`) — `mms-migration-status.md`.
 - **IDOR**: Authorize via permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from session (Messaging log POST pattern).
 - **Secrets storage**: Long-lived OAuth/API secrets in FORCE-RLS tenant tables — never in unscoped `objects` KV. Strip legacy secret object keys from backups (`SERVER_ONLY_OBJECT_KEYS`).
+- **Workspace backup / restore**: Admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`. Settings wipe-restore requires current-password step-up + verified safety backup before wipe (`mms-settings-i18n.md`). Encrypted `.mmsbak` envelope: PBKDF2 iterations bounded (`BACKUP_KDF_MIN_ITERATIONS`…`BACKUP_KDF_MAX_ITERATIONS`), format `version` ≤ `ENCRYPTED_BACKUP_VERSION`, salt/iv length caps — reject DoS envelopes. On restore, park unusable user hashes as `!restore-…` + `mustChangePassword`; fail only when **no** admin credential survives (`backup.missingUserCredentials`).
 - **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables (e.g. Contacts entity rows).
 - **XSS / exports**: No unsanitized HTML; encode user content in PDF/CSV/Excel cells.
 - **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens.

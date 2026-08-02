@@ -36,8 +36,9 @@ Platform theme: `MMS_PLATFORM_BRANDING` / `applyApexPlatformTheme('en')`.
 
 ## Before editing
 
-1. Read scoped rules for the area: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`, `mms-auth-security.mdc`
-2. Run quality gate after substantive changes:
+1. Read scoped rules for the area: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-structure-naming.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`, `mms-auth-security.mdc`
+2. Large shells: prefer hard ~300 / soft ~220 splits behind stable barrels (`use*PageController`, `*Section` / `*Panel`) — do not break public import paths
+3. Run quality gate after substantive changes:
 
 ```bash
 cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test
@@ -105,17 +106,20 @@ App-wide settings only — **not** per-module Fields/Preferences (those live in 
 ```
 SettingsPage.tsx (`tenant/features/settings/`) → SETTINGS_NAV + lazy SETTINGS_SECTION_COMPONENTS
 components/settings/        → Global, Branding, Theme, SystemModules, BackupRestore
-components/settings/backup/ → export/import/history sections (logic in useBackupRestore)
+components/settings/backup/ → export/import/history sections
 components/settings/modules/ModuleSettingsNavGrid.tsx → SYSTEM_MODULE_NAV toggles
 hooks/useSettingsDraft.ts   → generic draft + preview + save
 hooks/useBrandingDraft.ts   → branding record (Branding + Theme tabs)
 hooks/useThemeSettingsDraft.ts
-hooks/useBackupRestore.ts   → backup state machine
+hooks/useBackupRestore.ts   → orchestrates export + import
+hooks/useBackupRestoreExport.ts / useBackupRestoreImport.ts / useBackupRestoreImportActions.ts
 hooks/useSavedFlash.ts      → post-save footer flash
 hooks/useApplyLogoColors.ts → logo → primary/secondary
 ```
 
-Rules: `mms-settings-i18n.mdc`, `mms-settings-i18n.mdc`, `mms-hooks.mdc`.
+**Backup restore flow:** two-step — password step-up + `createSafetyBackup` → `safetyReady`, then `beginRestore` (wipe). Modal locked while busy; early `backup.workspaceMismatch` before decrypt; history download disabled when `!backup.data`. Copy via `backup.*` — `mms-settings-i18n.mdc`.
+
+Rules: `mms-settings-i18n.mdc`, `mms-hooks.mdc`.
 
 New section checklist: add to `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`; use `SettingsPanel` + `SettingsFormActions`; preview via `settingsPreview.ts`; all copy via `t()`.
 
