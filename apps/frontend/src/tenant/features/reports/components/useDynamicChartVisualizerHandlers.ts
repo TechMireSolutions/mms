@@ -36,6 +36,7 @@ interface BuildVisualizerHandlersOptions {
   pdfOrientation: 'p' | 'l';
   initialConfig?: VisualizerConfig;
   onSave?: (config: VisualizerConfig) => void;
+  onExportFailed: () => void;
 }
 
 export function buildDynamicChartVisualizerHandlers({
@@ -57,6 +58,7 @@ export function buildDynamicChartVisualizerHandlers({
   pdfOrientation,
   initialConfig,
   onSave,
+  onExportFailed,
 }: BuildVisualizerHandlersOptions) {
   const handleTogglePin = () => {
     const nextWidgets = toggleVisualizerWidgetPin({
@@ -86,20 +88,32 @@ export function buildDynamicChartVisualizerHandlers({
     setFilters(deleteFilterRule(filters, id));
   };
 
-  const handleExportPNG = () => runVisualizerPngExport(chartRef, title);
+  const handleExportPNG = () => {
+    void runVisualizerPngExport(chartRef, title).then((ok) => {
+      if (!ok) onExportFailed();
+    });
+  };
 
-  const handleExportExcel = () => runVisualizerExcelExport(title, processedData);
+  const handleExportExcel = () => {
+    void runVisualizerExcelExport(title, processedData).then((ok) => {
+      if (!ok) onExportFailed();
+    });
+  };
 
-  const handleExportPDF = () => runVisualizerPdfExport({
-    chartRef,
-    title,
-    processedData,
-    operation,
-    xAxisField,
-    collectionLabel: activeMeta.name,
-    pdfFormat,
-    pdfOrientation,
-  });
+  const handleExportPDF = () => {
+    void runVisualizerPdfExport({
+      chartRef,
+      title,
+      processedData,
+      operation,
+      xAxisField,
+      collectionLabel: activeMeta.name,
+      pdfFormat,
+      pdfOrientation,
+    }).then((ok) => {
+      if (!ok) onExportFailed();
+    });
+  };
 
   const handleSaveVisual = onSave
     ? () => {

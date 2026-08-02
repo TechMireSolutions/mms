@@ -34,13 +34,13 @@ export const DEFAULT_FORM_TABS: TabDefinition[] = [
   { key: "addresses", label: "Addresses",  labelKey: "contacts.form.tabAddresses", enabled: true, order: 3, isSystem: true },
   { key: "socials",   label: "Socials",    labelKey: "contacts.form.tabSocials",   enabled: true, order: 4, isSystem: true },
   { key: "relationship", label: "Relationship", labelKey: "contacts.form.tabRelationship", enabled: true, order: 5, isSystem: true },
+  { key: "custom", label: "Custom fields", labelKey: "contacts.form.tabCustom", enabled: true, order: 6, isSystem: true },
 ];
 
 export const DEFAULT_DETAIL_TABS: TabDefinition[] = [
   { key: "overview",  label: "Overview",  labelKey: "contacts.detail.tabOverview",  enabled: true, order: 0, isSystem: true },
   { key: "timeline",  label: "Timeline",  labelKey: "contacts.detail.tabTimeline",  enabled: true, order: 1, isSystem: true },
-  { key: "network",   label: "Network",   labelKey: "contacts.detail.tabNetwork",   enabled: true, order: 2, isSystem: true },
-  { key: "files",     label: "Files",     labelKey: "contacts.detail.tabFiles",     enabled: true, order: 3, isSystem: true },
+  { key: "files",     label: "Files",     labelKey: "contacts.detail.tabFiles",     enabled: true, order: 2, isSystem: true },
 ];
 
 export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [

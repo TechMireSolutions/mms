@@ -4,6 +4,7 @@ import { ContactEmailsTab } from "@/tenant/features/contacts/components/formTabs
 import { ContactAddressesTab } from "@/tenant/features/contacts/components/formTabs/ContactAddressesTab";
 import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTabs/ContactSocialsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
+import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { normalizeContactFormTabId } from "@mms/shared";
 
@@ -120,6 +121,16 @@ export function ContactFormTabContent({
           ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
           removeSubListItem={draft.removeSubListItem}
+        />
+      );
+    case "custom":
+      return (
+        <ContactCustomFieldsTab
+          contactDraft={draft.contactDraft}
+          formInstanceId={String(draft.formInstanceId)}
+          fields={draft.fields}
+          getFieldError={draft.getFieldError}
+          updateDraft={draft.updateDraft}
         />
       );
     default:

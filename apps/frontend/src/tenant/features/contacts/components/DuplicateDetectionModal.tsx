@@ -87,7 +87,7 @@ export function DuplicateDetectionModal({
         {pairsError ? (
           <ErrorState
             title={t("contacts.duplicates.scanFailed")}
-            description={t("common.retry")}
+            description={t("contacts.duplicates.scanFailedHint")}
             onRetry={onRetry}
           />
         ) : pairsLoading ? (

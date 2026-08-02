@@ -10,6 +10,8 @@ import ContactsSavedReports from "@/tenant/features/reports/components/ContactsS
 import { getObject, saveObject } from "@/lib/db";
 import { VisualizerConfig } from "@/tenant/features/reports/components/reportMetadata";
 import { useGenericSavedReportsSource } from "@/hooks/useSavedReportsSource";
+import { useTranslation } from "@/hooks/useTranslation";
+import { notify } from "@/lib/notify";
 import {
   GENERIC_SAVED_REPORT_CATEGORIES,
   type GenericSavedReportCategory,
@@ -82,6 +84,8 @@ export function ModuleReportsToolPanels({
   onVisualizerClose,
   getInitialCollection,
 }: ModuleReportsToolPanelsProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <AnimatePresence mode="wait">
       {activeTab === "compare" && (
@@ -109,11 +113,13 @@ export function ModuleReportsToolPanels({
                   const customVisuals = getObject<Record<string, VisualizerConfig>>("report_custom_visuals", {});
                   customVisuals[updatedConfig.id] = updatedConfig;
                   saveObject("report_custom_visuals", customVisuals);
+                  window.dispatchEvent(new Event("local-database-update"));
+                  onVisualizerSave(updatedConfig);
                 } catch (error) {
-                  console.error("Failed to save custom visual configuration", error);
+                  notify.error(t("reports.visualizer.saveFailed"), {
+                    description: error instanceof Error ? error.message : undefined,
+                  });
                 }
-                window.dispatchEvent(new Event("local-database-update"));
-                onVisualizerSave(updatedConfig);
               }}
               onClose={onVisualizerClose}
             />

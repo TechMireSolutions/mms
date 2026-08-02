@@ -3,6 +3,8 @@ import { Camera, FileText, Upload, X } from "lucide-react";
 import { AvatarCropper } from "@/components/ui/AvatarCropper";
 import { Button } from "@/components/ui/button";
 import { uploadUserImage } from "@/lib/imageUpload";
+import { useTranslation } from "@/hooks/useTranslation";
+import { notify } from "@/lib/notify";
 import type { FieldDefinition } from "@mms/shared";
 
 interface FormCustomFieldFileInputProps {
@@ -22,38 +24,46 @@ export function FormCustomFieldFileInput({
   clickToUploadDocumentLabel,
   removePhotoLabel,
 }: FormCustomFieldFileInputProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const isAvatar = field.key === "avatar" || field.label.toLowerCase().includes("photo") || field.label.toLowerCase().includes("avatar") || field.label.toLowerCase().includes("image");
+  const isAvatar =
+    field.key === "avatar" ||
+    field.label.toLowerCase().includes("photo") ||
+    field.label.toLowerCase().includes("avatar") ||
+    field.label.toLowerCase().includes("image");
   const fileUrl = typeof value === "string" ? value : (value as { url?: string })?.url || null;
-  const file = typeof value === "string" ? { name: "avatar.webp", url: value } : (value as { name: string; url: string; size?: number } | null);
+  const file =
+    typeof value === "string"
+      ? { name: "avatar.webp", url: value }
+      : (value as { name: string; url: string; size?: number } | null);
 
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const selected = event.target.files?.[0];
+    if (!selected) return;
 
-    if (isAvatar && file.type.startsWith("image/")) {
+    if (isAvatar && selected.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (readerEvent) => {
         if (typeof readerEvent.target?.result === "string") {
           setCropSrc(readerEvent.target.result);
         }
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(selected);
       event.target.value = "";
       return;
     }
 
-    if (file.type.startsWith("image/")) {
+    if (selected.type.startsWith("image/")) {
       try {
-        const url = await uploadUserImage(file, "general");
+        const url = await uploadUserImage(selected, "general");
         onChange({
-          name: file.name.replace(/\.[^/.]+$/, "") + ".avif",
+          name: selected.name.replace(/\.[^/.]+$/, "") + ".avif",
           url,
-          size: file.size,
+          size: selected.size,
           type: "image/avif",
         });
       } catch {
-        // Upload failed; input is reset below.
+        notify.error(t("account.photoUploadFailed"));
       }
       event.target.value = "";
       return;
@@ -62,13 +72,13 @@ export function FormCustomFieldFileInput({
     const reader = new FileReader();
     reader.onload = (readerEvent) => {
       onChange({
-        name: file.name,
+        name: selected.name,
         url: readerEvent.target?.result,
-        size: file.size,
-        type: file.type,
+        size: selected.size,
+        type: selected.type,
       });
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(selected);
     event.target.value = "";
   };
 
@@ -96,13 +106,22 @@ export function FormCustomFieldFileInput({
           </div>
           <label className="absolute -bottom-1 -end-1 min-h-11 min-w-11 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors z-10">
             <Camera className="w-3 h-3" />
-            <input id={`${field.key}-avatar-upload`} name={`${field.key}-avatar-upload`} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+            <input
+              id={`${field.key}-avatar-upload`}
+              name={`${field.key}-avatar-upload`}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(event) => {
+                void handleFile(event);
+              }}
+            />
           </label>
         </div>
         <div className="text-xs text-muted-foreground">
           <p className="font-semibold text-foreground mb-0.5">{field.label}</p>
           <p>{uploadInstructions}</p>
-          <p className="text-xs opacity-80 mt-0.5">Recommended size: 300×300 px (stored as AVIF/WebP)</p>
+          <p className="text-xs opacity-80 mt-0.5">{t("contacts.form.avatarRecommendedSize")}</p>
           {fileUrl && (
             <Button
               type="button"
@@ -126,7 +145,12 @@ export function FormCustomFieldFileInput({
             <FileText className="w-4 h-4 text-primary flex-shrink-0" />
             <span className="text-xs font-semibold truncate">{file.name}</span>
           </div>
-          <Button variant="ghost" onClick={() => onChange(null)} className="min-w-11 min-h-11 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors" type="button">
+          <Button
+            variant="ghost"
+            onClick={() => onChange(null)}
+            className="min-w-11 min-h-11 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
+            type="button"
+          >
             <X className="w-3.5 h-3.5" />
           </Button>
         </div>
@@ -134,7 +158,15 @@ export function FormCustomFieldFileInput({
         <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-border rounded-xl hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all">
           <Upload className="w-4 h-4 text-muted-foreground" />
           <span className="text-xs font-bold text-muted-foreground">{clickToUploadDocumentLabel}</span>
-          <input id={`${field.key}-document-upload`} name={`${field.key}-document-upload`} type="file" className="hidden" onChange={handleFile} />
+          <input
+            id={`${field.key}-document-upload`}
+            name={`${field.key}-document-upload`}
+            type="file"
+            className="hidden"
+            onChange={(event) => {
+              void handleFile(event);
+            }}
+          />
         </label>
       )}
     </div>

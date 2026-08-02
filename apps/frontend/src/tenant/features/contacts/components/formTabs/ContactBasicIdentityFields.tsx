@@ -6,6 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import type { Contact } from "@mms/shared";
 import { ContactBasicMetaFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicMetaFields";
+import { GenderIcon } from "@/components/ui/GenderIcon";
 
 export function ContactBasicIdentityFields({
   contactDraft,
@@ -79,10 +80,15 @@ export function ContactBasicIdentityFields({
             id={`cf-${formInstanceId}-gender`}
           >
             {lockGender ? (
-              <div className="flex h-10 w-full items-center rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground select-none font-semibold">
-                {contactDraft.gender
-                  ? formatContactGenderLabel(contactDraft.gender, t)
-                  : t("contacts.gender.unspecified")}
+              <div className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-muted/40 px-3.5 text-xs text-muted-foreground select-none font-semibold">
+                {contactDraft.gender ? (
+                  <>
+                    <GenderIcon gender={contactDraft.gender} className="w-3.5 h-3.5" />
+                    {formatContactGenderLabel(contactDraft.gender, t)}
+                  </>
+                ) : (
+                  t("contacts.gender.unspecified")
+                )}
               </div>
             ) : (
               <EditableSelect
@@ -93,7 +99,6 @@ export function ContactBasicIdentityFields({
                     (option) => option.toLowerCase() === (contactDraft.gender || "").toLowerCase(),
                   ) ||
                   contactDraft.gender ||
-                  genders[0] ||
                   ""
                 }
                 onChange={(val) => updateDraft({ gender: val.toLowerCase() })}

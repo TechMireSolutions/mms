@@ -1,5 +1,6 @@
 export {
   CollectionRowItem,
+  type CollectionRowAction,
   type CollectionRowItemProps,
 } from "./CollectionRowItem";
 export {

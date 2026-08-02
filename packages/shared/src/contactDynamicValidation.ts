@@ -65,7 +65,7 @@ export function buildDynamicContactSchema(
       if (!field.enabled || (viewerRole && !canViewContactField(viewerRole, field))) {
         continue;
       }
-      schemaObject[field.key] = buildCustomFieldSchema(field);
+      schemaObject[field.key] = buildCustomFieldSchema(field, language);
     }
   }
 
@@ -82,7 +82,7 @@ export function buildDynamicContactSchema(
       if (!field.enabled || (viewerRole && !canViewContactField(viewerRole, field))) {
         continue;
       }
-      itemSchemaObject[field.key] = buildCustomFieldSchema(field);
+      itemSchemaObject[field.key] = buildCustomFieldSchema(field, language);
     }
 
     const itemSchema = z.object(itemSchemaObject);

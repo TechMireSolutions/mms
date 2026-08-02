@@ -4,6 +4,7 @@ import type { ContactsPageOverlaysProps } from "@/tenant/features/contacts/compo
 
 export function useContactsPageOverlayProps({
   canWrite,
+  canDelete,
   showForm,
   editContact,
   defaultCountry,
@@ -20,6 +21,7 @@ export function useContactsPageOverlayProps({
   viewContact,
   setViewContact,
   handleEdit,
+  handleRestore,
   messagingHandlers,
   allContactsForLinks,
   handleUpdateContact,
@@ -35,6 +37,7 @@ export function useContactsPageOverlayProps({
   confirmBulkRestore,
 }: {
   canWrite: boolean;
+  canDelete: boolean;
   showForm: boolean;
   editContact: Contact | null;
   defaultCountry: string;
@@ -51,6 +54,7 @@ export function useContactsPageOverlayProps({
   viewContact: Contact | null;
   setViewContact: (contact: Contact | null) => void;
   handleEdit: (contact: Contact) => void;
+  handleRestore: (contactId: string | number) => void | Promise<void>;
   messagingHandlers: Pick<ContactsPageOverlaysProps, "onWhatsApp" | "onSms" | "onEmail">;
   allContactsForLinks: Contact[];
   handleUpdateContact: (contact: Contact) => Promise<void>;
@@ -68,6 +72,7 @@ export function useContactsPageOverlayProps({
   return useMemo(
     () => ({
       canWrite,
+      canDelete,
       showForm,
       editContact,
       defaultCountry,
@@ -89,6 +94,16 @@ export function useContactsPageOverlayProps({
         setViewContact(null);
         handleEdit(contactToEdit);
       },
+      onRestoreFromDrawer: canDelete
+        ? async (contactId: string | number) => {
+            try {
+              await handleRestore(contactId);
+              setViewContact(null);
+            } catch {
+              // Keep drawer open so the user can retry after a failed restore.
+            }
+          }
+        : undefined,
       onWhatsApp: messagingHandlers.onWhatsApp,
       onSms: messagingHandlers.onSms,
       onEmail: messagingHandlers.onEmail,
@@ -109,6 +124,7 @@ export function useContactsPageOverlayProps({
     }),
     [
       canWrite,
+      canDelete,
       showForm,
       editContact,
       defaultCountry,
@@ -125,6 +141,7 @@ export function useContactsPageOverlayProps({
       viewContact,
       setViewContact,
       handleEdit,
+      handleRestore,
       messagingHandlers,
       allContactsForLinks,
       handleUpdateContact,

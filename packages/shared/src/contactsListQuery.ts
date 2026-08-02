@@ -7,7 +7,7 @@ import { filterActiveContacts, isContactDeleted } from './contactSoftDelete.js';
 import { compareByField, getPrimaryEmail, getPrimaryPhone, hasWhatsApp, paginateArray } from './utils.js';
 
 /** Work-directory filter presets — SSOT for schema + Filters menu. */
-export const CONTACTS_QUICK_FILTERS = ['all', 'whatsapp', 'syed', 'missingInfo'] as const;
+export const CONTACTS_QUICK_FILTERS = ['all', 'whatsapp', 'syed', 'missingInfo', 'recent'] as const;
 
 const contactsQuickFilterSchema = z.enum(CONTACTS_QUICK_FILTERS);
 
@@ -24,6 +24,7 @@ const CONTACTS_QUICK_FILTER_LABEL_KEYS = {
   whatsapp: 'contacts.filtersWhatsApp',
   syed: 'contacts.filtersSyed',
   missingInfo: 'contacts.filtersMissingInfo',
+  recent: 'contacts.filtersRecent',
 } as const satisfies Record<ContactsQuickFilter, AppTranslationKey>;
 
 /** Preset options for the Contacts Work Filters menu. */
@@ -112,11 +113,23 @@ export interface ContactsListPageResult {
   hasMore: boolean;
 }
 
-function matchesContactsQuickFilter(contact: Contact, quickFilter: ContactsQuickFilter | undefined): boolean {
+function matchesContactsQuickFilter(
+  contact: Contact,
+  quickFilter: ContactsQuickFilter | undefined,
+  referenceDate = new Date(),
+): boolean {
   if (!quickFilter || quickFilter === 'all') return true;
   if (quickFilter === 'whatsapp') return hasWhatsApp(contact);
   if (quickFilter === 'syed') return Boolean(contact.isSyed);
   if (quickFilter === 'missingInfo') return !getPrimaryPhone(contact) || !getPrimaryEmail(contact);
+  if (quickFilter === 'recent') {
+    if (!contact.createdAt) return false;
+    const created = new Date(contact.createdAt);
+    if (Number.isNaN(created.getTime())) return false;
+    const cutoff = new Date(referenceDate);
+    cutoff.setDate(cutoff.getDate() - 30);
+    return created >= cutoff;
+  }
   return true;
 }
 

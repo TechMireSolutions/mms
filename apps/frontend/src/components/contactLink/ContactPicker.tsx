@@ -1,11 +1,12 @@
 import React from "react";
-import { type Contact } from "@mms/shared";
+import { CONTACTS_MODULE_MANIFEST, type Contact } from "@mms/shared";
 import {
   type ContactCreateDefaults,
 } from "./ContactCreateModal";
 import { ContactPickerSearchInput } from "./ContactPickerSearchInput";
 import { ContactPickerSelected } from "./ContactPickerSelected";
 import { useContactPickerState } from "./useContactPickerState";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 
 export type { ContactCreateDefaults };
 
@@ -53,6 +54,8 @@ export default function ContactPicker({
   id,
   name,
 }: ContactPickerProps): React.JSX.Element {
+  const { canWrite } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
+  const canCreate = allowCreate && canWrite;
   const picker = useContactPickerState({
     value,
     onChange,
@@ -97,7 +100,7 @@ export default function ContactPicker({
       resolvedName={picker.resolvedName}
       query={picker.query}
       open={picker.open}
-      allowCreate={allowCreate}
+      allowCreate={canCreate}
       error={error}
       searchPlaceholder={searchPlaceholder}
       createActionLabel={createActionLabel}

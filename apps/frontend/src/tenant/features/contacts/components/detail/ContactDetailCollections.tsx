@@ -1,6 +1,5 @@
-import { isContactRelationshipTabEnabled, type Contact } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { ContactDetailRelationshipSection } from "./ContactDetailRelationshipSection";
 import {
   ContactDetailAddressesSection,
   ContactDetailEmailsSection,
@@ -10,24 +9,23 @@ import {
 
 export interface ContactDetailCollectionsProps {
   contact: Contact;
-  allContacts: Contact[];
   visibleCollectionFields: {
     phones: { enabled?: boolean }[];
     emails: { enabled?: boolean }[];
     addresses: { enabled?: boolean }[];
     socials: { enabled?: boolean }[];
-    relationship: { enabled?: boolean }[];
   };
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
   onEmail?: (contacts: Contact[]) => void;
-  onNavigateToContact: (targetId: string | number) => void;
 }
 
 export function ContactDetailCollections({
   contact,
-  allContacts,
   visibleCollectionFields,
+  onWhatsApp,
+  onSms,
   onEmail,
-  onNavigateToContact,
 }: ContactDetailCollectionsProps): JSX.Element {
   const {
     enabledTabIds,
@@ -37,12 +35,7 @@ export function ContactDetailCollections({
     socialPlatforms,
     defaultPhoneCountryCode,
   } = useContactConfig();
-
-  const relationshipEnabled = isContactRelationshipTabEnabled(enabledTabIds);
-  const relationshipFields =
-    visibleCollectionFields.relationship.length > 0
-      ? visibleCollectionFields.relationship
-      : [];
+  const allowOutbound = !contact.deletedAt;
 
   return (
     <>
@@ -51,6 +44,9 @@ export function ContactDetailCollections({
           contact={contact}
           phoneLabels={phoneLabels}
           defaultPhoneCountryCode={defaultPhoneCountryCode}
+          allowOutbound={allowOutbound}
+          onWhatsApp={allowOutbound ? onWhatsApp : undefined}
+          onSms={allowOutbound ? onSms : undefined}
         />
       )}
 
@@ -58,7 +54,7 @@ export function ContactDetailCollections({
         <ContactDetailEmailsSection
           contact={contact}
           emailLabels={emailLabels}
-          onEmail={onEmail}
+          onEmail={allowOutbound ? onEmail : undefined}
         />
       )}
 
@@ -68,14 +64,6 @@ export function ContactDetailCollections({
 
       {enabledTabIds.has("socials") && visibleCollectionFields.socials.length > 0 && (
         <ContactDetailSocialsSection contact={contact} socialPlatforms={socialPlatforms} />
-      )}
-
-      {relationshipEnabled && relationshipFields.length > 0 && (
-        <ContactDetailRelationshipSection
-          contact={contact}
-          allContacts={allContacts}
-          onNavigateToContact={onNavigateToContact}
-        />
       )}
     </>
   );

@@ -13,6 +13,8 @@ interface UseModuleSettingsEditorOptions<T extends ModuleSettingsShape> {
   tabRegistry: TabDefinition[];
   defaultEnabledTabs?: string[];
   defaultRequiredTabs?: string[];
+  /** Tab keys that stay enabled on sync/save (default: `basic`). */
+  lockedEnabledTabs?: string[];
 }
 
 /**
@@ -24,16 +26,40 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   tabRegistry,
   defaultEnabledTabs,
   defaultRequiredTabs = [],
+  lockedEnabledTabs = ["basic"],
 }: UseModuleSettingsEditorOptions<T>) {
   const { settings, updateSettings, updateSettingsAsync } = config;
   const { saved, flashSaved, clearSaved } = useSavedFlash();
   const [settingsDraft, setSettingsDraft] = useState<T>(settings);
 
+  const lockedTabKeys = useMemo(
+    () => new Set(lockedEnabledTabs.map((key) => key.toLowerCase())),
+    [lockedEnabledTabs],
+  );
+
+  const isLockedEnabledTab = useCallback(
+    (tabKey: string): boolean => lockedTabKeys.has(tabKey.toLowerCase()),
+    [lockedTabKeys],
+  );
+
+  const withLockedEnabledTabs = useCallback(
+    (tabIds: Iterable<string>): string[] => {
+      const next = new Set(
+        [...tabIds].map((tabId) => tabId.trim().toLowerCase()).filter(Boolean),
+      );
+      for (const locked of lockedTabKeys) next.add(locked);
+      return [...next];
+    },
+    [lockedTabKeys],
+  );
+
   const resolvedDefaultEnabledTabs = useMemo(() => {
-    if (defaultEnabledTabs && defaultEnabledTabs.length > 0) return defaultEnabledTabs;
+    if (defaultEnabledTabs && defaultEnabledTabs.length > 0) {
+      return withLockedEnabledTabs(defaultEnabledTabs);
+    }
     const fromRegistry = tabRegistry.filter((t) => t.enabled !== false).map((t) => t.key);
-    return fromRegistry.length > 0 ? fromRegistry : ["basic"];
-  }, [defaultEnabledTabs, tabRegistry]);
+    return withLockedEnabledTabs(fromRegistry.length > 0 ? fromRegistry : ["basic"]);
+  }, [defaultEnabledTabs, tabRegistry, withLockedEnabledTabs]);
 
   const setSaved = useCallback((val: boolean | ((curr: boolean) => boolean)) => {
     const resolved = typeof val === "function" ? val(saved) : val;
@@ -57,10 +83,12 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   }, [setSaved]);
 
   const activeEnabledTabs = useMemo(() => {
-    return settings.enabledTabs && settings.enabledTabs.length > 0
-      ? settings.enabledTabs
-      : resolvedDefaultEnabledTabs;
-  }, [settings.enabledTabs, resolvedDefaultEnabledTabs]);
+    return withLockedEnabledTabs(
+      settings.enabledTabs && settings.enabledTabs.length > 0
+        ? settings.enabledTabs
+        : resolvedDefaultEnabledTabs,
+    );
+  }, [settings.enabledTabs, resolvedDefaultEnabledTabs, withLockedEnabledTabs]);
 
   const fieldsEditor = useModuleFieldsEditor({
     initialTabs: tabRegistry,
@@ -78,9 +106,11 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     const coreTabKeys = new Set(tabRegistry.map((tab) => tab.key.toLowerCase()));
     const customTabs = (settings.formTabs || []).filter((tab: TabDefinition) => !coreTabKeys.has(tab.key.toLowerCase()));
-    const currentActiveEnabledTabs = (settings.enabledTabs && settings.enabledTabs.length > 0
-      ? settings.enabledTabs
-      : resolvedDefaultEnabledTabs).map((t) => t.toLowerCase());
+    const currentActiveEnabledTabs = withLockedEnabledTabs(
+      settings.enabledTabs && settings.enabledTabs.length > 0
+        ? settings.enabledTabs
+        : resolvedDefaultEnabledTabs,
+    );
 
     const enabledSet = new Set(currentActiveEnabledTabs);
 
@@ -89,7 +119,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
       ...customTabs,
     ].map((tab) => ({
       ...tab,
-      enabled: tab.key.toLowerCase() === "basic" ? true : enabledSet.has(tab.key.toLowerCase()),
+      enabled: isLockedEnabledTab(tab.key) ? true : enabledSet.has(tab.key.toLowerCase()),
     }));
 
     // Perform structural checks to break potential infinite update loop
@@ -122,6 +152,8 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     tabRegistry,
     resolvedDefaultEnabledTabs,
     defaultRequiredTabs,
+    withLockedEnabledTabs,
+    isLockedEnabledTab,
     fieldsEditor.formTabs,
     fieldsEditor.tabFields,
     fieldsEditor.enabledTabs,
@@ -133,10 +165,12 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     additionalFields?: Partial<T>,
     options: { markSaved?: boolean } = {},
   ) => {
-    const enabledSet = new Set(Array.from(fieldsEditor.enabledTabs).map((t) => t.toLowerCase()));
+    const enabledSet = new Set(
+      withLockedEnabledTabs(Array.from(fieldsEditor.enabledTabs)),
+    );
     const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
       ...tab,
-      enabled: tab.key.toLowerCase() === "basic" ? true : enabledSet.has(tab.key.toLowerCase()),
+      enabled: isLockedEnabledTab(tab.key) ? true : enabledSet.has(tab.key.toLowerCase()),
     }));
 
     const nextSettings: T = {
@@ -156,7 +190,16 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
       updateSettings(nextSettings);
     }
     if (options.markSaved !== false) setSaved(true);
-  }, [settings, settingsDraft, updateSettings, updateSettingsAsync, fieldsEditor, setSaved]);
+  }, [
+    settings,
+    settingsDraft,
+    updateSettings,
+    updateSettingsAsync,
+    fieldsEditor,
+    setSaved,
+    withLockedEnabledTabs,
+    isLockedEnabledTab,
+  ]);
 
   const saveSettings = useCallback((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
     void saveSettingsAsync(preferencesDraft, additionalFields);

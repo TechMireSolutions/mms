@@ -1,5 +1,5 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
-import type { Contact } from "@mms/shared";
+import { ensureSinglePrimaryFlag, type Contact, type PhoneNumber } from "@mms/shared";
 import type {
   AddSubListItem,
   ContactSubListKey,
@@ -7,6 +7,14 @@ import type {
   RemoveSubListItem,
   UpdateSubListItem,
 } from "@/tenant/features/contacts/components/formTabs/types";
+
+function withHealedPrimary(
+  fieldKey: ContactSubListKey,
+  list: unknown[],
+): unknown[] {
+  if (fieldKey !== "phones" && fieldKey !== "emails") return list;
+  return ensureSinglePrimaryFlag(list as Array<{ isPrimary?: boolean }>);
+}
 
 export function useContactFormSubLists(
   setContactDraft: Dispatch<SetStateAction<Partial<Contact>>>,
@@ -17,7 +25,7 @@ export function useContactFormSubLists(
         const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
         return {
           ...prev,
-          [fieldKey]: [...currentList, newItem],
+          [fieldKey]: withHealedPrimary(fieldKey, [...currentList, newItem]),
         };
       });
     },
@@ -30,7 +38,7 @@ export function useContactFormSubLists(
       setContactDraft((prev) => {
         const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
         if (currentList.length > 0) return prev;
-        return { ...prev, [fieldKey]: [newItem] };
+        return { ...prev, [fieldKey]: withHealedPrimary(fieldKey, [newItem]) };
       });
     },
     [setContactDraft],
@@ -40,10 +48,17 @@ export function useContactFormSubLists(
     (fieldKey, idx, patch) => {
       setContactDraft((prev) => {
         const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
-        const nextList = currentList.map((item, i) =>
-          i === idx ? { ...item, ...patch } : item,
-        );
-        return { ...prev, [fieldKey]: nextList };
+        const nextList = currentList.map((item, i) => {
+          if (i !== idx) return item;
+          if (fieldKey === "phones" && "number" in patch) {
+            const phone = item as PhoneNumber;
+            const { whatsappStatus: _cleared, ...rest } = phone;
+            void _cleared;
+            return { ...rest, ...patch };
+          }
+          return { ...item, ...patch };
+        });
+        return { ...prev, [fieldKey]: withHealedPrimary(fieldKey, nextList) };
       });
     },
     [setContactDraft],
@@ -55,7 +70,10 @@ export function useContactFormSubLists(
         const currentList = (prev[fieldKey] as unknown[]) || [];
         return {
           ...prev,
-          [fieldKey]: currentList.filter((_, i) => i !== idx),
+          [fieldKey]: withHealedPrimary(
+            fieldKey,
+            currentList.filter((_, i) => i !== idx),
+          ),
         };
       });
     },

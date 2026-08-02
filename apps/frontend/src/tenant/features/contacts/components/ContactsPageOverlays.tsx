@@ -4,6 +4,7 @@ import type { Contact, StandardMessagingRecipient } from "@mms/shared";
 import {
   ContactsPageConfirmDialogs,
 } from "@/tenant/features/contacts/components/ContactsPageConfirmDialogs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
@@ -12,6 +13,7 @@ const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/compon
 
 export interface ContactsPageOverlaysProps {
   canWrite: boolean;
+  canDelete: boolean;
   showForm: boolean;
   editContact: Contact | null;
   defaultCountry: string;
@@ -27,6 +29,7 @@ export interface ContactsPageOverlaysProps {
   viewContact: Contact | null;
   onCloseView: () => void;
   onEditFromDrawer: (contact: Contact) => void;
+  onRestoreFromDrawer?: (contactId: string | number) => void;
   onWhatsApp?: (contacts: Contact[]) => void;
   onSms?: (contacts: Contact[]) => void;
   onEmail?: (contacts: Contact[]) => void;
@@ -47,6 +50,7 @@ export interface ContactsPageOverlaysProps {
 /** Lazy form/drawer/composer + confirm dialogs for Contacts page. */
 export function ContactsPageOverlays({
   canWrite,
+  canDelete,
   showForm,
   editContact,
   defaultCountry,
@@ -62,6 +66,7 @@ export function ContactsPageOverlays({
   viewContact,
   onCloseView,
   onEditFromDrawer,
+  onRestoreFromDrawer,
   onWhatsApp,
   onSms,
   onEmail,
@@ -106,21 +111,41 @@ export function ContactsPageOverlays({
               onClose={onCloseComposer}
             />
           )}
-          {viewContact && (
-            <ContactDetailDrawer
-              contact={viewContact}
-              onClose={onCloseView}
-              onEdit={onEditFromDrawer}
-              onWhatsApp={onWhatsApp}
-              onSms={onSms}
-              onEmail={onEmail}
-              allContacts={allContactsForLinks}
-              onUpdateContact={onUpdateContact}
-              canWrite={canWrite}
-            />
-          )}
         </AnimatePresence>
       </Suspense>
+
+      {viewContact && (
+        <Suspense
+          fallback={
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-end bg-black/20"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="flex h-full w-full max-w-full flex-col gap-3 border-s border-border bg-card p-5 sm:max-w-sm">
+                <Skeleton className="h-5 w-2/3 rounded" />
+                <Skeleton className="h-11 w-full rounded-xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+              </div>
+            </div>
+          }
+        >
+          <ContactDetailDrawer
+            contact={viewContact}
+            onClose={onCloseView}
+            onEdit={onEditFromDrawer}
+            onWhatsApp={onWhatsApp}
+            onSms={onSms}
+            onEmail={onEmail}
+            allContacts={allContactsForLinks}
+            onUpdateContact={onUpdateContact}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            onRestore={onRestoreFromDrawer}
+          />
+        </Suspense>
+      )}
 
       <ContactsPageConfirmDialogs
         bulkDeleteOpen={bulkDeleteOpen}

@@ -2,6 +2,10 @@ import type { Contact, FieldDefinition, FieldConfig } from './contactTypes.js';
 import { canViewContactColumn, type ContactColumnFieldContext } from './contactColumnAccess.js';
 import { canViewContactTab } from './contactFieldAccess.js';
 import {
+  isContactLockedEnabledTab,
+  resolveContactEnabledTabIds,
+} from './contactEnabledTabs.js';
+import {
   isRelationshipContactColumnKey,
   isRelationshipTypeColumnKey,
 } from './contactEmergencyTabMigration.js';
@@ -22,7 +26,7 @@ function tabAllowsField(
   fieldConfig: FieldConfig,
   tabId: string,
 ): boolean {
-  if (tabId === 'basic') return true;
+  if (isContactLockedEnabledTab(tabId)) return true;
   const formTabs = fieldConfig.formTabs ?? [];
   if (formTabs.length === 0) return true;
   const tab = formTabs.find((candidate) => candidate.key === tabId);
@@ -30,23 +34,11 @@ function tabAllowsField(
   return tab.enabled !== false && canViewContactTab(viewerRole, tab);
 }
 
-function visibleTabIds(fieldConfig: FieldConfig, viewerRole: string): Set<string> {
-  const formTabs = fieldConfig.formTabs ?? [];
-  if (formTabs.length === 0) {
-    return new Set(Object.keys(fieldConfig.fields).filter((tabId) => tabId !== 'basic'));
-  }
-  return new Set(
-    formTabs
-      .filter((tab) => tab.enabled !== false && canViewContactTab(viewerRole, tab))
-      .map((tab) => tab.key),
-  );
-}
-
 function buildColumnFieldContext(
   fieldConfig: FieldConfig,
   viewerRole: string,
 ): ContactColumnFieldContext {
-  const enabledTabIds = visibleTabIds(fieldConfig, viewerRole);
+  const enabledTabIds = resolveContactEnabledTabIds(fieldConfig, viewerRole);
   return {
     fields: fieldConfig.fields,
     enabledTabIds,

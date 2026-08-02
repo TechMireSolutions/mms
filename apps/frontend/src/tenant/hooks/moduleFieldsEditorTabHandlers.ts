@@ -57,7 +57,6 @@ export function handleAddTab(
   const newTab: TabDefinition = {
     key,
     label: label.trim(),
-    description: "Custom user-defined tab",
     enabled: true,
     order: formTabs.length,
     isSystem: false,
@@ -79,23 +78,32 @@ export function handleAddTab(
   setters.setTabFieldOrder((currentFieldOrder) => ({ ...currentFieldOrder, [key]: [] }));
 }
 
-export function handleDeleteTab(
-  key: string,
-  setFormTabs: Dispatch<SetStateAction<TabDefinition[]>>,
-  setEnabledTabs: Dispatch<SetStateAction<Set<string>>>,
-  setRequiredTabs: Dispatch<SetStateAction<Set<string>>>,
-): void {
-  setFormTabs((currentTabs) => currentTabs.filter((tab) => tab.key !== key));
-  setEnabledTabs((currentEnabledTabs) => {
+export function handleDeleteTab(key: string, setters: TabHandlerSetters): void {
+  setters.setFormTabs((currentTabs) => currentTabs.filter((tab) => tab.key !== key));
+  setters.setEnabledTabs((currentEnabledTabs) => {
     const updatedEnabledTabs = new Set(currentEnabledTabs);
     updatedEnabledTabs.delete(key);
     return updatedEnabledTabs;
   });
-  setRequiredTabs((currentRequiredTabs) => {
+  setters.setRequiredTabs((currentRequiredTabs) => {
     const updatedRequiredTabs = new Set(currentRequiredTabs);
     updatedRequiredTabs.delete(key);
     return updatedRequiredTabs;
   });
+
+  const omitTabKey = <T,>(current: Record<string, T>): Record<string, T> => {
+    const next = { ...current };
+    delete next[key];
+    return next;
+  };
+
+  setters.setTabFields(omitTabKey);
+  setters.setTabFieldEnabled(omitTabKey);
+  setters.setTabFieldRequired(omitTabKey);
+  setters.setTabFieldUnique(omitTabKey);
+  setters.setTabFieldDefaultValues(omitTabKey);
+  setters.setTabFieldPermissions(omitTabKey);
+  setters.setTabFieldOrder(omitTabKey);
 }
 
 export function handleRenameTab(

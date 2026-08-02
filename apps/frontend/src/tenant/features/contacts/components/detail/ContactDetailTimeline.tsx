@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent } from "react";
 import { motion } from "framer-motion";
 import { History, Send } from "lucide-react";
 import { ContactActivity, formatDate } from "@mms/shared";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACTIVITY_TYPE_I18N } from "@/lib/contacts/contactI18n";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,15 @@ export function ContactDetailTimeline({
   onAddNote,
 }: ContactDetailTimelineProps): JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
 
   return (
     <div className="space-y-5">
       {canPersistContact && <div className="relative">
         <form onSubmit={onAddNote} className="flex gap-2">
+          <label htmlFor={noteInputId} className="sr-only">
+            {t('contacts.detail.logEventOrNote')}
+          </label>
           <Input
             id={noteInputId}
             name="contact-note"
@@ -44,7 +49,9 @@ export function ContactDetailTimeline({
           <Button
             type="submit"
             aria-label={t('contacts.detail.logEventOrNoteSubmit')}
-            className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-none"
+            className={`w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-none ${
+              reducedMotion ? "" : "hover:scale-105 active:scale-95 transition-all"
+            }`}
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -64,9 +71,9 @@ export function ContactDetailTimeline({
             return (
               <motion.div
                 key={act.id}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.15, delay: Math.min(idx * 0.03, 0.3) }}
+                initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: reducedMotion ? 0 : 0.15, delay: reducedMotion ? 0 : Math.min(idx * 0.03, 0.3) }}
                 className="relative ps-6 group"
               >
                 <div

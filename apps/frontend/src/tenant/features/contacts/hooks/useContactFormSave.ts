@@ -10,6 +10,8 @@ import {
   todayISO,
   cleanContactDraft,
   syncContactScalarFields,
+  normalizeToE164,
+  isContactDeleted,
   type ValidationError,
 } from "@mms/shared";
 
@@ -35,6 +37,12 @@ export function useContactFormSave({
 
   const handleSave = useCallback(async (): Promise<void> => {
     setValidationErrors([]);
+
+    if (contact && isContactDeleted(contact)) {
+      notify.error(t("contacts.form.cannotEditDeleted"));
+      return;
+    }
+
     const cleanedDraft = cleanContactDraft(contactDraft);
     const formErrors = validate(cleanedDraft);
 
@@ -47,6 +55,17 @@ export function useContactFormSave({
           message: t("contacts.form.cnicInvalid"),
         });
       }
+    }
+
+    if (
+      typeof cleanedDraft.avatar === "string" &&
+      cleanedDraft.avatar.startsWith("data:")
+    ) {
+      formErrors.push({
+        fieldId: "avatar",
+        tabId: "basic",
+        message: t("contacts.form.avatarMustUpload"),
+      });
     }
 
     if (formErrors.length > 0) {
@@ -67,11 +86,24 @@ export function useContactFormSave({
       const lastName = toTitleCase((cleanedDraft.lastName || "").trim());
 
       const normalizedPhones = (cleanedDraft.phones || []).map((phone) => {
-        const { countryCode, formattedNumber: number } = formatContactPhoneDisplay(
+        const { countryCode, formattedNumber: national } = formatContactPhoneDisplay(
           phone.number,
           phone.countryCode || defaultCountryCode,
         );
-        return { ...phone, countryCode, number };
+        const number = national
+          ? normalizeToE164(countryCode || defaultCountryCode, national)
+          : "";
+        const prevDigits = (phone.number || "").replace(/\D/g, "");
+        const nextDigits = number.replace(/\D/g, "");
+        const { whatsappStatus, ...rest } = phone;
+        return {
+          ...rest,
+          countryCode,
+          number,
+          ...(prevDigits === nextDigits && whatsappStatus
+            ? { whatsappStatus }
+            : {}),
+        };
       });
 
       const contactRaw: Contact = {

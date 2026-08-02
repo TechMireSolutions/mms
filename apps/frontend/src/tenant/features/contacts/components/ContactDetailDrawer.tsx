@@ -1,11 +1,12 @@
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import type { Contact } from "@mms/shared";
+import { getDisplayName, type Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactDetailAttachments } from "@/tenant/features/contacts/hooks/useContactDetailAttachments";
 import { useContactDetailViewModel } from "@/tenant/features/contacts/hooks/useContactDetailViewModel";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ContactDetailDrawerContent } from "./detail/ContactDetailDrawerContent";
 import {
+  ContactDetailDrawerArchivedBanner,
   ContactDetailDrawerFooter,
   ContactDetailDrawerHeaderActions,
   ContactDetailDrawerTabBar,
@@ -21,6 +22,8 @@ interface ContactDetailDrawerProps {
   allContacts?: Contact[];
   onUpdateContact?: (contact: Contact) => Promise<void>;
   canWrite?: boolean;
+  canDelete?: boolean;
+  onRestore?: (contactId: string | number) => void | Promise<void>;
 }
 
 export default function ContactDetailDrawer({
@@ -33,6 +36,8 @@ export default function ContactDetailDrawer({
   allContacts = [],
   onUpdateContact,
   canWrite = false,
+  canDelete = false,
+  onRestore,
 }: ContactDetailDrawerProps): JSX.Element {
   const { t } = useTranslation();
 
@@ -61,6 +66,10 @@ export default function ContactDetailDrawer({
     canWrite,
   });
 
+  const displayName = getDisplayName(contactState);
+  const isArchived = Boolean(contactState.deletedAt);
+  const hasFooterStamp = Boolean(contactState.updatedAt || contactState.createdAt);
+
   const {
     isDragging,
     setIsDragging,
@@ -81,23 +90,29 @@ export default function ContactDetailDrawer({
   return (
     <DetailDrawerShell
       onClose={onClose}
-      title={t("contacts.detail.title")}
-      ariaLabel={t("contacts.detail.title")}
+      title={displayName}
+      subtitle={isArchived ? t("contacts.detail.archivedSubtitle") : undefined}
+      ariaLabel={t("contacts.detail.ariaLabel", { name: displayName })}
       headerActions={
         <ContactDetailDrawerHeaderActions
           canWrite={canWrite}
+          canDelete={canDelete}
           contact={contactState}
           onEdit={onEdit}
+          onRestore={onRestore}
         />
       }
       headerExtra={
-        <ContactDetailDrawerTabBar
-          detailTabs={detailTabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+        <div className="space-y-2">
+          <ContactDetailDrawerArchivedBanner contact={contactState} />
+          <ContactDetailDrawerTabBar
+            detailTabs={detailTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+        </div>
       }
-      footer={<ContactDetailDrawerFooter contact={contactState} />}
+      footer={hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null}
     >
       <ContactDetailDrawerContent
         activeTab={activeTab}

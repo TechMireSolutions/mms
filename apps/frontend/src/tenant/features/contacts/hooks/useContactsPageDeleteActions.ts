@@ -112,21 +112,21 @@ export function useContactsPageDeleteActions({
   ]);
 
   const handleRestore = useCallback(
-    (id: string | number) => {
+    async (id: string | number) => {
       if (!canDelete) return;
       const selectedContact = findContactById(id);
       const name = selectedContact ? getDisplayName(selectedContact) : undefined;
-      void restoreContactAction(String(id))
-        .then(() => {
-          notify.success(t("contacts.restoreSuccessTitle"), {
-            description: name
-              ? t("contacts.restoreSuccessDescription", { name })
-              : t("contacts.restoreSuccessDescriptionDefault"),
-          });
-        })
-        .catch((err) => {
-          handleError(err, "contacts.restore_single", "contacts.restoreFailed");
+      try {
+        await restoreContactAction(String(id));
+        notify.success(t("contacts.restoreSuccessTitle"), {
+          description: name
+            ? t("contacts.restoreSuccessDescription", { name })
+            : t("contacts.restoreSuccessDescriptionDefault"),
         });
+      } catch (err) {
+        handleError(err, "contacts.restore_single", "contacts.restoreFailed");
+        throw err;
+      }
     },
     [canDelete, findContactById, restoreContactAction, t, handleError],
   );

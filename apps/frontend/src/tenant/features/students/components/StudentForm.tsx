@@ -63,6 +63,7 @@ export default function StudentForm({
           <StudentContactSection
             contactId={form.studentDraft.contactId}
             excludeIds={form.excludeIds}
+            linkedGenderRaw={form.linkedGenderRaw}
             linkedGenderLabel={form.linkedGenderLabel}
             linkedDob={form.linkedDob}
             genderError={form.getFieldError("gender")}

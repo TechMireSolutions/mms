@@ -2,7 +2,6 @@ import { and, eq, isNotNull, isNull, notInArray, sql, type SQL } from 'drizzle-o
 import {
   hydrateContactRelationshipFields,
   normalizeSearchString,
-  stripContactClientSoftDeleteFields,
   type Contact,
   type ContactsListPageResult,
   type ContactsListQuery,
@@ -31,32 +30,6 @@ function hydrateContact(contact: Contact): Contact {
   return hydrateContactRelationshipFields(contact) as Contact;
 }
 
-type ContactRow = {
-  id: string;
-  customData: unknown;
-  deletedAt?: Date | null;
-  deletedBy?: string | null;
-  deletionReason?: string | null;
-};
-
-function rowToContact(row: ContactRow): Contact {
-  const data = {
-    ...(row.customData as Omit<Contact, 'id'>),
-    id: row.id,
-  } as Contact;
-
-  if (row.deletedAt instanceof Date) {
-    data.deletedAt = row.deletedAt.toISOString();
-    if (row.deletedBy) data.deletedBy = String(row.deletedBy);
-    else delete data.deletedBy;
-    if (row.deletionReason) data.deletionReason = String(row.deletionReason);
-    else delete data.deletionReason;
-    return hydrateContact(data);
-  }
-
-  return hydrateContact(stripContactClientSoftDeleteFields(data as Record<string, unknown>) as Contact);
-}
-
 /** JSONB array path, or empty array when missing/non-array (avoids jsonb_array_elements errors). */
 function jsonbArrayOrEmpty(field: 'phones' | 'emails' | 'addresses'): SQL {
   return sql`(CASE
@@ -64,6 +37,34 @@ function jsonbArrayOrEmpty(field: 'phones' | 'emails' | 'addresses'): SQL {
     THEN ${contacts.customData}->${field}
     ELSE '[]'::jsonb
   END)`;
+}
+
+/** Primary dialable phone digits: phones[] (isPrimary first) then scalar phone. */
+function primaryPhoneDigitsSql(): SQL {
+  return sql`COALESCE(
+    NULLIF((
+      SELECT regexp_replace(
+        CASE
+          WHEN NULLIF(trim(phone.value->>'number'), '') LIKE '+%'
+            THEN trim(phone.value->>'number')
+          ELSE concat_ws(
+            '',
+            NULLIF(trim(phone.value->>'countryCode'), ''),
+            NULLIF(trim(phone.value->>'number'), '')
+          )
+        END,
+        '[^0-9]',
+        '',
+        'g'
+      )
+      FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
+      WHERE NULLIF(trim(phone.value->>'number'), '') IS NOT NULL
+      ORDER BY CASE WHEN COALESCE((phone.value->>'isPrimary')::boolean, false) THEN 0 ELSE 1 END
+      LIMIT 1
+    ), ''),
+    NULLIF(regexp_replace(COALESCE(${contacts.customData}->>'phone', ''), '[^0-9]', '', 'g'), ''),
+    ''
+  )`;
 }
 
 /** True when contact has a non-empty primary/legacy phone number in JSONB. */
@@ -91,42 +92,37 @@ function hasEmailSql(): SQL {
 }
 
 /**
- * WhatsApp eligibility approx: dialable digit length 8–15 on primary phone.
- * Phone precedence matches getPrimaryPhone: phones[] (primary first) then scalar phone.
+ * WhatsApp eligibility approx: dialable digit length 8–15 on primary phone
+ * (aligns with PuppeteerWhatsAppProvider.getNumberId bounds).
  */
 function hasWhatsAppSql(): SQL {
-  return sql`(
-    length(regexp_replace(
-      COALESCE(
-        (
-          SELECT NULLIF(trim(phone.value->>'number'), '')
-          FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-          WHERE NULLIF(trim(phone.value->>'number'), '') IS NOT NULL
-          ORDER BY CASE WHEN COALESCE((phone.value->>'isPrimary')::boolean, false) THEN 0 ELSE 1 END
-          LIMIT 1
-        ),
-        NULLIF(trim(COALESCE(${contacts.customData}->>'phone', '')), ''),
-        ''
-      ),
-      '[^0-9]',
-      '',
-      'g'
-    )) BETWEEN 8 AND 15
-  )`;
+  return sql`(length(${primaryPhoneDigitsSql()}) BETWEEN 8 AND 15)`;
 }
 
 function isSyedSql(): SQL {
   return sql`COALESCE((${contacts.customData}->>'isSyed')::boolean, false) = true`;
 }
 
-/** Approximate normalizeSearchString for SQL haystacks (Yeh/Kaf + harakat strip + lower). */
+/**
+ * Approximate normalizeSearchString in SQL:
+ * NFD → strip Latin combining marks → strip Arabic harakat → Yeh/Kaf → lower.
+ */
 function sqlNormalizeSearchExpr(expr: SQL): SQL {
-  // Arabic Yeh (ي) / Kaf (ك) → Persian/Urdu Yeh (ی) / Kaf (ک) — same as normalizeSearchString.
   const fromChars = '\u064A\u0643';
   const toChars = '\u06CC\u06A9';
   return sql`lower(
     translate(
-      regexp_replace(${expr}, '[\u064B-\u065F\u0670]', '', 'g'),
+      regexp_replace(
+        regexp_replace(
+          normalize(${expr}, NFD),
+          '[\u0300-\u036f]',
+          '',
+          'g'
+        ),
+        '[\u064B-\u065F\u0670]',
+        '',
+        'g'
+      ),
       ${fromChars},
       ${toChars}
     )
@@ -137,6 +133,7 @@ function buildSearchSql(search: string): SQL | null {
   const normalized = normalizeSearchString(search.trim());
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
+  // Haystack mirrors getContactSearchHaystack: name parts, primary phone, all emails, addresses.
   const haystack = sql`concat_ws(' ',
       COALESCE(${contacts.customData}->>'name', ''),
       COALESCE(${contacts.customData}->>'firstName', ''),
@@ -144,10 +141,7 @@ function buildSearchSql(search: string): SQL | null {
       COALESCE(${contacts.customData}->>'city', ''),
       COALESCE(${contacts.customData}->>'phone', ''),
       COALESCE(${contacts.customData}->>'email', ''),
-      COALESCE((
-        SELECT string_agg(NULLIF(trim(phone.value->>'number'), ''), ' ')
-        FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-      ), ''),
+      NULLIF(${primaryPhoneDigitsSql()}, ''),
       COALESCE((
         SELECT string_agg(NULLIF(trim(email.value->>'address'), ''), ' ')
         FROM jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
@@ -224,6 +218,11 @@ function buildListConditions(
     else if (quick === 'syed') conditions.push(isSyedSql());
     else if (quick === 'missingInfo') {
       conditions.push(sql`(NOT ${hasPhoneSql()} OR NOT ${hasEmailSql()})`);
+    } else if (quick === 'recent') {
+      conditions.push(sql`(
+        NULLIF(trim(COALESCE(${contacts.customData}->>'createdAt', '')), '') IS NOT NULL
+        AND (${contacts.customData}->>'createdAt')::timestamptz >= (NOW() - INTERVAL '30 days')
+      )`);
     }
   }
 
@@ -242,7 +241,7 @@ function buildListConditions(
 
 /**
  * SQL-filtered contacts Work list page (soft-delete column + JSONB person filters).
- * Search is lowercased LIKE (not full Unicode normalizeSearchString parity).
+ * Search approximates normalizeSearchString (NFD + Yeh/Kaf + harakat) via SQL.
  */
 export async function listContactsPage(
   tenant: string,
@@ -273,7 +272,7 @@ export async function listContactsPage(
       .limit(limit)
       .offset(offset);
 
-    const pageContacts = (rows as ContactRow[]).map(rowToContact);
+    const pageContacts = rows.map((row) => hydrateContact(repo.rowToRecord(row)));
     return {
       contacts: pageContacts,
       total,
@@ -315,6 +314,71 @@ export async function saveContact(tenant: string, contact: Contact): Promise<voi
 
 export async function bulkSaveContacts(tenant: string, records: Contact[]): Promise<void> {
   await repo.bulkSave(tenant, records.map(hydrateContact));
+}
+
+/**
+ * Non-empty custom_data value for a field key — mirrors
+ * `@mms/shared` `countContactsWithFieldValue` (string trim, array length, other types count).
+ */
+function contactFieldNonEmptySql(fieldKey: string): SQL {
+  return sql`(
+    ${contacts.customData}->${fieldKey} IS NOT NULL
+    AND ${contacts.customData}->${fieldKey} <> 'null'::jsonb
+    AND (
+      (
+        jsonb_typeof(${contacts.customData}->${fieldKey}) = 'string'
+        AND NULLIF(trim(${contacts.customData}->>${fieldKey}), '') IS NOT NULL
+      )
+      OR (
+        jsonb_typeof(${contacts.customData}->${fieldKey}) = 'array'
+        AND jsonb_array_length(${contacts.customData}->${fieldKey}) > 0
+      )
+      OR (
+        jsonb_typeof(${contacts.customData}->${fieldKey}) NOT IN ('string', 'array', 'null')
+      )
+    )
+  )`;
+}
+
+/**
+ * Counts active contacts with a non-empty value for each field key (SQL, no full-list load).
+ * Single-pass `count(*) FILTER` per key. Every requested key is present (default 0).
+ */
+export async function countFieldUsageByKeys(
+  tenant: string,
+  fieldKeys: string[],
+): Promise<Record<string, number>> {
+  const uniqueKeys = [...new Set(fieldKeys.map((key) => key.trim()).filter(Boolean))];
+  if (uniqueKeys.length === 0) {
+    return Object.fromEntries(fieldKeys.map((key) => [key, 0]));
+  }
+
+  const subdomain = tenant.trim().toLowerCase();
+  // Stable aliases — field keys are not always safe SQL identifiers.
+  const selection = Object.fromEntries(
+    uniqueKeys.map((fieldKey, index) => [
+      `k${index}`,
+      sql<number>`count(*) FILTER (WHERE ${contactFieldNonEmptySql(fieldKey)})::int`.as(
+        `k${index}`,
+      ),
+    ]),
+  );
+
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select(selection)
+      .from(contacts)
+      .where(and(eq(contacts.workspaceSubdomain, subdomain), isNull(contacts.deletedAt)));
+
+    const row = (rows[0] ?? {}) as Record<string, number | null | undefined>;
+    const counts: Record<string, number> = {};
+    for (let index = 0; index < uniqueKeys.length; index += 1) {
+      counts[uniqueKeys[index]] = Number(row[`k${index}`] ?? 0);
+    }
+    return Object.fromEntries(
+      fieldKeys.map((key) => [key.trim(), counts[key.trim()] ?? 0]),
+    );
+  });
 }
 
 export const deleteContact = repo.deleteById;

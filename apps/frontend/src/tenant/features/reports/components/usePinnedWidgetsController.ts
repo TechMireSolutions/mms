@@ -151,8 +151,7 @@ export function usePinnedWidgetsController(category: string) {
           recordId: String(recordId),
           field: targetField,
         });
-      } catch (error) {
-        console.error(error);
+      } catch {
         notify.error(t("reports.widgets.errorToggleFailed"));
       }
     })();

@@ -1,63 +1,41 @@
 import { useCallback } from "react";
-import {
-  type FieldConfig,
-  type ContactPreferences,
-  DEFAULT_COLUMN_REGISTRY,
-  getContactFieldRemovalIssues,
-  CONTACTS_MODULE_MANIFEST,
-} from "@mms/shared";
+import { type FieldConfig, type ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { apiJson } from "@/lib/apiClient";
 import { notify } from "@/lib/notify";
+import {
+  preflightContactFieldDelete,
+  type FieldsDraftSnapshot,
+} from "@/tenant/features/contacts/hooks/contactsSetupDeletePreflight";
 
-/** Guards field deletion against prefs/column deps and live contact data usage. */
+/** Guards field deletion against prefs/column deps (draft-aware) and live contact data usage. */
 export function useContactsSetupFieldDeleteGuard({
   config,
   contextPrefs,
+  fieldsDraft,
   onDeleteField,
-  onDirty,
 }: {
   config: FieldConfig;
-  contextPrefs: ContactPreferences;
+  contextPrefs: Pick<ContactPreferences, "duplicateDetectionFields">;
+  fieldsDraft: FieldsDraftSnapshot;
   onDeleteField: (tabId: string, fieldId: string) => void;
-  onDirty: () => void;
 }) {
   const { t } = useTranslation();
 
   return useCallback(
-    async (tabId: string, fieldId: string) => {
-      const issues = getContactFieldRemovalIssues({
-        fieldKey: fieldId,
-        columnRegistry: config.columnRegistry || DEFAULT_COLUMN_REGISTRY,
-        preferences: contextPrefs,
+    async (tabId: string, fieldId: string): Promise<boolean> => {
+      const allowed = await preflightContactFieldDelete(fieldId, {
+        config,
+        contextPrefs,
+        fieldsDraft,
+        onBlocked: (messageKey, params) => {
+          notify.error(t(messageKey as Parameters<typeof t>[0], params));
+        },
       });
-      if (issues.length > 0) {
-        const issue = issues[0];
-        notify.error(
-          t(
-            issue.messageKey as Parameters<typeof t>[0],
-            issue.count !== undefined ? { count: issue.count } : undefined,
-          ),
-        );
-        return;
-      }
-
-      try {
-        const { count } = await apiJson<{ count: number }>(
-          `${CONTACTS_MODULE_MANIFEST.restBasePath}/field-usage/${encodeURIComponent(fieldId)}`,
-        );
-        if (count > 0) {
-          notify.error(t("contacts.setup.fieldHasContactData", { count }));
-          return;
-        }
-      } catch {
-        notify.error(t("contacts.saveFailed"));
-        return;
-      }
+      if (!allowed) return false;
 
       onDeleteField(tabId, fieldId);
-      onDirty();
+      return true;
     },
-    [config.columnRegistry, contextPrefs, onDeleteField, onDirty, t],
+    [config, contextPrefs, fieldsDraft, onDeleteField, t],
   );
 }

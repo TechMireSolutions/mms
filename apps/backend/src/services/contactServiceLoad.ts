@@ -5,7 +5,6 @@ import {
   computeContactsMonthlyCreatedCounts,
   computeContactsReportAnalytics,
   computeContactsWidgetAggregates,
-  countContactsWithFieldValue,
   DEFAULT_ENABLED_TABS,
   DEFAULT_FORM_TABS,
   DEFAULT_REQUIRED_TABS,
@@ -30,6 +29,7 @@ import {
   countContactsByWorkspace,
   findContactById,
   findContactsByIds,
+  countFieldUsageByKeys,
 } from '../db/repositories/contactRepository.js';
 import { listStudentsByWorkspace } from '../db/repositories/studentRepository.js';
 import { listTeachersByWorkspace } from '../db/repositories/teacherRepository.js';
@@ -147,6 +147,7 @@ export async function loadContactRuntimeDefaults(): Promise<ContactRuntimeDefaul
 
 export async function loadContactsReportAnalytics(options?: {
   compareYears?: number[];
+  language?: string;
 }): Promise<{ analytics: ContactsReportAnalyticsSnapshot; monthlyByYear?: ContactsMonthlyYearCounts[] }> {
   const contacts = await loadContacts();
   const analytics = computeContactsReportAnalytics(contacts);
@@ -156,17 +157,28 @@ export async function loadContactsReportAnalytics(options?: {
     return { analytics };
   }
 
+  const language = options?.language || 'en';
   const monthlyByYear = years.map((year) => ({
     year,
-    months: computeContactsMonthlyCreatedCounts(contacts, year),
+    months: computeContactsMonthlyCreatedCounts(contacts, year, 6, language),
   }));
 
   return { analytics, monthlyByYear };
 }
 
+export async function loadContactFieldUsageCounts(
+  fieldKeys: string[],
+): Promise<Record<string, number>> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return Object.fromEntries(fieldKeys.map((key) => [key, 0]));
+  }
+  return countFieldUsageByKeys(tenant, fieldKeys);
+}
+
 export async function loadContactFieldUsageCount(fieldKey: string): Promise<number> {
-  const contacts = await loadContacts();
-  return countContactsWithFieldValue(contacts, fieldKey);
+  const counts = await loadContactFieldUsageCounts([fieldKey]);
+  return counts[fieldKey] ?? 0;
 }
 
 export async function loadContactsWidgetAggregates(

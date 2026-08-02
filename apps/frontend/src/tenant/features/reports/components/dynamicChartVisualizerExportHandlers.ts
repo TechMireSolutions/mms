@@ -9,23 +9,25 @@ import {
 export async function runVisualizerPngExport(
   chartRef: RefObject<HTMLDivElement | null>,
   title: string,
-): Promise<void> {
-  if (!chartRef.current) return;
+): Promise<boolean> {
+  if (!chartRef.current) return false;
   try {
     await exportVisualizerPng({ chartElement: chartRef.current, title });
-  } catch (error) {
-    console.error('Failed to export chart image', error);
+    return true;
+  } catch {
+    return false;
   }
 }
 
 export async function runVisualizerExcelExport(
   title: string,
   processedData: AggregatedItem[],
-): Promise<void> {
+): Promise<boolean> {
   try {
     await exportVisualizerExcel({ title, processedData });
-  } catch (error) {
-    console.error('Failed to export Excel spreadsheet', error);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -38,8 +40,8 @@ export async function runVisualizerPdfExport(input: {
   collectionLabel: string;
   pdfFormat: string;
   pdfOrientation: 'p' | 'l';
-}): Promise<void> {
-  if (!input.chartRef.current) return;
+}): Promise<boolean> {
+  if (!input.chartRef.current) return false;
   try {
     await exportVisualizerPdf({
       chartElement: input.chartRef.current,
@@ -51,7 +53,8 @@ export async function runVisualizerPdfExport(input: {
       pdfFormat: input.pdfFormat,
       pdfOrientation: input.pdfOrientation,
     });
-  } catch (error) {
-    console.error('Failed to export PDF report', error);
+    return true;
+  } catch {
+    return false;
   }
 }

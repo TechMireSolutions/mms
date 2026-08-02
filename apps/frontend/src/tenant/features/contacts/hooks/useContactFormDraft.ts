@@ -254,5 +254,6 @@ export function useContactFormDraft({
     updateSubListItem,
     removeSubListItem,
     handleSave,
+    fields,
   };
 }

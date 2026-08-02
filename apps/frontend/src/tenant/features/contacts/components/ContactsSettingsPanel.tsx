@@ -20,6 +20,15 @@ function LazyFallback(): JSX.Element {
   );
 }
 
+function SetupReadOnlyMessage(): JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+      {t("contacts.setupReadOnly")}
+    </p>
+  );
+}
+
 export interface ContactsSettingsPanelProps {
   contacts: Contact[];
   onImport: (list: Contact[]) => void | Promise<void>;
@@ -35,6 +44,7 @@ export default function ContactsSettingsPanel({
 }: ContactsSettingsPanelProps): JSX.Element {
   const { t } = useTranslation();
   const { fieldConfig, updateConfig, updateConfigAsync } = useContactConfig();
+  const [fieldsDirty, setFieldsDirty] = useState(false);
 
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
@@ -63,43 +73,56 @@ export default function ContactsSettingsPanel({
     return settingsSubTabs[0]?.key || "preferences";
   });
 
+  const handleSubTabChange = (next: string): void => {
+    if (next === sub) return;
+    if (sub === "fields" && fieldsDirty) {
+      if (!confirm(t("contacts.setup.discardUnsavedFieldsConfirm"))) return;
+      setFieldsDirty(false);
+    }
+    setSub(next);
+  };
+
   return (
     <div className="space-y-4">
       <SubTabBar
         tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
         value={sub}
-        onChange={setSub}
+        onChange={handleSubTabChange}
       />
       <Suspense fallback={<LazyFallback />}>
-        {!canEditSetup && (sub === "fields" || sub === "preferences") ? (
-          <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-            {t("contacts.setupReadOnly")}
-          </p>
-        ) : null}
-        {sub === "fields" && canEditSetup && (
-          <ContactsSetupPanel
-            config={fieldConfig}
-            onConfigChange={updateConfig}
-            onConfigChangeAsync={updateConfigAsync}
-            mode="fields"
-          />
-        )}
-        {sub === "preferences" && canEditSetup && (
-          <ContactsSetupPanel
-            config={fieldConfig}
-            onConfigChange={updateConfig}
-            onConfigChangeAsync={updateConfigAsync}
-            mode="preferences"
-          />
-        )}
-        {sub === "sync" && (
-          <ContactSyncPanel
-            contacts={contacts}
-            onImport={onImport}
-            canWrite={canWrite}
-            canEditSetup={canEditSetup}
-          />
-        )}
+        {sub === "fields" &&
+          (canEditSetup ? (
+            <ContactsSetupPanel
+              config={fieldConfig}
+              onConfigChange={updateConfig}
+              onConfigChangeAsync={updateConfigAsync}
+              mode="fields"
+              onFieldsDirtyChange={setFieldsDirty}
+            />
+          ) : (
+            <SetupReadOnlyMessage />
+          ))}
+        {sub === "preferences" &&
+          (canEditSetup ? (
+            <ContactsSetupPanel
+              config={fieldConfig}
+              onConfigChange={updateConfig}
+              onConfigChangeAsync={updateConfigAsync}
+              mode="preferences"
+            />
+          ) : (
+            <SetupReadOnlyMessage />
+          ))}
+        {sub === "sync" &&
+          (canWrite || canEditSetup ? (
+            <ContactSyncPanel
+              contacts={contacts}
+              onImport={onImport}
+              canWrite={canWrite}
+            />
+          ) : (
+            <SetupReadOnlyMessage />
+          ))}
       </Suspense>
     </div>
   );

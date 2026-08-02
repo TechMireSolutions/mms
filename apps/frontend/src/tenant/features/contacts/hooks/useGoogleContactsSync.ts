@@ -30,7 +30,9 @@ export function useGoogleContactsSync({
 }) {
   const { t } = useTranslation();
   const invalidateContacts = useInvalidateContactsQueries();
-  const { data: serverConfig, isLoading: configLoading } = useContactGoogleSyncConfig();
+  const { data: serverConfig, isLoading: configLoading } = useContactGoogleSyncConfig({
+    enabled: canWrite,
+  });
   const { saveConfig, logSyncAudit, exchangeOAuth, runGoogleSync } = useContactGoogleSyncMutations();
   const [config, setConfig] = useState<ContactGoogleSyncConfigClient>({});
   const [showSetup, setShowSetup] = useState(false);

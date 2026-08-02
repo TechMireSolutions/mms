@@ -1,6 +1,8 @@
-import type { Contact } from "@mms/shared";
+import { isContactRelationshipTabEnabled, type Contact } from "@mms/shared";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { FieldGroupCard } from "./ContactDetailShared";
 import { ContactDetailCollections } from "./ContactDetailCollections";
+import { ContactDetailNetwork } from "./ContactDetailNetwork";
 import { ContactDetailOverviewHero } from "./ContactDetailOverviewHero";
 import { ContactDetailOverviewQuickActions } from "./ContactDetailOverviewQuickActions";
 
@@ -23,7 +25,6 @@ export interface ContactDetailOverviewProps {
     emails: { enabled?: boolean }[];
     addresses: { enabled?: boolean }[];
     socials: { enabled?: boolean }[];
-    relationship: { enabled?: boolean }[];
   };
   primaryPhone: string | null;
   primaryEmail: string | null;
@@ -46,42 +47,65 @@ export function ContactDetailOverview({
   onEmail,
   onNavigateToContact,
 }: ContactDetailOverviewProps): JSX.Element {
+  const { enabledTabIds } = useContactConfig();
+  const showRelationships = isContactRelationshipTabEnabled(enabledTabIds);
+  const showPhoneSection =
+    enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0;
+  const showEmailSection =
+    enabledTabIds.has("emails") && visibleCollectionFields.emails.length > 0;
+  // Per-row channel actions cover Call/WA/SMS/Email when those sections render.
+  const showQuickActions = !showPhoneSection && !showEmailSection;
+  const basicGroups = Object.entries(grouped)
+    .map(([groupName, fieldsList]) => ({
+      groupName,
+      fields: fieldsList.filter((field) => field.tab === "basic"),
+    }))
+    .filter((entry) => entry.fields.length > 0);
+
   return (
     <>
       <ContactDetailOverviewHero contact={contact} />
 
-      <ContactDetailOverviewQuickActions
-        contact={contact}
-        primaryPhone={primaryPhone}
-        primaryEmail={primaryEmail}
-        onWhatsApp={onWhatsApp}
-        onSms={onSms}
-        onEmail={onEmail}
-      />
+      {showQuickActions ? (
+        <ContactDetailOverviewQuickActions
+          contact={contact}
+          primaryPhone={primaryPhone}
+          primaryEmail={primaryEmail}
+          onWhatsApp={onWhatsApp}
+          onSms={onSms}
+          onEmail={onEmail}
+        />
+      ) : null}
 
       <div className="space-y-4">
-        {Object.entries(grouped)
-          .filter(([, fieldsList]) =>
-            fieldsList.some(
-              (field) => field.tab === "basic" || !["timeline", "network", "files"].includes(field.tab),
-            ),
-          )
-          .map(([groupName, fieldsList]) => (
-            <FieldGroupCard
-              key={groupName}
-              group={groupName}
-              fields={fieldsList}
-              formatValue={formatFieldValue}
-            />
-          ))}
+        {basicGroups.map(({ groupName, fields }) => (
+          <FieldGroupCard
+            key={groupName}
+            group={groupName}
+            fields={fields}
+            formatValue={formatFieldValue}
+            getRawValue={(key) => (contact as Record<string, unknown>)[key]}
+          />
+        ))}
 
         <ContactDetailCollections
           contact={contact}
-          allContacts={allContacts}
           visibleCollectionFields={visibleCollectionFields}
+          onWhatsApp={onWhatsApp}
+          onSms={onSms}
           onEmail={onEmail}
-          onNavigateToContact={onNavigateToContact}
         />
+
+        {showRelationships ? (
+          <ContactDetailNetwork
+            contact={contact}
+            allContacts={allContacts}
+            onNavigateToContact={onNavigateToContact}
+            onWhatsApp={onWhatsApp}
+            onSms={onSms}
+            onEmail={onEmail}
+          />
+        ) : null}
       </div>
     </>
   );

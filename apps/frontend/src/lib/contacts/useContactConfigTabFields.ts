@@ -2,9 +2,8 @@ import { useCallback, useMemo } from "react";
 import {
   type FieldConfig,
   type FieldDefinition,
-  DEFAULT_ENABLED_TABS,
   INITIAL_FIELD_SEED,
-  canViewContactTab,
+  resolveContactEnabledTabIds,
 } from "@mms/shared";
 
 /** Tab/field enablement helpers derived from Contact field config. */
@@ -15,15 +14,10 @@ export function useContactConfigTabFields({
   fieldConfig: FieldConfig;
   userRole: string;
 }) {
-  const enabledTabIds = useMemo(() => {
-    if (fieldConfig.formTabs) {
-      const activeFromTabs = fieldConfig.formTabs
-        .filter((tab) => canViewContactTab(userRole, tab) && tab.enabled !== false)
-        .map((tab) => tab.key);
-      return new Set([...DEFAULT_ENABLED_TABS, ...activeFromTabs]);
-    }
-    return new Set([...DEFAULT_ENABLED_TABS, ...(fieldConfig.enabledTabs || [])]);
-  }, [fieldConfig, userRole]);
+  const enabledTabIds = useMemo(
+    () => resolveContactEnabledTabIds(fieldConfig, userRole),
+    [fieldConfig, userRole],
+  );
 
   const requiredTabIds = useMemo(() => {
     return new Set(fieldConfig.requiredTabs || []);

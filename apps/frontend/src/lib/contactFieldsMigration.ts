@@ -74,7 +74,26 @@ export function migrateContactFieldConfig(config: unknown): FieldConfig {
   });
 
   workingConfig.formTabs = repairedFormTabs;
-  workingConfig.detailTabs = normalizeTabs(workingConfig.detailTabs) ?? defaults.detailTabs;
+  const normalizedDetailTabs = normalizeTabs(workingConfig.detailTabs) ?? defaults.detailTabs ?? DEFAULT_DETAIL_TABS;
+  workingConfig.detailTabs = normalizedDetailTabs
+    .filter((tab) => tab.key !== "network")
+    .map((tab, index) => {
+      const defaultTab = DEFAULT_DETAIL_TABS.find((d) => d.key === tab.key);
+      if (!defaultTab) return { ...tab, order: tab.order ?? index };
+      return {
+        ...tab,
+        labelKey: tab.labelKey ?? defaultTab.labelKey,
+        isSystem: true,
+        order: defaultTab.order,
+      };
+    });
+  // Ensure all current system detail tabs exist after retiring `network`.
+  for (const defaultTab of DEFAULT_DETAIL_TABS) {
+    if (!workingConfig.detailTabs.some((tab) => tab.key === defaultTab.key)) {
+      workingConfig.detailTabs.push({ ...defaultTab });
+    }
+  }
+  workingConfig.detailTabs.sort((a, b) => a.order - b.order);
   workingConfig.settingsSubTabs = normalizeTabs(workingConfig.settingsSubTabs) ?? defaults.settingsSubTabs;
   workingConfig.columnRegistry = workingConfig.columnRegistry ?? defaults.columnRegistry;
   workingConfig.fields = workingConfig.fields ?? defaults.fields;

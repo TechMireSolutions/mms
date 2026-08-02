@@ -9,6 +9,8 @@ import {
 import {
   Contact,
   getDisplayName,
+  getEmails,
+  getPhoneNumbers,
   parseVCard,
   toVCard,
 } from "@mms/shared";
@@ -89,12 +91,23 @@ export function useAppleContactsPanel({
     if (!canWrite) return;
     setImporting(true);
     try {
+      const existingPhones = new Set(contacts.flatMap((contact) => getPhoneNumbers(contact)));
+      const existingEmails = new Set(contacts.flatMap((contact) => getEmails(contact)));
       const existingNames = new Set(
-        contacts.map((contact) => getDisplayName(contact).toLowerCase().trim()),
+        contacts.map((contact) => getDisplayName(contact).toLowerCase().trim()).filter(Boolean),
       );
-      const fresh = previewList.filter(
-        (contact) => !existingNames.has(getDisplayName(contact).toLowerCase().trim()),
-      );
+      const fresh = previewList.filter((contact) => {
+        const phones = getPhoneNumbers(contact);
+        const emails = getEmails(contact);
+        if (phones.some((phone) => existingPhones.has(phone))) return false;
+        if (emails.some((email) => existingEmails.has(email))) return false;
+        // Name-only skip when the import row has no phone/email identifiers.
+        if (phones.length === 0 && emails.length === 0) {
+          const name = getDisplayName(contact).toLowerCase().trim();
+          return !name || !existingNames.has(name);
+        }
+        return true;
+      });
       await onImport(fresh);
       setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
       setPreviewList([]);

@@ -99,6 +99,7 @@ export function useContactsPagePropBundles({
 
   const overlayProps = useContactsPageOverlayProps({
     canWrite,
+    canDelete,
     showForm: state.showForm,
     editContact: state.editContact,
     defaultCountry: state.defaultCountry,
@@ -115,6 +116,7 @@ export function useContactsPagePropBundles({
     viewContact: state.viewContact,
     setViewContact: state.setViewContact,
     handleEdit: state.handleEdit,
+    handleRestore: state.handleRestore,
     messagingHandlers,
     allContactsForLinks: state.allContactsForLinks,
     handleUpdateContact: state.handleUpdateContact,

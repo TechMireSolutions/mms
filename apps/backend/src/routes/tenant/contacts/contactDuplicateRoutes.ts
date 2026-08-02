@@ -71,7 +71,7 @@ export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(202).send({ job: existing });
     }
 
-    const label = parsed.data.label?.trim() || 'Scanning for duplicate contacts…';
+    const label = parsed.data.label?.trim() || 'duplicate-scan';
     const runningJob: BackgroundJobRecord = {
       id: jobId,
       moduleId: CONTACTS_MODULE_MANIFEST.moduleId,

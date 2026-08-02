@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateSmsSegments } from "./smsUtils.js";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, applyTitleCaseToContact, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft } from "./utils.js";
 
 
 
@@ -183,6 +183,20 @@ describe("applyTitleCaseRecursive", () => {
       name: "Should Be Changed",
     };
     expect(applyTitleCaseRecursive(input)).toEqual(expected);
+  });
+
+  it("applyTitleCaseToContact ignores soft-delete audit keys", () => {
+    const input = {
+      name: "should be changed",
+      deletedAt: "2026-01-01T00:00:00.000Z",
+      deletedBy: "u-admin",
+      deletionReason: "duplicate entry",
+    };
+    const result = applyTitleCaseToContact(input);
+    expect(result.deletedBy).toBe("u-admin");
+    expect(result.deletionReason).toBe("duplicate entry");
+    expect(result.deletedAt).toBe("2026-01-01T00:00:00.000Z");
+    expect(result.name).toBe("Should Be Changed");
   });
 
   it("ignores non-eligible strings like URLs, phone numbers, and dates", () => {

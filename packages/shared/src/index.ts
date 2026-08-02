@@ -82,7 +82,11 @@ export {
 export * from './contactResponseSanitizer.js';
 export * from './contactSyncDiff.js';
 export * from './contactSoftDelete.js';
+export * from './contactFormCustomFields.js';
 export * from './contactFieldAccess.js';
+export * from './contactEnabledTabs.js';
+export * from './contactColumnRegistrySync.js';
+export * from './contactFieldUsage.js';
 export * from './contactColumnAccess.js';
 export * from './workspaceTypes.js';
 export * from './tenantUtils.js';

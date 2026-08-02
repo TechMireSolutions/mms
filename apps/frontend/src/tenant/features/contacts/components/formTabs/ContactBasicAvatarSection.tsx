@@ -5,21 +5,26 @@ import { AvatarCropper } from "@/components/ui/AvatarCropper";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { Contact, getDisplayName } from "@mms/shared";
+import { GenderIcon } from "@/components/ui/GenderIcon";
+import { genderBadgeClass } from "@/lib/semanticTone";
 
 export function ContactBasicAvatarSection({
   contactDraft,
+  formInstanceId,
   cropSrc,
   setCropSrc,
   updateDraft,
   handleAvatarChange,
 }: {
   contactDraft: Partial<Contact>;
+  formInstanceId: string;
   cropSrc: string | null;
   setCropSrc: (src: string | null) => void;
   updateDraft: (patch: Partial<Contact>) => void;
   handleAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
+  const avatarInputId = `cf-${formInstanceId}-avatar-file`;
 
   return (
     <div className="mb-2 flex flex-col items-center gap-6 border-b border-border/60 pb-6 @sm:flex-row">
@@ -43,13 +48,16 @@ export function ContactBasicAvatarSection({
             className="w-full h-full text-2xl"
           />
 
-          <label className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-full bg-black/45 text-white opacity-100 transition-opacity duration-300 @md:opacity-0 @md:group-hover:opacity-100 @md:focus-within:opacity-100">
+          <label
+            htmlFor={avatarInputId}
+            className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-full bg-black/45 text-white opacity-100 transition-opacity duration-300 @md:opacity-0 @md:group-hover:opacity-100 @md:focus-within:opacity-100"
+          >
             <Camera className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
               {t("account.changePhoto")}
             </span>
             <input
-              id="contact-avatar-file-input"
+              id={avatarInputId}
               name="avatarFile"
               type="file"
               accept="image/*"
@@ -67,7 +75,8 @@ export function ContactBasicAvatarSection({
         </h3>
         <div className="mt-1 flex flex-wrap items-center justify-center gap-2 @sm:justify-start">
           {contactDraft.gender && contactDraft.gender !== "unspecified" && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-muted text-muted-foreground border border-border/80">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${genderBadgeClass(contactDraft.gender)}`}>
+              <GenderIcon gender={contactDraft.gender} className="w-3 h-3" />
               {formatContactGenderLabel(contactDraft.gender, t)}
             </span>
           )}

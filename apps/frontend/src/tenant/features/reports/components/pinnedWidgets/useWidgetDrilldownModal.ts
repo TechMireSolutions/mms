@@ -45,8 +45,7 @@ export function useWidgetDrilldownModal(widget: CustomWidget) {
           collectionName: widget.collection,
           recordId,
         });
-      } catch (error) {
-        console.error("Failed to toggle record status", error);
+      } catch {
         notify.error(t("reports.widgets.errorToggleFailed"));
       }
     })();
@@ -56,8 +55,7 @@ export function useWidgetDrilldownModal(widget: CustomWidget) {
     void (async () => {
       try {
         await persistWidgetHasanatDistributionDelete(distId);
-      } catch (error) {
-        console.error("Failed to delete distribution", error);
+      } catch {
         notify.error(t("reports.widgets.errorDeleteFailed"));
       }
     })();

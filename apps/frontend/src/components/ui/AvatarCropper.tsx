@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import { uploadCanvasImage } from '@/lib/imageUpload';
 import { useTranslation } from '@/hooks/useTranslation';
+import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Modal } from '@/components/ui/Modal';
@@ -9,7 +10,8 @@ import { useAvatarCropperCanvas } from '@/components/ui/useAvatarCropperCanvas';
 
 interface AvatarCropperProps {
   src: string;
-  onCrop: (dataUrl: string) => void;
+  /** Uploaded image URL (S3 / CDN), never a raw data URL. */
+  onCrop: (url: string) => void;
   onCancel: () => void;
 }
 
@@ -40,8 +42,13 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
 
     setSaving(true);
     void uploadCanvasImage(out, 'avatar')
-      .then((url) => onCrop(url))
+      .then((url) => {
+        onCrop(url);
+      })
       .catch(() => {
+        notify.error(t('account.photoUploadFailed'));
+      })
+      .finally(() => {
         setSaving(false);
       });
   };
@@ -92,6 +99,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
               onValueChange={(values) => setScale(values[0])}
               className="flex-1"
               aria-label={t('contacts.form.zoomScale')}
+              disabled={saving}
             />
             <ZoomIn className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           </div>
@@ -101,6 +109,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
               type="button"
               variant="outline"
               onClick={rotateCounterClockwise}
+              disabled={saving}
               className="flex items-center gap-1.5 px-3 min-h-11 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-foreground shadow-none"
             >
               <RotateCw className="w-3.5 h-3.5 scale-x-[-1]" />
@@ -110,6 +119,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
               type="button"
               variant="outline"
               onClick={resetTransform}
+              disabled={saving}
               className="px-3 min-h-11 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-muted-foreground shadow-none"
             >
               {t('contacts.form.reset')}
@@ -117,10 +127,11 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
             <Button
               type="button"
               onClick={handleCrop}
-              className="flex-1 flex items-center justify-center gap-1.5 min-h-11 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none"
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-1.5 min-h-11 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-none disabled:opacity-60"
             >
               <Check className="w-4 h-4" />
-              <span>{t('contacts.form.applyPhoto')}</span>
+              <span>{saving ? t('common.loading') : t('contacts.form.applyPhoto')}</span>
             </Button>
           </div>
         </div>

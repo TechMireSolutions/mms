@@ -10,8 +10,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
 
 interface Step1SelectStudentProps {
   value: Student | null | undefined;
@@ -26,10 +25,10 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
   const { t } = useTranslation();
   const [search, setSearch] = useState<string>("");
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
-  const genderConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
-    male: { label: t("sessions.classes.gender.male"), cls: SEMANTIC_BADGE.info },
-    female: { label: t("sessions.classes.gender.female"), cls: SEMANTIC_BADGE.secondary },
-  }), [t]);
+  const genderConfig = useMemo(
+    () => genderStatusBadgeConfig(t),
+    [t],
+  );
 
   const { data: studentPage, isFetching } = useStudentsPaginated({
     page: 1,

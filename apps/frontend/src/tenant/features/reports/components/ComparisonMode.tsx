@@ -29,7 +29,7 @@ import type { ComparisonDataItem, ComparisonModeProps, DateRange } from "./compa
  * @returns React.JSX.Element
  */
 export default function ComparisonMode({ category, onClose }: ComparisonModeProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const isContacts = category.toLowerCase() === "contacts";
   const [mode, setMode] = useState<"sessions" | "daterange">("sessions");
@@ -55,6 +55,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const { data: reportData } = useContactsReportAnalytics({
     enabled: isContacts,
     compareYears,
+    language,
   });
   const sessions = useSessionsCollection();
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(

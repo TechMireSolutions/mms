@@ -64,6 +64,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
 
   const {
     linkedContact,
+    linkedGenderRaw,
     linkedGenderLabel,
     linkedDob,
     nextGrNumber,
@@ -123,6 +124,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     enabledTabs,
     getFieldError,
     linkedContact,
+    linkedGenderRaw,
     linkedGenderLabel,
     linkedDob,
     duplicateConfirmOpen,

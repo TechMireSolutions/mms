@@ -85,7 +85,9 @@ export function useContactsPageWriteActions({
 
   const handleSave = useCallback(
     async (contactDraft: Contact): Promise<void> => {
-      if (!canWrite) return;
+      if (!canWrite) {
+        throw new Error(t("contacts.form.writeDenied"));
+      }
       const isCreatingContact = !editContact;
       const basePayload = syncContactScalarFields(contactDraft);
 
@@ -104,12 +106,14 @@ export function useContactsPageWriteActions({
       setShowForm(false);
       setEditContact(null);
     },
-    [editContact, saveContact, canWrite, setShowForm, setEditContact],
+    [editContact, saveContact, canWrite, setShowForm, setEditContact, t],
   );
 
   const handleUpdateContact = useCallback(
     (updated: Contact): Promise<void> => {
-      if (!canWrite) return Promise.resolve();
+      if (!canWrite) {
+        return Promise.reject(new Error(t("contacts.form.writeDenied")));
+      }
       return updateContact
         .mutateAsync({ id: String(updated.id), contact: updated })
         .then(() => undefined)
@@ -118,23 +122,27 @@ export function useContactsPageWriteActions({
           throw err;
         });
     },
-    [canWrite, updateContact, handleError],
+    [canWrite, updateContact, handleError, t],
   );
 
   const handleImport = useCallback(
     async (list: Contact[]): Promise<void> => {
-      if (!canWrite) return;
+      if (!canWrite) {
+        throw new Error(t("contacts.form.writeDenied"));
+      }
       await importContacts(list);
     },
-    [canWrite, importContacts],
+    [canWrite, importContacts, t],
   );
 
   const handleMerge = useCallback(
     async (keepId: string | number, deleteId: string | number, mergedData: Contact) => {
-      if (!canWrite) return;
+      if (!canWrite) {
+        throw new Error(t("contacts.form.writeDenied"));
+      }
       await mergeContacts(keepId, deleteId, mergedData);
     },
-    [canWrite, mergeContacts],
+    [canWrite, mergeContacts, t],
   );
 
   return {

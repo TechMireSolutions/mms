@@ -1,4 +1,23 @@
+import type { Dispatch, SetStateAction } from "react";
 import { type FieldDefinition, type TabDefinition } from "@mms/shared";
+
+export interface ModuleFieldsSetupCopy {
+  introTitle?: string;
+  introDescription?: string;
+  fieldsByTab?: string;
+  dragToReorder?: string;
+  toReorder?: string;
+  enableTab?: string;
+  fieldRequired?: string;
+  fieldOptional?: string;
+  addCustomTab?: string;
+  addTab?: string;
+  renameTab?: string;
+  renameTabButton?: string;
+  customTabName?: string;
+  addCustomTabPlaceholder?: string;
+  customTabDescription?: string;
+}
 
 export interface UseFieldsEditorResult {
   formTabs: TabDefinition[];
@@ -11,6 +30,8 @@ export interface UseFieldsEditorResult {
   tabFieldDefaultValues: Record<string, Record<string, unknown>>;
   tabFieldPermissions: Record<string, Record<string, string[]>>;
   tabFieldOrder: Record<string, string[]>;
+  setTabFieldDefaultValues: Dispatch<SetStateAction<Record<string, Record<string, unknown>>>>;
+  setTabFieldPermissions: Dispatch<SetStateAction<Record<string, Record<string, string[]>>>>;
 
   toggleTabEnabled: (tabId: string) => void;
   toggleTabRequired: (tabId: string) => void;
@@ -20,9 +41,9 @@ export interface UseFieldsEditorResult {
   handleReorder: (tabId: string, reorderedFields: FieldDefinition[]) => void;
   handleCustomFieldsChange: (tabId: string, newFields: import("@/components/ui/CustomFieldsBuilder").CustomFieldConfig[]) => void;
   handleEditField: (tabId: string, updatedField: FieldDefinition) => void;
-  handleDeleteField: (tabId: string, fieldId: string) => void;
+  handleDeleteField: (tabId: string, fieldId: string) => void | boolean | Promise<void | boolean>;
   handleAddTab: (label: string) => void;
-  handleDeleteTab: (key: string) => void;
+  handleDeleteTab: (key: string) => void | boolean | Promise<void | boolean>;
   handleRenameTab: (key: string, newLabel: string) => void;
 }
 

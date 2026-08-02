@@ -3,12 +3,43 @@ import {
   type FieldConfig,
   type ContactPreferences,
   type TabDefinition,
+  CONTACT_LOCKED_ENABLED_TABS,
   DEFAULT_FORM_TABS,
   INITIAL_FIELD_SEED,
+  isContactLockedEnabledTab,
+  withContactLockedEnabledTabs,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useContactsSetupSaveActions } from "@/tenant/features/contacts/hooks/useContactsSetupSaveActions";
+
+type CountryCodeEntry = { country: string; code: string };
+
+function fieldsSetupSnapshot(input: {
+  fields: FieldConfig["fields"];
+  enabledTabs: Iterable<string>;
+  requiredTabs: Iterable<string>;
+  formTabs: TabDefinition[];
+}): string {
+  const enabled = withContactLockedEnabledTabs(input.enabledTabs).sort();
+  const required = [...input.requiredTabs]
+    .map((tabId) => tabId.toLowerCase())
+    .sort();
+  const formTabs = input.formTabs
+    .map((tab) => ({
+      key: tab.key.toLowerCase(),
+      enabled: isContactLockedEnabledTab(tab.key) ? true : tab.enabled !== false,
+      label: tab.label,
+      order: tab.order ?? 0,
+    }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+  return JSON.stringify({
+    fields: input.fields || {},
+    enabled,
+    required,
+    formTabs,
+  });
+}
 
 export function useContactsSetupPanelState({
   config,
@@ -21,8 +52,12 @@ export function useContactsSetupPanelState({
   onConfigChangeAsync?: (config: FieldConfig) => Promise<void>;
   mode?: "fields" | "preferences";
 }) {
-  const { updatePrefsAsync, prefs: contextPrefs, countryCodes, updateCountryCodes } =
-    useContactConfig();
+  const {
+    updatePrefsAsync,
+    prefs: contextPrefs,
+    countryCodes,
+    updateCountryCodes,
+  } = useContactConfig();
 
   const editorConfig = useMemo(
     () => ({
@@ -40,32 +75,71 @@ export function useContactsSetupPanelState({
 
   const defaultEnabledTabs = useMemo(
     () =>
-      (config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS)
-        .filter((tab) => tab.enabled !== false)
-        .map((tab) => tab.key),
+      withContactLockedEnabledTabs(
+        (config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS)
+          .filter((tab) => tab.enabled !== false)
+          .map((tab) => tab.key),
+      ),
     [config.formTabs],
   );
+
+  const lockedEnabledTabs = useMemo(() => [...CONTACT_LOCKED_ENABLED_TABS], []);
 
   const { fieldsEditor, saved, setSaved, saveSettingsAsync } = useModuleSettingsEditor({
     config: editorConfig,
     tabRegistry: initialTabs,
     defaultEnabledTabs,
+    lockedEnabledTabs,
   });
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);
+  const [countryCodesDraft, setCountryCodesDraft] = useState<CountryCodeEntry[]>(
+    () => countryCodes,
+  );
 
   useEffect(() => {
     setPrefs(contextPrefs);
   }, [contextPrefs]);
+
+  useEffect(() => {
+    setCountryCodesDraft(countryCodes);
+  }, [countryCodes]);
 
   const isPrefsDirty = useMemo(
     () => JSON.stringify(prefs) !== JSON.stringify(contextPrefs),
     [prefs, contextPrefs],
   );
 
+  const isCountryCodesDirty = useMemo(
+    () => JSON.stringify(countryCodesDraft) !== JSON.stringify(countryCodes),
+    [countryCodesDraft, countryCodes],
+  );
+
+  const isPreferencesDirty = isPrefsDirty || isCountryCodesDirty;
+
+  const isFieldsDirty = useMemo(() => {
+    const persistedEnabled =
+      config.enabledTabs && config.enabledTabs.length > 0
+        ? config.enabledTabs
+        : defaultEnabledTabs;
+    const persisted = fieldsSetupSnapshot({
+      fields: config.fields,
+      enabledTabs: persistedEnabled,
+      requiredTabs: config.requiredTabs || [],
+      formTabs: config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS,
+    });
+    const draft = fieldsSetupSnapshot({
+      fields: fieldsEditor.buildFieldsMap(),
+      enabledTabs: fieldsEditor.enabledTabs,
+      requiredTabs: fieldsEditor.requiredTabs,
+      formTabs: fieldsEditor.formTabs,
+    });
+    return persisted !== draft;
+  }, [config, defaultEnabledTabs, fieldsEditor]);
+
   const countryOptions = useMemo(
     () =>
-      (countryCodes || []).map((countryCodeObj) => {
+      (countryCodesDraft || []).map((countryCodeObj) => {
         const codeStr = (countryCodeObj.code || "").trim();
         const formattedCode = codeStr.startsWith("+") ? codeStr : `+${codeStr}`;
         return {
@@ -73,7 +147,7 @@ export function useContactsSetupPanelState({
           label: `${countryCodeObj.country} (${formattedCode})`,
         };
       }),
-    [countryCodes],
+    [countryCodesDraft],
   );
 
   const updatePreference = useCallback(
@@ -84,7 +158,20 @@ export function useContactsSetupPanelState({
     [setSaved],
   );
 
-  const { isSaving, handleDeleteFieldWithGuard, handleSave } = useContactsSetupSaveActions({
+  const updateCountryCodesDraft = useCallback(
+    (next: CountryCodeEntry[]) => {
+      setCountryCodesDraft(next);
+      setSaved(false);
+    },
+    [setSaved],
+  );
+
+  const {
+    isSaving,
+    handleDeleteFieldWithGuard,
+    handleDeleteTabWithGuard,
+    handleSave,
+  } = useContactsSetupSaveActions({
     config,
     contextPrefs,
     prefs,
@@ -93,6 +180,8 @@ export function useContactsSetupPanelState({
     mode,
     saveSettingsAsync,
     updatePrefsAsync,
+    updateCountryCodes,
+    countryCodesDraft,
     setSaved,
   });
 
@@ -100,11 +189,13 @@ export function useContactsSetupPanelState({
     () => ({
       ...fieldsEditor,
       handleDeleteField: handleDeleteFieldWithGuard,
+      handleDeleteTab: handleDeleteTabWithGuard,
       formTabs: fieldsEditor.formTabs.map((tab) => {
         const seed = DEFAULT_FORM_TABS.find((entry) => entry.key === tab.key);
         return {
           ...tab,
           labelKey: tab.labelKey ?? seed?.labelKey,
+          enabled: isContactLockedEnabledTab(tab.key) ? true : tab.enabled,
         };
       }),
       tabFields: Object.fromEntries(
@@ -122,7 +213,7 @@ export function useContactsSetupPanelState({
         }),
       ),
     }),
-    [fieldsEditor, handleDeleteFieldWithGuard],
+    [fieldsEditor, handleDeleteFieldWithGuard, handleDeleteTabWithGuard],
   );
 
   const isCoreField = useCallback(
@@ -136,10 +227,11 @@ export function useContactsSetupPanelState({
     saved,
     setSaved,
     isSaving,
-    isPrefsDirty,
+    isPrefsDirty: isPreferencesDirty,
+    isFieldsDirty,
     countryOptions,
-    countryCodes,
-    updateCountryCodes,
+    countryCodes: countryCodesDraft,
+    updateCountryCodes: updateCountryCodesDraft,
     updatePreference,
     wrappedFieldsEditor,
     handleSave,

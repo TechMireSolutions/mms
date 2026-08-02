@@ -37,10 +37,14 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   );
 
   if (Array.isArray(result.phones)) {
-    result.phones = result.phones.filter((phone) => (phone.number || "").trim().length > 0);
+    result.phones = ensureSinglePrimaryFlag(
+      result.phones.filter((phone) => (phone.number || "").trim().length > 0),
+    );
   }
   if (Array.isArray(result.emails)) {
-    result.emails = result.emails.filter((email) => (email.address || "").trim().length > 0);
+    result.emails = ensureSinglePrimaryFlag(
+      result.emails.filter((email) => (email.address || "").trim().length > 0),
+    );
   }
   if (Array.isArray(result.addresses)) {
     result.addresses = result.addresses.filter((address) => (address.line1 || "").trim().length > 0);
@@ -60,6 +64,14 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   }
 
   return result;
+}
+
+/** Ensures exactly one `isPrimary` flag among list items (first when none set). */
+export function ensureSinglePrimaryFlag<T extends { isPrimary?: boolean }>(items: T[]): T[] {
+  if (items.length === 0) return items;
+  const primaryIndex = items.findIndex((item) => item.isPrimary === true);
+  const keepIndex = primaryIndex >= 0 ? primaryIndex : 0;
+  return items.map((item, index) => ({ ...item, isPrimary: index === keepIndex }));
 }
 
 /**

@@ -7,6 +7,7 @@ export {
   loadContactRuntimeDefaults,
   loadContactsReportAnalytics,
   loadContactFieldUsageCount,
+  loadContactFieldUsageCounts,
   loadContactsWidgetAggregates,
   loadContactsByIds,
   loadContactDuplicatePairsPage,

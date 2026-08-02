@@ -1,6 +1,6 @@
 import {
-  Calendar, User, MessageCircle, MessageSquare, Phone,
-  LucideIcon, LayoutDashboard, History, Users as UsersIcon, FileText, Zap,
+  Calendar, MessageCircle, MessageSquare, Phone,
+  LucideIcon, LayoutDashboard, History, FileText, Zap, User,
 } from "lucide-react";
 import { DEFAULT_DETAIL_TABS } from "@mms/shared";
 
@@ -8,10 +8,8 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   // tab keys
   overview: LayoutDashboard,
   timeline: History,
-  network: UsersIcon,
   files: FileText,
-  // field keys
-  gender: User,
+  // field keys — gender icon resolved per-value via getGenderIcon in FieldGroupCard
   dob: Calendar,
   // activity types
   note: FileText,

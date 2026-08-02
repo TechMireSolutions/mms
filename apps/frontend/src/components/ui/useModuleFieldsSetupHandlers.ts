@@ -22,6 +22,14 @@ export function useModuleFieldsSetupHandlers({ editor, onStateChange }: UseModul
   const isUniqueField = (tabId: string, fieldId: string): boolean =>
     editor.tabFieldUnique[tabId]?.has(fieldId) || false;
 
+  const runDeleteAction = async (
+    action: () => void | boolean | Promise<void | boolean>,
+  ): Promise<void> => {
+    const result = await Promise.resolve(action());
+    // Guards return false when blocked; sync deletes return void (treat as success).
+    if (result !== false && onStateChange) onStateChange();
+  };
+
   return {
     isAddTabModalOpen,
     setIsAddTabModalOpen,
@@ -43,9 +51,9 @@ export function useModuleFieldsSetupHandlers({ editor, onStateChange }: UseModul
     handleEditFieldLocal: (tabId: string, updatedField: FieldDefinition) =>
       triggerChange(() => editor.handleEditField(tabId, updatedField)),
     handleDeleteFieldLocal: (tabId: string, fieldId: string) =>
-      triggerChange(() => editor.handleDeleteField(tabId, fieldId)),
+      void runDeleteAction(() => editor.handleDeleteField(tabId, fieldId)),
     handleAddTabLocal: (label: string) => triggerChange(() => editor.handleAddTab(label)),
-    handleDeleteTabLocal: (key: string) => triggerChange(() => editor.handleDeleteTab(key)),
+    handleDeleteTabLocal: (key: string) => void runDeleteAction(() => editor.handleDeleteTab(key)),
     handleRenameTabLocal: (key: string, newLabel: string) => triggerChange(() => editor.handleRenameTab(key, newLabel)),
     triggerChange,
   };

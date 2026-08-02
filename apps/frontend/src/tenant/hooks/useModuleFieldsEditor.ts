@@ -118,7 +118,7 @@ export function useModuleFieldsEditor({
     handleDeleteField: (tabId: string, fieldId: string) =>
       handleDeleteFieldImpl(tabId, fieldId, setTabFields, setTabFieldOrder),
     handleAddTab: (label: string) => handleAddTabImpl(label, formTabs, tabHandlerSetters),
-    handleDeleteTab: (key: string) => handleDeleteTabImpl(key, setFormTabs, setEnabledTabs, setRequiredTabs),
+    handleDeleteTab: (key: string) => handleDeleteTabImpl(key, tabHandlerSetters),
     handleRenameTab: (key: string, newLabel: string) => handleRenameTabImpl(key, newLabel, setFormTabs),
     buildFieldsMap: () =>
       buildFieldsMap(

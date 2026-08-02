@@ -1,8 +1,10 @@
-import React, { lazy, Suspense, useMemo } from "react";
-import { type Contact, toTitleCase } from "@mms/shared";
+import React, { lazy, Suspense, useEffect, useMemo } from "react";
+import { CONTACTS_MODULE_MANIFEST, type Contact, toTitleCase } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { notify } from "@/lib/notify";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 
@@ -44,6 +46,7 @@ export default function ContactCreateModal({
   const { t } = useTranslation();
   const { prefs } = useContactConfig();
   const { upsertContact } = useContactMutations();
+  const { canWrite } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
 
   const initialDraft = useMemo(() => {
     const draft = nameToDraft(initialName);
@@ -53,13 +56,22 @@ export default function ContactCreateModal({
     return draft;
   }, [initialName, createDefaults?.gender]);
 
+  useEffect(() => {
+    if (!open || canWrite) return;
+    notify.error(t("contacts.form.writeDenied"));
+    onClose();
+  }, [open, canWrite, onClose, t]);
+
   const handleSave = async (contactPayload: Contact): Promise<void> => {
+    if (!canWrite) {
+      throw new Error(t("contacts.form.writeDenied"));
+    }
     const payload = { ...contactPayload, id: contactPayload.id ?? crypto.randomUUID() };
     const response = await upsertContact.mutateAsync(payload);
     onCreated(response.contact);
   };
 
-  if (!open) return null;
+  if (!open || !canWrite) return null;
 
   return (
     <Suspense fallback={<span role="status" className="sr-only">{t("common.loading")}</span>}>

@@ -85,7 +85,7 @@ export function useContactValidation(): (contactDraft: unknown) => ValidationErr
       if (result.success) {
         return [];
       }
-      return formatZodIssues(result.error, contactDraft, fieldsForValidation);
+      return formatZodIssues(result.error, contactDraft, fieldsForValidation, settings.language);
     },
     [fieldConfig, enabledTabIds, requiredTabIds, fieldsForValidation, settings.language, viewerRole],
   );

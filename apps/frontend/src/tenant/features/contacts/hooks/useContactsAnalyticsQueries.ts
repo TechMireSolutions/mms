@@ -30,6 +30,7 @@ export function useContactsMetrics(options?: { enabled?: boolean }) {
 export interface ContactsReportAnalyticsParams {
   enabled?: boolean;
   compareYears?: number[];
+  language?: string;
 }
 
 export interface ContactsReportAnalyticsResult {
@@ -41,10 +42,14 @@ export function useContactsReportAnalytics(params: ContactsReportAnalyticsParams
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
   const yearsKey = params.compareYears?.filter(Boolean).join(',') ?? '';
+  const language = params.language ?? 'en';
   return useQuery({
-    queryKey: [...CONTACTS_REPORT_ANALYTICS_QUERY_KEY, yearsKey] as const,
+    queryKey: [...CONTACTS_REPORT_ANALYTICS_QUERY_KEY, yearsKey, language] as const,
     queryFn: async () => {
-      const queryString = yearsKey ? `?years=${encodeURIComponent(yearsKey)}` : '';
+      const query = new URLSearchParams();
+      if (yearsKey) query.set('years', yearsKey);
+      if (language) query.set('lang', language);
+      const queryString = query.toString() ? `?${query.toString()}` : '';
       return apiJson<ContactsReportAnalyticsResult>(`${CONTACTS_API}/report-analytics${queryString}`);
     },
     enabled: isAuthenticated && enabled,

@@ -4,6 +4,7 @@ import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canDeleteContacts, canReadContacts } from '../../services/rbacService.js';
 import {
+  contactFieldUsageBatchBodySchema,
   contactFieldUsageParamsSchema,
   contactsListQuerySchema,
   contactsReportAnalyticsQuerySchema,
@@ -17,6 +18,7 @@ import {
   loadContactsWidgetAggregates,
   loadContactsByIds,
   loadContactFieldUsageCount,
+  loadContactFieldUsageCounts,
   countContacts,
 } from '../../services/contactService.js';
 import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
@@ -92,7 +94,10 @@ export async function contactRoutes(
     const parsed = parseRequest(contactsReportAnalyticsQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const result = await loadContactsReportAnalytics({ compareYears: parsed.data.years });
+      const result = await loadContactsReportAnalytics({
+        compareYears: parsed.data.years,
+        language: parsed.data.lang,
+      });
       return reply.send(result);
     } catch {
       return sendDatabaseError(reply, 'Failed to load contact report analytics');
@@ -107,6 +112,19 @@ export async function contactRoutes(
     try {
       const count = await loadContactFieldUsageCount(params.data.fieldKey);
       return reply.send({ count });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to load field usage');
+    }
+  });
+
+  fastify.post('/field-usage', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadContacts(user)) return sendForbidden(reply);
+    const parsed = parseRequest(contactFieldUsageBatchBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const counts = await loadContactFieldUsageCounts(parsed.data.fieldKeys);
+      return reply.send({ counts });
     } catch {
       return sendDatabaseError(reply, 'Failed to load field usage');
     }

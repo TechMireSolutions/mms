@@ -147,6 +147,19 @@ describe('filterContactsForQuery quickFilter', () => {
       '3',
     ]);
   });
+
+  it('filters recent (created in last 30 days)', () => {
+    const now = new Date();
+    const recentIso = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    const oldIso = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
+    const recentRows = [
+      contact({ id: 'new', name: 'New', createdAt: recentIso }),
+      contact({ id: 'old', name: 'Old', createdAt: oldIso }),
+    ];
+    expect(filterContactsForQuery(recentRows, { quickFilter: 'recent' }).map((row) => row.id)).toEqual([
+      'new',
+    ]);
+  });
 });
 
 describe('filterContactsForQuery excludeIds', () => {

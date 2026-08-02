@@ -4,6 +4,7 @@ import {
   getChartPaletteColors,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { notify } from '@/lib/notify';
 import { getObject } from '@/lib/db';
 import { useReportCollectionRows } from '@/lib/reports/useReportCollections';
 import { METADATA_FIELDS, type VisualizerConfig } from '@/tenant/features/reports/components/reportMetadata';
@@ -119,6 +120,9 @@ export function useDynamicChartVisualizer({
     pdfOrientation,
     initialConfig,
     onSave,
+    onExportFailed: () => {
+      notify.error(t('reports.visualizer.exportFailed'));
+    },
   });
 
   const currentColors = [...getChartPaletteColors(activePalette)];

@@ -1,21 +1,31 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
   type FieldConfig,
   type ContactPreferences,
+  type FieldDefinition,
   type TabDefinition,
   CONFIG_VERSION,
   normalizeContactPreferences,
+  syncContactColumnRegistryWithFields,
   toTitleCase,
+  withContactLockedEnabledTabs,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 import { notify } from "@/lib/notify";
 import { useContactsSetupFieldDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupFieldDeleteGuard";
+import { useContactsSetupTabDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupTabDeleteGuard";
 
 type FieldsEditorLike = {
   formTabs: TabDefinition[];
+  enabledTabs: Set<string>;
+  tabFields: Record<string, FieldDefinition[]>;
+  buildFieldsMap: () => FieldConfig["fields"];
   handleDeleteField: (tabId: string, fieldId: string) => void;
+  handleDeleteTab: (tabId: string) => void;
 };
+
+type CountryCodeEntry = { country: string; code: string };
 
 export function useContactsSetupSaveActions({
   config,
@@ -26,6 +36,8 @@ export function useContactsSetupSaveActions({
   mode,
   saveSettingsAsync,
   updatePrefsAsync,
+  updateCountryCodes,
+  countryCodesDraft,
   setSaved,
 }: {
   config: FieldConfig;
@@ -40,34 +52,51 @@ export function useContactsSetupSaveActions({
     options?: { markSaved?: boolean },
   ) => Promise<void>;
   updatePrefsAsync: (prefs: ContactPreferences) => Promise<void>;
+  updateCountryCodes: (countryCodes: CountryCodeEntry[]) => void | Promise<void>;
+  countryCodesDraft: CountryCodeEntry[];
   setSaved: Dispatch<SetStateAction<boolean>>;
 }) {
   const { t } = useTranslation();
   const { logSetupAudit } = useContactMutations();
   const [isSaving, setIsSaving] = useState(false);
 
+  const fieldsDraft = useMemo(
+    () => ({
+      buildFieldsMap: fieldsEditor.buildFieldsMap,
+      enabledTabs: fieldsEditor.enabledTabs,
+      tabFields: fieldsEditor.tabFields,
+    }),
+    [fieldsEditor.buildFieldsMap, fieldsEditor.enabledTabs, fieldsEditor.tabFields],
+  );
+
   const handleDeleteFieldWithGuard = useContactsSetupFieldDeleteGuard({
     config,
     contextPrefs,
+    fieldsDraft,
     onDeleteField: fieldsEditor.handleDeleteField,
-    onDirty: () => setSaved(false),
+  });
+
+  const handleDeleteTabWithGuard = useContactsSetupTabDeleteGuard({
+    config,
+    contextPrefs,
+    fieldsDraft,
+    onDeleteTab: fieldsEditor.handleDeleteTab,
   });
 
   const handleSave = useCallback(async (): Promise<void> => {
-    if (prefs.defaultProvince && /\d/.test(prefs.defaultProvince)) {
-      notify.error(t("contacts.setup.invalidProvince"));
-      return;
-    }
-    if (prefs.defaultCity && /\d/.test(prefs.defaultCity)) {
-      notify.error(t("contacts.setup.invalidCity"));
-      return;
+    if (mode === "preferences") {
+      if (prefs.defaultProvince && /\d/.test(prefs.defaultProvince)) {
+        notify.error(t("contacts.setup.invalidProvince"));
+        return;
+      }
+      if (prefs.defaultCity && /\d/.test(prefs.defaultCity)) {
+        notify.error(t("contacts.setup.invalidCity"));
+        return;
+      }
     }
 
     setIsSaving(true);
     try {
-      const applyTitleCaseToTabs = (tabs: TabDefinition[]) =>
-        tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
-
       const updatedPrefs = normalizeContactPreferences({
         ...prefs,
         defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
@@ -77,6 +106,7 @@ export function useContactsSetupSaveActions({
 
       if (mode === "preferences") {
         await updatePrefsAsync(updatedPrefs);
+        await updateCountryCodes(countryCodesDraft);
         await logSetupAudit.mutateAsync({
           area: "preferences",
           summary: t("contacts.setup.auditSummary", { area: "preferences" }),
@@ -84,15 +114,21 @@ export function useContactsSetupSaveActions({
         setPrefs(updatedPrefs);
         notify.success(t("contacts.setup.preferencesSaved"));
       } else {
+        const fieldsMap = fieldsEditor.buildFieldsMap() || {};
+        const enabledTabIds = withContactLockedEnabledTabs(fieldsEditor.enabledTabs);
+        // Omit formTabs/enabledTabs — saveSettingsAsync syncs them from the fields editor.
         await saveSettingsAsync(
           {},
           {
             version: CONFIG_VERSION,
-            pageTabs: applyTitleCaseToTabs(config.pageTabs || []),
-            formTabs: applyTitleCaseToTabs(fieldsEditor.formTabs),
-            detailTabs: applyTitleCaseToTabs(config.detailTabs || []),
-            settingsSubTabs: applyTitleCaseToTabs(config.settingsSubTabs || []),
-            columnRegistry: config.columnRegistry,
+            pageTabs: config.pageTabs || [],
+            detailTabs: (config.detailTabs || []).filter((tab) => tab.key !== "network"),
+            settingsSubTabs: config.settingsSubTabs || [],
+            columnRegistry: syncContactColumnRegistryWithFields(
+              config.columnRegistry,
+              fieldsMap,
+              enabledTabIds,
+            ),
           },
           { markSaved: false },
         );
@@ -113,10 +149,12 @@ export function useContactsSetupSaveActions({
   }, [
     prefs,
     config,
-    fieldsEditor.formTabs,
     mode,
+    fieldsEditor,
     saveSettingsAsync,
     updatePrefsAsync,
+    updateCountryCodes,
+    countryCodesDraft,
     logSetupAudit,
     setPrefs,
     setSaved,
@@ -126,6 +164,7 @@ export function useContactsSetupSaveActions({
   return {
     isSaving,
     handleDeleteFieldWithGuard,
+    handleDeleteTabWithGuard,
     handleSave,
   };
 }

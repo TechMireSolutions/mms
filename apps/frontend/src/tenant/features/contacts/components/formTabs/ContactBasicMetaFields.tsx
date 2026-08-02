@@ -2,7 +2,6 @@ import React from "react";
 import { FileText, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { cn } from "@/lib/utils";
@@ -23,6 +22,7 @@ export function ContactBasicMetaFields({
   updateDraft: (patch: Partial<Contact>) => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
+  const isSyedId = `cf-${formInstanceId}-isSyed`;
 
   return (
     <>
@@ -67,7 +67,7 @@ export function ContactBasicMetaFields({
       {isFieldEnabled("basic", "isSyed") && (
         <div className="flex flex-col justify-end min-h-11">
           <label
-            htmlFor="isSyed"
+            htmlFor={isSyedId}
             className={cn(
               "flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none",
               contactDraft.isSyed
@@ -76,7 +76,7 @@ export function ContactBasicMetaFields({
             )}
           >
             <Checkbox
-              id="isSyed"
+              id={isSyedId}
               name="isSyed"
               checked={Boolean(contactDraft.isSyed)}
               onCheckedChange={(checked) => updateDraft({ isSyed: Boolean(checked) })}
@@ -90,26 +90,6 @@ export function ContactBasicMetaFields({
             />
             <span className="text-xs font-semibold">{t("contacts.fields.isSyed")}</span>
           </label>
-        </div>
-      )}
-
-      {isFieldEnabled("basic", "notes") && (
-        <div className="pt-2 @md:col-span-2">
-          <Field
-            label={t("contacts.form.notes")}
-            error={getFieldError("notes")}
-            id={`cf-${formInstanceId}-notes`}
-          >
-            <Textarea
-              id={`cf-${formInstanceId}-notes`}
-              name="notes"
-              value={(contactDraft.notes as string) || ""}
-              onChange={(e) => updateDraft({ notes: e.target.value })}
-              placeholder={t("contacts.form.notesPlaceholder")}
-              rows={3}
-              className="w-full"
-            />
-          </Field>
         </div>
       )}
     </>

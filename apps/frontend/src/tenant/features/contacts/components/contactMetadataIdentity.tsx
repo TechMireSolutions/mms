@@ -1,4 +1,4 @@
-import { User, CheckCircle2, MapPin } from "lucide-react";
+import { CheckCircle2, MapPin } from "lucide-react";
 import {
   Contact,
   hasWhatsApp,
@@ -8,6 +8,7 @@ import {
 } from "@mms/shared";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { GenderIcon } from "@/components/ui/GenderIcon";
 
 type Translate = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
@@ -24,7 +25,7 @@ export function renderGenderMetadata({
   if (!genderValue) return emptyNode;
   return (
     <span className="flex items-center gap-1 capitalize">
-      <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+      <GenderIcon gender={genderValue} className="w-3.5 h-3.5 shrink-0" />
       {formatContactGenderLabel(genderValue, t)}
     </span>
   );

@@ -3,6 +3,7 @@ import { Calendar, User } from "lucide-react";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import {
   ContactProfileValue,
   FieldError,
@@ -12,6 +13,7 @@ import {
 interface StudentContactSectionProps {
   contactId?: string | number | null;
   excludeIds: string[];
+  linkedGenderRaw?: string;
   linkedGenderLabel: string;
   linkedDob: string;
   genderError?: string;
@@ -24,6 +26,7 @@ interface StudentContactSectionProps {
 export function StudentContactSection({
   contactId,
   excludeIds,
+  linkedGenderRaw,
   linkedGenderLabel,
   linkedDob,
   genderError,
@@ -33,6 +36,7 @@ export function StudentContactSection({
   onStudentAvatarChange,
 }: StudentContactSectionProps): React.JSX.Element {
   const { t } = useTranslation();
+  const GenderGlyph = getGenderIcon(linkedGenderRaw);
 
   return (
     <div className="space-y-6">
@@ -58,7 +62,13 @@ export function StudentContactSection({
 
           {contactId && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-              <ContactProfileValue label={t("students.gender")} value={linkedGenderLabel} icon={User} error={genderError} />
+                  <ContactProfileValue
+                    label={t("students.gender")}
+                    value={linkedGenderLabel}
+                    icon={GenderGlyph}
+                    iconClassName={getGenderIconClass(linkedGenderRaw)}
+                    error={genderError}
+                  />
               <ContactProfileValue label={t("students.form.fieldDob")} value={linkedDob} icon={Calendar} error={dobError} />
             </div>
           )}

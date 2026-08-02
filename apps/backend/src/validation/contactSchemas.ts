@@ -13,6 +13,8 @@ import {
   contactWriteSchema,
   contactListSchema,
   contactsListQuerySchema,
+  contactFieldUsageParamsSchema,
+  contactFieldUsageBatchBodySchema,
 } from '@mms/shared';
 
 export {
@@ -28,6 +30,8 @@ export {
   contactWriteSchema,
   contactListSchema,
   contactsListQuerySchema,
+  contactFieldUsageParamsSchema,
+  contactFieldUsageBatchBodySchema,
 };
 
 /** Bulk soft-delete — shared max(500) with other module bulk id bodies. */
@@ -128,10 +132,7 @@ export const contactsReportAnalyticsQuerySchema = z.object({
             .filter((year) => Number.isFinite(year) && year >= 1900 && year <= 2100)
         : [],
     ),
-});
-
-export const contactFieldUsageParamsSchema = z.object({
-  fieldKey: z.string().min(1).max(128),
+  lang: z.string().max(16).optional(),
 });
 
 export const contactDuplicateCheckBodySchema = z.object({

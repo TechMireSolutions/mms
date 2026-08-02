@@ -69,8 +69,12 @@ export function getWidgetRecordDisplay(
     status = t("reports.widgets.pointsText", { points: displayRecord.points || 50 });
     hasAction = false;
   } else if (widget.collection === "contacts") {
-    detailText = `${displayRecord.email || t("reports.widgets.noEmail")} • ${displayRecord.gender || t("contacts.gender.male")}`;
-    status = displayRecord.isActive !== false ? "active" : "inactive";
+    const genderLabel = displayRecord.gender
+      ? getFieldLabel(displayRecord.gender, displayRecord.gender, t)
+      : t("contacts.gender.unspecified");
+    detailText = `${displayRecord.email || t("reports.widgets.noEmail")} • ${genderLabel}`;
+    // Contacts roster is soft-delete filtered; form never writes `isActive`.
+    status = "active";
   } else if (widget.collection === "sessions") {
     name = String(displayRecord.name || "");
     detailText = t("reports.widgets.roomText", { type: displayRecord.type || t("reports.widgets.defaultSessionType"), room: displayRecord.room || t("common.notAvailable") });

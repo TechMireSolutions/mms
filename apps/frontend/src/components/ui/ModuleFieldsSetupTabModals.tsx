@@ -4,6 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { FormModal } from "@/components/ui/FormModal";
 import { Field } from "@/components/ui/FormPrimitives";
+import type { ModuleFieldsSetupCopy } from "@/components/ui/moduleFieldsSetupShared";
 
 export interface ModuleFieldsSetupTabModalsProps {
   isAddTabModalOpen: boolean;
@@ -16,6 +17,7 @@ export interface ModuleFieldsSetupTabModalsProps {
   renameTabLabel: string;
   setRenameTabLabel: (label: string) => void;
   onRenameTab: (key: string, label: string) => void;
+  copy?: ModuleFieldsSetupCopy;
 }
 
 export function ModuleFieldsSetupTabModals({
@@ -29,8 +31,15 @@ export function ModuleFieldsSetupTabModals({
   renameTabLabel,
   setRenameTabLabel,
   onRenameTab,
+  copy,
 }: ModuleFieldsSetupTabModalsProps): React.ReactElement {
   const { t } = useTranslation();
+  const addCustomTab = copy?.addCustomTab ?? t("fields.setup.addCustomTab");
+  const addTab = copy?.addTab ?? t("fields.setup.addTab");
+  const renameTab = copy?.renameTab ?? t("fields.setup.renameTab");
+  const renameTabButton = copy?.renameTabButton ?? t("fields.setup.renameTabButton");
+  const customTabName = copy?.customTabName ?? t("fields.setup.customTabName");
+  const placeholder = copy?.addCustomTabPlaceholder ?? t("fields.setup.addCustomTabPlaceholder");
 
   return (
     <>
@@ -40,7 +49,7 @@ export function ModuleFieldsSetupTabModals({
           setIsAddTabModalOpen(false);
           setNewTabLabel("");
         }}
-        title={t("contacts.setup.addCustomTab")}
+        title={addCustomTab}
         icon={Plus}
         onSave={() => {
           onAddTab(newTabLabel);
@@ -48,19 +57,19 @@ export function ModuleFieldsSetupTabModals({
           setNewTabLabel("");
         }}
         saveDisabled={!newTabLabel.trim()}
-        saveLabel={t("contacts.setup.addTab")}
+        saveLabel={addTab}
       >
         <div className="text-start">
-          <Field id="newTabLabel" label={t("contacts.setup.customTabName")} required>
-          <Input
-            id="newTabLabel"
-            name="newTabLabel"
-            value={newTabLabel}
-            onChange={(event) => setNewTabLabel(event.target.value)}
-            placeholder={t("contacts.setup.addCustomTabPlaceholder")}
-            autoFocus
-            required
-          />
+          <Field id="newTabLabel" label={customTabName} required>
+            <Input
+              id="newTabLabel"
+              name="newTabLabel"
+              value={newTabLabel}
+              onChange={(event) => setNewTabLabel(event.target.value)}
+              placeholder={placeholder}
+              autoFocus
+              required
+            />
           </Field>
         </div>
       </FormModal>
@@ -71,7 +80,7 @@ export function ModuleFieldsSetupTabModals({
           setRenamingTabKey(null);
           setRenameTabLabel("");
         }}
-        title={t("contacts.setup.renameTab")}
+        title={renameTab}
         icon={Pencil}
         onSave={() => {
           if (renamingTabKey) {
@@ -81,19 +90,19 @@ export function ModuleFieldsSetupTabModals({
           setRenameTabLabel("");
         }}
         saveDisabled={!renameTabLabel.trim()}
-        saveLabel={t("contacts.setup.renameTabButton")}
+        saveLabel={renameTabButton}
       >
         <div className="text-start">
-          <Field id="renameTabLabel" label={t("contacts.setup.customTabName")} required>
-          <Input
-            id="renameTabLabel"
-            name="renameTabLabel"
-            value={renameTabLabel}
-            onChange={(event) => setRenameTabLabel(event.target.value)}
-            placeholder={t("contacts.setup.addCustomTabPlaceholder")}
-            autoFocus
-            required
-          />
+          <Field id="renameTabLabel" label={customTabName} required>
+            <Input
+              id="renameTabLabel"
+              name="renameTabLabel"
+              value={renameTabLabel}
+              onChange={(event) => setRenameTabLabel(event.target.value)}
+              placeholder={placeholder}
+              autoFocus
+              required
+            />
           </Field>
         </div>
       </FormModal>

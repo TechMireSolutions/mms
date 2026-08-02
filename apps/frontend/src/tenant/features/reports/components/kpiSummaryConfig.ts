@@ -38,6 +38,7 @@ export const KPI_TITLE_KEYS: Partial<Record<string, AppTranslationKey>> = {
   'kpi-total-faculty': 'reports.kpi.totalFaculty',
   'kpi-on-leave': 'reports.kpi.onLeave',
   'kpi-whatsapp-verified': 'reports.contacts.kpi.whatsappVerified',
+  'kpi-missing-contact-info': 'reports.contacts.kpi.missingContactInfo',
   'kpi-active-contacts': 'reports.contacts.kpi.activeContacts',
   'kpi-total-contacts': 'reports.contacts.kpi.totalContacts',
 };

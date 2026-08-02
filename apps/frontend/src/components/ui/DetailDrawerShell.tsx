@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 
@@ -38,9 +39,13 @@ export function DetailDrawerShell({
   className,
 }: DetailDrawerShellProps): React.JSX.Element {
   const { t, isRtl } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const containerRef = useOverlayBehavior<HTMLElement>({ open, onClose });
   const titleId = useId();
   const slideFrom = isRtl ? "-100%" : "100%";
+  const panelTransition = reducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, damping: 28, stiffness: 260 };
 
   return (
     <AnimatePresence>
@@ -48,10 +53,10 @@ export function DetailDrawerShell({
         <div className="fixed inset-0 z-50 flex items-center justify-end">
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={reducedMotion ? undefined : { opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.2 }}
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
           />
@@ -59,15 +64,15 @@ export function DetailDrawerShell({
           {/* Drawer content panel */}
           <motion.aside
             ref={containerRef}
-            initial={{ x: slideFrom, opacity: 0 }}
+            initial={reducedMotion ? false : { x: slideFrom, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: slideFrom, opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 260 }}
+            exit={reducedMotion ? undefined : { x: slideFrom, opacity: 0 }}
+            transition={panelTransition}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
             className={cn(
-              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col border-s border-border/80 bg-card/90 text-start shadow-2xl backdrop-blur-xl sm:max-w-sm",
+              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain border-s border-border/80 bg-card/90 text-start shadow-2xl backdrop-blur-xl sm:max-w-sm",
               className
             )}
             aria-label={ariaLabel}
@@ -111,7 +116,7 @@ export function DetailDrawerShell({
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-6">
               {children}
             </div>
 

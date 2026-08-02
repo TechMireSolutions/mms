@@ -15,18 +15,17 @@ import {
 
 export interface GoogleContactsPanelProps {
   canWrite?: boolean;
-  canEditSetup?: boolean;
 }
 
 /**
  * GoogleContactsPanel component to configure and run Google Contacts synchronization.
  */
 export function GoogleContactsPanel({
-  canWrite = true,
-  canEditSetup = false,
+  canWrite = false,
 }: GoogleContactsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const sync = useGoogleContactsSync({ canWrite: canWrite || canEditSetup });
+  // BE google-sync routes require contacts.write.
+  const sync = useGoogleContactsSync({ canWrite });
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">
@@ -42,7 +41,7 @@ export function GoogleContactsPanel({
             </span>
           )}
         </div>
-        {canEditSetup && (
+        {canWrite && (
           <Button
             type="button"
             variant="ghost"
@@ -57,11 +56,17 @@ export function GoogleContactsPanel({
       </div>
 
       <div className="p-4 space-y-4 text-start">
-        {!sync.isConfigured && !sync.showSetup && (
+        {!canWrite && (
+          <p className="text-xs text-muted-foreground rounded-lg border border-border bg-muted/20 px-3 py-2.5">
+            {t('contacts.sync.writeRequired')}
+          </p>
+        )}
+
+        {!sync.isConfigured && !sync.showSetup && canWrite && (
           <GoogleContactsSetupHint t={t} />
         )}
 
-        {canEditSetup && sync.showSetup && (
+        {canWrite && sync.showSetup && (
           <GoogleContactsSetupForm
             clientId={sync.form.clientId}
             clientSecret={sync.form.clientSecret}
@@ -77,7 +82,7 @@ export function GoogleContactsPanel({
           />
         )}
 
-        {sync.isConfigured && !sync.isConnected && !sync.showSetup && canEditSetup && (
+        {sync.isConfigured && !sync.isConnected && !sync.showSetup && canWrite && (
           <GoogleContactsConnectStep
             showAuthCode={sync.showAuthCode}
             authCode={sync.authCode}

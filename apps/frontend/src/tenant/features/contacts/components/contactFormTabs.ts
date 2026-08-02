@@ -1,4 +1,4 @@
-import { User, Phone, Mail, MapPin, Share2, Heart } from "lucide-react";
+import { User, Phone, Mail, MapPin, Share2, Heart, SlidersHorizontal } from "lucide-react";
 import {
   DEFAULT_FORM_TABS,
   type AppTranslationKey,
@@ -11,6 +11,7 @@ const CONTACT_TAB_ICONS: Record<string, typeof User> = {
   addresses: MapPin,
   socials: Share2,
   relationship: Heart,
+  custom: SlidersHorizontal,
 };
 
 export const CONTACT_FORM_TABS = DEFAULT_FORM_TABS

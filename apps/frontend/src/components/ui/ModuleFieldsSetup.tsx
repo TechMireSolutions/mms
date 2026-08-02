@@ -4,15 +4,21 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetupTabModals } from "@/components/ui/ModuleFieldsSetupTabModals";
 import { ModuleFieldsSetupTabCard } from "@/components/ui/ModuleFieldsSetupTabCard";
-import type { UseFieldsEditorResult } from "@/components/ui/moduleFieldsSetupShared";
+import type {
+  ModuleFieldsSetupCopy,
+  UseFieldsEditorResult,
+} from "@/components/ui/moduleFieldsSetupShared";
 import { useModuleFieldsSetupHandlers } from "@/components/ui/useModuleFieldsSetupHandlers";
 
 interface ModuleFieldsSetupProps {
   editor: UseFieldsEditorResult;
   isCoreField: (tabId: string, fieldKey: string) => boolean;
+  /** When set, controls rename/delete affordances instead of branching on `tab.isSystem`. */
+  isProtectedTab?: (tabId: string) => boolean;
+  /** When set, tabs that cannot be disabled (Contacts: basic/custom). Default: none locked. */
+  isLockedTab?: (tabId: string) => boolean;
   onStateChange?: () => void;
-  introTitle?: string;
-  introDescription?: string;
+  copy?: ModuleFieldsSetupCopy;
   labels?: {
     required?: string;
     optional?: string;
@@ -24,34 +30,40 @@ interface ModuleFieldsSetupProps {
 export function ModuleFieldsSetup({
   editor,
   isCoreField,
+  isProtectedTab,
+  isLockedTab,
   onStateChange,
-  introTitle,
-  introDescription,
+  copy,
   labels,
 }: ModuleFieldsSetupProps): React.JSX.Element {
   const { t } = useTranslation();
   const handlers = useModuleFieldsSetupHandlers({ editor, onStateChange });
 
+  const introTitle = copy?.introTitle ?? t("fields.setup.introTitle");
+  const introDescription = copy?.introDescription ?? t("fields.setup.introDescription");
+  const fieldsByTab = copy?.fieldsByTab ?? t("fields.setup.fieldsByTab");
+  const dragToReorder = copy?.dragToReorder ?? t("fields.setup.dragToReorder");
+  const toReorder = copy?.toReorder ?? t("fields.setup.toReorder");
+  const addCustomTab = copy?.addCustomTab ?? t("fields.setup.addCustomTab");
+
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-start">
-        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <Info className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
         <div>
-          <h4 className="font-semibold text-xs">{introTitle || t("contacts.setup.fieldsIntroTitle")}</h4>
-          <p className="text-xs mt-0.5 text-info/90">
-            {introDescription || t("contacts.setup.fieldsIntroDescription")}
-          </p>
+          <h4 className="font-semibold text-xs">{introTitle}</h4>
+          <p className="text-xs mt-0.5 text-info/90">{introDescription}</p>
         </div>
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2 text-start">
         <div className="flex items-center gap-2">
-          <Layout className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">{t("contacts.setup.fieldsByTab")}</h3>
+          <Layout className="w-4 h-4 text-primary" aria-hidden="true" />
+          <h3 className="text-sm font-bold text-foreground">{fieldsByTab}</h3>
           <span className="text-xs text-muted-foreground ms-1 flex items-center gap-1">
-            <span>— {t("contacts.setup.dragToReorder")} </span>
-            <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 inline align-middle" />
-            <span>{t("contacts.setup.toReorder")}</span>
+            <span>— {dragToReorder} </span>
+            <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 inline align-middle" aria-hidden="true" />
+            <span>{toReorder}</span>
           </span>
         </div>
       </div>
@@ -63,6 +75,9 @@ export function ModuleFieldsSetup({
             tab={tab}
             editor={editor}
             isCoreField={isCoreField}
+            isProtectedTab={isProtectedTab}
+            isLockedTab={isLockedTab}
+            copy={copy}
             labels={labels}
             isUniqueField={handlers.isUniqueField}
             onToggleTabEnabled={handlers.handleToggleTabEnabled}
@@ -81,18 +96,24 @@ export function ModuleFieldsSetup({
             }}
             onChangeDefaults={(tabId, fieldId, fieldValue) => {
               handlers.triggerChange(() => {
-                editor.tabFieldDefaultValues[tabId] = {
-                  ...(editor.tabFieldDefaultValues[tabId] || {}),
-                  [fieldId]: fieldValue,
-                };
+                editor.setTabFieldDefaultValues((current) => ({
+                  ...current,
+                  [tabId]: {
+                    ...(current[tabId] || {}),
+                    [fieldId]: fieldValue,
+                  },
+                }));
               });
             }}
             onChangePermissions={(tabId, fieldId, roles) => {
               handlers.triggerChange(() => {
-                editor.tabFieldPermissions[tabId] = {
-                  ...(editor.tabFieldPermissions[tabId] || {}),
-                  [fieldId]: roles,
-                };
+                editor.setTabFieldPermissions((current) => ({
+                  ...current,
+                  [tabId]: {
+                    ...(current[tabId] || {}),
+                    [fieldId]: roles,
+                  },
+                }));
               });
             }}
           />
@@ -104,8 +125,8 @@ export function ModuleFieldsSetup({
             onClick={() => handlers.setIsAddTabModalOpen(true)}
             className="flex min-h-11 items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary shadow-none transition-all hover:bg-primary/20"
           >
-            <Plus className="w-4 h-4" />
-            <span>{t("contacts.setup.addCustomTab")}</span>
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span>{addCustomTab}</span>
           </Button>
         </div>
       </div>
@@ -121,6 +142,7 @@ export function ModuleFieldsSetup({
         renameTabLabel={handlers.renameTabLabel}
         setRenameTabLabel={handlers.setRenameTabLabel}
         onRenameTab={handlers.handleRenameTabLocal}
+        copy={copy}
       />
     </div>
   );

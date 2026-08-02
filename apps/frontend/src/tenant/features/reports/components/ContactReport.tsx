@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, UserCheck, MessageCircle, UserPlus, Loader2 } from "lucide-react";
+import { Users, MessageCircle, UserPlus, AlertCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsReportAnalytics } from "@/tenant/hooks/collections/contacts";
 import { StatCard } from "@/components/ui/StatCard";
@@ -23,7 +23,7 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
       <div className="p-4">
         <ErrorState
           title={t("contacts.report.loadFailed")}
-          description={t("common.retry")}
+          description={t("contacts.report.loadFailedHint")}
           onRetry={() => {
             void refetch();
           }}
@@ -42,7 +42,7 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
   }
 
   const totalContacts = analytics?.total ?? 0;
-  const activeContacts = analytics?.activeCount ?? 0;
+  const missingInfoCount = analytics?.missingInfoCount ?? 0;
   const whatsappRate = analytics?.whatsappRate ?? 0;
   const newLast30Days = analytics?.newLast30Days ?? 0;
 
@@ -57,12 +57,6 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
           onClick={() => applyContactsWorkDrillDown({})}
         />
         <StatCard
-          icon={UserCheck}
-          label={t("contacts.report.activeContacts")}
-          value={activeContacts}
-          accent="success"
-        />
-        <StatCard
           icon={MessageCircle}
           label={t("contacts.report.whatsappVerified")}
           value={`${whatsappRate}%`}
@@ -74,6 +68,14 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
           label={t("contacts.report.newLast30Days")}
           value={newLast30Days}
           accent="secondary"
+          onClick={() => applyContactsWorkDrillDown({ quickFilter: "recent" })}
+        />
+        <StatCard
+          icon={AlertCircle}
+          label={t("contacts.report.missingContactInfo")}
+          value={missingInfoCount}
+          accent="destructive"
+          onClick={() => applyContactsWorkDrillDown({ quickFilter: "missingInfo" })}
         />
       </div>
     </div>

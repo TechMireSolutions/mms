@@ -1,11 +1,12 @@
 import type { ChangeEvent, FormEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useTranslation } from "@/hooks/useTranslation";
 import { DETAIL_SYSTEM_TAB_KEYS } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { FieldGroupCard } from "@/tenant/features/contacts/components/detail/ContactDetailShared";
 import { ContactDetailOverview } from "@/tenant/features/contacts/components/detail/ContactDetailOverview";
 import { ContactDetailTimeline } from "@/tenant/features/contacts/components/detail/ContactDetailTimeline";
-import { ContactDetailNetwork } from "@/tenant/features/contacts/components/detail/ContactDetailNetwork";
 import { ContactDetailFiles } from "@/tenant/features/contacts/components/detail/ContactDetailFiles";
 import type { DetailFieldView } from "@/tenant/features/contacts/hooks/useContactDetailViewModel";
 
@@ -20,7 +21,6 @@ interface ContactDetailDrawerContentProps {
     emails: { enabled?: boolean }[];
     addresses: { enabled?: boolean }[];
     socials: { enabled?: boolean }[];
-    relationship: { enabled?: boolean }[];
   };
   primaryPhone: string | null;
   primaryEmail: string | null;
@@ -70,14 +70,26 @@ export function ContactDetailDrawerContent({
   onFileChange,
   onRequestDelete,
 }: ContactDetailDrawerContentProps): JSX.Element {
+  const reducedMotion = useReducedMotion();
+  const { t } = useTranslation();
+  const customTabFields = Object.entries(grouped)
+    .map(([groupName, fieldsList]) => ({
+      groupName,
+      fields: fieldsList.filter((field) => field.tab === activeTab),
+    }))
+    .filter((entry) => entry.fields.length > 0);
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={activeTab}
-        initial={{ opacity: 0, y: 8 }}
+        role="tabpanel"
+        id={`contact-detail-drawer-${activeTab}`}
+        aria-labelledby={`contact-detail-drawer-tab-${activeTab}`}
+        initial={reducedMotion ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.15 }}
+        exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
+        transition={{ duration: reducedMotion ? 0 : 0.15 }}
         className="space-y-6"
       >
         {activeTab === "overview" && (
@@ -107,14 +119,6 @@ export function ContactDetailDrawerContent({
           />
         )}
 
-        {activeTab === "network" && (
-          <ContactDetailNetwork
-            contact={contactState}
-            allContacts={allContacts}
-            onNavigateToContact={onNavigateToContact}
-          />
-        )}
-
         {activeTab === "files" && (
           <ContactDetailFiles
             contact={contactState}
@@ -131,16 +135,21 @@ export function ContactDetailDrawerContent({
 
         {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
           <div className="space-y-4">
-            {Object.entries(grouped)
-              .filter(([, fieldsList]) => fieldsList.some((field) => field.tab === activeTab))
-              .map(([groupName, fieldsList]) => (
+            {customTabFields.length === 0 ? (
+              <p className="py-12 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                {t("contacts.detail.emptyCustomTab")}
+              </p>
+            ) : (
+              customTabFields.map(({ groupName, fields }) => (
                 <FieldGroupCard
                   key={groupName}
                   group={groupName}
-                  fields={fieldsList.filter((field) => field.tab === activeTab)}
+                  fields={fields}
                   formatValue={formatFieldValue}
+                  getRawValue={(key) => (contactState as Record<string, unknown>)[key]}
                 />
-              ))}
+              ))
+            )}
           </div>
         )}
       </motion.div>

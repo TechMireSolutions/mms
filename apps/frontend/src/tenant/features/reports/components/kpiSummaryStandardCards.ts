@@ -128,9 +128,10 @@ export function buildStandardKPICards(options: BuildStandardKPICardsOptions): Ca
       color: 'amber', trend: 'flat', categories: ['contacts'], isAvailable: (contactAnalytics?.total ?? 0) > 0,
     },
     {
-      id: 'kpi-active-contacts', icon: UserCheck, label: t('reports.contacts.kpi.activeContacts'),
-      value: String(contactAnalytics?.activeCount ?? 0), sub: t('reports.contacts.kpi.activeContactsSub'),
-      color: 'green', trend: 'flat', categories: ['contacts'], isAvailable: (contactAnalytics?.total ?? 0) > 0,
+      id: 'kpi-missing-contact-info', icon: AlertCircle, label: t('reports.contacts.kpi.missingContactInfo'),
+      value: String(contactAnalytics?.missingInfoCount ?? 0), sub: t('reports.contacts.kpi.missingContactInfoSub'),
+      color: 'red', trend: 'flat', categories: ['contacts'],
+      isAvailable: (contactAnalytics?.missingInfoCount ?? 0) > 0 || (contactAnalytics?.total ?? 0) > 0,
     },
     {
       id: 'kpi-total-contacts', icon: Users, label: t('reports.contacts.kpi.totalContacts'),

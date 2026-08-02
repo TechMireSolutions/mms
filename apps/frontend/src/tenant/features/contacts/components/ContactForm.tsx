@@ -5,7 +5,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import type { Contact } from "@mms/shared";
+import {
+  listEnabledCustomContactFormFields,
+  type Contact,
+} from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import {
   ContactFormTabContent,
@@ -42,10 +45,11 @@ export default function ContactForm({
   lockGender = false,
   priority = false,
 }: ContactFormProps): JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
-  const { enabledTabIds } = useContactConfig();
+  const { enabledTabIds, fields } = useContactConfig();
   const [tab, setTab] = useState<ContactFormTabKey>("basic");
+  const hasCustomFields = listEnabledCustomContactFormFields(fields).length > 0;
 
   const draft = useContactFormDraft({
     open,
@@ -81,9 +85,11 @@ export default function ContactForm({
       relationship: draft.collectionCounts.filledRelationships,
     };
 
-    return CONTACT_FORM_TABS.filter(
-      (tabItem) => tabItem.key === "basic" || enabledTabIds.has(tabItem.key),
-    ).map((tabItem) => {
+    return CONTACT_FORM_TABS.filter((tabItem) => {
+      if (tabItem.key === "basic") return true;
+      if (tabItem.key === "custom") return hasCustomFields;
+      return enabledTabIds.has(tabItem.key);
+    }).map((tabItem) => {
       const count = countMap[tabItem.key];
       return {
         key: tabItem.key,
@@ -92,7 +98,7 @@ export default function ContactForm({
         badge: count && count > 0 ? count : undefined,
       };
     });
-  }, [draft.collectionCounts, enabledTabIds, t]);
+  }, [draft.collectionCounts, enabledTabIds, hasCustomFields, t]);
 
   return (
     <FormModal
@@ -112,6 +118,7 @@ export default function ContactForm({
       onTabChange={setTab}
       tabPanelIdPrefix="contact-form-tab"
       lang={language}
+      dir={dir}
       cancelLabel={t("common.cancel")}
       saveLabel={t("contacts.form.saveContact")}
       onSave={() => {

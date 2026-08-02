@@ -1,4 +1,5 @@
 import type { Contact, FieldConfig } from './contactTypes.js';
+import { isContactLockedEnabledTab } from './contactEnabledTabs.js';
 
 const LIST_TAB_DATA_KEYS: Record<string, string> = {
   phones: 'phones',
@@ -9,6 +10,10 @@ const LIST_TAB_DATA_KEYS: Record<string, string> = {
 };
 
 const COMPLETENESS_SKIP_TYPES = new Set(['boolean', 'ai_summary']);
+
+function isCompletenessTabActive(tab: { key: string; enabled?: boolean }): boolean {
+  return tab.enabled !== false || isContactLockedEnabledTab(tab.key);
+}
 
 /** Returns true when a form field value is considered filled. */
 export function hasFieldValue(value: unknown): boolean {
@@ -28,7 +33,7 @@ export function hasFieldValue(value: unknown): boolean {
 /** Config-driven profile completeness (0–100) for command-centre metrics. */
 export function calculateProfileCompleteness(contact: Partial<Contact>, fieldConfig: FieldConfig): number {
   const fields = fieldConfig.fields || {};
-  const formTabs = (fieldConfig.formTabs || []).filter((tab) => tab.enabled || tab.key === 'basic');
+  const formTabs = (fieldConfig.formTabs || []).filter(isCompletenessTabActive);
   const record = contact as Record<string, unknown>;
 
   let totalRequired = 0;
@@ -87,7 +92,7 @@ export function isContactProfileIncomplete(
   fieldConfig: FieldConfig,
 ): boolean {
   const fields = fieldConfig.fields || {};
-  const formTabs = (fieldConfig.formTabs || []).filter((tab) => tab.enabled || tab.key === "basic");
+  const formTabs = (fieldConfig.formTabs || []).filter(isCompletenessTabActive);
   const record = contact as Record<string, unknown>;
   const requiredTabs = new Set(fieldConfig.requiredTabs || []);
 

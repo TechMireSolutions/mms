@@ -43,7 +43,12 @@ export function useContactDetailViewModel({
     const tabsFromConfig = fieldConfig.detailTabs || [];
     const sorted = [...tabsFromConfig]
       .sort((a, b) => a.order - b.order)
-      .filter((tab) => tab.enabled && (DETAIL_SYSTEM_TAB_KEYS.has(tab.key) || enabledTabIds.has(tab.key)));
+      .filter(
+        (tab) =>
+          tab.key !== "network" &&
+          tab.enabled &&
+          (DETAIL_SYSTEM_TAB_KEYS.has(tab.key) || enabledTabIds.has(tab.key)),
+      );
 
     return sorted.map((tab) => {
       const defaultTab = DEFAULT_DETAIL_TAB_BY_KEY.get(tab.key);

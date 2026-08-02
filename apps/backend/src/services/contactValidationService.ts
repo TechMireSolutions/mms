@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   applyTitleCaseToContact,
   buildDynamicContactSchema,
+  resolveContactEnabledTabIds,
   verifyBlueprintVersion,
   type Contact,
 } from '@mms/shared';
@@ -49,7 +50,7 @@ export async function validateContactDynamic(
   let schema = schemaCache.get(cacheKey);
 
   if (!schema) {
-    const enabledTabIds = new Set(fieldConfig.enabledTabs || []);
+    const enabledTabIds = resolveContactEnabledTabIds(fieldConfig, viewerRole || '');
     const requiredTabIds = new Set(fieldConfig.requiredTabs || []);
     const fields = fieldConfig.fields || {};
 

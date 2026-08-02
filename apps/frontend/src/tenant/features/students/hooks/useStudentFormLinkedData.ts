@@ -69,6 +69,7 @@ export function useStudentFormLinkedData({
 
   return {
     linkedContact,
+    linkedGenderRaw,
     linkedGenderLabel,
     linkedDob,
     nextGrNumber,

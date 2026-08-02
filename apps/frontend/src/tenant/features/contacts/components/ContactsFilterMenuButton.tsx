@@ -6,6 +6,7 @@ import {
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { GenderIcon } from "@/components/ui/GenderIcon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,7 +92,14 @@ export function ContactsFilterMenuButton({
               value={genderOption}
               className="text-sm"
             >
-              {genderOption ? formatContactGenderLabel(genderOption, t) : t("contacts.allGenders")}
+              {genderOption ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <GenderIcon gender={genderOption} className="w-3.5 h-3.5" />
+                  {formatContactGenderLabel(genderOption, t)}
+                </span>
+              ) : (
+                t("contacts.allGenders")
+              )}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

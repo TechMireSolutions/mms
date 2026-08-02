@@ -21,12 +21,20 @@ export function ContactDetailOverviewQuickActions({
   onWhatsApp?: (contacts: Contact[]) => void;
   onSms?: (contacts: Contact[]) => void;
   onEmail?: (contacts: Contact[]) => void;
-}): React.JSX.Element {
+}): React.JSX.Element | null {
   const { t } = useTranslation();
+  const allowOutbound = !contact.deletedAt;
+  if (!allowOutbound) return null;
+
+  const showWhatsApp = Boolean(onWhatsApp && hasWhatsApp(contact));
+  const showSms = Boolean(onSms && primaryPhone);
+  const showCall = Boolean(primaryPhone);
+  const showEmail = Boolean(onEmail && primaryEmail);
+  if (!showWhatsApp && !showSms && !showCall && !showEmail) return null;
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {onWhatsApp && hasWhatsApp(contact) && (
+      {showWhatsApp && onWhatsApp && (
         <QuickActionButton
           label={t("contacts.whatsapp")}
           icon={MessageCircle}
@@ -34,7 +42,7 @@ export function ContactDetailOverviewQuickActions({
           className={DETAIL_STYLES.whatsappActive}
         />
       )}
-      {onSms && primaryPhone && (
+      {showSms && onSms && primaryPhone && (
         <QuickActionButton
           label={t("contacts.sms")}
           icon={MessageSquare}
@@ -42,7 +50,7 @@ export function ContactDetailOverviewQuickActions({
           className={DETAIL_STYLES.smsAction}
         />
       )}
-      {primaryPhone && (
+      {showCall && primaryPhone && (
         <QuickActionButton
           label={t("contacts.detail.call")}
           icon={Phone}
@@ -51,7 +59,7 @@ export function ContactDetailOverviewQuickActions({
           className={DETAIL_STYLES.callAction}
         />
       )}
-      {onEmail && primaryEmail && (
+      {showEmail && onEmail && primaryEmail && (
         <QuickActionButton
           label={t("contacts.detail.emailAction")}
           icon={Mail}

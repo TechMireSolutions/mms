@@ -4,15 +4,16 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { CONTACTS_API, CONTACTS_GOOGLE_SYNC_QUERY_KEY } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 
-export function useContactGoogleSyncConfig() {
+export function useContactGoogleSyncConfig(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY,
     queryFn: async () => {
       const googleSyncResponse = await apiJson<{ config: ContactGoogleSyncConfigClient }>(`${CONTACTS_API}/google-sync`);
       return googleSyncResponse.config;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && enabled,
     staleTime: 60_000,
   });
 }

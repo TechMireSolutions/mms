@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { translateApp, translateAppParams, type AppTranslationKey } from "./appTranslations.js";
 import type { FieldDefinition } from "./contactTypes.js";
 
 const EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
@@ -33,9 +34,28 @@ export function isUrlOrSocialHandle(value: string): boolean {
   return /^[\w][\w.-]*(\/[\w./-]*)?$/.test(trimmed);
 }
 
+function fieldLabel(fieldDefinition: FieldDefinition, language: string): string {
+  if (fieldDefinition.labelKey) {
+    return translateApp(fieldDefinition.labelKey as AppTranslationKey, language);
+  }
+  return fieldDefinition.label;
+}
+
+function msg(
+  key: AppTranslationKey,
+  language: string,
+  vars?: Record<string, string | number>,
+): string {
+  return translateAppParams(key, language, vars as never);
+}
+
 /** Compiles a dynamic field validator from its field definition. */
-export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodTypeAny {
+export function buildCustomFieldSchema(
+  fieldDefinition: FieldDefinition,
+  language = "en",
+): z.ZodTypeAny {
   let baseSchema: z.ZodTypeAny;
+  const label = fieldLabel(fieldDefinition, language);
 
   switch (fieldDefinition.type) {
     case "text":
@@ -44,13 +64,19 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       if (fieldDefinition.minLength !== undefined) {
         stringSchema = stringSchema.min(
           fieldDefinition.minLength,
-          `${fieldDefinition.label} must be at least ${fieldDefinition.minLength} characters.`,
+          msg("contacts.validation.minLength", language, {
+            label,
+            min: fieldDefinition.minLength,
+          }),
         );
       }
       if (fieldDefinition.maxLength !== undefined) {
         stringSchema = stringSchema.max(
           fieldDefinition.maxLength,
-          `${fieldDefinition.label} must be at most ${fieldDefinition.maxLength} characters.`,
+          msg("contacts.validation.maxLength", language, {
+            label,
+            max: fieldDefinition.maxLength,
+          }),
         );
       }
       baseSchema = stringSchema;
@@ -58,51 +84,64 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
     }
     case "number": {
       let numberSchema = z.coerce.number({
-        message: `${fieldDefinition.label} must be a number.`,
+        message: msg("contacts.validation.mustBeNumber", language, { label }),
       });
       if (fieldDefinition.min !== undefined) {
         numberSchema = numberSchema.min(
           fieldDefinition.min,
-          `${fieldDefinition.label} must be at least ${fieldDefinition.min}.`,
+          msg("contacts.validation.minValue", language, {
+            label,
+            min: fieldDefinition.min,
+          }),
         );
       }
       if (fieldDefinition.max !== undefined) {
         numberSchema = numberSchema.max(
           fieldDefinition.max,
-          `${fieldDefinition.label} must be at most ${fieldDefinition.max}.`,
+          msg("contacts.validation.maxValue", language, {
+            label,
+            max: fieldDefinition.max,
+          }),
         );
       }
       baseSchema = numberSchema;
       break;
     }
     case "email":
-      baseSchema = z.string().regex(EMAIL_RE, { message: "isNotValidEmail" });
+      baseSchema = z.string().regex(EMAIL_RE, {
+        message: msg("contacts.validation.invalidEmail", language),
+      });
       break;
     case "url":
       baseSchema = z.string().refine(isUrlOrSocialHandle, {
-        message: `${fieldDefinition.label} is not a valid URL or handle.`,
+        message: msg("contacts.validation.invalidUrlOrHandle", language, { label }),
       });
       break;
     case "date":
       baseSchema = z.string().refine((value) => !Number.isNaN(Date.parse(value)), {
-        message: `${fieldDefinition.label} is not a valid date.`,
+        message: msg("contacts.validation.invalidDate", language, { label }),
       });
       break;
     case "datetime":
       baseSchema = z.string().refine((value) => !Number.isNaN(Date.parse(value)), {
-        message: `${fieldDefinition.label} is not a valid date/time.`,
+        message: msg("contacts.validation.invalidDateTime", language, { label }),
       });
       break;
     case "currency": {
       let currencySchema = z.string().refine(
         (value) => !value || !Number.isNaN(Number(value)),
-        { message: `${fieldDefinition.label} must be a valid numeric string.` },
+        { message: msg("contacts.validation.mustBeNumericString", language, { label }) },
       );
       if (fieldDefinition.precision !== undefined) {
         const precision = fieldDefinition.precision;
         currencySchema = currencySchema.refine(
           (value) => !value || (value.split('.')[1] ?? '').length <= precision,
-          { message: `Precision exceeded. Max allowed is ${precision} decimal places.` },
+          {
+            message: msg("contacts.validation.precisionExceeded", language, {
+              label,
+              precision,
+            }),
+          },
         );
       }
       baseSchema = currencySchema;
@@ -113,7 +152,7 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       baseSchema = fieldDefinition.options?.length
         ? z.string().refine(
             (value) => !value || isValidOption(fieldDefinition.options ?? [], value),
-            { message: `${fieldDefinition.label} must be one of the allowed options.` },
+            { message: msg("contacts.validation.invalidOption", language, { label }) },
           )
         : z.string();
       break;
@@ -124,7 +163,7 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
             (values) => values.every((value) =>
               isValidOption(fieldDefinition.options ?? [], value)
             ),
-            { message: `${fieldDefinition.label} contains invalid options.` },
+            { message: msg("contacts.validation.invalidOptions", language, { label }) },
           )
         : z.array(z.string());
       break;
@@ -159,6 +198,8 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       baseSchema = z.unknown();
   }
 
+  const requiredMessage = msg("contacts.validation.required", language, { label });
+
   if (!fieldDefinition.required) {
     return z.preprocess(
       (value) => value === "" || value === null || value === undefined ? undefined : value,
@@ -169,32 +210,31 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
   if (TEXT_LIKE_FIELD_TYPES.has(fieldDefinition.type)) {
     return z.preprocess(
       (value) => {
-        // Contact picker ids may be numbers in persisted JSONB.
         if (typeof value === "number" || typeof value === "bigint") return String(value);
         if (typeof value === "string") return value.trim();
         return value;
       },
       baseSchema.refine(
         (value) => typeof value === "string" && value.trim() !== "",
-        { message: `${fieldDefinition.label} is required.` },
+        { message: requiredMessage },
       ),
     );
   }
   if (fieldDefinition.type === "multiselect" || fieldDefinition.type === "multi_select") {
     return baseSchema.refine(
       (value) => Array.isArray(value) && value.length > 0,
-      { message: `${fieldDefinition.label} is required.` },
+      { message: requiredMessage },
     );
   }
   if (fieldDefinition.type === "number") {
     return baseSchema.refine(
       (value) => value !== null && value !== undefined && !Number.isNaN(value as number),
-      { message: `${fieldDefinition.label} is required.` },
+      { message: requiredMessage },
     );
   }
   if (fieldDefinition.type === "boolean") {
     return baseSchema.refine((value) => value === true, {
-      message: `${fieldDefinition.label} is required.`,
+      message: requiredMessage,
     });
   }
   if (fieldDefinition.type === "tags") {
@@ -202,7 +242,7 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
       (value) => Array.isArray(value)
         ? value.length > 0
         : typeof value === "string" && value.trim() !== "",
-      { message: `${fieldDefinition.label} is required.` },
+      { message: requiredMessage },
     );
   }
   return baseSchema;

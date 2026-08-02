@@ -1,6 +1,10 @@
-import React from "react";
-import { Save } from "lucide-react";
-import { FieldConfig } from "@mms/shared";
+import React, { useEffect } from "react";
+import { AlertTriangle, Save } from "lucide-react";
+import {
+  FieldConfig,
+  isContactLockedEnabledTab,
+  isContactSeedFormTab,
+} from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
@@ -12,6 +16,8 @@ interface ContactsSetupPanelProps {
   onConfigChange: (config: FieldConfig) => void;
   onConfigChangeAsync?: (config: FieldConfig) => Promise<void>;
   mode?: "fields" | "preferences";
+  /** Reports Fields draft dirtiness to the Setup shell (leave-guard). */
+  onFieldsDirtyChange?: (isDirty: boolean) => void;
 }
 
 export default function ContactsSetupPanel({
@@ -19,6 +25,7 @@ export default function ContactsSetupPanel({
   onConfigChange,
   onConfigChangeAsync,
   mode,
+  onFieldsDirtyChange,
 }: ContactsSetupPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const {
@@ -27,6 +34,7 @@ export default function ContactsSetupPanel({
     prefs,
     isSaving,
     isPrefsDirty,
+    isFieldsDirty,
     countryOptions,
     countryCodes,
     updateCountryCodes,
@@ -43,13 +51,38 @@ export default function ContactsSetupPanel({
     mode,
   });
 
+  useEffect(() => {
+    if (!showFields) {
+      onFieldsDirtyChange?.(false);
+      return;
+    }
+    onFieldsDirtyChange?.(isFieldsDirty);
+  }, [showFields, isFieldsDirty, onFieldsDirtyChange]);
+
   return (
     <div className="space-y-6 max-w-3xl text-start">
+      {showFields && isFieldsDirty && (
+        <div
+          className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
+          role="alert"
+        >
+          <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span>{t("contacts.setup.unsavedFieldsWarning")}</span>
+        </div>
+      )}
+
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}
           isCoreField={isCoreField}
+          isProtectedTab={isContactSeedFormTab}
+          isLockedTab={isContactLockedEnabledTab}
           onStateChange={() => setSaved(false)}
+          copy={{
+            introTitle: t("contacts.setup.fieldsIntroTitle"),
+            introDescription: t("contacts.setup.fieldsIntroDescription"),
+            customTabDescription: t("contacts.setup.customTabDescription"),
+          }}
         />
       )}
 
@@ -64,14 +97,15 @@ export default function ContactsSetupPanel({
         />
       )}
 
+      {/* Explicit Save (not auto-save): intentional for Contacts Setup Fields audit + column sync. */}
       <div className="flex items-center gap-3 pt-2 border-t border-border sticky bottom-0 bg-background pb-2 flex-wrap">
         <Button
           type="button"
           onClick={handleSave}
-          disabled={isSaving || (showPrefs ? !isPrefsDirty : saved)}
+          disabled={isSaving || (showPrefs ? !isPrefsDirty : !isFieldsDirty)}
           className="flex items-center gap-2 px-5 min-h-11"
         >
-          <Save className="w-4 h-4" />
+          <Save className="w-4 h-4" aria-hidden="true" />
           <span>{saved ? t("contacts.form.saved") : t("contacts.setup.saveAndApply")}</span>
         </Button>
       </div>

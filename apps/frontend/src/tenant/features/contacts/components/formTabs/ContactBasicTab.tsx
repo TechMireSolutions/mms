@@ -37,6 +37,7 @@ export function ContactBasicTab({
         {isFieldEnabled("basic", "avatar") && (
           <ContactBasicAvatarSection
             contactDraft={contactDraft}
+            formInstanceId={formInstanceId}
             cropSrc={cropSrc}
             setCropSrc={setCropSrc}
             updateDraft={updateDraft}

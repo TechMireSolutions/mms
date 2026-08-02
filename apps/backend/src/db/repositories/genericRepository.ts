@@ -251,8 +251,16 @@ export function createGenericRepository<
       conflictSet.deletedAt = sql`excluded.deleted_at`;
     }
     if (shouldSyncSoftDeleteAudit) {
-      conflictSet.deletedBy = sql`excluded.deleted_by`;
-      conflictSet.deletionReason = sql`excluded.deletion_reason`;
+      // Preserve prior audit when payload omits deletedBy/reason but keeps deleted_at.
+      // Clear audit when restoring (excluded.deleted_at IS NULL).
+      conflictSet.deletedBy = sql`CASE
+        WHEN excluded.deleted_at IS NULL THEN NULL
+        ELSE COALESCE(excluded.deleted_by, ${table.deletedBy})
+      END`;
+      conflictSet.deletionReason = sql`CASE
+        WHEN excluded.deleted_at IS NULL THEN NULL
+        ELSE COALESCE(excluded.deletion_reason, ${table.deletionReason})
+      END`;
     }
 
     await withTenantTransaction(subdomain, async (tx) => {

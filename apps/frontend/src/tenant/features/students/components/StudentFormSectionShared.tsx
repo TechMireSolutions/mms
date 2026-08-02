@@ -19,11 +19,13 @@ export function ContactProfileValue({
   label,
   value,
   icon,
+  iconClassName,
   error,
 }: {
   label: string;
   value: string;
   icon: ComponentType<{ className?: string }>;
+  iconClassName?: string;
   error?: string;
 }): React.JSX.Element {
   const { t } = useTranslation();
@@ -37,7 +39,9 @@ export function ContactProfileValue({
           error ? "border-destructive/40 bg-destructive/5" : "border-border/60 bg-muted/25"
         }`}
       >
-        <Icon className={`h-4 w-4 shrink-0 ${error ? "text-destructive" : "text-muted-foreground"}`} />
+        <Icon
+          className={`h-4 w-4 shrink-0 ${error ? "text-destructive" : iconClassName || "text-muted-foreground"}`}
+        />
         <span className={`text-sm font-semibold ${hasValue ? "text-foreground" : "text-muted-foreground"}`}>
           {hasValue ? value : t("students.form.notSetOnContact")}
         </span>

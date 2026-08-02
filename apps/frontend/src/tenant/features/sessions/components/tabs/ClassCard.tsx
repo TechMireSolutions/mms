@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Class } from "@/lib/data/sessionsData";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
 import { teacherNameById } from "@/lib/teachers/teacherAssignment";
 
 interface ClassCardProps {
@@ -23,11 +23,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
   const capacityPercent = Math.round((sessionClass.enrolled / sessionClass.capacity) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
   const teacherLabel = teacherNameById(teachers, sessionClass.teacherId) || sessionClass.teacherName || t("sessions.classes.unassigned");
-  const genderConfig: Record<string, StatusBadgeConfigItem> = {
-    male: { label: t("sessions.classes.gender.male"), cls: SEMANTIC_BADGE.info },
-    female: { label: t("sessions.classes.gender.female"), cls: SEMANTIC_BADGE.secondary },
-    any: { label: t("sessions.classes.gender.any"), cls: SEMANTIC_BADGE.muted },
-  };
+  const genderConfig: Record<string, StatusBadgeConfigItem> = genderStatusBadgeConfig(t, { includeAny: true });
 
   return (
     <motion.article
