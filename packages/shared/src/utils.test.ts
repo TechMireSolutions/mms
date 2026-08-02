@@ -610,7 +610,7 @@ describe("normalizeContactForEdit", () => {
   it("pre-populates one empty row for socials and emergency contacts", () => {
     const draft = normalizeContactForEdit(undefined, undefined);
     expect(draft.socials).toEqual([{ platform: "Facebook", url: "" }]);
-    expect(draft.emergencyContacts).toEqual([{ relationship: "Father", contactId: "" }]);
+    expect(draft.emergencyContacts).toEqual([{ relationship: "Parent", contactId: "" }]);
   });
 
   it("keeps existing socials and emergency contacts", () => {

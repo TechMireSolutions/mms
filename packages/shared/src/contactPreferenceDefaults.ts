@@ -29,7 +29,60 @@ export const COLOR_PALETTES = {
   destructive: { bg: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/15 dark:border-destructive/25", text: "text-destructive", border: "border-destructive/20 dark:border-destructive/25" },
 };
 
-export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [];
+export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [
+  { id: "parent_child", forward: "Parent", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
+  { id: "father_child", forward: "Father", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
+  { id: "mother_child", forward: "Mother", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
+  { id: "spouse", forward: "Spouse", inverse: "Spouse" },
+  { id: "sibling", forward: "Sibling", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
+  { id: "brother_sibling", forward: "Brother", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
+  { id: "sister_sibling", forward: "Sister", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
+  { id: "guardian_dependent", forward: "Guardian", inverse: "Dependent" },
+  { id: "grandparent_grandchild", forward: "Grandparent", inverse: "Grandchild", inverseMale: "Grandson", inverseFemale: "Granddaughter" },
+  { id: "aunt_uncle", forward: "Aunt/Uncle", inverse: "Niece/Nephew", inverseMale: "Nephew", inverseFemale: "Niece" },
+  { id: "cousin", forward: "Cousin", inverse: "Cousin" },
+  { id: "inlaw", forward: "Parent-In-Law", inverse: "Child-In-Law" },
+  { id: "other", forward: "Other", inverse: "Other" },
+];
+
+/**
+ * Flattens configured 2-sided relationship pairs into unique dropdown option labels
+ * (forward, inverse, and optional gendered inverse labels).
+ */
+export function deriveRelationshipOptionsFromPairs(pairs: RelationshipPair[]): string[] {
+  const labels = pairs.flatMap((pair) => [
+    pair.forward,
+    pair.inverse,
+    pair.inverseMale,
+    pair.inverseFemale,
+  ]);
+  return uniqueRelationshipLabels(labels);
+}
+
+/**
+ * Merges relationship option lists case-insensitively, preserving first-seen casing.
+ * Pair-derived labels are listed before existing collection options.
+ */
+export function mergeRelationshipOptionLabels(
+  primaryLabels: readonly (string | undefined | null)[],
+  secondaryLabels: readonly (string | undefined | null)[] = [],
+): string[] {
+  return uniqueRelationshipLabels([...primaryLabels, ...secondaryLabels]);
+}
+
+function uniqueRelationshipLabels(labels: readonly (string | undefined | null)[]): string[] {
+  const seen = new Set<string>();
+  const options: string[] = [];
+  for (const label of labels) {
+    const trimmed = typeof label === 'string' ? label.trim() : '';
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    options.push(trimmed);
+  }
+  return options;
+}
 
 export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   defaultCountry: "Pakistan",
@@ -60,6 +113,24 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   namePrefixesToIgnore: ["syed", "syeda"],
   relationshipPairs: DEFAULT_RELATIONSHIP_PAIRS,
 };
+
+/**
+ * Merges stored contact preferences onto defaults.
+ * Empty `relationshipPairs` falls back to DEFAULT_RELATIONSHIP_PAIRS so emergency
+ * dropdowns and reciprocal inference stay usable after the cleared-defaults era.
+ */
+export function normalizeContactPreferences(
+  partial?: Partial<ContactPreferences> | null,
+): ContactPreferences {
+  const merged: ContactPreferences = {
+    ...DEFAULT_CONTACT_PREFERENCES,
+    ...(partial && typeof partial === "object" && !Array.isArray(partial) ? partial : {}),
+  };
+  if (!Array.isArray(merged.relationshipPairs) || merged.relationshipPairs.length === 0) {
+    merged.relationshipPairs = [...DEFAULT_RELATIONSHIP_PAIRS];
+  }
+  return merged;
+}
 
 
 
@@ -105,4 +176,4 @@ export const COUNTRY_CODES = [
   { country: "Indonesia",             code: "+62"  },
 ];
 
-export const RELATIONSHIPS: string[] = [];
+export const RELATIONSHIPS: string[] = deriveRelationshipOptionsFromPairs(DEFAULT_RELATIONSHIP_PAIRS);

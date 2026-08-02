@@ -13,7 +13,6 @@ import {
   ColumnRegistryEntry,
 } from "@mms/shared";
 import {
-  DEFAULT_PREFERENCES,
   loadPreferences,
   savePreferences,
   savePreferencesAsync,
@@ -35,18 +34,12 @@ export function useContactConfigCore({
 }) {
   const lastUserIdRef = useRef<string | number | undefined>(userId);
   const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
-  const [prefs, setPrefsState] = useState<ContactPreferences>(() => ({
-    ...DEFAULT_PREFERENCES,
-    ...loadPreferences(),
-  }));
+  const [prefs, setPrefsState] = useState<ContactPreferences>(() => loadPreferences());
   const { rawUserColumnOverlay, updateUserColumnLayout } = useContactConfigColumnPrefs(userId);
 
   const reloadContactConfigFromDatabaseCache = useCallback(() => {
     setFieldConfigState(loadFieldConfig());
-    setPrefsState({
-      ...DEFAULT_PREFERENCES,
-      ...loadPreferences(),
-    });
+    setPrefsState(loadPreferences());
     reloadCollections();
   }, [reloadCollections]);
 

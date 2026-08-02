@@ -3,6 +3,7 @@ import {
   CONTACTS_SAVED_REPORT_CATEGORY,
   canDeleteContactsSavedReport,
   canViewContactsSavedReport,
+  normalizeContactPreferences,
   type ContactColumnPreference,
   type ContactPreferences,
   type ContactsSavedReport,
@@ -38,7 +39,7 @@ const LEGACY_PREFERENCES_KEY = 'contact_prefs';
 export async function loadContactPreferences(): Promise<ContactPreferences | null> {
   const raw = await fetchMigratedObject(PREFERENCES_KEY, LEGACY_PREFERENCES_KEY);
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return raw as ContactPreferences;
+  return normalizeContactPreferences(raw as Partial<ContactPreferences>);
 }
 
 export async function setUserColumnPreferences(userId: string, preferences: ContactColumnPreference[]): Promise<void> {

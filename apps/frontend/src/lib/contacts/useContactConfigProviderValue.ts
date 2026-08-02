@@ -1,5 +1,14 @@
 import { useMemo } from "react";
-import type { ColumnRegistryEntry, ContactPreferences, FieldConfig, FieldDefinition } from "@mms/shared";
+import {
+  DEFAULT_RELATIONSHIP_PAIRS,
+  deriveRelationshipOptionsFromPairs,
+  mergeRelationshipOptionLabels,
+  type ColumnRegistryEntry,
+  type ContactPreferences,
+  type FieldConfig,
+  type FieldDefinition,
+  type RelationshipPair,
+} from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
 
@@ -18,7 +27,6 @@ export function useContactConfigProviderValue({
   genders,
   socialPlatforms,
   relationships,
-  relationshipPairs,
   phoneLabels,
   emailLabels,
   addressLabels,
@@ -55,7 +63,6 @@ export function useContactConfigProviderValue({
   genders: string[];
   socialPlatforms: string[];
   relationships: string[];
-  relationshipPairs: import("@mms/shared").RelationshipPair[];
   phoneLabels: string[];
   emailLabels: string[];
   addressLabels: string[];
@@ -67,7 +74,7 @@ export function useContactConfigProviderValue({
   updateGenders: (genderOptions: string[]) => void;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
   updateRelationships: (relationshipOptions: string[]) => void;
-  updateRelationshipPairs: (pairs: import("@mms/shared").RelationshipPair[]) => void;
+  updateRelationshipPairs: (pairs: RelationshipPair[]) => void;
   updatePhoneLabels: (phoneLabelOptions: string[]) => void;
   updateEmailLabels: (emailLabelOptions: string[]) => void;
   updateAddressLabels: (addressLabelOptions: string[]) => void;
@@ -81,6 +88,18 @@ export function useContactConfigProviderValue({
   const defaultPhoneCountryCode = useMemo(
     () => getFallbackCountryCode(prefs, countryCodesMap, countryCodes),
     [countryCodes, countryCodesMap, prefs],
+  );
+
+  const resolvedRelationshipPairs = prefs.relationshipPairs?.length
+    ? prefs.relationshipPairs
+    : DEFAULT_RELATIONSHIP_PAIRS;
+  const resolvedRelationships = useMemo(
+    () =>
+      mergeRelationshipOptionLabels(
+        deriveRelationshipOptionsFromPairs(resolvedRelationshipPairs),
+        relationships,
+      ),
+    [relationships, resolvedRelationshipPairs],
   );
 
   return useMemo(
@@ -98,8 +117,8 @@ export function useContactConfigProviderValue({
       isTabFieldRequired,
       genders,
       socialPlatforms,
-      relationships,
-      relationshipPairs,
+      relationships: resolvedRelationships,
+      relationshipPairs: resolvedRelationshipPairs,
       phoneLabels,
       emailLabels,
       addressLabels,
@@ -137,8 +156,8 @@ export function useContactConfigProviderValue({
       isTabFieldRequired,
       genders,
       socialPlatforms,
-      relationships,
-      relationshipPairs,
+      resolvedRelationships,
+      resolvedRelationshipPairs,
       phoneLabels,
       emailLabels,
       addressLabels,
@@ -164,4 +183,3 @@ export function useContactConfigProviderValue({
     ],
   );
 }
-

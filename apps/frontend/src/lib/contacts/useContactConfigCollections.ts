@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import type { FieldConfig, RelationshipPair } from "@mms/shared";
+import { deriveRelationshipOptionsFromPairs, type FieldConfig, type RelationshipPair } from "@mms/shared";
 import { getCollection, saveCollectionAsync } from "@/lib/db";
 
 import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
@@ -27,9 +27,6 @@ export function useContactConfigCollections({
   const [socialPlatforms, setSocialPlatformsState] = useState<string[]>(() =>
     getCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, contactConfigDefaults.socialPlatforms),
   );
-  const [relationshipPairs, setRelationshipPairsState] = useState<RelationshipPair[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationshipPairs, contactConfigDefaults.relationshipPairs),
-  );
   const [relationships, setRelationshipsState] = useState<string[]>(() =>
     getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships),
   );
@@ -53,9 +50,6 @@ export function useContactConfigCollections({
     );
     setRelationshipsState(
       getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships),
-    );
-    setRelationshipPairsState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationshipPairs, contactConfigDefaults.relationshipPairs),
     );
     setPhoneLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, contactConfigDefaults.phoneLabels));
     setEmailLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, contactConfigDefaults.emailLabels));
@@ -112,21 +106,16 @@ export function useContactConfigCollections({
     "emergency",
     "relationship",
   );
+  /**
+   * Replaces emergency relationship dropdown options from preference-owned pairs.
+   * Pairs SSOT is contact_preferences — not a document-store collection.
+   */
   const updateRelationshipPairs = useCallback(
     async (pairs: RelationshipPair[]) => {
-      setRelationshipPairsState(pairs);
-      await saveCollectionAsync(CONTACT_CONFIG_COLLECTION_KEYS.relationshipPairs, pairs);
-      // Derive and sync flat relationship options from pairs
-      const options = Array.from(
-        new Set(
-          pairs.flatMap((p) => [p.forward, p.inverse, p.inverseMale, p.inverseFemale]).filter((v): v is string => Boolean(v && v.trim())),
-        ),
-      );
-      if (options.length > 0) {
-        setRelationshipsState(options);
-        await saveCollectionAsync(CONTACT_CONFIG_COLLECTION_KEYS.relationships, options);
-        await syncFieldOptions("emergency", "relationship", options);
-      }
+      const options = deriveRelationshipOptionsFromPairs(pairs);
+      setRelationshipsState(options);
+      await saveCollectionAsync(CONTACT_CONFIG_COLLECTION_KEYS.relationships, options);
+      await syncFieldOptions("emergency", "relationship", options);
     },
     [syncFieldOptions],
   );
@@ -168,7 +157,6 @@ export function useContactConfigCollections({
     genders,
     socialPlatforms,
     relationships,
-    relationshipPairs,
     phoneLabels,
     emailLabels,
     addressLabels,

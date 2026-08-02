@@ -1,13 +1,15 @@
 import { z } from 'zod';
 import { tenantDatabaseSnapshotSchema } from '@mms/shared';
 
-const jsonRecord = z.record(z.string(), z.unknown());
-
+/**
+ * Lookup collections (`genders`, `relationships`, `phoneLabels`, …) store plain strings.
+ * Entity / structured collections store objects. Accept both shapes.
+ */
 export const syncPayloadSchema = tenantDatabaseSnapshotSchema;
 
 export const collectionSaveBodySchema = z.union([
-  z.array(jsonRecord),
-  z.object({ data: z.array(jsonRecord) }),
+  z.array(z.unknown()),
+  z.object({ data: z.array(z.unknown()) }),
 ]);
 
 export function normalizeCollectionSaveBody(

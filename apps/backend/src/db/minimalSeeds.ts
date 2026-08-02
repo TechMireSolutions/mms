@@ -5,6 +5,7 @@ import {
   DEFAULT_SESSIONS_SETTINGS,
   DEFAULT_ATTENDANCE_SETTINGS,
   DEFAULT_QUESTION_BANK_SETTINGS,
+  RELATIONSHIPS,
   WORKSPACES_COLLECTION,
   sanitizeContactSeedObjects,
 } from '@mms/shared';
@@ -40,7 +41,7 @@ export async function getMinimalCollectionsForSeed(): Promise<Record<string, unk
       minimal[name] = [];
     }
   }
-  minimal['relationships'] = [];
+  minimal['relationships'] = [...RELATIONSHIPS];
   minimal['questions'] = [];
   minimal['tests'] = [];
   minimal['assessment_results'] = [];

@@ -1,6 +1,7 @@
 import {
   CONTACTS_MODULE_MANIFEST,
   DEFAULT_CONTACT_PREFERENCES,
+  normalizeContactPreferences,
   type ContactPreferences,
   type FieldConfig,
 } from "@mms/shared";
@@ -33,15 +34,14 @@ function parseLegacyLocalPreferences(): Partial<ContactPreferences> {
 }
 
 /** Loads contact preferences — manifest object key authoritative; legacy keys one-shot merge. */
-function loadPreferences(): Partial<ContactPreferences> {
+function loadPreferences(): ContactPreferences {
   const fromObject = readObjectLocal<Partial<ContactPreferences>>(PREFERENCES_OBJECT_KEY)
     ?? readObjectLocal<Partial<ContactPreferences>>(LEGACY_PREFERENCES_OBJECT_KEY);
   const fromLocal = parseLegacyLocalPreferences();
-  return {
-    ...DEFAULT_CONTACT_PREFERENCES,
+  return normalizeContactPreferences({
     ...fromLocal,
     ...(fromObject && typeof fromObject === "object" ? fromObject : {}),
-  };
+  });
 }
 
 /** Persists contact preferences to the manifest object key only. */

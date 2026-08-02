@@ -68,7 +68,7 @@ export default function ContactsSetupPanel({
         <Button
           type="button"
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || (showPrefs ? !isPrefsDirty : saved)}
           className="flex items-center gap-2 px-5 min-h-11"
         >
           <Save className="w-4 h-4" />
