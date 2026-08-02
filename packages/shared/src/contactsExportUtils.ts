@@ -95,14 +95,14 @@ function cellValue(
   if (columnId === 'socials_url') {
     return (contact.socials || []).map((s) => s.url).filter(Boolean).join('; ');
   }
-  if (columnId === 'emergency_contact') {
-    return (contact.emergencyContacts || [])
+  if (columnId === 'relationship_contact' || columnId === 'emergency_contact') {
+    return (contact.relationshipContacts || [])
       .map((ec) => ec.name || (ec.contactId ? String(ec.contactId) : ''))
       .filter(Boolean)
       .join('; ');
   }
-  if (columnId === 'emergency_relationship') {
-    return (contact.emergencyContacts || [])
+  if (columnId === 'relationship_type' || columnId === 'emergency_relationship') {
+    return (contact.relationshipContacts || [])
       .map((ec) => ec.relationship)
       .filter(Boolean)
       .join('; ');

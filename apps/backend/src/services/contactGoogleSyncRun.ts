@@ -72,7 +72,7 @@ function mapGoogleConnectionToContact(person: GoogleConnection, defaults: Contac
         ]
       : [],
     socials: [],
-    emergencyContacts: [],
+    relationshipContacts: [],
     createdAt: new Date().toISOString().slice(0, 10),
   };
 

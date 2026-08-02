@@ -11,6 +11,7 @@ const CONTACT_TAB_ICONS: Record<string, typeof User> = {
   addresses: MapPin,
   socials: Share2,
   emergency: Heart,
+  relationship: Heart,
 };
 
 export const CONTACT_FORM_TABS = DEFAULT_FORM_TABS

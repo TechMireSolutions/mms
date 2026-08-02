@@ -33,7 +33,7 @@ export const DEFAULT_FORM_TABS: TabDefinition[] = [
   { key: "emails",    label: "Emails",     labelKey: "contacts.form.tabEmails",    enabled: true, order: 2, isSystem: true },
   { key: "addresses", label: "Addresses",  labelKey: "contacts.form.tabAddresses", enabled: true, order: 3, isSystem: true },
   { key: "socials",   label: "Socials",    labelKey: "contacts.form.tabSocials",   enabled: true, order: 4, isSystem: true },
-  { key: "emergency", label: "Emergency",  labelKey: "contacts.form.tabEmergency", enabled: true, order: 5, isSystem: true },
+  { key: "relationship", label: "Relationship", labelKey: "contacts.form.tabRelationship", enabled: true, order: 5, isSystem: true },
 ];
 
 export const DEFAULT_DETAIL_TABS: TabDefinition[] = [
@@ -64,8 +64,8 @@ export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "country",                label: "Country",                labelKey: "contacts.columns.country",                enabled: false, order: 12, sortable: true,  width: 110 },
   { key: "socials_platform",       label: "Social Platforms",       labelKey: "contacts.columns.socialPlatforms",        enabled: false, order: 13, sortable: false, width: 130 },
   { key: "socials_url",            label: "Social Links",           labelKey: "contacts.columns.socialLinks",            enabled: false, order: 14, sortable: false, width: 150 },
-  { key: "emergency_contact",      label: "Emergency Contact",      labelKey: "contacts.columns.emergencyContact",       enabled: false, order: 15, sortable: false, width: 150 },
-  { key: "emergency_relationship", label: "Emergency Relationship", labelKey: "contacts.columns.emergencyRelationship",  enabled: false, order: 16, sortable: false, width: 140 },
+  { key: "relationship_contact", label: "Relationship Contact", labelKey: "contacts.columns.relationshipContact", enabled: false, order: 15, sortable: false, width: 150 },
+  { key: "relationship_type",    label: "Relationship Type",    labelKey: "contacts.columns.relationshipType",    enabled: false, order: 16, sortable: false, width: 140 },
 ];
 
 export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: string }> = {
@@ -84,6 +84,6 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   country: { tabId: "addresses", fieldId: "country" },
   socials_platform: { tabId: "socials", fieldId: "platform" },
   socials_url: { tabId: "socials", fieldId: "url" },
-  emergency_contact: { tabId: "emergency", fieldId: "contactId" },
-  emergency_relationship: { tabId: "emergency", fieldId: "relationship" },
+  relationship_contact: { tabId: "relationship", fieldId: "contactId" },
+  relationship_type: { tabId: "relationship", fieldId: "relationship" },
 };

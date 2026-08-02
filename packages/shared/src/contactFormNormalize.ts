@@ -10,19 +10,20 @@ import {
   type EmailAddress as ContactEmail,
   type Address as ContactAddress,
   type SocialLink as ContactSocial,
-  type EmergencyContact,
+  type RelationshipContact,
 } from "./contactTypes.js";
 import { getPrimaryPhone, normalizeToE164 } from "./phoneUtils.js";
 import { getPrimaryEmail } from "./contactDisplayUtils.js";
 import {
   normalizeAddressItem,
   normalizeEmailItem,
-  normalizeEmergencyItem,
+  normalizeRelationshipContactItem,
   normalizePhoneItem,
   normalizeSocialItem,
   type ContactItemNormalizeDefaults,
 } from "./contactItemNormalize.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
+import { hydrateContactRelationshipFields } from "./contactRelationshipHydrate.js";
 
 export type { ContactItemNormalizeDefaults } from "./contactItemNormalize.js";
 
@@ -48,7 +49,7 @@ export function normalizeContactForEdit(
   };
   const dialDefault = defaults.defaultPhoneCountryCode || "";
 
-  const merged: Partial<Contact> = {
+  const merged: Partial<Contact> = hydrateContactRelationshipFields({
     firstName: "",
     lastName: "",
     name: "",
@@ -61,11 +62,11 @@ export function normalizeContactForEdit(
     emails: [],
     addresses: [],
     socials: [],
-    emergencyContacts: [],
+    relationshipContacts: [],
     relationships: [],
     ...initialDraft,
     ...raw,
-  };
+  });
 
   let firstName = (merged.firstName || "").trim();
   let lastName = (merged.lastName || "").trim();
@@ -169,12 +170,12 @@ export function normalizeContactForEdit(
     socials = [{ platform: defaults.socialPlatform || "Facebook", url: "" }];
   }
 
-  let emergencyContacts: EmergencyContact[] = Array.isArray(merged.emergencyContacts)
-    ? merged.emergencyContacts.map((item) => normalizeEmergencyItem(item, defaults))
+  let relationshipContacts: RelationshipContact[] = Array.isArray(merged.relationshipContacts)
+    ? merged.relationshipContacts.map((item) => normalizeRelationshipContactItem(item, defaults))
     : [];
 
-  if (emergencyContacts.length === 0) {
-    emergencyContacts = [{ relationship: defaults.relationship || RELATIONSHIPS[0], contactId: "" }];
+  if (relationshipContacts.length === 0) {
+    relationshipContacts = [{ relationship: defaults.relationship || RELATIONSHIPS[0], contactId: "" }];
   }
 
   return {
@@ -186,7 +187,7 @@ export function normalizeContactForEdit(
     emails,
     addresses,
     socials,
-    emergencyContacts,
+    relationshipContacts,
   } as Partial<Contact>;
 }
 

@@ -5,7 +5,7 @@ const LIST_TAB_DATA_KEYS: Record<string, string> = {
   emails: 'emails',
   addresses: 'addresses',
   socials: 'socials',
-  emergency: 'emergencyContacts',
+  relationship: 'relationshipContacts',
 };
 
 const COMPLETENESS_SKIP_TYPES = new Set(['boolean', 'ai_summary']);

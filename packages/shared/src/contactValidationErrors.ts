@@ -6,7 +6,7 @@ const LIST_TAB_TO_TAB_ID: Record<string, string> = {
   emails: "emails",
   addresses: "addresses",
   socials: "socials",
-  emergencyContacts: "emergency",
+  relationshipContacts: "relationship",
   relationships: "relationships",
 };
 
@@ -15,7 +15,7 @@ const LIST_TAB_PREFIX_MAP: Record<string, string> = {
   emails: "Email",
   addresses: "Address",
   socials: "Social Link",
-  emergencyContacts: "Emergency Contact",
+  relationshipContacts: "Relationship",
   relationships: "Relationship",
 };
 

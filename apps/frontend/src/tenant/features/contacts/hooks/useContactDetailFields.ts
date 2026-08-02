@@ -71,7 +71,10 @@ export function useContactDetailFields({
       emails: filterVisibleCollection(fields.emails, viewerRole),
       addresses: filterVisibleCollection(fields.addresses, viewerRole),
       socials: filterVisibleCollection(fields.socials, viewerRole),
-      emergency: filterVisibleCollection(fields.emergency, viewerRole),
+      relationship: filterVisibleCollection(
+        fields.relationship ?? fields.emergency,
+        viewerRole,
+      ),
     }),
     [fields, viewerRole],
   );

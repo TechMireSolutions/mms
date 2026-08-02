@@ -18,15 +18,17 @@ export function hasContactCardColumnData(contact: Contact, colId: string): boole
       return Boolean(contact.socials && contact.socials.some((s) => s.platform && s.platform.trim().length > 0));
     case "socials_url":
       return Boolean(contact.socials && contact.socials.some((s) => s.url && s.url.trim().length > 0));
+    case "relationship_contact":
     case "emergency_contact":
       return Boolean(
-        contact.emergencyContacts &&
-        contact.emergencyContacts.some((ec) => (ec.name && ec.name.trim().length > 0) || ec.contactId),
+        contact.relationshipContacts &&
+        contact.relationshipContacts.some((ec) => (ec.name && ec.name.trim().length > 0) || ec.contactId),
       );
+    case "relationship_type":
     case "emergency_relationship":
       return Boolean(
-        contact.emergencyContacts &&
-        contact.emergencyContacts.some((ec) => ec.relationship && ec.relationship.trim().length > 0),
+        contact.relationshipContacts &&
+        contact.relationshipContacts.some((ec) => ec.relationship && ec.relationship.trim().length > 0),
       );
     case "line1":
     case "city":

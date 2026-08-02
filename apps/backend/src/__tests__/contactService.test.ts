@@ -48,7 +48,7 @@ function contact(overrides: Partial<Contact>): Contact {
     name: 'Contact One',
     firstName: 'Contact',
     lastName: 'One',
-    emergencyContacts: [],
+    relationshipContacts: [],
     relationships: [],
     ...overrides,
   };
@@ -102,14 +102,14 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Aisha Khan',
       firstName: 'Aisha',
       gender: 'Female',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Father' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
     });
     const target = contact({
       id: 'b',
       name: 'Bilal Khan',
       firstName: 'Bilal',
       gender: 'Male',
-      emergencyContacts: [],
+      relationshipContacts: [],
     });
     mockFindContactsByIds.mockResolvedValue([target]);
 
@@ -120,7 +120,7 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
       }),
     ]);
     expect(mockInvalidateDuplicateScanCache).toHaveBeenCalled();
@@ -132,14 +132,14 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Dr. Tariq',
       firstName: 'Tariq',
       gender: 'Male',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Mentor' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Mentor' }],
     });
     const target = contact({
       id: 'b',
       name: 'Zayn Ahmad',
       firstName: 'Zayn',
       gender: 'Male',
-      emergencyContacts: [],
+      relationshipContacts: [],
     });
     mockFindContactsByIds.mockResolvedValue([target]);
 
@@ -148,7 +148,7 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Mentor', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Mentor', 1)]),
       }),
     ]);
   });
@@ -159,14 +159,14 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Dr. Tariq',
       firstName: 'Tariq',
       gender: 'Male',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Mentor' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Mentor' }],
     });
     const target = contact({
       id: 'b',
       name: 'Zayn Ahmad',
       firstName: 'Zayn',
       gender: 'Male',
-      emergencyContacts: [],
+      relationshipContacts: [],
     });
     mockFindContactsByIds.mockResolvedValue([target]);
 
@@ -177,7 +177,7 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Mentee', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Mentee', 1)]),
       }),
     ]);
   });
@@ -196,7 +196,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Sara Khan',
       firstName: 'Sara',
       gender: 'Female',
-      emergencyContacts: [
+      relationshipContacts: [
         { contactId: 'a', relationship: 'Other' },
         { contactId: 'c', relationship: 'Sister' },
       ],
@@ -206,13 +206,13 @@ describe('contactService emergency reciprocal mapping', () => {
 
     await updateContactById('a', {
       ...existingSource,
-      emergencyContacts: [{ contactId: 'b', relationship: 'Son' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Son' }],
     });
 
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([
+        relationshipContacts: expect.arrayContaining([
           inferredLink('a', 'Father', 1),
           link('c', 'Sister'),
         ]),
@@ -226,7 +226,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Ahmed Khan',
       firstName: 'Ahmed',
       gender: 'Male',
-      emergencyContacts: [
+      relationshipContacts: [
         { contactId: 'b', relationship: 'Sister' },
         { contactId: 'c', relationship: 'Spouse' },
         { contactId: 'd', relationship: 'Guardian' },
@@ -245,19 +245,19 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Brother', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Brother', 1)]),
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Spouse', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Spouse', 1)]),
       }),
       expect.objectContaining({
         id: 'd',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Dependent', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Dependent', 1)]),
       }),
       expect.objectContaining({
         id: 'e',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Other', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Other', 1)]),
       }),
     ]);
   });
@@ -268,7 +268,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Aisha Khan',
       firstName: 'Aisha',
       gender: 'Female',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Father' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
     });
     const family = [
       contact({
@@ -276,7 +276,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Bilal Khan',
         firstName: 'Bilal',
         gender: 'Male',
-        emergencyContacts: [
+        relationshipContacts: [
           { contactId: 'c', relationship: 'Mother' },
           { contactId: 'd', relationship: 'Brother' },
         ],
@@ -287,7 +287,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Danish Khan',
         firstName: 'Danish',
         gender: 'Male',
-        emergencyContacts: [{ contactId: 'e', relationship: 'Daughter' }],
+        relationshipContacts: [{ contactId: 'e', relationship: 'Daughter' }],
       }),
       contact({ id: 'e', name: 'Eman Khan', firstName: 'Eman', gender: 'Female' }),
     ];
@@ -300,11 +300,11 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
       }),
       expect.objectContaining({
         id: 'a',
-        emergencyContacts: expect.arrayContaining([
+        relationshipContacts: expect.arrayContaining([
           link('b', 'Father'),
           inferredLink('c', 'Grandmother', 2),
           inferredLink('d', 'Uncle', 2),
@@ -313,15 +313,15 @@ describe('contactService emergency reciprocal mapping', () => {
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
       }),
       expect.objectContaining({
         id: 'd',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Niece', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Niece', 2)]),
       }),
       expect.objectContaining({
         id: 'e',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Cousin', 3)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Cousin', 3)]),
       }),
     ]));
   });
@@ -332,7 +332,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Ahmed Khan',
       firstName: 'Ahmed',
       gender: 'Male',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Spouse' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Spouse' }],
     });
     const family = [
       contact({
@@ -340,7 +340,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Sara Khan',
         firstName: 'Sara',
         gender: 'Female',
-        emergencyContacts: [
+        relationshipContacts: [
           { contactId: 'c', relationship: 'Father' },
           { contactId: 'd', relationship: 'Sister' },
         ],
@@ -357,11 +357,11 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Spouse', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Spouse', 1)]),
       }),
       expect.objectContaining({
         id: 'a',
-        emergencyContacts: expect.arrayContaining([
+        relationshipContacts: expect.arrayContaining([
           link('b', 'Spouse'),
           inferredLink('c', 'Father-In-Law', 2),
           inferredLink('d', 'Sister-In-Law', 2),
@@ -369,11 +369,11 @@ describe('contactService emergency reciprocal mapping', () => {
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Son-In-Law', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Son-In-Law', 2)]),
       }),
       expect.objectContaining({
         id: 'd',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Brother-In-Law', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Brother-In-Law', 2)]),
       }),
     ]));
   });
@@ -384,7 +384,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Aisha Khan',
       firstName: 'Aisha',
       gender: 'Female',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Father' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
     });
     const family = [
       contact({
@@ -392,7 +392,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Bilal Khan',
         firstName: 'Bilal',
         gender: 'Male',
-        emergencyContacts: [
+        relationshipContacts: [
           { contactId: 'c', relationship: 'Spouse' },
           { contactId: 'd', relationship: 'Sister' },
         ],
@@ -403,7 +403,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Eman Khan',
         firstName: 'Eman',
         gender: 'Female',
-        emergencyContacts: [{ contactId: 'e', relationship: 'Son' }],
+        relationshipContacts: [{ contactId: 'e', relationship: 'Son' }],
       }),
       contact({ id: 'e', name: 'Omar Khan', firstName: 'Omar', gender: 'Male' }),
     ];
@@ -416,7 +416,7 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
       expect.objectContaining({
         id: 'a',
-        emergencyContacts: expect.arrayContaining([
+        relationshipContacts: expect.arrayContaining([
           link('b', 'Father'),
           inferredLink('c', 'Mother', 2),
           inferredLink('d', 'Aunt', 2),
@@ -425,11 +425,11 @@ describe('contactService emergency reciprocal mapping', () => {
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 2)]),
       }),
       expect.objectContaining({
         id: 'e',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Cousin', 3)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Cousin', 3)]),
       }),
     ]));
   });
@@ -440,7 +440,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Ahmed Khan',
       firstName: 'Ahmed',
       gender: 'Male',
-      emergencyContacts: [
+      relationshipContacts: [
         { contactId: 'b', relationship: 'Son' },
         { contactId: 'd', relationship: 'Brother' },
       ],
@@ -451,7 +451,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Bilal Khan',
         firstName: 'Bilal',
         gender: 'Male',
-        emergencyContacts: [{ contactId: 'c', relationship: 'Sister' }],
+        relationshipContacts: [{ contactId: 'c', relationship: 'Sister' }],
       }),
       contact({ id: 'c', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
       contact({
@@ -459,7 +459,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Danish Khan',
         firstName: 'Danish',
         gender: 'Male',
-        emergencyContacts: [{ contactId: 'e', relationship: 'Sister' }],
+        relationshipContacts: [{ contactId: 'e', relationship: 'Sister' }],
       }),
       contact({ id: 'e', name: 'Eman Khan', firstName: 'Eman', gender: 'Female' }),
     ];
@@ -472,7 +472,7 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
       expect.objectContaining({
         id: 'a',
-        emergencyContacts: expect.arrayContaining([
+        relationshipContacts: expect.arrayContaining([
           link('b', 'Son'),
           link('d', 'Brother'),
           inferredLink('c', 'Daughter', 2),
@@ -481,11 +481,11 @@ describe('contactService emergency reciprocal mapping', () => {
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Father', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Father', 2)]),
       }),
       expect.objectContaining({
         id: 'e',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Brother', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Brother', 2)]),
       }),
     ]));
   });
@@ -496,7 +496,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Unknown Source',
       firstName: 'Unknown',
       gender: '',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Parent' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Parent' }],
     });
     const family = [
       contact({
@@ -504,7 +504,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Unknown Parent',
         firstName: 'Unknown',
         gender: '',
-        emergencyContacts: [
+        relationshipContacts: [
           { contactId: 'c', relationship: 'Parent' },
           { contactId: 'd', relationship: 'Sibling' },
         ],
@@ -521,11 +521,11 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Child', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Child', 1)]),
       }),
       expect.objectContaining({
         id: 'a',
-        emergencyContacts: expect.arrayContaining([
+        relationshipContacts: expect.arrayContaining([
           link('b', 'Parent'),
           inferredLink('c', 'Grandparent', 2),
           inferredLink('d', 'Aunt/Uncle', 2),
@@ -533,11 +533,11 @@ describe('contactService emergency reciprocal mapping', () => {
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Grandchild', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Grandchild', 2)]),
       }),
       expect.objectContaining({
         id: 'd',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Niece/Nephew', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Niece/Nephew', 2)]),
       }),
     ]));
   });
@@ -548,7 +548,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Aisha Khan',
       firstName: 'Aisha',
       gender: 'Female',
-      emergencyContacts: [
+      relationshipContacts: [
         { contactId: 'b', relationship: 'Father' },
         { contactId: 'c', relationship: 'Guardian' },
       ],
@@ -559,7 +559,7 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Bilal Khan',
         firstName: 'Bilal',
         gender: 'Male',
-        emergencyContacts: [{ contactId: 'c', relationship: 'Mother' }],
+        relationshipContacts: [{ contactId: 'c', relationship: 'Mother' }],
       }),
       contact({ id: 'c', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
     ];
@@ -572,11 +572,11 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Dependent', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Dependent', 1)]),
       }),
     ]);
     expect(mockBulkSaveContacts).not.toHaveBeenCalledWith(
@@ -584,7 +584,7 @@ describe('contactService emergency reciprocal mapping', () => {
       expect.arrayContaining([
         expect.objectContaining({
           id: 'a',
-          emergencyContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
+          relationshipContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
         }),
       ]),
     );
@@ -596,7 +596,7 @@ describe('contactService emergency reciprocal mapping', () => {
       name: 'Aisha Khan',
       firstName: 'Aisha',
       gender: 'Female',
-      emergencyContacts: [{ contactId: 'b', relationship: 'Father' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
     });
     const family = [
       contact({
@@ -604,14 +604,14 @@ describe('contactService emergency reciprocal mapping', () => {
         name: 'Bilal Khan',
         firstName: 'Bilal',
         gender: 'Male',
-        emergencyContacts: [{ contactId: 'c', relationship: 'Mother' }],
+        relationshipContacts: [{ contactId: 'c', relationship: 'Mother' }],
       }),
       contact({
         id: 'c',
         name: 'Nadia Khan',
         firstName: 'Nadia',
         gender: 'Female',
-        emergencyContacts: [{ contactId: 'a', relationship: 'Guardian' }],
+        relationshipContacts: [{ contactId: 'a', relationship: 'Guardian' }],
       }),
     ];
     mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
@@ -623,7 +623,7 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
       }),
     ]);
     expect(mockBulkSaveContacts).not.toHaveBeenCalledWith(
@@ -631,11 +631,11 @@ describe('contactService emergency reciprocal mapping', () => {
       expect.arrayContaining([
         expect.objectContaining({
           id: 'a',
-          emergencyContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
+          relationshipContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
         }),
         expect.objectContaining({
           id: 'c',
-          emergencyContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
+          relationshipContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
         }),
       ]),
     );
@@ -668,15 +668,15 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
       expect.objectContaining({
         id: 'b',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
       }),
       expect.objectContaining({
         id: 'a',
-        emergencyContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
       }),
       expect.objectContaining({
         id: 'c',
-        emergencyContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
       }),
     ]));
   });
@@ -697,7 +697,7 @@ describe('contactService emergency reciprocal mapping', () => {
       firstName: 'Ali',
       name: 'Ali',
       lastName: '',
-      emergencyContacts: [],
+      relationshipContacts: [],
       relationships: [],
     } as Contact);
 

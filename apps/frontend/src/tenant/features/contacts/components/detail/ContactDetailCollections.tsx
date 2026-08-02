@@ -1,6 +1,6 @@
 import type { Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { ContactDetailEmergencySection } from "./ContactDetailEmergencySection";
+import { ContactDetailRelationshipSection } from "./ContactDetailRelationshipSection";
 import {
   ContactDetailAddressesSection,
   ContactDetailEmailsSection,
@@ -16,7 +16,7 @@ export interface ContactDetailCollectionsProps {
     emails: { enabled?: boolean }[];
     addresses: { enabled?: boolean }[];
     socials: { enabled?: boolean }[];
-    emergency: { enabled?: boolean }[];
+    relationship: { enabled?: boolean }[];
   };
   onEmail?: (contacts: Contact[]) => void;
   onNavigateToContact: (targetId: string | number) => void;
@@ -37,6 +37,13 @@ export function ContactDetailCollections({
     socialPlatforms,
     defaultPhoneCountryCode,
   } = useContactConfig();
+
+  const relationshipEnabled =
+    enabledTabIds.has("relationship") || enabledTabIds.has("emergency");
+  const relationshipFields =
+    visibleCollectionFields.relationship.length > 0
+      ? visibleCollectionFields.relationship
+      : [];
 
   return (
     <>
@@ -64,8 +71,8 @@ export function ContactDetailCollections({
         <ContactDetailSocialsSection contact={contact} socialPlatforms={socialPlatforms} />
       )}
 
-      {enabledTabIds.has("emergency") && visibleCollectionFields.emergency.length > 0 && (
-        <ContactDetailEmergencySection
+      {relationshipEnabled && relationshipFields.length > 0 && (
+        <ContactDetailRelationshipSection
           contact={contact}
           allContacts={allContacts}
           onNavigateToContact={onNavigateToContact}

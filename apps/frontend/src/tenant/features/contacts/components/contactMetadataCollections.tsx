@@ -58,7 +58,7 @@ export function renderSocialMetadata({
   );
 }
 
-export function renderEmergencyMetadata({
+export function renderRelationshipMetadata({
   contact,
   contactsMap,
   emptyNode,
@@ -71,7 +71,7 @@ export function renderEmergencyMetadata({
   renderJoinedList: (items: (string | undefined | null)[], showTitle?: boolean) => React.ReactNode;
   t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 }): React.ReactNode {
-  const list = (contact.emergencyContacts || []).filter(
+  const list = (contact.relationshipContacts || []).filter(
     (emergencyContact) =>
       (emergencyContact.name || "").trim() ||
       emergencyContact.contactId ||

@@ -11,7 +11,7 @@ const base = (overrides: Partial<Contact> = {}): Contact => ({
   emails: [],
   addresses: [],
   socials: [],
-  emergencyContacts: [],
+  relationshipContacts: [],
   gender: 'male',
   ...overrides,
 });

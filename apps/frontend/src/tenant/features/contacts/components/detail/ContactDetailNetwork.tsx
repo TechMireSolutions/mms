@@ -35,7 +35,7 @@ function collectNetworkLinks(contact: Contact): NetworkLink[] {
     });
   };
 
-  for (const entry of contact.emergencyContacts ?? []) add(entry);
+  for (const entry of contact.relationshipContacts ?? []) add(entry);
   for (const entry of contact.relationships ?? []) add(entry);
 
   return [...byId.values()];
@@ -81,7 +81,7 @@ export function ContactDetailNetwork({
               : t("contacts.detail.unknownContact");
             const relationshipLabel =
               formatContactOptionLabel(relationship.relationship, t) ||
-              t("contacts.detail.emergencyContact");
+              t("contacts.detail.linkedContact");
 
             return (
               <Card

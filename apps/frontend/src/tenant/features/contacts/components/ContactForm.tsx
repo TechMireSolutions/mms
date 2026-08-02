@@ -78,7 +78,8 @@ export default function ContactForm({
       emails: draft.collectionCounts.filledEmails,
       addresses: draft.collectionCounts.filledAddresses,
       socials: draft.collectionCounts.filledSocials,
-      emergency: draft.collectionCounts.filledEmergency,
+      emergency: draft.collectionCounts.filledRelationships,
+      relationship: draft.collectionCounts.filledRelationships,
     };
 
     return CONTACT_FORM_TABS.filter(

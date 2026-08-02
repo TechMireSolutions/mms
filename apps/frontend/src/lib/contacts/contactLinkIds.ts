@@ -4,7 +4,7 @@ import type { Contact } from '@mms/shared';
 export function collectLinkedContactIds(contacts: readonly Contact[]): string[] {
   const ids = new Set<string>();
   for (const contact of contacts) {
-    for (const ec of contact.emergencyContacts ?? []) {
+    for (const ec of contact.relationshipContacts ?? []) {
       if (ec.contactId != null && String(ec.contactId).length > 0) {
         ids.add(String(ec.contactId));
       }

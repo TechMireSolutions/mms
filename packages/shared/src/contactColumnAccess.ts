@@ -82,14 +82,24 @@ export function resolveContactColumnField(
       ? findField(fields, 'socials', 'url')
       : null;
   }
-  if (columnKey === 'emergency_contact') {
-    return enabledTabIds.has('emergency') && isTabFieldEnabled('emergency', 'contactId')
-      ? findField(fields, 'emergency', 'contactId')
+  if (columnKey === 'relationship_contact' || columnKey === 'emergency_contact') {
+    const tabId = enabledTabIds.has('relationship')
+      ? 'relationship'
+      : enabledTabIds.has('emergency')
+        ? 'emergency'
+        : null;
+    return tabId && isTabFieldEnabled(tabId, 'contactId')
+      ? findField(fields, tabId, 'contactId')
       : null;
   }
-  if (columnKey === 'emergency_relationship') {
-    return enabledTabIds.has('emergency') && isTabFieldEnabled('emergency', 'relationship')
-      ? findField(fields, 'emergency', 'relationship')
+  if (columnKey === 'relationship_type' || columnKey === 'emergency_relationship') {
+    const tabId = enabledTabIds.has('relationship')
+      ? 'relationship'
+      : enabledTabIds.has('emergency')
+        ? 'emergency'
+        : null;
+    return tabId && isTabFieldEnabled(tabId, 'relationship')
+      ? findField(fields, tabId, 'relationship')
       : null;
   }
 

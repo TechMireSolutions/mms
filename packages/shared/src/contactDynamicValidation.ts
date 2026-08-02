@@ -9,7 +9,7 @@ const REQUIRED_TAB_I18N: Partial<Record<string, AppTranslationKey>> = {
   emails: "contacts.form.atLeastOneEmailRequired",
   addresses: "contacts.form.atLeastOneAddressRequired",
   socials: "contacts.form.atLeastOneSocialRequired",
-  emergency: "contacts.form.atLeastOneEmergencyContactRequired",
+  relationship: "contacts.form.atLeastOneRelationshipRequired",
 };
 
 const LIST_TABS_PROP_MAP: Record<string, string> = {
@@ -17,7 +17,7 @@ const LIST_TABS_PROP_MAP: Record<string, string> = {
   emails: "emails",
   addresses: "addresses",
   socials: "socials",
-  emergency: "emergencyContacts",
+  relationship: "relationshipContacts",
 };
 
 /** Compiles the active contact field configuration into a Zod object schema. */

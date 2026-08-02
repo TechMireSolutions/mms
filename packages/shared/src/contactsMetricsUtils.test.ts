@@ -30,7 +30,7 @@ const base = (overrides: Partial<Contact> = {}): Contact => ({
   emails: [],
   addresses: [],
   socials: [],
-  emergencyContacts: [],
+  relationshipContacts: [],
   createdAt: '2026-06-01',
   ...overrides,
 });

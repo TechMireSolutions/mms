@@ -36,9 +36,9 @@ export function ContactFormFooterStart({
             {collectionCounts.filledEmails} {t("contacts.form.emailsLabel")}
           </span>
         )}
-        {collectionCounts.filledEmergency > 0 && (
+        {collectionCounts.filledRelationships > 0 && (
           <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-semibold border border-destructive/20 text-xs">
-            {collectionCounts.filledEmergency} {t("contacts.detail.emergency")}
+            {collectionCounts.filledRelationships} {t("contacts.detail.relationships")}
           </span>
         )}
       </div>

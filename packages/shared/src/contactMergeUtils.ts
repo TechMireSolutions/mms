@@ -5,7 +5,7 @@ import {
   type EmailAddress as ContactEmail,
   type Address as ContactAddress,
   type SocialLink as ContactSocial,
-  type EmergencyContact,
+  type RelationshipContact,
 } from "./contactTypes.js";
 
 // ── Merging Logic ──────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ export const mergeContacts = (
       key === "emails" ||
       key === "addresses" ||
       key === "socials" ||
-      key === "emergencyContacts" ||
+      key === "relationshipContacts" ||
       key === "notes" ||
       key === "createdAt" ||
       key === "updatedAt"
@@ -117,20 +117,20 @@ export const mergeContacts = (
 
   // Merge emergency contacts: match by contact ID & relationship
   const seenEmergency = new Set<string>();
-  const mergedEmergency: EmergencyContact[] = [];
+  const mergedRelationshipContacts: RelationshipContact[] = [];
 
-  const addEmergency = (emergencyContact: EmergencyContact | undefined): void => {
+  const addRelationshipContact = (emergencyContact: RelationshipContact | undefined): void => {
     if (!emergencyContact || !emergencyContact.contactId) return;
     const key = `${emergencyContact.contactId}-${emergencyContact.relationship}`;
     if (!seenEmergency.has(key)) {
       seenEmergency.add(key);
-      mergedEmergency.push({ ...emergencyContact });
+      mergedRelationshipContacts.push({ ...emergencyContact });
     }
   };
 
-  (keep.emergencyContacts || []).forEach(addEmergency);
-  (other.emergencyContacts || []).forEach(addEmergency);
-  merged.emergencyContacts = mergedEmergency;
+  (keep.relationshipContacts || []).forEach(addRelationshipContact);
+  (other.relationshipContacts || []).forEach(addRelationshipContact);
+  merged.relationshipContacts = mergedRelationshipContacts;
 
   return merged;
 };

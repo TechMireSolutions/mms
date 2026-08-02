@@ -17,16 +17,16 @@ function withEmptyCollectionRows(
   relationshipOptions: string[],
 ): Partial<Contact> {
   const socials = draft.socials ?? [];
-  const emergencyContacts = draft.emergencyContacts ?? [];
+  const relationshipContacts = draft.relationshipContacts ?? [];
   return {
     ...draft,
     socials:
       socials.length > 0
         ? socials
         : [{ platform: socialPlatforms[0] ?? "", url: "" }],
-    emergencyContacts:
-      emergencyContacts.length > 0
-        ? emergencyContacts
+    relationshipContacts:
+      relationshipContacts.length > 0
+        ? relationshipContacts
         : [{ relationship: relationshipOptions[0] ?? "", contactId: "" }],
   };
 }

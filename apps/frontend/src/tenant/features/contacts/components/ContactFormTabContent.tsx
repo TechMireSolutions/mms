@@ -3,7 +3,7 @@ import { ContactPhonesTab } from "@/tenant/features/contacts/components/formTabs
 import { ContactEmailsTab } from "@/tenant/features/contacts/components/formTabs/ContactEmailsTab";
 import { ContactAddressesTab } from "@/tenant/features/contacts/components/formTabs/ContactAddressesTab";
 import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTabs/ContactSocialsTab";
-import { ContactEmergencyTab } from "@/tenant/features/contacts/components/formTabs/ContactEmergencyTab";
+import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 
 export { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
@@ -107,9 +107,10 @@ export function ContactFormTabContent({
           removeSubListItem={draft.removeSubListItem}
         />
       );
+    case "relationship":
     case "emergency":
       return (
-        <ContactEmergencyTab
+        <ContactRelationshipTab
           contactDraft={draft.contactDraft}
           getLocalId={draft.getLocalId}
           relationshipOptions={draft.relationshipOptions}

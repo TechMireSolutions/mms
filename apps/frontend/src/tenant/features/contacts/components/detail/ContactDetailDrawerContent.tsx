@@ -20,7 +20,7 @@ interface ContactDetailDrawerContentProps {
     emails: { enabled?: boolean }[];
     addresses: { enabled?: boolean }[];
     socials: { enabled?: boolean }[];
-    emergency: { enabled?: boolean }[];
+    relationship: { enabled?: boolean }[];
   };
   primaryPhone: string | null;
   primaryEmail: string | null;

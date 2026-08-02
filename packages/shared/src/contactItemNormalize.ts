@@ -10,10 +10,11 @@ import {
   type EmailAddress as ContactEmail,
   type Address as ContactAddress,
   type SocialLink as ContactSocial,
-  type EmergencyContact,
+  type RelationshipContact,
 } from "./contactTypes.js";
 import { parsePhoneNumber } from "./phoneUtils.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
+import { hydrateContactRelationshipFields } from "./contactRelationshipHydrate.js";
 
 /** Optional tenant/config defaults for empty-row seeding (falls back to shared DEFAULT_*). */
 export interface ContactItemNormalizeDefaults {
@@ -26,12 +27,14 @@ export interface ContactItemNormalizeDefaults {
 }
 
 /**
- * Strips blank or empty items from contact phones, emails, addresses, socials, and emergency contacts.
+ * Strips blank or empty items from contact phones, emails, addresses, socials, and relationship contacts.
  * @param draft - Partial contact record to clean.
  * @returns Cleaned partial contact record.
  */
 export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
-  const result = stripContactClientSoftDeleteFields({ ...draft } as Record<string, unknown>) as Partial<Contact>;
+  const result = hydrateContactRelationshipFields(
+    stripContactClientSoftDeleteFields({ ...draft } as Record<string, unknown>) as Partial<Contact>,
+  );
 
   if (Array.isArray(result.phones)) {
     result.phones = result.phones.filter((phone) => (phone.number || "").trim().length > 0);
@@ -45,8 +48,8 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   if (Array.isArray(result.socials)) {
     result.socials = result.socials.filter((social) => (social.url || "").trim().length > 0);
   }
-  if (Array.isArray(result.emergencyContacts)) {
-    result.emergencyContacts = result.emergencyContacts.filter(
+  if (Array.isArray(result.relationshipContacts)) {
+    result.relationshipContacts = result.relationshipContacts.filter(
       (em) => em.contactId != null && String(em.contactId).trim().length > 0,
     );
   }
@@ -194,12 +197,12 @@ export function normalizeSocialItem(
 }
 
 /**
- * Normalizes a single Emergency Contact entry into a valid EmergencyContact object.
+ * Normalizes a single relationship-contact entry into a valid RelationshipContact object.
  */
-export function normalizeEmergencyItem(
+export function normalizeRelationshipContactItem(
   item: unknown,
   defaults: ContactItemNormalizeDefaults = {},
-): EmergencyContact {
+): RelationshipContact {
   const defaultRelationship = defaults.relationship || RELATIONSHIPS[0] || "";
   if (!item) return { relationship: defaultRelationship, contactId: "" };
   if (typeof item === "string" || typeof item === "number") {

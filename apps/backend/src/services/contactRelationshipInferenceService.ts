@@ -1,4 +1,4 @@
-import { resolveRelationshipPairs, type Contact, type ContactRelationship, type EmergencyContact, type RelationshipPair } from '@mms/shared';
+import { resolveRelationshipPairs, type Contact, type ContactRelationship, type RelationshipContact, type RelationshipPair } from '@mms/shared';
 import { bulkSaveContacts, findContactsByIds } from '../db/repositories/contactRepository.js';
 import { loadContactPreferences } from './contactPreferencesService.js';
 
@@ -17,7 +17,7 @@ import {
 
 
 function linksForContact(contact: Contact): RelationshipLink[] {
-  const collect = (entry: EmergencyContact | ContactRelationship): RelationshipLink | null => {
+  const collect = (entry: RelationshipContact | ContactRelationship): RelationshipLink | null => {
     const contactId = entry.contactId == null ? '' : String(entry.contactId);
     if (!contactId.trim()) return null;
     return {
@@ -28,7 +28,7 @@ function linksForContact(contact: Contact): RelationshipLink[] {
     };
   };
 
-  return [...(contact.emergencyContacts ?? []), ...(contact.relationships ?? [])]
+  return [...(contact.relationshipContacts ?? []), ...(contact.relationships ?? [])]
     .map(collect)
     .filter((entry): entry is RelationshipLink => Boolean(entry));
 }
@@ -38,23 +38,23 @@ function hasManualRelationship(contact: Contact, contactId: string): boolean {
 }
 
 function setEmergencyRelationship(contact: Contact, planned: PlannedRelationship): Contact {
-  const emergencyContacts = contact.emergencyContacts ?? [];
-  const existingIndex = emergencyContacts.findIndex((entry) => String(entry.contactId) === planned.contactId);
-  const relationshipEntry: EmergencyContact = {
+  const relationshipContacts = contact.relationshipContacts ?? [];
+  const existingIndex = relationshipContacts.findIndex((entry) => String(entry.contactId) === planned.contactId);
+  const relationshipEntry: RelationshipContact = {
     contactId: planned.contactId,
     relationship: planned.relationship,
     inferred: true,
     inferredFromContactId: planned.inferredFromContactId,
     inferenceDepth: planned.inferenceDepth,
   };
-  const nextEmergencyContacts =
+  const nextRelationshipContacts =
     existingIndex >= 0
-      ? emergencyContacts.map((entry, index) => (index === existingIndex ? { ...entry, ...relationshipEntry } : entry))
-      : [...emergencyContacts, relationshipEntry];
+      ? relationshipContacts.map((entry, index) => (index === existingIndex ? { ...entry, ...relationshipEntry } : entry))
+      : [...relationshipContacts, relationshipEntry];
 
   return {
     ...contact,
-    emergencyContacts: nextEmergencyContacts,
+    relationshipContacts: nextRelationshipContacts,
   };
 }
 

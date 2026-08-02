@@ -42,8 +42,8 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
     { key: "platform", label: "Platform Selection",  labelKey: "contacts.fields.platform",  type: "select", description: "Platform selection (Facebook, X, etc.)", descriptionKey: "contacts.fields.platformDesc", options: SOCIAL_PLATFORMS, defaultValue: SOCIAL_PLATFORMS[0], permissions: [], enabled: true, order: 0, required: false },
     { key: "url",      label: "Social URL / Handle", labelKey: "contacts.fields.socialUrl", type: "text",   description: "URL or handle input. Enables social media engagement & verification.", descriptionKey: "contacts.fields.socialUrlDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
-  emergency: [
-    { key: "contactId",    label: "Contact",      labelKey: "contacts.fields.emergencyContact", type: "text",   description: "Contact picker — links existing contacts as emergency contacts.", descriptionKey: "contacts.fields.emergencyContactDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
-    { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",     type: "select", description: "Relationship with the emergency contact (e.g. Father, Mother, Spouse).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+  relationship: [
+    { key: "contactId",    label: "Contact",      labelKey: "contacts.fields.linkedContact", type: "text",   description: "Contact picker — links an existing contact in this relationship.", descriptionKey: "contacts.fields.linkedContactDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
+    { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",  type: "select", description: "Relationship type (e.g. Father, Mother, Spouse).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
 };

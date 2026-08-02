@@ -191,8 +191,8 @@ export function applyTitleCaseToContact(contact: Record<string, unknown>): Recor
     }));
   }
 
-  if (Array.isArray(result.emergencyContacts)) {
-    result.emergencyContacts = result.emergencyContacts.map((emergencyContact: Record<string, unknown>) => ({
+  if (Array.isArray(result.relationshipContacts)) {
+    result.relationshipContacts = result.relationshipContacts.map((emergencyContact: Record<string, unknown>) => ({
       ...emergencyContact,
       name: typeof emergencyContact.name === "string" ? (toTitleCase(emergencyContact.name) as string) : emergencyContact.name,
       relationship: typeof emergencyContact.relationship === "string" ? (toTitleCase(emergencyContact.relationship) as string) : emergencyContact.relationship,
@@ -220,7 +220,7 @@ export function applyTitleCaseToContact(contact: Record<string, unknown>): Recor
     "emails",
     "addresses",
     "socials",
-    "emergencyContacts",
+    "relationshipContacts",
     "relationships",
     "activities",
     "attachments",

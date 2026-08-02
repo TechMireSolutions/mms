@@ -40,16 +40,16 @@ export function useContactFormDraftHelpers({
       (address) => (address.line1 || address.city || "").trim(),
     ).length;
     const filledSocials = (contactDraft.socials || []).filter((social) => (social.url || "").trim()).length;
-    const filledEmergency = (contactDraft.emergencyContacts || []).filter(
+    const filledRelationships = (contactDraft.relationshipContacts || []).filter(
       (emergency) => emergency.contactId,
     ).length;
-    return { filledPhones, filledEmails, filledAddresses, filledSocials, filledEmergency };
+    return { filledPhones, filledEmails, filledAddresses, filledSocials, filledRelationships };
   }, [
     contactDraft.phones,
     contactDraft.emails,
     contactDraft.addresses,
     contactDraft.socials,
-    contactDraft.emergencyContacts,
+    contactDraft.relationshipContacts,
   ]);
 
   const isFieldEnabled = useCallback(

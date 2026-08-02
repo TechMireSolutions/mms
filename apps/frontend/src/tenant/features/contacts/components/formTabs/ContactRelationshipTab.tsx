@@ -6,14 +6,14 @@ import ContactPicker from "@/components/contactLink/ContactPicker";
 import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
-import { EmergencyContact } from "@mms/shared";
+import { RelationshipContact } from "@mms/shared";
 
-export interface ContactEmergencyTabProps extends ContactSubListTabBaseProps {
+export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
   onUpdateRelationships: (relationships: string[]) => void;
 }
 
-export function ContactEmergencyTab({
+export function ContactRelationshipTab({
   contactDraft,
   getLocalId,
   relationshipOptions,
@@ -23,25 +23,25 @@ export function ContactEmergencyTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-}: ContactEmergencyTabProps): JSX.Element {
+}: ContactRelationshipTabProps): JSX.Element {
   const { t } = useTranslation();
-  const emergencyContacts = contactDraft.emergencyContacts || [];
-  const emptyEmergency = () => ({
+  const links = contactDraft.relationshipContacts || [];
+  const emptyLink = () => ({
     relationship: relationshipOptions[0] || "",
     contactId: "",
   });
-  const addEmergency = () => {
-    addSubListItem("emergencyContacts", emptyEmergency());
+  const addLink = () => {
+    addSubListItem("relationshipContacts", emptyLink());
   };
-  const ensureEmergency = () => {
-    ensureSubListItem("emergencyContacts", emptyEmergency());
+  const ensureLink = () => {
+    ensureSubListItem("relationshipContacts", emptyLink());
   };
-  const removeEmergency = (idx: number) => removeSubListItem("emergencyContacts", idx);
-  const updateEmergency = (idx: number, patch: Partial<EmergencyContact>) =>
-    updateSubListItem("emergencyContacts", idx, patch);
+  const removeLink = (idx: number) => removeSubListItem("relationshipContacts", idx);
+  const updateLink = (idx: number, patch: Partial<RelationshipContact>) =>
+    updateSubListItem("relationshipContacts", idx, patch);
 
   const excludeIds = (idx: number): (string | number)[] => {
-    const linked = emergencyContacts
+    const linked = links
       .filter((_, i) => i !== idx)
       .map((em) => em.contactId)
       .filter((cid) => cid != null && String(cid).length > 0) as (string | number)[];
@@ -51,54 +51,54 @@ export function ContactEmergencyTab({
 
   return (
     <ContactSubListShell
-      isEmpty={emergencyContacts.length === 0}
+      isEmpty={links.length === 0}
       emptyIcon={Heart}
-      emptyMessage={t("contacts.form.noEmergencyContactsYet")}
-      addLabel={t("contacts.form.addEmergencyContact")}
-      onAdd={addEmergency}
-      onEnsureRow={ensureEmergency}
+      emptyMessage={t("contacts.form.noRelationshipsSet")}
+      addLabel={t("contacts.form.addRelationshipLink")}
+      onAdd={addLink}
+      onEnsureRow={ensureLink}
     >
       <AnimatePresence initial={false}>
-        {emergencyContacts.map((em, idx) => {
-          const pickerError = getListItemError("emergency", "contactId", idx);
+        {links.map((em, idx) => {
+          const pickerError = getListItemError("relationship", "contactId", idx);
           return (
             <ListFieldCard
-              key={getLocalId("emergency", idx)}
-              id={getLocalId("emergency", idx)}
+              key={getLocalId("relationship", idx)}
+              id={getLocalId("relationship", idx)}
               index={idx}
               icon={Heart}
               accentClass="bg-destructive/60 group-hover:bg-destructive"
               iconClass="text-destructive/70 group-hover:text-destructive"
               label={`${t("contacts.form.contact")} ${idx + 1}`}
-              onRemove={() => removeEmergency(idx)}
-              removeLabel={t("contacts.form.removeEmergencyContact", { index: idx + 1 })}
+              onRemove={() => removeLink(idx)}
+              removeLabel={t("contacts.form.removeRelationship", { index: idx + 1 })}
             >
               <div className="space-y-3">
                 <ContactPicker
                   label={t("contacts.form.linkContact")}
                   value={em.contactId ?? null}
                   onChange={(id) => {
-                    updateEmergency(idx, {
+                    updateLink(idx, {
                       contactId: id != null ? String(id) : "",
                     });
                   }}
                   excludeIds={excludeIds(idx)}
                   searchPlaceholder={t("contacts.form.searchByName")}
                   emptyTitle={t("contacts.form.noContactsFound")}
-                  id={`emergency-contact-${idx}`}
-                  name={`emergency-contact-${idx}`}
+                  id={`relationship-contact-${idx}`}
+                  name={`relationship-contact-${idx}`}
                 />
                 <FieldInlineError message={pickerError} />
 
-                <Field label={t("contacts.form.relationshipType")} id={`emergency-relationship-${idx}`}>
+                <Field label={t("contacts.form.relationshipType")} id={`relationship-type-${idx}`}>
                   <EditableSelect
                     options={relationshipOptions}
                     value={em.relationship || relationshipOptions[0] || ""}
-                    onChange={(val) => updateEmergency(idx, { relationship: val })}
+                    onChange={(val) => updateLink(idx, { relationship: val })}
                     onUpdateOptions={onUpdateRelationships}
                     className="w-full"
-                    id={`emergency-relationship-${idx}`}
-                    name={`emergency-relationship-${idx}`}
+                    id={`relationship-type-${idx}`}
+                    name={`relationship-type-${idx}`}
                   />
                 </Field>
               </div>

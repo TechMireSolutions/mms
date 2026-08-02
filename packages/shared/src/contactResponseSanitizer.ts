@@ -11,7 +11,7 @@ const TAB_COLLECTION_KEYS: Record<string, (keyof Contact)[]> = {
   emails: ['emails', 'email'],
   addresses: ['addresses', 'city', 'state', 'country'],
   socials: ['socials'],
-  emergency: ['emergencyContacts'],
+  relationship: ['relationshipContacts'],
   relationships: ['relationships'],
 };
 

@@ -66,7 +66,7 @@ export function parseVCard(text: string, options?: ParseVCardOptions): Contact[]
       notes: note || '',
       addresses: [],
       socials: [],
-      emergencyContacts: [],
+      relationshipContacts: [],
       createdAt: todayISO(),
     };
 

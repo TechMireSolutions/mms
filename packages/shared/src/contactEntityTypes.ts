@@ -71,8 +71,8 @@ export interface SocialLink {
   url: string;
 }
 
-/** Emergency contact entry for a contact entity. */
-export interface EmergencyContact {
+/** Linked contact entry for the Relationship form tab (reciprocal graph). */
+export interface RelationshipContact {
   name?: string;
   relationship?: string;
   phone?: string;
@@ -81,6 +81,9 @@ export interface EmergencyContact {
   inferredFromContactId?: string;
   inferenceDepth?: number;
 }
+
+/** @deprecated Use {@link RelationshipContact}. */
+export type EmergencyContact = RelationshipContact;
 
 /** Inter-contact relationship reference link. */
 export interface ContactRelationship {
@@ -148,7 +151,7 @@ export interface Contact {
   emails?: EmailAddress[];
   addresses?: Address[];
   socials?: SocialLink[];
-  emergencyContacts?: EmergencyContact[];
+  relationshipContacts?: RelationshipContact[];
   relationships?: ContactRelationship[];
   activities?: ContactActivity[];
   attachments?: ContactAttachment[];

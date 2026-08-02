@@ -7,7 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { buildContactsMap, formatContactCellValue } from "@/lib/contacts/contactI18n";
 import {
   renderSocialMetadata,
-  renderEmergencyMetadata,
+  renderRelationshipMetadata,
 } from "@/tenant/features/contacts/components/contactMetadataCollections";
 import {
   renderLunarDobMetadata,
@@ -109,9 +109,11 @@ export function ContactMetadataCell({
           emptyNode: renderDash(),
           t,
         });
+      case "relationship_contact":
+      case "relationship_type":
       case "emergency_contact":
       case "emergency_relationship":
-        return renderEmergencyMetadata({
+        return renderRelationshipMetadata({
           contact,
           contactsMap,
           emptyNode: renderDash(),

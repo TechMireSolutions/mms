@@ -1,6 +1,7 @@
 import type { Permission } from './permissions.js';
 import { DEFAULT_SETTINGS_SUB_TABS } from './contactTypes.js';
 import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
+import { hydrateContactRelationshipFields } from './contactRelationshipHydrate.js';
 import { z } from 'zod';
 
 export const phoneNumberSchema = z
@@ -35,7 +36,7 @@ export const socialLinkSchema = z
   })
   .passthrough();
 
-export const emergencyContactSchema = z
+export const relationshipContactSchema = z
   .object({
     name: z.string().optional(),
     relationship: z.string().optional(),
@@ -92,7 +93,9 @@ export const contactRecordSchema = z
     emails: z.array(emailAddressSchema).optional(),
     addresses: z.array(addressSchema).optional(),
     socials: z.array(socialLinkSchema).optional(),
-    emergencyContacts: z.array(emergencyContactSchema).optional(),
+    relationshipContacts: z.array(relationshipContactSchema).optional(),
+    /** @deprecated Legacy JSON key — hydrated into relationshipContacts on read/write. */
+    emergencyContacts: z.array(relationshipContactSchema).optional(),
     relationships: z.array(relationshipSchema).optional(),
     activities: z.array(activitySchema).optional(),
     attachments: z.array(attachmentSchema).optional(),
@@ -101,10 +104,11 @@ export const contactRecordSchema = z
 
 /** Client write payloads — soft-delete metadata is set only by dedicated helpers. */
 export const contactWriteSchema = z.preprocess(
-  (raw) =>
-    raw && typeof raw === 'object' && !Array.isArray(raw)
-      ? stripContactClientSoftDeleteFields(raw as Record<string, unknown>)
-      : raw,
+  (raw) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+    const stripped = stripContactClientSoftDeleteFields(raw as Record<string, unknown>);
+    return hydrateContactRelationshipFields(stripped);
+  },
   contactRecordSchema.omit({
     deletedAt: true,
     deletedBy: true,

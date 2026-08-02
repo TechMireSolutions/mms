@@ -37,7 +37,7 @@ const ALLOWED_SELF_CONTACT_FIELDS = new Set([
   'emails',
   'addresses',
   'socials',
-  'emergencyContacts',
+  'relationshipContacts',
   'phone',
   'email',
   'city',

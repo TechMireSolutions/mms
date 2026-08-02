@@ -97,7 +97,7 @@ export function useContactsPageWriteActions({
         emails: contactDraft.emails ?? [],
         addresses: contactDraft.addresses ?? [],
         socials: contactDraft.socials ?? [],
-        emergencyContacts: contactDraft.emergencyContacts ?? [],
+        relationshipContacts: contactDraft.relationshipContacts ?? [],
       };
 
       await saveContact(payload, isCreatingContact);

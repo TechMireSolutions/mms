@@ -610,19 +610,19 @@ describe("normalizeContactForEdit", () => {
   it("pre-populates one empty row for socials and emergency contacts", () => {
     const draft = normalizeContactForEdit(undefined, undefined);
     expect(draft.socials).toEqual([{ platform: "Facebook", url: "" }]);
-    expect(draft.emergencyContacts).toEqual([{ relationship: "Parent", contactId: "" }]);
+    expect(draft.relationshipContacts).toEqual([{ relationship: "Parent", contactId: "" }]);
   });
 
   it("keeps existing socials and emergency contacts", () => {
     const draft = normalizeContactForEdit(
       {
         socials: [{ platform: "Instagram", url: "https://instagram.com/a" }],
-        emergencyContacts: [{ relationship: "Mother", contactId: "c-2" }],
+        relationshipContacts: [{ relationship: "Mother", contactId: "c-2" }],
       },
       undefined,
     );
     expect(draft.socials).toEqual([{ platform: "Instagram", url: "https://instagram.com/a" }]);
-    expect(draft.emergencyContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
+    expect(draft.relationshipContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
   });
 
   it("seeds empty rows from tenant option defaults", () => {
@@ -640,7 +640,7 @@ describe("normalizeContactForEdit", () => {
       { label: "Office", line1: "", city: "", state: "", country: "", isPrimary: true },
     ]);
     expect(draft.socials).toEqual([{ platform: "LinkedIn", url: "" }]);
-    expect(draft.emergencyContacts).toEqual([{ relationship: "Guardian", contactId: "" }]);
+    expect(draft.relationshipContacts).toEqual([{ relationship: "Guardian", contactId: "" }]);
   });
 });
 
@@ -651,13 +651,13 @@ describe("cleanContactDraft", () => {
         { platform: "WhatsApp", url: "" },
         { platform: "Instagram", url: "https://instagram.com/a" },
       ],
-      emergencyContacts: [
+      relationshipContacts: [
         { relationship: "Father", contactId: "" },
         { relationship: "Mother", contactId: "c-2" },
       ],
     });
     expect(cleaned.socials).toEqual([{ platform: "Instagram", url: "https://instagram.com/a" }]);
-    expect(cleaned.emergencyContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
+    expect(cleaned.relationshipContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
   });
 });
 

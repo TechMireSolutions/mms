@@ -9,6 +9,7 @@ import {
   DEFAULT_DETAIL_TABS,
   DEFAULT_SETTINGS_SUB_TABS,
   DEFAULT_COLUMN_REGISTRY,
+  migrateEmergencyTabToRelationship,
   refreshModuleTierTabLabels,
   refreshModuleTierTabKeys,
 } from "@mms/shared";
@@ -88,5 +89,5 @@ export function migrateContactFieldConfig(config: unknown): FieldConfig {
 
   delete (workingConfig as Record<string, unknown>).uiStrings;
 
-  return workingConfig as FieldConfig;
+  return migrateEmergencyTabToRelationship(workingConfig as FieldConfig);
 }

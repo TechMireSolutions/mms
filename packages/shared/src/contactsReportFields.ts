@@ -16,7 +16,7 @@ export const CONTACTS_REPORT_FIELD_IDS = [
   'city',
   'state',
   'country',
-  'emergencyContact',
+  'relationshipContact',
   'lastActivity',
   'notesCount',
 ] as const;
@@ -41,7 +41,7 @@ export const CONTACTS_REPORT_FIELDS: ContactsReportFieldDef[] = [
   { id: 'city', labelKey: 'contacts.reportFields.city' },
   { id: 'state', labelKey: 'contacts.reportFields.state' },
   { id: 'country', labelKey: 'contacts.reportFields.country' },
-  { id: 'emergencyContact', labelKey: 'contacts.reportFields.emergencyContact' },
+  { id: 'relationshipContact', labelKey: 'contacts.reportFields.relationshipContact' },
   { id: 'lastActivity', labelKey: 'contacts.reportFields.lastActivity' },
   { id: 'notesCount', labelKey: 'contacts.reportFields.notesCount' },
 ];
@@ -157,9 +157,10 @@ export function getContactReportCellValue(
       return contact.addresses?.[0]?.state || String(contact.state || '—');
     case 'country':
       return contact.addresses?.[0]?.country || String(contact.country || '—');
+    case 'relationshipContact':
     case 'emergencyContact': {
-      const emergencies = contact.emergencyContacts;
-      return emergencies?.[0]?.name || '—';
+      const linked = contact.relationshipContacts;
+      return linked?.[0]?.name || linked?.[0]?.contactId || '—';
     }
     case 'lastActivity': {
       const activities = contact.activities;

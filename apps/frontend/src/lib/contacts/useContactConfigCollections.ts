@@ -103,7 +103,7 @@ export function useContactConfigCollections({
     CONTACT_CONFIG_COLLECTION_KEYS.relationships,
     setRelationshipsState,
     syncFieldOptions,
-    "emergency",
+    "relationship",
     "relationship",
   );
   const updateRelationshipPairs = useCallback(
@@ -111,7 +111,7 @@ export function useContactConfigCollections({
       const options = deriveRelationshipOptionsFromPairs(pairs);
       setRelationshipsState(options);
       await saveCollectionAsync(CONTACT_CONFIG_COLLECTION_KEYS.relationships, options);
-      await syncFieldOptions("emergency", "relationship", options);
+      await syncFieldOptions("relationship", "relationship", options);
     },
     [syncFieldOptions],
   );

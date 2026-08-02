@@ -32,15 +32,21 @@ export function ContactCardMetadataGrid({
         if (col.id === "socials_url" && visibleColumnIds.has("socials_platform")) {
           return null;
         }
-        if (col.id === "emergency_relationship" && visibleColumnIds.has("emergency_contact")) {
+        if (
+          (col.id === "relationship_type" || col.id === "emergency_relationship") &&
+          (visibleColumnIds.has("relationship_contact") || visibleColumnIds.has("emergency_contact"))
+        ) {
           return null;
         }
         if (!hasContactCardColumnData(contact, col.id)) return null;
 
         const colLabel = col.id === "socials_platform" || col.id === "socials_url"
           ? t("contacts.detail.socials")
-          : (col.id === "emergency_contact" || col.id === "emergency_relationship"
-            ? t("contacts.form.tabEmergency")
+          : (col.id === "relationship_contact" ||
+              col.id === "relationship_type" ||
+              col.id === "emergency_contact" ||
+              col.id === "emergency_relationship"
+            ? t("contacts.form.tabRelationship")
             : col.label);
 
         return (
