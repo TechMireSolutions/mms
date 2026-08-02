@@ -7,13 +7,15 @@ description: Reviews MMS code against project rules, skills, and migration statu
 
 Agent self-review after edits → also follow always-on `mms-completion-review.md`.
 
+**When X → skill Y (deep dive, not this index):** FormModal / Zod forms → **`mms-form-architecture`** · Query factories → **`mms-query-factories`** · axe / focus-return → **`mms-a11y-smoke`** · deps bumps → **`mms-dependency-upgrade`** · DDL → **`mms-schema-migrate`** · CSRF/cookies → **`mms-backend-security`** · backup wipe → **`mms-backup-restore`**.
+
 ## Review order
 
 1. Automated gates (`pnpm typecheck`, scoped lint/tests)
 2. Security / tenant / RBAC
 3. Data layer (Query vs legacy, bulk upsert, RLS)
 4. Module §7 gold-standard (+ messaging variants when touched)
-5. i18n / a11y
+5. i18n / a11y (axe smoke via `mms-a11y-smoke` when shells/primitives change)
 6. Scope creep
 
 ## Automated checks
@@ -38,18 +40,20 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ### Backend API
 - [ ] Tenant protected routes use **`authenticateTenant`** — not raw `jwtVerify`
+- [ ] Cookie CSRF / Origin on state-changing cookie-auth routes
 - [ ] `host` / `x-forwarded-host` tested in `inject()` tests for tenant routes
-- [ ] Zod or JSON Schema on write bodies
+- [ ] Zod write DTOs (prefer `.strict()`); no parallel Ajv for same shape
 - [ ] `rbacService` on writes; admin-only on sync download/upload
-- [ ] Drizzle migration + **`_journal.json`** entry if schema changed
+- [ ] Drizzle migration + journal via **`mms-schema-migrate`** (no `drizzle-kit push` on shared/prod)
 - [ ] Stable error `type` codes; no stack traces in responses
 
 ### Frontend API
 - [ ] Internal MMS calls use `apiFetch` / `apiJson` — no raw `fetch('/api/...')`
 - [ ] `credentials: 'include'` via apiClient (cookie session — no new `mms_token` writes)
-- [ ] Query hooks export stable `QUERY_KEY` constants
+- [ ] Query factories / tuple keys — skill **`mms-query-factories`**
 - [ ] `enabled: isAuthenticated` on tenant REST hooks
 - [ ] Mutations invalidate affected queries (list + count keys; Contacts also messaging resolve)
+- [ ] Optimistic updates banned for money / soft-delete / bulk / backup / messaging send
 - [ ] No duplicate data path (Query mutations + parallel `saveCollection` for same write)
 - [ ] After server `bulkSave` imports (e.g. Google sync), invalidate only — do not re-upsert the same rows
 - [ ] REST pages use Query hooks / collection facades — not raw `useLiveCollection` for entity rows
@@ -63,18 +67,11 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] `ResponsiveAccordionTabs` / `SubTabBar` — no inline tab bars
 - [ ] Mobile-first layout: no fixed `w-[Npx]` page widths; no `max-lg:` layout forks; logical CSS for RTL
 - [ ] Tables wrapped (`Table` or `overflow-x-auto`); interactive controls ≥ 44×44 (`min-h-11 min-w-11`)
-- [ ] `FormModal` for add/edit; in-dialog layout uses `@container` `@md:` / `@sm:` (not viewport `md:`)
-- [ ] Contact collection deletes persist (`[]` + scalar sync; no existing-row / scalar resurrection) — `mms-form-architecture.md` §3
-- [ ] Contact form option dropdowns from ContactConfig — not runtime `DEFAULT_*` / `GENDERS` fallbacks
-- [ ] Bulk id bodies use shared `bulkIdsBodySchema` (`.max(500)`) when applicable
-- [ ] Contacts list filters use shared `contactsListQuerySchema` (`hasEmail` / `hasPhone` / `hasReachable`) — no forked Messaging flags
+- [ ] Forms: `FormModal` + norms — skill **`mms-form-architecture`** (container queries, ContactConfig options, collection delete persist)
+- [ ] Bulk id bodies / contacts list filters: shared schemas (`bulkIdsBodySchema`, `contactsListQuerySchema`) — no forked Messaging flags
 - [ ] Contacts `activeCount` = soft-delete-filtered total (not phantom `isActive`)
-- [ ] Settings panels use `useSettingsDraft` / domain draft hooks + live preview — not direct `saveObject` on change
-- [ ] New settings section: registered in `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`
-- [ ] Settings footer labels via `t()` — no hardcoded save-state strings in `SettingsFormActions`
-- [ ] Brand colour previews use derived tokens (`brandingTheme`) — not raw hex on surfaces
-- [ ] **Platform apex English-only**: no tenant `settings.language` / RTL on apex; use `shouldForcePlatformEnglish` + `applyApexPlatformTheme('en')`; platform shells `dir="ltr"`
-- [ ] **Missing tenant host**: hard-redirect to apex `/tenant-not-found?subdomain=…` (`tenantNotFoundPath`) — never mount `/settings` or stay on the bad host; contact platform admin copy only
+- [ ] Settings: draft hooks + preview — skill **`mms-settings-i18n`** / **`mms-frontend`**
+- [ ] **Platform apex English-only** / **missing tenant hard-redirect** — `mms-auth-security.md`
 
 ### RBAC (frontend)
 - [ ] Module pages use `useModulePermissions(X_MODULE_MANIFEST)` (or `can()`) — not `role ===` / `disabled={role === '…'}`
@@ -99,6 +96,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Composer uses `MessagingRecipient` — not contacts schemas
 - [ ] Clear-logs soft-archive semantics preserved
 - [ ] Session-forced `userId` on BE; no SQL echo; upsert templates/logs
+- [ ] Send/campaign idempotency key when retries likely; `429`/`Retry-After` surfaced
 
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper
@@ -120,14 +118,12 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Shell / touch / RTL / table changes: keep `responsive-shell` + `responsive-authenticated` green; extend when touching platform `md` nav or Reports/Setup builders
 
 ### Accessibility
-- [ ] Icon buttons have `aria-label` from `t()`; forms use associated labels
-- [ ] Suspense fallbacks have `role="status"` / screen-reader text
-- [ ] Honor `prefers-reduced-motion` for decorative Framer Motion when adding motion
+- [ ] When shells/primitives/FormModal change → run skill **`mms-a11y-smoke`** (axe serious/critical + focus-return)
+- [ ] Icon buttons `aria-label` from `t()`; Suspense `role="status"`; honor `prefers-reduced-motion`
 
-### Performance
-- [ ] jspdf/xlsx/html2canvas dynamically imported
-- [ ] No `setInterval` / `refetchInterval` polling added
-- [ ] No unnecessary `useMemo`/`useCallback` (React Compiler-first)
+### Performance / deps
+- [ ] jspdf/xlsx/html2canvas dynamically imported; no ad-hoc poll loops
+- [ ] Dependency bumps → skill **`mms-dependency-upgrade`**
 
 ### Scope
 - [ ] No drive-by refactors
@@ -141,7 +137,5 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ## References
 
-- Frontend: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-auth-security.md`, `mms-messaging.md`
-- Backend: `mms-api-interface.md`, `mms-auth-security.md`, `mms-data-layer.md`
-- Debt: `mms-migration-status.md`
-- Skills: `mms-backend-api`, `mms-backend-security`, `mms-data-sync`, `mms-frontend`, `mms-messaging`
+- Rules: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-auth-security.md`, `mms-form-architecture.md`, `mms-messaging.md`, `mms-migration-status.md`
+- Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`

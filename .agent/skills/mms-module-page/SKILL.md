@@ -5,9 +5,9 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 
 # MMS Module Page Pattern
 
-**Source:** Rule: `mms-module-architecture.md`
+**Rule (norms SSOT):** `mms-module-architecture.md` — this skill is workflow + checklist only.
 
-## Module Architecture Section Map
+## Section map
 
 | Section | Topic | Skill / rule |
 |---------|--------|--------------|
@@ -16,186 +16,64 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 | §3 | Work directory | skill **`mms-module-work`** |
 | §4 | Setup / fields | skill **`mms-module-setup`**, `mms-fields.md` |
 | §5 | Background jobs | skill **`mms-background-jobs`** |
-| §6 | Soft-delete / RBAC | `mms-auth-security.md` |
+| §6 | Soft-delete Work UX + RBAC omit | `mms-module-architecture.md` (+ sessions/RBAC middleware → `mms-auth-security.md`) |
 | §7 | Gold-standard parity | checklist below |
 | Reports | Analytics / export | skill **`mms-reports-export`** |
 
-Modules live under `apps/frontend/src/tenant/features/{module}/` (not legacy `pages/` only).
+Modules live under `apps/frontend/src/tenant/features/{module}/` (lazy route in `HostRoutes` / tenant routes — not legacy `src/pages/`).
 
-## Required structure
+## Workflow
 
-```
-PageHeader (command centre — always visible)
-work  |  reports  |  setup
-                    └─ Fields | Preferences | (module extras)
-```
+1. Add `packages/shared/src/{module}ModuleManifest.ts` (`moduleId`, tiers, permissions, `work.directoryViews`, `setupSubTabs`, `softDelete`).
+2. Person-directory Work: `directoryViews: ['table','cards']` (never `list`). Domain modules keep their own sub-modes — `mms-module-work`.
+3. Scaffold `{Module}Page.tsx` + `use{Module}PageController` under `tenant/features/{module}/`.
+4. Wire nav: `navConfig.tsx` + `SYSTEM_MODULES` / `SYSTEM_MODULE_NAV`.
+5. Shell: `PageHeader` (always visible) + `ResponsiveAccordionTabs` + `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`.
+6. Work → skill **`mms-module-work`**. Reports → **`mms-reports-export`**. Setup → **`mms-module-setup`**.
+7. Data: REST Query-first via **`mms-query-factories`** — no new `useLiveCollection` for REST entities.
+8. Gates: `useModulePermissions(manifest)`; omit forbidden CTAs; BE `rbacService` still required.
 
-## Reference implementations
+Reference: Contacts (full), Students/Teachers (soft-delete Work). Before building: read Contacts/Students page + manifest + rule §7.
 
-| Module | Architecture alignment | Data layer | Primary hooks |
-|--------|-------------------------|------------|---------------|
-| **Contacts** | **Full reference** — manifest, metrics, dedup, soft delete + trash UI, field RBAC, cards, drill-down, sync outbox, saved reports | REST + Query | `useContactsPageState`, `useContacts`, `useContactMutations` |
-| **Students / Teachers** | Three-tier + soft-delete Work trash + `useModulePermissions` + Cmd/Ctrl+N | REST + Query | `useStudents` / `useTeachers` mutations |
-| **Hasanat / Examinations / Obligations / Finance / Accounting / Sessions / Attendance / Enrollments** | Gold-standard soft-delete trash + upsert bulk + awaited saves (pattern varies by entity) | REST + Query | Feature `useXxx` / `useXxxMutations` |
-| **Users** | Manifest `setupSubTabs`; soft-delete Work trash (`deleted_at`); ErrorState; awaited saves | REST + Query | `useUsers` / `useUsersMutations` |
-| **Messaging** | Templates Setup; log clear soft-archive; ErrorState; Cmd/Ctrl+N campaign | REST + Query | `useMessageTemplates` / `useMessagingMutations` |
-| Question Bank | Three-tier + soft-delete trash on questions + upsert bulk + gold-standard Setup/UX | REST + Query | `useQuestionBank*` |
-
-**Before building a new module:** read `ContactsPage.tsx` (or Students for soft-delete), `{module}ModuleManifest.ts`, `mms-module-architecture.md` §7, and skill `mms-module-work`.
-
-## Module manifest (§1.1 — required for new modules)
-
-Add `packages/shared/src/{module}ModuleManifest.ts`:
-
-```typescript
-export const STUDENTS_MODULE_MANIFEST = {
-  moduleId: 'students',
-  entityType: 'Student',
-  collectionKey: 'students',
-  restBasePath: '/api/students',
-  tiers: ['work', 'reports', 'setup'] as const,
-  permissions: { read: '...', write: '...', delete: '...' },
-  work: { directoryViews: [...], bulkActions: [...], integrityTools: [...] },
-  setupSubTabs: ['fields', 'preferences'] as const,
-  exportInlineMaxRows: 500,
-  exportChunkSize: 100,
-  softDelete: { workExcludesDeleted: true, ... },
-} as const;
-```
-
-Hooks and pages import constants — no duplicated collection names or tier ids.
-
-## Gold-standard checklist (`mms-module-architecture.md` §7)
+## Gold-standard checklist (§7)
 
 ```
 - [ ] Bulk PUT upsert-only (never replaceForWorkspace wipe on API write paths)
 - [ ] Soft-delete + Work trash UI (or documented manifest variant)
 - [ ] mutateAsync + await form/setup saves; close only after success
 - [ ] setupSubTabs + canEditSetup + saveSettingsAsync
-- [ ] ErrorState + retry on list query failure
+- [ ] ErrorState + retry + hint on list query failure
 - [ ] Cmd/Ctrl+N create when canWrite and not in trash
+- [ ] Person-directory: directoryViews ['table','cards']; cards share server page API
 - [ ] useModulePermissions(manifest); omit forbidden CTAs
 - [ ] i18n via t() (en/ar/ur/fa)
 ```
 
-## Checklist
+## New module checklist
 
 ```
 - [ ] {Module}ModuleManifest in @mms/shared
-- [ ] Page in apps/frontend/src/pages/ — lazy route in HostRoutes.tsx
-- [ ] Nav: navConfig.tsx + SYSTEM_MODULES + SYSTEM_MODULE_NAV
-- [ ] PageHeader command centre: metrics, create, export, integrity tools (not tier-gated)
-- [ ] use{Module}PageState hook — keep page thin
-- [ ] ResponsiveAccordionTabs + useModuleTierTabs (work | reports | setup)
-- [ ] Work: directory + search/filter/sort + detail drawer + bulk bar + FormModal
-- [ ] Work mobile: card layout where appropriate (Contacts: ContactCards)
-- [ ] Reports: KPISummary(moduleCategory) + ModuleReports — reports tier only
-- [ ] Setup: SubTabBar → Fields + Preferences (+ manifest setupSubTabs)
-- [ ] can() / useModulePermissions(manifest) UI gates + API RBAC on writes
-- [ ] Field/tab/column RBAC when registry-driven (Contacts pattern)
-- [ ] Soft delete in API when REST CRUD exists; Work trash UI or documented hard-delete/variant
-- [ ] Data: Query-first if REST exists; else useLiveCollection (do not expand legacy)
-- [ ] ErrorBoundary on Work + Reports; ErrorState on list load failure
-- [ ] i18n via t(); no new uiStrings keys
-- [ ] Audit on sensitive writes (Contacts REST + setup-audit shipped)
-- [ ] Field delete dependency checks when registry-driven Setup (Contacts: contactFieldDependencies)
-- [ ] Offline outbox pattern when REST + offline UX required (Contacts reference)
+- [ ] Page under tenant/features/{module}/ — lazy route wired
+- [ ] Nav: navConfig + SYSTEM_MODULES / SYSTEM_MODULE_NAV
+- [ ] PageHeader command centre (metrics/create/export) — not tier-gated
+- [ ] useFilteredModuleTierTabs (work | reports | setup)
+- [ ] Work / Reports / Setup via sibling skills
+- [ ] FormModal for create/edit — mms-form-architecture
+- [ ] ErrorBoundary on Work + Reports; Query-first data
+- [ ] No nested ContactConfigProvider; no raw fetch('/api/...')
 ```
-
-## PageHeader command centre (§2)
-
-| Element | Placement |
-|---------|-------------|
-| Title, subtitle/metrics | `PageHeader` |
-| Add entity | `PageHeader.actions` — visible on all tiers |
-| Export, duplicates, module tools | `PageHeader.actions` |
-| Tier-specific controls | Inside tier panel only |
-
-Reference: `ContactsCommandMetrics.tsx`.
-
-## Data layer choice
-
-| Scenario | Pattern |
-|----------|---------|
-| Module has `/api/{resource}` | Query hooks in `hooks/use{Resource}.ts` |
-| Generic `/api/db/collections` | `useLiveCollection` + `saveCollection` |
-| Migrating to REST | Query hooks first; **ban** hybrid localStorage dual-write for person entities (Contacts already Query-only) |
-| Dashboard widgets on legacy data | Query cache first (`widgetDataUtils`); `saveCollection` in `queryFn` fallback only for non-REST keys |
-
-## Work tier (§3)
-
-- Search/filter/sort — permission-aware
-- Directory views: list/table, optional kanban, **mobile cards**
-- Detail drawer — no route change; registry tabs + field RBAC
-- Bulk bar — partial failure reporting for large ops
-- Soft-delete trash toggle — skill `mms-module-work`
-- Lazy-load heavy overlays (`DuplicateDetection`, messaging panels)
-- Per-user column prefs on server when REST module exists (include clamped `width` on PUT; local merge is cache only)
-
-## Reports tier (§4)
-
-- Same RBAC boundary as Work
-- Drill-down: chart segment → filtered Work view (Contacts: `contactsWorkDrillDown.ts`)
-- Saved reports: logic not snapshot — per-module REST (Contacts shipped; generic `SavedReports` empty until wired)
-- CustomReportBuilder contacts fields: `contactsReportFields.ts` + `t()`
-
-## Setup tier (Fields & Preferences)
-
-Skill: **`mms-module-setup`** · Rule: `mms-module-architecture.md`
-
-- Fields + Preferences sub-tabs via `SubTabBar`
-- Module extras registered in manifest `setupSubTabs`
-- Field delete: `getContactFieldRemovalIssues()` pattern before remove
-- Copy via `t()` — do not add Setup `uiStrings` editors
-- Audit all Setup saves (Contacts: `setup-audit` shipped)
-- `canEditSetup` — read-only message when view-only; prefer `saveSettingsAsync`
-
-## Module isolation
-
-Each tier is **module-scoped only** (`mms-module-architecture.md`):
-
-| Tier (id) | User label | Content |
-|-----------|------------|---------|
-| work | Work | CRUD, lists, wizards — no KPIs or reports |
-| reports | Reports | `KPISummary(moduleCategory)` + module charts |
-| setup | Setup | fields, preferences, module config |
-
-- `KPISummary` **inside Reports tab only**
-- Use module's own analytics category (not `academic`)
-
-## Responsive layout
-
-Owner: `mms-ui-ux-design.md` §7.
-
-| Concern | Standard |
-|---------|----------|
-| Module tiers | `ResponsiveAccordionTabs` — accordion `< lg`; underline tabs `lg+` |
-| Setup / inner tabs | `SubTabBar` — same `lg` breakpoint; no custom pill bars |
-| Page shell | `ModulePageShell` — `max-w-7xl min-w-0` fluid width |
-| Tables | Shared `Table` or `overflow-x-auto max-w-full`; card rows `< md` when dense |
-| Touch | `Button` / `ActionButton` (`min-h-11 min-w-11`); no undersized icon-only controls |
-| Verify | 375 / 768 / 1440; responsive e2e when shell chrome changes |
 
 ## Do not
 
-- Add a fourth top-level tier
-- Gate PageHeader CTAs on `activeTab`
+- Fourth top-level tier; gate PageHeader CTAs on `activeTab`
 - Mount module Setup under `/settings`
-- Use raw `fetch('/api/...')` — use `apiClient`
-- Duplicate data paths (Query mutations + parallel `saveCollection` for same entity)
-- Nest `ContactConfigProvider` on module pages
-- Hard-delete when manifest specifies soft delete
-- Wipe workspace rows via bulk PUT `replaceForWorkspace`
-- Close forms after fire-and-forget `mutate()` without awaiting success
-- Reference removed `globlestructure.md` or `globle.md` — use `mms-module-architecture.md`
-
-## Rules
-
-`mms-module-architecture.md`, `mms-ui-ux-design.md`, `mms-settings-i18n.md`, `mms-data-layer.md`, `mms-api-interface.md`
+- Dual-write Query + `saveCollection`; wipe via bulk PUT `replaceForWorkspace`
+- Close forms after fire-and-forget `mutate()`
+- Reference removed `globlestructure.md` / `globle.md`
 
 ## Related skills
 
-`mms-module-work`, `mms-module-setup`, `mms-fields-registry`, `mms-reports-export`, `mms-messaging`, `mms-background-jobs`
+`mms-module-work`, `mms-module-setup`, `mms-background-jobs`, `mms-reports-export`, `mms-query-factories`, `mms-form-architecture`, `mms-fields-registry`, `mms-messaging`
 
 ## Done
 

@@ -15,7 +15,7 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 .agent/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 20 capability modules (SKILL.md per folder)
+  skills/            # 25 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
@@ -48,34 +48,39 @@ CLAUDE.md            # Session entry (points here + sync commands)
 | `rules/antigravity-global.md` | `rules/antigravity-global.mdc` |
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 | `rules/mms-migration-status.md` | `rules/mms-migration-status.mdc` |
-| `rules/mms-dependencies.md` | `rules/mms-dependencies.mdc` |
-| `rules/mms-dry.md` | `rules/mms-dry.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
-Engineering layout & naming (file-scoped): `mms-structure-naming` — hard ~300 / soft ~220 file-size bands, stable barrels, page controllers.
+Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker), `mms-structure-naming` (layout/size bands).
+
+**Rule → skill map:** each rule has a **Workflow skill:** line; full matrix in `mms-core` Standards index (rules = norms; skills = how-to).
 
 | Skill | Purpose |
 |-------|---------|
 | `antigravity-workspace` | Where rules/skills live; sync policy |
 | `mms-dev-setup` | Install, run, env verify |
+| `mms-dependency-upgrade` | Catalogs, Dependabot, audits, React Compiler |
 | `mms-frontend` | React app shell, apiClient, Query vs localStorage, FE tests |
-| `mms-module-page` | Three-tier module pages + gold-standard parity (`mms-module-architecture.md` §7) |
-| `mms-module-work` | Command centre and Work tab — metrics, directory, drawer, bulk actions, soft-delete trash |
-| `mms-module-setup` | Module Setup tier — Fields, Preferences, audit, `setupSubTabs` / `canEditSetup` |
-| `mms-background-jobs` | Queued processing — exports, imports, dedup scans, progress, artifacts |
-| `mms-form-architecture` | Static FormModal, shared Zod, React 19 inputs, tenant RLS, JSONB merge, local multipart uploads |
+| `mms-query-factories` | TanStack Query factories / optimistic policy |
+| `mms-module-page` | Three-tier module pages + gold-standard parity (§7) |
+| `mms-module-work` | Work tier — metrics, directory, drawer, trash |
+| `mms-module-setup` | Setup tier — Fields, Preferences, field guards |
+| `mms-background-jobs` | Queued exports/imports, progress, artifacts |
+| `mms-form-architecture` | Static FormModal, shared Zod, uploads |
 | `mms-fields-registry` | Fields & tabs |
 | `mms-data-sync` | db.ts & API sync |
-| `mms-linux-compatibility` | Linux & Ubuntu VPS compatibility check (casing, line endings, PM2) |
+| `mms-backup-restore` | Encrypted backup / wipe-restore |
+| `mms-schema-migrate` | Forward-only Drizzle DDL |
+| `mms-linux-compatibility` | Linux/Ubuntu VPS compatibility |
 | `mms-shared-package` | `@mms/shared` |
 | `mms-backend-api` | Fastify backend |
-| `mms-backend-security` | Tenant isolation, RBAC, cookies, rate limits |
-| `mms-ops-deploy` | Hetzner deploy, Apache, PORT 5002, GitHub Actions |
+| `mms-backend-security` | Tenant isolation, RBAC, cookies, CSRF |
+| `mms-ops-deploy` | Hetzner deploy, Apache, PORT 5002 |
 | `mms-reports-export` | Analytics & export |
-| `mms-messaging` | SMS/WhatsApp campaigns, MessageComposer, templates, message logs |
+| `mms-messaging` | SMS/WhatsApp campaigns |
 | `mms-migration-fixes` | Tech debt fixes |
 | `mms-code-review` | PR review |
-| `mms-settings-i18n` | Settings panels, sidebar/dropdown navigation registry, settings previews/drafts, and localization/i18n standards (en/ar/ur/fa) |
+| `mms-a11y-smoke` | axe + shell a11y verify |
+| `mms-settings-i18n` | Settings + i18n (en/ar/ur/fa) |
 
 Index: [.agent/skills/README.md](.agent/skills/README.md)
 
@@ -109,7 +114,7 @@ bash .agent/scripts/sync-all.sh
 
 Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).
 
-**20 rules** (6 always-on + 14 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, `mms-messaging`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
+**20 rules** (4 always-on + 16 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, `mms-messaging`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 

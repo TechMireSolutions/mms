@@ -5,7 +5,12 @@ description: Addresses known MMS technical debt from mms-migration-status — re
 
 # MMS Migration Fixes
 
-Only implement items **in scope** for the current task. Full register: `.cursor/rules/mms-migration-status.mdc` (synced to `.agent` / `.claude`).
+Only implement items **in scope** for the current task.
+
+- **Do not reintroduce themes** (always-on): `.cursor/rules/mms-migration-status.mdc`
+- **Open gaps detail** (this skill): prioritized P1–Pn below — the rule keeps a short summary only.
+
+When the user asks to fix migration debt, work from the open priorities here and the owning scoped rules.
 
 ## Resolved (do not reintroduce)
 

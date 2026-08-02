@@ -11,18 +11,18 @@ paths:
 
 # MMS Hooks
 
+**Workflow skills:** Query `queryOptions` / optimistic policy → `mms-query-factories` · page controllers / FE shell → `mms-frontend` · Work layout → `mms-module-work`.
+
 Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), or `tenant/features/{module}/hooks/`. Pure logic used in 2+ modules → `@mms/shared`, keep the hook as a thin wrapper. Exhaustive hook catalogs go stale — follow patterns below; discover hooks via feature folders / `@/tenant/hooks/collections/*`.
 
 ## Server state (TanStack Query)
 
-Pattern for REST modules:
+**Policy owner:** `mms-data-layer.md` §3. This section is recipes only.
 
-- `enabled: isAuthenticated`
-- Export tuple `QUERY_KEY` (prefer shared key factories)
-- `apiJson` in `queryFn` with Query `signal`
-- Mutations invalidate list + count narrowly — no blanket `invalidateQueries()`
-- Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY` (messaging resolve cache)
-- Await `mutateAsync`; no dual-write via `saveCollection` in `onSuccess` (cache mirror only in legacy `useCollectionSync` → `saveCollectionCacheOnly`)
+- Follow data-layer: `enabled: isAuthenticated`, tuple keys, `signal` → `apiJson`, narrow invalidation, await `mutateAsync`, no `saveCollection` dual-write, optimistic-update bans.
+- Colocate TanStack Query v5 `queryOptions` / `mutationOptions` factories with tuple keys; hooks wrap factories — avoid ad-hoc inline key objects in every call site.
+- Toast success/error at the call site with `notify.*` + `t()` after `mutateAsync` — do not add a global `MutationCache` toast bus.
+- Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`.
 
 ### Cross-module collection facades
 
@@ -75,20 +75,20 @@ Large feature pages and settings panels should keep JSX thin:
 | Panel / form state | `use{Thing}State` / `use{Thing}Draft` | Local draft + derived options |
 | Action clusters | `use{Thing}Actions` / `*ActionHandlers` | Save, restore, bulk, decrypt — called from the orchestrator |
 
-Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Do not add `useMemo` / `useCallback` by default — `antigravity-global.md`.
+Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Do not add `useMemo` / `useCallback` by default — `antigravity-global.md`. Prefer React 19 `useEffectEvent` / `startTransition` / `useDeferredValue` when the repo pattern already fits (e.g. event handlers that read latest props without re-subscribing effects).
 
 ## Work directory layout
 
 | Hook / component | Use |
 |------------------|-----|
 | `useWorkDirectoryViewMode` + `WorkViewModeToggle` | Single resolved `viewMode` (`table` \| `cards`) — `mms-module-architecture.md` §3 |
-| `useModuleColumnLayout` | Column visibility **and** width; localStorage + `/column-preferences`; `mergeModuleColumnPreferences` |
+| `useModuleColumnLayout` | Column visibility **and** width — merge rules **`mms-module-architecture.md` §3** |
 | Contacts column prefs | `useContactConfigColumnPrefs` / `useContactColumnRegistry` via `ContactConfigContext` |
 | Command / dashboard metrics | `use*Metrics` from `@/tenant/hooks/collections/*` — ban client-reduce of full lists for KPI values |
 
 ## New hooks checklist
 
-- [ ] No polling — events or TanStack Query
+- [ ] No ad-hoc polling loops — events, TanStack Query (incl. documented `refetchInterval`), or job-progress polls — `mms-core.md`
 - [ ] Internal API via `apiClient`
 - [ ] Export query keys when using Query; pass `signal`
 - [ ] `enabled: isAuthenticated` for tenant REST

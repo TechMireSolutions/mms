@@ -91,7 +91,7 @@ curl -fsS "https://dar-ul-quran.${MMS_APP_DOMAIN}/health"            # replace s
 
 ## Rules
 
-`.cursor/rules/mms-ops-infrastructure.mdc`, `mms-ops-infrastructure.mdc`, `mms-auth-security.mdc`
+`mms-ops-infrastructure.mdc`, `mms-auth-security.mdc` (Cursor mirrors use `.mdc` — sync docs only; agent canon is `.md`)
 
 ## Related skills
 

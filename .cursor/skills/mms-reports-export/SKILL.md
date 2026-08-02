@@ -5,13 +5,15 @@ description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboar
 
 # MMS Reports & Export Workflow
 
-**Rules:** `mms-reports.mdc`, `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`.
+**Rules:** `mms-reports.mdc`, `mms-data-layer.mdc` (Query-first policy), `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`.
 
 ## Placement
 
 Reports tab **inside** each module — no standalone `/reports` page. Shared UI: `apps/frontend/src/components/reports/` · utils: `@/lib/reports/*`.
 
 ## Data (Query-first)
+
+REST reports/KPIs use Query hooks / `/metrics` — not localStorage-primary. Factories → **`mms-query-factories`**.
 
 ```ts
 // ✅ REST modules — Query / server aggregates / /metrics

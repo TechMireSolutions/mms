@@ -6,11 +6,13 @@ alwaysApply: false
 
 # MMS Operations & Infrastructure
 
+**Workflow skills:** local install/run → `mms-dev-setup` · production Hetzner/Apache → `mms-ops-deploy` · VPS casing/LF/PM2 → `mms-linux-compatibility`.
+
 Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
 
 ## 1. Prerequisites & Environment Setup
-- **Node.js**: Match root `package.json` `engines.node` (currently **`>=24.14.0`**). Align CI/Docker images with the same major — do not leave Dockerfile on a newer Node/pnpm pin than `engines` / `packageManager`.
-- **pnpm**: Match root `packageManager` (currently **pnpm@11.15.1**) via Corepack (`corepack enable`).
+- **Node.js**: Match root `package.json` `engines.node` (currently **`>=24.14.0`**). CI/Docker Node major must match `engines` exactly — do not pin newer or older than the declared floor allows without bumping `engines` in the same change.
+- **pnpm**: Match root `packageManager` (currently **pnpm@11.15.1**) via Corepack (`corepack enable`). Docker/CI must use that exact pnpm version — not a newer pin.
 
 ### Workspace Commands (from repo root)
 ```bash
@@ -85,14 +87,17 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) executes on every push/
 5. Playwright responsive E2E: `responsive-shell.spec.ts` + `responsive-authenticated.spec.ts`
 6. **pnpm lint** (frontend & backend)
 
-CI Node/pnpm images must match root `engines` / `packageManager`. Never commit `.env` or secrets in artifacts.
+CI Node/pnpm images must match root `engines` / `packageManager` exactly — upgrade workflow → **`mms-dependencies.mdc`**. Never commit `.env` or secrets in artifacts.
+Run responsive Playwright specs as **separate** CI steps (no bare `--` before the path) — `mms-testing-observability.mdc` / `mms-ui-ux-design.mdc` §7.
+Retain Playwright **trace/video on failure** for responsive (and a11y smoke) specs as CI artifacts — do not discard failure diagnostics.
+Supply-chain: Dependabot/Renovate + dependency-review → **`mms-dependencies.mdc`**.
 
 ### Turbo cache
 Treat `turbo.json` inputs/outputs as sensitive — change only with intentional cache invalidation.
 
-### Health Checks
-- **Liveness**: `GET /health` -> 200 (server up).
-- **Readiness**: `GET /ready` -> 200 (pings PostgreSQL; returns 503 if down).
+### Health Checks (SSOT)
+- **Liveness**: `GET /health` → 200 (server up; unauthenticated; used by `AuthContext.checkAppState()`).
+- **Readiness**: `GET /ready` → 200 on DB ping, `503` if PostgreSQL is down.
 - PM2 deployments must curl `/ready` post-restart.
 
 ### Deploy Guidelines

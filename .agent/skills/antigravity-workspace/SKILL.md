@@ -24,17 +24,15 @@ Keep in sync when editing: `bash .agent/scripts/sync-all.sh`
 | File | Purpose |
 |------|---------|
 | `rules/antigravity-global.md` | Agent cognition, output, security, React Compiler discipline |
-| `rules/mms-core.md` | MMS stack & boundaries |
-| `rules/mms-migration-status.md` | Known tech debt — don't fix opportunistically |
-| `rules/mms-dependencies.md` | Node/pnpm/workspace dependency upgrades |
-| `rules/mms-dry.md` | DRY policy, extraction thresholds, file-split DRY |
+| `rules/mms-core.md` | MMS stack, boundaries, ownership matrix |
+| `rules/mms-migration-status.md` | Do not reintroduce + short open-gaps summary |
 | `rules/mms-completion-review.md` | Self-review after code edits — verify, then mark done |
 
-Scoped when editing large modules: `mms-structure-naming` (file-size bands + barrels), `mms-hooks` (page controllers).
+Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker), `mms-structure-naming` (file-size bands + barrels), `mms-hooks` (page controllers).
 
 ## Priority skills (daily)
 
-`mms-dev-setup` → `mms-frontend` / `mms-backend-api` → `mms-module-page` / `mms-module-work` → `mms-code-review`. Domain: `mms-messaging`, `mms-settings-i18n`, `mms-backend-security`.
+`mms-dev-setup` → `mms-frontend` / `mms-query-factories` / `mms-backend-api` → `mms-module-page` / `mms-module-work` → `mms-code-review` / `mms-a11y-smoke`. Domain: `mms-messaging`, `mms-settings-i18n`, `mms-backup-restore`, `mms-backend-security`. Infra: `mms-dependency-upgrade`, `mms-schema-migrate`.
 
 ## Skills index
 

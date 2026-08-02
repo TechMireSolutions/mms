@@ -1,10 +1,12 @@
 ---
 description: Unified SMS/WhatsApp campaign composition, templates, and message history specifications.
-globs: apps/frontend/src/tenant/features/messaging/**,apps/frontend/src/components/ui/MessageComposer.tsx,apps/frontend/src/components/ui/MessagingVariableTokensBar.tsx,apps/frontend/src/components/ui/messageComposer/**,apps/frontend/src/hooks/useMessaging.ts,packages/shared/src/messagingModuleManifest.ts,packages/shared/src/messagingSchemas.ts,apps/backend/src/routes/tenant/messaging.ts,apps/backend/src/routes/tenant/messaging/**,apps/backend/src/db/repositories/messagingRepository.ts
+globs: apps/frontend/src/tenant/features/messaging/**,apps/frontend/src/components/ui/MessageComposer.tsx,apps/frontend/src/components/ui/MessagingVariableTokensBar.tsx,apps/frontend/src/components/ui/messageComposer/**,apps/frontend/src/hooks/useMessaging.ts,packages/shared/src/messagingModuleManifest.ts,packages/shared/src/messagingSchemas.ts,apps/backend/src/routes/tenant/messaging.ts,apps/backend/src/routes/tenant/messaging/**,apps/backend/src/db/repositories/messagingRepository.ts,apps/backend/src/services/messaging*.ts
 alwaysApply: false
 ---
 
 # MMS Messaging & Campaign Specification
+
+**Workflow skill:** `mms-messaging`.
 
 Governs campaign composition, templates, and sent-history for the Messaging module and cross-module `MessageComposer`.
 
@@ -21,6 +23,7 @@ Governs campaign composition, templates, and sent-history for the Messaging modu
 - Bulk writes upsert (`bulkSave`); do not wipe via `replaceForWorkspace` on normal save paths.
 - **Log clear**: intentional soft-archive (`deletedAt`) of the active view — not a Contacts-style trash browser.
 - BE: `authenticateTenant` + RLS/`withTenantTransaction`; force `userId` from session; strip client `deletedAt` on POST; never echo SQL to clients.
+- Campaign/send POSTs: accept an **idempotency key** when the client may retry — `mms-api-interface.mdc` §6. Surface `429` / `Retry-After` via shared notify — `mms-auth-security.mdc`.
 
 ## 3. Personalization & openers
 

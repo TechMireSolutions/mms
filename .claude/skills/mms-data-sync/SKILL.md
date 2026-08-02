@@ -1,9 +1,11 @@
 ---
 name: mms-data-sync
-description: Works with MMS localStorage layer (db.ts), useLiveCollection, TanStack Query cache sync, backend /api/db sync, tenant-scoped storage, and collection/object persistence. Use when reading or writing app data, fixing stale UI, or syncing frontend with PostgreSQL.
+description: Legacy/hybrid localStorage and /api/db document-store sync (db.ts, useLiveCollection, objects/collections). Use when fixing legacy persistence or /api/db — not for new REST Query hooks (use mms-query-factories) or backup wipe-restore UI (use mms-backup-restore).
 ---
 
 # MMS Data Sync Workflow
+
+**Legacy / hybrid only.** New REST entity work → skill **`mms-query-factories`** (+ `mms-data-layer.md`). Backup wipe-restore UI → **`mms-backup-restore`**. Do not expand `useLiveCollection` for REST-migrated entities.
 
 ## Frontend (`apps/frontend/src/lib/db.ts`)
 
@@ -87,10 +89,12 @@ import {
 ## Add new collection (modern path)
 
 1. Backend REST route + Zod (`mms-backend-api` skill)
-2. Query hooks (`useQuery` + `useMutation`, export `QUERY_KEY`, pass `signal`)
+2. Query factories / hooks → skill **`mms-query-factories`** (`queryOptions`, tuple keys, `signal`, optimistic bans)
 3. Soft-delete: default exclude deleted; trash uses `includeDeleted`
 4. **Banned for new modules:** hybrid Query→localStorage mirroring / new `useLiveCollection`
 5. Stop using `/api/db/collections/:name` for that entity
+
+Backup/wipe-restore UI + validate-before-wipe → skill **`mms-backup-restore`** (not this skill’s primary path).
 
 ## Concurrency
 
@@ -117,7 +121,7 @@ Full-array read-modify-write — merge concurrent edits to same collection.
 
 ## Related skills
 
-`mms-backend-api`, `mms-frontend`, `mms-form-architecture`, `mms-messaging`
+`mms-query-factories`, `mms-backup-restore`, `mms-schema-migrate`, `mms-backend-api`, `mms-frontend`, `mms-form-architecture`
 
 ## Done
 

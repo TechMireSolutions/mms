@@ -18,6 +18,8 @@ paths:
 
 # MMS File Structure & Naming Conventions
 
+**Workflow skills:** FE feature scaffolding → `mms-frontend` · shared barrels/exports → `mms-shared-package` · module page layout → `mms-module-page`.
+
 Governs code layout, file colocation, splitting thresholds, casing conventions, and naming consistency across the monorepo workspaces.
 
 ---
@@ -36,7 +38,8 @@ MMS uses a strict `pnpm` workspace monorepo layout:
   Each feature folder contains its entry page (`{Module}Page.tsx`), `components/` subdirectory, and `hooks/` subdirectory.
   Shared cross-feature tenant hooks live under `apps/frontend/src/tenant/hooks/` (e.g. `useBranding.ts`, `collections/`).
 - Tenant non-feature shells: `apps/frontend/src/tenant/pages/` (auth), `tenant/components/` (AppLayout / guards), `tenant/routes/` (`TenantRoutes.tsx`).
-- Platform apex console lives under `apps/frontend/src/platform/` with `pages/`, `components/`, `hooks/`, `lib/`, and `routes/` (incl. `pages/auth/`).- Backend routes are scoped by namespace under `apps/backend/src/routes/`:
+- Platform apex console lives under `apps/frontend/src/platform/` with `pages/`, `components/`, `hooks/`, `lib/`, and `routes/` (incl. `pages/auth/`).
+- Backend routes are scoped by namespace under `apps/backend/src/routes/`:
   - `platform/` (e.g. `platformWorkspaces.ts`, `platformAuth.ts`, `platformUsers.ts`, `platformSettings.ts`)
   - `tenant/` — prefer a thin barrel (`contacts.ts`, `messaging.ts`) that registers sub-route modules under `tenant/{module}/` when a domain grows
   - `common/` (e.g. `auth.ts`, `db.ts`, `public.ts`, `backgroundJobs.ts`)
@@ -100,6 +103,7 @@ To prevent monolithic components and maintain clean boundaries:
 ### Other organization rules
 
 - **Separation of Concerns**: If a component has > 3 distinct responsibilities, split it.
+- **Feature import boundary**: Ban circular imports across `tenant/features/*`. Cross-feature data only via `@/tenant/hooks/collections/*` or `@mms/shared` — never feature→feature deep imports.
 - **Dry-run Refactoring**: Extract duplicated JSX elements appearing >= 2 times into reusable layout helpers — `mms-dry.md`.
 - **Test files**: Colocate `*.test.ts(x)` next to unit under test; E2E only under `e2e/`.
 - **Route files**: Match URL segment (`students.ts` → `/api/students`); submodules stay private to that barrel.

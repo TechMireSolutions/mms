@@ -4,6 +4,8 @@ trigger: model_decision
 
 # MMS Reports & Analytics
 
+**Workflow skills:** charts/exports/KPIs → `mms-reports-export` · mega export job tray → `mms-background-jobs`. Query-first policy → `mms-data-layer.md` · skill `mms-query-factories`.
+
 **Placement & per-module categories** → `mms-module-architecture.md`. This file covers report **implementation** only.
 
 ## Data (Query-first)
@@ -34,6 +36,7 @@ trigger: model_decision
 | PDF | `jspdf` + `jspdf-autotable` — auto page size/orientation |
 
 Use shared `ExportToolbar` / `ExportToolbarCompact` (`@/components/ui/ExportToolbar*`, `exportToolbarUtils.ts`) — not a deleted `ReportExportBar`. Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
+Exports above interactive size → **background job + tray download** (`mms-module-architecture.md` §5) — ban main-thread mega xlsx/PDF in the Reports tab.
 
 ## Visual
 

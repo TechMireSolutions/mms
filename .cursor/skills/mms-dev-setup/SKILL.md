@@ -87,7 +87,7 @@ packages/shared/ @mms/shared
 
 ## Related skills
 
-`mms-backend-api`, `mms-backend-security`, `mms-data-sync`, `mms-linux-compatibility`
+`mms-dependency-upgrade` (catalogs / Dependabot / Compiler — not day-to-day install), `mms-backend-api`, `mms-backend-security`, `mms-data-sync`, `mms-linux-compatibility`
 
 ## Done
 

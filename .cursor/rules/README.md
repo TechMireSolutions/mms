@@ -4,39 +4,62 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 **Architecture rules:** `mms-module-architecture.mdc`, `mms-ops-infrastructure.mdc`, `mms-ui-ux-design.mdc`, `mms-data-layer.mdc`.
 
-## Always Applied (6)
+## Always Applied (4)
 
 | Rule | Purpose |
 |------|---------|
 | `antigravity-global.mdc` | Agent cognition, output economy, security, TS/git standards |
-| `mms-core.mdc` | Stack, boundaries, domain invariants, standards index, edit discipline |
-| `mms-migration-status.mdc` | Open gaps + Do not reintroduce — do not regress |
-| `mms-dependencies.mdc` | Latest stable Node, pnpm, and workspace dependency upgrades |
-| `mms-dry.mdc` | DRY — single source of truth, extraction thresholds, duplication bans, `@mms/shared` exports |
+| `mms-core.mdc` | Stack, boundaries, ownership matrix, edit discipline |
+| `mms-migration-status.mdc` | Do not reintroduce themes + short open-gaps summary (full gaps → `mms-migration-fixes` skill) |
 | `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
 
-## Scoped Rules (14)
+## Scoped Rules (16)
 
 | Rule | Focus / Topic |
 |------|---------------|
-| `mms-ops-infrastructure.mdc` | Local dev setup, environment variables, Docker backend ports, health endpoints, Linux compatibility, and CI expectations |
-| `mms-ui-ux-design.mdc` | UI primitives, design tokens, forms (`FormModal`), tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (mobile-first, breakpoints, 44px touch, tables, e2e) |
+| `mms-dry.mdc` | DRY — single source of truth, extraction thresholds, `@mms/shared` exports |
+| `mms-dependencies.mdc` | Latest stable Node, pnpm, and workspace dependency upgrades |
+| `mms-ops-infrastructure.mdc` | Local dev setup, environment variables, Docker backend ports, health endpoints, Linux compatibility, and CI orchestration |
+| `mms-ui-ux-design.mdc` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (FormModal chrome → `mms-form-architecture.mdc`) |
 | `mms-module-architecture.mdc` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
-| `mms-data-layer.mdc` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query fetching, and deprecated localStorage caching |
+| `mms-data-layer.mdc` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query policy |
 | `mms-form-architecture.mdc` | Static FormModal forms, shared Zod DTOs, React 19 defaults, decimal-as-string, local multipart uploads |
-| `mms-structure-naming.mdc` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, split shapes, stable barrels, naming (files, folders, symbols, routes, i18n keys), and UI-to-DB casing alignment |
-| `mms-hooks.mdc` | Custom React hooks (Query, live data, **page controllers / action handlers**, Work layout, config contexts) |
-| `mms-auth-security.mdc` | Auth, users, JWT session shapes, RBAC permissions, multi-tenant isolation, cookie policies, rate limits, and threat model |
-| `mms-settings-i18n.mdc` | Settings hierarchy, settings persistence and preview, navigation groups, translations/locales (en/ar/ur/fa) |
+| `mms-structure-naming.mdc` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, Title Case on save, naming |
+| `mms-hooks.mdc` | Custom React hooks (Query recipes, page controllers / action handlers, Work layout) |
+| `mms-auth-security.mdc` | Auth, users, JWT session shapes, RBAC permissions, multi-tenant isolation, cookie policies, rate limits |
+| `mms-settings-i18n.mdc` | Settings hierarchy, preview, navigation, translations, `formatDate` / `formatMoney` |
 | `mms-fields.mdc` | Field and tab registry |
-| `mms-api-interface.mdc` | Vite SPA shell, routing, apiClient, providers, Fastify server API routes, and schema validation |
+| `mms-api-interface.mdc` | Vite SPA shell, routing, apiClient, Fastify API routes, error taxonomy, HTTP pagination contract |
 | `mms-reports.mdc` | Analytics implementation & exports |
-| `mms-testing-observability.mdc` | Vitest, API tests, CI expectations, logging formats, healthchecks, ErrorBoundary, and error reporting |
+| `mms-testing-observability.mdc` | Vitest, API tests, logging, ErrorBoundary, Sentry, request-id |
 | `mms-messaging.mdc` | SMS/WhatsApp campaigns, `MessageComposer`, templates, and message-log soft-archive semantics |
+
+## Ownership (see `mms-core.mdc`)
+
+Single prose owner per topic. Duplicate essays elsewhere must be short pointers. Full matrix in always-on `mms-core.mdc` Standards index.
 
 ## Skills (Workflows)
 
 `.cursor/skills/` — task-discovered workflow guides. Index: [../skills/README.md](../skills/README.md). Overview: [../../AGENTS.md](../../AGENTS.md).
+
+Rules = norms/SSOT. Skills = workflows/checklists that **point** at rules (do not re-author norms).
+
+Every rule starts with a **Workflow skill:** line; the full rule→skill map lives in always-on **`mms-core.mdc`** Standards index. Highlights:
+
+| When working on… | Invoke skill |
+|------------------|--------------|
+| New module / three-tier page | `mms-module-page` (+ `mms-module-work` / `mms-module-setup`) |
+| REST Query hooks / optimistic policy | `mms-query-factories` |
+| Drizzle DDL / FORCE RLS | `mms-schema-migrate` |
+| Auth / CSRF / cookies / RBAC | `mms-backend-security` |
+| Fastify routes / `inject()` | `mms-backend-api` |
+| FE shell / apiClient | `mms-frontend` |
+| FormModal / Zod forms | `mms-form-architecture` |
+| Backup wipe-restore | `mms-backup-restore` |
+| Dep upgrades / catalogs | `mms-dependency-upgrade` |
+| axe / focus-return | `mms-a11y-smoke` |
+| Migration debt | `mms-migration-fixes` |
+| PR / self-review | `mms-code-review` |
 
 ## Agent Mirrors
 
@@ -60,7 +83,7 @@ bash .agent/scripts/sync-all.sh
 - [ ] Frontend lint if touched: `cd apps/frontend && pnpm lint`
 - [ ] No new hardcoded labels/colours — see `mms-settings-i18n.mdc` (en/ar/ur/fa) + registries
 - [ ] Module tiers respect isolation boundaries in `mms-module-architecture.mdc`
-- [ ] Work: `directoryViews: ['table','cards']`, paged list GET (no `loadAllFn`), cards share server pagination, drawer trash parity
+- [ ] Person-directory Work: `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes; paged list GET (no `loadAllFn`); cards share server pagination; drawer trash parity
 - [ ] Work column widths persist (local + `/column-preferences`; merge preserves device widths) — `mms-module-architecture.mdc` §3
 - [ ] Dashboard/report KPI cards use `/metrics` where available — no forced collection dumps for those values; widgets/visualizer use `useWidgetCollections` / `useReportCollectionRows` — `mms-reports.mdc`
 - [ ] Setup Fields / form: tab enablement SSOT + enabled fields render in form **and** drawer — `mms-fields.mdc`
@@ -92,4 +115,4 @@ bash .agent/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — six always-apply rules + 14 file-scoped rules when matching paths are open (**20 total**).
+**Settings → Rules** — four always-apply rules + 16 file-scoped rules when matching paths are open (**20 total**).

@@ -1,16 +1,18 @@
 ---
 name: mms-backend-security
-description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, rate limits, and auth artifacts. Use when reviewing security, fixing auth bypass, adding protected routes, auditing Fastify middleware, cookies, CORS, Helmet/headers, or session/OTP flows.
+description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, CSRF/Origin, rate limits, and auth artifacts. Use when reviewing security, fixing auth bypass, adding protected routes, auditing Fastify middleware, cookies, CORS, CSRF, Origin checks, Helmet/headers, or session/OTP flows.
 ---
 
 # MMS Backend Security Workflow
+
+**Rule (norms SSOT):** `mms-auth-security.mdc`. Route/service wiring → **`mms-backend-api`**.
 
 ## When to use
 
 - New protected route or auth endpoint
 - Security review / PR audit
 - Tenant isolation or cross-workspace bugs
-- Cookie, refresh, 2FA, or handoff changes
+- Cookie, CSRF/Origin, refresh, 2FA, or handoff changes
 
 ## Mandatory middleware
 
@@ -82,9 +84,12 @@ Mutual exclusion: issuing/clearing a platform session also clears tenant auth co
 
 CORS: `credentials: true`; production requires explicit `ALLOWED_ORIGIN`.
 
+Cookie-auth mutations: enforce same-origin (`Origin` / `Sec-Fetch-Site`) or equivalent CSRF defense — do not rely on `SameSite=Lax` alone. Reject JSON writes without `application/json`. On `429`, emit `Retry-After` — `mms-auth-security.mdc`.
+
 ## Tenant isolation checklist
 
 - [ ] Tenant from host header — not from client JSON body on protected routes
+- [ ] Cookie CSRF / Origin check on state-changing cookie-auth routes
 - [ ] Storage keys `t:{subdomain}:{logicalKey}` on server (`database.ts` + `tenantContext.ts`)
 - [ ] JWT subdomain matches resolved tenant
 - [ ] Apex routes do not expose other tenants' data

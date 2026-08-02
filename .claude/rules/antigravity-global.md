@@ -4,20 +4,22 @@ description: Antigravity agent cognition, behaviour, output economy, security, a
 
 # Antigravity Global Rules
 
+**Workflow skills:** orientation / sync → `antigravity-workspace` · PR/self-review index → `mms-code-review`. Rule→skill map → `mms-core.md` Standards index.
+
 ## Cognition
 
 - **Plan:** Output a concise `<plan>` before structural or multi-file changes.
-- **Check:** Search the workspace (especially `@mms/shared`) before writing new logic.
+- **Check:** Search the workspace (especially `@mms/shared`) before writing new logic — extraction thresholds `mms-dry.md` · skill `mms-shared-package`.
 - **Type-check:** Verify types against schemas and `@mms/shared` before emitting code.
-- **Review:** On code edits, completion review per `mms-completion-review.md` — fix bugs before done.
+- **Review:** On code edits, completion review per `mms-completion-review.md` — skill `mms-code-review`; fix bugs before done.
 
 ## Behaviour
 
 - **Focus:** Edit in-scope files only. Ask before deletions or large removals.
 - **Style:** Terse, functional code. No boilerplate or filler comments.
 - **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
-- **Names:** Semantic identifiers — full policy in `mms-structure-naming.md`
-- **Memo hygiene (Compiler-ready):** Do not add `useMemo` / `useCallback` / `React.memo` by default — React Compiler is not enabled yet. Prefer `startTransition`, `useDeferredValue`, and `useEffectEvent` when appropriate.
+- **Names:** Semantic identifiers — `mms-structure-naming.md`.
+- **Memo hygiene (Compiler-ready):** Do not add `useMemo` / `useCallback` / `React.memo` by default — React Compiler is not enabled yet. Prefer `startTransition`, `useDeferredValue`, and `useEffectEvent` when appropriate — `mms-hooks.md`, `mms-dependencies.md`.
 
 ## Communication (two modes)
 
@@ -31,23 +33,21 @@ Do not echo file contents already in context.
 ## Output economy
 
 - **Edits:** `search_replace` / small writes — not full-file rewrites.
-- **Tests:** After code edits, follow `mms-completion-review.md` (do not invent extra suites beyond that gate). Pure `@mms/shared` helpers still need unit tests — `mms-testing-observability.md`.
-- **JSDoc:** Required on **public exports** in `packages/shared` only. Omit elsewhere; do not add narrating comments to app code.
+- **Tests:** Follow `mms-completion-review.md`. Pure `@mms/shared` helpers need unit tests — `mms-testing-observability.md`.
+- **JSDoc:** Required on **public exports** in `packages/shared` only. Omit elsewhere.
 
 ## Security & state
 
-- **Validation:** Zero-trust DTOs — Zod schemas in `@mms/shared`; validate on FE forms and BE via `parseRequest` (no divergent hand-rolled shapes).
-- **State:** Prefer unidirectional flow; pure helpers for transforms.
-- **Concurrency:** Cancel in-flight work on unmount/dep change — pass `AbortSignal` into `apiFetch` / Query `queryFn`; clear timers/observers.
-- **Resilience:** Error boundaries on heavy module sections; degrade gracefully on API failure.
-- **Secrets:** Never log, commit, or paste tokens, passwords, OTP, or PII — `mms-auth-security.md`.
-- **XSS:** Treat user HTML/Markdown as untrusted — no `dangerouslySetInnerHTML` without an approved sanitizer.
+- **Validation:** Zero-trust DTOs via `@mms/shared` Zod + BE `parseRequest` — `mms-core.md` Validation SSOT, `mms-form-architecture.md`.
+- **State:** Prefer unidirectional flow; pure helpers for transforms — Query policy `mms-data-layer.md`.
+- **Concurrency:** Pass `AbortSignal` into `apiFetch` / Query `queryFn`; clear timers/observers — `mms-data-layer.md`, `mms-api-interface.md`.
+- **Resilience:** Error boundaries on heavy sections — `mms-testing-observability.md`.
+- **Secrets / XSS:** Never log tokens/PII; no unsanitized `dangerouslySetInnerHTML` — `mms-auth-security.md`.
 
 ## Standards
 
-- **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`. Prefer narrowing over assertion casts on API boundaries.
+- **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`. Prefer `import type`. Dedicated-PR targets (`noUncheckedIndexedAccess`, `verbatimModuleSyntax`) → `mms-dependencies.md`.
 - **Errors:** Handle explicitly; no silent empty `catch`.
-- **A11y default:** New interactive controls ship with accessible name/label, keyboard path, and visible focus — `mms-ui-ux-design.md`.
-- **HTML/CSS:** Semantic HTML; Tailwind utilities unless design tokens override.
+- **A11y / HTML:** Accessible interactive controls + semantic landmarks — `mms-ui-ux-design.md`.
 - **Git:** Conventional Commits (`feat`/`fix`/`chore`). No direct commits to `main`. **Never commit unless the user asks. Never push to any remote — the user always handles pushes.**
-- **Rules:** When changing MMS standards, run `bash .agent/scripts/sync-all.sh` to mirror `.cursor/rules`, `.agent/rules`, and `.claude/rules` (see `.cursor/rules/README.md`).
+- **Rules:** When changing MMS standards, run `bash .agent/scripts/sync-all.sh` (see `.cursor/rules/README.md`).

@@ -1,8 +1,16 @@
 ---
 description: DRY (Don't Repeat Yourself) guidelines, extraction thresholds, boundaries, and @mms/shared exports standards.
+paths:
+  - "packages/shared/**"
+  - "apps/frontend/src/hooks/**"
+  - "apps/frontend/src/tenant/hooks/**"
+  - "apps/frontend/src/tenant/features/**"
+  - "apps/backend/src/services/**"
 ---
 
 # MMS DRY & Shared Package Policy
+
+**Workflow skill:** `mms-shared-package` (extract/export pure helpers and Zod DTOs).
 
 **Don't Repeat Yourself (DRY)** — every piece of knowledge, logic, and configuration must have a single, unambiguous, authoritative representation within the Madrasa Management System (MMS).
 
@@ -12,7 +20,7 @@ description: DRY (Don't Repeat Yourself) guidelines, extraction thresholds, boun
 - **Search First**: BEFORE writing any helper function, component, validation schema, utility hook, or CSS style, search `@mms/shared` (including `platformApiErrors` / platform Zod schemas), `apps/frontend/src/lib/config/` (`routes.ts`, `navConfig.tsx`, `settingsNavConfig.ts`), `apps/frontend/src/hooks/`, `apps/frontend/src/tenant/hooks/`, `apps/frontend/src/tenant/hooks/collections/`, `apps/frontend/src/tenant/features/`, `apps/frontend/src/tenant/pages/`, `apps/frontend/src/tenant/components/`, `apps/frontend/src/platform/`, `apps/frontend/src/lib/reports/`, and `apps/frontend/src/components/ui/` for existing equivalents.
 - **Extend, Don't Fork**: If an existing helper almost fits your use case, extend its parameters rather than copying it or creating a near-duplicate function.
 - **Scan & Refactor**: When editing code, actively scan the surrounding files for duplicate blocks and refactor them into a unified local utility.
-- **Zod SSOT**: Do not duplicate the same request/response shape in FE and BE — export once from `@mms/shared`.
+- **Zod SSOT**: Do not duplicate the same request/response shape in FE and BE — export once from `@mms/shared`. Schema variants via `.pick` / `.omit` / `.extend` on the shared base only — no copy-paste parallel object literals.
 
 ---
 
@@ -53,5 +61,4 @@ apps/backend/src/*       Fastify routes, services, Drizzle schema/queries.
 - **JSDoc**: Required on **public exports** in `packages/shared` only. Omit elsewhere; do not add narrating comments to application code.
 - **Unit Testing**: All non-trivial pure logic helper utilities added to `@mms/shared` must include unit tests.
 - **Dead Code**: Actively prune unused imports, dead variables, and legacy shims within your change boundary.
-- **Date Formatting Consistency**: Never format dates using raw inline `.toLocaleDateString()` or custom format patterns. All date formatting across the monorepo must resolve through the global settings-driven `formatDate` helper (imported from `@mms/shared`, `@/lib/utils`, or `@/lib/db`) to ensure the user's date format settings are applied everywhere.
-- **Money & Currency Formatting Consistency**: Never format money/currency values using raw inline `.toLocaleString()` or custom string prefixes (e.g. `PKR ...` or `₨ ...`). All currency formatting across the monorepo must resolve through the centralized `formatMoney` helper (imported from `@mms/shared`) to ensure consistency and correct locale formatting.
+- **Date / money formatting**: Never invent parallel formatters — use settings-driven `formatDate` / `formatMoney` — **`mms-settings-i18n.md`**.

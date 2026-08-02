@@ -6,6 +6,8 @@ alwaysApply: false
 
 # MMS Settings, Navigation & Internationalization
 
+**Workflow skills:** `/settings` + i18n → `mms-settings-i18n` · Backup wipe-restore → `mms-backup-restore`. Module Setup (not `/settings`) → `mms-module-setup`.
+
 Governs application-wide configuration tabs, live settings preview states, sidebar navigation rules, and localization copy mappings across English, Arabic, Urdu, and Persian.
 
 ---
@@ -27,7 +29,8 @@ Governs application-wide configuration tabs, live settings preview states, sideb
 - **Restore is two-step**: (1) current-password step-up + mandatory safety backup download (`createSafetyBackup` → `safetyReady`); (2) wipe-restore (`beginRestore`) disabled until `safetyReady`.
 - Confirm modal must not close while safety backup or restore is in progress.
 - Early-reject encrypted file `subdomain` ≠ current tenant (`backup.workspaceMismatch`) before the decrypt prompt.
-- All copy via `backup.*` keys (en/ar/ur/fa). Map HTTP `408` / `backup.syncTimeout` to localized timeout messaging — `mms-data-layer.mdc` / `mms-auth-security.mdc` for sync and credential rules.
+- Always run `validateWorkspaceBackupJson` / `validateAndNormalizeSnapshot` (and subdomain match) **before** wipe-restore; treat validation-only as the dry-run — never commit a partial restore. Envelope/KDF mechanics → `mms-data-layer.mdc`.
+- All copy via `backup.*` keys (en/ar/ur/fa). Map HTTP `408` / `backup.syncTimeout` to localized timeout messaging.
 
 ---
 
@@ -67,7 +70,7 @@ MMS supports four languages configured in `languageUtils.ts` (`APP_LANGUAGES`):
 - **Reactive Layout Direction**: Consume `dir` / `isRtl` from `useTranslation()` — do not read DOM `dir` directly.
 - **Locale Typography**: Apply language font stacks via `applyDocumentLanguage` / CSS variables to avoid CLS.
 - **Non-Destructive Live Previews**: In-memory locale/theme previews via drafts before Save.
-- **Settings-Aware `Intl` Formatting**: Dates/money via settings-aware `formatDate` / `formatMoney` (+ `Intl`), not ad-hoc string math.
+- **Settings-Aware `Intl` Formatting (SSOT)**: All dates/money via settings-aware `formatDate` / `formatMoney` from `@mms/shared` (or `@/lib/utils` / `@/lib/db` wrappers) + `Intl` — never raw `.toLocaleDateString()` / `.toLocaleString()` or hardcoded `PKR` / `₨` prefixes. Currency hooks: `useFinanceCurrency` / `useAccountingCurrency`. If relative times or list formatting ship, add settings-aware `Intl.RelativeTimeFormat` / `Intl.ListFormat` helpers in `@mms/shared` — same ban on raw `toLocale*`.
 - **Error Codes Mapping**: Tenant UI maps API `type` to `t('errors.{type}')`. Platform auth/setup/admin surfaces use `mapPlatformAuthError` → `platform.*` keys (`platformAuthErrors.ts`).
 
 ### Platform apex = English only

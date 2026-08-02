@@ -4,41 +4,44 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 **Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agent/skills-manifest.json](../skills-manifest.json)
 
-## Skills index
+## Skills index (25)
 
 | Skill | Use when |
 |-------|----------|
 | [antigravity-workspace](antigravity-workspace/SKILL.md) | Antigravity orientation, rules/skills sync |
 | [mms-dev-setup](mms-dev-setup/SKILL.md) | Install, run servers, env, typecheck |
+| [mms-dependency-upgrade](mms-dependency-upgrade/SKILL.md) | Catalogs, Dependabot, audits, React Compiler enablement |
 | [mms-frontend](mms-frontend/SKILL.md) | Frontend pages, hooks, apiClient, Vite, FE tests |
-| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `mms-module-architecture.mdc` (incl. §7 gold-standard) |
-| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — metrics, directory, drawer, bulk actions, soft-delete trash (`mms-module-architecture.mdc` §2–§3, §6–§7) |
-| [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup tier — Fields, Preferences, audit, field guards (`mms-module-architecture.mdc` §4, `mms-fields.mdc`) |
-| [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued processing — large exports, imports, bulk ops, dedup scans, progress, artifacts (`mms-module-architecture.mdc` §5) |
-| [mms-form-architecture](mms-form-architecture/SKILL.md) | Static FormModal, shared Zod, React 19 inputs, tenant RLS, JSONB merge, local multipart uploads |
+| [mms-query-factories](mms-query-factories/SKILL.md) | TanStack Query `queryOptions` / mutations / optimistic policy |
+| [mms-module-page](mms-module-page/SKILL.md) | New module or three-tier page — `mms-module-architecture.mdc` (incl. §7) |
+| [mms-module-work](mms-module-work/SKILL.md) | Command centre and Work tier — directory, drawer, trash |
+| [mms-module-setup](mms-module-setup/SKILL.md) | Module Setup — Fields, Preferences, field guards |
+| [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued exports/imports, progress, artifacts |
+| [mms-form-architecture](mms-form-architecture/SKILL.md) | Static FormModal, shared Zod, uploads |
 | [mms-fields-registry](mms-fields-registry/SKILL.md) | Custom fields, tabs, column registry |
-| [mms-data-sync](mms-data-sync/SKILL.md) | db.ts, sync API (admin GET), REST vs collections, Query cache |
+| [mms-data-sync](mms-data-sync/SKILL.md) | db.ts, sync API, REST vs collections |
+| [mms-backup-restore](mms-backup-restore/SKILL.md) | Encrypted backup / wipe-restore validate-before-wipe |
+| [mms-schema-migrate](mms-schema-migrate/SKILL.md) | Forward-only Drizzle DDL, FORCE RLS, ban db push |
 | [mms-shared-package](mms-shared-package/SKILL.md) | `@mms/shared` types and utils |
-| [mms-backend-api](mms-backend-api/SKILL.md) | Fastify routes, middleware, Zod, migrations, inject tests |
-| [mms-backend-security](mms-backend-security/SKILL.md) | Tenant isolation, RBAC, cookies, auth artifacts, rate limits |
+| [mms-backend-api](mms-backend-api/SKILL.md) | Fastify routes, middleware, Zod, inject tests |
+| [mms-backend-security](mms-backend-security/SKILL.md) | Tenant isolation, RBAC, cookies, CSRF/Origin, rate limits |
 | [mms-reports-export](mms-reports-export/SKILL.md) | Analytics, charts, PDF/Excel |
-| [mms-messaging](mms-messaging/SKILL.md) | SMS/WhatsApp campaigns, MessageComposer, templates, message logs |
+| [mms-messaging](mms-messaging/SKILL.md) | SMS/WhatsApp campaigns, MessageComposer, logs |
 | [mms-migration-fixes](mms-migration-fixes/SKILL.md) | Known tech debt from migration-status |
 | [mms-code-review](mms-code-review/SKILL.md) | PR / change review against MMS standards |
-| [mms-ops-deploy](mms-ops-deploy/SKILL.md) | Hetzner deploy, Apache isolation, PORT 5002, GitHub Actions |
-| [mms-linux-compatibility](mms-linux-compatibility/SKILL.md) | Enforce and check Linux/Ubuntu VPS compatibility (casing, line endings, permissions, PM2) |
-| [mms-settings-i18n](mms-settings-i18n/SKILL.md) | App settings (/settings), settings preview drafts, sidebar navigation, and localization/i18n standards (en/ar/ur/fa) |
+| [mms-a11y-smoke](mms-a11y-smoke/SKILL.md) | axe smoke, focus-return, shell a11y verify |
+| [mms-ops-deploy](mms-ops-deploy/SKILL.md) | Hetzner deploy, Apache isolation, PORT 5002 |
+| [mms-linux-compatibility](mms-linux-compatibility/SKILL.md) | Linux/Ubuntu VPS casing, line endings, PM2 |
+| [mms-settings-i18n](mms-settings-i18n/SKILL.md) | `/settings`, nav registries, i18n (en/ar/ur/fa) |
 
 ## Rules vs skills
 
 | Layer | Location | Behavior |
 |-------|----------|----------|
-| **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) |
-| **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches task |
+| **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) — norms/SSOT |
+| **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches — workflows/checklists that **point** at rules |
 
-Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`, `mms-completion-review`.
-
-Frontend work: rules `mms-api-interface`, `mms-data-layer`, `mms-hooks`, `mms-ui-ux-design` (**§7 responsiveness**), `mms-settings-i18n` + skill **`mms-frontend`** (includes `/settings` page patterns).
+Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review`. Scoped examples: `mms-dry`, `mms-dependencies`, `mms-structure-naming`.
 
 ## Verify setup
 
@@ -54,8 +57,6 @@ pnpm install && pnpm typecheck && pnpm test
 | Antigravity | `.agent/skills/` (canonical) |
 | Cursor | `.cursor/skills/` |
 | Claude Code | `.claude/skills/` |
-
-Identical skill folders in all three. Workflows in `.agent/workflows/` (Claude reference: `.claude/docs/workflows/`). Rules in `.agent/rules/`, `.cursor/rules/`, `.claude/rules/`.
 
 After editing skills or rules:
 

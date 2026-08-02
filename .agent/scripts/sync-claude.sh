@@ -89,6 +89,27 @@ for dir in "$ROOT/.agent/skills"/*/; do
 done
 
 cp "$ROOT/.agent/rules/README.md" "$ROOT/.claude/rules/README.md" 2>/dev/null || true
+if [[ -f "$ROOT/.claude/rules/README.md" ]]; then
+  # Tool-specific title/blurb after Agent mirror copy
+  node <<'NODE'
+const fs = require("fs");
+const path = require("path");
+const p = path.join(process.cwd(), ".claude/rules/README.md");
+let s = fs.readFileSync(p, "utf8");
+s = s
+  .replace(/^# MMS Agent Rules\b/m, "# MMS Claude Rules")
+  .replace(/^# MMS Cursor Rules\b/m, "# MMS Claude Rules")
+  .replace(
+    /Antigravity loads `\.md` files from this directory \(synced from Cursor `\.mdc`\)\./g,
+    "Claude Code loads `.md` files from this directory (synced from Cursor `.mdc`)."
+  )
+  .replace(
+    /Claude Code loads\s+files from this directory \(synced from Cursor\s*\)\./g,
+    "Claude Code loads `.md` files from this directory (synced from Cursor `.mdc`)."
+  );
+fs.writeFileSync(p, s);
+NODE
+fi
 cp "$ROOT/.agent/skills/README.md" "$ROOT/.claude/skills/README.md"
 
 mkdir -p "$ROOT/.claude/docs/workflows"

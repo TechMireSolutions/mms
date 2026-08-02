@@ -4,6 +4,8 @@ trigger: model_decision
 
 # MMS Messaging & Campaign Specification
 
+**Workflow skill:** `mms-messaging`.
+
 Governs campaign composition, templates, and sent-history for the Messaging module and cross-module `MessageComposer`.
 
 ## 1. Boundaries
@@ -19,6 +21,7 @@ Governs campaign composition, templates, and sent-history for the Messaging modu
 - Bulk writes upsert (`bulkSave`); do not wipe via `replaceForWorkspace` on normal save paths.
 - **Log clear**: intentional soft-archive (`deletedAt`) of the active view — not a Contacts-style trash browser.
 - BE: `authenticateTenant` + RLS/`withTenantTransaction`; force `userId` from session; strip client `deletedAt` on POST; never echo SQL to clients.
+- Campaign/send POSTs: accept an **idempotency key** when the client may retry — `mms-api-interface.md` §6. Surface `429` / `Retry-After` via shared notify — `mms-auth-security.md`.
 
 ## 3. Personalization & openers
 

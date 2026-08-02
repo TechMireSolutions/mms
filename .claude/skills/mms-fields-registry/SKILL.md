@@ -5,7 +5,7 @@ description: Adds or changes field/tab registries, CustomFieldsBuilder, Draggabl
 
 # MMS Field & Tab Registry
 
-**Source:** Rules: `mms-fields.md`, `mms-module-architecture.md` · Skill: `mms-module-setup` for full Setup workflow.
+**Rule (norms SSOT):** `mms-fields.md`. Also `mms-module-architecture.md` §4. Full Setup workflow → skill **`mms-module-setup`**. FormModal / Zod / JSONB merge → **`mms-form-architecture`**.
 
 ## Schemas (`@mms/shared/contactTypes.ts`)
 
@@ -55,8 +55,8 @@ Before merging any new/changed field, complete all layers:
 | Settings singleton | `getBrandingSettings` / `await saveBrandingSettings`, etc. |
 | Lookup option list | `saveCollection` / **`saveCollectionAsync`** (genders, labels, `countryCodes`, …) |
 | REST entity row (Contacts, Students, …) | Query mutations → `/api/{resource}` — **never** `saveCollection('contacts')` |
-| Registry definition | `saveObject('{module}_field_config', …)` |
-| Custom Tabs | Hydrated inside settings objects (e.g. `{module}_settings`), persisted via `saveObject` and backend-integrated extraction |
+| Registry definition | `saveObject('{module}_field_config', …)` (document-store gap until fully typed) |
+| Custom Tabs | Typed `custom_tabs` table + `/api/custom-tabs` — residual dual-write to settings objects is migration debt only (`mms-migration-status.md`) |
 
 **Reviewer test:** grep the field key — must appear in type, merge, form, and save. Block if only in `useState`.
 
@@ -85,14 +85,9 @@ Tables: column registry `{ key, label, enabled, order, sortable, width }`.
 - Locked tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic`, `custom`) + `useModuleSettingsEditor({ lockedEnabledTabs })` on save/sync.
 - Fields Save: dirty-gated; sync `columnRegistry` via `syncContactColumnRegistryWithFields` on Fields save.
 
-## Target Architecture & Form Specification
+## Forms
 
-All custom field configurations, registries, and dynamic form behaviors must conform to the **MMS Dynamic Form Architecture**. Refer to [mms-form-architecture.md](../rules/mms-form-architecture.md) (or the corresponding Cursor rule `mms-form-architecture.md`) for the full specifications on:
-- Monorepo package boundaries and ESM isolation.
-- Branded types (`FieldId`, `TabId`, etc.) and validation factory patterns.
-- Math safeguards and decimal precision handling for numbers and currency.
-- Row-Level Security transaction scope and JSONB deep merge operations.
-- Client-side memoized validation compilation and uncontrolled React 19 inputs prevention.
+Entity create/edit uses **static** `FormModal` + shared Zod — **ban** dynamic form compilers / memoized validation compilation. Norms → `mms-form-architecture.md` · skill **`mms-form-architecture`**.
 
 ## One DraggableFieldList
 

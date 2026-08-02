@@ -5,7 +5,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 
 # MMS Module Work Workflow
 
-Source: `mms-module-architecture.mdc` §2–§3 and §6–§7. Rules: `mms-module-architecture.mdc`, `mms-auth-security.mdc`, `mms-data-layer.mdc`.
+**Rule (norms SSOT):** `mms-module-architecture.mdc` §2–§3, §6–§7. Also `mms-auth-security.mdc`, `mms-data-layer.mdc`.
 
 ## Reference
 
@@ -21,12 +21,12 @@ Source: `mms-module-architecture.mdc` §2–§3 and §6–§7. Rules: `mms-modul
 2. `PageHeader` stays visible — metrics, add, export, integrity tools live there.
 3. Work = directory/CRUD/drawer/filters/bulk only — no charts.
 4. **Filters SSOT**: one Filters menu owns presets/dimensions; no always-visible chip bar that repeats the same options. Preset ids + `labelKey`s live in `@mms/shared` next to the list-query schema (Contacts: `CONTACTS_QUICK_FILTER_OPTIONS`). Active state = badge + Clear; `FilterChips` only for removable active multi-selects.
-5. **View mode SSOT**: resolve one `viewMode` (`table` | `cards`); manifest `directoryViews: ['table','cards']` (never `list`); default cards below `md`, table at `md+`; user toggle overrides. Do not dual-render with CSS breakpoints + separate override state. Setup `defaultViewLayout` must not drive Work directory render. Cards share the same server page API — ban `maxPageSize` dumps.
+5. **View mode**: person-directory Work → `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes (finance/attendance/…). Resolve one `viewMode`; defaults/cards paging — rule §3.
 6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET.
 7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
 8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** archive chrome + Restore; hide Call/WA/SMS/Email when `deletedAt`.
 9. §7: `ErrorState`+retry+hint on list `isError`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close.
-10. **Column layout SSOT**: `useModuleColumnLayout` (Contacts: `useContactConfigColumnPrefs`) for visibility **and** width. `ResizableTableHead` → `setColumnWidth`. Save device `localStorage` immediately (`mms_{moduleId}_columns_{userId}`); debounce `PUT …/column-preferences`. On load merge with `mergeModuleColumnPreferences` — **local width wins**; never wipe local widths when server omits `width`. Mobile cards for dense directories; failures via `notify`.
+10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate).
 11. Contacts report KPIs: `activeCount` = soft-delete-filtered roster length (form never writes `isActive`).
 12. Contacts mutations invalidate messaging resolve Query keys when person data changes.
 
@@ -36,7 +36,7 @@ Source: `mms-module-architecture.mdc` §2–§3 and §6–§7. Rules: `mms-modul
 - [ ] PageHeader visible on all tiers; metrics permission-scoped
 - [ ] Create omitted when !canWrite; Cmd/Ctrl+N when allowed
 - [ ] Server pagination / metrics — no unbounded client lists / no `loadAllFn`
-- [ ] Cards + table same page API; `directoryViews: ['table','cards']`
+- [ ] Person-directory: `directoryViews: ['table','cards']`; cards + table same page API
 - [ ] Soft-delete trash + restore (+ drawer archive chrome) or documented variant
 - [ ] ErrorState + retry + hint on list isError (not empty success)
 - [ ] mutateAsync awaited before form close

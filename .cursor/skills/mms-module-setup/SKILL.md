@@ -105,7 +105,7 @@ After hiding/disabling a tab or field, verify absent from:
 
 ## Rules
 
-`mms-module-architecture.mdc`, `mms-fields.mdc`, `mms-settings-i18n.mdc`, `mms-module-architecture.mdc`, `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`
+`mms-module-architecture.mdc`, `mms-fields.mdc`, `mms-settings-i18n.mdc`, `mms-ui-ux-design.mdc`
 
 ## Related skills
 

@@ -1,10 +1,12 @@
 ---
 description: Data Layer — PostgreSQL, Drizzle schema, migrations, database transactions, localStorage cache, sync API, and TanStack Query fetching.
-globs: apps/backend/src/db/**,apps/backend/drizzle.config.ts,apps/backend/src/db/migrations/**,apps/backend/src/routes/common/db.ts,apps/backend/src/routes/tenant/**,apps/backend/src/services/dbSyncService.ts,apps/frontend/src/lib/db.ts,apps/frontend/src/lib/queryClient.ts,apps/frontend/src/hooks/**,apps/frontend/src/tenant/hooks/**,apps/frontend/src/tenant/features/**
+globs: apps/backend/src/db/**,apps/backend/drizzle.config.ts,apps/backend/src/db/migrations/**,apps/backend/src/routes/common/db.ts,apps/backend/src/routes/tenant/**,apps/backend/src/services/dbSyncService.ts,apps/frontend/src/lib/db.ts,apps/frontend/src/lib/queryClient.ts,apps/frontend/src/hooks/**,apps/frontend/src/tenant/hooks/**,apps/frontend/src/tenant/features/**/hooks/**,packages/shared/src/apiSchemas.ts
 alwaysApply: false
 ---
 
 # MMS Data Layer & Caching System
+
+**Workflow skills:** REST Query factories → `mms-query-factories` · Drizzle DDL/RLS → `mms-schema-migrate` · legacy `/api/db` / localStorage → `mms-data-sync` · backup wipe → `mms-backup-restore`.
 
 Authoritative standards for backend databases, migrations, caching architectures, and client fetching strategies in the MMS monorepo.
 
@@ -12,9 +14,11 @@ Authoritative standards for backend databases, migrations, caching architectures
 
 ## 1. Database & ORM Stack (PostgreSQL + Drizzle)
 - **Database Engine**: PostgreSQL is the unified relational database. Ensure connection secrets are configured via `DATABASE_URL`.
+- **Pool sizing**: Size the PG pool via `PG_POOL_MAX` / `serverConfig.pgPoolMax` (default 20) — do not hardcode `Pool({ max })` in call sites. Keep RLS SET LOCAL inside transactions so pooled clients never leak tenant context.
 - **Drizzle ORM**: Defines schemas in `apps/backend/src/db/schema.ts`. Circular imports are avoided via `dbClient.ts` dependencies.
 - **Module layout**: Connection / init / purge / document-store helpers may live in focused siblings (`dbConnection.ts`, `dbInit.ts`, `documentStore*.ts`, …) re-exported from the stable public surface callers already import — `mms-structure-naming.mdc`.
 - **Access Pattern**: Controllers must not import raw `pg` drivers. Prefer **REST repositories**; use `dbSyncService` only for settings/legacy sync paths.
+- **Hydrate graphs**: Prefer Drizzle relational `db.query.*` or explicit joins in services — ban N+1 per-id loops (pair with FE batch `/resolve`).
 
 ### Transaction-Scoped Tenant RLS (Pool Poisoning Prevention)
 - Enforce strict transaction boundaries on pooled connections. Global PG configurations are prohibited. Context settings must use `LOCAL` parameters (destroyed on commit/rollback):
@@ -37,13 +41,14 @@ Authoritative standards for backend databases, migrations, caching architectures
 
 ### Soft-delete on entity tables
 - Prefer a typed nullable `deleted_at` column + `(workspace_subdomain, deleted_at)` index.
+- Prefer **partial indexes** for hot active lists, e.g. `(workspace_subdomain, …) WHERE deleted_at IS NULL`, in addition to the soft-delete filter index.
 - Prefer typed `deleted_by` / `deletion_reason` when auditing who archived a row (Contacts pattern) — do not leave audit only in JSONB.
 - Repository list helpers must SQL-filter (`deleted: 'active' | 'deleted' | 'all'`) — do not load the full tenant then filter only in JS for Work/trash.
 - When `syncDeletedAtColumn` is on, hydrate `deletedAt` from the **column** (source of truth) and **strip** soft-delete keys from `custom_data` JSONB on write.
 - Client create/update bodies must not set soft-delete metadata — shared write schema + `stripContactClientSoftDeleteFields` (entity-specific equivalents OK).
 
 ### Entity list pagination (REST)
-- Paginated list routes must **require** `page` (or equivalent) — ban unpaged full-tenant dumps via `loadAllFn` / optional-page defaults that return everything (Contacts closed this; do not re-open on Students/Teachers/…).
+- Paginated list routes: clients should send `page` (+ `limit`); omit may default to page 1 / default page size with a server max cap — **ban** unpaged full-tenant dumps via `loadAllFn` or optional-page paths that return everything (Contacts closed this; do not re-open on Students/Teachers/…). Do not claim Zod already requires `page`/`limit` until `baseListQuerySchema` is tightened.
 - Work **cards** and **table** must use the same server page/limit APIs — ban `maxPageSize` one-shot loads for cards with a truncation banner that says “switch to list”.
 - Prefer SQL `LIMIT`/`OFFSET` (or keyset) + total count; in-memory `paginateX(loadAll())` is migration debt — do not expand it.
 
@@ -56,13 +61,16 @@ Authoritative standards for backend databases, migrations, caching architectures
 - **`GET /api/db/backup`**: Full-fidelity admin snapshot — document store + relational tables via `fetchBackupSnapshot` inside `runInReadSnapshotTransaction` (REPEATABLE READ).
 - **`GET/POST /api/db/sync`**: Admin sync path. Wipe-restore runs `synchronizeData(payload, signal)` under `withSyncTimeout`; on abort/timeout the transaction must roll back and the route returns `408` + `backup.syncTimeout` (no partial commit).
 - Envelope helpers SSOT in `@mms/shared`: `buildWorkspaceBackupEnvelope`, `remapBackupKeysToPrefix`, `validateWorkspaceBackupJson`, `validateAndNormalizeSnapshot` (prototype-pollution / restricted-key / admin-present checks).
+- Envelope `format version` must be ≤ `ENCRYPTED_BACKUP_VERSION`; reject unknown/future versions and DoS KDF params (`BACKUP_KDF_MIN_ITERATIONS`…`BACKUP_KDF_MAX_ITERATIONS`, salt/iv caps).
 - Product UI restore enforces same-subdomain; cross-workspace key remap is intentional/dev-only and must not become the Settings default.
-- Strip `SERVER_ONLY_OBJECT_KEYS` on restore; exclude credential tables from `relationalReplaceMapping`.
+- Strip `SERVER_ONLY_OBJECT_KEYS` on restore; exclude credential tables from `relationalReplaceMapping`. On restore, park unusable user hashes as `!restore-…` + `mustChangePassword`; fail only when **no** admin credential survives (`backup.missingUserCredentials`).
 - After successful server restore: clear local collection cache by tenant prefix; keep settings/singleton objects only — do **not** dump the full relational snapshot into localStorage.
 
 ### Data Migrations & Schema DDL
 - **Baseline**: Squashed `apps/backend/src/db/migrations_drizzle/0000_init.sql` is the DDL baseline. Append **forward-only** migrations + journal entries — do not resurrect pre-squash numbered SQL history (`0032_*`, etc.).
+- **Ban `drizzle-kit push` / `db push` against shared/prod DBs** — only forward migrations + journal (`migrations_drizzle`). Push is local/dev emergency only.
 - **DDL Changes**: Generate Drizzle migrations and ensure journal tracking (`apps/backend/src/db/migrations_drizzle/meta/_journal.json`) is committed in the same change. Keep meta snapshots aligned with applied SQL.
+- **Expand/contract**: Prefer add-nullable → backfill → constrain; drop columns/tables only after a dual-read window. Never expand-and-break live tenants in one migration.
 - **Platform audit FK**: `platform_activity_logs.user_id` is nullable with `ON DELETE SET NULL` so deleting a platform user retains audit history — do not “fix” back to `NOT NULL` / cascade-delete of log rows.
 - **TypeScript Transforms**: Implement idempotent data updates in `migrations/00N_*.ts` to execute on server startup.
 - **GIN & JSONB Indexes**: Dynamic fields are stored in a native `JSONB` column (`custom_data`). Search indexing uses `GIN` definitions or Expression Indexes in Drizzle migrations.
@@ -85,7 +93,7 @@ Authoritative standards for backend databases, migrations, caching architectures
   window.dispatchEvent(new Event('local-database-update'));
   ```
 - **Sync Endpoints**: Legacy bulk synchronization routes through `/api/db/sync` (bulk snapshot GET/POST), `/api/db/collections/:name`, and `/api/db/reset` (admin-only tenant reset).
-- **Title Case Formatting**: All save operations to local storage (`saveCollection` / `saveObject` / `dbSyncService` / backend repository writes) must recursively apply Title Case formatting using `applyTitleCaseRecursive` from `@mms/shared` before committing the write.
+- **Title Case Formatting**: Apply `applyTitleCaseRecursive` on save boundaries — policy owner **`mms-structure-naming.mdc`**.
 
 ### Settings Singletons
 Settings singletons (`branding`, `global_settings`) must survive authentication syncs:
@@ -99,19 +107,22 @@ Settings singletons (`branding`, `global_settings`) must survive authentication 
 ## 3. TanStack Query (Server-Authoritative REST)
 
 ### Query client defaults
-- Set default client options: `refetchOnWindowFocus: false`, `retry: 1`. List responses use a default `staleTime: 30_000`.
+Align with `queryClient.ts`: `staleTime` 30s, `gcTime` 5m, `refetchOnWindowFocus: false`, `refetchOnReconnect: true`, `retry` ≤ 1 (skip 401/403). Keep `structuralSharing` on unless a `select` returns unstable new refs every render. Prefer pause/disable queries when unauthenticated — do not invent a second offline sync stack.
 
-### Fetching Standards
-- **Tuple Keys**: Export query keys as named tuple constants from the hook file (prefer shared key factories over ad-hoc strings).
-- **Auth Gate**: Gate tenant-specific queries using `enabled: isAuthenticated` from the authentication context.
-- **Cancellation**: Pass Query `signal` into `apiFetch` / `queryFn` so in-flight work aborts on unmount/key change.
-- **Mutations**: Hook success handlers must invalidate list and count query keys narrowly — avoid blanket `invalidateQueries()`.
-- **Server-persisted imports**: After a server route already `bulkSave`s rows (e.g. Google Contacts sync), the FE must **invalidate** Query keys only — ban looping `upsert` dual-writes of the same payload.
-- **Save Confirmation**: UI saved/success states must wait for `mutateAsync` or an explicit mutation success callback. Do not mark a REST-backed draft as saved immediately after calling fire-and-forget `mutate()`.
-- **List load failures**: Module Work (and Reports when query-backed) surfaces must show `ErrorState` with retry **and** a hint description (`loadFailedHint` or module equivalent) when the primary list query `isError` — do not render an empty directory as success (`mms-module-architecture.mdc` §7).
-- **Cross-module hydrate**: Use batch `/resolve` endpoints — ban N+1 per-id fetches in loops.
-- **Errors**: Propagate mutation/toast errors through `notify.error()`. Expose loading screens via `isPending` or `isFetching`.
-- **Scroll surfaces**: Route and tier/sub-tab changes use shared scroll helpers (`scrollDocumentToTop` / `useScrollSurfaceOnChange`) — do not fork per-page `window.scrollTo` recipes.
+### Fetching Standards (policy)
+- **Tuple Keys**: Named tuple constants / shared key factories — not ad-hoc strings. Prefer colocated TanStack Query v5 `queryOptions` / `mutationOptions` factories — hooks wrap factories (`mms-hooks.mdc`).
+- **Auth Gate**: `enabled: isAuthenticated` for tenant queries.
+- **Cancellation**: Pass Query `signal` into `apiFetch` / `queryFn` (required).
+- **Mutations**: Narrow invalidation of list + count keys — avoid blanket `invalidateQueries()`. Await `mutateAsync` (or success callback) before UI “saved”. Surface success/error via call-site `notify.*` + `t()` — do not add a global `MutationCache` toast middleware or `mutation.meta` toast bus (`mms-hooks.mdc`).
+- **Optimistic updates**: Allowed only for idempotent, easily-rollbackable UX. **Ban** for money, soft-delete/restore, bulk, backup/restore, messaging send. Always reconcile via invalidate + server response — never leave optimistic cache as SSOT.
+- **No dual-write**: After server `bulkSave`, FE invalidates only — ban looping `upsert` / `saveCollection` in mutation `onSuccess`.
+- **`select` / `placeholderData`**: Prefer Query `select` for derived view models; use `placeholderData` / `keepPreviousData` for paginated lists — do not invent parallel local caches.
+- **Pagination shape**: Prefer server offset `page`+`limit` for Work directories; use infinite/keyset Query only when the API supports cursor/keyset — ban client-side full dumps / `loadAllFn` (HTTP contract pointer `mms-api-interface.mdc` §6).
+- **List load failures**: Work/Reports show `ErrorState` + hint + retry — `mms-module-architecture.mdc` §7.
+- **Cross-module hydrate**: Batch `/resolve` — ban N+1 per-id loops.
+- **Errors / loading**: `notify.error()`; expose `isPending` / `isFetching`.
+- Hook recipes (controllers, facades) → **`mms-hooks.mdc`**.
+
 ### Hybrid Trajectory (Deprecated)
-- **Banned for New Modules**: The hybrid pattern (saving query responses to local storage to satisfy legacy widgets) is a transition mechanism only. New feature modules must read directly from TanStack Query hooks without cache mirroring.
-- **Constraint**: Never use `useLiveCollection` for an entity that is already fetched via Query on the same viewport. No new `useLiveCollection` for REST-migrated entities.
+- **Banned for New Modules**: Query → localStorage mirror for widgets. Read from Query hooks.
+- **Constraint**: No new `useLiveCollection` for REST-migrated entities.

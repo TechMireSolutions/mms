@@ -15,122 +15,15 @@
       ]
     },
     {
-      "name": "mms-dev-setup",
-      "path": "skills/mms-dev-setup",
+      "name": "mms-a11y-smoke",
+      "path": "skills/mms-a11y-smoke",
       "keywords": [
-        "install",
-        "pnpm",
-        "dev server",
-        "env",
-        "postgresql",
-        "typecheck",
-        "lint"
-      ]
-    },
-    {
-      "name": "mms-frontend",
-      "path": "skills/mms-frontend",
-      "keywords": [
-        "frontend",
-        "react",
-        "vite",
-        "apiClient",
-        "tanstack query",
-        "hooks",
-        "pages",
-        "components",
-        "playwright",
-        "contacts"
-      ]
-    },
-    {
-      "name": "mms-module-page",
-      "path": "skills/mms-module-page",
-      "keywords": [
-        "module page",
-        "work",
-        "reports",
-        "setup",
-        "globle1",
-        "globle2",
-        "globlestructure",
-        "command centre",
-        "new module",
-        "universal architecture"
-      ]
-    },
-    {
-      "name": "mms-module-work",
-      "path": "skills/mms-module-work",
-      "keywords": [
-        "work tab",
-        "command centre",
-        "module metrics",
-        "directory",
-        "bulk actions",
-        "detail drawer",
-        "column prefs",
-        "globle1"
-      ]
-    },
-    {
-      "name": "mms-module-setup",
-      "path": "skills/mms-module-setup",
-      "keywords": [
-        "setup",
-        "fields",
-        "preferences",
-        "globle2",
-        "CustomFieldsBuilder",
-        "setup audit",
-        "field dependencies"
-      ]
-    },
-    {
-      "name": "mms-background-jobs",
-      "path": "skills/mms-background-jobs",
-      "keywords": [
-        "background jobs",
-        "queued processing",
-        "large export",
-        "bulk operations",
-        "dedup scan",
-        "progress",
-        "download artifact",
-        "globle2"
-      ]
-    },
-    {
-      "name": "mms-fields-registry",
-      "path": "skills/mms-fields-registry",
-      "keywords": [
-        "custom field",
-        "tab registry",
-        "CustomFieldsBuilder",
-        "DraggableFieldList"
-      ]
-    },
-    {
-      "name": "mms-data-sync",
-      "path": "skills/mms-data-sync",
-      "keywords": [
-        "db.ts",
-        "localStorage",
-        "sync",
-        "useLiveCollection",
-        "collections",
-        "admin sync",
-        "students api"
-      ]
-    },
-    {
-      "name": "mms-shared-package",
-      "path": "skills/mms-shared-package",
-      "keywords": [
-        "@mms/shared",
-        "shared package",
-        "contactTypes",
-        "settingsTypes"
+        "a11y",
+        "accessibility",
+        "axe",
+        "focus-return",
+        "wcag",
+        "responsive shell"
       ]
     },
     {
@@ -156,20 +49,144 @@
         "tenant isolation",
         "rbac",
         "cookies",
+        "csrf",
+        "origin",
         "rate limit",
         "auth artifacts"
       ]
     },
     {
-      "name": "mms-reports-export",
-      "path": "skills/mms-reports-export",
+      "name": "mms-background-jobs",
+      "path": "skills/mms-background-jobs",
       "keywords": [
-        "reports",
-        "analytics",
-        "recharts",
-        "pdf",
-        "excel",
-        "export"
+        "background jobs",
+        "queued processing",
+        "large export",
+        "bulk operations",
+        "dedup scan",
+        "progress",
+        "download artifact",
+        "globle2"
+      ]
+    },
+    {
+      "name": "mms-backup-restore",
+      "path": "skills/mms-backup-restore",
+      "keywords": [
+        "backup",
+        "restore",
+        "mmsbak",
+        "wipe-restore",
+        "safety backup",
+        "validate before wipe",
+        "sync timeout"
+      ]
+    },
+    {
+      "name": "mms-code-review",
+      "path": "skills/mms-code-review",
+      "keywords": [
+        "code review",
+        "pr review",
+        "compliance",
+        "audit",
+        "backend security",
+        "authenticateTenant"
+      ]
+    },
+    {
+      "name": "mms-data-sync",
+      "path": "skills/mms-data-sync",
+      "keywords": [
+        "db.ts",
+        "localStorage",
+        "sync",
+        "useLiveCollection",
+        "collections",
+        "admin sync",
+        "students api"
+      ]
+    },
+    {
+      "name": "mms-dependency-upgrade",
+      "path": "skills/mms-dependency-upgrade",
+      "keywords": [
+        "dependency",
+        "upgrade",
+        "pnpm catalog",
+        "dependabot",
+        "renovate",
+        "react compiler",
+        "audit",
+        "outdated"
+      ]
+    },
+    {
+      "name": "mms-dev-setup",
+      "path": "skills/mms-dev-setup",
+      "keywords": [
+        "install",
+        "pnpm",
+        "dev server",
+        "env",
+        "postgresql",
+        "typecheck",
+        "lint"
+      ]
+    },
+    {
+      "name": "mms-fields-registry",
+      "path": "skills/mms-fields-registry",
+      "keywords": [
+        "custom field",
+        "tab registry",
+        "CustomFieldsBuilder",
+        "DraggableFieldList"
+      ]
+    },
+    {
+      "name": "mms-form-architecture",
+      "path": "skills/mms-form-architecture",
+      "keywords": [
+        "form modal",
+        "form architecture",
+        "zod",
+        "react 19",
+        "decimal string",
+        "rls",
+        "multipart upload",
+        "focus-return",
+        "mapZodFormErrors"
+      ]
+    },
+    {
+      "name": "mms-frontend",
+      "path": "skills/mms-frontend",
+      "keywords": [
+        "frontend",
+        "react",
+        "vite",
+        "apiClient",
+        "tanstack query",
+        "hooks",
+        "pages",
+        "components",
+        "playwright",
+        "contacts"
+      ]
+    },
+    {
+      "name": "mms-linux-compatibility",
+      "path": "skills/mms-linux-compatibility",
+      "keywords": [
+        "linux",
+        "ubuntu",
+        "vps",
+        "deploy",
+        "casing",
+        "line endings",
+        "permissions",
+        "pm2"
       ]
     },
     {
@@ -197,15 +214,46 @@
       ]
     },
     {
-      "name": "mms-code-review",
-      "path": "skills/mms-code-review",
+      "name": "mms-module-page",
+      "path": "skills/mms-module-page",
       "keywords": [
-        "code review",
-        "pr review",
-        "compliance",
-        "audit",
-        "backend security",
-        "authenticateTenant"
+        "module page",
+        "work",
+        "reports",
+        "setup",
+        "globle1",
+        "globle2",
+        "globlestructure",
+        "command centre",
+        "new module",
+        "universal architecture"
+      ]
+    },
+    {
+      "name": "mms-module-setup",
+      "path": "skills/mms-module-setup",
+      "keywords": [
+        "setup",
+        "fields",
+        "preferences",
+        "globle2",
+        "CustomFieldsBuilder",
+        "setup audit",
+        "field dependencies"
+      ]
+    },
+    {
+      "name": "mms-module-work",
+      "path": "skills/mms-module-work",
+      "keywords": [
+        "work tab",
+        "command centre",
+        "module metrics",
+        "directory",
+        "bulk actions",
+        "detail drawer",
+        "column prefs",
+        "globle1"
       ]
     },
     {
@@ -223,34 +271,40 @@
       ]
     },
     {
-      "name": "mms-linux-compatibility",
-      "path": "skills/mms-linux-compatibility",
+      "name": "mms-query-factories",
+      "path": "skills/mms-query-factories",
       "keywords": [
-        "linux",
-        "ubuntu",
-        "vps",
-        "deploy",
-        "casing",
-        "line endings",
-        "permissions",
-        "pm2"
+        "tanstack query",
+        "queryOptions",
+        "mutationOptions",
+        "optimistic update",
+        "query key",
+        "collection facade"
       ]
     },
     {
-      "name": "mms-form-architecture",
-      "path": "skills/mms-form-architecture",
+      "name": "mms-reports-export",
+      "path": "skills/mms-reports-export",
       "keywords": [
-        "dynamic form",
-        "form architecture",
-        "blueprint",
-        "branded id",
-        "validation",
-        "ieee 754 bypass",
-        "rls",
-        "jsonb merge",
-        "react 19 state",
-        "s3 upload",
-        "fastify"
+        "reports",
+        "analytics",
+        "recharts",
+        "pdf",
+        "excel",
+        "export"
+      ]
+    },
+    {
+      "name": "mms-schema-migrate",
+      "path": "skills/mms-schema-migrate",
+      "keywords": [
+        "drizzle",
+        "migration",
+        "schema",
+        "ddl",
+        "force rls",
+        "drizzle-kit push",
+        "expand contract"
       ]
     },
     {
@@ -270,6 +324,16 @@
         "formatting",
         "preview"
       ]
+    },
+    {
+      "name": "mms-shared-package",
+      "path": "skills/mms-shared-package",
+      "keywords": [
+        "@mms/shared",
+        "shared package",
+        "contactTypes",
+        "settingsTypes"
+      ]
     }
   ],
   "rules": {
@@ -277,8 +341,6 @@
       "rules/antigravity-global.md",
       "rules/mms-core.md",
       "rules/mms-migration-status.md",
-      "rules/mms-dependencies.md",
-      "rules/mms-dry.md",
       "rules/mms-completion-review.md"
     ],
     "directory": "rules/"

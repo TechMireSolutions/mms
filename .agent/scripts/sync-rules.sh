@@ -58,6 +58,11 @@ if (fs.existsSync(readmePath)) {
     .replace(
       /`(\.\/)?\.cursor\/rules\/([^`]*)\.md`/g,
       "`$1.cursor/rules/$2.mdc`"
+    )
+    .replace(/^# MMS Cursor Rules\b/m, "# MMS Agent Rules")
+    .replace(
+      /Cursor loads `\.md` files from this directory automatically\./g,
+      "Antigravity loads `.md` files from this directory (synced from Cursor `.mdc`)."
     );
   fs.writeFileSync(path.join(agentsDir, "README.md"), translatedReadme, "utf8");
   console.log("synced README.md");

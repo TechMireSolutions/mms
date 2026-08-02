@@ -5,6 +5,8 @@ description: Checks and enforces Linux/Ubuntu VPS compatibility — case-sensiti
 
 # Linux VPS Compatibility Verification Workflow
 
+**Rules / deploy:** `mms-ops-infrastructure.md` · skill **`mms-ops-deploy`**. This skill is the pre-deploy casing/LF/permissions/PM2 checklist only.
+
 Follow this workflow to verify that code and scripts are compatible with a Linux environment before deploying them to the Ubuntu VPS.
 
 ## 1. Line Ending Verification

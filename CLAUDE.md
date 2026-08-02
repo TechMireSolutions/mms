@@ -26,13 +26,13 @@ bash .agent/scripts/sync-all.sh
 
 ## Always-on rules (no `paths` — load every session)
 
-`antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`, `mms-completion-review`
+`antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review`
 
-Scoped rules load when Claude reads matching paths (see each file's `paths:` frontmatter).
+Scoped rules load when Claude reads matching paths (see each file's `paths:` frontmatter). Each rule has a **Workflow skill:** line; full rule→skill map in `mms-core` Standards index.
 
-## Skills (20)
+## Skills (25)
 
-Start with **`mms-dev-setup`** for install/run, **`mms-frontend`** for React work (includes `/settings`), **`mms-module-page`** for new modules.
+Start with **`mms-dev-setup`** for install/run, **`mms-frontend`** / **`mms-query-factories`** for React/Query work, **`mms-module-page`** for new modules.
 
 Index: [.claude/skills/README.md](.claude/skills/README.md) · Workflows (reference): [.claude/docs/workflows/](.claude/docs/workflows/)
 

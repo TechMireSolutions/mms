@@ -1,8 +1,10 @@
 ---
-trigger: always_on
+trigger: model_decision
 ---
 
 # Dependencies & Tech Stack
+
+**Workflow skill:** `mms-dependency-upgrade` (catalogs, Dependabot, audits, React Compiler). Day-to-day install/run → `mms-dev-setup`.
 
 Stay current. MMS targets **latest stable** releases across the monorepo — not “good enough” pins.
 
@@ -18,7 +20,7 @@ Stack majors are not frozen — upgrade React, Vite, Fastify, Drizzle, Tailwind,
 
 ## Upgrade workflow
 
-Run only on **dedicated upgrade PRs** — not mid-feature.
+Full checklist → skill **`mms-dependency-upgrade`**. Run only on **dedicated upgrade PRs** — not mid-feature.
 
 1. `pnpm outdated -r` at repo root
 2. Bump stale workspace deps (direct + transitive risk review)
@@ -35,6 +37,7 @@ Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution f
 |----|-------|
 | Exact `packageManager` + `engines` at root | Arbitrary `^` downgrades to avoid upgrading |
 | Workspace protocol for `@mms/shared` | Duplicate shared code to dodge a major bump |
+| pnpm `catalog:` / `catalogs` for React, Vite, Fastify, Drizzle, Zod, TanStack Query (apps cannot drift majors) | Divergent majors across apps/packages |
 | Read upstream migration guides for majors | Silence type errors with `any` or `@ts-ignore` |
 | Patch/minor bumps freely within semver | Leave known CVEs unpatched |
 | Align CI/Docker Node with `engines.node` | Mismatched CI images |
@@ -51,3 +54,22 @@ Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution f
 - Remove deprecated API usage — do not wrap obsolete calls indefinitely
 - Update skills/rules if commands or ports change (`mms-ops-infrastructure.md`, `mms-dev-setup`)
 - Do **not** commit or push unless the user asks
+
+## Supply chain (CI)
+
+Enable Dependabot (or Renovate) + GitHub `dependency-review` on PRs for high/critical advisories; keep `pnpm audit` in upgrade PRs. Do not require SBOM/provenance until an ops task adds them — `mms-ops-infrastructure.md`.
+
+## TypeScript strictness (dedicated PR)
+
+Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax` (and `erasableSyntaxOnly` when on TS 5.8+). `exactOptionalPropertyTypes` is opt-in only — high churn; do not enable mid-feature. Strict mode + ban `any` already always-on (`antigravity-global.md`).
+
+## React Compiler (when enabling)
+
+React Compiler is **not** enabled today — do not add `useMemo` / `useCallback` / `React.memo` by default (`antigravity-global.md`).
+
+When enabling in a dedicated PR:
+1. Add the official Babel/Vite plugin **only in `apps/frontend` Vite config** (not root); keep React major current.
+2. Keep `eslint-plugin-react-hooks`; add `eslint-plugin-react-compiler` diagnostics in the same PR.
+3. Run `pnpm typecheck && pnpm test` + FE lint; fix Compiler diagnostics (impure renders, hidden mutations).
+4. Prefer deleting ad-hoc memo wrappers that the Compiler covers — do not enable Compiler with memo wrappers left in place.
+5. Update `mms-core.md` stack note / this checklist if the enablement path changes.

@@ -7,7 +7,7 @@ description: Review MMS changes against project rules and migration status
 ## Steps
 
 1. Load skill: `mms-code-review`
-2. Load always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-dependencies`, `mms-dry`, `mms-completion-review`
+2. Load always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review` (plus scoped rules matching the change: `mms-dry`, `mms-dependencies`, …)
 3. Run checks:
    ```bash
    pnpm typecheck

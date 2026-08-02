@@ -7,8 +7,9 @@ paths:
   - "apps/backend/src/middleware/authenticate*.ts"
   - "apps/backend/src/services/auth/**"
   - "apps/backend/src/services/platform/**"
-  - "apps/backend/src/services/rbacService.ts"
+  - "apps/backend/src/services/rbac*.ts"
   - "apps/backend/src/lib/tenantContext.ts"
+  - "packages/shared/src/platformApiErrors.ts"
   - "apps/frontend/src/lib/contexts/AuthContext.tsx"
   - "apps/frontend/src/platform/lib/PlatformAuthContext.tsx"
   - "apps/frontend/src/platform/lib/platformAuthErrors.ts"
@@ -23,6 +24,8 @@ paths:
 ---
 
 # MMS Auth & Security System
+
+**Workflow skill:** `mms-backend-security` (CSRF/Origin, cookies, RBAC, tenant isolation). Route/service wiring → `mms-backend-api`.
 
 Governs user authentication, sessions, tenant isolation, role-based authorization (RBAC), and server threat protections in the Madrasa Management System (MMS).
 
@@ -67,6 +70,7 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 - `refresh_token` (7 days TTL): Token rotation hashes — store opaque hash in indexed `lookup_key` and `user:{id}` in `scope_key` (not payload-only scans).
 - `login_email_change` (10 min TTL): Verification hashes.
 - `platform_password_reset`: Apex password-reset OTP artifacts (platform TTLs via shared constants). Do **not** reintroduce unused `platform_setup` artifact kind — first-run uses interactive setup when no users exist.
+- **2FA scope**: OTP via `auth_artifacts.two_factor_challenge` only — do not invent WebAuthn/passkeys or recovery-code flows outside an explicit product task. If recovery codes ever ship, store only hashed artifacts (same TTL/purge rules).
 - **Purge**: Startup + scheduled `purgeExpiredAuthArtifacts` (API process) — TTL hygiene only; see `mms-ops-infrastructure.md` for wipe/reset paths.
 
 ---
@@ -103,16 +107,19 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 ---
 
 ## 4. Threat Mitigations & Security Checklist
-- **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse (`type: 'rate_limit_exceeded'` where configured).
+- **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse (`type: 'rate_limit_exceeded'` where configured). Emit **`Retry-After`** (and `X-RateLimit-*` when the plugin exposes them). FE must not tight-loop retries on `429` — back off / surface `notify`.
 - **Platform `AUTH_RATE_LIMIT`**: Auth-sensitive + destructive platform routes (login/setup/password flows; admin disable/delete; workspace delete; database reset) — do not ship those mutations without the limit + password confirm where already required.
-- **Password Security**: Hash with `scrypt`. Enforce onboarding / platform password policy. Verify with `timingSafeEqual`.
+- **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site`) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations.
+- **Content-Type**: JSON mutation routes reject bodies without `application/json` (multipart only on upload routes). Ban empty/`text/plain` bodies on JSON write paths.
+- **Password Security**: Keep `scrypt` + `timingSafeEqual`. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.
 - **OTP Generation**: `crypto.randomInt()` only — `Math.random()` forbidden.
 - **CORS**: Explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` forbidden.
-- **Cookies (prod)**: Set `Secure` on session cookies under HTTPS / `NODE_ENV=production`.
-- **Headers**: `@fastify/helmet` is registered (frame denial, `X-Content-Type-Options`, HSTS in prod). Remaining gap: enable SPA-safe `contentSecurityPolicy` (currently `false`) — `mms-migration-status.md`.
+- **Cookies (prod)**: Set `Secure` under HTTPS / `NODE_ENV=production`. Prefer `__Host-` cookie names when `Path=/` and no `Domain` is required; never `SameSite=None` without `Secure` and an explicit cross-site need (tenant/platform stay `SameSite=Lax`).
+- **Headers**: `@fastify/helmet` is registered (frame denial, `X-Content-Type-Options`, HSTS in prod). Remaining gap: enable SPA-safe CSP (currently `contentSecurityPolicy: false`) — prefer nonce- or hash-based script policy compatible with the Vite SPA; do not ship `unsafe-inline` long-term — `mms-migration-status.md` / skill `mms-migration-fixes`.
+- **Identity**: Never trust client body/query for `workspaceSubdomain` or authz `userId` — bind from session + host after `authenticateTenant` / `authenticatePlatform`.
 - **IDOR**: Authorize via permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from session (Messaging log POST pattern).
 - **Secrets storage**: Long-lived OAuth/API secrets in FORCE-RLS tenant tables — never in unscoped `objects` KV. Strip legacy secret object keys from backups (`SERVER_ONLY_OBJECT_KEYS`).
-- **Workspace backup / restore**: Admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`. Settings wipe-restore requires current-password step-up + verified safety backup before wipe (`mms-settings-i18n.md`). Encrypted `.mmsbak` envelope: PBKDF2 iterations bounded (`BACKUP_KDF_MIN_ITERATIONS`…`BACKUP_KDF_MAX_ITERATIONS`), format `version` ≤ `ENCRYPTED_BACKUP_VERSION`, salt/iv length caps — reject DoS envelopes. On restore, park unusable user hashes as `!restore-…` + `mustChangePassword`; fail only when **no** admin credential survives (`backup.missingUserCredentials`).
+- **Workspace backup / restore**: Admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`. Envelope/KDF/credential-strip mechanics → **`mms-data-layer.md`**. Settings two-step UI + password step-up → **`mms-settings-i18n.md`**.
 - **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables (e.g. Contacts entity rows).
 - **XSS / exports**: No unsanitized HTML; encode user content in PDF/CSV/Excel cells.
 - **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens.

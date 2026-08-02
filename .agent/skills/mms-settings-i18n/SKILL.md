@@ -5,102 +5,40 @@ description: Governs application-wide settings panels (/settings), settings prev
 
 # MMS Settings, Navigation & Internationalization
 
-## 1. App-Wide Settings (URL Scope: `/settings`)
+**Rule (norms SSOT):** `mms-settings-i18n.md` — do not re-author policy here.
 
-App-wide settings reside solely on the `/settings` path and are controlled by in-page active tab tracking via `SettingsTabContext`.
+Related: `mms-ui-ux-design.md` (RTL/a11y), `mms-fields.md` (labelKey). Backup wipe-restore workflow → skill **`mms-backup-restore`**.
 
-### Registered Sections
-Only the following section IDs are allowed on `/settings` (`SETTINGS_SECTIONS`):
-1. `global`: System languages, timezone format, date formats, and notifications.
-2. `modules`: System module toggles (`enabledModules` map).
-3. `branding`: Identity parameters (name, tagline, address, logo).
-4. `theme`: Color configurations, display mode, and footer overrides.
-5. `backup`: Admin workspace export/import (`BackupRestore` + `useBackupRestore*`) — not Postgres ops backups.
-6. `llm`: LLM / AI integration settings.
+## Workflow
 
-> [!IMPORTANT]
-> **Separation of Concerns**: Never add module-specific preferences (e.g., student cutoff times or grading systems) to `/settings`. Place them in the respective module's **Setup → Preferences** sub-tab.
+1. App-wide settings only on `/settings` via `SettingsTabContext` + `SETTINGS_SECTIONS` (`global`, `modules`, `branding`, `theme`, `backup`, `llm`). Module prefs → module Setup → Preferences.
+2. Sidebar/nav from `NAV_ITEMS` / `SYSTEM_MODULE_NAV` in `navConfig.tsx` — Academics grouped; no ad-hoc sidebar links.
+3. Drafts via `useSettingsDraft` / `useBrandingDraft` / `useThemeSettingsDraft`; `onPreview(draft)`; `revertSettingsPreviews()` on leave.
+4. New copy: key in `appTranslationsEn.ts` → ar → ur → fa overrides; render with `t('key')` only (no English `||` fallbacks).
+5. Dates/money: `formatDate` / `formatMoney` (+ currency hooks) — never raw locale string math.
+6. Platform apex English/LTR + unknown-tenant hard-redirect — follow the rule (host lock / `TenantBootGate`).
+7. Backup UI: two-step + password step-up + validate-before-wipe — details in **`mms-backup-restore`**; copy via `backup.*` keys.
 
-### Workspace backup & restore
-- Export encrypted `.mmsbak` from `GET /api/db/backup` (not browser cache alone).
-- Restore is **two-step**: `createSafetyBackup` (password step-up) → `safetyReady`, then `beginRestore`. Confirm modal must not close while busy.
-- Early-reject encrypted file subdomain ≠ current tenant (`backup.workspaceMismatch`) before decrypt.
-- Disable history download when `!backup.data` (metadata-only). Map `408` / `backup.syncTimeout` via `backup.*` keys (en/ar/ur/fa).
-- Sync/credential mechanics: `mms-data-layer.md` / `mms-auth-security.md`.
+## Checklist
 
----
+```
+- [ ] No module prefs on /settings
+- [ ] Nav from registries only
+- [ ] Draft + preview; revert on leave
+- [ ] t() keys in en (+ ar/ur/fa as needed); labelKey on registries
+- [ ] Logical CSS / useTranslation dir for RTL
+- [ ] formatDate / formatMoney only
+- [ ] Platform English lock + tenant-not-found redirect intact
+- [ ] Backup changes follow mms-backup-restore
+```
 
-## 2. Systems Modules Navigation Registry
+## Do Not
 
-- **Sidebar Integration**: The sidebar layout retrieves navigation links dynamically from `NAV_ITEMS` in `navConfig.tsx`.
-- **Academics Dropdown**: Academic features (`students`, `teachers`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`, `questionBank`) must be grouped inside the Academics submenu (match `SYSTEM_MODULE_NAV` / `NAV_ITEMS[].moduleId`).
-- **Registry & Defaults**: Toggles reside in `SystemModulesSettings` mapping `SYSTEM_MODULE_NAV`. Standalone modules render in pairs, and the Academics group displays as a bordered panel with a `BookOpen` icon.
+- Hardcode UI strings or directional `left`/`ml-*`
+- Open `/settings` on a missing tenant host
+- Dual-write backup from browser cache alone
+- Invent platform locale packs
 
----
+## Done
 
-## 3. Live Previews & Settings Drafts
-
-- **In-Memory Drafts**: Save settings modifications to component states using the draft hooks (`useSettingsDraft`, `useBrandingDraft`, `useThemeSettingsDraft`). Do not commit to local storage or PostgreSQL until the user clicks **Save**.
-- **Live Preview Trigger**: Call `onPreview(draft)` on changes to dynamically update the active page surfaces (e.g., localizing UI or changing theme colors instantly).
-- **Cleanup**: Call `revertSettingsPreviews()` when navigating away from the Settings viewport to discard unsaved preview configurations.
-
----
-
-## 4. Localization & i18n Standards
-
-### Locale Support
-MMS supports four languages configured in `languageUtils.ts` (`APP_LANGUAGES`):
-- **English (`en`)**: Source of truth map in `appTranslationsEn.ts` (determines `AppTranslationKey`).
-- **Arabic (`ar`)**: Full Arabic translation object (RTL).
-- **Urdu (`ur`)**: Full Urdu translation object in `appTranslationsUr.ts` (RTL).
-- **Persian (`fa`)**: Persian override pack in `appTranslationsFa.ts` merging overrides with Farsi fallbacks (`{ ...ar, ...APP_TRANSLATIONS_FA }`).
-
-### Checklist for Adding Copy/Translations
-1. **Define in Source (English)**: Add the key and the English string to `packages/shared/src/appTranslationsEn.ts`.
-2. **Typesafe Interpolation**:
-   - Variables must be enclosed in curly braces: `{userName}`.
-   - Placeholders are automatically type-checked by TypeScript using the `ExtractPlaceholders` template utility.
-   - Pass params reactively: `t('contacts.deleteConfirm', { name: contact.name })`.
-3. **ICU Plural Formatting**: Use the simple ICU select syntax for plurals: `{count, select, one {record} other {records}}`.
-4. **Translate Language Packs**: Add matching keys to `appTranslationsAr.ts`, `appTranslationsUr.ts`, and `appTranslationsFa.ts`.
-5. **Cascading Fallbacks**: In case of missing keys, Farsi (`fa`) falls back to Arabic (`ar`), and all languages fall back to English (`en`) to prevent unrendered/blank texts.
-
-### Code Splitting & Performance
-- Non-English language packs must be dynamically loaded (`import()`) in a React `useEffect` inside `TranslationProvider` when requested.
-- Loaded language packs are cached in-memory inside the client translation registry (`TRANSLATION_CACHE`) to enable instant switching.
-
-### UI Direction & Styling
-- **No Hardcoded Strings**: Never render hardcoded copy in UI components. Use `t('key')` exclusively.
-- **Registry Keys**: Field labels, table headers, and statuses must declare a `labelKey: AppTranslationKey` resolved via `t(labelKey)`.
-- **RTL Logical CSS**: Never use hardcoded directional offsets (`left: 0`, `right: 0`, `ml-*`, `pr-*`). Use logical properties to support RTL mirroring:
-  - Spacing: `ms-*` (margin start), `me-*` (margin end), `ps-*`, `pe-*`
-  - Text: `text-start`, `text-end`
-  - Borders: `border-s-*`, `border-e-*`
-  - Layout: Use Tailwind `rtl:` modifier where custom mirroring is required (e.g. `rtl:flex-row-reverse`).
-- **Reactive layout direction**: Retrieve directionality reactively using `useTranslation()`:
-  ```tsx
-  const { dir, isRtl, isLoading } = useTranslation();
-  ```
-  Use these fields to adjust icon orientations (e.g., chevron rotation) or absolute element positions.
-- **Typography & Font Stacking**: Language-specific font stacks are applied to the document root element (`<html>`) dynamically (`applyDocumentLanguage`). Ensure standard CSS variables (`--font-sans`, `--font-display`) resolve to appropriate fonts (e.g., Noto Nastaliq Urdu for `ur`) to prevent layout shifts (CLS).
-
-### Platform apex = English only
-- **Entire platform host** (console, onboarding, account, admins, auth, **tenant-not-found**) is **English + LTR** — never follow tenant `settings.language`.
-- Lock via `shouldForcePlatformEnglish()` (`themeScope.ts`) + `TranslationProvider` + `applyApexPlatformTheme('en')`.
-- Do **not** expand `isPlatformEntryPath` to simulate English for the console — host-level lock is the SSOT.
-- Platform shells (`PlatformPageShell`, onboarding `WizardLayout`) hardcode `dir="ltr"` / `lang="en"`.
-- Tenant authenticated app remains multilingual (en/ar/ur/fa).
-
-### Unknown / missing tenant host
-- Non-existent tenant subdomain → `TenantBootGate` **hard-redirects** to apex `/tenant-not-found?subdomain=…` (`tenantNotFoundPath`); **never** open `/settings` or keep the bad host URL.
-- Apex `TenantNotFoundPage`: English “Tenant does not exist” + contact MMS platform administrator only.
-- Do not link to Settings, onboarding, or workspace-create CTAs from that page.
-- Disabled workspaces stay on tenant host with `WorkspaceDisabledScreen`.
-
-### Settings-Aware Native Formatting
-Never format dates, times, numbers, or currencies using raw strings or ad-hoc formatters. Use settings-aware hooks/helpers that wrap browser-native `Intl` APIs:
-- **Dates**: Resolves via settings-aware `formatDate()` or `formatDateTime()` helpers using active locale codes (e.g., `ur-PK`, `fa-IR`).
-- **Currencies**: Resolves via `formatMoney()` with system-configured currency hooks (`useFinanceCurrency` or `useAccountingCurrency`).
-
-### API Error Handling
-API routes must return stable error types (`type: 'forbidden'`), which the frontend resolves dynamically to user-facing translations using `t('errors.{type}')`.
+`mms-completion-review.md` — typecheck + FE lint when UI touched.

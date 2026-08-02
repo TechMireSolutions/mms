@@ -1,8 +1,11 @@
 ---
-description: Consolidated UI component primitives, design tokens, forms (FormModal), navigation tabs, notifications, accessibility (RTL / WCAG), and mobile-first responsiveness (§7).
+description: Consolidated UI component primitives, design tokens, navigation tabs, notifications, accessibility (RTL / WCAG), and mobile-first responsiveness (§7). FormModal norms → mms-form-architecture.
 paths:
-  - "apps/frontend/src/**/*.tsx"
-  - "apps/frontend/src/components/ui/**"
+  - "apps/frontend/src/components/**/*.tsx"
+  - "apps/frontend/src/tenant/features/**/*.tsx"
+  - "apps/frontend/src/platform/**/*.tsx"
+  - "apps/frontend/src/tenant/pages/**/*.tsx"
+  - "apps/frontend/src/tenant/components/**/*.tsx"
   - "apps/frontend/src/index.css"
   - "apps/frontend/src/tenant/hooks/useBranding.ts"
   - "apps/frontend/src/lib/notify.ts"
@@ -10,12 +13,14 @@ paths:
 
 # MMS UI, UX & Design System
 
+**Workflow skills:** primitives/shells → `mms-frontend` · axe/§7 verify → `mms-a11y-smoke` · FormModal chrome norms → `mms-form-architecture` (skill + rule).
+
 Rules governing the strictly typed, component-driven, accessible UI/UX architecture of the Madrasa Management System (MMS).
 
 ## 1. Component & Design Token Constraints
 
 ### Primitive Component Enforcement
-- **No Raw HTML Elements**: NEVER use raw UI tags (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, checkboxes) where design system primitives are available.
+- **No raw control elements**: NEVER use raw UI tags (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, checkboxes) where design system primitives are available. This does **not** ban semantic landmarks (`<main>`, `<nav>`, `<section>`, `<header>`, `<footer>`).
 - **Utilize Central Primitives**: Use:
   - `Button` (`@/components/ui/button`)
   - `Input` (`@/components/ui/input`)
@@ -40,25 +45,16 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 
 ### Design Token Strictness
 - **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
-- **Use Semantic Design Tokens**: Use tokens mapped in `index.css` `@theme` (e.g., `text-foreground`, `text-primary`, `bg-background`, `bg-card`, `border-border`, `rounded-2xl`, `gap-3`).
+- **Use Semantic Design Tokens**: Define tokens **only** in `index.css` `@theme` (Tailwind v4) — ban feature-level `@theme` / raw hex. Prefer CSS `@layer` for base/components/utilities. Keep FormModal `@container` queries.
 - **Touch-target exception**: Design-system primitives may use approved sizes from `formStyles` / primitives (e.g. `min-h-11`, `min-w-11`) — do not invent new arbitrary values in feature code.
 - **Semantic Colors**: For success/warning/destructive affordances, use semantic tokens (e.g., `text-destructive`, `bg-destructive/10`, theme `--success`).
 - **Glassmorphism**: Consistent card overlays use `backdrop-blur` and translucent borders.
 
 ---
 
-## 2. Dialog Containment & Form Architecture (`FormModal`)
+## 2. Dialogs & forms (pointer)
 
-### Form Shell & Layout
-- Layout repeatable entity forms using full-width single column flows (`COLLECTION_BODY`) inside `space-y-3` containers.
-- Form inputs, selects, and textareas must share a standard sizing of `min-h-11` (via `FORM_INPUT` in `formStyles`).
-- Create/edit forms, builder forms, and other popup workflows must use the shared `FormModal` shell for header, icon, subtitle, tabs, progress, focus trap, sizing, and mobile behavior. Use raw `Modal` only for lightweight confirmation/content dialogs that are not forms or builders.
-- Long forms and builder workflows should split major tasks into `FormModal` tabs instead of placing every control in one tall scrolling surface. Keep each tab purposeful (details, saved drafts, sections, picker, preview) and preserve form state across tab switches.
-
-### Overlays & Scroll Controls
-- **Stable Heights**: Tabbed forms must not shift height dynamically. Enforce fixed boundaries with `<FormModal tall>` (`h-[88vh] max-h-[43.75rem]` with scrollable body `flex-1 overflow-y-auto`).
-- **Scroll Containment**: Lock parent body scrolls using `useBodyScrollLock()` and apply `overscroll-contain` to scrollable modal boxes.
-- **Mobile-First Builders**: Wide builder forms may pass explicit `panelClassName` sizing to `FormModal`, but controls must remain usable at phone widths before desktop grids are introduced.
+FormModal shell, tabs, tall height, scroll lock, Zod/save clears, focus trap, and focus-return → **`mms-form-architecture.md`**. This rule owns tokens, tabs chrome, a11y, and §7 responsive layout (including FormModal `@container` breakpoints).
 
 ---
 
@@ -88,12 +84,13 @@ Use `useFilteredModuleTierTabs({ canViewSetup, canViewReports })` so forbidden t
 ## 5. Accessibility & RTL Baseline
 
 ### WCAG Baseline
-- **Focus & Trap**: Interactive components (modals, popovers, select dropdowns) must use Radix UI primitives integrated in central components.
+- **Focus & Trap**: Interactive components (modals, popovers, select dropdowns) must use Radix UI primitives integrated in central components. FormModal/drawer focus-return → `mms-form-architecture.md`.
 - **Labels**: Button icons must declare `aria-label`. Associate labels with input IDs (`htmlFor` / `id`).
 - **Color Contrast**: Primary texts on glass surfaces must meet WCAG AA contrast. Never convey status by color alone; always pair colors with text labels (`StatusBadge` + `t()`).
 - **Name and ID attributes**: All input, select, textarea, date picker, and tag input elements must declare explicit `name` and `id` properties. If not supplied, components must fallback automatically to `React.useId()` and link label/assistive elements accordingly.
 - **Motion**: Honor `prefers-reduced-motion` — reduce or disable non-essential Framer Motion on decorative transitions.
-- **Landmarks**: When touching app shell / module chrome, preserve landmark roles and skip-to-content where present.
+- **View Transitions**: Default **off**. If enabled, only document navigations that do not fight Framer Motion; always honor `prefers-reduced-motion`.
+- **Landmarks**: Prefer semantic `<main>` / `<nav>` / `<section>` / `<header>` / `<footer>` on app shell and module chrome; preserve skip-to-content where present.
 
 ### RTL Support (`ar`, `ur`, `fa`)
 - Retrieve current language direction from `useTranslation()`.
@@ -103,7 +100,8 @@ Use `useFilteredModuleTierTabs({ canViewSetup, canViewReports })` so forbidden t
 
 ## 6. Performance & Bundle Optimization
 - **Bundle Splitting**: Split massive external packages (Recharts, xlsx, jspdf) into deferred chunks — keep Work-tier initial bundles lean.
-- **Lazy Loading**: Utilize React `lazy` and `<Suspense>` for dashboards, report panels, and non-immediate UI.
+- **Lazy Loading**: Utilize React `lazy` and `<Suspense>` for dashboards, report panels, and non-immediate UI. Let Vite handle `modulepreload` for lazy route chunks — do not hand-write preload for every page.
+
 - **De-prioritize Rendering**: Prefer `startTransition` / deferred mount for heavy non-critical chrome (job tray, secondary drawers).
 - **Layout Shift Safeguards**: Declare explicit width/height on images, placeholders, and charts to prevent CLS.
 - **Long lists**: Prefer server pagination; virtualize dense Work tables when row counts are large.
@@ -169,9 +167,4 @@ Before declaring any layout implementation complete, verify:
 
 ## 8. Missing / unknown tenant hosts
 
-- Unregistered subdomain hosts must **not** render tenant app chrome (`AppLayout`, `/settings`, login, modules).
-- `TenantBootGate` **hard-redirects** off the bad host to the apex URL `/tenant-not-found?subdomain=…` (`ROUTES.tenantNotFound` + `tenantNotFoundPath`, page `TenantNotFoundPage`).
-- Browser URL must change host (e.g. `missing.localhost:5173/settings` → `localhost:5173/tenant-not-found?subdomain=missing`). Path-only replace on the tenant host is a regression.
-- Copy: English “Tenant does not exist” + contact MMS platform administrator. No Settings / onboarding / create CTAs.
-- Disabled workspaces use `WorkspaceDisabledScreen` on the tenant host with path normalize to `/`.
-- Owner rule for copy/locale + routing SSOT: `mms-settings-i18n.md`.
+Routing, copy, and locale SSOT → **`mms-settings-i18n.md`**. UI must not render tenant chrome on unregistered hosts; hard-redirect off the bad host to apex `/tenant-not-found?subdomain=…`.

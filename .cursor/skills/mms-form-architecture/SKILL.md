@@ -5,47 +5,40 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 
 # MMS Form Architecture Skill
 
-**Rule:** `mms-form-architecture.mdc` — static FormModal forms (not dynamic layout engines / blueprints).
+**Rule (norms SSOT):** `mms-form-architecture.mdc` — shell, Zod, collection clears, uploads.
+
+Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mms-data-layer.mdc`, `mms-settings-i18n.mdc`.
 
 ## Workflow
 
-1. Use `FormModal` for create/edit/builders; raw `Modal` only for confirm/preview.
-2. Bind inputs via design-system primitives + `formStyles` (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`).
-3. Validate with the same Zod schema from `@mms/shared` that BE `parseRequest` uses — prefer **write** schemas that strip server-owned fields (soft-delete metadata).
-4. Map Zod issues with shared `mapZodFormErrors`; chrome via `formStyles.ts`.
-5. Initialize fields: strings `""`, numbers/dates `null`, lists `[]` (React 19 uncontrolled→controlled safety).
-6. Money/decimals as **strings** — no float math.
-7. Phones: single `type="tel"`; parse/normalize with `parsePhoneNumber` + `normalizeToE164`.
-8. Collection tabs: `cleanContactDraft` before save; edit merge via `mergeContactEditSavePayload` so empty arrays clear legacy scalars (`mms-form-architecture.mdc` §3).
-9. Persist via REST mutations (`mutateAsync`); tenant writes use RLS `SET LOCAL` — `mms-data-layer.mdc`.
-10. Soft-delete only via DELETE/restore routes — never from the form body.
-11. Uploads: authenticated multipart `/api/uploads/image|attachment` (local disk); resolve URLs via `resolveApiUrl` — no S3/presign.
+1. `FormModal` for create/edit/builders; raw `Modal` for confirm/preview only.
+2. Primitives + `formStyles`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred).
+3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164.
+4. Collection tabs: `cleanContactDraft` / `mergeContactEditSavePayload` — empty arrays clear scalars (rule §3).
+5. Persist with `mutateAsync`; soft-delete only via DELETE/restore routes.
+6. Uploads: authenticated multipart `/api/uploads/*` + `resolveApiUrl`; auth (or short-TTL) to read.
+7. On close: **focus-return** to the control that opened the dialog.
 
 ## Checklist
 
 ```
-- [ ] FormModal (not ad-hoc dialog) for entity forms
-- [ ] Shared Zod write/read DTOs — no forked FE/BE shapes; soft-delete stripped on write
-- [ ] formStyles + primitives + DatePicker; no raw <input type="date">
-- [ ] mapZodFormErrors for field errors
-- [ ] name + id on every control (useId fallback)
-- [ ] Logical CSS for RTL
-- [ ] Mobile-usable: `FORM_INPUT` / controls `min-h-11`; FormModal tab/field layout uses container `@md:` / `@sm:` (dialog width), not viewport `md:` — `mms-ui-ux-design.mdc` §7
-- [ ] Inline validation; focus first invalid tab
-- [ ] Contact (and similar) option dropdowns: config/registry lists + `EditableSelect` `onUpdateOptions` — ban runtime `DEFAULT_*` / `GENDERS` fallbacks in form tabs
-- [ ] Collection deletes persist: empty arrays + scalar sync; no existing-contact spread resurrection
-- [ ] No dynamic form compiler / blueprint engine
+- [ ] FormModal + tall/scroll rules from rule §1
+- [ ] Focus-return to opener on close
+- [ ] Shared Zod write/read DTOs; soft-delete stripped on write
+- [ ] formStyles + DatePicker; name + id on controls
+- [ ] Empty collection arrays persist; no scalar resurrection
+- [ ] canWrite gates; no fire-and-forget mutate close
+- [ ] No dynamic form compiler
+- [ ] Copy via t() / labelKey
 ```
 
 ## Do Not
 
 - Reintroduce blueprint/`compileZodFromBlueprint` engines
 - Dual-write Query + `saveCollection` on save
-- Accept client `deletedAt` / `deletedBy` / `deletionReason` on create/update
-- Hardcoded labels — use `t()` / `labelKey`
-- Rebuild phones/emails/addresses from legacy scalars when the collection array is explicitly `[]`
-- Spread `editContact` / existing row over a cleared draft so stale `phone` / `email` / `line1` come back
+- Accept client soft-delete fields on create/update
+- Rebuild list rows from legacy scalars when arrays are `[]`
 
 ## Done
 
-`mms-completion-review.mdc` — typecheck + FE lint. Related: `mms-fields-registry`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`.
+`mms-completion-review.mdc` — typecheck + FE lint.
