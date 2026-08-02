@@ -31,4 +31,6 @@ export interface ContactSubListTabBaseProps extends ContactSubListMutationProps 
   contactDraft: Partial<Contact>;
   getLocalId: (tabName: string, idx: number) => string;
   getListItemError: (tabId: string, fieldId: string, index: number) => string | undefined;
+  isFieldEnabled: (tabId: string, fieldId: string) => boolean;
+  isFieldRequired: (tabId: string, fieldId: string) => boolean;
 }

@@ -2,7 +2,10 @@ import { useCallback, useState } from "react";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactValidation } from "@/lib/contacts/useContactValidation";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+import { useContacts } from "@/tenant/features/contacts/hooks/useContacts";
 import {
   toTitleCase,
   applyTitleCaseToContact,
@@ -12,6 +15,7 @@ import {
   syncContactScalarFields,
   normalizeToE164,
   isContactDeleted,
+  findContactUniqueFieldConflicts,
   type ValidationError,
 } from "@mms/shared";
 
@@ -31,6 +35,9 @@ export function useContactFormSave({
   onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
 }) {
   const { t } = useTranslation();
+  const { language } = useGlobalSettings();
+  const { fields } = useContactConfig();
+  const { data: peerContacts = [] } = useContacts();
   const validate = useContactValidation();
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -67,6 +74,20 @@ export function useContactFormSave({
         message: t("contacts.form.avatarMustUpload"),
       });
     }
+
+    const uniqueCandidate = {
+      ...cleanedDraft,
+      id: cleanedDraft.id || contact?.id,
+    };
+    formErrors.push(
+      ...findContactUniqueFieldConflicts(
+        uniqueCandidate,
+        peerContacts,
+        fields,
+        language,
+        { defaultPhoneCountryCode: defaultCountryCode },
+      ),
+    );
 
     if (formErrors.length > 0) {
       setValidationErrors(formErrors);
@@ -136,9 +157,12 @@ export function useContactFormSave({
     contact,
     contactDraft,
     defaultCountryCode,
+    fields,
+    language,
     onClose,
     onSave,
     onValidationTab,
+    peerContacts,
     t,
     validate,
   ]);

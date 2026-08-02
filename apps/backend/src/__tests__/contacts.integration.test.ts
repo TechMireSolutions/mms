@@ -379,7 +379,7 @@ describe('contacts REST routes', () => {
       payload: { id: 'c1', firstName: 'Ali', lastName: 'Updated' },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockUpdateContactById).toHaveBeenCalledWith('c1', expect.objectContaining({ firstName: 'Ali' }));
+    expect(mockUpdateContactById).toHaveBeenCalledWith('c1', expect.objectContaining({ firstName: 'Ali' }), expect.any(String));
     await app.close();
   });
 

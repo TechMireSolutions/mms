@@ -21,12 +21,17 @@ export function ContactEmailsTab({
   emailLabels,
   onUpdateEmailLabels,
   getListItemError,
+  isFieldEnabled,
+  isFieldRequired,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
 }: ContactEmailsTabProps): JSX.Element {
   const { t } = useTranslation();
+  const showLabel = isFieldEnabled("emails", "label");
+  const showAddress = isFieldEnabled("emails", "address");
+  const allowAdd = showLabel || showAddress;
   const emails = contactDraft.emails || [];
   const emptyEmail = () => ({
     label: resolveEmailLabel(undefined, emailLabels, t),
@@ -49,6 +54,7 @@ export function ContactEmailsTab({
       addLabel={t("contacts.form.addEmailAddress")}
       onAdd={addEmail}
       onEnsureRow={ensureEmail}
+      allowAdd={allowAdd}
     >
       <AnimatePresence initial={false}>
         {emails.map((email, idx) => {
@@ -63,35 +69,42 @@ export function ContactEmailsTab({
               iconClass="text-warning group-hover:text-warning"
               label={`${t("contacts.form.type")}:`}
               typeSelect={
-                <EditableSelect
-                  options={emailLabels}
-                  value={resolveEmailLabel(email.label, emailLabels, t)}
-                  onChange={(val) => updateEmail(idx, { label: val })}
-                  onUpdateOptions={onUpdateEmailLabels}
-                  className={TYPE_SELECT_WIDTH}
-                  id={`email-label-${idx}`}
-                  name={`email-label-${idx}`}
-                />
+                showLabel ? (
+                  <EditableSelect
+                    options={emailLabels}
+                    value={resolveEmailLabel(email.label, emailLabels, t)}
+                    onChange={(val) => updateEmail(idx, { label: val })}
+                    onUpdateOptions={onUpdateEmailLabels}
+                    className={TYPE_SELECT_WIDTH}
+                    id={`email-label-${idx}`}
+                    name={`email-label-${idx}`}
+                  />
+                ) : undefined
               }
               onRemove={() => removeEmail(idx)}
               removeLabel={t("contacts.form.removeEmailAddress", { index: idx + 1 })}
             >
-              <div className="relative flex items-center group/input">
-                <Mail className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  type="email"
-                  id={`email-address-${idx}`}
-                  name={`email-address-${idx}`}
-                  value={email.address || ""}
-                  onChange={(e) => updateEmail(idx, { address: e.target.value })}
-                  placeholder={t("auth.emailAddress")}
-                  className={cn(
-                    "ps-10",
-                    emailError && "border-destructive focus-visible:ring-destructive",
-                  )}
-                />
-              </div>
-              <FieldInlineError message={emailError} />
+              {showAddress ? (
+                <>
+                  <div className="relative flex items-center group/input">
+                    <Mail className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      type="email"
+                      id={`email-address-${idx}`}
+                      name={`email-address-${idx}`}
+                      value={email.address || ""}
+                      required={isFieldRequired("emails", "address")}
+                      onChange={(e) => updateEmail(idx, { address: e.target.value })}
+                      placeholder={t("auth.emailAddress")}
+                      className={cn(
+                        "ps-10",
+                        emailError && "border-destructive focus-visible:ring-destructive",
+                      )}
+                    />
+                  </div>
+                  <FieldInlineError message={emailError} />
+                </>
+              ) : null}
             </ListFieldCard>
           );
         })}

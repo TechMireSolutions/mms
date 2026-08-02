@@ -36,6 +36,7 @@ export function ContactFormTabContent({
           formInstanceId={draft.formInstanceId}
           fields={draft.fields}
           isFieldEnabled={draft.isFieldEnabled}
+          isFieldRequired={draft.isFieldRequired}
           getFieldError={draft.getFieldError}
           updateDraft={draft.updateDraft}
           cropSrc={draft.cropSrc}
@@ -57,6 +58,8 @@ export function ContactFormTabContent({
           countryCodeOptions={draft.countryCodeOptions}
           onUpdateDialCodeOptions={draft.updateDialCodeOptions}
           getListItemError={draft.getListItemError}
+          isFieldEnabled={draft.isFieldEnabled}
+          isFieldRequired={draft.isFieldRequired}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
@@ -72,6 +75,8 @@ export function ContactFormTabContent({
           emailLabels={draft.emailLabels}
           onUpdateEmailLabels={draft.updateEmailLabels}
           getListItemError={draft.getListItemError}
+          isFieldEnabled={draft.isFieldEnabled}
+          isFieldRequired={draft.isFieldRequired}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
@@ -91,6 +96,8 @@ export function ContactFormTabContent({
           defaultProvince={defaultProvince}
           defaultCountry={defaultCountry}
           getListItemError={draft.getListItemError}
+          isFieldEnabled={draft.isFieldEnabled}
+          isFieldRequired={draft.isFieldRequired}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
@@ -105,6 +112,8 @@ export function ContactFormTabContent({
           socialPlatforms={draft.socialPlatforms}
           onUpdateSocialPlatforms={draft.updateSocialPlatforms}
           getListItemError={draft.getListItemError}
+          isFieldEnabled={draft.isFieldEnabled}
+          isFieldRequired={draft.isFieldRequired}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}
           updateSubListItem={draft.updateSubListItem}
@@ -119,6 +128,7 @@ export function ContactFormTabContent({
           relationshipOptions={draft.relationshipOptions}
           onUpdateRelationships={draft.updateRelationships}
           isFieldEnabled={draft.isFieldEnabled}
+          isFieldRequired={draft.isFieldRequired}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}

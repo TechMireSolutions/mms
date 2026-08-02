@@ -239,4 +239,42 @@ export const COUNTRY_CODES = [
   { country: "United Kingdom", code: "+44"  },
 ];
 
+/**
+ * Names retired from the former expanded Contacts dial-code seed.
+ * Presence in a persisted list means it should be replaced with {@link COUNTRY_CODES}.
+ */
+export const RETIRED_CONTACT_COUNTRY_CODE_NAMES = [
+  "Canada",
+  "Australia",
+  "Bangladesh",
+  "Egypt",
+  "Nigeria",
+  "Ghana",
+  "Saudi Arabia",
+  "United Arab Emirates",
+  "Qatar",
+  "Kuwait",
+  "Bahrain",
+  "Oman",
+  "Malaysia",
+  "Singapore",
+  "Thailand",
+  "Indonesia",
+] as const;
+
+/** True when a persisted dial-code list still contains a retired seed country. */
+export function needsContactCountryCodesCurate(
+  entries: ReadonlyArray<{ country: string; code: string }>,
+): boolean {
+  const retired = new Set(
+    RETIRED_CONTACT_COUNTRY_CODE_NAMES.map((name) => name.toLowerCase()),
+  );
+  return entries.some((entry) => retired.has(entry.country.trim().toLowerCase()));
+}
+
+/** Fresh copy of the curated Contacts dial-code seed. */
+export function curatedContactCountryCodes(): Array<{ country: string; code: string }> {
+  return COUNTRY_CODES.map((entry) => ({ ...entry }));
+}
+
 export const RELATIONSHIPS: string[] = deriveRelationshipOptionsFromPairs(DEFAULT_RELATIONSHIP_PAIRS);

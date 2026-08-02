@@ -27,3 +27,7 @@ export {
   softDeleteContactById,
   bulkSoftDeleteContacts,
 } from './contactServiceMutate.js';
+export {
+  ContactUniqueFieldError,
+  assertContactUniqueFields,
+} from './contactUniqueValidationService.js';

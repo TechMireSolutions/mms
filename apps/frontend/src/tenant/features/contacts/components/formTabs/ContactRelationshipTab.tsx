@@ -13,7 +13,6 @@ import { RelationshipTypeSelect } from "./RelationshipTypeSelect";
 export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
   onUpdateRelationships: (relationships: string[]) => void;
-  isFieldEnabled: (tabId: string, fieldId: string) => boolean;
 }
 
 export function ContactRelationshipTab({
@@ -22,6 +21,7 @@ export function ContactRelationshipTab({
   relationshipOptions,
   onUpdateRelationships,
   isFieldEnabled,
+  isFieldRequired,
   getListItemError,
   addSubListItem,
   ensureSubListItem,
@@ -36,6 +36,7 @@ export function ContactRelationshipTab({
   const links = contactDraft.relationshipContacts || [];
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
+  const allowAdd = showLinkedContact || showRelationshipType;
 
   const emptyLink = (): RelationshipContact => ({
     relationship: relationshipOptions[0] || "",
@@ -63,6 +64,7 @@ export function ContactRelationshipTab({
         addLabel={t("contacts.form.addRelationshipLink")}
         onAdd={() => addSubListItem("relationshipContacts", emptyLink())}
         onEnsureRow={() => ensureSubListItem("relationshipContacts", emptyLink())}
+        allowAdd={allowAdd}
       >
         <AnimatePresence initial={false}>
           {links.map((link, idx) => {
@@ -101,7 +103,11 @@ export function ContactRelationshipTab({
                   ) : null}
 
                   {showRelationshipType ? (
-                    <Field label={t("contacts.form.relationshipType")} id={`relationship-type-${idx}`}>
+                    <Field
+                      label={t("contacts.form.relationshipType")}
+                      required={isFieldRequired("relationship", "relationship")}
+                      id={`relationship-type-${idx}`}
+                    >
                       <RelationshipTypeSelect
                         options={relationshipOptions}
                         value={link.relationship || relationshipOptions[0] || ""}

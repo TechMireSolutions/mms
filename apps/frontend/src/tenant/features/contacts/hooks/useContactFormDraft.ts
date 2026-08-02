@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { normalizeContactForEdit, type Contact, type ContactItemNormalizeDefaults } from "@mms/shared";
+import {
+  applyContactScalarCustomFieldDefaults,
+  normalizeContactForEdit,
+  type Contact,
+  type ContactItemNormalizeDefaults,
+} from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import {
   mergeCountryDialCodeOptions,
@@ -79,6 +84,7 @@ export function useContactFormDraft({
 }) {
   const {
     isTabFieldEnabled,
+    isTabFieldRequired,
     fields,
     phoneLabels,
     emailLabels,
@@ -142,13 +148,16 @@ export function useContactFormDraft({
 
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() =>
     withEmptyCollectionRows(
-      normalizeContactForEdit(
-        contact,
-        initialDraft,
-        defaultCity,
-        defaultProvince,
-        defaultCountry,
-        optionDefaults,
+      applyContactScalarCustomFieldDefaults(
+        normalizeContactForEdit(
+          contact,
+          initialDraft,
+          defaultCity,
+          defaultProvince,
+          defaultCountry,
+          optionDefaults,
+        ),
+        fields,
       ),
       socialPlatforms,
       relationshipOptions,
@@ -173,6 +182,7 @@ export function useContactFormDraft({
     collectionCounts,
     getLocalId,
     isFieldEnabled,
+    isFieldRequired,
     getFieldError,
     getListItemError,
     updateDraft,
@@ -183,6 +193,7 @@ export function useContactFormDraft({
     defaultCountryCode,
     fields,
     isTabFieldEnabled,
+    isTabFieldRequired,
     validationErrors,
     contactDraft,
     setContactDraft,
@@ -192,13 +203,16 @@ export function useContactFormDraft({
     if (!open) return;
     setContactDraft(
       withEmptyCollectionRows(
-        normalizeContactForEdit(
-          contact,
-          initialDraft,
-          defaultCity,
-          defaultProvince,
-          defaultCountry,
-          optionDefaults,
+        applyContactScalarCustomFieldDefaults(
+          normalizeContactForEdit(
+            contact,
+            initialDraft,
+            defaultCity,
+            defaultProvince,
+            defaultCountry,
+            optionDefaults,
+          ),
+          fields,
         ),
         socialPlatforms,
         relationshipOptions,
@@ -213,6 +227,7 @@ export function useContactFormDraft({
     defaultProvince,
     defaultCountry,
     optionDefaults,
+    fields,
     socialPlatforms,
     relationshipOptions,
     setValidationErrors,
@@ -244,6 +259,7 @@ export function useContactFormDraft({
     updateRelationships,
     getLocalId,
     isFieldEnabled,
+    isFieldRequired,
     getFieldError,
     getListItemError,
     updateDraft,

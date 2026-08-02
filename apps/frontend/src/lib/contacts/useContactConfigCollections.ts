@@ -1,5 +1,9 @@
-import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import type { FieldConfig } from "@mms/shared";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  curatedContactCountryCodes,
+  needsContactCountryCodesCurate,
+  type FieldConfig,
+} from "@mms/shared";
 import { getCollection, saveCollectionAsync } from "@/lib/db";
 
 import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
@@ -39,9 +43,28 @@ export function useContactConfigCollections({
   const [addressLabels, setAddressLabelsState] = useState<string[]>(() =>
     getCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, contactConfigDefaults.addressLabels),
   );
-  const [countryCodes, setCountryCodesState] = useState<CountryCodeEntry[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, contactConfigDefaults.countryCodes),
-  );
+  const [countryCodes, setCountryCodesState] = useState<CountryCodeEntry[]>(() => {
+    const loaded = getCollection(
+      CONTACT_CONFIG_COLLECTION_KEYS.countryCodes,
+      contactConfigDefaults.countryCodes,
+    );
+    return needsContactCountryCodesCurate(loaded)
+      ? curatedContactCountryCodes()
+      : loaded;
+  });
+
+  // Persist curated dial codes when localStorage still holds the expanded seed.
+  useEffect(() => {
+    const loaded = getCollection(
+      CONTACT_CONFIG_COLLECTION_KEYS.countryCodes,
+      contactConfigDefaults.countryCodes,
+    );
+    if (!needsContactCountryCodesCurate(loaded)) return;
+    void saveCollectionAsync(
+      CONTACT_CONFIG_COLLECTION_KEYS.countryCodes,
+      curatedContactCountryCodes(),
+    );
+  }, [contactConfigDefaults.countryCodes]);
 
   const reloadCollections = useCallback(() => {
     setGendersState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, contactConfigDefaults.genders));

@@ -21,12 +21,17 @@ export function ContactSocialsTab({
   socialPlatforms,
   onUpdateSocialPlatforms,
   getListItemError,
+  isFieldEnabled,
+  isFieldRequired,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
 }: ContactSocialsTabProps): JSX.Element {
   const { t } = useTranslation();
+  const showPlatform = isFieldEnabled("socials", "platform");
+  const showUrl = isFieldEnabled("socials", "url");
+  const allowAdd = showPlatform || showUrl;
   const socials = contactDraft.socials || [];
   const emptySocial = () => ({
     platform: resolveSocialPlatformLabel(undefined, socialPlatforms, t),
@@ -49,6 +54,7 @@ export function ContactSocialsTab({
       addLabel={t("contacts.form.addSocialLink")}
       onAdd={addSocial}
       onEnsureRow={ensureSocial}
+      allowAdd={allowAdd}
     >
       <AnimatePresence initial={false}>
         {socials.map((soc, idx) => {
@@ -63,34 +69,41 @@ export function ContactSocialsTab({
               iconClass="text-destructive group-hover:text-destructive"
               label={`${t("contacts.form.type")}:`}
               typeSelect={
-                <EditableSelect
-                  options={socialPlatforms}
-                  value={resolveSocialPlatformLabel(soc.platform, socialPlatforms, t)}
-                  onChange={(val) => updateSocial(idx, { platform: val })}
-                  onUpdateOptions={onUpdateSocialPlatforms}
-                  className={TYPE_SELECT_WIDTH}
-                  id={`social-platform-${idx}`}
-                  name={`social-platform-${idx}`}
-                />
+                showPlatform ? (
+                  <EditableSelect
+                    options={socialPlatforms}
+                    value={resolveSocialPlatformLabel(soc.platform, socialPlatforms, t)}
+                    onChange={(val) => updateSocial(idx, { platform: val })}
+                    onUpdateOptions={onUpdateSocialPlatforms}
+                    className={TYPE_SELECT_WIDTH}
+                    id={`social-platform-${idx}`}
+                    name={`social-platform-${idx}`}
+                  />
+                ) : undefined
               }
               onRemove={() => removeSocial(idx)}
               removeLabel={t("contacts.form.removeSocialLink", { index: idx + 1 })}
             >
-              <div className="relative flex items-center group/input">
-                <Share2 className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  id={`social-url-${idx}`}
-                  name={`social-url-${idx}`}
-                  value={soc.url || ""}
-                  onChange={(e) => updateSocial(idx, { url: e.target.value })}
-                  placeholder={t("contacts.form.socialHandlePlaceholder")}
-                  className={cn(
-                    "ps-10",
-                    urlError && "border-destructive focus-visible:ring-destructive",
-                  )}
-                />
-              </div>
-              <FieldInlineError message={urlError} />
+              {showUrl ? (
+                <>
+                  <div className="relative flex items-center group/input">
+                    <Share2 className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <Input
+                      id={`social-url-${idx}`}
+                      name={`social-url-${idx}`}
+                      value={soc.url || ""}
+                      required={isFieldRequired("socials", "url")}
+                      onChange={(e) => updateSocial(idx, { url: e.target.value })}
+                      placeholder={t("contacts.form.socialHandlePlaceholder")}
+                      className={cn(
+                        "ps-10",
+                        urlError && "border-destructive focus-visible:ring-destructive",
+                      )}
+                    />
+                  </div>
+                  <FieldInlineError message={urlError} />
+                </>
+              ) : null}
             </ListFieldCard>
           );
         })}

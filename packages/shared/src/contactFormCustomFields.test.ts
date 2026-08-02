@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyContactScalarCustomFieldDefaults,
   listEnabledCustomContactFormFields,
   listContactSystemFormFieldKeys,
 } from "./contactFormCustomFields.js";
@@ -61,5 +62,35 @@ describe("listEnabledCustomContactFormFields", () => {
       "onCustom",
       "onBasic",
     ]);
+  });
+});
+
+describe("applyContactScalarCustomFieldDefaults", () => {
+  it("seeds defaultValue on new contacts only", () => {
+    const fields = {
+      basic: [field({ key: "loyaltyTier", defaultValue: "Gold" })],
+      custom: [field({ key: "extraNote", defaultValue: "Hello" })],
+    };
+
+    expect(
+      applyContactScalarCustomFieldDefaults({ firstName: "" }, fields),
+    ).toMatchObject({
+      firstName: "",
+      loyaltyTier: "Gold",
+      extraNote: "Hello",
+    });
+
+    expect(
+      applyContactScalarCustomFieldDefaults({ id: "c1", firstName: "Ali" }, fields),
+    ).toEqual({ id: "c1", firstName: "Ali" });
+  });
+
+  it("does not overwrite initialDraft values", () => {
+    const fields = {
+      custom: [field({ key: "extraNote", defaultValue: "Hello" })],
+    };
+    expect(
+      applyContactScalarCustomFieldDefaults({ extraNote: "Keep me" }, fields),
+    ).toEqual({ extraNote: "Keep me" });
   });
 });

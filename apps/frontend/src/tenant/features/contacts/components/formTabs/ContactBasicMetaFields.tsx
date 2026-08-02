@@ -12,12 +12,14 @@ export function ContactBasicMetaFields({
   contactDraft,
   formInstanceId,
   isFieldEnabled,
+  isFieldRequired,
   getFieldError,
   updateDraft,
 }: {
   contactDraft: Partial<Contact>;
   formInstanceId: string;
   isFieldEnabled: (tabId: string, fieldId: string) => boolean;
+  isFieldRequired: (tabId: string, fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
 }): React.JSX.Element {
@@ -29,6 +31,7 @@ export function ContactBasicMetaFields({
       {isFieldEnabled("basic", "dob") && (
         <Field
           label={t("contacts.fields.dob")}
+          required={isFieldRequired("basic", "dob")}
           error={getFieldError("dob")}
           id={`cf-${formInstanceId}-dob`}
         >
@@ -44,6 +47,7 @@ export function ContactBasicMetaFields({
       {isFieldEnabled("basic", "cnic") && (
         <Field
           label={t("contacts.form.cnic")}
+          required={isFieldRequired("basic", "cnic")}
           id={`cf-${formInstanceId}-cnic`}
           error={getFieldError("cnic")}
         >

@@ -12,6 +12,7 @@ export function ContactBasicIdentityFields({
   contactDraft,
   formInstanceId,
   isFieldEnabled,
+  isFieldRequired,
   getFieldError,
   updateDraft,
   genders,
@@ -21,6 +22,7 @@ export function ContactBasicIdentityFields({
   contactDraft: Partial<Contact>;
   formInstanceId: string;
   isFieldEnabled: (tabId: string, fieldId: string) => boolean;
+  isFieldRequired: (tabId: string, fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
   genders: string[];
@@ -35,7 +37,7 @@ export function ContactBasicIdentityFields({
         {isFieldEnabled("basic", "firstName") && (
           <Field
             label={t("contacts.fields.firstName")}
-            required
+            required={isFieldRequired("basic", "firstName")}
             error={getFieldError("firstName")}
             id={`cf-${formInstanceId}-firstName`}
           >
@@ -56,6 +58,7 @@ export function ContactBasicIdentityFields({
         {isFieldEnabled("basic", "lastName") && (
           <Field
             label={t("contacts.fields.lastName")}
+            required={isFieldRequired("basic", "lastName")}
             error={getFieldError("lastName")}
             id={`cf-${formInstanceId}-lastName`}
           >
@@ -76,6 +79,7 @@ export function ContactBasicIdentityFields({
         {isFieldEnabled("basic", "gender") && (
           <Field
             label={t("contacts.fields.gender")}
+            required={isFieldRequired("basic", "gender")}
             error={getFieldError("gender")}
             id={`cf-${formInstanceId}-gender`}
           >
@@ -114,6 +118,7 @@ export function ContactBasicIdentityFields({
           contactDraft={contactDraft}
           formInstanceId={formInstanceId}
           isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
           getFieldError={getFieldError}
           updateDraft={updateDraft}
         />

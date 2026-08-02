@@ -3587,6 +3587,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.validation.itemSocial": "سوشل لنک #{index}",
   "contacts.validation.itemRelationship": "تعلق #{index}",
   "contacts.validation.itemGeneric": "آئٹم #{index}",
+  "contacts.validation.mustBeUnique": "{label} منفرد ہونا چاہیے",
   "contacts.form.type": "قسم",
   "contacts.form.selectLabel": "لیبل منتخب کریں",
   "contacts.form.addEmailAddress": "ای میل پتہ شامل کریں",

@@ -21,6 +21,7 @@ export function useContactFormDraftHelpers({
   formInstanceId,
   defaultCountryCode,
   isTabFieldEnabled,
+  isTabFieldRequired,
   validationErrors,
   contactDraft,
   setContactDraft,
@@ -29,6 +30,7 @@ export function useContactFormDraftHelpers({
   defaultCountryCode: string;
   fields?: Record<string, FieldDefinition[]>;
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
+  isTabFieldRequired: (tabId: string, fieldId: string) => boolean;
   validationErrors: ValidationError[];
   contactDraft: Partial<Contact>;
   setContactDraft: Dispatch<SetStateAction<Partial<Contact>>>;
@@ -66,6 +68,14 @@ export function useContactFormDraftHelpers({
       return isTabFieldEnabled(tabId, fieldId);
     },
     [isTabFieldEnabled],
+  );
+
+  const isFieldRequired = useCallback(
+    (tabId: string, fieldId: string) => {
+      if (!isFieldEnabled(tabId, fieldId)) return false;
+      return isTabFieldRequired(tabId, fieldId);
+    },
+    [isFieldEnabled, isTabFieldRequired],
   );
 
   const getFieldError = useCallback(
@@ -151,6 +161,7 @@ export function useContactFormDraftHelpers({
     collectionCounts,
     getLocalId,
     isFieldEnabled,
+    isFieldRequired,
     getFieldError,
     getListItemError,
     updateDraft,

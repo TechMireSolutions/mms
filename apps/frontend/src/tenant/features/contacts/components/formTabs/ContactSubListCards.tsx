@@ -84,6 +84,8 @@ export interface ContactSubListShellProps {
   onAdd: () => void;
   /** Idempotent seed when the list is empty (zero-click first row). */
   onEnsureRow: () => void;
+  /** When false, hide add/ensure (e.g. all Setup fields for the tab are disabled). */
+  allowAdd?: boolean;
   children: ReactNode;
 }
 
@@ -95,26 +97,29 @@ export function ContactSubListShell({
   addLabel,
   onAdd,
   onEnsureRow,
+  allowAdd = true,
   children,
 }: ContactSubListShellProps): JSX.Element {
   useEffect(() => {
-    if (!isEmpty) return;
+    if (!allowAdd || !isEmpty) return;
     onEnsureRow();
-  }, [isEmpty, onEnsureRow]);
+  }, [allowAdd, isEmpty, onEnsureRow]);
 
   return (
     <div className="space-y-3 text-start">
       {isEmpty ? <EmptyListCard icon={emptyIcon} message={emptyMessage} /> : null}
       <div className="space-y-3">{children}</div>
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={onAdd}
-        className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors px-0 py-2 justify-start mt-2 cursor-pointer"
-      >
-        <Plus className="w-4 h-4" aria-hidden />
-        <span>{addLabel}</span>
-      </Button>
+      {allowAdd ? (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onAdd}
+          className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors px-0 py-2 justify-start mt-2 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" aria-hidden />
+          <span>{addLabel}</span>
+        </Button>
+      ) : null}
     </div>
   );
 }

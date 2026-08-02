@@ -7,6 +7,7 @@ import {
   updateContactById,
   upsertContact,
   ContactPermissionError,
+  ContactUniqueFieldError,
 } from '../../../services/contactService.js';
 import { validateContactDynamic } from '../../../services/contactValidationService.js';
 import { canReadContacts, canWriteContacts } from '../../../services/rbacService.js';
@@ -62,8 +63,13 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     );
     if (!isValid) return;
 
+    const lang = (request.headers['accept-language'] as string) || 'en';
+
     try {
-      const { contact, created, restoredFromDelete } = await upsertContact(parsed.data as Contact, user);
+      const { contact, created, restoredFromDelete } = await upsertContact(parsed.data as Contact, {
+        user,
+        language: lang,
+      });
       if (restoredFromDelete) {
         await auditContact(user, 'contact.restore', `Restored contact ${String(contact.id)} via upsert`, String(contact.id));
       } else {
@@ -80,6 +86,9 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (error: unknown) {
       if (error instanceof ContactPermissionError) {
         return sendForbidden(reply, error.message);
+      }
+      if (error instanceof ContactUniqueFieldError) {
+        return replyValidationError(reply, error.message, { errors: error.errors });
       }
       return sendDatabaseError(reply, 'Failed to save contact record', error);
     }
@@ -140,11 +149,17 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     );
     if (!isValid) return;
 
+    const lang = (request.headers['accept-language'] as string) || 'en';
+
     try {
-      const updated = await updateContactById(params.data.id, {
-        ...body.data,
-        id: body.data.id ?? params.data.id,
-      } as Contact);
+      const updated = await updateContactById(
+        params.data.id,
+        {
+          ...body.data,
+          id: body.data.id ?? params.data.id,
+        } as Contact,
+        lang,
+      );
       if (!updated) {
         return sendNotFound(reply, 'Contact not found');
       }
@@ -152,6 +167,9 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       await auditContact(user, 'contact.update', diff, params.data.id);
       return reply.send({ contact: await sanitizeOneForUser(updated, user) });
     } catch (error: unknown) {
+      if (error instanceof ContactUniqueFieldError) {
+        return replyValidationError(reply, error.message, { errors: error.errors });
+      }
       return sendDatabaseError(reply, 'Failed to update contact', error);
     }
   });

@@ -28,6 +28,8 @@ export function ContactPhonesTab({
   countryCodeOptions,
   onUpdateDialCodeOptions,
   getListItemError,
+  isFieldEnabled,
+  isFieldRequired,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
@@ -35,6 +37,9 @@ export function ContactPhonesTab({
   handlePhoneBlur,
 }: ContactPhonesTabProps): JSX.Element {
   const { t } = useTranslation();
+  const showLabel = isFieldEnabled("phones", "label");
+  const showNumber = isFieldEnabled("phones", "number");
+  const allowAdd = showLabel || showNumber;
   const phones = contactDraft.phones || [];
   const emptyPhone = () => ({
     label: resolvePhoneLabel(undefined, phoneLabels, t),
@@ -58,6 +63,7 @@ export function ContactPhonesTab({
       addLabel={t("contacts.form.addPhoneNumber")}
       onAdd={addPhone}
       onEnsureRow={ensurePhone}
+      allowAdd={allowAdd}
     >
       <AnimatePresence initial={false}>
         {phones.map((phone, idx) => {
@@ -72,60 +78,67 @@ export function ContactPhonesTab({
               iconClass="text-primary/70 group-hover:text-primary"
               label={`${t("contacts.form.type")}:`}
               typeSelect={
-                <EditableSelect
-                  options={phoneLabels}
-                  value={resolvePhoneLabel(phone.label, phoneLabels, t)}
-                  onChange={(val) => updatePhone(idx, { label: val })}
-                  onUpdateOptions={onUpdatePhoneLabels}
-                  className={TYPE_SELECT_WIDTH}
-                  id={`phone-label-${idx}`}
-                  name={`phone-label-${idx}`}
-                />
+                showLabel ? (
+                  <EditableSelect
+                    options={phoneLabels}
+                    value={resolvePhoneLabel(phone.label, phoneLabels, t)}
+                    onChange={(val) => updatePhone(idx, { label: val })}
+                    onUpdateOptions={onUpdatePhoneLabels}
+                    className={TYPE_SELECT_WIDTH}
+                    id={`phone-label-${idx}`}
+                    name={`phone-label-${idx}`}
+                  />
+                ) : undefined
               }
               onRemove={() => removePhone(idx)}
               removeLabel={t("contacts.form.removePhoneNumber", { index: idx + 1 })}
             >
-              <div className="flex items-center gap-2 w-full">
-                <EditableSelect
-                  options={countryCodeOptions}
-                  value={phone.countryCode || defaultCountryCode}
-                  onChange={(val) => updatePhone(idx, { countryCode: val })}
-                  onUpdateOptions={onUpdateDialCodeOptions}
-                  className="w-[5.625rem] shrink-0"
-                  id={`phone-country-${idx}`}
-                  name={`phone-country-${idx}`}
-                />
-                <div className="relative flex items-center group/input flex-1 min-w-0">
-                  <Phone className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                  <Input
-                    type="tel"
-                    id={`phone-number-${idx}`}
-                    name={`phone-number-${idx}`}
-                    value={phone.number || ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const trimmed = val.trim();
-                      if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
-                        const parsed = parsePhoneNumber(val, phone.countryCode || defaultCountryCode, countryCodeOptions);
-                        updatePhone(idx, {
-                          countryCode: parsed.countryCode,
-                          number: parsed.number,
-                        });
-                        return;
-                      }
-                      updatePhone(idx, { number: val });
-                    }}
-                    onBlur={() => handlePhoneBlur(idx)}
-                    placeholder={t("contacts.form.phoneNumberPlaceholder")}
-                    className={cn(
-                      "ps-10",
-                      numError &&
-                        "border-destructive focus-visible:ring-destructive",
-                    )}
-                  />
-                </div>
-              </div>
-              <FieldInlineError message={numError} />
+              {showNumber ? (
+                <>
+                  <div className="flex items-center gap-2 w-full">
+                    <EditableSelect
+                      options={countryCodeOptions}
+                      value={phone.countryCode || defaultCountryCode}
+                      onChange={(val) => updatePhone(idx, { countryCode: val })}
+                      onUpdateOptions={onUpdateDialCodeOptions}
+                      className="w-[5.625rem] shrink-0"
+                      id={`phone-country-${idx}`}
+                      name={`phone-country-${idx}`}
+                    />
+                    <div className="relative flex items-center group/input flex-1 min-w-0">
+                      <Phone className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                      <Input
+                        type="tel"
+                        id={`phone-number-${idx}`}
+                        name={`phone-number-${idx}`}
+                        value={phone.number || ""}
+                        required={isFieldRequired("phones", "number")}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const trimmed = val.trim();
+                          if (trimmed.startsWith("+") || trimmed.startsWith("00")) {
+                            const parsed = parsePhoneNumber(val, phone.countryCode || defaultCountryCode, countryCodeOptions);
+                            updatePhone(idx, {
+                              countryCode: parsed.countryCode,
+                              number: parsed.number,
+                            });
+                            return;
+                          }
+                          updatePhone(idx, { number: val });
+                        }}
+                        onBlur={() => handlePhoneBlur(idx)}
+                        placeholder={t("contacts.form.phoneNumberPlaceholder")}
+                        className={cn(
+                          "ps-10",
+                          numError &&
+                            "border-destructive focus-visible:ring-destructive",
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <FieldInlineError message={numError} />
+                </>
+              ) : null}
             </ListFieldCard>
           );
         })}

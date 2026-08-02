@@ -3587,6 +3587,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.validation.itemSocial": "الرابط الاجتماعي #{index}",
   "contacts.validation.itemRelationship": "العلاقة #{index}",
   "contacts.validation.itemGeneric": "العنصر #{index}",
+  "contacts.validation.mustBeUnique": "يجب أن يكون {label} فريدًا",
   "contacts.form.type": "النوع",
   "contacts.form.selectLabel": "اختر التصنيف",
   "contacts.form.addEmailAddress": "إضافة بريد إلكتروني",

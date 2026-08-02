@@ -10,6 +10,7 @@ export interface ContactBasicTabProps {
   formInstanceId: string;
   fields: Record<string, FieldDefinition[]>;
   isFieldEnabled: (tabId: string, fieldId: string) => boolean;
+  isFieldRequired: (tabId: string, fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
   cropSrc: string | null;
@@ -25,6 +26,7 @@ export function ContactBasicTab({
   formInstanceId,
   fields,
   isFieldEnabled,
+  isFieldRequired,
   getFieldError,
   updateDraft,
   cropSrc,
@@ -52,6 +54,7 @@ export function ContactBasicTab({
           contactDraft={contactDraft}
           formInstanceId={formInstanceId}
           isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
           getFieldError={getFieldError}
           updateDraft={updateDraft}
           genders={genders}

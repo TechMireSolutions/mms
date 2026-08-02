@@ -118,9 +118,17 @@ export function useModuleFieldsEditor({
         setTabFieldOrder,
         setTabFields,
         setTabFieldEnabled,
+        setTabFieldRequired,
+        setTabFieldUnique,
       ),
     handleEditField: (tabId: string, updatedField: FieldDefinition) =>
-      handleEditFieldImpl(tabId, updatedField, setTabFields),
+      handleEditFieldImpl(
+        tabId,
+        updatedField,
+        setTabFields,
+        setTabFieldRequired,
+        setTabFieldUnique,
+      ),
     handleDeleteField: (tabId: string, fieldId: string) =>
       handleDeleteFieldImpl(tabId, fieldId, setTabFields, setTabFieldOrder),
     handleAddTab: (label: string) => handleAddTabImpl(label, formTabs, tabHandlerSetters),

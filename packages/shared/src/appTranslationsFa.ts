@@ -1451,6 +1451,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.form.doNotContact": "انصراف از پیام‌های انبوه (تماس نگیرید)",
   "contacts.form.phonesLabel": "تلفن‌ها",
   "contacts.form.pleaseFixErrors": "لطفاً خطاهای زیر را برطرف کنید",
+  "contacts.validation.mustBeUnique": "{label} باید یکتا باشد",
   "contacts.form.profileHealth": "سلامت پروفایل",
   "contacts.form.progress": "میزان پیشرفت ثبت",
   "contacts.form.relationshipInstructions": "برای ترسیم لینک‌های خانوادگی، معرف‌ها و ارتباطات فامیلی، روابط را مشخص کنید.",

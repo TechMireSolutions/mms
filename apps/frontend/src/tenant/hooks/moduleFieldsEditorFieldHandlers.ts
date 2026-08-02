@@ -3,11 +3,47 @@ import { type FieldDefinition } from "@mms/shared";
 import { CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
 import { safeArray, syncOrder } from "./moduleFieldsEditorUtils";
 
+type StringSetMapSetter = Dispatch<SetStateAction<Record<string, Set<string>>>>;
+
+function syncFlagSet(
+  tabId: string,
+  fieldKey: string,
+  enabled: boolean,
+  setFlagSet: StringSetMapSetter,
+): void {
+  setFlagSet((current) => {
+    const next = new Set(current[tabId] ?? []);
+    if (enabled) next.add(fieldKey);
+    else next.delete(fieldKey);
+    return { ...current, [tabId]: next };
+  });
+}
+
+/** Keep existing Set membership for known keys; opt new keys in when `shouldAdd` is true. */
+function mergeNewKeysIntoFlagSet(
+  tabId: string,
+  newFields: Array<{ key: string }>,
+  setFlagSet: StringSetMapSetter,
+  shouldAdd: (field: { key: string }) => boolean,
+): void {
+  const newKeys = new Set(newFields.map((field) => field.key));
+  setFlagSet((current) => {
+    const previous = current[tabId] ?? new Set<string>();
+    const next = new Set([...previous].filter((key) => newKeys.has(key)));
+    for (const field of newFields) {
+      if (!previous.has(field.key) && shouldAdd(field)) {
+        next.add(field.key);
+      }
+    }
+    return { ...current, [tabId]: next };
+  });
+}
+
 export function toggleFieldEnabled(
   tabId: string,
   fieldId: string,
-  setTabFieldEnabled: Dispatch<SetStateAction<Record<string, Set<string>>>>,
-  setTabFieldRequired: Dispatch<SetStateAction<Record<string, Set<string>>>>,
+  setTabFieldEnabled: StringSetMapSetter,
+  setTabFieldRequired: StringSetMapSetter,
 ): void {
   setTabFieldEnabled((currentEnabledFields) => {
     const updatedFieldIds = new Set(currentEnabledFields[tabId]);
@@ -28,7 +64,7 @@ export function toggleFieldEnabled(
 export function toggleFieldRequired(
   tabId: string,
   fieldId: string,
-  setTabFieldRequired: Dispatch<SetStateAction<Record<string, Set<string>>>>,
+  setTabFieldRequired: StringSetMapSetter,
 ): void {
   setTabFieldRequired((currentRequiredFields) => {
     const updatedFieldIds = new Set(currentRequiredFields[tabId]);
@@ -44,7 +80,7 @@ export function toggleFieldRequired(
 export function toggleFieldUnique(
   tabId: string,
   fieldId: string,
-  setTabFieldUnique: Dispatch<SetStateAction<Record<string, Set<string>>>>,
+  setTabFieldUnique: StringSetMapSetter,
 ): void {
   setTabFieldUnique((currentUniqueFields) => {
     const updatedFieldIds = new Set(currentUniqueFields[tabId] || []);
@@ -73,7 +109,9 @@ export function handleCustomFieldsChange(
   newFields: CustomFieldConfig[],
   setTabFieldOrder: Dispatch<SetStateAction<Record<string, string[]>>>,
   setTabFields: Dispatch<SetStateAction<Record<string, FieldDefinition[]>>>,
-  setTabFieldEnabled: Dispatch<SetStateAction<Record<string, Set<string>>>>,
+  setTabFieldEnabled: StringSetMapSetter,
+  setTabFieldRequired: StringSetMapSetter,
+  setTabFieldUnique: StringSetMapSetter,
 ): void {
   const newKeys = newFields.map((field) => field.key);
   setTabFieldOrder((currentFieldOrder) => ({
@@ -84,25 +122,34 @@ export function handleCustomFieldsChange(
     ...currentTabFields,
     [tabId]: newFields as unknown as FieldDefinition[],
   }));
-  // Newly added keys are absent from the enabled Set; `Set.has` is false (not
-  // nullish), so buildFieldsMap would persist them as enabled:false. Opt new
-  // fields in unless the builder marked them disabled.
-  setTabFieldEnabled((currentEnabledFields) => {
-    const previous = currentEnabledFields[tabId] ?? new Set<string>();
-    const next = new Set(previous);
-    for (const field of newFields) {
-      if (!previous.has(field.key) && field.enabled !== false) {
-        next.add(field.key);
-      }
-    }
-    return { ...currentEnabledFields, [tabId]: next };
-  });
+  // Newly added keys are absent from flag Sets; `Set.has` is false (not nullish),
+  // so buildFieldsMap would persist them as enabled/required/unique:false.
+  mergeNewKeysIntoFlagSet(
+    tabId,
+    newFields,
+    setTabFieldEnabled,
+    (field) => (field as CustomFieldConfig).enabled !== false,
+  );
+  mergeNewKeysIntoFlagSet(
+    tabId,
+    newFields,
+    setTabFieldRequired,
+    (field) => Boolean((field as CustomFieldConfig).required),
+  );
+  mergeNewKeysIntoFlagSet(
+    tabId,
+    newFields,
+    setTabFieldUnique,
+    (field) => Boolean((field as CustomFieldConfig).unique),
+  );
 }
 
 export function handleEditField(
   tabId: string,
   updatedField: FieldDefinition,
   setTabFields: Dispatch<SetStateAction<Record<string, FieldDefinition[]>>>,
+  setTabFieldRequired: StringSetMapSetter,
+  setTabFieldUnique: StringSetMapSetter,
 ): void {
   setTabFields((currentTabFields) => ({
     ...currentTabFields,
@@ -110,6 +157,8 @@ export function handleEditField(
       field.key === updatedField.key ? updatedField : field
     ),
   }));
+  syncFlagSet(tabId, updatedField.key, Boolean(updatedField.required), setTabFieldRequired);
+  syncFlagSet(tabId, updatedField.key, Boolean(updatedField.unique), setTabFieldUnique);
 }
 
 export function handleDeleteField(

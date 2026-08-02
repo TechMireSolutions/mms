@@ -3731,6 +3731,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.validation.itemSocial": "Social link #{index}",
   "contacts.validation.itemRelationship": "Relationship #{index}",
   "contacts.validation.itemGeneric": "Item #{index}",
+  "contacts.validation.mustBeUnique": "{label} must be unique",
   "contacts.form.type": "Type",
   "contacts.form.selectLabel": "Select label",
   "contacts.form.addEmailAddress": "Add email address",

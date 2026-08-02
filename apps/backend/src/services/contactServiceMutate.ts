@@ -23,6 +23,7 @@ import {
 import {
   loadContactRuntimeDefaults,
 } from './contactServiceLoad.js';
+import { assertContactUniqueFields } from './contactUniqueValidationService.js';
 
 function stripClientSoftDeleteFields(contact: Contact): Contact {
   return stripContactClientSoftDeleteFields(contact as unknown as Record<string, unknown>) as Contact;
@@ -100,6 +101,8 @@ export async function prepareContactRecord(contact: Contact, id?: string | numbe
 export interface UpsertContactOptions {
   user?: User;
   canRestore?: boolean;
+  /** Accept-Language for unique-field conflict messages. */
+  language?: string;
 }
 
 export async function upsertContact(
@@ -117,8 +120,10 @@ export async function upsertContact(
     const created = !existing;
     const restoredFromDelete = existing && Boolean(existing.deletedAt);
 
-    const user = options && 'role' in options ? (options as User) : (options as UpsertContactOptions)?.user;
-    const explicitCanRestore = options && !('role' in options) ? (options as UpsertContactOptions)?.canRestore : undefined;
+    const opts = options && !('role' in options) ? (options as UpsertContactOptions) : undefined;
+    const user = options && 'role' in options ? (options as User) : opts?.user;
+    const explicitCanRestore = opts?.canRestore;
+    const language = opts?.language || 'en';
 
     if (restoredFromDelete) {
       if (explicitCanRestore === false) {
@@ -132,6 +137,7 @@ export async function upsertContact(
     const stripped = stripClientSoftDeleteFields(contact);
     const mergedInput = existing ? mergeContactPatch(existing, stripped) : stripped;
     const contactWithId = await prepareContactRecord(mergedInput, contact.id ?? existing?.id);
+    await assertContactUniqueFields(tenant, contactWithId, language);
     const saved: Contact = created
       ? contactWithId
       : {
@@ -148,7 +154,11 @@ export async function upsertContact(
   });
 }
 
-export async function updateContactById(id: string, contact: Contact): Promise<Contact | null> {
+export async function updateContactById(
+  id: string,
+  contact: Contact,
+  language = 'en',
+): Promise<Contact | null> {
   return runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return null;
@@ -158,6 +168,7 @@ export async function updateContactById(id: string, contact: Contact): Promise<C
     }
     const stripped = stripClientSoftDeleteFields({ ...contact, id });
     const contactWithId = await prepareContactRecord(mergeContactPatch(existing, stripped), id);
+    await assertContactUniqueFields(tenant, contactWithId, language);
     const saved: Contact = {
       ...contactWithId,
       id,
@@ -194,6 +205,8 @@ export async function mergeContactsById(
       ? { ...mergedInput, id: keepId }
       : mergeContactRecords(keep, other);
     const prepared = await prepareContactRecord(mergedSource, keepId);
+    // Exclude the contact being merged away — its values may move onto keep.
+    await assertContactUniqueFields(tenant, prepared, 'en', [deleteId]);
     const saved: Contact = {
       ...keep,
       ...prepared,

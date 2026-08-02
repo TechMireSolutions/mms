@@ -1,6 +1,7 @@
 /** Helpers for contact form custom (non-seed) fields. */
 import { INITIAL_FIELD_SEED } from './contactFieldSeed.js';
 import { REMOVED_FORM_FIELD_KEYS } from './contactTabRegistry.js';
+import type { Contact } from './contactEntityTypes.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 
 /** Keys owned by static form chrome / list-tab structure (INITIAL_FIELD_SEED). */
@@ -51,4 +52,28 @@ export function listEnabledCustomContactFormFields(
 /** True when `fieldId` is part of the static form seed for `tabId`. */
 export function isContactSystemFormField(tabId: string, fieldId: string): boolean {
   return (INITIAL_FIELD_SEED[tabId] ?? []).some((field) => field.key === fieldId);
+}
+
+/**
+ * Seeds Setup `defaultValue` for enabled scalar custom fields on new contacts only.
+ * Does not overwrite keys already present on the draft (including `initialDraft`).
+ */
+export function applyContactScalarCustomFieldDefaults(
+  draft: Partial<Contact>,
+  fields: Record<string, FieldDefinition[]> | undefined,
+): Partial<Contact> {
+  if (!fields) return draft;
+  if (draft.id != null && String(draft.id).length > 0) return draft;
+
+  const next: Record<string, unknown> = { ...draft };
+  const customFields = [
+    ...listEnabledCustomContactFormFields(fields, "basic"),
+    ...listEnabledCustomContactFormFields(fields, "custom"),
+  ];
+  for (const field of customFields) {
+    if (Object.prototype.hasOwnProperty.call(next, field.key)) continue;
+    if (field.defaultValue === undefined || field.defaultValue === null) continue;
+    next[field.key] = field.defaultValue;
+  }
+  return next as Partial<Contact>;
 }
