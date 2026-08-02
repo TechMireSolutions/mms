@@ -15,7 +15,8 @@ Path alias: `@/` → `apps/frontend/src/`
 
 ```
 main.tsx → App.tsx → AppProviders (providers/AppProviders.tsx)
-  RootErrorBoundary → AuthProvider → QueryClientProvider → Router → … → ContactConfigProvider
+  RootErrorBoundary → AuthProvider → QueryClientProvider → Router → …
+    → TenantScopedProviders (ContactConfigProvider on tenant host only)
     AuthenticatedApp → RouterBridge + Suspense → HostRoutes (apex OR tenant tree)
 ```
 
@@ -120,7 +121,7 @@ New section checklist: add to `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SEC
 
 ## Provider tree (do not break)
 
-`providers/AppProviders.tsx`: RootErrorBoundary → AuthProvider → QueryClientProvider → Router → BrandingPaletteProvider → TenantProvider → PlatformAuthProvider → ContactConfigProvider
+`providers/AppProviders.tsx`: RootErrorBoundary → AuthProvider → QueryClientProvider → Router → BrandingPaletteProvider → TenantProvider → TranslationProvider → PlatformAuthProvider → `TenantScopedProviders` (`ContactConfigProvider` on tenant host only; skipped on apex)
 
 Never nest `ContactConfigProvider` on child pages.
 
@@ -142,14 +143,14 @@ Never nest `ContactConfigProvider` on child pages.
 | `lib/routing/routePrefetch.ts` | Lazy route chunk warmup |
 | `lib/data/*Data.ts` | Module seed/mock collections |
 | `lib/notify.ts` | Toasts — sole user feedback API |
-| `lib/query-client.ts` | TanStack Query defaults |
+| `lib/queryClient.ts` | TanStack Query defaults |
 
 ## Large files — split pattern
 
 | Concern | Location |
 |---------|----------|
-| Contact validation/schema | `lib/contactConfig/validationSchema.ts` |
-| Contact profile metrics | `lib/contactConfig/profileMetrics.ts` |
+| Contact validation | `lib/contacts/useContactValidation.ts` |
+| Contact command/report metrics | `useContactsMetrics` / `useContactsReportAnalytics` in `tenant/features/contacts/hooks/` (facade: `@/tenant/hooks/collections/contacts`) |
 | Widget types/colors | `components/reports/pinnedWidgets/types.ts` |
 | Widget data utils | `components/reports/pinnedWidgets/widgetDataUtils.ts` |
 

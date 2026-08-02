@@ -142,7 +142,6 @@ export function buildContactsPageStateReturn({
     allContactsForLinks: directory.allContactsForLinks,
     selectedTargets,
     shownCount: directory.shownCount,
-    workTruncated: directory.workTruncated,
     pendingCount,
     conflictCount,
     flushing,

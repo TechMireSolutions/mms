@@ -29,7 +29,6 @@ export type UseContactsPageTabPanelPropsInput = {
   viewMode: ContactsWorkViewMode;
   setViewMode: (mode: ContactsWorkViewMode) => void;
   shownCount: number;
-  workTruncated: boolean;
   selected: Array<string | number>;
   selectedTargets: {
     waTargets: Contact[];
@@ -86,7 +85,6 @@ export function buildContactsPageTabPanelProps(
     viewMode: input.viewMode,
     onViewModeChange: input.setViewMode,
     shownCount: input.shownCount,
-    workTruncated: input.workTruncated,
     selected: input.selected,
     onClearSelection: () => input.setSelected([]),
     selectedTargets: input.selectedTargets,

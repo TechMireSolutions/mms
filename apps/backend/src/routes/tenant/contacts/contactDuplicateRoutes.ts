@@ -5,7 +5,10 @@ import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { countContactDuplicateMatches } from '../../../services/contactDuplicateScanService.js';
-import { enqueueBackgroundJob } from '../../../services/backgroundJobWorkerService.js';
+import {
+  enqueueBackgroundJob,
+  getUserBackgroundJob,
+} from '../../../services/backgroundJobWorkerService.js';
 import {
   loadContactDuplicatePairsPage,
   prepareContactRecord,
@@ -61,8 +64,13 @@ export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
     const tenant = getRequestTenant()!;
-    const jobId = crypto.randomUUID();
     const userId = String(user.id);
+    const jobId = parsed.data.idempotencyKey?.trim() || crypto.randomUUID();
+    const existing = await getUserBackgroundJob(userId, jobId);
+    if (existing) {
+      return reply.status(202).send({ job: existing });
+    }
+
     const label = parsed.data.label?.trim() || 'Scanning for duplicate contacts…';
     const runningJob: BackgroundJobRecord = {
       id: jobId,

@@ -70,7 +70,6 @@ export function useContactsPagePropBundles({
     viewMode: state.viewMode,
     setViewMode: state.setViewMode,
     shownCount: state.shownCount,
-    workTruncated: state.workTruncated,
     selected: state.selected,
     selectedTargets: state.selectedTargets,
     bulkActions,

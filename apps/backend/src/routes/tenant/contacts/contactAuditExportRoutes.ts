@@ -4,7 +4,10 @@ import { CONTACTS_MODULE_MANIFEST, getDisplayName, roleHasPermission } from '@mm
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { enqueueBackgroundJob } from '../../../services/backgroundJobWorkerService.js';
+import {
+  enqueueBackgroundJob,
+  getUserBackgroundJob,
+} from '../../../services/backgroundJobWorkerService.js';
 import { canReadContacts, canWriteContacts, canDeleteContacts } from '../../../services/rbacService.js';
 import { mergeContactsById } from '../../../services/contactService.js';
 import {
@@ -15,6 +18,17 @@ import {
 } from '../../../validation/contactSchemas.js';
 import { auditContact, sanitizeOneForUser } from './contactRouteHelpers.js';
 
+function normalizeExportQuery(
+  query: Record<string, unknown> | undefined,
+  allowDeleted: boolean,
+): Record<string, unknown> {
+  const next = { ...(query ?? {}) };
+  if (!allowDeleted) {
+    delete next.includeDeleted;
+  }
+  return next;
+}
+
 /** Contact CSV export queue, merge, and audit logging routes. */
 export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/export/csv', async (request, reply) => {
@@ -24,9 +38,20 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
     const parsed = parseRequest(contactsCsvExportBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
+    const allowDeleted = canDeleteContacts(user);
+    const query = normalizeExportQuery(
+      parsed.data.query as Record<string, unknown> | undefined,
+      allowDeleted,
+    );
+
     const tenant = getRequestTenant()!;
-    const jobId = crypto.randomUUID();
     const userId = String(user.id);
+    const jobId = parsed.data.idempotencyKey?.trim() || crypto.randomUUID();
+    const existing = await getUserBackgroundJob(userId, jobId);
+    if (existing) {
+      return reply.status(202).send({ job: existing });
+    }
+
     const label = parsed.data.label?.trim() || 'Exporting contacts…';
     const runningJob: BackgroundJobRecord = {
       id: jobId,
@@ -38,11 +63,12 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
     };
 
     const job = await enqueueBackgroundJob(tenant, userId, runningJob, {
-      query: parsed.data.query ?? {},
+      query,
       columns: parsed.data.columns,
       filename: parsed.data.filename,
       label,
       viewerRole: user.role,
+      allowDeleted,
     });
     await auditContact(user, 'contact.export.queue', `Queued contact export "${label}"`, jobId);
     return reply.status(202).send({ job });

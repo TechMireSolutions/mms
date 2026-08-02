@@ -34,7 +34,6 @@ export function useContactsPageTabPanelProps(
       input.viewMode,
       input.setViewMode,
       input.shownCount,
-      input.workTruncated,
       input.selected,
       input.selectedTargets,
       input.bulkActions,

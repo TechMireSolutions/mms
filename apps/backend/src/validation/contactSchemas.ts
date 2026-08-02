@@ -97,10 +97,23 @@ export const contactsCsvExportBodySchema = z.object({
   columns: z.array(exportColumnSchema).max(50).optional(),
   filename: z.string().min(1).max(200).optional(),
   label: z.string().min(1).max(500).optional(),
+  /** Client retry key — reused as the background job id when provided. */
+  idempotencyKey: z
+    .string()
+    .min(8)
+    .max(128)
+    .regex(/^[a-zA-Z0-9_-]+$/)
+    .optional(),
 });
 
 export const contactsDuplicateScanBodySchema = z.object({
   label: z.string().min(1).max(500).optional(),
+  idempotencyKey: z
+    .string()
+    .min(8)
+    .max(128)
+    .regex(/^[a-zA-Z0-9_-]+$/)
+    .optional(),
 });
 
 export const contactsReportAnalyticsQuerySchema = z.object({

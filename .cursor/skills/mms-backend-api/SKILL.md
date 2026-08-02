@@ -126,9 +126,10 @@ Do not use `authenticateTenant` on apex-only public routes.
 `/api/contacts` full REST. On create/update:
 
 - E.164 normalize, title-case, persist via contacts **repository** (typed `contacts` table + FORCE RLS)
-- Runtime dial/label defaults from `loadContactRuntimeDefaults` (prefs `defaultCountry` + `countryCodes` / `phoneLabels`)
+- Runtime dial/label defaults from `loadContactRuntimeDefaults` (prefs `defaultCountry` + collections `countryCodes` / `phoneLabels` / `emailLabels`)
 - `handleContactSaveOrUpdate` enqueues WhatsApp check
-- Bulk delete bodies use shared `bulkIdsBodySchema` (`.max(500)`)
+- Bulk delete/restore bodies use shared `bulkIdsBodySchema` (`.max(500)`)
+- List/filter query SSOT: `@mms/shared` `contactsListQuerySchema` / `paginateContacts` (includes `hasEmail` / `hasPhone` / `hasReachable` for Messaging “select all with email” etc.) — do not fork flags per route
 
 `whatsAppService` → `whatsAppQueue` → `PuppeteerWhatsAppProvider` (dev only; no CI).
 
@@ -141,10 +142,10 @@ Do not use `authenticateTenant` on apex-only public routes.
 - No secrets in logs
 - `unknown` + narrowing — not `any`
 
-## Dynamic Form Backend Architecture
+## Custom-field / JSONB write architecture
 
-All backend API routes, repository queries, validation, and schema definitions for dynamic forms must follow **`mms-form-architecture.mdc`** (or the corresponding Cursor rule `mms-form-architecture.mdc`). Specifically:
-- **Fastify Zod Asymmetry:** Builder routes use `zodToJsonSchema` for AJV performance; dynamic data entry routes bypass AJV and run Zod validation manually inside the handler.
+Entity forms are static `FormModal` + shared Zod (no blueprint compilers). Custom `custom_data` / GIN / SET LOCAL / `COALESCE ||` merge rules still follow **`mms-form-architecture.mdc`** and **`mms-data-layer.mdc`**:
+- **Fastify Zod Asymmetry:** Builder routes use `zodToJsonSchema` for AJV performance; custom-data entry routes bypass AJV and run Zod validation manually inside the handler.
 - **ORM & GIN Indexes:** Custom data uses native `JSONB` columns with PostgreSQL GIN indexing.
 - **Poisoning Prevention:** Row-level security config parameters must be set strictly inside transaction scopes (`SET LOCAL`).
 - **Data Destruction Prevention:** Payload updates use PostgreSQL `||` with `COALESCE` to prevent overwriting/deleting fields the user is unauthorized to write.

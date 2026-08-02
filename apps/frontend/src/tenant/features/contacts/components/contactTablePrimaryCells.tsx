@@ -110,16 +110,13 @@ export function renderContactPhoneCell({
                   title={t("contacts.whatsapp")}
                   aria-label={t("contacts.whatsapp")}
                   variant="ghost"
-                  className="h-6 w-6 min-h-6 min-w-6 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-success hover:text-success/80 cursor-pointer"
+                  className="min-h-11 min-w-11 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-success hover:text-success/80 cursor-pointer"
                   type="button"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                 </Button>
               ) : null}
-              <CopyBtn
-                text={primaryPhone}
-                className="h-6 w-6 min-h-6 min-w-6 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-muted-foreground hover:text-foreground cursor-pointer"
-              />
+              <CopyBtn text={primaryPhone} />
             </div>
           </>
         ) : (
@@ -146,10 +143,7 @@ export function renderContactEmailCell({
         <span className="text-sm text-muted-foreground">{primaryEmail || t("contacts.table.emptyDash")}</span>
         {primaryEmail && (
           <div className="flex items-center gap-1">
-            <CopyBtn
-              text={primaryEmail}
-              className="h-6 w-6 min-h-6 min-w-6 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-muted-foreground hover:text-foreground cursor-pointer"
-            />
+            <CopyBtn text={primaryEmail} />
           </div>
         )}
       </div>

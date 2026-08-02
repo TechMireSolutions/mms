@@ -57,7 +57,6 @@ export function useContactsDirectory({
   const contacts = useMemo(() => rawContacts || [], [rawContacts]);
   const workContacts = workPageData?.contacts ?? [];
   const shownCount = workPageData?.total ?? 0;
-  const workTruncated = useServerWork && Boolean(workPageData?.hasMore);
 
   const allContactsForLinks = useContactsDirectoryLinks({
     needsFullContactsList,
@@ -98,7 +97,6 @@ export function useContactsDirectory({
     isWorkFetching,
     workContacts,
     shownCount,
-    workTruncated,
     allContactsForLinks,
     hasActiveFilters: filters.hasActiveFilters,
     activeFilterCount: filters.activeFilterCount,

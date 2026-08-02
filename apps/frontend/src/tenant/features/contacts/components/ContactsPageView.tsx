@@ -17,6 +17,7 @@ export function ContactsPageView({
   effectiveTab,
   setActiveTab,
   canExport,
+  canRead,
   canWrite,
   viewingDeleted,
   openingDuplicates,
@@ -45,6 +46,7 @@ export function ContactsPageView({
       headerActions={
         <ContactsPageHeaderActions
           canExport={canExport}
+          canRead={canRead}
           canWrite={canWrite}
           viewingDeleted={viewingDeleted}
           openingDuplicates={openingDuplicates}
@@ -60,7 +62,9 @@ export function ContactsPageView({
           conflictCount={conflictCount}
           flushing={flushing}
           onFlushPending={() => void flush()}
-          onOpenDuplicates={() => void handleOpenDuplicates()}
+          onOpenDuplicates={
+            canRead && !viewingDeleted ? () => void handleOpenDuplicates() : undefined
+          }
           onReviewConflicts={openConflictReview}
         />
       }

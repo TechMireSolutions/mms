@@ -3988,7 +3988,6 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.sync.conflictServer": "سرور",
   "contacts.sync.conflictField": "فیلڈ",
   "contacts.sync.conflictNoServer": "سرور پر رابطہ نہیں ملا (شاید حذف ہو چکا)۔",
-  "contacts.workTruncated": "پہلے {limit} از {total} دکھائے جا رہے ہیں — فلٹر تنگ کریں یا صفحہ بندی کے لیے فہرست دیکھیں۔",
   "contacts.jobs.dismiss": "کام ہٹائیں",
   "contacts.jobs.clearFailed": "ناکام کام صاف کریں",
   "contacts.jobs.exportLabel": "{count} رابطے برآمد ہو رہے ہیں…",

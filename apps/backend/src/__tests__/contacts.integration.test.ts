@@ -30,6 +30,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 const mockLoadContacts = vi.fn();
 const mockLoadContactsPage = vi.fn();
+const mockCountContacts = vi.fn();
 const mockGetContactById = vi.fn();
 const mockUpsertContact = vi.fn();
 const mockUpdateContactById = vi.fn();
@@ -49,10 +50,12 @@ const mockDeleteContactsSavedReport = vi.fn();
 const mockTouchContactsSavedReportRun = vi.fn();
 const mockRecordAudit = vi.fn();
 const mockEnqueueBackgroundJob = vi.fn();
+const mockGetUserBackgroundJob = vi.fn();
 
 vi.mock('../services/contactService.js', () => ({
   loadContacts: (...args: unknown[]) => mockLoadContacts(...args),
   loadContactsPage: (...args: unknown[]) => mockLoadContactsPage(...args),
+  countContacts: (...args: unknown[]) => mockCountContacts(...args),
   getContactById: (...args: unknown[]) => mockGetContactById(...args),
   upsertContact: (...args: unknown[]) => mockUpsertContact(...args),
   updateContactById: (...args: unknown[]) => mockUpdateContactById(...args),
@@ -103,6 +106,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
   return {
     ...(actual as object),
     enqueueBackgroundJob: (...args: unknown[]) => mockEnqueueBackgroundJob(...args),
+    getUserBackgroundJob: (...args: unknown[]) => mockGetUserBackgroundJob(...args),
   };
 });
 
@@ -123,6 +127,7 @@ describe('contacts REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     mockLoadContacts.mockReset().mockResolvedValue([sampleContact]);
+    mockCountContacts.mockReset().mockResolvedValue(1);
     mockGetContactById.mockReset().mockResolvedValue(sampleContact);
     mockLoadContactsPage.mockReset().mockResolvedValue({
       contacts: [sampleContact],
@@ -163,6 +168,7 @@ describe('contacts REST routes', () => {
       label: 'Contacts CSV',
       createdAt: '2026-06-21T00:00:00.000Z',
     });
+    mockGetUserBackgroundJob.mockReset().mockResolvedValue(null);
     mockTouchContactsSavedReportRun.mockReset().mockResolvedValue({
       id: 'csr_test',
       name: 'Leads',
@@ -203,7 +209,7 @@ describe('contacts REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/contacts lists contacts for authorized roles', async () => {
+  it('GET /api/contacts lists a page for authorized roles', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
@@ -214,8 +220,16 @@ describe('contacts REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ contacts: [sampleContact] });
-    expect(mockLoadContacts).toHaveBeenCalled();
+    expect(res.json()).toEqual({
+      contacts: [sampleContact],
+      total: 1,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+    expect(mockLoadContactsPage).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, includeDeleted: false }),
+    );
     await app.close();
   });
 
@@ -231,6 +245,7 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ count: 1 });
+    expect(mockCountContacts).toHaveBeenCalled();
     await app.close();
   });
 
@@ -281,7 +296,13 @@ describe('contacts REST routes', () => {
 
   it('GET /api/contacts?includeDeleted=true lists deleted for admin', async () => {
     const deletedContact = { ...sampleContact, deletedAt: '2026-01-02T00:00:00.000Z' };
-    mockLoadContacts.mockResolvedValueOnce([deletedContact]);
+    mockLoadContactsPage.mockResolvedValueOnce({
+      contacts: [deletedContact],
+      total: 1,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
@@ -292,8 +313,16 @@ describe('contacts REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ contacts: [deletedContact] });
-    expect(mockLoadContacts).toHaveBeenCalledWith({ includeDeleted: true });
+    expect(res.json()).toEqual({
+      contacts: [deletedContact],
+      total: 1,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+    expect(mockLoadContactsPage).toHaveBeenCalledWith(
+      expect.objectContaining({ includeDeleted: true, page: 1 }),
+    );
     await app.close();
   });
 
@@ -529,6 +558,7 @@ describe('contacts REST routes', () => {
         columns: [{ id: 'name', label: 'Name' }],
         label: 'Contacts CSV',
         viewerRole: 'teacher',
+        allowDeleted: false,
       }),
     );
     expect(mockRecordAudit).toHaveBeenCalledWith(expect.objectContaining({
@@ -712,6 +742,78 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockRecordAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'contact.setup' }));
+    await app.close();
+  });
+
+  it('GET /api/contacts returns 403 for wrong tenant host', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/contacts?page=1',
+      headers: {
+        host: 'other.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    await app.close();
+  });
+
+  it('POST /api/contacts/export/csv strips includeDeleted without contacts.delete', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: {
+        label: 'Trash CSV',
+        query: { includeDeleted: 'true', search: 'ali' },
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      'u-teacher',
+      expect.objectContaining({ kind: 'export' }),
+      expect.objectContaining({
+        allowDeleted: false,
+        query: { search: 'ali' },
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/db/collections/contacts rejects REST-only entity ghost writes', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/db/collections/contacts',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: [{ id: 'ghost', firstName: 'Ghost', lastName: 'Contact' }],
+    });
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toMatchObject({ type: 'not_found' });
+    await app.close();
+  });
+
+  it('GET /api/db/collections/contacts rejects REST-only entity ghost reads', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/db/collections/contacts',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toMatchObject({ type: 'not_found' });
     await app.close();
   });
 });

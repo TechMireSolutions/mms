@@ -12,6 +12,8 @@ export interface ContactsExportJobPayload {
   filename?: string;
   label?: string;
   viewerRole: string;
+  /** Enqueue-time privilege — runner must not honor includeDeleted without this. */
+  allowDeleted?: boolean;
 }
 
 export function registerDefaultBackgroundJobRunners(): void {
@@ -24,6 +26,7 @@ export function registerDefaultBackgroundJobRunners(): void {
       columns: exportPayload.columns,
       filename: exportPayload.filename,
       viewerRole: exportPayload.viewerRole,
+      allowDeleted: exportPayload.allowDeleted === true,
     });
     await saveExportArtifact(ctx.userId, ctx.jobId, csv, filename);
     await ctx.complete({

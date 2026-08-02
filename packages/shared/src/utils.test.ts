@@ -169,6 +169,22 @@ describe("applyTitleCaseRecursive", () => {
     expect(applyTitleCaseRecursive(input)).toEqual(expected);
   });
 
+  it("ignores soft-delete audit keys", () => {
+    const input = {
+      deletedAt: "2026-01-01T00:00:00.000Z",
+      deletedBy: "u-admin",
+      deletionReason: "duplicate entry",
+      name: "should be changed",
+    };
+    const expected = {
+      deletedAt: "2026-01-01T00:00:00.000Z",
+      deletedBy: "u-admin",
+      deletionReason: "duplicate entry",
+      name: "Should Be Changed",
+    };
+    expect(applyTitleCaseRecursive(input)).toEqual(expected);
+  });
+
   it("ignores non-eligible strings like URLs, phone numbers, and dates", () => {
     const input = {
       website: "https://example.com/some-page",

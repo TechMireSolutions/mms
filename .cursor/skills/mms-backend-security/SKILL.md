@@ -74,7 +74,7 @@ CORS: `credentials: true`; production requires explicit `ALLOWED_ORIGIN`.
 - [ ] JWT subdomain matches resolved tenant
 - [ ] Apex routes do not expose other tenants' data
 - [ ] Tests use `host: '{subdomain}.localhost'` in `inject()`
-- [ ] REST routes use `dbSyncService` so tenant prefix is applied automatically
+- [ ] Typed REST routes use repositories + `withTenantTransaction` / SET LOCAL RLS (not `dbSyncService`); `dbSyncService` only for `/api/db` JSON documents
 
 ## Secrets & logging
 

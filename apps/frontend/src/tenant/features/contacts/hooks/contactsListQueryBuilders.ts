@@ -107,7 +107,9 @@ export async function fetchAllContactsForQuery(
     all.push(...contactsPage.contacts);
     total = contactsPage.total;
     onProgress?.(all.length, total);
-    if (!contactsPage.hasMore || page >= 200) break;
+    if (!contactsPage.hasMore || all.length >= total) break;
+    const maxPages = Math.max(1, Math.ceil(Math.max(total, 1) / limit) + 2);
+    if (page >= maxPages) break;
     page += 1;
   }
 
@@ -120,7 +122,5 @@ export async function fetchContactById(contactId: string): Promise<Contact> {
 }
 
 export async function fetchContacts(includeDeleted = false): Promise<Contact[]> {
-  const url = includeDeleted ? `${CONTACTS_API}?includeDeleted=true` : CONTACTS_API;
-  const contactsResponse = await apiJson<{ contacts: Contact[] }>(url);
-  return contactsResponse.contacts;
+  return fetchAllContactsForQuery({ includeDeleted });
 }

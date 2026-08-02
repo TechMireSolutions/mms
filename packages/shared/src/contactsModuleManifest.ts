@@ -143,7 +143,7 @@ export const CONTACTS_MODULE_MANIFEST = {
     reports: 'contacts.read',
   } satisfies Record<string, Permission>,
   work: {
-    directoryViews: ['list', 'cards'] as const,
+    directoryViews: ['table', 'cards'] as const,
     bulkActions: ['whatsapp', 'sms', 'export', 'delete'] as const,
     integrityTools: ['duplicates'] as const,
   },
@@ -157,6 +157,7 @@ export const CONTACTS_MODULE_MANIFEST = {
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,
+    /** Active Work/server CSV exports exclude trash; Work trash UI omits export CTAs. */
     exportsIncludeDeleted: false,
     duplicatesIncludeDeleted: false,
     captureDeletionReason: true,

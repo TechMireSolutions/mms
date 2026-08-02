@@ -11,13 +11,13 @@ import {
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { registerDefaultBackgroundJobRunners } from '../../services/backgroundJobRunnerService.js';
 import {
-  loadContacts,
   loadContactsPage,
   loadContactsCommandMetrics,
   loadContactsReportAnalytics,
   loadContactsWidgetAggregates,
   loadContactsByIds,
   loadContactFieldUsageCount,
+  countContacts,
 } from '../../services/contactService.js';
 import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
 import {
@@ -63,7 +63,6 @@ export async function contactRoutes(
     errorMessagePrefix: 'contacts',
     canWriteDeletedCheck: canDeleteContacts,
     loadPageFn: (query) => loadContactsPage(query),
-    loadAllFn: (options) => loadContacts(options),
     responseTransform: async (result: Contact[] | ContactsListPageResult, user) => {
       if (isContactsPageResult(result)) {
         return {
@@ -77,7 +76,7 @@ export async function contactRoutes(
 
   registerCountRoute(fastify, {
     collection: 'contacts',
-    loadAllFn: loadContacts,
+    loadCountFn: () => countContacts(),
     errorMessagePrefix: 'contacts',
   });
 

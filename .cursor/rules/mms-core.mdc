@@ -89,7 +89,7 @@ Shared Zod schemas live in `@mms/shared`. FE forms and BE `parseRequest` must co
 ### Anti-patterns
 
 ```tsx
-// ❌ Nested ContactConfigProvider — mount once in App.tsx only
+// ❌ Nested ContactConfigProvider — mount once in TenantScopedProviders only
 <ContactConfigProvider><ContactsPage /></ContactConfigProvider>
 
 // ❌ Frontend importing backend

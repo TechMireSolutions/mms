@@ -1884,7 +1884,6 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.whatsapp.template": "قالب پیام",
   "contacts.whatsapp.typeMessagePlaceholder": "متن پیام خود را در اینجا بنویسید...",
   "contacts.whatsappBulk": "واتس‌اپ ({count})",
-  "contacts.workTruncated": "در حال نمایش اولین {limit} مورد از کل {total} مورد — فیلترها را دقیق‌تر کنید یا برای صفحه‌بندی به نمای لیستی بروید.",
   "dashboard.accountantOverview": "وصول شهریه و خلاصه دفتر کل امروز.",
   "dashboard.activeData": "داده‌های فعال",
   "dashboard.addMetricCard": "افزودن کارت شاخص",

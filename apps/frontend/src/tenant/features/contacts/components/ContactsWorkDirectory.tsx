@@ -2,7 +2,6 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolbar";
 import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
 import { ContactsWorkListBody } from "@/tenant/features/contacts/components/ContactsWorkListBody";
-import { ContactsWorkTruncatedBanner } from "@/tenant/features/contacts/components/ContactsWorkTruncatedBanner";
 import type { ContactsWorkDirectoryProps } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
 
 export type { ContactsWorkDirectoryProps } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
@@ -25,7 +24,6 @@ export function ContactsWorkDirectory({
   viewMode,
   onViewModeChange,
   shownCount,
-  workTruncated,
   selected,
   onClearSelection,
   selectedTargets,
@@ -74,8 +72,6 @@ export function ContactsWorkDirectory({
           shownCount={shownCount}
         />
       </ErrorBoundary>
-
-      {workTruncated && <ContactsWorkTruncatedBanner shownCount={shownCount} />}
 
       <ContactsBulkActionBar
         selectedCount={selected.length}

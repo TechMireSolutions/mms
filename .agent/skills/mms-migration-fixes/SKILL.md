@@ -13,7 +13,7 @@ Only implement items **in scope** for the current task. Full register: `.cursor/
 |------|------------|
 | Auth seeds shape | `StoredUser` with `role` + `passwordHash` |
 | RBAC on `/api/db/*` writes | `rbacService` |
-| Nested `ContactConfigProvider` | Single mount in `App.tsx` |
+| Nested `ContactConfigProvider` | Single mount in `TenantScopedProviders` (tenant host) |
 | JWT localStorage-only | httpOnly cookies; `apiClient` cookie-only (`credentials: 'include'`) |
 | Tenant JWT binding | `authenticateTenant` middleware |
 | Bulk sync open download | Admin-only `canDownloadBulkSync` |

@@ -4,6 +4,7 @@ import type { Contact } from '@mms/shared';
 const mockFindContactById = vi.fn();
 const mockFindContactsByIds = vi.fn();
 const mockListContactsByWorkspace = vi.fn();
+const mockListContactsPage = vi.fn();
 const mockSaveContact = vi.fn();
 const mockBulkSaveContacts = vi.fn();
 const mockGetRequestTenant = vi.fn();
@@ -11,6 +12,7 @@ const mockInvalidateDuplicateScanCache = vi.fn();
 
 vi.mock('../db/repositories/contactRepository.js', () => ({
   listContactsByWorkspace: (...args: unknown[]) => mockListContactsByWorkspace(...args),
+  listContactsPage: (...args: unknown[]) => mockListContactsPage(...args),
   findContactById: (...args: unknown[]) => mockFindContactById(...args),
   saveContact: (...args: unknown[]) => mockSaveContact(...args),
   findContactsByIds: (...args: unknown[]) => mockFindContactsByIds(...args),
@@ -38,7 +40,7 @@ vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
 
-import { loadContactsPage, updateContactById, upsertContact } from '../services/contactService.js';
+import { loadContactsPage, updateContactById, upsertContact, bulkSoftDeleteContacts } from '../services/contactService.js';
 import { applyContactRelationshipInference } from '../services/contactRelationshipInferenceService.js';
 
 
@@ -72,6 +74,13 @@ describe('contactService relationship reciprocal mapping', () => {
     vi.clearAllMocks();
     mockGetRequestTenant.mockReturnValue('demo');
     mockListContactsByWorkspace.mockResolvedValue([]);
+    mockListContactsPage.mockResolvedValue({
+      contacts: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
     mockFindContactById.mockResolvedValue(null);
     mockFindContactsByIds.mockResolvedValue([]);
     mockSaveContact.mockResolvedValue(undefined);
@@ -80,18 +89,20 @@ describe('contactService relationship reciprocal mapping', () => {
   });
 
   it('returns only deleted contacts for trash pages', async () => {
-    mockListContactsByWorkspace.mockImplementation((_tenant: string, options?: { deleted?: string }) => {
-      if (options?.deleted === 'deleted') {
-        return Promise.resolve([
-          contact({ id: 'deleted', deletedAt: '2026-07-27T00:00:00.000Z' }),
-        ]);
-      }
-      return Promise.resolve([contact({ id: 'active' })]);
+    mockListContactsPage.mockResolvedValue({
+      contacts: [contact({ id: 'deleted', deletedAt: '2026-07-27T00:00:00.000Z' })],
+      total: 1,
+      page: 1,
+      limit: 50,
+      hasMore: false,
     });
 
     const page = await loadContactsPage({ page: 1, limit: 50, includeDeleted: true });
 
-    expect(mockListContactsByWorkspace).toHaveBeenCalledWith('demo', { deleted: 'deleted' });
+    expect(mockListContactsPage).toHaveBeenCalledWith(
+      'demo',
+      expect.objectContaining({ page: 1, limit: 50, includeDeleted: true }),
+    );
     expect(page.contacts.map((entry) => entry.id)).toEqual(['deleted']);
     expect(page.total).toBe(1);
   });
@@ -733,6 +744,25 @@ describe('contactService relationship reciprocal mapping', () => {
         deletedBy: 'attacker',
         deletionReason: 'forged',
       }),
+    );
+  });
+
+  it('soft-delete bulkSave includes deletedBy and deletionReason for column sync', async () => {
+    mockFindContactsByIds.mockResolvedValue([contact({ id: 'a', firstName: 'Ahmed' })]);
+
+    const result = await bulkSoftDeleteContacts(['a'], 'u-admin', 'Duplicate entry');
+
+    expect(result).toEqual({ succeeded: 1, failed: 0 });
+    expect(mockBulkSaveContacts).toHaveBeenCalledWith(
+      'demo',
+      [
+        expect.objectContaining({
+          id: 'a',
+          deletedBy: 'u-admin',
+          deletionReason: 'Duplicate entry',
+          deletedAt: expect.any(String),
+        }),
+      ],
     );
   });
 });

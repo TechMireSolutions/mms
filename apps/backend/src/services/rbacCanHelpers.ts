@@ -96,6 +96,9 @@ export function canDeleteCollection(user: User, collectionName: string): boolean
   if (!user || !user.role) {
     return false;
   }
+  if (collectionName === 'contacts') {
+    return canDeleteContacts(user);
+  }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
   }

@@ -26,7 +26,8 @@ export const contactSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     if (!params.ok) return replyValidationError(reply, params.message);
 
     const body = parseRequest(contactDeleteBodySchema, request.body ?? {});
-    const deletionReason = body.ok ? body.data.deletionReason : undefined;
+    if (!body.ok) return replyValidationError(reply, body.message);
+    const deletionReason = body.data.deletionReason;
 
     try {
       const deleted = await softDeleteContactById(params.data.id, user.id, deletionReason);

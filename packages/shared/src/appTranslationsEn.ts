@@ -4134,7 +4134,6 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.sync.conflictServer": "Server",
   "contacts.sync.conflictField": "Field",
   "contacts.sync.conflictNoServer": "Contact not found on server (may have been deleted).",
-  "contacts.workTruncated": "Showing first {limit} of {total} matches — refine filters or switch to list view for paging.",
   "contacts.jobs.dismiss": "Dismiss job",
   "contacts.jobs.clearFailed": "Clear failed jobs",
   "contacts.jobs.exportLabel": "Exporting {count} contacts…",

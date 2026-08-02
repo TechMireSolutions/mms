@@ -29,6 +29,13 @@
       "when": 1785490000000,
       "tag": "0003_platform_db_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785669600000,
+      "tag": "0004_contacts_soft_delete_audit",
+      "breakpoints": true
     }
   ]
 }

@@ -4,7 +4,6 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { notify } from "@/lib/notify";
-import { fetchAllContactsForQuery } from "@/tenant/features/contacts/hooks/useContacts";
 import { safeAudit } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
 import { runContactsCsvExport } from "@/tenant/features/contacts/hooks/runContactsCsvExport";
 
@@ -64,26 +63,9 @@ export function useContactsExportActions({
   );
 
   const handleExportCSV = useCallback(async () => {
-    if (!canExport) return;
+    if (!canExport || showDeletedArchives) return;
 
     const filename = t("contacts.exportFilename");
-    if (showDeletedArchives) {
-      try {
-        const rows = await fetchAllContactsForQuery({
-          search,
-          gender: filterGender || undefined,
-          sortField,
-          sortDir,
-          quickFilter,
-          includeDeleted: true,
-        });
-        runExport(rows, "filtered");
-      } catch (err) {
-        handleError(err, "contacts.export_deleted_csv", "contacts.exportFailed");
-      }
-      return;
-    }
-
     const label = t("contacts.jobs.exportLabelServer");
 
     try {
@@ -111,7 +93,6 @@ export function useContactsExportActions({
       handleError(err, "contacts.server_export_csv", "contacts.exportFailed");
     }
   }, [
-    runExport,
     canExport,
     showDeletedArchives,
     search,
@@ -126,11 +107,11 @@ export function useContactsExportActions({
   ]);
 
   const handleBulkExport = useCallback(() => {
-    if (!canExport) return;
+    if (!canExport || showDeletedArchives) return;
     const rows = workContacts.filter((contact) => selected.includes(contact.id));
     if (rows.length === 0) return;
     runExport(rows, "selection");
-  }, [workContacts, selected, runExport, canExport]);
+  }, [workContacts, selected, runExport, canExport, showDeletedArchives]);
 
   return {
     runExport,

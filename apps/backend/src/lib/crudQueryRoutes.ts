@@ -45,7 +45,10 @@ export function registerMetricsRoute(
 export interface CountRouteOptions {
   path?: string;
   collection: string;
-  loadAllFn: () => Promise<unknown[]>;
+  /** Prefer SQL/count helpers — avoids loading every row. */
+  loadCountFn?: () => Promise<number>;
+  /** Fallback when loadCountFn is omitted (loads full list). */
+  loadAllFn?: () => Promise<unknown[]>;
   errorMessagePrefix: string;
 }
 
@@ -56,12 +59,19 @@ export function registerCountRoute(
   fastify: FastifyInstance,
   options: CountRouteOptions,
 ): void {
-  const { path = '/count', collection, loadAllFn, errorMessagePrefix } = options;
+  const { path = '/count', collection, loadCountFn, loadAllFn, errorMessagePrefix } = options;
 
   fastify.get(path, async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
     try {
+      if (loadCountFn) {
+        const count = await loadCountFn();
+        return reply.send({ count });
+      }
+      if (!loadAllFn) {
+        return sendDatabaseError(reply, `Failed to count ${errorMessagePrefix}`);
+      }
       const items = await loadAllFn();
       return reply.send({ count: items.length });
     } catch {

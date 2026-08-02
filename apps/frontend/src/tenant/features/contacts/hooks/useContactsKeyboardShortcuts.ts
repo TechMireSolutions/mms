@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 
+/** Stable id for Contacts Work search — used by `/` / Cmd+K focus shortcut. */
+export const CONTACTS_WORK_SEARCH_INPUT_ID = "contacts-work-search";
+
 /** Contacts Work keyboard shortcuts: focus search, clear selection/filters, Cmd/Ctrl+N create. */
 export function useContactsKeyboardShortcuts({
   selectedCount,
@@ -34,9 +37,9 @@ export function useContactsKeyboardShortcuts({
 
       if ((event.key === "/" || (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey))) && !isInputActive) {
         event.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>(
-          'input[type="search"], input[placeholder*="search" i], input[placeholder*="Search" i]',
-        );
+        const searchInput = document.getElementById(
+          CONTACTS_WORK_SEARCH_INPUT_ID,
+        ) as HTMLInputElement | null;
         searchInput?.focus();
         searchInput?.select();
       } else if (event.key === "Escape") {

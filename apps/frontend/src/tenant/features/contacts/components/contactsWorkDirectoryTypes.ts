@@ -32,7 +32,6 @@ export interface ContactsWorkDirectoryProps {
   viewMode: ContactsWorkViewMode;
   onViewModeChange: (mode: ContactsWorkViewMode) => void;
   shownCount: number;
-  workTruncated: boolean;
   selected: Array<string | number>;
   onClearSelection: () => void;
   selectedTargets: {

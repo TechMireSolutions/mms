@@ -34,6 +34,8 @@ export interface ContactsCsvExportOptions {
   filename?: string;
   viewerRole: string;
   chunkSize?: number;
+  /** When false, force-exclude deleted rows even if query asks for them. */
+  allowDeleted?: boolean;
 }
 
 export interface ContactsCsvExportResult {
@@ -42,13 +44,17 @@ export interface ContactsCsvExportResult {
   count: number;
 }
 
-function normalizeListQuery(query: ContactsExportQueryInput): ContactsListQuery {
-  const includeDeleted =
+function normalizeListQuery(
+  query: ContactsExportQueryInput,
+  allowDeleted = false,
+): ContactsListQuery {
+  const includeDeletedRaw =
     query.includeDeleted === true || query.includeDeleted === 'true'
       ? true
       : query.includeDeleted === false || query.includeDeleted === 'false'
         ? false
         : undefined;
+  const includeDeleted = allowDeleted ? includeDeletedRaw : undefined;
   return { ...query, includeDeleted };
 }
 
@@ -60,7 +66,7 @@ export async function* generateContactsCsvStreamChunks(
   query: ContactsExportQueryInput,
   options: ContactsCsvExportOptions,
 ): AsyncGenerator<string, { count: number; filename: string }, undefined> {
-  const normalized = normalizeListQuery(query);
+  const normalized = normalizeListQuery(query, options.allowDeleted === true);
   const all = await loadContacts({ includeDeleted: normalized.includeDeleted });
   const rows = listAllContactsForQuery(all, normalized);
 

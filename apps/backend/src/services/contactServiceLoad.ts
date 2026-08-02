@@ -9,7 +9,6 @@ import {
   DEFAULT_ENABLED_TABS,
   DEFAULT_FORM_TABS,
   DEFAULT_REQUIRED_TABS,
-  paginateContacts,
   type Contact,
   type ContactsCommandMetricsSnapshot,
   type ContactsDuplicatePairsPageResult,
@@ -27,6 +26,8 @@ import { loadContactPreferences } from './contactPreferencesService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listContactsByWorkspace,
+  listContactsPage,
+  countContactsByWorkspace,
   findContactById,
   findContactsByIds,
 } from '../db/repositories/contactRepository.js';
@@ -46,20 +47,31 @@ export async function loadContacts(options?: { includeDeleted?: boolean }): Prom
   return listContactsByWorkspace(tenant, { deleted });
 }
 
+/** Active (or deleted-only) contact count via SQL — avoids loading every row. */
+export async function countContacts(options?: { includeDeleted?: boolean }): Promise<number> {
+  const tenant = getRequestTenant();
+  if (!tenant) return 0;
+  const deleted = options?.includeDeleted ? 'deleted' : 'active';
+  return countContactsByWorkspace(tenant, { deleted });
+}
+
 export async function loadContactsPage(query: ContactsListQuery): Promise<ContactsListPageResult> {
   const tenant = getRequestTenant();
-  const scoped = await loadContacts({ includeDeleted: query.includeDeleted });
+  if (!tenant) {
+    return { contacts: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 50, hasMore: false };
+  }
+
   const excludeIds = [...(query.excludeIds ?? [])];
-  if (tenant && query.excludeLinkedModules?.includes('students')) {
+  if (query.excludeLinkedModules?.includes('students')) {
     const students = await listStudentsByWorkspace(tenant, { deleted: 'active' });
     excludeIds.push(...collectStudentLinkedContactIds(students));
   }
-  if (tenant && query.excludeLinkedModules?.includes('teachers')) {
+  if (query.excludeLinkedModules?.includes('teachers')) {
     const teachers = await listTeachersByWorkspace(tenant, { deleted: 'active' });
     excludeIds.push(...collectTeacherLinkedContactIds(teachers));
   }
   const { excludeLinkedModules: _excludeLinkedModules, ...pageQuery } = query;
-  return paginateContacts(scoped, {
+  return listContactsPage(tenant, {
     ...pageQuery,
     excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
   });

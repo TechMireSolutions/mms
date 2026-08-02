@@ -90,7 +90,7 @@ export function ContactsBulkActionBar({
                 {t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
               </Button>
             )}
-            {bulkActions.includes("export") && canExport && (
+            {bulkActions.includes("export") && canExport && !viewingDeleted && (
               <Button
                 type="button"
                 size="sm"

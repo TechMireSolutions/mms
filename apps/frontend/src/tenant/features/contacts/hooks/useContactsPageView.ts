@@ -9,6 +9,7 @@ import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAu
 /** Composes Contacts page state + directory/tab/overlay prop bundles. */
 export function useContactsPageView() {
   const {
+    canRead,
     canWrite,
     canDelete,
     canExport,
@@ -52,6 +53,7 @@ export function useContactsPageView() {
     effectiveTab: state.effectiveTab,
     setActiveTab: state.setActiveTab,
     canExport,
+    canRead,
     canWrite,
     viewingDeleted: state.showDeletedArchives,
     openingDuplicates: state.openingDuplicates,

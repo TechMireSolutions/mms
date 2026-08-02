@@ -3,6 +3,7 @@ import { DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY, type User } fro
 import {
   canBulkSync,
   canDeleteContacts,
+  canDeleteCollection,
   canReadCollection,
   canReadContacts,
   canReadObject,
@@ -125,6 +126,8 @@ describe("rbacService", () => {
     expect(canDeleteContacts(admin)).toBe(true);
     expect(canDeleteContacts(teacher)).toBe(false);
     expect(canDeleteContacts(accountant)).toBe(false);
+    expect(canDeleteCollection(admin, "contacts")).toBe(true);
+    expect(canDeleteCollection(teacher, "contacts")).toBe(false);
   });
 
   it("aligns contacts read with contacts.read permission", () => {

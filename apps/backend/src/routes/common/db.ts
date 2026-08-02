@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import {
   fetchBackupSnapshot,
   fetchDatabaseSnapshot,
@@ -9,7 +9,7 @@ import {
   fetchObject,
   persistObject,
 } from '../../services/dbSyncService.js';
-import { canBulkSync, canDownloadBulkSync, canReadCollection, canReadObject, canResetTenantData, canWriteCollection, canWriteObject } from '../../services/rbacService.js';
+import { canBulkSync, canDownloadBulkSync, canReadCollection, canReadObject, canResetTenantData, canWriteCollection, canWriteObject, isAllowedCollectionName } from '../../services/rbacService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import {
   isServerOnlyObjectKey,
@@ -37,9 +37,8 @@ import {
   syncPayloadSchema,
 } from '../../validation/dbSchemas.js';
 import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../../validation/commonSchemas.js';
-import { parseRequest, replyValidationError, executeDynamicValidation } from '../../lib/zodRequest.js';
-import { validateAndNormalizeContacts } from '../../services/contactValidationService.js';
-import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
+import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
 
 function sanitizeUserCollections(collections: Record<string, unknown[]>, userId: string | number): void {
   const userMsgKey = `messages_u:${userId}`;
@@ -84,33 +83,6 @@ function stripUnwritableObjects(objects: Record<string, unknown>, user: User): v
       delete objects[key];
     }
   }
-}
-
-/**
- * Runs collection-specific validation/normalization if defined.
- * Returns the normalized rows on success, or null if validation fails.
- */
-async function validateAndNormalizeCollectionIfRequired(
-  collectionName: string,
-  rows: unknown[],
-  request: FastifyRequest,
-  reply: FastifyReply,
-  userRole: string,
-): Promise<unknown[] | null> {
-  if (collectionName === 'contacts') {
-    let result = rows;
-    const isValid = await executeDynamicValidation(request, reply, async (tenant, lang) => {
-      result = await validateAndNormalizeContacts(
-        tenant,
-        rows,
-        lang,
-        userRole,
-      );
-    });
-    if (!isValid) return null;
-    return result;
-  }
-  return rows;
 }
 
 /**
@@ -257,6 +229,12 @@ export default async function dbRoutes(
     const params = parseRequest(resourceNameParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const { name } = params.data;
+    if (name === WORKSPACES_COLLECTION) {
+      return sendForbidden(reply, `You do not have permission to read collection "${name}"`);
+    }
+    if (!isAllowedCollectionName(name)) {
+      return sendNotFound(reply, `Collection "${name}" is not available via document store`);
+    }
     const user = request.user as User;
     if (!canReadCollection(user, name)) {
       return sendForbidden(reply, `You do not have permission to read collection "${name}"`);
@@ -281,6 +259,12 @@ export default async function dbRoutes(
     const params = parseRequest(resourceNameParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     const { name } = params.data;
+    if (name === WORKSPACES_COLLECTION) {
+      return sendForbidden(reply, `You do not have permission to write collection "${name}"`);
+    }
+    if (!isAllowedCollectionName(name)) {
+      return sendNotFound(reply, `Collection "${name}" is not available via document store`);
+    }
     const user = request.user as User;
     if (!canWriteCollection(user, name)) {
       return sendForbidden(reply, `You do not have permission to write collection "${name}"`);
@@ -288,17 +272,7 @@ export default async function dbRoutes(
     try {
       const bodyParsed = parseRequest(collectionSaveBodySchema, request.body);
       if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
-      let collectionRowsToSave = normalizeCollectionSaveBody(bodyParsed.data);
-
-      const validated = await validateAndNormalizeCollectionIfRequired(
-        name,
-        collectionRowsToSave,
-        request,
-        reply,
-        user.role,
-      );
-      if (!validated) return;
-      collectionRowsToSave = validated;
+      const collectionRowsToSave = normalizeCollectionSaveBody(bodyParsed.data);
 
       const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
       await persistCollection(storageName, collectionRowsToSave);

@@ -47,7 +47,7 @@ Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / brandi
 
 ## Contact config
 
-`useContactConfig` / columns / validation from `ContactConfigContext`. Provider at `App.tsx` root only — never nest on child pages.
+`useContactConfig` / columns / validation from `ContactConfigContext` (`lib/contexts/ContactConfigContext.tsx` + `lib/contacts/*`). Mount once via `TenantScopedProviders` (tenant host only) — never nest on child pages.
 
 ## RBAC & viewer
 

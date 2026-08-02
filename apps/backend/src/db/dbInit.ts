@@ -57,6 +57,7 @@ const dataMigrationsToRun = [
   { id: '035', load: async () => (await import('./migrations/035_migrate_messaging_to_tables.js')).runMigration035 },
   { id: '036', load: async () => (await import('./migrations/036_migrate_contacts_secrets_and_reports.js')).runMigration036 },
   { id: '037', load: async () => (await import('./migrations/037_migrate_emergency_to_relationship.js')).runMigration037 },
+  { id: '038', load: async () => (await import('./migrations/038_clear_legacy_contacts_collections.js')).runMigration038 },
 ];
 
 export async function initDb(): Promise<void> {

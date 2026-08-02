@@ -11,6 +11,7 @@ export {
   loadContactsByIds,
   loadContactDuplicatePairsPage,
   getContactById,
+  countContacts,
 } from './contactServiceLoad.js';
 export type { UpsertContactOptions } from './contactServiceMutate.js';
 export {

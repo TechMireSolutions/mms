@@ -9,6 +9,7 @@ import {
   ContactsFilterMenuButton,
 } from "@/tenant/features/contacts/components/ContactsToolbarControls";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
+import { CONTACTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
 
 interface ContactsToolbarProps {
   search: string;
@@ -68,6 +69,7 @@ export default function ContactsToolbar({
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative min-w-0 flex-1">
           <SearchBar
+            id={CONTACTS_WORK_SEARCH_INPUT_ID}
             value={search}
             onChange={onSearchChange}
             placeholder={t("contacts.searchPlaceholder")}

@@ -4,8 +4,8 @@ paths:
   - "apps/frontend/src/hooks/**"
   - "apps/frontend/src/tenant/hooks/**"
   - "apps/frontend/src/tenant/features/**/hooks/**"
-  - "apps/frontend/src/lib/ContactConfigContext.tsx"
-  - "apps/frontend/src/lib/contactConfig/**"
+  - "apps/frontend/src/lib/contexts/ContactConfigContext.tsx"
+  - "apps/frontend/src/lib/contacts/**"
   - "apps/frontend/src/lib/contexts/TenantContext.tsx"
 ---
 
@@ -54,7 +54,7 @@ Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / brandi
 
 ## Contact config
 
-`useContactConfig` / columns / validation from `ContactConfigContext`. Provider at `App.tsx` root only — never nest on child pages.
+`useContactConfig` / columns / validation from `ContactConfigContext` (`lib/contexts/ContactConfigContext.tsx` + `lib/contacts/*`). Mount once via `TenantScopedProviders` (tenant host only) — never nest on child pages.
 
 ## RBAC & viewer
 

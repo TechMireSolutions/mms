@@ -64,6 +64,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] `FormModal` for add/edit; in-dialog layout uses `@container` `@md:` / `@sm:` (not viewport `md:`)
 - [ ] Contact form option dropdowns from ContactConfig — not runtime `DEFAULT_*` / `GENDERS` fallbacks
 - [ ] Bulk id bodies use shared `bulkIdsBodySchema` (`.max(500)`) when applicable
+- [ ] Contacts list filters use shared `contactsListQuerySchema` (`hasEmail` / `hasPhone` / `hasReachable`) — no forked Messaging flags
 - [ ] Contacts `activeCount` = soft-delete-filtered total (not phantom `isActive`)
 - [ ] Settings panels use `useSettingsDraft` / domain draft hooks + live preview — not direct `saveObject` on change
 - [ ] New settings section: registered in `SETTINGS_SECTIONS`, `SETTINGS_NAV`, `SETTINGS_SECTION_COMPONENTS`

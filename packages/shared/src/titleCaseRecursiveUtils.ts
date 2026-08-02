@@ -22,6 +22,8 @@ const SYSTEM_EXCLUDED_KEYS = new Set([
   "createdat",
   "updatedat",
   "deletedat",
+  "deletedby",
+  "deletionreason",
   "rating",
   "aisummary",
   "attachment",

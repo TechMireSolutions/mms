@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, AnyPgTable } from 'drizzle-orm/pg-core';
 import { applyTitleCaseRecursive, stripContactClientSoftDeleteFields } from '@mms/shared';
 import { withTenantTransaction } from '../withTenantTransaction.js';
@@ -22,6 +22,8 @@ type GenericTableRow = {
   id: string | number;
   customData: unknown;
   deletedAt?: Date | null;
+  deletedBy?: string | null;
+  deletionReason?: string | null;
 };
 
 type GenericTable = AnyPgTable & {
@@ -30,6 +32,8 @@ type GenericTable = AnyPgTable & {
   customData: AnyPgColumn;
   updatedAt: AnyPgColumn;
   deletedAt?: AnyPgColumn;
+  deletedBy?: AnyPgColumn;
+  deletionReason?: AnyPgColumn;
 };
 
 function deletedAtFromRecord(record: { deletedAt?: unknown }): Date | null {
@@ -40,13 +44,31 @@ function deletedAtFromRecord(record: { deletedAt?: unknown }): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function softDeleteAuditFromRecord(record: {
+  deletedBy?: unknown;
+  deletionReason?: unknown;
+}): { deletedBy: string | null; deletionReason: string | null } {
+  const deletedBy =
+    typeof record.deletedBy === 'string' && record.deletedBy.trim()
+      ? record.deletedBy.trim()
+      : null;
+  const deletionReason =
+    typeof record.deletionReason === 'string' && record.deletionReason.trim()
+      ? record.deletionReason.trim()
+      : null;
+  return { deletedBy, deletionReason };
+}
+
 export function createGenericRepository<
-  T extends { id: string | number; deletedAt?: unknown },
+  T extends { id: string | number; deletedAt?: unknown; deletedBy?: unknown; deletionReason?: unknown },
   Table extends GenericTable,
 >(table: Table, options: GenericRepoOptions = {}) {
   const { updateStrategy = 'merge', syncDeletedAtColumn = false } = options;
   const dbTable: AnyPgTable = table;
   const shouldSyncDeletedAt = Boolean(syncDeletedAtColumn && table.deletedAt);
+  const shouldSyncSoftDeleteAudit = Boolean(
+    shouldSyncDeletedAt && table.deletedBy && table.deletionReason,
+  );
 
   function rowToRecord(row: GenericTableRow): T {
     const data = {
@@ -59,6 +81,18 @@ export function createGenericRepository<
         (data as { deletedAt?: string }).deletedAt = row.deletedAt.toISOString();
       } else {
         return stripContactClientSoftDeleteFields(data as Record<string, unknown>) as T;
+      }
+      if (shouldSyncSoftDeleteAudit) {
+        if (row.deletedBy) {
+          (data as { deletedBy?: string }).deletedBy = String(row.deletedBy);
+        } else {
+          delete (data as { deletedBy?: string }).deletedBy;
+        }
+        if (row.deletionReason) {
+          (data as { deletionReason?: string }).deletionReason = String(row.deletionReason);
+        } else {
+          delete (data as { deletionReason?: string }).deletionReason;
+        }
       }
     }
 
@@ -76,7 +110,24 @@ export function createGenericRepository<
     if (shouldSyncDeletedAt) {
       payload.deletedAt = deletedAtFromRecord(record);
     }
+    if (shouldSyncSoftDeleteAudit) {
+      const audit = softDeleteAuditFromRecord(record);
+      payload.deletedBy = audit.deletedBy;
+      payload.deletionReason = audit.deletionReason;
+    }
     return payload;
+  }
+
+  function softDeleteConditions(deleted: SoftDeleteListFilter): SQL[] {
+    const conditions: SQL[] = [];
+    if (shouldSyncDeletedAt && table.deletedAt) {
+      if (deleted === 'active') {
+        conditions.push(isNull(table.deletedAt));
+      } else if (deleted === 'deleted') {
+        conditions.push(isNotNull(table.deletedAt));
+      }
+    }
+    return conditions;
   }
 
   async function listByWorkspace(
@@ -86,19 +137,28 @@ export function createGenericRepository<
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const deleted = listOptions?.deleted ?? 'all';
     return withTenantTransaction(subdomain, async (tx) => {
-      const conditions = [eq(table.workspaceSubdomain, subdomain)];
-      if (shouldSyncDeletedAt && table.deletedAt) {
-        if (deleted === 'active') {
-          conditions.push(isNull(table.deletedAt));
-        } else if (deleted === 'deleted') {
-          conditions.push(isNotNull(table.deletedAt));
-        }
-      }
+      const conditions = [eq(table.workspaceSubdomain, subdomain), ...softDeleteConditions(deleted)];
       const rows = await tx
         .select()
         .from(dbTable)
         .where(and(...conditions));
       return (rows as GenericTableRow[]).map(rowToRecord);
+    });
+  }
+
+  async function countByWorkspace(
+    workspaceSubdomain: string,
+    listOptions?: ListByWorkspaceOptions,
+  ): Promise<number> {
+    const subdomain = workspaceSubdomain.trim().toLowerCase();
+    const deleted = listOptions?.deleted ?? 'all';
+    return withTenantTransaction(subdomain, async (tx) => {
+      const conditions = [eq(table.workspaceSubdomain, subdomain), ...softDeleteConditions(deleted)];
+      const rows = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(dbTable)
+        .where(and(...conditions));
+      return Number(rows[0]?.count ?? 0);
     });
   }
 
@@ -190,6 +250,10 @@ export function createGenericRepository<
     if (shouldSyncDeletedAt) {
       conflictSet.deletedAt = sql`excluded.deleted_at`;
     }
+    if (shouldSyncSoftDeleteAudit) {
+      conflictSet.deletedBy = sql`excluded.deleted_by`;
+      conflictSet.deletionReason = sql`excluded.deletion_reason`;
+    }
 
     await withTenantTransaction(subdomain, async (tx) => {
       await tx
@@ -253,6 +317,7 @@ export function createGenericRepository<
   return {
     rowToRecord,
     listByWorkspace,
+    countByWorkspace,
     findById,
     findByIds,
     save,

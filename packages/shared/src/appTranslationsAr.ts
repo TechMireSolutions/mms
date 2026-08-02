@@ -4182,7 +4182,6 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.sync.conflictServer": "الخادم",
   "contacts.sync.conflictField": "الحقل",
   "contacts.sync.conflictNoServer": "جهة الاتصال غير موجودة على الخادم (ربما حُذفت).",
-  "contacts.workTruncated": "عرض أول {limit} من {total} — refine الفلاتر أو استخدم عرض القائمة للتصفح.",
   "contacts.jobs.dismiss": "تجاهل المهمة",
   "contacts.jobs.clearFailed": "مسح المهام الفاشلة",
   "contacts.jobs.exportLabel": "جاري تصدير {count} جهة اتصال…",
