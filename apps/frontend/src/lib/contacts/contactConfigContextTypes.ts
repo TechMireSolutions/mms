@@ -4,7 +4,6 @@ import type {
   ContactPreferences,
   FieldDefinition,
   ColumnRegistryEntry,
-  RelationshipPair,
 } from "@mms/shared";
 
 export interface ContactConfigContextType {
@@ -24,7 +23,6 @@ export interface ContactConfigContextType {
   genders: string[];
   socialPlatforms: string[];
   relationships: string[];
-  relationshipPairs: RelationshipPair[];
   phoneLabels: string[];
   emailLabels: string[];
   addressLabels: string[];
@@ -40,7 +38,6 @@ export interface ContactConfigContextType {
   updateGenders: (genderOptions: string[]) => void | Promise<void>;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void | Promise<void>;
   updateRelationships: (relationshipOptions: string[]) => void | Promise<void>;
-  updateRelationshipPairs: (pairs: RelationshipPair[]) => void | Promise<void>;
   updatePhoneLabels: (phoneLabelOptions: string[]) => void | Promise<void>;
   updateEmailLabels: (emailLabelOptions: string[]) => void | Promise<void>;
   updateAddressLabels: (addressLabelOptions: string[]) => void | Promise<void>;

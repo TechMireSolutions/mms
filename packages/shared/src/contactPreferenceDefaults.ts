@@ -56,27 +56,6 @@ export function resolveRelationshipPairs(
 }
 
 /**
- * True when an equivalent forward/inverse pair already exists (case-insensitive;
- * order-independent so Mentor↔Mentee matches Mentee↔Mentor).
- */
-export function isDuplicateRelationshipPair(
-  pairs: readonly RelationshipPair[],
-  forward: string,
-  inverse: string,
-): boolean {
-  const direct = relationshipPairKey(forward, inverse);
-  const swapped = relationshipPairKey(inverse, forward);
-  return pairs.some((pair) => {
-    const existing = relationshipPairKey(pair.forward, pair.inverse);
-    return existing === direct || existing === swapped;
-  });
-}
-
-function relationshipPairKey(forward: string, inverse: string): string {
-  return `${forward.trim().toLowerCase()}::${inverse.trim().toLowerCase()}`;
-}
-
-/**
  * Flattens configured 2-sided relationship pairs into unique dropdown option labels
  * (forward, inverse, and optional gendered inverse labels).
  */

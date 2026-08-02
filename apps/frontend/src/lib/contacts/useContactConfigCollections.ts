@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import { deriveRelationshipOptionsFromPairs, type FieldConfig, type RelationshipPair } from "@mms/shared";
+import type { FieldConfig } from "@mms/shared";
 import { getCollection, saveCollectionAsync } from "@/lib/db";
 
 import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
@@ -106,15 +106,6 @@ export function useContactConfigCollections({
     "relationship",
     "relationship",
   );
-  const updateRelationshipPairs = useCallback(
-    async (pairs: RelationshipPair[]) => {
-      const options = deriveRelationshipOptionsFromPairs(pairs);
-      setRelationshipsState(options);
-      await saveCollectionAsync(CONTACT_CONFIG_COLLECTION_KEYS.relationships, options);
-      await syncFieldOptions("relationship", "relationship", options);
-    },
-    [syncFieldOptions],
-  );
   const updatePhoneLabels = usePersistedStringCollectionUpdater(
     CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels,
     setPhoneLabelsState,
@@ -162,7 +153,6 @@ export function useContactConfigCollections({
     updateGenders,
     updateSocialPlatforms,
     updateRelationships,
-    updateRelationshipPairs,
     updatePhoneLabels,
     updateEmailLabels,
     updateAddressLabels,

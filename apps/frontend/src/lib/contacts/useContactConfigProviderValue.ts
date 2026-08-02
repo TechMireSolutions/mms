@@ -1,13 +1,10 @@
 import { useMemo } from "react";
 import {
-  deriveRelationshipOptionsFromPairs,
-  mergeRelationshipOptionLabels,
-  resolveRelationshipPairs,
+  RELATIONSHIPS,
   type ColumnRegistryEntry,
   type ContactPreferences,
   type FieldConfig,
   type FieldDefinition,
-  type RelationshipPair,
 } from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
@@ -38,7 +35,6 @@ export function useContactConfigProviderValue({
   updateGenders,
   updateSocialPlatforms,
   updateRelationships,
-  updateRelationshipPairs,
   updatePhoneLabels,
   updateEmailLabels,
   updateAddressLabels,
@@ -74,7 +70,6 @@ export function useContactConfigProviderValue({
   updateGenders: (genderOptions: string[]) => void;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void;
   updateRelationships: (relationshipOptions: string[]) => void;
-  updateRelationshipPairs: (pairs: RelationshipPair[]) => void;
   updatePhoneLabels: (phoneLabelOptions: string[]) => void;
   updateEmailLabels: (emailLabelOptions: string[]) => void;
   updateAddressLabels: (addressLabelOptions: string[]) => void;
@@ -90,15 +85,8 @@ export function useContactConfigProviderValue({
     [countryCodes, countryCodesMap, prefs],
   );
 
-  const resolvedRelationshipPairs = resolveRelationshipPairs(prefs.relationshipPairs);
-  const resolvedRelationships = useMemo(
-    () =>
-      mergeRelationshipOptionLabels(
-        deriveRelationshipOptionsFromPairs(resolvedRelationshipPairs),
-        relationships,
-      ),
-    [relationships, resolvedRelationshipPairs],
-  );
+  /** Form Relationship-type dropdown SSOT — seeded defaults when the collection is empty. */
+  const resolvedRelationships = relationships.length > 0 ? relationships : [...RELATIONSHIPS];
 
   return useMemo(
     () => ({
@@ -116,7 +104,6 @@ export function useContactConfigProviderValue({
       genders,
       socialPlatforms,
       relationships: resolvedRelationships,
-      relationshipPairs: resolvedRelationshipPairs,
       phoneLabels,
       emailLabels,
       addressLabels,
@@ -129,7 +116,6 @@ export function useContactConfigProviderValue({
       updateGenders,
       updateSocialPlatforms,
       updateRelationships,
-      updateRelationshipPairs,
       updatePhoneLabels,
       updateEmailLabels,
       updateAddressLabels,
@@ -155,7 +141,6 @@ export function useContactConfigProviderValue({
       genders,
       socialPlatforms,
       resolvedRelationships,
-      resolvedRelationshipPairs,
       phoneLabels,
       emailLabels,
       addressLabels,
@@ -168,7 +153,6 @@ export function useContactConfigProviderValue({
       updateGenders,
       updateSocialPlatforms,
       updateRelationships,
-      updateRelationshipPairs,
       updatePhoneLabels,
       updateEmailLabels,
       updateAddressLabels,

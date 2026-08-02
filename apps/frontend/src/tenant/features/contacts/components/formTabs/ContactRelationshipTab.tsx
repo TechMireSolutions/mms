@@ -50,7 +50,11 @@ export function ContactRelationshipTab({
   };
 
   return (
-    <ContactSubListShell
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        {t("contacts.form.relationshipInstructions")}
+      </p>
+      <ContactSubListShell
       isEmpty={links.length === 0}
       emptyIcon={Heart}
       emptyMessage={t("contacts.form.noRelationshipsSet")}
@@ -107,5 +111,6 @@ export function ContactRelationshipTab({
         })}
       </AnimatePresence>
     </ContactSubListShell>
+    </div>
   );
 }

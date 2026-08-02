@@ -7,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ContactsCountryCodesSection } from "@/tenant/features/contacts/components/ContactsCountryCodesSection";
-import { ContactsRelationshipPairsSection } from "@/tenant/features/contacts/components/ContactsRelationshipPairsSection";
 
 
 const DUPLICATE_DETECTION_FIELD_OPTIONS = [
@@ -188,11 +187,6 @@ export function ContactsPreferencesSection({
           </div>
         </div>
       </section>
-
-      <ContactsRelationshipPairsSection
-        pairs={prefs.relationshipPairs ?? []}
-        onUpdatePairs={(pairs) => onUpdatePreference("relationshipPairs", pairs)}
-      />
     </>
   );
 }

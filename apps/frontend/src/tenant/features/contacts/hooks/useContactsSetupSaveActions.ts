@@ -2,11 +2,9 @@ import { useCallback, useState, type Dispatch, type SetStateAction } from "react
 import {
   type FieldConfig,
   type ContactPreferences,
-  type RelationshipPair,
   type TabDefinition,
   CONFIG_VERSION,
   normalizeContactPreferences,
-  resolveRelationshipPairs,
   toTitleCase,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -28,7 +26,6 @@ export function useContactsSetupSaveActions({
   mode,
   saveSettingsAsync,
   updatePrefsAsync,
-  syncRelationshipsFromPairs,
   setSaved,
 }: {
   config: FieldConfig;
@@ -43,7 +40,6 @@ export function useContactsSetupSaveActions({
     options?: { markSaved?: boolean },
   ) => Promise<void>;
   updatePrefsAsync: (prefs: ContactPreferences) => Promise<void>;
-  syncRelationshipsFromPairs: (pairs: RelationshipPair[]) => void | Promise<void>;
   setSaved: Dispatch<SetStateAction<boolean>>;
 }) {
   const { t } = useTranslation();
@@ -81,7 +77,6 @@ export function useContactsSetupSaveActions({
 
       if (mode === "preferences") {
         await updatePrefsAsync(updatedPrefs);
-        await syncRelationshipsFromPairs(resolveRelationshipPairs(updatedPrefs.relationshipPairs));
         await logSetupAudit.mutateAsync({
           area: "preferences",
           summary: t("contacts.setup.auditSummary", { area: "preferences" }),
@@ -122,7 +117,6 @@ export function useContactsSetupSaveActions({
     mode,
     saveSettingsAsync,
     updatePrefsAsync,
-    syncRelationshipsFromPairs,
     logSetupAudit,
     setPrefs,
     setSaved,
