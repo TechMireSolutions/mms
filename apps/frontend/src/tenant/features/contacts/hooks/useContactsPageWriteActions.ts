@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   CONTACTS_MODULE_MANIFEST,
-  syncContactScalarFields,
+  mergeContactEditSavePayload,
   type Contact,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -89,18 +89,7 @@ export function useContactsPageWriteActions({
         throw new Error(t("contacts.form.writeDenied"));
       }
       const isCreatingContact = !editContact;
-      const basePayload = syncContactScalarFields(contactDraft);
-
-      const payload: Contact = {
-        ...(editContact || {}),
-        ...contactDraft,
-        ...basePayload,
-        phones: contactDraft.phones ?? [],
-        emails: contactDraft.emails ?? [],
-        addresses: contactDraft.addresses ?? [],
-        socials: contactDraft.socials ?? [],
-        relationshipContacts: contactDraft.relationshipContacts ?? [],
-      };
+      const payload = mergeContactEditSavePayload(editContact, contactDraft);
 
       await saveContact(payload, isCreatingContact);
       setShowForm(false);

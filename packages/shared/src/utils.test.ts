@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateSmsSegments } from "./smsUtils.js";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, applyTitleCaseToContact, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, applyTitleCaseToContact, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft, syncContactScalarFields, mergeContactEditSavePayload } from "./utils.js";
 
 
 
@@ -672,6 +672,124 @@ describe("normalizeContactForEdit", () => {
     expect(draft.socials).toEqual([{ platform: "LinkedIn", url: "" }]);
     expect(draft.relationshipContacts).toEqual([{ relationship: "Guardian", contactId: "" }]);
   });
+
+  it("does not resurrect deleted phones from a leftover scalar", () => {
+    const draft = normalizeContactForEdit(
+      {
+        phones: [],
+        phone: "+923001234567",
+        emails: [],
+        email: "stale@example.com",
+      },
+      undefined,
+    );
+    expect(draft.phones).toEqual([
+      expect.objectContaining({ number: "", isPrimary: true }),
+    ]);
+    expect(draft.emails).toEqual([
+      expect.objectContaining({ address: "", isPrimary: true }),
+    ]);
+  });
+
+  it("still hydrates legacy scalar-only contacts into collection rows", () => {
+    const draft = normalizeContactForEdit(
+      {
+        phone: "+923001234567",
+        email: "legacy@example.com",
+      },
+      undefined,
+    );
+    expect(draft.phones?.[0]).toEqual(expect.objectContaining({ number: expect.any(String) }));
+    expect((draft.phones?.[0]?.number || "").length).toBeGreaterThan(0);
+    expect(draft.emails?.[0]).toEqual(expect.objectContaining({ address: "legacy@example.com" }));
+  });
+});
+
+describe("syncContactScalarFields", () => {
+  it("clears scalar phone/email when collections are explicitly empty", () => {
+    const synced = syncContactScalarFields({
+      phones: [],
+      emails: [],
+      addresses: [],
+      phone: "+923001234567",
+      email: "stale@example.com",
+      line1: "Old street",
+    } as Partial<Contact>);
+    expect(synced.phone).toBe("");
+    expect(synced.email).toBe("");
+    expect(synced.line1).toBe("");
+  });
+
+  it("derives scalars from primary collection rows", () => {
+    const synced = syncContactScalarFields({
+      phones: [{ label: "Mobile", number: "3001234567", countryCode: "+92", isPrimary: true }],
+      emails: [{ label: "Home", address: "a@example.com", isPrimary: true }],
+      addresses: [{ label: "Home", line1: "1 Main", city: "Lahore", state: "Punjab", country: "PK", isPrimary: true }],
+    } as Partial<Contact>);
+    expect(synced.phone).toBeTruthy();
+    expect(synced.email).toBe("a@example.com");
+    expect(synced.line1).toBe("1 Main");
+    expect(synced.city).toBe("Lahore");
+  });
+});
+
+describe("mergeContactEditSavePayload", () => {
+  it("does not resurrect deleted phones from the existing contact scalar", () => {
+    const existing = {
+      id: "c1",
+      firstName: "Ahmed",
+      name: "Ahmed",
+      phone: "+923001234567",
+      phones: [{ label: "Mobile", number: "3001234567", countryCode: "+92", isPrimary: true }],
+      email: "old@example.com",
+      emails: [{ label: "Home", address: "old@example.com", isPrimary: true }],
+    } as Partial<Contact>;
+
+    const payload = mergeContactEditSavePayload(existing, {
+      id: "c1",
+      firstName: "Ahmed",
+      name: "Ahmed",
+      phones: [],
+      emails: [],
+    });
+
+    expect(payload.phones).toEqual([]);
+    expect(payload.phone).toBe("");
+    expect(payload.emails).toEqual([]);
+    expect(payload.email).toBe("");
+  });
+
+  it("clears addresses, socials, address scalar, and legacy relationships", () => {
+    const existing = {
+      id: "c1",
+      firstName: "Ahmed",
+      name: "Ahmed",
+      address: "1 Main",
+      line1: "1 Main",
+      city: "Lahore",
+      addresses: [{ label: "Home", line1: "1 Main", city: "Lahore", isPrimary: true }],
+      socials: [{ platform: "Instagram", url: "https://instagram.com/a" }],
+      relationshipContacts: [{ relationship: "Father", contactId: "c-2" }],
+      relationships: [{ contactId: "c-2", relationship: "father" }],
+    } as Partial<Contact>;
+
+    const payload = mergeContactEditSavePayload(existing, {
+      id: "c1",
+      firstName: "Ahmed",
+      name: "Ahmed",
+      addresses: [],
+      socials: [],
+      relationshipContacts: [],
+    });
+
+    expect(payload.addresses).toEqual([]);
+    expect(payload.address).toBe("");
+    expect(payload.line1).toBe("");
+    expect(payload.city).toBe("");
+    expect(payload.socials).toEqual([]);
+    expect(payload.relationshipContacts).toEqual([]);
+    expect(payload.relationships).toEqual([]);
+  });
 });
 
 describe("cleanContactDraft", () => {
@@ -688,6 +806,25 @@ describe("cleanContactDraft", () => {
     });
     expect(cleaned.socials).toEqual([{ platform: "Instagram", url: "https://instagram.com/a" }]);
     expect(cleaned.relationshipContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
+  });
+
+  it("clears legacy relationships when relationship contacts are emptied", () => {
+    const cleaned = cleanContactDraft({
+      relationshipContacts: [{ relationship: "Father", contactId: "" }],
+      relationships: [{ contactId: "c-2", relationship: "father" }],
+    });
+    expect(cleaned.relationshipContacts).toEqual([]);
+    expect(cleaned.relationships).toEqual([]);
+  });
+
+  it("strips blank custom collection tab rows before save", () => {
+    const cleaned = cleanContactDraft({
+      custom_work: [
+        { title: "", notes: "" },
+        { title: "Teacher", notes: "" },
+      ],
+    } as Partial<Contact>);
+    expect(cleaned.custom_work).toEqual([{ title: "Teacher", notes: "" }]);
   });
 });
 

@@ -5,6 +5,7 @@ import {
   parsePhoneNumber,
   stripContactClientSoftDeleteFields,
   stripContactRetiredClassificationFields,
+  syncContactScalarFields,
   type Contact,
   type User,
 } from '@mms/shared';
@@ -51,12 +52,14 @@ function mergeContactPatch(existing: Contact, patch: Contact): Contact {
 
 export async function normalizeContactPhones(contact: Contact): Promise<Contact> {
   let phones = contact.phones;
+  // Explicit `phones: []` means "clear all phones" — do not rebuild from legacy scalar.
+  const phonesProvided = Array.isArray(contact.phones);
   const scalarPhone = typeof contact.phone === 'string' ? contact.phone.trim() : '';
   const { defaultPhoneCountryCode, phoneLabel } = await loadContactRuntimeDefaults();
   const dialDefault = defaultPhoneCountryCode || '';
   const labelDefault = phoneLabel || '';
 
-  if ((!phones || !phones.length) && scalarPhone) {
+  if (!phonesProvided && scalarPhone) {
     phones = [{
       label: labelDefault,
       number: scalarPhone,
@@ -66,35 +69,59 @@ export async function normalizeContactPhones(contact: Contact): Promise<Contact>
   }
 
   if (!phones?.length) {
-    return { ...contact, phones: phones || [] };
+    return {
+      ...contact,
+      phones: phones || [],
+      ...(phonesProvided ? { phone: '' } : {}),
+    };
   }
   const countryCodes = (await fetchCollection('countryCodes')) || [];
   const knownCodes = countryCodes
     .map((row) => (row && typeof row === 'object' && typeof (row as { code?: unknown }).code === 'string' ? String((row as { code: string }).code) : ''))
     .filter(Boolean);
 
+  const normalizedPhones = phones.map((phone) => {
+    const fallbackCode = phone.countryCode || dialDefault;
+    const trimmedNumber = (phone.number || '').trim();
+    const parsedRaw = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
+    const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
+    const parsed = parsePhoneNumber(e164, parsedRaw.countryCode, knownCodes);
+    return {
+      ...phone,
+      countryCode: parsed.countryCode,
+      number: parsed.number,
+    };
+  });
+
+  const primary = normalizedPhones.find((phone) => phone.isPrimary && phone.number?.trim())
+    || normalizedPhones.find((phone) => phone.number?.trim());
+  const primaryScalar = primary
+    ? normalizeToE164(primary.countryCode || dialDefault, primary.number || '')
+    : '';
+
   return {
     ...contact,
-    phones: phones.map((phone) => {
-      const fallbackCode = phone.countryCode || dialDefault;
-      const trimmedNumber = (phone.number || '').trim();
-      const parsedRaw = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
-      const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
-      const parsed = parsePhoneNumber(e164, parsedRaw.countryCode, knownCodes);
-      return {
-        ...phone,
-        countryCode: parsed.countryCode,
-        number: parsed.number,
-      };
-    }),
+    phones: normalizedPhones,
+    ...(phonesProvided ? { phone: primaryScalar } : {}),
   };
+}
+
+/**
+ * When collection arrays are present on a write, clear/sync legacy scalars so deletes stick.
+ * Phones are handled in {@link normalizeContactPhones}; this covers emails/addresses.
+ * Legacy `relationships` is cleared by the form save payload when relationshipContacts is emptied
+ * (do not wipe here — empty relationshipContacts is also the create default for legacy-only links).
+ */
+export function syncContactCollectionScalars(contact: Contact): Contact {
+  return syncContactScalarFields(contact) as Contact;
 }
 
 export async function prepareContactRecord(contact: Contact, id?: string | number): Promise<Contact> {
   const stripped = stripClientSoftDeleteFields(contact);
   const withPhones = await normalizeContactPhones(stripped);
-  const resolvedId = id ?? withPhones.id ?? `temp-${Date.now()}`;
-  const titled = applyTitleCaseToContact({ ...withPhones, id: resolvedId }) as Contact;
+  const withScalars = syncContactCollectionScalars(withPhones);
+  const resolvedId = id ?? withScalars.id ?? `temp-${Date.now()}`;
+  const titled = applyTitleCaseToContact({ ...withScalars, id: resolvedId }) as Contact;
   return stripContactRetiredClassificationFields({ ...titled }) as Contact;
 }
 

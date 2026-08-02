@@ -12,6 +12,7 @@ import {
   type SocialLink as ContactSocial,
   type RelationshipContact,
 } from "./contactTypes.js";
+import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import { parsePhoneNumber } from "./phoneUtils.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 import { hydrateContactRelationshipFields } from "./contactRelationshipHydrate.js";
@@ -61,9 +62,45 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
         relationship:
           typeof link.relationship === "string" ? link.relationship.trim() : link.relationship,
       }));
+    // Form clears relationshipContacts — also drop legacy parallel key so deletes stick.
+    if (result.relationshipContacts.length === 0) {
+      result.relationships = [];
+    }
+  }
+
+  // Tenant custom form tabs only — never strip entity arrays (activities/attachments/…).
+  const entityArrayKeys = new Set([
+    "phones",
+    "emails",
+    "addresses",
+    "socials",
+    "relationshipContacts",
+    "relationships",
+    "activities",
+    "attachments",
+    "emergencyContacts",
+  ]);
+  for (const key of Object.keys(result)) {
+    if (entityArrayKeys.has(key) || !isContactCustomCollectionTab(key)) continue;
+    const rows = result[key];
+    if (!Array.isArray(rows)) continue;
+    result[key] = rows.filter((row) => !isBlankCustomCollectionRow(row));
   }
 
   return result;
+}
+
+/** True when a tenant custom-tab row has no meaningful user-entered values. */
+export function isBlankCustomCollectionRow(row: unknown): boolean {
+  if (!row || typeof row !== "object" || Array.isArray(row)) return true;
+  return Object.values(row as Record<string, unknown>).every((value) => {
+    if (value == null) return true;
+    if (typeof value === "boolean") return true;
+    if (typeof value === "number") return Number.isNaN(value);
+    if (typeof value === "string") return value.trim().length === 0;
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+  });
 }
 
 /** Ensures exactly one `isPrimary` flag among list items (first when none set). */

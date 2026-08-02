@@ -724,6 +724,83 @@ describe('contactService relationship reciprocal mapping', () => {
     );
   });
 
+  it('persists an explicit empty phones array and clears the legacy phone scalar', async () => {
+    mockFindContactById.mockResolvedValue(
+      contact({
+        id: 'a',
+        firstName: 'Ahmed',
+        phone: '+923001234567',
+        phones: [{ label: 'Mobile', number: '3001234567', countryCode: '+92', isPrimary: true }],
+      }),
+    );
+
+    await updateContactById('a', {
+      id: 'a',
+      firstName: 'Ahmed',
+      name: 'Ahmed',
+      lastName: '',
+      phones: [],
+      phone: '',
+      relationshipContacts: [],
+      relationships: [],
+    } as Contact);
+
+    expect(mockSaveContact).toHaveBeenCalledWith(
+      'demo',
+      expect.objectContaining({
+        id: 'a',
+        phones: [],
+        phone: '',
+      }),
+    );
+  });
+
+  it('persists empty emails/addresses/socials and clears legacy scalars + relationships', async () => {
+    mockFindContactById.mockResolvedValue(
+      contact({
+        id: 'a',
+        firstName: 'Ahmed',
+        email: 'old@example.com',
+        emails: [{ label: 'Home', address: 'old@example.com', isPrimary: true }],
+        line1: '1 Main',
+        city: 'Lahore',
+        address: '1 Main',
+        addresses: [{ label: 'Home', line1: '1 Main', city: 'Lahore', isPrimary: true }],
+        socials: [{ platform: 'Instagram', url: 'https://instagram.com/a' }],
+        relationshipContacts: [{ relationship: 'Father', contactId: 'b' }],
+        relationships: [{ contactId: 'b', relationship: 'father' }],
+      }),
+    );
+
+    await updateContactById('a', {
+      id: 'a',
+      firstName: 'Ahmed',
+      name: 'Ahmed',
+      lastName: '',
+      emails: [],
+      addresses: [],
+      socials: [],
+      relationshipContacts: [],
+      relationships: [],
+    } as Contact);
+
+    expect(mockSaveContact).toHaveBeenCalledWith(
+      'demo',
+      expect.objectContaining({
+        id: 'a',
+        emails: [],
+        email: '',
+        addresses: [],
+        line1: '',
+        city: '',
+        address: '',
+        socials: [],
+        relationshipContacts: [],
+        relationships: [],
+      }),
+    );
+  });
+
   it('strips client soft-delete fields from prepare/upsert payloads', async () => {
     mockFindContactById.mockResolvedValue(null);
 

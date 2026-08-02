@@ -243,8 +243,13 @@ export function createGenericRepository<
       };
     });
 
+    // Match single-row `save`: overwrite replaces full JSONB so emptied collections
+    // (phones/emails/…) cannot be resurrected by top-level jsonb `||` merge.
     const conflictSet: Record<string, unknown> = {
-      customData: sql`COALESCE(${table.customData}, '{}'::jsonb) || excluded.custom_data`,
+      customData:
+        updateStrategy === 'overwrite'
+          ? sql`excluded.custom_data`
+          : sql`COALESCE(${table.customData}, '{}'::jsonb) || excluded.custom_data`,
       updatedAt: sql`excluded.updated_at`,
     };
     if (shouldSyncDeletedAt) {

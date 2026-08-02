@@ -54,4 +54,27 @@ describe('mergeContactForSync', () => {
     expect(merged.firstName).toBe('Ali');
     expect(merged.gender).toBe('female');
   });
+
+  it('applies cleared phone/email/address collections from local', () => {
+    const local = {
+      ...base,
+      phones: [],
+      phone: '',
+      emails: [],
+      email: '',
+      addresses: [],
+      city: '',
+    } as Contact;
+    const merged = mergeContactForSync(local, base, {
+      phone: 'local',
+      email: 'local',
+      city: 'local',
+    });
+    expect(merged.phones).toEqual([]);
+    expect(merged.phone).toBe('');
+    expect(merged.emails).toEqual([]);
+    expect(merged.email).toBe('');
+    expect(merged.addresses).toEqual([]);
+    expect(merged.city).toBe('');
+  });
 });
