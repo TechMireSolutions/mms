@@ -148,7 +148,7 @@ export function relationshipLabel(role: RelationshipRole, contact: Contact): str
     case 'sibling':
       return genderedRelationship(contact, 'Brother', 'Sister', 'Sibling');
     case 'spouse':
-      return 'Spouse';
+      return genderedRelationship(contact, 'Husband', 'Wife', 'Spouse');
     case 'guardian':
       return 'Guardian';
     case 'dependent':
@@ -222,18 +222,23 @@ export function resolveInverseRelationship(
   if (!relationship || !relationship.trim()) return 'Other';
   const norm = normalizeRelationshipTerm(relationship);
 
-  // 1. Custom configured 2-sided pairs check
+  // 1. Custom configured 2-sided pairs check (including gendered inverse labels)
   if (customPairs && customPairs.length > 0) {
     for (const pair of customPairs) {
       const normFwd = normalizeRelationshipTerm(pair.forward);
       const normInv = normalizeRelationshipTerm(pair.inverse);
+      const normInvMale = normalizeRelationshipTerm(pair.inverseMale);
+      const normInvFemale = normalizeRelationshipTerm(pair.inverseFemale);
       if (norm === normFwd) {
         if (isFemale(sourceContact) && pair.inverseFemale) return pair.inverseFemale;
         if (isMale(sourceContact) && pair.inverseMale) return pair.inverseMale;
         return pair.inverse;
       }
-      if (norm === normInv) {
-        if (isFemale(sourceContact) && pair.inverseFemale) return pair.forward;
+      if (norm === normInv || (normInvMale && norm === normInvMale) || (normInvFemale && norm === normInvFemale)) {
+        const fwdRole = relationshipRole(pair.forward);
+        if (fwdRole !== 'other') {
+          return relationshipLabel(fwdRole, sourceContact);
+        }
         return pair.forward;
       }
     }

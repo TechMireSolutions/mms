@@ -58,6 +58,8 @@ export const CONTACT_OPTION_LABEL_KEYS: Record<string, AppTranslationKey> = {
   Guardian: 'contacts.options.relationship.guardian',
   Dependent: 'contacts.options.relationship.dependent',
   Spouse: 'contacts.options.relationship.spouse',
+  Husband: 'contacts.options.relationship.husband',
+  Wife: 'contacts.options.relationship.wife',
   Friend: 'contacts.options.relationship.friend',
   Colleague: 'contacts.options.relationship.colleague',
 };

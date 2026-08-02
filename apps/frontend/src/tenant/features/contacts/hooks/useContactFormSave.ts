@@ -55,7 +55,9 @@ export function useContactFormSave({
       if (firstError.tabId) {
         onValidationTab(firstError.tabId, firstError.fieldId);
       }
-      notify.error(t("contacts.form.pleaseFixErrors"));
+      notify.error(t("contacts.form.pleaseFixErrors"), {
+        description: firstError.message,
+      });
       return;
     }
 

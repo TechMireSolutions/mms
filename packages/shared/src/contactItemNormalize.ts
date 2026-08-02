@@ -49,9 +49,14 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
     result.socials = result.socials.filter((social) => (social.url || "").trim().length > 0);
   }
   if (Array.isArray(result.relationshipContacts)) {
-    result.relationshipContacts = result.relationshipContacts.filter(
-      (em) => em.contactId != null && String(em.contactId).trim().length > 0,
-    );
+    result.relationshipContacts = result.relationshipContacts
+      .filter((link) => link.contactId != null && String(link.contactId).trim().length > 0)
+      .map((link) => ({
+        ...link,
+        contactId: String(link.contactId).trim(),
+        relationship:
+          typeof link.relationship === "string" ? link.relationship.trim() : link.relationship,
+      }));
   }
 
   return result;

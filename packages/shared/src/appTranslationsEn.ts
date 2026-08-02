@@ -4302,6 +4302,8 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.options.relationship.guardian": "Guardian",
   "contacts.options.relationship.dependent": "Dependent",
   "contacts.options.relationship.spouse": "Spouse",
+  "contacts.options.relationship.husband": "Husband",
+  "contacts.options.relationship.wife": "Wife",
   "contacts.options.relationship.friend": "Friend",
   "contacts.options.relationship.colleague": "Colleague",
   "contacts.options.relationship.other": "Other",

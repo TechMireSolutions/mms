@@ -1596,6 +1596,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.options.relationship.guardian": "سرپرست",
   "contacts.options.relationship.dependent": "تحت تکفل",
   "contacts.options.relationship.spouse": "همسر",
+  "contacts.options.relationship.husband": "شوهر",
+  "contacts.options.relationship.wife": "همسر (زن)",
   "contacts.options.relationship.friend": "دوست",
   "contacts.options.relationship.colleague": "همکار",
   "contacts.options.relationship.other": "سایر",

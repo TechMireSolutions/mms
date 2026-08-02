@@ -168,7 +168,12 @@ export function buildCustomFieldSchema(fieldDefinition: FieldDefinition): z.ZodT
 
   if (TEXT_LIKE_FIELD_TYPES.has(fieldDefinition.type)) {
     return z.preprocess(
-      (value) => (typeof value === "string" ? value.trim() : value),
+      (value) => {
+        // Contact picker ids may be numbers in persisted JSONB.
+        if (typeof value === "number" || typeof value === "bigint") return String(value);
+        if (typeof value === "string") return value.trim();
+        return value;
+      },
       baseSchema.refine(
         (value) => typeof value === "string" && value.trim() !== "",
         { message: `${fieldDefinition.label} is required.` },

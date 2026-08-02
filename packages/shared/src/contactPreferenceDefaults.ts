@@ -31,6 +31,7 @@ export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [
   { id: "father_child", forward: "Father", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
   { id: "mother_child", forward: "Mother", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
   { id: "spouse", forward: "Spouse", inverse: "Spouse" },
+  { id: "husband_wife", forward: "Husband", inverse: "Wife" },
   { id: "sibling", forward: "Sibling", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
   { id: "brother_sibling", forward: "Brother", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
   { id: "sister_sibling", forward: "Sister", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },

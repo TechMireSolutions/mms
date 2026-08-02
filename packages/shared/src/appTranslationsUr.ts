@@ -4155,6 +4155,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.options.relationship.guardian": "سرپرست",
   "contacts.options.relationship.dependent": "زیر کفالت",
   "contacts.options.relationship.spouse": "شوہر / بیوی",
+  "contacts.options.relationship.husband": "شوہر",
+  "contacts.options.relationship.wife": "بیوی",
   "contacts.options.relationship.friend": "دوست",
   "contacts.options.relationship.colleague": "ساتھی",
   "contacts.options.relationship.other": "دیگر",

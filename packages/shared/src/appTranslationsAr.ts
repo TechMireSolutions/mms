@@ -4349,6 +4349,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.options.relationship.guardian": "ولي أمر",
   "contacts.options.relationship.dependent": "مُعال",
   "contacts.options.relationship.spouse": "زوج / زوجة",
+  "contacts.options.relationship.husband": "زوج",
+  "contacts.options.relationship.wife": "زوجة",
   "contacts.options.relationship.friend": "صديق",
   "contacts.options.relationship.colleague": "زميل",
   "contacts.options.relationship.other": "أخرى",

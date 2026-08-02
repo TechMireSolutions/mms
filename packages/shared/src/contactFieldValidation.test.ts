@@ -1,0 +1,37 @@
+import { describe, expect, it } from 'vitest';
+import { buildCustomFieldSchema } from './contactFieldValidation.js';
+import type { FieldDefinition } from './contactFieldSchemaTypes.js';
+
+function field(partial: Partial<FieldDefinition> & Pick<FieldDefinition, 'key' | 'type'>): FieldDefinition {
+  return {
+    label: partial.label ?? partial.key,
+    enabled: true,
+    order: 0,
+    required: false,
+    ...partial,
+  };
+}
+
+describe('buildCustomFieldSchema', () => {
+  it('accepts numeric contact ids for required text fields', () => {
+    const schema = buildCustomFieldSchema(
+      field({ key: 'contactId', label: 'Contact', type: 'text', required: true }),
+    );
+    expect(schema.safeParse(42).success).toBe(true);
+    expect(schema.safeParse('').success).toBe(false);
+  });
+
+  it('accepts relationship labels listed in select options', () => {
+    const schema = buildCustomFieldSchema(
+      field({
+        key: 'relationship',
+        label: 'Relationship',
+        type: 'select',
+        required: false,
+        options: ['Husband', 'Wife', 'Spouse'],
+      }),
+    );
+    expect(schema.safeParse('Husband').success).toBe(true);
+    expect(schema.safeParse('Mentor').success).toBe(false);
+  });
+});
