@@ -27,10 +27,21 @@ export interface ContactItemNormalizeDefaults {
   defaultPhoneCountryCode?: string;
 }
 
+/** Built-in contact array keys — never treated as tenant custom-tab collections. */
+const CONTACT_ENTITY_ARRAY_KEYS = new Set([
+  "phones",
+  "emails",
+  "addresses",
+  "socials",
+  "relationshipContacts",
+  "relationships",
+  "activities",
+  "attachments",
+  "emergencyContacts",
+]);
+
 /**
- * Strips blank or empty items from contact phones, emails, addresses, socials, and relationship contacts.
- * @param draft - Partial contact record to clean.
- * @returns Cleaned partial contact record.
+ * Strips blank phones, emails, addresses, socials, relationship contacts, and custom-tab rows.
  */
 export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   const result = hydrateContactRelationshipFields(
@@ -62,26 +73,13 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
         relationship:
           typeof link.relationship === "string" ? link.relationship.trim() : link.relationship,
       }));
-    // Form clears relationshipContacts — also drop legacy parallel key so deletes stick.
     if (result.relationshipContacts.length === 0) {
       result.relationships = [];
     }
   }
 
-  // Tenant custom form tabs only — never strip entity arrays (activities/attachments/…).
-  const entityArrayKeys = new Set([
-    "phones",
-    "emails",
-    "addresses",
-    "socials",
-    "relationshipContacts",
-    "relationships",
-    "activities",
-    "attachments",
-    "emergencyContacts",
-  ]);
   for (const key of Object.keys(result)) {
-    if (entityArrayKeys.has(key) || !isContactCustomCollectionTab(key)) continue;
+    if (CONTACT_ENTITY_ARRAY_KEYS.has(key) || !isContactCustomCollectionTab(key)) continue;
     const rows = result[key];
     if (!Array.isArray(rows)) continue;
     result[key] = rows.filter((row) => !isBlankCustomCollectionRow(row));
@@ -90,8 +88,7 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   return result;
 }
 
-/** True when a tenant custom-tab row has no meaningful user-entered values. */
-export function isBlankCustomCollectionRow(row: unknown): boolean {
+function isBlankCustomCollectionRow(row: unknown): boolean {
   if (!row || typeof row !== "object" || Array.isArray(row)) return true;
   return Object.values(row as Record<string, unknown>).every((value) => {
     if (value == null) return true;

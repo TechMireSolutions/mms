@@ -734,7 +734,7 @@ describe("syncContactScalarFields", () => {
 });
 
 describe("mergeContactEditSavePayload", () => {
-  it("does not resurrect deleted phones from the existing contact scalar", () => {
+  it("does not resurrect deleted collections or scalars from the existing contact", () => {
     const existing = {
       id: "c1",
       firstName: "Ahmed",
@@ -743,27 +743,6 @@ describe("mergeContactEditSavePayload", () => {
       phones: [{ label: "Mobile", number: "3001234567", countryCode: "+92", isPrimary: true }],
       email: "old@example.com",
       emails: [{ label: "Home", address: "old@example.com", isPrimary: true }],
-    } as Partial<Contact>;
-
-    const payload = mergeContactEditSavePayload(existing, {
-      id: "c1",
-      firstName: "Ahmed",
-      name: "Ahmed",
-      phones: [],
-      emails: [],
-    });
-
-    expect(payload.phones).toEqual([]);
-    expect(payload.phone).toBe("");
-    expect(payload.emails).toEqual([]);
-    expect(payload.email).toBe("");
-  });
-
-  it("clears addresses, socials, address scalar, and legacy relationships", () => {
-    const existing = {
-      id: "c1",
-      firstName: "Ahmed",
-      name: "Ahmed",
       address: "1 Main",
       line1: "1 Main",
       city: "Lahore",
@@ -777,11 +756,17 @@ describe("mergeContactEditSavePayload", () => {
       id: "c1",
       firstName: "Ahmed",
       name: "Ahmed",
+      phones: [],
+      emails: [],
       addresses: [],
       socials: [],
       relationshipContacts: [],
     });
 
+    expect(payload.phones).toEqual([]);
+    expect(payload.phone).toBe("");
+    expect(payload.emails).toEqual([]);
+    expect(payload.email).toBe("");
     expect(payload.addresses).toEqual([]);
     expect(payload.address).toBe("");
     expect(payload.line1).toBe("");
@@ -827,15 +812,4 @@ describe("cleanContactDraft", () => {
     expect(cleaned.custom_work).toEqual([{ title: "Teacher", notes: "" }]);
   });
 });
-
-
-
-
-
-
-
-
-
-
-
 

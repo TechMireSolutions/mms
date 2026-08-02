@@ -78,8 +78,7 @@ export function normalizeContactForEdit(
     lastName = parts.slice(1).join(" ");
   }
 
-  // Only hydrate from legacy scalars when the collection was absent on the source.
-  // Explicit `phones: []` (after a delete) must not be resurrected from `phone`.
+  // Hydrate from legacy scalars only when the source omitted the collection array.
   const sourceHasPhonesArray = Array.isArray(raw?.phones) || Array.isArray(initialDraft?.phones);
   const sourceHasEmailsArray = Array.isArray(raw?.emails) || Array.isArray(initialDraft?.emails);
   const sourceHasAddressesArray =
@@ -207,17 +206,13 @@ export function normalizeContactForEdit(
 }
 
 /**
- * Synchronizes primary phone, email, and primary address scalar fields (phone, email, line1, city, state, country)
- * onto the contact object from its structured collections.
- *
- * When a collection array is present on the draft, scalars are derived only from that array
- * (empty array → empty string) so merges with an existing contact cannot resurrect deleted rows.
+ * Sync legacy scalar mirrors from collection arrays.
+ * When an array is present it is authoritative (empty → `""`) so merges cannot resurrect deletes.
  */
 export function syncContactScalarFields<T extends Partial<Contact>>(contact: T): T {
   const result = { ...contact } as Record<string, unknown>;
 
   if (Array.isArray(contact.phones)) {
-    // Ignore legacy scalar — arrays are authoritative when provided.
     result.phone = getPrimaryPhone({ phones: contact.phones }) || "";
   } else {
     const primaryPhoneStr = getPrimaryPhone(contact);
@@ -245,6 +240,7 @@ export function syncContactScalarFields<T extends Partial<Contact>>(contact: T):
     delete result.city;
     delete result.state;
     delete result.country;
+    delete result.address;
   }
 
   return result as T;
@@ -252,8 +248,7 @@ export function syncContactScalarFields<T extends Partial<Contact>>(contact: T):
 
 /**
  * Merge an edit-form draft onto an existing contact for persistence.
- * Collection arrays (and scalars derived from them) win over stale existing fields,
- * so deleting the last phone/email/address row is not undone by spreading `existing`.
+ * Draft collections (and synced scalars) win over stale existing fields.
  */
 export function mergeContactEditSavePayload(
   existing: Partial<Contact> | null | undefined,
@@ -267,32 +262,14 @@ export function mergeContactEditSavePayload(
     socials: draft.socials ?? [],
     relationshipContacts: draft.relationshipContacts ?? [],
   };
-  const synced = syncContactScalarFields(withCollections) as Record<string, unknown>;
-  const scalarOrEmpty = (key: string): string =>
-    typeof synced[key] === "string" ? (synced[key] as string) : "";
-
-  // Form edits relationshipContacts only — clear emptied links and drop legacy parallel key
-  // when the form collection was explicitly emptied.
-  const relationshipsCleared =
+  const synced = syncContactScalarFields(withCollections);
+  const clearLegacyRelationships =
     Array.isArray(withCollections.relationshipContacts)
     && withCollections.relationshipContacts.length === 0;
 
   return {
     ...(existing || {}),
-    ...withCollections,
     ...synced,
-    phones: withCollections.phones,
-    emails: withCollections.emails,
-    addresses: withCollections.addresses,
-    socials: withCollections.socials,
-    relationshipContacts: withCollections.relationshipContacts,
-    ...(relationshipsCleared ? { relationships: [] } : {}),
-    phone: scalarOrEmpty("phone"),
-    email: scalarOrEmpty("email"),
-    line1: scalarOrEmpty("line1"),
-    city: scalarOrEmpty("city"),
-    state: scalarOrEmpty("state"),
-    country: scalarOrEmpty("country"),
-    address: scalarOrEmpty("address"),
+    ...(clearLegacyRelationships ? { relationships: [] } : {}),
   } as Contact;
 }

@@ -1,5 +1,6 @@
 import type { Contact } from './contactTypes.js';
-import { getPrimaryEmail, getPrimaryPhone } from './utils.js';
+import { getPrimaryEmail } from './contactDisplayUtils.js';
+import { getPrimaryPhone } from './phoneUtils.js';
 
 export interface ContactFieldDiff {
   field: string;
@@ -83,10 +84,9 @@ export type SyncFieldPick = 'local' | 'server';
 function applySyncFieldValue(target: Contact, source: Contact, field: (typeof SYNC_DIFF_FIELDS)[number]): void {
   switch (field) {
     case 'phone':
-      // Explicit empty arrays mean "clear" — do not skip and keep the base contact's phones.
       if (Array.isArray(source.phones)) {
         target.phones = [...source.phones];
-        target.phone = source.phones.length > 0 ? (source.phone || target.phone) : '';
+        target.phone = getPrimaryPhone({ phones: source.phones }) || '';
       } else if (source.phone) {
         target.phone = source.phone;
       }
@@ -94,15 +94,15 @@ function applySyncFieldValue(target: Contact, source: Contact, field: (typeof SY
     case 'email':
       if (Array.isArray(source.emails)) {
         target.emails = [...source.emails];
-        target.email = source.emails.length > 0 ? (source.email || target.email) : '';
+        target.email = getPrimaryEmail({ emails: source.emails }) || '';
       } else if (source.email) {
         target.email = source.email;
       }
       break;
     case 'city':
       if (Array.isArray(source.addresses)) {
-        target.addresses = [...source.addresses];
         const first = source.addresses[0];
+        target.addresses = [...source.addresses];
         target.city = first?.city || '';
         target.line1 = first?.line1 || '';
         target.state = first?.state || '';
