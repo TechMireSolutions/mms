@@ -231,26 +231,12 @@ export const SOCIAL_PLATFORMS = [
 export const DEFAULT_SOCIAL_PLATFORMS = SOCIAL_PLATFORMS;
 
 export const COUNTRY_CODES = [
-  { country: "Pakistan",              code: "+92"  },
-  { country: "United States",         code: "+1"   },
-  { country: "United Kingdom",        code: "+44"  },
-  { country: "Canada",                code: "+1"   },
-  { country: "Australia",             code: "+61"  },
-  { country: "India",                 code: "+91"  },
-  { country: "Bangladesh",            code: "+880" },
-  { country: "Egypt",                 code: "+20"  },
-  { country: "Nigeria",               code: "+234" },
-  { country: "Ghana",                 code: "+233" },
-  { country: "Saudi Arabia",          code: "+966" },
-  { country: "United Arab Emirates",  code: "+971" },
-  { country: "Qatar",                 code: "+974" },
-  { country: "Kuwait",                code: "+965" },
-  { country: "Bahrain",               code: "+973" },
-  { country: "Oman",                  code: "+968" },
-  { country: "Malaysia",              code: "+60"  },
-  { country: "Singapore",             code: "+65"  },
-  { country: "Thailand",              code: "+66"  },
-  { country: "Indonesia",             code: "+62"  },
+  { country: "Pakistan",       code: "+92"  },
+  { country: "India",          code: "+91"  },
+  { country: "Iran",           code: "+98"  },
+  { country: "Iraq",           code: "+964" },
+  { country: "United States",  code: "+1"   },
+  { country: "United Kingdom", code: "+44"  },
 ];
 
 export const RELATIONSHIPS: string[] = deriveRelationshipOptionsFromPairs(DEFAULT_RELATIONSHIP_PAIRS);

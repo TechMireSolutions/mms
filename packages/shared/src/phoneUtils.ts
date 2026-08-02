@@ -22,7 +22,7 @@ export function parsePhoneNumber(
   }
 
   // Normalize known codes and default codes to form a unique sorted list (longest first)
-  const codes = [defaultCode, ...knownCodes, "+92", "+1", "+44"]
+  const codes = [defaultCode, ...knownCodes, "+92", "+91", "+98", "+964", "+1", "+44"]
     .map((c) => c.trim())
     .filter((c) => c.startsWith("+"));
   const uniqueCodes = Array.from(new Set(codes)).sort((a, b) => b.length - a.length);
