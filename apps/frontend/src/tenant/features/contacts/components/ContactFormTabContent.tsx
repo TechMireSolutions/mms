@@ -5,6 +5,7 @@ import { ContactAddressesTab } from "@/tenant/features/contacts/components/formT
 import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTabs/ContactSocialsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
+import { normalizeContactFormTabId } from "@mms/shared";
 
 export { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
@@ -25,7 +26,7 @@ export function ContactFormTabContent({
   defaultCity: string;
   defaultProvince: string;
 }): JSX.Element | null {
-  switch (tab) {
+  switch (normalizeContactFormTabId(tab)) {
     case "basic":
       return (
         <ContactBasicTab
@@ -108,7 +109,6 @@ export function ContactFormTabContent({
         />
       );
     case "relationship":
-    case "emergency":
       return (
         <ContactRelationshipTab
           contactDraft={draft.contactDraft}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   mergeModuleColumnPreferences,
+  migrateContactColumnPreferenceKeys,
   type ContactColumnPreference,
   type ColumnRegistryEntry,
 } from "@mms/shared";
@@ -38,12 +39,14 @@ export function useContactConfigColumnPrefs(userId: string | number | undefined)
 
   const rawUserColumnOverlay = useMemo(() => {
     if (localUserColumnOverlay) {
-      return localUserColumnOverlay;
+      return migrateContactColumnPreferenceKeys(localUserColumnOverlay);
     }
     const scopedUserId = userId ? String(userId) : "";
-    const local = scopedUserId ? loadModuleColumnPreferences("contacts", scopedUserId) : null;
+    const localRaw = scopedUserId ? loadModuleColumnPreferences("contacts", scopedUserId) : null;
+    const local = localRaw ? migrateContactColumnPreferenceKeys(localRaw) : null;
     if (columnPrefsLoaded && serverColumnPrefs && serverColumnPrefs.length > 0) {
-      return mergeModuleColumnPreferences(serverColumnPrefs, local) ?? serverColumnPrefs;
+      const server = migrateContactColumnPreferenceKeys(serverColumnPrefs);
+      return mergeModuleColumnPreferences(server, local) ?? server;
     }
     return local;
   }, [columnPrefsLoaded, localUserColumnOverlay, serverColumnPrefs, userId]);
@@ -63,10 +66,12 @@ export function useContactConfigColumnPrefs(userId: string | number | undefined)
     if (!columnPrefsLoaded) return;
 
     const scopedUserId = String(userId);
-    const local = loadModuleColumnPreferences("contacts", scopedUserId);
+    const localRaw = loadModuleColumnPreferences("contacts", scopedUserId);
+    const local = localRaw ? migrateContactColumnPreferenceKeys(localRaw) : null;
 
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
-      const merged = mergeModuleColumnPreferences(serverColumnPrefs, local) ?? serverColumnPrefs;
+      const server = migrateContactColumnPreferenceKeys(serverColumnPrefs);
+      const merged = mergeModuleColumnPreferences(server, local) ?? server;
       saveModuleColumnPreferenceList("contacts", scopedUserId, merged);
       return;
     }

@@ -1,6 +1,10 @@
 import type { Contact, FieldDefinition, FieldConfig } from './contactTypes.js';
 import { canViewContactColumn, type ContactColumnFieldContext } from './contactColumnAccess.js';
 import { canViewContactTab } from './contactFieldAccess.js';
+import {
+  isRelationshipContactColumnKey,
+  isRelationshipTypeColumnKey,
+} from './contactEmergencyTabMigration.js';
 import { getPrimaryPhone, hasWhatsApp } from './utils.js';
 
 export interface ContactExportColumn {
@@ -95,13 +99,13 @@ function cellValue(
   if (columnId === 'socials_url') {
     return (contact.socials || []).map((s) => s.url).filter(Boolean).join('; ');
   }
-  if (columnId === 'relationship_contact' || columnId === 'emergency_contact') {
+  if (isRelationshipContactColumnKey(columnId)) {
     return (contact.relationshipContacts || [])
       .map((ec) => ec.name || (ec.contactId ? String(ec.contactId) : ''))
       .filter(Boolean)
       .join('; ');
   }
-  if (columnId === 'relationship_type' || columnId === 'emergency_relationship') {
+  if (isRelationshipTypeColumnKey(columnId)) {
     return (contact.relationshipContacts || [])
       .map((ec) => ec.relationship)
       .filter(Boolean)

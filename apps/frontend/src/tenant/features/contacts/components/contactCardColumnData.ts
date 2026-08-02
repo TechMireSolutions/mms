@@ -1,5 +1,10 @@
 import type { Contact } from "@mms/shared";
-import { getPrimaryAddress, hasWhatsApp } from "@mms/shared";
+import {
+  getPrimaryAddress,
+  hasWhatsApp,
+  isRelationshipContactColumnKey,
+  isRelationshipTypeColumnKey,
+} from "@mms/shared";
 
 /** Whether a card metadata column has renderable data for the contact. */
 export function hasContactCardColumnData(contact: Contact, colId: string): boolean {
@@ -18,18 +23,6 @@ export function hasContactCardColumnData(contact: Contact, colId: string): boole
       return Boolean(contact.socials && contact.socials.some((s) => s.platform && s.platform.trim().length > 0));
     case "socials_url":
       return Boolean(contact.socials && contact.socials.some((s) => s.url && s.url.trim().length > 0));
-    case "relationship_contact":
-    case "emergency_contact":
-      return Boolean(
-        contact.relationshipContacts &&
-        contact.relationshipContacts.some((ec) => (ec.name && ec.name.trim().length > 0) || ec.contactId),
-      );
-    case "relationship_type":
-    case "emergency_relationship":
-      return Boolean(
-        contact.relationshipContacts &&
-        contact.relationshipContacts.some((ec) => ec.relationship && ec.relationship.trim().length > 0),
-      );
     case "line1":
     case "city":
     case "state":
@@ -42,6 +35,22 @@ export function hasContactCardColumnData(contact: Contact, colId: string): boole
       return addrVal !== undefined && addrVal !== null && String(addrVal).trim().length > 0;
     }
     default: {
+      if (isRelationshipContactColumnKey(colId)) {
+        return Boolean(
+          contact.relationshipContacts &&
+            contact.relationshipContacts.some(
+              (link) => (link.name && link.name.trim().length > 0) || link.contactId,
+            ),
+        );
+      }
+      if (isRelationshipTypeColumnKey(colId)) {
+        return Boolean(
+          contact.relationshipContacts &&
+            contact.relationshipContacts.some(
+              (link) => link.relationship && link.relationship.trim().length > 0,
+            ),
+        );
+      }
       const val = contact[colId as keyof Contact];
       if (typeof val === "boolean") return true;
       if (typeof val === "number") return true;

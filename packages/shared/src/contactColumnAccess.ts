@@ -1,5 +1,10 @@
 import { INITIAL_FIELD_SEED, type FieldDefinition } from './contactTypes.js';
 import { canViewContactField } from './contactFieldAccess.js';
+import {
+  isRelationshipContactColumnKey,
+  isRelationshipTypeColumnKey,
+  resolveRelationshipFieldsTabId,
+} from './contactEmergencyTabMigration.js';
 
 export interface ContactColumnFieldContext {
   fields: Record<string, FieldDefinition[]>;
@@ -82,22 +87,14 @@ export function resolveContactColumnField(
       ? findField(fields, 'socials', 'url')
       : null;
   }
-  if (columnKey === 'relationship_contact' || columnKey === 'emergency_contact') {
-    const tabId = enabledTabIds.has('relationship')
-      ? 'relationship'
-      : enabledTabIds.has('emergency')
-        ? 'emergency'
-        : null;
+  if (isRelationshipContactColumnKey(columnKey)) {
+    const tabId = resolveRelationshipFieldsTabId(fields, enabledTabIds);
     return tabId && isTabFieldEnabled(tabId, 'contactId')
       ? findField(fields, tabId, 'contactId')
       : null;
   }
-  if (columnKey === 'relationship_type' || columnKey === 'emergency_relationship') {
-    const tabId = enabledTabIds.has('relationship')
-      ? 'relationship'
-      : enabledTabIds.has('emergency')
-        ? 'emergency'
-        : null;
+  if (isRelationshipTypeColumnKey(columnKey)) {
+    const tabId = resolveRelationshipFieldsTabId(fields, enabledTabIds);
     return tabId && isTabFieldEnabled(tabId, 'relationship')
       ? findField(fields, tabId, 'relationship')
       : null;

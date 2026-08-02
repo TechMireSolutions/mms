@@ -115,16 +115,16 @@ export const mergeContacts = (
   (other.socials || []).forEach(addSocial);
   merged.socials = mergedSocials;
 
-  // Merge emergency contacts: match by contact ID & relationship
-  const seenEmergency = new Set<string>();
+  // Merge relationship contacts: match by contact ID & relationship
+  const seenRelationship = new Set<string>();
   const mergedRelationshipContacts: RelationshipContact[] = [];
 
-  const addRelationshipContact = (emergencyContact: RelationshipContact | undefined): void => {
-    if (!emergencyContact || !emergencyContact.contactId) return;
-    const key = `${emergencyContact.contactId}-${emergencyContact.relationship}`;
-    if (!seenEmergency.has(key)) {
-      seenEmergency.add(key);
-      mergedRelationshipContacts.push({ ...emergencyContact });
+  const addRelationshipContact = (link: RelationshipContact | undefined): void => {
+    if (!link || !link.contactId) return;
+    const key = `${link.contactId}-${link.relationship}`;
+    if (!seenRelationship.has(key)) {
+      seenRelationship.add(key);
+      mergedRelationshipContacts.push({ ...link });
     }
   };
 

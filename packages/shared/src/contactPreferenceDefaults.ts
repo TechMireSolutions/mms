@@ -56,6 +56,78 @@ export function resolveRelationshipPairs(
 }
 
 /**
+ * True when an equivalent forward/inverse pair already exists (case-insensitive;
+ * order-independent so Mentor↔Mentee matches Mentee↔Mentor).
+ */
+export function isDuplicateRelationshipPair(
+  pairs: readonly RelationshipPair[],
+  forward: string,
+  inverse: string,
+): boolean {
+  const direct = relationshipPairKey(forward, inverse);
+  const swapped = relationshipPairKey(inverse, forward);
+  return pairs.some((pair) => {
+    const existing = relationshipPairKey(pair.forward, pair.inverse);
+    return existing === direct || existing === swapped;
+  });
+}
+
+function relationshipPairKey(forward: string, inverse: string): string {
+  return `${forward.trim().toLowerCase()}::${inverse.trim().toLowerCase()}`;
+}
+
+/**
+ * Appends a 2-sided pair and returns the next pairs list plus flattened option labels.
+ */
+export function buildRelationshipPairAddition(
+  existingPairs: readonly RelationshipPair[],
+  existingLabels: readonly string[],
+  forward: string,
+  inverse: string,
+):
+  | { ok: true; pairs: RelationshipPair[]; labels: string[]; selected: string }
+  | { ok: false; reason: "empty" | "duplicate" } {
+  const fwd = forward.trim();
+  const inv = inverse.trim();
+  if (!fwd || !inv) return { ok: false, reason: "empty" };
+  if (isDuplicateRelationshipPair(existingPairs, fwd, inv)) {
+    return { ok: false, reason: "duplicate" };
+  }
+  const pairs = [
+    ...existingPairs,
+    {
+      id: `pair_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      forward: fwd,
+      inverse: inv,
+    },
+  ];
+  return {
+    ok: true,
+    pairs,
+    labels: mergeRelationshipOptionLabels(existingLabels, [fwd, inv]),
+    selected: fwd,
+  };
+}
+
+/**
+ * Removes pairs that reference a dropped dropdown label (forward, inverse, or gendered).
+ * Empty results are returned as-is; callers/resolvers restore defaults when needed.
+ */
+export function pruneRelationshipPairsForRemovedLabel(
+  pairs: readonly RelationshipPair[],
+  removedLabel: string,
+): RelationshipPair[] {
+  const key = removedLabel.trim().toLowerCase();
+  if (!key) return [...pairs];
+  return pairs.filter((pair) => {
+    const labels = [pair.forward, pair.inverse, pair.inverseMale, pair.inverseFemale];
+    return !labels.some(
+      (label) => typeof label === "string" && label.trim().toLowerCase() === key,
+    );
+  });
+}
+
+/**
  * Flattens configured 2-sided relationship pairs into unique dropdown option labels
  * (forward, inverse, and optional gendered inverse labels).
  */

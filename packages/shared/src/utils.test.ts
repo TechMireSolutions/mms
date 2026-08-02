@@ -607,13 +607,13 @@ describe("getDisplayName", () => {
 });
 
 describe("normalizeContactForEdit", () => {
-  it("pre-populates one empty row for socials and emergency contacts", () => {
+  it("pre-populates one empty row for socials and relationship contacts", () => {
     const draft = normalizeContactForEdit(undefined, undefined);
     expect(draft.socials).toEqual([{ platform: "Facebook", url: "" }]);
     expect(draft.relationshipContacts).toEqual([{ relationship: "Parent", contactId: "" }]);
   });
 
-  it("keeps existing socials and emergency contacts", () => {
+  it("keeps existing socials and relationship contacts", () => {
     const draft = normalizeContactForEdit(
       {
         socials: [{ platform: "Instagram", url: "https://instagram.com/a" }],
@@ -645,7 +645,7 @@ describe("normalizeContactForEdit", () => {
 });
 
 describe("cleanContactDraft", () => {
-  it("strips blank social and emergency rows before save", () => {
+  it("strips blank social and relationship rows before save", () => {
     const cleaned = cleanContactDraft({
       socials: [
         { platform: "WhatsApp", url: "" },

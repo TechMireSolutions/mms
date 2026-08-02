@@ -19,7 +19,7 @@ type NetworkLink = {
   inferred?: boolean;
 };
 
-/** Merge emergency + legacy relationship links; prefer non-inferred when both exist. */
+/** Merge relationshipContacts + legacy `relationships`; prefer non-inferred when both exist. */
 function collectNetworkLinks(contact: Contact): NetworkLink[] {
   const byId = new Map<string, NetworkLink>();
 

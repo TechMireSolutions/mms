@@ -1,6 +1,7 @@
 import type { Contact, FieldDefinition, TabDefinition } from './contactTypes.js';
 import { INITIAL_FIELD_SEED } from './contactTypes.js';
 import { canViewContactField, canViewContactTab } from './contactFieldAccess.js';
+import { normalizeContactReportFieldId } from './contactEmergencyTabMigration.js';
 import { getPrimaryEmail, getPrimaryPhone } from './utils.js';
 
 export const CONTACTS_REPORT_FIELD_IDS = [
@@ -131,7 +132,7 @@ export function getContactReportCellValue(
     return String(value);
   }
 
-  switch (fieldId) {
+  switch (normalizeContactReportFieldId(fieldId)) {
     case 'fullName':
       return String(contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`).trim() || '—';
     case 'firstName':
@@ -157,8 +158,7 @@ export function getContactReportCellValue(
       return contact.addresses?.[0]?.state || String(contact.state || '—');
     case 'country':
       return contact.addresses?.[0]?.country || String(contact.country || '—');
-    case 'relationshipContact':
-    case 'emergencyContact': {
+    case 'relationshipContact': {
       const linked = contact.relationshipContacts;
       return linked?.[0]?.name || linked?.[0]?.contactId || '—';
     }

@@ -78,7 +78,6 @@ export default function ContactForm({
       emails: draft.collectionCounts.filledEmails,
       addresses: draft.collectionCounts.filledAddresses,
       socials: draft.collectionCounts.filledSocials,
-      emergency: draft.collectionCounts.filledRelationships,
       relationship: draft.collectionCounts.filledRelationships,
     };
 

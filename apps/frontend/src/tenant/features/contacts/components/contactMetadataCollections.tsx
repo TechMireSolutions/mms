@@ -72,21 +72,21 @@ export function renderRelationshipMetadata({
   t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 }): React.ReactNode {
   const list = (contact.relationshipContacts || []).filter(
-    (emergencyContact) =>
-      (emergencyContact.name || "").trim() ||
-      emergencyContact.contactId ||
-      (emergencyContact.relationship || "").trim(),
+    (link) =>
+      (link.name || "").trim() ||
+      link.contactId ||
+      (link.relationship || "").trim(),
   );
   if (list.length === 0) return emptyNode;
 
-  const items = list.map((emergencyContact) => {
-    let name = emergencyContact.name ? emergencyContact.name.trim() : "";
-    if (!name && emergencyContact.contactId) {
-      const linked = contactsMap?.get(String(emergencyContact.contactId));
-      name = linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${emergencyContact.contactId}`;
+  const items = list.map((link) => {
+    let name = link.name ? link.name.trim() : "";
+    if (!name && link.contactId) {
+      const linked = contactsMap?.get(String(link.contactId));
+      name = linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${link.contactId}`;
     }
-    const relationship = emergencyContact.relationship
-      ? formatContactOptionLabel(emergencyContact.relationship.trim(), t)
+    const relationship = link.relationship
+      ? formatContactOptionLabel(link.relationship.trim(), t)
       : "";
     if (name && relationship) return `${name} (${relationship})`;
     return name || relationship;

@@ -14,17 +14,8 @@ export function hydrateContactRelationshipFields<T extends Partial<Contact> | Re
     emergencyContacts?: RelationshipContact[];
   };
 
-  const modern = record.relationshipContacts;
-  const legacy = record.emergencyContacts;
-  const hasModern = Array.isArray(modern);
-  const hasLegacy = Array.isArray(legacy);
-
-  if (hasModern && modern.length > 0) {
-    record.relationshipContacts = modern;
-  } else if (hasLegacy) {
-    record.relationshipContacts = legacy;
-  } else if (hasModern) {
-    record.relationshipContacts = modern;
+  if (!Array.isArray(record.relationshipContacts) && Array.isArray(record.emergencyContacts)) {
+    record.relationshipContacts = record.emergencyContacts;
   }
 
   delete record.emergencyContacts;

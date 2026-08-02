@@ -1,5 +1,12 @@
 import { AlertTriangle } from "lucide-react";
-import { formatDate, type Contact, type ContactPreferences } from "@mms/shared";
+import {
+  formatDate,
+  isRelationshipContactColumnKey,
+  isRelationshipTypeColumnKey,
+  isRelationshipWorkColumnKey,
+  type Contact,
+  type ContactPreferences,
+} from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
@@ -26,28 +33,27 @@ export function ContactCardMetadataGrid({
     return null;
   }
 
+  const hasVisibleRelationshipContact = [...visibleColumnIds].some((id) =>
+    isRelationshipContactColumnKey(id),
+  );
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
       {otherColumns.map((col) => {
         if (col.id === "socials_url" && visibleColumnIds.has("socials_platform")) {
           return null;
         }
-        if (
-          (col.id === "relationship_type" || col.id === "emergency_relationship") &&
-          (visibleColumnIds.has("relationship_contact") || visibleColumnIds.has("emergency_contact"))
-        ) {
+        if (isRelationshipTypeColumnKey(col.id) && hasVisibleRelationshipContact) {
           return null;
         }
         if (!hasContactCardColumnData(contact, col.id)) return null;
 
-        const colLabel = col.id === "socials_platform" || col.id === "socials_url"
-          ? t("contacts.detail.socials")
-          : (col.id === "relationship_contact" ||
-              col.id === "relationship_type" ||
-              col.id === "emergency_contact" ||
-              col.id === "emergency_relationship"
-            ? t("contacts.form.tabRelationship")
-            : col.label);
+        const colLabel =
+          col.id === "socials_platform" || col.id === "socials_url"
+            ? t("contacts.detail.socials")
+            : isRelationshipWorkColumnKey(col.id)
+              ? t("contacts.form.tabRelationship")
+              : col.label;
 
         return (
           <div

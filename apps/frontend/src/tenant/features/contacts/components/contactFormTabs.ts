@@ -10,7 +10,6 @@ const CONTACT_TAB_ICONS: Record<string, typeof User> = {
   emails: Mail,
   addresses: MapPin,
   socials: Share2,
-  emergency: Heart,
   relationship: Heart,
 };
 

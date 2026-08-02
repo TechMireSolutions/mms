@@ -37,7 +37,7 @@ function hasManualRelationship(contact: Contact, contactId: string): boolean {
   return linksForContact(contact).some((entry) => entry.contactId === contactId && !entry.inferred);
 }
 
-function setEmergencyRelationship(contact: Contact, planned: PlannedRelationship): Contact {
+function setInferredRelationshipContact(contact: Contact, planned: PlannedRelationship): Contact {
   const relationshipContacts = contact.relationshipContacts ?? [];
   const existingIndex = relationshipContacts.findIndex((entry) => String(entry.contactId) === planned.contactId);
   const relationshipEntry: RelationshipContact = {
@@ -198,7 +198,7 @@ export async function applyContactRelationshipInference(
     const owner = updatesById.get(relationship.ownerId) ?? contactsById.get(relationship.ownerId);
     if (!owner || owner.deletedAt) continue;
     if (!relationship.overwriteExisting && hasManualRelationship(owner, relationship.contactId)) continue;
-    updatesById.set(relationship.ownerId, setEmergencyRelationship(owner, relationship));
+    updatesById.set(relationship.ownerId, setInferredRelationshipContact(owner, relationship));
   }
 
   const updates = Array.from(updatesById.values());

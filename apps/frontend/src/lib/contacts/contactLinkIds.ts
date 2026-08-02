@@ -1,6 +1,6 @@
 import type { Contact } from '@mms/shared';
 
-/** Collect linked contact ids from emergency contacts and relationships (globle2 §10 batch resolve). */
+/** Collect linked contact ids from relationshipContacts and legacy relationships. */
 export function collectLinkedContactIds(contacts: readonly Contact[]): string[] {
   const ids = new Set<string>();
   for (const contact of contacts) {

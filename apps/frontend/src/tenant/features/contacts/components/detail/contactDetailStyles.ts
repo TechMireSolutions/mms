@@ -30,7 +30,6 @@ export const DETAIL_STYLES = {
   smsAction: "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20",
   callAction: "bg-info/10 text-info border border-info/20 hover:bg-info/20",
   emailAction: "bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20",
-  emergencyBadge: "bg-destructive/10 text-destructive border-destructive/30",
   networkHeader: "bg-success/10 border-success/30",
   networkIcon: "bg-success/10 text-success",
   networkTitle: "text-success",

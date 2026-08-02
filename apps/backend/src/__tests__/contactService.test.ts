@@ -67,7 +67,7 @@ function inferredLink(contactId: string, relationship: string, inferenceDepth?: 
   });
 }
 
-describe('contactService emergency reciprocal mapping', () => {
+describe('contactService relationship reciprocal mapping', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetRequestTenant.mockReturnValue('demo');
@@ -96,7 +96,7 @@ describe('contactService emergency reciprocal mapping', () => {
     expect(page.total).toBe(1);
   });
 
-  it('adds a reciprocal emergency link when creating a new contact', async () => {
+  it('adds a reciprocal relationship link when creating a new contact', async () => {
     const source = contact({
       id: 'a',
       name: 'Aisha Khan',
@@ -184,7 +184,7 @@ describe('contactService emergency reciprocal mapping', () => {
 
 
 
-  it('updates the reciprocal emergency link when editing an existing contact', async () => {
+  it('updates the reciprocal relationship link when editing an existing contact', async () => {
     const existingSource = contact({
       id: 'a',
       name: 'Ahmed Khan',

@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import {
   Contact,
   ContactPreferences,
+  isRelationshipWorkColumnKey,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildContactsMap, formatContactCellValue } from "@/lib/contacts/contactI18n";
@@ -109,18 +110,16 @@ export function ContactMetadataCell({
           emptyNode: renderDash(),
           t,
         });
-      case "relationship_contact":
-      case "relationship_type":
-      case "emergency_contact":
-      case "emergency_relationship":
-        return renderRelationshipMetadata({
-          contact,
-          contactsMap,
-          emptyNode: renderDash(),
-          renderJoinedList,
-          t,
-        });
       default: {
+        if (isRelationshipWorkColumnKey(colId)) {
+          return renderRelationshipMetadata({
+            contact,
+            contactsMap,
+            emptyNode: renderDash(),
+            renderJoinedList,
+            t,
+          });
+        }
         const raw = contact[colId as keyof Contact];
         const formatted = formatContactCellValue(raw, t);
         return formatted ? <span>{formatted}</span> : renderDash();

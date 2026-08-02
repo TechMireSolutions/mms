@@ -1,28 +1,99 @@
-/** Migrates legacy contacts "emergency" form tab keys to "relationship". */
+/** Migrates legacy contacts "emergency" form tab / column keys to "relationship". */
 import type { ColumnRegistryEntry, FieldConfig, FieldDefinition, TabDefinition } from './contactFieldSchemaTypes.js';
 
-const LEGACY_TAB = 'emergency';
-const TAB = 'relationship';
+/** @deprecated Legacy form-tab id — remapped by {@link migrateEmergencyTabToRelationship}. */
+export const LEGACY_EMERGENCY_FORM_TAB = 'emergency';
+export const CONTACT_RELATIONSHIP_FORM_TAB = 'relationship';
 
-const COLUMN_KEY_MAP: Record<string, string> = {
+/** Legacy Work-column keys → modern relationship column keys. */
+export const LEGACY_EMERGENCY_COLUMN_KEY_MAP = {
   emergency_contact: 'relationship_contact',
   emergency_relationship: 'relationship_type',
-};
+} as const;
 
-function remapTabKey(key: string | undefined): string | undefined {
-  return key === LEGACY_TAB ? TAB : key;
+export type LegacyEmergencyColumnKey = keyof typeof LEGACY_EMERGENCY_COLUMN_KEY_MAP;
+
+/** Remaps a form / enabled-tab id from legacy emergency → relationship. */
+export function normalizeContactFormTabId(tabId: string): string {
+  return tabId === LEGACY_EMERGENCY_FORM_TAB ? CONTACT_RELATIONSHIP_FORM_TAB : tabId;
+}
+
+/** Remaps a Work / card column key from legacy emergency_* → relationship_*. */
+export function normalizeContactColumnKey(columnKey: string): string {
+  return (
+    LEGACY_EMERGENCY_COLUMN_KEY_MAP[columnKey as LegacyEmergencyColumnKey] ?? columnKey
+  );
+}
+
+/** Remaps saved-report field ids (`emergencyContact` → `relationshipContact`). */
+export function normalizeContactReportFieldId(fieldId: string): string {
+  return fieldId === 'emergencyContact' ? 'relationshipContact' : fieldId;
+}
+
+export function isRelationshipContactColumnKey(columnKey: string): boolean {
+  return normalizeContactColumnKey(columnKey) === 'relationship_contact';
+}
+
+export function isRelationshipTypeColumnKey(columnKey: string): boolean {
+  return normalizeContactColumnKey(columnKey) === 'relationship_type';
+}
+
+export function isRelationshipWorkColumnKey(columnKey: string): boolean {
+  const key = normalizeContactColumnKey(columnKey);
+  return key === 'relationship_contact' || key === 'relationship_type';
+}
+
+/** True when enabled tabs include relationship (or legacy emergency). */
+export function isContactRelationshipTabEnabled(
+  enabledTabIds: ReadonlySet<string> | Iterable<string>,
+): boolean {
+  for (const tabId of enabledTabIds) {
+    if (normalizeContactFormTabId(tabId) === CONTACT_RELATIONSHIP_FORM_TAB) return true;
+  }
+  return false;
+}
+
+/**
+ * Resolves which field-config tab holds relationship fields after/before migration.
+ * Prefers modern `relationship`; falls back to legacy `emergency` when still present.
+ */
+export function resolveRelationshipFieldsTabId(
+  fields: Record<string, unknown> | undefined,
+  enabledTabIds?: ReadonlySet<string> | Iterable<string>,
+): typeof CONTACT_RELATIONSHIP_FORM_TAB | typeof LEGACY_EMERGENCY_FORM_TAB | null {
+  if (enabledTabIds) {
+    const enabled = new Set(
+      [...enabledTabIds].map((tabId) => normalizeContactFormTabId(tabId)),
+    );
+    if (enabled.has(CONTACT_RELATIONSHIP_FORM_TAB)) {
+      if (fields?.[CONTACT_RELATIONSHIP_FORM_TAB]) return CONTACT_RELATIONSHIP_FORM_TAB;
+      if (fields?.[LEGACY_EMERGENCY_FORM_TAB]) return LEGACY_EMERGENCY_FORM_TAB;
+      return CONTACT_RELATIONSHIP_FORM_TAB;
+    }
+  }
+  if (fields?.[CONTACT_RELATIONSHIP_FORM_TAB]) return CONTACT_RELATIONSHIP_FORM_TAB;
+  if (fields?.[LEGACY_EMERGENCY_FORM_TAB]) return LEGACY_EMERGENCY_FORM_TAB;
+  return null;
+}
+
+/** Remap keys on persisted user column preference overlays. */
+export function migrateContactColumnPreferenceKeys<T extends { key: string }>(prefs: readonly T[]): T[] {
+  return prefs.map((pref) => {
+    const nextKey = normalizeContactColumnKey(pref.key);
+    return nextKey === pref.key ? pref : { ...pref, key: nextKey };
+  });
 }
 
 function migrateTabs(tabs: TabDefinition[] | undefined): TabDefinition[] | undefined {
   if (!Array.isArray(tabs)) return tabs;
   return tabs.map((tab) => {
     if (!tab || typeof tab !== 'object') return tab;
-    const nextKey = remapTabKey(tab.key);
+    const nextKey = normalizeContactFormTabId(tab.key);
     if (nextKey === tab.key) return tab;
     const legacyLabelKey = tab.labelKey as string | undefined;
     return {
       ...tab,
-      key: nextKey ?? tab.key,
+      key: nextKey,
       label: tab.label === 'Emergency' ? 'Relationship' : tab.label,
       labelKey:
         legacyLabelKey === 'contacts.form.tabEmergency' || legacyLabelKey === 'contacts.tabs.emergency'
@@ -36,18 +107,18 @@ function migrateFields(
   fields: Record<string, FieldDefinition[]> | undefined,
 ): Record<string, FieldDefinition[]> | undefined {
   if (!fields || typeof fields !== 'object') return fields;
-  if (!fields[LEGACY_TAB]) return fields;
+  if (!fields[LEGACY_EMERGENCY_FORM_TAB]) return fields;
   const next = { ...fields };
-  if (!next[TAB]) {
-    next[TAB] = next[LEGACY_TAB];
+  if (!next[CONTACT_RELATIONSHIP_FORM_TAB]) {
+    next[CONTACT_RELATIONSHIP_FORM_TAB] = next[LEGACY_EMERGENCY_FORM_TAB];
   }
-  delete next[LEGACY_TAB];
+  delete next[LEGACY_EMERGENCY_FORM_TAB];
   return next;
 }
 
 function migrateStringList(list: string[] | undefined): string[] | undefined {
   if (!Array.isArray(list)) return list;
-  return list.map((entry) => (entry === LEGACY_TAB ? TAB : entry));
+  return list.map((entry) => normalizeContactFormTabId(entry));
 }
 
 function migrateColumnRegistry(
@@ -56,23 +127,22 @@ function migrateColumnRegistry(
   if (!Array.isArray(columns)) return columns;
   return columns.map((column) => {
     if (!column || typeof column !== 'object') return column;
-    const nextKey = COLUMN_KEY_MAP[column.key];
-    if (!nextKey) return column;
+    const legacyKey = column.key as string;
+    const nextKey = normalizeContactColumnKey(legacyKey);
+    if (nextKey === legacyKey) return column;
     return {
       ...column,
       key: nextKey,
-      label:
-        column.key === 'emergency_contact'
-          ? 'Relationship Contact'
-          : column.key === 'emergency_relationship'
-            ? 'Relationship Type'
-            : column.label,
-      labelKey:
-        column.key === 'emergency_contact'
-          ? 'contacts.columns.relationshipContact'
-          : column.key === 'emergency_relationship'
-            ? 'contacts.columns.relationshipType'
-            : column.labelKey,
+      label: isRelationshipContactColumnKey(legacyKey)
+        ? 'Relationship Contact'
+        : isRelationshipTypeColumnKey(legacyKey)
+          ? 'Relationship Type'
+          : column.label,
+      labelKey: isRelationshipContactColumnKey(legacyKey)
+        ? 'contacts.columns.relationshipContact'
+        : isRelationshipTypeColumnKey(legacyKey)
+          ? 'contacts.columns.relationshipType'
+          : column.labelKey,
     };
   });
 }

@@ -1,6 +1,39 @@
 import { describe, expect, it } from 'vitest';
-import { migrateEmergencyTabToRelationship } from './contactEmergencyTabMigration.js';
+import {
+  isContactRelationshipTabEnabled,
+  isRelationshipWorkColumnKey,
+  migrateContactColumnPreferenceKeys,
+  migrateEmergencyTabToRelationship,
+  normalizeContactColumnKey,
+  normalizeContactFormTabId,
+  normalizeContactReportFieldId,
+} from './contactEmergencyTabMigration.js';
 import type { FieldConfig } from './contactFieldSchemaTypes.js';
+
+describe('emergency → relationship normalize helpers', () => {
+  it('normalizes tab, column, and report field ids', () => {
+    expect(normalizeContactFormTabId('emergency')).toBe('relationship');
+    expect(normalizeContactFormTabId('relationship')).toBe('relationship');
+    expect(normalizeContactColumnKey('emergency_contact')).toBe('relationship_contact');
+    expect(normalizeContactColumnKey('emergency_relationship')).toBe('relationship_type');
+    expect(normalizeContactReportFieldId('emergencyContact')).toBe('relationshipContact');
+    expect(isRelationshipWorkColumnKey('emergency_contact')).toBe(true);
+    expect(isContactRelationshipTabEnabled(new Set(['phones', 'emergency']))).toBe(true);
+    expect(isContactRelationshipTabEnabled(new Set(['phones']))).toBe(false);
+  });
+
+  it('migrates column preference keys', () => {
+    expect(
+      migrateContactColumnPreferenceKeys([
+        { key: 'emergency_contact', enabled: true, order: 1 },
+        { key: 'name', enabled: true, order: 0 },
+      ]),
+    ).toEqual([
+      { key: 'relationship_contact', enabled: true, order: 1 },
+      { key: 'name', enabled: true, order: 0 },
+    ]);
+  });
+});
 
 describe('migrateEmergencyTabToRelationship', () => {
   it('remaps emergency tab, fields, enabled tabs, and columns', () => {

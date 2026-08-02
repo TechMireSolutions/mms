@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_RELATIONSHIP_PAIRS,
+  buildRelationshipPairAddition,
   deriveRelationshipOptionsFromPairs,
+  isDuplicateRelationshipPair,
   mergeRelationshipOptionLabels,
   normalizeContactPreferences,
+  pruneRelationshipPairsForRemovedLabel,
   resolveRelationshipPairs,
 } from './contactPreferenceDefaults.js';
 
@@ -61,6 +64,70 @@ describe('resolveRelationshipPairs', () => {
   it('returns the provided non-empty list', () => {
     const pairs = [{ id: 'mentor', forward: 'Mentor', inverse: 'Mentee' }];
     expect(resolveRelationshipPairs(pairs)).toEqual(pairs);
+  });
+});
+
+describe('isDuplicateRelationshipPair', () => {
+  const pairs = [{ id: 'mentor', forward: 'Mentor', inverse: 'Mentee' }];
+
+  it('matches order-independently and case-insensitively', () => {
+    expect(isDuplicateRelationshipPair(pairs, 'mentor', 'mentee')).toBe(true);
+    expect(isDuplicateRelationshipPair(pairs, 'Mentee', 'Mentor')).toBe(true);
+    expect(isDuplicateRelationshipPair(pairs, 'Uncle', 'Nephew')).toBe(false);
+  });
+});
+
+describe('buildRelationshipPairAddition', () => {
+  it('rejects empty or duplicate pairs', () => {
+    expect(
+      buildRelationshipPairAddition([{ id: 'a', forward: 'Mentor', inverse: 'Mentee' }], [], '  ', 'Mentee'),
+    ).toEqual({ ok: false, reason: 'empty' });
+    expect(
+      buildRelationshipPairAddition(
+        [{ id: 'a', forward: 'Mentor', inverse: 'Mentee' }],
+        ['Mentor'],
+        'Mentee',
+        'Mentor',
+      ),
+    ).toEqual({ ok: false, reason: 'duplicate' });
+  });
+
+  it('appends the pair and merges both labels', () => {
+    const result = buildRelationshipPairAddition(
+      [{ id: 'a', forward: 'Father', inverse: 'Child' }],
+      ['Father', 'Child'],
+      'Mentor',
+      'Mentee',
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.selected).toBe('Mentor');
+    expect(result.labels).toEqual(['Father', 'Child', 'Mentor', 'Mentee']);
+    expect(result.pairs).toHaveLength(2);
+    expect(result.pairs[1]).toMatchObject({ forward: 'Mentor', inverse: 'Mentee' });
+    expect(result.pairs[1]?.id).toMatch(/^pair_/);
+  });
+
+  it('allows self-inverse pairs', () => {
+    const result = buildRelationshipPairAddition([], [], 'Spouse', 'Spouse');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.labels).toEqual(['Spouse']);
+    expect(result.pairs[0]).toMatchObject({ forward: 'Spouse', inverse: 'Spouse' });
+  });
+});
+
+describe('pruneRelationshipPairsForRemovedLabel', () => {
+  it('drops pairs that reference the removed label on either side', () => {
+    expect(
+      pruneRelationshipPairsForRemovedLabel(
+        [
+          { id: 'a', forward: 'Mentor', inverse: 'Mentee' },
+          { id: 'b', forward: 'Father', inverse: 'Child' },
+        ],
+        'mentee',
+      ),
+    ).toEqual([{ id: 'b', forward: 'Father', inverse: 'Child' }]);
   });
 });
 

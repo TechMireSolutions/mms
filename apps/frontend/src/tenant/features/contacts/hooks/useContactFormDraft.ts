@@ -10,7 +10,7 @@ import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useCont
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
 
-/** Ensure Social / Emergency tabs open with one editable row (zero-click). */
+/** Ensure Social / Relationship tabs open with one editable row (zero-click). */
 function withEmptyCollectionRows(
   draft: Partial<Contact>,
   socialPlatforms: string[],

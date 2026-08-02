@@ -41,7 +41,7 @@ export function useContactFormDraftHelpers({
     ).length;
     const filledSocials = (contactDraft.socials || []).filter((social) => (social.url || "").trim()).length;
     const filledRelationships = (contactDraft.relationshipContacts || []).filter(
-      (emergency) => emergency.contactId,
+      (link) => link.contactId,
     ).length;
     return { filledPhones, filledEmails, filledAddresses, filledSocials, filledRelationships };
   }, [

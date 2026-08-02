@@ -1,4 +1,4 @@
-import type { Contact } from "@mms/shared";
+import { isContactRelationshipTabEnabled, type Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { ContactDetailRelationshipSection } from "./ContactDetailRelationshipSection";
 import {
@@ -38,8 +38,7 @@ export function ContactDetailCollections({
     defaultPhoneCountryCode,
   } = useContactConfig();
 
-  const relationshipEnabled =
-    enabledTabIds.has("relationship") || enabledTabIds.has("emergency");
+  const relationshipEnabled = isContactRelationshipTabEnabled(enabledTabIds);
   const relationshipFields =
     visibleCollectionFields.relationship.length > 0
       ? visibleCollectionFields.relationship

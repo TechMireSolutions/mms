@@ -82,9 +82,6 @@ export interface RelationshipContact {
   inferenceDepth?: number;
 }
 
-/** @deprecated Use {@link RelationshipContact}. */
-export type EmergencyContact = RelationshipContact;
-
 /** Inter-contact relationship reference link. */
 export interface ContactRelationship {
   contactId: string | number;

@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import {
   canViewContactField,
   CONTACTS_MODULE_MANIFEST,
+  resolveRelationshipFieldsTabId,
   type Contact,
   type FieldDefinition,
 } from "@mms/shared";
@@ -65,19 +66,16 @@ export function useContactDetailFields({
     );
   }, [fields, t, viewerRole]);
 
-  const visibleCollectionFields = useMemo(
-    () => ({
+  const visibleCollectionFields = useMemo(() => {
+    const relationshipTabId = resolveRelationshipFieldsTabId(fields) ?? "relationship";
+    return {
       phones: filterVisibleCollection(fields.phones, viewerRole),
       emails: filterVisibleCollection(fields.emails, viewerRole),
       addresses: filterVisibleCollection(fields.addresses, viewerRole),
       socials: filterVisibleCollection(fields.socials, viewerRole),
-      relationship: filterVisibleCollection(
-        fields.relationship ?? fields.emergency,
-        viewerRole,
-      ),
-    }),
-    [fields, viewerRole],
-  );
+      relationship: filterVisibleCollection(fields[relationshipTabId], viewerRole),
+    };
+  }, [fields, viewerRole]);
 
   const fieldsToRender = allFields.filter(
     (field) =>
