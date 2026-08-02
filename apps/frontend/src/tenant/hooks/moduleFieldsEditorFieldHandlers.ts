@@ -73,6 +73,7 @@ export function handleCustomFieldsChange(
   newFields: CustomFieldConfig[],
   setTabFieldOrder: Dispatch<SetStateAction<Record<string, string[]>>>,
   setTabFields: Dispatch<SetStateAction<Record<string, FieldDefinition[]>>>,
+  setTabFieldEnabled: Dispatch<SetStateAction<Record<string, Set<string>>>>,
 ): void {
   const newKeys = newFields.map((field) => field.key);
   setTabFieldOrder((currentFieldOrder) => ({
@@ -83,6 +84,19 @@ export function handleCustomFieldsChange(
     ...currentTabFields,
     [tabId]: newFields as unknown as FieldDefinition[],
   }));
+  // Newly added keys are absent from the enabled Set; `Set.has` is false (not
+  // nullish), so buildFieldsMap would persist them as enabled:false. Opt new
+  // fields in unless the builder marked them disabled.
+  setTabFieldEnabled((currentEnabledFields) => {
+    const previous = currentEnabledFields[tabId] ?? new Set<string>();
+    const next = new Set(previous);
+    for (const field of newFields) {
+      if (!previous.has(field.key) && field.enabled !== false) {
+        next.add(field.key);
+      }
+    }
+    return { ...currentEnabledFields, [tabId]: next };
+  });
 }
 
 export function handleEditField(

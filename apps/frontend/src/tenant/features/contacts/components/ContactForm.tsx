@@ -6,6 +6,7 @@ import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import {
+  isContactCustomCollectionTab,
   listEnabledCustomContactFormFields,
   type Contact,
 } from "@mms/shared";
@@ -14,10 +15,7 @@ import {
   ContactFormTabContent,
   ContactFormFooterStart,
 } from "@/tenant/features/contacts/components/ContactFormTabContent";
-import {
-  CONTACT_FORM_TABS,
-  type ContactFormTabKey,
-} from "@/tenant/features/contacts/components/contactFormTabs";
+import { resolveContactFormTabs } from "@/tenant/features/contacts/components/contactFormTabs";
 
 interface ContactFormProps {
   open?: boolean;
@@ -47,9 +45,11 @@ export default function ContactForm({
 }: ContactFormProps): JSX.Element {
   const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
-  const { enabledTabIds, fields } = useContactConfig();
-  const [tab, setTab] = useState<ContactFormTabKey>("basic");
-  const hasCustomFields = listEnabledCustomContactFormFields(fields).length > 0;
+  const { enabledTabIds, fields, fieldConfig } = useContactConfig();
+  const [tab, setTab] = useState("basic");
+  const hasCustomFields = listEnabledCustomContactFormFields(fields, "custom").length > 0;
+  const formTabs = resolveContactFormTabs(fieldConfig.formTabs);
+  const formInstanceId = String(contact?.id ?? "new");
 
   const draft = useContactFormDraft({
     open,
@@ -60,12 +60,15 @@ export default function ContactForm({
     defaultProvince,
     onSave,
     onClose,
-    onValidationTab: (tabId, fieldId) => {
-      setTab(tabId as ContactFormTabKey);
+    onValidationTab: (tabId, fieldId, index) => {
+      setTab(tabId);
       if (!fieldId) return;
-      const formInstanceId = String(contact?.id ?? "new");
+      const targetId =
+        typeof index === "number" && isContactCustomCollectionTab(tabId)
+          ? `cf-${formInstanceId}-${tabId}-${index}-${fieldId}`
+          : `cf-${formInstanceId}-${fieldId}`;
       requestAnimationFrame(() => {
-        const target = document.getElementById(`cf-${formInstanceId}-${fieldId}`);
+        const target = document.getElementById(targetId);
         if (target instanceof HTMLElement) target.focus();
       });
     },
@@ -85,7 +88,7 @@ export default function ContactForm({
       relationship: draft.collectionCounts.filledRelationships,
     };
 
-    return CONTACT_FORM_TABS.filter((tabItem) => {
+    return formTabs.filter((tabItem) => {
       if (tabItem.key === "basic") return true;
       if (tabItem.key === "custom") return hasCustomFields;
       return enabledTabIds.has(tabItem.key);
@@ -98,7 +101,7 @@ export default function ContactForm({
         badge: count && count > 0 ? count : undefined,
       };
     });
-  }, [draft.collectionCounts, enabledTabIds, hasCustomFields, t]);
+  }, [draft.collectionCounts, enabledTabIds, formTabs, hasCustomFields, t]);
 
   return (
     <FormModal

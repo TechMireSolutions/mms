@@ -22,6 +22,14 @@ export function isContactSeedFormTab(tabKey: string): boolean {
 }
 
 /**
+ * True when `tabKey` is a tenant-created form tab (e.g. `custom_*`).
+ * These tabs store an array of row objects on the contact (like phones/emails).
+ */
+export function isContactCustomCollectionTab(tabKey: string): boolean {
+  return !isContactSeedFormTab(tabKey);
+}
+
+/**
  * Ensures locked Contacts form tabs are present in an enabled-tab id list.
  * Comparison is case-insensitive; returned ids are lowercased.
  */

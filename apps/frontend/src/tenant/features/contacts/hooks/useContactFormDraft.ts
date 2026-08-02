@@ -75,7 +75,7 @@ export function useContactFormDraft({
   defaultProvince: string;
   onSave: (contact: Contact) => void | Promise<void>;
   onClose: () => void;
-  onValidationTab: (tabId: string, fieldId?: string) => void;
+  onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
 }) {
   const {
     isTabFieldEnabled,

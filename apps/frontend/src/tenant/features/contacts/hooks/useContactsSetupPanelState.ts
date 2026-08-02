@@ -7,13 +7,13 @@ import {
   DEFAULT_FORM_TABS,
   INITIAL_FIELD_SEED,
   isContactLockedEnabledTab,
+  normalizeContactDialCode,
   withContactLockedEnabledTabs,
 } from "@mms/shared";
+import type { CountryCodeEntry } from "@/lib/contacts/countryCodeOptions";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useContactsSetupSaveActions } from "@/tenant/features/contacts/hooks/useContactsSetupSaveActions";
-
-type CountryCodeEntry = { country: string; code: string };
 
 function fieldsSetupSnapshot(input: {
   fields: FieldConfig["fields"];
@@ -97,15 +97,7 @@ export function useContactsSetupPanelState({
     () => countryCodes,
   );
 
-  useEffect(() => {
-    setPrefs(contextPrefs);
-  }, [contextPrefs]);
-
-  useEffect(() => {
-    setCountryCodesDraft(countryCodes);
-  }, [countryCodes]);
-
-  const isPrefsDirty = useMemo(
+  const isPrefsDraftDirty = useMemo(
     () => JSON.stringify(prefs) !== JSON.stringify(contextPrefs),
     [prefs, contextPrefs],
   );
@@ -115,7 +107,18 @@ export function useContactsSetupPanelState({
     [countryCodesDraft, countryCodes],
   );
 
-  const isPreferencesDirty = isPrefsDirty || isCountryCodesDirty;
+  const isPreferencesDirty = isPrefsDraftDirty || isCountryCodesDirty;
+
+  // Do not clobber local drafts while the user is editing Preferences.
+  useEffect(() => {
+    if (isPreferencesDirty) return;
+    setPrefs(contextPrefs);
+  }, [contextPrefs, isPreferencesDirty]);
+
+  useEffect(() => {
+    if (isPreferencesDirty) return;
+    setCountryCodesDraft(countryCodes);
+  }, [countryCodes, isPreferencesDirty]);
 
   const isFieldsDirty = useMemo(() => {
     const persistedEnabled =
@@ -140,11 +143,12 @@ export function useContactsSetupPanelState({
   const countryOptions = useMemo(
     () =>
       (countryCodesDraft || []).map((countryCodeObj) => {
-        const codeStr = (countryCodeObj.code || "").trim();
-        const formattedCode = codeStr.startsWith("+") ? codeStr : `+${codeStr}`;
+        const formattedCode = normalizeContactDialCode(countryCodeObj.code || "");
         return {
           value: countryCodeObj.country,
-          label: `${countryCodeObj.country} (${formattedCode})`,
+          label: formattedCode
+            ? `${countryCodeObj.country} (${formattedCode})`
+            : countryCodeObj.country,
         };
       }),
     [countryCodesDraft],
@@ -182,6 +186,7 @@ export function useContactsSetupPanelState({
     updatePrefsAsync,
     updateCountryCodes,
     countryCodesDraft,
+    setCountryCodesDraft,
     setSaved,
   });
 

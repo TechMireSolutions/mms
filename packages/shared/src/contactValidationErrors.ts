@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { translateAppParams, type AppTranslationKey } from "./appTranslations.js";
-import { listContactSystemFormFieldKeys } from "./contactFormCustomFields.js";
+import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import type { FieldDefinition } from "./contactTypes.js";
 
 const LIST_TAB_TO_TAB_ID: Record<string, string> = {
@@ -37,13 +37,17 @@ export function formatZodIssues(
   language = "en",
 ): ValidationError[] {
   void submittedValue;
-  const systemKeys = listContactSystemFormFieldKeys();
 
   return error.issues.map((issue) => {
     const [pathRoot, pathIndex, pathField] = issue.path;
+    const listTabId =
+      typeof pathRoot === "string"
+        ? (LIST_TAB_TO_TAB_ID[pathRoot] ??
+          (isContactCustomCollectionTab(pathRoot) ? pathRoot : undefined))
+        : undefined;
     if (
       typeof pathRoot === "string" &&
-      LIST_TAB_TO_TAB_ID[pathRoot] &&
+      listTabId &&
       typeof pathIndex === "number"
     ) {
       const prefixKey = LIST_TAB_PREFIX_KEYS[pathRoot] ?? "contacts.validation.itemGeneric";
@@ -51,18 +55,18 @@ export function formatZodIssues(
         index: pathIndex + 1,
       });
       return {
-        fieldId: pathField as string,
-        tabId: LIST_TAB_TO_TAB_ID[pathRoot] ?? pathRoot,
+        fieldId: String(pathField ?? ""),
+        tabId: listTabId,
         message: `${prefix}: ${issue.message}`,
         index: pathIndex,
       };
     }
 
     const fieldId = String(pathRoot ?? "");
-    const configTabId = Object.entries(fields).find(([, tabFields]) =>
-      tabFields.some((field) => field.key === fieldId)
-    )?.[0] ?? "basic";
-    const tabId = systemKeys.has(fieldId) ? configTabId : "custom";
+    const tabId =
+      Object.entries(fields).find(([, tabFields]) =>
+        tabFields.some((field) => field.key === fieldId),
+      )?.[0] ?? "basic";
     return { fieldId, tabId, message: issue.message };
   });
 }

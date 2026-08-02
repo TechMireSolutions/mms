@@ -112,7 +112,13 @@ export function useModuleFieldsEditor({
       handleReorderImpl(tabId, reorderedFields, setTabFieldOrder),
     resetAllState,
     handleCustomFieldsChange: (tabId: string, newFields: Parameters<typeof handleCustomFieldsChangeImpl>[1]) =>
-      handleCustomFieldsChangeImpl(tabId, newFields, setTabFieldOrder, setTabFields),
+      handleCustomFieldsChangeImpl(
+        tabId,
+        newFields,
+        setTabFieldOrder,
+        setTabFields,
+        setTabFieldEnabled,
+      ),
     handleEditField: (tabId: string, updatedField: FieldDefinition) =>
       handleEditFieldImpl(tabId, updatedField, setTabFields),
     handleDeleteField: (tabId: string, fieldId: string) =>

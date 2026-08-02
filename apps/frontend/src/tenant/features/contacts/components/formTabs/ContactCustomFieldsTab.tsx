@@ -3,6 +3,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import { cn } from "@/lib/utils";
 import {
   listEnabledCustomContactFormFields,
   type Contact,
@@ -13,19 +14,28 @@ export function ContactCustomFieldsTab({
   contactDraft,
   formInstanceId,
   fields,
+  tabId = "custom",
   getFieldError,
   updateDraft,
+  hideWhenEmpty = false,
+  className,
 }: {
   contactDraft: Partial<Contact>;
   formInstanceId: string;
   fields: Record<string, FieldDefinition[]>;
+  /** Config tab whose non-seed fields to render (default: system Custom tab). */
+  tabId?: string;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
-}): React.JSX.Element {
+  /** When true, render nothing if this tab has no custom fields (e.g. embed under Basic). */
+  hideWhenEmpty?: boolean;
+  className?: string;
+}): React.JSX.Element | null {
   const { t } = useTranslation();
-  const customFields = listEnabledCustomContactFormFields(fields);
+  const customFields = listEnabledCustomContactFormFields(fields, tabId);
 
   if (customFields.length === 0) {
+    if (hideWhenEmpty) return null;
     return (
       <p className="text-sm text-muted-foreground py-6 text-center">
         {t("contacts.form.customFieldsEmpty")}
@@ -34,7 +44,7 @@ export function ContactCustomFieldsTab({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
+    <div className={cn("grid grid-cols-1 gap-4 @md:grid-cols-2", className)}>
       {customFields.map((field) => {
         const fieldId = `cf-${formInstanceId}-${field.key}`;
         const error = getFieldError(field.key);

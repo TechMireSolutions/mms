@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isContactCustomCollectionTab,
   isContactLockedEnabledTab,
   isContactSeedFormTab,
   resolveContactEnabledTabIds,
@@ -18,6 +19,12 @@ describe('contactEnabledTabs', () => {
     expect(isContactSeedFormTab('basic')).toBe(true);
     expect(isContactSeedFormTab('Phones')).toBe(true);
     expect(isContactSeedFormTab('custom_abc123')).toBe(false);
+  });
+
+  it('treats tenant custom tabs as collection tabs', () => {
+    expect(isContactCustomCollectionTab('custom_abc123')).toBe(true);
+    expect(isContactCustomCollectionTab('custom')).toBe(false);
+    expect(isContactCustomCollectionTab('phones')).toBe(false);
   });
 
   it('always injects basic and custom into enabled lists', () => {

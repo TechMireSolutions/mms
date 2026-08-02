@@ -18,6 +18,8 @@ interface ContactsSetupPanelProps {
   mode?: "fields" | "preferences";
   /** Reports Fields draft dirtiness to the Setup shell (leave-guard). */
   onFieldsDirtyChange?: (isDirty: boolean) => void;
+  /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
+  onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
 export default function ContactsSetupPanel({
@@ -26,6 +28,7 @@ export default function ContactsSetupPanel({
   onConfigChangeAsync,
   mode,
   onFieldsDirtyChange,
+  onPrefsDirtyChange,
 }: ContactsSetupPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const {
@@ -58,6 +61,14 @@ export default function ContactsSetupPanel({
     }
     onFieldsDirtyChange?.(isFieldsDirty);
   }, [showFields, isFieldsDirty, onFieldsDirtyChange]);
+
+  useEffect(() => {
+    if (!showPrefs) {
+      onPrefsDirtyChange?.(false);
+      return;
+    }
+    onPrefsDirtyChange?.(isPrefsDirty);
+  }, [showPrefs, isPrefsDirty, onPrefsDirtyChange]);
 
   return (
     <div className="space-y-6 max-w-3xl text-start">

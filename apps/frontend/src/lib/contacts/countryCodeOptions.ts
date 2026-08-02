@@ -1,13 +1,9 @@
+import { normalizeContactDialCode } from "@mms/shared";
+
 /** Merge phone dial-code option edits into tenant `{ country, code }` rows. */
 export type CountryCodeEntry = { country: string; code: string };
 
-/** Normalize a dial-code string to `+…` form (empty → ""). */
-export function normalizeDialCode(code: string): string {
-  const trimmed = code.trim();
-  if (!trimmed) return "";
-  const digits = trimmed.replace(/^\+*/, "").replace(/\s+/g, "");
-  return digits ? `+${digits}` : "";
-}
+export { normalizeContactDialCode as normalizeDialCode };
 
 /**
  * Applies an EditableSelect dial-code list onto country/code pairs.
@@ -17,17 +13,17 @@ export function mergeCountryDialCodeOptions(
   current: CountryCodeEntry[],
   nextCodes: string[],
 ): CountryCodeEntry[] {
-  const unique = Array.from(new Set(nextCodes.map(normalizeDialCode).filter(Boolean)));
+  const unique = Array.from(new Set(nextCodes.map(normalizeContactDialCode).filter(Boolean)));
   const uniqueSet = new Set(unique);
 
   const next = current.map((entry) => {
-    const code = normalizeDialCode(entry.code);
+    const code = normalizeContactDialCode(entry.code);
     if (code && uniqueSet.has(code)) return { country: entry.country, code };
     return { country: entry.country, code: "" };
   });
 
   for (const code of unique) {
-    if (!next.some((entry) => normalizeDialCode(entry.code) === code)) {
+    if (!next.some((entry) => normalizeContactDialCode(entry.code) === code)) {
       next.push({ country: code, code });
     }
   }

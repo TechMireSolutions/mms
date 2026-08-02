@@ -45,6 +45,7 @@ export default function ContactsSettingsPanel({
   const { t } = useTranslation();
   const { fieldConfig, updateConfig, updateConfigAsync } = useContactConfig();
   const [fieldsDirty, setFieldsDirty] = useState(false);
+  const [prefsDirty, setPrefsDirty] = useState(false);
 
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
@@ -79,6 +80,10 @@ export default function ContactsSettingsPanel({
       if (!confirm(t("contacts.setup.discardUnsavedFieldsConfirm"))) return;
       setFieldsDirty(false);
     }
+    if (sub === "preferences" && prefsDirty) {
+      if (!confirm(t("contacts.setup.discardUnsavedPreferencesConfirm"))) return;
+      setPrefsDirty(false);
+    }
     setSub(next);
   };
 
@@ -109,6 +114,7 @@ export default function ContactsSettingsPanel({
               onConfigChange={updateConfig}
               onConfigChangeAsync={updateConfigAsync}
               mode="preferences"
+              onPrefsDirtyChange={setPrefsDirty}
             />
           ) : (
             <SetupReadOnlyMessage />

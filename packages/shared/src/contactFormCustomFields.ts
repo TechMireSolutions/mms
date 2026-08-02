@@ -18,16 +18,21 @@ export function listContactSystemFormFieldKeys(): ReadonlySet<string> {
 }
 
 /**
- * Enabled non-seed fields that the create/edit form must render (Custom Fields tab).
- * Sorted by order within each tab, then tab key for stability.
+ * Enabled non-seed fields for the contact form.
+ * When `tabId` is set, only fields stored under that config tab are returned
+ * (so a field created on Basic stays on Basic).
+ * When omitted, returns enabled non-seed fields from every tab (legacy aggregate).
  */
 export function listEnabledCustomContactFormFields(
   fields: Record<string, FieldDefinition[]>,
+  tabId?: string,
 ): FieldDefinition[] {
   const systemKeys = listContactSystemFormFieldKeys();
   const byKey = new Map<string, FieldDefinition>();
+  const sourceTabs: FieldDefinition[][] =
+    tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
 
-  for (const tabFields of Object.values(fields)) {
+  for (const tabFields of sourceTabs) {
     for (const field of tabFields) {
       if (!field.enabled || systemKeys.has(field.key)) continue;
       if (!byKey.has(field.key)) {

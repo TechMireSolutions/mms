@@ -2,6 +2,7 @@
 export * from './contactEntityTypes.js';
 export * from './contactFieldSchemaTypes.js';
 export * from './contactPreferenceDefaults.js';
+export * from './contactPreferencesSetupValidation.js';
 export * from './contactFieldSeed.js';
 export * from './contactRetiredFields.js';
 export * from './contactTabRegistry.js';

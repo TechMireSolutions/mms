@@ -1,12 +1,14 @@
 import React, { ChangeEvent } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import type { Contact } from "@mms/shared";
+import type { Contact, FieldDefinition } from "@mms/shared";
 import { ContactBasicAvatarSection } from "@/tenant/features/contacts/components/formTabs/ContactBasicAvatarSection";
 import { ContactBasicIdentityFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicIdentityFields";
+import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
 
 export interface ContactBasicTabProps {
   contactDraft: Partial<Contact>;
   formInstanceId: string;
+  fields: Record<string, FieldDefinition[]>;
   isFieldEnabled: (tabId: string, fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
@@ -21,6 +23,7 @@ export interface ContactBasicTabProps {
 export function ContactBasicTab({
   contactDraft,
   formInstanceId,
+  fields,
   isFieldEnabled,
   getFieldError,
   updateDraft,
@@ -54,6 +57,17 @@ export function ContactBasicTab({
           genders={genders}
           onUpdateGenders={onUpdateGenders}
           lockGender={lockGender}
+        />
+
+        <ContactCustomFieldsTab
+          contactDraft={contactDraft}
+          formInstanceId={formInstanceId}
+          fields={fields}
+          tabId="basic"
+          getFieldError={getFieldError}
+          updateDraft={updateDraft}
+          hideWhenEmpty
+          className="mt-4"
         />
       </SectionCard>
     </div>

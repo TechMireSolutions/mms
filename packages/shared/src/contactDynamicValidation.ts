@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { translateApp, type AppTranslationKey } from "./appTranslations.js";
 import { canViewContactField, canViewContactTab } from "./contactFieldAccess.js";
+import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import { buildCustomFieldSchema } from "./contactFieldValidation.js";
 import type { FieldConfig, FieldDefinition } from "./contactTypes.js";
 
@@ -53,7 +54,7 @@ export function buildDynamicContactSchema(
   };
 
   for (const [tabId, configuredFields] of Object.entries(fields)) {
-    if (LIST_TABS_PROP_MAP[tabId]) continue;
+    if (LIST_TABS_PROP_MAP[tabId] || isContactCustomCollectionTab(tabId)) continue;
     if (!enabledTabIds.has(tabId) && tabId !== "basic") continue;
 
     const tabDefinition = config.formTabs?.find((tab) => tab.key === tabId);
@@ -69,7 +70,14 @@ export function buildDynamicContactSchema(
     }
   }
 
-  for (const [tabId, propertyKey] of Object.entries(LIST_TABS_PROP_MAP)) {
+  const listTabEntries: Array<[string, string]> = [
+    ...Object.entries(LIST_TABS_PROP_MAP),
+    ...Object.keys(fields)
+      .filter((tabId) => isContactCustomCollectionTab(tabId))
+      .map((tabId): [string, string] => [tabId, tabId]),
+  ];
+
+  for (const [tabId, propertyKey] of listTabEntries) {
     if (!enabledTabIds.has(tabId)) continue;
 
     const tabDefinition = config.formTabs?.find((tab) => tab.key === tabId);
@@ -90,7 +98,7 @@ export function buildDynamicContactSchema(
       const translationKey = REQUIRED_TAB_I18N[tabId];
       const message = translationKey
         ? translateApp(translationKey, language)
-        : "At least one entry is required.";
+        : translateApp("contacts.form.atLeastOneEntryRequired", language);
       schemaObject[propertyKey] = z.array(itemSchema).min(1, message);
     } else {
       schemaObject[propertyKey] = z.array(itemSchema).optional().nullable();

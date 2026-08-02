@@ -1,20 +1,33 @@
 import { useCallback, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import {
+  type AppTranslationKey,
   type FieldConfig,
   type ContactPreferences,
   type FieldDefinition,
   type TabDefinition,
   CONFIG_VERSION,
-  normalizeContactPreferences,
+  prepareContactPreferencesSetupSave,
   syncContactColumnRegistryWithFields,
-  toTitleCase,
   withContactLockedEnabledTabs,
+  type ContactPreferencesSetupIssue,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 import { notify } from "@/lib/notify";
+import type { CountryCodeEntry } from "@/lib/contacts/countryCodeOptions";
 import { useContactsSetupFieldDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupFieldDeleteGuard";
 import { useContactsSetupTabDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupTabDeleteGuard";
+
+const PREFS_SETUP_ISSUE_KEYS: Record<ContactPreferencesSetupIssue, AppTranslationKey> = {
+  invalidProvince: "contacts.setup.invalidProvince",
+  invalidCity: "contacts.setup.invalidCity",
+  invalidThresholdHigh: "contacts.setup.invalidThresholdHigh",
+  invalidThresholdMedium: "contacts.setup.invalidThresholdMedium",
+  thresholdOrder: "contacts.setup.thresholdOrder",
+  emptyCountryRow: "contacts.setup.emptyCountryRow",
+  invalidDialCode: "contacts.setup.invalidDialCode",
+  duplicateCountry: "contacts.setup.duplicateCountry",
+};
 
 type FieldsEditorLike = {
   formTabs: TabDefinition[];
@@ -24,8 +37,6 @@ type FieldsEditorLike = {
   handleDeleteField: (tabId: string, fieldId: string) => void;
   handleDeleteTab: (tabId: string) => void;
 };
-
-type CountryCodeEntry = { country: string; code: string };
 
 export function useContactsSetupSaveActions({
   config,
@@ -38,6 +49,7 @@ export function useContactsSetupSaveActions({
   updatePrefsAsync,
   updateCountryCodes,
   countryCodesDraft,
+  setCountryCodesDraft,
   setSaved,
 }: {
   config: FieldConfig;
@@ -54,6 +66,7 @@ export function useContactsSetupSaveActions({
   updatePrefsAsync: (prefs: ContactPreferences) => Promise<void>;
   updateCountryCodes: (countryCodes: CountryCodeEntry[]) => void | Promise<void>;
   countryCodesDraft: CountryCodeEntry[];
+  setCountryCodesDraft: Dispatch<SetStateAction<CountryCodeEntry[]>>;
   setSaved: Dispatch<SetStateAction<boolean>>;
 }) {
   const { t } = useTranslation();
@@ -85,60 +98,64 @@ export function useContactsSetupSaveActions({
 
   const handleSave = useCallback(async (): Promise<void> => {
     if (mode === "preferences") {
-      if (prefs.defaultProvince && /\d/.test(prefs.defaultProvince)) {
-        notify.error(t("contacts.setup.invalidProvince"));
+      const prepared = prepareContactPreferencesSetupSave(prefs, countryCodesDraft);
+      if (!prepared.ok) {
+        notify.error(t(PREFS_SETUP_ISSUE_KEYS[prepared.issue]));
         return;
       }
-      if (prefs.defaultCity && /\d/.test(prefs.defaultCity)) {
-        notify.error(t("contacts.setup.invalidCity"));
-        return;
-      }
-    }
 
-    setIsSaving(true);
-    try {
-      const updatedPrefs = normalizeContactPreferences({
-        ...prefs,
-        defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
-        defaultProvince: prefs.defaultProvince ? toTitleCase(prefs.defaultProvince.trim()) : "",
-        defaultCity: prefs.defaultCity ? toTitleCase(prefs.defaultCity.trim()) : "",
-      });
-
-      if (mode === "preferences") {
-        await updatePrefsAsync(updatedPrefs);
-        await updateCountryCodes(countryCodesDraft);
+      setIsSaving(true);
+      try {
+        await updatePrefsAsync(prepared.prefs);
+        try {
+          await updateCountryCodes(prepared.countryCodes);
+        } catch (countryError) {
+          // Roll back prefs so Setup does not leave a partial Preferences write.
+          await updatePrefsAsync(contextPrefs);
+          throw countryError;
+        }
         await logSetupAudit.mutateAsync({
           area: "preferences",
           summary: t("contacts.setup.auditSummary", { area: "preferences" }),
         });
-        setPrefs(updatedPrefs);
+        setPrefs(prepared.prefs);
+        setCountryCodesDraft(prepared.countryCodes);
         notify.success(t("contacts.setup.preferencesSaved"));
-      } else {
-        const fieldsMap = fieldsEditor.buildFieldsMap() || {};
-        const enabledTabIds = withContactLockedEnabledTabs(fieldsEditor.enabledTabs);
-        // Omit formTabs/enabledTabs — saveSettingsAsync syncs them from the fields editor.
-        await saveSettingsAsync(
-          {},
-          {
-            version: CONFIG_VERSION,
-            pageTabs: config.pageTabs || [],
-            detailTabs: (config.detailTabs || []).filter((tab) => tab.key !== "network"),
-            settingsSubTabs: config.settingsSubTabs || [],
-            columnRegistry: syncContactColumnRegistryWithFields(
-              config.columnRegistry,
-              fieldsMap,
-              enabledTabIds,
-            ),
-          },
-          { markSaved: false },
-        );
-        await logSetupAudit.mutateAsync({
-          area: "fields",
-          summary: t("contacts.setup.auditSummary", { area: "fields" }),
-        });
-        notify.success(t("contacts.setup.fieldsSaved"));
+        setSaved(true);
+      } catch {
+        setSaved(false);
+        notify.error(t("contacts.saveFailed"));
+      } finally {
+        setIsSaving(false);
       }
+      return;
+    }
 
+    setIsSaving(true);
+    try {
+      const fieldsMap = fieldsEditor.buildFieldsMap() || {};
+      const enabledTabIds = withContactLockedEnabledTabs(fieldsEditor.enabledTabs);
+      // Omit formTabs/enabledTabs — saveSettingsAsync syncs them from the fields editor.
+      await saveSettingsAsync(
+        {},
+        {
+          version: CONFIG_VERSION,
+          pageTabs: config.pageTabs || [],
+          detailTabs: (config.detailTabs || []).filter((tab) => tab.key !== "network"),
+          settingsSubTabs: config.settingsSubTabs || [],
+          columnRegistry: syncContactColumnRegistryWithFields(
+            config.columnRegistry,
+            fieldsMap,
+            enabledTabIds,
+          ),
+        },
+        { markSaved: false },
+      );
+      await logSetupAudit.mutateAsync({
+        area: "fields",
+        summary: t("contacts.setup.auditSummary", { area: "fields" }),
+      });
+      notify.success(t("contacts.setup.fieldsSaved"));
       setSaved(true);
     } catch {
       setSaved(false);
@@ -155,8 +172,10 @@ export function useContactsSetupSaveActions({
     updatePrefsAsync,
     updateCountryCodes,
     countryCodesDraft,
+    contextPrefs,
     logSetupAudit,
     setPrefs,
+    setCountryCodesDraft,
     setSaved,
     t,
   ]);

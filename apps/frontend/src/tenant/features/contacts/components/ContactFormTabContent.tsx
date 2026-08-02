@@ -5,6 +5,7 @@ import { ContactAddressesTab } from "@/tenant/features/contacts/components/formT
 import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTabs/ContactSocialsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
 import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
+import { ContactCustomCollectionTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomCollectionTab";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { normalizeContactFormTabId } from "@mms/shared";
 
@@ -32,7 +33,8 @@ export function ContactFormTabContent({
       return (
         <ContactBasicTab
           contactDraft={draft.contactDraft}
-          formInstanceId={String(draft.formInstanceId)}
+          formInstanceId={draft.formInstanceId}
+          fields={draft.fields}
           isFieldEnabled={draft.isFieldEnabled}
           getFieldError={draft.getFieldError}
           updateDraft={draft.updateDraft}
@@ -128,13 +130,25 @@ export function ContactFormTabContent({
       return (
         <ContactCustomFieldsTab
           contactDraft={draft.contactDraft}
-          formInstanceId={String(draft.formInstanceId)}
+          formInstanceId={draft.formInstanceId}
           fields={draft.fields}
+          tabId="custom"
           getFieldError={draft.getFieldError}
           updateDraft={draft.updateDraft}
         />
       );
     default:
-      return null;
+      // Tenant-created Setup tabs — multi-entry collections (like phones/emails).
+      return (
+        <ContactCustomCollectionTab
+          contactDraft={draft.contactDraft}
+          formInstanceId={draft.formInstanceId}
+          fields={draft.fields}
+          tabId={tab}
+          getLocalId={draft.getLocalId}
+          getListItemError={draft.getListItemError}
+          updateDraft={draft.updateDraft}
+        />
+      );
   }
 }

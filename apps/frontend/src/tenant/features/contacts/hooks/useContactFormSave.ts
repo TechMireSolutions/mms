@@ -28,7 +28,7 @@ export function useContactFormSave({
   defaultCountryCode: string;
   onSave: (contact: Contact) => void | Promise<void>;
   onClose: () => void;
-  onValidationTab: (tabId: string, fieldId?: string) => void;
+  onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
 }) {
   const { t } = useTranslation();
   const validate = useContactValidation();
@@ -72,7 +72,7 @@ export function useContactFormSave({
       setValidationErrors(formErrors);
       const firstError = formErrors[0];
       if (firstError.tabId) {
-        onValidationTab(firstError.tabId, firstError.fieldId);
+        onValidationTab(firstError.tabId, firstError.fieldId, firstError.index);
       }
       notify.error(t("contacts.form.pleaseFixErrors"), {
         description: firstError.message,

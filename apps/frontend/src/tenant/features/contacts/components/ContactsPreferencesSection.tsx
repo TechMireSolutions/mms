@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { AlertTriangle, Users, Copy } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -37,9 +38,16 @@ export function ContactsPreferencesSection({
 }: ContactsPreferencesSectionProps): JSX.Element {
   const { t } = useTranslation();
   const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email"];
+  const [namePrefixesDraft, setNamePrefixesDraft] = useState(
+    () => (prefs.namePrefixesToIgnore ?? []).join(", "),
+  );
+
+  useEffect(() => {
+    if (isPrefsDirty) return;
+    setNamePrefixesDraft((prefs.namePrefixesToIgnore ?? []).join(", "));
+  }, [prefs.namePrefixesToIgnore, isPrefsDirty]);
 
   const toggleDetectionField = (fieldId: string, enabled: boolean) => {
-
     const next = enabled
       ? Array.from(new Set([...detectionFields, fieldId]))
       : detectionFields.filter((field) => field !== fieldId);
@@ -115,6 +123,29 @@ export function ContactsPreferencesSection({
               onChange={(val) => onUpdatePreference("showDetailedLunarAge", val)}
             />
           </div>
+
+          <div className="border-t border-border/60 pt-3 mt-3">
+            <label className={FORM_LABEL} htmlFor="namePrefixesToIgnore">
+              {t("contacts.setup.namePrefixesToIgnore")}
+            </label>
+            <p className="text-xs text-muted-foreground mb-2">
+              {t("contacts.setup.namePrefixesToIgnoreDesc")}
+            </p>
+            <Input
+              id="namePrefixesToIgnore"
+              value={namePrefixesDraft}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setNamePrefixesDraft(raw);
+                const next = raw
+                  .split(",")
+                  .map((prefix) => prefix.trim())
+                  .filter(Boolean);
+                onUpdatePreference("namePrefixesToIgnore", next);
+              }}
+              placeholder={t("contacts.setup.namePrefixesToIgnorePlaceholder")}
+            />
+          </div>
         </div>
       </section>
 
@@ -164,9 +195,13 @@ export function ContactsPreferencesSection({
                 min={1}
                 max={100}
                 value={prefs.duplicateDetectionThresholdHigh ?? 90}
-                onChange={(e) =>
-                  onUpdatePreference("duplicateDetectionThresholdHigh", Number(e.target.value) || 90)
-                }
+                onChange={(e) => {
+                  const parsed = Number(e.target.value);
+                  onUpdatePreference(
+                    "duplicateDetectionThresholdHigh",
+                    Number.isFinite(parsed) ? parsed : (prefs.duplicateDetectionThresholdHigh ?? 90),
+                  );
+                }}
               />
             </div>
             <div>
@@ -179,9 +214,13 @@ export function ContactsPreferencesSection({
                 min={1}
                 max={100}
                 value={prefs.duplicateDetectionThresholdMedium ?? 75}
-                onChange={(e) =>
-                  onUpdatePreference("duplicateDetectionThresholdMedium", Number(e.target.value) || 75)
-                }
+                onChange={(e) => {
+                  const parsed = Number(e.target.value);
+                  onUpdatePreference(
+                    "duplicateDetectionThresholdMedium",
+                    Number.isFinite(parsed) ? parsed : (prefs.duplicateDetectionThresholdMedium ?? 75),
+                  );
+                }}
               />
             </div>
           </div>
