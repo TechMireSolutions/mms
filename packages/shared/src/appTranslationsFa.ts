@@ -1581,7 +1581,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.fields.platformDesc": "انتخاب پلتفرم (فیس‌بوک، ایکس و غیره).",
   "contacts.fields.socialUrlDesc": "ورود لینک یا شناسه. تعامل در شبکه‌های اجتماعی و تأیید را ممکن می‌کند.",
   "contacts.fields.linkedContactDesc": "انتخاب‌گر مخاطب — یک مخاطب موجود را در این رابطه پیوند می‌دهد.",
-  "contacts.fields.relationshipDesc": "نسبت با مخاطب اضطراری (مثلاً پدر، مادر، همسر).",
+  "contacts.fields.relationshipDesc": "نوع نسبت (مثلاً پدر، مادر، همسر).",
   "contacts.fields.cnicDesc": "شماره ملی وقتی مدرسه آن را لازم بداند.",
   "contacts.options.phone.mobile": "موبایل",
   "contacts.options.phone.home": "منزل",

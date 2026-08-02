@@ -25,6 +25,7 @@ export interface ContactDetailOverviewProps {
     emails: { enabled?: boolean }[];
     addresses: { enabled?: boolean }[];
     socials: { enabled?: boolean }[];
+    relationship: { enabled?: boolean }[];
   };
   primaryPhone: string | null;
   primaryEmail: string | null;
@@ -48,7 +49,9 @@ export function ContactDetailOverview({
   onNavigateToContact,
 }: ContactDetailOverviewProps): JSX.Element {
   const { enabledTabIds } = useContactConfig();
-  const showRelationships = isContactRelationshipTabEnabled(enabledTabIds);
+  const showRelationships =
+    isContactRelationshipTabEnabled(enabledTabIds) &&
+    visibleCollectionFields.relationship.length > 0;
   const showPhoneSection =
     enabledTabIds.has("phones") && visibleCollectionFields.phones.length > 0;
   const showEmailSection =

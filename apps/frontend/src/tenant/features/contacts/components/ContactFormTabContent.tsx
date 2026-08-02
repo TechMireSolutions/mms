@@ -116,6 +116,7 @@ export function ContactFormTabContent({
           getLocalId={draft.getLocalId}
           relationshipOptions={draft.relationshipOptions}
           onUpdateRelationships={draft.updateRelationships}
+          isFieldEnabled={draft.isFieldEnabled}
           getListItemError={draft.getListItemError}
           addSubListItem={draft.addSubListItem}
           ensureSubListItem={draft.ensureSubListItem}

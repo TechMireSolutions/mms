@@ -4137,7 +4137,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.fields.platformDesc": "پلیٹ فارم کا انتخاب (فیس بک، ایکس وغیرہ).",
   "contacts.fields.socialUrlDesc": "URL یا ہینڈل درج کریں۔ سوشل میڈیا مشغولیت اور تصدیق کو ممکن بناتا ہے۔",
   "contacts.fields.linkedContactDesc": "رابطہ منتخب کنندہ — اس تعلق میں موجودہ رابطے کو جوڑتا ہے۔",
-  "contacts.fields.relationshipDesc": "ہنگامی رابطے کے ساتھ تعلق (مثلاً والد، والدہ، زوجہ/شوہر).",
+  "contacts.fields.relationshipDesc": "تعلق کی قسم (مثلاً والد، والدہ، زوجہ/شوہر).",
   "contacts.fields.cnicDesc": "قومی شناختی نمبر جب مدرسہ اسے درکار کرے۔",
   "contacts.options.phone.mobile": "موبائل",
   "contacts.options.phone.home": "گھر",

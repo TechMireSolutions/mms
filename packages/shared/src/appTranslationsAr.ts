@@ -4331,7 +4331,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.fields.platformDesc": "اختيار المنصة (فيسبوك، إكس، إلخ).",
   "contacts.fields.socialUrlDesc": "إدخال الرابط أو المعرف. يتيح التفاعل عبر وسائل التواصل والتحقق.",
   "contacts.fields.linkedContactDesc": "منتقي جهات الاتصال — يربط جهة اتصال موجودة بهذه العلاقة.",
-  "contacts.fields.relationshipDesc": "العلاقة مع جهة اتصال الطوارئ (مثل: أب، أم، زوج/زوجة).",
+  "contacts.fields.relationshipDesc": "نوع العلاقة (مثل: أب، أم، زوج/زوجة).",
   "contacts.fields.cnicDesc": "رقم الهوية الوطنية عند اشتراط المدرسة.",
   "contacts.options.phone.mobile": "جوال",
   "contacts.options.phone.home": "منزل",

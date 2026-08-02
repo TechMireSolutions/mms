@@ -4,6 +4,9 @@ import { type ModuleSettingsShape } from "@/hooks/useModuleConfig";
 import { useModuleFieldsEditor } from "./useModuleFieldsEditor";
 import { useSavedFlash } from "./useSavedFlash";
 
+const EMPTY_REQUIRED_TABS: string[] = [];
+const DEFAULT_LOCKED_ENABLED_TABS: string[] = ["basic"];
+
 interface UseModuleSettingsEditorOptions<T extends ModuleSettingsShape> {
   config: {
     settings: T;
@@ -25,8 +28,8 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   config,
   tabRegistry,
   defaultEnabledTabs,
-  defaultRequiredTabs = [],
-  lockedEnabledTabs = ["basic"],
+  defaultRequiredTabs = EMPTY_REQUIRED_TABS,
+  lockedEnabledTabs = DEFAULT_LOCKED_ENABLED_TABS,
 }: UseModuleSettingsEditorOptions<T>) {
   const { settings, updateSettings, updateSettingsAsync } = config;
   const { saved, flashSaved, clearSaved } = useSavedFlash();
@@ -100,12 +103,16 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   const resetRef = useRef(fieldsEditor.resetAllState);
   resetRef.current = fieldsEditor.resetAllState;
 
-  // Keep fields state synced when settings load or change
+  // Rehydrate fields editor only when persisted settings / registry change.
+  // Do not depend on draft Sets — comparing draft vs settings snapped tab/field
+  // checkboxes back on every toggle.
   useEffect(() => {
     if (!settings) return;
 
     const coreTabKeys = new Set(tabRegistry.map((tab) => tab.key.toLowerCase()));
-    const customTabs = (settings.formTabs || []).filter((tab: TabDefinition) => !coreTabKeys.has(tab.key.toLowerCase()));
+    const customTabs = (settings.formTabs || []).filter(
+      (tab: TabDefinition) => !coreTabKeys.has(tab.key.toLowerCase()),
+    );
     const currentActiveEnabledTabs = withLockedEnabledTabs(
       settings.enabledTabs && settings.enabledTabs.length > 0
         ? settings.enabledTabs
@@ -114,39 +121,17 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     const enabledSet = new Set(currentActiveEnabledTabs);
 
-    const updatedTabs = [
-      ...tabRegistry,
-      ...customTabs,
-    ].map((tab) => ({
+    const updatedTabs = [...tabRegistry, ...customTabs].map((tab) => ({
       ...tab,
       enabled: isLockedEnabledTab(tab.key) ? true : enabledSet.has(tab.key.toLowerCase()),
     }));
 
-    // Perform structural checks to break potential infinite update loop
-    const currentTabsStr = JSON.stringify(fieldsEditor.formTabs);
-    const newTabsStr = JSON.stringify(updatedTabs);
-    const currentFieldsStr = JSON.stringify(fieldsEditor.tabFields);
-    const newFieldsStr = JSON.stringify(settings.fields || {});
-    
-    const currentEnabledStr = Array.from(fieldsEditor.enabledTabs).map((t) => t.toLowerCase()).sort().join(',');
-    const newEnabledStr = Array.from(enabledSet).sort().join(',');
-    
-    const currentRequiredStr = Array.from(fieldsEditor.requiredTabs).map((t) => t.toLowerCase()).sort().join(',');
-    const newRequiredStr = Array.from(new Set((settings.requiredTabs || defaultRequiredTabs).map((t) => t.toLowerCase()))).sort().join(',');
-
-    if (
-      currentTabsStr !== newTabsStr ||
-      currentFieldsStr !== newFieldsStr ||
-      currentEnabledStr !== newEnabledStr ||
-      currentRequiredStr !== newRequiredStr
-    ) {
-      resetRef.current(
-        updatedTabs,
-        settings.fields || {},
-        currentActiveEnabledTabs,
-        (settings.requiredTabs || defaultRequiredTabs).map((t) => t.toLowerCase())
-      );
-    }
+    resetRef.current(
+      updatedTabs,
+      settings.fields || {},
+      currentActiveEnabledTabs,
+      (settings.requiredTabs || defaultRequiredTabs).map((t) => t.toLowerCase()),
+    );
   }, [
     settings,
     tabRegistry,
@@ -154,10 +139,6 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     defaultRequiredTabs,
     withLockedEnabledTabs,
     isLockedEnabledTab,
-    fieldsEditor.formTabs,
-    fieldsEditor.tabFields,
-    fieldsEditor.enabledTabs,
-    fieldsEditor.requiredTabs,
   ]);
 
   const saveSettingsAsync = useCallback(async (

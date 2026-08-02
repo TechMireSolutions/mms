@@ -13,6 +13,7 @@ import { RelationshipTypeSelect } from "./RelationshipTypeSelect";
 export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
   onUpdateRelationships: (relationships: string[]) => void;
+  isFieldEnabled: (tabId: string, fieldId: string) => boolean;
 }
 
 export function ContactRelationshipTab({
@@ -20,6 +21,7 @@ export function ContactRelationshipTab({
   getLocalId,
   relationshipOptions,
   onUpdateRelationships,
+  isFieldEnabled,
   getListItemError,
   addSubListItem,
   ensureSubListItem,
@@ -32,6 +34,8 @@ export function ContactRelationshipTab({
     onUpdateRelationships,
   );
   const links = contactDraft.relationshipContacts || [];
+  const showLinkedContact = isFieldEnabled("relationship", "contactId");
+  const showRelationshipType = isFieldEnabled("relationship", "relationship");
 
   const emptyLink = (): RelationshipContact => ({
     relationship: relationshipOptions[0] || "",
@@ -76,38 +80,44 @@ export function ContactRelationshipTab({
                 removeLabel={t("contacts.form.removeRelationship", { index: idx + 1 })}
               >
                 <div className="space-y-3">
-                  <ContactPicker
-                    label={t("contacts.form.linkContact")}
-                    value={link.contactId ?? null}
-                    onChange={(id) => {
-                      updateSubListItem("relationshipContacts", idx, {
-                        contactId: id != null ? String(id) : "",
-                      });
-                    }}
-                    excludeIds={excludeIds(idx)}
-                    searchPlaceholder={t("contacts.form.searchByName")}
-                    emptyTitle={t("contacts.form.noContactsFound")}
-                    id={`relationship-contact-${idx}`}
-                    name={`relationship-contact-${idx}`}
-                  />
-                  <FieldInlineError message={pickerError} />
+                  {showLinkedContact ? (
+                    <>
+                      <ContactPicker
+                        label={t("contacts.form.linkContact")}
+                        value={link.contactId ?? null}
+                        onChange={(id) => {
+                          updateSubListItem("relationshipContacts", idx, {
+                            contactId: id != null ? String(id) : "",
+                          });
+                        }}
+                        excludeIds={excludeIds(idx)}
+                        searchPlaceholder={t("contacts.form.searchByName")}
+                        emptyTitle={t("contacts.form.noContactsFound")}
+                        id={`relationship-contact-${idx}`}
+                        name={`relationship-contact-${idx}`}
+                      />
+                      <FieldInlineError message={pickerError} />
+                    </>
+                  ) : null}
 
-                  <Field label={t("contacts.form.relationshipType")} id={`relationship-type-${idx}`}>
-                    <RelationshipTypeSelect
-                      options={relationshipOptions}
-                      value={link.relationship || relationshipOptions[0] || ""}
-                      onChange={(val) =>
-                        updateSubListItem("relationshipContacts", idx, { relationship: val })
-                      }
-                      onUpdateOptions={(next) => {
-                        void updateOptions(next);
-                      }}
-                      onAddPair={addPair}
-                      className="w-full"
-                      id={`relationship-type-${idx}`}
-                      name={`relationship-type-${idx}`}
-                    />
-                  </Field>
+                  {showRelationshipType ? (
+                    <Field label={t("contacts.form.relationshipType")} id={`relationship-type-${idx}`}>
+                      <RelationshipTypeSelect
+                        options={relationshipOptions}
+                        value={link.relationship || relationshipOptions[0] || ""}
+                        onChange={(val) =>
+                          updateSubListItem("relationshipContacts", idx, { relationship: val })
+                        }
+                        onUpdateOptions={(next) => {
+                          void updateOptions(next);
+                        }}
+                        onAddPair={addPair}
+                        className="w-full"
+                        id={`relationship-type-${idx}`}
+                        name={`relationship-type-${idx}`}
+                      />
+                    </Field>
+                  ) : null}
                 </div>
               </ListFieldCard>
             );
