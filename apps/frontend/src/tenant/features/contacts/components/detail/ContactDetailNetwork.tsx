@@ -19,7 +19,7 @@ type NetworkLink = {
   inferred?: boolean;
 };
 
-/** Reciprocal/inferred links are stored on emergencyContacts; merge both link sources. */
+/** Merge emergency + legacy relationship links; prefer non-inferred when both exist. */
 function collectNetworkLinks(contact: Contact): NetworkLink[] {
   const byId = new Map<string, NetworkLink>();
 
@@ -27,7 +27,6 @@ function collectNetworkLinks(contact: Contact): NetworkLink[] {
     const contactId = entry.contactId == null ? "" : String(entry.contactId);
     if (!contactId.trim()) return;
     const existing = byId.get(contactId);
-    // Prefer explicit (non-inferred) links when both exist.
     if (existing && existing.inferred !== true && entry.inferred === true) return;
     byId.set(contactId, {
       contactId,
@@ -82,7 +81,6 @@ export function ContactDetailNetwork({
               : t("contacts.detail.unknownContact");
             const relationshipLabel =
               formatContactOptionLabel(relationship.relationship, t) ||
-              relationship.relationship ||
               t("contacts.detail.emergencyContact");
 
             return (

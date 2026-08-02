@@ -7,9 +7,11 @@ import { tenantDatabaseSnapshotSchema } from '@mms/shared';
  */
 export const syncPayloadSchema = tenantDatabaseSnapshotSchema;
 
+const collectionItemSchema = z.union([z.string(), z.record(z.string(), z.unknown())]);
+
 export const collectionSaveBodySchema = z.union([
-  z.array(z.unknown()),
-  z.object({ data: z.array(z.unknown()) }),
+  z.array(collectionItemSchema),
+  z.object({ data: z.array(collectionItemSchema) }),
 ]);
 
 export function normalizeCollectionSaveBody(

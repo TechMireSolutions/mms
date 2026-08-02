@@ -21,8 +21,9 @@ describe('collectionSaveBodySchema', () => {
     }
   });
 
-  it('rejects non-array bodies', () => {
+  it('rejects non-array bodies and mixed invalid items', () => {
     expect(collectionSaveBodySchema.safeParse({ Mentor: true }).success).toBe(false);
     expect(collectionSaveBodySchema.safeParse('Mentor').success).toBe(false);
+    expect(collectionSaveBodySchema.safeParse([42]).success).toBe(false);
   });
 });

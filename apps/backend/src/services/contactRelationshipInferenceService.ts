@@ -1,4 +1,4 @@
-import { type Contact, type ContactRelationship, type EmergencyContact, type RelationshipPair } from '@mms/shared';
+import { resolveRelationshipPairs, type Contact, type ContactRelationship, type EmergencyContact, type RelationshipPair } from '@mms/shared';
 import { bulkSaveContacts, findContactsByIds } from '../db/repositories/contactRepository.js';
 import { loadContactPreferences } from './contactPreferencesService.js';
 
@@ -85,7 +85,9 @@ export async function applyContactRelationshipInference(
   const sourceLinks = linksForContact(sourceContact).filter((entry) => entry.contactId !== sourceId);
   if (sourceLinks.length === 0) return;
 
-  const resolvedPairs = customPairs ?? (await loadContactPreferences())?.relationshipPairs;
+  const resolvedPairs = resolveRelationshipPairs(
+    customPairs ?? (await loadContactPreferences())?.relationshipPairs,
+  );
 
   const firstIds = Array.from(new Set(sourceLinks.map((entry) => entry.contactId)));
   const firstContacts = await findContactsByIds(tenant, firstIds);

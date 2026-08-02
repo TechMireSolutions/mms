@@ -174,7 +174,7 @@ export function normalizeContactForEdit(
     : [];
 
   if (emergencyContacts.length === 0) {
-    emergencyContacts = [{ relationship: defaults.relationship || RELATIONSHIPS[0] || "Parent", contactId: "" }];
+    emergencyContacts = [{ relationship: defaults.relationship || RELATIONSHIPS[0], contactId: "" }];
   }
 
   return {

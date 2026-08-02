@@ -5,6 +5,8 @@ import {
   type RelationshipPair,
   type TabDefinition,
   CONFIG_VERSION,
+  normalizeContactPreferences,
+  resolveRelationshipPairs,
   toTitleCase,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -70,16 +72,16 @@ export function useContactsSetupSaveActions({
       const applyTitleCaseToTabs = (tabs: TabDefinition[]) =>
         tabs.map((tab) => ({ ...tab, label: toTitleCase(tab.label) }));
 
-      const updatedPrefs = {
+      const updatedPrefs = normalizeContactPreferences({
         ...prefs,
         defaultCountry: prefs.defaultCountry ? toTitleCase(prefs.defaultCountry.trim()) : "",
         defaultProvince: prefs.defaultProvince ? toTitleCase(prefs.defaultProvince.trim()) : "",
         defaultCity: prefs.defaultCity ? toTitleCase(prefs.defaultCity.trim()) : "",
-      };
+      });
 
       if (mode === "preferences") {
         await updatePrefsAsync(updatedPrefs);
-        await syncRelationshipsFromPairs(updatedPrefs.relationshipPairs ?? []);
+        await syncRelationshipsFromPairs(resolveRelationshipPairs(updatedPrefs.relationshipPairs));
         await logSetupAudit.mutateAsync({
           area: "preferences",
           summary: t("contacts.setup.auditSummary", { area: "preferences" }),

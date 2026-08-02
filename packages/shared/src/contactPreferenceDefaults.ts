@@ -2,10 +2,7 @@
 import type { ContactPreferences, WhatsAppTemplate } from './contactFieldSchemaTypes.js';
 import type { RelationshipPair } from './contactEntityTypes.js';
 
-
-
 export const CONFIG_VERSION = 2;
-
 
 export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "emergency"];
 export const DEFAULT_REQUIRED_TABS: string[] = [];
@@ -44,6 +41,40 @@ export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [
   { id: "inlaw", forward: "Parent-In-Law", inverse: "Child-In-Law" },
   { id: "other", forward: "Other", inverse: "Other" },
 ];
+
+/**
+ * Returns configured pairs, or DEFAULT_RELATIONSHIP_PAIRS when missing/empty.
+ * Intentional empty lists are not supported (product invariant).
+ */
+export function resolveRelationshipPairs(
+  pairs?: RelationshipPair[] | null,
+): RelationshipPair[] {
+  if (!Array.isArray(pairs) || pairs.length === 0) {
+    return [...DEFAULT_RELATIONSHIP_PAIRS];
+  }
+  return pairs;
+}
+
+/**
+ * True when an equivalent forward/inverse pair already exists (case-insensitive;
+ * order-independent so Mentor↔Mentee matches Mentee↔Mentor).
+ */
+export function isDuplicateRelationshipPair(
+  pairs: readonly RelationshipPair[],
+  forward: string,
+  inverse: string,
+): boolean {
+  const direct = relationshipPairKey(forward, inverse);
+  const swapped = relationshipPairKey(inverse, forward);
+  return pairs.some((pair) => {
+    const existing = relationshipPairKey(pair.forward, pair.inverse);
+    return existing === direct || existing === swapped;
+  });
+}
+
+function relationshipPairKey(forward: string, inverse: string): string {
+  return `${forward.trim().toLowerCase()}::${inverse.trim().toLowerCase()}`;
+}
 
 /**
  * Flattens configured 2-sided relationship pairs into unique dropdown option labels
@@ -116,8 +147,7 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
 
 /**
  * Merges stored contact preferences onto defaults.
- * Empty `relationshipPairs` falls back to DEFAULT_RELATIONSHIP_PAIRS so emergency
- * dropdowns and reciprocal inference stay usable after the cleared-defaults era.
+ * Empty `relationshipPairs` falls back via {@link resolveRelationshipPairs}.
  */
 export function normalizeContactPreferences(
   partial?: Partial<ContactPreferences> | null,
@@ -126,14 +156,9 @@ export function normalizeContactPreferences(
     ...DEFAULT_CONTACT_PREFERENCES,
     ...(partial && typeof partial === "object" && !Array.isArray(partial) ? partial : {}),
   };
-  if (!Array.isArray(merged.relationshipPairs) || merged.relationshipPairs.length === 0) {
-    merged.relationshipPairs = [...DEFAULT_RELATIONSHIP_PAIRS];
-  }
+  merged.relationshipPairs = resolveRelationshipPairs(merged.relationshipPairs);
   return merged;
 }
-
-
-
 
 export const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
   { id: "fee", label: "Fee Reminder", body: "Assalamu Alaikum! This is a friendly reminder that your fee payment for this month is due. Please contact us at your earliest convenience. JazakAllah Khair." },

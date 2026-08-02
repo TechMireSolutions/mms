@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { RelationshipPair } from "@mms/shared";
+import { useState, type KeyboardEvent } from "react";
+import { isDuplicateRelationshipPair, type RelationshipPair } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { Input } from "@/components/ui/input";
@@ -13,17 +13,15 @@ export interface ContactsRelationshipPairsSectionProps {
   onUpdatePairs: (pairs: RelationshipPair[]) => void;
 }
 
-function pairKey(forward: string, inverse: string): string {
-  return `${forward.trim().toLowerCase()}::${inverse.trim().toLowerCase()}`;
-}
-
-function isDuplicatePair(pairs: RelationshipPair[], forward: string, inverse: string): boolean {
-  const direct = pairKey(forward, inverse);
-  const swapped = pairKey(inverse, forward);
-  return pairs.some((pair) => {
-    const existing = pairKey(pair.forward, pair.inverse);
-    return existing === direct || existing === swapped;
-  });
+function genderedInverseHint(
+  pair: RelationshipPair,
+  maleShort: string,
+  femaleShort: string,
+): string | null {
+  const parts: string[] = [];
+  if (pair.inverseMale) parts.push(`${maleShort}: ${pair.inverseMale}`);
+  if (pair.inverseFemale) parts.push(`${femaleShort}: ${pair.inverseFemale}`);
+  return parts.length > 0 ? `(${parts.join(" / ")})` : null;
 }
 
 export function ContactsRelationshipPairsSection({
@@ -39,28 +37,36 @@ export function ContactsRelationshipPairsSection({
     const inv = inverseInput.trim();
     if (!fwd || !inv) return;
 
-    if (isDuplicatePair(pairs, fwd, inv)) {
+    if (isDuplicateRelationshipPair(pairs, fwd, inv)) {
       notify.warning(t("contacts.setup.duplicateRelationshipPair"));
       return;
     }
 
-    const newPair: RelationshipPair = {
-      id: `pair_${crypto.randomUUID()}`,
-      forward: fwd,
-      inverse: inv,
-    };
-
-    onUpdatePairs([...pairs, newPair]);
+    onUpdatePairs([
+      ...pairs,
+      {
+        id: `pair_${crypto.randomUUID()}`,
+        forward: fwd,
+        inverse: inv,
+      },
+    ]);
     setForwardInput("");
     setInverseInput("");
   };
 
+  const handlePairInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    handleAddPair();
+  };
+
   const handleRemovePair = (index: number) => {
-    const nextPairs = pairs.filter((_, i) => i !== index);
-    onUpdatePairs(nextPairs);
+    onUpdatePairs(pairs.filter((_, i) => i !== index));
   };
 
   const canAdd = Boolean(forwardInput.trim() && inverseInput.trim());
+  const maleShort = t("contacts.setup.pairMaleShort");
+  const femaleShort = t("contacts.setup.pairFemaleShort");
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">
@@ -86,12 +92,7 @@ export function ContactsRelationshipPairsSection({
               name="newForwardRel"
               value={forwardInput}
               onChange={(e) => setForwardInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddPair();
-                }
-              }}
+              onKeyDown={handlePairInputKeyDown}
               placeholder={t("contacts.setup.forwardRelationshipPlaceholder")}
               className="text-xs"
             />
@@ -110,12 +111,7 @@ export function ContactsRelationshipPairsSection({
               name="newInverseRel"
               value={inverseInput}
               onChange={(e) => setInverseInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddPair();
-                }
-              }}
+              onKeyDown={handlePairInputKeyDown}
               placeholder={t("contacts.setup.reciprocalRelationshipPlaceholder")}
               className="text-xs"
             />
@@ -134,37 +130,38 @@ export function ContactsRelationshipPairsSection({
         </div>
 
         <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-          {pairs.map((pair, idx) => (
-            <div
-              key={pair.id || `pair_${idx}`}
-              className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-background text-xs"
-            >
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <span className="font-semibold text-foreground truncate">{pair.forward}</span>
-                <span className="text-muted-foreground font-bold" aria-hidden="true">&harr;</span>
-                <span className="font-semibold text-foreground truncate">{pair.inverse}</span>
-                {(pair.inverseMale || pair.inverseFemale) && (
-                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded ms-1">
-                    ({pair.inverseMale ? `${t("contacts.setup.pairMaleShort")}: ${pair.inverseMale}` : ""}
-                    {pair.inverseMale && pair.inverseFemale ? " / " : ""}
-                    {pair.inverseFemale ? `${t("contacts.setup.pairFemaleShort")}: ${pair.inverseFemale}` : ""})
-                  </span>
-                )}
-              </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => handleRemovePair(idx)}
-                className={`rounded ${REMOVE_BTN}`}
-                title={t("common.delete")}
-                aria-label={t("common.delete")}
+          {pairs.map((pair, idx) => {
+            const genderedHint = genderedInverseHint(pair, maleShort, femaleShort);
+            return (
+              <div
+                key={pair.id || `pair_${idx}`}
+                className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-background text-xs"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          ))}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="font-semibold text-foreground truncate">{pair.forward}</span>
+                  <span className="text-muted-foreground font-bold" aria-hidden="true">&harr;</span>
+                  <span className="font-semibold text-foreground truncate">{pair.inverse}</span>
+                  {genderedHint ? (
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded ms-1">
+                      {genderedHint}
+                    </span>
+                  ) : null}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemovePair(idx)}
+                  className={`rounded ${REMOVE_BTN}`}
+                  title={t("common.delete")}
+                  aria-label={t("common.delete")}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            );
+          })}
 
           {pairs.length === 0 && (
             <p className="text-xs text-muted-foreground italic py-2">

@@ -106,10 +106,6 @@ export function useContactConfigCollections({
     "emergency",
     "relationship",
   );
-  /**
-   * Replaces emergency relationship dropdown options from preference-owned pairs.
-   * Pairs SSOT is contact_preferences — not a document-store collection.
-   */
   const updateRelationshipPairs = useCallback(
     async (pairs: RelationshipPair[]) => {
       const options = deriveRelationshipOptionsFromPairs(pairs);

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import {
-  DEFAULT_RELATIONSHIP_PAIRS,
   deriveRelationshipOptionsFromPairs,
   mergeRelationshipOptionLabels,
+  resolveRelationshipPairs,
   type ColumnRegistryEntry,
   type ContactPreferences,
   type FieldConfig,
@@ -90,9 +90,7 @@ export function useContactConfigProviderValue({
     [countryCodes, countryCodesMap, prefs],
   );
 
-  const resolvedRelationshipPairs = prefs.relationshipPairs?.length
-    ? prefs.relationshipPairs
-    : DEFAULT_RELATIONSHIP_PAIRS;
+  const resolvedRelationshipPairs = resolveRelationshipPairs(prefs.relationshipPairs);
   const resolvedRelationships = useMemo(
     () =>
       mergeRelationshipOptionLabels(
