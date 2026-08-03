@@ -26,6 +26,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -58,6 +66,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -88,6 +104,14 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -137,6 +161,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -166,4 +198,5 @@ jobs:
             mms-dist.tar.gz
             mms-dist.tar.gz.sha256
           retention-days: 3
+          compression-level: 0
           if-no-files-found: error

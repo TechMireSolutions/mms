@@ -58,43 +58,47 @@ if [ "${NODE_MAJOR}" -lt "${MMS_NODE_MAJOR_MIN}" ] 2>/dev/null; then
   echo "WARNING: Node $(node -v 2>/dev/null || echo unknown) — MMS requires Node >= ${MMS_NODE_MAJOR_MIN} (engines >=24.14)"
 fi
 
-if [ ! -f "$TARBALL" ]; then
-  echo "FATAL: tarball missing at ${TARBALL}"
-  exit 1
-fi
+if [ -f "$TARBALL" ]; then
+  if [ -f "${TARBALL}.sha256" ]; then
+    echo "Verifying tarball checksum..."
+    (
+      cd "$(dirname "$TARBALL")" || exit 1
+      sha256sum -c "$(basename "$TARBALL").sha256"
+    ) || {
+      echo "FATAL: tarball checksum mismatch"
+      exit 1
+    }
+  fi
 
-if [ -f "${TARBALL}.sha256" ]; then
-  echo "Verifying tarball checksum..."
-  (
-    cd "$(dirname "$TARBALL")" || exit 1
-    sha256sum -c "$(basename "$TARBALL").sha256"
-  ) || {
-    echo "FATAL: tarball checksum mismatch"
+  # Retain release tarball for rollback (best-effort).
+  mkdir -p "$RELEASES_DIR"
+  RELEASE_NAME="${DEPLOY_SHA:-$(date -u +%Y%m%dT%H%M%SZ)}"
+  cp -f "$TARBALL" "${RELEASES_DIR}/${RELEASE_NAME}.tar.gz" 2>/dev/null || true
+  if [ -f "${TARBALL}.sha256" ]; then
+    cp -f "${TARBALL}.sha256" "${RELEASES_DIR}/${RELEASE_NAME}.tar.gz.sha256" 2>/dev/null || true
+  fi
+  # Prune older releases (keep newest N by mtime).
+  if [ -d "$RELEASES_DIR" ]; then
+    # shellcheck disable=SC2012
+    ls -1t "$RELEASES_DIR"/*.tar.gz 2>/dev/null | tail -n "+$((RELEASE_KEEP + 1))" | while read -r old; do
+      rm -f "$old" "${old}.sha256" 2>/dev/null || true
+    done
+  fi
+
+  echo "Extracting production dist..."
+  tar xzf "$TARBALL" -C "$ROOT_DIR"
+  if [ $? -ne 0 ]; then
+    echo "FATAL: tar extract failed"
     exit 1
-  }
+  fi
+  rm -f "$TARBALL" "${TARBALL}.sha256"
+else
+  echo "No tarball found at ${TARBALL} — checking pre-extracted dist folders..."
+  if [ ! -d "${ROOT_DIR}/apps/backend/dist" ] || [ ! -d "${ROOT_DIR}/apps/frontend/dist" ]; then
+    echo "FATAL: missing pre-built dist directories (apps/backend/dist, apps/frontend/dist) and no tarball at ${TARBALL}"
+    exit 1
+  fi
 fi
-
-# Retain release tarball for rollback (best-effort).
-mkdir -p "$RELEASES_DIR"
-RELEASE_NAME="${DEPLOY_SHA:-$(date -u +%Y%m%dT%H%M%SZ)}"
-cp -f "$TARBALL" "${RELEASES_DIR}/${RELEASE_NAME}.tar.gz" 2>/dev/null || true
-if [ -f "${TARBALL}.sha256" ]; then
-  cp -f "${TARBALL}.sha256" "${RELEASES_DIR}/${RELEASE_NAME}.tar.gz.sha256" 2>/dev/null || true
-fi
-# Prune older releases (keep newest N by mtime).
-if [ -d "$RELEASES_DIR" ]; then
-  # shellcheck disable=SC2012
-  ls -1t "$RELEASES_DIR"/*.tar.gz 2>/dev/null | tail -n "+$((RELEASE_KEEP + 1))" | while read -r old; do
-    rm -f "$old" "${old}.sha256" 2>/dev/null || true
-  done
-fi
-
-tar xzf "$TARBALL" -C "$ROOT_DIR"
-if [ $? -ne 0 ]; then
-  echo "FATAL: tar extract failed"
-  exit 1
-fi
-rm -f "$TARBALL" "${TARBALL}.sha256"
 
 if [ -f scripts/merge-backend-env.sh ]; then
   bash scripts/merge-backend-env.sh "$ENV_FILE"

@@ -150,6 +150,14 @@ jobs:
                 || git fetch origin
               git checkout --detach "${DEPLOY_SHA}"
             fi
+
+            # Extract pre-compiled dist files over the tree if tarball exists
+            if [ -f /tmp/mms-dist.tar.gz ]; then
+              echo "Extracting pre-built production dist..."
+              tar -xzf /tmp/mms-dist.tar.gz -C /var/www/mmsv2/
+              rm -f /tmp/mms-dist.tar.gz /tmp/mms-dist.tar.gz.sha256
+            fi
+
             bash scripts/deploy-on-server.sh
 
       - name: Verify production site
