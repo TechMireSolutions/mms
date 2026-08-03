@@ -12,7 +12,7 @@ export async function assertModuleTierSmoke(
   tenantOrigin: string,
 ): Promise<void> {
   await page.goto(`${tenantOrigin}${modulePath}`);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const desktopNav = page
     .locator('div.hidden.lg\\:block')
@@ -41,7 +41,7 @@ export async function loginTenant(
   password: string,
 ): Promise<void> {
   await page.goto(`${tenantOrigin}/login`);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   if (!page.url().includes('/login')) {
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum', { timeout: 20_000 });
@@ -52,5 +52,5 @@ export async function loginTenant(
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
   await expect(page.locator('h1')).toContainText('Assalamu Alaikum', { timeout: 30_000 });
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 }

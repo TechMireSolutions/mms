@@ -72,7 +72,7 @@ export async function bootstrapAuthenticatedTenant(
   } = credentials;
 
   await page.goto('/');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   await page.waitForSelector('#platform-setup-email');
 
   await page.fill('#platform-setup-name', 'Platform Admin');
@@ -115,7 +115,7 @@ export async function bootstrapAuthenticatedTenant(
   await expect(page.locator('h1')).toContainText('Platform console', { timeout: 30_000 });
 
   await page.goto(`${tenantOrigin}/login`);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   await page.fill('input[name="email"]', adminEmail);
   await page.fill('input[name="password"]', adminPassword);
   await page.click('button[type="submit"]');

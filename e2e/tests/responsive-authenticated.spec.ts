@@ -102,7 +102,7 @@ async function loginAndSetViewport(
 
 async function gotoReadyRoute(page: Page, path: string, ready?: string): Promise<void> {
   await page.goto(`${tenantOrigin}${path}`);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   await expect(page.locator('#main-content')).toBeVisible({ timeout: 20_000 });
   if (ready) {
     await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 });
@@ -202,7 +202,7 @@ test.describe.serial('Authenticated tenant shell responsive layout', () => {
       const reportsTab = page.getByRole('tab', { name: /Reports/i }).or(page.getByRole('button', { name: /Reports/i }));
       if (await reportsTab.first().isVisible().catch(() => false)) {
         await reportsTab.first().click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         await assertNoHorizontalOverflow(page);
         await assertPrimaryControlsMeetTouchTarget(page, { within: '#main-content' });
       }
@@ -210,7 +210,7 @@ test.describe.serial('Authenticated tenant shell responsive layout', () => {
       const setupTab = page.getByRole('tab', { name: /Setup/i }).or(page.getByRole('button', { name: /Setup/i }));
       if (await setupTab.first().isVisible().catch(() => false)) {
         await setupTab.first().click();
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
         await assertNoHorizontalOverflow(page);
         await assertPrimaryControlsMeetTouchTarget(page, { within: '#main-content' });
       }
