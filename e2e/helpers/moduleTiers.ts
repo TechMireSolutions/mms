@@ -44,16 +44,23 @@ export async function loginTenant(
   await page.waitForLoadState('domcontentloaded');
 
   const emailInput = page.locator('input[name="email"]');
-  const isLoginForm = await emailInput.isVisible({ timeout: 4000 }).catch(() => false);
+  const dashboardHeading = page.locator('h1', { hasText: 'Assalamu Alaikum' });
+
+  const isLoginForm = await emailInput
+    .or(dashboardHeading)
+    .first()
+    .waitFor({ state: 'visible', timeout: 25_000 })
+    .then(() => emailInput.isVisible())
+    .catch(() => false);
 
   if (!isLoginForm) {
-    await expect(page.locator('h1')).toContainText('Assalamu Alaikum', { timeout: 20_000 });
+    await expect(dashboardHeading).toBeVisible({ timeout: 10_000 });
     return;
   }
 
-  await page.fill('input[name="email"]', email);
+  await emailInput.fill(email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
-  await expect(page.locator('h1')).toContainText('Assalamu Alaikum', { timeout: 30_000 });
+  await expect(dashboardHeading).toBeVisible({ timeout: 30_000 });
   await page.waitForLoadState('domcontentloaded');
 }
