@@ -1,11 +1,12 @@
 import { useMemo, useState, lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import { Contact, CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
+import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { shouldOpenContactsSyncSetup } from "@/lib/contacts/googleContactsOAuth";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import type { Contact } from "@mms/shared";
 
 const ContactsSetupPanel = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupPanel"));
 const ContactSyncPanel = lazy(() => import("@/tenant/features/contacts/components/ContactSyncPanel"));
@@ -30,14 +31,12 @@ function SetupReadOnlyMessage(): JSX.Element {
 }
 
 export interface ContactsSettingsPanelProps {
-  contacts: Contact[];
   onImport: (list: Contact[]) => void | Promise<void>;
   canWrite: boolean;
   canEditSetup: boolean;
 }
 
 export default function ContactsSettingsPanel({
-  contacts,
   onImport,
   canWrite,
   canEditSetup,
@@ -119,16 +118,9 @@ export default function ContactsSettingsPanel({
           ) : (
             <SetupReadOnlyMessage />
           ))}
-        {sub === "sync" &&
-          (canWrite || canEditSetup ? (
-            <ContactSyncPanel
-              contacts={contacts}
-              onImport={onImport}
-              canWrite={canWrite}
-            />
-          ) : (
-            <SetupReadOnlyMessage />
-          ))}
+        {sub === "sync" && (
+          <ContactSyncPanel onImport={onImport} canWrite={canWrite} />
+        )}
       </Suspense>
     </div>
   );

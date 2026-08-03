@@ -14,6 +14,7 @@ export {
 export {
   contactsPaginatedQueryKey,
   fetchAllContactsForQuery,
+  fetchContactsPageForQuery,
   fetchContactById,
   useContactsPaginated,
   useContacts,

@@ -45,12 +45,15 @@ export function useContactsReportAnalytics(params: ContactsReportAnalyticsParams
   const language = params.language ?? 'en';
   return useQuery({
     queryKey: [...CONTACTS_REPORT_ANALYTICS_QUERY_KEY, yearsKey, language] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const query = new URLSearchParams();
       if (yearsKey) query.set('years', yearsKey);
       if (language) query.set('lang', language);
       const queryString = query.toString() ? `?${query.toString()}` : '';
-      return apiJson<ContactsReportAnalyticsResult>(`${CONTACTS_API}/report-analytics${queryString}`);
+      return apiJson<ContactsReportAnalyticsResult>(
+        `${CONTACTS_API}/report-analytics${queryString}`,
+        { signal },
+      );
     },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
@@ -81,12 +84,13 @@ export function useContactsWidgetAggregates(
 
   return useQuery({
     queryKey: [...CONTACTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const aggregateResponse = await apiJson<{ results: Record<string, ContactsWidgetAggregateResult> }>(
         `${CONTACTS_API}/widget-aggregates`,
         {
           method: 'POST',
           body: JSON.stringify({ widgets: contactQueries }),
+          signal,
         },
       );
       return aggregateResponse?.results ?? {};
@@ -109,9 +113,12 @@ export function useContactsDuplicatePairs(params: ContactsDuplicatesParams = {})
   const limit = params.limit ?? 100;
   return useQuery({
     queryKey: [...CONTACTS_DUPLICATES_QUERY_KEY, page, limit] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const queryParams = new URLSearchParams({ page: String(page), limit: String(limit) });
-      return apiJson<ContactsDuplicatePairsPageResult>(`${CONTACTS_API}/duplicates?${queryParams.toString()}`);
+      return apiJson<ContactsDuplicatePairsPageResult>(
+        `${CONTACTS_API}/duplicates?${queryParams.toString()}`,
+        { signal },
+      );
     },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,

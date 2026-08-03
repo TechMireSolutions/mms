@@ -3,6 +3,7 @@ import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
+import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 
 export function safeAudit(promise: Promise<unknown>, scope: string): void {
   void promise.catch((auditError) => {
@@ -15,7 +16,8 @@ export function useContactsCrudNotify() {
 
   const handleError = useCallback(
     (err: unknown, scope: string, messageKey: AppTranslationKey = "contacts.saveFailed") => {
-      notify.error(t(messageKey));
+      const validationMessage = getApiValidationMessage(err);
+      notify.error(t(messageKey), validationMessage ? { description: validationMessage } : undefined);
       reportClientError(err, { scope });
     },
     [t],
@@ -31,13 +33,20 @@ export function useContactsCrudNotify() {
       failed: number,
       singleSuccessKey: AppTranslationKey,
       multiSuccessKey: AppTranslationKey,
+      conflictDetail?: string,
     ) => {
       if (succeeded > 0 && failed === 0) {
         notify.success(
           succeeded === 1 ? t(singleSuccessKey) : t(multiSuccessKey, { count: succeeded }),
         );
       } else if (succeeded > 0 && failed > 0) {
-        notify.warning(t("contacts.bulkPartialFailure", { succeeded, failed }));
+        notify.warning(t("contacts.bulkPartialFailure", { succeeded, failed }), {
+          description: conflictDetail,
+        });
+      } else if (conflictDetail) {
+        notify.error(t(messageKeyForBulkFailure(singleSuccessKey)), {
+          description: conflictDetail,
+        });
       } else {
         saveFailed();
       }
@@ -46,4 +55,9 @@ export function useContactsCrudNotify() {
   );
 
   return { t, handleError, notifyBulkResult };
+}
+
+function messageKeyForBulkFailure(singleSuccessKey: AppTranslationKey): AppTranslationKey {
+  if (singleSuccessKey === "contacts.restoreSuccessTitle") return "contacts.restoreFailed";
+  return "contacts.saveFailed";
 }

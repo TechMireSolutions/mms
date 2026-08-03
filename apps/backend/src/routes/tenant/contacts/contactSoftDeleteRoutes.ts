@@ -5,6 +5,7 @@ import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import {
   bulkRestoreContacts,
   bulkSoftDeleteContacts,
+  ContactUniqueFieldError,
   restoreContactById,
   softDeleteContactById,
 } from '../../../services/contactService.js';
@@ -56,7 +57,10 @@ export const contactSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
       }
       await auditContact(user, 'contact.restore', `Restored contact ${params.data.id}`, params.data.id);
       return reply.send({ success: true, contact: await sanitizeOneForUser(restored, user) });
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof ContactUniqueFieldError) {
+        return replyValidationError(reply, error.message, { errors: error.errors });
+      }
       return sendDatabaseError(reply, 'Failed to restore contact');
     }
   });

@@ -1,5 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import type { Contact, QuestionBankQuestion, QuestionBankResult, QuestionBankTest, Teacher } from '@mms/shared';
+import {
+  CONTACTS_MODULE_MANIFEST,
+  type Contact,
+  type QuestionBankQuestion,
+  type QuestionBankResult,
+  type QuestionBankTest,
+  type Teacher,
+} from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import type { Invoice } from '@/lib/data/financeData';
@@ -7,7 +14,10 @@ import type { Denomination, Distribution } from '@/lib/data/hasanatData';
 import type { Session } from '@/lib/data/sessionsData';
 import type { Student } from '@/lib/data/studentsData';
 import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
-import { useContactsCollection } from '@/tenant/hooks/collections/contacts';
+import {
+  CONTACTS_QUERY_KEY,
+  fetchContactsPageForQuery,
+} from '@/tenant/hooks/collections/contacts';
 import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
 import {
   useHasanatDenomsCollection,
@@ -62,7 +72,8 @@ export function useWidgetCollections(options?: {
   const needs = (collection: ReportCollection): boolean =>
     queryEnabled && (required === null || required.has(collection));
 
-  const contacts = useContactsCollection({ enabled: needs('contacts') });
+  // Contacts widgets/charts read SQL aggregates — do not page-walk the directory here.
+  const contacts: Contact[] = [];
   const sessions = useSessionsCollection({ enabled: needs('sessions') });
   const financeInvoices = useFinanceInvoicesCollection({ enabled: needs('finance_invoices') });
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
@@ -120,7 +131,24 @@ export function useReportCollectionRows(
   const { isAuthenticated } = useAuth();
   const key = collectionKey;
 
-  const contacts = useContactsCollection({ enabled: isAuthenticated && key === 'contacts' });
+  // Single capped SQL page for Contacts chart visualizer — never unbounded page-walk.
+  const contactsQuery = useQuery({
+    queryKey: [...CONTACTS_QUERY_KEY, 'report-visualizer-page'] as const,
+    queryFn: async ({ signal }) => {
+      const page = await fetchContactsPageForQuery(
+        {
+          page: 1,
+          limit: CONTACTS_MODULE_MANIFEST.maxPageSize,
+          includeDeleted: false,
+        },
+        signal,
+      );
+      return page.contacts;
+    },
+    enabled: isAuthenticated && key === 'contacts',
+    staleTime: 30_000,
+  });
+  const contacts = contactsQuery.data ?? [];
   const sessions = useSessionsCollection({ enabled: isAuthenticated && key === 'sessions' });
   const financeInvoices = useFinanceInvoicesCollection({
     enabled: isAuthenticated && key === 'finance_invoices',

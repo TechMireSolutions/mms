@@ -23,6 +23,7 @@ export type { ContactsPaginatedParams } from "@/tenant/features/contacts/hooks/c
 export {
   contactsPaginatedQueryKey,
   fetchAllContactsForQuery,
+  fetchContactsPageForQuery,
   fetchContactById,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
 
@@ -50,7 +51,7 @@ export function useContacts(options?: { enabled?: boolean; includeDeleted?: bool
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: contactsListQueryKey(includeDeleted),
-    queryFn: () => fetchContacts(includeDeleted),
+    queryFn: ({ signal }) => fetchContacts(includeDeleted, signal),
     enabled: isAuthenticated && queryEnabled,
     staleTime: 30_000,
   });
@@ -60,7 +61,7 @@ export function useContactById(contactId: string | undefined, enabled = true) {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: contactDetailQueryKey(contactId ?? ""),
-    queryFn: () => fetchContactById(contactId!),
+    queryFn: ({ signal }) => fetchContactById(contactId!, signal),
     enabled: isAuthenticated && enabled && Boolean(contactId),
     staleTime: 10_000,
   });
@@ -84,7 +85,7 @@ export function useContactsByIds(ids: (string | number | null | undefined)[]) {
 
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, "resolve", signature] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const batchSize = 100;
       const contacts: Contact[] = [];
       for (let index = 0; index < normalized.length; index += batchSize) {
@@ -92,6 +93,7 @@ export function useContactsByIds(ids: (string | number | null | undefined)[]) {
         const contactsResponse = await apiJson<{ contacts: Contact[] }>(`${CONTACTS_API}/resolve`, {
           method: "POST",
           body: JSON.stringify({ ids: chunk }),
+          signal,
         });
         contacts.push(...(contactsResponse.contacts ?? []));
       }

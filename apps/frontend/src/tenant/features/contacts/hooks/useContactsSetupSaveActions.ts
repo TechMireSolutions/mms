@@ -17,6 +17,7 @@ import { notify } from "@/lib/notify";
 import type { CountryCodeEntry } from "@/lib/contacts/countryCodeOptions";
 import { useContactsSetupFieldDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupFieldDeleteGuard";
 import { useContactsSetupTabDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupTabDeleteGuard";
+import { syncContactsCustomTabs } from "@/tenant/features/contacts/hooks/syncContactsCustomTabs";
 
 const PREFS_SETUP_ISSUE_KEYS: Record<ContactPreferencesSetupIssue, AppTranslationKey> = {
   invalidProvince: "contacts.setup.invalidProvince",
@@ -135,7 +136,16 @@ export function useContactsSetupSaveActions({
     try {
       const fieldsMap = fieldsEditor.buildFieldsMap() || {};
       const enabledTabIds = withContactLockedEnabledTabs(fieldsEditor.enabledTabs);
-      // Omit formTabs/enabledTabs — saveSettingsAsync syncs them from the fields editor.
+      const enabledSet = new Set(enabledTabIds);
+      const formTabs = fieldsEditor.formTabs.map((tab) => ({
+        ...tab,
+        enabled:
+          tab.key === "basic" || tab.key === "custom"
+            ? true
+            : enabledSet.has(tab.key.toLowerCase()),
+      }));
+      // Typed custom_tabs via REST — do not dual-write formTabs into contact_field_config.
+      await syncContactsCustomTabs(formTabs);
       await saveSettingsAsync(
         {},
         {

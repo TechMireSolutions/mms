@@ -6,7 +6,6 @@ import { GoogleContactsPanel } from "./sync/GoogleContactsPanel";
 import { AppleContactsPanel } from "./sync/AppleContactsPanel";
 
 interface ContactSyncPanelProps {
-  contacts?: Contact[];
   onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }
@@ -15,7 +14,6 @@ interface ContactSyncPanelProps {
  * ContactSyncPanel component for managing Google and Apple Contacts synchronization.
  */
 export default function ContactSyncPanel({
-  contacts = [],
   onImport,
   canWrite = false,
 }: ContactSyncPanelProps): React.JSX.Element {
@@ -33,7 +31,7 @@ export default function ContactSyncPanel({
       </div>
 
       <GoogleContactsPanel canWrite={canWrite} />
-      <AppleContactsPanel contacts={contacts} onImport={onImport} canWrite={canWrite} />
+      <AppleContactsPanel onImport={onImport} canWrite={canWrite} />
     </div>
   );
 }

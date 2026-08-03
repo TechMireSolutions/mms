@@ -24,7 +24,10 @@ import {
 import {
   loadContactRuntimeDefaults,
 } from './contactServiceLoad.js';
-import { assertContactUniqueFields } from './contactUniqueValidationService.js';
+import {
+  assertContactUniqueFields,
+  ContactUniqueFieldError,
+} from './contactUniqueValidationService.js';
 
 function stripClientSoftDeleteFields(contact: Contact): Contact {
   return stripContactClientSoftDeleteFields(contact as unknown as Record<string, unknown>) as Contact;
@@ -160,11 +163,28 @@ export async function upsertContact(
   });
 }
 
+export interface UpdateContactByIdOptions {
+  language?: string;
+  /**
+   * When false, skip peer relationship graph writes.
+   * Required for self-service profile updates without `contacts.write`.
+   * @default true
+   */
+  applyRelationshipInference?: boolean;
+}
+
 export async function updateContactById(
   id: string,
   contact: Contact,
-  language = 'en',
+  languageOrOptions: string | UpdateContactByIdOptions = 'en',
 ): Promise<Contact | null> {
+  const options: UpdateContactByIdOptions =
+    typeof languageOrOptions === 'string'
+      ? { language: languageOrOptions }
+      : languageOrOptions;
+  const language = options.language ?? 'en';
+  const applyInference = options.applyRelationshipInference !== false;
+
   return runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return null;
@@ -183,7 +203,9 @@ export async function updateContactById(
       deletionReason: existing.deletionReason,
     };
     await saveContact(tenant, saved);
-    await applyContactRelationshipInference(tenant, saved);
+    if (applyInference) {
+      await applyContactRelationshipInference(tenant, saved);
+    }
     await invalidateDuplicateScanCache();
     return saved;
   });
@@ -240,49 +262,86 @@ export async function mergeContactsById(
   });
 }
 
-export async function restoreContactById(id: string, restoredBy: string): Promise<Contact | null> {
-  const tenant = getRequestTenant();
-  if (!tenant) return null;
-  const existing = await findContactById(tenant, id);
-  if (!existing) return null;
-  if (!existing.deletedAt) return existing;
+export async function restoreContactById(id: string, _restoredBy: string): Promise<Contact | null> {
+  return runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) return null;
+    const existing = await findContactById(tenant, id);
+    if (!existing) return null;
+    if (!existing.deletedAt) return existing;
 
-  const result = await bulkRestoreContacts([id], restoredBy);
-  if (result.succeeded === 1) {
-    return findContactById(tenant, id);
-  }
-  return null;
+    const now = new Date().toISOString();
+    const restored: Contact = {
+      ...existing,
+      deletedAt: undefined,
+      deletedBy: undefined,
+      deletionReason: undefined,
+      updatedAt: now,
+    };
+    // Throws ContactUniqueFieldError when restore would collide with an active peer.
+    await assertContactUniqueFields(tenant, restored, 'en');
+    await saveContact(tenant, restored);
+    await invalidateDuplicateScanCache();
+    return restored;
+  });
+}
+
+export interface ContactBulkRestoreConflict {
+  id: string;
+  errors: ContactUniqueFieldError['errors'];
+}
+
+export interface ContactBulkRestoreResult {
+  succeeded: number;
+  failed: number;
+  conflicts: ContactBulkRestoreConflict[];
 }
 
 export async function bulkRestoreContacts(
   ids: string[],
   _restoredBy: string,
-): Promise<{ succeeded: number; failed: number }> {
+): Promise<ContactBulkRestoreResult> {
   return runInTransaction(async () => {
     const tenant = getRequestTenant();
-    if (!tenant) return { succeeded: 0, failed: ids.length };
+    if (!tenant) return { succeeded: 0, failed: ids.length, conflicts: [] };
     let succeeded = 0;
     let failed = 0;
+    const conflicts: ContactBulkRestoreConflict[] = [];
     const now = new Date().toISOString();
     const toSave: Contact[] = [];
+    const accepted: Contact[] = [];
 
     const existingContacts = await findContactsByIds(tenant, ids);
     const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
 
     for (const id of ids) {
       const existing = existingMap.get(id);
-      if (existing && existing.deletedAt) {
-        const restored: Contact = {
-          ...existing,
-          deletedAt: undefined,
-          deletedBy: undefined,
-          deletionReason: undefined,
-          updatedAt: now,
-        };
-        toSave.push(restored);
-        succeeded += 1;
-      } else {
+      if (!(existing && existing.deletedAt)) {
         failed += 1;
+        continue;
+      }
+      const restored: Contact = {
+        ...existing,
+        deletedAt: undefined,
+        deletedBy: undefined,
+        deletionReason: undefined,
+        updatedAt: now,
+      };
+      try {
+        await assertContactUniqueFields(tenant, restored, {
+          language: 'en',
+          additionalPeers: accepted,
+        });
+        toSave.push(restored);
+        accepted.push(restored);
+        succeeded += 1;
+      } catch (error) {
+        if (error instanceof ContactUniqueFieldError) {
+          failed += 1;
+          conflicts.push({ id: String(id), errors: error.errors });
+          continue;
+        }
+        throw error;
       }
     }
 
@@ -290,7 +349,7 @@ export async function bulkRestoreContacts(
       await bulkSaveContacts(tenant, toSave);
       await invalidateDuplicateScanCache();
     }
-    return { succeeded, failed };
+    return { succeeded, failed, conflicts };
   });
 }
 

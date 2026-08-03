@@ -5,6 +5,7 @@ import {
   ContactsPageConfirmDialogs,
 } from "@/tenant/features/contacts/components/ContactsPageConfirmDialogs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
@@ -83,6 +84,7 @@ export function ContactsPageOverlays({
   onBulkRestoreOpenChange,
   onConfirmBulkRestore,
 }: ContactsPageOverlaysProps): React.JSX.Element {
+  const { t } = useTranslation();
   return (
     <>
       <Suspense fallback={null}>
@@ -117,16 +119,17 @@ export function ContactsPageOverlays({
       {viewContact && (
         <Suspense
           fallback={
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-end bg-black/20"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="flex h-full w-full max-w-full flex-col gap-3 border-s border-border bg-card p-5 sm:max-w-sm">
-                <Skeleton className="h-5 w-2/3 rounded" />
-                <Skeleton className="h-11 w-full rounded-xl" />
-                <Skeleton className="h-24 w-full rounded-2xl" />
-                <Skeleton className="h-32 w-full rounded-2xl" />
+            <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/20">
+              <div
+                className="flex h-full w-full max-w-full flex-col gap-3 border-s border-border bg-card p-5 sm:max-w-sm"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="sr-only">{t("common.loading")}</span>
+                <Skeleton className="h-5 w-2/3 rounded" aria-hidden />
+                <Skeleton className="h-11 w-full rounded-xl" aria-hidden />
+                <Skeleton className="h-24 w-full rounded-2xl" aria-hidden />
+                <Skeleton className="h-32 w-full rounded-2xl" aria-hidden />
               </div>
             </div>
           }

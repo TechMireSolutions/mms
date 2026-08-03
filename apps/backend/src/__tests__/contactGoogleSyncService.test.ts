@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mockFindCredentials = vi.fn();
 const mockUpsertCredentials = vi.fn();
 const mockGetRequestTenant = vi.fn();
-const mockLoadContacts = vi.fn();
+const mockFindExistingNormalizedContactNames = vi.fn();
 const mockLoadContactRuntimeDefaults = vi.fn();
 const mockBulkSaveContacts = vi.fn();
 const mockInvalidateDuplicateScanCache = vi.fn();
@@ -18,13 +18,26 @@ vi.mock('../db/repositories/contactGoogleSyncRepository.js', () => ({
 }));
 
 vi.mock('../services/contactService.js', () => ({
-  loadContacts: (...args: unknown[]) => mockLoadContacts(...args),
   loadContactRuntimeDefaults: (...args: unknown[]) => mockLoadContactRuntimeDefaults(...args),
   prepareContactRecord: async (contact: unknown) => contact,
 }));
 
 vi.mock('../db/repositories/contactRepository.js', () => ({
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
+  findExistingNormalizedContactNames: (...args: unknown[]) =>
+    mockFindExistingNormalizedContactNames(...args),
+}));
+
+vi.mock('../db/database.js', () => ({
+  runInTransaction: (cb: () => unknown) => cb(),
+}));
+
+vi.mock('../services/contactUniqueValidationService.js', () => ({
+  assertContactUniqueFields: vi.fn().mockResolvedValue(undefined),
+  ContactUniqueFieldError: class ContactUniqueFieldError extends Error {
+    code = 'unique_conflict';
+    errors: unknown[] = [];
+  },
 }));
 
 vi.mock('../services/contactDuplicateScanService.js', () => ({
@@ -49,7 +62,7 @@ describe('contactGoogleSyncService', () => {
         updatedAt: new Date().toISOString(),
       }),
     );
-    mockLoadContacts.mockReset().mockResolvedValue([]);
+    mockFindExistingNormalizedContactNames.mockReset().mockResolvedValue(new Set());
     mockBulkSaveContacts.mockReset().mockResolvedValue(undefined);
     mockInvalidateDuplicateScanCache.mockReset().mockResolvedValue(undefined);
     mockLoadContactRuntimeDefaults.mockReset().mockResolvedValue({
@@ -98,6 +111,12 @@ describe('contactGoogleSyncService', () => {
     ).rejects.toBeInstanceOf(GoogleOAuthExchangeError);
   });
 
+  it('rejects evil host with a Contacts path', async () => {
+    await expect(
+      exchangeGoogleContactsOAuthCode('u1', 'auth-code', 'https://evil.example/contacts'),
+    ).rejects.toBeInstanceOf(GoogleOAuthExchangeError);
+  });
+
   it('surfaces Google OAuth errors', async () => {
     mockFindCredentials.mockResolvedValue({
       clientId: 'client-id',
@@ -131,7 +150,7 @@ describe('contactGoogleSyncService', () => {
       refreshToken: 'refresh-1',
     });
 
-    mockLoadContacts.mockResolvedValue([{ id: '1', name: 'Ali Khan' }]);
+    mockFindExistingNormalizedContactNames.mockResolvedValue(new Set(['ali khan']));
 
     vi.mocked(fetch).mockResolvedValue({
       status: 200,
@@ -152,6 +171,8 @@ describe('contactGoogleSyncService', () => {
 
     expect(result.total).toBe(2);
     expect(result.imported).toBe(1);
+    expect(result.skippedName).toBe(1);
+    expect(result.skippedUnique).toBe(0);
     expect(result.skipped).toBe(1);
     expect(mockBulkSaveContacts).toHaveBeenCalledWith(
       'demo',
@@ -174,7 +195,7 @@ describe('contactGoogleSyncService', () => {
       refreshToken: 'refresh-1',
     });
 
-    mockLoadContacts.mockResolvedValue([]);
+    mockFindExistingNormalizedContactNames.mockResolvedValue(new Set());
 
     vi.mocked(fetch)
       .mockResolvedValueOnce({
@@ -194,6 +215,8 @@ describe('contactGoogleSyncService', () => {
     const result = await runGoogleContactsSync('u1');
 
     expect(result.imported).toBe(1);
+    expect(result.skippedName).toBe(0);
+    expect(result.skippedUnique).toBe(0);
     expect(mockBulkSaveContacts).toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledTimes(3);
   });

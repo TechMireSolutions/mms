@@ -86,7 +86,7 @@ export function ContactsWorkListBody({
         <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <ErrorState
             title={t("contacts.loadFailed")}
-            description={t("common.retry")}
+            description={t("contacts.loadFailedHint")}
             onRetry={onRetryWork}
           />
         </motion.div>

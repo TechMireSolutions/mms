@@ -53,7 +53,6 @@ export type UseContactsPageTabPanelPropsInput = {
   useServerWork: boolean;
   workPageData?: { page: number; total: number; limit: number; hasMore: boolean } | null;
   setListPage: (page: number) => void;
-  contacts: Contact[];
   canWrite: boolean;
   canEditSetup: boolean;
   handleImport: (list: Contact[]) => void | Promise<void>;
@@ -110,7 +109,6 @@ export function buildContactsPageTabPanelProps(
     useServerWork: input.useServerWork,
     workPageData: input.workPageData,
     onPageChange: input.setListPage,
-    contacts: input.contacts,
     canWrite: input.canWrite,
     canEditSetup: input.canEditSetup,
     onImport: input.handleImport,

@@ -14,8 +14,12 @@ Rules describe **target architecture**. Fix open gaps only when the task covers 
 |------|----------------------------|
 | Copy / a11y / SubTabBar / responsive depth | Residual niche debt → full `t()`, WCAG, `SubTabBar`, §7 — owners in `mms-settings-i18n.md` / `mms-ui-ux-design.md` |
 | RBAC / `role ===` | Manifests on major writes; platform `super_user` intentional → tenant `can()` only — `mms-auth-security.md` |
-| Custom tabs FE dual-write / document-store prefs | Typed `custom_tabs` shipped; prefs/lookups still in `objects` → REST SSOT + typed tables — `mms-fields.md` / `mms-data-layer.md` |
+| Custom tabs FE dual-write / document-store prefs | Typed `custom_tabs` shipped; **Contacts Setup writes tabs via `/api/custom-tabs` and strips `formTabs` from `contact_field_config`**; field-config / preferences / column prefs remain document-store → REST SSOT + typed tables — `mms-fields.md` / `mms-data-layer.md` |
 | Live push / CSP / Query-first niches | BE `/api/ws` without FE sub; CSP off; some charts client-reduce → FE WS, SPA CSP, server aggregates — `mms-core.md` / `mms-auth-security.md` / `mms-reports.md` |
+| Contacts residual full loads | Metrics/analytics/widgets/Google name check SQL; report widgets empty contacts dump; visualizer capped to one page; **duplicate scan, CSV export, Apple import/export page-walk remain** → SQL/streamed paths — `mms-data-layer.md` / `mms-reports.md` |
+| Contacts lookup collections | `genders`, `phoneLabels`, `emailLabels`, `countryCodes`, etc. remain unscoped `collections` KV → typed or tenant-RLS store — `mms-data-layer.md` / `mms-fields.md` |
+| Cookie CSRF / Origin depth | Mutations rely on `SameSite=Lax` + CORS; no app-wide Origin/`Sec-Fetch-Site` gate on cookie-auth writes (Contacts inherits) → defense-in-depth Origin check — `mms-auth-security.md` |
+| Contacts write Zod passthrough | `contactWriteSchema` strips soft-delete but remains `.passthrough()` for custom fields → documented dynamic-key / allowlist strategy (prefer `.strict()` where possible) — `mms-api-interface.md` / `mms-form-architecture.md` |
 | Work REST parity (Students/Teachers/Users/Sessions) | `list` views / unpaged dumps / drawer gaps → Contacts parity — `mms-module-architecture.md` §3/§7 |
 | SQL pagination / oversized shells | In-memory page after load; a few ~220–275 shells → SQL page/filter; split behind barrels — `mms-data-layer.md` / `mms-structure-naming.md` |
 

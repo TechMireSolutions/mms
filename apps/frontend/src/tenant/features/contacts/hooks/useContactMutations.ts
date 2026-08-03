@@ -91,7 +91,12 @@ export function useContactMutations() {
 
   const bulkRestoreContacts = useMutation({
     mutationFn: async (ids: (string | number)[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${CONTACTS_API}/bulk-restore`, {
+      apiJson<{
+        success: boolean;
+        succeeded: number;
+        failed: number;
+        conflicts?: Array<{ id: string; errors: Array<{ message: string }> }>;
+      }>(`${CONTACTS_API}/bulk-restore`, {
         method: 'POST',
         body: JSON.stringify({ ids }),
       }),

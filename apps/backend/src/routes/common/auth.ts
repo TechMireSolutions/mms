@@ -42,6 +42,7 @@ import {
   confirmLoginEmailChange,
   requestLoginEmailChange,
 } from '../../services/auth/tenantLoginEmailService.js';
+import { ContactUniqueFieldError } from '../../services/contactUniqueValidationService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendForbidden, sendNotFound, sendUnauthorized } from '../../lib/httpErrors.js';
 
@@ -210,6 +211,9 @@ export default async function authRoutes(
       }
       return reply.send({ contact });
     } catch (error: unknown) {
+      if (error instanceof ContactUniqueFieldError) {
+        return replyValidationError(reply, error.message, { errors: error.errors });
+      }
       const err = error as Error & { statusCode?: number; type?: string };
       return reply.status(err.statusCode ?? 500).send({
         type: err.type ?? 'server_error',

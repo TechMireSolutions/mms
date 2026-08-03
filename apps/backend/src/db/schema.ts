@@ -129,6 +129,9 @@ export const contacts = pgTable('contacts', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('contacts_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('contacts_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
   index('contacts_custom_data_gin_idx').using('gin', table.customData),
 ]);
 

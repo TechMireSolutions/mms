@@ -67,7 +67,7 @@ export function useContactsPageState({
     canWrite,
     canDelete,
     workContacts: directory.workContacts,
-    contacts: directory.contacts,
+    linkContacts: directory.allContactsForLinks,
     selected: directory.selected,
     setSelected: directory.setSelected,
     shownCount: directory.shownCount,

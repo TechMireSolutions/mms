@@ -5,7 +5,7 @@ import { formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactValidation } from "@/lib/contacts/useContactValidation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { useContacts } from "@/tenant/features/contacts/hooks/useContacts";
+import { getApiValidationErrors, getApiValidationMessage } from "@/lib/apiValidationMessage";
 import {
   toTitleCase,
   applyTitleCaseToContact,
@@ -37,7 +37,6 @@ export function useContactFormSave({
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const { fields } = useContactConfig();
-  const { data: peerContacts = [] } = useContacts();
   const validate = useContactValidation();
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -79,14 +78,11 @@ export function useContactFormSave({
       ...cleanedDraft,
       id: cleanedDraft.id || contact?.id,
     };
+    // Within-candidate uniqueness only — peer collisions are enforced by the server.
     formErrors.push(
-      ...findContactUniqueFieldConflicts(
-        uniqueCandidate,
-        peerContacts,
-        fields,
-        language,
-        { defaultPhoneCountryCode: defaultCountryCode },
-      ),
+      ...findContactUniqueFieldConflicts(uniqueCandidate, [], fields, language, {
+        defaultPhoneCountryCode: defaultCountryCode,
+      }),
     );
 
     if (formErrors.length > 0) {
@@ -147,6 +143,18 @@ export function useContactFormSave({
       );
       onClose();
     } catch (err: unknown) {
+      const apiErrors = getApiValidationErrors(err);
+      if (apiErrors) {
+        setValidationErrors(apiErrors);
+        const firstError = apiErrors[0];
+        if (firstError?.tabId) {
+          onValidationTab(firstError.tabId, firstError.fieldId, firstError.index);
+        }
+        notify.error(t("contacts.form.pleaseFixErrors"), {
+          description: firstError?.message ?? getApiValidationMessage(err),
+        });
+        return;
+      }
       notify.error(t("settings.serverSaveFailed"), {
         description: err instanceof Error ? err.message : String(err),
       });
@@ -162,7 +170,6 @@ export function useContactFormSave({
     onClose,
     onSave,
     onValidationTab,
-    peerContacts,
     t,
     validate,
   ]);

@@ -10,6 +10,7 @@ export {
   contactsPaginatedQueryKey,
   useContactsPaginated,
   fetchAllContactsForQuery,
+  fetchContactsPageForQuery,
   useContactsMetrics,
   useContactsReportAnalytics,
   useContactsWidgetAggregates,

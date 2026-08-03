@@ -55,8 +55,15 @@ export async function saveCustomTabsForObject(key: string, data: unknown, tenant
   if (!moduleId || !data || typeof data !== 'object') return data;
 
   const dataObj = data as Record<string, unknown>;
+  // Only sync when formTabs is an explicit array. Missing/undefined/null means
+  // "tabs live in typed custom_tabs" (Contacts Setup REST SSOT) — never wipe.
   if (!('formTabs' in dataObj)) {
     return data;
+  }
+  if (!Array.isArray(dataObj.formTabs)) {
+    const cleaned = { ...dataObj };
+    delete cleaned.formTabs;
+    return cleaned;
   }
 
   const formTabs = dataObj.formTabs;
@@ -67,7 +74,7 @@ export async function saveCustomTabsForObject(key: string, data: unknown, tenant
     .delete(schema.customTabs)
     .where(and(eq(schema.customTabs.workspaceSubdomain, tenant), customTabModuleFilter(moduleId)));
 
-  if (Array.isArray(formTabs) && formTabs.length > 0) {
+  if (formTabs.length > 0) {
     const values = formTabs.map((tabRaw: unknown, index: number) => {
       const tab = tabRaw as CustomTabInput;
       return {

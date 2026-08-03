@@ -76,7 +76,7 @@ export function useContactDetailActions({
       void queryClient
         .fetchQuery({
           queryKey: contactDetailQueryKey(contactId),
-          queryFn: () => fetchContactById(contactId),
+          queryFn: ({ signal }) => fetchContactById(contactId, signal),
         })
         .then((contact) => {
           setContactState(contact);

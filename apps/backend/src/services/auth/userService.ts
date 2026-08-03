@@ -415,5 +415,10 @@ export async function updateOwnLinkedContact(
     err.type = 'no_contact_link';
     throw err;
   }
-  return updateContactById(String(contactId), { ...contact, id: contactId });
+  // Own-profile updates never rewrite peer relationship graphs.
+  return updateContactById(
+    String(contactId),
+    { ...contact, id: contactId },
+    { applyRelationshipInference: false },
+  );
 }

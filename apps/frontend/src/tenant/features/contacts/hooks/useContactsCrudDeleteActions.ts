@@ -75,7 +75,13 @@ export function useContactsCrudDeleteActions({
   );
 
   const bulkRestoreContactsAction = useCallback(
-    async (ids: (string | number)[]): Promise<{ succeeded: number; failed: number }> => {
+    async (
+      ids: (string | number)[],
+    ): Promise<{
+      succeeded: number;
+      failed: number;
+      conflicts?: Array<{ id: string; errors: Array<{ message: string }> }>;
+    }> => {
       return bulkRestoreMutation.mutateAsync(ids);
     },
     [bulkRestoreMutation],

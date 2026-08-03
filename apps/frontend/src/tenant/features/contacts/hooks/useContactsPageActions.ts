@@ -11,7 +11,7 @@ export function useContactsPageActions({
   canWrite,
   canDelete,
   workContacts,
-  contacts,
+  linkContacts,
   selected,
   setSelected,
   shownCount,
@@ -30,7 +30,8 @@ export function useContactsPageActions({
   canWrite: boolean;
   canDelete: boolean;
   workContacts: Contact[];
-  contacts: Contact[];
+  /** Resolved linked contacts for drawer/edit (batch `/resolve`), not a full-tenant dump. */
+  linkContacts: Contact[];
   selected: Array<string | number>;
   setSelected: (ids: Array<string | number>) => void;
   shownCount: number;
@@ -60,8 +61,9 @@ export function useContactsPageActions({
 }) {
   const findContactById = useCallback(
     (id: string | number): Contact | undefined =>
-      workContacts.find((contact) => contact.id === id) ?? contacts.find((contact) => contact.id === id),
-    [workContacts, contacts],
+      workContacts.find((contact) => contact.id === id) ??
+      linkContacts.find((contact) => contact.id === id),
+    [workContacts, linkContacts],
   );
 
   const writeActions = useContactsPageWriteActions({

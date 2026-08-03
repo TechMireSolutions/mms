@@ -13,7 +13,13 @@ export function GoogleContactsConnectedState({
 }: {
   canWrite: boolean;
   error: string;
-  syncResult: { total: number; imported: number; skipped: number } | null;
+  syncResult: {
+    total: number;
+    imported: number;
+    skipped: number;
+    skippedName: number;
+    skippedUnique: number;
+  } | null;
   syncing: boolean;
   onDisconnect: () => void;
   onSync: () => void;
@@ -58,6 +64,9 @@ export function GoogleContactsConnectedState({
                 imported: syncResult.imported,
                 skipped: syncResult.skipped,
               })}
+              {syncResult.skippedUnique > 0
+                ? ` ${t("contacts.sync.skippedUniqueCount", { count: syncResult.skippedUnique })}`
+                : ""}
             </p>
           </div>
         </div>

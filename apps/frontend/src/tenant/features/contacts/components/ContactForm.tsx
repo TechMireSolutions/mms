@@ -128,7 +128,9 @@ export default function ContactForm({
         void draft.handleSave();
       }}
       saving={draft.saving}
-      saveDisabled={!draft.contactDraft.firstName?.trim()}
+      saveDisabled={
+        !draft.contactDraft.firstName?.trim() || (Boolean(contact) && !draft.isDirty)
+      }
       footerStart={
         <ContactFormFooterStart
           contactDraft={draft.contactDraft}

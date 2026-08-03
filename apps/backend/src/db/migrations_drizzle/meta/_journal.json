@@ -36,6 +36,13 @@
       "when": 1785669600000,
       "tag": "0004_contacts_soft_delete_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785717000000,
+      "tag": "0005_contacts_active_partial_idx",
+      "breakpoints": true
     }
   ]
 }

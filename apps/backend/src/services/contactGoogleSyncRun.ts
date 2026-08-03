@@ -2,15 +2,22 @@ import type { Contact, GoogleContactsSyncRunResult } from '@mms/shared';
 import { normalizeToE164, parsePhoneNumber } from '@mms/shared';
 import {
   loadContactRuntimeDefaults,
-  loadContacts,
   prepareContactRecord,
   type ContactRuntimeDefaults,
 } from './contactService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
-import { bulkSaveContacts } from '../db/repositories/contactRepository.js';
+import { runInTransaction } from '../db/database.js';
+import {
+  bulkSaveContacts,
+  findExistingNormalizedContactNames,
+} from '../db/repositories/contactRepository.js';
 import { getContactGoogleSyncConfig } from './contactGoogleSyncConfig.js';
 import { GoogleSyncError, refreshGoogleAccessToken } from './contactGoogleSyncOAuth.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
+import {
+  assertContactUniqueFields,
+  ContactUniqueFieldError,
+} from './contactUniqueValidationService.js';
 
 const GOOGLE_PEOPLE_FIELDS =
   'names,emailAddresses,phoneNumbers,organizations,birthdays,addresses,biographies';
@@ -146,26 +153,54 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
     .map((connection) => mapGoogleConnectionToContact(connection, defaults))
     .filter((contact): contact is Contact => contact != null);
 
-  const existing = await loadContacts();
-  const existingNames = new Set(
-    existing.map((contact) => contact.name?.toLowerCase().trim()).filter(Boolean),
-  );
+  const tenant = getRequestTenant();
+  const candidateNames = mapped.map((contact) => contact.name?.toLowerCase().trim() || '');
+  const existingNames = tenant
+    ? await findExistingNormalizedContactNames(tenant, candidateNames)
+    : new Set<string>();
   const fresh = mapped.filter(
     (contact) => !existingNames.has(contact.name?.toLowerCase().trim() || ''),
   );
 
-  const tenant = getRequestTenant();
+  const skippedName = mapped.length - fresh.length;
+  let skippedUnique = 0;
+  let imported = 0;
+
   if (tenant && fresh.length > 0) {
     const prepared = await Promise.all(
       fresh.map((contact) => prepareContactRecord(contact, contact.id)),
     );
-    await bulkSaveContacts(tenant, prepared);
-    await invalidateDuplicateScanCache();
+    const accepted: Contact[] = [];
+
+    await runInTransaction(async () => {
+      for (const candidate of prepared) {
+        try {
+          await assertContactUniqueFields(tenant, candidate, {
+            language: 'en',
+            additionalPeers: accepted,
+          });
+          accepted.push(candidate);
+        } catch (error) {
+          if (error instanceof ContactUniqueFieldError) {
+            skippedUnique += 1;
+            continue;
+          }
+          throw error;
+        }
+      }
+      if (accepted.length > 0) {
+        await bulkSaveContacts(tenant, accepted);
+        await invalidateDuplicateScanCache();
+      }
+      imported = accepted.length;
+    });
   }
 
   return {
     total: mapped.length,
-    imported: fresh.length,
-    skipped: mapped.length - fresh.length,
+    imported,
+    skippedName,
+    skippedUnique,
+    skipped: skippedName + skippedUnique,
   };
 }

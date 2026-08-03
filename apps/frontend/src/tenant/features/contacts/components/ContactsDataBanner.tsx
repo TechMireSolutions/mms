@@ -1,28 +1,22 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContacts } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import {
   ContactsConflictBanner,
-  ContactsFetchErrorBanner,
   ContactsOfflineBanner,
   ContactsPendingBanner,
 } from "@/tenant/features/contacts/components/ContactsDataBannerRows";
 
 interface ContactsDataBannerProps {
   onReviewConflicts?: () => void;
-  /** When false, skip full-list fetch error surfacing (Work tab uses paginated API). */
-  listFetchEnabled?: boolean;
 }
 
-/** Surfaces offline / sync failures for the Contacts module (globle1 §1.4). */
+/** Surfaces offline / sync outbox banners for the Contacts module. */
 export default function ContactsDataBanner({
   onReviewConflicts,
-  listFetchEnabled = true,
 }: ContactsDataBannerProps): JSX.Element | null {
   const { t } = useTranslation();
-  const { isError, isFetching } = useContacts({ enabled: listFetchEnabled });
   const { pendingCount, conflictCount, flushing, flush, clearConflicts } = useContactsSyncOutbox();
   const [offline, setOffline] = useState(() =>
     typeof navigator !== "undefined" ? !navigator.onLine : false,
@@ -68,10 +62,6 @@ export default function ContactsDataBanner({
         t={t}
       />,
     );
-  }
-
-  if (isError && !isFetching) {
-    banners.push(<ContactsFetchErrorBanner key="fetch-error" t={t} />);
   }
 
   if (banners.length === 0) return null;

@@ -3,6 +3,7 @@ import { getPrimaryEmail, getPrimaryPhone } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTenantProfile } from '@/tenant/hooks/useTenantProfile';
 import { apiJson, ApiError } from '@/lib/apiClient';
+import { getApiValidationMessage } from '@/lib/apiValidationMessage';
 import { notify } from '@/lib/notify';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -47,8 +48,13 @@ export function useAccountProfileContactActions() {
       await checkUserAuth();
       notify.success(t('account.contactSaved'));
     } catch (error: unknown) {
-      const message = error instanceof ApiError ? error.message : t('errors.boundary.description');
-      notify.error(message);
+      const validationMessage = getApiValidationMessage(error);
+      const message =
+        validationMessage ||
+        (error instanceof ApiError ? error.message : t('errors.boundary.description'));
+      notify.error(validationMessage ? t('account.contactUniqueConflict') : message, {
+        description: validationMessage || undefined,
+      });
     } finally {
       setSavingContact(false);
     }
@@ -75,8 +81,13 @@ export function useAccountProfileContactActions() {
       await checkUserAuth();
       notify.success(t('account.contactSaved'));
     } catch (error: unknown) {
-      const message = error instanceof ApiError ? error.message : t('errors.boundary.description');
-      notify.error(message);
+      const validationMessage = getApiValidationMessage(error);
+      const message =
+        validationMessage ||
+        (error instanceof ApiError ? error.message : t('errors.boundary.description'));
+      notify.error(validationMessage ? t('account.contactUniqueConflict') : message, {
+        description: validationMessage || undefined,
+      });
     } finally {
       setSavingContact(false);
     }

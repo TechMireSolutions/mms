@@ -1,3 +1,4 @@
+import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
 import {
   clearGoogleSyncTokens,
   getContactGoogleSyncConfig,
@@ -33,10 +34,19 @@ export class GoogleSyncError extends Error {
   }
 }
 
-function isAllowedOAuthRedirectUri(redirectUri: string): boolean {
+/** Path must be Contacts Work; host must match apex/tenant allowlist (not path-only). */
+export function isAllowedOAuthRedirectUri(redirectUri: string): boolean {
   try {
     const url = new URL(redirectUri);
-    return url.pathname === '/contacts' || url.pathname.endsWith('/contacts');
+    const pathOk = url.pathname === '/contacts' || url.pathname.endsWith('/contacts');
+    if (!pathOk) return false;
+
+    const origin = url.origin;
+    const appDomain = process.env.MMS_APP_DOMAIN?.trim();
+    if (appDomain) {
+      return isOriginAllowedForAppDomain(origin, appDomain);
+    }
+    return isTrustedWorkspaceOrigin(origin);
   } catch {
     return false;
   }

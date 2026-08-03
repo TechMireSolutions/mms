@@ -1,10 +1,7 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Contact } from "@mms/shared";
 import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
-import {
-  useContactsCollectionState,
-  useContactsPaginated,
-} from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsPaginated } from "@/tenant/features/contacts/hooks/useContacts";
 import { useContactsDirectoryFilters } from "@/tenant/features/contacts/hooks/useContactsDirectoryFilters";
 import { useContactsDirectoryLinks } from "@/tenant/features/contacts/hooks/useContactsDirectoryLinks";
 
@@ -28,13 +25,8 @@ export function useContactsDirectory({
     initialShowDeletedArchives,
   });
 
-  const needsFullContactsList = effectiveTab === "setup";
   const useServerWork = effectiveTab === "work";
   const workLimit = CONTACTS_MODULE_MANIFEST.defaultPageSize;
-
-  const { contacts: rawContacts } = useContactsCollectionState({
-    enabled: needsFullContactsList,
-  });
 
   const {
     data: workPageData,
@@ -54,13 +46,12 @@ export function useContactsDirectory({
     enabled: useServerWork,
   });
 
-  const contacts = useMemo(() => rawContacts || [], [rawContacts]);
   const workContacts = workPageData?.contacts ?? [];
   const shownCount = workPageData?.total ?? 0;
 
   const allContactsForLinks = useContactsDirectoryLinks({
-    needsFullContactsList,
-    contacts,
+    needsFullContactsList: false,
+    contacts: [],
     workContacts,
     editContact,
     viewContact,
@@ -87,9 +78,7 @@ export function useContactsDirectory({
     sortDir: filters.sortDir,
     selected: filters.selected,
     setSelected: filters.setSelected,
-    needsFullContactsList,
     useServerWork,
-    contacts,
     workPageData,
     isWorkLoading,
     isWorkError,

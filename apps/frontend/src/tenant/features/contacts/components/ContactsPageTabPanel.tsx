@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
+import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 import { ContactsWorkDirectory } from "@/tenant/features/contacts/components/ContactsWorkDirectory";
 import type { ContactsWorkDirectoryProps } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
 import type { Contact } from "@mms/shared";
@@ -9,7 +8,6 @@ import ContactsSettingsPanel from "@/tenant/features/contacts/components/Contact
 
 export interface ContactsPageTabPanelProps extends ContactsWorkDirectoryProps {
   effectiveTab: string;
-  contacts: Contact[];
   canWrite: boolean;
   canEditSetup: boolean;
   onImport: (list: Contact[]) => void | Promise<void>;
@@ -17,7 +15,6 @@ export interface ContactsPageTabPanelProps extends ContactsWorkDirectoryProps {
 
 export function ContactsPageTabPanel({
   effectiveTab,
-  contacts,
   canWrite,
   canEditSetup,
   onImport,
@@ -54,7 +51,6 @@ export function ContactsPageTabPanel({
         >
           <ErrorBoundary>
             <ContactsSettingsPanel
-              contacts={contacts}
               canWrite={canWrite}
               canEditSetup={canEditSetup}
               onImport={onImport}

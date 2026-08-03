@@ -5,6 +5,8 @@ let refreshPromise: Promise<boolean> | null = null;
 export interface ApiErrorBody {
   type?: string;
   message?: string;
+  /** Field-level validation issues (e.g. Contacts unique conflicts). */
+  errors?: unknown;
 }
 
 /** Structured API failure — map `type` to `t('errors.*')` in UI. */
@@ -12,13 +14,21 @@ export class ApiError extends Error {
   readonly status: number;
   readonly type: string;
   readonly requestId?: string;
+  readonly errors?: unknown;
 
-  constructor(status: number, message: string, type?: string, requestId?: string) {
+  constructor(
+    status: number,
+    message: string,
+    type?: string,
+    requestId?: string,
+    errors?: unknown,
+  ) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.type = type ?? (status === 401 ? 'auth_required' : status === 403 ? 'forbidden' : 'request_failed');
     this.requestId = requestId;
+    this.errors = errors;
   }
 }
 
@@ -104,7 +114,13 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
       errorBody = { message: text.substring(0, 100) || res.statusText || `Request failed (${res.status})` };
     }
     const requestId = res.headers.get('x-request-id') || undefined;
-    throw new ApiError(res.status, errorBody.message ?? `Request failed (${res.status})`, errorBody.type, requestId);
+    throw new ApiError(
+      res.status,
+      errorBody.message ?? `Request failed (${res.status})`,
+      errorBody.type,
+      requestId,
+      errorBody.errors,
+    );
   }
 
   if (!text) {

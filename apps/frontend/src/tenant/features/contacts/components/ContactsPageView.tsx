@@ -30,7 +30,6 @@ export function ContactsPageView({
   flushing,
   flush,
   openConflictReview,
-  needsFullContactsList,
   conflictPanelOpen,
   setConflictPanelOpen,
   tabPanelProps,
@@ -38,7 +37,7 @@ export function ContactsPageView({
 }: ContactsPageViewProps): React.JSX.Element {
   return (
     <ModulePageShell
-      seoTitle={`MMS - ${t("nav.contacts")}`}
+      seoTitle={t("page.contacts.seoTitle")}
       seoDescription={t("page.contacts.subtitle")}
       headerIcon={Users}
       headerTitle={t("nav.contacts")}
@@ -69,7 +68,7 @@ export function ContactsPageView({
         />
       }
     >
-      <ContactsDataBanner onReviewConflicts={openConflictReview} listFetchEnabled={needsFullContactsList} />
+      <ContactsDataBanner onReviewConflicts={openConflictReview} />
 
       <ContactsSyncConflictPanel
         open={conflictPanelOpen}

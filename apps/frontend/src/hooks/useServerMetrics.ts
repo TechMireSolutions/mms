@@ -26,9 +26,11 @@ export function useServerMetrics<T>({
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const queryString = extraParam ? `?date=${encodeURIComponent(extraParam)}` : '';
-      const response = await apiJson<{ metrics: T }>(`${apiPath}/metrics${queryString}`);
+      const response = await apiJson<{ metrics: T }>(`${apiPath}/metrics${queryString}`, {
+        signal,
+      });
       return response?.metrics ?? ({} as T);
     },
     enabled: isAuthenticated && enabled,

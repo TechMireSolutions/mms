@@ -55,7 +55,6 @@ export function useContactsPageTabPanelProps(
       input.useServerWork,
       input.workPageData,
       input.setListPage,
-      input.contacts,
       input.canWrite,
       input.canEditSetup,
       input.handleImport,

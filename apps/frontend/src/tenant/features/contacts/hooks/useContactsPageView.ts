@@ -66,7 +66,6 @@ export function useContactsPageView() {
     flushing: state.flushing,
     flush: state.flush,
     openConflictReview: state.openConflictReview,
-    needsFullContactsList: state.needsFullContactsList,
     conflictPanelOpen: state.conflictPanelOpen,
     setConflictPanelOpen: state.setConflictPanelOpen,
     tabPanelProps,

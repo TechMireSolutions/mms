@@ -13,7 +13,6 @@ import {
 } from "@/tenant/features/contacts/components/sync/AppleContactsPanelSections";
 
 export interface AppleContactsPanelProps {
-  contacts: Contact[];
   onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }
@@ -22,12 +21,11 @@ export interface AppleContactsPanelProps {
  * AppleContactsPanel component to import and export vCard files.
  */
 export function AppleContactsPanel({
-  contacts,
   onImport,
   canWrite = true,
 }: AppleContactsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const apple = useAppleContactsPanel({ contacts, onImport, canWrite });
+  const apple = useAppleContactsPanel({ onImport, canWrite });
 
   return (
     <section className="rounded-xl border border-border bg-card overflow-hidden">
@@ -52,7 +50,6 @@ export function AppleContactsPanel({
         {canWrite && apple.previewList.length === 0 && !apple.result && (
           <AppleContactsDropzone
             isDragging={apple.isDragging}
-            canWrite={canWrite}
             onOpenPicker={apple.openFilePicker}
             onDragOver={apple.handleDragOver}
             onDragLeave={apple.handleDragLeave}
@@ -75,8 +72,9 @@ export function AppleContactsPanel({
         {apple.result && <AppleContactsImportResult result={apple.result} t={t} />}
 
         <AppleContactsExportBar
-          contactCount={contacts.length}
-          onExport={apple.handleExport}
+          contactCount={apple.exportCount}
+          exporting={apple.exporting}
+          onExport={() => void apple.handleExport()}
           t={t}
         />
       </div>

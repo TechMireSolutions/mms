@@ -40,16 +40,25 @@ export function loadFieldConfig(): FieldConfig {
   return sanitizeContactFieldConfig(merged);
 }
 
+/** Strip formTabs — typed `custom_tabs` + `/api/custom-tabs` are the write SSOT. */
+function fieldConfigWithoutFormTabs(config: FieldConfig): Omit<FieldConfig, "formTabs"> & {
+  version: number;
+} {
+  const { formTabs: _formTabs, ...rest } = config;
+  return { ...rest, version: CONFIG_VERSION };
+}
+
 /**
  * Persists the active field config.
  * Always stamps the current CONFIG_VERSION before saving.
+ * Does not dual-write formTabs into objects (use `/api/custom-tabs`).
  */
 export function saveFieldConfig(config: FieldConfig): void {
-  saveObject("contact_field_config", { ...config, version: CONFIG_VERSION });
+  saveObject("contact_field_config", fieldConfigWithoutFormTabs(config));
 }
 
 /** Persists contact field config and waits for server synchronization. */
 export async function saveFieldConfigAsync(config: FieldConfig): Promise<void> {
-  const result = await saveObjectAsync("contact_field_config", { ...config, version: CONFIG_VERSION });
+  const result = await saveObjectAsync("contact_field_config", fieldConfigWithoutFormTabs(config));
   if (!result.ok) throw new Error("Failed to sync contact field configuration");
 }

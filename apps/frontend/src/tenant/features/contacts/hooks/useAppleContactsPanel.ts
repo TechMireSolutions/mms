@@ -19,13 +19,13 @@ import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n
 import { triggerFileDownload } from "@/lib/download";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
+import { fetchAllContactsForQuery } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
+import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
 
 export function useAppleContactsPanel({
-  contacts,
   onImport,
   canWrite,
 }: {
-  contacts: Contact[];
   onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite: boolean;
 }) {
@@ -33,8 +33,11 @@ export function useAppleContactsPanel({
   const { phoneLabels, emailLabels, defaultPhoneCountryCode } = useContactConfig();
   const mobileLabel = resolvePhoneLabel(undefined, phoneLabels, t);
   const personalLabel = resolveEmailLabel(undefined, emailLabels, t);
+  const { data: metrics } = useContactsMetrics({ enabled: true });
+  const exportCount = metrics?.total ?? 0;
   const [previewList, setPreviewList] = useState<Contact[]>([]);
   const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -90,11 +93,18 @@ export function useAppleContactsPanel({
   const handleImport = async (): Promise<void> => {
     if (!canWrite) return;
     setImporting(true);
+    const controller = new AbortController();
     try {
-      const existingPhones = new Set(contacts.flatMap((contact) => getPhoneNumbers(contact)));
-      const existingEmails = new Set(contacts.flatMap((contact) => getEmails(contact)));
+      // On-demand identity index — do not keep a live full-tenant Query dump for Setup.
+      const existing = await fetchAllContactsForQuery(
+        { includeDeleted: false },
+        undefined,
+        controller.signal,
+      );
+      const existingPhones = new Set(existing.flatMap((contact) => getPhoneNumbers(contact)));
+      const existingEmails = new Set(existing.flatMap((contact) => getEmails(contact)));
       const existingNames = new Set(
-        contacts.map((contact) => getDisplayName(contact).toLowerCase().trim()).filter(Boolean),
+        existing.map((contact) => getDisplayName(contact).toLowerCase().trim()).filter(Boolean),
       );
       const fresh = previewList.filter((contact) => {
         const phones = getPhoneNumbers(contact);
@@ -111,17 +121,34 @@ export function useAppleContactsPanel({
       await onImport(fresh);
       setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
       setPreviewList([]);
-    } catch {
+    } catch (error) {
+      if ((error as { name?: string })?.name === "AbortError") return;
       notify.error(t("contacts.saveFailed"));
     } finally {
+      controller.abort();
       setImporting(false);
     }
   };
 
-  const handleExport = (): void => {
-    const vcf = contacts.map(toVCard).join("\r\n");
-    const blob = new Blob([vcf], { type: "text/vcard" });
-    triggerFileDownload(blob, "madrasa-contacts.vcf");
+  const handleExport = async (): Promise<void> => {
+    setExporting(true);
+    const controller = new AbortController();
+    try {
+      const contacts = await fetchAllContactsForQuery(
+        { includeDeleted: false },
+        undefined,
+        controller.signal,
+      );
+      const vcf = contacts.map(toVCard).join("\r\n");
+      const blob = new Blob([vcf], { type: "text/vcard" });
+      triggerFileDownload(blob, t("contacts.sync.vcfFileName"));
+    } catch (error) {
+      if ((error as { name?: string })?.name === "AbortError") return;
+      notify.error(t("contacts.saveFailed"));
+    } finally {
+      controller.abort();
+      setExporting(false);
+    }
   };
 
   const clearPreview = (): void => setPreviewList([]);
@@ -138,6 +165,8 @@ export function useAppleContactsPanel({
   return {
     previewList,
     importing,
+    exporting,
+    exportCount,
     result,
     isDragging,
     fileRef: fileRef as RefObject<HTMLInputElement | null>,

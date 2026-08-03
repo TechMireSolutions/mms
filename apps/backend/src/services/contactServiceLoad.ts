@@ -1,10 +1,4 @@
 import {
-  collectStudentLinkedContactIds,
-  collectTeacherLinkedContactIds,
-  computeContactsCommandMetrics,
-  computeContactsMonthlyCreatedCounts,
-  computeContactsReportAnalytics,
-  computeContactsWidgetAggregates,
   DEFAULT_ENABLED_TABS,
   DEFAULT_FORM_TABS,
   DEFAULT_REQUIRED_TABS,
@@ -31,8 +25,16 @@ import {
   findContactsByIds,
   countFieldUsageByKeys,
 } from '../db/repositories/contactRepository.js';
-import { listStudentsByWorkspace } from '../db/repositories/studentRepository.js';
-import { listTeachersByWorkspace } from '../db/repositories/teacherRepository.js';
+import {
+  aggregateContactsCommandMetrics,
+  aggregateContactsMonthlyCreatedCounts,
+  aggregateContactsReportAnalytics,
+  aggregateContactsWidgetQueries,
+} from '../db/repositories/contactRepositoryAggregates.js';
+import {
+  listActiveStudentContactIds,
+  listActiveTeacherContactIds,
+} from '../db/repositories/moduleLinkedContactIds.js';
 
 export interface ContactRuntimeDefaults {
   defaultPhoneCountryCode: string;
@@ -63,12 +65,10 @@ export async function loadContactsPage(query: ContactsListQuery): Promise<Contac
 
   const excludeIds = [...(query.excludeIds ?? [])];
   if (query.excludeLinkedModules?.includes('students')) {
-    const students = await listStudentsByWorkspace(tenant, { deleted: 'active' });
-    excludeIds.push(...collectStudentLinkedContactIds(students));
+    excludeIds.push(...(await listActiveStudentContactIds(tenant)));
   }
   if (query.excludeLinkedModules?.includes('teachers')) {
-    const teachers = await listTeachersByWorkspace(tenant, { deleted: 'active' });
-    excludeIds.push(...collectTeacherLinkedContactIds(teachers));
+    excludeIds.push(...(await listActiveTeacherContactIds(tenant)));
   }
   const { excludeLinkedModules: _excludeLinkedModules, ...pageQuery } = query;
   return listContactsPage(tenant, {
@@ -89,14 +89,28 @@ function metricsFieldConfig(fieldConfig: FieldConfig | null): FieldConfig {
 }
 
 export async function loadContactsCommandMetrics(): Promise<ContactsCommandMetricsSnapshot> {
-  const contacts = await loadContacts();
-  const [fieldConfig, preferences] = await Promise.all([
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      total: 0,
+      newThisPeriod: 0,
+      whatsappCount: 0,
+      incompleteCount: 0,
+      duplicatePairCount: 0,
+    };
+  }
+  // Dynamic import avoids cycle: duplicateScan → contactService → contactServiceLoad.
+  const [{ getDuplicateScanCache }, fieldConfig] = await Promise.all([
+    import('./contactDuplicateScanService.js'),
     loadContactFieldConfig(),
-    loadContactPreferences(),
   ]);
-  return computeContactsCommandMetrics(contacts, {
-    fieldConfig: metricsFieldConfig(fieldConfig),
-    duplicateDetectionPreferences: preferences ?? undefined,
+  const dupeCache = await getDuplicateScanCache();
+  // Actionable pairs only (exclude name-only) — cache when warm; 0 when cold (no full-tenant scan).
+  const duplicatePairCount = dupeCache
+    ? dupeCache.pairs.filter((pair) => pair.reasonKey !== 'name').length
+    : 0;
+  return aggregateContactsCommandMetrics(tenant, metricsFieldConfig(fieldConfig), {
+    duplicatePairCount,
   });
 }
 
@@ -149,20 +163,33 @@ export async function loadContactsReportAnalytics(options?: {
   compareYears?: number[];
   language?: string;
 }): Promise<{ analytics: ContactsReportAnalyticsSnapshot; monthlyByYear?: ContactsMonthlyYearCounts[] }> {
-  const contacts = await loadContacts();
-  const analytics = computeContactsReportAnalytics(contacts);
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      analytics: {
+        total: 0,
+        activeCount: 0,
+        whatsappCount: 0,
+        whatsappRate: 0,
+        missingInfoCount: 0,
+        newLast30Days: 0,
+        newPrior30Days: 0,
+        newThisPeriod: 0,
+        hasSignupDates: false,
+        growthRecentSignups30d: 0,
+        growthPriorSignups30d: 0,
+      },
+    };
+  }
 
+  const analytics = await aggregateContactsReportAnalytics(tenant);
   const years = options?.compareYears?.filter(Boolean) ?? [];
   if (years.length === 0) {
     return { analytics };
   }
 
   const language = options?.language || 'en';
-  const monthlyByYear = years.map((year) => ({
-    year,
-    months: computeContactsMonthlyCreatedCounts(contacts, year, 6, language),
-  }));
-
+  const monthlyByYear = await aggregateContactsMonthlyCreatedCounts(tenant, years, 6, language);
   return { analytics, monthlyByYear };
 }
 
@@ -184,8 +211,9 @@ export async function loadContactFieldUsageCount(fieldKey: string): Promise<numb
 export async function loadContactsWidgetAggregates(
   queries: ContactsWidgetQuery[],
 ): Promise<Record<string, ContactsWidgetAggregateResult>> {
-  const contacts = await loadContacts();
-  return computeContactsWidgetAggregates(contacts, queries);
+  const tenant = getRequestTenant();
+  if (!tenant) return {};
+  return aggregateContactsWidgetQueries(tenant, queries);
 }
 
 export async function loadContactsByIds(ids: string[]): Promise<Contact[]> {

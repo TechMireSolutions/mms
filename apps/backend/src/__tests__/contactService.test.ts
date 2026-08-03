@@ -10,6 +10,10 @@ const mockBulkSaveContacts = vi.fn();
 const mockGetRequestTenant = vi.fn();
 const mockInvalidateDuplicateScanCache = vi.fn();
 
+const mockAssertContactUniqueFields = vi.fn();
+const mockListActiveStudentContactIds = vi.fn();
+const mockListActiveTeacherContactIds = vi.fn();
+
 vi.mock('../db/repositories/contactRepository.js', () => ({
   listContactsByWorkspace: (...args: unknown[]) => mockListContactsByWorkspace(...args),
   listContactsPage: (...args: unknown[]) => mockListContactsPage(...args),
@@ -18,6 +22,19 @@ vi.mock('../db/repositories/contactRepository.js', () => ({
   findContactsByIds: (...args: unknown[]) => mockFindContactsByIds(...args),
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
 }));
+
+vi.mock('../db/repositories/moduleLinkedContactIds.js', () => ({
+  listActiveStudentContactIds: (...args: unknown[]) => mockListActiveStudentContactIds(...args),
+  listActiveTeacherContactIds: (...args: unknown[]) => mockListActiveTeacherContactIds(...args),
+}));
+
+vi.mock('../services/contactUniqueValidationService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/contactUniqueValidationService.js')>();
+  return {
+    ...actual,
+    assertContactUniqueFields: (...args: unknown[]) => mockAssertContactUniqueFields(...args),
+  };
+});
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
@@ -40,7 +57,15 @@ vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
 
-import { loadContactsPage, updateContactById, upsertContact, bulkSoftDeleteContacts } from '../services/contactService.js';
+import {
+  loadContactsPage,
+  updateContactById,
+  upsertContact,
+  bulkSoftDeleteContacts,
+  restoreContactById,
+  bulkRestoreContacts,
+  ContactUniqueFieldError,
+} from '../services/contactService.js';
 import { applyContactRelationshipInference } from '../services/contactRelationshipInferenceService.js';
 
 
@@ -86,6 +111,9 @@ describe('contactService relationship reciprocal mapping', () => {
     mockSaveContact.mockResolvedValue(undefined);
     mockBulkSaveContacts.mockResolvedValue(undefined);
     mockInvalidateDuplicateScanCache.mockResolvedValue(undefined);
+    mockAssertContactUniqueFields.mockReset().mockResolvedValue(undefined);
+    mockListActiveStudentContactIds.mockReset().mockResolvedValue([]);
+    mockListActiveTeacherContactIds.mockReset().mockResolvedValue([]);
   });
 
   it('returns only deleted contacts for trash pages', async () => {
@@ -105,6 +133,88 @@ describe('contactService relationship reciprocal mapping', () => {
     );
     expect(page.contacts.map((entry) => entry.id)).toEqual(['deleted']);
     expect(page.total).toBe(1);
+  });
+
+  it('excludeLinkedModules uses scoped contact-id lookups', async () => {
+    mockListActiveStudentContactIds.mockResolvedValue(['s-contact']);
+    mockListActiveTeacherContactIds.mockResolvedValue(['t-contact']);
+    mockListContactsPage.mockResolvedValue({
+      contacts: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+
+    await loadContactsPage({
+      page: 1,
+      limit: 50,
+      excludeLinkedModules: ['students', 'teachers'],
+    });
+
+    expect(mockListActiveStudentContactIds).toHaveBeenCalledWith('demo');
+    expect(mockListActiveTeacherContactIds).toHaveBeenCalledWith('demo');
+    expect(mockListContactsPage).toHaveBeenCalledWith(
+      'demo',
+      expect.objectContaining({
+        excludeIds: expect.arrayContaining(['s-contact', 't-contact']),
+      }),
+    );
+  });
+
+  it('restoreContactById asserts uniqueness before clearing soft-delete', async () => {
+    const deleted = contact({
+      id: 'c1',
+      deletedAt: '2026-07-27T00:00:00.000Z',
+      phones: [{ label: 'Mobile', number: '3001112233', countryCode: '+92' }],
+    });
+    mockFindContactById.mockResolvedValue(deleted);
+
+    const restored = await restoreContactById('c1', 'u-admin');
+
+    expect(mockAssertContactUniqueFields).toHaveBeenCalledWith(
+      'demo',
+      expect.objectContaining({ id: 'c1', deletedAt: undefined }),
+      'en',
+    );
+    expect(mockSaveContact).toHaveBeenCalled();
+    expect(restored?.deletedAt).toBeUndefined();
+  });
+
+  it('restoreContactById surfaces unique conflicts', async () => {
+    mockFindContactById.mockResolvedValue(
+      contact({ id: 'c1', deletedAt: '2026-07-27T00:00:00.000Z' }),
+    );
+    mockAssertContactUniqueFields.mockRejectedValue(
+      new ContactUniqueFieldError([{ fieldId: 'number', tabId: 'phones', message: 'must be unique' }]),
+    );
+
+    await expect(restoreContactById('c1', 'u-admin')).rejects.toBeInstanceOf(ContactUniqueFieldError);
+    expect(mockSaveContact).not.toHaveBeenCalled();
+  });
+
+  it('bulkRestoreContacts skips unique conflicts', async () => {
+    mockFindContactsByIds.mockResolvedValue([
+      contact({ id: 'c1', deletedAt: '2026-07-27T00:00:00.000Z' }),
+      contact({ id: 'c2', deletedAt: '2026-07-27T00:00:00.000Z' }),
+    ]);
+    mockAssertContactUniqueFields
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(
+        new ContactUniqueFieldError([{ fieldId: 'number', tabId: 'phones', message: 'must be unique' }]),
+      );
+
+    const result = await bulkRestoreContacts(['c1', 'c2'], 'u-admin');
+
+    expect(result.succeeded).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.conflicts).toEqual([
+      expect.objectContaining({ id: 'c2' }),
+    ]);
+    expect(mockBulkSaveContacts).toHaveBeenCalledWith(
+      'demo',
+      [expect.objectContaining({ id: 'c1', deletedAt: undefined })],
+    );
   });
 
   it('adds a reciprocal relationship link when creating a new contact', async () => {

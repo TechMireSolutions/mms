@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { hashRefreshToken } from '../services/auth/authCookieService.js';
+import { ContactUniqueFieldError } from '../services/contactUniqueValidationService.js';
 import { signTenantToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
@@ -11,6 +12,8 @@ const mockFindRefreshTokenByHash = vi.fn();
 const mockDeleteAuthArtifact = vi.fn();
 const mockPutAuthArtifact = vi.fn();
 const mockGetPublicUserById = vi.fn();
+const mockGetTenantUserProfile = vi.fn();
+const mockUpdateOwnLinkedContact = vi.fn();
 const mockGetJwtExpiresIn = vi.fn();
 
 vi.mock('../services/auth/authArtifactService.js', async (importOriginal) => {
@@ -26,6 +29,8 @@ vi.mock('../services/auth/authArtifactService.js', async (importOriginal) => {
 
 vi.mock('../services/auth/userService.js', () => ({
   getPublicUserById: (...args: unknown[]) => mockGetPublicUserById(...args),
+  getTenantUserProfile: (...args: unknown[]) => mockGetTenantUserProfile(...args),
+  updateOwnLinkedContact: (...args: unknown[]) => mockUpdateOwnLinkedContact(...args),
 }));
 
 vi.mock('../services/globalSettingsService.js', async (importOriginal) => {
@@ -162,6 +167,8 @@ describe('auth routes', () => {
     mockDeleteAuthArtifact.mockReset().mockResolvedValue(undefined);
     mockPutAuthArtifact.mockReset().mockResolvedValue('new-artifact-id');
     mockGetPublicUserById.mockReset();
+    mockGetTenantUserProfile.mockReset();
+    mockUpdateOwnLinkedContact.mockReset();
     mockGetJwtExpiresIn.mockReset().mockResolvedValue('15m');
     mockHasPlatformUsers.mockReset().mockResolvedValue(true);
     mockFindPlatformUserByEmail.mockReset().mockResolvedValue(null);
@@ -269,6 +276,51 @@ describe('auth routes', () => {
       headers: { host: 'demo.localhost' },
     });
     expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('PUT /api/auth/me/contact returns validation_error on unique field conflict', async () => {
+    mockGetTenantUserProfile.mockResolvedValueOnce({
+      id: 'u1',
+      email: 'admin@test.com',
+      name: 'Admin',
+      role: 'admin',
+      contact: {
+        id: 'c1',
+        firstName: 'Ali',
+        lastName: 'Khan',
+        name: 'Ali Khan',
+      },
+    });
+    mockUpdateOwnLinkedContact.mockRejectedValueOnce(
+      new ContactUniqueFieldError([
+        { fieldId: 'number', tabId: 'phones', message: 'Phone Number must be unique' },
+      ]),
+    );
+    const app = await buildApp();
+    const token = signTenantToken(app, {
+      id: 'u1',
+      email: 'admin@test.com',
+      name: 'Admin',
+      role: 'admin',
+    });
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/auth/me/contact',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${token}`,
+      },
+      payload: {
+        phones: [{ label: 'Mobile', number: '+923001234567', countryCode: '+92' }],
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({
+      type: 'validation_error',
+      errors: [{ fieldId: 'number', tabId: 'phones' }],
+    });
+    expect(mockUpdateOwnLinkedContact).toHaveBeenCalled();
     await app.close();
   });
 

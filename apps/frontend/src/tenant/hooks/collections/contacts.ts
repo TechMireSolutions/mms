@@ -25,6 +25,7 @@ export {
   useContactColumnPrefsMutation,
   contactDetailQueryKey,
   fetchContactById,
+  fetchContactsPageForQuery,
   type ContactsPaginatedParams,
   type ContactsReportAnalyticsParams,
   type ContactsReportAnalyticsResult,

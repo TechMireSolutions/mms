@@ -9,8 +9,11 @@ export function useContactGoogleSyncConfig(options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY,
-    queryFn: async () => {
-      const googleSyncResponse = await apiJson<{ config: ContactGoogleSyncConfigClient }>(`${CONTACTS_API}/google-sync`);
+    queryFn: async ({ signal }) => {
+      const googleSyncResponse = await apiJson<{ config: ContactGoogleSyncConfigClient }>(
+        `${CONTACTS_API}/google-sync`,
+        { signal },
+      );
       return googleSyncResponse.config;
     },
     enabled: isAuthenticated && enabled,

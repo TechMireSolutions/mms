@@ -15,5 +15,10 @@ export interface ContactGoogleSyncConfigClient {
 export interface GoogleContactsSyncRunResult {
   total: number;
   imported: number;
+  /** Total skipped = skippedName + skippedUnique. */
   skipped: number;
+  /** Skipped because an active contact already has the same name. */
+  skippedName: number;
+  /** Skipped because a Setup-unique field collided with an active peer. */
+  skippedUnique: number;
 }

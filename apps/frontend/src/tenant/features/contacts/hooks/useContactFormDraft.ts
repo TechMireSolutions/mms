@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   applyContactScalarCustomFieldDefaults,
+  cleanContactDraft,
   normalizeContactForEdit,
   type Contact,
   type ContactItemNormalizeDefaults,
@@ -14,6 +15,10 @@ import {
 import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useContactFormSubLists";
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
+
+function contactDraftSnapshot(draft: Partial<Contact>): string {
+  return JSON.stringify(cleanContactDraft(draft));
+}
 
 /** Ensure Social / Relationship tabs open with one editable row (zero-click). */
 function withEmptyCollectionRows(
@@ -163,6 +168,9 @@ export function useContactFormDraft({
       relationshipOptions,
     ),
   );
+  const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
+    contactDraftSnapshot(contactDraft),
+  );
 
   const { saving, validationErrors, setValidationErrors, handleSave } = useContactFormSave({
     contact,
@@ -172,6 +180,8 @@ export function useContactFormDraft({
     onClose,
     onValidationTab,
   });
+
+  const isDirty = contactDraftSnapshot(contactDraft) !== baselineSnapshot;
 
   const { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem } =
     useContactFormSubLists(setContactDraft);
@@ -201,23 +211,23 @@ export function useContactFormDraft({
 
   useEffect(() => {
     if (!open) return;
-    setContactDraft(
-      withEmptyCollectionRows(
-        applyContactScalarCustomFieldDefaults(
-          normalizeContactForEdit(
-            contact,
-            initialDraft,
-            defaultCity,
-            defaultProvince,
-            defaultCountry,
-            optionDefaults,
-          ),
-          fields,
+    const nextDraft = withEmptyCollectionRows(
+      applyContactScalarCustomFieldDefaults(
+        normalizeContactForEdit(
+          contact,
+          initialDraft,
+          defaultCity,
+          defaultProvince,
+          defaultCountry,
+          optionDefaults,
         ),
-        socialPlatforms,
-        relationshipOptions,
+        fields,
       ),
+      socialPlatforms,
+      relationshipOptions,
     );
+    setContactDraft(nextDraft);
+    setBaselineSnapshot(contactDraftSnapshot(nextDraft));
     setValidationErrors([]);
   }, [
     open,
@@ -241,6 +251,7 @@ export function useContactFormDraft({
     updateCountryOptions,
     updateDialCodeOptions,
     saving,
+    isDirty,
     cropSrc,
     setCropSrc,
     contactDraft,

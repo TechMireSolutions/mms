@@ -53,29 +53,35 @@ const mockEnqueueBackgroundJob = vi.fn();
 const mockGetUserBackgroundJob = vi.fn();
 const mockLoadContactFieldUsageCount = vi.fn();
 const mockLoadContactFieldUsageCounts = vi.fn();
+const mockGetLinkedContactId = vi.fn().mockResolvedValue(null);
+const mockGetContactGoogleSyncConfig = vi.fn();
+const mockRedactGoogleSyncConfigForClient = vi.fn((...args: unknown[]) => args[0]);
 
-vi.mock('../services/contactService.js', () => ({
-  loadContacts: (...args: unknown[]) => mockLoadContacts(...args),
-  loadContactsPage: (...args: unknown[]) => mockLoadContactsPage(...args),
-  countContacts: (...args: unknown[]) => mockCountContacts(...args),
-  getContactById: (...args: unknown[]) => mockGetContactById(...args),
-  upsertContact: (...args: unknown[]) => mockUpsertContact(...args),
-  updateContactById: (...args: unknown[]) => mockUpdateContactById(...args),
-  softDeleteContactById: (...args: unknown[]) => mockSoftDeleteContactById(...args),
-  restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
-  bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
-  bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
-  mergeContactsById: (...args: unknown[]) => mockMergeContactsById(...args),
-  loadContactsCommandMetrics: vi.fn(),
-  loadContactsReportAnalytics: vi.fn(),
-  loadContactsWidgetAggregates: vi.fn(),
-  loadContactsByIds: vi.fn(),
-  loadContactFieldUsageCount: (...args: unknown[]) => mockLoadContactFieldUsageCount(...args),
-  loadContactFieldUsageCounts: (...args: unknown[]) => mockLoadContactFieldUsageCounts(...args),
-  loadContactDuplicatePairsPage: vi.fn(),
-  prepareContactRecord: vi.fn(),
-}));
-
+vi.mock('../services/contactService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/contactService.js')>();
+  return {
+    ...actual,
+    loadContacts: (...args: unknown[]) => mockLoadContacts(...args),
+    loadContactsPage: (...args: unknown[]) => mockLoadContactsPage(...args),
+    countContacts: (...args: unknown[]) => mockCountContacts(...args),
+    getContactById: (...args: unknown[]) => mockGetContactById(...args),
+    upsertContact: (...args: unknown[]) => mockUpsertContact(...args),
+    updateContactById: (...args: unknown[]) => mockUpdateContactById(...args),
+    softDeleteContactById: (...args: unknown[]) => mockSoftDeleteContactById(...args),
+    restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
+    bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
+    bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
+    mergeContactsById: (...args: unknown[]) => mockMergeContactsById(...args),
+    loadContactsCommandMetrics: vi.fn(),
+    loadContactsReportAnalytics: vi.fn(),
+    loadContactsWidgetAggregates: vi.fn(),
+    loadContactsByIds: vi.fn(),
+    loadContactFieldUsageCount: (...args: unknown[]) => mockLoadContactFieldUsageCount(...args),
+    loadContactFieldUsageCounts: (...args: unknown[]) => mockLoadContactFieldUsageCounts(...args),
+    loadContactDuplicatePairsPage: vi.fn(),
+    prepareContactRecord: vi.fn(),
+  };
+});
 
 vi.mock('../services/contactPreferencesService.js', () => ({
   getUserColumnPreferences: (...args: unknown[]) => mockGetUserColumnPreferences(...args),
@@ -97,7 +103,21 @@ vi.mock('../services/contactConfigService.js', () => ({
 }));
 
 vi.mock('../services/auth/userService.js', () => ({
-  getLinkedContactId: vi.fn().mockResolvedValue(null),
+  getLinkedContactId: (...args: unknown[]) => mockGetLinkedContactId(...args),
+}));
+
+vi.mock('../services/contactGoogleSyncService.js', () => ({
+  getContactGoogleSyncConfig: (...args: unknown[]) => mockGetContactGoogleSyncConfig(...args),
+  setContactGoogleSyncConfig: vi.fn(),
+  clearContactGoogleSyncConfig: vi.fn(),
+  clearGoogleSyncTokens: vi.fn(),
+  redactGoogleSyncConfigForClient: (...args: unknown[]) => mockRedactGoogleSyncConfigForClient(...args),
+  exchangeGoogleContactsOAuthCode: vi.fn(),
+  runGoogleContactsSync: vi.fn(),
+  GoogleOAuthExchangeError: class GoogleOAuthExchangeError extends Error {},
+  GoogleSyncError: class GoogleSyncError extends Error {
+    code = 'api_error';
+  },
 }));
 
 vi.mock('../services/auditService.js', () => ({
@@ -115,6 +135,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 
 import { buildApp } from '../app.js';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
+import { ContactUniqueFieldError } from '../services/contactUniqueValidationService.js';
 import { accountantToken, adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
 
 
@@ -129,6 +150,13 @@ const sampleContact = {
 describe('contacts REST routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
+    mockGetLinkedContactId.mockReset().mockResolvedValue(null);
+    mockGetContactGoogleSyncConfig.mockReset().mockResolvedValue({
+      clientId: 'cid',
+      isConfigured: true,
+      isConnected: false,
+    });
+    mockRedactGoogleSyncConfigForClient.mockReset().mockImplementation((config: unknown) => config);
     mockLoadContacts.mockReset().mockResolvedValue([sampleContact]);
     mockCountContacts.mockReset().mockResolvedValue(1);
     mockGetContactById.mockReset().mockResolvedValue(sampleContact);
@@ -379,7 +407,11 @@ describe('contacts REST routes', () => {
       payload: { id: 'c1', firstName: 'Ali', lastName: 'Updated' },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockUpdateContactById).toHaveBeenCalledWith('c1', expect.objectContaining({ firstName: 'Ali' }), expect.any(String));
+    expect(mockUpdateContactById).toHaveBeenCalledWith(
+      'c1',
+      expect.objectContaining({ firstName: 'Ali' }),
+      expect.objectContaining({ applyRelationshipInference: true, language: expect.any(String) }),
+    );
     await app.close();
   });
 
@@ -885,6 +917,120 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(404);
     expect(res.json()).toMatchObject({ type: 'not_found' });
+    await app.close();
+  });
+
+  it('PUT /api/contacts/:id allows self-service update without contacts.write and skips inference', async () => {
+    mockGetLinkedContactId.mockResolvedValue('c1');
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/c1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+      payload: {
+        id: 'c1',
+        firstName: 'Ali',
+        lastName: 'Khan',
+        relationshipContacts: [{ contactId: 'peer-1', relationship: 'Father' }],
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockUpdateContactById).toHaveBeenCalledWith(
+      'c1',
+      expect.objectContaining({
+        relationshipContacts: [{ contactId: 'peer-1', relationship: 'Father' }],
+      }),
+      expect.objectContaining({ applyRelationshipInference: false }),
+    );
+    await app.close();
+  });
+
+  it('PUT /api/contacts/:id denies non-writers updating another contact', async () => {
+    mockGetLinkedContactId.mockResolvedValue('linked-other');
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/c1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+      payload: {
+        id: 'c1',
+        firstName: 'Ali',
+        lastName: 'Khan',
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockUpdateContactById).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts returns validation_error on unique field conflict', async () => {
+    mockUpsertContact.mockRejectedValueOnce(
+      new ContactUniqueFieldError([
+        { fieldId: 'number', tabId: 'phones', message: 'Phone Number must be unique' },
+      ]),
+    );
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: sampleContact,
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({
+      type: 'validation_error',
+      errors: [{ fieldId: 'number', tabId: 'phones' }],
+    });
+    await app.close();
+  });
+
+  it('GET /api/contacts/google-sync allows contacts.write and denies readers', async () => {
+    const app = await buildApp();
+    const allow = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/google-sync',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(allow.statusCode).toBe(200);
+    expect(mockGetContactGoogleSyncConfig).toHaveBeenCalled();
+
+    const deny = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/google-sync',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+    expect(deny.statusCode).toBe(403);
+    expect(deny.json()).toMatchObject({ type: 'forbidden' });
+    await app.close();
+  });
+
+  it('POST /api/contacts/google-sync/run denies roles without contacts.write', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/google-sync/run',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
     await app.close();
   });
 });

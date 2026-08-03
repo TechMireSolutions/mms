@@ -14,7 +14,12 @@ export {
   getContactById,
   countContacts,
 } from './contactServiceLoad.js';
-export type { UpsertContactOptions } from './contactServiceMutate.js';
+export type {
+  UpsertContactOptions,
+  UpdateContactByIdOptions,
+  ContactBulkRestoreResult,
+  ContactBulkRestoreConflict,
+} from './contactServiceMutate.js';
 export {
   ContactPermissionError,
   normalizeContactPhones,

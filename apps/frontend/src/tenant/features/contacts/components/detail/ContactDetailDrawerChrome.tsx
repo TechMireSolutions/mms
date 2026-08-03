@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Edit2, Clock, RotateCcw, Archive, Loader2 } from "lucide-react";
-import type { KeyboardEvent } from "react";
 import type { Contact } from "@mms/shared";
 import { formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 
 function formatContactStamp(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value;
@@ -109,74 +108,15 @@ export function ContactDetailDrawerTabBar({
   activeTab: string;
   onTabChange: (tab: string) => void;
 }): React.JSX.Element {
-  const { t, isRtl } = useTranslation();
-
-  const focusTabAt = (index: number) => {
-    const next = detailTabs[index];
-    if (!next) return;
-    onTabChange(next.key);
-    const node = document.getElementById(`contact-detail-drawer-tab-${next.key}`);
-    node?.focus();
-  };
-
-  const onTabListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (detailTabs.length === 0) return;
-    const currentIndex = detailTabs.findIndex((tab) => tab.key === activeTab);
-    if (currentIndex < 0) return;
-
-    const nextKey = isRtl ? "ArrowLeft" : "ArrowRight";
-    const prevKey = isRtl ? "ArrowRight" : "ArrowLeft";
-
-    if (event.key === nextKey || event.key === prevKey) {
-      event.preventDefault();
-      const delta = event.key === nextKey ? 1 : -1;
-      const nextIndex = (currentIndex + delta + detailTabs.length) % detailTabs.length;
-      focusTabAt(nextIndex);
-      return;
-    }
-    if (event.key === "Home") {
-      event.preventDefault();
-      focusTabAt(0);
-      return;
-    }
-    if (event.key === "End") {
-      event.preventDefault();
-      focusTabAt(detailTabs.length - 1);
-    }
-  };
-
   return (
-    <div
-      role="tablist"
-      aria-label={t("contacts.detail.tabsLabel")}
-      onKeyDown={onTabListKeyDown}
-      className="flex w-full gap-1 overflow-x-auto overscroll-x-contain rounded-xl bg-muted p-1"
-    >
-      {detailTabs.map((tab) => {
-        const active = activeTab === tab.key;
-        return (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            id={`contact-detail-drawer-tab-${tab.key}`}
-            aria-selected={active}
-            aria-controls={`contact-detail-drawer-${tab.key}`}
-            tabIndex={active ? 0 : -1}
-            onClick={() => onTabChange(tab.key)}
-            className={cn(
-              "flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-all sm:px-4 sm:text-sm",
-              active
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {tab.icon && <tab.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
-    </div>
+    <SubTabBar
+      tabs={detailTabs}
+      value={activeTab}
+      onChange={onTabChange}
+      panelIdPrefix="contact-detail-drawer"
+      resetScrollOnChange={false}
+      className="w-full"
+    />
   );
 }
 

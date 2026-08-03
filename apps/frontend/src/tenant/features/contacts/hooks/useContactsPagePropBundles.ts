@@ -91,7 +91,6 @@ export function useContactsPagePropBundles({
     useServerWork: state.useServerWork,
     workPageData: state.workPageData,
     setListPage: state.setListPage,
-    contacts: state.contacts,
     canWrite,
     canEditSetup,
     handleImport: state.handleImport,

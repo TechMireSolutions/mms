@@ -90,10 +90,19 @@ export function sameContactsListFilters(
   );
 }
 
-/** Fetches all pages matching Work filters for export. */
+/** Single SQL page — preferred for report visualizer (no unbounded walk). */
+export async function fetchContactsPageForQuery(
+  params: Omit<ContactsPaginatedParams, "enabled">,
+  signal?: AbortSignal,
+): Promise<ContactsListPageResult> {
+  return apiJson<ContactsListPageResult>(buildContactsPageUrl(params), { signal });
+}
+
+/** Fetches all pages matching Work filters for export / on-demand sync helpers. */
 export async function fetchAllContactsForQuery(
   params: Omit<ContactsPaginatedParams, "page" | "enabled">,
   onProgress?: (fetched: number, total: number) => void,
+  signal?: AbortSignal,
 ): Promise<Contact[]> {
   const limit = CONTACTS_MODULE_MANIFEST.maxPageSize;
   const all: Contact[] = [];
@@ -103,6 +112,7 @@ export async function fetchAllContactsForQuery(
   for (;;) {
     const contactsPage = await apiJson<ContactsListPageResult>(
       buildContactsPageUrl({ ...params, page, limit }),
+      { signal },
     );
     all.push(...contactsPage.contacts);
     total = contactsPage.total;
@@ -116,11 +126,19 @@ export async function fetchAllContactsForQuery(
   return all;
 }
 
-export async function fetchContactById(contactId: string): Promise<Contact> {
-  const contactResponse = await apiJson<{ contact: Contact }>(`${CONTACTS_API}/${contactId}`);
+export async function fetchContactById(
+  contactId: string,
+  signal?: AbortSignal,
+): Promise<Contact> {
+  const contactResponse = await apiJson<{ contact: Contact }>(`${CONTACTS_API}/${contactId}`, {
+    signal,
+  });
   return contactResponse.contact;
 }
 
-export async function fetchContacts(includeDeleted = false): Promise<Contact[]> {
-  return fetchAllContactsForQuery({ includeDeleted });
+export async function fetchContacts(
+  includeDeleted = false,
+  signal?: AbortSignal,
+): Promise<Contact[]> {
+  return fetchAllContactsForQuery({ includeDeleted }, undefined, signal);
 }

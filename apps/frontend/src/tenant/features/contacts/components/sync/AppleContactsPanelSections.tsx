@@ -25,7 +25,6 @@ export function AppleContactsExportGuide({ t }: { t: TranslationFunction }) {
 
 export function AppleContactsDropzone({
   isDragging,
-  canWrite,
   onOpenPicker,
   onDragOver,
   onDragLeave,
@@ -33,7 +32,6 @@ export function AppleContactsDropzone({
   t,
 }: {
   isDragging: boolean;
-  canWrite: boolean;
   onOpenPicker: () => void;
   onDragOver: (event: DragEvent<HTMLButtonElement>) => void;
   onDragLeave: (event: DragEvent<HTMLButtonElement>) => void;
@@ -45,11 +43,10 @@ export function AppleContactsDropzone({
       type="button"
       variant="outline"
       onClick={onOpenPicker}
-      disabled={!canWrite}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed rounded-xl text-muted-foreground transition-all cursor-pointer bg-card disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card h-auto shadow-none ${
+      className={`w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed rounded-xl text-muted-foreground transition-all cursor-pointer bg-card h-auto shadow-none ${
         isDragging
           ? "border-primary bg-primary/10"
           : "border-border hover:border-primary/40 hover:bg-primary/5"
@@ -85,10 +82,12 @@ export function AppleContactsImportResult({
 
 export function AppleContactsExportBar({
   contactCount,
+  exporting,
   onExport,
   t,
 }: {
   contactCount: number;
+  exporting?: boolean;
   onExport: () => void;
   t: TranslationFunction;
 }) {
@@ -99,7 +98,8 @@ export function AppleContactsExportBar({
         type="button"
         variant="outline"
         onClick={onExport}
-        disabled={contactCount === 0}
+        disabled={contactCount === 0 || Boolean(exporting)}
+        aria-busy={exporting}
         className="flex w-full sm:w-auto shrink-0 items-center gap-1.5 px-3.5 min-h-11 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors bg-card shadow-none"
       >
         <Download className="w-3.5 h-3.5" />

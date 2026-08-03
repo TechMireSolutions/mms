@@ -9,6 +9,14 @@ import {
 import { contacts } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { createGenericRepository, type ListByWorkspaceOptions } from './genericRepository.js';
+import {
+  contactFieldNonEmptySql,
+  hasEmailSql,
+  hasPhoneSql,
+  hasWhatsAppSql,
+  jsonbArrayOrEmpty,
+  primaryPhoneDigitsSql,
+} from './contactRepositorySql.js';
 
 const repo = createGenericRepository<Contact, typeof contacts>(contacts, {
   updateStrategy: 'overwrite',
@@ -28,75 +36,6 @@ const CONTACT_SORT_FIELDS = new Set([
 
 function hydrateContact(contact: Contact): Contact {
   return hydrateContactRelationshipFields(contact) as Contact;
-}
-
-/** JSONB array path, or empty array when missing/non-array (avoids jsonb_array_elements errors). */
-function jsonbArrayOrEmpty(field: 'phones' | 'emails' | 'addresses'): SQL {
-  return sql`(CASE
-    WHEN jsonb_typeof(${contacts.customData}->${field}) = 'array'
-    THEN ${contacts.customData}->${field}
-    ELSE '[]'::jsonb
-  END)`;
-}
-
-/** Primary dialable phone digits: phones[] (isPrimary first) then scalar phone. */
-function primaryPhoneDigitsSql(): SQL {
-  return sql`COALESCE(
-    NULLIF((
-      SELECT regexp_replace(
-        CASE
-          WHEN NULLIF(trim(phone.value->>'number'), '') LIKE '+%'
-            THEN trim(phone.value->>'number')
-          ELSE concat_ws(
-            '',
-            NULLIF(trim(phone.value->>'countryCode'), ''),
-            NULLIF(trim(phone.value->>'number'), '')
-          )
-        END,
-        '[^0-9]',
-        '',
-        'g'
-      )
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-      WHERE NULLIF(trim(phone.value->>'number'), '') IS NOT NULL
-      ORDER BY CASE WHEN COALESCE((phone.value->>'isPrimary')::boolean, false) THEN 0 ELSE 1 END
-      LIMIT 1
-    ), ''),
-    NULLIF(regexp_replace(COALESCE(${contacts.customData}->>'phone', ''), '[^0-9]', '', 'g'), ''),
-    ''
-  )`;
-}
-
-/** True when contact has a non-empty primary/legacy phone number in JSONB. */
-function hasPhoneSql(): SQL {
-  return sql`(
-    NULLIF(trim(COALESCE(${contacts.customData}->>'phone', '')), '') IS NOT NULL
-    OR EXISTS (
-      SELECT 1
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-      WHERE NULLIF(trim(phone.value->>'number'), '') IS NOT NULL
-    )
-  )`;
-}
-
-/** True when contact has a non-empty primary/legacy email in JSONB. */
-function hasEmailSql(): SQL {
-  return sql`(
-    NULLIF(trim(COALESCE(${contacts.customData}->>'email', '')), '') IS NOT NULL
-    OR EXISTS (
-      SELECT 1
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
-      WHERE NULLIF(trim(email.value->>'address'), '') IS NOT NULL
-    )
-  )`;
-}
-
-/**
- * WhatsApp eligibility approx: dialable digit length 8–15 on primary phone
- * (aligns with PuppeteerWhatsAppProvider.getNumberId bounds).
- */
-function hasWhatsAppSql(): SQL {
-  return sql`(length(${primaryPhoneDigitsSql()}) BETWEEN 8 AND 15)`;
 }
 
 function isSyedSql(): SQL {
@@ -308,36 +247,139 @@ export async function findContactsByIds(tenant: string, ids: string[]): Promise<
   return rows.map(hydrateContact);
 }
 
+export interface ContactUniqueLookupValues {
+  /** Digits-only phone numbers to match against phones[] / scalar phone. */
+  phoneDigits: string[];
+  /** Lowercased email addresses to match against emails[] / scalar email. */
+  emails: string[];
+  /** Scalar unique fields: JSONB text equality after lower(trim). */
+  scalars: Array<{ fieldKey: string; normalized: string }>;
+}
+
+/**
+ * Normalized active contact names that match any of the candidates (lower/trim).
+ * Used by Google sync name-dedupe without a full-tenant hydrate.
+ */
+export async function findExistingNormalizedContactNames(
+  tenant: string,
+  names: string[],
+): Promise<Set<string>> {
+  const normalized = [
+    ...new Set(names.map((name) => name.trim().toLowerCase()).filter(Boolean)),
+  ];
+  if (normalized.length === 0) return new Set();
+
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        name: sql<string>`lower(trim(COALESCE(${contacts.customData}->>'name', '')))`,
+      })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.workspaceSubdomain, subdomain),
+          isNull(contacts.deletedAt),
+          sql`lower(trim(COALESCE(${contacts.customData}->>'name', ''))) IN (${sql.join(
+            normalized.map((name) => sql`${name}`),
+            sql`, `,
+          )})`,
+        ),
+      );
+    return new Set(rows.map((row) => row.name).filter(Boolean));
+  });
+}
+
+/**
+ * Active contacts that may collide on any of the candidate unique values.
+ * Scoped SQL lookup — avoids loading the full tenant for uniqueness checks.
+ */
+export async function findActiveContactsMatchingUniqueValues(
+  tenant: string,
+  values: ContactUniqueLookupValues,
+  excludeIds: Array<string | number> = [],
+): Promise<Contact[]> {
+  const phoneDigits = [...new Set(values.phoneDigits.map((v) => v.trim()).filter(Boolean))];
+  const emails = [...new Set(values.emails.map((v) => v.trim().toLowerCase()).filter(Boolean))];
+  const scalars = values.scalars.filter(
+    (entry) => entry.fieldKey.trim() && entry.normalized.trim(),
+  );
+  if (phoneDigits.length === 0 && emails.length === 0 && scalars.length === 0) {
+    return [];
+  }
+
+  const subdomain = tenant.trim().toLowerCase();
+  const excluded = [...new Set(excludeIds.map(String).filter(Boolean))];
+  const matchClauses: SQL[] = [];
+
+  if (phoneDigits.length > 0) {
+    matchClauses.push(sql`(
+      EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
+        WHERE regexp_replace(
+          CASE
+            WHEN NULLIF(trim(phone.value->>'number'), '') LIKE '+%'
+              THEN trim(phone.value->>'number')
+            ELSE concat_ws(
+              '',
+              NULLIF(trim(phone.value->>'countryCode'), ''),
+              NULLIF(trim(phone.value->>'number'), '')
+            )
+          END,
+          '[^0-9]',
+          '',
+          'g'
+        ) IN (${sql.join(phoneDigits.map((digit) => sql`${digit}`), sql`, `)})
+      )
+      OR regexp_replace(COALESCE(${contacts.customData}->>'phone', ''), '[^0-9]', '', 'g')
+        IN (${sql.join(phoneDigits.map((digit) => sql`${digit}`), sql`, `)})
+    )`);
+  }
+
+  if (emails.length > 0) {
+    matchClauses.push(sql`(
+      EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
+        WHERE lower(trim(COALESCE(email.value->>'address', '')))
+          IN (${sql.join(emails.map((email) => sql`${email}`), sql`, `)})
+      )
+      OR lower(trim(COALESCE(${contacts.customData}->>'email', '')))
+        IN (${sql.join(emails.map((email) => sql`${email}`), sql`, `)})
+    )`);
+  }
+
+  for (const scalar of scalars) {
+    matchClauses.push(sql`(
+      lower(trim(COALESCE(${contacts.customData}->>${scalar.fieldKey}, ''))) = ${scalar.normalized}
+    )`);
+  }
+
+  const whereParts: SQL[] = [
+    eq(contacts.workspaceSubdomain, subdomain),
+    isNull(contacts.deletedAt),
+    sql`(${sql.join(matchClauses, sql` OR `)})`,
+  ];
+  if (excluded.length > 0) {
+    whereParts.push(notInArray(contacts.id, excluded));
+  }
+
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(contacts)
+      .where(and(...whereParts));
+    return rows.map((row) => hydrateContact(repo.rowToRecord(row)));
+  });
+}
+
 export async function saveContact(tenant: string, contact: Contact): Promise<void> {
   await repo.save(tenant, hydrateContact(contact));
 }
 
 export async function bulkSaveContacts(tenant: string, records: Contact[]): Promise<void> {
   await repo.bulkSave(tenant, records.map(hydrateContact));
-}
-
-/**
- * Non-empty custom_data value for a field key — mirrors
- * `@mms/shared` `countContactsWithFieldValue` (string trim, array length, other types count).
- */
-function contactFieldNonEmptySql(fieldKey: string): SQL {
-  return sql`(
-    ${contacts.customData}->${fieldKey} IS NOT NULL
-    AND ${contacts.customData}->${fieldKey} <> 'null'::jsonb
-    AND (
-      (
-        jsonb_typeof(${contacts.customData}->${fieldKey}) = 'string'
-        AND NULLIF(trim(${contacts.customData}->>${fieldKey}), '') IS NOT NULL
-      )
-      OR (
-        jsonb_typeof(${contacts.customData}->${fieldKey}) = 'array'
-        AND jsonb_array_length(${contacts.customData}->${fieldKey}) > 0
-      )
-      OR (
-        jsonb_typeof(${contacts.customData}->${fieldKey}) NOT IN ('string', 'array', 'null')
-      )
-    )
-  )`;
 }
 
 /**

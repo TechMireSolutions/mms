@@ -90,11 +90,13 @@ export function useContactsPageDeleteActions({
     setBulkRestoreOpen(false);
     void bulkRestoreContactsAction(selected)
       .then((result) => {
+        const conflictDetail = result.conflicts?.[0]?.errors?.[0]?.message;
         notifyBulkResult(
           result.succeeded,
           result.failed,
           "contacts.restoreSuccessTitle",
           "contacts.bulkRestoreSuccess",
+          conflictDetail,
         );
         setSelected([]);
       })

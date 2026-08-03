@@ -38,7 +38,13 @@ export function useGoogleContactsSync({
   const [showSetup, setShowSetup] = useState(false);
   const [form, setForm] = useState({ clientId: "", clientSecret: "" });
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<{ total: number; imported: number; skipped: number } | null>(null);
+  const [syncResult, setSyncResult] = useState<{
+    total: number;
+    imported: number;
+    skipped: number;
+    skippedName: number;
+    skippedUnique: number;
+  } | null>(null);
   const [error, setError] = useState("");
   const [showAuthCode, setShowAuthCode] = useState(false);
   const [authCode, setAuthCode] = useState("");
@@ -103,7 +109,13 @@ export function useGoogleContactsSync({
       // Server already persisted imports via bulkSave — invalidate, do not re-upsert.
       invalidateContacts();
       await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
-      setSyncResult({ total: result.total, imported: result.imported, skipped: result.skipped });
+      setSyncResult({
+        total: result.total,
+        imported: result.imported,
+        skipped: result.skipped,
+        skippedName: result.skippedName ?? 0,
+        skippedUnique: result.skippedUnique ?? 0,
+      });
     } catch (syncError) {
       if (isApiError(syncError) && syncError.type === "session_expired") {
         await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });

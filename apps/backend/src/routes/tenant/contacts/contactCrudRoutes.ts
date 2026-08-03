@@ -152,13 +152,18 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     const lang = (request.headers['accept-language'] as string) || 'en';
 
     try {
+      const isSelfService = isOwnContact && !canWriteContacts(user);
       const updated = await updateContactById(
         params.data.id,
         {
           ...body.data,
           id: body.data.id ?? params.data.id,
         } as Contact,
-        lang,
+        {
+          language: lang,
+          // Non-writers must not rewrite peer relationship graphs via inference.
+          applyRelationshipInference: !isSelfService,
+        },
       );
       if (!updated) {
         return sendNotFound(reply, 'Contact not found');
