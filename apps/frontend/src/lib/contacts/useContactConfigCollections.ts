@@ -1,8 +1,11 @@
 import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ContactLookupKind, FieldConfig } from "@mms/shared";
 import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
 import { syncOptionsInConfig } from "@/lib/contacts/preferencesStorage";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import {
+  CONTACTS_LOOKUPS_QUERY_KEY,
   useContactLookupMutation,
   useContactLookupsQuery,
 } from "@/tenant/features/contacts/hooks/useContactLookups";
@@ -19,6 +22,8 @@ export function useContactConfigCollections({
   contactConfigDefaults?: unknown;
   setFieldConfigState: Dispatch<SetStateAction<FieldConfig>>;
 }) {
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const lookupsQuery = useContactLookupsQuery();
   const lookupMutation = useContactLookupMutation();
 
@@ -30,9 +35,12 @@ export function useContactConfigCollections({
   const addressLabels = lookupsQuery.data?.addressLabels ?? [];
   const countryCodes = (lookupsQuery.data?.countryCodes ?? []) as CountryCodeEntry[];
 
+  // Prefer invalidate over query.refetch() — refetch() ignores `enabled: false` and
+  // can storm /api/contacts/lookups + /api/auth/refresh on the login screen.
   const reloadCollections = useCallback(() => {
-    void lookupsQuery.refetch();
-  }, [lookupsQuery]);
+    if (!isAuthenticated) return;
+    void queryClient.invalidateQueries({ queryKey: CONTACTS_LOOKUPS_QUERY_KEY });
+  }, [isAuthenticated, queryClient]);
 
   const syncFieldOptions = useCallback(
     async (tabId: string, fieldId: string, options: string[]) => {

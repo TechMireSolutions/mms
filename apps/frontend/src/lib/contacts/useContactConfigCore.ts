@@ -96,14 +96,17 @@ export function useContactConfigCore({
     } else {
       setPrefsState(loadPreferences());
     }
-    reloadCollections();
 
+    // Unauthenticated hosts (tenant login) must not refetch lookups — Query.refetch()
+    // bypasses `enabled: false` and floods /lookups + /auth/refresh with 401s.
     if (!isAuthenticated) {
       setFieldConfigState(documentConfig);
       hasHydratedTabsOnceRef.current = true;
       setFormTabsReady(true);
       return;
     }
+
+    reloadCollections();
 
     if (!hasHydratedTabsOnceRef.current) {
       setFormTabsReady(false);
