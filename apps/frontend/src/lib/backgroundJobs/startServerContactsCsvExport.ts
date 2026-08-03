@@ -8,6 +8,7 @@ export async function startServerContactsCsvExport(options: {
   columns: ContactExportColumn[];
   filename: string;
   label: string;
+  ids?: Array<string | number>;
 }): Promise<BackgroundJobRecord> {
   const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(
     '/api/contacts/export/csv',
@@ -16,6 +17,29 @@ export async function startServerContactsCsvExport(options: {
       body: JSON.stringify({
         query: options.query,
         columns: options.columns,
+        filename: options.filename,
+        label: options.label,
+        ids: options.ids,
+      }),
+    },
+  );
+  upsertLocalBackgroundJob(jobResponse.job);
+
+  if (jobResponse.job.status === 'running') {
+    return pollBackgroundJobUntilDone(jobResponse.job.id);
+  }
+  return jobResponse.job;
+}
+
+export async function startServerContactsVcfExport(options: {
+  filename: string;
+  label: string;
+}): Promise<BackgroundJobRecord> {
+  const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(
+    '/api/contacts/export/vcf',
+    {
+      method: 'POST',
+      body: JSON.stringify({
         filename: options.filename,
         label: options.label,
       }),

@@ -8,6 +8,7 @@ import {
   getChannelLabelKey,
   getMessageCategoryLabelKey,
   toMessagingRecipient,
+  messagingResolveResponseSchema,
 } from '../messagingModuleManifest.js';
 
 describe('messagingModuleManifest', () => {
@@ -21,6 +22,15 @@ describe('messagingModuleManifest', () => {
     expect(MESSAGING_MODULE_MANIFEST.permissions.read).toBe('messaging.read');
     expect(MESSAGING_MODULE_MANIFEST.permissions.write).toBe('messaging.write');
     expect(MESSAGING_MODULE_MANIFEST.permissions.clearLogs).toBe('messaging.clearLogs');
+    expect(MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey).toBe(
+      'messaging_recipients_user_column_preferences',
+    );
+    expect(MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey).toBe(
+      'messaging_history_user_column_preferences',
+    );
+    expect(MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey).toBe(
+      'messaging_templates_user_column_preferences',
+    );
   });
 
   it('contains expected contract options mapping to i18n keys', () => {
@@ -76,6 +86,14 @@ describe('messagingModuleManifest', () => {
       phone: '+923001234567',
       email: 'aisha@example.com',
     });
+  });
+
+  it('parses lean resolve response via messagingResolveResponseSchema', () => {
+    const parsed = messagingResolveResponseSchema.parse({
+      recipients: [{ id: 'c1', name: 'Ali', phone: '+923001111111', email: 'ali@example.com' }],
+    });
+    expect(parsed.recipients).toHaveLength(1);
+    expect(parsed.recipients[0]?.name).toBe('Ali');
   });
 });
 

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { Mail, MessageCircle, MessageSquare, Send } from 'lucide-react';
 import {
   mergeMessageTemplates,
@@ -8,7 +8,7 @@ import {
 } from '@mms/shared';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import MessageComposer from '@/components/ui/MessageComposer';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
@@ -28,6 +28,7 @@ import {
   useMessagingMutations,
 } from './hooks/useMessaging';
 
+const MessageComposer = lazy(() => import('@/components/ui/MessageComposer'));
 export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
   const { canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_MANIFEST);
@@ -79,7 +80,6 @@ export default function MessagingPage(): React.JSX.Element {
 
   const resend = (log: Message, recipient: MessagingRecipient): void => {
     triggerCompose(log.channel, [recipient], log.body, log.subject);
-    notify.success(t('messaging.resendSuccess'));
   };
 
   const confirmDeleteTemplate = async (): Promise<void> => {
@@ -111,7 +111,15 @@ export default function MessagingPage(): React.JSX.Element {
       headerTitle={t('messaging.title')}
       headerSubtitle={t('messaging.subtitle')}
       headerActions={canWrite ? <ActionButton variant="primary" icon={Send} onClick={startCampaign}>{t('messaging.newCampaign')}</ActionButton> : null}
-      metricsStrip={(
+      metricsStrip={metricsQuery.isError ? (
+        <ErrorState
+          title={t('messaging.loadFailed')}
+          description={t('messaging.loadFailedHint')}
+          onRetry={() => {
+            void metricsQuery.refetch();
+          }}
+        />
+      ) : (
         <ModuleCommandMetricsGrid
           items={[
             { icon: Send, label: t('messaging.stats.total'), value: stats.total, accent: 'primary' },
@@ -155,17 +163,19 @@ export default function MessagingPage(): React.JSX.Element {
       </ResponsiveAccordionTabs>
 
       {messagingTarget && (
-        <MessageComposer
-          channel={messagingTarget.channel}
-          recipients={messagingTarget.recipients}
-          templates={templates}
-          initialMessage={messagingTarget.initialMessage}
-          initialSubject={messagingTarget.initialSubject}
-          onClose={() => {
-            closeComposer();
-            setSelectedById({});
-          }}
-        />
+        <Suspense fallback={null}>
+          <MessageComposer
+            channel={messagingTarget.channel}
+            recipients={messagingTarget.recipients}
+            templates={templates}
+            initialMessage={messagingTarget.initialMessage}
+            initialSubject={messagingTarget.initialSubject}
+            onClose={() => {
+              closeComposer();
+              setSelectedById({});
+            }}
+          />
+        </Suspense>
       )}
       <ConfirmAlertDialog open={Boolean(deleteTemplateId)} onOpenChange={(open) => { if (!open) setDeleteTemplateId(null); }} title={t('messaging.deleteTemplateTitle')} description={t('messaging.deleteTemplateDesc')} confirmLabel={t('common.delete')} destructive onConfirm={() => void confirmDeleteTemplate()} />
       <ConfirmAlertDialog open={confirmClearLogsOpen} onOpenChange={setConfirmClearLogsOpen} title={t('messaging.clearLogs')} description={t('messaging.clearLogsDesc')} confirmLabel={t('common.delete')} destructive onConfirm={() => void confirmClearLogs()} />

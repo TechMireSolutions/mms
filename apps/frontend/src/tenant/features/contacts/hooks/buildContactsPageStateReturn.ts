@@ -46,7 +46,7 @@ export function buildContactsPageStateReturn({
   messaging: Messaging;
   actions: Actions;
   handleExportCSV: () => void;
-  handleBulkExport: () => void;
+  handleBulkExport: () => void | Promise<void>;
   selectedTargets: SelectedTargets;
   prefs: {
     defaultCountry?: string;

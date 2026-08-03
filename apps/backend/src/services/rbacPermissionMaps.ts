@@ -102,9 +102,6 @@ export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   branding: 'configuration.view',
   workspace: 'configuration.view',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [CONTACTS_MODULE_MANIFEST.configObjectKey]: CONTACTS_MODULE_MANIFEST.permissions.setupView,
-  [CONTACTS_MODULE_MANIFEST.preferencesObjectKey]: CONTACTS_MODULE_MANIFEST.permissions.setupView,
-  [CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey]: CONTACTS_MODULE_MANIFEST.permissions.read,
   [STUDENTS_MODULE_MANIFEST.settingsObjectKey]: STUDENTS_MODULE_MANIFEST.permissions.setupView,
   [STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey]: STUDENTS_MODULE_MANIFEST.permissions.read,
   studentGuardianContactDefaults: STUDENTS_MODULE_MANIFEST.permissions.setupView,
@@ -134,6 +131,9 @@ export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   [EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.read,
   [QUESTION_BANK_MODULE_MANIFEST.settingsObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.setupView,
   [QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.read,
+  [MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
+  [MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
+  [MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
 };
 
 export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
@@ -141,9 +141,6 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
   branding: 'settings.branding.write',
   workspace: 'settings.global.write',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [CONTACTS_MODULE_MANIFEST.configObjectKey]: CONTACTS_MODULE_MANIFEST.permissions.setupWrite,
-  [CONTACTS_MODULE_MANIFEST.preferencesObjectKey]: CONTACTS_MODULE_MANIFEST.permissions.setupWrite,
-  [CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey]: CONTACTS_MODULE_MANIFEST.permissions.read,
   [STUDENTS_MODULE_MANIFEST.settingsObjectKey]: STUDENTS_MODULE_MANIFEST.permissions.setupWrite,
   [STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey]: STUDENTS_MODULE_MANIFEST.permissions.read,
   studentGuardianContactDefaults: STUDENTS_MODULE_MANIFEST.permissions.setupWrite,
@@ -173,6 +170,9 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
   [EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.read,
   [QUESTION_BANK_MODULE_MANIFEST.settingsObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.setupWrite,
   [QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.read,
+  [MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
+  [MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
+  [MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
 };
 
 export const ALLOWED_COLLECTIONS = new Set([
@@ -204,14 +204,7 @@ export const ALLOWED_COLLECTIONS = new Set([
   QUESTION_BANK_MODULE_MANIFEST.collectionKey,
   QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey,
   QUESTION_BANK_MODULE_MANIFEST.resultsCollectionKey,
-  'genders',
-  'socialPlatforms',
-  'relationships',
   'whatsappTemplates',
-  'phoneLabels',
-  'emailLabels',
-  'addressLabels',
-  'countryCodes',
   'studentStatuses',
   'studentGenderFilters',
   'studentDiscountTypes',
@@ -223,8 +216,6 @@ export const ALLOWED_COLLECTIONS = new Set([
   'attendanceStatuses',
   'backups',
   'custom_tabs',
-  'message_templates',
-  'message_logs',
   'saved_reports',
 ]);
 
@@ -233,9 +224,6 @@ export const ALLOWED_OBJECTS = new Set([
   'branding',
   'workspace',
   EMAIL_INTEGRATION_OBJECT_KEY,
-  CONTACTS_MODULE_MANIFEST.configObjectKey,
-  CONTACTS_MODULE_MANIFEST.preferencesObjectKey,
-  CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
   'socialPlaceholders',
   STUDENTS_MODULE_MANIFEST.settingsObjectKey,
   STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
@@ -266,6 +254,9 @@ export const ALLOWED_OBJECTS = new Set([
   EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey,
   QUESTION_BANK_MODULE_MANIFEST.settingsObjectKey,
   QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey,
+  MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey,
+  MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
+  MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey,
   DASHBOARD_PREFERENCES_KEY,
   INVOICE_TEMPLATE_OBJECT_KEY,
   'kpi_custom_widgets',
@@ -276,7 +267,6 @@ export const ALLOWED_OBJECTS = new Set([
 
 export function isAllowedCollectionName(collectionName: string): boolean {
   return ALLOWED_COLLECTIONS.has(collectionName)
-    || collectionName.startsWith('messages_u:')
     || collectionName.startsWith('whatsappTemplates_u:');
 }
 

@@ -88,7 +88,7 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 ## 4. Threat Mitigations & Security Checklist
 - **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse (`type: 'rate_limit_exceeded'` where configured). Emit **`Retry-After`** (and `X-RateLimit-*` when the plugin exposes them). FE must not tight-loop retries on `429` — back off / surface `notify`.
 - **Platform `AUTH_RATE_LIMIT`**: Auth-sensitive + destructive platform routes (login/setup/password flows; admin disable/delete; workspace delete; database reset) — do not ship those mutations without the limit + password confirm where already required.
-- **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site`) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations.
+- **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site`) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations. **Current gap:** no app-wide Origin gate yet — open gap → `mms-migration-status.md` / skill `mms-migration-fixes`; do not invent mid-feature Origin middleware unless the task owns that gap.
 - **Content-Type**: JSON mutation routes reject bodies without `application/json` (multipart only on upload routes). Ban empty/`text/plain` bodies on JSON write paths.
 - **Password Security**: Keep `scrypt` + `timingSafeEqual`. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.
 - **OTP Generation**: `crypto.randomInt()` only — `Math.random()` forbidden.
@@ -99,7 +99,7 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 - **IDOR**: Authorize via permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from session (Messaging log POST pattern).
 - **Secrets storage**: Long-lived OAuth/API secrets in FORCE-RLS tenant tables — never in unscoped `objects` KV. Strip legacy secret object keys from backups (`SERVER_ONLY_OBJECT_KEYS`).
 - **Workspace backup / restore**: Admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`. Envelope/KDF/credential-strip mechanics → **`mms-data-layer.md`**. Settings two-step UI + password step-up → **`mms-settings-i18n.md`**.
-- **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables (e.g. Contacts entity rows).
+- **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables (e.g. Contacts entity rows; Contacts Setup `contact_field_config` / `contact_preferences` / `contact_user_column_preferences` / lookup kinds).
 - **XSS / exports**: No unsanitized HTML; encode user content in PDF/CSV/Excel cells.
 - **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens.
 - **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes. PG row triggers read `app.current_user_id` + `app.current_tenant` (SET LOCAL in `withTenantTransaction` / `runInTransaction`).

@@ -9,7 +9,8 @@ export type AuthArtifactKind =
   | 'refresh_token'
   | 'platform_setup'
   | 'platform_password_reset'
-  | 'login_email_change';
+  | 'login_email_change'
+  | 'messaging_idempotency';
 
 export interface AuthArtifactRecord<T> {
   id: string;
@@ -42,6 +43,14 @@ export function authArtifactWorkspaceScopeKey(subdomain: string): string {
   return `ws:${subdomain.trim().toLowerCase()}`;
 }
 
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const code = 'code' in error ? String((error as { code?: unknown }).code ?? '') : '';
+  if (code === '23505') return true;
+  const cause = 'cause' in error ? (error as { cause?: unknown }).cause : undefined;
+  return isUniqueViolation(cause);
+}
+
 export async function putAuthArtifact<T>(
   kind: AuthArtifactKind,
   payload: T,
@@ -63,6 +72,44 @@ export async function putAuthArtifact<T>(
       expiresAt,
     });
   return id;
+}
+
+/**
+ * Inserts an artifact keyed by lookup_key. Returns claimed=false on unique conflict
+ * so callers can load the winner’s payload instead of racing the side effect.
+ */
+export async function tryClaimAuthArtifactByLookupKey<T>(
+  kind: AuthArtifactKind,
+  payload: T,
+  ttlMs: number,
+  options: { lookupKey: string; scopeKey?: string | null },
+): Promise<{ claimed: true; id: string } | { claimed: false }> {
+  const id = createArtifactId();
+  const expiresAt = new Date(Date.now() + ttlMs);
+  try {
+    await db()
+      .insert(authArtifacts)
+      .values({
+        id,
+        kind,
+        payload: payload as unknown as Record<string, unknown>,
+        lookupKey: options.lookupKey,
+        scopeKey: options.scopeKey ?? null,
+        expiresAt,
+      });
+    return { claimed: true, id };
+  } catch (error) {
+    if (isUniqueViolation(error)) return { claimed: false };
+    throw error;
+  }
+}
+
+/** Replaces the JSON payload for an existing artifact (e.g. finalize idempotency claim). */
+export async function updateAuthArtifactPayload<T>(id: string, payload: T): Promise<void> {
+  await db()
+    .update(authArtifacts)
+    .set({ payload: payload as unknown as Record<string, unknown> })
+    .where(eq(authArtifacts.id, id));
 }
 
 export async function takeAuthArtifact<T>(
@@ -100,6 +147,30 @@ export async function getAuthArtifact<T>(
   if (!row || row.kind !== kind) return null;
   if (row.expiresAt.getTime() < Date.now()) {
     await db().delete(authArtifacts).where(eq(authArtifacts.id, id));
+    return null;
+  }
+  return {
+    id: row.id,
+    kind: row.kind as AuthArtifactKind,
+    payload: row.payload as T,
+    expiresAt: row.expiresAt,
+  };
+}
+
+/** Finds a non-expired artifact by kind + indexed lookup_key. */
+export async function findAuthArtifactByLookupKey<T>(
+  kind: AuthArtifactKind,
+  lookupKey: string,
+): Promise<AuthArtifactRecord<T> | null> {
+  const rows = await db()
+    .select()
+    .from(authArtifacts)
+    .where(and(eq(authArtifacts.kind, kind), eq(authArtifacts.lookupKey, lookupKey)))
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  if (row.expiresAt.getTime() < Date.now()) {
+    await db().delete(authArtifacts).where(eq(authArtifacts.id, row.id));
     return null;
   }
   return {

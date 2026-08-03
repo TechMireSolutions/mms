@@ -6,22 +6,41 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { loadFieldConfig, saveFieldConfig, saveFieldConfigAsync } from "@/lib/contactFieldsStore";
+import {
+  loadFieldConfig,
+  saveFieldConfig,
+  saveFieldConfigAsync,
+  setFieldConfigMemory,
+} from "@/lib/contactFieldsStore";
 import {
   FieldConfig,
   ContactPreferences,
   ColumnRegistryEntry,
+  type TabDefinition,
 } from "@mms/shared";
+import {
+  loadContactsFormTabs,
+  mergeContactsFormTabsFromApi,
+} from "@/lib/contacts/contactsCustomTabsApi";
 import {
   loadPreferences,
   savePreferences,
   savePreferencesAsync,
+  setPreferencesMemory,
 } from "@/lib/contacts/preferencesStorage";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useContactConfigColumnPrefs } from "@/lib/contacts/useContactConfigColumnPrefs";
 import { useContactConfigTabFields } from "@/lib/contacts/useContactConfigTabFields";
+import { notify } from "@/lib/notify";
+import { useTranslation } from "@/hooks/useTranslation";
+import {
+  useContactFieldConfigQuery,
+  useContactPreferencesQuery,
+} from "@/tenant/features/contacts/hooks/useContactSetupConfig";
 
 /**
  * Field config, prefs, column overlay, and tab/field enablement for ContactConfigProvider.
+ * Field config + preferences hydrate from typed REST; formTabs from `/api/custom-tabs`.
  */
 export function useContactConfigCore({
   userId,
@@ -32,41 +51,118 @@ export function useContactConfigCore({
   userRole: string;
   reloadCollections: () => void;
 }) {
-  const lastUserIdRef = useRef<string | number | undefined>(userId);
+  const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
+  const tabsAbortRef = useRef<AbortController | null>(null);
+  const lastGoodFormTabsRef = useRef<TabDefinition[] | null>(null);
+  const hasHydratedTabsOnceRef = useRef(false);
+  const fieldConfigQuery = useContactFieldConfigQuery();
+  const preferencesQuery = useContactPreferencesQuery();
   const [fieldConfig, setFieldConfigState] = useState<FieldConfig>(() => loadFieldConfig());
   const [prefs, setPrefsState] = useState<ContactPreferences>(() => loadPreferences());
+  /** False until first authenticated tabs hydrate settles (avoids DEFAULT flash for customs). */
+  const [formTabsReady, setFormTabsReady] = useState(false);
   const { rawUserColumnOverlay, updateUserColumnLayout } = useContactConfigColumnPrefs(userId);
 
-  const reloadContactConfigFromDatabaseCache = useCallback(() => {
-    setFieldConfigState(loadFieldConfig());
-    setPrefsState(loadPreferences());
-    reloadCollections();
-  }, [reloadCollections]);
-
-  useEffect(() => {
-    if (lastUserIdRef.current !== userId) {
-      lastUserIdRef.current = userId;
-      setTimeout(reloadContactConfigFromDatabaseCache, 0);
+  const rememberFormTabs = useCallback((tabs: TabDefinition[] | undefined) => {
+    if (tabs && tabs.length > 0) {
+      lastGoodFormTabsRef.current = tabs;
     }
-  }, [reloadContactConfigFromDatabaseCache, userId]);
+  }, []);
 
   useEffect(() => {
-    const handleLocalDatabaseUpdate = () => {
-      setTimeout(reloadContactConfigFromDatabaseCache, 0);
+    if (!fieldConfigQuery.data) return;
+    setFieldConfigMemory(fieldConfigQuery.data);
+    setFieldConfigState((current) => ({
+      ...fieldConfigQuery.data,
+      formTabs: current.formTabs?.length ? current.formTabs : fieldConfigQuery.data.formTabs,
+    }));
+  }, [fieldConfigQuery.data]);
+
+  useEffect(() => {
+    if (!preferencesQuery.data) return;
+    setPreferencesMemory(preferencesQuery.data);
+    setPrefsState(preferencesQuery.data);
+  }, [preferencesQuery.data]);
+
+  const reloadContactConfigFromDatabaseCache = useCallback(() => {
+    tabsAbortRef.current?.abort();
+    const controller = new AbortController();
+    tabsAbortRef.current = controller;
+
+    const documentConfig = fieldConfigQuery.data ?? loadFieldConfig();
+    if (preferencesQuery.data) {
+      setPrefsState(preferencesQuery.data);
+    } else {
+      setPrefsState(loadPreferences());
+    }
+    reloadCollections();
+
+    if (!isAuthenticated) {
+      setFieldConfigState(documentConfig);
+      hasHydratedTabsOnceRef.current = true;
+      setFormTabsReady(true);
+      return;
+    }
+
+    if (!hasHydratedTabsOnceRef.current) {
+      setFormTabsReady(false);
+    }
+
+    void (async () => {
+      try {
+        const apiTabs = await loadContactsFormTabs(controller.signal);
+        if (controller.signal.aborted) return;
+        const formTabs = mergeContactsFormTabsFromApi(documentConfig.formTabs, apiTabs);
+        rememberFormTabs(formTabs);
+        setFieldConfigState({
+          ...documentConfig,
+          formTabs,
+        });
+        hasHydratedTabsOnceRef.current = true;
+        setFormTabsReady(true);
+      } catch {
+        if (controller.signal.aborted) return;
+        const fallbackTabs = lastGoodFormTabsRef.current;
+        setFieldConfigState({
+          ...documentConfig,
+          formTabs: fallbackTabs
+            ? mergeContactsFormTabsFromApi(documentConfig.formTabs, fallbackTabs)
+            : documentConfig.formTabs,
+        });
+        hasHydratedTabsOnceRef.current = true;
+        setFormTabsReady(true);
+        notify.warning(t("contacts.setup.formTabsLoadFailed"));
+      }
+    })();
+  }, [
+    fieldConfigQuery.data,
+    isAuthenticated,
+    preferencesQuery.data,
+    reloadCollections,
+    rememberFormTabs,
+    t,
+  ]);
+
+  useEffect(() => {
+    reloadContactConfigFromDatabaseCache();
+    return () => {
+      tabsAbortRef.current?.abort();
     };
-    window.addEventListener("local-database-update", handleLocalDatabaseUpdate);
-    return () => window.removeEventListener("local-database-update", handleLocalDatabaseUpdate);
-  }, [reloadContactConfigFromDatabaseCache]);
+  }, [reloadContactConfigFromDatabaseCache, userId]);
 
   const updateConfig = useCallback((nextConfig: FieldConfig) => {
     saveFieldConfig(nextConfig);
+    rememberFormTabs(nextConfig.formTabs);
     setFieldConfigState(nextConfig);
-  }, []);
+  }, [rememberFormTabs]);
 
   const updateConfigAsync = useCallback(async (nextConfig: FieldConfig): Promise<void> => {
-    await saveFieldConfigAsync(nextConfig);
-    setFieldConfigState(nextConfig);
-  }, []);
+    const saved = await saveFieldConfigAsync(nextConfig);
+    const withTabs = { ...saved, formTabs: nextConfig.formTabs ?? saved.formTabs };
+    rememberFormTabs(withTabs.formTabs);
+    setFieldConfigState(withTabs);
+  }, [rememberFormTabs]);
 
   const updatePrefs = useCallback((newPrefs: Partial<ContactPreferences>) => {
     setPrefsState((currentPreferences) => {
@@ -78,8 +174,8 @@ export function useContactConfigCore({
 
   const updatePrefsAsync = useCallback(async (newPrefs: Partial<ContactPreferences>): Promise<void> => {
     const merged = { ...prefs, ...newPrefs };
-    await savePreferencesAsync(merged);
-    setPrefsState(merged);
+    const saved = await savePreferencesAsync(merged);
+    setPrefsState(saved);
   }, [prefs]);
 
   const updateColumnRegistry = useCallback((columnRegistry: ColumnRegistryEntry[]) => {
@@ -91,6 +187,7 @@ export function useContactConfigCore({
   return {
     fieldConfig,
     setFieldConfigState: setFieldConfigState as Dispatch<SetStateAction<FieldConfig>>,
+    formTabsReady,
     prefs,
     rawUserColumnOverlay,
     updateConfig,

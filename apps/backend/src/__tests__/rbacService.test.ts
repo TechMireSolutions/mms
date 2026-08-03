@@ -12,6 +12,7 @@ import {
   canWriteContacts,
   canWriteObject,
   canClearMessagingLogs,
+  isAllowedCollectionName,
 } from "../services/rbacService.js";
 
 const admin: User = { id: "1", email: "a@test.com", name: "Admin", role: "admin", workspaceSubdomain: "demo" };
@@ -99,11 +100,13 @@ describe("rbacService", () => {
     expect(canBulkSync(accountant)).toBe(false);
   });
 
-  it("lets bulk-sync admins restore every per-user inbox and lookup list", () => {
-    expect(canWriteCollection(admin, "messages_u:other-user")).toBe(true);
-    expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(true);
+  it("denies legacy messages_u document-store inboxes", () => {
+    expect(canWriteCollection(admin, "messages_u:other-user")).toBe(false);
     expect(canWriteCollection(teacher, "messages_u:other-user")).toBe(false);
-    expect(canWriteCollection(teacher, "messages_u:2")).toBe(true);
+    expect(canWriteCollection(teacher, "messages_u:2")).toBe(false);
+    expect(canReadCollection(admin, "messages_u:2")).toBe(false);
+    expect(isAllowedCollectionName("messages_u:peer")).toBe(false);
+    expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(true);
     expect(canWriteCollection(admin, "currencies")).toBe(true);
     expect(canWriteCollection(admin, "teacherStatuses")).toBe(true);
     expect(canWriteCollection(admin, "sessionTypes")).toBe(true);

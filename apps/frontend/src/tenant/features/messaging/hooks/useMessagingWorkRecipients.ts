@@ -1,13 +1,17 @@
-import type { Contact, MessagingRoleFilter, MessagingGenderFilter, ContactsListPageResult } from '@mms/shared';
+import type {
+  Contact,
+  MessagingRoleFilter,
+  MessagingGenderFilter,
+  ContactsListPageResult,
+  MessagingRecipientsMatchResponseDto,
+  StandardMessagingRecipient,
+} from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import { useQuery } from '@tanstack/react-query';
 import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
 export const MESSAGING_RECIPIENTS_QUERY_KEY = ['messaging', 'recipients'] as const;
-
-const SELECT_ALL_PAGE_SIZE = 200;
-const SELECT_ALL_MAX_PAGES = 50;
 
 export interface UseMessagingWorkRecipientsParams {
   roleFilter: MessagingRoleFilter;
@@ -50,34 +54,30 @@ function buildRecipientsQuery(params: {
 }
 
 /**
- * Loads every matching recipient across pages for “Select All With Phone/Email”.
+ * Loads matching lean recipients for “Select All With Phone/Email” via one server call.
  */
 export async function loadMatchingRecipients(params: {
   roleFilter: MessagingRoleFilter;
   genderFilter: MessagingGenderFilter;
   search: string;
   kind: 'phone' | 'email';
-}): Promise<{ contacts: Contact[]; truncated: boolean }> {
+  signal?: AbortSignal;
+}): Promise<{ recipients: StandardMessagingRecipient[]; truncated: boolean }> {
+  const queryParams = new URLSearchParams();
+  queryParams.set('role', params.roleFilter);
+  queryParams.set('kind', params.kind);
+  if (params.genderFilter !== 'all') queryParams.set('gender', params.genderFilter);
   const search = params.search.trim();
-  const contacts: Contact[] = [];
-  let page = 1;
-  let hasMore = true;
-  while (hasMore && page <= SELECT_ALL_MAX_PAGES) {
-    const query = buildRecipientsQuery({
-      role: params.roleFilter,
-      gender: params.genderFilter,
-      search,
-      page,
-      pageSize: SELECT_ALL_PAGE_SIZE,
-      hasPhone: params.kind === 'phone',
-      hasEmail: params.kind === 'email',
-    });
-    const response = await apiJson<ContactsListPageResult>(`/api/messaging/recipients?${query}`);
-    contacts.push(...(response.contacts ?? []));
-    hasMore = Boolean(response.hasMore);
-    page += 1;
-  }
-  return { contacts, truncated: hasMore };
+  if (search) queryParams.set('search', search);
+
+  const response = await apiJson<MessagingRecipientsMatchResponseDto>(
+    `/api/messaging/recipients/match?${queryParams.toString()}`,
+    { signal: params.signal },
+  );
+  return {
+    recipients: response.recipients ?? [],
+    truncated: Boolean(response.truncated),
+  };
 }
 
 /**

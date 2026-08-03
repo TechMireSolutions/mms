@@ -1,16 +1,32 @@
 import { lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import type { Contact, StandardMessagingRecipient } from "@mms/shared";
 import {
   ContactsPageConfirmDialogs,
 } from "@/tenant/features/contacts/components/ContactsPageConfirmDialogs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
 const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
+
+function OverlayLoadingFallback(): React.JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+      role="status"
+      aria-live="polite"
+    >
+      <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden />
+      <span className="sr-only">{t("common.loading")}</span>
+    </div>
+  );
+}
 
 export interface ContactsPageOverlaysProps {
   canWrite: boolean;
@@ -85,20 +101,28 @@ export function ContactsPageOverlays({
   onConfirmBulkRestore,
 }: ContactsPageOverlaysProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { formTabsReady } = useContactConfig();
+  const formNeedsTabs = showForm || Boolean(viewContact);
+  const tabsPending = formNeedsTabs && !formTabsReady;
+
   return (
     <>
-      <Suspense fallback={null}>
+      {tabsPending ? <OverlayLoadingFallback /> : null}
+
+      <Suspense fallback={<OverlayLoadingFallback />}>
         <AnimatePresence>
-          <ContactForm
-            open={showForm}
-            key={editContact?.id || "new"}
-            contact={editContact ?? undefined}
-            defaultCountry={defaultCountry}
-            defaultCity={defaultCity}
-            defaultProvince={defaultProvince}
-            onClose={onCloseForm}
-            onSave={onSave}
-          />
+          {formTabsReady ? (
+            <ContactForm
+              open={showForm}
+              key={editContact?.id || "new"}
+              contact={editContact ?? undefined}
+              defaultCountry={defaultCountry}
+              defaultCity={defaultCity}
+              defaultProvince={defaultProvince}
+              onClose={onCloseForm}
+              onSave={onSave}
+            />
+          ) : null}
           {showDuplicates && (
             <DuplicateDetection
               onClose={onCloseDuplicates}
@@ -116,7 +140,7 @@ export function ContactsPageOverlays({
         </AnimatePresence>
       </Suspense>
 
-      {viewContact && (
+      {viewContact && formTabsReady && (
         <Suspense
           fallback={
             <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/20">

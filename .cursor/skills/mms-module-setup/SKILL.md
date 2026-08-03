@@ -30,7 +30,7 @@ Register sub-tab ids in `{Module}ModuleManifest.setupSubTabs`.
 
 Drive Setup SubTabBar from the manifest (Hasanat / Examinations / Users pattern) — do not hardcode tab ids in the page.
 
-Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves. Lookup option lists (`genders`, labels, `countryCodes`) use **`saveCollectionAsync`** — await server before claiming saved.
+Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves. Contacts lookup option lists (`genders`, labels, `countryCodes`) use **`/api/contacts/lookups`** Query/mutation — await before claiming saved.
 
 ## Contacts reference map
 
@@ -40,11 +40,11 @@ Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-o
 | Fields UI | `ContactsSettingsPanel.tsx` (mode `fields`) |
 | Field delete guard | `getContactFieldRemovalIssues()` in `@mms/shared` |
 | Preferences UI | `ContactsSettingsPanel.tsx` (mode `preferences`) |
-| Countries & dial codes | `ContactsCountryCodesSection.tsx` → `updateCountryCodes` / `saveCollectionAsync('countryCodes')` |
-| Option lists (gender/labels/…) | ContactConfig + `EditableSelect` `onUpdateOptions` → `saveCollectionAsync` |
-| Default Preferences | `preferencesStorage.ts`, `updatePreferences` |
+| Countries & dial codes | `ContactsCountryCodesSection.tsx` → `updateCountryCodes` / `PUT /api/contacts/lookups/countryCodes` |
+| Option lists (gender/labels/…) | ContactConfig + `EditableSelect` `onUpdateOptions` → `/api/contacts/lookups/:kind` |
+| Default Preferences | `preferencesStorage.ts` + `PUT /api/contacts/preferences` |
 | Sync settings extra tab | `ContactSyncPanel.tsx` |
-| Config DB store | `contact_field_config`, `contact_preferences` objects; lookup collections via ContactConfig |
+| Config DB store | typed `contact_field_configs` / `contact_module_preferences` / `contact_user_column_prefs` REST; lookups via `/api/contacts/lookups` |
 | Context Provider | `ContactConfigProvider` via `TenantScopedProviders` (tenant host only) |
 
 ## Workflow: add Setup Fields capability
@@ -52,7 +52,7 @@ Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-o
 1. Extend registry schema in `@mms/shared` if new field metadata needed
 2. Add UI in `{Module}SettingsPanel` — `CustomFieldsBuilder` + `DraggableFieldList`
 3. Wire visibility cascade: form, drawer, table columns, reports, export
-4. On save: persist config object + call setup audit mutation
+4. On save: persist field-config via `PUT /api/contacts/field-config` (or module typed REST) + call setup audit mutation; preferences via `PUT /api/contacts/preferences`; custom tabs via `/api/custom-tabs`
 5. Block delete with dependency helper (mirror `contactFieldDependencies.ts`)
 6. Copy via `t()` — no new `uiStrings`
 

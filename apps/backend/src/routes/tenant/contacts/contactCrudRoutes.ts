@@ -13,10 +13,10 @@ import { validateContactDynamic } from '../../../services/contactValidationServi
 import { canReadContacts, canWriteContacts } from '../../../services/rbacService.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { executeDynamicValidation, parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { contactWriteSchema } from '../../../validation/contactSchemas.js';
 import { resourceIdParamsSchema } from '../../../validation/commonSchemas.js';
 import {
   auditContact,
+  parseContactWriteBody,
   sanitizeOneForUser,
 } from './contactRouteHelpers.js';
 
@@ -55,7 +55,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     const user = request.user as User;
     if (!canWriteContacts(user)) return sendForbidden(reply);
 
-    const parsed = parseRequest(contactWriteSchema, request.body);
+    const parsed = await parseContactWriteBody(request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
     const isValid = await executeDynamicValidation(request, reply, (tenant, lang) =>
@@ -129,7 +129,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       return sendNotFound(reply, 'Contact not found');
     }
 
-    const body = parseRequest(contactWriteSchema, request.body);
+    const body = await parseContactWriteBody(request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
 
     if (isOwnContact && !canWriteContacts(user)) {

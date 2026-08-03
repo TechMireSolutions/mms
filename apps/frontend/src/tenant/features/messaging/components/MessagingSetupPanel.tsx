@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Copy, Edit3, Tag, Trash2 } from 'lucide-react';
 import {
-  appendVariableToken,
   mergeMessageTemplates,
   type MessageCategory,
   type MessageTemplate,
@@ -108,6 +107,7 @@ export function MessagingSetupPanel({
     return (
       <ErrorState
         title={t('messaging.loadFailed')}
+        description={t('messaging.loadFailedHint')}
         onRetry={() => {
           void templatesQuery.refetch();
         }}
@@ -133,7 +133,6 @@ export function MessagingSetupPanel({
         onBodyChange={setBody}
         onCategoryChange={setCategory}
         onChannelChange={setChannel}
-        onAppendToken={(token) => setBody((current) => appendVariableToken(current, token))}
       />
 
       <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs md:col-span-2">
@@ -175,7 +174,7 @@ export function MessagingSetupPanel({
               </article>
             ))}
             {filteredTemplates.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">{t('messaging.noLogs')}</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">{t('messaging.noTemplates')}</p>
             )}
           </div>
           <div className="hidden overflow-x-auto md:block">
@@ -193,13 +192,13 @@ export function MessagingSetupPanel({
                     <td className="px-4 py-3"><StatusBadge status={template.category || 'general'} config={categoryBadgeConfig} size="sm" /></td>
                     <td className="max-w-sm truncate px-4 py-3 text-muted-foreground" title={template.body}>{template.body}</td>
                     <td className="px-4 py-3 text-center"><div className="flex items-center justify-center gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => void copyBody(template.body)} className="text-muted-foreground" title={t('messaging.copyTemplate')}><Copy className="h-3.5 w-3.5" /></Button>
-                      {canWrite && <Button variant="ghost" size="icon" onClick={() => void duplicate(template)} className="text-muted-foreground" title={t('messaging.duplicateTemplate')}><Copy className="h-3.5 w-3.5 text-primary/70" /></Button>}
-                      {canWrite && template.id.startsWith('custom_') ? <><Button variant="ghost" size="icon" onClick={() => edit(template)} className="text-primary" title={t('common.edit')}><Edit3 className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" onClick={() => onDeleteRequest(template.id)} className="text-destructive" title={t('common.delete')}><Trash2 className="h-3.5 w-3.5" /></Button></> : <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground/60">{t('messaging.tagSystem')}</span>}
+                      <Button variant="ghost" size="icon" onClick={() => void copyBody(template.body)} className="text-muted-foreground" title={t('messaging.copyTemplate')} aria-label={t('messaging.copyTemplate')}><Copy className="h-3.5 w-3.5" /></Button>
+                      {canWrite && <Button variant="ghost" size="icon" onClick={() => void duplicate(template)} className="text-muted-foreground" title={t('messaging.duplicateTemplate')} aria-label={t('messaging.duplicateTemplate')}><Copy className="h-3.5 w-3.5 text-primary/70" /></Button>}
+                      {canWrite && template.id.startsWith('custom_') ? <><Button variant="ghost" size="icon" onClick={() => edit(template)} className="text-primary" title={t('common.edit')} aria-label={t('common.edit')}><Edit3 className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" onClick={() => onDeleteRequest(template.id)} className="text-destructive" title={t('common.delete')} aria-label={t('common.delete')}><Trash2 className="h-3.5 w-3.5" /></Button></> : <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground/60">{t('messaging.tagSystem')}</span>}
                     </div></td>
                   </tr>
                 ))}
-                {filteredTemplates.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">{t('messaging.noLogs')}</td></tr>}
+                {filteredTemplates.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">{t('messaging.noTemplates')}</td></tr>}
               </tbody>
             </table>
           </div>

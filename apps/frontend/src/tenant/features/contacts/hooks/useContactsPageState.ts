@@ -93,7 +93,6 @@ export function useContactsPageState({
     sortDir: directory.sortDir,
     quickFilter: directory.quickFilter,
     showDeletedArchives: directory.showDeletedArchives,
-    workContacts: directory.workContacts,
     selected: directory.selected,
     logExportAudit,
     handleError,

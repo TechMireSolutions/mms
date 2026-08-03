@@ -34,6 +34,8 @@ import { contactGoogleSyncRoutes } from './contacts/googleSyncRoutes.js';
 import { contactOperationRoutes } from './contacts/contactOperationRoutes.js';
 import { contactCrudRoutes } from './contacts/contactCrudRoutes.js';
 import { contactSavedReportRoutes } from './contacts/savedReportRoutes.js';
+import { contactLookupRoutes } from './contacts/contactLookupRoutes.js';
+import { contactSetupConfigRoutes } from './contacts/contactSetupConfigRoutes.js';
 import { sanitizeForUser } from './contacts/contactRouteHelpers.js';
 
 let backgroundJobRunnersReady = false;
@@ -148,6 +150,8 @@ export async function contactRoutes(
   });
 
   await fastify.register(contactOperationRoutes);
+  await fastify.register(contactLookupRoutes);
+  await fastify.register(contactSetupConfigRoutes);
 
   registerColumnPreferencesRoutes(fastify, {
     collection: 'contacts',

@@ -63,6 +63,7 @@ export function useMessageComposerDispatch({
   const cancelRef = useRef(false);
   const pausedRef = useRef(false);
   const auditSavedCountRef = useRef(0);
+  const auditIdempotencyKeyRef = useRef<string | null>(null);
   pausedRef.current = isPaused;
   const personalizeOptions = useMemo(
     () => ({ madrasaName: branding.madrasaName || undefined }),
@@ -94,6 +95,13 @@ export function useMessageComposerDispatch({
     const pending = sentRecords.slice(auditSavedCountRef.current);
     if (!pending.length) return true;
 
+    if (!auditIdempotencyKeyRef.current) {
+      auditIdempotencyKeyRef.current = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `msg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+    const idempotencyKey = auditIdempotencyKeyRef.current;
+
     for (let index = 0; index < pending.length; index += MESSAGE_LOG_RECORD_BATCH_MAX) {
       const chunk = pending.slice(index, index + MESSAGE_LOG_RECORD_BATCH_MAX);
       const messages: MessageLogCreateDto[] = chunk.map((record) => ({
@@ -105,7 +113,10 @@ export function useMessageComposerDispatch({
         category: activeTemplate?.category || 'general',
       }));
       try {
-        await recordDispatches.mutateAsync(messages);
+        await recordDispatches.mutateAsync({
+          logs: messages,
+          idempotencyKey: `${idempotencyKey}:${auditSavedCountRef.current + index}`,
+        });
         auditSavedCountRef.current += chunk.length;
       } catch {
         return false;
@@ -145,6 +156,7 @@ export function useMessageComposerDispatch({
 
     setSaving(true);
     auditSavedCountRef.current = 0;
+    auditIdempotencyKeyRef.current = null;
     try {
       if (eligibleRecipients.length === 1) {
         record(eligibleRecipients[0], executeSend(eligibleRecipients[0], message));

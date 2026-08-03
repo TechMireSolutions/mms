@@ -69,6 +69,8 @@ export interface ContactsWidgetAggregateWidgetInput {
   filterOperator?: ContactsWidgetQuery['filterOperator'];
   filterValue?: string;
   xAxisField?: string;
+  filters?: ContactsWidgetQuery['filters'];
+  chartLimit?: number;
 }
 
 export function useContactsWidgetAggregates(
@@ -80,7 +82,7 @@ export function useContactsWidgetAggregates(
   const contactQueries = widgets
     .filter((widget) => widget.collection === 'contacts')
     .map((widget) => contactsWidgetQueryFromWidget(widget));
-  const querySignature = contactQueries.map((query) => query.id).sort().join(',');
+  const querySignature = JSON.stringify(contactQueries);
 
   return useQuery({
     queryKey: [...CONTACTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,

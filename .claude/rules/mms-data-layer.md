@@ -48,7 +48,7 @@ Authoritative standards for backend databases, migrations, caching architectures
 - Composite PK `(workspace_subdomain, id)` (or equivalent tenant-scoped key).
 - RLS policy + **`FORCE ROW LEVEL SECURITY`** on the table (Messaging / Contacts / `custom_tabs` / `saved_reports` / `contact_google_sync_credentials` pattern).
 - Writes go through `withTenantTransaction` / SET LOCAL — never rely on app filters alone.
-- API bulk write paths must **upsert** (`bulkSave` / `bulkUpsertCustomTabsForModule` / merge-by-id). Keep `replaceForWorkspace` only for migrations, intentional admin clears, or documented one-shot archives — never as the route `saveFn` for normal client saves (`mms-api-interface.md`).
+- API bulk write upsert / ban `replaceForWorkspace` as route `saveFn` → **`mms-api-interface.md` §5**.
 
 ### Soft-delete on entity tables
 - Prefer a typed nullable `deleted_at` column + `(workspace_subdomain, deleted_at)` index.
@@ -98,7 +98,7 @@ Authoritative standards for backend databases, migrations, caching architectures
 ## 2. Client Persistence & Synchronization (`db.ts` [DEPRECATED for Primary Collections])
 
 ### Local Storage Caching (Legacy)
-- **Settings & Singletons Only**: The client-side database helper `db.ts` is deprecated for primary feature collection storage. Its usage is restricted to singletons (e.g. `branding`, `global_settings`) and custom field configuration objects.
+- **Settings & Singletons Only**: The client-side database helper `db.ts` is deprecated for primary feature collection storage. Restrict to settings/singletons (e.g. `branding`, `global_settings`) and **non-migrated** legacy document-store keys only. Contacts (and other migrated) field-config / preferences / lookups / column prefs use Query/REST — **never** `getObject` / `getCollection` as primary for those keys (`mms-hooks.md`). Other modules’ `*_field_config` may remain on `objects` until migrated (`mms-migration-status.md`).
 - **Event Bus Refreshes**: Local updates for settings drafts trigger window-level events on local state writes:
   ```typescript
   window.dispatchEvent(new Event('local-database-update'));
@@ -110,8 +110,8 @@ Authoritative standards for backend databases, migrations, caching architectures
 Settings singletons (`branding`, `global_settings`) must survive authentication syncs:
 - **Save Actions**: Await backend resolution (`POST /api/db/objects/:key`) before UI success feedback. Raw `saveObject` is prohibited; utilize typed helpers.
 - **Secrets Protection**: Server-only configuration properties (e.g. `email_integration_secrets`, legacy Google sync object keys) must be filtered out of sync reads and client objects. Prefer dedicated FORCE-RLS tables for new secrets (see §1).
-- **Allowed objects**: Do not leave obsolete logical keys in `ALLOWED_OBJECTS` / object RBAC maps after migrating to typed tables (e.g. Contacts saved reports → `saved_reports`).
-- **Allowed collections**: After REST migration, remove the entity key from `ALLOWED_COLLECTIONS` and FE `BUSINESS_COLLECTIONS` so `POST /api/db/collections/:name` cannot ghost-write a parallel JSON array (Contacts entity already closed). Lookup collections (`genders`, `phoneLabels`, `countryCodes`, …) remain document-store until migrated.
+- **Allowed objects**: Do not leave obsolete logical keys in `ALLOWED_OBJECTS` / object RBAC maps after migrating to typed tables (e.g. Contacts saved reports → `saved_reports`; Contacts field-config / preferences / column prefs → typed tables + REST — removed from `ALLOWED_OBJECTS`).
+- **Allowed collections**: After REST migration, remove the entity key from `ALLOWED_COLLECTIONS` and FE `BUSINESS_COLLECTIONS` so `POST /api/db/collections/:name` cannot ghost-write a parallel JSON array (Contacts entity already closed). Contacts Setup lookup kinds (`genders`, `phoneLabels`, `countryCodes`, …) use typed `contact_lookups` + `/api/contacts/lookups` — also removed from FE `BUSINESS_COLLECTIONS`.
 
 ---
 
@@ -124,7 +124,7 @@ Align with `queryClient.ts`: `staleTime` 30s, `gcTime` 5m, `refetchOnWindowFocus
 - **Tuple Keys**: Named tuple constants / shared key factories — not ad-hoc strings. Prefer colocated TanStack Query v5 `queryOptions` / `mutationOptions` factories — hooks wrap factories (`mms-hooks.md`).
 - **Auth Gate**: `enabled: isAuthenticated` for tenant queries.
 - **Cancellation**: Pass Query `signal` into `apiFetch` / `queryFn` (required).
-- **Mutations**: Narrow invalidation of list + count keys — avoid blanket `invalidateQueries()`. Await `mutateAsync` (or success callback) before UI “saved”. Surface success/error via call-site `notify.*` + `t()` — do not add a global `MutationCache` toast middleware or `mutation.meta` toast bus (`mms-hooks.md`).
+- **Mutations**: Narrow invalidation of list + count keys — avoid blanket `invalidateQueries()`. Await success before UI “saved” / form close — **`mms-module-architecture.md` §7**. Surface success/error via call-site `notify.*` + `t()` — do not add a global `MutationCache` toast middleware or `mutation.meta` toast bus (`mms-hooks.md`).
 - **Optimistic updates**: Allowed only for idempotent, easily-rollbackable UX. **Ban** for money, soft-delete/restore, bulk, backup/restore, messaging send. Always reconcile via invalidate + server response — never leave optimistic cache as SSOT.
 - **No dual-write**: After server `bulkSave`, FE invalidates only — ban looping `upsert` / `saveCollection` in mutation `onSuccess`.
 - **`select` / `placeholderData`**: Prefer Query `select` for derived view models; use `placeholderData` / `keepPreviousData` for paginated lists — do not invent parallel local caches.

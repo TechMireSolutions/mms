@@ -4,6 +4,7 @@ import { requiresTwoFactor, type BrandingSocialLink } from '@mms/shared';
 import { validateCredentials, createUser, type PublicUser } from './userService.js';
 import { createWorkspace, assertWorkspaceActive } from '../workspaceService.js';
 import { saveObject } from '../../db/database.js';
+import { upsertContactModulePreferences } from '../../db/repositories/contactModulePreferencesRepository.js';
 import type { Workspace } from '@mms/shared';
 import { buildBrandingFromOnboarding } from '@mms/shared';
 import { assertPasswordMeetsPolicy, getJwtExpiresIn, loadGlobalSettings } from '../globalSettingsService.js';
@@ -178,7 +179,7 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
       showLunarDob: false,
       showDetailedLunarAge: false,
     };
-    await saveObject('contact_preferences', contactPreferences);
+    await upsertContactModulePreferences(workspace.subdomain, contactPreferences);
 
     await assertPasswordMeetsPolicy(input.password);
     await createUser(input.email, input.adminName, input.password, 'admin', workspace.subdomain, {

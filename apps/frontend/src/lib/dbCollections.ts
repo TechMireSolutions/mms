@@ -12,7 +12,6 @@ import {
 } from "@/lib/dbLinkHydration.js";
 
 const BUSINESS_COLLECTIONS = new Set([
-  "messages",
   "students",
   "teachers",
   "enrollments",
@@ -42,17 +41,10 @@ const BUSINESS_COLLECTIONS = new Set([
   "accounting_entries",
   "accounting_fiscal_years",
   "currencies",
-  "genders",
   "studentStatuses",
   "studentGenderFilters",
   "studentDiscountTypes",
-  "socialPlatforms",
-  "relationships",
   "whatsappTemplates",
-  "phoneLabels",
-  "emailLabels",
-  "addressLabels",
-  "countryCodes",
   "teacherStatuses",
   "teacherSpecializations",
   "sessionStatuses",
@@ -126,7 +118,7 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
       }
     }
     const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
-    if (isAuth && (BUSINESS_COLLECTIONS.has(key) || key.startsWith("messages_u:"))) {
+    if (isAuth && BUSINESS_COLLECTIONS.has(key)) {
       return [] as T[];
     }
     if (defaultData.length === 0) {

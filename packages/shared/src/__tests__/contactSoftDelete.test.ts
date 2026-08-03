@@ -46,11 +46,20 @@ describe('contactSoftDelete', () => {
     });
     expect(parsed.success).toBe(true);
     if (parsed.success) {
-      expect(parsed.data).not.toHaveProperty('deletedAt');
-      expect(parsed.data).not.toHaveProperty('deletedBy');
-      expect(parsed.data).not.toHaveProperty('deletionReason');
-      expect(parsed.data.firstName).toBe('Ali');
+      const data = parsed.data as Record<string, unknown>;
+      expect(data).not.toHaveProperty('deletedAt');
+      expect(data).not.toHaveProperty('deletedBy');
+      expect(data).not.toHaveProperty('deletionReason');
+      expect(data.firstName).toBe('Ali');
     }
+  });
+
+  it('contactWriteSchema rejects unknown top-level keys', () => {
+    const parsed = contactWriteSchema.safeParse({
+      firstName: 'Ali',
+      notAContactField: 1,
+    });
+    expect(parsed.success).toBe(false);
   });
 
   it('filterActiveContacts excludes soft-deleted rows', () => {

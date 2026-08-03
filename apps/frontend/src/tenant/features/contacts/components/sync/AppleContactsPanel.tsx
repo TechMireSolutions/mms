@@ -22,7 +22,7 @@ export interface AppleContactsPanelProps {
  */
 export function AppleContactsPanel({
   onImport,
-  canWrite = true,
+  canWrite = false,
 }: AppleContactsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const apple = useAppleContactsPanel({ onImport, canWrite });

@@ -9,7 +9,6 @@ export {
   CONTACTS_DUPLICATES_QUERY_KEY,
   contactsPaginatedQueryKey,
   useContactsPaginated,
-  fetchAllContactsForQuery,
   fetchContactsPageForQuery,
   useContactsMetrics,
   useContactsReportAnalytics,
@@ -18,7 +17,6 @@ export {
   contactsListQueryKey,
   contactDetailQueryKey,
   fetchContactById,
-  useContacts,
   useContactById,
   useContactsByIds,
   useContactGoogleSyncConfig,
@@ -28,15 +26,12 @@ export {
   useContactsSavedReports,
   useContactsSavedReportMutations,
   useContactsSavedReportsSource,
-  useContactsCollection,
-  useContactsCollectionState,
   type ContactsSavedReportCreateInput,
   type ContactsPaginatedParams,
   type ContactsReportAnalyticsParams,
   type ContactsReportAnalyticsResult,
   type ContactsWidgetAggregateWidgetInput,
   type ContactsDuplicatesParams,
-  type UseContactsCollectionResult,
 } from '@/tenant/features/contacts/hooks/useContactsQueries';
 
 export {

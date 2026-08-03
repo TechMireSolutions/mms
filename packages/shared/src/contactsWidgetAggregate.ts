@@ -3,7 +3,13 @@ import { isContactDeleted } from './contactSoftDelete.js';
 import { matchesWidgetFilter } from './utils.js';
 
 export type ContactsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-export type ContactsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
+export type ContactsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt' | 'startsWith';
+
+export interface ContactsWidgetFilter {
+  field: string;
+  operator?: ContactsWidgetFilterOperator;
+  value: string;
+}
 
 export interface ContactsWidgetQuery {
   id: string;
@@ -13,6 +19,10 @@ export interface ContactsWidgetQuery {
   filterOperator?: ContactsWidgetFilterOperator;
   filterValue?: string;
   xAxisField?: string;
+  /** Extra AND filters (visualizer multi-rule). */
+  filters?: ContactsWidgetFilter[];
+  /** Chart GROUP BY series cap (default 8). */
+  chartLimit?: number;
 }
 
 export interface ContactsWidgetAggregateResult {
@@ -25,12 +35,32 @@ function contactFieldValue(contact: Contact, field: string): unknown {
   return contact[field as keyof Contact];
 }
 
+function matchesOneFilter(
+  contact: Contact,
+  field: string | undefined,
+  operator: ContactsWidgetFilterOperator | undefined,
+  value: string | undefined,
+): boolean {
+  if (!field || value == null || value === '') return true;
+  if (operator === 'startsWith') {
+    const fieldValue = contactFieldValue(contact, field);
+    if (fieldValue === undefined || fieldValue === null) return false;
+    return String(fieldValue).toLowerCase().startsWith(String(value).toLowerCase());
+  }
+  return matchesWidgetFilter(contact, field, operator, value);
+}
 
 function filterContactsForWidget(contacts: Contact[], query: ContactsWidgetQuery): Contact[] {
   const active = contacts.filter((contact) => !isContactDeleted(contact));
-  return active.filter((contact) =>
-    matchesWidgetFilter(contact, query.filterField, query.filterOperator, query.filterValue),
-  );
+  return active.filter((contact) => {
+    if (!matchesOneFilter(contact, query.filterField, query.filterOperator, query.filterValue)) {
+      return false;
+    }
+    for (const rule of query.filters ?? []) {
+      if (!matchesOneFilter(contact, rule.field, rule.operator, rule.value)) return false;
+    }
+    return true;
+  });
 }
 
 function aggregateNumericField(
@@ -49,6 +79,11 @@ function aggregateNumericField(
   });
   if (operation === 'sum') return sum;
   return count > 0 ? Math.round(sum / count) : 0;
+}
+
+function resolveChartLimit(query: ContactsWidgetQuery): number {
+  const requested = query.chartLimit ?? 8;
+  return Math.min(Math.max(requested, 1), 50);
 }
 
 function buildChartData(items: Contact[], query: ContactsWidgetQuery): { name: string; value: number }[] {
@@ -72,7 +107,7 @@ function buildChartData(items: Contact[], query: ContactsWidgetQuery): { name: s
     return { name: groupName, value: finalValue };
   });
 
-  return chartData.sort((a, b) => b.value - a.value).slice(0, 8);
+  return chartData.sort((a, b) => b.value - a.value).slice(0, resolveChartLimit(query));
 }
 
 /** Server/client widget aggregate for contacts collection (globle2 §10). */
@@ -119,6 +154,8 @@ export function contactsWidgetQueryFromWidget(widget: {
   filterOperator?: ContactsWidgetFilterOperator;
   filterValue?: string;
   xAxisField?: string;
+  filters?: ContactsWidgetFilter[];
+  chartLimit?: number;
 }): ContactsWidgetQuery {
   return {
     id: widget.id,
@@ -128,5 +165,7 @@ export function contactsWidgetQueryFromWidget(widget: {
     filterOperator: widget.filterOperator,
     filterValue: widget.filterValue,
     xAxisField: widget.xAxisField,
+    filters: widget.filters,
+    chartLimit: widget.chartLimit,
   };
 }

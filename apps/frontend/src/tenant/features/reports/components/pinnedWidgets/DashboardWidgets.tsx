@@ -13,7 +13,7 @@ import { WidgetDrilldownModal } from '@/tenant/features/reports/components/pinne
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
-import { applyContactsWorkDrillDown } from '@/lib/contacts/contactsWorkDrillDown';
+import { applyContactsWidgetWorkDrillDown } from '@/lib/contacts/contactsWidgetWorkDrillDown';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DashboardWidgetsHeader } from '@/tenant/features/reports/components/pinnedWidgets/DashboardWidgetsHeader';
@@ -84,13 +84,7 @@ export function DashboardWidgets({
   useTeachersWidgetAggregates(activeWidgets);
 
   const handleMetricClick = useCallback((widget: CustomWidget) => {
-    if (widget.collection === 'contacts') {
-      applyContactsWorkDrillDown({
-        gender: widget.filterField === 'gender' && widget.filterValue ? widget.filterValue : undefined,
-      });
-      window.location.assign('/contacts');
-      return;
-    }
+    if (applyContactsWidgetWorkDrillDown(widget)) return;
     setDrilldownWidget(widget);
   }, []);
 

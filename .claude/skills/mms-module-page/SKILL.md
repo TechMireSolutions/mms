@@ -12,7 +12,7 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 | Section | Topic | Skill / rule |
 |---------|--------|--------------|
 | §1 | Manifests | `mms-module-architecture.md` |
-| §2 | Three-tier shell | `mms-ui-ux-design.md`, this skill |
+| §2 | Three-tier shell norms | `mms-module-architecture.md` · chrome (`PageHeader` / `ResponsiveAccordionTabs`) → `mms-ui-ux-design.md` |
 | §3 | Work directory | skill **`mms-module-work`** |
 | §4 | Setup / fields | skill **`mms-module-setup`**, `mms-fields.md` |
 | §5 | Background jobs | skill **`mms-background-jobs`** |

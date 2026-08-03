@@ -54,6 +54,9 @@ export function personalizeMessage(
 
   return body.replace(/\{([a-z_]+)(?:\|([^}]+))?\}/gi, (match, key, fallback) => {
     const lowerKey = String(key).toLowerCase();
+    if (!Object.prototype.hasOwnProperty.call(tokenValues, lowerKey)) {
+      return match;
+    }
     const val = tokenValues[lowerKey];
     if (val !== undefined && val !== "") {
       return val;

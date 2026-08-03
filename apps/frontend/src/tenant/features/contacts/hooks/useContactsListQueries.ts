@@ -7,14 +7,12 @@ import {
   CONTACTS_API,
   CONTACTS_QUERY_KEY,
   contactDetailQueryKey,
-  contactsListQueryKey,
 } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 import {
   buildContactsPageUrl,
   contactsListQueryKeyParams,
   contactsPaginatedQueryKey,
   fetchContactById,
-  fetchContacts,
   sameContactsListFilters,
   type ContactsPaginatedParams,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
@@ -22,7 +20,6 @@ import {
 export type { ContactsPaginatedParams } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
 export {
   contactsPaginatedQueryKey,
-  fetchAllContactsForQuery,
   fetchContactsPageForQuery,
   fetchContactById,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
@@ -42,18 +39,6 @@ export function useContactsPaginated(params: ContactsPaginatedParams) {
         | undefined;
       return sameContactsListFilters(previousParams, keyParams) ? previousData : undefined;
     },
-  });
-}
-
-export function useContacts(options?: { enabled?: boolean; includeDeleted?: boolean }) {
-  const queryEnabled = options?.enabled ?? true;
-  const includeDeleted = options?.includeDeleted ?? false;
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: contactsListQueryKey(includeDeleted),
-    queryFn: ({ signal }) => fetchContacts(includeDeleted, signal),
-    enabled: isAuthenticated && queryEnabled,
-    staleTime: 30_000,
   });
 }
 
@@ -102,35 +87,4 @@ export function useContactsByIds(ids: (string | number | null | undefined)[]) {
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
   });
-}
-
-export interface UseContactsCollectionResult {
-  contacts: Contact[];
-  isLoading: boolean;
-  isError: boolean;
-  isFetching: boolean;
-}
-
-/** Query-only contacts list (no localStorage hybrid). Prefer paginated hooks for Work directories. */
-export function useContactsCollection(options?: {
-  enabled?: boolean;
-  includeDeleted?: boolean;
-}): Contact[] {
-  return useContactsCollectionState(options).contacts;
-}
-
-/** Returns REST contacts along with query loading and fetching state. */
-export function useContactsCollectionState(options?: {
-  enabled?: boolean;
-  includeDeleted?: boolean;
-}): UseContactsCollectionResult {
-  const enabled = options?.enabled ?? true;
-  const includeDeleted = options?.includeDeleted ?? false;
-  const queryResult = useContacts({ enabled, includeDeleted });
-  return {
-    contacts: queryResult.data ?? [],
-    isLoading: queryResult.isLoading,
-    isError: queryResult.isError,
-    isFetching: queryResult.isFetching,
-  };
 }

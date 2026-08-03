@@ -8,6 +8,8 @@ import type {
 
 export interface ContactConfigContextType {
   fieldConfig: FieldConfig;
+  /** True after first authenticated `/api/custom-tabs` hydrate settles (or when logged out). */
+  formTabsReady: boolean;
   prefs: ContactPreferences;
   updateConfig: (nextConfig: FieldConfig) => void;
   updateConfigAsync: (nextConfig: FieldConfig) => Promise<void>;

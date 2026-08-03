@@ -3,14 +3,18 @@ import {
   type Message,
   type MessagingMetricsDto,
   type MessagingRecipientsQueryDto,
+  type MessagingRecipientsMatchQueryDto,
+  type MessagingRecipientsMatchResponseDto,
   type ContactsListPageResult,
-  type Contact,
+  type StandardMessagingRecipient,
+  MESSAGING_RECIPIENTS_MATCH_LIMIT,
   messageTemplateSchema,
   messageRecordSchema,
   filterActiveContacts,
-  paginateContacts,
-  collectStudentLinkedContactIds,
-  collectTeacherLinkedContactIds,
+  toMessagingRecipient,
+  getDisplayName,
+  getPrimaryPhone,
+  getPrimaryEmail,
 } from '@mms/shared';
 import {
   listMessageTemplatesByWorkspace,
@@ -26,14 +30,9 @@ import {
   type MessageLogsFilterQuery,
   type MessageLogsPageResult,
 } from '../db/repositories/messagingRepository.js';
-import { listContactsByWorkspace, findContactsByIds } from '../db/repositories/contactRepository.js';
-import { listStudentsByWorkspace } from '../db/repositories/studentRepository.js';
-import { listTeachersByWorkspace } from '../db/repositories/teacherRepository.js';
-import { listTenantUsersByWorkspace } from '../db/repositories/tenantUserRepository.js';
+import { listContactsPage, findContactsByIds } from '../db/repositories/contactRepository.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { z } from 'zod';
-
-const TEACHER_USER_ROLES = new Set(['teacher', 'assistant_teacher']);
 
 const templateListSchema = z.array(messageTemplateSchema);
 const logListSchema = z.array(messageRecordSchema);
@@ -70,13 +69,11 @@ export async function loadFilteredMessageLogs(
   query?: MessageLogsFilterQuery,
 ): Promise<MessageLogsPageResult> {
   if (!workspaceSubdomain) {
-    const logs = await loadMessageLogs();
-    const active = query?.includeDeleted === true ? logs : logs.filter((log) => !log.deletedAt);
     return {
-      logs: active,
-      total: active.length,
+      logs: [],
+      total: 0,
       page: 1,
-      pageSize: Math.max(active.length, 1),
+      pageSize: 50,
       hasMore: false,
     };
   }
@@ -95,7 +92,10 @@ export async function clearAllMessageLogs(workspaceSubdomain: string): Promise<v
   await softDeleteActiveMessageLogs(workspaceSubdomain);
 }
 
-export async function computeMessagingMetrics(workspaceSubdomain?: string): Promise<MessagingMetricsDto> {
+export async function computeMessagingMetrics(
+  workspaceSubdomain?: string,
+  filters?: { startDate?: string; endDate?: string },
+): Promise<MessagingMetricsDto> {
   if (!workspaceSubdomain) {
     return {
       total: 0,
@@ -117,40 +117,27 @@ export async function computeMessagingMetrics(workspaceSubdomain?: string): Prom
       },
     };
   }
-  return queryMessagingMetrics(workspaceSubdomain);
-}
-
-function orderContactsByIds(ids: Array<string | number>, contacts: Contact[]): Contact[] {
-  const byId = new Map(contacts.map((contact) => [String(contact.id), contact]));
-  const seen = new Set<string>();
-  const ordered: Contact[] = [];
-  for (const id of ids) {
-    const key = String(id);
-    if (seen.has(key)) continue;
-    const contact = byId.get(key);
-    if (!contact) continue;
-    seen.add(key);
-    ordered.push(contact);
-  }
-  return ordered;
+  return queryMessagingMetrics(workspaceSubdomain, filters);
 }
 
 /**
- * Resolve contact rows for messaging UI under messaging.read (not contacts.read).
+ * Resolve lean messaging recipients under messaging.read (not contacts.read).
  */
-export async function resolveMessagingContacts(
+export async function resolveMessagingRecipients(
   workspaceSubdomain: string,
   ids: string[],
-): Promise<Contact[]> {
+): Promise<StandardMessagingRecipient[]> {
   if (ids.length === 0) return [];
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const found = await findContactsByIds(subdomain, ids);
-  return filterActiveContacts(found);
+  return filterActiveContacts(found).map((contact) =>
+    toMessagingRecipient(contact, { getDisplayName, getPrimaryPhone, getPrimaryEmail }),
+  );
 }
 
 /**
- * Work-tab recipients under messaging.read — joins module links server-side and paginates.
- * Does not require students/teachers/users collection read permissions.
+ * Work-tab recipients under messaging.read — SQL filter/page via contacts list path.
+ * Role scoping uses EXISTS / NOT EXISTS module-link filters (no id materialization).
  */
 export async function loadMessagingRecipients(
   workspaceSubdomain: string,
@@ -163,40 +150,84 @@ export async function loadMessagingRecipients(
   const pageSize = query.pageSize ?? 50;
   const search = query.search?.trim() || undefined;
 
-  const allContacts = await listContactsByWorkspace(subdomain, { deleted: 'active' });
-  let scoped: Contact[] = allContacts;
+  const reachability =
+    query.hasPhone
+      ? { hasPhone: true as const }
+      : query.hasEmail
+        ? { hasEmail: true as const }
+        : { hasReachable: true as const };
 
-  if (role === 'students') {
-    const students = await listStudentsByWorkspace(subdomain, { deleted: 'active' });
-    scoped = orderContactsByIds(collectStudentLinkedContactIds(students), allContacts);
-  } else if (role === 'teachers') {
-    const teachers = await listTeachersByWorkspace(subdomain, { deleted: 'active' });
-    scoped = orderContactsByIds(collectTeacherLinkedContactIds(teachers), allContacts);
-  } else if (role === 'staff') {
-    const users = await listTenantUsersByWorkspace(subdomain);
-    const staffIds = users
-      .filter((user) => user.contactId != null && !TEACHER_USER_ROLES.has(String(user.role || '').toLowerCase()))
-      .map((user) => user.contactId as string | number);
-    scoped = orderContactsByIds(staffIds, allContacts);
-  } else if (role === 'contacts') {
-    const students = await listStudentsByWorkspace(subdomain, { deleted: 'active' });
-    const teachers = await listTeachersByWorkspace(subdomain, { deleted: 'active' });
-    const excluded = new Set([
-      ...collectStudentLinkedContactIds(students),
-      ...collectTeacherLinkedContactIds(teachers),
-    ].map(String));
-    scoped = allContacts.filter((contact) => !excluded.has(String(contact.id)));
-  }
-
-  return paginateContacts(scoped, {
+  const baseQuery = {
     page,
     limit: pageSize,
     search,
     gender,
-    ...(query.hasPhone
-      ? { hasPhone: true }
-      : query.hasEmail
-        ? { hasEmail: true }
-        : { hasReachable: true }),
-  });
+    ...reachability,
+  };
+
+  if (role === 'students') {
+    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'students' });
+  }
+  if (role === 'teachers') {
+    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'teachers' });
+  }
+  if (role === 'staff') {
+    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'staff' });
+  }
+  if (role === 'contacts') {
+    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'unlinked' });
+  }
+
+  return listContactsPage(subdomain, baseQuery);
+}
+
+const MATCH_PAGE_SIZE = 500;
+
+/**
+ * Select-all reachable recipients — lean DTOs, server-capped (no FE page-walk).
+ */
+export async function matchMessagingRecipients(
+  workspaceSubdomain: string,
+  query: MessagingRecipientsMatchQueryDto,
+): Promise<MessagingRecipientsMatchResponseDto> {
+  const limit = MESSAGING_RECIPIENTS_MATCH_LIMIT;
+  const listQuery: MessagingRecipientsQueryDto = {
+    role: query.role,
+    gender: query.gender,
+    search: query.search,
+    page: 1,
+    pageSize: MATCH_PAGE_SIZE,
+    hasPhone: query.kind === 'phone' ? true : undefined,
+    hasEmail: query.kind === 'email' ? true : undefined,
+  };
+
+  const recipients: StandardMessagingRecipient[] = [];
+  let total = 0;
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore && recipients.length < limit) {
+    const result = await loadMessagingRecipients(workspaceSubdomain, {
+      ...listQuery,
+      page,
+      pageSize: MATCH_PAGE_SIZE,
+    });
+    total = result.total;
+    for (const contact of result.contacts) {
+      if (recipients.length >= limit) break;
+      recipients.push(
+        toMessagingRecipient(contact, { getDisplayName, getPrimaryPhone, getPrimaryEmail }),
+      );
+    }
+    hasMore = result.hasMore && recipients.length < limit;
+    page += 1;
+  }
+
+  const truncated = total > recipients.length || (hasMore && recipients.length >= limit);
+  return {
+    recipients,
+    total,
+    truncated,
+    limit,
+  };
 }

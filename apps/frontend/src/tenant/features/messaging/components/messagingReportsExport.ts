@@ -1,81 +1,59 @@
-import {
-  buildCsvContent,
-  formatDateTime,
-  getDisplayName,
-  type Message,
-} from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
-import { triggerFileDownload } from '@/lib/download';
+import type { MessagingCsvExportQueryDto } from '@mms/shared';
+import { downloadBackgroundJobArtifact } from '@/lib/backgroundJobs/backgroundJobApi';
+import { startServerMessagingCsvExport } from '@/lib/backgroundJobs/startServerMessagingCsvExport';
 import { notify } from '@/lib/notify';
-import type { MessageLogsPageResult } from '@/hooks/useMessaging';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
-
-const EXPORT_PAGE_SIZE = 500;
-const EXPORT_MAX_PAGES = 40;
 
 interface ExportMessagingLogsOptions {
   channel: 'all' | 'sms' | 'whatsapp' | 'email';
   category: string;
   debouncedSearch: string;
   status: 'all' | 'sent' | 'delivered' | 'failed' | 'skipped';
+  startDate?: string;
+  endDate?: string;
   t: TranslationFunction;
 }
 
+/** Normalize a date-only picker value for lexicographic sentAt end bound. */
+export function messagingExportEndDateBound(dateOnly: string): string {
+  const trimmed = dateOnly.trim();
+  if (!trimmed) return '';
+  if (trimmed.includes('T')) return trimmed;
+  return `${trimmed}T23:59:59.999Z`;
+}
+
+/** Queue messaging logs CSV on the server, then download the completed artifact. */
 export async function exportMessagingLogsFiltered({
   channel,
   category,
   debouncedSearch,
   status,
+  startDate,
+  endDate,
   t,
 }: ExportMessagingLogsOptions): Promise<void> {
-  const allLogs: Message[] = [];
-  let page = 1;
-  let hasMore = true;
-  while (hasMore && page <= EXPORT_MAX_PAGES) {
-    const queryParams = new URLSearchParams();
-    queryParams.set('page', String(page));
-    queryParams.set('pageSize', String(EXPORT_PAGE_SIZE));
-    if (channel !== 'all') queryParams.set('channel', channel);
-    if (category !== 'all') queryParams.set('category', category);
-    if (debouncedSearch.trim()) queryParams.set('search', debouncedSearch.trim());
-    if (status !== 'all') queryParams.set('status', status);
-    const response = await apiJson<MessageLogsPageResult>(`/api/messaging/logs?${queryParams.toString()}`);
-    allLogs.push(...(response.logs ?? []));
-    hasMore = Boolean(response.hasMore);
-    page += 1;
-  }
-  const exportTruncated = hasMore;
+  const query: MessagingCsvExportQueryDto = {};
+  if (channel !== 'all') query.channel = channel;
+  if (category !== 'all') query.category = category;
+  if (debouncedSearch.trim()) query.search = debouncedSearch.trim();
+  if (status !== 'all') query.status = status;
+  if (startDate?.trim()) query.startDate = startDate.trim();
+  if (endDate?.trim()) query.endDate = messagingExportEndDateBound(endDate);
 
-  const uniqueIds = [...new Set(allLogs.map((log) => String(log.contactId)))];
-  const resolvedContacts: Array<{ id: string | number; name?: string }> = [];
-  for (let index = 0; index < uniqueIds.length; index += 100) {
-    const chunk = uniqueIds.slice(index, index + 100);
-    const resolved = await apiJson<{ contacts: Array<{ id: string | number; name?: string }> }>(
-      '/api/messaging/contacts/resolve',
-      { method: 'POST', body: JSON.stringify({ ids: chunk }) },
-    );
-    resolvedContacts.push(...(resolved.contacts ?? []));
-  }
-  const exportContactMap = new Map(
-    resolvedContacts.flatMap((contact) => [[contact.id, contact], [String(contact.id), contact]]),
-  );
-
-  const headers = [
-    t('messaging.recipient'),
-    t('messaging.channel'),
-    t('messaging.category'),
-    t('messaging.messageBody'),
-    t('messaging.dateSent'),
-  ];
-  const rows = allLogs.map((log) => {
-    const contact = exportContactMap.get(log.contactId) ?? exportContactMap.get(String(log.contactId));
-    const name = contact
-      ? getDisplayName(contact as Parameters<typeof getDisplayName>[0])
-      : t('messaging.contactFallback', { id: log.contactId });
-    return [name, log.channel, log.category || 'general', log.body, formatDateTime(log.sentAt)];
+  const filename = `${t('messaging.exportFilename')}.csv`;
+  const job = await startServerMessagingCsvExport({
+    query,
+    filename,
+    label: t('messaging.jobs.exportLabelServer'),
   });
-  const csv = buildCsvContent([headers, ...rows]);
-  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
-  triggerFileDownload(blob, `${t('messaging.exportFilename')}.csv`);
-  if (exportTruncated) notify.warning(t('messaging.exportTruncated'));
+
+  if (job.status === 'failed') {
+    throw new Error(job.error || t('messaging.exportFailed'));
+  }
+
+  if (job.hasDownload && job.status === 'completed') {
+    await downloadBackgroundJobArtifact(job.id, filename);
+  }
+
+  notify.success(t('messaging.exportSuccess'));
 }

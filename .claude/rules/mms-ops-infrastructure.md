@@ -20,8 +20,8 @@ paths:
 Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
 
 ## 1. Prerequisites & Environment Setup
-- **Node.js**: Match root `package.json` `engines.node` (currently **`>=24.14.0`**). CI/Docker Node major must match `engines` exactly — do not pin newer or older than the declared floor allows without bumping `engines` in the same change.
-- **pnpm**: Match root `packageManager` (currently **pnpm@11.15.1**) via Corepack (`corepack enable`). Docker/CI must use that exact pnpm version — not a newer pin.
+- **Node.js**: Match root `package.json` `engines.node` exactly in CI/Docker — do not restate pin numbers here; bumps → **`mms-dependencies.md`** / skill `mms-dependency-upgrade`.
+- **pnpm**: Match root `packageManager` via Corepack (`corepack enable`). Docker/CI must use that exact pnpm version.
 
 ### Workspace Commands (from repo root)
 ```bash

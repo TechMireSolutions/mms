@@ -11,6 +11,7 @@ import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
 
 export function useContactConfigProviderValue({
   fieldConfig,
+  formTabsReady,
   prefs,
   updateConfig,
   updateConfigAsync,
@@ -46,6 +47,7 @@ export function useContactConfigProviderValue({
   systemSortOptions,
 }: {
   fieldConfig: FieldConfig;
+  formTabsReady: boolean;
   prefs: ContactPreferences;
   updateConfig: (nextConfig: FieldConfig) => void;
   updateConfigAsync: (nextConfig: FieldConfig) => Promise<void>;
@@ -91,6 +93,7 @@ export function useContactConfigProviderValue({
   return useMemo(
     () => ({
       fieldConfig,
+      formTabsReady,
       prefs,
       updateConfig,
       updateConfigAsync,
@@ -128,6 +131,7 @@ export function useContactConfigProviderValue({
     }),
     [
       fieldConfig,
+      formTabsReady,
       prefs,
       updateConfig,
       updateConfigAsync,

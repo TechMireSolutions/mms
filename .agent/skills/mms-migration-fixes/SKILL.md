@@ -53,9 +53,11 @@ When the user asks to fix migration debt, work from the open priorities here and
 | Google Contacts OAuth secrets table | `contact_google_sync_credentials` FORCE RLS; not `objects` |
 | Contacts saved reports → typed table | `saved_reports` category `contacts`; object key deprecated from ALLOWED_OBJECTS |
 | Audit trigger tenant + user GUCs | `log_row_change` fills `workspace_subdomain`; `app.current_user_id` SET LOCAL |
-| Contact write schema soft-delete strip | `contactWriteSchema` + `stripContactClientSoftDeleteFields` |
+| Contact write schema soft-delete strip + top-level strict | `contactWriteSchema` / `buildContactWriteSchema` + `stripContactClientSoftDeleteFields` (nested item `.passthrough()` remains open — P3b) |
 | Atomic contact merge | `POST /api/contacts/merge`; FE invalidates after Google sync (no dual upsert) |
 | Custom tabs typed + FORCE RLS | `custom_tabs` composite PK + FORCE RLS in `0000_init`; `/api/custom-tabs` CRUD; bulk PUT upsert-only |
+| Contacts Setup lookups typed | `contact_lookups` + `/api/contacts/lookups`; removed from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` |
+| Contacts Setup field-config / prefs / column prefs typed | `contact_field_configs`, `contact_module_preferences`, `contact_user_column_prefs` + REST; removed from `ALLOWED_OBJECTS` |
 | Query-first report widgets | `useWidgetCollections({ requiredCollections })` + `useReportCollectionRows`; REST toggles via `widgetRecordToggle` |
 
 ## Open priorities
@@ -74,11 +76,17 @@ When the user asks to fix migration debt, work from the open priorities here and
 
 **Fix:** Prefer `can()` / contract permissions when touching those UIs; do not add new tenant-module `role ===` write gates (`mms-auth-security.md`).
 
-### P3 — Remaining document-store debt (prefs / field config / lookups)
+### P3 — Remaining document-store debt (other modules’ prefs / field config)
 
-**Problem:** Prefs, field config, and lookup lists still live in `objects`. Custom **tabs** are already typed (`custom_tabs` + REST); Contacts Setup may still dual-write `formTabs` into `contact_field_config`.
+**Problem:** Other modules’ prefs, field config, and column prefs may still live in `objects`. Contacts Setup (tabs, lookups, field-config, preferences, column prefs) is typed REST.
 
-**Fix:** Prefer typed tables + FORCE RLS for new shareable/secret data; migrate Contacts Setup to `custom_tabs` REST SSOT (`mms-fields.md`). Do not reintroduce object-only custom-tab SSOT.
+**Fix:** Prefer typed tables + FORCE RLS when migrating shareable module config; do not reintroduce Contacts Setup keys into `ALLOWED_OBJECTS` / `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` (`mms-fields.md`, `mms-data-layer.md`).
+
+### P3b — Nested contact item Zod `.passthrough()`
+
+**Problem:** Top-level `contactWriteSchema` / `buildContactWriteSchema` is strict (closed). Nested phone/email/address item schemas in `contactNestedSchemas.ts` still `.passthrough()` for item flags.
+
+**Fix:** When touching those shapes, prefer `.strict()` / explicit allowlists — `mms-form-architecture.md`. Do not loosen top-level write Zod.
 
 ### P4 — Report drill-down & saved reports
 

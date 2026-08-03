@@ -42,7 +42,12 @@ export default async function backgroundJobRoutes(
       if (!artifact) {
         return sendNotFound(reply, 'Export file not found or expired');
       }
-      reply.header('Content-Type', 'text/csv; charset=utf-8');
+      reply.header(
+        'Content-Type',
+        artifact.filename.toLowerCase().endsWith('.vcf')
+          ? 'text/vcard; charset=utf-8'
+          : 'text/csv; charset=utf-8',
+      );
       reply.header('Content-Disposition', `attachment; filename="${artifact.filename.replace(/"/g, '')}"`);
       return reply.send(artifact.content);
     } catch {

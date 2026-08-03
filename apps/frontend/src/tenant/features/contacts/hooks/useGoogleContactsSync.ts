@@ -24,7 +24,7 @@ function mapGoogleSyncError(
 }
 
 export function useGoogleContactsSync({
-  canWrite = true,
+  canWrite = false,
 }: {
   canWrite?: boolean;
 }) {

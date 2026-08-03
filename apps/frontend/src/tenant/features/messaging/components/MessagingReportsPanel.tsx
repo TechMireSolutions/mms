@@ -1,16 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Trash2 } from 'lucide-react';
 import {
-  getDisplayName,
-  getPrimaryEmail,
-  getPrimaryPhone,
   MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
-  toMessagingRecipient,
   type Message,
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -19,12 +16,18 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { useMessageLogs, useMessagingMetrics } from '@/hooks/useMessaging';
-import { useMessagingContactsByIds } from '../hooks/useMessagingContactsByIds';
+import { useMessagingRecipientsByIds } from '../hooks/useMessagingContactsByIds';
 import { useMessagingHistoryColumnLayout } from '../hooks/useMessagingColumnLayouts';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
 import { MessagingReportsLogTable } from './MessagingReportsLogTable';
-import { MessagingReportsVolumeChart } from './MessagingReportsVolumeChart';
-import { exportMessagingLogsFiltered } from './messagingReportsExport';
+import {
+  exportMessagingLogsFiltered,
+  messagingExportEndDateBound,
+} from './messagingReportsExport';
+
+const MessagingReportsVolumeChart = lazy(() =>
+  import('./MessagingReportsVolumeChart').then((mod) => ({ default: mod.MessagingReportsVolumeChart })),
+);
 
 interface MessagingReportsPanelProps {
   canWrite: boolean;
@@ -46,10 +49,15 @@ export function MessagingReportsPanel({
   const [channel, setChannel] = useState<'all' | 'sms' | 'whatsapp' | 'email'>('all');
   const [category, setCategory] = useState('all');
   const [status, setStatus] = useState<'all' | 'sent' | 'delivered' | 'failed' | 'skipped'>('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [exporting, setExporting] = useState(false);
   const debouncedSearch = useDebounce(search, 250);
 
-  const filterKey = `${debouncedSearch}|${channel}|${category}|${status}`;
+  const queryStartDate = startDate.trim() || undefined;
+  const queryEndDate = endDate.trim() ? messagingExportEndDateBound(endDate) : undefined;
+
+  const filterKey = `${debouncedSearch}|${channel}|${category}|${status}|${startDate}|${endDate}`;
   const [activeFilterKey, setActiveFilterKey] = useState(filterKey);
   if (filterKey !== activeFilterKey) {
     setActiveFilterKey(filterKey);
@@ -62,29 +70,37 @@ export function MessagingReportsPanel({
     category,
     search: debouncedSearch,
     status,
+    startDate: queryStartDate,
+    endDate: queryEndDate,
     page: pageForQuery,
     pageSize: MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   });
-  const metricsQuery = useMessagingMetrics();
+  const metricsQuery = useMessagingMetrics({
+    startDate: queryStartDate,
+    endDate: queryEndDate,
+  });
   const contactIds = useMemo(() => logsQuery.logs.map((log) => log.contactId), [logsQuery.logs]);
-  const { data: contacts = [] } = useMessagingContactsByIds(contactIds);
-  const contactMap = useMemo(
-    () => new Map(contacts.flatMap((contact) => [[contact.id, contact], [String(contact.id), contact]])),
-    [contacts],
+  const { data: recipients = [] } = useMessagingRecipientsByIds(contactIds);
+  const recipientMap = useMemo(
+    () => new Map(recipients.flatMap((recipient) => [[recipient.id, recipient], [String(recipient.id), recipient]])),
+    [recipients],
   );
   const { getColumnWidth, setColumnWidth } = useMessagingHistoryColumnLayout();
 
   const getRecipientName = useCallback((contactId: string | number): string => {
-    const contact = contactMap.get(contactId) ?? contactMap.get(String(contactId));
-    return contact ? getDisplayName(contact) : t('messaging.contactFallback', { id: contactId });
-  }, [contactMap, t]);
+    const recipient = recipientMap.get(contactId) ?? recipientMap.get(String(contactId));
+    return recipient?.name || t('messaging.contactFallback', { id: contactId });
+  }, [recipientMap, t]);
 
   const handleResendLog = useCallback((log: Message): void => {
-    const contact = contactMap.get(log.contactId) ?? contactMap.get(String(log.contactId));
-    onResend(log, contact
-      ? toMessagingRecipient(contact, { getDisplayName, getPrimaryPhone, getPrimaryEmail })
-      : { id: log.contactId, name: getRecipientName(log.contactId), phone: '', email: '' });
-  }, [contactMap, getRecipientName, onResend]);
+    const recipient = recipientMap.get(log.contactId) ?? recipientMap.get(String(log.contactId));
+    onResend(log, recipient ?? {
+      id: log.contactId,
+      name: getRecipientName(log.contactId),
+      phone: '',
+      email: '',
+    });
+  }, [recipientMap, getRecipientName, onResend]);
 
   const stats = metricsQuery.data ?? {
     total: logsQuery.total,
@@ -99,12 +115,20 @@ export function MessagingReportsPanel({
   ].filter((item) => item.value > 0);
 
   const exportAllFilteredLogs = async (): Promise<void> => {
-    if (exporting) return;
+    if (!canWrite || exporting) return;
     setExporting(true);
     try {
-      await exportMessagingLogsFiltered({ channel, category, debouncedSearch, status, t });
+      await exportMessagingLogsFiltered({
+        channel,
+        category,
+        debouncedSearch,
+        status,
+        startDate: queryStartDate,
+        endDate,
+        t,
+      });
     } catch {
-      notify.error(t('settings.serverSaveFailed'));
+      notify.error(t('messaging.exportFailed'), { description: t('messaging.loadFailedHint') });
     } finally {
       setExporting(false);
     }
@@ -114,6 +138,7 @@ export function MessagingReportsPanel({
     return (
       <ErrorState
         title={t('messaging.loadFailed')}
+        description={t('messaging.loadFailedHint')}
         onRetry={() => void Promise.all([logsQuery.refetch(), metricsQuery.refetch()])}
       />
     );
@@ -128,9 +153,21 @@ export function MessagingReportsPanel({
             <SegmentedPillFilter options={channelSelectOptions} value={channel} onChange={(value) => setChannel(value as typeof channel)} size="sm" />
             <SegmentedPillFilter options={statusOptions} value={status} onChange={(value) => setStatus(value as typeof status)} size="sm" />
             <FormSelect id="logCategory" value={category} onChange={setCategory} options={categorySelectOptions} />
+            <DatePicker
+              value={startDate}
+              onChange={setStartDate}
+              className="text-sm"
+              placeholder={t('messaging.dateFrom')}
+            />
+            <DatePicker
+              value={endDate}
+              onChange={setEndDate}
+              className="text-sm"
+              placeholder={t('messaging.dateTo')}
+            />
           </div>
           <div className="flex items-center gap-2">
-            {logsQuery.total > 0 && (
+            {canWrite && logsQuery.total > 0 && (
               <Button variant="outline" size="sm" disabled={exporting} onClick={() => void exportAllFilteredLogs()} className="font-semibold">
                 <Download className="me-1.5 h-4 w-4" />
                 {exporting ? t('common.loading') : t('messaging.exportLogs')}
@@ -160,7 +197,9 @@ export function MessagingReportsPanel({
         />
       </div>
 
-      <MessagingReportsVolumeChart chartData={chartData} />
+      <Suspense fallback={<div className="h-[15rem] animate-pulse rounded-xl border border-border bg-muted/20" aria-hidden />}>
+        <MessagingReportsVolumeChart chartData={chartData} />
+      </Suspense>
     </motion.div>
   );
 }

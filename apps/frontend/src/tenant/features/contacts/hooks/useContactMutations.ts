@@ -9,7 +9,10 @@ import {
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
   contactsListQueryKey,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
-import { MESSAGING_CONTACTS_RESOLVE_QUERY_KEY } from '@/tenant/features/messaging/hooks/useMessagingContactsByIds';
+import {
+  MESSAGING_CONTACTS_RESOLVE_QUERY_KEY,
+  MESSAGING_RECIPIENTS_QUERY_KEY,
+} from '@/tenant/hooks/collections/messaging';
 
 const CONTACTS_API = CONTACTS_MODULE_MANIFEST.restBasePath;
 
@@ -23,6 +26,7 @@ export function useInvalidateContactsQueries() {
     void queryClient.invalidateQueries({ queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: MESSAGING_CONTACTS_RESOLVE_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: MESSAGING_RECIPIENTS_QUERY_KEY });
   };
 }
 

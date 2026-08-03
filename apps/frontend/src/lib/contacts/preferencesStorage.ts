@@ -1,11 +1,11 @@
 import {
-  CONTACTS_MODULE_MANIFEST,
   DEFAULT_CONTACT_PREFERENCES,
   normalizeContactPreferences,
   type ContactPreferences,
   type FieldConfig,
 } from "@mms/shared";
-import { readObjectLocal, saveObject, saveObjectAsync } from "@/lib/db";
+import { apiJson } from "@/lib/apiClient";
+import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 
 function syncOptionsInConfig(config: FieldConfig, tabId: string, fieldKey: string, options: string[]): FieldConfig {
   const nextConfig = { ...config };
@@ -20,9 +20,10 @@ function syncOptionsInConfig(config: FieldConfig, tabId: string, fieldKey: strin
   return nextConfig;
 }
 
-const PREFERENCES_OBJECT_KEY = CONTACTS_MODULE_MANIFEST.preferencesObjectKey;
+const PREFERENCES_API = `${CONTACTS_API}/preferences`;
 const LEGACY_LOCAL_PREFERENCES_KEY = "mms_contact_preferences";
-const LEGACY_PREFERENCES_OBJECT_KEY = "contact_prefs";
+
+let memoryPreferences: ContactPreferences | null = null;
 
 function parseLegacyLocalPreferences(): Partial<ContactPreferences> {
   try {
@@ -33,28 +34,43 @@ function parseLegacyLocalPreferences(): Partial<ContactPreferences> {
   }
 }
 
-/** Loads contact preferences — manifest object key authoritative; legacy keys one-shot merge. */
+/** Sync read — last hydrated server prefs or defaults (+ one-shot legacy local merge). */
 function loadPreferences(): ContactPreferences {
-  const fromObject = readObjectLocal<Partial<ContactPreferences>>(PREFERENCES_OBJECT_KEY)
-    ?? readObjectLocal<Partial<ContactPreferences>>(LEGACY_PREFERENCES_OBJECT_KEY);
+  if (memoryPreferences) return memoryPreferences;
   const fromLocal = parseLegacyLocalPreferences();
-  return normalizeContactPreferences({
-    ...fromLocal,
-    ...(fromObject && typeof fromObject === "object" ? fromObject : {}),
-  });
+  return normalizeContactPreferences(fromLocal);
 }
 
-/** Persists contact preferences to the manifest object key only. */
+function setPreferencesMemory(preferences: ContactPreferences): void {
+  memoryPreferences = preferences;
+  localStorage.removeItem(LEGACY_LOCAL_PREFERENCES_KEY);
+}
+
+async function fetchPreferences(signal?: AbortSignal): Promise<ContactPreferences> {
+  const response = await apiJson<{ preferences: ContactPreferences }>(PREFERENCES_API, { signal });
+  const normalized = normalizeContactPreferences(response.preferences ?? null);
+  setPreferencesMemory(normalized);
+  return normalized;
+}
+
+/** Optimistic local write — prefer savePreferencesAsync for server persistence. */
 function savePreferences(preferences: ContactPreferences): void {
-  localStorage.removeItem(LEGACY_LOCAL_PREFERENCES_KEY);
-  saveObject(PREFERENCES_OBJECT_KEY, preferences);
+  setPreferencesMemory(preferences);
 }
 
-/** Persists contact preferences and waits for server synchronization. */
-async function savePreferencesAsync(preferences: ContactPreferences): Promise<void> {
-  localStorage.removeItem(LEGACY_LOCAL_PREFERENCES_KEY);
-  const result = await saveObjectAsync(PREFERENCES_OBJECT_KEY, preferences);
-  if (!result.ok) throw new Error("Failed to sync contact preferences");
+async function savePreferencesAsync(preferences: ContactPreferences): Promise<ContactPreferences> {
+  const normalized = normalizeContactPreferences(preferences);
+  const response = await apiJson<{ success: boolean; preferences: ContactPreferences }>(
+    PREFERENCES_API,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(normalized),
+    },
+  );
+  const saved = normalizeContactPreferences(response.preferences ?? normalized);
+  setPreferencesMemory(saved);
+  return saved;
 }
 
 export {
@@ -62,5 +78,7 @@ export {
   loadPreferences,
   savePreferences,
   savePreferencesAsync,
+  fetchPreferences,
+  setPreferencesMemory,
   DEFAULT_CONTACT_PREFERENCES as DEFAULT_PREFERENCES,
 };

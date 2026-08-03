@@ -50,8 +50,6 @@ export function useContactsDirectory({
   const shownCount = workPageData?.total ?? 0;
 
   const allContactsForLinks = useContactsDirectoryLinks({
-    needsFullContactsList: false,
-    contacts: [],
     workContacts,
     editContact,
     viewContact,

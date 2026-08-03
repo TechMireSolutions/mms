@@ -16,15 +16,17 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 | Hooks | `useMessageTemplates`, `useMessageLogs`, `useMessagingMetrics`, `useMessagingMutations` |
 | Shared | `MESSAGING_MODULE_MANIFEST`, `messagingSchemas`, `MessagingRecipient` |
 | Backend | `routes/tenant/messaging.ts` (+ `messaging/**`), `messagingRepository.ts`, `services/messaging*.ts` |
+| CSV job | `startServerMessagingCsvExport.ts` → `POST /api/messaging/export/csv` |
 
 ## Workflow
 
 1. Recipients via `MessagingRecipient` / `toMessagingRecipient` — never contacts schemas in composer.
-2. Query + `/api/messaging` only.
+2. Query + `/api/messaging` only (`/recipients`, `/recipients/match`, `/contacts/resolve`, logs, metrics, templates, `/export/csv`).
 3. Bulk template/log writes upsert; clear-logs soft-archive (intentional §7 variant).
 4. Allowlisted tokens; plain text; BE forces session `userId`, strips client `deletedAt`.
 5. §7 UX: permissions, `ErrorState`, Cmd/Ctrl+N, `mutateAsync`, `t()`.
 6. Campaign/send POSTs: idempotency key when the client may retry; surface `429` / `Retry-After` via `notify` — `mms-api-interface.md` / `mms-auth-security.md`.
+7. Select-all via `/recipients/match`; CSV via background `messaging:export` — no FE page-walk. Never re-allowlist `messages_u:`.
 
 ## Checklist
 
@@ -32,6 +34,8 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 - [ ] useModulePermissions(MESSAGING_MODULE_MANIFEST)
 - [ ] No raw fetch('/api/...')
 - [ ] Upsert saves; clear-logs soft-archive preserved
+- [ ] Select-all uses /recipients/match (lean); CSV uses /export/csv job
+- [ ] No messages_u: / message_* in ALLOWED_COLLECTIONS dual-write
 - [ ] Send path idempotency + 429 backoff
 - [ ] Token allowlist; no HTML injection
 - [ ] ErrorState + Cmd/Ctrl+N when canWrite

@@ -170,7 +170,7 @@ export function MessagingReportsLogTable({
         limit={pageSize}
         hasMore={hasMore}
         onPageChange={onPageChange}
-        i18nNamespace="contacts"
+        i18nNamespace="messaging"
         variant="range"
       />
     </>

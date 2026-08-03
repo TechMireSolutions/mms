@@ -1,5 +1,4 @@
 import {
-  CONTACTS_MODULE_MANIFEST,
   CONTACTS_SAVED_REPORT_CATEGORY,
   canDeleteContactsSavedReport,
   canViewContactsSavedReport,
@@ -10,13 +9,17 @@ import {
   type ContactsSavedReportViewer,
   type ContactsWorkDrillDown,
   type GenericSavedReport,
+  type ModuleColumnPreference,
 } from '@mms/shared';
-import { fetchObject, persistObject } from './dbSyncService.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from './userColumnPreferencesService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  getContactModulePreferencesByWorkspace,
+  upsertContactModulePreferences,
+} from '../db/repositories/contactModulePreferencesRepository.js';
+import {
+  getContactUserColumnPrefs,
+  setContactUserColumnPrefs,
+} from '../db/repositories/contactUserColumnPrefsRepository.js';
 import {
   createPersistedSavedReport,
   deleteSavedReportById,
@@ -25,42 +28,47 @@ import {
   touchSavedReportRunById,
 } from '../db/repositories/savedReportsRepository.js';
 
-const COLUMN_PREFERENCES_KEY = CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey;
-const LEGACY_COLUMN_PREFERENCES_KEY = 'contact_user_column_prefs';
-
-export async function getUserColumnPreferences(userId: string): Promise<ContactColumnPreference[]> {
-  await fetchMigratedObject(COLUMN_PREFERENCES_KEY, LEGACY_COLUMN_PREFERENCES_KEY);
-  return getUserColumnPreferencesForModule(COLUMN_PREFERENCES_KEY, userId) as Promise<ContactColumnPreference[]>;
+function requireTenant(): string {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  return tenant.trim().toLowerCase();
 }
 
-const PREFERENCES_KEY = CONTACTS_MODULE_MANIFEST.preferencesObjectKey;
-const LEGACY_PREFERENCES_KEY = 'contact_prefs';
+function filterColumnPreferences(preferences: unknown[]): ModuleColumnPreference[] {
+  return preferences.filter(
+    (preference): preference is ModuleColumnPreference =>
+      preference != null &&
+      typeof preference === 'object' &&
+      typeof (preference as ModuleColumnPreference).key === 'string' &&
+      typeof (preference as ModuleColumnPreference).enabled === 'boolean' &&
+      typeof (preference as ModuleColumnPreference).order === 'number',
+  );
+}
+
+export async function getUserColumnPreferences(userId: string): Promise<ContactColumnPreference[]> {
+  const prefs = await getContactUserColumnPrefs(requireTenant(), userId);
+  return filterColumnPreferences(prefs) as ContactColumnPreference[];
+}
 
 export async function loadContactPreferences(): Promise<ContactPreferences | null> {
-  const raw = await fetchMigratedObject(PREFERENCES_KEY, LEGACY_PREFERENCES_KEY);
+  const raw = await getContactModulePreferencesByWorkspace(requireTenant());
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   return normalizeContactPreferences(raw as Partial<ContactPreferences>);
 }
 
-export async function setUserColumnPreferences(userId: string, preferences: ContactColumnPreference[]): Promise<void> {
-  await fetchMigratedObject(COLUMN_PREFERENCES_KEY, LEGACY_COLUMN_PREFERENCES_KEY);
-  await setUserColumnPreferencesForModule(COLUMN_PREFERENCES_KEY, userId, preferences);
+export async function saveContactPreferences(
+  preferences: ContactPreferences,
+): Promise<ContactPreferences> {
+  const normalized = normalizeContactPreferences(preferences);
+  await upsertContactModulePreferences(requireTenant(), normalized as unknown as Record<string, unknown>);
+  return normalized;
 }
 
-async function fetchMigratedObject(key: string, legacyKey: string): Promise<unknown | null> {
-  const current = await fetchObject(key);
-  if (current != null) return current;
-  const legacy = await fetchObject(legacyKey);
-  if (legacy != null) {
-    await persistObject(key, legacy);
-  }
-  return legacy;
-}
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant;
+export async function setUserColumnPreferences(
+  userId: string,
+  preferences: ContactColumnPreference[],
+): Promise<void> {
+  await setContactUserColumnPrefs(requireTenant(), userId, preferences);
 }
 
 function asStringArray(value: unknown): string[] | undefined {

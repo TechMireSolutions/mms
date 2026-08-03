@@ -48,7 +48,7 @@ export function GoogleContactsSetupForm({
           id="clientId"
           value={clientId}
           onChange={(event) => onClientIdChange(event.target.value)}
-          placeholder="xxxx.apps.googleusercontent.com"
+          placeholder={t("contacts.sync.clientIdPlaceholder")}
         />
       </div>
       <div>
@@ -60,7 +60,7 @@ export function GoogleContactsSetupForm({
           type="password"
           value={clientSecret}
           onChange={(event) => onClientSecretChange(event.target.value)}
-          placeholder="GOCSPX-..."
+          placeholder={t("contacts.sync.clientSecretPlaceholder")}
         />
       </div>
       {error && (

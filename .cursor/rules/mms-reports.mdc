@@ -15,7 +15,7 @@ alwaysApply: false
 - Prefer TanStack Query / server aggregates / module `/metrics` for REST-migrated modules.
 - `getCollection` / `useLiveCollection` only for legacy non-migrated report sources — never as the primary path for REST entities.
 - Dashboard widgets / builders / drilldown: `useWidgetCollections({ requiredCollections })` from `@/lib/reports/useReportCollections` — fetch only collections the pinned set needs.
-- Chart visualizer: `useReportCollectionRows(collectionKey)` — do not call `getCollection(activeMeta.dbKey)` for REST report collections.
+- Chart visualizer: `useReportCollectionRows(collectionKey)` — do not call `getCollection(activeMeta.dbKey)` for REST report collections. **Contacts** visualizer uses SQL `GROUP BY` via `POST /api/contacts/widget-aggregates` (no capped page dump).
 - Widget field toggles / Hasanat drilldown deletes: REST via `persistWidgetRecordToggle` / `persistWidgetHasanatDistributionDelete` — ban `saveCollection` for REST-authoritative keys.
 - Sync helper `getWidgetCollections()` is Query-cache read-only (no localStorage invent) — prefer the hooks in React trees.
 - No stale snapshot caches unless the user explicitly exports.
@@ -52,7 +52,7 @@ Recharts + semantic colours (`StatusBadge` / design tokens). Export/print labels
 |---------|-------------|
 | Home seeded KPI cards + report standard KPIs | Category-gated `use*Metrics` / widget-aggregates — not full collection dumps |
 | Pinned widgets / builder / drilldown | `useWidgetCollections({ requiredCollections })` — Query facades only |
-| Dynamic chart visualizer | `useReportCollectionRows` (active key + denoms when Hasanat) |
+| Dynamic chart visualizer | `useReportCollectionRows` (active key + denoms when Hasanat); Contacts → `/widget-aggregates` SQL series |
 | Niche charts + date-scoped financial statements | Prefer `/metrics` / server aggregates; row-level Query reduce OK when aggregates unavailable — never localStorage-primary for REST entities |
 
 Ban fake faculty workload hours (`hours += 2`); use real class counts.

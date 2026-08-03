@@ -19,7 +19,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-background-jobs](mms-background-jobs/SKILL.md) | Queued exports/imports, progress, artifacts |
 | [mms-form-architecture](mms-form-architecture/SKILL.md) | Static FormModal, shared Zod, uploads |
 | [mms-fields-registry](mms-fields-registry/SKILL.md) | Custom fields, tabs, column registry |
-| [mms-data-sync](mms-data-sync/SKILL.md) | db.ts, sync API, REST vs collections |
+| [mms-data-sync](mms-data-sync/SKILL.md) | Legacy `/api/db` + db.ts (non-migrated keys only) |
 | [mms-backup-restore](mms-backup-restore/SKILL.md) | Encrypted backup / wipe-restore validate-before-wipe |
 | [mms-schema-migrate](mms-schema-migrate/SKILL.md) | Forward-only Drizzle DDL, FORCE RLS, ban db push |
 | [mms-shared-package](mms-shared-package/SKILL.md) | `@mms/shared` types and utils |

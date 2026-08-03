@@ -11,6 +11,8 @@ import {
   attachmentSchema,
   contactRecordSchema,
   contactWriteSchema,
+  buildContactWriteSchema,
+  collectContactWriteExtraFieldKeys,
   contactListSchema,
   contactsListQuerySchema,
   contactFieldUsageParamsSchema,
@@ -28,6 +30,8 @@ export {
   attachmentSchema,
   contactRecordSchema,
   contactWriteSchema,
+  buildContactWriteSchema,
+  collectContactWriteExtraFieldKeys,
   contactListSchema,
   contactsListQuerySchema,
   contactFieldUsageParamsSchema,
@@ -44,11 +48,16 @@ export const contactExportAuditSchema = z.object({
   scope: z.enum(['all', 'filtered', 'selection']).optional(),
 });
 
-export const contactMergeBodySchema = z.object({
-  keepId: z.union([z.string(), z.number()]),
-  deleteId: z.union([z.string(), z.number()]),
-  merged: contactWriteSchema.optional(),
-});
+export function buildContactMergeBodySchema(extraFieldKeys: string[] = []) {
+  return z.object({
+    keepId: z.union([z.string(), z.number()]),
+    deleteId: z.union([z.string(), z.number()]),
+    merged: buildContactWriteSchema(extraFieldKeys).optional(),
+  });
+}
+
+/** System-keys-only merge body — prefer `buildContactMergeBodySchema` on tenant writes. */
+export const contactMergeBodySchema = buildContactMergeBodySchema();
 
 export const contactsWorkDrillDownSchema = z.object({
   gender: z.string().optional(),
@@ -98,10 +107,23 @@ const exportColumnSchema = z.object({
 
 export const contactsCsvExportBodySchema = z.object({
   query: contactsListQuerySchema.optional(),
+  /** Explicit id selection — prefer over page-local FE filtering. */
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500).optional(),
   columns: z.array(exportColumnSchema).max(50).optional(),
   filename: z.string().min(1).max(200).optional(),
   label: z.string().min(1).max(500).optional(),
   /** Client retry key — reused as the background job id when provided. */
+  idempotencyKey: z
+    .string()
+    .min(8)
+    .max(128)
+    .regex(/^[a-zA-Z0-9_-]+$/)
+    .optional(),
+});
+
+export const contactsVcfExportBodySchema = z.object({
+  filename: z.string().min(1).max(200).optional(),
+  label: z.string().min(1).max(500).optional(),
   idempotencyKey: z
     .string()
     .min(8)
@@ -135,6 +157,10 @@ export const contactsReportAnalyticsQuerySchema = z.object({
   lang: z.string().max(16).optional(),
 });
 
-export const contactDuplicateCheckBodySchema = z.object({
-  contact: contactWriteSchema,
-});
+export function buildContactDuplicateCheckBodySchema(extraFieldKeys: string[] = []) {
+  return z.object({
+    contact: buildContactWriteSchema(extraFieldKeys),
+  });
+}
+
+export const contactDuplicateCheckBodySchema = buildContactDuplicateCheckBodySchema();

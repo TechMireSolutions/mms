@@ -15,10 +15,12 @@ import {
 } from '../../../services/contactService.js';
 import { canReadContacts, canWriteContacts } from '../../../services/rbacService.js';
 import {
-  contactDuplicateCheckBodySchema,
+  buildContactDuplicateCheckBodySchema,
   contactsDuplicatesQuerySchema,
   contactsDuplicateScanBodySchema,
 } from '../../../validation/contactSchemas.js';
+import { loadContactFieldConfig } from '../../../services/contactConfigService.js';
+import { collectContactWriteExtraFieldKeys } from '@mms/shared';
 import { sanitizeForUser } from './contactRouteHelpers.js';
 
 /** Contact duplicate check, pairs list, and background scan routes. */
@@ -26,7 +28,11 @@ export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/duplicate-check', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteContacts(user)) return sendForbidden(reply);
-    const parsed = parseRequest(contactDuplicateCheckBodySchema, request.body);
+    const fieldConfig = await loadContactFieldConfig();
+    const checkSchema = buildContactDuplicateCheckBodySchema(
+      collectContactWriteExtraFieldKeys(fieldConfig),
+    );
+    const parsed = parseRequest(checkSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const prepared = await prepareContactRecord(parsed.data.contact as Contact);

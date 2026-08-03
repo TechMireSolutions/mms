@@ -8,16 +8,6 @@ import {
   COUNTRY_CODES,
 } from "@mms/shared";
 
-export const CONTACT_CONFIG_COLLECTION_KEYS = {
-  genders: "genders",
-  socialPlatforms: "socialPlatforms",
-  relationships: "relationships",
-  phoneLabels: "phoneLabels",
-  emailLabels: "emailLabels",
-  addressLabels: "addressLabels",
-  countryCodes: "countryCodes",
-} as const;
-
 /** Legacy messaging template collection key (cleaned on logout; Messaging owns templates now). */
 export function contactWhatsappTemplatesKey(userId?: string | number | null): string {
   return userId ? `whatsappTemplates_u:${userId}` : "whatsappTemplates";

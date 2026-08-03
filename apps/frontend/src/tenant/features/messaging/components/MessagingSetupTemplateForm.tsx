@@ -1,12 +1,11 @@
 import type React from 'react';
-import { Check, Edit3, Plus, Sparkles } from 'lucide-react';
+import { Check, Edit3, Plus } from 'lucide-react';
 import type { MessageCategory } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
-import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
-import { Textarea } from '@/components/ui/textarea';
+import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingSetupTemplateFormProps {
@@ -25,7 +24,6 @@ interface MessagingSetupTemplateFormProps {
   onBodyChange: (value: string) => void;
   onCategoryChange: (value: MessageCategory) => void;
   onChannelChange: (value: 'all' | 'sms' | 'whatsapp' | 'email') => void;
-  onAppendToken: (token: string) => void;
 }
 
 export function MessagingSetupTemplateForm({
@@ -44,7 +42,6 @@ export function MessagingSetupTemplateForm({
   onBodyChange,
   onCategoryChange,
   onChannelChange,
-  onAppendToken,
 }: MessagingSetupTemplateFormProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -63,18 +60,48 @@ export function MessagingSetupTemplateForm({
             {editingId && <Button variant="ghost" size="sm" onClick={onReset} className="shrink-0 self-start text-xs">{t('common.cancel')}</Button>}
           </div>
           <form onSubmit={onSave} className="space-y-3">
-            <div><label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label><Input id="tplLabel" value={label} onChange={(event) => onLabelChange(event.target.value)} placeholder={t('messaging.templateLabelPlaceholder')} required /></div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <div><label className={FORM_LABEL} htmlFor="tplCategory">{t('messaging.category')}</label><FormSelect id="tplCategory" value={category} onChange={(value) => onCategoryChange(value as MessageCategory)} options={templateCategorySelectOptions} /></div>
-              <div><label className={FORM_LABEL} htmlFor="tplChannel">{t('messaging.targetChannel')}</label><FormSelect id="tplChannel" value={channel} onChange={(value) => onChannelChange(value as typeof channel)} options={channelSelectOptions} /></div>
-            </div>
             <div>
-              <label className={FORM_LABEL} htmlFor="tplBody">{t('messaging.messageBody')}</label>
-              <MessagingVariableTokensBar onSelectToken={onAppendToken} className="mb-2" />
-              <Textarea id="tplBody" value={body} onChange={(event) => onBodyChange(event.target.value)} placeholder={t('messaging.templateBodyPlaceholder')} rows={4} required />
-              <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground/80"><Sparkles className="h-3 w-3 flex-shrink-0 text-primary/70" />{t('messaging.fallbackHint')}</p>
+              <label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label>
+              <Input
+                id="tplLabel"
+                name="tplLabel"
+                value={label}
+                onChange={(event) => onLabelChange(event.target.value)}
+                placeholder={t('messaging.templateLabelPlaceholder')}
+                required
+              />
             </div>
-            <Button type="submit" className="w-full font-bold"><Check className="me-1.5 h-4 w-4" />{editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}</Button>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div>
+                <label className={FORM_LABEL} htmlFor="tplCategory">{t('messaging.category')}</label>
+                <FormSelect
+                  id="tplCategory"
+                  value={category}
+                  onChange={(value) => onCategoryChange(value as MessageCategory)}
+                  options={templateCategorySelectOptions}
+                />
+              </div>
+              <div>
+                <label className={FORM_LABEL} htmlFor="tplChannel">{t('messaging.targetChannel')}</label>
+                <FormSelect
+                  id="tplChannel"
+                  value={channel}
+                  onChange={(value) => onChannelChange(value as typeof channel)}
+                  options={channelSelectOptions}
+                />
+              </div>
+            </div>
+            <MessagingMessageBodyField
+              id="tplBody"
+              value={body}
+              onChange={onBodyChange}
+              placeholder={t('messaging.templateBodyPlaceholder')}
+              required
+            />
+            <Button type="submit" className="w-full font-bold">
+              <Check className="me-1.5 h-4 w-4" />
+              {editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
+            </Button>
           </form>
         </>
       ) : (

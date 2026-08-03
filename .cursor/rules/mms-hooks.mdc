@@ -12,12 +12,11 @@ Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), o
 
 ## Server state (TanStack Query)
 
-**Policy owner:** `mms-data-layer.mdc` §3. This section is recipes only.
+**Policy owner:** `mms-data-layer.mdc` §3 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
 
-- Follow data-layer: `enabled: isAuthenticated`, tuple keys, `signal` → `apiJson`, narrow invalidation, await `mutateAsync`, no `saveCollection` dual-write, optimistic-update bans.
-- Colocate TanStack Query v5 `queryOptions` / `mutationOptions` factories with tuple keys; hooks wrap factories — avoid ad-hoc inline key objects in every call site.
-- Toast success/error at the call site with `notify.*` + `t()` after `mutateAsync` — do not add a global `MutationCache` toast bus.
+- Wrap colocated `queryOptions` / `mutationOptions`; toast via `notify.*` + `t()` at call site after `mutateAsync` — no global `MutationCache` toast bus.
 - Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`.
+- Form close after success → **`mms-module-architecture.mdc` §7**.
 
 ### Cross-module collection facades
 
@@ -29,7 +28,7 @@ Same-feature files may keep direct feature-hook imports. Shared person UI: `Cont
 
 ## `useLiveCollection(key, seed?)`
 
-Legacy localStorage reactive reads only. **Hard ban** on new use for REST-migrated entities. Contacts entity rows are REST-only (not in FE `BUSINESS_COLLECTIONS`).
+Legacy localStorage reactive reads only. **Hard ban** on new use for REST-migrated entities. Contacts entity rows are REST-only (not in FE `BUSINESS_COLLECTIONS`). Contacts Setup config (field-config, preferences, lookups) uses Query via `@/tenant/hooks/collections/contacts` (`useContactFieldConfigQuery`, `useContactPreferencesQuery`, `useContactLookupsQuery`) — **never** `getObject` / `getCollection` for those keys.
 
 ```ts
 // ✅ Legacy keys not yet on Query as primary

@@ -39,7 +39,7 @@ export type UseContactsPageTabPanelPropsInput = {
   canExport: boolean;
   handleWhatsApp: (targets: Contact[]) => void;
   handleSms: (targets: Contact[]) => void;
-  handleBulkExport: () => void;
+  handleBulkExport: () => void | Promise<void>;
   requestBulkDelete: () => void;
   requestBulkRestore: () => void;
   isWorkError: boolean;

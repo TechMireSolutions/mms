@@ -13,9 +13,9 @@ import {
   type ContactsWidgetQuery,
   type FieldConfig,
 } from '@mms/shared';
-import { fetchCollection } from './dbSyncService.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 import { loadContactPreferences } from './contactPreferencesService.js';
+import { loadContactLookupKind } from './contactLookupsService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listContactsByWorkspace,
@@ -31,11 +31,6 @@ import {
   aggregateContactsReportAnalytics,
   aggregateContactsWidgetQueries,
 } from '../db/repositories/contactRepositoryAggregates.js';
-import {
-  listActiveStudentContactIds,
-  listActiveTeacherContactIds,
-} from '../db/repositories/moduleLinkedContactIds.js';
-
 export interface ContactRuntimeDefaults {
   defaultPhoneCountryCode: string;
   phoneLabel: string;
@@ -63,18 +58,8 @@ export async function loadContactsPage(query: ContactsListQuery): Promise<Contac
     return { contacts: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 50, hasMore: false };
   }
 
-  const excludeIds = [...(query.excludeIds ?? [])];
-  if (query.excludeLinkedModules?.includes('students')) {
-    excludeIds.push(...(await listActiveStudentContactIds(tenant)));
-  }
-  if (query.excludeLinkedModules?.includes('teachers')) {
-    excludeIds.push(...(await listActiveTeacherContactIds(tenant)));
-  }
-  const { excludeLinkedModules: _excludeLinkedModules, ...pageQuery } = query;
-  return listContactsPage(tenant, {
-    ...pageQuery,
-    excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
-  });
+  // excludeLinkedModules is applied as SQL NOT EXISTS inside listContactsPage.
+  return listContactsPage(tenant, query);
 }
 
 function metricsFieldConfig(fieldConfig: FieldConfig | null): FieldConfig {
@@ -143,19 +128,19 @@ function resolveDefaultPhoneCountryCode(
 
 export async function loadContactRuntimeDefaults(): Promise<ContactRuntimeDefaults> {
   const [countryCodes, phoneLabels, emailLabels, preferences] = await Promise.all([
-    fetchCollection('countryCodes'),
-    fetchCollection('phoneLabels'),
-    fetchCollection('emailLabels'),
+    loadContactLookupKind('countryCodes'),
+    loadContactLookupKind('phoneLabels'),
+    loadContactLookupKind('emailLabels'),
     loadContactPreferences(),
   ]);
 
   return {
     defaultPhoneCountryCode: resolveDefaultPhoneCountryCode(
-      countryCodes,
+      countryCodes as unknown[],
       preferences?.defaultCountry?.trim() ?? '',
     ),
-    phoneLabel: firstCollectionString(phoneLabels),
-    emailLabel: firstCollectionString(emailLabels),
+    phoneLabel: firstCollectionString(phoneLabels as unknown[]),
+    emailLabel: firstCollectionString(emailLabels as unknown[]),
   };
 }
 

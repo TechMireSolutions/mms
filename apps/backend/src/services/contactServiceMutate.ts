@@ -1,15 +1,8 @@
 import {
-  applyTitleCaseToContact,
   mergeContacts as mergeContactRecords,
-  normalizeToE164,
-  parsePhoneNumber,
-  stripContactClientSoftDeleteFields,
-  stripContactRetiredClassificationFields,
-  syncContactScalarFields,
   type Contact,
   type User,
 } from '@mms/shared';
-import { fetchCollection } from './dbSyncService.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { applyContactRelationshipInference } from './contactRelationshipInferenceService.js';
@@ -18,94 +11,32 @@ import { canDeleteContacts } from './rbacService.js';
 import {
   findContactById,
   saveContact,
-  findContactsByIds,
-  bulkSaveContacts,
 } from '../db/repositories/contactRepository.js';
 import {
-  loadContactRuntimeDefaults,
-} from './contactServiceLoad.js';
-import {
   assertContactUniqueFields,
-  ContactUniqueFieldError,
 } from './contactUniqueValidationService.js';
+import {
+  ContactPermissionError,
+  mergeContactPatch,
+  prepareContactRecord,
+  stripClientSoftDeleteFields,
+} from './contactServiceNormalize.js';
 
-function stripClientSoftDeleteFields(contact: Contact): Contact {
-  return stripContactClientSoftDeleteFields(contact as unknown as Record<string, unknown>) as Contact;
-}
-
-export class ContactPermissionError extends Error {
-  readonly code = 'forbidden' as const;
-
-  constructor(message = 'Permission denied') {
-    super(message);
-    this.name = 'ContactPermissionError';
-  }
-}
-
-/** Merge a client patch onto an existing contact, ignoring undefined keys. */
-function mergeContactPatch(existing: Contact, patch: Contact): Contact {
-  const next: Contact = { ...existing };
-  for (const [key, value] of Object.entries(patch) as [keyof Contact, Contact[keyof Contact]][]) {
-    if (value !== undefined) {
-      (next as Record<string, unknown>)[key as string] = value;
-    }
-  }
-  return next;
-}
-
-export async function normalizeContactPhones(contact: Contact): Promise<Contact> {
-  let phones = contact.phones;
-  // Explicit `phones: []` means clear — do not rebuild from legacy scalar.
-  // Scalar `phone` is synced afterward via syncContactScalarFields.
-  const phonesProvided = Array.isArray(contact.phones);
-  const scalarPhone = typeof contact.phone === 'string' ? contact.phone.trim() : '';
-  const { defaultPhoneCountryCode, phoneLabel } = await loadContactRuntimeDefaults();
-  const dialDefault = defaultPhoneCountryCode || '';
-  const labelDefault = phoneLabel || '';
-
-  if (!phonesProvided && scalarPhone) {
-    phones = [{
-      label: labelDefault,
-      number: scalarPhone,
-      countryCode: dialDefault,
-      isPrimary: true,
-    }];
-  }
-
-  if (!phones?.length) {
-    return { ...contact, phones: phones || [] };
-  }
-
-  const countryCodes = (await fetchCollection('countryCodes')) || [];
-  const knownCodes = countryCodes
-    .map((row) => (row && typeof row === 'object' && typeof (row as { code?: unknown }).code === 'string' ? String((row as { code: string }).code) : ''))
-    .filter(Boolean);
-
-  return {
-    ...contact,
-    phones: phones.map((phone) => {
-      const fallbackCode = phone.countryCode || dialDefault;
-      const trimmedNumber = (phone.number || '').trim();
-      const parsedRaw = parsePhoneNumber(trimmedNumber, fallbackCode, knownCodes);
-      const e164 = normalizeToE164(parsedRaw.countryCode, parsedRaw.number);
-      const parsed = parsePhoneNumber(e164, parsedRaw.countryCode, knownCodes);
-      return {
-        ...phone,
-        countryCode: parsed.countryCode,
-        number: parsed.number,
-      };
-    }),
-  };
-}
-
-export async function prepareContactRecord(contact: Contact, id?: string | number): Promise<Contact> {
-  const stripped = stripClientSoftDeleteFields(contact);
-  const withPhones = await normalizeContactPhones(stripped);
-  const withScalars = syncContactScalarFields(withPhones) as Contact;
-  const resolvedId = id ?? withScalars.id ?? `temp-${Date.now()}`;
-  const titled = applyTitleCaseToContact({ ...withScalars, id: resolvedId }) as Contact;
-  return stripContactRetiredClassificationFields({ ...titled }) as Contact;
-}
+export {
+  ContactPermissionError,
+  normalizeContactPhones,
+  prepareContactRecord,
+} from './contactServiceNormalize.js';
+export type {
+  ContactBulkRestoreConflict,
+  ContactBulkRestoreResult,
+} from './contactServiceSoftDelete.js';
+export {
+  restoreContactById,
+  bulkRestoreContacts,
+  softDeleteContactById,
+  bulkSoftDeleteContacts,
+} from './contactServiceSoftDelete.js';
 
 export interface UpsertContactOptions {
   user?: User;
@@ -233,7 +164,6 @@ export async function mergeContactsById(
       ? { ...mergedInput, id: keepId }
       : mergeContactRecords(keep, other);
     const prepared = await prepareContactRecord(mergedSource, keepId);
-    // Exclude the contact being merged away — its values may move onto keep.
     await assertContactUniqueFields(tenant, prepared, 'en', [deleteId]);
     const saved: Contact = {
       ...keep,
@@ -259,146 +189,5 @@ export async function mergeContactsById(
 
     await invalidateDuplicateScanCache();
     return saved;
-  });
-}
-
-export async function restoreContactById(id: string, _restoredBy: string): Promise<Contact | null> {
-  return runInTransaction(async () => {
-    const tenant = getRequestTenant();
-    if (!tenant) return null;
-    const existing = await findContactById(tenant, id);
-    if (!existing) return null;
-    if (!existing.deletedAt) return existing;
-
-    const now = new Date().toISOString();
-    const restored: Contact = {
-      ...existing,
-      deletedAt: undefined,
-      deletedBy: undefined,
-      deletionReason: undefined,
-      updatedAt: now,
-    };
-    // Throws ContactUniqueFieldError when restore would collide with an active peer.
-    await assertContactUniqueFields(tenant, restored, 'en');
-    await saveContact(tenant, restored);
-    await invalidateDuplicateScanCache();
-    return restored;
-  });
-}
-
-export interface ContactBulkRestoreConflict {
-  id: string;
-  errors: ContactUniqueFieldError['errors'];
-}
-
-export interface ContactBulkRestoreResult {
-  succeeded: number;
-  failed: number;
-  conflicts: ContactBulkRestoreConflict[];
-}
-
-export async function bulkRestoreContacts(
-  ids: string[],
-  _restoredBy: string,
-): Promise<ContactBulkRestoreResult> {
-  return runInTransaction(async () => {
-    const tenant = getRequestTenant();
-    if (!tenant) return { succeeded: 0, failed: ids.length, conflicts: [] };
-    let succeeded = 0;
-    let failed = 0;
-    const conflicts: ContactBulkRestoreConflict[] = [];
-    const now = new Date().toISOString();
-    const toSave: Contact[] = [];
-    const accepted: Contact[] = [];
-
-    const existingContacts = await findContactsByIds(tenant, ids);
-    const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
-
-    for (const id of ids) {
-      const existing = existingMap.get(id);
-      if (!(existing && existing.deletedAt)) {
-        failed += 1;
-        continue;
-      }
-      const restored: Contact = {
-        ...existing,
-        deletedAt: undefined,
-        deletedBy: undefined,
-        deletionReason: undefined,
-        updatedAt: now,
-      };
-      try {
-        await assertContactUniqueFields(tenant, restored, {
-          language: 'en',
-          additionalPeers: accepted,
-        });
-        toSave.push(restored);
-        accepted.push(restored);
-        succeeded += 1;
-      } catch (error) {
-        if (error instanceof ContactUniqueFieldError) {
-          failed += 1;
-          conflicts.push({ id: String(id), errors: error.errors });
-          continue;
-        }
-        throw error;
-      }
-    }
-
-    if (toSave.length > 0) {
-      await bulkSaveContacts(tenant, toSave);
-      await invalidateDuplicateScanCache();
-    }
-    return { succeeded, failed, conflicts };
-  });
-}
-
-export async function softDeleteContactById(
-  id: string,
-  deletedBy: string,
-  deletionReason?: string,
-): Promise<boolean> {
-  const result = await bulkSoftDeleteContacts([id], deletedBy, deletionReason);
-  return result.succeeded === 1;
-}
-
-export async function bulkSoftDeleteContacts(
-  ids: string[],
-  deletedBy: string,
-  deletionReason?: string,
-): Promise<{ succeeded: number; failed: number }> {
-  return runInTransaction(async () => {
-    const tenant = getRequestTenant();
-    if (!tenant) return { succeeded: 0, failed: ids.length };
-    let succeeded = 0;
-    let failed = 0;
-    const now = new Date().toISOString();
-    const trimmedReason = deletionReason?.trim();
-    const toSave: Contact[] = [];
-
-    const existingContacts = await findContactsByIds(tenant, ids);
-    const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
-
-    for (const id of ids) {
-      const existing = existingMap.get(id);
-      if (existing && !existing.deletedAt) {
-        const updated: Contact = {
-          ...existing,
-          deletedAt: now,
-          deletedBy,
-          deletionReason: trimmedReason || undefined,
-        };
-        toSave.push(updated);
-        succeeded += 1;
-      } else {
-        failed += 1;
-      }
-    }
-
-    if (toSave.length > 0) {
-      await bulkSaveContacts(tenant, toSave);
-      await invalidateDuplicateScanCache();
-    }
-    return { succeeded, failed };
   });
 }

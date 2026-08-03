@@ -4,8 +4,6 @@ import { calculateSmsSegments } from '../smsUtils.js';
 import {
   mergeMessageTemplates,
   DEFAULT_MESSAGE_TEMPLATES,
-  getMessagesDbKey,
-  getMessageTemplatesDbKey,
   type MessageTemplate,
 } from '../messagingSchemas.js';
 
@@ -36,6 +34,15 @@ describe('messagingUtils', () => {
         phone: '+923001234567',
       }, { madrasaName: 'Madrasa Tul Elm', date: '2026-08-01' });
       expect(result).toBe('Welcome to Madrasa Tul Elm on 2026-08-01.');
+    });
+
+    it('preserves unknown token literals', () => {
+      const result = personalizeMessage('Hello {name}, see {custom_field} and {foo|bar}.', {
+        id: 4,
+        name: 'Ali',
+        phone: '+923001234567',
+      });
+      expect(result).toBe('Hello Ali, see {custom_field} and {foo|bar}.');
     });
   });
 
@@ -113,13 +120,6 @@ describe('messagingUtils', () => {
       expect(merged.find((t: MessageTemplate) => t.id === 't1')?.label).toBe('General Announcement'); // Preserves base t1
       expect(merged.find((t: MessageTemplate) => t.id === 'custom_100')?.label).toBe('Custom Notice');
       expect(merged.find((t: MessageTemplate) => t.id === 'ctx_1')?.label).toBe('Context Template');
-    });
-  });
-
-  describe('dbStorageKeys', () => {
-    it('formats user-scoped message and template DB keys correctly', () => {
-      expect(getMessagesDbKey('usr_123')).toBe('messages_u:usr_123');
-      expect(getMessageTemplatesDbKey('usr_123')).toBe('messages_templates_u:usr_123');
     });
   });
 

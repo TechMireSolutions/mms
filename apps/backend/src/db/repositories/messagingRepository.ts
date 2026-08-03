@@ -1,8 +1,12 @@
 import { createGenericRepository } from './genericRepository.js';
 import { messageTemplates, messageLogs } from '../schema.js';
 import type { MessageTemplate, Message } from '@mms/shared';
+import { MESSAGE_LOGS_DEFAULT_PAGE_SIZE } from '@mms/shared';
 import { sql } from 'drizzle-orm';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+
+/** Matches messagingLogsQuerySchema pageSize max — defensive for direct callers. */
+const MESSAGE_LOGS_MAX_PAGE_SIZE = 500;
 
 const templateRepository = createGenericRepository<MessageTemplate, typeof messageTemplates>(
   messageTemplates,
@@ -10,6 +14,7 @@ const templateRepository = createGenericRepository<MessageTemplate, typeof messa
 );
 const logRepository = createGenericRepository<Message, typeof messageLogs>(messageLogs, {
   conflictTarget: [messageLogs.workspaceSubdomain, messageLogs.id],
+  syncDeletedAtColumn: true,
 });
 
 export const listMessageTemplatesByWorkspace = templateRepository.listByWorkspace;
@@ -23,17 +28,25 @@ export const replaceMessageLogsForWorkspace = logRepository.replaceForWorkspace;
 export const bulkSaveMessageLogs = logRepository.bulkSave;
 export const deleteMessageLogsByWorkspace = logRepository.deleteByWorkspace;
 
+function deletedAtColumnFromRecord(record: Message): Date | null {
+  const raw = record.deletedAt;
+  if (typeof raw !== 'string' || !raw.trim()) return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 /** Insert-only log write — never overwrite an existing dispatch audit row. */
 export async function insertMessageLogs(workspaceSubdomain: string, logs: Message[]): Promise<void> {
   if (logs.length === 0) return;
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const values = logs.map((record) => {
     const id = String(record.id);
-    const { id: _id, ...extra } = record;
+    const { id: _id, deletedAt: _deletedAt, ...extra } = record;
     return {
       id,
       workspaceSubdomain: subdomain,
       customData: extra,
+      deletedAt: deletedAtColumnFromRecord(record),
       updatedAt: new Date(),
     };
   });
@@ -76,10 +89,26 @@ function getQueryRows<T>(result: unknown): T[] {
   return [];
 }
 
-function rowToMessage(row: { id: string; custom_data?: unknown; customData?: unknown }): Message {
+function rowToMessage(row: {
+  id: string;
+  custom_data?: unknown;
+  customData?: unknown;
+  deleted_at?: Date | string | null;
+  deletedAt?: Date | string | null;
+}): Message {
+  const payload = { ...((row.custom_data ?? row.customData) as Omit<Message, 'id'>) };
+  delete (payload as { deletedAt?: unknown }).deletedAt;
+  const columnDeleted = row.deleted_at ?? row.deletedAt ?? null;
+  let deletedAt: string | undefined;
+  if (columnDeleted instanceof Date) {
+    deletedAt = columnDeleted.toISOString();
+  } else if (typeof columnDeleted === 'string' && columnDeleted.trim()) {
+    deletedAt = columnDeleted;
+  }
   return {
-    ...((row.custom_data ?? row.customData) as Omit<Message, 'id'>),
+    ...payload,
     id: row.id,
+    ...(deletedAt ? { deletedAt } : {}),
   };
 }
 
@@ -95,8 +124,8 @@ function buildMessageLogsFilterSql(
   startDate: string | null;
   endDate: string | null;
   page: number;
-  pageSize: number | null;
-  offset: number | null;
+  pageSize: number;
+  offset: number;
 } {
   const includeDeleted = query.includeDeleted === true;
   const channel = query.channel && query.channel !== 'all' ? query.channel : null;
@@ -106,8 +135,11 @@ function buildMessageLogsFilterSql(
   const startDate = query.startDate?.trim() || null;
   const endDate = query.endDate?.trim() || null;
   const page = query.page && query.page > 0 ? query.page : 1;
-  const pageSize = query.pageSize && query.pageSize > 0 ? query.pageSize : null;
-  const offset = pageSize != null ? (page - 1) * pageSize : null;
+  const rawPageSize = query.pageSize && query.pageSize > 0
+    ? query.pageSize
+    : MESSAGE_LOGS_DEFAULT_PAGE_SIZE;
+  const pageSize = Math.min(rawPageSize, MESSAGE_LOGS_MAX_PAGE_SIZE);
+  const offset = (page - 1) * pageSize;
   return { includeDeleted, channel, category, status, search, startDate, endDate, page, pageSize, offset };
 }
 
@@ -135,7 +167,7 @@ export async function queryFilteredMessageLogs(
       WHERE workspace_subdomain = ${subdomain}
         AND (
           ${includeDeleted}
-          OR (custom_data->>'deletedAt') IS NULL
+          OR deleted_at IS NULL
         )
         AND (
           ${channel}::text IS NULL
@@ -174,28 +206,41 @@ export async function queryFilteredMessageLogs(
     const total = Number(countRows[0]?.total ?? 0) || 0;
 
     const result = await tx.execute(sql`
-      SELECT id, custom_data
+      SELECT id, custom_data, deleted_at
       FROM message_logs
       ${whereSql}
       ORDER BY custom_data->>'sentAt' DESC NULLS LAST
-      ${offset != null && pageSize != null ? sql`LIMIT ${pageSize} OFFSET ${offset}` : sql``}
+      LIMIT ${pageSize} OFFSET ${offset}
     `);
 
-    const rows = getQueryRows<{ id: string; custom_data?: unknown; customData?: unknown }>(result);
+    const rows = getQueryRows<{
+      id: string;
+      custom_data?: unknown;
+      customData?: unknown;
+      deleted_at?: Date | string | null;
+      deletedAt?: Date | string | null;
+    }>(result);
     const logs = rows.map((row) => rowToMessage(row));
-    const effectivePageSize = pageSize ?? Math.max(total, 1);
     return {
       logs,
       total,
       page,
-      pageSize: effectivePageSize,
-      hasMore: pageSize != null ? page * pageSize < total : false,
+      pageSize,
+      hasMore: page * pageSize < total,
     };
   });
 }
 
+export interface MessagingMetricsFilterQuery {
+  startDate?: string;
+  endDate?: string;
+}
+
 /** SQL aggregate metrics for active (non-archived) message logs. */
-export async function queryMessagingMetrics(workspaceSubdomain: string): Promise<{
+export async function queryMessagingMetrics(
+  workspaceSubdomain: string,
+  filters: MessagingMetricsFilterQuery = {},
+): Promise<{
   total: number;
   smsCount: number;
   whatsappCount: number;
@@ -209,6 +254,8 @@ export async function queryMessagingMetrics(workspaceSubdomain: string): Promise
   categoryBreakdown: Record<string, number>;
 }> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const startDate = filters.startDate?.trim() || null;
+  const endDate = filters.endDate?.trim() || null;
   return withTenantTransaction(subdomain, async (tx) => {
     const result = await tx.execute(sql`
       SELECT
@@ -228,7 +275,15 @@ export async function queryMessagingMetrics(workspaceSubdomain: string): Promise
         COUNT(*) FILTER (WHERE custom_data->>'category' = 'emergency')::int AS cat_emergency
       FROM message_logs
       WHERE workspace_subdomain = ${subdomain}
-        AND (custom_data->>'deletedAt') IS NULL
+        AND deleted_at IS NULL
+        AND (
+          ${startDate}::text IS NULL
+          OR custom_data->>'sentAt' >= ${startDate}
+        )
+        AND (
+          ${endDate}::text IS NULL
+          OR custom_data->>'sentAt' <= ${endDate}
+        )
     `);
 
     const rows = getQueryRows<Record<string, unknown>>(result);
@@ -265,15 +320,15 @@ export async function queryMessagingMetrics(workspaceSubdomain: string): Promise
 /** Soft-archives active message logs for a workspace in one tenant-scoped update. */
 export async function softDeleteActiveMessageLogs(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const deletedAt = new Date().toISOString();
   await withTenantTransaction(subdomain, async (tx) => {
     await tx.execute(sql`
       UPDATE message_logs
       SET
-        custom_data = COALESCE(custom_data, '{}'::jsonb) || jsonb_build_object('deletedAt', ${deletedAt}::text),
-        updated_at = NOW()
+        deleted_at = NOW(),
+        updated_at = NOW(),
+        custom_data = COALESCE(custom_data, '{}'::jsonb) - 'deletedAt'
       WHERE workspace_subdomain = ${subdomain}
-        AND (custom_data->>'deletedAt') IS NULL
+        AND deleted_at IS NULL
     `);
   });
 }

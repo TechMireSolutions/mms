@@ -1,0 +1,79 @@
+import { useMemo } from "react";
+import {
+  mergeCountryDialCodeOptions,
+  mergeCountryNameOptions,
+  normalizeDialCode,
+  type CountryCodeEntry,
+} from "@/lib/contacts/countryCodeOptions";
+import { buildOptionDefaults } from "@/tenant/features/contacts/hooks/contactFormDraftUtils";
+
+export function useContactFormDraftOptions({
+  phoneLabels,
+  emailLabels,
+  addressLabels,
+  socialPlatforms,
+  relationshipOptions,
+  defaultCountryCode,
+  countryCodes,
+  defaultCountry,
+  updateCountryCodes,
+}: {
+  phoneLabels: string[];
+  emailLabels: string[];
+  addressLabels: string[];
+  socialPlatforms: string[];
+  relationshipOptions: string[];
+  defaultCountryCode: string;
+  countryCodes: CountryCodeEntry[];
+  defaultCountry: string;
+  updateCountryCodes: (next: CountryCodeEntry[]) => void;
+}) {
+  const optionDefaults = useMemo(
+    () =>
+      buildOptionDefaults({
+        phoneLabels,
+        emailLabels,
+        addressLabels,
+        socialPlatforms,
+        relationshipOptions,
+        defaultPhoneCountryCode: defaultCountryCode,
+      }),
+    [
+      phoneLabels,
+      emailLabels,
+      addressLabels,
+      socialPlatforms,
+      relationshipOptions,
+      defaultCountryCode,
+    ],
+  );
+
+  const countryCodeOptions = useMemo(() => {
+    const list = (countryCodes || [])
+      .map((countryItem) => normalizeDialCode(countryItem.code))
+      .filter(Boolean);
+    const fallback = normalizeDialCode(defaultCountryCode);
+    return Array.from(new Set([fallback, ...list].filter(Boolean)));
+  }, [countryCodes, defaultCountryCode]);
+
+  const countryOptions = useMemo(() => {
+    const names = (countryCodes || []).map((entry) => entry.country).filter(Boolean);
+    return Array.from(new Set([defaultCountry, ...names].filter(Boolean)));
+  }, [countryCodes, defaultCountry]);
+
+  const updateCountryOptions = (nextCountries: string[]) => {
+    updateCountryCodes(mergeCountryNameOptions(countryCodes, nextCountries));
+  };
+
+  const updateDialCodeOptions = (nextCodes: string[]) => {
+    updateCountryCodes(mergeCountryDialCodeOptions(countryCodes, nextCodes));
+  };
+
+  return {
+    optionDefaults,
+    countryCodeOptions,
+    countryOptions,
+    updateCountryOptions,
+    updateDialCodeOptions,
+  };
+}

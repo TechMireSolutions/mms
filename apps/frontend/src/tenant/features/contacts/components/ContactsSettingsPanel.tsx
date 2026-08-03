@@ -4,6 +4,7 @@ import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { shouldOpenContactsSyncSetup } from "@/lib/contacts/googleContactsOAuth";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import type { Contact } from "@mms/shared";
@@ -42,9 +43,10 @@ export default function ContactsSettingsPanel({
   canEditSetup,
 }: ContactsSettingsPanelProps): JSX.Element {
   const { t } = useTranslation();
-  const { fieldConfig, updateConfig, updateConfigAsync } = useContactConfig();
+  const { fieldConfig, formTabsReady, updateConfig, updateConfigAsync } = useContactConfig();
   const [fieldsDirty, setFieldsDirty] = useState(false);
   const [prefsDirty, setPrefsDirty] = useState(false);
+  const [pendingSubTab, setPendingSubTab] = useState<string | null>(null);
 
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
@@ -73,17 +75,24 @@ export default function ContactsSettingsPanel({
     return settingsSubTabs[0]?.key || "preferences";
   });
 
+  const discardConfirmOpen = pendingSubTab != null;
+  const discardConfirmIsFields = sub === "fields" && fieldsDirty;
+
   const handleSubTabChange = (next: string): void => {
     if (next === sub) return;
-    if (sub === "fields" && fieldsDirty) {
-      if (!confirm(t("contacts.setup.discardUnsavedFieldsConfirm"))) return;
-      setFieldsDirty(false);
-    }
-    if (sub === "preferences" && prefsDirty) {
-      if (!confirm(t("contacts.setup.discardUnsavedPreferencesConfirm"))) return;
-      setPrefsDirty(false);
+    if ((sub === "fields" && fieldsDirty) || (sub === "preferences" && prefsDirty)) {
+      setPendingSubTab(next);
+      return;
     }
     setSub(next);
+  };
+
+  const handleConfirmDiscard = (): void => {
+    if (!pendingSubTab) return;
+    if (sub === "fields") setFieldsDirty(false);
+    if (sub === "preferences") setPrefsDirty(false);
+    setSub(pendingSubTab);
+    setPendingSubTab(null);
   };
 
   return (
@@ -95,7 +104,9 @@ export default function ContactsSettingsPanel({
       />
       <Suspense fallback={<LazyFallback />}>
         {sub === "fields" &&
-          (canEditSetup ? (
+          (!formTabsReady ? (
+            <LazyFallback />
+          ) : canEditSetup ? (
             <ContactsSetupPanel
               config={fieldConfig}
               onConfigChange={updateConfig}
@@ -122,6 +133,23 @@ export default function ContactsSettingsPanel({
           <ContactSyncPanel onImport={onImport} canWrite={canWrite} />
         )}
       </Suspense>
+
+      <ConfirmAlertDialog
+        open={discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) setPendingSubTab(null);
+        }}
+        title={t("settings.unsavedChanges")}
+        description={
+          discardConfirmIsFields
+            ? t("contacts.setup.discardUnsavedFieldsConfirm")
+            : t("contacts.setup.discardUnsavedPreferencesConfirm")
+        }
+        confirmLabel={t("common.yes")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={handleConfirmDiscard}
+      />
     </div>
   );
 }

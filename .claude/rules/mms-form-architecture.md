@@ -62,7 +62,7 @@ Simple static forms with design-system primitives — not dynamic layout engines
 ## 4. Write vs read Zod schemas
 
 - Prefer a **write** schema for POST/PUT that omits/strips server-owned fields such as soft-delete metadata.
-- Prefer Zod `.strict()` on write DTOs (or explicit `.strip()` with documented exceptions) — unknown keys must not persist — `mms-api-interface.md`.
+- Prefer Zod `.strict()` on write DTOs (or explicit `.strip()` with documented exceptions) — unknown keys must not persist. Write-vs-read schema split and soft-delete strip on create/update bodies live here; HTTP/parseRequest wiring → `mms-api-interface.md`.
 - Use `z.preprocess` / `stripContactClientSoftDeleteFields` so `.passthrough()` cannot reintroduce stripped keys.
 - Map Zod issues via shared `mapZodFormErrors` — prefer a shared Zod `errorMap` / issue-code → `t()` mapping in `@mms/shared` (also used by `parseRequest` messages); ban per-form string switches on `ZodIssue.code`.
 - Money/decimals as **strings** through input + validation — no IEEE 754 float math.

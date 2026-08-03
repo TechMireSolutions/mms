@@ -1,75 +1,34 @@
 import type { Permission } from './permissions.js';
 import { DEFAULT_SETTINGS_SUB_TABS } from './contactTypes.js';
-import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
-import { hydrateContactRelationshipFields } from './contactRelationshipHydrate.js';
 import { z } from 'zod';
+import {
+  activitySchema,
+  attachmentSchema,
+  addressSchema,
+  emailAddressSchema,
+  phoneNumberSchema,
+  relationshipContactSchema,
+  relationshipSchema,
+  socialLinkSchema,
+} from './contactNestedSchemas.js';
 
-export const phoneNumberSchema = z
-  .object({
-    label: z.string().optional(),
-    number: z.string(),
-    countryCode: z.string().optional(),
-  })
-  .passthrough();
+export {
+  activitySchema,
+  attachmentSchema,
+  addressSchema,
+  emailAddressSchema,
+  phoneNumberSchema,
+  relationshipContactSchema,
+  relationshipSchema,
+  socialLinkSchema,
+} from './contactNestedSchemas.js';
 
-export const emailAddressSchema = z
-  .object({
-    label: z.string().optional(),
-    address: z.string(),
-  })
-  .passthrough();
-
-export const addressSchema = z
-  .object({
-    label: z.string().optional(),
-    line1: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    country: z.string().optional(),
-  })
-  .passthrough();
-
-export const socialLinkSchema = z
-  .object({
-    platform: z.string(),
-    url: z.string(),
-  })
-  .passthrough();
-
-export const relationshipContactSchema = z
-  .object({
-    name: z.string().optional(),
-    relationship: z.string().optional(),
-    phone: z.string().optional(),
-    contactId: z.union([z.string(), z.number()]).optional(),
-  })
-  .passthrough();
-
-export const relationshipSchema = z.object({
-  contactId: z.union([z.string(), z.number()]),
-  relationship: z.string().optional(),
-});
-
-export const activitySchema = z
-  .object({
-    id: z.string(),
-    type: z.enum(['note', 'stage_change', 'whatsapp', 'email', 'system', 'task', 'call']),
-    content: z.string(),
-    date: z.string(),
-    by: z.string().optional(),
-  })
-  .passthrough();
-
-export const attachmentSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    type: z.string(),
-    size: z.number(),
-    url: z.string(),
-    date: z.string(),
-  })
-  .passthrough();
+export {
+  CONTACT_WRITE_SYSTEM_KEYS,
+  collectContactWriteExtraFieldKeys,
+  buildContactWriteSchema,
+  contactWriteSchema,
+} from './contactWriteSchema.js';
 
 export const contactRecordSchema = z
   .object({
@@ -102,22 +61,7 @@ export const contactRecordSchema = z
   })
   .passthrough();
 
-/** Client write payloads — soft-delete metadata is set only by dedicated helpers. */
-export const contactWriteSchema = z.preprocess(
-  (raw) => {
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-    const stripped = stripContactClientSoftDeleteFields(raw as Record<string, unknown>);
-    return hydrateContactRelationshipFields(stripped);
-  },
-  contactRecordSchema.omit({
-    deletedAt: true,
-    deletedBy: true,
-    deletionReason: true,
-  }),
-);
-
 export const contactListSchema = z.array(contactRecordSchema);
-
 
 /**
  * Contacts module manifest — single source of truth per globle1.md §1.1.

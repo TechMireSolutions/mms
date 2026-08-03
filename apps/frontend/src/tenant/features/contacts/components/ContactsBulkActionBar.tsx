@@ -24,7 +24,7 @@ export interface ContactsBulkActionBarProps {
   };
   onWhatsApp: (targets: Contact[]) => void;
   onSms: (targets: Contact[]) => void;
-  onBulkExport: () => void;
+  onBulkExport: () => void | Promise<void>;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;

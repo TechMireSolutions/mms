@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetWorkDrillDown";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
@@ -118,7 +119,9 @@ export function PinnedWidgetsGrid({
                 widget={widget}
                 collections={collections}
                 onSwitchToggle={onSwitchToggle}
-                onMetricClick={() => {}}
+                onMetricClick={(clicked) => {
+                  if (applyContactsWidgetWorkDrillDown(clicked)) return;
+                }}
               />
             </ErrorBoundary>
           </motion.div>

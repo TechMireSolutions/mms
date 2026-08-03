@@ -1,0 +1,108 @@
+import { Copy } from "lucide-react";
+import type { ContactPreferences } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+
+const DUPLICATE_DETECTION_FIELD_OPTIONS = [
+  { id: "name", labelKey: "contacts.setup.duplicateFieldName" as const },
+  { id: "phone", labelKey: "contacts.setup.duplicateFieldPhone" as const },
+  { id: "email", labelKey: "contacts.setup.duplicateFieldEmail" as const },
+] as const;
+
+export function ContactsPreferencesDuplicateSection({
+  prefs,
+  onUpdatePreference,
+}: {
+  prefs: ContactPreferences;
+  onUpdatePreference: <K extends keyof ContactPreferences>(
+    key: K,
+    value: ContactPreferences[K],
+  ) => void;
+}): JSX.Element {
+  const { t } = useTranslation();
+  const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email"];
+
+  const toggleDetectionField = (fieldId: string, enabled: boolean) => {
+    const next = enabled
+      ? Array.from(new Set([...detectionFields, fieldId]))
+      : detectionFields.filter((field) => field !== fieldId);
+    onUpdatePreference("duplicateDetectionFields", next.length > 0 ? next : ["name"]);
+  };
+
+  return (
+    <section className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
+        <Copy className="w-4 h-4 text-primary" />
+        <span className="text-sm font-bold text-foreground">{t("contacts.setup.duplicateDetection")}</span>
+      </div>
+      <div className="p-4 space-y-4">
+        <p className="text-xs text-muted-foreground">{t("contacts.setup.duplicateDetectionDesc")}</p>
+        <fieldset className="space-y-2">
+          <legend className={FORM_LABEL}>{t("contacts.setup.duplicateFields")}</legend>
+          <div className="flex flex-wrap gap-3">
+            {DUPLICATE_DETECTION_FIELD_OPTIONS.map((option) => {
+              const checked = detectionFields.includes(option.id);
+              const checkboxId = `dup-field-${option.id}`;
+              return (
+                <label
+                  key={option.id}
+                  htmlFor={checkboxId}
+                  className="flex min-h-11 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm"
+                >
+                  <Checkbox
+                    id={checkboxId}
+                    checked={checked}
+                    onCheckedChange={(value) => toggleDetectionField(option.id, value === true)}
+                  />
+                  <span>{t(option.labelKey)}</span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={FORM_LABEL} htmlFor="dupThresholdHigh">
+              {t("contacts.setup.duplicateThresholdHigh")}
+            </label>
+            <Input
+              id="dupThresholdHigh"
+              type="number"
+              min={1}
+              max={100}
+              value={prefs.duplicateDetectionThresholdHigh ?? 90}
+              onChange={(e) => {
+                const parsed = Number(e.target.value);
+                onUpdatePreference(
+                  "duplicateDetectionThresholdHigh",
+                  Number.isFinite(parsed) ? parsed : (prefs.duplicateDetectionThresholdHigh ?? 90),
+                );
+              }}
+            />
+          </div>
+          <div>
+            <label className={FORM_LABEL} htmlFor="dupThresholdMedium">
+              {t("contacts.setup.duplicateThresholdMedium")}
+            </label>
+            <Input
+              id="dupThresholdMedium"
+              type="number"
+              min={1}
+              max={100}
+              value={prefs.duplicateDetectionThresholdMedium ?? 75}
+              onChange={(e) => {
+                const parsed = Number(e.target.value);
+                onUpdatePreference(
+                  "duplicateDetectionThresholdMedium",
+                  Number.isFinite(parsed) ? parsed : (prefs.duplicateDetectionThresholdMedium ?? 75),
+                );
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

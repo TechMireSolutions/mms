@@ -41,13 +41,9 @@ import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
 
 function sanitizeUserCollections(collections: Record<string, unknown[]>, userId: string | number): void {
-  const userMsgKey = `messages_u:${userId}`;
   const userTplKey = `whatsappTemplates_u:${userId}`;
   for (const key of Object.keys(collections)) {
-    if (
-      (key.startsWith('messages_u:') && key !== userMsgKey) ||
-      (key.startsWith('whatsappTemplates_u:') && key !== userTplKey)
-    ) {
+    if (key.startsWith('whatsappTemplates_u:') && key !== userTplKey) {
       delete collections[key];
     }
   }
@@ -240,8 +236,7 @@ export default async function dbRoutes(
       return sendForbidden(reply, `You do not have permission to read collection "${name}"`);
     }
     try {
-      const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
-      const collectionRows = await fetchCollection(storageName);
+      const collectionRows = await fetchCollection(name);
       if (collectionRows === null) {
         return reply.send([]);
       }
@@ -274,8 +269,7 @@ export default async function dbRoutes(
       if (!bodyParsed.ok) return replyValidationError(reply, bodyParsed.message);
       const collectionRowsToSave = normalizeCollectionSaveBody(bodyParsed.data);
 
-      const storageName = name === 'messages' ? `messages_u:${user.id}` : name;
-      await persistCollection(storageName, collectionRowsToSave);
+      await persistCollection(name, collectionRowsToSave);
       if (AUDITED_COLLECTIONS.has(name)) {
         await recordAudit({
           userId: user.id,

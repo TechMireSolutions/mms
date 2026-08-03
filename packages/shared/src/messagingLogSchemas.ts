@@ -18,7 +18,7 @@ export const messageLogCreateSchema = z.object({
   subject: z.string().max(500).optional(),
   category: messageCategorySchema.optional().default('general'),
   errorMessage: z.string().max(1_000).optional(),
-});
+}).strict();
 
 export const messageRecordSchema = z.object({
   id: z.string(),
@@ -36,7 +36,9 @@ export const messageRecordSchema = z.object({
 
 export const recordMessageLogsSchema = z.object({
   logs: z.array(messageLogCreateSchema).min(1).max(MESSAGE_LOG_RECORD_BATCH_MAX),
-});
+  /** Client retry key — duplicate POSTs with the same key return the prior recorded count. */
+  idempotencyKey: z.string().trim().min(8).max(128).optional(),
+}).strict();
 
 export const messagingLogsQuerySchema = z.object({
   channel: z.string().optional(),
@@ -56,6 +58,9 @@ export const messagingLogsQuerySchema = z.object({
 export const MESSAGING_RECIPIENT_ROLES = ['all', 'students', 'teachers', 'staff', 'contacts'] as const;
 export const MESSAGING_RECIPIENT_GENDERS = ['all', 'male', 'female', 'unspecified'] as const;
 
+/** Cap for Work “select all reachable” match — same ceiling as the retired FE page-walk. */
+export const MESSAGING_RECIPIENTS_MATCH_LIMIT = 10_000;
+
 /** Work-tab recipient directory query (server-paginated under messaging RBAC). */
 export const messagingRecipientsQuerySchema = z.object({
   role: z.enum(MESSAGING_RECIPIENT_ROLES).optional().default('all'),
@@ -73,6 +78,27 @@ export const messagingRecipientsQuerySchema = z.object({
     .transform((value) => (value === undefined ? undefined : value === true || value === 'true')),
 });
 
+/** Select-all reachable recipients (no client page-walk). */
+export const messagingRecipientsMatchQuerySchema = messagingRecipientsQuerySchema
+  .omit({ page: true, pageSize: true, hasPhone: true, hasEmail: true })
+  .extend({
+    kind: z.enum(['phone', 'email']),
+  });
+
+export const messagingRecipientsMatchResponseSchema = z.object({
+  recipients: z.array(
+    z.object({
+      id: z.union([z.string(), z.number()]),
+      name: z.string(),
+      phone: z.string(),
+      email: z.string().optional(),
+    }),
+  ),
+  total: z.number().int().nonnegative(),
+  truncated: z.boolean(),
+  limit: z.number().int().positive(),
+});
+
 export const messagingMetricsSchema = z.object({
   total: z.number(),
   smsCount: z.number(),
@@ -87,6 +113,36 @@ export const messagingMetricsSchema = z.object({
   categoryBreakdown: z.record(messageCategorySchema, z.number()).optional(),
 });
 
+/** Date-range query for GET /api/messaging/metrics. */
+export const messagingMetricsQuerySchema = messagingLogsQuerySchema.pick({
+  startDate: true,
+  endDate: true,
+});
+
+/** Filter fields accepted when queueing a messaging logs CSV export job. */
+export const messagingCsvExportQuerySchema = messagingLogsQuerySchema.pick({
+  channel: true,
+  category: true,
+  search: true,
+  status: true,
+  startDate: true,
+  endDate: true,
+});
+
+/** POST /api/messaging/export/csv body. */
+export const messagingCsvExportBodySchema = z.object({
+  query: messagingCsvExportQuerySchema.optional(),
+  filename: z.string().min(1).max(200).optional(),
+  label: z.string().min(1).max(500).optional(),
+  /** Client retry key — reused as the background job id when provided. */
+  idempotencyKey: z
+    .string()
+    .min(8)
+    .max(128)
+    .regex(/^[a-zA-Z0-9_-]+$/)
+    .optional(),
+});
+
 /** Client dispatch-log create payload (server assigns id/userId/sentAt). */
 export type MessageLogCreateDto = z.infer<typeof messageLogCreateSchema>;
 /** Recorded message dispatch history DTO payload structure. */
@@ -97,5 +153,15 @@ export type Message = MessageRecordDto;
 export type MessagingLogsQueryDto = z.infer<typeof messagingLogsQuerySchema>;
 /** Work recipient directory query parameters. */
 export type MessagingRecipientsQueryDto = z.infer<typeof messagingRecipientsQuerySchema>;
+/** Select-all reachable match query. */
+export type MessagingRecipientsMatchQueryDto = z.infer<typeof messagingRecipientsMatchQuerySchema>;
+/** Select-all reachable match response. */
+export type MessagingRecipientsMatchResponseDto = z.infer<typeof messagingRecipientsMatchResponseSchema>;
 /** Messaging volume and delivery metrics summary DTO. */
 export type MessagingMetricsDto = z.infer<typeof messagingMetricsSchema>;
+/** Messaging metrics date-range query. */
+export type MessagingMetricsQueryDto = z.infer<typeof messagingMetricsQuerySchema>;
+/** Messaging CSV export job filter query. */
+export type MessagingCsvExportQueryDto = z.infer<typeof messagingCsvExportQuerySchema>;
+/** Messaging CSV export enqueue body. */
+export type MessagingCsvExportBodyDto = z.infer<typeof messagingCsvExportBodySchema>;

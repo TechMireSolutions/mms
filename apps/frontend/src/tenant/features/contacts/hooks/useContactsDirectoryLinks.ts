@@ -4,14 +4,10 @@ import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contac
 import { useContactsByIds } from "@/tenant/features/contacts/hooks/useContacts";
 
 export function useContactsDirectoryLinks({
-  needsFullContactsList,
-  contacts,
   workContacts,
   editContact,
   viewContact,
 }: {
-  needsFullContactsList: boolean;
-  contacts: Contact[];
   workContacts: Contact[];
   editContact: Contact | null;
   viewContact: Contact | null;
@@ -28,12 +24,10 @@ export function useContactsDirectoryLinks({
     [linkSourceContacts],
   );
 
-  const { data: resolvedLinkContacts = [] } = useContactsByIds(
-    needsFullContactsList ? [] : linkedContactIds,
-  );
+  const { data: resolvedLinkContacts = [] } = useContactsByIds(linkedContactIds);
 
-  return useMemo(() => {
-    if (needsFullContactsList) return contacts;
-    return mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts);
-  }, [needsFullContactsList, contacts, linkSourceContacts, resolvedLinkContacts]);
+  return useMemo(
+    () => mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts),
+    [linkSourceContacts, resolvedLinkContacts],
+  );
 }

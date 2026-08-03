@@ -99,8 +99,18 @@ export interface ContactsListQuery {
   /** Contact ids to omit from results (picker already-linked exclusions). */
   excludeIds?: Array<string | number>;
   /**
-   * Server expands to linked contact ids from those modules before paging.
-   * Prefer this over a large `excludeIds` query string (messaging Contacts role).
+   * Restrict results to these contact ids.
+   * Empty array means no matches — do not confuse with omitted (no id restriction).
+   */
+  includeIds?: Array<string | number>;
+  /**
+   * SQL-only: EXISTS / NOT EXISTS against module link tables (no id materialization).
+   * Prefer over large `includeIds` / `excludeIds` for messaging role scopes.
+   */
+  moduleLinkFilter?: 'students' | 'teachers' | 'staff' | 'unlinked';
+  /**
+   * SQL-only: omit contacts linked to these modules (NOT EXISTS per module).
+   * Prefer over a large `excludeIds` query string.
    */
   excludeLinkedModules?: Array<'students' | 'teachers'>;
 }
@@ -162,6 +172,10 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
   if (query.excludeIds && query.excludeIds.length > 0) {
     const excluded = new Set(query.excludeIds.map(String));
     rows = rows.filter((contact) => !excluded.has(String(contact.id)));
+  }
+  if (query.includeIds) {
+    const included = new Set(query.includeIds.map(String));
+    rows = rows.filter((contact) => included.has(String(contact.id)));
   }
   if (query.search?.trim()) {
     rows = rows.filter((contact) => contactMatchesSearch(contact, query.search!));

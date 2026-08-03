@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
 import {
   MESSAGE_LOG_RECORD_BATCH_MAX,
   MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
@@ -8,8 +8,8 @@ import {
   type MessagingMetricsDto,
 } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
+import { notifyApiFailure } from '@/lib/apiErrorNotify';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export const MESSAGING_TEMPLATES_QUERY_KEY = ['messaging', 'templates'] as const;
@@ -24,19 +24,101 @@ export interface MessageLogsPageResult {
   hasMore: boolean;
 }
 
-export function useMessageTemplates(options?: { enabled?: boolean }) {
-  const { isAuthenticated } = useAuth();
+export interface RecordDispatchesInput {
+  logs: MessageLogCreateDto[];
+  /** Final per-batch key from the caller (already chunked); forwarded unchanged. */
+  idempotencyKey?: string;
+}
 
-  const query = useQuery({
+export function messagingTemplatesQueryOptions(enabled: boolean) {
+  return queryOptions({
     queryKey: MESSAGING_TEMPLATES_QUERY_KEY,
-    queryFn: async () => {
-      const res = await apiJson<{ templates: MessageTemplate[] }>('/api/messaging/templates');
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ templates: MessageTemplate[] }>('/api/messaging/templates', { signal });
       return res.templates || [];
     },
     staleTime: 30_000,
-    enabled: options?.enabled !== false && isAuthenticated,
+    enabled,
   });
+}
 
+export function messagingLogsQueryOptions(params: {
+  enabled: boolean;
+  channel?: string;
+  category?: string;
+  search?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  page: number;
+  pageSize: number;
+}) {
+  const queryParams = new URLSearchParams();
+  queryParams.set('page', String(params.page));
+  queryParams.set('pageSize', String(params.pageSize));
+  if (params.channel && params.channel !== 'all') queryParams.set('channel', params.channel);
+  if (params.category && params.category !== 'all') queryParams.set('category', params.category);
+  if (params.search?.trim()) queryParams.set('search', params.search.trim());
+  if (params.status && params.status !== 'all') queryParams.set('status', params.status);
+  if (params.startDate?.trim()) queryParams.set('startDate', params.startDate.trim());
+  if (params.endDate?.trim()) queryParams.set('endDate', params.endDate.trim());
+  const endpoint = `/api/messaging/logs?${queryParams.toString()}`;
+
+  return queryOptions({
+    queryKey: [
+      ...MESSAGING_LOGS_QUERY_KEY,
+      params.channel,
+      params.category,
+      params.search,
+      params.status,
+      params.startDate,
+      params.endDate,
+      params.page,
+      params.pageSize,
+    ] as const,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<MessageLogsPageResult>(endpoint, { signal });
+      return {
+        logs: res.logs || [],
+        total: res.total ?? res.logs?.length ?? 0,
+        page: res.page ?? params.page,
+        pageSize: res.pageSize ?? params.pageSize,
+        hasMore: Boolean(res.hasMore),
+      } satisfies MessageLogsPageResult;
+    },
+    staleTime: 15_000,
+    enabled: params.enabled,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function messagingMetricsQueryOptions(params: {
+  enabled: boolean;
+  startDate?: string;
+  endDate?: string;
+}) {
+  const queryParams = new URLSearchParams();
+  if (params.startDate?.trim()) queryParams.set('startDate', params.startDate.trim());
+  if (params.endDate?.trim()) queryParams.set('endDate', params.endDate.trim());
+  const qs = queryParams.toString();
+  const endpoint = qs ? `/api/messaging/metrics?${qs}` : '/api/messaging/metrics';
+
+  return queryOptions({
+    queryKey: [...MESSAGING_METRICS_QUERY_KEY, params.startDate, params.endDate] as const,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ metrics: MessagingMetricsDto }>(endpoint, { signal });
+      return res.metrics;
+    },
+    staleTime: 15_000,
+    enabled: params.enabled,
+  });
+}
+
+export function useMessageTemplates(options?: { enabled?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  const query = useQuery(
+    messagingTemplatesQueryOptions(options?.enabled !== false && isAuthenticated),
+  );
   return { ...query, templates: query.data ?? [] };
 }
 
@@ -46,6 +128,8 @@ export function useMessageLogs(options?: {
   category?: string;
   search?: string;
   status?: string;
+  startDate?: string;
+  endDate?: string;
   page?: number;
   pageSize?: number;
 }) {
@@ -55,39 +139,19 @@ export function useMessageLogs(options?: {
     ? options.pageSize
     : MESSAGE_LOGS_DEFAULT_PAGE_SIZE;
 
-  const queryParams = new URLSearchParams();
-  queryParams.set('page', String(page));
-  queryParams.set('pageSize', String(pageSize));
-  if (options?.channel && options.channel !== 'all') queryParams.set('channel', options.channel);
-  if (options?.category && options.category !== 'all') queryParams.set('category', options.category);
-  if (options?.search?.trim()) queryParams.set('search', options.search.trim());
-  if (options?.status && options.status !== 'all') queryParams.set('status', options.status);
-  const endpoint = `/api/messaging/logs?${queryParams.toString()}`;
-
-  const query = useQuery({
-    queryKey: [
-      ...MESSAGING_LOGS_QUERY_KEY,
-      options?.channel,
-      options?.category,
-      options?.search,
-      options?.status,
+  const query = useQuery(
+    messagingLogsQueryOptions({
+      enabled: options?.enabled !== false && isAuthenticated,
+      channel: options?.channel,
+      category: options?.category,
+      search: options?.search,
+      status: options?.status,
+      startDate: options?.startDate,
+      endDate: options?.endDate,
       page,
       pageSize,
-    ],
-    queryFn: async () => {
-      const res = await apiJson<MessageLogsPageResult>(endpoint);
-      return {
-        logs: res.logs || [],
-        total: res.total ?? res.logs?.length ?? 0,
-        page: res.page ?? page,
-        pageSize: res.pageSize ?? pageSize,
-        hasMore: Boolean(res.hasMore),
-      } satisfies MessageLogsPageResult;
-    },
-    staleTime: 15_000,
-    enabled: options?.enabled !== false && isAuthenticated,
-    placeholderData: (previous) => previous,
-  });
+    }),
+  );
 
   return {
     ...query,
@@ -99,18 +163,19 @@ export function useMessageLogs(options?: {
   };
 }
 
-export function useMessagingMetrics(options?: { enabled?: boolean }) {
+export function useMessagingMetrics(options?: {
+  enabled?: boolean;
+  startDate?: string;
+  endDate?: string;
+}) {
   const { isAuthenticated } = useAuth();
-
-  return useQuery({
-    queryKey: MESSAGING_METRICS_QUERY_KEY,
-    queryFn: async () => {
-      const res = await apiJson<{ metrics: MessagingMetricsDto }>('/api/messaging/metrics');
-      return res.metrics;
-    },
-    staleTime: 15_000,
-    enabled: options?.enabled !== false && isAuthenticated,
-  });
+  return useQuery(
+    messagingMetricsQueryOptions({
+      enabled: options?.enabled !== false && isAuthenticated,
+      startDate: options?.startDate,
+      endDate: options?.endDate,
+    }),
+  );
 }
 
 export function useMessagingMutations() {
@@ -123,8 +188,8 @@ export function useMessagingMutations() {
     void queryClient.invalidateQueries({ queryKey: MESSAGING_METRICS_QUERY_KEY });
   };
 
-  const onError = () => {
-    notify.error(t('settings.serverSaveFailed'));
+  const onError = (error: unknown) => {
+    notifyApiFailure(error, t);
   };
 
   const saveTemplate = useMutation({
@@ -149,7 +214,18 @@ export function useMessagingMutations() {
   });
 
   const recordDispatches = useMutation({
-    mutationFn: async (logs: MessageLogCreateDto[]) => {
+    mutationFn: async (input: RecordDispatchesInput | MessageLogCreateDto[]) => {
+      const logs = Array.isArray(input) ? input : input.logs;
+      const idempotencyKey = Array.isArray(input) ? undefined : input.idempotencyKey;
+      // Caller owns batching when an idempotency key is supplied — forward it unchanged.
+      if (idempotencyKey) {
+        const response = await apiJson<{ recorded: number }>('/api/messaging/logs', {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey },
+          body: JSON.stringify({ logs, idempotencyKey }),
+        });
+        return { recorded: response.recorded };
+      }
       let recorded = 0;
       for (let index = 0; index < logs.length; index += MESSAGE_LOG_RECORD_BATCH_MAX) {
         const chunk = logs.slice(index, index + MESSAGE_LOG_RECORD_BATCH_MAX);

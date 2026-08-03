@@ -47,16 +47,16 @@ Checks: seed field, enabled column, duplicate-detection prefs, contact data coun
 Before merging any new/changed field, complete all layers:
 
 ```
-@shared type → DEFAULT_* + merge → read (getObject/getCollection) → write (save* + /api/db) → UI binding → seeds (if default)
+@shared type → DEFAULT_* + merge → read (typed REST / Query) → write (typed REST) → UI binding → seeds (if default)
 ```
 
 | Storage | Write path |
 |---------|------------|
 | Settings singleton | `getBrandingSettings` / `await saveBrandingSettings`, etc. |
-| Lookup option list | `saveCollection` / **`saveCollectionAsync`** (genders, labels, `countryCodes`, …) |
+| Lookup option list | Contacts: `/api/contacts/lookups` (typed `contact_lookups`) — **never** `saveCollection` for genders/labels/`countryCodes` |
 | REST entity row (Contacts, Students, …) | Query mutations → `/api/{resource}` — **never** `saveCollection('contacts')` |
-| Registry definition | `saveObject('{module}_field_config', …)` (document-store gap until fully typed) |
-| Custom Tabs | Typed `custom_tabs` table + `/api/custom-tabs` — residual dual-write to settings objects is migration debt only (`mms-migration-status.mdc`) |
+| Registry definition | Contacts: `/api/contacts/field-config` (typed). Other modules may still use `saveObject('{module}_field_config', …)` until migrated |
+| Custom Tabs | Typed `custom_tabs` + `/api/custom-tabs` — Contacts closed; do not dual-write `formTabs` into field-config. Other modules may still lag |
 
 **Reviewer test:** grep the field key — must appear in type, merge, form, and save. Block if only in `useState`.
 
@@ -66,7 +66,7 @@ See `mms-fields.mdc` and `mms-data-layer.mdc`.
 
 Pattern: `{Module}SettingsPanel` + `CustomFieldsBuilder` + `ContactDraggableFieldList` / `DraggableFieldList`
 
-Storage: `{module}_field_config` or contract `configObjectKey` via `saveObject`.
+Storage: Contacts → `/api/contacts/field-config`. Other modules → `{module}_field_config` or contract `configObjectKey` via `saveObject` until migrated.
 
 ## Rendering
 

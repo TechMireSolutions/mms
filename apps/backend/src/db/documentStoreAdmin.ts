@@ -97,7 +97,7 @@ export async function listTenantObjectLogicalKeys(): Promise<string[]> {
 
 /**
  * Lists the request tenant's collection logical keys (same scoping as `getAllData`).
- * Includes per-user `messages_u:*` / `whatsappTemplates_u:*` rows.
+ * Includes leftover document-store keys such as `whatsappTemplates_u:*`.
  */
 export async function listTenantCollectionLogicalKeys(): Promise<string[]> {
   const tenant = getRequestTenant();

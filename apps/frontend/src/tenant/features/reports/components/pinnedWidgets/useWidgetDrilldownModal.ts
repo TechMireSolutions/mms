@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetWorkDrillDown";
 import { notify } from "@/lib/notify";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
 import {
@@ -13,13 +14,27 @@ import { getFilteredRecords } from "@/tenant/features/reports/components/pinnedW
 
 export function useWidgetDrilldownModal(widget: CustomWidget) {
   const { t } = useTranslation();
+
+  // Contacts widgets have no row dump — redirect to Work with equivalent filters.
+  useEffect(() => {
+    if (widget.collection === "contacts") {
+      applyContactsWidgetWorkDrillDown(widget);
+    }
+  }, [widget]);
+
   const requiredCollections = useMemo(
     () => new Set<ReportCollection>([widget.collection, "students"]),
     [widget.collection],
   );
-  const collections = useWidgetCollections({ requiredCollections });
+  const collections = useWidgetCollections({
+    requiredCollections,
+    enabled: widget.collection !== "contacts",
+  });
 
-  const widgetRecords = useMemo(() => getFilteredRecords(widget, collections), [widget, collections]);
+  const widgetRecords = useMemo(
+    () => (widget.collection === "contacts" ? [] : getFilteredRecords(widget, collections)),
+    [widget, collections],
+  );
 
   const pagination = useLocalPagination({
     items: widgetRecords,

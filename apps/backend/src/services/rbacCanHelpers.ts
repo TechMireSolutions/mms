@@ -31,12 +31,12 @@ export function canReadCollection(user: User, collectionName: string): boolean {
   if (collectionName === 'contacts') {
     return canReadContacts(user);
   }
+  // Typed messaging tables are REST-only (not document-store allowlisted).
+  if (collectionName === 'message_logs' || collectionName === 'message_templates') {
+    return canReadMessaging(user);
+  }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
-  }
-  if (collectionName.startsWith('messages_u:')) {
-    const ownerId = collectionName.split(':')[1];
-    return ownerId === user.id;
   }
   if (collectionName.startsWith('whatsappTemplates_u:')) {
     const ownerId = collectionName.split(':')[1];
@@ -66,13 +66,12 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
   if (collectionName === 'contacts') {
     return canWriteContacts(user);
   }
+  // Typed messaging tables are REST-only (not document-store allowlisted).
+  if (collectionName === 'message_logs' || collectionName === 'message_templates') {
+    return canWriteMessaging(user);
+  }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
-  }
-  if (collectionName.startsWith('messages_u:')) {
-    const ownerId = collectionName.split(':')[1];
-    // Full-workspace restore must rewrite every inbox from the backup.
-    return ownerId === user.id || roleHasPermission(user.role, 'settings.global.write');
   }
   if (collectionName.startsWith('whatsappTemplates_u:')) {
     const ownerId = collectionName.split(':')[1];

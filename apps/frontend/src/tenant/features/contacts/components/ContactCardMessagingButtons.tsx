@@ -36,9 +36,9 @@ export function ContactCardMessagingButtons({
   const scaleTap = reducedMotion ? 1 : 0.95;
 
   const showCall = !showArchived && Boolean(phone);
-  const showWhatsApp = Boolean(onWhatsApp && hasWhatsApp(contact));
-  const showSms = Boolean(onSms && phone);
-  const showEmail = Boolean(onEmail && email);
+  const showWhatsApp = !showArchived && Boolean(onWhatsApp && hasWhatsApp(contact));
+  const showSms = !showArchived && Boolean(onSms && phone);
+  const showEmail = !showArchived && Boolean(onEmail && email);
   if (!showCall && !showWhatsApp && !showSms && !showEmail) return null;
 
   return (

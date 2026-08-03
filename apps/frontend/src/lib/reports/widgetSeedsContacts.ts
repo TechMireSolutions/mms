@@ -1,9 +1,11 @@
 import type { CustomWidget } from "./pinnedWidgetTypes";
 
+/** Seeded titles resolve via `titleKey` / DEFAULT_WIDGET_TITLE_KEYS — no English title copies. */
 export const contactsWidgetSeeds: CustomWidget[] = [
       {
         id: "def-contacts-total",
-        title: "Total Contacts",
+        title: "",
+        titleKey: "widget.title.totalContacts",
         category: "contacts",
         collection: "contacts",
         widgetType: "kpi",
@@ -13,7 +15,8 @@ export const contactsWidgetSeeds: CustomWidget[] = [
       },
       {
         id: "def-card-admin-contacts",
-        title: "Total Contacts",
+        title: "",
+        titleKey: "widget.title.totalContacts",
         category: "contacts",
         collection: "contacts",
         widgetType: "card",
@@ -28,7 +31,8 @@ export const contactsWidgetSeeds: CustomWidget[] = [
       },
       {
         id: "def-card-accountant-contacts",
-        title: "Total Contacts",
+        title: "",
+        titleKey: "widget.title.totalContacts",
         category: "contacts",
         collection: "contacts",
         widgetType: "card",
@@ -43,7 +47,8 @@ export const contactsWidgetSeeds: CustomWidget[] = [
       },
       {
         id: "def-contacts-whatsapp",
-        title: "WhatsApp Verified Rate",
+        title: "",
+        titleKey: "widget.title.whatsappVerifiedRate",
         category: "contacts",
         collection: "contacts",
         widgetType: "progress",

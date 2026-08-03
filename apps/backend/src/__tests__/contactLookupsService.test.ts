@@ -1,0 +1,67 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mockListByWorkspace = vi.fn();
+const mockListByKind = vi.fn();
+const mockReplaceKind = vi.fn();
+
+vi.mock('../db/repositories/contactLookupsRepository.js', () => ({
+  listContactLookupsByWorkspace: (...args: unknown[]) => mockListByWorkspace(...args),
+  listContactLookupsByKind: (...args: unknown[]) => mockListByKind(...args),
+  replaceContactLookupsForKind: (...args: unknown[]) => mockReplaceKind(...args),
+}));
+
+vi.mock('../lib/tenantContext.js', () => ({
+  getRequestTenant: () => 'demo',
+}));
+
+import {
+  loadContactLookupKind,
+  loadContactLookupsMap,
+  replaceContactLookupKind,
+} from '../services/contactLookupsService.js';
+
+describe('contactLookupsService', () => {
+  beforeEach(() => {
+    mockListByWorkspace.mockReset();
+    mockListByKind.mockReset();
+    mockReplaceKind.mockReset();
+  });
+
+  it('returns shared defaults when no typed rows exist', async () => {
+    mockListByWorkspace.mockResolvedValue([]);
+    const map = await loadContactLookupsMap('demo');
+    expect(map.genders.length).toBeGreaterThan(0);
+    expect(map.phoneLabels.length).toBeGreaterThan(0);
+    expect(map.countryCodes[0]).toMatchObject({ country: expect.any(String), code: expect.any(String) });
+  });
+
+  it('maps typed string rows for a kind', async () => {
+    mockListByKind.mockResolvedValue([
+      { label: 'Mobile', meta: null, sortOrder: 0 },
+      { label: 'Work', meta: null, sortOrder: 1 },
+    ]);
+    await expect(loadContactLookupKind('phoneLabels', 'demo')).resolves.toEqual(['Mobile', 'Work']);
+  });
+
+  it('replaces countryCodes with meta.code', async () => {
+    mockReplaceKind.mockResolvedValue(undefined);
+    const saved = await replaceContactLookupKind(
+      'countryCodes',
+      [{ country: 'Pakistan', code: '+92' }],
+      'demo',
+    );
+    expect(saved).toEqual([{ country: 'Pakistan', code: '+92' }]);
+    expect(mockReplaceKind).toHaveBeenCalledWith(
+      'demo',
+      'countryCodes',
+      [
+        expect.objectContaining({
+          kind: 'countryCodes',
+          label: 'Pakistan',
+          meta: { code: '+92' },
+          sortOrder: 0,
+        }),
+      ],
+    );
+  });
+});

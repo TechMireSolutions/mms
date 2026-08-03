@@ -18,7 +18,7 @@ export const messageTemplateInputSchema = z.object({
   body: z.string().min(1).max(10_000),
   category: messageCategorySchema.default('general'),
   channel: messageChannelSchema.default('all'),
-});
+}).strict();
 
 /** Message template DTO payload structure. */
 export type MessageTemplateDto = z.infer<typeof messageTemplateSchema>;
@@ -91,20 +91,4 @@ export function mergeMessageTemplates(
     .filter((template) => !existingIds.has(template.id))
     .map(normalizeMessageTemplate);
   return [...base, ...uniqueCustom];
-}
-
-/**
- * Helper to generate the local storage database key for user-scoped message logs.
- * @param userId User identifier
- */
-export function getMessagesDbKey(userId: string): string {
-  return `messages_u:${userId}`;
-}
-
-/**
- * Helper to generate the local storage database key for user-scoped message templates.
- * @param userId User identifier
- */
-export function getMessageTemplatesDbKey(userId: string): string {
-  return `messages_templates_u:${userId}`;
 }

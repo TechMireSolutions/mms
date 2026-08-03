@@ -24,6 +24,7 @@ export function useMessagingRecipientsColumnLayout() {
   return useModuleColumnLayout({
     moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_recipients`,
     tenantRegistry,
+    apiPath: `${MESSAGING_MODULE_MANIFEST.restBasePath}/recipients`,
     translationPrefix: 'messaging.columns',
   });
 }
@@ -45,6 +46,7 @@ export function useMessagingHistoryColumnLayout() {
   return useModuleColumnLayout({
     moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_history`,
     tenantRegistry,
+    apiPath: `${MESSAGING_MODULE_MANIFEST.restBasePath}/history`,
     translationPrefix: 'messaging.columns',
   });
 }
@@ -65,6 +67,7 @@ export function useMessagingTemplatesColumnLayout() {
   return useModuleColumnLayout({
     moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_templates`,
     tenantRegistry,
+    apiPath: `${MESSAGING_MODULE_MANIFEST.restBasePath}/templates`,
     translationPrefix: 'messaging.columns',
   });
 }

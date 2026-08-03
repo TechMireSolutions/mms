@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { Permission } from './permissions.js';
 import type { PersonalizeRecipient } from './utils.js';
 import type { AppTranslationKey } from './appTranslations.js';
@@ -40,6 +41,9 @@ export const MESSAGING_MODULE_MANIFEST = {
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
   },
+  recipientsColumnPreferencesObjectKey: 'messaging_recipients_user_column_preferences',
+  historyColumnPreferencesObjectKey: 'messaging_history_user_column_preferences',
+  templatesColumnPreferencesObjectKey: 'messaging_templates_user_column_preferences',
   permissions: {
     read: 'messaging.read',
     write: 'messaging.write',
@@ -47,7 +51,7 @@ export const MESSAGING_MODULE_MANIFEST = {
     setupView: 'configuration.view',
     setupWrite: 'messaging.write',
   } satisfies Record<string, Permission>,
-  /** Admin clear soft-archives active logs (`deletedAt`); not a Contacts-style trash browser. */
+  /** Admin clear soft-archives active logs (typed `deleted_at`); not a Contacts-style trash browser. */
   logRetention: 'soft-archive-clear' as const,
   categories: MESSAGE_CATEGORIES,
   channels: MESSAGE_CHANNELS,
@@ -95,6 +99,24 @@ export interface StandardMessagingRecipient extends PersonalizeRecipient {
   phone: string;
   email?: string;
 }
+
+/** Lean recipient DTO for messaging resolve / composer payloads. */
+export const messagingRecipientSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  name: z.string(),
+  phone: z.string(),
+  email: z.string().optional(),
+});
+
+/** POST /api/messaging/contacts/resolve response body. */
+export const messagingResolveResponseSchema = z.object({
+  recipients: z.array(messagingRecipientSchema),
+});
+
+/** Inferred lean recipient from Zod (matches StandardMessagingRecipient). */
+export type MessagingRecipientDto = z.infer<typeof messagingRecipientSchema>;
+/** Resolve endpoint response DTO. */
+export type MessagingResolveResponseDto = z.infer<typeof messagingResolveResponseSchema>;
 
 /**
  * Converts a contact or entity object into a standardized StandardMessagingRecipient payload.

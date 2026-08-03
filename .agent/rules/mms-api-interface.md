@@ -16,9 +16,8 @@ All frontend requests to backend resources must use `apiFetch` or `apiJson` from
 - **AbortSignal**: Pass Query/`fetch` `signal` into `apiFetch` / `apiJson` — required for cancellation — `mms-data-layer.md`.
 - **REST Trajectory**: New features must implement resource-specific endpoints (e.g. `GET /api/students`) instead of the generic collections sync API.
 - **Data Types**: DTOs via `@mms/shared` only. Zod `parseRequest` / form schemas are the write boundary — do **not** enable parallel Fastify Ajv/JSON-Schema body validation for the same DTO.
-- **Write DTOs**: Prefer Zod `.strict()` (or explicit `.strip()` with documented passthrough exceptions) so unknown keys never silently persist — `mms-form-architecture.md`.
-- **Response shapes**: Derive serializers / type guards from the same `@mms/shared` Zod (e.g. `zod-to-json-schema` or parse-on-exit in tests) — still ban hand-forked Fastify JSON Schema DTOs.
-- **Write vs read schemas**: Prefer dedicated write schemas for create/update (strip server-owned soft-delete fields) while response/list schemas may include them.
+- **Write DTOs / write-vs-read**: Prefer shared write schemas — norms → **`mms-form-architecture.md`** (`.strict()`, soft-delete strip).
+- **Response shapes**: Derive serializers / type guards from the same `@mms/shared` Zod — still ban hand-forked Fastify JSON Schema DTOs.
 - **Destructive merges**: Atomic server transaction (`POST …/merge`) — ban FE-only dual delete+upsert.
 - **429 handling**: Honor `Retry-After` — `mms-auth-security.md`.
 
@@ -56,7 +55,7 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 - **Bulk id lists**: Prefer shared `bulkIdsBodySchema` / `bulkStringIdsBodySchema` (`.max(500)`) for bulk-delete / bulk-restore — do not fork unbounded id arrays per module.
 - **Contacts list/filter query**: Shared `contactsListQuerySchema` / `paginateContacts` — do not fork Messaging “select all with email” flags per route.
 - **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Prefer `bulkSave` / `bulkUpsertCustomTabsForModule`. Keep replace helpers only for migrations, intentional admin clears, backup restore, or documented one-shot archives.
-- Frontend mutations must use `mutateAsync` and await success before closing forms — `mms-data-layer.md`, `mms-module-architecture.md` §7.
+- Frontend mutations: await success before closing forms — **`mms-module-architecture.md` §7**.
 
 ## 6. Pagination & idempotency
 - HTTP contract: clients **should send** `page` and `limit` (shared `baseListQuerySchema`); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.

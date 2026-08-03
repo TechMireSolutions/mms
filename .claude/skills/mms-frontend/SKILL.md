@@ -15,11 +15,12 @@ Stack: React 19 · Vite 8 · Tailwind 4 · TanStack Query · React Router · sha
 Dedicated REST (/api/{resource})?
 ├── YES → TanStack Query — skill mms-query-factories
 │         useXxx / useXxxPaginated / useXxxMutations (restore when soft-delete ships)
-└── NO  → useLiveCollection + saveCollection (legacy only — do not expand)
+└── NO  → useLiveCollection + saveCollection for **existing non-migrated** keys only
+              (no new entity collections / no new useLiveCollection for REST-migrated modules)
               skill mms-data-sync
 ```
 
-Contacts (and other typed person entities): **Query + REST only** — never `saveCollection('contacts')`. Lookup option lists may still use collection helpers via ContactConfig.
+Contacts (and other typed person entities): **Query + REST only** — never `saveCollection('contacts')`. Lookups via ContactConfig / `useContactLookups*` + `/api/contacts/lookups` — **never** `saveCollection` for genders/labels/countryCodes.
 
 ## Before editing
 

@@ -202,4 +202,47 @@ describe('apiClient', () => {
     }
     globalThis.fetch = original;
   });
+
+  it('parses Retry-After into ApiError.retryAfterSeconds', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ type: 'rate_limit_exceeded', message: 'Too many requests' }), {
+        status: 429,
+        headers: new Headers({ 'Retry-After': '12' }),
+      });
+
+    const { apiJson, ApiError } = await import('@/lib/apiClient');
+    try {
+      await apiJson('/api/messaging/logs');
+      expect.unreachable('should throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      if (error instanceof ApiError) {
+        expect(error.status).toBe(429);
+        expect(error.type).toBe('rate_limit_exceeded');
+        expect(error.retryAfterSeconds).toBe(12);
+      }
+    }
+    globalThis.fetch = original;
+  });
+
+  it('leaves retryAfterSeconds undefined when Retry-After is missing', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = async () =>
+      new Response(JSON.stringify({ type: 'rate_limit_exceeded', message: 'Too many requests' }), {
+        status: 429,
+      });
+
+    const { apiJson, ApiError } = await import('@/lib/apiClient');
+    try {
+      await apiJson('/api/messaging/logs');
+      expect.unreachable('should throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      if (error instanceof ApiError) {
+        expect(error.retryAfterSeconds).toBeUndefined();
+      }
+    }
+    globalThis.fetch = original;
+  });
 });

@@ -6,21 +6,21 @@ import {
   type DragEvent,
   type RefObject,
 } from "react";
-import {
-  Contact,
-  getDisplayName,
-  getEmails,
-  getPhoneNumbers,
-  parseVCard,
-  toVCard,
-} from "@mms/shared";
+import { Contact, parseVCard } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
-import { triggerFileDownload } from "@/lib/download";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
-import { fetchAllContactsForQuery } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
+import { apiJson } from "@/lib/apiClient";
+import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
+import { startServerContactsVcfExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
+import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
+import {
+  buildAppleImportIdentityCandidates,
+  filterAppleImportFreshContacts,
+} from "@/tenant/features/contacts/hooks/appleContactsIdentity";
+import type { ContactIdentityMatchResult } from "@mms/shared";
 
 export function useAppleContactsPanel({
   onImport,
@@ -95,29 +95,13 @@ export function useAppleContactsPanel({
     setImporting(true);
     const controller = new AbortController();
     try {
-      // On-demand identity index — do not keep a live full-tenant Query dump for Setup.
-      const existing = await fetchAllContactsForQuery(
-        { includeDeleted: false },
-        undefined,
-        controller.signal,
-      );
-      const existingPhones = new Set(existing.flatMap((contact) => getPhoneNumbers(contact)));
-      const existingEmails = new Set(existing.flatMap((contact) => getEmails(contact)));
-      const existingNames = new Set(
-        existing.map((contact) => getDisplayName(contact).toLowerCase().trim()).filter(Boolean),
-      );
-      const fresh = previewList.filter((contact) => {
-        const phones = getPhoneNumbers(contact);
-        const emails = getEmails(contact);
-        if (phones.some((phone) => existingPhones.has(phone))) return false;
-        if (emails.some((email) => existingEmails.has(email))) return false;
-        // Name-only skip when the import row has no phone/email identifiers.
-        if (phones.length === 0 && emails.length === 0) {
-          const name = getDisplayName(contact).toLowerCase().trim();
-          return !name || !existingNames.has(name);
-        }
-        return true;
+      const candidates = buildAppleImportIdentityCandidates(previewList, defaultPhoneCountryCode);
+      const existing = await apiJson<ContactIdentityMatchResult>(`${CONTACTS_API}/identity-match`, {
+        method: "POST",
+        body: JSON.stringify(candidates),
+        signal: controller.signal,
       });
+      const fresh = filterAppleImportFreshContacts(previewList, existing);
       await onImport(fresh);
       setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
       setPreviewList([]);
@@ -132,21 +116,20 @@ export function useAppleContactsPanel({
 
   const handleExport = async (): Promise<void> => {
     setExporting(true);
-    const controller = new AbortController();
     try {
-      const contacts = await fetchAllContactsForQuery(
-        { includeDeleted: false },
-        undefined,
-        controller.signal,
-      );
-      const vcf = contacts.map(toVCard).join("\r\n");
-      const blob = new Blob([vcf], { type: "text/vcard" });
-      triggerFileDownload(blob, t("contacts.sync.vcfFileName"));
+      const filename = t("contacts.sync.vcfFileName");
+      const job = await startServerContactsVcfExport({
+        filename,
+        label: t("contacts.jobs.exportLabelServer"),
+      });
+      if (job.hasDownload && job.status === "completed") {
+        await downloadBackgroundJobArtifact(job.id, filename);
+      }
+      notify.success(t("contacts.exportSuccess"));
     } catch (error) {
       if ((error as { name?: string })?.name === "AbortError") return;
       notify.error(t("contacts.saveFailed"));
     } finally {
-      controller.abort();
       setExporting(false);
     }
   };

@@ -19,7 +19,7 @@ vi.mock('../services/dbSyncService.js', async (importOriginal) => {
         users: [{ id: 'u-admin', role: 'admin', email: 'admin@test.com' }],
         contacts: [{ id: 'c-1' }],
         students: [{ id: 's-1' }],
-        'messages_u:peer': [{ id: 'm-1', text: 'hello' }],
+        message_logs: [{ id: 'm-1', channel: 'sms', body: 'hello' }],
         genders: [{ id: 'male' }],
       },
       objects: {
@@ -131,7 +131,8 @@ describe('tenant JWT binding', () => {
       { id: 'u-admin', role: 'admin', email: 'admin@test.com' },
     ]);
     expect(body.collections.students).toEqual([{ id: 's-1' }]);
-    expect(body.collections['messages_u:peer']).toEqual([{ id: 'm-1', text: 'hello' }]);
+    expect(body.collections.message_logs).toEqual([{ id: 'm-1', channel: 'sms', body: 'hello' }]);
+    expect(body.collections).not.toHaveProperty('messages_u:peer');
     expect(body.collections.genders).toEqual([{ id: 'male' }]);
     expect(body.objects.branding).toEqual({ madrasaName: 'Demo Madrasa' });
     expect(body.objects).not.toHaveProperty('platform_super_users');
@@ -430,7 +431,7 @@ describe('tenant JWT binding', () => {
       await app.close();
     });
 
-    it('allows admin sync of peer inboxes and module lookup collections', async () => {
+    it('allows admin sync of module lookup collections and strips legacy messages_u', async () => {
       const app = await buildApp();
       const token = adminToken(app);
       const res = await app.inject({

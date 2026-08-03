@@ -71,14 +71,14 @@ export function MessageComposerRecipients({
                   <Button type="button" variant="ghost" className="h-auto min-h-11 w-full min-w-0 justify-start truncate px-2 text-xs" onClick={() => { if (eligibleIndex >= 0) onPreviewIndexChange(eligibleIndex); }}>{recipient.name}</Button>
                   <span className="block truncate px-2 font-mono text-xs text-muted-foreground">({displayAddress})</span>
                 </div>
-                {recipient.isValid ? <Button type="button" variant="link" className="ms-auto inline-flex min-h-11 shrink-0 items-center p-0 text-xs font-semibold text-primary" onClick={() => onSendOne(recipient, message)}>{isEmail ? t('messaging.sendEmail') : isSms ? t('contacts.openSmsApp') : t('contacts.whatsapp.open')}</Button> : <span className="ms-auto shrink-0 text-xs font-semibold text-warning">{t('messaging.skippedStatus')}</span>}
+                {recipient.isValid ? <Button type="button" variant="link" className="ms-auto inline-flex min-h-11 shrink-0 items-center p-0 text-xs font-semibold text-primary" onClick={() => onSendOne(recipient, message)}>{isEmail ? t('messaging.sendEmail') : isSms ? t('messaging.openSmsApp') : t('messaging.openWhatsapp')}</Button> : <span className="ms-auto shrink-0 text-xs font-semibold text-warning">{t('messaging.skippedStatus')}</span>}
               </li>
             );
           })}
           {displayedRecipients.length === 0 && <li className="py-2 text-center text-xs text-muted-foreground">{t('messaging.noRecipientsFound')}</li>}
         </ul>
       </div>
-      {eligibleRecipients.length === 0 && <p className="text-xs font-medium text-destructive">{isEmail ? t('messaging.selectRecipientsDesc') : isSms ? t('contacts.smsNoEligibleContacts') : t('contacts.whatsapp.skippedNote')}</p>}
+      {eligibleRecipients.length === 0 && <p className="text-xs font-medium text-destructive">{isEmail ? t('messaging.selectRecipientsDesc') : isSms ? t('messaging.smsNoEligibleContacts') : t('messaging.whatsappSkippedNote')}</p>}
     </>
   );
 }

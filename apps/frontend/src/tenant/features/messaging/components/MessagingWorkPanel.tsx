@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CONTACTS_MODULE_MANIFEST, type Contact, type MessagingGenderFilter, type MessagingRoleFilter, type StandardMessagingRecipient as MessagingRecipient } from '@mms/shared';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -44,9 +44,14 @@ export function MessagingWorkPanel({
   const [genderFilter, setGenderFilter] = useState<MessagingGenderFilter>('all');
   const [roleFilter, setRoleFilter] = useState<MessagingRoleFilter>('all');
   const [selectingReachable, setSelectingReachable] = useState(false);
+  const selectAbortRef = useRef<AbortController | null>(null);
   const debouncedSearch = useDebounce(searchContact, 250);
 
   useEffect(() => setRecipientsPage(1), [debouncedSearch, genderFilter, roleFilter]);
+
+  useEffect(() => () => {
+    selectAbortRef.current?.abort();
+  }, []);
 
   const recipientsQuery = useMessagingWorkRecipients({
     roleFilter,
@@ -79,23 +84,29 @@ export function MessagingWorkPanel({
 
   const selectReachable = async (kind: 'phone' | 'email'): Promise<void> => {
     if (selectingReachable) return;
+    selectAbortRef.current?.abort();
+    const controller = new AbortController();
+    selectAbortRef.current = controller;
     setSelectingReachable(true);
     try {
-      const { contacts: matched, truncated } = await loadMatchingRecipients({
+      const { recipients: matched, truncated } = await loadMatchingRecipients({
         roleFilter,
         genderFilter,
         search: debouncedSearch,
         kind,
+        signal: controller.signal,
       });
       const next: MessagingSelectedMap = {};
-      for (const contact of matched) {
-        next[String(contact.id)] = contactToRecipient(contact);
+      for (const recipient of matched) {
+        next[String(recipient.id)] = recipient;
       }
       onSelectedByIdChange(next);
       if (truncated) notify.warning(t('messaging.selectAllTruncated'));
-    } catch {
-      notify.error(t('messaging.loadFailed'));
+    } catch (error) {
+      if ((error as { name?: string })?.name === 'AbortError') return;
+      notify.error(t('messaging.selectAllFailed'), { description: t('messaging.loadFailedHint') });
     } finally {
+      if (selectAbortRef.current === controller) selectAbortRef.current = null;
       setSelectingReachable(false);
     }
   };
@@ -104,6 +115,7 @@ export function MessagingWorkPanel({
     return (
       <ErrorState
         title={t('messaging.loadFailed')}
+        description={t('messaging.loadFailedHint')}
         onRetry={() => {
           recipientsQuery.refetch();
         }}

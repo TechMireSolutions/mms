@@ -1,98 +1,38 @@
-import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
-import {
-  curatedContactCountryCodes,
-  needsContactCountryCodesCurate,
-  type FieldConfig,
-} from "@mms/shared";
-import { getCollection, saveCollectionAsync } from "@/lib/db";
-
+import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
+import type { ContactLookupKind, FieldConfig } from "@mms/shared";
 import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
 import { syncOptionsInConfig } from "@/lib/contacts/preferencesStorage";
 import {
-  CONTACT_CONFIG_COLLECTION_KEYS,
-  getContactConfigCollectionDefaults,
-} from "@/lib/contacts/contactConfigSeeds";
-import { usePersistedStringCollectionUpdater } from "@/lib/contacts/usePersistedStringCollectionUpdater";
-import { useContactConfigCollectionStorageSync } from "@/lib/contacts/useContactConfigCollectionStorageSync";
+  useContactLookupMutation,
+  useContactLookupsQuery,
+} from "@/tenant/features/contacts/hooks/useContactLookups";
 
 type CountryCodeEntry = { country: string; code: string };
-type ContactConfigDefaults = ReturnType<typeof getContactConfigCollectionDefaults>;
 
+/**
+ * Contacts Setup option lists via `/api/contacts/lookups` (typed contact_lookups).
+ * Keeps field-config option sync on string-list updates.
+ */
 export function useContactConfigCollections({
-  contactConfigDefaults,
   setFieldConfigState,
 }: {
-  contactConfigDefaults: ContactConfigDefaults;
+  contactConfigDefaults?: unknown;
   setFieldConfigState: Dispatch<SetStateAction<FieldConfig>>;
 }) {
-  const [genders, setGendersState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, contactConfigDefaults.genders),
-  );
-  const [socialPlatforms, setSocialPlatformsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, contactConfigDefaults.socialPlatforms),
-  );
-  const [relationships, setRelationshipsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships),
-  );
-  const [phoneLabels, setPhoneLabelsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, contactConfigDefaults.phoneLabels),
-  );
-  const [emailLabels, setEmailLabelsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, contactConfigDefaults.emailLabels),
-  );
-  const [addressLabels, setAddressLabelsState] = useState<string[]>(() =>
-    getCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, contactConfigDefaults.addressLabels),
-  );
-  const [countryCodes, setCountryCodesState] = useState<CountryCodeEntry[]>(() => {
-    const loaded = getCollection(
-      CONTACT_CONFIG_COLLECTION_KEYS.countryCodes,
-      contactConfigDefaults.countryCodes,
-    );
-    return needsContactCountryCodesCurate(loaded)
-      ? curatedContactCountryCodes()
-      : loaded;
-  });
+  const lookupsQuery = useContactLookupsQuery();
+  const lookupMutation = useContactLookupMutation();
 
-  // Persist curated dial codes when localStorage still holds the expanded seed.
-  useEffect(() => {
-    const loaded = getCollection(
-      CONTACT_CONFIG_COLLECTION_KEYS.countryCodes,
-      contactConfigDefaults.countryCodes,
-    );
-    if (!needsContactCountryCodesCurate(loaded)) return;
-    void saveCollectionAsync(
-      CONTACT_CONFIG_COLLECTION_KEYS.countryCodes,
-      curatedContactCountryCodes(),
-    );
-  }, [contactConfigDefaults.countryCodes]);
+  const genders = lookupsQuery.data?.genders ?? [];
+  const socialPlatforms = lookupsQuery.data?.socialPlatforms ?? [];
+  const relationships = lookupsQuery.data?.relationships ?? [];
+  const phoneLabels = lookupsQuery.data?.phoneLabels ?? [];
+  const emailLabels = lookupsQuery.data?.emailLabels ?? [];
+  const addressLabels = lookupsQuery.data?.addressLabels ?? [];
+  const countryCodes = (lookupsQuery.data?.countryCodes ?? []) as CountryCodeEntry[];
 
   const reloadCollections = useCallback(() => {
-    setGendersState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.genders, contactConfigDefaults.genders));
-    setSocialPlatformsState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms, contactConfigDefaults.socialPlatforms),
-    );
-    setRelationshipsState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.relationships, contactConfigDefaults.relationships),
-    );
-    setPhoneLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels, contactConfigDefaults.phoneLabels));
-    setEmailLabelsState(getCollection(CONTACT_CONFIG_COLLECTION_KEYS.emailLabels, contactConfigDefaults.emailLabels));
-    setAddressLabelsState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.addressLabels, contactConfigDefaults.addressLabels),
-    );
-    setCountryCodesState(
-      getCollection(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, contactConfigDefaults.countryCodes),
-    );
-  }, [contactConfigDefaults]);
-
-  useContactConfigCollectionStorageSync({
-    setGendersState,
-    setSocialPlatformsState,
-    setRelationshipsState,
-    setPhoneLabelsState,
-    setEmailLabelsState,
-    setAddressLabelsState,
-    setCountryCodesState,
-  });
+    void lookupsQuery.refetch();
+  }, [lookupsQuery]);
 
   const syncFieldOptions = useCallback(
     async (tabId: string, fieldId: string, options: string[]) => {
@@ -108,52 +48,44 @@ export function useContactConfigCollections({
     [setFieldConfigState],
   );
 
-  const updateGenders = usePersistedStringCollectionUpdater(
-    CONTACT_CONFIG_COLLECTION_KEYS.genders,
-    setGendersState,
-    syncFieldOptions,
-    "basic",
-    "gender",
+  const persistStringKind = useCallback(
+    async (kind: ContactLookupKind, options: string[], tabId: string, fieldId: string) => {
+      await lookupMutation.mutateAsync({ kind, items: options });
+      await syncFieldOptions(tabId, fieldId, options);
+    },
+    [lookupMutation, syncFieldOptions],
   );
-  const updateSocialPlatforms = usePersistedStringCollectionUpdater(
-    CONTACT_CONFIG_COLLECTION_KEYS.socialPlatforms,
-    setSocialPlatformsState,
-    syncFieldOptions,
-    "socials",
-    "platform",
+
+  const updateGenders = useCallback(
+    (options: string[]) => persistStringKind("genders", options, "basic", "gender"),
+    [persistStringKind],
   );
-  const updateRelationships = usePersistedStringCollectionUpdater(
-    CONTACT_CONFIG_COLLECTION_KEYS.relationships,
-    setRelationshipsState,
-    syncFieldOptions,
-    "relationship",
-    "relationship",
+  const updateSocialPlatforms = useCallback(
+    (options: string[]) => persistStringKind("socialPlatforms", options, "socials", "platform"),
+    [persistStringKind],
   );
-  const updatePhoneLabels = usePersistedStringCollectionUpdater(
-    CONTACT_CONFIG_COLLECTION_KEYS.phoneLabels,
-    setPhoneLabelsState,
-    syncFieldOptions,
-    "phones",
-    "label",
+  const updateRelationships = useCallback(
+    (options: string[]) => persistStringKind("relationships", options, "relationship", "relationship"),
+    [persistStringKind],
   );
-  const updateEmailLabels = usePersistedStringCollectionUpdater(
-    CONTACT_CONFIG_COLLECTION_KEYS.emailLabels,
-    setEmailLabelsState,
-    syncFieldOptions,
-    "emails",
-    "label",
+  const updatePhoneLabels = useCallback(
+    (options: string[]) => persistStringKind("phoneLabels", options, "phones", "label"),
+    [persistStringKind],
   );
-  const updateAddressLabels = usePersistedStringCollectionUpdater(
-    CONTACT_CONFIG_COLLECTION_KEYS.addressLabels,
-    setAddressLabelsState,
-    syncFieldOptions,
-    "addresses",
-    "label",
+  const updateEmailLabels = useCallback(
+    (options: string[]) => persistStringKind("emailLabels", options, "emails", "label"),
+    [persistStringKind],
   );
-  const updateCountryCodes = useCallback(async (countryCodeOptions: CountryCodeEntry[]) => {
-    setCountryCodesState(countryCodeOptions);
-    await saveCollectionAsync(CONTACT_CONFIG_COLLECTION_KEYS.countryCodes, countryCodeOptions);
-  }, []);
+  const updateAddressLabels = useCallback(
+    (options: string[]) => persistStringKind("addressLabels", options, "addresses", "label"),
+    [persistStringKind],
+  );
+  const updateCountryCodes = useCallback(
+    async (countryCodeOptions: CountryCodeEntry[]) => {
+      await lookupMutation.mutateAsync({ kind: "countryCodes", items: countryCodeOptions });
+    },
+    [lookupMutation],
+  );
 
   const countryCodesMap = useMemo(() => {
     const countryCodeByCountry: Record<string, string> = {};
@@ -180,5 +112,6 @@ export function useContactConfigCollections({
     updateEmailLabels,
     updateAddressLabels,
     updateCountryCodes,
+    lookupsReady: lookupsQuery.isSuccess || lookupsQuery.isError,
   };
 }

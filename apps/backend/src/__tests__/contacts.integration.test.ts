@@ -53,9 +53,21 @@ const mockEnqueueBackgroundJob = vi.fn();
 const mockGetUserBackgroundJob = vi.fn();
 const mockLoadContactFieldUsageCount = vi.fn();
 const mockLoadContactFieldUsageCounts = vi.fn();
+const mockLoadContactsCommandMetrics = vi.fn();
+const mockLoadContactsReportAnalytics = vi.fn();
+const mockLoadContactsWidgetAggregates = vi.fn();
 const mockGetLinkedContactId = vi.fn().mockResolvedValue(null);
 const mockGetContactGoogleSyncConfig = vi.fn();
 const mockRedactGoogleSyncConfigForClient = vi.fn((...args: unknown[]) => args[0]);
+const mockMatchContactIdentityIndex = vi.fn().mockResolvedValue({
+  phones: [],
+  emails: [],
+  names: [],
+});
+
+vi.mock('../services/contactIdentityMatchService.js', () => ({
+  matchContactIdentityIndex: (...args: unknown[]) => mockMatchContactIdentityIndex(...args),
+}));
 
 vi.mock('../services/contactService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/contactService.js')>();
@@ -72,9 +84,9 @@ vi.mock('../services/contactService.js', async (importOriginal) => {
     bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
     bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
     mergeContactsById: (...args: unknown[]) => mockMergeContactsById(...args),
-    loadContactsCommandMetrics: vi.fn(),
-    loadContactsReportAnalytics: vi.fn(),
-    loadContactsWidgetAggregates: vi.fn(),
+    loadContactsCommandMetrics: (...args: unknown[]) => mockLoadContactsCommandMetrics(...args),
+    loadContactsReportAnalytics: (...args: unknown[]) => mockLoadContactsReportAnalytics(...args),
+    loadContactsWidgetAggregates: (...args: unknown[]) => mockLoadContactsWidgetAggregates(...args),
     loadContactsByIds: vi.fn(),
     loadContactFieldUsageCount: (...args: unknown[]) => mockLoadContactFieldUsageCount(...args),
     loadContactFieldUsageCounts: (...args: unknown[]) => mockLoadContactFieldUsageCounts(...args),
@@ -83,9 +95,16 @@ vi.mock('../services/contactService.js', async (importOriginal) => {
   };
 });
 
+const mockLoadContactFieldConfig = vi.fn();
+const mockSaveContactFieldConfig = vi.fn();
+const mockLoadContactPreferences = vi.fn();
+const mockSaveContactPreferences = vi.fn();
+
 vi.mock('../services/contactPreferencesService.js', () => ({
   getUserColumnPreferences: (...args: unknown[]) => mockGetUserColumnPreferences(...args),
   setUserColumnPreferences: (...args: unknown[]) => mockSetUserColumnPreferences(...args),
+  loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
+  saveContactPreferences: (...args: unknown[]) => mockSaveContactPreferences(...args),
   listContactsSavedReports: (...args: unknown[]) => mockListContactsSavedReports(...args),
   createContactsSavedReport: (...args: unknown[]) => mockCreateContactsSavedReport(...args),
   deleteContactsSavedReport: (...args: unknown[]) => mockDeleteContactsSavedReport(...args),
@@ -99,7 +118,17 @@ vi.mock('../services/userColumnPreferencesService.js', () => ({
 
 
 vi.mock('../services/contactConfigService.js', () => ({
-  loadContactFieldConfig: vi.fn().mockResolvedValue(null),
+  loadContactFieldConfig: (...args: unknown[]) => mockLoadContactFieldConfig(...args),
+  saveContactFieldConfig: (...args: unknown[]) => mockSaveContactFieldConfig(...args),
+}));
+
+const mockLoadContactLookupsMap = vi.fn();
+const mockReplaceContactLookupKind = vi.fn();
+
+vi.mock('../services/contactLookupsService.js', () => ({
+  loadContactLookupsMap: (...args: unknown[]) => mockLoadContactLookupsMap(...args),
+  loadContactLookupKind: vi.fn(),
+  replaceContactLookupKind: (...args: unknown[]) => mockReplaceContactLookupKind(...args),
 }));
 
 vi.mock('../services/auth/userService.js', () => ({
@@ -200,8 +229,38 @@ describe('contacts REST routes', () => {
       createdAt: '2026-06-21T00:00:00.000Z',
     });
     mockGetUserBackgroundJob.mockReset().mockResolvedValue(null);
+    mockMatchContactIdentityIndex.mockReset().mockResolvedValue({
+      phones: [],
+      emails: [],
+      names: [],
+    });
     mockLoadContactFieldUsageCount.mockReset().mockResolvedValue(0);
     mockLoadContactFieldUsageCounts.mockReset().mockResolvedValue({ customNotes: 0 });
+    mockLoadContactsCommandMetrics.mockReset().mockResolvedValue({
+      total: 10,
+      newThisPeriod: 2,
+      whatsappCount: 5,
+      incompleteCount: 1,
+      duplicatePairCount: 0,
+    });
+    mockLoadContactsReportAnalytics.mockReset().mockResolvedValue({
+      analytics: {
+        total: 10,
+        activeCount: 10,
+        whatsappCount: 5,
+        whatsappRate: 50,
+        missingInfoCount: 1,
+        newLast30Days: 2,
+        newPrior30Days: 1,
+        newThisPeriod: 2,
+        hasSignupDates: true,
+        growthRecentSignups30d: 2,
+        growthPriorSignups30d: 1,
+      },
+    });
+    mockLoadContactsWidgetAggregates.mockReset().mockResolvedValue({
+      'w1': { value: 10, totalCount: 10, chartData: [{ name: 'Male', value: 6 }] },
+    });
     mockTouchContactsSavedReportRun.mockReset().mockResolvedValue({
       id: 'csr_test',
       name: 'Leads',
@@ -279,6 +338,126 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ count: 1 });
     expect(mockCountContacts).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/contacts/metrics loads command metrics for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      metrics: {
+        total: 10,
+        newThisPeriod: 2,
+        whatsappCount: 5,
+        incompleteCount: 1,
+        duplicatePairCount: 0,
+      },
+    });
+    expect(mockLoadContactsCommandMetrics).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/contacts/metrics returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockLoadContactsCommandMetrics).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/contacts/report-analytics loads analytics for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/report-analytics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      analytics: expect.objectContaining({ total: 10, whatsappRate: 50 }),
+    });
+    expect(mockLoadContactsReportAnalytics).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/contacts/report-analytics returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/report-analytics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockLoadContactsReportAnalytics).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts/widget-aggregates loads aggregates for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/widget-aggregates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        widgets: [{ id: 'w1', operation: 'count', xAxisField: 'gender' }],
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      results: {
+        w1: { value: 10, totalCount: 10, chartData: [{ name: 'Male', value: 6 }] },
+      },
+    });
+    expect(mockLoadContactsWidgetAggregates).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'w1', operation: 'count', xAxisField: 'gender' }),
+    ]);
+    await app.close();
+  });
+
+  it('POST /api/contacts/widget-aggregates returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/widget-aggregates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        widgets: [{ id: 'w1', operation: 'count' }],
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockLoadContactsWidgetAggregates).not.toHaveBeenCalled();
     await app.close();
   });
 
@@ -602,6 +781,81 @@ describe('contacts REST routes', () => {
       action: 'contact.export.queue',
       entityId: expect.any(String),
     }));
+    await app.close();
+  });
+
+  it('POST /api/contacts/export/csv accepts selection ids', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: {
+        label: 'Selection CSV',
+        columns: [{ id: 'name', label: 'Name' }],
+        ids: ['c1', 'c2'],
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      'u-teacher',
+      expect.objectContaining({ moduleId: 'contacts', kind: 'export', label: 'Selection CSV' }),
+      expect.objectContaining({
+        query: expect.objectContaining({ includeIds: ['c1', 'c2'] }),
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/contacts/export/vcf queues a VCF export job', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/export/vcf',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: {
+        label: 'Apple VCF',
+        filename: 'contacts.vcf',
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      'u-teacher',
+      expect.objectContaining({ moduleId: 'contacts', kind: 'export-vcf', label: 'Apple VCF' }),
+      expect.objectContaining({ filename: 'contacts.vcf' }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/contacts/identity-match returns scoped matches for readers', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/identity-match',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: {
+        phones: ['923001234567'],
+        emails: ['a@example.com'],
+        names: ['syed ali'],
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      phones: expect.any(Array),
+      emails: expect.any(Array),
+      names: expect.any(Array),
+    });
     await app.close();
   });
 
@@ -1031,6 +1285,136 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(res.json()).toMatchObject({ type: 'forbidden' });
+    await app.close();
+  });
+
+  it('GET /api/contacts/lookups allows readers and PUT requires setup write', async () => {
+    mockLoadContactLookupsMap.mockResolvedValue({
+      genders: ['male', 'female'],
+      socialPlatforms: [],
+      relationships: [],
+      phoneLabels: ['Mobile'],
+      emailLabels: [],
+      addressLabels: [],
+      countryCodes: [{ country: 'Pakistan', code: '+92' }],
+    });
+    mockReplaceContactLookupKind.mockResolvedValue(['male', 'female', 'other']);
+
+    const app = await buildApp();
+    const readOk = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/lookups',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(readOk.statusCode).toBe(200);
+    expect(readOk.json()).toMatchObject({
+      lookups: { genders: ['male', 'female'] },
+    });
+
+    const writeDenied = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/lookups/genders',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: { items: ['male', 'female', 'other'] },
+    });
+    expect(writeDenied.statusCode).toBe(403);
+
+    const writeOk = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/lookups/genders',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { items: ['male', 'female', 'other'] },
+    });
+    expect(writeOk.statusCode).toBe(200);
+    expect(mockReplaceContactLookupKind).toHaveBeenCalledWith(
+      'genders',
+      ['male', 'female', 'other'],
+    );
+    await app.close();
+  });
+
+  it('GET/PUT /api/contacts/field-config and /preferences require setup permissions', async () => {
+    mockLoadContactFieldConfig.mockResolvedValue({ version: 1, enabledTabs: ['basic'], fields: {} });
+    mockSaveContactFieldConfig.mockResolvedValue({ version: 1, enabledTabs: ['basic'], fields: {} });
+    mockLoadContactPreferences.mockResolvedValue({ defaultCountry: 'PK' });
+    mockSaveContactPreferences.mockResolvedValue({ defaultCountry: 'PK' });
+
+    const app = await buildApp();
+
+    const fieldReadDenied = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/field-config',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(fieldReadDenied.statusCode).toBe(403);
+
+    const fieldReadOk = await app.inject({
+      method: 'GET',
+      url: '/api/contacts/field-config',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(fieldReadOk.statusCode).toBe(200);
+
+    const fieldWriteDenied = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/field-config',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: { version: 1, enabledTabs: ['basic'], fields: {} },
+    });
+    expect(fieldWriteDenied.statusCode).toBe(403);
+
+    const fieldWriteOk = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/field-config',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { version: 1, enabledTabs: ['basic'], fields: {} },
+    });
+    expect(fieldWriteOk.statusCode).toBe(200);
+    expect(mockSaveContactFieldConfig).toHaveBeenCalled();
+
+    const prefsWriteDenied = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/preferences',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: { defaultCountry: 'PK' },
+    });
+    expect(prefsWriteDenied.statusCode).toBe(403);
+
+    const prefsWriteOk = await app.inject({
+      method: 'PUT',
+      url: '/api/contacts/preferences',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { defaultCountry: 'PK' },
+    });
+    expect(prefsWriteOk.statusCode).toBe(200);
+    expect(mockSaveContactPreferences).toHaveBeenCalled();
     await app.close();
   });
 });

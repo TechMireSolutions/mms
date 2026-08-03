@@ -1,6 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
-import { messagingRecipientsQuerySchema } from '@mms/shared';
+import {
+  messagingRecipientsMatchQuerySchema,
+  messagingRecipientsQuerySchema,
+} from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
@@ -8,11 +11,27 @@ import { entityResolveBodySchema } from '../../../validation/commonSchemas.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import {
   loadMessagingRecipients,
-  resolveMessagingContacts,
+  matchMessagingRecipients,
+  resolveMessagingRecipients,
 } from '../../../services/messagingService.js';
 
 /** Messaging recipient directory and contact resolve routes. */
 export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get('/recipients/match', async (req, reply) => {
+    const user = req.user as User;
+    if (!canReadMessaging(user)) return sendForbidden(reply);
+    const parsedQuery = parseRequest(messagingRecipientsMatchQuerySchema, req.query);
+    if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
+    const tenantSubdomain = getRequestTenant();
+    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    try {
+      const result = await matchMessagingRecipients(tenantSubdomain, parsedQuery.data);
+      return reply.send(result);
+    } catch (err) {
+      return sendDatabaseError(reply, 'Failed to match messaging recipients', err);
+    }
+  });
+
   fastify.get('/recipients', async (req, reply) => {
     const user = req.user as User;
     if (!canReadMessaging(user)) return sendForbidden(reply);
@@ -36,8 +55,8 @@ export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
     const tenantSubdomain = getRequestTenant();
     if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
     try {
-      const contacts = await resolveMessagingContacts(tenantSubdomain, parsed.data.ids);
-      return reply.send({ contacts });
+      const recipients = await resolveMessagingRecipients(tenantSubdomain, parsed.data.ids);
+      return reply.send({ recipients });
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to resolve messaging contacts', err);
     }

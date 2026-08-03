@@ -42,6 +42,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const {
     fieldConfig,
     setFieldConfigState,
+    formTabsReady,
     prefs,
     rawUserColumnOverlay,
     updateConfig,
@@ -106,6 +107,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
 
   const providerValue = useContactConfigProviderValue({
     fieldConfig,
+    formTabsReady,
     prefs,
     updateConfig,
     updateConfigAsync,

@@ -174,6 +174,25 @@ describe('filterContactsForQuery excludeIds', () => {
   });
 });
 
+describe('filterContactsForQuery includeIds', () => {
+  const rows = [
+    contact({ id: '1', name: 'Ali' }),
+    contact({ id: '2', name: 'Sara' }),
+    contact({ id: '3', name: 'Hassan' }),
+  ];
+
+  it('keeps only included contact ids', () => {
+    expect(filterContactsForQuery(rows, { includeIds: ['2', 3] }).map((row) => row.id)).toEqual([
+      '2',
+      '3',
+    ]);
+  });
+
+  it('returns none when includeIds is empty', () => {
+    expect(filterContactsForQuery(rows, { includeIds: [] })).toEqual([]);
+  });
+});
+
 describe('filterContactsForQuery soft deletion', () => {
   const rows = [
     contact({ id: 'active', name: 'Active Contact' }),

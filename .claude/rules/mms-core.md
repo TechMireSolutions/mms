@@ -53,7 +53,7 @@ Prefer the existing tenant WS channel when wiring live push (`mms-migration-stat
 | Phase | Pattern | Owner |
 |-------|---------|--------|
 | **Current** | Per-entity REST + TanStack Query; report widgets/visualizer Query-first; BE broadcasts on `/api/ws` (FE not yet subscribed) | `mms-data-layer.md`, `mms-reports.md` |
-| **Target** | localStorage as offline cache only; FE WS → Query invalidation; remaining niche chart/statement panels on server aggregates | `mms-migration-status.md` |
+| **Target** | localStorage as offline cache only; FE WS → Query invalidation; remaining niche chart/statement panels on server aggregates | `mms-data-layer.md`, `mms-reports.md` (gap register → `mms-migration-status.md`) |
 
 ## Tenant write invariant
 
@@ -61,7 +61,7 @@ Any new tenant write path must use **`authenticateTenant`** + transaction-scoped
 
 ## Validation SSOT
 
-Shared Zod schemas live in `@mms/shared`. FE forms and BE `parseRequest` must consume the same shapes — do not fork request/response schemas per app.
+Shared Zod schemas live in `@mms/shared`. FE forms and BE `parseRequest` must consume the same shapes — do not fork request/response schemas per app. Write `.strict()` / write-vs-read shapes → **`mms-form-architecture.md`**.
 
 ## Standards index (ownership matrix)
 
@@ -69,19 +69,22 @@ Single prose owner per topic — other rules/skills use short pointers only. **W
 
 | Topic | Owner (rule) | Workflow skill |
 |-------|--------------|----------------|
-| Dependencies & latest stack | `mms-dependencies.md` | `mms-dependency-upgrade` |
+| Dependencies & latest stack (Node/pnpm bumps) | `mms-dependencies.md` | `mms-dependency-upgrade` |
 | File structure, naming, Title Case on save | `mms-structure-naming.md` | `mms-frontend` / `mms-shared-package` |
 | DRY / extraction / `@mms/shared` exports | `mms-dry.md` | `mms-shared-package` |
 | Sessions, cookies, CSRF, RBAC, rate limits | `mms-auth-security.md` | `mms-backend-security` |
-| apiClient, error `type` taxonomy, HTTP pagination | `mms-api-interface.md` | `mms-frontend` · `mms-backend-api` |
-| Query policy, Drizzle/RLS, soft-delete strip | `mms-data-layer.md` | `mms-query-factories` · `mms-schema-migrate` · `mms-data-sync` (legacy) |
+| apiClient, error `type`, HTTP pagination, bulk PUT upsert | `mms-api-interface.md` | `mms-frontend` · `mms-backend-api` |
+| Query policy, Drizzle/RLS, soft-delete **schema/strip/SQL** | `mms-data-layer.md` | `mms-query-factories` · `mms-schema-migrate` · `mms-data-sync` (legacy) |
+| Soft-delete **Work trash / drawer / §7** | `mms-module-architecture.md` | `mms-module-work` · `mms-module-page` |
+| Await `mutateAsync` before form close | `mms-module-architecture.md` §7 | `mms-module-page` |
+| SQL page / `loadAllFn` ban | `mms-data-layer.md` | `mms-query-factories` |
 | Query/controller recipes | `mms-hooks.md` | `mms-query-factories` · `mms-frontend` |
-| FormModal shell, Zod forms, collection-list clears | `mms-form-architecture.md` | `mms-form-architecture` |
+| FormModal shell, write Zod `.strict()`, collection-list clears | `mms-form-architecture.md` | `mms-form-architecture` |
 | UI tokens, tabs, a11y, responsive §7 | `mms-ui-ux-design.md` | `mms-frontend` · `mms-a11y-smoke` |
 | Module Work/Reports/Setup, §7 gold-standard | `mms-module-architecture.md` | `mms-module-page` · `mms-module-work` · `mms-module-setup` · `mms-background-jobs` |
 | Field/tab registry | `mms-fields.md` | `mms-fields-registry` · `mms-module-setup` |
 | Settings, i18n, formatters, backup UI | `mms-settings-i18n.md` | `mms-settings-i18n` · `mms-backup-restore` |
-| Health, ports, purge/reset, env, CI | `mms-ops-infrastructure.md` | `mms-dev-setup` · `mms-ops-deploy` · `mms-linux-compatibility` |
+| Health, ports, purge/reset, env, CI (match root engines) | `mms-ops-infrastructure.md` | `mms-dev-setup` · `mms-ops-deploy` · `mms-linux-compatibility` |
 | Tests, logging, ErrorBoundary, Sentry | `mms-testing-observability.md` | `mms-code-review` · `mms-a11y-smoke` |
 | Reports & exports | `mms-reports.md` | `mms-reports-export` |
 | Messaging campaigns | `mms-messaging.md` | `mms-messaging` |

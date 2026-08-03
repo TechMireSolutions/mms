@@ -57,19 +57,21 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     compareYears,
     language,
   });
-  const sessions = useSessionsCollection();
+  // Contacts Compare uses /report-analytics years only — skip unrelated collections.
+  const nonContactsEnabled = !isContacts;
+  const sessions = useSessionsCollection({ enabled: nonContactsEnabled });
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(
     () => sessions.filter((session) => session.id !== "all").map((session) => ({ id: session.id, name: session.name })),
     [sessions],
   );
 
-  const enrollments = useEnrollmentsCollection();
-  const attendanceRecords = useAttendanceRecordsCollection();
-  const financeInvoices = useFinanceInvoicesCollection();
-  const hasanatDistributions = useHasanatDistributionsCollection();
-  const examResults = useExaminationsResultsCollection();
-  const exams = useExaminationsExamsCollection();
-  const denoms = useHasanatDenomsCollection();
+  const enrollments = useEnrollmentsCollection({ enabled: nonContactsEnabled });
+  const attendanceRecords = useAttendanceRecordsCollection({ enabled: nonContactsEnabled });
+  const financeInvoices = useFinanceInvoicesCollection({ enabled: nonContactsEnabled });
+  const hasanatDistributions = useHasanatDistributionsCollection({ enabled: nonContactsEnabled });
+  const examResults = useExaminationsResultsCollection({ enabled: nonContactsEnabled });
+  const exams = useExaminationsExamsCollection({ enabled: nonContactsEnabled });
+  const denoms = useHasanatDenomsCollection({ enabled: nonContactsEnabled });
 
   useEffect(() => {
     if (isContacts) {

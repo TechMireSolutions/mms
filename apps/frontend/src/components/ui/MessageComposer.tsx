@@ -84,34 +84,34 @@ export default function MessageComposer({
     ? isEmail
       ? t('messaging.bulkEmailTitle')
       : isSms
-        ? t('contacts.bulkSmsMessage')
-        : t('contacts.whatsapp.bulkTitle')
+        ? t('messaging.bulkSmsTitle')
+        : t('messaging.bulkWhatsappTitle')
     : isEmail
       ? `${t('messaging.sendEmail')} – ${recipients[0]?.name}`
       : isSms
-        ? `${t('contacts.sms')} – ${recipients[0]?.name}`
-        : t('contacts.whatsapp.singleTitle', { name: recipients[0]?.name ?? '' });
+        ? `${t('messaging.sms')} – ${recipients[0]?.name}`
+        : t('messaging.whatsappSingleTitle', { name: recipients[0]?.name ?? '' });
   const subtitle = isBulk
     ? isEmail
-      ? `${dispatch.eligibleRecipients.length} ${t('contacts.of')} ${recipients.length} ${t('messaging.selectRecipientsDesc')}`
+      ? `${dispatch.eligibleRecipients.length} ${t('messaging.of')} ${recipients.length} ${t('messaging.selectRecipientsDesc')}`
       : isSms
-        ? `${dispatch.eligibleRecipients.length} ${t('contacts.of')} ${recipients.length} ${t('contacts.contactsHavePhone')}`
-        : `${dispatch.eligibleRecipients.length} ${t('contacts.of')} ${recipients.length} ${t('contacts.whatsapp.contactsHaveWhatsapp')}`
+        ? `${dispatch.eligibleRecipients.length} ${t('messaging.of')} ${recipients.length} ${t('messaging.contactsHavePhone')}`
+        : `${dispatch.eligibleRecipients.length} ${t('messaging.of')} ${recipients.length} ${t('messaging.contactsHaveWhatsapp')}`
     : undefined;
-  const note = isEmail ? t('messaging.bulkEmailDesc') : isSms ? t('contacts.smsManualSendNote') : t('contacts.whatsapp.bulkManualNote');
+  const note = isEmail ? t('messaging.bulkEmailDesc') : isSms ? t('messaging.smsManualSendNote') : t('messaging.whatsappBulkManualNote');
   const saveLabel = dispatch.pendingAudit
     ? t('messaging.retrySaveHistory')
     : dispatch.opening
-      ? isEmail ? t('messaging.openingMail') : t('contacts.whatsapp.openingTabs')
+      ? isEmail ? t('messaging.openingMail') : t('messaging.openingTabs')
       : isEmail
         ? isBulk ? t('messaging.openAllMail', { count: String(dispatch.eligibleRecipients.length) }) : t('messaging.openMailDraft')
         : isSms
-          ? t('contacts.openSmsApp')
-          : isBulk ? `${t('contacts.whatsapp.openAll')} (${dispatch.eligibleRecipients.length})` : t('contacts.whatsapp.open');
+          ? t('messaging.openSmsApp')
+          : isBulk ? `${t('messaging.openAllWhatsapp')} (${dispatch.eligibleRecipients.length})` : t('messaging.openWhatsapp');
 
   const changeTemplate = (nextTemplateId: string): void => {
     setTemplateId(nextTemplateId);
-    const selected = activeTemplates.find((template) => template.id === nextTemplateId);
+    const selected = channelTemplates.find((template) => template.id === nextTemplateId);
     if (selected && selected.id !== 'custom') setMessage(selected.body);
   };
 
@@ -161,7 +161,7 @@ export default function MessageComposer({
         />
         <MessageComposerFormBody
           channel={channel}
-          activeTemplates={activeTemplates}
+          channelTemplates={channelTemplates}
           templateId={templateId}
           subject={subject}
           message={message}
@@ -191,15 +191,6 @@ export default function MessageComposer({
             onPreviewIndexChange={setPreviewIndex}
             onSendOne={dispatch.executeSend}
           />
-        )}
-        {isBulk && dispatch.eligibleRecipients.length === 0 && (
-          <p className="text-xs font-medium text-destructive">
-            {isEmail
-              ? t('messaging.selectRecipientsDesc')
-              : isSms
-                ? t('contacts.smsNoEligibleContacts')
-                : t('contacts.whatsapp.skippedNote')}
-          </p>
         )}
       </div>
     </FormModal>

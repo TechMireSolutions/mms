@@ -50,9 +50,22 @@ export const widgetQuerySchema = z.object({
   operation: z.enum(['count', 'sum', 'avg', 'percentage']),
   targetField: z.string().max(128).optional(),
   filterField: z.string().max(128).optional(),
-  filterOperator: z.enum(['equals', 'contains', 'gt', 'lt']).optional(),
+  filterOperator: z.enum(['equals', 'contains', 'gt', 'lt', 'startsWith']).optional(),
   filterValue: z.string().max(256).optional(),
   xAxisField: z.string().max(128).optional(),
+  /** Extra AND filters (chart visualizer / multi-rule widgets). */
+  filters: z
+    .array(
+      z.object({
+        field: z.string().min(1).max(128),
+        operator: z.enum(['equals', 'contains', 'gt', 'lt', 'startsWith']).optional(),
+        value: z.string().max(256),
+      }),
+    )
+    .max(8)
+    .optional(),
+  /** Chart GROUP BY series cap (default 8; visualizer may request up to 50). */
+  chartLimit: z.number().int().min(1).max(50).optional(),
 });
 
 export const widgetAggregatesBodySchema = z.object({

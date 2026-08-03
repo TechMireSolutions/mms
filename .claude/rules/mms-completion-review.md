@@ -38,7 +38,7 @@ After **creating or editing code**, run a completion review **before** marking t
 | Failing test | Fix or revert — do not ship broken tests |
 | Hardcoded copy | Add `t()` keys — `mms-settings-i18n.md` (ban `t(key) \|\| 'English'`) |
 | Work `ErrorState` title-only | Add hint description (`loadFailedHint` pattern) — `mms-module-architecture.md` §7 |
-| Manifest `directoryViews: list` with table\|cards UI | Align to `['table','cards']` — `mms-migration-status.md` |
+| Manifest `directoryViews: list` with table\|cards UI | Align to `['table','cards']` — `mms-module-architecture.md` §3 |
 | Touched file still ≫300 lines with a clean seam | Split by concern behind a stable barrel — `mms-structure-naming.md` |
 | Rule violation in touched code | Fix when inside the change boundary |
 

@@ -1,10 +1,6 @@
 import { apiJson } from "@/lib/apiClient";
 import type { TabDefinition } from "@mms/shared";
-
-interface CustomTabApiRow {
-  id: string;
-  key: string;
-}
+import type { CustomTabApiRow } from "@/lib/contacts/contactsCustomTabsApi";
 
 /**
  * Upsert Contacts form tabs via typed `/api/custom-tabs`, then delete rows removed in Setup.

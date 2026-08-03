@@ -11,8 +11,6 @@ const mockGetRequestTenant = vi.fn();
 const mockInvalidateDuplicateScanCache = vi.fn();
 
 const mockAssertContactUniqueFields = vi.fn();
-const mockListActiveStudentContactIds = vi.fn();
-const mockListActiveTeacherContactIds = vi.fn();
 
 vi.mock('../db/repositories/contactRepository.js', () => ({
   listContactsByWorkspace: (...args: unknown[]) => mockListContactsByWorkspace(...args),
@@ -21,11 +19,6 @@ vi.mock('../db/repositories/contactRepository.js', () => ({
   saveContact: (...args: unknown[]) => mockSaveContact(...args),
   findContactsByIds: (...args: unknown[]) => mockFindContactsByIds(...args),
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
-}));
-
-vi.mock('../db/repositories/moduleLinkedContactIds.js', () => ({
-  listActiveStudentContactIds: (...args: unknown[]) => mockListActiveStudentContactIds(...args),
-  listActiveTeacherContactIds: (...args: unknown[]) => mockListActiveTeacherContactIds(...args),
 }));
 
 vi.mock('../services/contactUniqueValidationService.js', async (importOriginal) => {
@@ -51,6 +44,14 @@ vi.mock('../services/dbSyncService.js', () => ({
 
 vi.mock('../services/contactConfigService.js', () => ({
   loadContactFieldConfig: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('../services/contactLookupsService.js', () => ({
+  loadContactLookupKind: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../services/contactPreferencesService.js', () => ({
+  loadContactPreferences: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('../db/database.js', () => ({
@@ -112,8 +113,6 @@ describe('contactService relationship reciprocal mapping', () => {
     mockBulkSaveContacts.mockResolvedValue(undefined);
     mockInvalidateDuplicateScanCache.mockResolvedValue(undefined);
     mockAssertContactUniqueFields.mockReset().mockResolvedValue(undefined);
-    mockListActiveStudentContactIds.mockReset().mockResolvedValue([]);
-    mockListActiveTeacherContactIds.mockReset().mockResolvedValue([]);
   });
 
   it('returns only deleted contacts for trash pages', async () => {
@@ -135,9 +134,7 @@ describe('contactService relationship reciprocal mapping', () => {
     expect(page.total).toBe(1);
   });
 
-  it('excludeLinkedModules uses scoped contact-id lookups', async () => {
-    mockListActiveStudentContactIds.mockResolvedValue(['s-contact']);
-    mockListActiveTeacherContactIds.mockResolvedValue(['t-contact']);
+  it('excludeLinkedModules is forwarded to SQL listContactsPage', async () => {
     mockListContactsPage.mockResolvedValue({
       contacts: [],
       total: 0,
@@ -152,12 +149,12 @@ describe('contactService relationship reciprocal mapping', () => {
       excludeLinkedModules: ['students', 'teachers'],
     });
 
-    expect(mockListActiveStudentContactIds).toHaveBeenCalledWith('demo');
-    expect(mockListActiveTeacherContactIds).toHaveBeenCalledWith('demo');
     expect(mockListContactsPage).toHaveBeenCalledWith(
       'demo',
       expect.objectContaining({
-        excludeIds: expect.arrayContaining(['s-contact', 't-contact']),
+        page: 1,
+        limit: 50,
+        excludeLinkedModules: ['students', 'teachers'],
       }),
     );
   });

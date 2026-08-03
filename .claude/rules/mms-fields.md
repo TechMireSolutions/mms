@@ -30,7 +30,7 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 | **Custom fields** | Tenant `custom_data` JSONB + field config registries | Constrained via `CustomFieldsBuilder` — not free-form layout engines |
 
 - Free-form dynamic form compilers / visual schema generators are **banned**.
-- Custom **tabs** persist in typed `custom_tabs` (composite PK `(workspace_subdomain, id)` + **FORCE RLS**; Drizzle baseline `0000_init`; data migrate `021_migrate_custom_tabs`) via `/api/custom-tabs`. Bulk PUT **upserts** only — never wipe rows absent from the payload. Do not reintroduce object-only tab SSOT; remaining gap is FE Setup dual-write of `formTabs` via `contact_field_config` (`mms-migration-status.md`).
+- Custom **tabs** persist in typed `custom_tabs` (composite PK `(workspace_subdomain, id)` + **FORCE RLS**; Drizzle baseline `0000_init`; data migrate `021_migrate_custom_tabs`) via `/api/custom-tabs`. Bulk PUT **upserts** only — never wipe rows absent from the payload. Do not reintroduce object-only tab SSOT. Contacts field registry is typed `contact_field_configs` + `GET/PUT /api/contacts/field-config` — never dual-write `formTabs` into field-config (tabs SSOT remains `/api/custom-tabs`) — `mms-migration-status.md`.
 - Tenant-created form tabs (`custom_*`, `isContactCustomCollectionTab`) persist as **row arrays** on the contact (like phones/emails). Blank rows strip on save via `cleanContactDraft`; emptied arrays must persist — `mms-form-architecture.md` §3.
 - Column visibility **and width** prefs → **`mms-module-architecture.md` §3** (local width wins; clamp with `clampModuleColumnWidth`).
 
@@ -57,7 +57,7 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 ## 5. Setup Fields save & column sync
 
 - Fields / Preferences draft locally; **Save disabled until dirty** (structural snapshot vs persisted config). Do not leave Save always enabled on first mount.
-- On Fields save: persist `fields` / `formTabs` / `enabledTabs` from the editor; sync `columnRegistry` with field/tab enablement (`syncContactColumnRegistryWithFields` or module equivalent).
+- On Fields save: persist `fields` / `enabledTabs` (and related registry) via Contacts `PUT /api/contacts/field-config` (or module typed REST); sync custom tabs via `/api/custom-tabs` — never `saveObject('contact_field_config')` or dual-write `formTabs` into field-config. Sync `columnRegistry` with field/tab enablement (`syncContactColumnRegistryWithFields` or module equivalent).
 - CustomFieldsBuilder lists non-core fields; merges must keep core seed fields intact (do not replace the whole tab map with customs only).
 - Field delete: run `get*FieldRemovalIssues()` (prefs + columns + usage) before `handleDeleteField`.
 

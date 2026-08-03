@@ -5,7 +5,7 @@ description: Legacy/hybrid localStorage and /api/db document-store sync (db.ts, 
 
 # MMS Data Sync Workflow
 
-**Legacy / hybrid only.** New REST entity work → skill **`mms-query-factories`** (+ `mms-data-layer.md`). Backup wipe-restore UI → **`mms-backup-restore`**. Do not expand `useLiveCollection` for REST-migrated entities.
+**Legacy / hybrid only.** New REST entity work → skill **`mms-query-factories`** (+ `mms-data-layer.md`). Backup wipe-restore UI → **`mms-backup-restore`**. Maintain existing non-migrated keys only — **do not** add new entity collections / new `useLiveCollection` for REST-migrated modules.
 
 ## Frontend (`apps/frontend/src/lib/db.ts`)
 
@@ -14,9 +14,12 @@ All sync HTTP calls go through **`apiClient`** (`credentials: 'include'`) intern
 ```ts
 import { getCollection, saveCollection, saveCollectionAsync } from './db';
 
-// Lookup / legacy collections — prefer empty default (no mock auto-seed)
+// Legacy / non-migrated collections only — prefer empty default (no mock auto-seed)
 const items = getCollection<MyType>('collection_key');
-await saveCollectionAsync('collection_key', updated); // Setup option lists — await server
+await saveCollectionAsync('collection_key', updated); // await server before claiming saved
+
+// Contacts Setup uses typed REST — not document-store objects/collections
+// GET/PUT /api/contacts/lookups, /field-config, /preferences (Query via collections/contacts)
 
 // Reactive (localStorage modules)
 import { useLiveCollection } from '../hooks/useLiveCollection';
@@ -52,8 +55,9 @@ import {
 | TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/teachers`, workspace) |
 | Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch |
 | Metrics / aggregates | KPI, dashboard, reports — `use*Metrics` from `@/tenant/hooks/collections/*`, widget-aggregates; ban full-list reduce for KPI values already on `/metrics` |
-| Column preferences | `useModuleColumnLayout` / Contacts column prefs — localStorage + `PUT …/column-preferences`; merge with `mergeModuleColumnPreferences` (local width wins) |
-| Lookup option lists | `saveCollectionAsync` for genders/labels/`countryCodes` — await before claiming Setup saved |
+| Column preferences | Contacts: localStorage + `PUT /api/contacts/column-preferences` (typed `contact_user_column_prefs`); merge with `mergeModuleColumnPreferences` (local width wins). Other modules may still use object maps. |
+| Lookup option lists | Contacts: `/api/contacts/lookups` via Query/mutation (`useContactLookups*`) — not `saveCollectionAsync` |
+| Contacts Setup field-config / preferences | `useContactFieldConfig*` / `useContactPreferences*` → `/api/contacts/field-config` and `/preferences` — not `saveObject` |
 
 **Writes on REST modules:** use `useXxxMutations()` only — mutations invalidate Query; do not also `saveCollection` for the same entity. Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`. UI saved/success state must wait for `mutateAsync` or an explicit mutation success callback; fire-and-forget `mutate()` must not immediately show "saved". Backend bulk PUT must upsert (never wipe missing rows via `replaceForWorkspace` on normal save paths — `mms-api-interface.md`).
 
@@ -61,8 +65,8 @@ import {
 
 | Table | Content |
 |-------|---------|
-| `collections` | JSON arrays per tenant — **lookup lists** (not Contacts entity rows) |
-| `objects` | JSON singletons per tenant key `t:{subdomain}:{key}` |
+| `collections` | JSON arrays per tenant — **non-Contacts lookup lists** (Contacts lookups are typed `contact_lookups`) |
+| `objects` | JSON singletons per tenant key `t:{subdomain}:{key}` — **not** Contacts Setup field-config / preferences / column prefs |
 
 ## API (auth required — `authenticateTenant`)
 
@@ -79,20 +83,18 @@ import {
 
 **Do not** store long-lived OAuth secrets in `objects` — use FORCE-RLS tenant tables (`mms-data-layer.md`). Admin backup snapshots must not include credential tables (`relationalReplaceMapping`); strip `SERVER_ONLY_OBJECT_KEYS` on restore. Envelope helpers SSOT in `@mms/shared` (`buildWorkspaceBackupEnvelope`, `remapBackupKeysToPrefix`, `validateWorkspaceBackupJson`). After server restore: clear local collection cache by prefix — do not dump full relational snapshot into localStorage.
 
-## Add new collection (legacy path)
+## Maintain legacy collections (non-migrated keys only)
 
-1. Add empty default in frontend — **no** large `*Data.ts` seed push
-2. Type in `@mms/shared` if shared shape
-3. `useLiveCollection('key')` in UI
+**Do not** add new entity collections or new `useLiveCollection` for REST-migrated / new modules — `mms-data-layer.md`. For existing legacy keys still on `/api/db/collections/*`:
+
+1. Keep empty defaults — **no** large `*Data.ts` seed push
+2. Shared shape in `@mms/shared` when needed
+3. Touch UI via existing `useLiveCollection('key')` only
 4. Optional seed row in `minimalSeeds.ts` for default settings only
 
-## Add new collection (modern path)
+## New REST entity (modern path)
 
-1. Backend REST route + Zod (`mms-backend-api` skill)
-2. Query factories / hooks → skill **`mms-query-factories`** (`queryOptions`, tuple keys, `signal`, optimistic bans)
-3. Soft-delete: default exclude deleted; trash uses `includeDeleted`
-4. **Banned for new modules:** hybrid Query→localStorage mirroring / new `useLiveCollection`
-5. Stop using `/api/db/collections/:name` for that entity
+→ skill **`mms-query-factories`** (+ `mms-backend-api`). Ban hybrid Query→localStorage mirror / new `useLiveCollection`.
 
 Backup/wipe-restore UI + validate-before-wipe → skill **`mms-backup-restore`** (not this skill’s primary path).
 

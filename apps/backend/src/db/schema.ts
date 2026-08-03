@@ -148,6 +148,57 @@ export const contactGoogleSyncCredentials = pgTable('contact_google_sync_credent
   primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
 ]);
 
+/**
+ * Contacts Setup option lists (genders, labels, country dial codes, …).
+ * Replaces unscoped document-store `collections` KV for these kinds.
+ */
+export const contactLookups = pgTable('contact_lookups', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(),
+  label: text('label').notNull(),
+  meta: jsonb('meta').$type<Record<string, unknown> | null>(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  uniqueIndex('contact_lookups_workspace_kind_sort_idx').on(
+    table.workspaceSubdomain,
+    table.kind,
+    table.sortOrder,
+  ),
+  index('contact_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
+]);
+
+/** Contacts Setup field registry (was document-store `contact_field_config`). */
+export const contactFieldConfigs = pgTable('contact_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Contacts Setup preferences (was document-store `contact_preferences`). */
+export const contactModulePreferences = pgTable('contact_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Per-user Contacts Work column layout (was document-store `contact_user_column_preferences`). */
+export const contactUserColumnPrefs = pgTable('contact_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('contact_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
 export const students = pgTable('students', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -559,11 +610,19 @@ export const messageLogs = pgTable('message_logs', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  deletedAt: timestamp('deleted_at', { mode: 'date' }),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('message_logs_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('message_logs_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('message_logs_custom_data_gin_idx').using('gin', table.customData),
+  index('message_logs_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+  index('message_logs_workspace_sent_at_active_idx')
+    .on(table.workspaceSubdomain, sql`(custom_data->>'sentAt')`)
+    .where(sql`${table.deletedAt} is null`),
 ]);
 
 

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import {
-  CONTACTS_MODULE_MANIFEST,
   type Contact,
   type QuestionBankQuestion,
   type QuestionBankResult,
@@ -14,10 +13,6 @@ import type { Denomination, Distribution } from '@/lib/data/hasanatData';
 import type { Session } from '@/lib/data/sessionsData';
 import type { Student } from '@/lib/data/studentsData';
 import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
-import {
-  CONTACTS_QUERY_KEY,
-  fetchContactsPageForQuery,
-} from '@/tenant/hooks/collections/contacts';
 import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
 import {
   useHasanatDenomsCollection,
@@ -131,24 +126,8 @@ export function useReportCollectionRows(
   const { isAuthenticated } = useAuth();
   const key = collectionKey;
 
-  // Single capped SQL page for Contacts chart visualizer — never unbounded page-walk.
-  const contactsQuery = useQuery({
-    queryKey: [...CONTACTS_QUERY_KEY, 'report-visualizer-page'] as const,
-    queryFn: async ({ signal }) => {
-      const page = await fetchContactsPageForQuery(
-        {
-          page: 1,
-          limit: CONTACTS_MODULE_MANIFEST.maxPageSize,
-          includeDeleted: false,
-        },
-        signal,
-      );
-      return page.contacts;
-    },
-    enabled: isAuthenticated && key === 'contacts',
-    staleTime: 30_000,
-  });
-  const contacts = contactsQuery.data ?? [];
+  // Contacts chart visualizer uses POST /widget-aggregates SQL GROUP BY — no row dump.
+  const contacts: Contact[] = [];
   const sessions = useSessionsCollection({ enabled: isAuthenticated && key === 'sessions' });
   const financeInvoices = useFinanceInvoicesCollection({
     enabled: isAuthenticated && key === 'finance_invoices',

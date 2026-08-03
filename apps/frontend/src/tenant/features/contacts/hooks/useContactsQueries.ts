@@ -13,17 +13,12 @@ export {
 
 export {
   contactsPaginatedQueryKey,
-  fetchAllContactsForQuery,
   fetchContactsPageForQuery,
   fetchContactById,
   useContactsPaginated,
-  useContacts,
   useContactById,
   useContactsByIds,
-  useContactsCollection,
-  useContactsCollectionState,
   type ContactsPaginatedParams,
-  type UseContactsCollectionResult,
 } from '@/tenant/features/contacts/hooks/useContactsListQueries';
 
 export {

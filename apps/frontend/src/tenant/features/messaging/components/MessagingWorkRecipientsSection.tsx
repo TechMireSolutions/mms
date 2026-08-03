@@ -98,7 +98,7 @@ export function MessagingWorkRecipientsSection({
         limit={recipientsLimit}
         hasMore={recipientsHasMore}
         onPageChange={onPageChange}
-        i18nNamespace="contacts"
+        i18nNamespace="messaging"
         variant="range"
       />
     </div>

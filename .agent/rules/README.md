@@ -23,20 +23,20 @@ Project rules for the Madrasa Management System. Antigravity loads `.md` files f
 | `mms-ui-ux-design.md` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (FormModal chrome → `mms-form-architecture.md`) |
 | `mms-module-architecture.md` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
 | `mms-data-layer.md` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query policy |
-| `mms-form-architecture.md` | Static FormModal forms, shared Zod DTOs, React 19 defaults, decimal-as-string, local multipart uploads |
+| `mms-form-architecture.md` | Static FormModal forms, write Zod `.strict()`, React 19 defaults, decimal-as-string, local multipart uploads |
 | `mms-structure-naming.md` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, Title Case on save, naming |
 | `mms-hooks.md` | Custom React hooks (Query recipes, page controllers / action handlers, Work layout) |
 | `mms-auth-security.md` | Auth, users, JWT session shapes, RBAC permissions, multi-tenant isolation, cookie policies, rate limits |
 | `mms-settings-i18n.md` | Settings hierarchy, preview, navigation, translations, `formatDate` / `formatMoney` |
 | `mms-fields.md` | Field and tab registry |
-| `mms-api-interface.md` | Vite SPA shell, routing, apiClient, Fastify API routes, error taxonomy, HTTP pagination contract |
+| `mms-api-interface.md` | apiClient, Fastify routes, error taxonomy, HTTP pagination, bulk PUT upsert |
 | `mms-reports.md` | Analytics implementation & exports |
 | `mms-testing-observability.md` | Vitest, API tests, logging, ErrorBoundary, Sentry, request-id |
 | `mms-messaging.md` | SMS/WhatsApp campaigns, `MessageComposer`, templates, and message-log soft-archive semantics |
 
 ## Ownership (see `mms-core.md`)
 
-Single prose owner per topic. Duplicate essays elsewhere must be short pointers. Full matrix in always-on `mms-core.md` Standards index.
+Single prose owner per topic. Duplicate essays elsewhere must be short pointers. Full matrix in always-on `mms-core.md` Standards index (soft-delete schema vs Work UX, write Zod, bulk PUT, `mutateAsync` split there).
 
 ## Skills (Workflows)
 
@@ -83,10 +83,12 @@ bash .agent/scripts/sync-all.sh
 - [ ] Frontend lint if touched: `cd apps/frontend && pnpm lint`
 - [ ] No new hardcoded labels/colours — see `mms-settings-i18n.md` (en/ar/ur/fa) + registries
 - [ ] Module tiers respect isolation boundaries in `mms-module-architecture.md`
-- [ ] Person-directory Work: `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes; paged list GET (no `loadAllFn`); cards share server pagination; drawer trash parity
+- [ ] Person-directory Work: `directoryViews: ['table','cards']` (never `list`) — `mms-module-architecture.md` §3
+- [ ] Bulk PUT upsert / ban wipe-missing-rows — `mms-api-interface.md` §5; form close after `mutateAsync` — module-arch §7
+- [ ] Write Zod `.strict()` — `mms-form-architecture.md`
 - [ ] Work column widths persist (local + `/column-preferences`; merge preserves device widths) — `mms-module-architecture.md` §3
-- [ ] Dashboard/report KPI cards use `/metrics` where available — no forced collection dumps for those values; widgets/visualizer use `useWidgetCollections` / `useReportCollectionRows` — `mms-reports.md`
-- [ ] Setup Fields / form: tab enablement SSOT + enabled fields render in form **and** drawer — `mms-fields.md`
+- [ ] Dashboard/report KPI cards use `/metrics` where available — `mms-reports.md`
+- [ ] Setup Fields / form: tab enablement SSOT + enabled fields render in form **and** drawer — `mms-fields.md` / `mms-form-architecture.md`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
 - [ ] Touched app files stay under hard ~300 lines (prefer ~220 for FE shells); splits keep public import barrels — `mms-structure-naming.md`
 - [ ] No commit unless user requested
