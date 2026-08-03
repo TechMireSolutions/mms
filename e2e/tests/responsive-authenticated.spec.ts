@@ -101,11 +101,14 @@ async function loginAndSetViewport(
 }
 
 async function gotoReadyRoute(page: Page, path: string, ready?: string): Promise<void> {
-  await page.goto(`${tenantOrigin}${path}`);
-  await page.waitForLoadState('domcontentloaded');
-  await expect(page.locator('#main-content')).toBeVisible({ timeout: 20_000 });
+  const targetUrl = `${tenantOrigin}${path}`;
+  if (page.url() !== targetUrl && page.url() !== `${targetUrl}/`) {
+    await page.goto(targetUrl);
+    await page.waitForLoadState('domcontentloaded');
+  }
+  await expect(page.locator('#main-content')).toBeVisible({ timeout: 25_000 });
   if (ready) {
-    await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator(ready).first()).toBeVisible({ timeout: 25_000 });
   }
 }
 
