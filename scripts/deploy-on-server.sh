@@ -53,6 +53,7 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
 fi
 export PATH="$HOME/.local/share/pnpm:$PATH"
 export PUPPETEER_SKIP_DOWNLOAD=true
+export CI=true
 
 NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]" 2>/dev/null || echo 0)"
 if [ "${NODE_MAJOR}" -lt "${MMS_NODE_MAJOR_MIN}" ] 2>/dev/null; then
