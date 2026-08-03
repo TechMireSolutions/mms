@@ -4243,6 +4243,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.sync.clientIdRequired": "Client ID اور Client Secret دونوں درکار ہیں۔",
   "contacts.sync.saveCredentials": "اسناد محفوظ کریں",
   "contacts.sync.credentialsSaved": "اسناد محفوظ ہو گئیں۔ Google اکاؤنٹ منسلک کر کے مطابقت شروع کریں۔",
+  "contacts.sync.auditFailed": "مطابقت کی ترتیبات محفوظ ہو گئیں، لیکن آڈٹ لاگ ریکارڈ نہیں ہو سکا۔",
   "contacts.sync.connectGoogle": "Google اکاؤنٹ منسلک کریں",
   "contacts.sync.pasteAuthCode": "تصدیقی کوڈ چسپاں کریں",
   "contacts.sync.pasteAuthCodePlaceholder": "redirect URL سے کوڈ چسپاں کریں…",

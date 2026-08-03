@@ -64,8 +64,8 @@ export const contactRecordSchema = z
 export const contactListSchema = z.array(contactRecordSchema);
 
 /**
- * Contacts module manifest — single source of truth per globle1.md §1.1.
- * UI, API, exports, and Setup must align with these constants.
+ * Contacts module manifest — single source of truth for tiers, permissions,
+ * Work directory views, soft-delete policy, and Setup sub-tabs.
  */
 export const CONTACTS_MODULE_MANIFEST = {
   moduleId: 'contacts',
@@ -106,13 +106,13 @@ export const CONTACTS_MODULE_MANIFEST = {
     duplicatesIncludeDeleted: false,
     captureDeletionReason: true,
   },
-  /** Rows above this count use chunked export with progress (globle1 §8). */
+  /** Rows above this count use chunked export with progress. */
   exportInlineMaxRows: 500,
   exportChunkSize: 100,
-  /** Default Work directory page size when using server pagination (globle1 §10). */
+  /** Default Work directory page size when using server pagination. */
   defaultPageSize: 50,
   maxPageSize: 500,
-  /** Contact count above which duplicate scan runs as a background job (globle1 §8). */
+  /** Contact count above which duplicate scan runs as a background job. */
   duplicateScanAsyncMinContacts: 500,
 } as const;
 

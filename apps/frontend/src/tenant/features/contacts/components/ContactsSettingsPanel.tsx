@@ -130,6 +130,8 @@ export default function ContactsSettingsPanel({
             <SetupReadOnlyMessage />
           ))}
         {sub === "sync" && (
+          // Sync mutates contacts + OAuth secrets — gate on contacts.write (canWrite),
+          // never OR with canEditSetup (mms-auth-security). Fields/Prefs stay canEditSetup.
           <ContactSyncPanel onImport={onImport} canWrite={canWrite} />
         )}
       </Suspense>

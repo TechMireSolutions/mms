@@ -8,6 +8,10 @@ export interface ServerConfig {
   bodyLimit: number;
   requestTimeoutMs: number;
   pgPoolMax: number;
+  /** Tenant-bound SET LOCAL statement_timeout (ms). Capped by requestTimeoutMs. */
+  pgStatementTimeoutMs: number;
+  /** Tenant-bound SET LOCAL idle_in_transaction_session_timeout (ms). Capped by statement timeout. */
+  pgIdleInTxTimeoutMs: number;
 }
 
 export function loadServerConfig(): ServerConfig {
@@ -57,6 +61,16 @@ export function loadServerConfig(): ServerConfig {
     ? trustProxyValue.split(',').map((entry) => entry.trim()).filter(Boolean)
     : [];
 
+  const requestTimeoutMs = Number(process.env.REQUEST_TIMEOUT_MS) || 120_000;
+  const pgStatementTimeoutMs = Math.min(
+    Math.max(Number(process.env.PG_STATEMENT_TIMEOUT_MS) || 30_000, 1),
+    requestTimeoutMs,
+  );
+  const pgIdleInTxTimeoutMs = Math.min(
+    Math.max(Number(process.env.PG_IDLE_IN_TX_TIMEOUT_MS) || 15_000, 1),
+    pgStatementTimeoutMs,
+  );
+
   return {
     isProd,
     jwtSecret,
@@ -65,7 +79,9 @@ export function loadServerConfig(): ServerConfig {
     logLevel: process.env.LOG_LEVEL || 'info',
     allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
     bodyLimit: Number(process.env.REQUEST_BODY_LIMIT_BYTES) || 1024 * 1024,
-    requestTimeoutMs: Number(process.env.REQUEST_TIMEOUT_MS) || 120_000,
+    requestTimeoutMs,
     pgPoolMax: Number(process.env.PG_POOL_MAX) || 20,
+    pgStatementTimeoutMs,
+    pgIdleInTxTimeoutMs,
   };
 }

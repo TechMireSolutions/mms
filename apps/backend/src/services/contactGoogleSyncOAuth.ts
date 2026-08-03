@@ -1,4 +1,5 @@
 import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
+import { fetchWithTimeout } from '../lib/outboundUrl.js';
 import {
   clearGoogleSyncTokens,
   getContactGoogleSyncConfig,
@@ -53,7 +54,10 @@ export function isAllowedOAuthRedirectUri(redirectUri: string): boolean {
 }
 
 async function requestGoogleToken(params: URLSearchParams): Promise<GoogleTokenResponse> {
-  const res = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', body: params });
+  const res = await fetchWithTimeout('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    body: params,
+  });
   return (await res.json()) as GoogleTokenResponse;
 }
 

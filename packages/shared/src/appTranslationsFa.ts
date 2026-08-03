@@ -1855,6 +1855,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.sync.connected": "متصل شد",
   "contacts.sync.contactsFound": "مخاطب یافت شد",
   "contacts.sync.credentialsSaved": "اعتبارنامه‌ها ذخیره شدند. حساب گوگل خود را برای شروع همگام‌سازی متصل کنید.",
+  "contacts.sync.auditFailed": "تنظیمات همگام‌سازی ذخیره شد، اما ثبت گزارش ممیزی ممکن نشد.",
   "contacts.sync.description": "حساب گوگل خود را برای همگام‌سازی زنده متصل کنید، یا یک فایل vCard را از Apple Contacts آپلود نمایید. هر مدیر مدرسه اتصال خود را به طور مستقل مدیریت می‌کند.",
   "contacts.sync.disconnect": "قطع اتصال",
   "contacts.sync.dismissConflicts": "رد کردن همه تداخل‌ها",

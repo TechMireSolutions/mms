@@ -1,19 +1,25 @@
 import { z } from 'zod';
 
+const whatsappStatusSchema = z.enum(['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED']);
+
 export const phoneNumberSchema = z
   .object({
     label: z.string().optional(),
     number: z.string(),
     countryCode: z.string().optional(),
+    isPrimary: z.boolean().optional(),
+    whatsappStatus: whatsappStatusSchema.optional(),
   })
-  .passthrough();
+  .strict();
 
 export const emailAddressSchema = z
   .object({
     label: z.string().optional(),
     address: z.string(),
+    isPrimary: z.boolean().optional(),
+    isVerified: z.boolean().optional(),
   })
-  .passthrough();
+  .strict();
 
 export const addressSchema = z
   .object({
@@ -22,15 +28,16 @@ export const addressSchema = z
     city: z.string().optional(),
     state: z.string().optional(),
     country: z.string().optional(),
+    isPrimary: z.boolean().optional(),
   })
-  .passthrough();
+  .strict();
 
 export const socialLinkSchema = z
   .object({
     platform: z.string(),
     url: z.string(),
   })
-  .passthrough();
+  .strict();
 
 export const relationshipContactSchema = z
   .object({
@@ -38,13 +45,19 @@ export const relationshipContactSchema = z
     relationship: z.string().optional(),
     phone: z.string().optional(),
     contactId: z.union([z.string(), z.number()]).optional(),
+    inferred: z.boolean().optional(),
+    inferredFromContactId: z.union([z.string(), z.number()]).optional(),
+    inferenceDepth: z.number().optional(),
   })
-  .passthrough();
+  .strict();
 
-export const relationshipSchema = z.object({
-  contactId: z.union([z.string(), z.number()]),
-  relationship: z.string().optional(),
-});
+export const relationshipSchema = z
+  .object({
+    contactId: z.union([z.string(), z.number()]),
+    relationship: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .strict();
 
 export const activitySchema = z
   .object({
@@ -53,8 +66,9 @@ export const activitySchema = z
     content: z.string(),
     date: z.string(),
     by: z.string().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
-  .passthrough();
+  .strict();
 
 export const attachmentSchema = z
   .object({
@@ -65,4 +79,4 @@ export const attachmentSchema = z
     url: z.string(),
     date: z.string(),
   })
-  .passthrough();
+  .strict();

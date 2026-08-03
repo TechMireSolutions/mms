@@ -9,6 +9,8 @@ import { useInvalidateContactsQueries } from "@/tenant/features/contacts/hooks/u
 import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey, type ContactGoogleSyncConfigClient } from "@mms/shared";
 import { isApiError } from "@/lib/apiClient";
+import { reportClientError } from "@/lib/clientErrorReporting";
+import { notify } from "@/lib/notify";
 import { queryClientInstance } from "@/lib/queryClient";
 
 function mapGoogleSyncError(
@@ -93,7 +95,12 @@ export function useGoogleContactsSync({
       setConfig(updatedConfig);
       setShowSetup(false);
       setError("");
-      void logSyncAudit.mutateAsync({ action: "credentials_saved" });
+      try {
+        await logSyncAudit.mutateAsync({ action: "credentials_saved" });
+      } catch (auditError) {
+        reportClientError(auditError, { scope: "contacts.googleSync.audit.credentials_saved" });
+        notify.warning(t("contacts.sync.auditFailed"));
+      }
     } catch (saveError) {
       setError(mapGoogleSyncError(saveError, t));
     }
@@ -135,7 +142,12 @@ export function useGoogleContactsSync({
     try {
       await saveConfig.mutateAsync({ clientId: config.clientId, clearTokens: true });
       setConfig(disconnectedConfig);
-      void logSyncAudit.mutateAsync({ action: "disconnected" });
+      try {
+        await logSyncAudit.mutateAsync({ action: "disconnected" });
+      } catch (auditError) {
+        reportClientError(auditError, { scope: "contacts.googleSync.audit.disconnected" });
+        notify.warning(t("contacts.sync.auditFailed"));
+      }
       await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
       setSyncResult(null);
       setError("");

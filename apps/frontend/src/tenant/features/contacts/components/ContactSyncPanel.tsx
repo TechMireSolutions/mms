@@ -7,11 +7,13 @@ import { AppleContactsPanel } from "./sync/AppleContactsPanel";
 
 interface ContactSyncPanelProps {
   onImport: (contacts: Contact[]) => void | Promise<void>;
+  /** Requires `contacts.write` — sync imports/mutates entities; do not gate on canEditSetup alone. */
   canWrite?: boolean;
 }
 
 /**
- * ContactSyncPanel component for managing Google and Apple Contacts synchronization.
+ * ContactSyncPanel — Google/Apple sync under Setup → Sync.
+ * CTAs use `canWrite` (contacts.write), not `canEditSetup`, so Setup-only roles cannot import.
  */
 export default function ContactSyncPanel({
   onImport,

@@ -56,6 +56,7 @@ const mockLoadContactFieldUsageCounts = vi.fn();
 const mockLoadContactsCommandMetrics = vi.fn();
 const mockLoadContactsReportAnalytics = vi.fn();
 const mockLoadContactsWidgetAggregates = vi.fn();
+const mockLoadContactsByIds = vi.fn();
 const mockGetLinkedContactId = vi.fn().mockResolvedValue(null);
 const mockGetContactGoogleSyncConfig = vi.fn();
 const mockRedactGoogleSyncConfigForClient = vi.fn((...args: unknown[]) => args[0]);
@@ -87,7 +88,7 @@ vi.mock('../services/contactService.js', async (importOriginal) => {
     loadContactsCommandMetrics: (...args: unknown[]) => mockLoadContactsCommandMetrics(...args),
     loadContactsReportAnalytics: (...args: unknown[]) => mockLoadContactsReportAnalytics(...args),
     loadContactsWidgetAggregates: (...args: unknown[]) => mockLoadContactsWidgetAggregates(...args),
-    loadContactsByIds: vi.fn(),
+    loadContactsByIds: (...args: unknown[]) => mockLoadContactsByIds(...args),
     loadContactFieldUsageCount: (...args: unknown[]) => mockLoadContactFieldUsageCount(...args),
     loadContactFieldUsageCounts: (...args: unknown[]) => mockLoadContactFieldUsageCounts(...args),
     loadContactDuplicatePairsPage: vi.fn(),
@@ -261,6 +262,7 @@ describe('contacts REST routes', () => {
     mockLoadContactsWidgetAggregates.mockReset().mockResolvedValue({
       'w1': { value: 10, totalCount: 10, chartData: [{ name: 'Male', value: 6 }] },
     });
+    mockLoadContactsByIds.mockReset().mockResolvedValue([sampleContact]);
     mockTouchContactsSavedReportRun.mockReset().mockResolvedValue({
       id: 'csr_test',
       name: 'Leads',
@@ -458,6 +460,58 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(403);
     expect(res.json()).toMatchObject({ type: 'forbidden' });
     expect(mockLoadContactsWidgetAggregates).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts/resolve requires auth', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/resolve',
+      headers: {
+        host: 'demo.localhost',
+        'content-type': 'application/json',
+      },
+      payload: { ids: ['c1'] },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(mockLoadContactsByIds).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts/resolve loads contacts for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/resolve',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { ids: ['c1'] },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadContactsByIds).toHaveBeenCalledWith(['c1']);
+    expect(res.json()).toEqual({ contacts: [sampleContact] });
+    await app.close();
+  });
+
+  it('POST /api/contacts/resolve returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/resolve',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { ids: ['c1'] },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockLoadContactsByIds).not.toHaveBeenCalled();
     await app.close();
   });
 

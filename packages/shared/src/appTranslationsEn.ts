@@ -4390,6 +4390,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.sync.clientIdRequired": "Both Client ID and Client Secret are required.",
   "contacts.sync.saveCredentials": "Save credentials",
   "contacts.sync.credentialsSaved": "Credentials saved. Connect your Google account to start syncing.",
+  "contacts.sync.auditFailed": "Sync settings saved, but the audit log could not be recorded.",
   "contacts.sync.connectGoogle": "Connect Google account",
   "contacts.sync.pasteAuthCode": "Paste authorization code",
   "contacts.sync.pasteAuthCodePlaceholder": "Paste the code from the redirect URL…",

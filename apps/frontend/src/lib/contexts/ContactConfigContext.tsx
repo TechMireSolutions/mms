@@ -1,7 +1,8 @@
 /**
  * ContactConfigContext
- * Global React Context that broadcasts contact field configuration
- * and preferences to all consumers in real-time without page refresh.
+ * Broadcasts contact field configuration and preferences via TanStack Query + REST
+ * (`/api/contacts/field-config`, preferences, lookups, column-prefs, custom-tabs).
+ * Mount once under TenantScopedProviders — never nest on child pages.
  *
  * Usage:
  *   const { fieldConfig, prefs, updateConfig, updatePrefs } = useContactConfig();
@@ -26,8 +27,8 @@ import { useContactConfigCore } from "@/lib/contacts/useContactConfigCore";
 import { useContactConfigProviderValue } from "@/lib/contacts/useContactConfigProviderValue";
 
 /**
- * Context Provider component that loads contact configuration arrays
- * from the tenant database cache, synchronizing state in real-time.
+ * Context Provider that loads contact configuration from typed Contacts Setup REST
+ * (Query-backed). Invalidation refreshes consumers — not a localStorage / live DB cache.
  *
  * @param {object} props - Component props.
  * @param {React.ReactNode} props.children - Child elements.

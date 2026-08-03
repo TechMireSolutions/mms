@@ -91,8 +91,17 @@ export function ContactsWorkListBody({
           />
         </motion.div>
       ) : isWorkLoading ? (
-        <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div
+          key="skeleton"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          aria-busy="true"
+          role="status"
+          aria-live="polite"
+        >
           <TableSkeleton rows={6} cols={tableColumns.length} />
+          <span className="sr-only">{t("common.loading")}</span>
         </motion.div>
       ) : (
         <motion.div
@@ -101,6 +110,7 @@ export function ContactsWorkListBody({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
+          aria-busy={useServerWork && isWorkFetching ? true : undefined}
         >
           {workContacts.length === 0 ? (
             <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl p-6">
@@ -138,7 +148,9 @@ export function ContactsWorkListBody({
                 />
               )}
               {useServerWork && isWorkFetching && (
-                <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
+                <p className="text-xs text-muted-foreground px-1" role="status" aria-live="polite">
+                  {t("common.loading")}
+                </p>
               )}
             </ErrorBoundary>
           )}

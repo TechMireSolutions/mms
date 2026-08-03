@@ -3,9 +3,10 @@ import { sql } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import { loadServerConfig } from '../config/serverConfig.js';
-import { getRequestTenant, getRequestUserId } from '../lib/tenantContext.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 import { getDb, setDb } from './dbClient.js';
 import * as schema from './schema.js';
+import { applyTenantTransactionGuards } from './tenantTransactionGuards.js';
 
 export type DbClient = NodePgDatabase<typeof schema>;
 
@@ -93,15 +94,7 @@ async function runTransaction<T>(cb: () => Promise<T>, readSnapshot: boolean): P
 
   const tenant = getRequestTenant();
   return await getDb().transaction(async (tx) => {
-    if (tenant && tenant.trim()) {
-      const normalized = tenant.trim().toLowerCase();
-      await tx.execute(sql`SELECT set_config('app.current_tenant', ${normalized}, true)`);
-      await tx.execute(sql`SELECT set_config('app.rls_bypass', 'off', true)`);
-    } else {
-      await tx.execute(sql`SELECT set_config('app.rls_bypass', 'on', true)`);
-    }
-    const userId = getRequestUserId();
-    await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId ?? ''}, true)`);
+    await applyTenantTransactionGuards(tx, tenant);
     return await txStorage.run(tx, cb);
   }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
 }

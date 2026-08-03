@@ -4437,6 +4437,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.sync.clientIdRequired": "معرف العميل وسر العميل مطلوبان.",
   "contacts.sync.saveCredentials": "حفظ بيانات الاعتماد",
   "contacts.sync.credentialsSaved": "تم حفظ بيانات الاعتماد. اربط حساب Google لبدء المزامنة.",
+  "contacts.sync.auditFailed": "تم حفظ إعدادات المزامنة، لكن تعذّر تسجيل سجل التدقيق.",
   "contacts.sync.connectGoogle": "ربط حساب Google",
   "contacts.sync.pasteAuthCode": "الصق رمز التفويض",
   "contacts.sync.pasteAuthCodePlaceholder": "الصق الرمز من عنوان URL بعد إعادة التوجيه…",

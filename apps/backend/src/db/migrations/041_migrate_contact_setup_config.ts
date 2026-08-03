@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
+import { withTenantTransaction } from '../withTenantTransaction.js';
 import { parseTenantScopedStorageKey } from '@mms/shared';
 
 const FIELD_CONFIG_KEY = 'contact_field_config';
@@ -46,58 +47,60 @@ export async function runMigration041(): Promise<void> {
   let prefsCount = 0;
   let columnUserCount = 0;
 
-  for (const [tenant, config] of fieldByTenant) {
-    const existing = await db
-      .select({ workspaceSubdomain: schema.contactFieldConfigs.workspaceSubdomain })
-      .from(schema.contactFieldConfigs)
-      .where(eq(schema.contactFieldConfigs.workspaceSubdomain, tenant))
-      .limit(1);
-    if (existing.length > 0) continue;
-    await db.insert(schema.contactFieldConfigs).values({
-      workspaceSubdomain: tenant,
-      config,
-      updatedAt: new Date(),
-    });
-    fieldCount += 1;
-    console.log(`[Migration 041] Migrated contact_field_config for tenant "${tenant}".`);
-  }
-
-  for (const [tenant, preferences] of prefsByTenant) {
-    const existing = await db
-      .select({ workspaceSubdomain: schema.contactModulePreferences.workspaceSubdomain })
-      .from(schema.contactModulePreferences)
-      .where(eq(schema.contactModulePreferences.workspaceSubdomain, tenant))
-      .limit(1);
-    if (existing.length > 0) continue;
-    await db.insert(schema.contactModulePreferences).values({
-      workspaceSubdomain: tenant,
-      preferences,
-      updatedAt: new Date(),
-    });
-    prefsCount += 1;
-    console.log(`[Migration 041] Migrated contact_preferences for tenant "${tenant}".`);
-  }
-
-  for (const [tenant, map] of columnByTenant) {
-    const existingRows = await db
-      .select({ userId: schema.contactUserColumnPrefs.userId })
-      .from(schema.contactUserColumnPrefs)
-      .where(eq(schema.contactUserColumnPrefs.workspaceSubdomain, tenant));
-    const existingUsers = new Set(existingRows.map((row) => row.userId));
-    for (const [userId, prefs] of Object.entries(map)) {
-      if (!userId.trim() || !Array.isArray(prefs) || existingUsers.has(userId)) continue;
-      await db.insert(schema.contactUserColumnPrefs).values({
+  await withTenantTransaction(null, async (tx) => {
+    for (const [tenant, config] of fieldByTenant) {
+      const existing = await tx
+        .select({ workspaceSubdomain: schema.contactFieldConfigs.workspaceSubdomain })
+        .from(schema.contactFieldConfigs)
+        .where(eq(schema.contactFieldConfigs.workspaceSubdomain, tenant))
+        .limit(1);
+      if (existing.length > 0) continue;
+      await tx.insert(schema.contactFieldConfigs).values({
         workspaceSubdomain: tenant,
-        userId,
-        preferences: prefs,
+        config,
         updatedAt: new Date(),
       });
-      columnUserCount += 1;
+      fieldCount += 1;
+      console.log(`[Migration 041] Migrated contact_field_config for tenant "${tenant}".`);
     }
-    if (Object.keys(map).length > 0) {
-      console.log(`[Migration 041] Migrated column prefs for tenant "${tenant}".`);
+
+    for (const [tenant, preferences] of prefsByTenant) {
+      const existing = await tx
+        .select({ workspaceSubdomain: schema.contactModulePreferences.workspaceSubdomain })
+        .from(schema.contactModulePreferences)
+        .where(eq(schema.contactModulePreferences.workspaceSubdomain, tenant))
+        .limit(1);
+      if (existing.length > 0) continue;
+      await tx.insert(schema.contactModulePreferences).values({
+        workspaceSubdomain: tenant,
+        preferences,
+        updatedAt: new Date(),
+      });
+      prefsCount += 1;
+      console.log(`[Migration 041] Migrated contact_preferences for tenant "${tenant}".`);
     }
-  }
+
+    for (const [tenant, map] of columnByTenant) {
+      const existingRows = await tx
+        .select({ userId: schema.contactUserColumnPrefs.userId })
+        .from(schema.contactUserColumnPrefs)
+        .where(eq(schema.contactUserColumnPrefs.workspaceSubdomain, tenant));
+      const existingUsers = new Set(existingRows.map((row) => row.userId));
+      for (const [userId, prefs] of Object.entries(map)) {
+        if (!userId.trim() || !Array.isArray(prefs) || existingUsers.has(userId)) continue;
+        await tx.insert(schema.contactUserColumnPrefs).values({
+          workspaceSubdomain: tenant,
+          userId,
+          preferences: prefs,
+          updatedAt: new Date(),
+        });
+        columnUserCount += 1;
+      }
+      if (Object.keys(map).length > 0) {
+        console.log(`[Migration 041] Migrated column prefs for tenant "${tenant}".`);
+      }
+    }
+  });
 
   console.log(
     `[Migration 041] Done — field-config=${fieldCount}, preferences=${prefsCount}, column-user-rows=${columnUserCount}.`,

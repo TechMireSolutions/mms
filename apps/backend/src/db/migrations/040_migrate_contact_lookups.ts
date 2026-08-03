@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
+import { withTenantTransaction } from '../withTenantTransaction.js';
 import { parseTenantScopedStorageKey } from '@mms/shared';
 import {
   CONTACT_LOOKUP_KINDS,
@@ -67,18 +68,6 @@ export async function runMigration040(): Promise<void> {
     const tenant = parsed.subdomain.trim().toLowerCase();
     if (!tenant) continue;
 
-    const existing = await db
-      .select({ id: schema.contactLookups.id })
-      .from(schema.contactLookups)
-      .where(
-        and(
-          eq(schema.contactLookups.workspaceSubdomain, tenant),
-          eq(schema.contactLookups.kind, kind),
-        ),
-      )
-      .limit(1);
-    if (existing.length > 0) continue;
-
     const values =
       kind === 'countryCodes'
         ? normalizeCountryItems(row.data).map((entry, index) => ({
@@ -102,11 +91,29 @@ export async function runMigration040(): Promise<void> {
 
     if (values.length === 0) continue;
 
-    await db.insert(schema.contactLookups).values(values);
-    insertedRows += values.length;
+    const inserted = await withTenantTransaction(null, async (tx) => {
+      const existing = await tx
+        .select({ id: schema.contactLookups.id })
+        .from(schema.contactLookups)
+        .where(
+          and(
+            eq(schema.contactLookups.workspaceSubdomain, tenant),
+            eq(schema.contactLookups.kind, kind),
+          ),
+        )
+        .limit(1);
+      if (existing.length > 0) return 0;
+
+      await tx.insert(schema.contactLookups).values(values);
+      return values.length;
+    });
+
+    if (inserted === 0) continue;
+
+    insertedRows += inserted;
     migratedTenants += 1;
     console.log(
-      `[Migration 040] Migrated ${values.length} "${kind}" lookup rows for tenant "${tenant}".`,
+      `[Migration 040] Migrated ${inserted} "${kind}" lookup rows for tenant "${tenant}".`,
     );
   }
 
