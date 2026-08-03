@@ -35,6 +35,7 @@ packages/shared/src/
 | Named barrel exports | Subpath imports |
 | Shared Zod DTOs used by FE + BE (write vs read when needed) | Fork the same shape in both apps |
 | `formatDate` / `formatMoney` / `parsePhoneNumber` / `normalizeToE164` | Ad-hoc `toLocale*` / currency prefixes |
+| `applyTitleCaseRecursive` for Latin/display names | Title-casing ar/ur/fa / non-Latin / free-form RTL prose — `mms-structure-naming.md` |
 | Soft-delete strip helpers (`stripContactClientSoftDeleteFields`) | Accepting client `deletedAt` on write DTOs |
 | Pure functions only | React, Fastify, DB, `localStorage`, DOM |
 
@@ -54,4 +55,4 @@ If used in 2+ modules OR FE+BE → extract pure helper → replace duplicates �
 
 ## Done
 
-`mms-completion-review.md` · Rules: `mms-dry.md`, `mms-settings-i18n.md`.
+`mms-completion-review.md` · Rules: `mms-dry.md`, `mms-settings-i18n.md`, `mms-structure-naming.md` (Title Case scope).

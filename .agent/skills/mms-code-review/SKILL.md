@@ -9,6 +9,20 @@ Agent self-review after edits → also follow always-on `mms-completion-review.m
 
 **When X → skill Y (deep dive, not this index):** FormModal / Zod forms → **`mms-form-architecture`** · Query factories → **`mms-query-factories`** · axe / focus-return → **`mms-a11y-smoke`** · deps bumps → **`mms-dependency-upgrade`** · DDL → **`mms-schema-migrate`** · CSRF/cookies → **`mms-backend-security`** · backup wipe → **`mms-backup-restore`**.
 
+## Modern practices (pointers only)
+
+| When reviewing… | Owner |
+|-----------------|--------|
+| Keyset/cursor vs OFFSET lists | `mms-data-layer.md` · **`mms-backend-api`** / **`mms-query-factories`** |
+| Contested PUT / `updated_at` → 409 | `mms-api-interface.md` §6 · **`mms-backend-api`** |
+| `sql.raw` / statement_timeout | `mms-data-layer.md` · **`mms-schema-migrate`** / **`mms-backend-api`** |
+| Dense table virtualization | `@tanstack/react-virtual` — `mms-ui-ux-design.md` · **`mms-module-work`** |
+| List pending a11y (`aria-busy`) | `mms-ui-ux-design.md` · **`mms-a11y-smoke`** |
+| Query `placeholderData: (prev) => prev` | `mms-data-layer.md` · **`mms-query-factories`** |
+| bodyLimit / outbound `AbortSignal.timeout` / idempotency↔body | `mms-api-interface.md` · **`mms-backend-api`** |
+| Title Case skip ar/ur/fa / RTL prose | `mms-structure-naming.md` · **`mms-shared-package`** |
+| Messaging send idempotency digest | `mms-api-interface.md` §6 · **`mms-messaging`** |
+
 ## Review order
 
 1. Automated gates (`pnpm typecheck`, scoped lint/tests)
@@ -96,7 +110,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Composer uses `MessagingRecipient` — not contacts schemas
 - [ ] Clear-logs soft-archive semantics preserved
 - [ ] Session-forced `userId` on BE; no SQL echo; upsert templates/logs
-- [ ] Send/campaign idempotency key when retries likely; `429`/`Retry-After` surfaced
+- [ ] Send/campaign idempotency key **bound to body digest** (409 on mismatch); `429`/`Retry-After` surfaced
 
 ### Field persistence (new/changed fields)
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper

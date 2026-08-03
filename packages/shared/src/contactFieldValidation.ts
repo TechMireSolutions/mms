@@ -16,7 +16,8 @@ const TEXT_LIKE_FIELD_TYPES: ReadonlySet<FieldDefinition['type']> = new Set([
   "currency",
 ]);
 
-function isValidOption(options: unknown[], targetValue: string): boolean {
+function isValidOption(options: unknown[], targetValue: string, fieldKey?: string): boolean {
+  if (fieldKey === "relationship") return true;
   const normalizedTarget = targetValue.trim().toLowerCase();
   return options.some((option) =>
     typeof option === "string" && option.trim().toLowerCase() === normalizedTarget
@@ -151,7 +152,7 @@ export function buildCustomFieldSchema(
     case "single_select":
       baseSchema = fieldDefinition.options?.length
         ? z.string().refine(
-            (value) => !value || isValidOption(fieldDefinition.options ?? [], value),
+            (value) => !value || isValidOption(fieldDefinition.options ?? [], value, fieldDefinition.key),
             { message: msg("contacts.validation.invalidOption", language, { label }) },
           )
         : z.string();
@@ -161,7 +162,7 @@ export function buildCustomFieldSchema(
       baseSchema = fieldDefinition.options?.length
         ? z.array(z.string()).refine(
             (values) => values.every((value) =>
-              isValidOption(fieldDefinition.options ?? [], value)
+              isValidOption(fieldDefinition.options ?? [], value, fieldDefinition.key)
             ),
             { message: msg("contacts.validation.invalidOptions", language, { label }) },
           )

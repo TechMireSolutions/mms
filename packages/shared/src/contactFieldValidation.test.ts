@@ -21,7 +21,7 @@ describe('buildCustomFieldSchema', () => {
     expect(schema.safeParse('').success).toBe(false);
   });
 
-  it('accepts relationship labels listed in select options', () => {
+  it('accepts standard and custom relationship terms on relationship fields', () => {
     const schema = buildCustomFieldSchema(
       field({
         key: 'relationship',
@@ -32,6 +32,20 @@ describe('buildCustomFieldSchema', () => {
       }),
     );
     expect(schema.safeParse('Husband').success).toBe(true);
-    expect(schema.safeParse('Mentor').success).toBe(false);
+    expect(schema.safeParse('Mentor').success).toBe(true);
+  });
+
+  it('rejects unlisted options for non-relationship select fields', () => {
+    const schema = buildCustomFieldSchema(
+      field({
+        key: 'gender',
+        label: 'Gender',
+        type: 'select',
+        required: false,
+        options: ['Male', 'Female'],
+      }),
+    );
+    expect(schema.safeParse('Male').success).toBe(true);
+    expect(schema.safeParse('Unknown').success).toBe(false);
   });
 });

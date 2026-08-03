@@ -49,6 +49,7 @@ Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution f
 | Read upstream migration guides for majors | Silence type errors with `any` or `@ts-ignore` |
 | Patch/minor bumps freely within semver | Leave known CVEs unpatched |
 | Align CI/Docker Node with `engines.node` | Mismatched CI images |
+| `pnpm.onlyBuiltDependencies` (or equivalent) allowlist for native/postinstall scripts | Running arbitrary package `postinstall` / build scripts unreviewed |
 
 ## Scope
 
@@ -65,7 +66,7 @@ Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution f
 
 ## Supply chain (CI)
 
-Enable Dependabot (or Renovate) + GitHub `dependency-review` on PRs for high/critical advisories; keep `pnpm audit` in upgrade PRs. Do not require SBOM/provenance until an ops task adds them — `mms-ops-infrastructure.md`.
+Enable Dependabot (or Renovate) + GitHub `dependency-review` on PRs for high/critical advisories; keep `pnpm audit` in upgrade PRs. Prefer `onlyBuiltDependencies` (pnpm) so only reviewed packages may run install scripts — do not silently enable every postinstall. Do not require SBOM/provenance until an ops task adds them — `mms-ops-infrastructure.md`.
 
 ## TypeScript strictness (dedicated PR)
 

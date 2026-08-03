@@ -60,6 +60,8 @@ pnpm test             # Run Vitest suites for all workspaces
 | `PLATFORM_ALLOW_ENV_BOOTSTRAP` | Backend | When `true`, seed super-user from `PLATFORM_ADMIN_EMAIL` + password env — otherwise first-run UI (`mms-auth-security.mdc`). |
 | `NODE_ENV` | Backend | Run environment (`production` restricts CORS / cookie options). |
 
+**Client bundle hygiene:** Only `VITE_*` (and Vite-injected `import.meta.env`) may ship in the frontend bundle. **Ban** leaking `JWT_SECRET`, `DATABASE_URL`, or other server secrets into FE code / Vite `define` — bumps/env layout → `mms-dependencies.mdc` when touching tooling.
+
 ### Data wipe / purge (do not invent new wipe APIs)
 - **Tenant workspace delete**: `deleteWorkspace` → `purgeTenantDataBySubdomain` then remove workspace row (platform workspaces API).
 - **Platform full reset**: `POST /api/platform/settings/reset-database` — apex + `authenticatePlatform` + `requireSuperUser` + password confirm → `resetAndReseedDatabase()`; clears platform session cookie. Not a tenant-scoped op.

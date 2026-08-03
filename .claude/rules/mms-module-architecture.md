@@ -64,7 +64,9 @@ Every standard module page (e.g., `ContactsPage.tsx`, `StudentsPage.tsx`) must i
 Operations that exceed direct interaction limits or process massive records must run as background jobs:
 - **Eligible Actions**: Large CSV data exports/imports, bulk messaging queues, database deduplication scans, and long report generations.
 - **User UX**: Staged tasks must update in the global `BackgroundJobsTray`. Show status (`running | completed | failed`), progress percentage, error counts, and download links.
-- **Backend Isolation**: Run background tasks in isolated workers (`worker.ts` / `jobRunnerProcess.ts`). Enforce RBAC at enqueue **and** execute. Bind jobs to tenant + user; use an idempotency key when retries are expected.
+- **Backend Isolation**: Run background tasks in isolated workers (`worker.ts` / `jobRunnerProcess.ts`). Enforce RBAC at enqueue **and** execute. Bind jobs to tenant + user; use an idempotency key when retries are expected (`mms-api-interface.md` §6).
+- **Claim semantics**: Workers claim the next pending job with `FOR UPDATE SKIP LOCKED` (see `worker.ts`) so concurrent workers do not double-run the same row.
+- **Multi-instance**: Current runner is in-process — do **not** pretend a Redis/durable queue exists. Multi-instance deploy needs a durable shared queue before scaling workers horizontally. Workflow → skill **`mms-background-jobs`**.
 
 ---
 

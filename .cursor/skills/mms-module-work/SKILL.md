@@ -22,13 +22,14 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 3. Work = directory/CRUD/drawer/filters/bulk only — no charts.
 4. **Filters SSOT**: one Filters menu owns presets/dimensions; no always-visible chip bar that repeats the same options. Preset ids + `labelKey`s live in `@mms/shared` next to the list-query schema (Contacts: `CONTACTS_QUICK_FILTER_OPTIONS`). Active state = badge + Clear; `FilterChips` only for removable active multi-selects.
 5. **View mode**: person-directory Work → `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes (finance/attendance/…). Resolve one `viewMode`; defaults/cards paging — rule §3.
-6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET.
+6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET. Prefer **keyset/cursor** for hot/large directories when touching list APIs — `mms-data-layer.mdc`.
 7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
 8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** archive chrome + Restore; hide Call/WA/SMS/Email when `deletedAt`.
 9. §7: `ErrorState`+retry+hint on list `isError`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close.
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate).
-11. Contacts report KPIs: `activeCount` = soft-delete-filtered roster length (form never writes `isActive`).
-12. Contacts mutations invalidate messaging resolve Query keys when person data changes.
+11. Dense Work tables: prefer `@tanstack/react-virtual` (or named shared wrapper) — ban one-off virtualization libs — `mms-ui-ux-design.mdc`.
+12. Contacts report KPIs: `activeCount` = soft-delete-filtered roster length (form never writes `isActive`).
+13. Contacts mutations invalidate messaging resolve Query keys when person data changes.
 
 ## Checklist
 
@@ -36,6 +37,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] PageHeader visible on all tiers; metrics permission-scoped
 - [ ] Create omitted when !canWrite; Cmd/Ctrl+N when allowed
 - [ ] Server pagination / metrics — no unbounded client lists / no `loadAllFn`
+- [ ] Hot/large directories: keyset preference when touching list APIs
 - [ ] Person-directory: `directoryViews: ['table','cards']`; cards + table same page API
 - [ ] Soft-delete trash + restore (+ drawer archive chrome) or documented variant
 - [ ] ErrorState + retry + hint on list isError (not empty success)
@@ -46,7 +48,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] Directory viewMode SSOT — cards default `< md`, table `md+`; toggle overrides without CSS dual-render
 - [ ] Column widths persist — local + `/column-preferences`; merge preserves device widths
 - [ ] Copy via t(); no raw fetch('/api/...')
-- [ ] Dense lists: card rows `< md` and/or `overflow-x-auto` tables; touch targets ≥ 44px (`mms-ui-ux-design.mdc` §7)
+- [ ] Dense lists: `@tanstack/react-virtual` when virtualizing; card rows `< md` and/or `overflow-x-auto` tables; touch ≥ 44px (`mms-ui-ux-design.mdc` §7)
 ```
 
 ## Do Not

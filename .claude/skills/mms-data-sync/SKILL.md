@@ -98,16 +98,16 @@ import {
 
 Backup/wipe-restore UI + validate-before-wipe → skill **`mms-backup-restore`** (not this skill’s primary path).
 
-## Concurrency
+## Concurrency (legacy document-store only)
 
-Full-array read-modify-write — merge concurrent edits to same collection.
+Full-array read-modify-write on `/api/db` collections — merge concurrent edits to the **same legacy collection**. This is **not** REST optimistic concurrency (`updated_at` → `409`) — that lives in `mms-api-interface.md` §6 / **`mms-backend-api`**.
 
 ## Student / contact hydration
 
 `db.ts` hydrates students from linked contacts on read — preserve when editing links. Contact REST persists via repositories on backend.
 
 ## Value formatting intercepts
-- **Title Case**: `applyTitleCaseRecursive` on save paths (FE sync + BE repos).
+- **Title Case**: `applyTitleCaseRecursive` on Latin/display-name save paths (FE sync + BE repos). **Skip** ar/ur/fa / non-Latin scripts and free-form RTL prose — `mms-structure-naming.md`.
 - **E.164**: `parsePhoneNumber` on phone save boundaries.
 
 ## Branding / global settings

@@ -39,7 +39,7 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 - **Use Semantic Design Tokens**: Define tokens **only** in `index.css` `@theme` (Tailwind v4) — ban feature-level `@theme` / raw hex. Prefer CSS `@layer` for base/components/utilities. Keep FormModal `@container` queries.
 - **Touch-target exception**: Design-system primitives may use approved sizes from `formStyles` / primitives (e.g. `min-h-11`, `min-w-11`) — do not invent new arbitrary values in feature code.
 - **Semantic Colors**: For success/warning/destructive affordances, use semantic tokens (e.g., `text-destructive`, `bg-destructive/10`, theme `--success`).
-- **Glassmorphism**: Consistent card overlays use `backdrop-blur` and translucent borders.
+- **Glass tokens**: Where glass surfaces already exist in the design system, reuse those tokens (`backdrop-blur`, translucent borders). Do **not** require glassmorphism on every card.
 
 ---
 
@@ -80,6 +80,7 @@ Use `useFilteredModuleTierTabs({ canViewSetup, canViewReports })` so forbidden t
 - **Color Contrast**: Primary texts on glass surfaces must meet WCAG AA contrast. Never convey status by color alone; always pair colors with text labels (`StatusBadge` + `t()`).
 - **Name and ID attributes**: All input, select, textarea, date picker, and tag input elements must declare explicit `name` and `id` properties. If not supplied, components must fallback automatically to `React.useId()` and link label/assistive elements accordingly.
 - **Motion**: Honor `prefers-reduced-motion` — reduce or disable non-essential Framer Motion on decorative transitions.
+- **Pending loads**: Work directory / list Query pending states should expose `aria-busy` and a polite live region (or equivalent Status) so screen readers hear loading — not only a spinner.
 - **View Transitions**: Default **off**. If enabled, only document navigations that do not fight Framer Motion; always honor `prefers-reduced-motion`.
 - **Landmarks**: Prefer semantic `<main>` / `<nav>` / `<section>` / `<header>` / `<footer>` on app shell and module chrome; preserve skip-to-content where present.
 
@@ -95,7 +96,7 @@ Use `useFilteredModuleTierTabs({ canViewSetup, canViewReports })` so forbidden t
 
 - **De-prioritize Rendering**: Prefer `startTransition` / deferred mount for heavy non-critical chrome (job tray, secondary drawers).
 - **Layout Shift Safeguards**: Declare explicit width/height on images, placeholders, and charts to prevent CLS.
-- **Long lists**: Prefer server pagination; virtualize dense Work tables when row counts are large.
+- **Long lists**: Prefer server pagination; when virtualizing dense Work tables, use `@tanstack/react-virtual` (or a named shared wrapper around it) — **ban** one-off virtualization libraries.
 - **Observer De-registration**: Clean up ResizeObservers, event listeners, and timers on unmount.
 - **SEO Routing Safeguards**: Enforce `noindex` on authenticated app layout paths.
 
@@ -107,6 +108,7 @@ Use `useFilteredModuleTierTabs({ canViewSetup, canViewReports })` so forbidden t
 - Write default (mobile) styles first; layer up with `min-width` Tailwind breakpoints (`sm:`, `md:`, `lg:`, `xl:`). Ban desktop-first `max-sm:` / `max-md:` / `max-lg:` for layout width.
 - **Never hardcode fixed layout widths in pixels** (e.g., `w-[1200px]`). Use relative units (`%`, `rem`, `vw`, `max-w-*`, Grid, Flexbox) so content reflows naturally.
 - Root containers must never exceed `100vw`; apply `max-w-full` and `box-sizing: border-box` (`box-border`) to prevent horizontal overflow.
+- **Viewport units**: Prefer `dvh`/`svh` and `safe-area-inset-*` for shell/modals/full-height chrome over raw `vh` (iOS browser chrome/keyboard). FormModal tall height → `mms-form-architecture.md`.
 
 ### MMS Breakpoints
 Adhere to these thresholds — they map to the Tailwind v4 tokens already defined in `index.css`:

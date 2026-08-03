@@ -15,7 +15,9 @@ Authoritative standards for backend databases, migrations, caching architectures
 ## 1. Database & ORM Stack (PostgreSQL + Drizzle)
 - **Database Engine**: PostgreSQL is the unified relational database. Ensure connection secrets are configured via `DATABASE_URL`.
 - **Pool sizing**: Size the PG pool via `PG_POOL_MAX` / `serverConfig.pgPoolMax` (default 20) — do not hardcode `Pool({ max })` in call sites. Keep RLS SET LOCAL inside transactions so pooled clients never leak tenant context.
+- **Timeout budgets**: On tenant write transactions prefer `SET LOCAL statement_timeout` and `SET LOCAL idle_in_transaction_session_timeout` (or equivalent pool/session budgets) so a stuck query cannot hold a pooled client indefinitely — align with Fastify `requestTimeout` / `bodyLimit` in `mms-api-interface.mdc`. Open until wired everywhere → `mms-migration-status.mdc`.
 - **Drizzle ORM**: Defines schemas in `apps/backend/src/db/schema.ts`. Circular imports are avoided via `dbClient.ts` dependencies.
+- **`sql` fragment safety**: Approved Drizzle `sql` fragments for RLS `SET LOCAL` and JSONB merge must use **parameterized** values only. **Ban** piping user/tenant input into `sql.raw`, string-built identifiers, or concatenated SQL.
 - **Module layout**: Connection / init / purge / document-store helpers may live in focused siblings (`dbConnection.ts`, `dbInit.ts`, `documentStore*.ts`, …) re-exported from the stable public surface callers already import — `mms-structure-naming.mdc`.
 - **Access Pattern**: Controllers must not import raw `pg` drivers. Prefer **REST repositories**; use `dbSyncService` only for settings/legacy sync paths.
 - **Hydrate graphs**: Prefer Drizzle relational `db.query.*` or explicit joins in services — ban N+1 per-id loops (pair with FE batch `/resolve`).
@@ -50,7 +52,7 @@ Authoritative standards for backend databases, migrations, caching architectures
 ### Entity list pagination (REST)
 - Paginated list routes: clients should send `page` (+ `limit`); omit may default to page 1 / default page size with a server max cap — **ban** unpaged full-tenant dumps via `loadAllFn` or optional-page paths that return everything (Contacts closed this; do not re-open on Students/Teachers/…). Do not claim Zod already requires `page`/`limit` until `baseListQuerySchema` is tightened.
 - Work **cards** and **table** must use the same server page/limit APIs — ban `maxPageSize` one-shot loads for cards with a truncation banner that says “switch to list”.
-- Prefer SQL `LIMIT`/`OFFSET` (or keyset) + total count; in-memory `paginateX(loadAll())` is migration debt — do not expand it.
+- Prefer **keyset/cursor** pagination for large or hot directories when touching those APIs; SQL `LIMIT`/`OFFSET` is OK for small Work pages. In-memory `paginateX(loadAll())` is migration debt — do not expand it.
 
 ### Secrets & credential stores
 - Long-lived OAuth / API secrets belong in **tenant-scoped FORCE-RLS tables** (e.g. `contact_google_sync_credentials`), never in the unscoped `objects` KV.
@@ -116,12 +118,18 @@ Align with `queryClient.ts`: `staleTime` 30s, `gcTime` 5m, `refetchOnWindowFocus
 - **Mutations**: Narrow invalidation of list + count keys — avoid blanket `invalidateQueries()`. Await success before UI “saved” / form close — **`mms-module-architecture.mdc` §7**. Surface success/error via call-site `notify.*` + `t()` — do not add a global `MutationCache` toast middleware or `mutation.meta` toast bus (`mms-hooks.mdc`).
 - **Optimistic updates**: Allowed only for idempotent, easily-rollbackable UX. **Ban** for money, soft-delete/restore, bulk, backup/restore, messaging send. Always reconcile via invalidate + server response — never leave optimistic cache as SSOT.
 - **No dual-write**: After server `bulkSave`, FE invalidates only — ban looping `upsert` / `saveCollection` in mutation `onSuccess`.
-- **`select` / `placeholderData`**: Prefer Query `select` for derived view models; use `placeholderData` / `keepPreviousData` for paginated lists — do not invent parallel local caches.
-- **Pagination shape**: Prefer server offset `page`+`limit` for Work directories; use infinite/keyset Query only when the API supports cursor/keyset — ban client-side full dumps / `loadAllFn` (HTTP contract pointer `mms-api-interface.mdc` §6).
+- **`select` / `placeholderData`**: Prefer Query `select` for derived view models; for paginated lists use `placeholderData: (previousData) => previousData` (TanStack Query v5) — do not invent parallel local caches or the v4 boolean `keepPreviousData` API.
+- **Pagination shape**: Prefer server `page`+`limit` for Work directories; prefer keyset/cursor Query when the API supports it for large/hot lists — ban client-side full dumps / `loadAllFn` (HTTP contract pointer `mms-api-interface.mdc` §6).
 - **List load failures**: Work/Reports show `ErrorState` + hint + retry — `mms-module-architecture.mdc` §7.
 - **Cross-module hydrate**: Batch `/resolve` — ban N+1 per-id loops.
 - **Errors / loading**: `notify.error()`; expose `isPending` / `isFetching`.
 - Hook recipes (controllers, facades) → **`mms-hooks.mdc`**.
+
+### Live push (`/api/ws`) — subscribe contract (when FE ships)
+BE already broadcasts via `/api/ws` + `broadcastTenantUpdate`. Until FE subscribes → open gap `mms-migration-status.mdc`. When shipping the subscriber:
+- Cookie session auth on the existing tenant WS channel only — **ban** parallel/ad-hoc WS protocols.
+- Reconnect with backoff; honor heartbeat/ping.
+- On events: **invalidate** the relevant Query tuple keys only — do not invent a second cache or full-collection dump.
 
 ### Hybrid Trajectory (Deprecated)
 - **Banned for New Modules**: Query → localStorage mirror for widgets. Read from Query hooks.

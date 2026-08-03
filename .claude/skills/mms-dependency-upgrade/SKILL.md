@@ -14,7 +14,7 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 1. Confirm root `packageManager` + `engines.node` match CI/Docker exactly.
 2. Prefer pnpm `catalog:` / `catalogs` for React, Vite, Fastify, Drizzle, Zod, TanStack Query — apps must not drift majors.
 3. Bump via Dependabot/Renovate PR or a dedicated manual catalog edit (not mid-feature).
-4. `pnpm install` then `pnpm audit` (or OSV) — fix/document high+ findings.
+4. `pnpm install` then `pnpm audit` (or OSV) — fix/document high+ findings. Prefer `onlyBuiltDependencies` allowlist so arbitrary postinstall scripts stay off.
 5. Read upstream major migration guides before landing breaking API changes.
 6. `pnpm typecheck && pnpm test` + FE/BE lint when those apps changed.
 7. **React Compiler** (only if enabling): Babel/Vite plugin in `apps/frontend` Vite config only → add `eslint-plugin-react-compiler` → delete redundant `useMemo`/`useCallback`/`React.memo` → update stack note in `mms-core.md` / this rule.
@@ -28,6 +28,7 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 - [ ] catalogs / majors aligned across apps
 - [ ] engines + packageManager match CI/Docker
 - [ ] audit clean or justified
+- [ ] onlyBuiltDependencies / install-script allowlist reviewed when adding native deps
 - [ ] typecheck + test + lint green
 - [ ] Compiler not half-enabled (plugin + eslint + memo cleanup together)
 ```

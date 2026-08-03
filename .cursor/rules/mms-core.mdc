@@ -74,13 +74,14 @@ Single prose owner per topic — other rules/skills use short pointers only. **W
 | File structure, naming, Title Case on save | `mms-structure-naming.mdc` | `mms-frontend` / `mms-shared-package` |
 | DRY / extraction / `@mms/shared` exports | `mms-dry.mdc` | `mms-shared-package` |
 | Sessions, cookies, CSRF, RBAC, rate limits | `mms-auth-security.mdc` | `mms-backend-security` |
-| apiClient, error `type`, HTTP pagination, bulk PUT upsert | `mms-api-interface.mdc` | `mms-frontend` · `mms-backend-api` |
-| Query policy, Drizzle/RLS, soft-delete **schema/strip/SQL** | `mms-data-layer.mdc` | `mms-query-factories` · `mms-schema-migrate` · `mms-data-sync` (legacy) |
+| apiClient, error `type`, HTTP pagination, bulk PUT upsert, idempotency↔body | `mms-api-interface.mdc` | `mms-frontend` · `mms-backend-api` |
+| Query policy, Drizzle/RLS, soft-delete **schema/strip/SQL**, PG timeouts, WS invalidate | `mms-data-layer.mdc` | `mms-query-factories` · `mms-schema-migrate` · `mms-data-sync` (legacy) |
 | Soft-delete **Work trash / drawer / §7** | `mms-module-architecture.mdc` | `mms-module-work` · `mms-module-page` |
 | Await `mutateAsync` before form close | `mms-module-architecture.mdc` §7 | `mms-module-page` |
+| Background jobs (SKIP LOCKED / durable queue) | `mms-module-architecture.mdc` §5 | `mms-background-jobs` |
 | SQL page / `loadAllFn` ban | `mms-data-layer.mdc` | `mms-query-factories` |
 | Query/controller recipes | `mms-hooks.mdc` | `mms-query-factories` · `mms-frontend` |
-| FormModal shell, write Zod `.strict()`, collection-list clears | `mms-form-architecture.mdc` | `mms-form-architecture` |
+| FormModal shell, write Zod `.strict()`, no Server Actions, uploads | `mms-form-architecture.mdc` | `mms-form-architecture` |
 | UI tokens, tabs, a11y, responsive §7 | `mms-ui-ux-design.mdc` | `mms-frontend` · `mms-a11y-smoke` |
 | Module Work/Reports/Setup, §7 gold-standard | `mms-module-architecture.mdc` | `mms-module-page` · `mms-module-work` · `mms-module-setup` · `mms-background-jobs` |
 | Field/tab registry | `mms-fields.mdc` | `mms-fields-registry` · `mms-module-setup` |
@@ -101,6 +102,7 @@ Hardcoding ban (copy, colours, formats, statuses): follow the owner row above �
 - **Phones E.164** on save via `parsePhoneNumber` — `mms-form-architecture.mdc`.
 - **WhatsApp number id** only via `PuppeteerWhatsAppProvider.getNumberId` — `mms-messaging.mdc`.
 - **Module pages:** three tiers only — `mms-module-architecture.mdc` (+ shell components `mms-ui-ux-design.mdc`).
+- **No Server Actions** for tenant writes — cookie SPA + `apiClient` only — `mms-form-architecture.mdc`.
 
 ## Performance (agent-checkable)
 

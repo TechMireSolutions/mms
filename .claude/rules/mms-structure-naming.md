@@ -68,10 +68,11 @@ All internal naming (variables, parameters, types) and database naming (tables, 
 - *Example*: If the UI displays "Contact Role", the database column must be `contact_role`, the TS variable `contactRole` / `ContactRole` (e.g. `contactRoleId`). Using custom abbreviations like `cntct_rl` or generic names like `role` is forbidden.
 
 ### Title Case Formatting for Values
-User-entered text data (such as names, cities, and description strings) must be automatically standardized to Title Case upon crossing boundaries.
+Latin/display name fields (and similar English-script person/place labels) must be standardized to Title Case on save boundaries.
 - **Unified Helper**: Use `applyTitleCaseRecursive` from `@mms/shared`.
 - **Enforcement Points**: All database save hooks (repositories/insert logic) and client storage write boundaries (`db.ts`) must intercept payload objects and run this formatting recursively.
-- **Exclusion Policy**: Standard identifiers, keys, email addresses, phone numbers, passwords, hashes, URLs, dates, and other system/control properties must be systematically excluded from Title Casing (configured inside `applyTitleCaseRecursive`).
+- **Exclusion Policy**: Standard identifiers, keys, email addresses, phone numbers, passwords, hashes, URLs, dates, and other system/control properties must be systematically excluded (configured inside `applyTitleCaseRecursive`).
+- **Scripts / i18n**: **Skip** Title Case for ar/ur/fa and other non-Latin scripts, and for free-form RTL or long prose description fields — do not mangle locale text.
 
 ---
 

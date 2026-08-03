@@ -67,6 +67,13 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 - [ ] Errors: { type, message } + correct status
 - [ ] Registered prefix; inject() with tenant host + cookie
 - [ ] Tenant writes: withTenantTransaction + SET LOCAL (+ app.current_user_id for audit)
+- [ ] Prefer SET LOCAL statement_timeout / idle_in_transaction_session_timeout on tenant write txs — mms-data-layer
+- [ ] Parameterized sql only — ban user/tenant input → sql.raw
+- [ ] Large/hot list APIs: prefer keyset/cursor; OFFSET OK for small Work pages — mms-data-layer
+- [ ] Contested PUT: updated_at/version → 409 conflict, or document LWW — mms-api-interface §6
+- [ ] bodyLimit / requestTimeout from serverConfig (or explicit raise for sync/upload)
+- [ ] Retryable POSTs: idempotency key bound to body digest (409 on mismatch) — mms-api-interface §6
+- [ ] Outbound provider fetch uses AbortSignal.timeout
 ```
 
 ## Auth / workspace routes

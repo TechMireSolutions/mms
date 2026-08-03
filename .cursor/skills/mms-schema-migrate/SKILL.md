@@ -20,6 +20,7 @@ Do **not** use for product debt register → `mms-migration-fixes`. Do **not** u
 7. Prefer partial indexes for hot active lists (`WHERE deleted_at IS NULL`) when adding soft-delete.
 8. Restart / `initDb` applies migrations; run inject smoke if RLS or write paths touched.
 9. Size pool via `PG_POOL_MAX` — do not hardcode `Pool({ max })` in call sites.
+10. Statement/sql safety budgets → `mms-data-layer.mdc` (`statement_timeout`, parameterized `sql` only — ban user→`sql.raw`).
 
 ## Checklist
 
@@ -29,6 +30,7 @@ Do **not** use for product debt register → `mms-migration-fixes`. Do **not** u
 - [ ] Expand/contract for breaking DDL
 - [ ] FORCE RLS on new tenant tables
 - [ ] Soft-delete columns/indexes when archiving entities
+- [ ] Aware of PG timeout / sql fragment norms (data-layer)
 ```
 
 ## Done

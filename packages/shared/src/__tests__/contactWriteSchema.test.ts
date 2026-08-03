@@ -44,6 +44,23 @@ describe('contactWriteSchema allowlist', () => {
     }
   });
 
+  it('accepts notes, line1, and address scalar mirrors on the system schema', () => {
+    const parsed = contactWriteSchema.safeParse({
+      firstName: 'Ali',
+      notes: 'Some notes',
+      line1: '123 Main St',
+      address: '123 Main St',
+      city: 'Karachi',
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      const data = parsed.data as Record<string, unknown>;
+      expect(data.notes).toBe('Some notes');
+      expect(data.line1).toBe('123 Main St');
+      expect(data.address).toBe('123 Main St');
+    }
+  });
+
   it('collectContactWriteExtraFieldKeys gathers enabled custom field keys', () => {
     const config = {
       version: 1,

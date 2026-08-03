@@ -24,15 +24,17 @@ Use this skill when adding or changing background processing, export/download ar
 1. Decide whether the work is inline or queued. Queue it when it is large, slow, retryable, or needs progress.
 2. Add an authenticated tenant route to enqueue the job. Check RBAC before creating the job.
 3. Register a runner with a stable `{moduleId}:{kind}` key.
-4. Run the job in tenant context and re-apply permission/visibility/soft-delete rules while generating results. Bind tenant + user; prefer an idempotency key when retries are likely.
-5. Store job state and artifacts scoped by tenant and user.
-6. Update progress, complete with a clear label, or fail with an actionable reason.
-7. Surface status in `BackgroundJobsTray` and provide download/result links only for owned artifacts.
-8. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery.
+4. Run the job in tenant context and re-apply permission/visibility/soft-delete rules while generating results. Bind tenant + user; prefer an idempotency key when retries are likely (`mms-api-interface.mdc` §6).
+5. Claim next job with **`FOR UPDATE SKIP LOCKED`** (`worker.ts`) — norms → `mms-module-architecture.mdc` §5.
+6. Store job state and artifacts scoped by tenant and user.
+7. Update progress, complete with a clear label, or fail with an actionable reason.
+8. Surface status in `BackgroundJobsTray` and provide download/result links only for owned artifacts.
+9. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery.
 
 ## Job Checklist
 
 ```
+- [ ] Claim uses FOR UPDATE SKIP LOCKED (or equivalent)
 - [ ] Enqueue route uses authenticateTenant
 - [ ] RBAC checked before enqueue
 - [ ] Runner key is registered exactly once
@@ -42,6 +44,7 @@ Use this skill when adding or changing background processing, export/download ar
 - [ ] Download requires current user ownership
 - [ ] Export respects field visibility and soft-delete policy
 - [ ] Sensitive job is audited
+- [ ] Multi-instance: durable queue planned before horizontal scale (in-process is current)
 - [ ] Tests cover success, forbidden, and failure paths
 ```
 
@@ -51,6 +54,6 @@ Use this skill when adding or changing background processing, export/download ar
 - Use queued jobs to bypass field, report, export, or soft-delete rules.
 - Leave failed jobs invisible.
 - Store long-lived artifacts without expiry.
-- Depend on the in-process runner for critical multi-instance production work without adding a durable queue.
+- Depend on the in-process runner for critical multi-instance production work without adding a durable queue — `mms-module-architecture.mdc` §5.
 
 Related skills: `mms-module-work`, `mms-module-page`, `mms-reports-export`, `mms-backend-security`.

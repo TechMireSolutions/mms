@@ -104,7 +104,13 @@ When the user asks to fix migration debt, work from the open priorities here and
 
 **Problem:** BE broadcasts on `/api/ws` + `broadcastTenantUpdate`; FE has no subscriber.
 
-**Fix:** Subscribe and invalidate Query keys — ban new polling loops (`mms-core.md`).
+**Fix:** Subscribe per `mms-data-layer.md` contract (cookie auth, reconnect/backoff, invalidate tuple keys only) — ban new polling loops / parallel WS (`mms-core.md`).
+
+### P7 — PG statement timeout budgets
+
+**Problem:** Pool sizing exists; tenant transactions lack systematic `SET LOCAL statement_timeout` / `idle_in_transaction_session_timeout`.
+
+**Fix:** Wire budgets on tenant write paths — `mms-data-layer.md` (align with Fastify `requestTimeout`).
 
 ## After each fix
 

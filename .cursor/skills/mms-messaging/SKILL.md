@@ -25,7 +25,7 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 3. Bulk template/log writes upsert; clear-logs soft-archive (intentional §7 variant).
 4. Allowlisted tokens; plain text; BE forces session `userId`, strips client `deletedAt`.
 5. §7 UX: permissions, `ErrorState`, Cmd/Ctrl+N, `mutateAsync`, `t()`.
-6. Campaign/send POSTs: idempotency key when the client may retry; surface `429` / `Retry-After` via `notify` — `mms-api-interface.mdc` / `mms-auth-security.mdc`.
+6. Campaign/send POSTs: idempotency key **bound to body digest** when the client may retry; reject mismatched replay with `409` — `mms-api-interface.mdc` §6. Surface `429` / `Retry-After` via `notify` — `mms-auth-security.mdc`.
 7. Select-all via `/recipients/match`; CSV via background `messaging:export` — no FE page-walk. Never re-allowlist `messages_u:`.
 
 ## Checklist
@@ -36,7 +36,7 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 - [ ] Upsert saves; clear-logs soft-archive preserved
 - [ ] Select-all uses /recipients/match (lean); CSV uses /export/csv job
 - [ ] No messages_u: / message_* in ALLOWED_COLLECTIONS dual-write
-- [ ] Send path idempotency + 429 backoff
+- [ ] Send path: idempotency key bound to body digest (409 on mismatch) + 429 backoff
 - [ ] Token allowlist; no HTML injection
 - [ ] ErrorState + Cmd/Ctrl+N when canWrite
 - [ ] BE: authenticateTenant + RLS; no client authz userId

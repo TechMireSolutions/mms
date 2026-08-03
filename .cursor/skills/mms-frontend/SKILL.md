@@ -30,7 +30,7 @@ Contacts (and other typed person entities): **Query + REST only** — never `sav
 
 ## API calls
 
-Always `apiJson` / `apiFetch` from `@/lib/apiClient` — cookie session (`credentials: 'include'`). No `localStorage` token reads. Exception: third-party URLs (e.g. Google OAuth popup). After server-persisted imports (`bulkSave`), **invalidate** Query keys only — no client upsert loop.
+Always `apiJson` / `apiFetch` from `@/lib/apiClient` — cookie session (`credentials: 'include'`). No `localStorage` token reads. Exception: third-party URLs (e.g. Google OAuth popup). After server-persisted imports (`bulkSave`), **invalidate** Query keys only — no client upsert loop. Only `VITE_*` in the FE bundle — ban server secrets (`JWT_SECRET`, `DATABASE_URL`) — `mms-ops-infrastructure.mdc`.
 
 ## New page checklist
 
@@ -40,13 +40,14 @@ Always `apiJson` / `apiFetch` from `@/lib/apiClient` — cookie session (`creden
 - [ ] Three-tier: useFilteredModuleTierTabs + ResponsiveAccordionTabs
 - [ ] PageHeader actions unconditional; omit when !canWrite
 - [ ] ErrorBoundary on Work/Reports; ErrorState on list isError
+- [ ] List pending: aria-busy / polite live region when touching Work loads
 - [ ] Copy via t(); StatusBadge (not text-green-500)
 - [ ] Internal API via apiClient; RBAC via useModulePermissions / can()
 - [ ] Soft-delete trash UI when REST restore ships — mms-module-work
 - [ ] §7 gold-standard — mms-module-page
 ```
 
-Full module pattern → skill **`mms-module-page`**.
+Full module pattern → skill **`mms-module-page`**. When shipping FE `/api/ws` subscribe: cookie auth, reconnect/backoff, invalidate tuple keys only — `mms-data-layer.mdc` (gap until then → `mms-migration-status.mdc`).
 
 ## Host / provider (do not break)
 
