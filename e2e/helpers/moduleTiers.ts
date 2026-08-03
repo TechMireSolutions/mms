@@ -43,7 +43,10 @@ export async function loginTenant(
   await page.goto(`${tenantOrigin}/login`);
   await page.waitForLoadState('domcontentloaded');
 
-  if (!page.url().includes('/login')) {
+  const emailInput = page.locator('input[name="email"]');
+  const isLoginForm = await emailInput.isVisible({ timeout: 4000 }).catch(() => false);
+
+  if (!isLoginForm) {
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum', { timeout: 20_000 });
     return;
   }
