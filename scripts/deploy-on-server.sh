@@ -49,6 +49,7 @@ export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
   # shellcheck disable=SC1090
   . "$NVM_DIR/nvm.sh"
+  nvm use 24 >/dev/null 2>&1 || nvm use stable >/dev/null 2>&1 || true
 fi
 export PATH="$HOME/.local/share/pnpm:$PATH"
 export PUPPETEER_SKIP_DOWNLOAD=true
