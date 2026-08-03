@@ -90,13 +90,13 @@ To ensure seamless deployments on Ubuntu systems:
 ---
 
 ## 4. CI/CD & Deploy Procedures
-The GitHub Actions workflow (`.github/workflows/ci.yml`) executes on every push/PR to `main`:
-1. **pnpm install --frozen-lockfile**
-2. Start PostgreSQL + create `mms` DB
-3. **pnpm typecheck**
-4. **pnpm test**
-5. Playwright responsive E2E: `responsive-shell.spec.ts` + `responsive-authenticated.spec.ts`
-6. **pnpm lint** (frontend & backend)
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs parallel jobs on push/PR to `main`:
+1. **typecheck-lint** — install → typecheck → FE/BE lint
+2. **unit** — install → Postgres → `pnpm test`
+3. **e2e** — install → Postgres → Playwright chromium → responsive shell + authenticated specs
+4. **build-dist** (main push only, after 1–3) — production `pnpm build` + upload `mms-dist` artifact (tarball + sha256)
+
+`deploy.yml` triggers on CI success for `main` (`workflow_run`) or manual dispatch: downloads the CI artifact (or builds on dispatch), SCPs to the VPS, runs `scripts/deploy-on-server.sh` pinned to `DEPLOY_SHA` (= CI `head_sha`). Schema DDL runs on backend startup via `initDb` / Drizzle migrate — no separate deploy migrate step. Rollback: `bash scripts/deploy-rollback.sh` (uses `.deploy-releases/`).
 
 CI Node/pnpm images must match root `engines` / `packageManager` exactly — upgrade workflow → **`mms-dependencies.md`**. Never commit `.env` or secrets in artifacts.
 Run responsive Playwright specs as **separate** CI steps (no bare `--` before the path) — `mms-testing-observability.md` / `mms-ui-ux-design.md` §7.
@@ -113,5 +113,6 @@ Treat `turbo.json` inputs/outputs as sensitive — change only with intentional 
 
 ### Deploy Guidelines
 - Merge configs using `scripts/merge-backend-env.sh` (always sets `PORT=5002`).
-- Configure Apache upstreams via `scripts/fix-apache-upstream.sh` to forward to `:5002`.
+- Configure Apache upstreams via `scripts/fix-apache-upstream.sh` to forward to `:5002` (skipped when Apache fingerprint unchanged unless `MMS_FORCE_APACHE=1`).
+- Skip prod `pnpm install` when `pnpm-lock.yaml` hash matches `.deploy-lock-hash` unless `MMS_FORCE_PNPM_INSTALL=1`.
 - Run health checks locally on the production host using `curl http://127.0.0.1:5002/health`.

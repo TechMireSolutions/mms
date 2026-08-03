@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Re-create mmsv2-frontend when restart leaves the preview server down.
+# LEGACY — not used by deploy-on-server.sh.
+# Production serves the SPA from Fastify (@fastify/static → apps/frontend/dist on :5002).
+# deploy-on-server.sh deletes the mmsv2-frontend PM2 app. Keep only for emergency
+# vite-preview debugging on MMS_PROD_FRONTEND_PORT (4173). Prefer SPA-from-backend.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

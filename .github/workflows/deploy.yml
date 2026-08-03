@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: mms-production-deploy
@@ -23,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
 
     steps:
       - name: Validate deploy secrets
@@ -49,26 +51,50 @@ jobs:
               echo "::warning::MMS_APP_DOMAIN looks short — if your site is mmsv2.${MMS_APP_DOMAIN}, use the full hostname"
             fi
           fi
+          echo "DEPLOY_SHA=${DEPLOY_SHA}"
 
       - name: Checkout Code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
+
+      - name: Download CI dist artifact
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: mms-dist
+          path: .
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup pnpm
+        if: github.event_name == 'workflow_dispatch'
         uses: pnpm/action-setup@v6
 
       - name: Setup Node
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: 'pnpm'
 
-      - name: Install and build on runner
+      - name: Install and build on runner (manual dispatch fallback)
+        if: github.event_name == 'workflow_dispatch'
         env:
           VITE_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
           tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
+          sha256sum mms-dist.tar.gz > mms-dist.tar.gz.sha256
+
+      - name: Verify tarball checksum
+        run: |
+          set -euo pipefail
+          test -f mms-dist.tar.gz
+          test -f mms-dist.tar.gz.sha256
+          sha256sum -c mms-dist.tar.gz.sha256
+          ls -lh mms-dist.tar.gz
 
       # Required secrets (Settings → Secrets → Actions):
       #   SERVER_IP, SERVER_USER, SSH_PRIVATE_KEY
@@ -85,7 +111,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          source: mms-dist.tar.gz
+          source: mms-dist.tar.gz,mms-dist.tar.gz.sha256
           target: /tmp
 
       - name: Deploy via SSH
@@ -105,18 +131,25 @@ jobs:
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
           PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
           MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+          DEPLOY_SHA: ${{ env.DEPLOY_SHA }}
+          MMS_DEPLOY_SKIP_PUBLIC_VERIFY: '1'
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           command_timeout: 20m
-          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN
+          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,DEPLOY_SHA,MMS_DEPLOY_SKIP_PUBLIC_VERIFY
           script: |
             set -e
             cd /var/www/mmsv2
-            git reset --hard HEAD
-            git pull origin main
+            # Pin tree to CI SHA before invoking deploy script (so updated scripts are used).
+            if [ -n "${DEPLOY_SHA:-}" ]; then
+              git fetch --depth=1 origin "${DEPLOY_SHA}" 2>/dev/null \
+                || git fetch origin "${DEPLOY_SHA}" 2>/dev/null \
+                || git fetch origin
+              git checkout --detach "${DEPLOY_SHA}"
+            fi
             bash scripts/deploy-on-server.sh
 
       - name: Verify production site
@@ -157,4 +190,4 @@ jobs:
             echo "::warning::deployment-config appDomain does not match MMS_APP_DOMAIN — check server .env"
           fi
 
-          echo "Production OK: ${BASE}/"
+          echo "Production OK: ${BASE}/ (SHA ${DEPLOY_SHA})"

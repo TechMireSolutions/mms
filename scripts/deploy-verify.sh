@@ -99,15 +99,20 @@ fi
 
 if [[ "$LOCAL_OK" == true ]]; then
   report_setup_status "$LOCAL_BASE" "$APP_DOMAIN" || LOCAL_OK=false
+  if [[ "${MMS_DEPLOY_SKIP_PUBLIC_VERIFY:-0}" == "1" ]]; then
+    echo "Local deploy OK (public verify skipped — owned by deploy.yml)"
+    [[ "$LOCAL_OK" == true ]] && exit 0
+    exit 1
+  fi
   PUBLIC_API_URL="$(resolve_public_url)"
   if [[ -z "$PUBLIC_API_URL" ]]; then
     echo "Local deploy OK (no MMS_APP_DOMAIN for public check)"
     exit 0
   fi
-  echo "Trying public site: ${PUBLIC_API_URL}/"
-  if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/ready" && curl_ok "${PUBLIC_API_URL}/"; then
-    echo "Public site OK"
-    report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
+  # Single apex sample when local already passed (full public gate is in deploy.yml).
+  echo "Trying public site: ${PUBLIC_API_URL}/health"
+  if curl_ok "${PUBLIC_API_URL}/health"; then
+    echo "Public apex health OK"
     if [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
       bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || {
         echo "WARNING: Tenant host verification failed. Platform apex is online, but tenant routing check failed."
@@ -122,21 +127,25 @@ if [[ "$LOCAL_OK" == true ]]; then
   exit 1
 fi
 
-PUBLIC_API_URL="$(resolve_public_url)"
-if [[ -n "$PUBLIC_API_URL" ]]; then
-  echo "Trying public health: ${PUBLIC_API_URL}/health"
-  if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/ready" && curl_ok "${PUBLIC_API_URL}/"; then
-    echo "Public site OK (local backend check failed — investigate ports)"
-    report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
-    if [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
-      bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || {
-        echo "WARNING: Tenant host verification failed. Platform apex is online, but tenant routing check failed."
-        if [[ "${MMS_REQUIRE_WILDCARD_TLS:-0}" == "1" ]]; then
-          exit 1
-        fi
-      }
+if [[ "${MMS_DEPLOY_SKIP_PUBLIC_VERIFY:-0}" == "1" ]]; then
+  echo "ERROR: local backend unhealthy (public verify skipped)"
+else
+  PUBLIC_API_URL="$(resolve_public_url)"
+  if [[ -n "$PUBLIC_API_URL" ]]; then
+    echo "Trying public health: ${PUBLIC_API_URL}/health"
+    if curl_ok "${PUBLIC_API_URL}/health" && curl_ok "${PUBLIC_API_URL}/ready" && curl_ok "${PUBLIC_API_URL}/"; then
+      echo "Public site OK (local backend check failed — investigate ports)"
+      report_setup_status "$PUBLIC_API_URL" "$APP_DOMAIN" || exit 1
+      if [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
+        bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || {
+          echo "WARNING: Tenant host verification failed. Platform apex is online, but tenant routing check failed."
+          if [[ "${MMS_REQUIRE_WILDCARD_TLS:-0}" == "1" ]]; then
+            exit 1
+          fi
+        }
+      fi
+      exit 0
     fi
-    exit 0
   fi
 fi
 

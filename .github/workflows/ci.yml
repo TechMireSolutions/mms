@@ -13,11 +13,42 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PUPPETEER_SKIP_DOWNLOAD: 'true'
+
 jobs:
-  lint-and-typecheck:
+  typecheck-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Typecheck
+        run: pnpm typecheck
+
+      - name: Lint Frontend
+        run: pnpm lint
+        working-directory: apps/frontend
+
+      - name: Lint Backend
+        run: pnpm lint
+        working-directory: apps/backend
+
+  unit:
     runs-on: ubuntu-latest
     env:
-      PUPPETEER_SKIP_DOWNLOAD: 'true'
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
       DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
     steps:
@@ -43,8 +74,39 @@ jobs:
           sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
           sudo -u postgres psql -c "CREATE DATABASE mms;"
 
-      - name: Run Typecheck
-        run: pnpm typecheck
+      - name: Run Test Suite
+        run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
+      DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter @mms/shared build
+
+      - name: Start PostgreSQL and Setup Database
+        run: |
+          sudo systemctl start postgresql.service
+          pg_isready
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+          sudo -u postgres psql -c "CREATE DATABASE mms;"
 
       - name: Cache Playwright Browsers
         uses: actions/cache@v6
@@ -57,19 +119,51 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm --filter e2e-tests exec playwright install chromium
 
-      - name: Run Test Suite
-        run: pnpm test
-
       - name: Run responsive shell E2E
         run: pnpm test:e2e tests/responsive-shell.spec.ts
 
       - name: Run authenticated responsive E2E
         run: pnpm test:e2e tests/responsive-authenticated.spec.ts
 
-      - name: Lint Frontend
-        run: pnpm lint
-        working-directory: apps/frontend
+  # Production dist for deploy.yml (main push only). Schema migrations run on backend startup (initDb).
+  build-dist:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [typecheck-lint, unit, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
 
-      - name: Lint Backend
-        run: pnpm lint
-        working-directory: apps/backend
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Production build
+        env:
+          VITE_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+        run: |
+          if [ -z "${VITE_APP_DOMAIN}" ]; then
+            echo "::warning::MMS_APP_DOMAIN secret empty — Vite build may lack production app domain"
+          fi
+          pnpm run build
+          tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
+          sha256sum mms-dist.tar.gz > mms-dist.tar.gz.sha256
+          cat mms-dist.tar.gz.sha256
+
+      - name: Upload mms-dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mms-dist
+          path: |
+            mms-dist.tar.gz
+            mms-dist.tar.gz.sha256
+          retention-days: 3
+          if-no-files-found: error

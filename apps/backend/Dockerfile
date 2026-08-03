@@ -4,9 +4,9 @@
 # Run:
 #   docker run -p 5002:5002 -e JWT_SECRET=... -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/mms mms-backend
 
-FROM node:26-alpine AS base
+FROM node:24-alpine AS base
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN corepack enable && corepack prepare pnpm@11.8.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.15.1 --activate
 WORKDIR /app
 
 FROM base AS deps

@@ -46,17 +46,21 @@ Symptom → likely cause:
 ```bash
 bash scripts/merge-backend-env.sh apps/backend/.env
 bash scripts/apply-production-host-isolation.sh apps/backend/.env
-bash scripts/deploy-on-server.sh
+bash scripts/deploy-on-server.sh          # expects DEPLOY_SHA + /tmp/mms-dist.tar.gz
+bash scripts/deploy-rollback.sh [sha|list]
 bash scripts/server-diagnose.sh apps/backend/.env
 bash scripts/verify-tenant-hosts.sh [subdomain] apps/backend/.env
 bash scripts/check-workspace.sh <subdomain> apps/backend/.env
 ```
 
-**First-time VPS:** `sudo bash scripts/production/bootstrap-ubuntu-vps.sh`  
+**First-time VPS:** `sudo bash scripts/production/bootstrap-ubuntu-vps.sh` (Node **24**, pnpm **11.15.1** — match `engines` / `packageManager`)  
 **PM2 boot persistence:** `bash scripts/production/setup-pm2-startup.sh`  
 **DB backups:** `bash scripts/production/backup-postgres.sh` (cron daily)
 
-Process manager: `ecosystem.config.cjs` — single `mmsv2-backend` (SPA served by Fastify; no separate frontend PM2).
+Process manager: `ecosystem.config.cjs` — single `mmsv2-backend` (SPA served by Fastify; no separate frontend PM2).  
+`scripts/deploy-recover-frontend.sh` is **legacy** (vite preview) — do not use in normal deploys.
+
+**Schema migrations:** run on backend startup (`initDb` / Drizzle) — not a separate deploy step.
 
 Apache-only fix:
 
@@ -64,19 +68,30 @@ Apache-only fix:
 bash scripts/apache/isolate-mms-vhost.sh apps/backend/.env
 bash scripts/apache/install-mms-vhost.sh apps/backend/.env
 sudo bash scripts/fix-apache-upstream.sh apps/backend/.env
+# Or force on next deploy: MMS_FORCE_APACHE=1
 ```
 
 ## GitHub Actions
 
 | Workflow | Purpose |
 |----------|---------|
-| `ci.yml` | typecheck, test, lint, e2e |
-| `deploy.yml` | build tarball → SSH → `deploy-on-server.sh` (after CI on main) |
+| `ci.yml` | Parallel typecheck/lint ∥ unit ∥ e2e; on main push also `build-dist` → `mms-dist` artifact |
+| `deploy.yml` | Download CI artifact (or build on `workflow_dispatch`) → SCP → `deploy-on-server.sh` at `DEPLOY_SHA` |
 | `production-apache-isolate.yml` | manual — strip MMS from foreign vhosts |
 
 Required secrets: `SERVER_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `MMS_APP_DOMAIN`.
 
 **Do not set `MMS_API_URL`.** The platform is served at `https://${MMS_APP_DOMAIN}` (apex + `*.${MMS_APP_DOMAIN}` tenants). A legacy `MMS_API_URL` secret (e.g. `mmsv2-api.…`) caused deploy health checks to fail; deploy scripts strip it from server `.env` on merge.
+
+### Deploy optimisations (server)
+
+| Flag / file | Behaviour |
+|-------------|-----------|
+| `DEPLOY_SHA` | Detached checkout of CI-validated commit |
+| `.deploy-lock-hash` | Skip `pnpm install --prod` when lockfile unchanged (`MMS_FORCE_PNPM_INSTALL=1` to force) |
+| `.deploy-apache-fingerprint` | Skip Apache isolate/install/fix when unchanged (`MMS_FORCE_APACHE=1` to force) |
+| `.deploy-releases/` | Last N tarballs for `deploy-rollback.sh` |
+| `MMS_DEPLOY_SKIP_PUBLIC_VERIFY=1` | Server verify stays local; public gate in `deploy.yml` |
 
 ## Verify production
 

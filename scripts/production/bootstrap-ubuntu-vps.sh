@@ -11,7 +11,9 @@ set -euo pipefail
 
 DEPLOY_ROOT="${MMS_DEPLOY_ROOT:-/var/www/mmsv2}"
 DEPLOY_USER="${SUDO_USER:-$USER}"
-NODE_VERSION="${MMS_NODE_VERSION:-26}"
+# Match package.json engines (>=24.14) and GitHub Actions (Node 24).
+NODE_VERSION="${MMS_NODE_VERSION:-24}"
+PNPM_VERSION="${MMS_PNPM_VERSION:-11.15.1}"
 
 echo "══ MMS Ubuntu VPS bootstrap ══"
 echo "Deploy root: ${DEPLOY_ROOT}"
@@ -45,7 +47,7 @@ sudo -u "$DEPLOY_USER" bash -lc "
   nvm install ${NODE_VERSION}
   nvm alias default ${NODE_VERSION}
   corepack enable
-  corepack prepare pnpm@11.8.0 --activate
+  corepack prepare pnpm@${PNPM_VERSION} --activate
   node -v && pnpm -v
 "
 

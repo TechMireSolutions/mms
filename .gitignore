@@ -81,3 +81,9 @@ playwright/.cache/
 *.db
 *.db-shm
 *.db-wal
+
+# Production deploy state (server-only; never commit)
+.deploy-lock-hash
+.deploy-apache-fingerprint
+.deploy-current-sha
+.deploy-releases/
