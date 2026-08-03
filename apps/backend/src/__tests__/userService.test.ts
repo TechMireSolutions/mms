@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadContacts } from '../services/contactService.js';
+import { loadContactsByIds } from '../services/contactService.js';
 import type { Contact } from '@mms/shared';
 
 const mockListTenantUsers = vi.fn();
@@ -34,7 +34,8 @@ vi.mock('../services/auth/passwordService.js', () => ({
 }));
 
 vi.mock('../services/contactService.js', () => ({
-  loadContacts: vi.fn().mockResolvedValue([]),
+  loadContactsByIds: vi.fn().mockResolvedValue([]),
+  getContactById: vi.fn().mockResolvedValue(null),
   updateContactById: vi.fn(),
 }));
 
@@ -50,7 +51,7 @@ describe('userService', () => {
     mockHashPassword.mockImplementation(async (password: string) => `hashed:${password}`);
     mockVerifyPassword.mockResolvedValue(true);
     mockGetRequestTenant.mockReturnValue('dar-ul-quran');
-    vi.mocked(loadContacts).mockResolvedValue([]);
+    vi.mocked(loadContactsByIds).mockResolvedValue([]);
   });
 
   it('matches login by loginEmail not contact CRM email', async () => {
@@ -66,7 +67,7 @@ describe('userService', () => {
         createdAt: '2026-01-01T00:00:00.000Z',
       },
     ]);
-    vi.mocked(loadContacts).mockResolvedValue([
+    vi.mocked(loadContactsByIds).mockResolvedValue([
       {
         id: '42',
         name: 'Syed Ahmed Ali Naqvi',
@@ -81,6 +82,7 @@ describe('userService', () => {
     );
 
     expect(mockVerifyPassword).toHaveBeenCalledWith('secret', 'salt:hash');
+    expect(loadContactsByIds).toHaveBeenCalledWith(['42']);
     expect(result).toMatchObject({
       id: 'auth-1',
       email: 'admin@workspace.local',
@@ -103,7 +105,7 @@ describe('userService', () => {
       },
     ]);
     mockFindTenantUserById.mockResolvedValue(null);
-    vi.mocked(loadContacts).mockResolvedValue([
+    vi.mocked(loadContactsByIds).mockResolvedValue([
       {
         id: '42',
         name: 'Admin',

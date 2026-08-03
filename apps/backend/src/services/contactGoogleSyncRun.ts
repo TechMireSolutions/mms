@@ -11,6 +11,7 @@ import {
   bulkSaveContacts,
   findExistingNormalizedContactNames,
 } from '../db/repositories/contactRepository.js';
+import { fetchWithTimeout } from '../lib/outboundUrl.js';
 import { getContactGoogleSyncConfig } from './contactGoogleSyncConfig.js';
 import { GoogleSyncError, refreshGoogleAccessToken } from './contactGoogleSyncOAuth.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanService.js';
@@ -18,6 +19,7 @@ import {
   assertContactUniqueFields,
   ContactUniqueFieldError,
 } from './contactUniqueValidationService.js';
+import { broadcastCollection } from './websocketService.js';
 
 const GOOGLE_PEOPLE_FIELDS =
   'names,emailAddresses,phoneNumbers,organizations,birthdays,addresses,biographies';
@@ -99,7 +101,7 @@ async function fetchGoogleConnectionsPage(
   url.searchParams.set('pageSize', '1000');
   if (pageToken) url.searchParams.set('pageToken', pageToken);
 
-  const res = await fetch(url.toString(), {
+  const res = await fetchWithTimeout(url.toString(), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -194,6 +196,7 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
       }
       imported = accepted.length;
     });
+    if (imported > 0) await broadcastCollection('contacts');
   }
 
   return {

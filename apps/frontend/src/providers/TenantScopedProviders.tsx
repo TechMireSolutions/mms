@@ -1,8 +1,14 @@
 import React from 'react';
 import { ContactConfigProvider } from '@/lib/contexts/ContactConfigContext';
 import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
+import { useTenantDatabaseUpdates } from '@/hooks/useTenantDatabaseUpdates';
 
-/** Mounts tenant-only providers (contacts config) — skipped on platform apex. */
+function TenantLivePushSubscriber(): null {
+  useTenantDatabaseUpdates();
+  return null;
+}
+
+/** Mounts tenant-only providers (contacts config + live push) — skipped on platform apex. */
 export default function TenantScopedProviders({
   children,
 }: {
@@ -14,5 +20,10 @@ export default function TenantScopedProviders({
     return <>{children}</>;
   }
 
-  return <ContactConfigProvider>{children}</ContactConfigProvider>;
+  return (
+    <ContactConfigProvider>
+      <TenantLivePushSubscriber />
+      {children}
+    </ContactConfigProvider>
+  );
 }

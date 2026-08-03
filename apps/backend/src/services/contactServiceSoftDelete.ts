@@ -12,6 +12,7 @@ import {
   assertContactUniqueFields,
   ContactUniqueFieldError,
 } from './contactUniqueValidationService.js';
+import { broadcastCollection } from './websocketService.js';
 
 export interface ContactBulkRestoreConflict {
   id: string;
@@ -25,7 +26,7 @@ export interface ContactBulkRestoreResult {
 }
 
 export async function restoreContactById(id: string, _restoredBy: string): Promise<Contact | null> {
-  return runInTransaction(async () => {
+  const restored = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return null;
     const existing = await findContactById(tenant, id);
@@ -33,25 +34,27 @@ export async function restoreContactById(id: string, _restoredBy: string): Promi
     if (!existing.deletedAt) return existing;
 
     const now = new Date().toISOString();
-    const restored: Contact = {
+    const next: Contact = {
       ...existing,
       deletedAt: undefined,
       deletedBy: undefined,
       deletionReason: undefined,
       updatedAt: now,
     };
-    await assertContactUniqueFields(tenant, restored, 'en');
-    await saveContact(tenant, restored);
+    await assertContactUniqueFields(tenant, next, 'en');
+    await saveContact(tenant, next);
     await invalidateDuplicateScanCache();
-    return restored;
+    return next;
   });
+  if (restored) await broadcastCollection('contacts');
+  return restored;
 }
 
 export async function bulkRestoreContacts(
   ids: string[],
   _restoredBy: string,
 ): Promise<ContactBulkRestoreResult> {
-  return runInTransaction(async () => {
+  const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return { succeeded: 0, failed: ids.length, conflicts: [] };
     let succeeded = 0;
@@ -101,6 +104,8 @@ export async function bulkRestoreContacts(
     }
     return { succeeded, failed, conflicts };
   });
+  if (result.succeeded > 0) await broadcastCollection('contacts');
+  return result;
 }
 
 export async function softDeleteContactById(
@@ -117,7 +122,7 @@ export async function bulkSoftDeleteContacts(
   deletedBy: string,
   deletionReason?: string,
 ): Promise<{ succeeded: number; failed: number }> {
-  return runInTransaction(async () => {
+  const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return { succeeded: 0, failed: ids.length };
     let succeeded = 0;
@@ -151,4 +156,6 @@ export async function bulkSoftDeleteContacts(
     }
     return { succeeded, failed };
   });
+  if (result.succeeded > 0) await broadcastCollection('contacts');
+  return result;
 }

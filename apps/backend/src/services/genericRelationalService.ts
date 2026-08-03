@@ -138,14 +138,26 @@ export function createGenericRelationalService<
 
 /**
  * Hydrates generic database records using contact profile data if available.
+ * Loads only linked contact ids for the current record set (never a full-tenant dump).
  */
 export async function hydrateRecordsFromContacts<TRaw, THydrated>(
   records: TRaw[],
-  loadContactsFn: () => Promise<unknown>,
+  collectContactIdsFn: (record: TRaw) => Array<string | number | null | undefined>,
   hydrate: (record: TRaw, contacts: unknown[]) => THydrated,
+  loadContactsByIdsFn: (ids: string[]) => Promise<unknown[]>,
 ): Promise<THydrated[]> {
-  const contactsData = await loadContactsFn();
-  if (!contactsData || !Array.isArray(contactsData)) {
+  if (records.length === 0) return [];
+
+  const ids = [
+    ...new Set(
+      records
+        .flatMap((record) => collectContactIdsFn(record))
+        .filter((id): id is string | number => id != null && id !== '')
+        .map(String),
+    ),
+  ];
+  const contactsData = ids.length === 0 ? [] : await loadContactsByIdsFn(ids);
+  if (!Array.isArray(contactsData)) {
     return records as unknown as THydrated[];
   }
   return records.map((row) => hydrate(row, contactsData));
@@ -156,15 +168,16 @@ export async function hydrateRecordsFromContacts<TRaw, THydrated>(
  */
 export async function loadHydratedAll<TRaw extends { deletedAt?: string | null | undefined }, THydrated>(
   listFn: (subdomain: string) => Promise<TRaw[]>,
-  loadContactsFn: () => Promise<unknown>,
+  collectContactIdsFn: (record: TRaw) => Array<string | number | null | undefined>,
   hydrateFn: (record: TRaw, contacts: unknown[]) => THydrated,
+  loadContactsByIdsFn: (ids: string[]) => Promise<unknown[]>,
   options?: { includeDeleted?: boolean },
 ): Promise<THydrated[]> {
   const tenant = getRequestTenant();
   if (!tenant) return [];
   const rawRows = await listFn(tenant);
   const filtered = options?.includeDeleted ? rawRows : rawRows.filter((row) => !row.deletedAt);
-  return hydrateRecordsFromContacts(filtered, loadContactsFn, hydrateFn);
+  return hydrateRecordsFromContacts(filtered, collectContactIdsFn, hydrateFn, loadContactsByIdsFn);
 }
 
 /**
@@ -173,15 +186,21 @@ export async function loadHydratedAll<TRaw extends { deletedAt?: string | null |
 export async function loadHydratedById<TRaw extends { deletedAt?: string | null | undefined }, THydrated>(
   id: string,
   findByIdFn: (subdomain: string, id: string) => Promise<TRaw | null>,
-  loadContactsFn: () => Promise<unknown>,
+  collectContactIdsFn: (record: TRaw) => Array<string | number | null | undefined>,
   hydrateFn: (record: TRaw, contacts: unknown[]) => THydrated,
+  loadContactsByIdsFn: (ids: string[]) => Promise<unknown[]>,
   includeDeleted = false,
 ): Promise<THydrated | null> {
   const tenant = getRequestTenant();
   if (!tenant) return null;
   const existing = await findByIdFn(tenant, id);
   if (!existing || (!includeDeleted && existing.deletedAt)) return null;
-  const hydrated = await hydrateRecordsFromContacts([existing], loadContactsFn, hydrateFn);
+  const hydrated = await hydrateRecordsFromContacts(
+    [existing],
+    collectContactIdsFn,
+    hydrateFn,
+    loadContactsByIdsFn,
+  );
   return hydrated[0] ?? null;
 }
 
@@ -191,20 +210,22 @@ export async function loadHydratedById<TRaw extends { deletedAt?: string | null 
 export async function loadHydratedByIds<TRaw, THydrated>(
   ids: string[],
   findByIdsFn: (subdomain: string, ids: string[]) => Promise<TRaw[]>,
-  loadContactsFn: () => Promise<unknown>,
+  collectContactIdsFn: (record: TRaw) => Array<string | number | null | undefined>,
   hydrateFn: (record: TRaw, contacts: unknown[]) => THydrated,
+  loadContactsByIdsFn: (ids: string[]) => Promise<unknown[]>,
 ): Promise<THydrated[]> {
   const tenant = getRequestTenant();
   if (!tenant || ids.length === 0) return [];
   const matched = await findByIdsFn(tenant, ids);
-  return hydrateRecordsFromContacts(matched, loadContactsFn, hydrateFn);
+  return hydrateRecordsFromContacts(matched, collectContactIdsFn, hydrateFn, loadContactsByIdsFn);
 }
 
 export interface ContactHydratedServiceOptions<TRaw, THydrated> {
   listByWorkspaceFn: (subdomain: string) => Promise<TRaw[]>;
   findByIdFn: (subdomain: string, id: string) => Promise<TRaw | null>;
   findByIdsFn: (subdomain: string, ids: string[]) => Promise<TRaw[]>;
-  loadContactsFn: () => Promise<unknown>;
+  collectContactIdsFn: (record: TRaw) => Array<string | number | null | undefined>;
+  loadContactsByIdsFn: (ids: string[]) => Promise<unknown[]>;
   hydrateFn: (record: TRaw, contacts: unknown[]) => THydrated;
 }
 
@@ -215,18 +236,38 @@ export function createContactHydratedService<
   TRaw extends { deletedAt?: string | null | undefined },
   THydrated,
 >(options: ContactHydratedServiceOptions<TRaw, THydrated>) {
-  const { listByWorkspaceFn, findByIdFn, findByIdsFn, loadContactsFn, hydrateFn } = options;
+  const {
+    listByWorkspaceFn,
+    findByIdFn,
+    findByIdsFn,
+    collectContactIdsFn,
+    loadContactsByIdsFn,
+    hydrateFn,
+  } = options;
 
   async function loadAll(opts?: { includeDeleted?: boolean }): Promise<THydrated[]> {
-    return loadHydratedAll(listByWorkspaceFn, loadContactsFn, hydrateFn, opts);
+    return loadHydratedAll(
+      listByWorkspaceFn,
+      collectContactIdsFn,
+      hydrateFn,
+      loadContactsByIdsFn,
+      opts,
+    );
   }
 
   async function loadById(id: string, includeDeleted = false): Promise<THydrated | null> {
-    return loadHydratedById(id, findByIdFn, loadContactsFn, hydrateFn, includeDeleted);
+    return loadHydratedById(
+      id,
+      findByIdFn,
+      collectContactIdsFn,
+      hydrateFn,
+      loadContactsByIdsFn,
+      includeDeleted,
+    );
   }
 
   async function loadByIds(ids: string[]): Promise<THydrated[]> {
-    return loadHydratedByIds(ids, findByIdsFn, loadContactsFn, hydrateFn);
+    return loadHydratedByIds(ids, findByIdsFn, collectContactIdsFn, hydrateFn, loadContactsByIdsFn);
   }
 
   return {

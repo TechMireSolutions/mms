@@ -21,6 +21,7 @@ import {
   prepareContactRecord,
   stripClientSoftDeleteFields,
 } from './contactServiceNormalize.js';
+import { broadcastCollection } from './websocketService.js';
 
 export {
   ContactPermissionError,
@@ -53,7 +54,7 @@ export async function upsertContact(
   created: boolean;
   restoredFromDelete?: boolean;
 }> {
-  return runInTransaction(async () => {
+  const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
     const existing = await findContactById(tenant, String(contact.id ?? ''));
@@ -92,6 +93,8 @@ export async function upsertContact(
     await invalidateDuplicateScanCache();
     return { contact: saved, created, restoredFromDelete: restoredFromDelete || undefined };
   });
+  await broadcastCollection('contacts');
+  return result;
 }
 
 export interface UpdateContactByIdOptions {
@@ -116,7 +119,7 @@ export async function updateContactById(
   const language = options.language ?? 'en';
   const applyInference = options.applyRelationshipInference !== false;
 
-  return runInTransaction(async () => {
+  const saved = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return null;
     const existing = await findContactById(tenant, id);
@@ -126,20 +129,22 @@ export async function updateContactById(
     const stripped = stripClientSoftDeleteFields({ ...contact, id });
     const contactWithId = await prepareContactRecord(mergeContactPatch(existing, stripped), id);
     await assertContactUniqueFields(tenant, contactWithId, language);
-    const saved: Contact = {
+    const next: Contact = {
       ...contactWithId,
       id,
       deletedAt: existing.deletedAt,
       deletedBy: existing.deletedBy,
       deletionReason: existing.deletionReason,
     };
-    await saveContact(tenant, saved);
+    await saveContact(tenant, next);
     if (applyInference) {
-      await applyContactRelationshipInference(tenant, saved);
+      await applyContactRelationshipInference(tenant, next);
     }
     await invalidateDuplicateScanCache();
-    return saved;
+    return next;
   });
+  if (saved) await broadcastCollection('contacts');
+  return saved;
 }
 
 export async function mergeContactsById(
@@ -148,7 +153,7 @@ export async function mergeContactsById(
   mergedInput: Contact | undefined,
   deletedBy: string,
 ): Promise<Contact> {
-  return runInTransaction(async () => {
+  const saved = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
     if (String(keepId) === String(deleteId)) {
@@ -165,7 +170,7 @@ export async function mergeContactsById(
       : mergeContactRecords(keep, other);
     const prepared = await prepareContactRecord(mergedSource, keepId);
     await assertContactUniqueFields(tenant, prepared, 'en', [deleteId]);
-    const saved: Contact = {
+    const next: Contact = {
       ...keep,
       ...prepared,
       id: keepId,
@@ -175,8 +180,8 @@ export async function mergeContactsById(
       updatedAt: new Date().toISOString(),
     };
 
-    await saveContact(tenant, saved);
-    await applyContactRelationshipInference(tenant, saved);
+    await saveContact(tenant, next);
+    await applyContactRelationshipInference(tenant, next);
 
     const now = new Date().toISOString();
     await saveContact(tenant, {
@@ -188,6 +193,8 @@ export async function mergeContactsById(
     });
 
     await invalidateDuplicateScanCache();
-    return saved;
+    return next;
   });
+  await broadcastCollection('contacts');
+  return saved;
 }

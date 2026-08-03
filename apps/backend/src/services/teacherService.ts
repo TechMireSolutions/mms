@@ -14,7 +14,7 @@ import {
   type TeacherRecord,
   teacherRecordSchema,
 } from '../validation/teacherSchemas.js';
-import { loadContacts } from './contactService.js';
+import { loadContactsByIds } from './contactService.js';
 import {
   createGenericRelationalService,
   createContactHydratedService,
@@ -76,7 +76,8 @@ const hydrated = createContactHydratedService<Teacher, TeacherRecord>({
   listByWorkspaceFn: listTeachersByWorkspace,
   findByIdFn: findTeacherById,
   findByIdsFn: findTeachersByIds,
-  loadContactsFn: loadContacts,
+  collectContactIdsFn: (row) => [row.contactId],
+  loadContactsByIdsFn: loadContactsByIds,
   hydrateFn: (row, contacts) => hydrateTeacherFromContact(row as never, contacts as never) as unknown as TeacherRecord,
 });
 

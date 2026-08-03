@@ -17,7 +17,7 @@ import {
   type TenantUserRow,
 } from '../../db/repositories/tenantUserRepository.js';
 import { hashPassword, verifyPassword } from './passwordService.js';
-import { loadContacts, updateContactById } from '../contactService.js';
+import { loadContactsByIds, getContactById, updateContactById } from '../contactService.js';
 import { assertPasswordMeetsPolicy } from '../globalSettingsService.js';
 
 /** Auth-capable user with credentials resolved for login and session. */
@@ -51,9 +51,17 @@ function requireTenantSubdomain(): string {
   return tenant.trim().toLowerCase();
 }
 
-async function getContacts(): Promise<ContactLike[]> {
-  const raw = await loadContacts();
-  if (!Array.isArray(raw)) return [];
+async function getContactsForUsers(users: PersistedUser[]): Promise<ContactLike[]> {
+  const ids = [
+    ...new Set(
+      users
+        .map((user) => user.contactId)
+        .filter((id): id is string | number => id != null && id !== '')
+        .map(String),
+    ),
+  ];
+  if (ids.length === 0) return [];
+  const raw = await loadContactsByIds(ids);
   return raw as ContactLike[];
 }
 
@@ -74,8 +82,8 @@ async function getRawUsers(options?: { includeDeleted?: boolean }): Promise<Pers
 export async function getHydratedUsers(options?: {
   includeDeleted?: boolean;
 }): Promise<PersistedUser[]> {
-  const contacts = await getContacts();
   const users = await getRawUsers(options);
+  const contacts = await getContactsForUsers(users);
   return users.map((user) =>
     hydrateWorkspaceUserProfile(user, contacts) as PersistedUser,
   );
@@ -216,9 +224,7 @@ export async function getTenantUserProfile(userId: string): Promise<TenantUserPr
 
   let contact: Contact | null = null;
   if (hydrated.contactId != null && hydrated.contactId !== '') {
-    const contacts = await loadContacts();
-    contact =
-      contacts.find((candidateContact) => String(candidateContact.id) === String(hydrated.contactId)) ?? null;
+    contact = await getContactById(String(hydrated.contactId));
   }
 
   const raw = await getRawUsers();

@@ -14,7 +14,7 @@ import {
   type StudentRecord,
   studentRecordSchema,
 } from '@mms/shared';
-import { loadContacts } from './contactService.js';
+import { loadContactsByIds } from './contactService.js';
 import {
   createGenericRelationalService,
   createContactHydratedService,
@@ -76,7 +76,13 @@ const hydrated = createContactHydratedService<Student, StudentRecord>({
   listByWorkspaceFn: listStudentsByWorkspace,
   findByIdFn: findStudentById,
   findByIdsFn: findStudentsByIds,
-  loadContactsFn: loadContacts,
+  collectContactIdsFn: (row) => [
+    row.contactId,
+    row.fatherContactId,
+    row.motherContactId,
+    row.guardianContactId,
+  ],
+  loadContactsByIdsFn: loadContactsByIds,
   hydrateFn: (row, contacts) => hydrateStudentFromContacts(row as never, contacts as never) as unknown as StudentRecord,
 });
 

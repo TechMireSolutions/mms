@@ -10,7 +10,7 @@ import {
   type FieldDefinition,
 } from '@mms/shared';
 import { fetchObject } from './dbSyncService.js';
-import { loadContacts } from './contactService.js';
+import { loadContactsByIds } from './contactService.js';
 import { validateOrThrow } from '../lib/zodRequest.js';
 
 const CONFIG_KEY = 'students_settings';
@@ -100,7 +100,20 @@ export async function validateStudentDynamic(
   let cachedContacts: Contact[] | undefined;
   const getContacts = async () => {
     if (!cachedContacts) {
-      cachedContacts = await loadContacts();
+      const subjects = Array.isArray(student) ? student : [student];
+      const ids = [
+        ...new Set(
+          subjects
+            .map((item) =>
+              item && typeof item === 'object' && !Array.isArray(item)
+                ? (item as Record<string, unknown>).contactId
+                : undefined,
+            )
+            .filter((id): id is string | number => id != null && id !== '')
+            .map(String),
+        ),
+      ];
+      cachedContacts = ids.length === 0 ? [] : await loadContactsByIds(ids);
     }
     return cachedContacts;
   };
