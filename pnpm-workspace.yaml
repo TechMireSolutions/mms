@@ -21,3 +21,7 @@ minimumReleaseAgeExclude:
 peerDependencyRules:
   allowAny:
     - eslint
+
+overrides:
+  esbuild: "^0.25.0"
+  xlsx: "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"

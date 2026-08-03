@@ -50,17 +50,17 @@ jobs:
         env:
           PLATFORM_APP_URL: ${{ secrets.PLATFORM_APP_URL }}
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
-          PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
-          PLATFORM_SMTP_PORT: ${{ secrets.PLATFORM_SMTP_PORT }}
-          PLATFORM_SMTP_SECURE: ${{ secrets.PLATFORM_SMTP_SECURE }}
-          PLATFORM_SMTP_USER: ${{ secrets.PLATFORM_SMTP_USER }}
-          PLATFORM_SMTP_PASS: ${{ secrets.PLATFORM_SMTP_PASS }}
+          PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST || '' }}
+          PLATFORM_SMTP_PORT: ${{ secrets.PLATFORM_SMTP_PORT || '' }}
+          PLATFORM_SMTP_SECURE: ${{ secrets.PLATFORM_SMTP_SECURE || '' }}
+          PLATFORM_SMTP_USER: ${{ secrets.PLATFORM_SMTP_USER || '' }}
+          PLATFORM_SMTP_PASS: ${{ secrets.PLATFORM_SMTP_PASS || '' }}
           PLATFORM_EMAIL_FROM: ${{ secrets.PLATFORM_EMAIL_FROM }}
-          PLATFORM_EMAIL_FROM_NAME: ${{ secrets.PLATFORM_EMAIL_FROM_NAME }}
-          PLATFORM_ALLOW_ENV_BOOTSTRAP: ${{ secrets.PLATFORM_ALLOW_ENV_BOOTSTRAP }}
-          PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL }}
-          PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
-          PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
+          PLATFORM_EMAIL_FROM_NAME: ${{ secrets.PLATFORM_EMAIL_FROM_NAME || '' }}
+          PLATFORM_ALLOW_ENV_BOOTSTRAP: ${{ secrets.PLATFORM_ALLOW_ENV_BOOTSTRAP || '' }}
+          PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL || '' }}
+          PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD || '' }}
+          PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME || '' }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
