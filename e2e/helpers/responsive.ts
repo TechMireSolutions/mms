@@ -21,15 +21,29 @@ export async function waitForAppShellReady(page: Page, timeoutMs = 20_000): Prom
 }
 
 export async function assertNoHorizontalOverflow(page: Page): Promise<void> {
-  const layout = await page.evaluate(() => {
-    const root = document.getElementById('root');
-    return {
-      bodyWidth: document.body.scrollWidth,
-      documentWidth: document.documentElement.scrollWidth,
-      rootWidth: root?.scrollWidth ?? 0,
-      viewportWidth: document.documentElement.clientWidth,
-    };
-  });
+  let layout;
+  try {
+    layout = await page.evaluate(() => {
+      const root = document.getElementById('root');
+      return {
+        bodyWidth: document.body.scrollWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        rootWidth: root?.scrollWidth ?? 0,
+        viewportWidth: document.documentElement.clientWidth,
+      };
+    });
+  } catch {
+    await page.waitForLoadState('domcontentloaded');
+    layout = await page.evaluate(() => {
+      const root = document.getElementById('root');
+      return {
+        bodyWidth: document.body.scrollWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        rootWidth: root?.scrollWidth ?? 0,
+        viewportWidth: document.documentElement.clientWidth,
+      };
+    });
+  }
 
   expect(layout.bodyWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
   expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
@@ -39,20 +53,32 @@ export async function assertNoHorizontalOverflow(page: Page): Promise<void> {
 }
 
 export async function forceRtl(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    document.documentElement.setAttribute('dir', 'rtl');
-    document.documentElement.setAttribute('lang', 'ar');
-    document.body.setAttribute('dir', 'rtl');
-    document.querySelectorAll('[dir]').forEach((element) => {
-      element.setAttribute('dir', 'rtl');
+  try {
+    await page.evaluate(() => {
+      document.documentElement.setAttribute('dir', 'rtl');
+      document.documentElement.setAttribute('lang', 'ar');
+      document.body.setAttribute('dir', 'rtl');
+      document.querySelectorAll('[dir]').forEach((element) => {
+        element.setAttribute('dir', 'rtl');
+      });
     });
-  });
+  } catch {
+    await page.waitForLoadState('domcontentloaded');
+    await page.evaluate(() => {
+      document.documentElement.setAttribute('dir', 'rtl');
+      document.documentElement.setAttribute('lang', 'ar');
+      document.body.setAttribute('dir', 'rtl');
+      document.querySelectorAll('[dir]').forEach((element) => {
+        element.setAttribute('dir', 'rtl');
+      });
+    });
+  }
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       }),
-  );
+  ).catch(() => {});
 }
 
 /** Wait for toast banners to dismiss so they do not cover shell chrome. */

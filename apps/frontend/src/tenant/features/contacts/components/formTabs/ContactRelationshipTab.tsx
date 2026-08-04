@@ -115,7 +115,6 @@ export function ContactRelationshipTab({
                     <Field
                       label={t("contacts.form.relationshipType")}
                       required={isFieldRequired("relationship", "relationship")}
-                      id={`relationship-type-${idx}`}
                     >
                       <EditableSelect
                         options={relationshipOptions}

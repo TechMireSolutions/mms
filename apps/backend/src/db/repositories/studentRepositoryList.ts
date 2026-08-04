@@ -39,6 +39,15 @@ function buildSearchSql(search: string): SQL | null {
     OR COALESCE(${students.customData}->>'cnic', '') LIKE ${pattern}
     OR lower(COALESCE(${students.customData}->>'fatherName', '')) LIKE ${pattern}
     OR lower(COALESCE(${students.customData}->>'guardianName', '')) LIKE ${pattern}
+    OR EXISTS (
+      SELECT 1 FROM contacts c
+      WHERE c.id = ${students.contactId}
+        AND (
+          lower(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')) LIKE ${pattern}
+          OR lower(COALESCE(c.custom_data->>'firstName', '')) LIKE ${pattern}
+          OR lower(COALESCE(c.custom_data->>'lastName', '')) LIKE ${pattern}
+        )
+    )
   )`;
 }
 

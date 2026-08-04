@@ -114,7 +114,7 @@ export function registerResolveRoute(
 export interface WidgetAggregatesRouteOptions {
   path?: string;
   collection: string;
-  loadAggregatesFn: (widgets: WidgetQuery[]) => Promise<unknown>;
+  loadAggregatesFn: (widgets: WidgetQuery[], request: FastifyRequest) => Promise<unknown>;
   errorMessagePrefix: string;
 }
 
@@ -133,9 +133,10 @@ export function registerWidgetAggregatesRoute(
     const parsed = parseRequest(widgetAggregatesBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const results = await loadAggregatesFn(parsed.data.widgets);
+      const results = await loadAggregatesFn(parsed.data.widgets, request);
       return reply.send({ results });
-    } catch {
+    } catch (err) {
+      request.log.error(err, `Failed to load ${errorMessagePrefix} widget aggregates`);
       return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix} widget aggregates`);
     }
   });

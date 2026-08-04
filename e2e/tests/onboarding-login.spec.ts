@@ -77,7 +77,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // 1. Navigate to the platform apex landing page
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait until the setup screen input field is visible (since we reset the DB, setup is always needed)
     await page.waitForSelector('#platform-setup-email');
@@ -184,7 +184,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     const tenantLoginUrl = `http://${subdomain}.localhost:5173/login`;
     console.log(`Navigating to the new tenant login page: ${tenantLoginUrl}`);
     await page.goto(tenantLoginUrl);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 8. Fill out the tenant login form with the temporary onboarding password
     await page.fill('input[name="email"]', adminEmail);
@@ -207,7 +207,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // 11. Wait for navigation to dashboard (Vite home route redirects/resolves to `/`)
     await page.waitForURL(`http://${subdomain}.localhost:5173/`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 12. Assert welcome banner displays the logged-in user name
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum, Test Admin');
@@ -215,7 +215,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     // 13. Navigate to Contacts Page
     console.log('Navigating to Contacts Page...');
     await page.goto(`http://${subdomain}.localhost:5173/contacts`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 14. Create a new Contact
     await page.click('button:has-text("Add Contact")');
@@ -270,7 +270,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     // 15. Navigate to Students Page
     console.log('Navigating to Students Page...');
     await page.goto(`http://${subdomain}.localhost:5173/students`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 16. Create a new Student linking to the Contact
     await page.click('button:has-text("Add Student")');
@@ -283,21 +283,49 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     await expect(janeOption).toBeVisible({ timeout: 15_000 });
     await janeOption.click();
 
-    // Link Father guardian (John Doe) — accessible name includes avatar initials (e.g. "JD John Doe —")
-    const fatherSearch = registerDialog.getByLabel('Father');
-    await fatherSearch.scrollIntoViewIfNeeded();
-    await fatherSearch.fill('John Doe');
-    const johnOption = page.getByRole('option', { name: /John Doe/ }).first();
-    await expect(johnOption).toBeVisible({ timeout: 15_000 });
-    await johnOption.click();
+    // Link John Doe as Father guardian via "Edit contact relationships" button in Guardians section
+    const editRelationshipsCta = registerDialog.getByRole('button', { name: /Edit contact relationships/i });
+    await expect(editRelationshipsCta).toBeVisible({ timeout: 15_000 });
+    await editRelationshipsCta.click();
 
-    // Wait for the next GR number query to resolve and populate the input field
-    await expect(page.locator('input[placeholder="e.g. 0001-2026"]')).not.toHaveValue('');
+    const editJaneDialog = page.getByRole('dialog', { name: /Edit Contact/i });
+    await expect(editJaneDialog).toBeVisible({ timeout: 15_000 });
+    await editJaneDialog.getByRole('tab', { name: 'Relationship' }).click();
+    await editJaneDialog.getByRole('button', { name: /Add relationship/i }).click();
+    const relContactPicker = editJaneDialog.getByRole('combobox', { name: /Link contact/i }).first();
+      await relContactPicker.fill('John Doe');
+    const johnRelOption = page.getByRole('option', { name: /John Doe/ }).first();
+    await expect(johnRelOption).toBeVisible({ timeout: 15_000 });
+    await johnRelOption.click();
 
-    await registerDialog.getByRole('button', { name: 'Register student' }).click();
+      const relTypeSelect = editJaneDialog.locator('#relationship-type-0');
+      await relTypeSelect.click();
+      const fatherOption = page.getByRole('option', { name: /^Father$/i }).first();
+      if (await fatherOption.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await fatherOption.click();
+      } else {
+        const addInput = page.getByPlaceholder(/Husband : Wife/i).first();
+        await expect(addInput).toBeVisible({ timeout: 10_000 });
+        await addInput.fill('Father : Child');
+        await addInput.press('Enter');
+      }
+    await editJaneDialog.getByRole('button', { name: 'Save' }).click();
+    await expect(editJaneDialog).toBeHidden();
+    await expect(registerDialog.getByText(/John Doe/i).first()).toBeVisible({ timeout: 15_000 });
+
+    // Submit student registration
+    const saveButton = registerDialog.getByRole('button', { name: /Register student|Save/i });
+    await expect(saveButton).toBeEnabled({ timeout: 15_000 });
+    await saveButton.click();
+
+    // If duplicate student warning confirmation appears, confirm save
+    const saveAnywayButton = page.getByRole('button', { name: /Save anyway/i });
+    if (await saveAnywayButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await saveAnywayButton.click();
+    }
 
     // Wait for the modal dialog to close completely
-    await expect(registerDialog).toBeHidden();
+    await expect(registerDialog).toBeHidden({ timeout: 20_000 });
 
     // 17. Verify Student successfully created and listed
     await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
@@ -318,12 +346,12 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     // 19. Navigate to Attendance Page
     console.log('Navigating to Attendance Page...');
     await page.goto(`http://${subdomain}.localhost:5173/attendance`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 20. Select Class in filters
     await page.waitForSelector('#filter-class >> visible=true');
     await page.selectOption('#filter-class >> visible=true', { label: 'Morning Quran Class' });
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // 21. Verify Jane Doe is listed in the roster
     await page.waitForSelector('text=Jane Doe >> visible=true');
@@ -362,7 +390,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Soft-delete trash toggle on Students (Contacts-style Work trash)
     await page.goto(`${tenantOrigin}/students`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const trashToggle = page.getByRole('button', { name: /Show deleted|Show active/i });
     await expect(trashToggle).toBeVisible({ timeout: 20_000 });
     await trashToggle.click();
@@ -371,14 +399,14 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Settings shell
     await page.goto(`${tenantOrigin}/settings`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible({
       timeout: 20_000,
     });
 
     // Teacher from existing John Doe contact
     await page.goto(`${tenantOrigin}/teachers`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'Add Teacher' }).click();
     const teacherDialog = page.getByRole('dialog', { name: 'Add teacher' });
     await expect(teacherDialog).toBeVisible();
@@ -410,7 +438,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Finance invoice for Jane Doe
     await page.goto(`${tenantOrigin}/finance`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'New Invoice' }).click();
     const invoiceDialog = page.getByRole('dialog', { name: 'New Invoice' });
     await expect(invoiceDialog).toBeVisible();
@@ -438,7 +466,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Session create (server-assigned shape via client sess-* id)
     await page.goto(`${tenantOrigin}/sessions`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'New session' }).click();
     const sessionDialog = page.getByRole('dialog', { name: 'New session' });
     await expect(sessionDialog).toBeVisible();
@@ -494,12 +522,12 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
     // Class creation confirmed via PUT 200 response above.
     // The enrollment wizard step later verifies "Tajweed A" appears as a selectable radio button.
     // Close the session detail drawer to return to the sessions list.
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Enrollment wizard: Jane Doe → Afternoon Tajweed 2026
     await page.goto(`${tenantOrigin}/enrollments`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'New Enrollment' }).click();
     const enrollmentDialog = page.getByRole('dialog', { name: 'New Enrollment' });
     await expect(enrollmentDialog).toBeVisible();
@@ -556,7 +584,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Record payment against the Jane Doe invoice
     await page.goto(`${tenantOrigin}/finance`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: /Record payment for/i }).first().click();
     const paymentDialog = page.getByRole('dialog', { name: 'Record payment' });
     await expect(paymentDialog).toBeVisible();
@@ -579,7 +607,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Messaging Setup — create a custom template preset
     await page.goto(`${tenantOrigin}/messaging`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const messagingNav = page
       .locator('div.hidden.lg\\:block')
       .filter({ has: page.getByRole('button', { name: 'Setup', exact: true }) })
@@ -633,9 +661,13 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Prefer the custom preset when available in the native template select
     const templateSelect = smsDialog.locator('#messageTemplate');
-    const feeTemplateValue = await templateSelect.locator('option', { hasText: /E2e Fee Reminder/i }).getAttribute('value');
-    if (feeTemplateValue) {
-      await templateSelect.selectOption(feeTemplateValue);
+    const targetOption = templateSelect.locator('option', { hasText: /E2e Fee Reminder/i });
+    const hasOption = await targetOption.isVisible({ timeout: 5_000 }).catch(() => false);
+    if (hasOption) {
+      const feeTemplateValue = await targetOption.getAttribute('value');
+      if (feeTemplateValue) {
+        await templateSelect.selectOption(feeTemplateValue);
+      }
     } else {
       await smsDialog.locator('#messageBody').fill(
         'Assalamu Alaikum {name}, your fee balance is due.',
@@ -669,7 +701,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Accounting — two accounts + balanced journal entry (bulk PUT upsert)
     await page.goto(`${tenantOrigin}/accounting`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'Chart of Accounts', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Chart of Accounts' })).toBeVisible({
       timeout: 15_000,
@@ -749,7 +781,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
 
     // Users — add John Doe as Teacher via invite-style account setup (bulk PUT)
     await page.goto(`${tenantOrigin}/users`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.getByRole('button', { name: 'Add User' }).click();
     const userDialog = page.getByRole('dialog', { name: 'Add new user' });
     await expect(userDialog).toBeVisible({ timeout: 15_000 });

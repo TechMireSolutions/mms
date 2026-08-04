@@ -134,7 +134,7 @@ export function StudentGuardianSection({
           <div className="flex flex-col gap-3">
             {visibleRows.map((row) => {
               const contact = row.contactId ? byId.get(String(row.contactId)) : undefined;
-              const name = contact?.name || row.fallbackName;
+              const name = contact?.name || row.fallbackName || (row.contactId ? t("common.loading") : undefined);
               if (!name) return null;
               const phone = contact ? getPrimaryPhone(contact) || undefined : undefined;
               return (

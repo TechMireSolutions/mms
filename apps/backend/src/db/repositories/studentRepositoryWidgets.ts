@@ -6,6 +6,8 @@ import type {
 import { students } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 
+const customDataSql = sql.raw('"students"."custom_data"');
+
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt))!;
 }
@@ -17,18 +19,19 @@ function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
+  const safeField = sql.raw(`'${trimmedField.replace(/[^a-zA-Z0-9_]/g, '')}'`);
   const op = operator ?? 'equals';
   if (op === 'equals') {
-    return sql`lower(trim(COALESCE(${students.customData}->>${trimmedField}, ''))) = ${value.trim().toLowerCase()}`;
+    return sql`lower(trim(COALESCE(${customDataSql}->>${safeField}, ''))) = ${value.trim().toLowerCase()}`;
   }
   if (op === 'contains') {
-    return sql`lower(COALESCE(${students.customData}->>${trimmedField}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
+    return sql`lower(COALESCE(${customDataSql}->>${safeField}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(${students.customData}->>${trimmedField}, '')::numeric > ${Number(value)}`;
+    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric > ${Number(value)}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(${students.customData}->>${trimmedField}, '')::numeric < ${Number(value)}`;
+    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric < ${Number(value)}`;
   }
   return null;
 }
@@ -90,10 +93,11 @@ export async function aggregateStudentsWidgetQueries(
       } else if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
+          const safeTarget = sql.raw(`'${target.replace(/[^a-zA-Z0-9_]/g, '')}'`);
           const aggRows = await tx
             .select({
-              sum: sql<number>`coalesce(sum(NULLIF(${students.customData}->>${target}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${students.customData}->>${target}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
             })
             .from(students)
             .where(whereClause);
@@ -104,14 +108,17 @@ export async function aggregateStudentsWidgetQueries(
       }
 
       const xAxis = query.xAxisField?.trim() || 'status';
+      const safeXAxis = sql.raw(`'${xAxis.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${customDataSql}->>${safeXAxis}), ''), 'Unknown')`;
+
       const chartRows = await tx
         .select({
-          name: sql<string>`COALESCE(NULLIF(trim(${students.customData}->>${xAxis}), ''), 'Unknown')`,
+          name: groupExpr,
           value: sql<number>`count(*)::int`,
         })
         .from(students)
         .where(whereClause)
-        .groupBy(sql`COALESCE(NULLIF(trim(${students.customData}->>${xAxis}), ''), 'Unknown')`)
+        .groupBy(groupExpr)
         .orderBy(sql`count(*) desc`)
         .limit(chartLimit);
 
@@ -123,15 +130,16 @@ export async function aggregateStudentsWidgetQueries(
       if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
+          const safeTarget = sql.raw(`'${target.replace(/[^a-zA-Z0-9_]/g, '')}'`);
           const numericChart = await tx
             .select({
-              name: sql<string>`COALESCE(NULLIF(trim(${students.customData}->>${xAxis}), ''), 'Unknown')`,
-              sum: sql<number>`coalesce(sum(NULLIF(${students.customData}->>${target}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${students.customData}->>${target}, '') IS NOT NULL)::int`,
+              name: groupExpr,
+              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
             })
             .from(students)
             .where(whereClause)
-            .groupBy(sql`COALESCE(NULLIF(trim(${students.customData}->>${xAxis}), ''), 'Unknown')`)
+            .groupBy(groupExpr)
             .limit(chartLimit);
           chartData = numericChart
             .map((row) => {

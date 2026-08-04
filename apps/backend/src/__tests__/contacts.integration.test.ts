@@ -437,9 +437,10 @@ describe('contacts REST routes', () => {
         w1: { value: 10, totalCount: 10, chartData: [{ name: 'Male', value: 6 }] },
       },
     });
-    expect(mockLoadContactsWidgetAggregates).toHaveBeenCalledWith([
-      expect.objectContaining({ id: 'w1', operation: 'count', xAxisField: 'gender' }),
-    ]);
+    expect(mockLoadContactsWidgetAggregates).toHaveBeenCalledWith(
+      [expect.objectContaining({ id: 'w1', operation: 'count', xAxisField: 'gender' })],
+      expect.anything(),
+    );
     await app.close();
   });
 

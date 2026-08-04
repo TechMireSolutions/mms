@@ -142,19 +142,8 @@ export function useContactFormDraft({
     setContactDraft(nextDraft);
     setBaselineSnapshot(contactDraftSnapshot(nextDraft));
     setValidationErrors([]);
-  }, [
-    open,
-    contact,
-    initialDraft,
-    defaultCity,
-    defaultProvince,
-    defaultCountry,
-    optionDefaults,
-    fields,
-    socialPlatforms,
-    relationshipOptions,
-    setValidationErrors,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, contact?.id]);
 
   return {
     formInstanceId,
