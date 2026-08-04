@@ -1,0 +1,49 @@
+/** Helpers for student form custom (non-seed) fields. */
+import { INITIAL_STUDENT_FIELD_SEED } from './moduleFieldSetupPersons.js';
+import type { FieldDefinition } from './contactFieldSchemaTypes.js';
+
+/** Keys owned by static student form chrome (INITIAL_STUDENT_FIELD_SEED). */
+export function listStudentSystemFormFieldKeys(): ReadonlySet<string> {
+  const keys = new Set<string>();
+  for (const tabFields of Object.values(INITIAL_STUDENT_FIELD_SEED)) {
+    for (const field of tabFields) {
+      keys.add(field.key);
+    }
+  }
+  return keys;
+}
+
+/**
+ * Enabled non-seed fields for the student form.
+ * When `tabId` is set, only fields stored under that config tab are returned.
+ * When omitted, returns enabled non-seed fields from every tab.
+ */
+export function listEnabledCustomStudentFormFields(
+  fields: Record<string, FieldDefinition[]>,
+  tabId?: string,
+): FieldDefinition[] {
+  const systemKeys = listStudentSystemFormFieldKeys();
+  const byKey = new Map<string, FieldDefinition>();
+  const sourceTabs: FieldDefinition[][] =
+    tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
+
+  for (const tabFields of sourceTabs) {
+    for (const field of tabFields) {
+      if (!field.enabled || systemKeys.has(field.key)) continue;
+      if (!byKey.has(field.key)) {
+        byKey.set(field.key, field);
+      }
+    }
+  }
+
+  return [...byKey.values()].sort((left, right) => {
+    const orderDelta = (left.order ?? 0) - (right.order ?? 0);
+    if (orderDelta !== 0) return orderDelta;
+    return left.key.localeCompare(right.key);
+  });
+}
+
+/** True when `fieldId` is part of the static form seed for `tabId`. */
+export function isStudentSystemFormField(tabId: string, fieldId: string): boolean {
+  return (INITIAL_STUDENT_FIELD_SEED[tabId] ?? []).some((field) => field.key === fieldId);
+}

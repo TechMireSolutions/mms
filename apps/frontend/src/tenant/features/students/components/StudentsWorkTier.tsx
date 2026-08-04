@@ -38,11 +38,14 @@ interface StudentsWorkTierProps {
   onRetry: () => void;
   onPageChange: (page: number) => void;
   onEdit: (student: Student) => void;
-  onDelete: (studentId: string, deletionReason?: string) => void;
-  onRestore: (studentId: string) => void;
-  onBulkDelete: (studentIds: string[], deletionReason?: string) => void;
-  onBulkRestore: (studentIds: string[]) => void;
-  onBulkStatusChange: (studentIds: string[], status: string) => void;
+  onDelete: (studentId: string, deletionReason?: string) => void | Promise<void>;
+  onRestore: (studentId: string) => void | Promise<void>;
+  onBulkDelete: (studentIds: string[], deletionReason?: string) => void | Promise<void>;
+  onBulkRestore: (studentIds: string[]) => void | Promise<void>;
+  onBulkStatusChange: (studentIds: string[], status: string) => void | Promise<void>;
+  sortField?: import("@/tenant/features/students/components/StudentListContentTypes").StudentListSortField | null;
+  sortDir?: "asc" | "desc";
+  onServerSort?: (field: import("@/tenant/features/students/components/StudentListContentTypes").StudentListSortField) => void;
 }
 
 export function StudentsWorkTier({
@@ -76,6 +79,9 @@ export function StudentsWorkTier({
   onBulkDelete,
   onBulkRestore,
   onBulkStatusChange,
+  sortField = null,
+  sortDir = "desc",
+  onServerSort,
 }: StudentsWorkTierProps) {
   const { t } = useTranslation();
   const studentFilterChips = [
@@ -106,6 +112,7 @@ export function StudentsWorkTier({
       exit={{ opacity: 0 }}
       transition={{ duration: 0.18 }}
       className="space-y-5"
+      aria-busy={useServerWork && isWorkPageFetching ? true : undefined}
     >
       <StudentsWorkTierToolbar
         studentSearch={studentSearch}
@@ -148,6 +155,11 @@ export function StudentsWorkTier({
               canWrite={canWrite}
               canDelete={canDelete}
               serverPagination={serverPagination}
+              serverSort={
+                onServerSort
+                  ? { sortField, sortDir, onSort: onServerSort }
+                  : undefined
+              }
               onEdit={onEdit}
               onDelete={onDelete}
               onRestore={onRestore}

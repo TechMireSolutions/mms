@@ -5,6 +5,7 @@ import {
   verifyBlueprintVersion,
   getPrimaryPhone,
   getPrimaryEmail,
+  resolveStudentGuardianLinks,
   type StudentsSettings,
   type Contact,
   type FieldDefinition,
@@ -53,6 +54,14 @@ async function hydrateStudentValidationSubject(
     phone: studentRecord.phone ?? getPrimaryPhone(contact),
     email: studentRecord.email ?? getPrimaryEmail(contact),
     city: studentRecord.city ?? contact.city,
+    ...resolveStudentGuardianLinks(
+      studentRecord as {
+        fatherContactId?: string | number;
+        motherContactId?: string | number;
+        guardianContactId?: string | number;
+      },
+      contact,
+    ),
   };
 }
 

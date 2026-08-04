@@ -1,110 +1,186 @@
 import type React from "react";
+import { lazy, Suspense, useState } from "react";
 import { Users } from "lucide-react";
-import ContactPicker from "@/components/contactLink/ContactPicker";
+import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import type { Contact, Student } from "@mms/shared";
 import {
-  FieldError,
-  type StudentFieldErrorGetter,
-} from "@/tenant/features/students/components/StudentFormSectionShared";
+  CONTACTS_MODULE_MANIFEST,
+  getPrimaryPhone,
+  resolveStudentGuardianLinks,
+  type Contact,
+  type Student,
+} from "@mms/shared";
+import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
+import { useContactMutations, useContactsByIds } from "@/tenant/hooks/collections/contacts";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 
-function resolveGenderOption(genders: string[], preferred: string, fallbackIndex: number): string {
-  const match = genders.find((option) => option.toLowerCase() === preferred.toLowerCase());
-  return match ?? genders[fallbackIndex] ?? genders[0] ?? preferred;
-}
+const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 
 interface StudentGuardianSectionProps {
-  enabled: boolean;
+  formInstanceId: string;
   studentDraft: Partial<Student>;
-  fatherExcludeIds: string[];
-  motherExcludeIds: string[];
-  guardianExcludeIds: string[];
-  getFieldError: StudentFieldErrorGetter;
+  linkedContact?: Contact | null;
   isFieldEnabled: (fieldId: string) => boolean;
-  onParentSelect: (
-    role: "father" | "mother" | "guardian",
-    id: string | number | null,
-    contactObj?: Contact | null,
-  ) => void;
 }
 
 export function StudentGuardianSection({
-  enabled,
+  formInstanceId,
   studentDraft,
-  fatherExcludeIds,
-  motherExcludeIds,
-  guardianExcludeIds,
-  getFieldError,
+  linkedContact,
   isFieldEnabled,
-  onParentSelect,
-}: StudentGuardianSectionProps): React.JSX.Element | null {
+}: StudentGuardianSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { genders } = useContactConfig();
-  const fatherGender = resolveGenderOption(genders, "male", 0);
-  const motherGender = resolveGenderOption(genders, "female", 1);
-  if (!enabled) return null;
+  const { prefs } = useContactConfig();
+  const { updateContact } = useContactMutations();
+  const { canWrite: canWriteContacts } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
+  const [editContactOpen, setEditContactOpen] = useState(false);
+
+  const guardians = resolveStudentGuardianLinks(studentDraft, linkedContact ?? null);
+  const relatedIds = [
+    guardians.fatherContactId,
+    guardians.motherContactId,
+    guardians.guardianContactId,
+  ].filter(Boolean) as string[];
+  const { data: relatedContacts = [] } = useContactsByIds(relatedIds);
+  const byId = new Map(relatedContacts.map((contact) => [String(contact.id), contact]));
+
+  const showFather = isFieldEnabled("fatherLink");
+  const showMother = isFieldEnabled("motherLink");
+  const showGuardian = isFieldEnabled("guardianLink");
+
+  const rows: Array<{
+    key: string;
+    visible: boolean;
+    label: string;
+    badgeCode: string;
+    badgeBg: string;
+    badgeText: string;
+    contactId?: string;
+    fallbackName?: string;
+  }> = [
+    {
+      key: "father",
+      visible: showFather,
+      label: t("students.form.fatherLink"),
+      badgeCode: "FA",
+      badgeBg: "bg-info/15",
+      badgeText: "text-info",
+      contactId: guardians.fatherContactId,
+      fallbackName: guardians.fatherName,
+    },
+    {
+      key: "mother",
+      visible: showMother,
+      label: t("students.form.motherLink"),
+      badgeCode: "MO",
+      badgeBg: "bg-primary/15",
+      badgeText: "text-primary",
+      contactId: guardians.motherContactId,
+      fallbackName: guardians.motherName,
+    },
+    {
+      key: "guardian",
+      visible: showGuardian,
+      label: t("students.form.guardianLink"),
+      badgeCode: "GU",
+      badgeBg: "bg-warning/15",
+      badgeText: "text-warning",
+      contactId: guardians.guardianContactId,
+      fallbackName: guardians.guardianName,
+    },
+  ];
+
+  const visibleRows = rows.filter((row) => row.visible);
+  const hasAnyLink = visibleRows.some((row) => row.contactId || row.fallbackName);
+  const canOpenContactEditor = Boolean(linkedContact?.id) && canWriteContacts;
+
+  const handleSaveContact = async (contact: Contact): Promise<void> => {
+    await updateContact.mutateAsync({ id: String(contact.id), contact });
+    setEditContactOpen(false);
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id={`sf-${formInstanceId}-guardians`} tabIndex={-1}>
       <SectionCard
         title={t("students.form.guardiansSection")}
         subtitle={t("students.form.guardiansSectionDesc")}
         icon={Users}
         accentColor="info"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {isFieldEnabled("fatherLink") && (
-            <div className="space-y-1">
-              <ContactPicker
-                label={t("students.form.fatherLink")}
-                value={studentDraft.fatherContactId ? String(studentDraft.fatherContactId) : null}
-                onChange={(id, contactObj) => onParentSelect("father", id, contactObj)}
-                filterGender={fatherGender}
-                createDefaults={{ gender: fatherGender.toLowerCase(), lockGender: true }}
-                excludeIds={fatherExcludeIds}
-                searchPlaceholder={t("contacts.picker.searchPlaceholder")}
-                emptyTitle={t("contacts.picker.emptyTitle")}
-                error={!!getFieldError("fatherLink")}
-              />
-              <FieldError message={getFieldError("fatherLink")} />
-            </div>
-          )}
-
-          {isFieldEnabled("motherLink") && (
-            <div className="space-y-1">
-              <ContactPicker
-                label={t("students.form.motherLink")}
-                value={studentDraft.motherContactId ? String(studentDraft.motherContactId) : null}
-                onChange={(id, contactObj) => onParentSelect("mother", id, contactObj)}
-                filterGender={motherGender}
-                createDefaults={{ gender: motherGender.toLowerCase(), lockGender: true }}
-                excludeIds={motherExcludeIds}
-                searchPlaceholder={t("contacts.picker.searchPlaceholder")}
-                emptyTitle={t("contacts.picker.emptyTitle")}
-                error={!!getFieldError("motherLink")}
-              />
-              <FieldError message={getFieldError("motherLink")} />
-            </div>
-          )}
-
-          {isFieldEnabled("guardianLink") && (
-            <div className="sm:col-span-2 space-y-1">
-              <ContactPicker
-                label={t("students.form.guardianLink")}
-                value={studentDraft.guardianContactId ? String(studentDraft.guardianContactId) : null}
-                onChange={(id, contactObj) => onParentSelect("guardian", id, contactObj)}
-                excludeIds={guardianExcludeIds}
-                searchPlaceholder={t("contacts.picker.searchPlaceholder")}
-                emptyTitle={t("contacts.picker.emptyTitle")}
-                error={!!getFieldError("guardianLink")}
-              />
-              <FieldError message={getFieldError("guardianLink")} />
-            </div>
-          )}
-        </div>
+        {!studentDraft.contactId ? (
+          <p className="text-sm text-muted-foreground">{t("students.form.guardiansNeedContact")}</p>
+        ) : !hasAnyLink ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t("students.form.guardiansFromContactsEmpty")}</p>
+            {canOpenContactEditor ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11"
+                onClick={() => setEditContactOpen(true)}
+              >
+                {t("students.form.guardiansEditContactCta")}
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("students.form.guardiansEditOnContact")}</p>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {visibleRows.map((row) => {
+              const contact = row.contactId ? byId.get(String(row.contactId)) : undefined;
+              const name = contact?.name || row.fallbackName;
+              if (!name) return null;
+              const phone = contact ? getPrimaryPhone(contact) || undefined : undefined;
+              return (
+                <GuardianContactCard
+                  key={row.key}
+                  label={row.label}
+                  badgeCode={row.badgeCode}
+                  badgeBg={row.badgeBg}
+                  badgeText={row.badgeText}
+                  name={name}
+                  phone={phone || undefined}
+                />
+              );
+            })}
+          </div>
+        )}
+        {studentDraft.contactId && hasAnyLink ? (
+          <div className="mt-3">
+            {canOpenContactEditor ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="min-h-11 px-0 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setEditContactOpen(true)}
+              >
+                {t("students.form.guardiansEditContactCta")}
+              </Button>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("students.form.guardiansEditOnContact")}</p>
+            )}
+          </div>
+        ) : null}
       </SectionCard>
+
+      {editContactOpen && linkedContact ? (
+        <Suspense fallback={<span role="status" className="sr-only">{t("common.loading")}</span>}>
+          <ContactForm
+            key={`student-guardian-edit-${linkedContact.id}`}
+            open
+            priority
+            contact={linkedContact}
+            defaultCountry={prefs.defaultCountry || ""}
+            defaultCity={prefs.defaultCity || ""}
+            defaultProvince={prefs.defaultProvince || ""}
+            onClose={() => setEditContactOpen(false)}
+            onSave={handleSaveContact}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

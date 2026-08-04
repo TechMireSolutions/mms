@@ -1,5 +1,4 @@
 import type React from "react";
-import type { ReactNode } from "react";
 import { Clock, GraduationCap, Hash } from "lucide-react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -35,16 +34,9 @@ export function StudentRegistrationSection({
   onDraftChange,
 }: StudentRegistrationSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const grNumberLabel: ReactNode = (
-    <div className="flex items-center justify-between w-full">
-      <span>{t("students.form.grNumber")}</span>
-      {isGrAutoAssigned && (
-        <span className="text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md me-1">
-          {t("students.form.grAutoAssigned")}
-        </span>
-      )}
-    </div>
-  );
+  const registeredDateText = studentDraft.registeredDate
+    ? formatDateTime(studentDraft.registeredDate, true)
+    : t("contacts.table.emptyDash");
 
   return (
     <div className="space-y-6">
@@ -54,8 +46,8 @@ export function StudentRegistrationSection({
         icon={GraduationCap}
         accentColor="primary"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label={grNumberLabel} required error={getFieldError("grNumber")}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+          <Field label={t("students.form.grNumber")} required error={getFieldError("grNumber")} id="grNumber">
             <div className="relative flex items-center group/input">
               <Hash className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
               <Input
@@ -63,12 +55,17 @@ export function StudentRegistrationSection({
                 value={studentDraft.grNumber || ""}
                 onChange={(event) => onGrNumberChange(event.target.value)}
                 placeholder={t("students.form.grNumberPlaceholder")}
-                className={`${FORM_INPUT} ps-10`}
+                className={`${FORM_INPUT} ps-10 ${isGrAutoAssigned ? "pe-28" : ""}`}
               />
+              {isGrAutoAssigned ? (
+                <span className="pointer-events-none absolute end-2.5 text-[0.625rem] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md">
+                  {t("students.form.grAutoAssigned")}
+                </span>
+              ) : null}
             </div>
           </Field>
 
-          <Field label={t("students.form.status")} required error={getFieldError("status")}>
+          <Field label={t("students.form.status")} required error={getFieldError("status")} id="status">
             <FormSelect
               value={studentDraft.status || "active"}
               onChange={(value) => onDraftChange({ status: value as StudentStatus })}
@@ -77,14 +74,18 @@ export function StudentRegistrationSection({
           </Field>
 
           <div className="sm:col-span-2">
-            <Field label={t("students.form.registeredDate")}>
-              <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-11 text-sm text-muted-foreground select-none font-medium">
-                <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" />
-                <span>
-                  {studentDraft.registeredDate
-                    ? formatDateTime(studentDraft.registeredDate, true)
-                    : t("contacts.table.emptyDash")}
-                </span>
+            <Field
+              label={t("students.form.registeredDate")}
+              hint={t("students.form.registeredDateHint")}
+            >
+              <div
+                role="text"
+                aria-readonly="true"
+                aria-label={`${t("students.form.registeredDate")}: ${registeredDateText}`}
+                className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-11 text-sm text-muted-foreground select-none font-medium"
+              >
+                <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" aria-hidden />
+                <span>{registeredDateText}</span>
               </div>
             </Field>
           </div>

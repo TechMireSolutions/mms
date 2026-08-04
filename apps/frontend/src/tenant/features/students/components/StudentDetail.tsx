@@ -39,10 +39,14 @@ export default function StudentDetail({
     messagingTarget,
     openComposer,
     closeComposer,
+    canWriteMessaging,
     sortedEnabledFields,
     fatherContact,
     motherContact,
     guardianContact,
+    fatherName,
+    motherName,
+    guardianName,
     age,
     enrolledSessionDetails,
     primaryPhone,
@@ -147,7 +151,7 @@ export default function StudentDetail({
       >
         <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
 
-        {!isArchived && (
+        {!isArchived && canWriteMessaging && (
           <StudentDetailQuickActions
             student={student}
             primaryPhone={primaryPhone}
@@ -158,7 +162,15 @@ export default function StudentDetail({
 
         {hasVisibleDetailFields && (
           <StudentDetailFieldsSection
-            student={student}
+            student={{
+              ...student,
+              fatherContactId: fatherContact?.id != null ? String(fatherContact.id) : student.fatherContactId,
+              motherContactId: motherContact?.id != null ? String(motherContact.id) : student.motherContactId,
+              guardianContactId: guardianContact?.id != null ? String(guardianContact.id) : student.guardianContactId,
+              fatherName: fatherName || student.fatherName,
+              motherName: motherName || student.motherName,
+              guardianName: guardianName || student.guardianName,
+            }}
             sortedEnabledFields={sortedEnabledFields}
             age={age}
             fatherContact={fatherContact}
@@ -168,7 +180,7 @@ export default function StudentDetail({
             motherPhone={motherPhone}
             guardianPhone={guardianPhone}
             openComposer={openComposer}
-            messagingEnabled={!isArchived}
+            messagingEnabled={!isArchived && canWriteMessaging}
           />
         )}
 
@@ -177,7 +189,7 @@ export default function StudentDetail({
         <StudentDetailSessionsSection sessions={enrolledSessionDetails} />
       </DetailDrawerShell>
 
-      {messagingTarget && !isArchived && (
+      {messagingTarget && !isArchived && canWriteMessaging && (
         <Suspense fallback={null}>
           <MessageComposer
             channel={messagingTarget.channel}

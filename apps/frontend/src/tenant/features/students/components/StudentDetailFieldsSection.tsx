@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Clock, User } from "lucide-react";
+import { Calendar, Clock, FileText, User } from "lucide-react";
 import {
   type Student,
   formatDate,
@@ -90,8 +90,8 @@ export function StudentDetailFieldsSection({
           }
 
           if (field.key === "fatherLink") {
-            if (!fatherContact && !student.fatherName) return null;
-            const fatherName = student.fatherName || fatherContact?.name || "";
+            const fatherName = fatherContact?.name || student.fatherName || "";
+            if (!fatherName) return null;
             const fatherId = fatherContact?.id || student.fatherContactId || "father";
             return (
               <GuardianContactCard
@@ -117,8 +117,8 @@ export function StudentDetailFieldsSection({
           }
 
           if (field.key === "motherLink") {
-            if (!motherContact && !student.motherName) return null;
-            const motherName = student.motherName || motherContact?.name || "";
+            const motherName = motherContact?.name || student.motherName || "";
+            if (!motherName) return null;
             const motherId = motherContact?.id || student.motherContactId || "mother";
             return (
               <GuardianContactCard
@@ -144,8 +144,8 @@ export function StudentDetailFieldsSection({
           }
 
           if (field.key === "guardianLink") {
-            if (!guardianContact && !student.guardianName) return null;
-            const guardianName = student.guardianName || guardianContact?.name || "";
+            const guardianName = guardianContact?.name || student.guardianName || "";
+            if (!guardianName) return null;
             const guardianId = guardianContact?.id || student.guardianContactId || "guardian";
             return (
               <GuardianContactCard
@@ -170,9 +170,42 @@ export function StudentDetailFieldsSection({
             );
           }
 
-          return null;
+          const rawValue = (student as Record<string, unknown>)[field.key];
+          const displayValue = formatStudentCustomFieldValue(rawValue, field.type, t);
+          if (displayValue == null) return null;
+          return (
+            <StudentDetailAttributeRow
+              key={field.key}
+              icon={FileText}
+              label={field.label}
+              value={displayValue}
+            />
+          );
         })}
       </div>
     </div>
   );
+}
+
+function formatStudentCustomFieldValue(
+  value: unknown,
+  type: string,
+  t: (key: "common.yes" | "common.no") => string,
+): string | null {
+  if (value == null) return null;
+  if (typeof value === "string" && !value.trim()) return null;
+  if (Array.isArray(value)) {
+    const joined = value.map(String).filter(Boolean).join(", ");
+    return joined || null;
+  }
+  if (typeof value === "boolean") {
+    return value ? t("common.yes") : t("common.no");
+  }
+  if (type === "date" && typeof value === "string") {
+    return formatDate(value, true);
+  }
+  if (type === "datetime" && typeof value === "string") {
+    return formatDateTime(value, true);
+  }
+  return String(value);
 }

@@ -10,6 +10,15 @@ import { useStudentsPaginated, useStudentMutations, type StudentRecord } from '@
 import { useStudentColumnLayout } from '@/tenant/features/students/hooks/useStudentColumnLayout';
 import { useStudentConfig } from '@/hooks/useStandardModuleConfig';
 import { useGrMigration } from '@/tenant/features/students/hooks/useGrMigration';
+import type { StudentListSortField } from '@/tenant/features/students/components/StudentListContentTypes';
+
+const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
+  name: 'name',
+  age: 'dob',
+  fatherName: 'fatherName',
+  status: 'status',
+  grNumber: 'grNumber',
+};
 
 export function useStudentsPageController() {
   const {
@@ -32,6 +41,8 @@ export function useStudentsPageController() {
   const [listPage, setListPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+  const [sortField, setSortField] = useState<StudentListSortField | null>('grNumber');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useGrMigration(activeTab, canWrite);
 
@@ -59,13 +70,24 @@ export function useStudentsPageController() {
     search: studentSearch,
     status: studentFilterStatus.length > 0 ? studentFilterStatus.join(',') : undefined,
     gender: studentFilterGender || undefined,
+    sortField: sortField ? SORT_FIELD_TO_API[sortField] : undefined,
+    sortDir: sortField ? sortDir : undefined,
     includeDeleted: showDeleted,
     enabled: useServerWork,
   });
 
   useEffect(() => {
     setListPage(1);
-  }, [studentSearch, studentFilterStatus, studentFilterGender, viewMode, showDeleted]);
+  }, [studentSearch, studentFilterStatus, studentFilterGender, viewMode, showDeleted, sortField, sortDir]);
+
+  const handleServerSort = (field: StudentListSortField) => {
+    if (sortField === field) {
+      setSortDir((current) => (current === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
 
   const workStudents = useMemo(
     () => (workPageQuery.data?.students ?? []) as Student[],
@@ -124,5 +146,8 @@ export function useStudentsPageController() {
     handleSaveStudent,
     toggleStudentStatus,
     setListPage,
+    sortField,
+    sortDir,
+    handleServerSort,
   };
 }

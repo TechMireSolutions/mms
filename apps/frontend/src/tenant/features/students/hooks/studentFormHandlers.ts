@@ -1,5 +1,4 @@
 import type { Student } from "@mms/shared";
-import type { Contact } from "@mms/shared";
 
 export function buildContactSelectPatch(
   id: string | number | null,
@@ -15,15 +14,4 @@ export function buildContactSelectPatch(
     patch.grNumber = nextGrNumber;
   }
   return patch;
-}
-
-export function buildParentSelectPatch(
-  role: "father" | "mother" | "guardian",
-  id: string | number | null,
-  contactObj?: Contact | null,
-): Partial<Student> {
-  return {
-    [`${role}ContactId`]: id ? String(id) : null,
-    [`${role}Name`]: contactObj?.name ?? "",
-  };
 }

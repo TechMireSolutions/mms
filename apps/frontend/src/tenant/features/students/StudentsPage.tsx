@@ -53,6 +53,9 @@ export default function Students() {
     handleSaveStudent,
     toggleStudentStatus,
     setListPage,
+    sortField,
+    sortDir,
+    handleServerSort,
   } = useStudentsPageController();
 
   const {
@@ -126,39 +129,56 @@ export default function Students() {
               onRetry={() => void workPageQuery.refetch()}
               onPageChange={setListPage}
               onEdit={(studentToEdit) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
-              onDelete={(studentId, deletionReason) => {
-                void deleteStudent.mutateAsync(
-                  { id: String(studentId), deletionReason },
-                  {
-                    onSuccess: () => notify.success(t('students.deleteSuccess')),
-                    onError: () => notify.error(t('students.deleteFailed')),
-                  },
-                );
+              onDelete={async (studentId, deletionReason) => {
+                try {
+                  await deleteStudent.mutateAsync({ id: String(studentId), deletionReason });
+                  notify.success(t('students.deleteSuccess'));
+                } catch {
+                  notify.error(t('students.deleteFailed'));
+                }
               }}
-              onRestore={(studentId) => {
-                void restoreStudent.mutateAsync(String(studentId), {
-                  onSuccess: () => notify.success(t('students.restoreSuccess')),
-                  onError: () => notify.error(t('students.restoreFailed')),
-                });
+              onRestore={async (studentId) => {
+                try {
+                  await restoreStudent.mutateAsync(String(studentId));
+                  notify.success(t('students.restoreSuccess'));
+                } catch (error) {
+                  notify.error(t('students.restoreFailed'));
+                  throw error;
+                }
               }}
-              onBulkDelete={(studentIds, deletionReason) => {
-                void bulkDeleteStudents.mutateAsync(
-                  { ids: studentIds.map(String), deletionReason },
-                  {
-                    onSuccess: () => notify.success(t('students.deleteSuccess')),
-                    onError: () => notify.error(t('students.deleteFailed')),
-                  },
-                );
+              onBulkDelete={async (studentIds, deletionReason) => {
+                try {
+                  await bulkDeleteStudents.mutateAsync({
+                    ids: studentIds.map(String),
+                    deletionReason,
+                  });
+                  notify.success(t('students.deleteSuccess'));
+                } catch {
+                  notify.error(t('students.deleteFailed'));
+                }
               }}
-              onBulkRestore={(studentIds) => {
-                void bulkRestoreStudents.mutateAsync(studentIds.map(String), {
-                  onSuccess: () => notify.success(t('students.restoreSuccess')),
-                  onError: () => notify.error(t('students.restoreFailed')),
-                });
+              onBulkRestore={async (studentIds) => {
+                try {
+                  await bulkRestoreStudents.mutateAsync(studentIds.map(String));
+                  notify.success(t('students.restoreSuccess'));
+                } catch {
+                  notify.error(t('students.restoreFailed'));
+                }
               }}
-              onBulkStatusChange={(studentIds, status) => {
-                void bulkUpdateStudentStatus.mutateAsync({ ids: studentIds.map(String), status });
+              onBulkStatusChange={async (studentIds, status) => {
+                try {
+                  await bulkUpdateStudentStatus.mutateAsync({
+                    ids: studentIds.map(String),
+                    status,
+                  });
+                  notify.success(t('students.bulkStatusSuccess'));
+                } catch {
+                  notify.error(t('students.bulkStatusFailed'));
+                }
               }}
+              sortField={sortField}
+              sortDir={sortDir}
+              onServerSort={handleServerSort}
             />
           ) : activeTab === 'reports' ? (
             <StudentsReportsTier />

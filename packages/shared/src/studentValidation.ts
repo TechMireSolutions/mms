@@ -23,16 +23,17 @@ export function buildDynamicStudentSchema(
 ): z.ZodTypeAny {
   const schemaObject: Record<string, z.ZodTypeAny> = {};
 
+  const contactRequiredMsg = translateApp("students.form.contactRequired" as AppTranslationKey, language);
   schemaObject.contactId = z.union([z.string(), z.number()], {
-    error: translateApp("students.form.contactRequired" as AppTranslationKey, language) || "Contact is required.",
+    error: contactRequiredMsg,
   }).refine((contactIdValue) => contactIdValue !== null && contactIdValue !== undefined && contactIdValue !== "", {
-    message: translateApp("students.form.contactRequired" as AppTranslationKey, language) || "Contact is required.",
+    message: contactRequiredMsg,
   });
 
-  const grRequiredMsg = translateApp("students.form.grNumberRequired" as AppTranslationKey, language) || "GR Number is required.";
+  const grRequiredMsg = translateApp("students.form.grNumberRequired" as AppTranslationKey, language);
   schemaObject.grNumber = z.string({ message: grRequiredMsg }).min(1, grRequiredMsg);
 
-  const statusRequiredMsg = translateApp("students.form.statusRequired" as AppTranslationKey, language) || "Status is required.";
+  const statusRequiredMsg = translateApp("students.form.statusRequired" as AppTranslationKey, language);
   schemaObject.status = z.string().min(1, statusRequiredMsg);
 
   // Process dynamic tab fields
@@ -53,13 +54,23 @@ export function buildDynamicStudentSchema(
       }
       // Map logic link fields to their model properties
       if (field.key === "fatherLink" || field.key === "motherLink" || field.key === "guardianLink") {
-        const label = field.key === "fatherLink" ? "Father Link" : field.key === "motherLink" ? "Mother Link" : "Guardian Link";
+        const labelKey =
+          field.key === "fatherLink"
+            ? "students.form.fatherLink"
+            : field.key === "motherLink"
+              ? "students.form.motherLink"
+              : "students.form.guardianLink";
+        const label = translateApp(labelKey as AppTranslationKey, language);
         const targetKey = field.key === "fatherLink" ? "fatherContactId" : field.key === "motherLink" ? "motherContactId" : "guardianContactId";
-        
+        const linkInvalidMsg = translateApp("students.form.linkContactInvalid" as AppTranslationKey, language).replace(
+          "{label}",
+          label,
+        );
+
         const linkSchema = z.union([z.string(), z.number()], {
-          error: `${label} must be a valid contact.`,
+          error: linkInvalidMsg,
         });
-        
+
         if (field.required) {
           schemaObject[targetKey] = linkSchema;
         } else {
@@ -82,8 +93,8 @@ export function buildDynamicStudentSchema(
     baseSchema = baseSchema.refine((studentDraft: Record<string, unknown>) => {
       return Boolean(studentDraft.fatherContactId || studentDraft.motherContactId || studentDraft.guardianContactId);
     }, {
-      message: translateApp("students.form.guardianRequired" as AppTranslationKey, language) || "At least one guardian (father, mother, or other guardian) must be linked.",
-      path: ["guardianContactId"], // Highlight guardian select if missing
+      message: translateApp("students.form.guardianRequired" as AppTranslationKey, language),
+      path: ["guardianContactId"],
     });
   }
 
@@ -112,10 +123,18 @@ export function formatStudentZodIssues(
     if (fieldId === "guardianContactId") mappedFieldId = "guardianLink";
 
     for (const [tId, tabFields] of Object.entries(fields)) {
-      if (tabFields.some((f) => f.key === mappedFieldId)) {
+      if (tabFields.some((f) => f.key === mappedFieldId || f.key === fieldId)) {
         tabId = tId;
         break;
       }
+    }
+
+    // FormModal has Identity (`basic`) + Registration (`registration`) only.
+    const registrationFieldIds = new Set(["grNumber", "status", "registeredDate", "notes"]);
+    if (registrationFieldIds.has(mappedFieldId) || tabId === "academic" || tabId === "registration") {
+      tabId = "registration";
+    } else {
+      tabId = "basic";
     }
 
     errors.push({ fieldId: mappedFieldId, tabId, message });

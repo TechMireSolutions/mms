@@ -20,12 +20,46 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
-import { Save, GraduationCap } from "lucide-react";
+import { Loader2, Save, GraduationCap } from "lucide-react";
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   fields: "students.setup.fields",
   preferences: "students.setup.preferences",
 };
+
+const PREF_KEYS = [
+  "grNumberTemplate",
+  "grNumberDigits",
+  "grNumberRestartAnnually",
+  "autoGenerateId",
+  "requireGuardian",
+  "requirePhoto",
+  "defaultViewLayout",
+] as const;
+
+function studentsFieldsSnapshot(input: {
+  fields: unknown;
+  enabledTabs: Iterable<string>;
+  requiredTabs: Iterable<string>;
+  formTabs: Array<{ key: string; enabled?: boolean; label?: string; order?: number }>;
+}): string {
+  const enabled = [...input.enabledTabs].map((tab) => tab.toLowerCase()).sort();
+  const required = [...input.requiredTabs].map((tab) => tab.toLowerCase()).sort();
+  const formTabs = input.formTabs
+    .map((tab) => ({
+      key: tab.key.toLowerCase(),
+      enabled: tab.enabled !== false,
+      label: tab.label,
+      order: tab.order ?? 0,
+    }))
+    .sort((left, right) => left.key.localeCompare(right.key));
+  return JSON.stringify({
+    fields: input.fields || {},
+    enabled,
+    required,
+    formTabs,
+  });
+}
 
 export default function StudentsSettings(): React.ReactElement {
   const { t } = useTranslation();
@@ -38,7 +72,7 @@ export default function StudentsSettings(): React.ReactElement {
     saved,
     setSaved,
     upd,
-    saveSettings,
+    saveSettingsAsync,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: STUDENT_TAB_REGISTRY,
@@ -57,14 +91,50 @@ export default function StudentsSettings(): React.ReactElement {
   );
 
   const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key || "fields");
+  const [saving, setSaving] = useState(false);
   const showFields = sub === "fields";
   const showPrefs = sub === "preferences";
 
-  const handleSave = (): void => {
-    saveSettings(undefined, {
-      version: 2,
-      columnRegistry: settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
-    });
+  const isFieldsDirty = useMemo(() => {
+    const persistedEnabled =
+      settings.enabledTabs && settings.enabledTabs.length > 0
+        ? settings.enabledTabs
+        : DEFAULT_STUDENT_ENABLED_TABS;
+    return (
+      studentsFieldsSnapshot({
+        fields: fieldsEditor.buildFieldsMap(),
+        enabledTabs: fieldsEditor.enabledTabs,
+        requiredTabs: fieldsEditor.requiredTabs,
+        formTabs: fieldsEditor.formTabs,
+      }) !==
+      studentsFieldsSnapshot({
+        fields: settings.fields,
+        enabledTabs: persistedEnabled,
+        requiredTabs: settings.requiredTabs || DEFAULT_STUDENT_REQUIRED_TABS,
+        formTabs: settings.formTabs || STUDENT_TAB_REGISTRY,
+      })
+    );
+  }, [fieldsEditor, settings]);
+
+  const isPrefsDirty = useMemo(() => {
+    const draft = settingsDraft as unknown as Record<string, unknown>;
+    const savedSettings = settings as unknown as Record<string, unknown>;
+    return PREF_KEYS.some((key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]));
+  }, [settings, settingsDraft]);
+
+  const isDirty = showPrefs ? isPrefsDirty : isFieldsDirty;
+
+  const handleSave = async (): Promise<void> => {
+    if (!isDirty || saving) return;
+    setSaving(true);
+    try {
+      await saveSettingsAsync(undefined, {
+        version: 3,
+        columnRegistry: settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -167,10 +237,17 @@ export default function StudentsSettings(): React.ReactElement {
           <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
             <Button
               type="button"
-              onClick={handleSave}
+              onClick={() => { void handleSave(); }}
+              disabled={saving || !isDirty}
+              aria-busy={saving}
               className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
             >
-              <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("students.settings.saveSuccess") : t("students.settings.saveSettings")}
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Save className="w-3.5 h-3.5" aria-hidden="true" />
+              )}{" "}
+              {saved ? t("students.settings.saveSuccess") : t("students.settings.saveSettings")}
             </Button>
           </footer>
         </section>

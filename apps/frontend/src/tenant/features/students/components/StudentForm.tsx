@@ -4,12 +4,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
-import {
-  StudentContactSection,
-  StudentGuardianSection,
-  StudentNotesSection,
-  StudentRegistrationSection,
-} from "@/tenant/features/students/components/StudentFormSections";
+import { StudentFormTabContent } from "@/tenant/features/students/components/StudentFormTabContent";
 import { useStudentFormState } from "@/tenant/features/students/hooks/useStudentFormState";
 import type { Student } from "@mms/shared";
 
@@ -50,6 +45,11 @@ export default function StudentForm({
         title={student ? form.t("students.form.editTitle") : form.t("students.form.addTitle")}
         subtitle={form.t("students.form.subtitle")}
         icon={GraduationCap}
+        tall
+        tabs={form.visibleTabs}
+        activeTab={form.activeTab}
+        onTabChange={form.setActiveTab}
+        tabPanelIdPrefix="student-form-tab"
         lang={form.language}
         cancelLabel={form.t("common.cancel")}
         saveLabel={form.saving ? form.t("students.form.saving") : student ? form.t("students.form.saveUpdate") : form.t("students.form.saveRegister")}
@@ -59,46 +59,25 @@ export default function StudentForm({
         error={form.validationErrorSummary ?? (form.errorSummary || undefined)}
         footerStart={footerStart}
       >
-        <div className="space-y-6 pb-6">
-          <StudentContactSection
-            contactId={form.studentDraft.contactId}
-            excludeIds={form.excludeIds}
-            linkedGenderRaw={form.linkedGenderRaw}
-            linkedGenderLabel={form.linkedGenderLabel}
-            linkedDob={form.linkedDob}
-            genderError={form.getFieldError("gender")}
-            dobError={form.getFieldError("dob")}
-            getFieldError={form.getFieldError}
-            onContactSelect={form.handleContactSelect}
-            onStudentAvatarChange={form.handleStudentAvatarChange}
-          />
-
-          <StudentRegistrationSection
-            studentDraft={form.studentDraft}
-            isGrAutoAssigned={form.isGrAutoAssigned}
-            statusSelectOptions={form.statusSelectOptions}
-            getFieldError={form.getFieldError}
-            onGrNumberChange={form.handleGrNumberChange}
-            onDraftChange={form.updateDraft}
-          />
-
-          <StudentGuardianSection
-            enabled={form.enabledTabs.has("guardian")}
-            studentDraft={form.studentDraft}
-            fatherExcludeIds={form.fatherExcludeIds}
-            motherExcludeIds={form.motherExcludeIds}
-            guardianExcludeIds={form.guardianExcludeIds}
-            getFieldError={form.getFieldError}
-            isFieldEnabled={form.isFieldEnabled}
-            onParentSelect={form.handleParentSelect}
-          />
-
-          <StudentNotesSection
-            enabled={form.enabledTabs.has("academic")}
-            notes={form.studentDraft.notes}
-            onDraftChange={form.updateDraft}
-          />
-        </div>
+        <StudentFormTabContent
+          tab={form.activeTab}
+          formInstanceId={form.formInstanceId}
+          studentDraft={form.studentDraft}
+          linkedContact={form.linkedContact}
+          linkedGenderRaw={form.linkedGenderRaw}
+          linkedGenderLabel={form.linkedGenderLabel}
+          linkedDob={form.linkedDob}
+          excludeIds={form.excludeIds}
+          isGrAutoAssigned={form.isGrAutoAssigned}
+          statusSelectOptions={form.statusSelectOptions}
+          fields={form.fields}
+          isFieldEnabled={form.isFieldEnabled}
+          getFieldError={form.getFieldError}
+          onContactSelect={form.handleContactSelect}
+          onStudentAvatarChange={form.handleStudentAvatarChange}
+          onGrNumberChange={form.handleGrNumberChange}
+          onDraftChange={form.updateDraft}
+        />
       </FormModal>
       <ConfirmAlertDialog
         open={form.duplicateConfirmOpen}

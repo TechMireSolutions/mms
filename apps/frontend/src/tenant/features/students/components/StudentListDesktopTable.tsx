@@ -19,6 +19,7 @@ type StudentListDesktopTableProps = Pick<
   | "showDeleted"
   | "canWrite"
   | "canDelete"
+  | "canWriteMessaging"
   | "statusBadgeConfig"
   | "isFieldEnabled"
   | "renderSortIcon"
@@ -48,6 +49,7 @@ export function StudentListDesktopTable({
   showDeleted,
   canWrite,
   canDelete,
+  canWriteMessaging,
   statusBadgeConfig,
   isFieldEnabled,
   renderSortIcon,
@@ -150,6 +152,7 @@ export function StudentListDesktopTable({
                 showDeleted={showDeleted}
                 canWrite={canWrite}
                 canDelete={canDelete}
+                canWriteMessaging={canWriteMessaging}
                 statusBadgeConfig={statusBadgeConfig}
                 isFieldEnabled={isFieldEnabled}
                 onSelectOne={onSelectOne}

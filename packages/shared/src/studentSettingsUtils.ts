@@ -8,11 +8,14 @@ import {
   type StudentCustomField,
   type StudentsSettings,
 } from './settingsTypes.js';
-import type { FieldDefinition } from './contactTypes.js';
+import type { FieldDefinition, TabDefinition } from './contactTypes.js';
 import {
   refreshModuleTierTabKeys,
   refreshModuleTierTabLabels,
 } from './moduleTierTabs.js';
+
+const OBSOLETE_STUDENT_SETUP_TABS = new Set(['guardian', 'academic']);
+const STUDENT_SETTINGS_VERSION = 3;
 
 function cloneStudentSettings(settings: StudentsSettings): StudentsSettings {
   return JSON.parse(JSON.stringify(settings)) as StudentsSettings;
@@ -38,6 +41,96 @@ function normalizeTabs(tabs: unknown): StudentsSettings['formTabs'] | undefined 
     }) as unknown as StudentsSettings['formTabs'];
 }
 
+function mergeFieldLists(
+  primary: FieldDefinition[],
+  incoming: FieldDefinition[],
+): FieldDefinition[] {
+  const merged = [...primary];
+  for (const field of incoming) {
+    if (merged.some((existing) => existing.key === field.key)) continue;
+    merged.push({ ...field });
+  }
+  merged.forEach((field, index) => {
+    field.order = index;
+  });
+  return merged;
+}
+
+/** Collapse guardian → basic and academic → registration (Setup Fields v3). */
+export function migrateStudentSetupFieldsToTwoTabs(
+  fields: Record<string, FieldDefinition[]>,
+): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = { ...fields };
+  const basic = mergeFieldLists(next.basic ?? [], next.guardian ?? []);
+  const registration = mergeFieldLists(next.registration ?? [], next.academic ?? []);
+  next.basic = basic;
+  next.registration = registration;
+  delete next.guardian;
+  delete next.academic;
+  return next;
+}
+
+export function remapStudentEnabledTabs(tabs: string[] | undefined): string[] {
+  const source = tabs ?? [];
+  const out: string[] = [];
+  let hadAcademic = false;
+  for (const tab of source) {
+    if (tab === 'guardian') continue;
+    if (tab === 'academic') {
+      hadAcademic = true;
+      continue;
+    }
+    if (!out.includes(tab)) out.push(tab);
+  }
+  if (hadAcademic && !out.includes('registration')) {
+    out.push('registration');
+  }
+  if (out.length === 0) {
+    return [...DEFAULT_STUDENT_ENABLED_TABS];
+  }
+  return out;
+}
+
+function rebuildStudentFormTabs(existing: TabDefinition[] | undefined): TabDefinition[] {
+  const registryKeys = new Set(STUDENT_TAB_REGISTRY.map((tab) => tab.key));
+  const extras = (normalizeTabs(existing) ?? []).filter(
+    (tab) => !registryKeys.has(tab.key) && !OBSOLETE_STUDENT_SETUP_TABS.has(tab.key),
+  );
+  return refreshModuleTierTabLabels(
+    refreshModuleTierTabKeys([...STUDENT_TAB_REGISTRY, ...extras]),
+  );
+}
+
+function applyStudentSetupV3Migrate(draft: Partial<StudentsSettings>): void {
+  const storedVersion = typeof draft.version === 'number' ? draft.version : 0;
+  if (storedVersion >= STUDENT_SETTINGS_VERSION) {
+    // Still scrub obsolete keys if a partial save left them around.
+    if (draft.fields && typeof draft.fields === 'object') {
+      const fields = draft.fields as Record<string, FieldDefinition[]>;
+      if (fields.guardian || fields.academic) {
+        draft.fields = migrateStudentSetupFieldsToTwoTabs(fields);
+      }
+    }
+    return;
+  }
+
+  if (draft.fields && typeof draft.fields === 'object' && !isLegacyFlatFields(draft.fields)) {
+    draft.fields = migrateStudentSetupFieldsToTwoTabs(
+      draft.fields as Record<string, FieldDefinition[]>,
+    );
+  }
+
+  draft.enabledTabs = remapStudentEnabledTabs(draft.enabledTabs);
+  draft.requiredTabs = remapStudentRequiredTabs(draft.requiredTabs);
+  draft.formTabs = rebuildStudentFormTabs(draft.formTabs);
+  draft.version = STUDENT_SETTINGS_VERSION;
+}
+
+function remapStudentRequiredTabs(tabs: string[] | undefined): string[] {
+  if (!tabs || tabs.length === 0) return [...DEFAULT_STUDENT_REQUIRED_TABS];
+  return remapStudentEnabledTabs(tabs);
+}
+
 export function normalizeStudentsSettings(config: unknown): StudentsSettings {
   const defaults = cloneStudentSettings(DEFAULT_STUDENTS_SETTINGS);
   if (!config || typeof config !== 'object') {
@@ -48,7 +141,7 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
       requiredTabs: [...DEFAULT_STUDENT_REQUIRED_TABS],
       fields: JSON.parse(JSON.stringify(INITIAL_STUDENT_FIELD_SEED)) as Record<string, FieldDefinition[]>,
       columnRegistry: [...DEFAULT_STUDENT_COLUMN_REGISTRY],
-      version: 2,
+      version: STUDENT_SETTINGS_VERSION,
     };
   }
 
@@ -122,13 +215,15 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
     draft.columnRegistry = draft.columnRegistry ?? defaults.columnRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY;
   }
 
+  applyStudentSetupV3Migrate(draft);
+
   const merged = {
     ...defaults,
     ...draft,
     enabledTabs: draft.enabledTabs ?? defaults.enabledTabs ?? DEFAULT_STUDENT_ENABLED_TABS,
     requiredTabs: draft.requiredTabs ?? defaults.requiredTabs ?? DEFAULT_STUDENT_REQUIRED_TABS,
     fields: draft.fields ?? defaults.fields,
-    version: typeof draft.version === 'number' ? draft.version : 2,
+    version: typeof draft.version === 'number' ? draft.version : STUDENT_SETTINGS_VERSION,
   } as StudentsSettings;
 
   if (Array.isArray(merged.formTabs)) {

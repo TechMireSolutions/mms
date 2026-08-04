@@ -23,6 +23,8 @@ export interface ExportToolbarProps {
   data?: unknown[];
   headers?: string[];
   variant?: 'default' | 'compact';
+  /** When set, Excel/PDF resolve rows at click time (full filtered export). */
+  resolveRows?: () => Promise<Record<string, unknown>[]>;
 }
 
 export function ExportToolbar({
@@ -36,14 +38,16 @@ export function ExportToolbar({
   data,
   headers,
   variant,
+  resolveRows,
 }: ExportToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
   const [orientation, setOrientation] = useState<'p' | 'l'>('p');
   const [formatSize, setFormatSize] = useState<string>('a4');
   const [showPdfSettings, setShowPdfSettings] = useState<boolean>(false);
   const [compactFormat, setCompactFormat] = useState<'excel' | 'pdf'>('excel');
+  const [exporting, setExporting] = useState(false);
 
-  const resolvedVariant = variant || (data ? 'default' : 'compact');
+  const resolvedVariant = variant || (data || resolveRows ? 'default' : 'compact');
   const resolvedFilename = useMemo(() => filename || title.toLowerCase().replace(/\s+/g, '_'), [filename, title]);
 
   const [titlePrefix, titleSuffix] = useMemo(() => {
@@ -66,6 +70,7 @@ export function ExportToolbar({
     () => columns || (headers ? headers.map((h) => ({ header: h, key: h })) : []),
     [columns, headers],
   );
+  const canExport = Boolean(resolveRows) || finalRows.length > 0;
 
   const handlePrint = (): void => {
     if (onPrint) {
@@ -75,30 +80,47 @@ export function ExportToolbar({
     window.print();
   };
 
+  const resolveExportRows = async (): Promise<Record<string, unknown>[]> => {
+    if (resolveRows) return resolveRows();
+    return finalRows;
+  };
+
   const handleExcelExport = async (): Promise<void> => {
-    await exportExcel({
-      title,
-      columns: finalColumns,
-      rows: finalRows,
-      filename: resolvedFilename,
-      moduleId,
-      exportLabel,
-      sourceColumns: columns,
-      sourceHeaders: headers,
-    });
+    setExporting(true);
+    try {
+      const exportRows = await resolveExportRows();
+      await exportExcel({
+        title,
+        columns: finalColumns,
+        rows: exportRows,
+        filename: resolvedFilename,
+        moduleId,
+        exportLabel,
+        sourceColumns: columns,
+        sourceHeaders: headers,
+      });
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handlePdfExport = async (): Promise<void> => {
-    await exportPdf({
-      title,
-      rows: finalRows,
-      filename: resolvedFilename,
-      orientation,
-      formatSize,
-      variant: resolvedVariant,
-      sourceColumns: columns,
-      sourceHeaders: headers,
-    });
+    setExporting(true);
+    try {
+      const exportRows = await resolveExportRows();
+      await exportPdf({
+        title,
+        rows: exportRows,
+        filename: resolvedFilename,
+        orientation,
+        formatSize,
+        variant: resolvedVariant,
+        sourceColumns: columns,
+        sourceHeaders: headers,
+      });
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (resolvedVariant === 'compact') {
@@ -163,10 +185,11 @@ export function ExportToolbar({
         </Button>
         <Button
           onClick={() => { void handleExcelExport(); }}
-          disabled={finalRows.length === 0}
+          disabled={!canExport || exporting}
           variant="outline"
           className="flex min-h-11 items-center gap-1.5 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
           type="button"
+          aria-busy={exporting}
         >
           <FileSpreadsheet className="w-3.5 h-3.5 text-success" aria-hidden="true" />
           {t('reports.export.excel')}
@@ -175,10 +198,11 @@ export function ExportToolbar({
         <div className="flex min-h-11 overflow-x-auto rounded-lg border border-border bg-card">
           <Button
             onClick={() => { void handlePdfExport(); }}
-            disabled={finalRows.length === 0}
+            disabled={!canExport || exporting}
             variant="ghost"
             className="flex min-h-11 items-center gap-1.5 px-3 py-2 border-e border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 rounded-none"
             type="button"
+            aria-busy={exporting}
           >
             <FileText className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
             {t('reports.export.pdf')}

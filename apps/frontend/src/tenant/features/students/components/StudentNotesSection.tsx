@@ -7,27 +7,25 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { Student } from "@mms/shared";
 
 interface StudentNotesSectionProps {
-  enabled: boolean;
   notes?: string;
   onDraftChange: (patch: Partial<Student>) => void;
 }
 
 export function StudentNotesSection({
-  enabled,
   notes,
   onDraftChange,
-}: StudentNotesSectionProps): React.JSX.Element | null {
+}: StudentNotesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  if (!enabled) return null;
 
   return (
     <div className="space-y-6">
       <SectionCard
         title={t("students.form.notesSection")}
+        subtitle={t("students.form.notesSectionDesc")}
         icon={FileText}
         accentColor="emerald"
       >
-        <Field label={t("students.form.notesSection")}>
+        <Field label={t("students.form.notesLabel")}>
           <Textarea
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}

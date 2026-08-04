@@ -3,10 +3,7 @@ import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { formatDate, todayISO, type Student } from "@mms/shared";
 import { useStudentLinkedContactIds, useStudentNextGrNumber } from "@/tenant/features/students/hooks/useStudents";
-import {
-  getParentExcludeIds,
-  buildStudentContactExcludeIds,
-} from "@/tenant/features/students/hooks/studentFormValidation";
+import { buildStudentContactExcludeIds } from "@/tenant/features/students/hooks/studentFormValidation";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface UseStudentFormLinkedDataOptions {
@@ -56,13 +53,9 @@ export function useStudentFormLinkedData({
     updateDraft({ grNumber: value });
   }, [grManuallyEdited, updateDraft]);
 
-  const fatherExcludeIds = useMemo(() => getParentExcludeIds(studentDraft, "father"), [studentDraft]);
-  const motherExcludeIds = useMemo(() => getParentExcludeIds(studentDraft, "mother"), [studentDraft]);
-  const guardianExcludeIds = useMemo(() => getParentExcludeIds(studentDraft, "guardian"), [studentDraft]);
-
   const excludeIds = useMemo(
-    () => buildStudentContactExcludeIds(studentDraft, linkedStudentContactIds),
-    [studentDraft, linkedStudentContactIds],
+    () => buildStudentContactExcludeIds(studentDraft, linkedStudentContactIds, linkedContact),
+    [studentDraft, linkedStudentContactIds, linkedContact],
   );
 
   const isGrAutoAssigned = !student?.id && !!studentDraft.grNumber && studentDraft.grNumber === nextGrNumber && !grManuallyEdited.current;
@@ -74,9 +67,6 @@ export function useStudentFormLinkedData({
     linkedDob,
     nextGrNumber,
     handleGrNumberChange,
-    fatherExcludeIds,
-    motherExcludeIds,
-    guardianExcludeIds,
     excludeIds,
     isGrAutoAssigned,
   };

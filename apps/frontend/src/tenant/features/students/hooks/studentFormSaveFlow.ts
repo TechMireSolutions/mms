@@ -16,14 +16,47 @@ export interface StudentSaveFlowInput {
   linkedGenderRaw: string;
   validationContext: Omit<StudentValidationContext, "linkedGenderRaw" | "linkedDob">;
   blueprintVersion?: string | number | null;
+  formInstanceId: string;
   t: TranslationFunction;
   onSave: (student: Student) => void | Promise<void>;
   onClose: () => void;
+  onValidationTab?: (tabId: string, fieldId: string) => void;
   setValidationErrors: (errors: ValidationError[]) => void;
   setSaving: (saving: boolean) => void;
   setPendingSaveData: (data: Partial<Student> | null) => void;
   setTypedDuplicateReason: (reason: StudentDuplicateReason | null) => void;
   setDuplicateConfirmOpen: (open: boolean) => void;
+}
+
+function focusStudentValidationField(formInstanceId: string, fieldId: string): void {
+  const readOnlyFocusIds = new Set(["gender", "dob", "guardianLink", "fatherLink", "motherLink"]);
+  const candidates = [
+    `sf-${formInstanceId}-${fieldId}`,
+    fieldId,
+    fieldId === "gender" || fieldId === "dob" || fieldId === "contactId" ? "contactId" : "",
+    readOnlyFocusIds.has(fieldId) ? `sf-${formInstanceId}-guardians` : "",
+  ].filter(Boolean);
+
+  const tryFocus = (): boolean => {
+    for (const candidate of candidates) {
+      const target = document.getElementById(candidate);
+      if (target instanceof HTMLElement) {
+        target.focus();
+        target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        return true;
+      }
+    }
+    return false;
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (tryFocus()) return;
+      window.setTimeout(() => {
+        tryFocus();
+      }, 50);
+    });
+  });
 }
 
 export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<void> {
@@ -33,9 +66,15 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<v
     ...input.validationContext,
     linkedGenderRaw: input.linkedGenderRaw,
     linkedDob: input.linkedContact?.dob || "",
+    linkedContact: input.linkedContact,
   });
   if (zodErrors) {
     input.setValidationErrors(zodErrors);
+    const first = zodErrors[0];
+    if (first) {
+      input.onValidationTab?.(first.tabId, first.fieldId);
+      focusStudentValidationField(input.formInstanceId, first.fieldId);
+    }
     notify.error(input.t("common.formPleaseFixErrors"));
     return;
   }

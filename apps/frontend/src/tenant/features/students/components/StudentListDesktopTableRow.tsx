@@ -19,6 +19,7 @@ type StudentListDesktopTableRowProps = Pick<
   | "showDeleted"
   | "canWrite"
   | "canDelete"
+  | "canWriteMessaging"
   | "statusBadgeConfig"
   | "isFieldEnabled"
   | "onSelectOne"
@@ -45,6 +46,7 @@ export function StudentListDesktopTableRow({
   showDeleted,
   canWrite,
   canDelete,
+  canWriteMessaging = false,
   statusBadgeConfig,
   isFieldEnabled,
   onSelectOne,
@@ -157,7 +159,7 @@ export function StudentListDesktopTableRow({
           showDeleted={showDeleted}
           canWrite={canWrite}
           canDelete={canDelete}
-          includeMessaging
+          includeMessaging={canWriteMessaging && !showDeleted}
           triggerClassName="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100"
           contentClassName="w-44"
           iconClassName="w-4 h-4"

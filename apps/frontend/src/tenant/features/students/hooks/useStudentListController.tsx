@@ -17,6 +17,12 @@ interface UseStudentListControllerOptions {
     limit: number;
     hasMore: boolean;
   };
+  /** When set with server pagination, header sort is lifted to the list query. */
+  serverSort?: {
+    sortField: StudentListSortField | null;
+    sortDir: "asc" | "desc";
+    onSort: (field: StudentListSortField) => void;
+  };
 }
 
 export function useStudentListController({
@@ -24,6 +30,7 @@ export function useStudentListController({
   showDeleted = false,
   isColumnVisible,
   serverPagination,
+  serverSort,
 }: UseStudentListControllerOptions) {
   const { t } = useTranslation();
   const { statuses, isFieldEnabled } = useStudentConfig();
@@ -41,13 +48,15 @@ export function useStudentListController({
   const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
 
-  const [sortField, setSortField] = useState<StudentListSortField | null>("grNumber");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [localSortField, setLocalSortField] = useState<StudentListSortField | null>("grNumber");
+  const [localSortDir, setLocalSortDir] = useState<"asc" | "desc">("desc");
+  const sortField = serverSort?.sortField ?? localSortField;
+  const sortDir = serverSort?.sortDir ?? localSortDir;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [viewStudent, setViewStudent] = useState<Student | null>(null);
-  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+  const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -58,11 +67,15 @@ export function useStudentListController({
   }, [students.length, pageSize, showDeleted]);
 
   const handleSort = (field: NonNullable<typeof sortField>) => {
-    if (sortField === field) {
-      setSortDir((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
+    if (serverSort) {
+      serverSort.onSort(field);
+      return;
+    }
+    if (localSortField === field) {
+      setLocalSortDir((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
     } else {
-      setSortField(field);
-      setSortDir("asc");
+      setLocalSortField(field);
+      setLocalSortDir("asc");
     }
   };
 
@@ -76,7 +89,8 @@ export function useStudentListController({
   };
 
   const sortedStudents = useMemo(() => {
-    if (!sortField) return students;
+    // Server pagination already applies sortField/sortDir — do not re-sort the page.
+    if (serverPagination || !sortField) return students;
 
     return [...students].sort((firstStudent, secondStudent) => {
       let firstSortValue = "";
@@ -106,7 +120,7 @@ export function useStudentListController({
       if (firstSortValue > secondSortValue) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [students, sortField, sortDir]);
+  }, [students, sortField, sortDir, serverPagination]);
 
   const paginatedStudents = useMemo(() => {
     if (serverPagination) return sortedStudents;
@@ -164,6 +178,7 @@ export function useStudentListController({
     messagingTarget,
     openComposer,
     closeComposer,
+    canWriteMessaging,
     confirmBulkDeleteOpen,
     setConfirmBulkDeleteOpen,
     confirmBulkRestoreOpen,

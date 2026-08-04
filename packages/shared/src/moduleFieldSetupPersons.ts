@@ -3,28 +3,25 @@ import type { TabDefinition, FieldDefinition, ColumnRegistryEntry } from "./cont
 
 // ─── Default Students Field Setup Constants ───────────────────────────────────
 
-export const DEFAULT_STUDENT_ENABLED_TABS = ["guardian", "academic"];
+export const DEFAULT_STUDENT_ENABLED_TABS = ["registration"];
 export const DEFAULT_STUDENT_REQUIRED_TABS: string[] = [];
 
 export const STUDENT_TAB_REGISTRY: TabDefinition[] = [
-  { key: "basic", label: "Identity", enabled: true, order: 0, isSystem: true },
-  { key: "guardian", label: "Guardian Connections", enabled: true, order: 1, isSystem: true },
-  { key: "academic", label: "Enrollment Info", enabled: true, order: 2, isSystem: true },
+  { key: "basic", label: "Identity", labelKey: "students.form.tab.basic", enabled: true, order: 0, isSystem: true },
+  { key: "registration", label: "Registration", labelKey: "students.form.tab.registration", enabled: true, order: 1, isSystem: true },
 ];
 
 export const INITIAL_STUDENT_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
     { key: "gender", label: "Gender", type: "select", options: ["Male", "Female"], enabled: true, order: 0, required: true, description: "Must be defined (not empty) on the linked contact profile." },
     { key: "dob", label: "Date of Birth", type: "date", enabled: true, order: 1, required: true, description: "Must be provided (not empty) on the linked contact profile." },
+    { key: "fatherLink", label: "Father", type: "text", enabled: true, order: 2, required: false, description: "Shown from the linked contact’s Father relationship in Contacts (not a picker on this form)." },
+    { key: "motherLink", label: "Mother", type: "text", enabled: true, order: 3, required: false, description: "Shown from the linked contact’s Mother relationship in Contacts (not a picker on this form)." },
+    { key: "guardianLink", label: "Guardian", type: "text", enabled: true, order: 4, required: false, description: "Shown from the linked contact’s Guardian relationship in Contacts (not a picker on this form)." },
   ],
-  guardian: [
-    { key: "fatherLink", label: "Father", type: "text", enabled: true, order: 0, required: false, description: "Dropdown linking a Male contact from the database." },
-    { key: "motherLink", label: "Mother", type: "text", enabled: true, order: 1, required: false, description: "Dropdown linking a Female contact from the database." },
-    { key: "guardianLink", label: "Guardian", type: "text", enabled: true, order: 2, required: false, description: "Dropdown linking any contact from the database (no gender filter)." },
+  registration: [
+    { key: "registeredDate", label: "Registration Date", type: "date", enabled: true, order: 0, required: true, description: "Timestamp set when the student profile is registered; displayed read-only on the form." },
   ],
-  academic: [
-    { key: "registeredDate", label: "Registration Date", type: "date", enabled: true, order: 0, required: true, description: "Date/Time field indicating when the student profile was registered." },
-  ]
 };
 
 export const DEFAULT_STUDENT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Mail, MessageCircle, MessageSquare, RotateCcw, Tag } from "lucide-react";
+import { ChevronDown, Download, Mail, MessageCircle, MessageSquare, RotateCcw, Tag } from "lucide-react";
 import type { ReactElement } from "react";
 import type { StandardMessagingRecipient, Student } from "@mms/shared";
 import { toMessagingRecipient } from "@mms/shared";
@@ -21,10 +21,13 @@ interface StudentListSelectionBarProps {
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
+  canWriteMessaging?: boolean;
+  canExport?: boolean;
   studentStatusOptions: readonly string[];
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   onOpenComposer: (channel: MessageChannel, recipients: StandardMessagingRecipient[]) => void;
   onBulkStatusChange?: (ids: string[], status: string) => void;
+  onBulkExport?: () => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
@@ -36,10 +39,13 @@ export function StudentListSelectionBar({
   showDeleted,
   canWrite,
   canDelete,
+  canWriteMessaging = false,
+  canExport = false,
   studentStatusOptions,
   statusBadgeConfig,
   onOpenComposer,
   onBulkStatusChange,
+  onBulkExport,
   onRequestBulkDelete,
   onRequestBulkRestore,
   onClearSelection,
@@ -74,32 +80,47 @@ export function StudentListSelectionBar({
             )
           ) : (
             <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenComposer("whatsapp", selectedStudents.map((student) => toMessagingRecipient(student)))}
-                className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
-              </Button>
+              {canWriteMessaging && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenComposer("whatsapp", selectedStudents.map((student) => toMessagingRecipient(student)))}
+                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
+                  </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenComposer("sms", selectedStudents.map((student) => toMessagingRecipient(student)))}
-                className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
-              </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenComposer("sms", selectedStudents.map((student) => toMessagingRecipient(student)))}
+                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
+                  </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenComposer("email", selectedStudents.filter((student) => student.email).map((student) => toMessagingRecipient(student)))}
-                className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
-              >
-                <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
-              </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenComposer("email", selectedStudents.filter((student) => student.email).map((student) => toMessagingRecipient(student)))}
+                    className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
+                  </Button>
+                </>
+              )}
+
+              {canExport && onBulkExport && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onBulkExport}
+                  className="px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5 text-primary" /> {t("students.bulkExport")}
+                </Button>
+              )}
 
               {canWrite && onBulkStatusChange && (
                 <DropdownMenu>

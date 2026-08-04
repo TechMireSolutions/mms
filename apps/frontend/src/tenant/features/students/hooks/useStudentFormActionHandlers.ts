@@ -8,11 +8,9 @@ import type {
   ValidationError,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { notify } from "@/lib/notify";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/students/hooks/studentFormValidation";
-import {
-  buildContactSelectPatch,
-  buildParentSelectPatch,
-} from "@/tenant/features/students/hooks/studentFormHandlers";
+import { buildContactSelectPatch } from "@/tenant/features/students/hooks/studentFormHandlers";
 import {
   confirmPendingStudentSave,
   runStudentSaveFlow,
@@ -39,6 +37,8 @@ export interface UseStudentFormActionHandlersOptions {
   setPendingSaveData: (value: Partial<Student> | null) => void;
   setTypedDuplicateReason: (value: StudentDuplicateReason | null) => void;
   setDuplicateConfirmOpen: (value: boolean) => void;
+  formInstanceId: string;
+  onValidationTab?: (tabId: string, fieldId: string) => void;
 }
 
 export function useStudentFormActionHandlers({
@@ -62,6 +62,8 @@ export function useStudentFormActionHandlers({
   setPendingSaveData,
   setTypedDuplicateReason,
   setDuplicateConfirmOpen,
+  formInstanceId,
+  onValidationTab,
 }: UseStudentFormActionHandlersOptions) {
   const clearDuplicatePrompt = useCallback(() => {
     setDuplicateConfirmOpen(false);
@@ -88,9 +90,11 @@ export function useStudentFormActionHandlers({
         language,
       },
       blueprintVersion: settings.version,
+      formInstanceId,
       t,
       onSave,
       onClose,
+      onValidationTab,
       setValidationErrors,
       setSaving,
       setPendingSaveData,
@@ -118,20 +122,16 @@ export function useStudentFormActionHandlers({
     if (patch) updateDraft(patch);
   };
 
-  const handleStudentAvatarChange = (avatarUrl: string): void => {
+  const handleStudentAvatarChange = async (avatarUrl: string): Promise<void> => {
     if (!studentDraft.contactId || !linkedContact) return;
-    void updateContact.mutateAsync({
-      id: String(studentDraft.contactId),
-      contact: { ...linkedContact, avatar: avatarUrl },
-    });
-  };
-
-  const handleParentSelect = (
-    role: "father" | "mother" | "guardian",
-    id: string | number | null,
-    contactObj?: Contact | null,
-  ): void => {
-    updateDraft(buildParentSelectPatch(role, id, contactObj));
+    try {
+      await updateContact.mutateAsync({
+        id: String(studentDraft.contactId),
+        contact: { ...linkedContact, avatar: avatarUrl },
+      });
+    } catch {
+      notify.error(t("contacts.saveFailed"));
+    }
   };
 
   const errorSummary = useMemo(() => {
@@ -151,7 +151,6 @@ export function useStudentFormActionHandlers({
     confirmDuplicateSave,
     handleContactSelect,
     handleStudentAvatarChange,
-    handleParentSelect,
     errorSummary,
     validationErrorSummary,
     duplicateErrorKeys: DUPLICATE_ERROR_KEYS,

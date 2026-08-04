@@ -2,8 +2,8 @@ import {
   type Student,
   type Contact,
   normalizeStoredStudent,
-  toTitleCase,
   getPrimaryEmail,
+  resolveStudentGuardianLinks,
   type StudentDuplicateReason,
   type AppTranslationKey,
   buildDynamicStudentSchema,
@@ -28,6 +28,7 @@ export interface StudentValidationContext {
   language: string;
   linkedGenderRaw: string;
   linkedDob: string;
+  linkedContact?: Contact | null;
 }
 
 export function validateStudentDraft(
@@ -42,8 +43,10 @@ export function validateStudentDraft(
     context.language,
   );
 
+  const guardians = resolveStudentGuardianLinks(studentDraft, context.linkedContact ?? null);
   const validationDraft = {
     ...studentDraft,
+    ...guardians,
     gender: context.linkedGenderRaw,
     dob: context.linkedDob,
   };
@@ -81,41 +84,23 @@ export interface PrepareStudentSaveInput {
 }
 
 export function prepareStudentForSave(input: PrepareStudentSaveInput): Student {
-  const saved = {
+  return normalizeStoredStudent({
     ...input.data,
     registeredDate: input.data.registeredDate || undefined,
-    fatherName: input.data.fatherName ? toTitleCase(input.data.fatherName) : "",
-    motherName: input.data.motherName ? toTitleCase(input.data.motherName) : "",
-    guardianName: input.data.guardianName ? toTitleCase(input.data.guardianName) : "",
-  };
-
-  return normalizeStoredStudent({
-    ...saved,
     ...(input.studentId != null ? { id: input.studentId } : {}),
     enrolledSessions: input.enrolledSessions || [],
     ...(input.blueprintVersion != null ? { _blueprintId: String(input.blueprintVersion) } : {}),
   }) as Student;
 }
 
-export function getParentExcludeIds(
-  studentDraft: Partial<Student>,
-  selfRole: "father" | "mother" | "guardian",
-): string[] {
-  return [
-    studentDraft.contactId,
-    selfRole !== "father" ? studentDraft.fatherContactId : null,
-    selfRole !== "mother" ? studentDraft.motherContactId : null,
-    selfRole !== "guardian" ? studentDraft.guardianContactId : null,
-  ]
-    .filter(Boolean)
-    .map(String);
-}
-
+/** Exclude the student's guardians (from Contacts relationships) from the student-contact picker. */
 export function buildStudentContactExcludeIds(
   studentDraft: Partial<Student>,
   linkedStudentContactIds: Array<string | number>,
+  linkedContact?: Contact | null,
 ): string[] {
-  const list = [studentDraft.fatherContactId, studentDraft.motherContactId, studentDraft.guardianContactId]
+  const guardians = resolveStudentGuardianLinks(studentDraft, linkedContact ?? null);
+  const list = [guardians.fatherContactId, guardians.motherContactId, guardians.guardianContactId]
     .filter(Boolean)
     .map(String);
   return [...list, ...linkedStudentContactIds.map(String)];

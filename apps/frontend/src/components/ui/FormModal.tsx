@@ -127,7 +127,7 @@ export function FormModal<K extends string = string>({
   }, [open, saving, saveDisabled, saved, onSave]);
 
   const body = (
-    <div ref={containerRef} lang={lang} dir={dir} className="@container h-full">
+    <div ref={containerRef} lang={lang} dir={dir} className="@container h-full" aria-busy={saving || undefined}>
       <FormErrorBanner errors={errors} />
       {hasTabs && activeTab !== undefined && onTabChange ? (
         <FormModalTabs tabs={tabs!} activeTab={activeTab} onTabChange={onTabChange} dir={dir}>

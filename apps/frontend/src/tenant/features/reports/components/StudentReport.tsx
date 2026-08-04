@@ -1,37 +1,60 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { SubTabBar, type SubTab as UINavTab } from '@/components/ui/SubTabBar';
 import { Users, UserCheck, UserX, TrendingUp } from 'lucide-react';
-import { STUDENTS_MODULE_MANIFEST } from '@mms/shared';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useEnrollmentsCollection } from '@/tenant/hooks/collections/enrollments';
 import {
+  ENROLLMENTS_MODULE_MANIFEST,
+  STUDENTS_MODULE_MANIFEST,
+  formatDate,
+  type Enrollment,
+  type Student,
+} from '@mms/shared';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useEnrollmentsPaginated } from '@/tenant/hooks/collections/enrollments';
+import {
+  fetchAllStudentsForQuery,
   useStudentsMetrics,
   useStudentsPaginated,
   useStudentsWidgetAggregates,
 } from '@/tenant/hooks/collections/students';
 import { StatCard } from '@/components/ui/StatCard';
-import { ExportToolbar } from '@/components/ui/ExportToolbar';
+import { ExportToolbar, type ExportColumn } from '@/components/ui/ExportToolbar';
 import { ListPagination } from '@/components/ui/ListPagination';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { studentStatusBadgeConfig } from '@/lib/students/studentStatusUi';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { StudentReportDashboardWidgets } from './StudentReportDashboardWidgets';
 import { StudentReportFilterBanner } from './StudentReportFilterBanner';
 import { StudentReportTables } from './StudentReportTables';
-import type { Student } from '@mms/shared';
+import { fetchAllEnrollmentsForQuery } from './studentReportExport';
 import {
   mapStudentRow,
+  studentMatchesClassFilter,
+  studentMatchesSessionFilter,
   type EnrollmentHistoryItem,
   type ReportStudent,
   type StudentReportProps,
   type StudentReportSubTab,
 } from './studentReportTypes';
-import { formatDate } from '@mms/shared';
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 export type { EnrollmentHistoryItem, ReportStudent, StudentReportFilters, StudentReportProps } from './studentReportTypes';
 
+function mapEnrollmentRow(enrollment: Enrollment): EnrollmentHistoryItem {
+  return {
+    id: enrollment.id,
+    studentName: enrollment.studentName,
+    session: enrollment.sessionName,
+    class: enrollment.className || '—',
+    enrolled: formatDate(enrollment.enrolledDate),
+    status: enrollment.status,
+  };
+}
+
 export default function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
   const { t } = useTranslation();
+  const sessions = useSessionsCollection();
   const [activeSubTab, setActiveSubTab] = useState<StudentReportSubTab>('list');
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const enrollmentStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
@@ -49,7 +72,22 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
     [t],
   );
   const [listPage, setListPage] = useState(1);
+  const [historyPage, setHistoryPage] = useState(1);
   const [reportStatusFilter, setReportStatusFilter] = useState<string | null>(null);
+
+  const sessionFilter = filters.session && filters.session !== 'all' ? filters.session : undefined;
+  const classFilter = filters.class && filters.class !== 'all' ? filters.class : undefined;
+  const needsClientEnrollmentFilter = Boolean(sessionFilter || classFilter);
+  const statusParam = reportStatusFilter || (filters.status !== 'all' ? filters.status : undefined);
+  const searchParam = filters.student || undefined;
+
+  useEffect(() => {
+    setListPage(1);
+  }, [filters.student, filters.status, filters.session, filters.class, reportStatusFilter]);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [filters.student, filters.session]);
 
   const { data: metrics } = useStudentsMetrics();
   const { data: genderAggregates } = useStudentsWidgetAggregates([
@@ -57,44 +95,144 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
     { id: 'female', collection: 'students', operation: 'count', filterField: 'gender', filterOperator: 'equals', filterValue: 'female' },
   ]);
 
-  const { data: studentsPage } = useStudentsPaginated({
+  const studentsPageQuery = useStudentsPaginated({
     page: listPage,
     limit: STUDENTS_MODULE_MANIFEST.defaultPageSize,
-    search: filters.student || undefined,
-    status: reportStatusFilter || (filters.status !== 'all' ? filters.status : undefined),
+    search: searchParam,
+    status: statusParam,
+    enabled: activeSubTab === 'list' && !needsClientEnrollmentFilter,
   });
 
-  const enrollmentRecords = useEnrollmentsCollection();
+  const filteredStudentsQuery = useQuery({
+    queryKey: [
+      'students',
+      'report-filtered',
+      { search: searchParam, status: statusParam, session: sessionFilter, className: classFilter },
+    ] as const,
+    queryFn: async () => {
+      const all = await fetchAllStudentsForQuery({
+        search: searchParam,
+        status: statusParam,
+      });
+      return (all as unknown as Student[]).filter(
+        (student) =>
+          studentMatchesSessionFilter(student, sessionFilter ?? 'all') &&
+          studentMatchesClassFilter(student, classFilter ?? 'all', sessions),
+      );
+    },
+    enabled: activeSubTab === 'list' && needsClientEnrollmentFilter,
+    staleTime: 15_000,
+  });
+
+  const enrollmentsPageQuery = useEnrollmentsPaginated({
+    page: historyPage,
+    limit: ENROLLMENTS_MODULE_MANIFEST.defaultPageSize,
+    search: searchParam,
+    sessionId: sessionFilter,
+    enabled: activeSubTab === 'history',
+  });
+
+  const listError = needsClientEnrollmentFilter
+    ? filteredStudentsQuery.isError
+    : studentsPageQuery.isError;
+  const listRefetch = needsClientEnrollmentFilter
+    ? filteredStudentsQuery.refetch
+    : studentsPageQuery.refetch;
+  const historyError = enrollmentsPageQuery.isError;
 
   const students = useMemo<ReportStudent[]>(() => {
-    const studentRows = (studentsPage?.students ?? []) as unknown as Student[];
-    let filteredStudents = studentRows.map(mapStudentRow);
-    if (filters.class && filters.class !== 'all') {
-      filteredStudents = filteredStudents.filter((student) => student.class === filters.class);
+    if (needsClientEnrollmentFilter) {
+      const rows = filteredStudentsQuery.data ?? [];
+      const start = (listPage - 1) * STUDENTS_MODULE_MANIFEST.defaultPageSize;
+      return rows
+        .slice(start, start + STUDENTS_MODULE_MANIFEST.defaultPageSize)
+        .map((student) => mapStudentRow(student, sessions));
     }
-    return filteredStudents;
-  }, [studentsPage, filters.class]);
+    const studentRows = (studentsPageQuery.data?.students ?? []) as unknown as Student[];
+    return studentRows.map((student) => mapStudentRow(student, sessions));
+  }, [
+    needsClientEnrollmentFilter,
+    filteredStudentsQuery.data,
+    listPage,
+    studentsPageQuery.data,
+    sessions,
+  ]);
 
-  const enrollments = useMemo<EnrollmentHistoryItem[]>(() => {
-    let filteredEnrollments = enrollmentRecords.map((enrollment) => ({
-      id: enrollment.id,
-      studentName: enrollment.studentName,
-      session: enrollment.sessionName,
-      class: enrollment.className || '—',
-      enrolled: formatDate(enrollment.enrolledDate),
-      status: enrollment.status,
-    }));
-    if (filters.student) {
-      filteredEnrollments = filteredEnrollments.filter((enrollment) =>
-        enrollment.studentName.toLowerCase().includes(filters.student.toLowerCase()),
-      );
-    }
-    return filteredEnrollments;
-  }, [enrollmentRecords, filters.student]);
+  const listTotal = needsClientEnrollmentFilter
+    ? (filteredStudentsQuery.data?.length ?? 0)
+    : (studentsPageQuery.data?.total ?? 0);
+  const listHasMore = needsClientEnrollmentFilter
+    ? listPage * STUDENTS_MODULE_MANIFEST.defaultPageSize < listTotal
+    : Boolean(studentsPageQuery.data?.hasMore);
+
+  const enrollments = useMemo<EnrollmentHistoryItem[]>(
+    () => (enrollmentsPageQuery.data?.enrollments ?? []).map(mapEnrollmentRow),
+    [enrollmentsPageQuery.data],
+  );
 
   const male = genderAggregates?.male?.value ?? 0;
   const female = genderAggregates?.female?.value ?? 0;
-  const hasMoreStudents = Boolean(studentsPage?.hasMore);
+
+  const studentExportColumns = useMemo<ExportColumn[]>(
+    () => [
+      { header: t('students.report.colName'), key: 'name' },
+      { header: t('students.report.colGender'), key: 'gender' },
+      { header: t('students.report.colClass'), key: 'class' },
+      { header: t('students.report.colSession'), key: 'session' },
+      { header: t('students.report.colCity'), key: 'city' },
+      { header: t('students.report.colAge'), key: 'age' },
+      { header: t('students.report.colRegistered'), key: 'registered' },
+      { header: t('students.report.colStatus'), key: 'status' },
+    ],
+    [t],
+  );
+
+  const enrollmentExportColumns = useMemo<ExportColumn[]>(
+    () => [
+      { header: t('students.report.colStudent'), key: 'studentName' },
+      { header: t('students.report.colSession'), key: 'session' },
+      { header: t('students.report.colClass'), key: 'class' },
+      { header: t('students.report.colEnrolled'), key: 'enrolled' },
+      { header: t('students.report.colStatus'), key: 'status' },
+    ],
+    [t],
+  );
+
+  const resolveStudentExportRows = async (): Promise<Record<string, unknown>[]> => {
+    let source: Student[];
+    if (needsClientEnrollmentFilter) {
+      source = filteredStudentsQuery.data ?? await filteredStudentsQuery.refetch().then((r) => r.data ?? []);
+    } else {
+      source = (await fetchAllStudentsForQuery({
+        search: searchParam,
+        status: statusParam,
+      })) as unknown as Student[];
+    }
+    return source.map((student) => mapStudentRow(student, sessions) as unknown as Record<string, unknown>);
+  };
+
+  const resolveEnrollmentExportRows = async (): Promise<Record<string, unknown>[]> => {
+    const all = await fetchAllEnrollmentsForQuery({
+      search: searchParam,
+      sessionId: sessionFilter,
+    });
+    return all.map((enrollment) => mapEnrollmentRow(enrollment) as unknown as Record<string, unknown>);
+  };
+
+  if ((activeSubTab === 'list' && listError) || (activeSubTab === 'history' && historyError)) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={t('students.report.loadFailed')}
+          description={t('students.report.loadFailedHint')}
+          onRetry={() => {
+            if (activeSubTab === 'list') void listRefetch();
+            else void enrollmentsPageQuery.refetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -102,7 +240,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
         <StatCard icon={Users} label={t('students.report.totalStudents')} value={metrics?.total ?? 0} color="primary" isActive={!reportStatusFilter} onClick={() => { setReportStatusFilter(null); setActiveSubTab('list'); }} />
         <StatCard icon={UserCheck} label={t('students.report.active')} value={metrics?.active ?? 0} color="green" isActive={reportStatusFilter === 'active'} onClick={() => { setReportStatusFilter(reportStatusFilter === 'active' ? null : 'active'); setActiveSubTab('list'); }} />
         <StatCard icon={UserX} label={t('students.report.inactive')} value={metrics?.inactive ?? 0} color="red" isActive={reportStatusFilter === 'inactive'} onClick={() => { setReportStatusFilter(reportStatusFilter === 'inactive' ? null : 'inactive'); setActiveSubTab('list'); }} />
-        <StatCard icon={TrendingUp} label={t('students.report.genderSplit')} value={`${male}M / ${female}F`} color="blue" onClick={() => { setActiveSubTab('list'); }} />
+        <StatCard icon={TrendingUp} label={t('students.report.genderSplit')} value={t('students.report.genderSplitValue', { male, female })} color="blue" onClick={() => { setActiveSubTab('list'); }} />
       </div>
 
       <StudentReportFilterBanner
@@ -116,25 +254,10 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
 
       <ExportToolbar
         title={activeSubTab === 'list' ? t('students.report.studentListTab') : t('students.report.enrollmentHistoryTab')}
-        data={activeSubTab === 'list' ? students : enrollments}
-        headers={activeSubTab === 'list'
-          ? [
-              t('students.report.colName'),
-              t('students.report.colGender'),
-              t('students.report.colClass'),
-              t('students.report.colSession'),
-              t('students.report.colCity'),
-              t('students.report.colAge'),
-              t('students.report.colRegistered'),
-              t('students.report.colStatus'),
-            ]
-          : [
-              t('students.report.colStudent'),
-              t('students.report.colSession'),
-              t('students.report.colClass'),
-              t('students.report.colEnrolled'),
-              t('students.report.colStatus'),
-            ]}
+        columns={activeSubTab === 'list' ? studentExportColumns : enrollmentExportColumns}
+        rows={activeSubTab === 'list' ? (students as unknown as Record<string, unknown>[]) : (enrollments as unknown as Record<string, unknown>[])}
+        resolveRows={activeSubTab === 'list' ? resolveStudentExportRows : resolveEnrollmentExportRows}
+        moduleId="students"
       />
 
       <div className="space-y-3">
@@ -145,13 +268,24 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
           statusBadgeConfig={statusBadgeConfig}
           enrollmentStatusConfig={enrollmentStatusConfig}
         />
-        {activeSubTab === 'list' && studentsPage && (
+        {activeSubTab === 'list' && (
           <ListPagination
             page={listPage}
-            total={studentsPage.total}
+            total={listTotal}
             limit={STUDENTS_MODULE_MANIFEST.defaultPageSize}
-            hasMore={hasMoreStudents}
+            hasMore={listHasMore}
             onPageChange={setListPage}
+            i18nNamespace="students"
+            variant="range"
+          />
+        )}
+        {activeSubTab === 'history' && enrollmentsPageQuery.data && (
+          <ListPagination
+            page={historyPage}
+            total={enrollmentsPageQuery.data.total}
+            limit={ENROLLMENTS_MODULE_MANIFEST.defaultPageSize}
+            hasMore={enrollmentsPageQuery.data.hasMore}
+            onPageChange={setHistoryPage}
             i18nNamespace="students"
             variant="range"
           />

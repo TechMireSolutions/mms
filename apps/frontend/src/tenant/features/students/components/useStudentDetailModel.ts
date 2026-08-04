@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
+  resolveStudentGuardianLinks,
   type FieldDefinition,
   type Student,
   calcAge,
@@ -8,7 +9,7 @@ import {
   getPrimaryEmail,
 } from "@mms/shared";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { useContactsByIds } from '@/tenant/hooks/collections/contacts';
+import { useContactsByIds, useContactById } from '@/tenant/hooks/collections/contacts';
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -17,11 +18,23 @@ import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
-  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+  const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
   const sessions = useSessionsCollection();
+  const { data: primaryContact } = useContactById(
+    student.contactId != null ? String(student.contactId) : undefined,
+  );
+  const guardians = useMemo(
+    () => resolveStudentGuardianLinks(student, primaryContact ?? null),
+    [student, primaryContact],
+  );
   const linkedIds = useMemo(
-    () => [student.contactId, student.fatherContactId, student.motherContactId, student.guardianContactId],
-    [student.contactId, student.fatherContactId, student.motherContactId, student.guardianContactId],
+    () => [
+      student.contactId,
+      guardians.fatherContactId,
+      guardians.motherContactId,
+      guardians.guardianContactId,
+    ],
+    [student.contactId, guardians.fatherContactId, guardians.motherContactId, guardians.guardianContactId],
   );
   const contacts = useContactsByIds(linkedIds);
   const contactList = contacts.data ?? [];
@@ -72,10 +85,12 @@ export function useStudentDetailModel(student: Student) {
     });
   }, [fields, enabledTabIds, tabOrderMap]);
 
-  const studentContact = contactList.find((contact) => String(contact.id) === String(student.contactId));
-  const fatherContact = contactList.find((contact) => String(contact.id) === String(student.fatherContactId));
-  const motherContact = contactList.find((contact) => String(contact.id) === String(student.motherContactId));
-  const guardianContact = contactList.find((contact) => String(contact.id) === String(student.guardianContactId));
+  const studentContact = contactList.find((contact) => String(contact.id) === String(student.contactId))
+    ?? primaryContact
+    ?? undefined;
+  const fatherContact = contactList.find((contact) => String(contact.id) === String(guardians.fatherContactId));
+  const motherContact = contactList.find((contact) => String(contact.id) === String(guardians.motherContactId));
+  const guardianContact = contactList.find((contact) => String(contact.id) === String(guardians.guardianContactId));
 
   const age = calcAge(student.dob);
   const enrolledSessionDetails = sessions.filter((session) => student.enrolledSessions?.includes(session.id));
@@ -89,11 +104,11 @@ export function useStudentDetailModel(student: Student) {
 
   const hasVisibleDetailFields = sortedEnabledFields.some((field) =>
     field.key === "fatherLink"
-      ? (fatherContact || student.fatherName)
+      ? (fatherContact || guardians.fatherName)
       : field.key === "motherLink"
-        ? (motherContact || student.motherName)
+        ? (motherContact || guardians.motherName)
         : field.key === "guardianLink"
-          ? (guardianContact || student.guardianName)
+          ? (guardianContact || guardians.guardianName)
           : true,
   );
 
@@ -103,11 +118,15 @@ export function useStudentDetailModel(student: Student) {
     messagingTarget,
     openComposer,
     closeComposer,
+    canWriteMessaging,
     sortedEnabledFields,
     studentContact,
     fatherContact,
     motherContact,
     guardianContact,
+    fatherName: fatherContact?.name || guardians.fatherName,
+    motherName: motherContact?.name || guardians.motherName,
+    guardianName: guardianContact?.name || guardians.guardianName,
     age,
     enrolledSessionDetails,
     primaryPhone,

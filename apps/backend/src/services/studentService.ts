@@ -3,8 +3,10 @@ import {
   computeNextGrNumber,
   backfillMissingStudentGrNumbers,
   hydrateStudentFromContacts,
+  resolveStudentGuardianLinks,
   normalizeStudentsSettings,
   todayISO,
+  type Contact,
   type StudentGrNumberSettings,
   type StudentDuplicateCheckInput,
   type StudentsListQuery,
@@ -17,8 +19,6 @@ import { loadContactsByIds } from './contactService.js';
 import { fetchObject } from './dbSyncService.js';
 import {
   createGenericRelationalService,
-  createContactHydratedService,
-  hydrateRecordsFromContacts,
   type GenericServiceOptions,
 } from './genericRelationalService.js';
 import {
@@ -43,6 +43,63 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import { broadcastTenantUpdate } from './websocketService.js';
 
 const STUDENTS_SETTINGS_KEY = 'students_settings';
+
+type ContactWithRelationships = Contact & {
+  relationshipContacts?: Array<{ contactId?: string | number; relationship?: string; name?: string }>;
+  relationships?: Array<{ contactId?: string | number; relationship?: string; name?: string }>;
+};
+
+/**
+ * Two-pass hydrate: load primary (+ legacy parent) contacts, derive guardians from
+ * Contact relationships, then load any newly discovered guardian contact ids.
+ */
+async function hydrateStudentsFromContacts(rows: Student[]): Promise<Student[]> {
+  if (rows.length === 0) return [];
+
+  const firstPassIds = new Set<string>();
+  for (const row of rows) {
+    for (const id of [row.contactId, row.fatherContactId, row.motherContactId, row.guardianContactId]) {
+      if (id != null && id !== '') firstPassIds.add(String(id));
+    }
+  }
+
+  let contacts = (
+    firstPassIds.size === 0 ? [] : await loadContactsByIds([...firstPassIds])
+  ) as ContactWithRelationships[];
+  const contactById = new Map(contacts.map((contact) => [String(contact.id), contact]));
+
+  const withDerived = rows.map((row) => {
+    const primary =
+      row.contactId != null && row.contactId !== ''
+        ? contactById.get(String(row.contactId))
+        : undefined;
+    const guardians = resolveStudentGuardianLinks(row, primary ?? null);
+    return {
+      ...row,
+      fatherContactId: guardians.fatherContactId,
+      motherContactId: guardians.motherContactId,
+      guardianContactId: guardians.guardianContactId,
+      fatherName: guardians.fatherName,
+      motherName: guardians.motherName,
+      guardianName: guardians.guardianName,
+    } as Student;
+  });
+
+  const secondPassIds = new Set<string>();
+  for (const row of withDerived) {
+    for (const id of [row.fatherContactId, row.motherContactId, row.guardianContactId]) {
+      if (id != null && id !== '' && !contactById.has(String(id))) {
+        secondPassIds.add(String(id));
+      }
+    }
+  }
+  if (secondPassIds.size > 0) {
+    const more = (await loadContactsByIds([...secondPassIds])) as ContactWithRelationships[];
+    contacts = [...contacts, ...more];
+  }
+
+  return withDerived.map((row) => hydrateStudentFromContacts(row, contacts as never));
+}
 
 type StudentRepo = GenericServiceOptions<StudentRecord>['repo'];
 const crud = createGenericRelationalService<StudentRecord>({
@@ -88,23 +145,30 @@ export async function bulkUpdateStudentStatus(
   return { succeeded, failed: ids.length - succeeded };
 }
 
-const hydrated = createContactHydratedService<Student, Student>({
-  listByWorkspaceFn: listStudentsByWorkspace,
-  findByIdFn: findStudentById,
-  findByIdsFn: findStudentsByIds,
-  collectContactIdsFn: (row) => [
-    row.contactId,
-    row.fatherContactId,
-    row.motherContactId,
-    row.guardianContactId,
-  ],
-  loadContactsByIdsFn: loadContactsByIds,
-  hydrateFn: (row, contacts) => hydrateStudentFromContacts(row, contacts as never),
-});
+export async function loadStudents(options?: { includeDeleted?: boolean }): Promise<Student[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  const raw = await listStudentsByWorkspace(tenant, {
+    deleted: options?.includeDeleted ? 'deleted' : 'active',
+  });
+  return hydrateStudentsFromContacts(raw as Student[]);
+}
 
-export const loadStudents = hydrated.loadAll;
-export const loadStudentById = hydrated.loadById;
-export const loadStudentsByIds = hydrated.loadByIds;
+export async function loadStudentById(id: string): Promise<Student | null> {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  const row = await findStudentById(tenant, id);
+  if (!row) return null;
+  const [hydrated] = await hydrateStudentsFromContacts([row as Student]);
+  return hydrated ?? null;
+}
+
+export async function loadStudentsByIds(ids: string[]): Promise<Student[]> {
+  const tenant = getRequestTenant();
+  if (!tenant || ids.length === 0) return [];
+  const raw = await findStudentsByIds(tenant, ids);
+  return hydrateStudentsFromContacts(raw as Student[]);
+}
 
 export async function loadStudentsWidgetAggregates(
   queries: StudentsWidgetQuery[],
@@ -120,20 +184,9 @@ export async function loadStudentsPage(query: StudentsListQuery) {
     return { students: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 50, hasMore: false };
   }
   const page = await listStudentsPage(tenant, query);
-  const hydratedStudents = await hydrateRecordsFromContacts(
-    page.students,
-    (row) => [
-      row.contactId,
-      row.fatherContactId,
-      row.motherContactId,
-      row.guardianContactId,
-    ],
-    (row, contacts) => hydrateStudentFromContacts(row, contacts as never),
-    loadContactsByIds,
-  );
   return {
     ...page,
-    students: hydratedStudents,
+    students: await hydrateStudentsFromContacts(page.students),
   };
 }
 

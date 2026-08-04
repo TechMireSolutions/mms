@@ -9,9 +9,20 @@ import {
 describe("moduleFieldSetupDefaults", () => {
   it("keeps student setup tabs system-owned with matching field seeds", () => {
     expect(STUDENT_TAB_REGISTRY.every((tab) => tab.isSystem)).toBe(true);
+    expect(STUDENT_TAB_REGISTRY.map((tab) => tab.key)).toEqual(["basic", "registration"]);
     expect(Object.keys(INITIAL_STUDENT_FIELD_SEED).sort()).toEqual(
       STUDENT_TAB_REGISTRY.map((tab) => tab.key).sort(),
     );
+    expect(INITIAL_STUDENT_FIELD_SEED.basic?.map((field) => field.key)).toEqual([
+      "gender",
+      "dob",
+      "fatherLink",
+      "motherLink",
+      "guardianLink",
+    ]);
+    expect(INITIAL_STUDENT_FIELD_SEED.registration?.map((field) => field.key)).toEqual([
+      "registeredDate",
+    ]);
   });
 
   it("seeds attendance status as a required select field", () => {

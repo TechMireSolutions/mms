@@ -20,7 +20,7 @@ interface StudentContactSectionProps {
   dobError?: string;
   getFieldError: StudentFieldErrorGetter;
   onContactSelect: (id: string | number | null) => void;
-  onStudentAvatarChange: (avatarUrl: string) => void;
+  onStudentAvatarChange: (avatarUrl: string) => void | Promise<void>;
 }
 
 export function StudentContactSection({
@@ -57,18 +57,19 @@ export function StudentContactSection({
             emptyTitle={t("contacts.picker.emptyTitle")}
             emptyHint={t("contacts.picker.emptyHint")}
             error={!!getFieldError("contactId")}
+            id="contactId"
           />
           <FieldError message={getFieldError("contactId")} />
 
           {contactId && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
-                  <ContactProfileValue
-                    label={t("students.gender")}
-                    value={linkedGenderLabel}
-                    icon={GenderGlyph}
-                    iconClassName={getGenderIconClass(linkedGenderRaw)}
-                    error={genderError}
-                  />
+              <ContactProfileValue
+                label={t("students.gender")}
+                value={linkedGenderLabel}
+                icon={GenderGlyph}
+                iconClassName={getGenderIconClass(linkedGenderRaw)}
+                error={genderError}
+              />
               <ContactProfileValue label={t("students.form.fieldDob")} value={linkedDob} icon={Calendar} error={dobError} />
             </div>
           )}

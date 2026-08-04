@@ -17,6 +17,7 @@ interface StudentListSelectionProps {
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
+  canWriteMessaging?: boolean;
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   isFieldEnabled: (key: string) => boolean;
   onSelectOne: (id: string) => void;
@@ -24,11 +25,15 @@ interface StudentListSelectionProps {
   onViewStudent: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: string, deletionReason?: string) => void;
-  onRestore?: (id: string) => void;
+  onRestore?: (id: string) => void | Promise<void>;
 }
 
 export interface StudentListCardsProps extends StudentListSelectionProps {
   paginatedStudents: Student[];
+  onOpenComposer?: (
+    mode: "whatsapp" | "sms" | "email",
+    recipients: StudentListMessagingRecipient[],
+  ) => void;
 }
 
 export interface StudentListTableProps extends StudentListSelectionProps {

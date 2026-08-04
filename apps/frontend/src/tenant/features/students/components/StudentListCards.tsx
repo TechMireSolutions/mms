@@ -16,6 +16,7 @@ export function StudentListCards({
   showDeleted,
   canWrite,
   canDelete,
+  canWriteMessaging = false,
   statusBadgeConfig,
   isFieldEnabled,
   onSelectOne,
@@ -24,6 +25,7 @@ export function StudentListCards({
   onEdit,
   onDelete,
   onRestore,
+  onOpenComposer,
 }: StudentListCardsProps) {
   const { t } = useTranslation();
 
@@ -65,6 +67,7 @@ export function StudentListCards({
                 showDeleted={showDeleted}
                 canWrite={canWrite}
                 canDelete={canDelete}
+                includeMessaging={canWriteMessaging && !showDeleted}
                 triggerClassName="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 contentClassName="w-40"
                 iconClassName="w-3.5 h-3.5"
@@ -72,6 +75,7 @@ export function StudentListCards({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onRestore={onRestore}
+                onOpenComposer={onOpenComposer}
               />
             </div>
 

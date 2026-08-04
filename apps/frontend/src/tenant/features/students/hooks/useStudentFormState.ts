@@ -8,7 +8,10 @@ import { getInitialStudentDraft } from "@/tenant/features/students/components/st
 import type { StudentStatusSelectOption } from "@/tenant/features/students/components/StudentFormSectionShared";
 import { useStudentFormLinkedData } from "@/tenant/features/students/hooks/useStudentFormLinkedData";
 import { useStudentFormActionHandlers } from "@/tenant/features/students/hooks/useStudentFormActionHandlers";
+import { resolveStudentFormModalTabs, normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
+import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import {
+  type FieldDefinition,
   type Student,
   resolveStudentStatuses,
   DEFAULT_STUDENT_ENABLED_TABS,
@@ -32,7 +35,11 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<import("@mms/shared").StudentDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
   const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
+  const [activeTab, setActiveTab] = useState("basic");
   const grManuallyEdited = useRef(false);
+
+  const formInstanceId = String(student?.id ?? "new");
+  const fields = (settings.fields || {}) as Record<string, FieldDefinition[]>;
 
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const statusSelectOptions = useMemo((): StudentStatusSelectOption[] => {
@@ -48,6 +55,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   useEffect(() => {
     setStudentDraft(getInitialStudentDraft(student));
     setValidationErrors([]);
+    setActiveTab("basic");
     grManuallyEdited.current = false;
   }, [student]);
 
@@ -56,6 +64,23 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   };
 
   const enabledTabs = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
+
+  const visibleTabs = useMemo(
+    () =>
+      resolveStudentFormModalTabs(enabledTabs).map((tabItem) => ({
+        key: tabItem.key,
+        icon: tabItem.icon,
+        label: resolveRegistryLabel(tabItem, t),
+      })),
+    [enabledTabs, t],
+  );
+
+  useEffect(() => {
+    const normalized = normalizeStudentFormModalTab(activeTab);
+    if (normalized !== activeTab || !visibleTabs.some((tabItem) => tabItem.key === normalized)) {
+      setActiveTab(normalized === "registration" ? "registration" : "basic");
+    }
+  }, [activeTab, visibleTabs]);
 
   const getFieldError = (fieldId: string) => {
     const fieldError = validationErrors.find((validationError) => validationError.fieldId === fieldId);
@@ -69,9 +94,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     linkedDob,
     nextGrNumber,
     handleGrNumberChange,
-    fatherExcludeIds,
-    motherExcludeIds,
-    guardianExcludeIds,
     excludeIds,
     isGrAutoAssigned,
   } = useStudentFormLinkedData({
@@ -89,6 +111,10 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
       updateDraft({ grNumber: nextGrNumber });
     }
   }, [nextGrNumber, student?.id, studentDraft.grNumber]);
+
+  const handleValidationTab = (tabId: string, _fieldId: string) => {
+    setActiveTab(normalizeStudentFormModalTab(tabId));
+  };
 
   const actions = useStudentFormActionHandlers({
     student,
@@ -111,6 +137,8 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     setPendingSaveData,
     setTypedDuplicateReason,
     setDuplicateConfirmOpen,
+    formInstanceId,
+    onValidationTab: handleValidationTab,
   });
 
   return {
@@ -122,6 +150,11 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     statusBadgeConfig,
     statusSelectOptions,
     enabledTabs,
+    fields,
+    formInstanceId,
+    activeTab,
+    setActiveTab,
+    visibleTabs,
     getFieldError,
     linkedContact,
     linkedGenderRaw,
@@ -130,9 +163,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     duplicateConfirmOpen,
     typedDuplicateReason,
     excludeIds,
-    fatherExcludeIds,
-    motherExcludeIds,
-    guardianExcludeIds,
     isGrAutoAssigned,
     isFieldEnabled,
     handleGrNumberChange,

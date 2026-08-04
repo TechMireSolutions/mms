@@ -149,6 +149,8 @@ export * from './usersModuleManifest.js';
 export * from './moduleCommandMetrics.js';
 export * from './moduleColumnPreferences.js';
 export * from './studentUtils.js';
+export * from './studentFormCustomFields.js';
+export * from './studentGuardianFromContacts.js';
 export * from './contactLinkPolicy.js';
 export * from './linkedCollectionUtils.js';
 export * from './permissions.js';
