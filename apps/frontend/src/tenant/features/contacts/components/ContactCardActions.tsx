@@ -3,6 +3,7 @@ import { Eye } from "lucide-react";
 import { type Contact } from "@mms/shared";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 
@@ -43,6 +44,9 @@ export function ContactCardActions({
   onEmail,
 }: ContactCardActionsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+  const scaleHover = reducedMotion ? 1 : 1.02;
+  const scaleTap = reducedMotion ? 1 : 0.98;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 pt-3 dark:border-border/20">
@@ -61,8 +65,8 @@ export function ContactCardActions({
         <MotionButton
           type="button"
           variant="outline"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ scale: scaleHover }}
+          whileTap={{ scale: scaleTap }}
           onClick={() => onView?.(contact)}
           className="flex items-center min-h-11 h-auto gap-1.5 px-3 py-2 rounded-xl border border-border/50 dark:border-border/30 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:border-border transition-colors cursor-pointer shadow-none"
           aria-label={`${t("contacts.table.viewProfile")} - ${displayName}`}

@@ -48,7 +48,7 @@ export function ContactCardMessagingButtons({
           href={formatTelHref(phone)}
           whileHover={{ scale: scaleHover }}
           whileTap={{ scale: scaleTap }}
-          className={`${messagingBtnClass} inline-flex items-center justify-center border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 shadow-xs`}
+          className={`${messagingBtnClass} inline-flex items-center justify-center border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`}
           title={t("contacts.detail.callContact", { name: displayName })}
           aria-label={t("contacts.detail.callContact", { name: displayName })}
         >

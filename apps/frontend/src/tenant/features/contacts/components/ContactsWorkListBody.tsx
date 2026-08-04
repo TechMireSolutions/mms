@@ -5,7 +5,7 @@ import type { Contact } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { TableSkeleton } from "@/components/ui/LoadingState";
+import { TableSkeleton, CardSkeleton } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
@@ -100,7 +100,11 @@ export function ContactsWorkListBody({
           role="status"
           aria-live="polite"
         >
-          <TableSkeleton rows={6} cols={tableColumns.length} />
+          {viewMode === "cards" ? (
+            <CardSkeleton count={6} className="grid-cols-1 sm:grid-cols-2" />
+          ) : (
+            <TableSkeleton rows={6} cols={tableColumns.length} />
+          )}
           <span className="sr-only">{t("common.loading")}</span>
         </motion.div>
       ) : (

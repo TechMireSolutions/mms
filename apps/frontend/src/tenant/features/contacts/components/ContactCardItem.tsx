@@ -17,6 +17,7 @@ import {
   ContactCardMetadataGrid,
 } from "@/tenant/features/contacts/components/ContactCardSections";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
@@ -24,6 +25,11 @@ export { hasContactCardColumnData } from "@/tenant/features/contacts/components/
 export const contactCardItemVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
+};
+
+const contactCardItemVariantsReduced = {
+  hidden: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0 } },
 };
 
 export interface ContactCardItemProps {
@@ -76,6 +82,7 @@ export function ContactCardItem({
   onEmail,
 }: ContactCardItemProps): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const displayName = getDisplayName(contact);
   const { phone, countryCode, phoneDisplay } = resolveContactPhoneDisplay(
     contact,
@@ -87,19 +94,23 @@ export function ContactCardItem({
 
   return (
     <motion.div
-      layout
-      variants={contactCardItemVariants}
-      whileHover={{ y: -4, scale: 1.01, transition: { duration: 0.2 } }}
+      layout={!reducedMotion}
+      variants={reducedMotion ? contactCardItemVariantsReduced : contactCardItemVariants}
+      whileHover={
+        reducedMotion
+          ? undefined
+          : { y: -4, scale: 1.01, transition: { duration: 0.2 } }
+      }
       role="region"
       aria-label={displayName}
-      className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 ps-5.5 space-y-4 transition-all duration-300 shadow-xs hover:shadow-md ${isSelected
+      className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 ps-5.5 space-y-4 shadow-xs ${reducedMotion ? "" : "transition-all duration-300 hover:shadow-md"} ${isSelected
         ? "border-primary/50 bg-primary/[0.025] dark:bg-primary/[0.03] shadow-xs shadow-primary/5"
         : "border-border/50 dark:border-border/30 hover:border-primary/35 dark:hover:border-primary/20"
       }`}
     >
       <div
         aria-hidden="true"
-        className={`absolute start-0 top-0 bottom-0 w-1.5 ${getContactAccentBarClass(isSelected, contact.gender)} transition-colors duration-300`}
+        className={`absolute start-0 top-0 bottom-0 w-1.5 ${getContactAccentBarClass(isSelected, contact.gender)} ${reducedMotion ? "" : "transition-colors duration-300"}`}
       />
 
       <ContactCardHeader
@@ -108,6 +119,7 @@ export function ContactCardItem({
         displayName={displayName}
         onSelect={onSelect}
         onView={onView}
+        reducedMotion={reducedMotion}
       />
 
       <ContactCardInfoPills

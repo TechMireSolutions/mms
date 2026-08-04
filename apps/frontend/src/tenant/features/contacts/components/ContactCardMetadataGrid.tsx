@@ -94,7 +94,7 @@ export function ContactCardDeletedBanner({
   return (
     <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-xs text-destructive text-start">
       <div className="flex items-center gap-1.5 font-bold">
-        <AlertTriangle className="w-3.5 h-3.5" />
+        <AlertTriangle aria-hidden="true" className="w-3.5 h-3.5" />
         <span>{t("contacts.table.deletedAt", { date: formatDate(contact.deletedAt) })}</span>
       </div>
       {contact.deletionReason && (

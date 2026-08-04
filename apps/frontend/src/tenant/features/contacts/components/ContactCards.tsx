@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { type Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
@@ -59,6 +60,7 @@ export default function ContactCards({
   allSelected = false,
 }: ContactCardsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const { prefs, countryCodesMap, countryCodes } = useContactConfig();
 
   const visibleColumnIds = useMemo(
@@ -83,11 +85,13 @@ export default function ContactCards({
       {onSelectAll && contacts.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 bg-card/65 backdrop-blur-md rounded-2xl border border-border/40 mb-3.5 shadow-xs">
           <div className="flex items-center gap-2.5">
-            <Checkbox
-              checked={allSelected ? true : (selected.length > 0 ? "indeterminate" : false)}
-              onCheckedChange={onSelectAll}
-              id="select-all-cards"
-            />
+            <div className="flex min-h-11 min-w-11 items-center justify-center">
+              <Checkbox
+                checked={allSelected ? true : (selected.length > 0 ? "indeterminate" : false)}
+                onCheckedChange={onSelectAll}
+                id="select-all-cards"
+              />
+            </div>
             <label htmlFor="select-all-cards" className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors">
               {allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
             </label>
@@ -99,9 +103,9 @@ export default function ContactCards({
       )}
 
       <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        variants={reducedMotion ? undefined : containerVariants}
+        initial={reducedMotion ? false : "hidden"}
+        animate={reducedMotion ? undefined : "visible"}
         className="grid grid-cols-1 sm:grid-cols-2 gap-4"
       >
         {contacts.map((contact) => (

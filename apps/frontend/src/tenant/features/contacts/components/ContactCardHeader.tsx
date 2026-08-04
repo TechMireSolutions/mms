@@ -11,18 +11,20 @@ export function ContactCardHeader({
   displayName,
   onSelect,
   onView,
+  reducedMotion = false,
 }: {
   contact: Contact;
   isSelected: boolean;
   displayName: string;
   onSelect: (id: string | number) => void;
   onView?: (contact: Contact) => void;
+  reducedMotion?: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
     <div className="flex gap-3 items-start ms-1">
-      <div className="flex items-center justify-center flex-shrink-0 pt-1">
+      <div className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelect(contact.id)}
@@ -40,7 +42,9 @@ export function ContactCardHeader({
           id={contact.id}
           name={displayName}
           avatar={contact.avatar}
-          className="w-11 h-11 rounded-2xl text-sm shadow-inner group-hover:scale-105 transition-transform duration-200"
+          className={`w-11 h-11 rounded-2xl text-sm shadow-inner${
+            reducedMotion ? "" : " group-hover:scale-105 transition-transform duration-200"
+          }`}
         />
         <div className="min-w-0 flex-1">
           <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
