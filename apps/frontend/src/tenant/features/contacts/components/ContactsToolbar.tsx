@@ -3,9 +3,9 @@ import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { ContactsQuickFilter } from "@mms/shared";
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import {
   ContactsClearFiltersButton,
-  ContactsDeletedToggleButton,
   ContactsFilterMenuButton,
 } from "@/tenant/features/contacts/components/ContactsToolbarControls";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
@@ -101,10 +101,16 @@ export default function ContactsToolbar({
           )}
 
           {canViewDeleted && onShowDeletedChange && (
-            <ContactsDeletedToggleButton
-              showDeletedArchives={showDeletedArchives}
-              onShowDeletedChange={onShowDeletedChange}
-              t={t}
+            <ModuleTrashToggle
+              showDeleted={showDeletedArchives}
+              onToggle={() => onShowDeletedChange(!showDeletedArchives)}
+              showActiveLabel={t("contacts.showActive")}
+              showDeletedLabel={t("contacts.showDeleted")}
+              className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
+                showDeletedArchives
+                  ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
             />
           )}
 

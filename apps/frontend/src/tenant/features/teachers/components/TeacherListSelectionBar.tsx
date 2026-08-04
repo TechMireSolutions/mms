@@ -1,23 +1,15 @@
 import type { ReactElement } from 'react';
-import { ChevronDown, Tag } from 'lucide-react';
 import {
   BulkSelectionBar,
-  bulkSelectionActionClassName,
 } from '@/components/ui/BulkSelectionBar';
 import {
   BulkSelectionDeleteAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
+  BulkSelectionStatusAction,
   type BulkSelectionMessageChannel,
 } from '@/components/ui/BulkSelectionActions';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import { type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Teacher } from '@/lib/data/teachersData';
 
@@ -91,30 +83,15 @@ export function TeacherListSelectionBar({
             />
           )}
           {canWrite && onBulkStatusChange && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={bulkSelectionActionClassName}
-                >
-                  <Tag className="w-3.5 h-3.5 text-primary" /> {t('teachers.bulkStatus')} <ChevronDown className="w-3 h-3 ms-0.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                {Object.keys(statusConfig).map((statusVal) => (
-                  <DropdownMenuItem
-                    key={statusVal}
-                    onClick={() => {
-                      onBulkStatusChange(selectedIds, statusVal);
-                      onClearSelection();
-                    }}
-                  >
-                    <StatusBadge status={statusVal} config={statusConfig} />
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <BulkSelectionStatusAction
+              label={t('teachers.bulkStatus')}
+              statuses={Object.keys(statusConfig)}
+              statusBadgeConfig={statusConfig}
+              onSelectStatus={(statusVal) => {
+                onBulkStatusChange(selectedIds, statusVal);
+                onClearSelection();
+              }}
+            />
           )}
           {canDelete && (
             <>

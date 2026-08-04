@@ -43,6 +43,9 @@ export const WORK_SURFACE =
 export const WORK_SURFACE_INNER =
   'rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm';
 
+/** Sticky Work directory table header cells (checkbox / frozen name cols). */
+export const WORK_STICKY_HEAD = 'bg-muted/95 backdrop-blur-md';
+
 /** Detail drawer / profile section headings. */
 export const DETAIL_SECTION_TITLE =
   'text-xs font-black text-muted-foreground uppercase tracking-widest';

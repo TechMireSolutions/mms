@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TableCell } from "@/components/ui/table";
 import { getDisplayName, Contact, type ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
@@ -70,16 +71,16 @@ export const ContactTableRow = memo(function ContactTableRow({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.1 }}
-      className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/[0.02]" : ""}`}
+      className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
     >
-      <td className="w-12 min-w-12 px-4 py-3 sticky start-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-e border-border/30">
+      <TableCell className="w-12 min-w-12 px-4 py-3 sticky start-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-e border-border/30">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelect(contact.id)}
           aria-label={t("contacts.table.selectContact", { name: displayName })}
           className="cursor-pointer"
         />
-      </td>
+      </TableCell>
       {columns.map((col) =>
         renderContactTableCell({
           col,
@@ -97,7 +98,7 @@ export const ContactTableRow = memo(function ContactTableRow({
           onWhatsApp,
         }),
       )}
-      <td className="px-4 py-3">
+      <TableCell className="px-4 py-3">
         <ContactActionMenu
           contact={contact}
           onView={onView}
@@ -111,7 +112,7 @@ export const ContactTableRow = memo(function ContactTableRow({
           canWrite={canWrite}
           canDelete={canDelete}
         />
-      </td>
+      </TableCell>
     </motion.tr>
   );
 });

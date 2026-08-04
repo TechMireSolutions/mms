@@ -1,6 +1,5 @@
 import { RotateCcw, SlidersHorizontal } from "lucide-react";
 import { toTitleCase } from "@mms/shared";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -12,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ModuleFiltersMenuTrigger } from "@/components/ui/ModuleFiltersMenuButton";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -41,23 +41,11 @@ export function StudentsFilterMenuButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-            activeFilterCount > 0
-              ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
-              : "border-border bg-card text-foreground"
-          }`}
-        >
-          <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{t("students.filters")}</span>
-          {activeFilterCount > 0 && (
-            <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-              {activeFilterCount}
-            </span>
-          )}
-        </Button>
+        <ModuleFiltersMenuTrigger
+          label={t("students.filters")}
+          activeCount={activeFilterCount}
+          icon={SlidersHorizontal}
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
         <DropdownMenuLabel className="text-xs text-foreground">

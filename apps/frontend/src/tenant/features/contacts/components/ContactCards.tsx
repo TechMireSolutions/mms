@@ -6,6 +6,7 @@ import { buildContactsMap } from "@/lib/contacts/contactI18n";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Checkbox } from "@/components/ui/checkbox";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
 
@@ -70,9 +71,6 @@ export default function ContactCards({
 
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
 
-  const showPhonePill = !columns.length || visibleColumnIds.has("phone");
-  const showEmailPill = !columns.length || visibleColumnIds.has("email");
-
   const otherColumns = useMemo(
     () => columns.filter(
       (col) => col.id !== "name" && col.id !== "phone" && col.id !== "email",
@@ -83,7 +81,7 @@ export default function ContactCards({
   return (
     <>
       {onSelectAll && contacts.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 bg-card/65 backdrop-blur-md rounded-2xl border border-border/40 mb-3.5 shadow-xs">
+        <div className={`${WORK_SURFACE} mb-3.5 flex items-center justify-between border-border/40 px-4 py-3`}>
           <div className="flex items-center gap-2.5">
             <div className="flex min-h-11 min-w-11 items-center justify-center">
               <Checkbox
@@ -118,8 +116,6 @@ export default function ContactCards({
             countryCodes={countryCodes}
             contactsMap={contactsMap}
             allContacts={allContacts}
-            showPhonePill={showPhonePill}
-            showEmailPill={showEmailPill}
             otherColumns={otherColumns}
             visibleColumnIds={visibleColumnIds}
             showArchived={showArchived}

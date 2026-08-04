@@ -1,4 +1,4 @@
-import { ChevronDown, Download, Tag } from "lucide-react";
+import { Download } from "lucide-react";
 import type { ReactElement } from "react";
 import {
   BulkSelectionBar,
@@ -8,15 +8,10 @@ import {
   BulkSelectionDeleteAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
+  BulkSelectionStatusAction,
 } from "@/components/ui/BulkSelectionActions";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
@@ -94,30 +89,15 @@ export function StudentListSelectionBar({
           )}
 
           {canWrite && onBulkStatusChange && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={bulkSelectionActionClassName}
-                >
-                  <Tag className="w-3.5 h-3.5 text-primary" /> {t("students.columns.status")} <ChevronDown className="w-3 h-3 ms-0.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                {studentStatusOptions.map((statusVal) => (
-                  <DropdownMenuItem
-                    key={statusVal}
-                    onClick={() => {
-                      onBulkStatusChange(selectedIds, statusVal);
-                      onClearSelection();
-                    }}
-                  >
-                    <StatusBadge status={statusVal} size="sm" config={statusBadgeConfig} />
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <BulkSelectionStatusAction
+              label={t("students.columns.status")}
+              statuses={studentStatusOptions}
+              statusBadgeConfig={statusBadgeConfig}
+              onSelectStatus={(statusVal) => {
+                onBulkStatusChange(selectedIds, statusVal);
+                onClearSelection();
+              }}
+            />
           )}
 
           {canDelete && (

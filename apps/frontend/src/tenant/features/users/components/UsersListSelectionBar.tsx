@@ -1,7 +1,13 @@
 import type { JSX } from 'react';
-import { Mail, MessageCircle, MessageSquare, RotateCcw, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { SystemUser } from '@mms/shared';
 import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
+import {
+  BulkSelectionDeleteAction,
+  BulkSelectionMessagingActions,
+  BulkSelectionRestoreAction,
+  type BulkSelectionMessageChannel,
+} from '@/components/ui/BulkSelectionActions';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -30,7 +36,7 @@ export function UsersListSelectionBar({
 }: UsersListSelectionBarProps): JSX.Element {
   const { t } = useTranslation();
 
-  const handleBulkMessage = (channel: UsersListMessageChannel): void => {
+  const handleChannel = (channel: BulkSelectionMessageChannel): void => {
     onMessage?.(channel, selectedUsers);
   };
 
@@ -47,48 +53,33 @@ export function UsersListSelectionBar({
       }
     >
       {onMessage && !showDeleted && (
-        <>
-          <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('email')}>
-            <Mail className="h-3 w-3 me-1 text-primary" />
-            {t('users.sendEmail')}
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('whatsapp')}>
-            <MessageCircle className="h-3 w-3 me-1 text-success" />
-            {t('messaging.channel.whatsapp')}
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={() => handleBulkMessage('sms')}>
-            <MessageSquare className="h-3 w-3 me-1 text-info" />
-            {t('users.sendSms')}
-          </Button>
-        </>
+        <BulkSelectionMessagingActions
+          onChannel={handleChannel}
+          labels={{
+            whatsapp: t('messaging.channel.whatsapp'),
+            sms: t('users.sendSms'),
+            email: t('users.sendEmail'),
+          }}
+        />
       )}
       {canDelete && (
         showDeleted ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
+          <BulkSelectionRestoreAction
+            label={t('users.trash.bulkRestore')}
             onClick={() => {
               onBulkRestore(selectedIds);
               onClearSelection();
             }}
-          >
-            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-            {t('users.trash.bulkRestore')}
-          </Button>
+          />
         ) : (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
+          <BulkSelectionDeleteAction
+            label={t('users.trash.bulkDelete')}
             onClick={() => {
               onBulkDelete(selectedIds);
               onClearSelection();
             }}
-          >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden />
-            {t('users.trash.bulkDelete')}
-          </Button>
+            icon={Trash2}
+          />
         )
       )}
     </BulkSelectionBar>

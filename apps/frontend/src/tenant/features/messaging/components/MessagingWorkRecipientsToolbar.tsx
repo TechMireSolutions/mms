@@ -158,7 +158,12 @@ export function MessagingWorkRecipientsToolbar({
             <CheckSquare className="me-1 h-3.5 w-3.5 text-warning" /> {t('messaging.selectAllValidEmail')}
           </Button>
           {selectedCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={onClearSelection} className="text-xs text-destructive">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearSelection}
+              className="text-xs font-semibold text-destructive hover:bg-destructive/10 min-h-11"
+            >
               <XSquare className="me-1 h-3.5 w-3.5" /> {t('messaging.clearSelection')}
             </Button>
           )}

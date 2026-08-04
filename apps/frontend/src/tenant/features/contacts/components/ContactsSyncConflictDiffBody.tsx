@@ -3,6 +3,13 @@ import type { Contact, SyncFieldPick } from "@mms/shared";
 import { resolveSyncFieldLabel } from "@/lib/contacts/contactI18n";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { Button } from "@/components/ui/button";
+import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type SyncDiff = {
   field: string;
@@ -91,18 +98,26 @@ export function ContactsSyncConflictDiffBody({
           </div>
           <div className="hidden overflow-x-auto md:block max-w-full">
             <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground">
-                  <th className="text-start py-1 pe-2 font-medium">{t("contacts.sync.conflictField")}</th>
-                  <th className="text-start py-1 pe-2 font-medium">{t("contacts.sync.conflictLocal")}</th>
-                  <th className="text-start py-1 font-medium">{t("contacts.sync.conflictServer")}</th>
-                </tr>
-              </thead>
-              <tbody>
+              <TableHeader>
+                <TableRow className="text-muted-foreground border-0 hover:bg-transparent">
+                  <TableHead className="text-start py-1 pe-2 font-medium h-auto">
+                    {t("contacts.sync.conflictField")}
+                  </TableHead>
+                  <TableHead className="text-start py-1 pe-2 font-medium h-auto">
+                    {t("contacts.sync.conflictLocal")}
+                  </TableHead>
+                  <TableHead className="text-start py-1 font-medium h-auto">
+                    {t("contacts.sync.conflictServer")}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {diffs.map((diff) => (
-                  <tr key={diff.field} className="border-t border-border/50">
-                    <td className="py-1 pe-2 font-medium">{resolveSyncFieldLabel(diff.field, t)}</td>
-                    <td className="py-1 pe-2">
+                  <TableRow key={diff.field} className="border-t border-border/50 hover:bg-transparent">
+                    <TableCell className="py-1 pe-2 font-medium">
+                      {resolveSyncFieldLabel(diff.field, t)}
+                    </TableCell>
+                    <TableCell className="py-1 pe-2">
                       <Button
                         type="button"
                         variant="ghost"
@@ -115,8 +130,8 @@ export function ContactsSyncConflictDiffBody({
                       >
                         {diff.local}
                       </Button>
-                    </td>
-                    <td className="py-1">
+                    </TableCell>
+                    <TableCell className="py-1">
                       <Button
                         type="button"
                         variant="ghost"
@@ -129,10 +144,10 @@ export function ContactsSyncConflictDiffBody({
                       >
                         {diff.server}
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </table>
           </div>
         </>

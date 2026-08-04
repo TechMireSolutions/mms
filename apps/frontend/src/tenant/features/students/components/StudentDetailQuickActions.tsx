@@ -1,8 +1,5 @@
 import { useTranslation } from "@/hooks/useTranslation";
-import { QuickActionButton } from "@/components/ui/QuickActionButton";
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { cleanTelUri } from "@/tenant/features/students/components/studentDetailUtils";
-import { Mail, MessageCircle, MessageSquare, Phone } from "lucide-react";
+import { EntityMessagingQuickActions } from "@/components/ui/EntityMessagingQuickActions";
 import { toMessagingRecipient, type Student } from "@mms/shared";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
@@ -14,8 +11,6 @@ interface StudentDetailQuickActionsProps {
   openComposer: (channel: MessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 
-const QUICK_ACTION_BASE = `${WORK_SURFACE_INNER} text-center`;
-
 export function StudentDetailQuickActions({
   student,
   primaryPhone,
@@ -25,44 +20,38 @@ export function StudentDetailQuickActions({
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-      {primaryPhone && (
-        <QuickActionButton
-          label={t("students.detail.call")}
-          icon={Phone}
-          href={cleanTelUri(primaryPhone)}
-          ariaLabel={t("students.detail.callPhone", { phone: primaryPhone })}
-          className={`${QUICK_ACTION_BASE} hover:bg-info/10 hover:border-info/30 text-info`}
-        />
-      )}
-      {primaryPhone && (
-        <QuickActionButton
-          label={t("students.list.actionWhatsApp")}
-          icon={MessageCircle}
-          onClick={() => openComposer("whatsapp", [toMessagingRecipient({ ...student, phone: primaryPhone })])}
-          className={`${QUICK_ACTION_BASE} hover:bg-success/10 hover:border-success/30 text-success`}
-        />
-      )}
-      {primaryPhone && (
-        <QuickActionButton
-          label={t("students.list.actionSms")}
-          icon={MessageSquare}
-          onClick={() => openComposer("sms", [toMessagingRecipient({ ...student, phone: primaryPhone })])}
-          className={`${QUICK_ACTION_BASE} hover:bg-warning/10 hover:border-warning/30 text-warning`}
-        />
-      )}
-      {primaryEmail && (
-        <QuickActionButton
-          label={t("students.list.actionEmail")}
-          icon={Mail}
-          onClick={() =>
-            openComposer("email", [
-              toMessagingRecipient({ ...student, name: student.name || "", email: primaryEmail }),
-            ])
-          }
-          className={`${QUICK_ACTION_BASE} hover:bg-primary/10 hover:border-primary/30 text-primary`}
-        />
-      )}
-    </div>
+    <EntityMessagingQuickActions
+      primaryPhone={primaryPhone}
+      primaryEmail={primaryEmail}
+      labels={{
+        call: t("students.detail.call"),
+        whatsapp: t("students.list.actionWhatsApp"),
+        sms: t("students.list.actionSms"),
+        email: t("students.list.actionEmail"),
+      }}
+      callAriaLabel={
+        primaryPhone
+          ? t("students.detail.callPhone", { phone: primaryPhone })
+          : undefined
+      }
+      onWhatsApp={
+        primaryPhone
+          ? () => openComposer("whatsapp", [toMessagingRecipient({ ...student, phone: primaryPhone })])
+          : undefined
+      }
+      onSms={
+        primaryPhone
+          ? () => openComposer("sms", [toMessagingRecipient({ ...student, phone: primaryPhone })])
+          : undefined
+      }
+      onEmail={
+        primaryEmail
+          ? () =>
+              openComposer("email", [
+                toMessagingRecipient({ ...student, name: student.name || "", email: primaryEmail }),
+              ])
+          : undefined
+      }
+    />
   );
 }

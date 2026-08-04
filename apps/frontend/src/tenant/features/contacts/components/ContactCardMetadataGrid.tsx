@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { Archive } from "lucide-react";
 import {
   formatDate,
   isRelationshipContactColumnKey,
@@ -8,6 +8,7 @@ import {
   type ContactPreferences,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
@@ -92,16 +93,16 @@ export function ContactCardDeletedBanner({
   }
 
   return (
-    <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-2.5 space-y-1 text-xs text-destructive text-start">
-      <div className="flex items-center gap-1.5 font-bold">
-        <AlertTriangle aria-hidden="true" className="w-3.5 h-3.5" />
-        <span>{t("contacts.table.deletedAt", { date: formatDate(contact.deletedAt) })}</span>
-      </div>
-      {contact.deletionReason && (
-        <p className="font-semibold opacity-90 italic">
-          {t("contacts.deletionReasonLabel")}: {contact.deletionReason}
-        </p>
-      )}
-    </div>
+    <WarningCallout
+      icon={Archive}
+      density="compact"
+      role="status"
+      title={t("contacts.table.deletedAt", { date: formatDate(contact.deletedAt) })}
+      description={
+        contact.deletionReason
+          ? `${t("contacts.deletionReasonLabel")}: ${contact.deletionReason}`
+          : undefined
+      }
+    />
   );
 }

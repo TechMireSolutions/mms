@@ -5,6 +5,7 @@ import {
   isRelationshipWorkColumnKey,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { TableCell } from "@/components/ui/table";
 import { buildContactsMap, formatContactCellValue } from "@/lib/contacts/contactI18n";
 import {
   renderSocialMetadata,
@@ -128,7 +129,7 @@ export function ContactMetadataCell({
   };
 
   if (variant === "table") {
-    return <td className="px-4 py-3" style={style}>{renderValue()}</td>;
+    return <TableCell className="px-4 py-3" style={style}>{renderValue()}</TableCell>;
   }
 
   return <>{renderValue()}</>;

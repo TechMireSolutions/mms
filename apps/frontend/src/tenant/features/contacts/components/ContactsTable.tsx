@@ -9,6 +9,7 @@ import {
   type ContactsColumnConfig,
 } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactsTableHeader } from "@/tenant/features/contacts/components/ContactsTableHeader";
+import { TableBody } from "@/components/ui/table";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 export type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
@@ -80,7 +81,7 @@ export default function ContactsTable({
           onSelectAll={onSelectAll}
           t={t}
         />
-        <tbody className="divide-y divide-border/50">
+        <TableBody className="divide-y divide-border/50">
           <AnimatePresence>
             {contacts.map((contact) => (
               <ContactTableRow
@@ -109,7 +110,7 @@ export default function ContactsTable({
               />
             ))}
           </AnimatePresence>
-        </tbody>
+        </TableBody>
       </table>
 
       <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between bg-muted/5">

@@ -1,6 +1,7 @@
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -65,11 +66,10 @@ export function GoogleContactsSetupForm({
           placeholder={t("contacts.sync.clientSecretPlaceholder")}
         />
       </div>
-      {error && (
-        <p className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
+      <FieldErrorMessage
+        message={error || undefined}
+        className="mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+      />
       <div className="flex gap-2">
         <Button
           type="button"

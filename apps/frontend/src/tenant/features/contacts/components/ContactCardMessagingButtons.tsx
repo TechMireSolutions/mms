@@ -2,14 +2,16 @@ import { motion } from "framer-motion";
 import { MessageCircle, MessageSquare, Phone, Mail } from "lucide-react";
 import { type Contact, hasWhatsApp } from "@mms/shared";
 import { formatTelHref } from "@/lib/contacts/contactI18n";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const MotionButton = motion.create(Button);
-
-const messagingBtnClass =
-  "min-h-11 min-w-11 rounded-xl border shadow-none transition-colors";
 
 export function ContactCardMessagingButtons({
   contact,
@@ -48,7 +50,7 @@ export function ContactCardMessagingButtons({
           href={formatTelHref(phone)}
           whileHover={{ scale: scaleHover }}
           whileTap={{ scale: scaleTap }}
-          className={`${messagingBtnClass} inline-flex items-center justify-center border-border/50 dark:border-border/30 bg-muted/40 dark:bg-card/60 text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/20 shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`}
+          className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.call, "inline-flex items-center justify-center")}
           title={t("contacts.detail.callContact", { name: displayName })}
           aria-label={t("contacts.detail.callContact", { name: displayName })}
         >
@@ -64,7 +66,7 @@ export function ContactCardMessagingButtons({
           whileHover={{ scale: scaleHover }}
           whileTap={{ scale: scaleTap }}
           onClick={() => onWhatsApp([contact])}
-          className={`${messagingBtnClass} border-success/30 dark:border-success/20 bg-success/5 text-success hover:text-success hover:bg-success/10`}
+          className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.whatsapp)}
           title={t("contacts.detail.whatsappContact", { name: displayName })}
           aria-label={t("contacts.detail.whatsappContact", { name: displayName })}
         >
@@ -80,7 +82,7 @@ export function ContactCardMessagingButtons({
           whileHover={{ scale: scaleHover }}
           whileTap={{ scale: scaleTap }}
           onClick={() => onSms([contact])}
-          className={`${messagingBtnClass} border-primary/30 dark:border-primary/20 bg-primary/5 text-primary hover:text-primary hover:bg-primary/10`}
+          className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.sms)}
           title={t("contacts.detail.smsContact", { name: displayName })}
           aria-label={t("contacts.detail.smsContact", { name: displayName })}
         >
@@ -96,7 +98,7 @@ export function ContactCardMessagingButtons({
           whileHover={{ scale: scaleHover }}
           whileTap={{ scale: scaleTap }}
           onClick={() => onEmail([contact])}
-          className={`${messagingBtnClass} border-secondary/30 dark:border-secondary/20 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/10`}
+          className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.email)}
           title={t("contacts.detail.emailNamedContact", { name: displayName })}
           aria-label={t("contacts.detail.emailNamedContact", { name: displayName })}
         >

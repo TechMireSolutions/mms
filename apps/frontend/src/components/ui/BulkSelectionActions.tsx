@@ -1,4 +1,4 @@
-import { Mail, MessageCircle, MessageSquare, RotateCcw } from "lucide-react";
+import { Mail, MessageCircle, MessageSquare, RotateCcw, ChevronDown, Tag } from "lucide-react";
 import type React from "react";
 import type { ReactElement } from "react";
 import {
@@ -7,6 +7,13 @@ import {
   bulkSelectionRestoreClassName,
 } from "@/components/ui/BulkSelectionBar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 export type BulkSelectionMessageChannel = "whatsapp" | "sms" | "email";
 
@@ -110,5 +117,38 @@ export function BulkSelectionDeleteAction({
       {Icon ? <Icon className="w-3.5 h-3.5" aria-hidden /> : null}
       {label}
     </Button>
+  );
+}
+
+export interface BulkSelectionStatusActionProps {
+  label: string;
+  statuses: readonly string[];
+  statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
+  onSelectStatus: (status: string) => void;
+}
+
+/** Status dropdown action for Work bulk bars (Students / Teachers). */
+export function BulkSelectionStatusAction({
+  label,
+  statuses,
+  statusBadgeConfig,
+  onSelectStatus,
+}: BulkSelectionStatusActionProps): ReactElement {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="outline" className={bulkSelectionActionClassName}>
+          <Tag className="w-3.5 h-3.5 text-primary" /> {label}{" "}
+          <ChevronDown className="w-3 h-3 ms-0.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        {statuses.map((statusVal) => (
+          <DropdownMenuItem key={statusVal} onClick={() => onSelectStatus(statusVal)}>
+            <StatusBadge status={statusVal} size="sm" config={statusBadgeConfig} />
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

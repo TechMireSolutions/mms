@@ -1,3 +1,1 @@
-export function cleanTelUri(phone: string): string {
-  return `tel:${phone.replace(/[^\d+]/g, "")}`;
-}
+export { formatTelHref as cleanTelUri } from "@/lib/contacts/contactPhoneDisplay";

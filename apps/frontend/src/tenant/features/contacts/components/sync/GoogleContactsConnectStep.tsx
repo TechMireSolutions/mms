@@ -1,6 +1,7 @@
 import { ExternalLink, Globe, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -65,9 +66,10 @@ export function GoogleContactsConnectStep({
       )}
 
       {error && !showAuthCode && (
-        <p className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
-          {error}
-        </p>
+        <FieldErrorMessage
+          message={error}
+          className="mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+        />
       )}
     </div>
   );

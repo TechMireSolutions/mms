@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { ICON_MAP } from "./contactDetailStyles";
 
 export interface ContactDetailTimelineProps {
@@ -86,7 +87,7 @@ export function ContactDetailTimeline({
                 </div>
                 <Card className="p-4 shadow-xs hover:border-primary/20 group-hover:border-primary/20">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    <span className={DETAIL_SECTION_TITLE}>
                       {ACTIVITY_TYPE_I18N[act.type] ? t(ACTIVITY_TYPE_I18N[act.type]) : act.type}
                     </span>
                     <span className="text-xs font-bold text-muted-foreground/60">{formatDate(act.date)}</span>

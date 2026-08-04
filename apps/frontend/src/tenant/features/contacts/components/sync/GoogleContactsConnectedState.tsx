@@ -1,5 +1,6 @@
 import { CheckCircle2, Loader2, Unlink, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export function GoogleContactsConnectedState({
@@ -46,11 +47,10 @@ export function GoogleContactsConnectedState({
         )}
       </div>
 
-      {error && (
-        <p className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
+      <FieldErrorMessage
+        message={error || undefined}
+        className="mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+      />
 
       {syncResult && (
         <div className="flex items-start gap-2 p-3 rounded-xl bg-success/10 border border-success/30 text-xs text-success">

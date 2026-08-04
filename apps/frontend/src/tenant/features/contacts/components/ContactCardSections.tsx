@@ -1,5 +1,7 @@
 import { Mail, Phone } from "lucide-react";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 export {
   ContactCardMetadataGrid,
@@ -16,11 +18,16 @@ function ContactInfoPill({
   copyText: string;
 }) {
   return (
-    <div className="w-full flex items-center justify-between text-xs font-normal text-muted-foreground bg-muted/40 dark:bg-muted/20 hover:bg-muted/65 dark:hover:bg-muted/35 hover:text-foreground backdrop-blur-sm px-3 py-1.5 rounded-xl border border-border/30 dark:border-border/15 transition-all group/pill min-w-0">
+    <div
+      className={cn(
+        WORK_SURFACE_INNER,
+        "w-full flex items-center justify-between text-xs font-normal text-muted-foreground hover:bg-muted/65 hover:text-foreground px-3 py-1.5 rounded-xl group/pill min-w-0",
+      )}
+    >
       <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
         <Icon
           aria-hidden="true"
-          className="w-3.5 h-3.5 text-primary/80 dark:text-primary/70 flex-shrink-0 group-hover/pill:text-primary transition-colors"
+          className="w-3.5 h-3.5 text-primary/80 flex-shrink-0 group-hover/pill:text-primary transition-colors"
         />
         <span className="font-semibold tracking-tight truncate select-all">{text}</span>
       </div>

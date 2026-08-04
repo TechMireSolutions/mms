@@ -10,6 +10,7 @@ import { resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import { TableCell } from "@/components/ui/table";
 import type { useTranslation } from "@/hooks/useTranslation";
 import type { CSSProperties } from "react";
 
@@ -31,7 +32,7 @@ export function renderContactNameCell({
   onView?: (contact: Contact) => void;
 }): React.JSX.Element {
   return (
-    <td
+    <TableCell
       key="name"
       className="px-4 py-3 sticky start-12 z-10 bg-card group-hover:bg-muted/40 transition-colors border-e border-border/30"
       style={widthStyle}
@@ -60,7 +61,7 @@ export function renderContactNameCell({
           )}
         </div>
       </div>
-    </td>
+    </TableCell>
   );
 }
 
@@ -90,7 +91,7 @@ export function renderContactPhoneCell({
   const hasWa = hasWhatsApp(contact);
 
   return (
-    <td key="phone" className="px-4 py-3" style={widthStyle}>
+    <TableCell key="phone" className="px-4 py-3" style={widthStyle}>
       <div className="flex flex-col items-start gap-1 group/phone">
         {primaryPhone ? (
           <>
@@ -123,7 +124,7 @@ export function renderContactPhoneCell({
           <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>
         )}
       </div>
-    </td>
+    </TableCell>
   );
 }
 
@@ -138,7 +139,7 @@ export function renderContactEmailCell({
 }): React.JSX.Element {
   const primaryEmail = getPrimaryEmail(contact);
   return (
-    <td key="email" className="px-4 py-3" style={widthStyle}>
+    <TableCell key="email" className="px-4 py-3" style={widthStyle}>
       <div className="flex flex-col items-start gap-1 group/email">
         <span className="text-sm text-muted-foreground">{primaryEmail || t("contacts.table.emptyDash")}</span>
         {primaryEmail && (
@@ -147,6 +148,6 @@ export function renderContactEmailCell({
           </div>
         )}
       </div>
-    </td>
+    </TableCell>
   );
 }

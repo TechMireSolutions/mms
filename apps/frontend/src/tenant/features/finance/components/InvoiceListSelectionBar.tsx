@@ -1,7 +1,10 @@
 import type React from "react";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { Button } from "@/components/ui/button";
+import {
+  BulkSelectionDeleteAction,
+  BulkSelectionRestoreAction,
+} from "@/components/ui/BulkSelectionActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface InvoiceListSelectionBarProps {
@@ -24,10 +27,18 @@ export function InvoiceListSelectionBar({
       selectedCount={selectedCount}
       countLabel={t("finance.trash.selected", { count: selectedCount })}
     >
-      <Button type="button" variant={showDeleted ? "outline" : "destructive"} onClick={onRequestBulkAction}>
-        {showDeleted ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
-        {showDeleted ? t("finance.trash.restore") : t("common.delete")}
-      </Button>
+      {showDeleted ? (
+        <BulkSelectionRestoreAction
+          label={t("finance.trash.restore")}
+          onClick={onRequestBulkAction}
+        />
+      ) : (
+        <BulkSelectionDeleteAction
+          label={t("common.delete")}
+          onClick={onRequestBulkAction}
+          icon={Trash2}
+        />
+      )}
     </BulkSelectionBar>
   );
 }

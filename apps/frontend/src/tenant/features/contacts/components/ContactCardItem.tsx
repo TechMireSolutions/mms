@@ -9,6 +9,8 @@ import {
   resolveContactPhoneDisplay,
   getContactAccentBarClass,
 } from "@/lib/contacts/contactI18n";
+import { FORM_CARD } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { ContactCardActions } from "@/tenant/features/contacts/components/ContactCardActions";
 import { ContactCardHeader } from "@/tenant/features/contacts/components/ContactCardHeader";
 import {
@@ -40,8 +42,6 @@ export interface ContactCardItemProps {
   countryCodes: Array<{ country: string; code: string }>;
   contactsMap: Map<string, Contact> | null;
   allContacts: Contact[];
-  showPhonePill: boolean;
-  showEmailPill: boolean;
   otherColumns: ContactsColumnConfig[];
   visibleColumnIds: Set<string>;
   showArchived: boolean;
@@ -65,8 +65,6 @@ export function ContactCardItem({
   countryCodes,
   contactsMap,
   allContacts,
-  showPhonePill,
-  showEmailPill,
   otherColumns,
   visibleColumnIds,
   showArchived,
@@ -91,6 +89,8 @@ export function ContactCardItem({
     countryCodes,
   );
   const email = getPrimaryEmail(contact);
+  const showPhonePill = visibleColumnIds.size === 0 || visibleColumnIds.has("phone");
+  const showEmailPill = visibleColumnIds.size === 0 || visibleColumnIds.has("email");
 
   return (
     <motion.div
@@ -103,10 +103,14 @@ export function ContactCardItem({
       }
       role="region"
       aria-label={displayName}
-      className={`relative overflow-hidden group rounded-2xl border bg-gradient-to-br from-card/95 via-card/85 to-background/70 dark:from-card/95 dark:via-card/80 dark:to-background/60 backdrop-blur-xl p-4 ps-5.5 space-y-4 shadow-xs ${reducedMotion ? "" : "transition-all duration-300 hover:shadow-md"} ${isSelected
-        ? "border-primary/50 bg-primary/[0.025] dark:bg-primary/[0.03] shadow-xs shadow-primary/5"
-        : "border-border/50 dark:border-border/30 hover:border-primary/35 dark:hover:border-primary/20"
-      }`}
+      className={cn(
+        FORM_CARD,
+        "p-4 ps-5.5 space-y-4 shadow-xs",
+        reducedMotion ? "" : "hover:shadow-md",
+        isSelected
+          ? "border-primary/50 bg-primary/5 shadow-xs shadow-primary/5"
+          : "border-border/50 hover:border-primary/35",
+      )}
     >
       <div
         aria-hidden="true"

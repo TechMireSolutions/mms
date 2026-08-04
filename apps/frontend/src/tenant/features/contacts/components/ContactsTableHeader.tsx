@@ -1,6 +1,9 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { WORK_STICKY_HEAD } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import {
   TableHeaderCell,
   type ContactsColumnConfig,
@@ -33,21 +36,26 @@ export function ContactsTableHeader({
   t: Translate;
 }): React.JSX.Element {
   return (
-    <thead>
-      <tr className="border-b border-border bg-muted/30">
-        <th className="w-12 min-w-12 px-4 py-3 sticky start-0 z-20 bg-muted/95 backdrop-blur-md border-e border-border/30">
+    <TableHeader>
+      <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+        <TableHead
+          className={cn(
+            "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 border-e border-border/30 h-auto",
+            WORK_STICKY_HEAD,
+          )}
+        >
           <Checkbox
             checked={someSelected ? "indeterminate" : allSelected}
             onCheckedChange={() => onSelectAll()}
             aria-label={allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
             className="cursor-pointer"
           />
-        </th>
+        </TableHead>
         {columns.map((col) => {
           const sortFieldKey = col.sortField || col.id;
           const isNameCol = col.id === "name";
           const stickyClass = isNameCol
-            ? "sticky start-12 z-20 bg-muted/95 backdrop-blur-md border-e border-border/30"
+            ? cn("sticky start-12 z-20 border-e border-border/30", WORK_STICKY_HEAD)
             : "";
           const width = getColumnWidth(col.id) ?? col.width;
 
@@ -77,8 +85,8 @@ export function ContactsTableHeader({
             </ResizableTableHead>
           );
         })}
-        <th className="px-4 py-3 w-16" />
-      </tr>
-    </thead>
+        <TableHead className="px-4 py-3 w-16 h-auto" />
+      </TableRow>
+    </TableHeader>
   );
 }

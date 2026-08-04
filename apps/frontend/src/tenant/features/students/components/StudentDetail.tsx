@@ -1,9 +1,12 @@
-import React, { lazy, Suspense, useState } from "react";
-import { Archive, Edit2, GraduationCap, Loader2, RotateCcw } from "lucide-react";
-import { formatDate, type Student } from "@mms/shared";
-import { Button } from "@/components/ui/button";
+import React, { lazy, Suspense } from "react";
+import { GraduationCap } from "lucide-react";
+import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { WarningCallout } from "@/components/ui/WarningCallout";
+import {
+  DetailDrawerArchivedBanner,
+  DetailDrawerRestoreOrEditAction,
+  formatArchivedBannerDate,
+} from "@/components/ui/DetailDrawerArchiveChrome";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
 import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
 import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
@@ -20,12 +23,6 @@ export interface StudentDetailProps {
 }
 
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
-
-function formatStudentStamp(value: unknown): string | null {
-  if (typeof value === "string" && value.trim()) return value;
-  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
-  return null;
-}
 
 export default function StudentDetail({
   student,
@@ -58,60 +55,21 @@ export default function StudentDetail({
     hasVisibleDetailFields,
   } = useStudentDetailModel(student);
 
-  const [restoring, setRestoring] = useState(false);
   const isArchived = Boolean(student.deletedAt);
-  const archivedAt = formatStudentStamp(student.deletedAt);
+  const archivedDate = formatArchivedBannerDate(student.deletedAt);
 
-  const headerActions = (() => {
-    if (isArchived && canDelete && onRestore) {
-      return (
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          disabled={restoring}
-          onClick={() => {
-            void (async () => {
-              setRestoring(true);
-              try {
-                await onRestore(String(student.id));
-              } finally {
-                setRestoring(false);
-              }
-            })();
-          }}
-          className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          title={t("students.restore")}
-          aria-label={t("students.restore")}
-          aria-busy={restoring}
-        >
-          {restoring ? (
-            <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" aria-hidden />
-          ) : (
-            <RotateCcw className="w-4 h-4" />
-          )}
-        </Button>
-      );
-    }
-
-    if (onEdit && !isArchived) {
-      return (
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={() => onEdit(student)}
-          className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          title={t("students.detail.editTitle")}
-          aria-label={t("students.detail.editTitle")}
-        >
-          <Edit2 className="w-4 h-4" />
-        </Button>
-      );
-    }
-
-    return undefined;
-  })();
+  const headerActions = (
+    <DetailDrawerRestoreOrEditAction
+      isArchived={isArchived}
+      canRestore={canDelete}
+      canEdit={Boolean(onEdit)}
+      restoreLabel={t("students.restore")}
+      editLabel={t("students.detail.editTitle")}
+      onRestore={onRestore ? () => onRestore(String(student.id)) : undefined}
+      onEdit={onEdit ? () => onEdit(student) : undefined}
+      className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+    />
+  );
 
   return (
     <>
@@ -127,14 +85,10 @@ export default function StudentDetail({
         ariaLabel={t("students.detail.ariaLabel")}
         headerActions={headerActions}
         headerExtra={
-          isArchived && archivedAt ? (
-            <WarningCallout
-              icon={Archive}
-              density="compact"
-              role="status"
-              description={t("students.detail.archivedBanner", {
-                date: formatDate(archivedAt),
-              })}
+          isArchived && archivedDate ? (
+            <DetailDrawerArchivedBanner
+              deletedAt={student.deletedAt}
+              description={t("students.detail.archivedBanner", { date: archivedDate })}
             />
           ) : undefined
         }
