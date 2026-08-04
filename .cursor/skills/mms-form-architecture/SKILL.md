@@ -12,7 +12,7 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 ## Workflow
 
 1. `FormModal` for create/edit/builders; raw `Modal` for confirm/preview only.
-2. Primitives + `formStyles`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred).
+2. Primitives + `formStyles` (`FORM_INPUT`, `FORM_ERROR`, `FORM_CARD`, `FORM_INPUT_BUILDER`); inline errors via `FieldErrorMessage`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred).
 3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164. **Ban** Server Actions / `useActionState` / form `action=` for tenant writes.
 4. Collection tabs: `cleanContactDraft` / `mergeContactEditSavePayload` — empty arrays clear scalars (rule §3).
 5. Persist with `mutateAsync`; soft-delete only via DELETE/restore routes.
@@ -27,7 +27,7 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 - [ ] Focus-return to opener on close
 - [ ] No Server Actions / useActionState for tenant writes
 - [ ] Shared Zod write/read DTOs; soft-delete stripped on write
-- [ ] formStyles + DatePicker; name + id on controls
+- [ ] formStyles + DatePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`
 - [ ] Empty collection arrays persist; no scalar resurrection
 - [ ] canWrite gates; no fire-and-forget mutate close
 - [ ] Upload sniff + size + dimension/page caps

@@ -26,7 +26,7 @@ Contacts (and other typed person entities): **Query + REST only** — never `sav
 
 1. Read the rule row for the surface (table below).
 2. Large shells: hard ~300 / soft ~220 splits behind stable barrels — do not break public import paths.
-3. Work chrome: prefer shared `EmptyState` / `WarningCallout` / `BulkSelectionBar` + `BulkSelectionActions` / `QuickActionButton` / `ModuleCommandMetricsGrid` (KPI strips) / `formStyles` surface tokens (`WORK_SURFACE`, …) — `mms-ui-ux-design.mdc` · `mms-dry.mdc`. Column gates: `isColumnVisible` into leaves (no `show*` fans).
+3. Work chrome: prefer shared `EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` + `BulkSelectionActions` (incl. `BulkSelectionDeleteAction`) / `QuickActionButton` / `ModuleCommandMetricsGrid` (KPI strips) / `formStyles` tokens (`WORK_SURFACE`, `FORM_CARD`, `FORM_INPUT_BUILDER`, `FORM_ERROR`, …) / `@theme` layout sizes (`h-chart-*`, `z-modal*`, `max-w-toast`) — `mms-ui-ux-design.mdc` · `mms-dry.mdc`. Column gates: `isColumnVisible` into leaves (no `show*` fans).
 4. Quality gate: `cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test` · E2E: `pnpm exec playwright test`
 
 ## API calls

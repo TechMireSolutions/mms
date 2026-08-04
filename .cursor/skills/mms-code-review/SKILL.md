@@ -97,7 +97,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Create/update write schemas strip client soft-delete fields
 - [ ] FE trash UI or documented intentional hard-delete / manifest variant
 - [ ] Soft-delete modules: trash toggle + restore omit Add/messaging in archive mode; drawer uses `WarningCallout` + Restore
-- [ ] Work multi-select uses `BulkSelectionBar` + `BulkSelectionActions` on list/parent (no forked selection chrome; no toolbar-inline trash)
+- [ ] Work multi-select uses `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging) on list/parent (no forked selection chrome; no toolbar-inline trash)
 - [ ] Entity merge (if any) is atomic server endpoint — not FE dual-write
 
 ### Gold-standard module parity (`mms-module-architecture.mdc` §7)
@@ -105,9 +105,9 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Forms/setup use `mutateAsync` / await; close only after success
 - [ ] Manifest `setupSubTabs` + `softDelete` metadata when applicable
 - [ ] Setup gated by `canEditSetup`; Work shows `ErrorState` on list failure **with hint** (`loadFailedHint` — tenant and platform apex)
-- [ ] Directory empties use `EmptyState` (`title` required); column gates use `isColumnVisible` (not `show*` fans)
+- [ ] Directory empties use `EmptyState` (`title` required; `compact` when dense); column gates use `isColumnVisible` (not `show*` fans)
 - [ ] Cmd/Ctrl+N create when `canWrite` and not in trash
-- [ ] Prefer shared Work chrome (`EmptyState` / `WarningCallout` / `BulkSelectionBar` / `WORK_SURFACE` / `ModuleCommandMetricsGrid` for KPI strips) — `mms-ui-ux-design.mdc`
+- [ ] Prefer shared Work chrome (`EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` / `WORK_SURFACE` / `FORM_CARD` / `ModuleCommandMetricsGrid` for KPI strips; `h-chart-*` / `z-modal*` / `max-w-toast` over ad-hoc sizes) — `mms-ui-ux-design.mdc`
 
 ### Messaging (when touched)
 - [ ] Composer uses `MessagingRecipient` — not contacts schemas

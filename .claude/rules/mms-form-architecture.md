@@ -29,6 +29,8 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - **Focus return**: On close, restore focus to the control that opened the dialog/drawer when practical.
 - Layout repeatable entity forms using full-width single column flows (`COLLECTION_BODY`) inside `space-y-3` containers.
 - Form inputs share `min-h-11` via `FORM_INPUT` in `formStyles.ts` SSOT — no ad-hoc input chrome.
+- Inline field/panel errors → `FieldErrorMessage` + `FORM_ERROR` (do not fork `text-xs text-destructive` lines). Auth entry fields may apply `FORM_ERROR` class directly.
+- Form cards → `FORM_CARD`; dense builder inputs → `FORM_INPUT_BUILDER` — do not invent parallel glass stacks in features.
 - Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `EditableSelect`).
 - **Stable Heights**: Tabbed forms use `<FormModal tall>` with a tall viewport height + `max-h-[43.75rem]` and scrollable body `flex-1 overflow-y-auto`. Prefer `dvh`/`svh` (+ `safe-area-inset` padding) over raw `vh` when touching FormModal chrome — iOS keyboard/browser chrome.
 - **Scroll Containment**: `useBodyScrollLock()` + `overscroll-contain` on scrollable modal boxes.

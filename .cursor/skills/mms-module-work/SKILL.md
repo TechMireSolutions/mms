@@ -25,7 +25,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET. Prefer **keyset/cursor** for hot/large directories when touching list APIs — `mms-data-layer.mdc`.
 7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
 8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** `WarningCallout` archive chrome + Restore; hide Call/WA/SMS/Email when `deletedAt`.
-9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `EmptyState`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionRestoreAction` (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
+9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `EmptyState` (`compact` when dense); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate). Pass `isColumnVisible` through content — ban `visibleColumns` boolean object fans.
 11. Dense Work tables: prefer `@tanstack/react-virtual` (or named shared wrapper) — ban one-off virtualization libs — `mms-ui-ux-design.mdc`.
 12. Command/report KPI **StatCard strips** → `ModuleCommandMetricsGrid` when adding metrics — `mms-ui-ux-design.mdc`.
@@ -41,8 +41,8 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] Hot/large directories: keyset preference when touching list APIs
 - [ ] Person-directory: `directoryViews: ['table','cards']`; cards + table same page API
 - [ ] Soft-delete trash + restore (+ drawer `WarningCallout` archive chrome) or documented variant
-- [ ] Bulk selection bar uses shared `BulkSelectionBar` + `BulkSelectionActions` on list/parent (no forked floating/inline chrome; no toolbar-inline trash)
-- [ ] Directory empties use `EmptyState` (`title` required; dashed when bordered)
+- [ ] Bulk selection bar uses shared `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging) on list/parent (no forked floating/inline chrome; no toolbar-inline trash)
+- [ ] Directory empties use `EmptyState` (`title` required; dashed when bordered; `compact` when dense)
 - [ ] Column gates via `isColumnVisible` into leaves (no `visibleColumns`/`show*` boolean fans)
 - [ ] ErrorState + retry + hint on list isError (not empty success)
 - [ ] New KPI StatCard strips use `ModuleCommandMetricsGrid`

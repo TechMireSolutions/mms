@@ -1,6 +1,6 @@
 ---
 name: mms-a11y-smoke
-description: Runs axe smoke and shell a11y checks (FormModal focus-return, 375/768/1440) when changing AppLayout, FormModal, DataTable, or shared interactive primitives. Use for a11y verification, not for inventing UI tokens.
+description: Runs axe smoke and shell a11y checks (FormModal focus-return, 375/768/1440) when changing AppLayout, FormModal, Table, or shared interactive primitives. Use for a11y verification, not for inventing UI tokens.
 ---
 
 # MMS A11y Smoke Workflow
@@ -11,7 +11,7 @@ Do **not** use to invent design tokens → `mms-ui-ux-design.md` rule. Do **not*
 
 ## Workflow
 
-1. Confirm the change hits app shell or shared interactive primitives (AppLayout, FormModal, DataTable, buttons/inputs).
+1. Confirm the change hits app shell or shared interactive primitives (AppLayout, FormModal, Table, buttons/inputs).
 2. Keyboard path + accessible name/label spot-check on new controls.
 3. FormModal/drawer: focus trap + **focus-return** to the opener on close.
 4. Run `@axe-core/playwright` (or equivalent) on shell + one Work directory at **375** and **1440**; fail on serious/critical.

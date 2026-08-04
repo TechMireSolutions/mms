@@ -32,11 +32,12 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `DetailDrawerShell` (`@/components/ui/DetailDrawerShell`)
   - `Table` (`@/components/ui/table`) — shadcn table primitives; feature modules compose directory tables (no separate `DataTable` wrapper)
   - `StatCard` (`@/components/ui/StatCard`) — single tiles OK; **strips** of StatCards → `ModuleCommandMetricsGrid`
-  - `EmptyState` (`@/components/ui/EmptyState`) — list/directory empties; `title` **required** (no English default); prefer `variant="dashed"` for bordered/dashed empties; do not hand-roll `py-12/16 text-center` + dashed-border shells
+  - `EmptyState` (`@/components/ui/EmptyState`) — list/directory empties; `title` **required** (no English default); prefer `variant="dashed"` for bordered/dashed empties; use `compact` for dense/chart shells; do not hand-roll `py-12/16 text-center` + dashed-border shells; do **not** resurrect `FormEmptyState`
   - `ErrorState` (`@/components/ui/ErrorState`) — title + **hint** description + retry (tenant Work **and** platform apex lists)
+  - `FieldErrorMessage` (`@/components/ui/FormField` / `FormPrimitives`) — inline field / panel errors (`FORM_ERROR` + AlertCircle); do not fork `text-xs text-destructive` error lines in features (Auth entry may use `FORM_ERROR` class directly)
   - `WarningCallout` (`@/components/ui/WarningCallout`) — warning/archive banners (drawer archived state, setup/prefs warnings); do not fork amber callout markup in features
   - `BulkSelectionBar` (`@/components/ui/BulkSelectionBar`) — Work multi-select bars (`floating` \| `inline`); reuse exported action class helpers; do not fork selection-bar chrome per module
-  - `BulkSelectionActions` (`@/components/ui/BulkSelectionActions`) — `BulkSelectionRestoreAction` / `BulkSelectionMessagingActions` as bar children; do not fork outline restore/messaging buttons
+  - `BulkSelectionActions` (`@/components/ui/BulkSelectionActions`) — `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` / `BulkSelectionMessagingActions` as bar children; do not fork outline delete/restore/messaging buttons
   - `QuickActionButton` (`@/components/ui/QuickActionButton`) — directory/detail quick actions (Call / WA / SMS / Email pattern)
   - `ExportToolbar` (`@/components/ui/ExportToolbar`)
   - `SafeResponsiveContainer` (`@/components/ui/SafeResponsiveContainer`)
@@ -50,8 +51,10 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 
 ### Work surface & chrome
 - Prefer `WORK_SURFACE` / `WORK_SURFACE_INNER` / `DETAIL_SECTION_TITLE` from `formStyles` for directory/detail **and** report/widget/customize panels — ban re-forking `surface-glass` or duplicated `bg-card/45 backdrop-blur-*` glass stacks for that chrome (redundant glass on `<Card>` is out of scope — Card already embeds it).
-- Empties → `EmptyState` only (`title` via `t()`; `variant="dashed"` when bordered).
-- Multi-select bars → `BulkSelectionBar` only (`floating` \| `inline` + exported action classes). Mount the bar on the list/parent when selection is non-empty; trash/restore/messaging children via `BulkSelectionActions`. Do **not** put trash/restore beside Filters/Add in Work toolbars.
+- Form/builder panels → `FORM_CARD` / `FORM_INPUT_BUILDER` from `formStyles` (same glass SSOT — do not invent parallel blur stacks in features).
+- Empties → `EmptyState` only (`title` via `t()`; `variant="dashed"` when bordered; `compact` when dense/chart). Do **not** resurrect `FormEmptyState`.
+- Multi-select bars → `BulkSelectionBar` only (`floating` \| `inline` + exported action classes). Mount the bar on the list/parent when selection is non-empty; delete/restore/messaging children via `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging). Do **not** put trash/restore beside Filters/Add in Work toolbars.
+- Inline field/panel errors → `FieldErrorMessage` (or `FORM_ERROR` on Auth entry only).
 - Warning/archive banners → `WarningCallout` only (Contacts / Students / Teachers drawers as reference).
 - Quick actions → `QuickActionButton` (do not reintroduce Contacts-only deep copies).
 - Column visibility → pass `isColumnVisible(key)` into table/cards (optional `ALWAYS_COLUMN_VISIBLE` fallback); ban parent `visibleColumns` / `show*` boolean object fans.
@@ -59,9 +62,10 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 ### Design Token Strictness
 - **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
 - **Use Semantic Design Tokens**: Define tokens **only** in `index.css` `@theme` (Tailwind v4) — ban feature-level `@theme` / raw hex. Prefer CSS `@layer` for base/components/utilities. Keep FormModal `@container` queries.
+- **Layout size tokens (Rule of Three)**: Prefer `@theme` utilities `h-chart-sm|md|lg`, `max-w-toast`, `max-w-filter-sm`, `z-modal` / `z-modal-priority` / `z-toast` — ban ad-hoc rem chart heights, toast max-widths, or modal/toast `z-index` when these apply. Promote a repeated layout size to `@theme` after **3** occurrences — `mms-dry.md`.
 - **Touch-target exception**: Design-system primitives may use approved sizes from `formStyles` / primitives (e.g. `min-h-11`, `min-w-11`) — do not invent new arbitrary values in feature code.
 - **Semantic Colors**: For success/warning/destructive affordances, use semantic tokens (e.g., `text-destructive`, `bg-destructive/10`, theme `--success`).
-- **Glass tokens**: Where glass surfaces already exist in the design system, reuse those tokens (`backdrop-blur`, translucent borders). Do **not** require glassmorphism on every card.
+- **Glass tokens**: Reuse `formStyles` surfaces / existing `surface-glass` utility — do **not** invent new blur stacks in features. Do **not** require glassmorphism on every card.
 
 ---
 
@@ -155,7 +159,7 @@ Adhere to these thresholds — they map to the Tailwind v4 tokens already define
 ### Typography & Visual Media
 - **Fluid type**: Use `rem`/`em`/`clamp()` for font sizes — never hardcode `px` font sizes in feature **screen** UI. Prefer rem for layout size utilities too (`max-w-[26.25rem]`, not `max-w-[420px]`).
 - **Print / paper previews** (exception): certificate, Q-paper, and invoice canvas may keep physical `px`/`mm` for print fidelity. Host them in `overflow-x-auto max-w-full` (or scale like `InvoiceTemplateEditor`) so in-app preview never causes page-level horizontal scroll.
-- **Charts**: Recharts `tick={{ fontSize: N }}` and explicit chart heights for CLS are allowed — wrap charts in `SafeResponsiveContainer`.
+- **Charts**: Recharts `tick={{ fontSize: N }}` and explicit chart heights for CLS are allowed — wrap charts in `SafeResponsiveContainer`. Prefer `h-chart-sm|md|lg` (or `min-h-chart-*`) over one-off rem heights.
 - **Images & video**: Global `index.css` sets `img`/`video`/`svg { max-width: 100%; height: auto }`. Intrinsic `width`/`height` attributes for CLS (logos) remain allowed; do not remove them when adding `max-w-full`.
 
 ### Pre-Commit Verification
@@ -173,7 +177,7 @@ Before declaring any layout implementation complete, verify:
 ### Systemic enforcement (do not fork)
 - Shell overflow / fluid width: `AppLayout`, `ModulePageShell`, `PlatformPageShell`, `index.css` (`box-sizing`, `#root` / `body` `overflow-x: hidden`, `img`/`video`/`svg` `max-width: 100%`).
 - Touch targets: `Button` / `ActionButton` sizes use `min-h-11 min-w-11` (44px); modal/drawer closes and mobile nav chrome match.
-- Toast chrome: toast provider/viewport use `pointer-events-none`; individual toasts keep `pointer-events-auto` so empty toast layers never block shell controls.
+- Toast chrome: toast provider/viewport use `pointer-events-none`; individual toasts keep `pointer-events-auto` so empty toast layers never block shell controls. Prefer `max-w-toast` + `z-toast` from `@theme` for toast sizing/stacking.
 - Tables: shared `Table` wraps with `overflow-x-auto`; bare `<table>` inside cards must sit in `overflow-x-auto max-w-full`.
 - Popovers: shared `PopoverContent` defaults to `w-[min(18rem,calc(100vw-1.5rem))]` so menus never exceed the viewport.
 - Breakpoints: tenant shell + module tabs use mobile-default + `lg:`; platform chrome uses `md:`; FormModal in-dialog layout uses container `@md:` / `@sm:` — avoid `max-lg:` / `max-md:` for layout width.
