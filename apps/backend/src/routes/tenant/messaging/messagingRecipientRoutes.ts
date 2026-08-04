@@ -23,7 +23,9 @@ export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
     const parsedQuery = parseRequest(messagingRecipientsMatchQuerySchema, req.query);
     if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
     const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     try {
       const result = await matchMessagingRecipients(tenantSubdomain, parsedQuery.data);
       return reply.send(result);
@@ -38,7 +40,9 @@ export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
     const parsedQuery = parseRequest(messagingRecipientsQuerySchema, req.query);
     if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
     const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     try {
       const page = await loadMessagingRecipients(tenantSubdomain, parsedQuery.data);
       return reply.send(page);
@@ -53,7 +57,9 @@ export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
     const parsed = parseRequest(entityResolveBodySchema, req.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     try {
       const recipients = await resolveMessagingRecipients(tenantSubdomain, parsed.data.ids);
       return reply.send({ recipients });

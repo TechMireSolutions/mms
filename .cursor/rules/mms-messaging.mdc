@@ -27,16 +27,12 @@ Governs campaign composition, templates, and sent-history for the Messaging modu
 - Reports CSV: queue `POST /export/csv` → runner `messaging:export` → artifact download; gate **`canWriteMessaging`**; never export archived (`includeDeleted` omitted from export body).
 - Column prefs: server paths under `/recipients|/history|/templates/column-preferences` (manifest object keys).
 - BE: `authenticateTenant` + RLS/`withTenantTransaction`; force `userId` from session; strip client `deletedAt` on POST; never echo SQL to clients.
-- Campaign/send POSTs: accept an **idempotency key** when the client may retry — `mms-api-interface.mdc` §6. Surface `429` / `Retry-After` via shared notify — `mms-auth-security.mdc`.
+- Campaign/send POSTs: accept an **idempotency key** when the client may retry — bind key to a **body digest** and reject mismatched replays with `409` / `conflict` (`mms-api-interface.mdc` §6). Surface `429` / `Retry-After` via shared notify — `mms-auth-security.mdc`.
+- `GET /logs?includeDeleted` requires `canClearMessagingLogs` (not only `messaging.read`).
+- Clear-logs (`DELETE /logs`) soft-archives and **audits** `messaging.logs.clear`.
+- CSV export job caps rows (`MESSAGING_CSV_EXPORT_MAX_ROWS`) and bytes (`MESSAGING_CSV_EXPORT_MAX_BYTES`).
 
-**Target hardening** (open until closed — `mms-migration-status.mdc`):
-
-- Gate `GET /logs?includeDeleted` with `canClearMessagingLogs` (or remove the flag).
-- Bound CSV export rows/bytes (no unbounded in-memory job artifact).
-- Audit clear-logs (`messaging.logs.clear` or equivalent).
-- Bind log-POST idempotency to a body digest or reject mismatched replays (`409`).
-
-## 3. Personalization & openers
+**Do not reintroduce** (see `mms-migration-status.mdc`): ungated `includeDeleted`, unbounded CSV accumulate, unaudited clear-logs, idempotency without body-digest bind.
 
 - Placeholders evaluate on the client; allowlist known tokens (e.g. `{name}`) — reject unknown tokens.
 - Template/body content is plain text — no executable HTML.

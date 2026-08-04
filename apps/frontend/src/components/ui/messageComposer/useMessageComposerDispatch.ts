@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import {
+  findUnknownPersonalizationTokens,
   MESSAGE_LOG_RECORD_BATCH_MAX,
   personalizeMessage,
   PuppeteerWhatsAppProvider,
@@ -11,6 +12,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { openDeviceSmsComposer } from '@/lib/deviceSms';
+import { notify } from '@/lib/notify';
 import { useBranding } from '@/tenant/hooks/useBranding';
 import { useMessagingMutations } from '@/hooks/useMessaging';
 
@@ -145,6 +147,17 @@ export function useMessageComposerDispatch({
     }
 
     if (!eligibleRecipients.length || !message.trim()) return;
+    const unknownBodyTokens = findUnknownPersonalizationTokens(message);
+    const unknownSubjectTokens = channel === 'email'
+      ? findUnknownPersonalizationTokens(subject)
+      : [];
+    const unknownTokens = [...new Set([...unknownBodyTokens, ...unknownSubjectTokens])];
+    if (unknownTokens.length > 0) {
+      notify.error(t('messaging.unknownTokens', {
+        tokens: unknownTokens.map((token) => `{${token}}`).join(', '),
+      }));
+      return;
+    }
     const sentRecords: SentDispatchRecord[] = [];
     const record = (recipient: MessagingRecipient, success: boolean): void => {
       sentRecords.push({

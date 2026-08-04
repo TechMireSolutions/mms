@@ -40,16 +40,6 @@ import { resourceKeyParamsSchema, resourceNameParamsSchema } from '../../validat
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
 
-function sanitizeUserCollections(collections: Record<string, unknown[]>, userId: string | number): void {
-  const userTplKey = `whatsappTemplates_u:${userId}`;
-  for (const key of Object.keys(collections)) {
-    if (key.startsWith('whatsappTemplates_u:') && key !== userTplKey) {
-      delete collections[key];
-    }
-  }
-}
-
-/** Drop server-only object keys so older backups cannot 403 a full restore. */
 function stripServerOnlyObjects(objects: Record<string, unknown>): void {
   for (const key of Object.keys(objects)) {
     if (isServerOnlyObjectKey(key)) delete objects[key];
@@ -95,13 +85,9 @@ export default async function dbRoutes(
   // JWT + tenant binding for all db routes
   fastify.addHook('preHandler', authenticateTenant);
 
-  function sanitizeSnapshot(snapshot: TenantDatabaseSnapshot, user: User): TenantDatabaseSnapshot {
+  function sanitizeSnapshot(snapshot: TenantDatabaseSnapshot, _user: User): TenantDatabaseSnapshot {
     if (snapshot.collections) {
       delete snapshot.collections[WORKSPACES_COLLECTION];
-      // Per-collection GET still scopes DMs; admin backup/sync keep every user inbox.
-      if (!canBulkSync(user)) {
-        sanitizeUserCollections(snapshot.collections, user.id);
-      }
     }
     if (snapshot.objects) {
       delete snapshot.objects[PLATFORM_SUPER_USERS_OBJECT_KEY];

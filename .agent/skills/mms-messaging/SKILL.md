@@ -33,10 +33,12 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 ```
 - [ ] useModulePermissions(MESSAGING_MODULE_MANIFEST)
 - [ ] No raw fetch('/api/...')
-- [ ] Upsert saves; clear-logs soft-archive preserved
+- [ ] Upsert saves; clear-logs soft-archive + audit `messaging.logs.clear`
 - [ ] Select-all uses /recipients/match (lean); CSV uses /export/csv job
+- [ ] CSV export respects MESSAGING_CSV_EXPORT_MAX_ROWS / MAX_BYTES
 - [ ] No messages_u: / message_* in ALLOWED_COLLECTIONS dual-write
-- [ ] Send path: idempotency key bound to body digest (409 on mismatch) + 429 backoff
+- [ ] Send/export: idempotency key bound to body digest (409 on mismatch) + 429 backoff
+- [ ] GET /logs?includeDeleted requires canClearMessagingLogs
 - [ ] Token allowlist; no HTML injection
 - [ ] ErrorState + Cmd/Ctrl+N when canWrite
 - [ ] BE: authenticateTenant + RLS; no client authz userId

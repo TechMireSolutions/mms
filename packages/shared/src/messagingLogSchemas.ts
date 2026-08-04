@@ -61,6 +61,12 @@ export const MESSAGING_RECIPIENT_GENDERS = ['all', 'male', 'female', 'unspecifie
 /** Cap for Work “select all reachable” match — same ceiling as the retired FE page-walk. */
 export const MESSAGING_RECIPIENTS_MATCH_LIMIT = 10_000;
 
+/** Hard cap for messaging CSV export row count (in-memory job artifact). */
+export const MESSAGING_CSV_EXPORT_MAX_ROWS = 50_000;
+
+/** Hard cap for messaging CSV export UTF-8 byte size. */
+export const MESSAGING_CSV_EXPORT_MAX_BYTES = 25 * 1024 * 1024;
+
 /** Work-tab recipient directory query (server-paginated under messaging RBAC). */
 export const messagingRecipientsQuerySchema = z.object({
   role: z.enum(MESSAGING_RECIPIENT_ROLES).optional().default('all'),
@@ -141,7 +147,7 @@ export const messagingCsvExportBodySchema = z.object({
     .max(128)
     .regex(/^[a-zA-Z0-9_-]+$/)
     .optional(),
-});
+}).strict();
 
 /** Client dispatch-log create payload (server assigns id/userId/sentAt). */
 export type MessageLogCreateDto = z.infer<typeof messageLogCreateSchema>;

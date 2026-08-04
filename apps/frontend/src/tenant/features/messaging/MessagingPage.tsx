@@ -31,14 +31,14 @@ import {
 const MessageComposer = lazy(() => import('@/components/ui/MessageComposer'));
 export default function MessagingPage(): React.JSX.Element {
   const { t } = useTranslation();
-  const { canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_MANIFEST);
+  const { canRead, canWrite, canViewSetup, canEditSetup, canClearLogs } = useModulePermissions(MESSAGING_MODULE_MANIFEST);
   const [activeTab, setActiveTab] = usePersistedTabState<'work' | 'reports' | 'setup'>('messaging_active_tab', 'work');
   const [selectedById, setSelectedById] = useState<MessagingSelectedMap>({});
   const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
   const [confirmClearLogsOpen, setConfirmClearLogsOpen] = useState(false);
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
-  const templatesQuery = useMessageTemplates();
-  const metricsQuery = useMessagingMetrics();
+  const templatesQuery = useMessageTemplates({ enabled: canRead });
+  const metricsQuery = useMessagingMetrics({ enabled: canRead });
   const { deleteTemplate, clearLogs } = useMessagingMutations();
   const visibleTabs = useFilteredModuleTierTabs({ canViewSetup: canViewSetup || canEditSetup });
 
@@ -111,7 +111,7 @@ export default function MessagingPage(): React.JSX.Element {
       headerTitle={t('messaging.title')}
       headerSubtitle={t('messaging.subtitle')}
       headerActions={canWrite ? <ActionButton variant="primary" icon={Send} onClick={startCampaign}>{t('messaging.newCampaign')}</ActionButton> : null}
-      metricsStrip={metricsQuery.isError ? (
+      metricsStrip={!canRead ? null : metricsQuery.isError ? (
         <ErrorState
           title={t('messaging.loadFailed')}
           description={t('messaging.loadFailedHint')}
@@ -130,6 +130,12 @@ export default function MessagingPage(): React.JSX.Element {
         />
       )}
     >
+      {!canRead ? (
+        <ErrorState
+          title={t('platform.actionForbidden')}
+          description={t('messaging.loadFailedHint')}
+        />
+      ) : (
       <ResponsiveAccordionTabs
         tabs={visibleTabs}
         activeTab={activeTab}
@@ -161,8 +167,9 @@ export default function MessagingPage(): React.JSX.Element {
           />
         )}
       </ResponsiveAccordionTabs>
+      )}
 
-      {messagingTarget && (
+      {canRead && messagingTarget && (
         <Suspense fallback={null}>
           <MessageComposer
             channel={messagingTarget.channel}
@@ -178,7 +185,7 @@ export default function MessagingPage(): React.JSX.Element {
         </Suspense>
       )}
       <ConfirmAlertDialog open={Boolean(deleteTemplateId)} onOpenChange={(open) => { if (!open) setDeleteTemplateId(null); }} title={t('messaging.deleteTemplateTitle')} description={t('messaging.deleteTemplateDesc')} confirmLabel={t('common.delete')} destructive onConfirm={() => void confirmDeleteTemplate()} />
-      <ConfirmAlertDialog open={confirmClearLogsOpen} onOpenChange={setConfirmClearLogsOpen} title={t('messaging.clearLogs')} description={t('messaging.clearLogsDesc')} confirmLabel={t('common.delete')} destructive onConfirm={() => void confirmClearLogs()} />
+      <ConfirmAlertDialog open={confirmClearLogsOpen} onOpenChange={setConfirmClearLogsOpen} title={t('messaging.clearLogs')} description={t('messaging.clearLogsDesc')} confirmLabel={t('messaging.clearLogsConfirm')} destructive onConfirm={() => void confirmClearLogs()} />
     </ModulePageShell>
   );
 }

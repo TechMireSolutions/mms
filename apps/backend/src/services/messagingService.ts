@@ -21,6 +21,7 @@ import {
   replaceMessageTemplatesForWorkspace,
   bulkSaveMessageTemplates,
   deleteMessageTemplateById,
+  findMessageTemplateById,
   listMessageLogsByWorkspace,
   replaceMessageLogsForWorkspace,
   insertMessageLogs,
@@ -32,6 +33,7 @@ import {
 } from '../db/repositories/messagingRepository.js';
 import { listContactsPage, findContactsByIds } from '../db/repositories/contactRepository.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
+import { broadcastCollection } from './websocketService.js';
 import { z } from 'zod';
 
 const templateListSchema = z.array(messageTemplateSchema);
@@ -52,13 +54,22 @@ const logBulkService = defineTenantBulkCollectionService<Message>(
 export const loadMessageTemplates = templateBulkService.load;
 export const replaceMessageTemplates = templateBulkService.replace;
 
+export async function getMessageTemplateById(
+  workspaceSubdomain: string,
+  templateId: string,
+): Promise<MessageTemplate | null> {
+  return findMessageTemplateById(workspaceSubdomain, templateId);
+}
+
 export async function saveMessageTemplate(workspaceSubdomain: string, template: MessageTemplate): Promise<MessageTemplate> {
   await bulkSaveMessageTemplates(workspaceSubdomain, [template]);
+  await broadcastCollection('message_templates');
   return template;
 }
 
 export async function removeMessageTemplate(workspaceSubdomain: string, templateId: string): Promise<void> {
   await deleteMessageTemplateById(workspaceSubdomain, templateId);
+  await broadcastCollection('message_templates');
 }
 
 export const loadMessageLogs = logBulkService.load;
@@ -84,12 +95,14 @@ export async function loadFilteredMessageLogs(
 export async function recordMessageLogs(workspaceSubdomain: string, logs: Message[]): Promise<Message[]> {
   if (!logs || logs.length === 0) return [];
   await insertMessageLogs(workspaceSubdomain, logs);
+  await broadcastCollection('message_logs');
   return logs;
 }
 
 /** Soft-deletes all active message logs for the workspace (sets deletedAt). */
 export async function clearAllMessageLogs(workspaceSubdomain: string): Promise<void> {
   await softDeleteActiveMessageLogs(workspaceSubdomain);
+  await broadcastCollection('message_logs');
 }
 
 export async function computeMessagingMetrics(

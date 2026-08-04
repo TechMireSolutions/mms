@@ -5,6 +5,7 @@ import {
   type MessageTemplate,
   type Message,
   type MessageLogCreateDto,
+  type MessageTemplateInputDto,
   type MessagingMetricsDto,
 } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
@@ -193,7 +194,7 @@ export function useMessagingMutations() {
   };
 
   const saveTemplate = useMutation({
-    mutationFn: async (template: Partial<MessageTemplate> & { label: string; body: string }) => {
+    mutationFn: async (template: MessageTemplateInputDto) => {
       return apiJson<{ template: MessageTemplate }>('/api/messaging/templates', {
         method: 'POST',
         body: JSON.stringify(template),

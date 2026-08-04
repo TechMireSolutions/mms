@@ -7,17 +7,21 @@ import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/htt
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { canReadMessaging, canWriteMessaging } from '../../../services/rbacService.js';
 import {
+  getMessageTemplateById,
   loadMessageTemplates,
   removeMessageTemplate,
   saveMessageTemplate,
 } from '../../../services/messagingService.js';
-import { findMessageTemplateById } from '../../../db/repositories/messagingRepository.js';
 
 /** Messaging template list/create/delete routes. */
 export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/templates', async (req, reply) => {
     const user = req.user as User;
     if (!canReadMessaging(user)) return sendForbidden(reply);
+    const tenantSubdomain = getRequestTenant();
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     try {
       const templates = await loadMessageTemplates();
       return reply.send({ templates });
@@ -32,7 +36,9 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
     const parsed = parseRequest(messageTemplateInputSchema, req.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
 
     const requestedId = parsed.data.id?.trim();
     let templateId: string;
@@ -45,7 +51,7 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
       });
     } else {
       try {
-        const existing = await findMessageTemplateById(tenantSubdomain, requestedId);
+        const existing = await getMessageTemplateById(tenantSubdomain, requestedId);
         if (!existing) {
           return sendNotFound(reply, 'Template not found');
         }
@@ -76,7 +82,9 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
     const user = req.user as User;
     if (!canWriteMessaging(user)) return sendForbidden(reply);
     const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     const { id } = req.params as { id: string };
     if (!id.startsWith('custom_')) {
       return reply.status(400).send({

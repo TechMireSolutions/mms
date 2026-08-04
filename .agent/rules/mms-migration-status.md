@@ -21,7 +21,7 @@ Rules describe **target architecture**. Fix open gaps only when the task covers 
 | Cookie CSRF / Origin depth | Mutations rely on `SameSite=Lax` + CORS; no app-wide Origin/`Sec-Fetch-Site` gate on cookie-auth writes (Contacts inherits) → defense-in-depth Origin check — `mms-auth-security.md` |
 | Work REST parity (Students/Teachers/Users/Sessions) | `list` views / unpaged dumps / drawer gaps → Contacts parity — `mms-module-architecture.md` §3/§7 |
 | SQL pagination / oversized shells | In-memory page after load; a few ~220–275 shells → SQL page/filter; split behind barrels — `mms-data-layer.md` / `mms-structure-naming.md` |
-| Messaging hardening | `includeDeleted` readable under `messaging.read`; unbounded in-memory CSV job; clear-logs unaudited; idempotency key unbound to body → gate/cap/audit/bind — `mms-messaging.md` |
+| Messaging hardening | Closed: `includeDeleted` gated by `canClearMessagingLogs`; CSV row/byte caps; clear-logs audited; log/export idempotency bound to body digest (`409` on mismatch) — residual only if regressions reappear — `mms-messaging.md` |
 
 ## Do not reintroduce (themes)
 

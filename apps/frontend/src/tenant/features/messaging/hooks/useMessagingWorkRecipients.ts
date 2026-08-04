@@ -30,6 +30,7 @@ export interface MessagingWorkRecipientsResult {
   hasMore: boolean;
   isError: boolean;
   isPending: boolean;
+  isFetching: boolean;
   refetch: () => void;
 }
 
@@ -132,6 +133,7 @@ export function useMessagingWorkRecipients(
     hasMore: Boolean(query.data?.hasMore),
     isError: query.isError,
     isPending: query.isPending,
+    isFetching: query.isFetching,
     refetch: () => {
       void query.refetch();
     },

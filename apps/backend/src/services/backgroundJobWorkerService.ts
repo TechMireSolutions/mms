@@ -161,3 +161,24 @@ export async function getUserBackgroundJob(
   const row = rows[0];
   return row ? rowToJobRecord(row) : null;
 }
+
+/** Returns the stored enqueue payload for an existing user job (idempotency body binding). */
+export async function getUserBackgroundJobPayload(
+  userId: string,
+  jobId: string,
+): Promise<Record<string, unknown> | null> {
+  const db = getDb();
+  const tenantId = getRequestTenant();
+  if (!tenantId) return null;
+
+  const rows = await db.select({ payload: backgroundJobs.payload })
+    .from(backgroundJobs)
+    .where(and(
+      eq(backgroundJobs.tenantId, tenantId),
+      eq(backgroundJobs.userId, userId),
+      eq(backgroundJobs.id, jobId),
+    ))
+    .limit(1);
+
+  return rows[0]?.payload ?? null;
+}

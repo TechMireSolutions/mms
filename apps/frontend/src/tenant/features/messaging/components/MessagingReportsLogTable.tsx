@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
 import { ListPagination } from "@/components/ui/ListPagination";
+import { TableSkeleton } from "@/components/ui/LoadingState";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -21,6 +22,8 @@ interface MessagingReportsLogTableProps {
   pageSize: number;
   hasMore: boolean;
   canWrite: boolean;
+  isPending: boolean;
+  isFetching: boolean;
   logStatusConfig: Record<string, StatusBadgeConfigItem>;
   getRecipientName: (contactId: string | number) => string;
   getColumnWidth: (column: string) => number | undefined;
@@ -36,6 +39,8 @@ export function MessagingReportsLogTable({
   pageSize,
   hasMore,
   canWrite,
+  isPending,
+  isFetching,
   logStatusConfig,
   getRecipientName,
   getColumnWidth,
@@ -45,6 +50,15 @@ export function MessagingReportsLogTable({
 }: MessagingReportsLogTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const columns: MessagingLogColumn[] = ["recipient", "channel", "body", "dateSent"];
+
+  if (isPending && logs.length === 0) {
+    return (
+      <div role="status" aria-live="polite" aria-busy="true" className="rounded-lg border border-border/50 p-3">
+        <TableSkeleton rows={6} cols={5} />
+        <span className="sr-only">{t("common.loading")}</span>
+      </div>
+    );
+  }
 
   if (logs.length === 0) {
     return (
@@ -63,7 +77,7 @@ export function MessagingReportsLogTable({
   };
 
   return (
-    <>
+    <div aria-busy={isFetching ? true : undefined}>
       <div className="rounded-lg border border-border/50">
         <div className="space-y-3 p-3 md:hidden">
           {logs.map((log) => {
@@ -173,6 +187,6 @@ export function MessagingReportsLogTable({
         i18nNamespace="messaging"
         variant="range"
       />
-    </>
+    </div>
   );
 }

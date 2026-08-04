@@ -1,6 +1,8 @@
 import {
   buildCsvContent,
   formatDateTime,
+  MESSAGING_CSV_EXPORT_MAX_BYTES,
+  MESSAGING_CSV_EXPORT_MAX_ROWS,
   type Message,
   type MessagingCsvExportQueryDto,
 } from '@mms/shared';
@@ -22,6 +24,14 @@ export interface MessagingCsvExportResult {
   count: number;
 }
 
+/** Thrown when export would exceed row or byte caps. */
+export class MessagingCsvExportLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MessagingCsvExportLimitError';
+  }
+}
+
 function normalizeFilename(filename?: string): string {
   const trimmed = filename?.trim() || 'message_history.csv';
   return trimmed.toLowerCase().endsWith('.csv') ? trimmed : `${trimmed}.csv`;
@@ -36,9 +46,11 @@ function normalizeFilters(query: MessagingCsvExportQueryDto = {}): MessagingCsvE
   const endDate = query.endDate?.trim() || undefined;
   return { channel, category, status, search, startDate, endDate };
 }
+
 /**
  * Pages active message logs, resolves recipient names, and builds a CSV artifact.
  * Soft-archived logs are never included (`includeDeleted` is never set).
+ * Fails when row count or CSV bytes would exceed shared caps.
  */
 export async function buildMessagingCsvExport(
   workspaceSubdomain: string,
@@ -60,7 +72,17 @@ export async function buildMessagingCsvExport(
       // Never export soft-archived logs.
       includeDeleted: false,
     });
+    if (page === 1 && result.total > MESSAGING_CSV_EXPORT_MAX_ROWS) {
+      throw new MessagingCsvExportLimitError(
+        `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_ROWS} rows (${result.total} matched)`,
+      );
+    }
     logs.push(...result.logs);
+    if (logs.length > MESSAGING_CSV_EXPORT_MAX_ROWS) {
+      throw new MessagingCsvExportLimitError(
+        `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_ROWS} rows`,
+      );
+    }
     await options.onProgress?.(logs.length, Math.max(result.total, 1));
     hasMore = result.hasMore;
     page += 1;
@@ -92,8 +114,16 @@ export async function buildMessagingCsvExport(
     }),
   ];
 
+  const csv = buildCsvContent(rows);
+  const byteLength = Buffer.byteLength(csv, 'utf8');
+  if (byteLength > MESSAGING_CSV_EXPORT_MAX_BYTES) {
+    throw new MessagingCsvExportLimitError(
+      `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_BYTES} bytes (${byteLength} generated)`,
+    );
+  }
+
   return {
-    csv: buildCsvContent(rows),
+    csv,
     filename,
     count: logs.length,
   };

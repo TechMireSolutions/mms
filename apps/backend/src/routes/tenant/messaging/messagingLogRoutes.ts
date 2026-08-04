@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { FastifyPluginAsync } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
-import type { Message, User } from '@mms/shared';
+import type { Message, MessageLogCreateDto, User } from '@mms/shared';
 import {
   messagingLogsQuerySchema,
   messagingMetricsQuerySchema,
@@ -11,6 +11,7 @@ import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { MESSAGING_LOG_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
+import { recordAudit } from '../../../services/auditService.js';
 import {
   canClearMessagingLogs,
   canReadMessaging,
@@ -28,7 +29,6 @@ import {
   clearAllMessageLogs,
   computeMessagingMetrics,
   loadFilteredMessageLogs,
-  loadMessageLogs,
   recordMessageLogs,
 } from '../../../services/messagingService.js';
 
@@ -37,7 +37,7 @@ const IDEMPOTENCY_PENDING_POLL_MS = 25;
 const IDEMPOTENCY_PENDING_POLL_ATTEMPTS = 8;
 
 /** `recorded: null` = in-flight claim; number = completed dispatch audit. */
-type MessagingIdempotencyPayload = { recorded: number | null };
+type MessagingIdempotencyPayload = { recorded: number | null; bodyDigest: string };
 
 function normalizeDispatchLogs(user: User, logs: Array<{
   contactId: string | number;
@@ -83,25 +83,50 @@ function messagingIdempotencyLookupKey(
   return `messaging_idem:${digest}`;
 }
 
+/** Digest of the dispatch logs body — bound to the idempotency key (`mms-api-interface` §6). */
+function messagingDispatchBodyDigest(logs: MessageLogCreateDto[]): string {
+  return createHash('sha256').update(JSON.stringify(logs)).digest('hex');
+}
+
 function completedRecorded(payload: MessagingIdempotencyPayload): number | undefined {
   return payload.recorded === null ? undefined : payload.recorded;
 }
 
+function idempotencyBodyMatches(
+  payload: MessagingIdempotencyPayload,
+  bodyDigest: string,
+): boolean {
+  return payload.bodyDigest === bodyDigest;
+}
+
 async function waitForCompletedIdempotency(
   lookupKey: string,
-): Promise<number | undefined> {
+  bodyDigest: string,
+): Promise<{ recorded: number } | { mismatch: true } | undefined> {
   for (let attempt = 0; attempt < IDEMPOTENCY_PENDING_POLL_ATTEMPTS; attempt += 1) {
     const existing = await findAuthArtifactByLookupKey<MessagingIdempotencyPayload>(
       'messaging_idempotency',
       lookupKey,
     );
     if (existing) {
+      if (!idempotencyBodyMatches(existing.payload, bodyDigest)) {
+        return { mismatch: true };
+      }
       const recorded = completedRecorded(existing.payload);
-      if (recorded !== undefined) return recorded;
+      if (recorded !== undefined) return { recorded };
     }
     await new Promise((resolve) => setTimeout(resolve, IDEMPOTENCY_PENDING_POLL_MS));
   }
   return undefined;
+}
+
+function replyIdempotencyBodyMismatch(
+  reply: { status: (code: number) => { send: (body: unknown) => unknown } },
+) {
+  return reply.status(409).send({
+    type: 'conflict',
+    message: 'Idempotency key reused with a different request body',
+  });
 }
 
 /** Messaging log history, recording, clear, and metrics routes. */
@@ -111,20 +136,16 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
     if (!canReadMessaging(user)) return sendForbidden(reply);
     const parsedQuery = parseRequest(messagingLogsQuerySchema, req.query);
     if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
+    if (parsedQuery.data.includeDeleted && !canClearMessagingLogs(user)) {
+      return sendForbidden(reply);
+    }
     const tenantSubdomain = getRequestTenant();
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     try {
-      if (tenantSubdomain) {
-        const page = await loadFilteredMessageLogs(tenantSubdomain, parsedQuery.data);
-        return reply.send(page);
-      }
-      const logs = await loadMessageLogs();
-      return reply.send({
-        logs,
-        total: logs.length,
-        page: 1,
-        pageSize: Math.max(logs.length, 1),
-        hasMore: false,
-      });
+      const page = await loadFilteredMessageLogs(tenantSubdomain, parsedQuery.data);
+      return reply.send(page);
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to load message logs', err);
     }
@@ -139,12 +160,15 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
       const parsed = parseRequest(recordMessageLogsSchema, req.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
       const tenantSubdomain = getRequestTenant();
-      if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+      if (!tenantSubdomain) {
+        return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+      }
 
       const idempotencyKey = resolveIdempotencyKey(
         parsed.data.idempotencyKey,
         req.headers['idempotency-key'],
       );
+      const bodyDigest = messagingDispatchBodyDigest(parsed.data.logs);
       const lookupKey = idempotencyKey
         ? messagingIdempotencyLookupKey(tenantSubdomain, user.id, idempotencyKey)
         : undefined;
@@ -157,12 +181,16 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
             lookupKey,
           );
           if (existing) {
+            if (!idempotencyBodyMatches(existing.payload, bodyDigest)) {
+              return replyIdempotencyBodyMismatch(reply);
+            }
             const recorded = completedRecorded(existing.payload);
             if (recorded !== undefined) {
               return reply.send({ recorded });
             }
-            const waited = await waitForCompletedIdempotency(lookupKey);
-            if (waited !== undefined) return reply.send({ recorded: waited });
+            const waited = await waitForCompletedIdempotency(lookupKey, bodyDigest);
+            if (waited && 'mismatch' in waited) return replyIdempotencyBodyMismatch(reply);
+            if (waited && 'recorded' in waited) return reply.send({ recorded: waited.recorded });
             return reply.status(409).send({
               type: 'conflict',
               message: 'Idempotent request still in progress',
@@ -171,13 +199,14 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
 
           const claim = await tryClaimAuthArtifactByLookupKey<MessagingIdempotencyPayload>(
             'messaging_idempotency',
-            { recorded: null },
+            { recorded: null, bodyDigest },
             MESSAGING_IDEMPOTENCY_TTL_MS,
             { lookupKey, scopeKey },
           );
           if (!claim.claimed) {
-            const waited = await waitForCompletedIdempotency(lookupKey);
-            if (waited !== undefined) return reply.send({ recorded: waited });
+            const waited = await waitForCompletedIdempotency(lookupKey, bodyDigest);
+            if (waited && 'mismatch' in waited) return replyIdempotencyBodyMismatch(reply);
+            if (waited && 'recorded' in waited) return reply.send({ recorded: waited.recorded });
             return reply.status(409).send({
               type: 'conflict',
               message: 'Idempotent request still in progress',
@@ -187,7 +216,7 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
           try {
             const normalized = normalizeDispatchLogs(user, parsed.data.logs);
             const recorded = await recordMessageLogs(tenantSubdomain, normalized);
-            const payload: MessagingIdempotencyPayload = { recorded: recorded.length };
+            const payload: MessagingIdempotencyPayload = { recorded: recorded.length, bodyDigest };
             await updateAuthArtifactPayload(claim.id, payload);
             return reply.send({ recorded: recorded.length });
           } catch (err) {
@@ -209,9 +238,19 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
     const user = req.user as User;
     if (!canClearMessagingLogs(user)) return sendForbidden(reply);
     const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) return reply.status(400).send({ message: 'Tenant context required' });
+    if (!tenantSubdomain) {
+        return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+      }
     try {
       await clearAllMessageLogs(tenantSubdomain);
+      await recordAudit({
+        userId: user.id,
+        userEmail: user.email,
+        action: 'messaging.logs.clear',
+        entityType: 'collection',
+        entityId: 'message_logs',
+        summary: 'Soft-archived all message logs from Reports',
+      });
       return reply.send({ success: true });
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to clear message logs', err);
@@ -224,8 +263,11 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
     const parsedQuery = parseRequest(messagingMetricsQuerySchema, req.query);
     if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
     const tenantSubdomain = getRequestTenant();
+    if (!tenantSubdomain) {
+      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
+    }
     try {
-      const metrics = await computeMessagingMetrics(tenantSubdomain || undefined, {
+      const metrics = await computeMessagingMetrics(tenantSubdomain, {
         startDate: parsedQuery.data.startDate,
         endDate: parsedQuery.data.endDate,
       });

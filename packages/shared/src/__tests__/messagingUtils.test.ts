@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { personalizeMessage, validateRecipientAddress, MESSAGING_VARIABLE_TOKENS, appendVariableToken } from '../utils.js';
+import {
+  personalizeMessage,
+  findUnknownPersonalizationTokens,
+  validateRecipientAddress,
+  MESSAGING_VARIABLE_TOKENS,
+  appendVariableToken,
+} from '../utils.js';
 import { calculateSmsSegments } from '../smsUtils.js';
 import {
   mergeMessageTemplates,
@@ -36,13 +42,27 @@ describe('messagingUtils', () => {
       expect(result).toBe('Welcome to Madrasa Tul Elm on 2026-08-01.');
     });
 
-    it('preserves unknown token literals', () => {
+    it('leaves unknown token literals for callers to reject', () => {
       const result = personalizeMessage('Hello {name}, see {custom_field} and {foo|bar}.', {
         id: 4,
         name: 'Ali',
         phone: '+923001234567',
       });
       expect(result).toBe('Hello Ali, see {custom_field} and {foo|bar}.');
+    });
+  });
+
+  describe('findUnknownPersonalizationTokens', () => {
+    it('returns empty when all tokens are allowlisted', () => {
+      expect(findUnknownPersonalizationTokens('Hello {name} at {madrasa_name|School}')).toEqual([]);
+      expect(findUnknownPersonalizationTokens('Alias {school_name}')).toEqual([]);
+    });
+
+    it('returns deduped unknown token keys', () => {
+      expect(findUnknownPersonalizationTokens('Hello {name}, see {custom_field} and {foo|bar} {custom_field}.')).toEqual([
+        'custom_field',
+        'foo',
+      ]);
     });
   });
 

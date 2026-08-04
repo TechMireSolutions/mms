@@ -10,7 +10,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingSetupTemplateFormProps {
   canEditSetup: boolean;
-  canWrite: boolean;
   editingId: string | null;
   label: string;
   body: string;
@@ -28,7 +27,6 @@ interface MessagingSetupTemplateFormProps {
 
 export function MessagingSetupTemplateForm({
   canEditSetup,
-  canWrite,
   editingId,
   label,
   body,
@@ -47,7 +45,7 @@ export function MessagingSetupTemplateForm({
 
   return (
     <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs">
-      {canEditSetup || canWrite ? (
+      {canEditSetup ? (
         <>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 space-y-1">

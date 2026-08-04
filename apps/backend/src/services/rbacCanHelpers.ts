@@ -38,10 +38,6 @@ export function canReadCollection(user: User, collectionName: string): boolean {
   if (!isAllowedCollectionName(collectionName)) {
     return false;
   }
-  if (collectionName.startsWith('whatsappTemplates_u:')) {
-    const ownerId = collectionName.split(':')[1];
-    return ownerId === String(user.id);
-  }
   if (collectionName === 'backups') {
     return user.role === 'admin';
   }
@@ -72,10 +68,6 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
   }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
-  }
-  if (collectionName.startsWith('whatsappTemplates_u:')) {
-    const ownerId = collectionName.split(':')[1];
-    return ownerId === String(user.id) || roleHasPermission(user.role, 'settings.global.write');
   }
   if (collectionName === 'backups') {
     return user.role === 'admin';

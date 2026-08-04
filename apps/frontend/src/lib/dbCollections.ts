@@ -44,7 +44,6 @@ const BUSINESS_COLLECTIONS = new Set([
   "studentStatuses",
   "studentGenderFilters",
   "studentDiscountTypes",
-  "whatsappTemplates",
   "teacherStatuses",
   "teacherSpecializations",
   "sessionStatuses",

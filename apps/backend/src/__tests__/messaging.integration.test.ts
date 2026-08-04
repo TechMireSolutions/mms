@@ -44,20 +44,14 @@ const mockResolveMessagingRecipients = vi.fn();
 const mockFindMessageTemplateById = vi.fn();
 const mockEnqueueBackgroundJob = vi.fn();
 const mockGetUserBackgroundJob = vi.fn();
+const mockGetUserBackgroundJobPayload = vi.fn();
 const mockRecordAudit = vi.fn();
 const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();
 
-vi.mock('../db/repositories/messagingRepository.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../db/repositories/messagingRepository.js')>();
-  return {
-    ...actual,
-    findMessageTemplateById: (...args: unknown[]) => mockFindMessageTemplateById(...args),
-  };
-});
-
 vi.mock('../services/messagingService.js', () => ({
   loadMessageTemplates: (...args: unknown[]) => mockLoadMessageTemplates(...args),
+  getMessageTemplateById: (...args: unknown[]) => mockFindMessageTemplateById(...args),
   saveMessageTemplate: (...args: unknown[]) => mockSaveMessageTemplate(...args),
   removeMessageTemplate: (...args: unknown[]) => mockRemoveMessageTemplate(...args),
   loadMessageLogs: vi.fn().mockResolvedValue([]),
@@ -80,6 +74,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
     ...actual,
     enqueueBackgroundJob: (...args: unknown[]) => mockEnqueueBackgroundJob(...args),
     getUserBackgroundJob: (...args: unknown[]) => mockGetUserBackgroundJob(...args),
+    getUserBackgroundJobPayload: (...args: unknown[]) => mockGetUserBackgroundJobPayload(...args),
   };
 });
 
@@ -142,6 +137,7 @@ describe('messaging REST routes', () => {
     mockResolveMessagingRecipients.mockReset().mockResolvedValue([]);
     mockEnqueueBackgroundJob.mockReset().mockImplementation(async (_tenant, _userId, job) => job);
     mockGetUserBackgroundJob.mockReset().mockResolvedValue(null);
+    mockGetUserBackgroundJobPayload.mockReset().mockResolvedValue(null);
     mockRecordAudit.mockReset().mockResolvedValue(undefined);
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
@@ -317,6 +313,50 @@ describe('messaging REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockClearAllMessageLogs).toHaveBeenCalledWith('demo');
+    expect(mockRecordAudit).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'messaging.logs.clear',
+      entityId: 'message_logs',
+    }));
+    await app.close();
+  });
+
+  it('GET /api/messaging/logs?includeDeleted denies teacher without messaging.clearLogs', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/messaging/logs?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadFilteredMessageLogs).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/messaging/logs?includeDeleted allows admin with messaging.clearLogs', async () => {
+    mockLoadFilteredMessageLogs.mockResolvedValueOnce({
+      logs: [{ id: 'archived1', channel: 'sms', status: 'sent', deletedAt: '2026-01-01T00:00:00.000Z' }],
+      total: 1,
+      page: 1,
+      pageSize: 50,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/messaging/logs?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadFilteredMessageLogs).toHaveBeenCalledWith(
+      'demo',
+      expect.objectContaining({ includeDeleted: true }),
+    );
     await app.close();
   });
 
@@ -654,14 +694,7 @@ describe('messaging REST routes', () => {
       tryClaimAuthArtifactByLookupKey,
       updateAuthArtifactPayload,
     } = await import('../services/auth/authArtifactService.js');
-    vi.mocked(findAuthArtifactByLookupKey)
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        id: 'art-1',
-        kind: 'messaging_idempotency',
-        payload: { recorded: 1 },
-        expiresAt: new Date(Date.now() + 60_000),
-      });
+    vi.mocked(findAuthArtifactByLookupKey).mockResolvedValueOnce(null);
     vi.mocked(tryClaimAuthArtifactByLookupKey).mockResolvedValue({ claimed: true, id: 'art-1' });
     vi.mocked(updateAuthArtifactPayload).mockResolvedValue(undefined);
 
@@ -693,7 +726,22 @@ describe('messaging REST routes', () => {
     expect(first.json()).toEqual({ recorded: 1 });
     expect(mockRecordMessageLogs).toHaveBeenCalledTimes(1);
     expect(tryClaimAuthArtifactByLookupKey).toHaveBeenCalled();
-    expect(updateAuthArtifactPayload).toHaveBeenCalledWith('art-1', { recorded: 1 });
+    const claimedPayload = vi.mocked(tryClaimAuthArtifactByLookupKey).mock.calls[0]?.[1] as {
+      bodyDigest: string;
+    };
+    const bodyDigest = claimedPayload.bodyDigest;
+    expect(bodyDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect(updateAuthArtifactPayload).toHaveBeenCalledWith(
+      'art-1',
+      expect.objectContaining({ recorded: 1, bodyDigest }),
+    );
+
+    vi.mocked(findAuthArtifactByLookupKey).mockResolvedValueOnce({
+      id: 'art-1',
+      kind: 'messaging_idempotency',
+      payload: { recorded: 1, bodyDigest },
+      expiresAt: new Date(Date.now() + 60_000),
+    });
 
     const second = await app.inject({
       method: 'POST',
@@ -704,6 +752,48 @@ describe('messaging REST routes', () => {
     expect(second.statusCode).toBe(200);
     expect(second.json()).toEqual({ recorded: 1 });
     expect(mockRecordMessageLogs).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it('POST /api/messaging/logs returns 409 when idempotency key is reused with a different body', async () => {
+    const { findAuthArtifactByLookupKey } = await import('../services/auth/authArtifactService.js');
+    vi.mocked(findAuthArtifactByLookupKey).mockResolvedValueOnce({
+      id: 'art-mismatch',
+      kind: 'messaging_idempotency',
+      payload: {
+        recorded: 1,
+        bodyDigest: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      },
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/logs',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
+        'idempotency-key': 'dispatch-batch-mismatch',
+      },
+      payload: {
+        logs: [
+          {
+            contactId: 'c1',
+            channel: 'sms' as const,
+            body: 'Different body',
+            status: 'sent' as const,
+          },
+        ],
+        idempotencyKey: 'dispatch-batch-mismatch',
+      },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({
+      type: 'conflict',
+      message: 'Idempotency key reused with a different request body',
+    });
+    expect(mockRecordMessageLogs).not.toHaveBeenCalled();
     await app.close();
   });
 
@@ -747,6 +837,77 @@ describe('messaging REST routes', () => {
       action: 'messaging.export.queue',
       entityId: expect.any(String),
     }));
+    await app.close();
+  });
+
+  it('POST /api/messaging/export/csv returns 409 when idempotency key is reused with a different body', async () => {
+    mockGetUserBackgroundJob.mockResolvedValueOnce({
+      id: 'export-key-1',
+      moduleId: 'messaging',
+      kind: 'export',
+      status: 'completed',
+      label: 'Prior export',
+      createdAt: new Date().toISOString(),
+    });
+    mockGetUserBackgroundJobPayload.mockResolvedValueOnce({
+      bodyDigest: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      query: { channel: 'email' },
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
+      },
+      payload: {
+        idempotencyKey: 'export-key-1',
+        label: 'Different export',
+        query: { channel: 'sms' },
+      },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({
+      type: 'conflict',
+      message: 'Idempotency key reused with a different export body',
+    });
+    expect(mockEnqueueBackgroundJob).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/messaging/export/csv returns 409 when idempotency key exists without bodyDigest', async () => {
+    mockGetUserBackgroundJob.mockResolvedValueOnce({
+      id: 'export-key-no-digest',
+      moduleId: 'messaging',
+      kind: 'export',
+      status: 'completed',
+      label: 'Prior export',
+      createdAt: new Date().toISOString(),
+    });
+    mockGetUserBackgroundJobPayload.mockResolvedValueOnce({
+      query: { channel: 'sms' },
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/messaging/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${signTenantToken(app, { role: 'admin', name: 'admin' })}`,
+      },
+      payload: {
+        idempotencyKey: 'export-key-no-digest',
+        label: 'Retry export',
+        query: { channel: 'sms' },
+      },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({
+      type: 'conflict',
+      message: 'Idempotency key reused with a different export body',
+    });
+    expect(mockEnqueueBackgroundJob).not.toHaveBeenCalled();
     await app.close();
   });
 
@@ -833,5 +994,7 @@ describe('messaging REST routes', () => {
     expect(isAllowedCollectionName('message_logs')).toBe(false);
     expect(isAllowedCollectionName('message_templates')).toBe(false);
     expect(isAllowedCollectionName('messages_u:x')).toBe(false);
+    expect(isAllowedCollectionName('whatsappTemplates')).toBe(false);
+    expect(isAllowedCollectionName('whatsappTemplates_u:x')).toBe(false);
   });
 });

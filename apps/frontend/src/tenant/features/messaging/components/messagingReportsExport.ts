@@ -53,7 +53,6 @@ export async function exportMessagingLogsFiltered({
 
   if (job.hasDownload && job.status === 'completed') {
     await downloadBackgroundJobArtifact(job.id, filename);
+    notify.success(t('messaging.exportSuccess'));
   }
-
-  notify.success(t('messaging.exportSuccess'));
 }

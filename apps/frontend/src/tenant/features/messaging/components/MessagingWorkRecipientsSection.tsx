@@ -20,6 +20,8 @@ interface MessagingWorkRecipientsSectionProps {
   genderOptions: Array<{ value: string; label: string }>;
   selectingReachable: boolean;
   allVisibleSelected: boolean;
+  isPending: boolean;
+  isFetching: boolean;
   recipientsPage: number;
   recipientsTotal: number;
   recipientsLimit: number;
@@ -47,6 +49,8 @@ export function MessagingWorkRecipientsSection({
   genderOptions,
   selectingReachable,
   allVisibleSelected,
+  isPending,
+  isFetching,
   recipientsPage,
   recipientsTotal,
   recipientsLimit,
@@ -87,6 +91,8 @@ export function MessagingWorkRecipientsSection({
         contacts={contacts}
         selectedById={selectedById}
         allVisibleSelected={allVisibleSelected}
+        isPending={isPending}
+        isFetching={isFetching}
         getColumnWidth={getColumnWidth}
         onToggleRecipient={onToggleRecipient}
         onToggleAllVisible={onToggleAllVisible}

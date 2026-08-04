@@ -771,7 +771,7 @@
       "checkConstraints": {
         "auth_artifacts_kind_check": {
           "name": "auth_artifacts_kind_check",
-          "value": "\"kind\" IN ('handoff','two_factor_challenge','refresh_token','platform_setup','platform_password_reset','login_email_change')"
+          "value": "\"kind\" IN ('handoff','two_factor_challenge','refresh_token','platform_setup','platform_password_reset','login_email_change','messaging_idempotency')"
         }
       },
       "isRLSEnabled": false
@@ -2208,6 +2208,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp",
@@ -2232,6 +2238,27 @@
           "method": "btree",
           "with": {}
         },
+        "message_logs_workspace_deleted_idx": {
+          "name": "message_logs_workspace_deleted_idx",
+          "columns": [
+            {
+              "expression": "workspace_subdomain",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "message_logs_custom_data_gin_idx": {
           "name": "message_logs_custom_data_gin_idx",
           "columns": [
@@ -2246,6 +2273,44 @@
           "concurrently": false,
           "method": "gin",
           "with": {}
+        },
+        "message_logs_workspace_active_idx": {
+          "name": "message_logs_workspace_active_idx",
+          "columns": [
+            {
+              "expression": "workspace_subdomain",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "default"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {},
+          "where": "\"deleted_at\" is null"
+        },
+        "message_logs_workspace_sent_at_active_idx": {
+          "name": "message_logs_workspace_sent_at_active_idx",
+          "columns": [
+            {
+              "expression": "workspace_subdomain",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "(custom_data->>'sentAt')",
+              "isExpression": true,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {},
+          "where": "\"deleted_at\" is null"
         }
       },
       "foreignKeys": {

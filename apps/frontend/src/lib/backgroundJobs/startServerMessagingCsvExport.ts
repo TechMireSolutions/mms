@@ -9,6 +9,7 @@ export async function startServerMessagingCsvExport(options: {
   filename: string;
   label: string;
 }): Promise<BackgroundJobRecord> {
+  const idempotencyKey = crypto.randomUUID();
   const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(
     '/api/messaging/export/csv',
     {
@@ -17,6 +18,7 @@ export async function startServerMessagingCsvExport(options: {
         query: options.query,
         filename: options.filename,
         label: options.label,
+        idempotencyKey,
       }),
     },
   );

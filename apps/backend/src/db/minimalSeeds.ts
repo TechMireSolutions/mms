@@ -17,7 +17,6 @@ const MINIMAL_SEEDED_COLLECTIONS = new Set([
   'studentGenderFilters',
   'studentDiscountTypes',
   'socialPlatforms',
-  'whatsappTemplates',
   'phoneLabels',
   'emailLabels',
   'addressLabels',

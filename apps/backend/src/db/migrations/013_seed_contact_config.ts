@@ -17,7 +17,6 @@ const CONTACT_CONFIG_COLLECTIONS = [
   'genders',
   'socialPlatforms',
   'relationships',
-  'whatsappTemplates',
   'phoneLabels',
   'emailLabels',
   'addressLabels',

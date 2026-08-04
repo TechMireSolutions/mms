@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { connectTenantDatabaseSocket } from '@/lib/tenantWebSocket';
 import { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
+import { invalidateMessagingQueries } from '@/tenant/features/messaging/hooks/invalidateMessagingQueries';
 
 /**
  * Subscribes to tenant `/api/ws` and invalidates Query keys for live collection updates.
@@ -17,8 +18,13 @@ export function useTenantDatabaseUpdates(): void {
 
     return connectTenantDatabaseSocket({
       onDatabaseUpdate: (message) => {
-        if (message.type === 'collection' && message.key === 'contacts') {
+        if (message.type !== 'collection') return;
+        if (message.key === 'contacts') {
           invalidateContactsQueries(queryClient);
+          return;
+        }
+        if (message.key === 'message_logs' || message.key === 'message_templates') {
+          invalidateMessagingQueries(queryClient);
         }
       },
     });

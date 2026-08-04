@@ -204,7 +204,6 @@ export const ALLOWED_COLLECTIONS = new Set([
   QUESTION_BANK_MODULE_MANIFEST.collectionKey,
   QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey,
   QUESTION_BANK_MODULE_MANIFEST.resultsCollectionKey,
-  'whatsappTemplates',
   'studentStatuses',
   'studentGenderFilters',
   'studentDiscountTypes',
@@ -266,8 +265,7 @@ export const ALLOWED_OBJECTS = new Set([
 ]);
 
 export function isAllowedCollectionName(collectionName: string): boolean {
-  return ALLOWED_COLLECTIONS.has(collectionName)
-    || collectionName.startsWith('whatsappTemplates_u:');
+  return ALLOWED_COLLECTIONS.has(collectionName);
 }
 
 export function isAllowedObjectKey(key: string): boolean {

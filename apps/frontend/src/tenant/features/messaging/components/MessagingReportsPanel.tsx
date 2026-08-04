@@ -102,17 +102,15 @@ export function MessagingReportsPanel({
     });
   }, [recipientMap, getRecipientName, onResend]);
 
-  const stats = metricsQuery.data ?? {
-    total: logsQuery.total,
-    smsCount: 0,
-    whatsappCount: 0,
-    emailCount: 0,
-  };
-  const chartData = [
-    { name: t('messaging.channel.sms'), value: stats.smsCount },
-    { name: t('messaging.channel.whatsapp'), value: stats.whatsappCount },
-    { name: t('messaging.channel.email'), value: stats.emailCount },
-  ].filter((item) => item.value > 0);
+  const stats = metricsQuery.data;
+  const chartData = stats
+    ? [
+      { name: t('messaging.channel.sms'), value: stats.smsCount },
+      { name: t('messaging.channel.whatsapp'), value: stats.whatsappCount },
+      { name: t('messaging.channel.email'), value: stats.emailCount },
+    ].filter((item) => item.value > 0)
+    : [];
+  const metricsPending = metricsQuery.isPending && !metricsQuery.data;
 
   const exportAllFilteredLogs = async (): Promise<void> => {
     if (!canWrite || exporting) return;
@@ -188,6 +186,8 @@ export function MessagingReportsPanel({
           pageSize={logsQuery.pageSize}
           hasMore={logsQuery.hasMore}
           canWrite={canWrite}
+          isPending={logsQuery.isPending}
+          isFetching={logsQuery.isFetching}
           logStatusConfig={logStatusConfig}
           getRecipientName={getRecipientName}
           getColumnWidth={getColumnWidth}
@@ -197,9 +197,20 @@ export function MessagingReportsPanel({
         />
       </div>
 
-      <Suspense fallback={<div className="h-[15rem] animate-pulse rounded-xl border border-border bg-muted/20" aria-hidden />}>
-        <MessagingReportsVolumeChart chartData={chartData} />
-      </Suspense>
+      {metricsPending ? (
+        <div
+          className="h-[15rem] animate-pulse rounded-xl border border-border bg-muted/20"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span className="sr-only">{t('common.loading')}</span>
+        </div>
+      ) : (
+        <Suspense fallback={<div className="h-[15rem] animate-pulse rounded-xl border border-border bg-muted/20" aria-hidden />}>
+          <MessagingReportsVolumeChart chartData={chartData} />
+        </Suspense>
+      )}
     </motion.div>
   );
 }

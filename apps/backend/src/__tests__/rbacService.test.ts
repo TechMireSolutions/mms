@@ -100,13 +100,16 @@ describe("rbacService", () => {
     expect(canBulkSync(accountant)).toBe(false);
   });
 
-  it("denies legacy messages_u document-store inboxes", () => {
+  it("denies legacy messages_u and whatsappTemplates document-store keys", () => {
     expect(canWriteCollection(admin, "messages_u:other-user")).toBe(false);
     expect(canWriteCollection(teacher, "messages_u:other-user")).toBe(false);
     expect(canWriteCollection(teacher, "messages_u:2")).toBe(false);
     expect(canReadCollection(admin, "messages_u:2")).toBe(false);
     expect(isAllowedCollectionName("messages_u:peer")).toBe(false);
-    expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(true);
+    expect(isAllowedCollectionName("whatsappTemplates")).toBe(false);
+    expect(isAllowedCollectionName("whatsappTemplates_u:other-user")).toBe(false);
+    expect(canWriteCollection(admin, "whatsappTemplates")).toBe(false);
+    expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(false);
     expect(canWriteCollection(admin, "currencies")).toBe(true);
     expect(canWriteCollection(admin, "teacherStatuses")).toBe(true);
     expect(canWriteCollection(admin, "sessionTypes")).toBe(true);

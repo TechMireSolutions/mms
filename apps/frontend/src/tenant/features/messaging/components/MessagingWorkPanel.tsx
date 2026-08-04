@@ -47,7 +47,10 @@ export function MessagingWorkPanel({
   const selectAbortRef = useRef<AbortController | null>(null);
   const debouncedSearch = useDebounce(searchContact, 250);
 
-  useEffect(() => setRecipientsPage(1), [debouncedSearch, genderFilter, roleFilter]);
+  useEffect(() => {
+    selectAbortRef.current?.abort();
+    setRecipientsPage(1);
+  }, [debouncedSearch, genderFilter, roleFilter]);
 
   useEffect(() => () => {
     selectAbortRef.current?.abort();
@@ -140,6 +143,8 @@ export function MessagingWorkPanel({
         genderOptions={genderOptions}
         selectingReachable={selectingReachable}
         allVisibleSelected={allVisibleSelected}
+        isPending={recipientsQuery.isPending}
+        isFetching={recipientsQuery.isFetching}
         recipientsPage={recipientsQuery.page}
         recipientsTotal={recipientsQuery.total}
         recipientsLimit={recipientsQuery.limit}

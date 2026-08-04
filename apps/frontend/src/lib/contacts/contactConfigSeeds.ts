@@ -8,11 +8,6 @@ import {
   COUNTRY_CODES,
 } from "@mms/shared";
 
-/** Legacy messaging template collection key (cleaned on logout; Messaging owns templates now). */
-export function contactWhatsappTemplatesKey(userId?: string | number | null): string {
-  return userId ? `whatsappTemplates_u:${userId}` : "whatsappTemplates";
-}
-
 /** Seeds Setup option collections from shared DEFAULT_* constants (SSOT). */
 export function getContactConfigCollectionDefaults(): {
   genders: string[];

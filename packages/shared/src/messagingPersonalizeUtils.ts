@@ -13,9 +13,47 @@ export interface PersonalizeRecipient {
   time?: string;
 }
 
+/** Allowlisted personalization token keys (lowercase, without braces). */
+export const ALLOWED_PERSONALIZATION_TOKEN_KEYS = new Set([
+  "name",
+  "first_name",
+  "phone",
+  "email",
+  "date",
+  "due_date",
+  "amount",
+  "madrasa_name",
+  "school_name",
+  "salutation",
+  "time",
+]);
+
+const PERSONALIZATION_TOKEN_PATTERN_SOURCE = String.raw`\{([a-z_]+)(?:\|([^}]+))?\}`;
+
+function personalizationTokenPattern(): RegExp {
+  return new RegExp(PERSONALIZATION_TOKEN_PATTERN_SOURCE, "gi");
+}
+
+/**
+ * Returns unknown personalization token keys found in body text (deduped, lowercase).
+ * Unknown tokens must be rejected before send/save — `mms-messaging`.
+ */
+export function findUnknownPersonalizationTokens(body: string): string[] {
+  if (!body) return [];
+  const unknown = new Set<string>();
+  for (const match of body.matchAll(personalizationTokenPattern())) {
+    const key = String(match[1] ?? "").toLowerCase();
+    if (key && !ALLOWED_PERSONALIZATION_TOKEN_KEYS.has(key)) {
+      unknown.add(key);
+    }
+  }
+  return [...unknown];
+}
+
 /**
  * Centralized message personalization logic.
  * Replaces placeholders like {name}, {first_name}, {phone}, {email}, {date}, {due_date}, {amount}, {madrasa_name}, {salutation}, {time} with recipient details.
+ * Unknown tokens are left as literals — callers must reject via `findUnknownPersonalizationTokens` before send/save.
  * @param body Template body text containing placeholders
  * @param recipient Target recipient object with name, phone, email, etc.
  * @param options Optional overrides (e.g., date, dueDate, amount, madrasaName)
@@ -52,7 +90,7 @@ export function personalizeMessage(
     time: timeStr,
   };
 
-  return body.replace(/\{([a-z_]+)(?:\|([^}]+))?\}/gi, (match, key, fallback) => {
+  return body.replace(personalizationTokenPattern(), (match, key, fallback) => {
     const lowerKey = String(key).toLowerCase();
     if (!Object.prototype.hasOwnProperty.call(tokenValues, lowerKey)) {
       return match;
