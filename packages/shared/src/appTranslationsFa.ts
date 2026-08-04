@@ -4818,6 +4818,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "students.loadFailed": "بارگذاری داده‌های دانش‌آموزان ناموفق بود",
   "students.loadFailedHint": "اتصال خود را بررسی کنید و دوباره تلاش کنید.",
   "students.filterByStatus": "فیلتر بر اساس وضعیت",
+  "students.filters": "فیلترها",
   "students.columns.dob": "سن / تاریخ تولد",
   "students.columns.fixed": "ثابت شده",
   "students.columns.hidden": "پنهان شده",

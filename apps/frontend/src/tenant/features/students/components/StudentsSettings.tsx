@@ -9,7 +9,7 @@ import {
   type AppTranslationKey,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
-import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FORM_INPUT, WORK_SURFACE } from "@/components/ui/formStyles";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -150,7 +150,7 @@ export default function StudentsSettings(): React.ReactElement {
           {t("students.setupReadOnly")}
         </p>
       ) : (
-        <section className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-5 shadow-sm" aria-labelledby="students-settings-title">
+        <section className={`${WORK_SURFACE} p-5 space-y-5`} aria-labelledby="students-settings-title">
           <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <GraduationCap className="w-3.5 h-3.5 text-primary" aria-hidden="true" />

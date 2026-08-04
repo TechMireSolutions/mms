@@ -73,7 +73,7 @@ export function StudentListDesktopTableRow({
       transition={{ delay: Math.min(rowIndex * 0.03, 0.2) }}
       onClick={(event) => onRowClick(event, studentRow)}
       className={`hover:bg-muted/20 cursor-pointer transition-colors group ${
-        isSelected ? "bg-primary/[0.015]" : ""
+        isSelected ? "bg-primary/5" : ""
       }`}
     >
       <td className="px-4 py-3">

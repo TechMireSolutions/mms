@@ -1,11 +1,13 @@
 import { useState, useMemo, useEffect, type MouseEvent } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { type Student, resolveStudentStatuses } from "@mms/shared";
+import { type Student, resolveStudentStatuses, toMessagingRecipient } from "@mms/shared";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 import { useTranslation } from '@/hooks/useTranslation';
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+
+type MessageChannel = "whatsapp" | "sms" | "email";
 
 interface UseStudentListControllerOptions {
   students: Student[];
@@ -158,6 +160,16 @@ export function useStudentListController({
   const someSelected = selectedIds.length > 0 && selectedIds.length < paginatedStudents.length;
   const selectedStudents = students.filter((student) => selectedIds.includes(String(student.id)));
 
+  const openSelectionMessage = (channel: MessageChannel) => {
+    const recipients =
+      channel === "email"
+        ? selectedStudents
+            .filter((student) => student.email)
+            .map((student) => toMessagingRecipient(student))
+        : selectedStudents.map((student) => toMessagingRecipient(student));
+    openComposer(channel, recipients);
+  };
+
   return {
     t,
     statusBadgeConfig,
@@ -177,6 +189,7 @@ export function useStudentListController({
     setViewStudent,
     messagingTarget,
     openComposer,
+    openSelectionMessage,
     closeComposer,
     canWriteMessaging,
     confirmBulkDeleteOpen,

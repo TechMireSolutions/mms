@@ -1,5 +1,6 @@
 import { CreditCard, RotateCcw, Trash2 } from "lucide-react";
 
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -47,16 +48,18 @@ export function PaymentSelectionBar({
 }: PaymentSelectionBarProps) {
   const { t } = useTranslation();
 
-  if (selectedCount === 0) return null;
-
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <span className="text-sm font-medium">{t("finance.trash.selected", { count: selectedCount })}</span>
+    <BulkSelectionBar
+      placement="inline"
+      tone="plain"
+      selectedCount={selectedCount}
+      countLabel={t("finance.trash.selected", { count: selectedCount })}
+    >
       <Button type="button" variant={showDeleted ? "outline" : "destructive"} onClick={onOpenBulkConfirm}>
         {showDeleted ? <RotateCcw className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
         {showDeleted ? t("finance.trash.restore") : t("common.delete")}
       </Button>
-    </div>
+    </BulkSelectionBar>
   );
 }
 

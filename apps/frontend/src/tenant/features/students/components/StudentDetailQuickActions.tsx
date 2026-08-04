@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
+import { QuickActionButton } from "@/components/ui/QuickActionButton";
 import { cleanTelUri } from "@/tenant/features/students/components/studentDetailUtils";
 import { Mail, MessageCircle, MessageSquare, Phone } from "lucide-react";
 import { toMessagingRecipient, type Student } from "@mms/shared";
@@ -13,6 +13,9 @@ interface StudentDetailQuickActionsProps {
   openComposer: (channel: MessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 
+const QUICK_ACTION_BASE =
+  "border-border bg-card/45 backdrop-blur-sm text-center";
+
 export function StudentDetailQuickActions({
   student,
   primaryPhone,
@@ -24,49 +27,41 @@ export function StudentDetailQuickActions({
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
       {primaryPhone && (
-        <Button
-          variant="ghost"
-          asChild
-          className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-info/10 hover:border-info/30 transition-all text-info text-center shadow-none"
-        >
-          <a href={cleanTelUri(primaryPhone)}>
-            <Phone className="w-4 h-4 mx-auto" />
-            <span className="text-xs font-bold">{t("students.detail.call")}</span>
-          </a>
-        </Button>
+        <QuickActionButton
+          label={t("students.detail.call")}
+          icon={Phone}
+          href={cleanTelUri(primaryPhone)}
+          ariaLabel={t("students.detail.callPhone", { phone: primaryPhone })}
+          className={`${QUICK_ACTION_BASE} hover:bg-info/10 hover:border-info/30 text-info`}
+        />
       )}
       {primaryPhone && (
-        <Button
-          type="button"
-          variant="ghost"
+        <QuickActionButton
+          label={t("students.list.actionWhatsApp")}
+          icon={MessageCircle}
           onClick={() => openComposer("whatsapp", [toMessagingRecipient({ ...student, phone: primaryPhone })])}
-          className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-success/10 hover:border-success/30 transition-all text-success text-center cursor-pointer shadow-none"
-        >
-          <MessageCircle className="w-4 h-4 mx-auto" />
-          <span className="text-xs font-bold">{t("students.list.actionWhatsApp")}</span>
-        </Button>
+          className={`${QUICK_ACTION_BASE} hover:bg-success/10 hover:border-success/30 text-success`}
+        />
       )}
       {primaryPhone && (
-        <Button
-          type="button"
-          variant="ghost"
+        <QuickActionButton
+          label={t("students.list.actionSms")}
+          icon={MessageSquare}
           onClick={() => openComposer("sms", [toMessagingRecipient({ ...student, phone: primaryPhone })])}
-          className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-warning/10 hover:border-warning/30 transition-all text-warning text-center cursor-pointer shadow-none"
-        >
-          <MessageSquare className="w-4 h-4 mx-auto" />
-          <span className="text-xs font-bold">{t("students.list.actionSms")}</span>
-        </Button>
+          className={`${QUICK_ACTION_BASE} hover:bg-warning/10 hover:border-warning/30 text-warning`}
+        />
       )}
       {primaryEmail && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => openComposer("email", [toMessagingRecipient({ ...student, name: student.name || "", email: primaryEmail })])}
-          className="flex flex-col items-center justify-center gap-1.5 h-auto p-3 rounded-xl border border-border bg-card/45 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 transition-all text-primary text-center cursor-pointer shadow-none"
-        >
-          <Mail className="w-4 h-4 mx-auto" />
-          <span className="text-xs font-bold">{t("students.list.actionEmail")}</span>
-        </Button>
+        <QuickActionButton
+          label={t("students.list.actionEmail")}
+          icon={Mail}
+          onClick={() =>
+            openComposer("email", [
+              toMessagingRecipient({ ...student, name: student.name || "", email: primaryEmail }),
+            ])
+          }
+          className={`${QUICK_ACTION_BASE} hover:bg-primary/10 hover:border-primary/30 text-primary`}
+        />
       )}
     </div>
   );

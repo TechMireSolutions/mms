@@ -1,8 +1,8 @@
-import type React from "react";
 import { FileText } from "lucide-react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
+import { FORM_TEXTAREA } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Student } from "@mms/shared";
 
@@ -30,7 +30,7 @@ export function StudentNotesSection({
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}
             placeholder={t("students.form.notesPlaceholder")}
-            className="min-h-[7.5rem] bg-background"
+            className={`${FORM_TEXTAREA} min-h-30`}
           />
         </Field>
       </SectionCard>

@@ -1459,6 +1459,7 @@ export const APP_TRANSLATIONS_EN = {
   "students.loadFailed": "Failed to load students",
   "students.loadFailedHint": "Check your connection and try again.",
   "students.filterByStatus": "Filter by status",
+  "students.filters": "Filters",
   "students.columns.trigger": "Columns",
   "students.columns.title": "Columns",
   "students.columns.visibleAndOrder": "Visible & order",

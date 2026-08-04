@@ -145,7 +145,6 @@ export default function StudentList({
 
       <StudentListSelectionBar
         selectedIds={list.selectedIds}
-        selectedStudents={list.selectedStudents}
         showDeleted={showDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
@@ -153,7 +152,7 @@ export default function StudentList({
         canExport={canExport}
         studentStatusOptions={list.studentStatusOptions}
         statusBadgeConfig={list.statusBadgeConfig}
-        onOpenComposer={list.openComposer}
+        onMessage={list.openSelectionMessage}
         onBulkStatusChange={onBulkStatusChange}
         onBulkExport={() => { void handleBulkExport(); }}
         onRequestBulkDelete={() => {

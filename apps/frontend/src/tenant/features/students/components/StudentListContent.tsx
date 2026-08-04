@@ -1,5 +1,6 @@
 import { GraduationCap } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentListCards } from "@/tenant/features/students/components/StudentListCards";
@@ -22,7 +23,7 @@ export function StudentListContent(props: StudentListContentProps) {
 
   if (props.paginatedStudents.length === 0) {
     return (
-      <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
+      <div className={`${WORK_SURFACE} overflow-hidden bg-card/45`}>
         <EmptyState
           icon={GraduationCap}
           title={t("students.list.emptyTitle")}
@@ -33,7 +34,7 @@ export function StudentListContent(props: StudentListContentProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-xl overflow-hidden shadow-sm">
+    <div className={`${WORK_SURFACE} overflow-hidden bg-card/45`}>
       <div className="overflow-x-auto">
         <StudentListDesktopTable {...props} />
       </div>

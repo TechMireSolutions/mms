@@ -2,6 +2,7 @@ import React from "react";
 import { GraduationCap } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { RequiredBanner } from "@/components/ui/RequiredBanner";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 import { StudentFormTabContent } from "@/tenant/features/students/components/StudentFormTabContent";
@@ -32,9 +33,7 @@ export default function StudentForm({
       </div>
     </div>
   ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
-      {form.t("students.form.contactRequired")}
-    </span>
+    <RequiredBanner message={form.t("students.form.contactRequired")} />
   );
 
   return (

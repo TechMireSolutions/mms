@@ -1475,6 +1475,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "students.loadFailed": "طلبہ کا ڈیٹا لوڈ نہیں ہو سکا",
   "students.loadFailedHint": "اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
   "students.filterByStatus": "حیثیت کے مطابق فلٹر کریں",
+  "students.filters": "فلٹرز",
   "students.columns.trigger": "کالم",
   "students.columns.title": "کالم",
   "students.columns.visibleAndOrder": "ظاہر اور ترتیب",

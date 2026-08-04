@@ -1,10 +1,11 @@
 import type React from "react";
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import { Users } from "lucide-react";
+import ContactEditModal from "@/components/contactLink/ContactEditModal";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import {
   CONTACTS_MODULE_MANIFEST,
   getPrimaryPhone,
@@ -13,10 +14,8 @@ import {
   type Student,
 } from "@mms/shared";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
-import { useContactMutations, useContactsByIds } from "@/tenant/hooks/collections/contacts";
+import { useContactsByIds } from "@/tenant/hooks/collections/contacts";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-
-const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 
 interface StudentGuardianSectionProps {
   formInstanceId: string;
@@ -32,8 +31,6 @@ export function StudentGuardianSection({
   isFieldEnabled,
 }: StudentGuardianSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { prefs } = useContactConfig();
-  const { updateContact } = useContactMutations();
   const { canWrite: canWriteContacts } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
   const [editContactOpen, setEditContactOpen] = useState(false);
 
@@ -96,11 +93,6 @@ export function StudentGuardianSection({
   const hasAnyLink = visibleRows.some((row) => row.contactId || row.fallbackName);
   const canOpenContactEditor = Boolean(linkedContact?.id) && canWriteContacts;
 
-  const handleSaveContact = async (contact: Contact): Promise<void> => {
-    await updateContact.mutateAsync({ id: String(contact.id), contact });
-    setEditContactOpen(false);
-  };
-
   return (
     <div className="space-y-6" id={`sf-${formInstanceId}-guardians`} tabIndex={-1}>
       <SectionCard
@@ -110,22 +102,33 @@ export function StudentGuardianSection({
         accentColor="info"
       >
         {!studentDraft.contactId ? (
-          <p className="text-sm text-muted-foreground">{t("students.form.guardiansNeedContact")}</p>
+          <EmptyState
+            compact
+            icon={Users}
+            title={t("students.form.guardiansNeedContact")}
+          />
         ) : !hasAnyLink ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">{t("students.form.guardiansFromContactsEmpty")}</p>
-            {canOpenContactEditor ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="min-h-11"
-                onClick={() => setEditContactOpen(true)}
-              >
-                {t("students.form.guardiansEditContactCta")}
-              </Button>
-            ) : (
-              <p className="text-xs text-muted-foreground">{t("students.form.guardiansEditOnContact")}</p>
-            )}
+            <EmptyState
+              compact
+              icon={Users}
+              title={t("students.form.guardiansFromContactsEmpty")}
+              action={
+                canOpenContactEditor ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="min-h-11"
+                    onClick={() => setEditContactOpen(true)}
+                  >
+                    {t("students.form.guardiansEditContactCta")}
+                  </Button>
+                ) : undefined
+              }
+            />
+            {!canOpenContactEditor ? (
+              <p className="text-xs text-muted-foreground text-center">{t("students.form.guardiansEditOnContact")}</p>
+            ) : null}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -166,21 +169,11 @@ export function StudentGuardianSection({
         ) : null}
       </SectionCard>
 
-      {editContactOpen && linkedContact ? (
-        <Suspense fallback={<span role="status" className="sr-only">{t("common.loading")}</span>}>
-          <ContactForm
-            key={`student-guardian-edit-${linkedContact.id}`}
-            open
-            priority
-            contact={linkedContact}
-            defaultCountry={prefs.defaultCountry || ""}
-            defaultCity={prefs.defaultCity || ""}
-            defaultProvince={prefs.defaultProvince || ""}
-            onClose={() => setEditContactOpen(false)}
-            onSave={handleSaveContact}
-          />
-        </Suspense>
-      ) : null}
+      <ContactEditModal
+        open={editContactOpen}
+        contact={linkedContact}
+        onClose={() => setEditContactOpen(false)}
+      />
     </div>
   );
 }

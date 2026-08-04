@@ -1,6 +1,7 @@
 import React from "react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,7 @@ import {
   type FieldDefinition,
   type Student,
 } from "@mms/shared";
+import { LayoutGrid } from "lucide-react";
 
 interface StudentCustomFieldsBlockProps {
   studentDraft: Partial<Student>;
@@ -37,9 +39,11 @@ export function StudentCustomFieldsBlock({
   if (customFields.length === 0) {
     if (hideWhenEmpty) return null;
     return (
-      <p className="text-sm text-muted-foreground py-6 text-center">
-        {t("students.form.customFieldsEmpty")}
-      </p>
+      <EmptyState
+        compact
+        icon={LayoutGrid}
+        title={t("students.form.customFieldsEmpty")}
+      />
     );
   }
 

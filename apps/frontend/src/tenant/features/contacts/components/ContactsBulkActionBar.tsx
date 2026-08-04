@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Download,
   Users,
@@ -8,6 +7,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import type { Contact } from "@mms/shared";
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -48,93 +48,84 @@ export function ContactsBulkActionBar({
   const { t } = useTranslation();
 
   return (
-    <AnimatePresence>
-      {selectedCount > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md max-w-full"
+    <BulkSelectionBar
+      placement="inline"
+      tone="glass"
+      selectedCount={selectedCount}
+      countLabel={t("contacts.selectedCount", { count: selectedCount })}
+      leading={<Users className="w-4 h-4 text-primary" aria-hidden />}
+      trailing={
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onClearSelection}
+          className="text-muted-foreground hover:text-foreground font-medium"
         >
-          <div className="flex min-w-0 items-center gap-2">
-            <Users className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">
-              {t("contacts.selectedCount", { count: selectedCount })}
-            </span>
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            {bulkActions.includes("whatsapp") && !viewingDeleted && canWriteMessaging && (
-              <Button
-                type="button"
-                size="sm"
-                disabled={selectedTargets.waTargets.length === 0}
-                onClick={() => onWhatsApp(selectedTargets.waTargets)}
-                aria-label={t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
-                className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground font-semibold shadow-sm"
-              >
-                <MessageCircle className="w-3.5 h-3.5" />{" "}
-                {t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
-              </Button>
-            )}
-            {bulkActions.includes("sms") && !viewingDeleted && canWriteMessaging && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={selectedTargets.smsReady.length === 0}
-                onClick={() => onSms(selectedTargets.smsReady)}
-                aria-label={t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
-                className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />{" "}
-                {t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
-              </Button>
-            )}
-            {bulkActions.includes("export") && canExport && !viewingDeleted && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={onBulkExport}
-                className="gap-1.5 font-semibold"
-              >
-                <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
-              </Button>
-            )}
-            {bulkActions.includes("delete") && canDelete && !viewingDeleted && (
-              <Button
-                type="button"
-                size="sm"
-                variant="destructive"
-                onClick={onRequestBulkDelete}
-                className="gap-1.5 font-semibold"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> {t("contacts.bulkDelete")}
-              </Button>
-            )}
-            {viewingDeleted && canDelete && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={onRequestBulkRestore}
-                className="gap-1.5 border-primary/40 text-primary font-semibold hover:bg-primary/10"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> {t("contacts.bulkRestore")}
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onClearSelection}
-              className="text-muted-foreground hover:text-foreground font-medium"
-            >
-              {t("contacts.deselect")}
-            </Button>
-          </div>
-        </motion.div>
+          {t("contacts.deselect")}
+        </Button>
+      }
+    >
+      {bulkActions.includes("whatsapp") && !viewingDeleted && canWriteMessaging && (
+        <Button
+          type="button"
+          size="sm"
+          disabled={selectedTargets.waTargets.length === 0}
+          onClick={() => onWhatsApp(selectedTargets.waTargets)}
+          aria-label={t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
+          className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground font-semibold shadow-sm"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />{" "}
+          {t("contacts.whatsappBulk", { count: selectedTargets.waTargets.length })}
+        </Button>
       )}
-    </AnimatePresence>
+      {bulkActions.includes("sms") && !viewingDeleted && canWriteMessaging && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={selectedTargets.smsReady.length === 0}
+          onClick={() => onSms(selectedTargets.smsReady)}
+          aria-label={t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
+          className="gap-1.5 border-primary/40 bg-primary/10 text-primary font-semibold hover:bg-primary/20"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />{" "}
+          {t("contacts.smsBulk", { count: selectedTargets.smsReady.length })}
+        </Button>
+      )}
+      {bulkActions.includes("export") && canExport && !viewingDeleted && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onBulkExport}
+          className="gap-1.5 font-semibold"
+        >
+          <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
+        </Button>
+      )}
+      {bulkActions.includes("delete") && canDelete && !viewingDeleted && (
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive"
+          onClick={onRequestBulkDelete}
+          className="gap-1.5 font-semibold"
+        >
+          <Trash2 className="w-3.5 h-3.5" /> {t("contacts.bulkDelete")}
+        </Button>
+      )}
+      {viewingDeleted && canDelete && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onRequestBulkRestore}
+          className="gap-1.5 border-primary/40 text-primary font-semibold hover:bg-primary/10"
+        >
+          <RotateCcw className="w-3.5 h-3.5" /> {t("contacts.bulkRestore")}
+        </Button>
+      )}
+    </BulkSelectionBar>
   );
 }

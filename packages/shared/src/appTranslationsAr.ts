@@ -1475,6 +1475,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "students.loadFailed": "تعذر تحميل بيانات الطلاب",
   "students.loadFailedHint": "تحقق من الاتصال وحاول مرة أخرى.",
   "students.filterByStatus": "تصفية حسب الحالة",
+  "students.filters": "عوامل التصفية",
   "students.columns.trigger": "الأعمدة",
   "students.columns.title": "الأعمدة",
   "students.columns.visibleAndOrder": "الظاهرة والترتيب",

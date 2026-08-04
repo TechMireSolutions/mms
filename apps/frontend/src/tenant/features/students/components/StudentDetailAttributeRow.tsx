@@ -1,4 +1,5 @@
 import type React from "react";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 
 interface StudentDetailAttributeRowProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -12,7 +13,7 @@ export function StudentDetailAttributeRow({
   value,
 }: StudentDetailAttributeRowProps): React.JSX.Element {
   return (
-    <div className="relative overflow-hidden group/row flex items-center gap-3 p-3 bg-card/45 backdrop-blur-xs rounded-2xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className={`relative overflow-hidden group/row flex items-center gap-3 p-3 ${WORK_SURFACE_INNER} hover:shadow-md transition-all duration-200`}>
       <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/row:bg-primary" />
       <div className="p-2 rounded-lg bg-muted text-muted-foreground ms-1">
         <Icon className="w-3.5 h-3.5" />

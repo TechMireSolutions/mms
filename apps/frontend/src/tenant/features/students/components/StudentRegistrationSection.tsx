@@ -55,10 +55,10 @@ export function StudentRegistrationSection({
                 value={studentDraft.grNumber || ""}
                 onChange={(event) => onGrNumberChange(event.target.value)}
                 placeholder={t("students.form.grNumberPlaceholder")}
-                className={`${FORM_INPUT} ps-10 ${isGrAutoAssigned ? "pe-28" : ""}`}
+                className={`${FORM_INPUT} ps-10 ${isGrAutoAssigned ? "pe-24" : ""}`}
               />
               {isGrAutoAssigned ? (
-                <span className="pointer-events-none absolute end-2.5 text-[0.625rem] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md">
+                <span className="pointer-events-none absolute end-2.5 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md">
                   {t("students.form.grAutoAssigned")}
                 </span>
               ) : null}

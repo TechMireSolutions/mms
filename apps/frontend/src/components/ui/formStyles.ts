@@ -35,6 +35,18 @@ export const FORM_CHECKBOX =
 export const FORM_CARD =
   'relative overflow-hidden group group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300';
 
+/** Work directory / settings glass panel (toolbar, list shell, settings sections). */
+export const WORK_SURFACE =
+  'rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm';
+
+/** Inner detail surfaces (attribute rows, notes panels) — slightly denser glass. */
+export const WORK_SURFACE_INNER =
+  'rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm';
+
+/** Detail drawer / profile section headings. */
+export const DETAIL_SECTION_TITLE =
+  'text-xs font-black text-muted-foreground uppercase tracking-widest';
+
 /** Ultra-compact select trigger style (primarily for dashboard widget chart filters) */
 export const FORM_SELECT_MINI =
   'min-h-11 h-11 px-2 py-2 rounded text-xs font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none';

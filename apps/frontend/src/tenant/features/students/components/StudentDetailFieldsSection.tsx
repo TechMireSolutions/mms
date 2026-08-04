@@ -7,6 +7,7 @@ import {
   toMessagingRecipient,
   toTitleCase,
 } from "@mms/shared";
+import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
 import { StudentDetailAttributeRow } from "@/tenant/features/students/components/StudentDetailAttributeRow";
@@ -53,7 +54,7 @@ export function StudentDetailFieldsSection({
 
   return (
     <div className="space-y-4">
-      <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.sectionDetails")}</h4>
+      <h4 className={`${DETAIL_SECTION_TITLE} ps-1`}>{t("students.detail.sectionDetails")}</h4>
       <div className="space-y-2.5">
         {sortedEnabledFields.map((field) => {
           if (field.key === "gender") {

@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookOpen } from "lucide-react";
 import { formatMoney, type Session } from "@mms/shared";
@@ -12,13 +14,14 @@ export function StudentDetailSessionsSection({ sessions }: StudentDetailSessions
 
   return (
     <div className="space-y-3">
-      <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("students.detail.enrolledSessions", { count: sessions.length })}</h4>
+      <h4 className={`${DETAIL_SECTION_TITLE} ps-1`}>{t("students.detail.enrolledSessions", { count: sessions.length })}</h4>
       {sessions.length === 0 ? (
-        <div className="p-6 rounded-2xl border border-dashed border-border bg-muted/10 text-center">
-          <BookOpen className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
-          <p className="text-xs font-bold text-muted-foreground">{t("students.detail.notEnrolled")}</p>
-          <p className="text-xs text-muted-foreground mt-1">{t("students.detail.notEnrolledDesc")}</p>
-        </div>
+        <EmptyState
+          compact
+          icon={BookOpen}
+          title={t("students.detail.notEnrolled")}
+          description={t("students.detail.notEnrolledDesc")}
+        />
       ) : (
         <div className="space-y-2.5">
           {sessions.map((session) => (
