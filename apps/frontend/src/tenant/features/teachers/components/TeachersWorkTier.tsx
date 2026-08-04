@@ -109,7 +109,11 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
         {props.isWorkPageLoading ? (
           <TableSkeleton rows={6} cols={props.columnRegistry.length} />
         ) : props.isWorkPageError ? (
-          <ErrorState title={t("teachers.loadFailed")} onRetry={() => void props.onRetry()} />
+          <ErrorState
+            title={t("teachers.loadFailed")}
+            description={t("teachers.loadFailedHint")}
+            onRetry={() => void props.onRetry()}
+          />
         ) : (
           <>
             <TeacherList

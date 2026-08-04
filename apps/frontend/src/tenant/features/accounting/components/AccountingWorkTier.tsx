@@ -2,6 +2,7 @@ import type React from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { useTranslation } from "@/hooks/useTranslation";
 import { AccountingDashboard } from "@/tenant/features/accounting/components/AccountingDashboard";
 import { ChartOfAccounts } from "@/tenant/features/accounting/components/ChartOfAccounts";
 import { GeneralLedger } from "@/tenant/features/accounting/components/GeneralLedger";
@@ -81,6 +82,8 @@ export function AccountingWorkTier({
   showDeletedLabel,
   loadFailedTitle,
 }: AccountingWorkTierProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -103,6 +106,7 @@ export function AccountingWorkTier({
       {listLoadFailed && (
         <ErrorState
           title={loadFailedTitle}
+          description={t("accounting.loadFailedHint")}
           onRetry={onRetry}
         />
       )}

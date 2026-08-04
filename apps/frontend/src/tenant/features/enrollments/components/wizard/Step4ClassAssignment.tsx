@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Layers, AlertTriangle, Users, CheckCircle2 } from "lucide-react";
+import { Layers, Users, CheckCircle2 } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { Student } from '@/lib/data/studentsData';
 import { Button } from "@/components/ui/button";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface Step4ClassAssignmentProps {
@@ -58,18 +59,22 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
       )}
 
       {!suggestedClass && (
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-sm" role="status">
-          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
-          {t("enrollments.wizard.step4NoAutoMatch")}
-        </div>
+        <WarningCallout
+          role="status"
+          density="banner"
+          className="items-start"
+          description={t("enrollments.wizard.step4NoAutoMatch")}
+        />
       )}
 
       {/* Override warning */}
       {override && (
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-warning text-sm font-semibold" role="alert">
-          <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
-          {t("enrollments.wizard.step4OverrideWarning")}
-        </div>
+        <WarningCallout
+          role="alert"
+          density="banner"
+          className="items-start font-semibold"
+          description={t("enrollments.wizard.step4OverrideWarning")}
+        />
       )}
 
       {/* Class list */}

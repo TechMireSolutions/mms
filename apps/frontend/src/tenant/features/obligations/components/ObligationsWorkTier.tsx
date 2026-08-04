@@ -53,7 +53,13 @@ export function ObligationsWorkTier({
   const { t } = useTranslation();
 
   if (listLoadFailed) {
-    return <ErrorState title={t("obligations.loadFailed")} onRetry={onRetry} />;
+    return (
+      <ErrorState
+        title={t("obligations.loadFailed")}
+        description={t("obligations.loadFailedHint")}
+        onRetry={onRetry}
+      />
+    );
   }
 
   return (

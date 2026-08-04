@@ -79,7 +79,11 @@ export default function Finance() {
               {c.activeTab === "setup" && <FinanceSettings />}
 
               {c.activeTab === "work" && c.activeSubTab === "invoices" && c.invoicesResult.queryResult.isError ? (
-                <ErrorState title={c.t("finance.loadFailed")} onRetry={() => void c.invoicesResult.queryResult.refetch()} />
+                <ErrorState
+                  title={c.t("finance.loadFailed")}
+                  description={c.t("finance.loadFailedHint")}
+                  onRetry={() => void c.invoicesResult.queryResult.refetch()}
+                />
               ) : c.activeTab === "work" && c.activeSubTab === "invoices" && (
                 <InvoiceList
                   invoices={c.invoices}
@@ -105,7 +109,11 @@ export default function Finance() {
                 />
               )}
               {c.activeTab === "work" && c.activeSubTab === "payments" && c.paymentsResult.queryResult.isError ? (
-                <ErrorState title={c.t("finance.loadFailed")} onRetry={() => void c.paymentsResult.queryResult.refetch()} />
+                <ErrorState
+                  title={c.t("finance.loadFailed")}
+                  description={c.t("finance.loadFailedHint")}
+                  onRetry={() => void c.paymentsResult.queryResult.refetch()}
+                />
               ) : c.activeTab === "work" && c.activeSubTab === "payments" && (
                 <PaymentTracker
                   payments={c.payments}

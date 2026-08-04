@@ -88,7 +88,11 @@ export function QuestionBankWorkTier({
       </div>
 
       {activeSubTab === "questions" && listLoadFailed && (
-        <ErrorState title={t("questionBank.loadFailed")} onRetry={onRetry} />
+        <ErrorState
+          title={t("questionBank.loadFailed")}
+          description={t("questionBank.loadFailedHint")}
+          onRetry={onRetry}
+        />
       )}
 
       {activeSubTab === "questions" && !listLoadFailed && (

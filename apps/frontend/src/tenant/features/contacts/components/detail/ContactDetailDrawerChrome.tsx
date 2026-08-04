@@ -5,6 +5,7 @@ import { formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 
 function formatContactStamp(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value;
@@ -85,17 +86,14 @@ export function ContactDetailDrawerArchivedBanner({
   if (!deletedAt) return null;
 
   return (
-    <div
+    <WarningCallout
+      icon={Archive}
+      density="compact"
       role="status"
-      className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2.5 text-xs font-medium text-foreground"
-    >
-      <Archive className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" aria-hidden />
-      <span>
-        {t("contacts.detail.archivedBanner", {
-          date: formatDate(deletedAt),
-        })}
-      </span>
-    </div>
+      description={t("contacts.detail.archivedBanner", {
+        date: formatDate(deletedAt),
+      })}
+    />
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { AlertTriangle, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import {
   FieldConfig,
   isContactLockedEnabledTab,
@@ -8,6 +8,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ContactsPreferencesSection } from "@/tenant/features/contacts/components/ContactsPreferencesSection";
 import { useContactsSetupPanelState } from "@/tenant/features/contacts/hooks/useContactsSetupPanelState";
 
@@ -73,13 +74,11 @@ export default function ContactsSetupPanel({
   return (
     <div className="space-y-6 max-w-3xl text-start">
       {showFields && isFieldsDirty && (
-        <div
-          className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
+        <WarningCallout
           role="alert"
-        >
-          <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span>{t("contacts.setup.unsavedFieldsWarning")}</span>
-        </div>
+          density="banner"
+          description={t("contacts.setup.unsavedFieldsWarning")}
+        />
       )}
 
       {showFields && (

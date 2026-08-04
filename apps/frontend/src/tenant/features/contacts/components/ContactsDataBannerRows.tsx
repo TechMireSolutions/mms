@@ -1,16 +1,16 @@
 import { WifiOff, AlertCircle, CloudUpload, AlertTriangle } from "lucide-react";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { Button } from "@/components/ui/button";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 
 export function ContactsOfflineBanner({ t }: { t: TranslationFunction }): React.JSX.Element {
   return (
-    <div
-      className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
+    <WarningCallout
+      icon={WifiOff}
       role="status"
-    >
-      <WifiOff className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-      <span>{t("contacts.sync.offline")}</span>
-    </div>
+      density="banner"
+      description={t("contacts.sync.offline")}
+    />
   );
 }
 
@@ -64,33 +64,32 @@ export function ContactsConflictBanner({
   t: TranslationFunction;
 }): React.JSX.Element {
   return (
-    <div
-      className="flex items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
+    <WarningCallout
+      icon={AlertTriangle}
       role="alert"
-    >
-      <div className="flex items-center gap-2 min-w-0">
-        <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-        <span>{t("contacts.sync.conflicts", { count: conflictCount })}</span>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        <Button
-          type="button"
-          variant="link"
-          onClick={onReview}
-          className="text-xs font-semibold underline hover:no-underline min-h-11 px-2 text-warning shadow-none"
-        >
-          {t("contacts.sync.reviewConflicts")}
-        </Button>
-        <Button
-          type="button"
-          variant="link"
-          onClick={onDismissAll}
-          className="text-xs font-semibold underline hover:no-underline opacity-80 min-h-11 px-2 text-warning shadow-none"
-        >
-          {t("contacts.sync.dismissConflicts")}
-        </Button>
-      </div>
-    </div>
+      density="banner"
+      description={t("contacts.sync.conflicts", { count: conflictCount })}
+      action={
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="link"
+            onClick={onReview}
+            className="text-xs font-semibold underline hover:no-underline min-h-11 px-2 text-warning shadow-none"
+          >
+            {t("contacts.sync.reviewConflicts")}
+          </Button>
+          <Button
+            type="button"
+            variant="link"
+            onClick={onDismissAll}
+            className="text-xs font-semibold underline hover:no-underline opacity-80 min-h-11 px-2 text-warning shadow-none"
+          >
+            {t("contacts.sync.dismissConflicts")}
+          </Button>
+        </div>
+      }
+    />
   );
 }
 

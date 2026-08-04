@@ -1,6 +1,6 @@
-import { AlertTriangle } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ContactsCountryCodesSection } from "@/tenant/features/contacts/components/ContactsCountryCodesSection";
 import { ContactsPreferencesGeneralSection } from "@/tenant/features/contacts/components/ContactsPreferencesGeneralSection";
 import { ContactsPreferencesDuplicateSection } from "@/tenant/features/contacts/components/ContactsPreferencesDuplicateSection";
@@ -31,13 +31,11 @@ export function ContactsPreferencesSection({
   return (
     <>
       {isPrefsDirty && (
-        <div
-          className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning"
+        <WarningCallout
           role="alert"
-        >
-          <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span>{t("contacts.setup.unsavedWarning")}</span>
-        </div>
+          density="banner"
+          description={t("contacts.setup.unsavedWarning")}
+        />
       )}
 
       <ContactsPreferencesGeneralSection

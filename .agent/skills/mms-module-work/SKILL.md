@@ -24,8 +24,8 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 5. **View mode**: person-directory Work → `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes (finance/attendance/…). Resolve one `viewMode`; defaults/cards paging — rule §3.
 6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET. Prefer **keyset/cursor** for hot/large directories when touching list APIs — `mms-data-layer.md`.
 7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
-8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** archive chrome + Restore; hide Call/WA/SMS/Email when `deletedAt`.
-9. §7: `ErrorState`+retry+hint on list `isError`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close.
+8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** `WarningCallout` archive chrome + Restore; hide Call/WA/SMS/Email when `deletedAt`.
+9. §7: `ErrorState`+retry+hint on list `isError`; Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via `BulkSelectionBar`.
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate).
 11. Dense Work tables: prefer `@tanstack/react-virtual` (or named shared wrapper) — ban one-off virtualization libs — `mms-ui-ux-design.md`.
 12. Contacts report KPIs: `activeCount` = soft-delete-filtered roster length (form never writes `isActive`).
@@ -39,7 +39,8 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] Server pagination / metrics — no unbounded client lists / no `loadAllFn`
 - [ ] Hot/large directories: keyset preference when touching list APIs
 - [ ] Person-directory: `directoryViews: ['table','cards']`; cards + table same page API
-- [ ] Soft-delete trash + restore (+ drawer archive chrome) or documented variant
+- [ ] Soft-delete trash + restore (+ drawer `WarningCallout` archive chrome) or documented variant
+- [ ] Bulk selection bar uses shared `BulkSelectionBar` (no forked floating/inline chrome)
 - [ ] ErrorState + retry + hint on list isError (not empty success)
 - [ ] mutateAsync awaited before form close
 - [ ] Bulk actions: eligibility + partial failure reporting

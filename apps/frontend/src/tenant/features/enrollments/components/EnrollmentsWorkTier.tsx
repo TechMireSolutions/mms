@@ -2,6 +2,7 @@ import type React from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { useTranslation } from "@/hooks/useTranslation";
 import { EligibilityCheck } from "@/tenant/features/enrollments/components/EligibilityCheck";
 import { EnrollmentList } from "@/tenant/features/enrollments/components/EnrollmentList";
 import type { Enrollment } from "@/lib/data/enrollmentData";
@@ -55,6 +56,8 @@ export function EnrollmentsWorkTier({
   onFilteredCountChange,
   columnProps,
 }: EnrollmentsWorkTierProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <>
       <SubTabBar
@@ -70,6 +73,7 @@ export function EnrollmentsWorkTier({
           {isWorkListError ? (
             <ErrorState
               title={loadFailedTitle}
+              description={t("enrollments.loadFailedHint")}
               onRetry={onRetry}
             />
           ) : (

@@ -124,8 +124,8 @@ export function SessionsWorkList({
 
       {isError ? (
         <ErrorState
-          title={t("sessions.toast.saveFailed")}
-          description={t("common.retry")}
+          title={t("sessions.loadFailed")}
+          description={t("sessions.loadFailedHint")}
           onRetry={onRetry}
         />
       ) : isWorkLoading ? (

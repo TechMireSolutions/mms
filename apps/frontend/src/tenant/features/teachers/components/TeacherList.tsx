@@ -154,12 +154,14 @@ export function TeacherList({
       <TeacherListDetailDrawer
         teacher={viewTeacher}
         canWrite={canWrite}
+        canDelete={canDelete}
         showDeleted={showDeleted}
         onClose={() => setViewTeacher(null)}
         onEdit={(teacherToEdit) => {
           setViewTeacher(null);
           onEdit(teacherToEdit);
         }}
+        onRestore={onRestore}
       />
     </div>
   );

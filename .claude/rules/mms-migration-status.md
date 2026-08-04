@@ -31,7 +31,7 @@ Keep these regressions out of new work. Details live in owning scoped rules — 
 |-------|-------------------|--------|
 | Data authority | Mutation dual-write via `saveCollection`; `getCollection` as primary for REST; unpaged `loadAllFn` / `maxPageSize` card dumps | `mms-data-layer.md` |
 | Sessions | localStorage JWT; skip platform `/me` probe; resurrect deleted apex chrome | `mms-auth-security.md` |
-| Soft-delete Work UX | Work trash without drawer archive chrome | `mms-module-architecture.md` §6–§7 |
+| Soft-delete Work UX | Work trash without drawer archive chrome, or forked archive/warning callouts / selection bars instead of `WarningCallout` / `BulkSelectionBar` | `mms-module-architecture.md` §6–§7 · `mms-ui-ux-design.md` |
 | Soft-delete schema | JSONB-only `deletedAt` when typed columns exist; client soft-delete on create/update bodies | `mms-data-layer.md`, `mms-form-architecture.md` |
 | Gold-standard §7 | Bulk wipe PUT; fire-and-forget `mutate()` closes forms; missing `ErrorState` / Cmd+N / `canEditSetup` | `mms-module-architecture.md` §7 |
 | Work UX | Parallel Filters chip bar; `directoryViews: ['list']` when Work is table\|cards; server prefs overwriting local column widths | `mms-module-architecture.md` §3 |

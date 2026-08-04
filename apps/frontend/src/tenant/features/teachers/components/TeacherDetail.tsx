@@ -1,12 +1,24 @@
-import React, { lazy, Suspense, useMemo } from "react";
+import React, { lazy, Suspense, useMemo, useState } from "react";
 import {
-  Briefcase, Calendar, Edit2, GraduationCap, Hash, Mail, Phone, School, User,
+  Archive,
+  Briefcase,
+  Calendar,
+  Edit2,
+  GraduationCap,
+  Hash,
+  Loader2,
+  Mail,
+  Phone,
+  RotateCcw,
+  School,
+  User,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
@@ -29,12 +41,22 @@ interface TeacherDetailProps {
   teacher: Teacher;
   onClose: () => void;
   onEdit?: (teacher: Teacher) => void;
+  canDelete?: boolean;
+  onRestore?: (teacherId: string) => void | Promise<void>;
+}
+
+function formatTeacherStamp(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  return null;
 }
 
 export default function TeacherDetail({
   teacher,
   onClose,
   onEdit,
+  canDelete = false,
+  onRestore,
 }: TeacherDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const { statuses, settings } = useTeacherConfig();
@@ -43,6 +65,10 @@ export default function TeacherDetail({
     teacher.contactId ? String(teacher.contactId) : undefined,
     Boolean(teacher.contactId),
   );
+  const [restoring, setRestoring] = useState(false);
+
+  const isArchived = Boolean(teacher.deletedAt);
+  const archivedAt = formatTeacherStamp(teacher.deletedAt);
 
   const displayName = teacher.name || linkedContact?.name || t("teachers.contactMissing");
   const primaryPhone = (linkedContact ? getPrimaryPhone(linkedContact) : null) || teacher.phone;
@@ -65,35 +91,90 @@ export default function TeacherDetail({
 
   const customFields = settings.customFields ?? [];
 
+  const headerActions = (() => {
+    if (isArchived && canDelete && onRestore) {
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          disabled={restoring}
+          onClick={() => {
+            void (async () => {
+              setRestoring(true);
+              try {
+                await onRestore(String(teacher.id));
+              } finally {
+                setRestoring(false);
+              }
+            })();
+          }}
+          className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          title={t("teachers.restore")}
+          aria-label={t("teachers.restore")}
+          aria-busy={restoring}
+        >
+          {restoring ? (
+            <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" aria-hidden />
+          ) : (
+            <RotateCcw className="w-4 h-4" />
+          )}
+        </Button>
+      );
+    }
+
+    if (onEdit && !isArchived) {
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => onEdit(teacher)}
+          className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          title={t("teachers.detail.editTitle")}
+          aria-label={t("teachers.detail.editTitle")}
+        >
+          <Edit2 className="w-4 h-4" />
+        </Button>
+      );
+    }
+
+    return undefined;
+  })();
+
   return (
     <>
       <DetailDrawerShell
         onClose={onClose}
         title={t("teachers.detail.title")}
-        subtitle={t("teachers.detail.employeeSubtitle", {
-          id: teacher.employeeId || t("common.notSpecified"),
-        })}
+        subtitle={
+          isArchived
+            ? t("teachers.detail.archivedSubtitle")
+            : t("teachers.detail.employeeSubtitle", {
+                id: teacher.employeeId || t("common.notSpecified"),
+              })
+        }
         icon={School}
         ariaLabel={t("teachers.detail.ariaLabel")}
-        headerActions={
-          onEdit ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => onEdit(teacher)}
-              className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              title={t("teachers.detail.editTitle")}
-              aria-label={t("teachers.detail.editTitle")}
-            >
-              <Edit2 className="w-4 h-4" />
-            </Button>
+        headerActions={headerActions}
+        headerExtra={
+          isArchived && archivedAt ? (
+            <WarningCallout
+              icon={Archive}
+              density="compact"
+              role="status"
+              description={t("teachers.detail.archivedBanner", {
+                date: formatDate(archivedAt),
+              })}
+            />
           ) : undefined
         }
         footer={
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-success" />
-            <span className="text-xs font-bold text-success uppercase">{t("teachers.detail.synced")}</span>
+            <div className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`} />
+            <span className={`text-xs font-bold uppercase ${isArchived ? "text-warning" : "text-success"}`}>
+              {isArchived ? t("teachers.detail.archivedSubtitle") : t("teachers.detail.synced")}
+            </span>
           </div>
         }
       >
@@ -107,14 +188,16 @@ export default function TeacherDetail({
           </div>
         </div>
 
-        <TeacherDetailQuickActions
-          teacher={teacher}
-          displayName={displayName}
-          primaryPhone={primaryPhone}
-          primaryEmail={primaryEmail}
-          canWriteMessaging={canWriteMessaging}
-          onOpenComposer={openComposer}
-        />
+        {!isArchived && (
+          <TeacherDetailQuickActions
+            teacher={teacher}
+            displayName={displayName}
+            primaryPhone={primaryPhone}
+            primaryEmail={primaryEmail}
+            canWriteMessaging={canWriteMessaging}
+            onOpenComposer={openComposer}
+          />
+        )}
 
         <Card accentColor="primary" className="p-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
@@ -158,7 +241,7 @@ export default function TeacherDetail({
         </Card>
       </DetailDrawerShell>
 
-      {messagingTarget && (
+      {messagingTarget && !isArchived && canWriteMessaging && (
         <Suspense fallback={null}>
           <MessageComposer
             channel={messagingTarget.channel}

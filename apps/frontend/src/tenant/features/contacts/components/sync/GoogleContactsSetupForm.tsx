@@ -2,17 +2,19 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export function GoogleContactsSetupHint({ t }: { t: TranslationFunction }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl bg-warning/10 border border-warning/30 text-xs text-warning">
-      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-warning" />
-      <div>
-        <p className="font-semibold mb-1">{t("contacts.sync.oauthSetupTitle")}</p>
-        <p className="text-warning/90">{t("contacts.sync.oauthSetupDesc")}</p>
-      </div>
-    </div>
+    <WarningCallout
+      icon={AlertCircle}
+      density="compact"
+      role="status"
+      className="gap-3 p-3 text-warning"
+      title={t("contacts.sync.oauthSetupTitle")}
+      description={t("contacts.sync.oauthSetupDesc")}
+    />
   );
 }
 

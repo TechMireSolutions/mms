@@ -3,6 +3,7 @@ import { Archive, Edit2, GraduationCap, Loader2, RotateCcw } from "lucide-react"
 import { formatDate, type Student } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
 import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
 import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
@@ -127,17 +128,14 @@ export default function StudentDetail({
         headerActions={headerActions}
         headerExtra={
           isArchived && archivedAt ? (
-            <div
+            <WarningCallout
+              icon={Archive}
+              density="compact"
               role="status"
-              className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2.5 text-xs font-medium text-foreground"
-            >
-              <Archive className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" aria-hidden />
-              <span>
-                {t("students.detail.archivedBanner", {
-                  date: formatDate(archivedAt),
-                })}
-              </span>
-            </div>
+              description={t("students.detail.archivedBanner", {
+                date: formatDate(archivedAt),
+              })}
+            />
           ) : undefined
         }
         footer={

@@ -87,7 +87,11 @@ export function UsersWorkTier({
         className="space-y-4"
       >
         {activeSubTab === 'users' && listLoadFailed && (
-          <ErrorState title={t('users.loadFailed')} onRetry={onRetryUsers} />
+          <ErrorState
+            title={t('users.loadFailed')}
+            description={t('users.loadFailedHint')}
+            onRetry={onRetryUsers}
+          />
         )}
 
         {activeSubTab === 'users' && !listLoadFailed && (
@@ -112,7 +116,11 @@ export function UsersWorkTier({
         )}
 
         {activeSubTab === 'activity' && logsLoadFailed && (
-          <ErrorState title={t('users.loadFailed')} onRetry={onRetryLogs} />
+          <ErrorState
+            title={t('users.loadFailed')}
+            description={t('users.loadFailedHint')}
+            onRetry={onRetryLogs}
+          />
         )}
 
         {activeSubTab === 'activity' && !logsLoadFailed && (

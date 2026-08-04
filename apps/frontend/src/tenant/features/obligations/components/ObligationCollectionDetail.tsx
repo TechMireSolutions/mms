@@ -5,11 +5,12 @@ import { DEFAULT_CURRENCIES, formatMoney, formatDate } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
-import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
+import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
@@ -178,9 +179,12 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
         )}
 
         {dists.length === 0 && wakalaType && (
-          <div className="px-4 py-3 rounded-xl bg-warning/10 border border-warning/30 text-xs text-warning" role="alert">
-            {t("obligations.detail.noDistribution")}
-          </div>
+          <WarningCallout
+            density="compact"
+            role="alert"
+            className="text-warning"
+            description={t("obligations.detail.noDistribution")}
+          />
         )}
 
         <footer className="flex flex-wrap items-center justify-between gap-2">

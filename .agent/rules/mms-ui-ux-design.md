@@ -24,15 +24,24 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `DataTable` (`@/components/ui/DataTable`)
   - `StatCard` (`@/components/ui/StatCard`)
   - `ErrorState` (`@/components/ui/ErrorState`) — title + **hint** description + retry
+  - `WarningCallout` (`@/components/ui/WarningCallout`) — warning/archive banners (drawer archived state, setup/prefs warnings); do not fork amber callout markup in features
+  - `BulkSelectionBar` (`@/components/ui/BulkSelectionBar`) — Work multi-select bars (`floating` \| `inline`); reuse exported action class helpers; do not fork selection-bar chrome per module
+  - `QuickActionButton` (`@/components/ui/QuickActionButton`) — directory/detail quick actions (Call / WA / SMS / Email pattern)
   - `ExportToolbar` (`@/components/ui/ExportToolbar`)
   - `SafeResponsiveContainer` (`@/components/ui/SafeResponsiveContainer`)
 - Extend central primitives safely when custom variations are needed. Do not implement ad-hoc primitives in feature folders.
 
 ### Detail drawers
 - Use `DetailDrawerShell` for entity profiles (Contacts / Students / Teachers pattern).
-- Soft-deleted rows: archive banner + Restore; hide Call / WhatsApp / SMS / Email (and other outbound messaging) — `mms-module-architecture.md` §3.
+- Soft-deleted rows: `WarningCallout` + Archive icon + Restore header action; hide Edit and Call / WhatsApp / SMS / Email (and other outbound messaging) when `deletedAt` — `mms-module-architecture.md` §3 / §7.
 - Header Edit, close, and per-row icon actions must meet the `min-h-11` / `min-w-11` touch floor (do not ship bare `size="icon"` without it).
 - Render all enabled registry/custom fields — no hard-coded key allowlists that drop Setup fields — `mms-fields.md`.
+
+### Work surface & chrome
+- Prefer `WORK_SURFACE` / `WORK_SURFACE_INNER` / `DETAIL_SECTION_TITLE` from `formStyles` for directory/detail panels instead of one-off glass/card stacks.
+- Multi-select bars → `BulkSelectionBar` only (`floating` \| `inline` + exported action classes).
+- Warning/archive banners → `WarningCallout` only (Contacts / Students / Teachers drawers as reference).
+- Quick actions → `QuickActionButton` (do not reintroduce Contacts-only deep copies).
 
 ### Design Token Strictness
 - **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).

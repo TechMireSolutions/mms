@@ -94,7 +94,11 @@ export function HasanatWorkTier({
       </div>
 
       {listLoadFailed ? (
-        <ErrorState title={t("hasanat.loadFailed")} onRetry={onRetry} />
+        <ErrorState
+          title={t("hasanat.loadFailed")}
+          description={t("hasanat.loadFailedHint")}
+          onRetry={onRetry}
+        />
       ) : (
         <>
           {activeSubTab === "overview" && (

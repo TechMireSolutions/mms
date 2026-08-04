@@ -154,7 +154,7 @@ export default function Attendance() {
               {(attendanceCollectionQuery.queryResult.isError || (effectiveTab === 'work' && attendancePageQuery.isError)) ? (
                 <ErrorState
                   title={t('attendance.toast.loadFailed')}
-                  description={t('common.retry')}
+                  description={t('attendance.loadFailedHint')}
                   onRetry={() => {
                     void attendanceCollectionQuery.queryResult.refetch();
                     void attendancePageQuery.refetch();

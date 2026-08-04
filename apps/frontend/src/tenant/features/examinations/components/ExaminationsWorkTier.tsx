@@ -86,7 +86,11 @@ export function ExaminationsWorkTier({
       </div>
 
       {listLoadFailed ? (
-        <ErrorState title={t("examinations.loadFailed")} onRetry={onRetry} />
+        <ErrorState
+          title={t("examinations.loadFailed")}
+          description={t("examinations.loadFailedHint")}
+          onRetry={onRetry}
+        />
       ) : (
         <>
           {activeSubTab === "exams" && (
