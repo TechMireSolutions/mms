@@ -45,6 +45,6 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   ],
   relationship: [
     { key: "contactId",    label: "Contact",      labelKey: "contacts.fields.linkedContact", type: "text",   description: "Contact picker — links an existing contact in this relationship.", descriptionKey: "contacts.fields.linkedContactDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
-    { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",  type: "select", description: "Relationship type (e.g. Father, Mother, Spouse).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+    { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",  type: "select", description: "User-defined relationship type (created from the Relationship form tab).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
   ],
 };

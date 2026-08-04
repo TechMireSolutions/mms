@@ -367,7 +367,7 @@ describe('contactService relationship reciprocal mapping', () => {
       }),
       expect.objectContaining({
         id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Spouse', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Husband', 1)]),
       }),
       expect.objectContaining({
         id: 'd',
@@ -475,7 +475,7 @@ describe('contactService relationship reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
       expect.objectContaining({
         id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Spouse', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Husband', 1)]),
       }),
       expect.objectContaining({
         id: 'a',

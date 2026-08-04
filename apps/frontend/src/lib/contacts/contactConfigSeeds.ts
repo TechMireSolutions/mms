@@ -1,7 +1,6 @@
 import {
   GENDERS,
   SOCIAL_PLATFORMS,
-  RELATIONSHIPS,
   DEFAULT_PHONE_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_ADDRESS_LABELS,
@@ -21,7 +20,8 @@ export function getContactConfigCollectionDefaults(): {
   return {
     genders: [...GENDERS],
     socialPlatforms: [...SOCIAL_PLATFORMS],
-    relationships: [...RELATIONSHIPS],
+    /** Relationship types are user-created pairs only — no prebuilt seed. */
+    relationships: [],
     phoneLabels: [...DEFAULT_PHONE_LABELS],
     emailLabels: [...DEFAULT_EMAIL_LABELS],
     addressLabels: [...DEFAULT_ADDRESS_LABELS],

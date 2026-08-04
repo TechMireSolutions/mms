@@ -22,7 +22,7 @@ export interface OptionSelectPopoverProps {
   footer?: ReactNode | ((api: { close: () => void }) => ReactNode);
 }
 
-/** Shared option listbox popover used by EditableSelect and RelationshipTypeSelect. */
+/** Shared option listbox popover used by EditableSelect (Contacts form option lists). */
 export function OptionSelectPopover({
   options,
   value,

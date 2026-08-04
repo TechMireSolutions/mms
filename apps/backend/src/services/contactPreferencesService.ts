@@ -1,15 +1,20 @@
 import {
   CONTACTS_SAVED_REPORT_CATEGORY,
+  LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS,
   canDeleteContactsSavedReport,
   canViewContactsSavedReport,
+  deriveRelationshipOptionsFromPairs,
   normalizeContactPreferences,
   type ContactColumnPreference,
   type ContactPreferences,
   type ContactsSavedReport,
   type ContactsSavedReportViewer,
   type ContactsWorkDrillDown,
+  type FieldConfig,
+  type FieldDefinition,
   type GenericSavedReport,
   type ModuleColumnPreference,
+  type RelationshipPair,
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
@@ -27,6 +32,8 @@ import {
   listSavedReportsByCategory,
   touchSavedReportRunById,
 } from '../db/repositories/savedReportsRepository.js';
+import { loadContactFieldConfig, saveContactFieldConfig } from './contactConfigService.js';
+import { loadContactLookupKind, replaceContactLookupKind } from './contactLookupsService.js';
 
 function requireTenant(): string {
   const tenant = getRequestTenant();
@@ -45,6 +52,73 @@ function filterColumnPreferences(preferences: unknown[]): ModuleColumnPreference
   );
 }
 
+function rawHadLegacyRelationshipPairs(raw: Record<string, unknown>): boolean {
+  const pairs = raw.relationshipPairs;
+  if (!Array.isArray(pairs)) return false;
+  return pairs.some(
+    (pair) =>
+      pair != null &&
+      typeof pair === 'object' &&
+      typeof (pair as RelationshipPair).id === 'string' &&
+      LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS.has((pair as RelationshipPair).id as string),
+  );
+}
+
+function relationshipLabelListsMatch(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  if (left.length !== right.length) return false;
+  const rightKeys = new Set(right.map((label) => label.trim().toLowerCase()));
+  if (rightKeys.size !== left.length) return false;
+  return left.every((label) => rightKeys.has(label.trim().toLowerCase()));
+}
+
+function syncRelationshipOptionsInFieldConfig(
+  config: FieldConfig,
+  options: string[],
+): FieldConfig {
+  const tabFields = config.fields?.relationship;
+  if (!Array.isArray(tabFields)) return config;
+  let changed = false;
+  const nextFields: FieldDefinition[] = tabFields.map((field) => {
+    if (field.key !== 'relationship') return field;
+    const current = Array.isArray(field.options) ? field.options : [];
+    if (relationshipLabelListsMatch(current, options)) return field;
+    changed = true;
+    return { ...field, options };
+  });
+  if (!changed) return config;
+  return {
+    ...config,
+    fields: {
+      ...config.fields,
+      relationship: nextFields,
+    },
+  };
+}
+
+/** Align lookups + field-config options with pair-derived relationship labels. */
+async function syncRelationshipMirrorsFromPairs(
+  pairs: RelationshipPair[] | undefined,
+): Promise<void> {
+  const labels = deriveRelationshipOptionsFromPairs(pairs ?? []);
+  const currentLookups = await loadContactLookupKind('relationships');
+  const lookupLabels = Array.isArray(currentLookups)
+    ? currentLookups.filter((entry): entry is string => typeof entry === 'string')
+    : [];
+  if (!relationshipLabelListsMatch(lookupLabels, labels)) {
+    await replaceContactLookupKind('relationships', labels);
+  }
+
+  const fieldConfig = await loadContactFieldConfig();
+  if (!fieldConfig) return;
+  const synced = syncRelationshipOptionsInFieldConfig(fieldConfig, labels);
+  if (synced !== fieldConfig) {
+    await saveContactFieldConfig(synced);
+  }
+}
+
 export async function getUserColumnPreferences(userId: string): Promise<ContactColumnPreference[]> {
   const prefs = await getContactUserColumnPrefs(requireTenant(), userId);
   return filterColumnPreferences(prefs) as ContactColumnPreference[];
@@ -53,7 +127,18 @@ export async function getUserColumnPreferences(userId: string): Promise<ContactC
 export async function loadContactPreferences(): Promise<ContactPreferences | null> {
   const raw = await getContactModulePreferencesByWorkspace(requireTenant());
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return normalizeContactPreferences(raw as Partial<ContactPreferences>);
+  const record = raw as Record<string, unknown>;
+  const normalized = normalizeContactPreferences(record as Partial<ContactPreferences>);
+  // One-shot: drop former built-in pairs from stored prefs.
+  if (rawHadLegacyRelationshipPairs(record)) {
+    await upsertContactModulePreferences(
+      requireTenant(),
+      normalized as unknown as Record<string, unknown>,
+    );
+  }
+  // Align lookups + field-config options with pair-derived labels (purges stale seeds).
+  await syncRelationshipMirrorsFromPairs(normalized.relationshipPairs);
+  return normalized;
 }
 
 export async function saveContactPreferences(

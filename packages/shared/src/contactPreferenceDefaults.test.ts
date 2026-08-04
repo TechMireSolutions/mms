@@ -1,14 +1,50 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_RELATIONSHIP_PAIRS,
+  LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS,
   buildRelationshipPairAddition,
   deriveRelationshipOptionsFromPairs,
   isDuplicateRelationshipPair,
   mergeRelationshipOptionLabels,
   normalizeContactPreferences,
+  parseRelationshipPairInput,
   pruneRelationshipPairsForRemovedLabel,
   resolveRelationshipPairs,
 } from './contactPreferenceDefaults.js';
+
+describe('parseRelationshipPairInput', () => {
+  it('splits on colon, slash, or arrow with surrounding spaces', () => {
+    expect(parseRelationshipPairInput('Husband : Wife')).toEqual({
+      ok: true,
+      forward: 'Husband',
+      inverse: 'Wife',
+    });
+    expect(parseRelationshipPairInput('Son/Daughter')).toEqual({
+      ok: true,
+      forward: 'Son',
+      inverse: 'Daughter',
+    });
+    expect(parseRelationshipPairInput('Mentor ↔ Mentee')).toEqual({
+      ok: true,
+      forward: 'Mentor',
+      inverse: 'Mentee',
+    });
+  });
+
+  it('treats a single label as self-inverse', () => {
+    expect(parseRelationshipPairInput('Spouse')).toEqual({
+      ok: true,
+      forward: 'Spouse',
+      inverse: 'Spouse',
+    });
+  });
+
+  it('rejects empty input or empty sides', () => {
+    expect(parseRelationshipPairInput('  ')).toEqual({ ok: false, reason: 'empty' });
+    expect(parseRelationshipPairInput('Husband :')).toEqual({ ok: false, reason: 'empty' });
+    expect(parseRelationshipPairInput(': Wife')).toEqual({ ok: false, reason: 'empty' });
+  });
+});
 
 describe('deriveRelationshipOptionsFromPairs', () => {
   it('returns unique forward and inverse labels', () => {
@@ -56,14 +92,26 @@ describe('mergeRelationshipOptionLabels', () => {
 });
 
 describe('resolveRelationshipPairs', () => {
-  it('returns defaults for missing or empty lists', () => {
-    expect(resolveRelationshipPairs(null)).toEqual(DEFAULT_RELATIONSHIP_PAIRS);
-    expect(resolveRelationshipPairs([])).toEqual(DEFAULT_RELATIONSHIP_PAIRS);
+  it('returns empty for missing or empty lists', () => {
+    expect(resolveRelationshipPairs(null)).toEqual([]);
+    expect(resolveRelationshipPairs([])).toEqual([]);
+    expect(DEFAULT_RELATIONSHIP_PAIRS).toEqual([]);
   });
 
-  it('returns the provided non-empty list', () => {
+  it('returns the provided non-empty list without legacy ids', () => {
     const pairs = [{ id: 'mentor', forward: 'Mentor', inverse: 'Mentee' }];
     expect(resolveRelationshipPairs(pairs)).toEqual(pairs);
+  });
+
+  it('strips legacy built-in seed pair ids', () => {
+    const custom = { id: 'pair_abc', forward: 'Mentor', inverse: 'Mentee' };
+    const legacyId = [...LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS][0]!;
+    expect(
+      resolveRelationshipPairs([
+        { id: legacyId, forward: 'Father', inverse: 'Child' },
+        custom,
+      ]),
+    ).toEqual([custom]);
   });
 });
 
@@ -132,12 +180,12 @@ describe('pruneRelationshipPairsForRemovedLabel', () => {
 });
 
 describe('normalizeContactPreferences', () => {
-  it('restores default relationship pairs when stored list is empty', () => {
+  it('keeps empty relationship pairs (no built-in restore)', () => {
     const normalized = normalizeContactPreferences({
       defaultCity: 'Karachi',
       relationshipPairs: [],
     });
     expect(normalized.defaultCity).toBe('Karachi');
-    expect(normalized.relationshipPairs).toEqual(DEFAULT_RELATIONSHIP_PAIRS);
+    expect(normalized.relationshipPairs).toEqual([]);
   });
 });

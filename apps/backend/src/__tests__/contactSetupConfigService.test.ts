@@ -5,6 +5,8 @@ const mockUpsertConfig = vi.fn();
 const mockLoadCustomTabs = vi.fn();
 const mockGetPrefs = vi.fn();
 const mockUpsertPrefs = vi.fn();
+const mockLoadLookupKind = vi.fn();
+const mockReplaceLookupKind = vi.fn();
 
 vi.mock('../db/repositories/contactFieldConfigRepository.js', () => ({
   getContactFieldConfigByWorkspace: (...args: unknown[]) => mockGetConfig(...args),
@@ -18,6 +20,11 @@ vi.mock('../db/repositories/contactModulePreferencesRepository.js', () => ({
 
 vi.mock('../services/customTabsService.js', () => ({
   loadCustomTabs: (...args: unknown[]) => mockLoadCustomTabs(...args),
+}));
+
+vi.mock('../services/contactLookupsService.js', () => ({
+  loadContactLookupKind: (...args: unknown[]) => mockLoadLookupKind(...args),
+  replaceContactLookupKind: (...args: unknown[]) => mockReplaceLookupKind(...args),
 }));
 
 vi.mock('../lib/tenantContext.js', () => ({
@@ -40,7 +47,11 @@ describe('contact setup config services', () => {
     mockLoadCustomTabs.mockReset();
     mockGetPrefs.mockReset();
     mockUpsertPrefs.mockReset();
+    mockLoadLookupKind.mockReset();
+    mockReplaceLookupKind.mockReset();
     mockLoadCustomTabs.mockResolvedValue([]);
+    mockLoadLookupKind.mockResolvedValue([]);
+    mockReplaceLookupKind.mockResolvedValue([]);
   });
 
   it('returns null when field config row missing', async () => {
@@ -79,5 +90,55 @@ describe('contact setup config services', () => {
   it('returns null preferences when empty', async () => {
     mockGetPrefs.mockResolvedValue(null);
     await expect(loadContactPreferences()).resolves.toBeNull();
+  });
+
+  it('strips legacy relationship pairs and rewrites relationship mirrors', async () => {
+    mockGetPrefs.mockResolvedValue({
+      defaultCountry: 'Pakistan',
+      relationshipPairs: [
+        { id: 'father_child', forward: 'Father', inverse: 'Child' },
+        { id: 'pair_custom', forward: 'Mentor', inverse: 'Mentee' },
+      ],
+    });
+    mockLoadLookupKind.mockResolvedValue(['Father', 'Child', 'Mentor', 'Mentee']);
+    mockGetConfig.mockResolvedValue({
+      version: 1,
+      enabledTabs: ['relationship'],
+      requiredTabs: [],
+      fields: {
+        relationship: [
+          { key: 'contactId', label: 'Contact', type: 'text', enabled: true, order: 0 },
+          {
+            key: 'relationship',
+            label: 'Relationship',
+            type: 'select',
+            enabled: true,
+            order: 1,
+            options: ['Father', 'Child', 'Mentor', 'Mentee'],
+          },
+        ],
+      },
+    });
+
+    const loaded = await loadContactPreferences();
+    expect(loaded?.relationshipPairs).toEqual([
+      { id: 'pair_custom', forward: 'Mentor', inverse: 'Mentee' },
+    ]);
+    expect(mockUpsertPrefs).toHaveBeenCalled();
+    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', ['Mentor', 'Mentee']);
+    expect(mockUpsertConfig).toHaveBeenCalled();
+  });
+
+  it('rewrites stale relationship lookups when prefs are already clean', async () => {
+    mockGetPrefs.mockResolvedValue({
+      defaultCountry: 'Pakistan',
+      relationshipPairs: [],
+    });
+    mockLoadLookupKind.mockResolvedValue(['Father', 'Mother', 'Spouse']);
+    mockGetConfig.mockResolvedValue(null);
+
+    await loadContactPreferences();
+    expect(mockUpsertPrefs).not.toHaveBeenCalled();
+    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', []);
   });
 });

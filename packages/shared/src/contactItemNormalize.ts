@@ -3,7 +3,6 @@ import {
   DEFAULT_ADDRESS_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_PHONE_LABELS,
-  RELATIONSHIPS,
   SOCIAL_PLATFORMS,
   type Contact,
   type PhoneNumber as ContactPhone,
@@ -254,7 +253,7 @@ export function normalizeRelationshipContactItem(
   item: unknown,
   defaults: ContactItemNormalizeDefaults = {},
 ): RelationshipContact {
-  const defaultRelationship = defaults.relationship || RELATIONSHIPS[0] || "";
+  const defaultRelationship = defaults.relationship || "Parent";
   if (!item) return { relationship: defaultRelationship, contactId: "" };
   if (typeof item === "string" || typeof item === "number") {
     return { relationship: defaultRelationship, contactId: String(item) };

@@ -3,7 +3,6 @@ import {
   DEFAULT_ADDRESS_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_PHONE_LABELS,
-  RELATIONSHIPS,
   SOCIAL_PLATFORMS,
   type Contact,
   type PhoneNumber as ContactPhone,
@@ -44,7 +43,7 @@ export function normalizeContactForEdit(
     emailLabel: optionDefaults.emailLabel || DEFAULT_EMAIL_LABELS[0] || "Personal",
     addressLabel: optionDefaults.addressLabel || DEFAULT_ADDRESS_LABELS[0] || "Home",
     socialPlatform: optionDefaults.socialPlatform || SOCIAL_PLATFORMS[0] || "Facebook",
-    relationship: optionDefaults.relationship || RELATIONSHIPS[0] || "",
+    relationship: optionDefaults.relationship || "Parent",
     defaultPhoneCountryCode: optionDefaults.defaultPhoneCountryCode || "",
   };
   const dialDefault = defaults.defaultPhoneCountryCode || "";
@@ -189,7 +188,7 @@ export function normalizeContactForEdit(
     : [];
 
   if (relationshipContacts.length === 0) {
-    relationshipContacts = [{ relationship: defaults.relationship || RELATIONSHIPS[0], contactId: "" }];
+    relationshipContacts = [{ relationship: defaults.relationship || "", contactId: "" }];
   }
 
   return {

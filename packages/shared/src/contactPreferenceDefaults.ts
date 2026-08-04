@@ -26,34 +26,43 @@ export const COLOR_PALETTES = {
   destructive: { bg: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/15 dark:border-destructive/25", text: "text-destructive", border: "border-destructive/20 dark:border-destructive/25" },
 };
 
-export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [
-  { id: "parent_child", forward: "Parent", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
-  { id: "father_child", forward: "Father", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
-  { id: "mother_child", forward: "Mother", inverse: "Child", inverseMale: "Son", inverseFemale: "Daughter" },
-  { id: "spouse", forward: "Spouse", inverse: "Spouse" },
-  { id: "husband_wife", forward: "Husband", inverse: "Wife" },
-  { id: "sibling", forward: "Sibling", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
-  { id: "brother_sibling", forward: "Brother", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
-  { id: "sister_sibling", forward: "Sister", inverse: "Sibling", inverseMale: "Brother", inverseFemale: "Sister" },
-  { id: "guardian_dependent", forward: "Guardian", inverse: "Dependent" },
-  { id: "grandparent_grandchild", forward: "Grandparent", inverse: "Grandchild", inverseMale: "Grandson", inverseFemale: "Granddaughter" },
-  { id: "aunt_uncle", forward: "Aunt/Uncle", inverse: "Niece/Nephew", inverseMale: "Nephew", inverseFemale: "Niece" },
-  { id: "cousin", forward: "Cousin", inverse: "Cousin" },
-  { id: "inlaw", forward: "Parent-In-Law", inverse: "Child-In-Law" },
-  { id: "other", forward: "Other", inverse: "Other" },
-];
+/**
+ * Former seeded pair ids. Stripped on resolve so Workspaces only keep
+ * user-created dynamic pairs (ids like `pair_…`).
+ */
+export const LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS: ReadonlySet<string> = new Set([
+  "parent_child",
+  "father_child",
+  "mother_child",
+  "spouse",
+  "husband_wife",
+  "sibling",
+  "brother_sibling",
+  "sister_sibling",
+  "guardian_dependent",
+  "grandparent_grandchild",
+  "aunt_uncle",
+  "cousin",
+  "inlaw",
+  "other",
+]);
+
+/** No prebuilt pairs — relationship types are user-created only. */
+export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [];
 
 /**
- * Returns configured pairs, or DEFAULT_RELATIONSHIP_PAIRS when missing/empty.
- * Intentional empty lists are not supported (product invariant).
+ * Returns configured user pairs. Missing/empty → `[]`.
+ * Drops legacy built-in seed ids so only dynamic pairs remain.
  */
 export function resolveRelationshipPairs(
   pairs?: RelationshipPair[] | null,
 ): RelationshipPair[] {
   if (!Array.isArray(pairs) || pairs.length === 0) {
-    return [...DEFAULT_RELATIONSHIP_PAIRS];
+    return [];
   }
-  return pairs;
+  return pairs.filter(
+    (pair) => typeof pair.id !== "string" || !LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS.has(pair.id),
+  );
 }
 
 /**
@@ -75,6 +84,31 @@ export function isDuplicateRelationshipPair(
 
 function relationshipPairKey(forward: string, inverse: string): string {
   return `${forward.trim().toLowerCase()}::${inverse.trim().toLowerCase()}`;
+}
+
+const RELATIONSHIP_PAIR_SEPARATOR = /\s*[:/↔]\s*/;
+
+/**
+ * Parses a single-field relationship pair string (e.g. `Husband : Wife`).
+ * No separator → self-inverse (both sides the same label).
+ */
+export function parseRelationshipPairInput(
+  raw: string,
+):
+  | { ok: true; forward: string; inverse: string }
+  | { ok: false; reason: "empty" } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: false, reason: "empty" };
+
+  const match = RELATIONSHIP_PAIR_SEPARATOR.exec(trimmed);
+  if (!match || match.index == null) {
+    return { ok: true, forward: trimmed, inverse: trimmed };
+  }
+
+  const forward = trimmed.slice(0, match.index).trim();
+  const inverse = trimmed.slice(match.index + match[0].length).trim();
+  if (!forward || !inverse) return { ok: false, reason: "empty" };
+  return { ok: true, forward, inverse };
 }
 
 /**
@@ -112,7 +146,7 @@ export function buildRelationshipPairAddition(
 
 /**
  * Removes pairs that reference a dropped dropdown label (forward, inverse, or gendered).
- * Empty results are returned as-is; callers/resolvers restore defaults when needed.
+ * Empty results are returned as-is (no built-in fallback).
  */
 export function pruneRelationshipPairsForRemovedLabel(
   pairs: readonly RelationshipPair[],
@@ -199,7 +233,8 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
 
 /**
  * Merges stored contact preferences onto defaults.
- * Empty `relationshipPairs` falls back via {@link resolveRelationshipPairs}.
+ * Relationship pairs are resolved via {@link resolveRelationshipPairs}
+ * (empty allowed; legacy built-ins stripped).
  */
 export function normalizeContactPreferences(
   partial?: Partial<ContactPreferences> | null,

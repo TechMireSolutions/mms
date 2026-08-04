@@ -8,19 +8,34 @@ interface EditableSelectProps {
   options: string[];
   value: string;
   onChange: (value: string) => void;
-  /** When omitted, options are read-only for setup-only editing. */
+  /** When omitted, options are read-only (no add/remove). */
   onUpdateOptions?: (options: string[]) => void;
+  /**
+   * Custom add path (e.g. relationship pairs). Return the label to select on
+   * success, or null to keep the popover open (caller handles toasts).
+   */
+  onCommitAdd?: (raw: string) => string | null | Promise<string | null>;
+  /** Optional hint above the add row. */
+  addHint?: string;
+  /** Overrides the default add-input placeholder. */
+  addPlaceholder?: string;
   placeholder?: string;
   className?: string;
   id?: string;
   name?: string;
 }
 
+const INPUT_CLASS =
+  "h-auto min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-2 text-xs focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary/40";
+
 export function EditableSelect({
   options,
   value,
   onChange,
   onUpdateOptions,
+  onCommitAdd,
+  addHint,
+  addPlaceholder,
   placeholder,
   className = "w-28",
   id,
@@ -28,12 +43,30 @@ export function EditableSelect({
 }: EditableSelectProps): React.JSX.Element {
   const { t } = useTranslation();
   const [customValue, setCustomValue] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
   const customInputId = React.useId();
+  const canAdd = Boolean(onUpdateOptions || onCommitAdd);
 
-  const handleAdd = (close: () => void): void => {
-    if (!onUpdateOptions) return;
+  const handleAdd = async (close: () => void): Promise<void> => {
+    if (!canAdd || isAdding) return;
     const text = customValue.trim();
     if (!text) return;
+
+    if (onCommitAdd) {
+      setIsAdding(true);
+      try {
+        const selected = await onCommitAdd(text);
+        if (selected == null) return;
+        onChange(selected);
+        setCustomValue("");
+        close();
+      } finally {
+        setIsAdding(false);
+      }
+      return;
+    }
+
+    if (!onUpdateOptions) return;
     const existing = options.find((opt) => opt.trim().toLowerCase() === text.toLowerCase());
     if (existing) {
       onChange(existing);
@@ -59,33 +92,43 @@ export function EditableSelect({
         if (!open) setCustomValue("");
       }}
       footer={
-        onUpdateOptions
+        canAdd
           ? ({ close }) => (
-              <div className="p-2 flex gap-1.5 bg-muted/20 flex-shrink-0">
-                <Input
-                  id={customInputId}
-                  name={customInputId}
-                  type="text"
-                  value={customValue}
-                  onChange={(event) => setCustomValue(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      handleAdd(close);
-                    }
-                  }}
-                  placeholder={t("contacts.form.addNewTypePlaceholder")}
-                  className="h-auto min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-2 text-xs focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary/40"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => handleAdd(close)}
-                  className="px-2.5 text-xs font-semibold rounded-lg flex-shrink-0"
-                >
-                  {t("common.add")}
-                </Button>
+              <div className="p-2 space-y-2 bg-muted/20 flex-shrink-0">
+                {addHint ? (
+                  <p className="px-0.5 text-[11px] leading-snug text-muted-foreground">{addHint}</p>
+                ) : null}
+                <div className="flex gap-1.5">
+                  <Input
+                    id={customInputId}
+                    name={customInputId}
+                    type="text"
+                    value={customValue}
+                    onChange={(event) => setCustomValue(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        void handleAdd(close);
+                      }
+                    }}
+                    placeholder={addPlaceholder ?? t("contacts.form.addNewTypePlaceholder")}
+                    aria-label={addPlaceholder ?? t("contacts.form.addNewTypePlaceholder")}
+                    disabled={isAdding}
+                    className={INPUT_CLASS}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      void handleAdd(close);
+                    }}
+                    disabled={isAdding}
+                    className="px-2.5 text-xs font-semibold rounded-lg flex-shrink-0"
+                  >
+                    {t("common.add")}
+                  </Button>
+                </div>
               </div>
             )
           : null

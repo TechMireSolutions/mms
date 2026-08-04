@@ -1,14 +1,14 @@
 import React from "react";
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import type { RelationshipContact } from "@mms/shared";
-import { Field } from "@/components/ui/FormPrimitives";
+import { parseRelationshipPairInput, type RelationshipContact } from "@mms/shared";
+import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
+import { notify } from "@/lib/notify";
 import { useRelationshipTypeOptions } from "@/tenant/features/contacts/hooks/useRelationshipTypeOptions";
-import { RelationshipTypeSelect } from "./RelationshipTypeSelect";
 
 export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
@@ -50,6 +50,15 @@ export function ContactRelationshipTab({
       .filter((cid) => cid != null && String(cid).length > 0) as (string | number)[];
     if (contactDraft.id != null) linked.unshift(contactDraft.id);
     return linked;
+  };
+
+  const commitRelationshipPair = async (raw: string): Promise<string | null> => {
+    const parsed = parseRelationshipPairInput(raw);
+    if (!parsed.ok) {
+      notify.warning(t("contacts.form.invalidRelationshipPair"));
+      return null;
+    }
+    return addPair(parsed.forward, parsed.inverse);
   };
 
   return (
@@ -108,7 +117,7 @@ export function ContactRelationshipTab({
                       required={isFieldRequired("relationship", "relationship")}
                       id={`relationship-type-${idx}`}
                     >
-                      <RelationshipTypeSelect
+                      <EditableSelect
                         options={relationshipOptions}
                         value={link.relationship || relationshipOptions[0] || ""}
                         onChange={(val) =>
@@ -117,7 +126,9 @@ export function ContactRelationshipTab({
                         onUpdateOptions={(next) => {
                           void updateOptions(next);
                         }}
-                        onAddPair={addPair}
+                        onCommitAdd={commitRelationshipPair}
+                        addHint={t("contacts.form.addRelationshipPairHint")}
+                        addPlaceholder={t("contacts.form.relationshipPairPlaceholder")}
                         className="w-full"
                         id={`relationship-type-${idx}`}
                         name={`relationship-type-${idx}`}

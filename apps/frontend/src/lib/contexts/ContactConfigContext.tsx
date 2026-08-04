@@ -68,7 +68,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const {
     genders,
     socialPlatforms,
-    relationships,
     phoneLabels,
     emailLabels,
     addressLabels,
@@ -121,7 +120,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     isTabFieldRequired,
     genders,
     socialPlatforms,
-    relationships,
     phoneLabels,
     emailLabels,
     addressLabels,

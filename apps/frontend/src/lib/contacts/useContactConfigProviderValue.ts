@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import {
-  RELATIONSHIPS,
+  deriveRelationshipOptionsFromPairs,
+  resolveRelationshipPairs,
   type ColumnRegistryEntry,
   type ContactPreferences,
   type FieldConfig,
@@ -9,6 +10,12 @@ import {
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
 
+/**
+ * Builds ContactConfig context value.
+ * Relationship-type options are pair-derived only (`prefs.relationshipPairs`) —
+ * do not pass lookup `relationships` here (lookups remain a write mirror via
+ * `updateRelationships`).
+ */
 export function useContactConfigProviderValue({
   fieldConfig,
   formTabsReady,
@@ -24,7 +31,6 @@ export function useContactConfigProviderValue({
   isTabFieldRequired,
   genders,
   socialPlatforms,
-  relationships,
   phoneLabels,
   emailLabels,
   addressLabels,
@@ -60,7 +66,6 @@ export function useContactConfigProviderValue({
   isTabFieldRequired: (tabId: string, fieldId: string) => boolean;
   genders: string[];
   socialPlatforms: string[];
-  relationships: string[];
   phoneLabels: string[];
   emailLabels: string[];
   addressLabels: string[];
@@ -87,8 +92,12 @@ export function useContactConfigProviderValue({
     [countryCodes, countryCodesMap, prefs],
   );
 
-  /** Form Relationship-type dropdown SSOT — seeded defaults when the collection is empty. */
-  const resolvedRelationships = relationships.length > 0 ? relationships : [...RELATIONSHIPS];
+  /** Form Relationship-type dropdown — user-created pairs only (no prebuilt seed). */
+  const resolvedRelationships = useMemo(
+    () =>
+      deriveRelationshipOptionsFromPairs(resolveRelationshipPairs(prefs.relationshipPairs)),
+    [prefs.relationshipPairs],
+  );
 
   return useMemo(
     () => ({
