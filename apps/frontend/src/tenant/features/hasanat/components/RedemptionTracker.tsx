@@ -8,9 +8,11 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { formatDate, formatNumber } from "@mms/shared";
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { RedeemModal } from "@/tenant/features/hasanat/components/RedeemModal";
 
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 export interface RedemptionTrackerProps {
   distributions: Distribution[];
@@ -50,11 +52,7 @@ export function RedemptionTracker({
     setShowModal(false);
   };
 
-  const showStudent = isColumnVisible ? isColumnVisible("student") : true;
-  const showReward = isColumnVisible ? isColumnVisible("reward") : true;
-  const showPointsUsed = isColumnVisible ? isColumnVisible("pointsUsed") : true;
-  const showDate = isColumnVisible ? isColumnVisible("date") : true;
-  const showApprovedBy = isColumnVisible ? isColumnVisible("approvedBy") : true;
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   return (
     <section aria-label={t("hasanat.tabs.redemptions")} className="space-y-4">
@@ -87,10 +85,11 @@ export function RedemptionTracker({
       </header>
 
       {redemptions.length === 0 ? (
-        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
-          <Gift className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t("hasanat.empty.redemptions")}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={Gift}
+          title={t("hasanat.empty.redemptions")}
+        />
       ) : (
         <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
           <div className="space-y-3 p-3 md:hidden">
@@ -103,10 +102,10 @@ export function RedemptionTracker({
                 className="space-y-3 rounded-xl border border-border bg-card p-3"
               >
                 <div className="flex min-w-0 items-start justify-between gap-3">
-                  {showStudent && (
+                  {columnVisible("student") && (
                     <h4 className="min-w-0 truncate text-sm font-semibold text-foreground">{redemption.studentName || "—"}</h4>
                   )}
-                  {showPointsUsed && (
+                  {columnVisible("pointsUsed") && (
                     <div className="flex shrink-0 items-center gap-1">
                       <Star className="w-3 h-3 text-warning" aria-hidden="true" />
                       <span className="text-sm font-bold text-warning">{redemption.pointsUsed}</span>
@@ -114,19 +113,19 @@ export function RedemptionTracker({
                   )}
                 </div>
                 <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                  {showReward && (
+                  {columnVisible("reward") && (
                     <div>
                       <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.reward")}</dt>
                       <dd className="break-words text-foreground">{redemption.reward}</dd>
                     </div>
                   )}
-                  {showDate && (
+                  {columnVisible("date") && (
                     <div>
                       <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.date")}</dt>
                       <dd className="text-muted-foreground">{formatDate(redemption.date)}</dd>
                     </div>
                   )}
-                  {showApprovedBy && (
+                  {columnVisible("approvedBy") && (
                     <div>
                       <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.approvedBy")}</dt>
                       <dd className="break-words text-muted-foreground">{redemption.approvedBy || "—"}</dd>
@@ -141,27 +140,27 @@ export function RedemptionTracker({
               <caption className="sr-only">{t("hasanat.tabs.redemptions")}</caption>
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  {showStudent && (
+                  {columnVisible("student") && (
                     <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.student")}
                     </ResizableTableHead>
                   )}
-                  {showReward && (
+                  {columnVisible("reward") && (
                     <ResizableTableHead columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.reward")}
                     </ResizableTableHead>
                   )}
-                  {showPointsUsed && (
+                  {columnVisible("pointsUsed") && (
                     <ResizableTableHead columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.pointsUsed")}
                     </ResizableTableHead>
                   )}
-                  {showDate && (
+                  {columnVisible("date") && (
                     <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.date")}
                     </ResizableTableHead>
                   )}
-                  {showApprovedBy && (
+                  {columnVisible("approvedBy") && (
                     <ResizableTableHead columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                       {t("hasanat.columns.redemption.approvedBy")}
                     </ResizableTableHead>
@@ -171,13 +170,13 @@ export function RedemptionTracker({
               <tbody className="divide-y divide-border/50">
                 {redemptions.map((redemption, index) => (
                   <motion.tr key={redemption.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="hover:bg-muted/20 transition-colors">
-                    {showStudent && (
+                    {columnVisible("student") && (
                       <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{redemption.studentName || "—"}</td>
                     )}
-                    {showReward && (
+                    {columnVisible("reward") && (
                       <td className="px-4 py-3 text-sm text-foreground">{redemption.reward}</td>
                     )}
-                    {showPointsUsed && (
+                    {columnVisible("pointsUsed") && (
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 text-warning" aria-hidden="true" />
@@ -185,10 +184,10 @@ export function RedemptionTracker({
                         </div>
                       </td>
                     )}
-                    {showDate && (
+                    {columnVisible("date") && (
                       <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(redemption.date)}</td>
                     )}
-                    {showApprovedBy && (
+                    {columnVisible("approvedBy") && (
                       <td className="px-4 py-3 text-sm text-muted-foreground">{redemption.approvedBy || "—"}</td>
                     )}
                   </motion.tr>

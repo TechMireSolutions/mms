@@ -18,12 +18,7 @@ interface QuestionBankTableProps {
   canDelete: boolean;
   canTrashRows: boolean;
   showDeleted: boolean;
-  showText: boolean;
-  showCategory: boolean;
-  showLanguage: boolean;
-  showType: boolean;
-  showDifficulty: boolean;
-  showSource: boolean;
+  isColumnVisible: (key: string) => boolean;
   allFilteredSelected: boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -43,12 +38,7 @@ export function QuestionBankTable({
   canDelete,
   canTrashRows,
   showDeleted,
-  showText,
-  showCategory,
-  showLanguage,
-  showType,
-  showDifficulty,
-  showSource,
+  isColumnVisible,
   allFilteredSelected,
   getColumnWidth,
   onColumnResize,
@@ -65,12 +55,7 @@ export function QuestionBankTable({
         <caption className="sr-only">{t('questionBank.questions')}</caption>
         <QuestionBankTableHeader
           canDelete={canDelete}
-          showText={showText}
-          showCategory={showCategory}
-          showLanguage={showLanguage}
-          showType={showType}
-          showDifficulty={showDifficulty}
-          showSource={showSource}
+          isColumnVisible={isColumnVisible}
           allFilteredSelected={allFilteredSelected}
           getColumnWidth={getColumnWidth}
           onColumnResize={onColumnResize}
@@ -90,12 +75,7 @@ export function QuestionBankTable({
               canDelete={canDelete}
               canTrashRows={canTrashRows}
               showDeleted={showDeleted}
-              showText={showText}
-              showCategory={showCategory}
-              showLanguage={showLanguage}
-              showType={showType}
-              showDifficulty={showDifficulty}
-              showSource={showSource}
+              isColumnVisible={isColumnVisible}
               onEditQuestion={onEditQuestion}
               onTrashAction={onTrashAction}
               onToggleSelected={onToggleSelected}

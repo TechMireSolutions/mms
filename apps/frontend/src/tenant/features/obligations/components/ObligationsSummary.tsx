@@ -2,7 +2,7 @@ import { Layers, Receipt, TrendingUp, Users } from "lucide-react";
 import type { ObligationCollection, ObligationDistribution, ObligationType, Mujtahid, MujtahidRep, WakalaType } from "@/lib/data/obligationsData";
 import { formatMoney } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { ObligationsRepDuesSection } from "./ObligationsRepDuesSection";
 import { ObligationsSummaryChartsSection } from "./ObligationsSummaryChartsSection";
 import { ObligationsTypeBreakdownSection } from "./ObligationsTypeBreakdownSection";
@@ -53,11 +53,15 @@ export function ObligationsSummary({
         onClearFilters={model.clearFilters}
       />
 
-      <section aria-label={model.t("obligations.summary.kpi.aria")} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={Receipt} label={model.t("obligations.summary.kpi.totalCollections")} value={model.totalRecords} accent="primary" />
-        <StatCard icon={TrendingUp} label={model.t("obligations.summary.kpi.totalAmountReceived")} value={formatCurrency(model.totalAmount)} accent="emerald" />
-        <StatCard icon={Users} label={model.t("obligations.summary.kpi.activeReps")} value={model.uniqueReps} accent="blue" />
-        <StatCard icon={Layers} label={model.t("obligations.summary.kpi.obligationTypes")} value={model.typeBreakdown.length} accent="amber" />
+      <section aria-label={model.t("obligations.summary.kpi.aria")}>
+        <ModuleCommandMetricsGrid
+          items={[
+            { icon: Receipt, label: model.t("obligations.summary.kpi.totalCollections"), value: model.totalRecords, accent: "primary" },
+            { icon: TrendingUp, label: model.t("obligations.summary.kpi.totalAmountReceived"), value: formatCurrency(model.totalAmount), accent: "emerald" },
+            { icon: Users, label: model.t("obligations.summary.kpi.activeReps"), value: model.uniqueReps, accent: "blue" },
+            { icon: Layers, label: model.t("obligations.summary.kpi.obligationTypes"), value: model.typeBreakdown.length, accent: "amber" },
+          ]}
+        />
       </section>
 
       <ObligationsSummaryChartsSection

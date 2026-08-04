@@ -59,11 +59,7 @@ export interface AccountRecordProps {
   account: Account;
   balanceConfig: Record<string, StatusBadgeConfigItem>;
   canWrite: boolean;
-  showCode: boolean;
-  showName: boolean;
-  showSubtype: boolean;
-  showDescription: boolean;
-  showNormalBalance: boolean;
+  isColumnVisible: (key: string) => boolean;
   onEdit: (account: Account) => void;
   onDelete: (id: string) => void;
   onReactivate: (id: string) => void;
@@ -73,11 +69,7 @@ export function AccountMobileCard({
   account,
   balanceConfig,
   canWrite,
-  showCode,
-  showName,
-  showSubtype,
-  showDescription,
-  showNormalBalance,
+  isColumnVisible,
   onEdit,
   onDelete,
   onReactivate,
@@ -88,15 +80,15 @@ export function AccountMobileCard({
     <article className={`space-y-3 rounded-xl border border-border bg-card p-3 ${account.isActive === false ? "opacity-50" : ""}`}>
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          {showCode && <p className="m-0 font-mono text-xs font-bold text-muted-foreground">{account.code}</p>}
-          {showName && (
+          {isColumnVisible("code") && <p className="m-0 font-mono text-xs font-bold text-muted-foreground">{account.code}</p>}
+          {isColumnVisible("name") && (
             <h4 className="m-0 mt-0.5 text-sm font-semibold text-foreground">
               {account.name}
               {account.isActive === false && <span className="ms-2 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">{t("accounting.coa.inactive")}</span>}
             </h4>
           )}
         </div>
-        {showNormalBalance && (
+        {isColumnVisible("normalBalance") && (
           <StatusBadge
             status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
             config={balanceConfig}
@@ -105,13 +97,13 @@ export function AccountMobileCard({
         )}
       </div>
       <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-        {showSubtype && (
+        {isColumnVisible("subtype") && (
           <div>
             <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.subtype")}</dt>
             <dd className="text-foreground">{account.subtype || "—"}</dd>
           </div>
         )}
-        {showDescription && (
+        {isColumnVisible("description") && (
           <div>
             <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.description")}</dt>
             <dd className="break-words text-foreground">{account.description || "—"}</dd>
@@ -131,11 +123,7 @@ export function AccountTableRow({
   account,
   balanceConfig,
   canWrite,
-  showCode,
-  showName,
-  showSubtype,
-  showDescription,
-  showNormalBalance,
+  isColumnVisible,
   onEdit,
   onDelete,
   onReactivate,
@@ -144,16 +132,16 @@ export function AccountTableRow({
 
   return (
     <tr className={`transition-colors hover:bg-muted/20 ${account.isActive === false ? "opacity-50" : ""}`}>
-      {showCode && <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{account.code}</td>}
-      {showName && (
+      {isColumnVisible("code") && <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{account.code}</td>}
+      {isColumnVisible("name") && (
         <td className="px-4 py-2.5">
           <span className="font-semibold text-foreground">{account.name}</span>
           {account.isActive === false && <span className="ms-2 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">{t("accounting.coa.inactive")}</span>}
         </td>
       )}
-      {showSubtype && <td className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">{account.subtype || "—"}</td>}
-      {showDescription && <td className="hidden max-w-[12.5rem] truncate px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">{account.description || "—"}</td>}
-      {showNormalBalance && (
+      {isColumnVisible("subtype") && <td className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">{account.subtype || "—"}</td>}
+      {isColumnVisible("description") && <td className="hidden max-w-[12.5rem] truncate px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">{account.description || "—"}</td>}
+      {isColumnVisible("normalBalance") && (
         <td className="px-4 py-2.5">
           <StatusBadge
             status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}

@@ -21,12 +21,7 @@ interface SessionsWorkTableDesktopProps {
   selectedIds: string[];
   allVisibleSelected: boolean;
   someVisibleSelected: boolean;
-  showName: boolean;
-  showType: boolean;
-  showDuration: boolean;
-  showFee: boolean;
-  showEnrolled: boolean;
-  showStatus: boolean;
+  isColumnVisible: (key: string) => boolean;
   sortField: SessionSortField;
   sortDir: "asc" | "desc";
   columnLayout: SessionsWorkColumnLayout;
@@ -48,12 +43,7 @@ export function SessionsWorkTableDesktop({
   selectedIds,
   allVisibleSelected,
   someVisibleSelected,
-  showName,
-  showType,
-  showDuration,
-  showFee,
-  showEnrolled,
-  showStatus,
+  isColumnVisible,
   sortField,
   sortDir,
   columnLayout,
@@ -101,30 +91,30 @@ export function SessionsWorkTableDesktop({
                 />
               </th>
             )}
-            {showName && (
+            {isColumnVisible("name") && (
               <ResizableTableHead columnKey="name" width={columnLayout.getColumnWidth("name")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("name")}>
                   {t("sessions.columns.name")}{renderSortIcon("name")}
                 </Button>
               </ResizableTableHead>
             )}
-            {showType && (
+            {isColumnVisible("type") && (
               <ResizableTableHead columnKey="type" width={columnLayout.getColumnWidth("type")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("type")}>
                   {t("sessions.columns.type")}{renderSortIcon("type")}
                 </Button>
               </ResizableTableHead>
             )}
-            {showDuration && <ResizableTableHead columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("sessions.columns.duration")}</ResizableTableHead>}
-            {showFee && (
+            {isColumnVisible("duration") && <ResizableTableHead columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("sessions.columns.duration")}</ResizableTableHead>}
+            {isColumnVisible("fee") && (
               <ResizableTableHead columnKey="fee" width={columnLayout.getColumnWidth("fee")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("baseFee")}>
                   {t("sessions.columns.fee")}{renderSortIcon("baseFee")}
                 </Button>
               </ResizableTableHead>
             )}
-            {showEnrolled && <ResizableTableHead columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("sessions.columns.enrolled")}</ResizableTableHead>}
-            {showStatus && (
+            {isColumnVisible("enrolled") && <ResizableTableHead columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("sessions.columns.enrolled")}</ResizableTableHead>}
+            {isColumnVisible("status") && (
               <ResizableTableHead columnKey="status" width={columnLayout.getColumnWidth("status")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("status")}>
                   {t("sessions.columns.status")}{renderSortIcon("status")}
@@ -144,12 +134,12 @@ export function SessionsWorkTableDesktop({
                     <Checkbox checked={selectedIds.includes(sessionItem.id)} onCheckedChange={(checked) => onToggleSelectedSession(sessionItem.id, checked === true)} aria-label={sessionItem.name} />
                   </td>
                 )}
-                {showName && <td className="px-4 py-3 font-semibold text-foreground transition-colors group-hover:text-primary">{sessionItem.name}</td>}
-                {showType && <td className="px-4 py-3"><StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" /></td>}
-                {showDuration && <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}</td>}
-                {showFee && <td className="px-4 py-3 text-xs font-medium">{formatMoney(sessionItem.baseFee, sessionItem.currency)}</td>}
-                {showEnrolled && <td className="px-4 py-3 text-xs text-muted-foreground">{totalEnrolled}/{totalCapacity || t("common.notSpecified")}</td>}
-                {showStatus && <td className="px-4 py-3"><StatusBadge status={sessionItem.status} config={statusConfig} size="sm" /></td>}
+                {isColumnVisible("name") && <td className="px-4 py-3 font-semibold text-foreground transition-colors group-hover:text-primary">{sessionItem.name}</td>}
+                {isColumnVisible("type") && <td className="px-4 py-3"><StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" /></td>}
+                {isColumnVisible("duration") && <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}</td>}
+                {isColumnVisible("fee") && <td className="px-4 py-3 text-xs font-medium">{formatMoney(sessionItem.baseFee, sessionItem.currency)}</td>}
+                {isColumnVisible("enrolled") && <td className="px-4 py-3 text-xs text-muted-foreground">{totalEnrolled}/{totalCapacity || t("common.notSpecified")}</td>}
+                {isColumnVisible("status") && <td className="px-4 py-3"><StatusBadge status={sessionItem.status} config={statusConfig} size="sm" /></td>}
                 {canDelete && <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>{renderSessionListActions(sessionItem.id)}</td>}
               </tr>
             );

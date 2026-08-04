@@ -14,6 +14,7 @@ import {
 } from "recharts";
 
 import type { ComparisonDataItem, DateRangeDataItem } from "./comparisonModeTypes";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 type ComparisonModeChartData = Array<ComparisonDataItem | DateRangeDataItem>;
 
@@ -53,7 +54,7 @@ export function ComparisonModeCharts({
 
   return (
     <>
-      <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm text-start">
+      <div className={`${WORK_SURFACE} p-5 text-start`}>
         <p className="text-xs text-muted-foreground mb-3">
           {t("reports.comparison.comparing")} <span className="font-semibold text-primary">{labelA}</span> {t("reports.comparison.vs")} <span className="font-semibold text-warning">{labelB}</span>
         </p>
@@ -73,7 +74,7 @@ export function ComparisonModeCharts({
       </div>
 
       {mode === "sessions" && (
-        <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
+        <div className={`${WORK_SURFACE} overflow-hidden`}>
           <div className="space-y-3 p-3 md:hidden">
             {sessionRows.map((row) => {
               const diff = parseFloat((row.a - row.b).toFixed(1));

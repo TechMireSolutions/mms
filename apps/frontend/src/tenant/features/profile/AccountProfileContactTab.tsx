@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface AccountProfileContactTabProps {
@@ -46,13 +47,12 @@ export function AccountProfileContactTab({
       </CardHeader>
       <CardContent className="pt-6 space-y-4 ps-6.5">
         {!profile.contact ? (
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/20 text-warning-foreground animate-in fade-in-50 duration-200">
-            <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0 text-warning" />
-            <div className="space-y-1 text-start">
-              <h4 className="text-sm font-semibold">{t("account.unlinkedTitle")}</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">{t("account.noContact")}</p>
-            </div>
-          </div>
+          <WarningCallout
+            icon={ShieldCheck}
+            title={t("account.unlinkedTitle")}
+            description={t("account.noContact")}
+            className="items-start text-warning-foreground"
+          />
         ) : (
           <form
             onSubmit={(event) => {

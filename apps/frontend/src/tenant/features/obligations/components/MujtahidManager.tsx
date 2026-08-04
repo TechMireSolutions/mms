@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { NameFormModal } from "@/tenant/features/obligations/components/MujtahidNameFormModal";
@@ -65,7 +66,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
       <section aria-label={t("obligations.mujtahids.listAria")} className="space-y-2">
         {mujtahids.length === 0 && (
-          <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border">{t("obligations.mujtahids.empty")}</div>
+          <EmptyState variant="dashed" title={t("obligations.mujtahids.empty")} compact />
         )}
         {mujtahids.map((mujtahid) => {
           const mujtahidReps = reps.filter((representative) => representative.mujtahid_id === mujtahid.id);

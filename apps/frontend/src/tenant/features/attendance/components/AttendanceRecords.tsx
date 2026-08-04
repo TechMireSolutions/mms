@@ -18,6 +18,8 @@ import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 
 const PAGE_SIZE = 15;
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
+const ATTENDANCE_COLUMN_KEYS = ["date", "class", "student", "status", "timeIn", "timeOut", "notes"] as const;
 
 
 
@@ -99,17 +101,8 @@ export function AttendanceRecords({
     return t(key);
   };
 
-  const visibleColumns = {
-    date: isColumnVisible ? isColumnVisible("date") : true,
-    class: isColumnVisible ? isColumnVisible("class") : true,
-    student: isColumnVisible ? isColumnVisible("student") : true,
-    status: isColumnVisible ? isColumnVisible("status") : true,
-    timeIn: isColumnVisible ? isColumnVisible("timeIn") : true,
-    timeOut: isColumnVisible ? isColumnVisible("timeOut") : true,
-    notes: isColumnVisible ? isColumnVisible("notes") : true,
-  };
-
-  const visibleColCount = Object.values(visibleColumns).filter(Boolean).length + 1;
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
+  const visibleColCount = ATTENDANCE_COLUMN_KEYS.filter(columnVisible).length + 1;
 
   const updateDraft = <K extends keyof AttendanceRecord>(key: K, value: AttendanceRecord[K]) => {
     setEditingRecord((current) => current ? { ...current, [key]: value } : current);
@@ -169,7 +162,7 @@ export function AttendanceRecords({
       <AttendanceRecordsTable
         viewMode={viewMode}
         paginatedRecords={paginatedRecords}
-        visibleColumns={visibleColumns}
+        isColumnVisible={columnVisible}
         visibleColCount={visibleColCount}
         editingRecord={editingRecord}
         statuses={statuses}

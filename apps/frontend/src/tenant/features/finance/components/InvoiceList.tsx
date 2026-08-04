@@ -8,11 +8,14 @@ import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import type { Invoice } from "@/lib/data/financeData";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { InvoiceListContent, type InvoiceListVisibleColumns } from "@/tenant/features/finance/components/InvoiceListContent";
+import { InvoiceListContent } from "@/tenant/features/finance/components/InvoiceListContent";
 import { InvoiceListSelectionBar } from "@/tenant/features/finance/components/InvoiceListSelectionBar";
 import { InvoiceListToolbar } from "@/tenant/features/finance/components/InvoiceListToolbar";
+import { INVOICE_LIST_COLUMN_KEYS } from "@/tenant/features/finance/components/invoiceListContentShared";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
+
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 interface InvoiceListProps {
   invoices: Invoice[];
@@ -71,19 +74,9 @@ export function InvoiceList({
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
-  const visibleColumns: InvoiceListVisibleColumns = {
-    invoice: isColumnVisible ? isColumnVisible("invoice") : true,
-    student: isColumnVisible ? isColumnVisible("student") : true,
-    sessionClass: isColumnVisible ? isColumnVisible("sessionClass") : true,
-    baseFee: isColumnVisible ? isColumnVisible("baseFee") : true,
-    discount: isColumnVisible ? isColumnVisible("discount") : true,
-    final: isColumnVisible ? isColumnVisible("final") : true,
-    status: isColumnVisible ? isColumnVisible("status") : true,
-    dueDate: isColumnVisible ? isColumnVisible("dueDate") : true,
-  };
-
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
   const visibleColCount =
-    Object.values(visibleColumns).filter(Boolean).length +
+    INVOICE_LIST_COLUMN_KEYS.filter(columnVisible).length +
     (canDelete ? 1 : 0) +
     1;
 
@@ -136,7 +129,7 @@ export function InvoiceList({
         viewMode={viewMode}
         invoices={filtered}
         selectedIds={selectedIds}
-        visibleColumns={visibleColumns}
+        isColumnVisible={columnVisible}
         visibleColCount={visibleColCount}
         canWrite={canWrite}
         canDelete={canDelete}

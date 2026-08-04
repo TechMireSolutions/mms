@@ -1,5 +1,6 @@
 import type React from 'react';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
@@ -9,20 +10,10 @@ import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
 
-export interface AttendanceVisibleColumns {
-  date: boolean;
-  class: boolean;
-  student: boolean;
-  status: boolean;
-  timeIn: boolean;
-  timeOut: boolean;
-  notes: boolean;
-}
-
 interface AttendanceRecordsTableProps {
   viewMode: WorkDirectoryViewMode;
   paginatedRecords: AttendanceRecord[];
-  visibleColumns: AttendanceVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   visibleColCount: number;
   editingRecord: AttendanceRecord | null;
   statuses: AttendanceStatus[];
@@ -37,7 +28,7 @@ interface AttendanceRecordsTableProps {
 export function AttendanceRecordsTable({
   viewMode,
   paginatedRecords,
-  visibleColumns,
+  isColumnVisible,
   visibleColCount,
   editingRecord,
   statuses,
@@ -48,29 +39,13 @@ export function AttendanceRecordsTable({
   onColumnResize,
   t,
 }: AttendanceRecordsTableProps): React.JSX.Element {
-  const {
-    date: showDate,
-    class: showClass,
-    student: showStudent,
-    status: showStatus,
-    timeIn: showTimeIn,
-    timeOut: showTimeOut,
-    notes: showNotes,
-  } = visibleColumns;
-
   if (viewMode === 'cards') {
     return (
       <article className="rounded-xl border border-border overflow-hidden">
         <div className="space-y-3 p-3">
           <AttendanceRecordsMobileList
             paginatedRecords={paginatedRecords}
-            showDate={showDate}
-            showClass={showClass}
-            showStudent={showStudent}
-            showStatus={showStatus}
-            showTimeIn={showTimeIn}
-            showTimeOut={showTimeOut}
-            showNotes={showNotes}
+            isColumnVisible={isColumnVisible}
             editingRecord={editingRecord}
             statuses={statuses}
             updateDraft={updateDraft}
@@ -89,37 +64,37 @@ export function AttendanceRecordsTable({
         <table className="w-full text-sm table-fixed">
           <thead className="bg-muted/60 border-b border-border">
             <tr>
-              {showDate && (
+              {isColumnVisible("date") && (
                 <ResizableTableHead columnKey="date" width={getColumnWidth?.('date')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t('attendance.columns.date')}
                 </ResizableTableHead>
               )}
-              {showClass && (
+              {isColumnVisible("class") && (
                 <ResizableTableHead columnKey="class" width={getColumnWidth?.('class')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t('attendance.columns.class')}
                 </ResizableTableHead>
               )}
-              {showStudent && (
+              {isColumnVisible("student") && (
                 <ResizableTableHead columnKey="student" width={getColumnWidth?.('student')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t('attendance.columns.student')}
                 </ResizableTableHead>
               )}
-              {showStatus && (
+              {isColumnVisible("status") && (
                 <ResizableTableHead columnKey="status" width={getColumnWidth?.('status')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t('attendance.columns.status')}
                 </ResizableTableHead>
               )}
-              {showTimeIn && (
+              {isColumnVisible("timeIn") && (
                 <ResizableTableHead columnKey="timeIn" width={getColumnWidth?.('timeIn')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t('attendance.columns.timeIn')}
                 </ResizableTableHead>
               )}
-              {showTimeOut && (
+              {isColumnVisible("timeOut") && (
                 <ResizableTableHead columnKey="timeOut" width={getColumnWidth?.('timeOut')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t('attendance.columns.timeOut')}
                 </ResizableTableHead>
               )}
-              {showNotes && (
+              {isColumnVisible("notes") && (
                 <ResizableTableHead columnKey="notes" width={getColumnWidth?.('notes')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t('attendance.columns.notes')}
                 </ResizableTableHead>
@@ -131,19 +106,19 @@ export function AttendanceRecordsTable({
           </thead>
           <tbody className="divide-y divide-border">
             {paginatedRecords.length === 0 ? (
-              <tr><td colSpan={visibleColCount} className="px-4 py-12 text-center text-muted-foreground">{t('attendance.empty.records')}</td></tr>
+              <tr><td colSpan={visibleColCount} className="py-4"><EmptyState title={t('attendance.empty.records')} compact /></td></tr>
             ) : paginatedRecords.map((attendanceRecord) => (
               <motion.tr key={attendanceRecord.id} layout className="hover:bg-muted/20 transition-colors">
-                {showDate && (
+                {isColumnVisible("date") && (
                   <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{formatDate(attendanceRecord.date, true)}</td>
                 )}
-                {showClass && (
+                {isColumnVisible("class") && (
                   <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(attendanceRecord.classId)}</td>
                 )}
-                {showStudent && (
+                {isColumnVisible("student") && (
                   <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{attendanceRecord.studentName}</td>
                 )}
-                {showStatus && (
+                {isColumnVisible("status") && (
                   <td className="px-3 py-2.5">
                     <AttendanceRecordStatusCell
                       attendanceRecord={attendanceRecord}
@@ -153,7 +128,7 @@ export function AttendanceRecordsTable({
                     />
                   </td>
                 )}
-                {showTimeIn && (
+                {isColumnVisible("timeIn") && (
                   <td className="px-3 py-2.5">
                     {editingRecord?.id === attendanceRecord.id
                       ? <Input type="time" value={editingRecord.timeIn} onChange={(event) => updateDraft('timeIn', event.target.value)}
@@ -163,7 +138,7 @@ export function AttendanceRecordsTable({
                     }
                   </td>
                 )}
-                {showTimeOut && (
+                {isColumnVisible("timeOut") && (
                   <td className="px-3 py-2.5">
                     {editingRecord?.id === attendanceRecord.id
                       ? <Input type="time" value={editingRecord.timeOut} onChange={(event) => updateDraft('timeOut', event.target.value)}
@@ -173,7 +148,7 @@ export function AttendanceRecordsTable({
                     }
                   </td>
                 )}
-                {showNotes && (
+                {isColumnVisible("notes") && (
                   <td className="px-3 py-2.5 max-w-[10rem] truncate text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</td>
                 )}
                 <td className="px-3 py-2.5 text-end">

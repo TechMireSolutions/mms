@@ -5,12 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export interface QuestionBankTableHeaderProps {
   canDelete: boolean;
-  showText: boolean;
-  showCategory: boolean;
-  showLanguage: boolean;
-  showType: boolean;
-  showDifficulty: boolean;
-  showSource: boolean;
+  isColumnVisible: (key: string) => boolean;
   allFilteredSelected: boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -19,12 +14,7 @@ export interface QuestionBankTableHeaderProps {
 
 export function QuestionBankTableHeader({
   canDelete,
-  showText,
-  showCategory,
-  showLanguage,
-  showType,
-  showDifficulty,
-  showSource,
+  isColumnVisible,
   allFilteredSelected,
   getColumnWidth,
   onColumnResize,
@@ -43,32 +33,32 @@ export function QuestionBankTableHeader({
             />
           </th>
         )}
-        {showText && (
+        {isColumnVisible('text') && (
           <ResizableTableHead columnKey="text" width={getColumnWidth?.('text')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('questionBank.columns.text')}
           </ResizableTableHead>
         )}
-        {showCategory && (
+        {isColumnVisible('category') && (
           <ResizableTableHead columnKey="category" width={getColumnWidth?.('category')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('questionBank.columns.category')}
           </ResizableTableHead>
         )}
-        {showLanguage && (
+        {isColumnVisible('language') && (
           <ResizableTableHead columnKey="language" width={getColumnWidth?.('language')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('questionBank.columns.language')}
           </ResizableTableHead>
         )}
-        {showType && (
+        {isColumnVisible('type') && (
           <ResizableTableHead columnKey="type" width={getColumnWidth?.('type')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('questionBank.columns.type')}
           </ResizableTableHead>
         )}
-        {showDifficulty && (
+        {isColumnVisible('difficulty') && (
           <ResizableTableHead columnKey="difficulty" width={getColumnWidth?.('difficulty')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('questionBank.columns.difficulty')}
           </ResizableTableHead>
         )}
-        {showSource && (
+        {isColumnVisible('source') && (
           <ResizableTableHead columnKey="source" width={getColumnWidth?.('source')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('questionBank.columns.source')}
           </ResizableTableHead>

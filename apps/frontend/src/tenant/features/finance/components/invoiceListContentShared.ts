@@ -4,22 +4,22 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Invoice } from "@/lib/data/financeData";
 import type { InvoiceMessageChannel } from "@/tenant/features/finance/components/InvoiceListRowActions";
 
-export interface InvoiceListVisibleColumns {
-  invoice: boolean;
-  student: boolean;
-  sessionClass: boolean;
-  baseFee: boolean;
-  discount: boolean;
-  final: boolean;
-  status: boolean;
-  dueDate: boolean;
-}
+export const INVOICE_LIST_COLUMN_KEYS = [
+  "invoice",
+  "student",
+  "sessionClass",
+  "baseFee",
+  "discount",
+  "final",
+  "status",
+  "dueDate",
+] as const;
 
 export interface InvoiceListContentProps {
   viewMode: WorkDirectoryViewMode;
   invoices: Invoice[];
   selectedIds: string[];
-  visibleColumns: InvoiceListVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   visibleColCount: number;
   canWrite: boolean;
   canDelete: boolean;

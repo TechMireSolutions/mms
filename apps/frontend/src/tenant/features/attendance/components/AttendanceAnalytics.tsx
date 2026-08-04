@@ -1,6 +1,6 @@
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { AttendanceAnalyticsChartPanels } from "@/tenant/features/attendance/components/AttendanceAnalyticsChartPanels";
 import { AttendanceAnalyticsInsights } from "@/tenant/features/attendance/components/AttendanceAnalyticsInsights";
 import { useAttendanceAnalyticsModel } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
@@ -19,12 +19,38 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
 
   return (
     <section className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label={model.t("attendance.analytics.kpi.overallAttendance")} value={`${model.overallRate}%`} sub={model.t("attendance.analytics.kpi.allClasses")} icon={Award} accent="success" delayIndex={0} />
-        <StatCard label={model.t("attendance.analytics.kpi.totalPresent")} value={model.totalStats.present} sub={model.t("attendance.analytics.kpi.allRecords")} icon={Award} accent="primary" delayIndex={1} />
-        <StatCard label={model.t("attendance.analytics.kpi.lowAttendance")} value={model.lowAttendance.length} sub={model.t("attendance.analytics.kpi.belowThreshold")} icon={AlertTriangle} accent="warning" delayIndex={2} />
-        <StatCard label={model.t("attendance.analytics.kpi.mostAbsent")} value={model.studentRates[0]?.name || "—"} sub={`${model.studentRates[0]?.rate || 0}%`} icon={TrendingDown} accent="destructive" delayIndex={3} />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          {
+            label: model.t("attendance.analytics.kpi.overallAttendance"),
+            value: `${model.overallRate}%`,
+            sub: model.t("attendance.analytics.kpi.allClasses"),
+            icon: Award,
+            accent: "success",
+          },
+          {
+            label: model.t("attendance.analytics.kpi.totalPresent"),
+            value: model.totalStats.present,
+            sub: model.t("attendance.analytics.kpi.allRecords"),
+            icon: Award,
+            accent: "primary",
+          },
+          {
+            label: model.t("attendance.analytics.kpi.lowAttendance"),
+            value: model.lowAttendance.length,
+            sub: model.t("attendance.analytics.kpi.belowThreshold"),
+            icon: AlertTriangle,
+            accent: "warning",
+          },
+          {
+            label: model.t("attendance.analytics.kpi.mostAbsent"),
+            value: model.studentRates[0]?.name || "—",
+            sub: `${model.studentRates[0]?.rate || 0}%`,
+            icon: TrendingDown,
+            accent: "destructive",
+          },
+        ]}
+      />
 
       <AttendanceAnalyticsChartPanels
         t={model.t}

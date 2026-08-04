@@ -7,23 +7,13 @@ export interface ObligationContact {
   name?: string;
 }
 
-export interface ObligationCollectionVisibleColumns {
-  receiptNo: boolean;
-  receivedDate: boolean;
-  sender: boolean;
-  obligationType: boolean;
-  repMujtahid: boolean;
-  amount: boolean;
-  paymentMode: boolean;
-}
-
 export interface ObligationCollectionListContentProps {
   viewMode: WorkDirectoryViewMode;
   collections: ObligationCollection[];
   search: string;
   typeFilter: string;
   selectedIds: string[];
-  visibleColumns: ObligationCollectionVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   allFilteredSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;

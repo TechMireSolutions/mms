@@ -3,6 +3,7 @@ import { Plus, Trash2, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Button } from "@/components/ui/button";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { getFieldLabel } from "@/tenant/features/reports/components/reportMetadata";
 import type { FilterRule } from "@/tenant/features/reports/components/dynamicChartVisualizerTypes";
 import type { DynamicChartVisualizerFiltersPanelProps } from "@/tenant/features/reports/components/dynamicChartVisualizerConfigPanelTypes";
@@ -16,7 +17,7 @@ export function DynamicChartVisualizerFiltersPanel({
   t,
 }: DynamicChartVisualizerFiltersPanelProps): React.JSX.Element {
   return (
-    <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
+    <div className={`${WORK_SURFACE} p-5 space-y-4`}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">
           <div className="w-8 h-8 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary">

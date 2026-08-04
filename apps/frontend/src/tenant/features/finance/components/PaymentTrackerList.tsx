@@ -8,20 +8,20 @@ import type { Payment } from '@/lib/data/financeData';
 import { PaymentTrackerListMobile } from '@/tenant/features/finance/components/PaymentTrackerListMobile';
 import { PaymentTrackerListTable } from '@/tenant/features/finance/components/PaymentTrackerListTable';
 
-export interface PaymentTrackerVisibleColumns {
-  date: boolean;
-  student: boolean;
-  invoice: boolean;
-  amount: boolean;
-  method: boolean;
-  receivedBy: boolean;
-  note: boolean;
-}
+export const PAYMENT_TRACKER_COLUMN_KEYS = [
+  "date",
+  "student",
+  "invoice",
+  "amount",
+  "method",
+  "receivedBy",
+  "note",
+] as const;
 
 interface PaymentTrackerListProps {
   payments: Payment[];
   selectedIds: string[];
-  visibleColumns: PaymentTrackerVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   visibleColCount: number;
   allSelected: boolean;
   canDelete: boolean;
@@ -41,7 +41,7 @@ interface PaymentTrackerListProps {
 export function PaymentTrackerList({
   payments,
   selectedIds,
-  visibleColumns,
+  isColumnVisible,
   visibleColCount,
   allSelected,
   canDelete,
@@ -61,7 +61,7 @@ export function PaymentTrackerList({
   const listProps = {
     payments,
     selectedIds,
-    visibleColumns,
+    isColumnVisible,
     canDelete,
     showDeleted,
     methodConfig,

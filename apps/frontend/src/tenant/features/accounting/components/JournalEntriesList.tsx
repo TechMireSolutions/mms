@@ -1,4 +1,5 @@
 import type React from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { JournalEntriesListCards } from "@/tenant/features/accounting/components/JournalEntriesListCards";
 import { JournalEntriesListTable } from "@/tenant/features/accounting/components/JournalEntriesListTable";
@@ -10,9 +11,7 @@ export function JournalEntriesList(props: JournalEntriesListProps): React.JSX.El
 
   if (entries.length === 0) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground rounded-xl border border-border" role="status">
-        {t("accounting.journal.dashboard.noEntriesMatch")}
-      </div>
+      <EmptyState variant="dashed" title={t("accounting.journal.dashboard.noEntriesMatch")} compact />
     );
   }
 

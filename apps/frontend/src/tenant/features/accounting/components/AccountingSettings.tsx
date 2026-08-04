@@ -19,6 +19,7 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { notify } from "@/lib/notify";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { AccountingFiscalYearModal } from "./AccountingFiscalYearModal";
 import { AccountingSettingsPreferences } from "./AccountingSettingsPreferences";
 
@@ -107,7 +108,7 @@ export function AccountingSettings({
           {t("accounting.setup.readOnly")}
         </p>
       ) : (
-    <section className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 space-y-5 shadow-sm" aria-labelledby="accounting-settings-title">
+    <section className={`${WORK_SURFACE} p-5 space-y-5`} aria-labelledby="accounting-settings-title">
       <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
         <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
           <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden="true" />

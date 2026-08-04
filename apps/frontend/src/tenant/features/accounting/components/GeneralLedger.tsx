@@ -1,4 +1,5 @@
 import React from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Account, JournalEntry } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGeneralLedger } from "@/tenant/features/accounting/components/useGeneralLedger";
@@ -47,10 +48,7 @@ export function GeneralLedger({ accounts, entries }: GeneralLedgerProps) {
       />
 
       {!ledger.selectedAccount && (
-        <div className="py-20 text-center rounded-xl border border-border text-sm text-muted-foreground" role="status">
-          <p className="text-2xl mb-2" aria-hidden="true">📒</p>
-          {t("accounting.ledger.selectInstruction")}
-        </div>
+        <EmptyState variant="dashed" title={t("accounting.ledger.selectInstruction")} compact />
       )}
 
       {ledger.selectedAccount && ledger.activeAccount && (

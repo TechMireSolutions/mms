@@ -42,7 +42,8 @@ export default function PlatformAccount(): React.JSX.Element {
           <RouteStatusFallback />
         ) : profileError || !profile ? (
           <ErrorState
-            title={t("apex.loadError")}
+            title={t("platform.loadFailed")}
+            description={t("platform.loadFailedHint")}
             onRetry={() => void refetch()}
           />
         ) : (

@@ -5,6 +5,7 @@ import { canDeleteContactsSavedReport, validateContactsSavedReportDrillDown } fr
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Button } from "@/components/ui/button";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
 function formatDrillDownSummary(
@@ -91,7 +92,7 @@ export function ContactsSavedReportsList({
         return (
           <div
             key={savedReport.id}
-            className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl p-5 shadow-sm flex flex-col gap-3 text-start"
+            className={`${WORK_SURFACE} p-5 flex flex-col gap-3 text-start`}
           >
             <div className="flex items-start justify-between gap-2">
               <div>

@@ -11,11 +11,7 @@ interface ChartOfAccountsTreeTableProps {
   filteredAccounts: Account[];
   balanceConfig: Record<string, StatusBadgeConfigItem>;
   canWrite: boolean;
-  showCode: boolean;
-  showName: boolean;
-  showSubtype: boolean;
-  showDescription: boolean;
-  showNormalBalance: boolean;
+  isColumnVisible: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   onEdit: (account: Account) => void;
@@ -28,11 +24,7 @@ export function ChartOfAccountsTreeTable({
   filteredAccounts,
   balanceConfig,
   canWrite,
-  showCode,
-  showName,
-  showSubtype,
-  showDescription,
-  showNormalBalance,
+  isColumnVisible,
   getColumnWidth,
   onColumnResize,
   onEdit,
@@ -65,11 +57,7 @@ export function ChartOfAccountsTreeTable({
             accountTypeRows={accountTypeRows}
             balanceConfig={balanceConfig}
             canWrite={canWrite}
-            showCode={showCode}
-            showName={showName}
-            showSubtype={showSubtype}
-            showDescription={showDescription}
-            showNormalBalance={showNormalBalance}
+            isColumnVisible={isColumnVisible}
             getColumnWidth={getColumnWidth}
             onColumnResize={onColumnResize}
             onEdit={onEdit}
@@ -92,11 +80,7 @@ function AccountTypeGroup({
   accountTypeRows,
   balanceConfig,
   canWrite,
-  showCode,
-  showName,
-  showSubtype,
-  showDescription,
-  showNormalBalance,
+  isColumnVisible,
   getColumnWidth,
   onColumnResize,
   onEdit,
@@ -125,11 +109,7 @@ function AccountTypeGroup({
             account={account}
             balanceConfig={balanceConfig}
             canWrite={canWrite}
-            showCode={showCode}
-            showName={showName}
-            showSubtype={showSubtype}
-            showDescription={showDescription}
-            showNormalBalance={showNormalBalance}
+            isColumnVisible={isColumnVisible}
             onEdit={onEdit}
             onDelete={onDelete}
             onReactivate={onReactivate}
@@ -141,27 +121,27 @@ function AccountTypeGroup({
           <caption className="sr-only">{t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
           <thead className="bg-muted/40 border-b border-border">
             <tr>
-              {showCode && (
+              {isColumnVisible("code") && (
                 <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t("accounting.columns.account.code")}
                 </ResizableTableHead>
               )}
-              {showName && (
+              {isColumnVisible("name") && (
                 <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t("accounting.columns.account.name")}
                 </ResizableTableHead>
               )}
-              {showSubtype && (
+              {isColumnVisible("subtype") && (
                 <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">
                   {t("accounting.columns.account.subtype")}
                 </ResizableTableHead>
               )}
-              {showDescription && (
+              {isColumnVisible("description") && (
                 <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                   {t("accounting.columns.account.description")}
                 </ResizableTableHead>
               )}
-              {showNormalBalance && (
+              {isColumnVisible("normalBalance") && (
                 <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
                   {t("accounting.columns.account.normalBalance")}
                 </ResizableTableHead>
@@ -178,11 +158,7 @@ function AccountTypeGroup({
                 account={account}
                 balanceConfig={balanceConfig}
                 canWrite={canWrite}
-                showCode={showCode}
-                showName={showName}
-                showSubtype={showSubtype}
-                showDescription={showDescription}
-                showNormalBalance={showNormalBalance}
+                isColumnVisible={isColumnVisible}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onReactivate={onReactivate}

@@ -3,15 +3,15 @@ import { RotateCcw, Trash2 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Payment } from '@/lib/data/financeData';
-import type { PaymentTrackerVisibleColumns } from '@/tenant/features/finance/components/PaymentTrackerList';
 
 interface PaymentTrackerListMobileProps {
   payments: Payment[];
   selectedIds: string[];
-  visibleColumns: PaymentTrackerVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   canDelete: boolean;
   showDeleted: boolean;
   methodConfig: Record<string, StatusBadgeConfigItem>;
@@ -24,7 +24,7 @@ interface PaymentTrackerListMobileProps {
 export function PaymentTrackerListMobile({
   payments,
   selectedIds,
-  visibleColumns,
+  isColumnVisible,
   canDelete,
   showDeleted,
   methodConfig,
@@ -48,7 +48,7 @@ export function PaymentTrackerListMobile({
   );
 
   if (payments.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">{t('finance.empty.payments')}</p>;
+    return <EmptyState title={t('finance.empty.payments')} compact />;
   }
 
   return (
@@ -63,31 +63,31 @@ export function PaymentTrackerListMobile({
         >
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
-              {visibleColumns.student && <h4 className="truncate text-sm font-semibold text-foreground">{payment.studentName}</h4>}
-              {visibleColumns.invoice && <p className="truncate font-mono text-xs text-muted-foreground">{payment.invoiceId}</p>}
+              {isColumnVisible("student") && <h4 className="truncate text-sm font-semibold text-foreground">{payment.studentName}</h4>}
+              {isColumnVisible("invoice") && <p className="truncate font-mono text-xs text-muted-foreground">{payment.invoiceId}</p>}
             </div>
-            {visibleColumns.amount && <span className="shrink-0 text-sm font-bold text-success">{formatCurrency(payment.amount)}</span>}
+            {isColumnVisible("amount") && <span className="shrink-0 text-sm font-bold text-success">{formatCurrency(payment.amount)}</span>}
           </div>
           <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-            {visibleColumns.date && (
+            {isColumnVisible("date") && (
               <div>
                 <dt className="text-xs font-semibold text-muted-foreground">{t('finance.columns.paymentDate')}</dt>
                 <dd className="text-foreground">{formatDate(payment.date)}</dd>
               </div>
             )}
-            {visibleColumns.method && (
+            {isColumnVisible("method") && (
               <div>
                 <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('finance.columns.method')}</dt>
                 <dd><StatusBadge status={payment.method} config={methodConfig} size="sm" /></dd>
               </div>
             )}
-            {visibleColumns.receivedBy && (
+            {isColumnVisible("receivedBy") && (
               <div>
                 <dt className="text-xs font-semibold text-muted-foreground">{t('finance.columns.receivedBy')}</dt>
                 <dd className="break-words text-foreground">{payment.receivedBy || '—'}</dd>
               </div>
             )}
-            {visibleColumns.note && (
+            {isColumnVisible("note") && (
               <div>
                 <dt className="text-xs font-semibold text-muted-foreground">{t('finance.columns.note')}</dt>
                 <dd className="break-words text-foreground">{payment.note || '—'}</dd>

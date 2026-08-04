@@ -12,7 +12,7 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ChevronDown, Filter, RotateCcw, Search, Trash2 } from "lucide-react";
+import { ChevronDown, Filter, Search } from "lucide-react";
 
 const EXAM_STATUSES = ["upcoming", "ongoing", "completed", "scheduled", "cancelled"] as const;
 
@@ -21,15 +21,12 @@ interface ExaminationsListToolbarProps {
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   filterStatus: string[];
-  selectedCount: number;
   canWrite: boolean;
-  canDelete: boolean;
   showDeleted: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   statusLabels: Record<(typeof EXAM_STATUSES)[number], string>;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
-  onBulkAction: () => void;
   onNew: () => void;
 }
 
@@ -38,15 +35,12 @@ export function ExaminationsListToolbar({
   onViewModeChange,
   search,
   filterStatus,
-  selectedCount,
   canWrite,
-  canDelete,
   showDeleted,
   columnCustomizer,
   statusLabels,
   onSearchChange,
   onToggleStatus,
-  onBulkAction,
   onNew,
 }: ExaminationsListToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -97,17 +91,6 @@ export function ExaminationsListToolbar({
             updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
             labels={columnCustomizer.labels}
           />
-        )}
-        {canDelete && selectedCount > 0 && (
-          <Button
-            type="button"
-            variant={showDeleted ? "outline" : "destructive"}
-            onClick={onBulkAction}
-            className="flex items-center gap-1.5 whitespace-nowrap"
-          >
-            {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-            {showDeleted ? t("examinations.trash.restore") : t("common.delete")} ({selectedCount})
-          </Button>
         )}
         {canWrite && !showDeleted && (
           <Button

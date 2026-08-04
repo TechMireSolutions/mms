@@ -1,10 +1,8 @@
-import React from "react";
+import type React from "react";
 import { Card } from "@/components/ui/card";
 import { DistributionManagerListCards } from "@/tenant/features/hasanat/components/DistributionManagerListCards";
 import { DistributionManagerListTable } from "@/tenant/features/hasanat/components/DistributionManagerListTable";
 import type { DistributionManagerListProps } from "@/tenant/features/hasanat/components/distributionManagerListShared";
-
-export type { DistributionVisibleColumns } from "@/tenant/features/hasanat/components/distributionManagerListShared";
 
 export function DistributionManagerList(props: DistributionManagerListProps): React.JSX.Element {
   return (

@@ -1,5 +1,6 @@
 import React from "react";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { DynamicChartVisualizerChart } from "@/tenant/features/reports/components/DynamicChartVisualizerChart";
 import {
   VisualizerDataMatrix,
@@ -84,7 +85,7 @@ export function DynamicChartVisualizerPreview({
 }: DynamicChartVisualizerPreviewProps): React.JSX.Element {
   return (
     <div className="lg:col-span-7 space-y-5">
-      <div className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl p-6 shadow-xl space-y-6">
+      <div className={`${WORK_SURFACE} p-6 space-y-6`}>
         <VisualizerPreviewHeader
           title={title}
           collectionKey={collectionKey}

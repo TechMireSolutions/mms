@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { motion } from "framer-motion";
-import { AlertTriangle } from "lucide-react";
 import type { StudentRateEntry } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -18,25 +18,26 @@ export function AttendanceAnalyticsInsights({
   return (
     <>
       {lowAttendance.length > 0 && (
-        <motion.article
+        <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: 0.4 }}
-          className="rounded-xl border border-warning/30 bg-warning/10 p-4 space-y-3"
         >
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-warning" aria-hidden="true" />
-            <h3 className="text-sm font-bold text-warning m-0">{t("attendance.analytics.lowAlertTitle", { count: lowAttendance.length })}</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {lowAttendance.map((studentRate) => (
-              <div key={studentRate.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/45 backdrop-blur-sm border border-warning/30">
-                <span className="text-xs font-semibold text-foreground">{studentRate.name}</span>
-                <span className="text-xs font-bold text-destructive">{studentRate.rate}%</span>
-              </div>
-            ))}
-          </div>
-        </motion.article>
+          <WarningCallout
+            title={t("attendance.analytics.lowAlertTitle", { count: lowAttendance.length })}
+            className="items-start p-4"
+            role="alert"
+          >
+            <div className="mt-3 flex flex-wrap gap-2">
+              {lowAttendance.map((studentRate) => (
+                <div key={studentRate.name} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/45 backdrop-blur-sm border border-warning/30">
+                  <span className="text-xs font-semibold text-foreground">{studentRate.name}</span>
+                  <span className="text-xs font-bold text-destructive">{studentRate.rate}%</span>
+                </div>
+              ))}
+            </div>
+          </WarningCallout>
+        </motion.div>
       )}
 
       <motion.div

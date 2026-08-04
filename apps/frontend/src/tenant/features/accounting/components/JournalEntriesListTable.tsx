@@ -22,7 +22,7 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
     selectedIds,
     canDelete,
     allFilteredSelected,
-    visibleColumns,
+    isColumnVisible,
     journalStatusConfig,
     grandDebit,
     grandCredit,
@@ -34,7 +34,7 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
     onColumnResize,
   } = props;
   const { t } = useTranslation();
-  const visibleLeadingColumnCount = getVisibleLeadingColumnCount(visibleColumns);
+  const visibleLeadingColumnCount = getVisibleLeadingColumnCount(isColumnVisible);
   const entriesCountLabel = getJournalEntriesCountLabel(entries.length, t);
   const balanced = isJournalBalanced(grandDebit, grandCredit);
 
@@ -53,37 +53,37 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
                 />
               </th>
             )}
-            {visibleColumns.ref && (
+            {isColumnVisible("ref") && (
               <ResizableTableHead columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("accounting.columns.journal.ref")}
               </ResizableTableHead>
             )}
-            {visibleColumns.date && (
+            {isColumnVisible("date") && (
               <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("accounting.columns.journal.date")}
               </ResizableTableHead>
             )}
-            {visibleColumns.description && (
+            {isColumnVisible("description") && (
               <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("accounting.columns.journal.description")}
               </ResizableTableHead>
             )}
-            {visibleColumns.tags && (
+            {isColumnVisible("tags") && (
               <ResizableTableHead columnKey="tags" width={getColumnWidth?.("tags")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
                 {t("accounting.columns.journal.tags")}
               </ResizableTableHead>
             )}
-            {visibleColumns.debit && (
+            {isColumnVisible("debit") && (
               <ResizableTableHead columnKey="debit" width={getColumnWidth?.("debit")} onResize={onColumnResize} className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                 {t("accounting.columns.journal.debit")}
               </ResizableTableHead>
             )}
-            {visibleColumns.credit && (
+            {isColumnVisible("credit") && (
               <ResizableTableHead columnKey="credit" width={getColumnWidth?.("credit")} onResize={onColumnResize} className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
                 {t("accounting.columns.journal.credit")}
               </ResizableTableHead>
             )}
-            {visibleColumns.status && (
+            {isColumnVisible("status") && (
               <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("accounting.columns.journal.status")}
               </ResizableTableHead>
@@ -107,22 +107,22 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
                     />
                   </td>
                 )}
-                {visibleColumns.ref && (
+                {isColumnVisible("ref") && (
                   <td className="px-3 py-2.5">
                     <span className="font-mono text-xs font-bold text-primary">{entry.ref}</span>
                     {entry.reversed_ref && <p className="text-xs text-warning font-semibold m-0">{t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}</p>}
                     {entry.simple_mode && <span className="text-xs text-primary/60 font-semibold m-0">{t("accounting.journal.dashboard.simpleMode")}</span>}
                   </td>
                 )}
-                {visibleColumns.date && (
+                {isColumnVisible("date") && (
                   <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                     {formatDate(entry.date)}
                   </td>
                 )}
-                {visibleColumns.description && (
+                {isColumnVisible("description") && (
                   <td className="px-3 py-2.5 text-foreground max-w-[12.5rem] truncate">{entry.description}</td>
                 )}
-                {visibleColumns.tags && (
+                {isColumnVisible("tags") && (
                   <td className="px-3 py-2.5 hidden lg:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {(entry.tags || []).slice(0, 2).map((tag) => (
@@ -134,17 +134,17 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
                     </div>
                   </td>
                 )}
-                {visibleColumns.debit && (
+                {isColumnVisible("debit") && (
                   <td className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-info">
                     {formatAmount(totalDebit)}
                   </td>
                 )}
-                {visibleColumns.credit && (
+                {isColumnVisible("credit") && (
                   <td className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-success">
                     {formatAmount(totalCredit)}
                   </td>
                 )}
-                {visibleColumns.status && (
+                {isColumnVisible("status") && (
                   <td className="px-3 py-2.5"><StatusBadge status={entry.status} config={journalStatusConfig} size="sm" /></td>
                 )}
                 <td className="px-3 py-2.5 text-end">
@@ -159,17 +159,17 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
             <td colSpan={visibleLeadingColumnCount || 1} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">
               {entriesCountLabel}
             </td>
-            {visibleColumns.debit && (
+            {isColumnVisible("debit") && (
               <td className="px-3 py-2 text-end font-mono font-bold text-info text-xs">
                 {formatAmount(grandDebit)}
               </td>
             )}
-            {visibleColumns.credit && (
+            {isColumnVisible("credit") && (
               <td className="px-3 py-2 text-end font-mono font-bold text-success text-xs">
                 {formatAmount(grandCredit)}
               </td>
             )}
-            <td colSpan={(visibleColumns.status ? 1 : 0) + 1} className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground">
+            <td colSpan={(isColumnVisible("status") ? 1 : 0) + 1} className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground">
               {balanced ? (
                 <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>
               ) : (

@@ -22,7 +22,7 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
     entries,
     selectedIds,
     canDelete,
-    visibleColumns,
+    isColumnVisible,
     journalStatusConfig,
     grandDebit,
     grandCredit,
@@ -42,17 +42,17 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
           <article key={entry.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                {visibleColumns.ref && (
+                {isColumnVisible("ref") && (
                   <>
                     <p className="font-mono text-xs font-bold text-primary m-0">{entry.ref}</p>
                     {entry.reversed_ref && <p className="text-xs text-warning font-semibold m-0">{t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}</p>}
                     {entry.simple_mode && <span className="text-xs text-primary/60 font-semibold">{t("accounting.journal.dashboard.simpleMode")}</span>}
                   </>
                 )}
-                {visibleColumns.description && <h4 className="truncate text-sm font-semibold text-foreground m-0 mt-1">{entry.description}</h4>}
+                {isColumnVisible("description") && <h4 className="truncate text-sm font-semibold text-foreground m-0 mt-1">{entry.description}</h4>}
               </div>
               <div className="flex shrink-0 flex-col items-end gap-2">
-                {visibleColumns.status && <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />}
+                {isColumnVisible("status") && <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />}
                 {canDelete && (
                   <Checkbox
                     checked={selectedIds.includes(entry.id)}
@@ -63,13 +63,13 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
               </div>
             </div>
             <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              {visibleColumns.date && (
+              {isColumnVisible("date") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.date")}</dt>
                   <dd className="text-foreground">{formatDate(entry.date)}</dd>
                 </div>
               )}
-              {visibleColumns.tags && (entry.tags || []).length > 0 && (
+              {isColumnVisible("tags") && (entry.tags || []).length > 0 && (
                 <div>
                   <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.tags")}</dt>
                   <dd className="flex flex-wrap gap-1">
@@ -81,13 +81,13 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
                   </dd>
                 </div>
               )}
-              {visibleColumns.debit && (
+              {isColumnVisible("debit") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
                   <dd className="font-mono text-xs font-semibold text-info">{formatAmount(totalDebit)}</dd>
                 </div>
               )}
-              {visibleColumns.credit && (
+              {isColumnVisible("credit") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
                   <dd className="font-mono text-xs font-semibold text-success">{formatAmount(totalCredit)}</dd>
@@ -103,13 +103,13 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
       <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
         <p className="text-xs font-bold text-muted-foreground uppercase m-0">{entriesCountLabel}</p>
         <dl className="grid grid-cols-2 gap-2 text-sm">
-          {visibleColumns.debit && (
+          {isColumnVisible("debit") && (
             <div>
               <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
               <dd className="font-mono font-bold text-info text-xs">{formatAmount(grandDebit)}</dd>
             </div>
           )}
-          {visibleColumns.credit && (
+          {isColumnVisible("credit") && (
             <div>
               <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
               <dd className="font-mono font-bold text-success text-xs">{formatAmount(grandCredit)}</dd>

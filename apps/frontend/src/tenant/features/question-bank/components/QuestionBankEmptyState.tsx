@@ -1,12 +1,16 @@
 import type { JSX } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export function QuestionBankEmptyState(): JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-xl border-2 border-dashed border-border py-14 text-center" role="status">
-      <p className="text-sm font-medium text-muted-foreground">{t('questionBank.noQuestions')}</p>
-    </div>
+    <EmptyState
+      variant="dashed"
+      icon={null}
+      title={t('questionBank.noQuestions')}
+      className="py-14"
+    />
   );
 }

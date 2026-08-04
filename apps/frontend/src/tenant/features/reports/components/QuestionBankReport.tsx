@@ -15,7 +15,7 @@ import {
 } from "@/tenant/hooks/collections/questionBank";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 function sumScores(scores: Record<string, number>): number {
@@ -64,32 +64,34 @@ export default function QuestionBankReport(): React.JSX.Element {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard
-          icon={ClipboardList}
-          label={t("questionBank.report.totalQuestions")}
-          value={questions.length}
-          color="primary"
-        />
-        <StatCard
-          icon={FileCheck2}
-          label={t("questionBank.report.generatedTests")}
-          value={tests.length}
-          color="blue"
-        />
-        <StatCard
-          icon={Users}
-          label={t("questionBank.report.submissions")}
-          value={questionBankResults.length}
-          color="violet"
-        />
-        <StatCard
-          icon={Target}
-          label={t("questionBank.report.avgScore")}
-          value={`${avgScore}%`}
-          color="green"
-        />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          {
+            icon: ClipboardList,
+            label: t("questionBank.report.totalQuestions"),
+            value: questions.length,
+            accent: "primary",
+          },
+          {
+            icon: FileCheck2,
+            label: t("questionBank.report.generatedTests"),
+            value: tests.length,
+            accent: "blue",
+          },
+          {
+            icon: Users,
+            label: t("questionBank.report.submissions"),
+            value: questionBankResults.length,
+            accent: "violet",
+          },
+          {
+            icon: Target,
+            label: t("questionBank.report.avgScore"),
+            value: `${avgScore}%`,
+            accent: "green",
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title={t("questionBank.analytics.difficultyBreakdown")}>

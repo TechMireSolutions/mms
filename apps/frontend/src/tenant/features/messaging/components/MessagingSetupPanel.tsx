@@ -9,6 +9,7 @@ import {
   findUnknownPersonalizationTokens,
 } from '@mms/shared';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
@@ -201,7 +202,7 @@ export function MessagingSetupPanel({
                   </article>
                 ))}
                 {filteredTemplates.length === 0 && (
-                  <p className="py-6 text-center text-sm text-muted-foreground">{t('messaging.noTemplates')}</p>
+                  <EmptyState title={t('messaging.noTemplates')} compact />
                 )}
               </div>
               <div className="hidden overflow-x-auto md:block">
@@ -225,7 +226,7 @@ export function MessagingSetupPanel({
                         </div></td>
                       </tr>
                     ))}
-                    {filteredTemplates.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">{t('messaging.noTemplates')}</td></tr>}
+                    {filteredTemplates.length === 0 && <tr><td colSpan={4} className="py-4"><EmptyState title={t('messaging.noTemplates')} compact /></td></tr>}
                   </tbody>
                 </table>
               </div>

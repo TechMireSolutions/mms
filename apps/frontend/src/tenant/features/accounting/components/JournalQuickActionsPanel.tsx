@@ -3,6 +3,7 @@ import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { CheckCircle2, DollarSign, Download, Plus, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -110,11 +111,13 @@ export function JournalQuickActionsPanel({
         </header>
 
         {entries.length === 0 ? (
-          <div className="py-16 text-center rounded-2xl border-2 border-dashed border-border" role="status">
-            <DollarSign className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" aria-hidden="true" />
-            <p className="text-sm font-semibold text-muted-foreground m-0">{t("accounting.journal.dashboard.noTransactionsYet")}</p>
-            <p className="text-xs text-muted-foreground mt-1 m-0">{t("accounting.journal.dashboard.useQuickActions")}</p>
-          </div>
+          <EmptyState
+            variant="dashed"
+            icon={DollarSign}
+            title={t("accounting.journal.dashboard.noTransactionsYet")}
+            description={t("accounting.journal.dashboard.useQuickActions")}
+            className="rounded-2xl py-16"
+          />
         ) : (
           <div className="space-y-2">
             {[...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 20).map((entry) => {

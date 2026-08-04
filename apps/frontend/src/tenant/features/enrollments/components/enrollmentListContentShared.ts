@@ -5,16 +5,6 @@ import type { Student, toMessagingRecipient } from "@mms/shared";
 
 export type EnrollmentMessageChannel = "whatsapp" | "sms" | "email";
 
-export interface EnrollmentListVisibleColumns {
-  student: boolean;
-  session: boolean;
-  class: boolean;
-  enrolledDate: boolean;
-  finalFee: boolean;
-  status: boolean;
-  payment: boolean;
-}
-
 export interface EnrollmentListContentProps {
   viewMode: WorkDirectoryViewMode;
   enrollments: Enrollment[];
@@ -22,7 +12,7 @@ export interface EnrollmentListContentProps {
   page: number;
   pageSize: number;
   students: Student[];
-  visibleColumns: EnrollmentListVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;

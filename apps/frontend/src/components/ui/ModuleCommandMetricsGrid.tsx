@@ -5,8 +5,10 @@ interface MetricItem {
   icon?: StatCardProps['icon'];
   label: string;
   value: string | number;
+  sub?: StatCardProps['sub'];
   accent?: StatCardProps['accent'];
   onClick?: StatCardProps['onClick'];
+  isActive?: StatCardProps['isActive'];
 }
 
 interface ModuleCommandMetricsGridProps {
@@ -40,9 +42,11 @@ export function ModuleCommandMetricsGrid({ items }: ModuleCommandMetricsGridProp
           icon={item.icon}
           label={item.label}
           value={item.value}
+          sub={item.sub}
           accent={item.accent}
           delayIndex={index}
           onClick={item.onClick}
+          isActive={item.isActive}
           variant="compact"
         />
       ))}

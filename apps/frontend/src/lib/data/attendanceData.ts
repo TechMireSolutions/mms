@@ -43,11 +43,11 @@ export function getAttendanceStatusInfo(status: string, customStatuses?: Attenda
     id: status,
     label: toTitleCase(status),
     short: status.charAt(0).toUpperCase(),
-    color: "slate",
-    bg: "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200",
-    text: "text-slate-800 dark:text-slate-200",
-    border: "border-slate-200 dark:border-slate-700",
-    dot: "bg-slate-400",
+    color: "muted",
+    bg: "bg-muted text-muted-foreground",
+    text: "text-muted-foreground",
+    border: "border-border",
+    dot: "bg-muted-foreground",
   };
 }
 

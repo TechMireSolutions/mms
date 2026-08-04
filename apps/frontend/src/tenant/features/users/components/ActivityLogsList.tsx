@@ -4,6 +4,7 @@ import { formatDate, type ActivityLog } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ActivityActionBadge } from '@/tenant/features/users/components/UserBadges';
 import { Button } from '@/components/ui/button';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
@@ -35,10 +36,7 @@ export function ActivityLogsList({
 
   if (paginated.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-center">
-        <Activity className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm font-semibold text-foreground">{t('users.activityEmpty')}</p>
-      </div>
+      <EmptyState variant="dashed" title={t('users.activityEmpty')} icon={Activity} compact />
     );
   }
 

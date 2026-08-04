@@ -7,6 +7,7 @@ import {
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
@@ -62,10 +63,7 @@ export function MessagingReportsLogTable({
 
   if (logs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <Clock className="mb-2 h-8 w-8 opacity-40" />
-        <p className="text-sm font-medium">{t("messaging.noLogs")}</p>
-      </div>
+      <EmptyState icon={Clock} title={t("messaging.noLogs")} compact />
     );
   }
 

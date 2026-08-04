@@ -1,5 +1,6 @@
 import React from "react";
 import { Sparkles } from "lucide-react";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { DynamicChartVisualizerFiltersPanel } from "@/tenant/features/reports/components/DynamicChartVisualizerFiltersPanel";
 import { DynamicChartVisualizerConfigFields } from "@/tenant/features/reports/components/DynamicChartVisualizerConfigFields";
 import type { DynamicChartVisualizerConfigPanelProps } from "@/tenant/features/reports/components/dynamicChartVisualizerConfigPanelTypes";
@@ -20,7 +21,7 @@ export function DynamicChartVisualizerConfigPanel(
 
   return (
     <div className="lg:col-span-5 space-y-5 print:hidden">
-      <div className="rounded-2xl border border-border/50 bg-card/45 backdrop-blur-2xl p-5 space-y-4 shadow-xl">
+      <div className={`${WORK_SURFACE} p-5 space-y-4`}>
         <div className="flex items-center gap-2 pb-2 border-b border-border/50">
           <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
             <Sparkles className="w-4 h-4" />

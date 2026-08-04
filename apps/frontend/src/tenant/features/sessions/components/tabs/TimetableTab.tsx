@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import { Plus, Clock } from "lucide-react";
 import { DAYS, Session, TimetableItem } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -79,11 +80,12 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
       </div>
 
       {timetable.length === 0 ? (
-        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
-          <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t("sessions.timetable.emptyTitle")}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 m-0">{t("sessions.timetable.emptySubtitle")}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={Clock}
+          title={t("sessions.timetable.emptyTitle")}
+          description={t("sessions.timetable.emptySubtitle")}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {DAYS.map((day) => {

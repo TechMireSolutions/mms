@@ -12,6 +12,8 @@ import { ResultsViewStats } from "@/tenant/features/examinations/components/Resu
 import { ResultsViewRankingsList } from "@/tenant/features/examinations/components/ResultsViewRankingsList";
 import type { RankedResult, ResultsViewProps } from "@/tenant/features/examinations/components/resultsViewTypes";
 
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
+
 /**
  * Rankings view component summarizing examination results and score distributions.
  */
@@ -39,13 +41,7 @@ export function ResultsView({
     onFilteredCountChange,
   });
 
-  const showRank = isColumnVisible ? isColumnVisible("rank") : true;
-  const showStudent = isColumnVisible ? isColumnVisible("student") : true;
-  const showClassRoll = isColumnVisible ? isColumnVisible("classRoll") : true;
-  const showMarks = isColumnVisible ? isColumnVisible("marks") : true;
-  const showPercentage = isColumnVisible ? isColumnVisible("percentage") : true;
-  const showGrade = isColumnVisible ? isColumnVisible("grade") : true;
-  const showPassFail = isColumnVisible ? isColumnVisible("passFail") : true;
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   return (
     <section className="space-y-5" aria-labelledby="results-view-title">
@@ -86,13 +82,7 @@ export function ResultsView({
             exam={exam}
             rankedResults={rankedResults}
             passFailConfig={passFailConfig}
-            showRank={showRank}
-            showStudent={showStudent}
-            showClassRoll={showClassRoll}
-            showMarks={showMarks}
-            showPercentage={showPercentage}
-            showGrade={showGrade}
-            showPassFail={showPassFail}
+            isColumnVisible={columnVisible}
             onSelectResult={setSelectedStudent}
             onCertificate={setCertStudent}
             t={t}

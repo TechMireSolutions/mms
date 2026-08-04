@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Tag, ToggleLeft, ToggleRight } from "lucide-react";
 import { Session, Discount } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatMoney } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -73,10 +74,11 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
       </header>
 
       {discounts.length === 0 ? (
-        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
-          <Tag className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t("sessions.discounts.emptyTitle")}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={Tag}
+          title={t("sessions.discounts.emptyTitle")}
+        />
       ) : (
         <div className="space-y-3">
           {discounts.map((discountItem, index) => (

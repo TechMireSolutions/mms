@@ -2,7 +2,7 @@ import React from "react";
 import { BookOpen, Filter, Star, Trophy, TrendingUp, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { AcademicResultItem } from "./academicReportTypes";
@@ -24,12 +24,14 @@ export function AcademicReportKpis({
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <StatCard icon={BookOpen} label={t("examinations.report.totalRecords")} value={totalRecords} color="primary" />
-      <StatCard icon={TrendingUp} label={t("examinations.report.classAvg")} value={`${averageMarks}%`} color="blue" />
-      <StatCard icon={Trophy} label={t("examinations.report.topScore")} value={`${topScore}%`} color="amber" />
-      <StatCard icon={Star} label={t("examinations.report.passRate")} value={`${passRate}%`} color="green" />
-    </div>
+    <ModuleCommandMetricsGrid
+      items={[
+        { icon: BookOpen, label: t("examinations.report.totalRecords"), value: totalRecords, accent: "primary" },
+        { icon: TrendingUp, label: t("examinations.report.classAvg"), value: `${averageMarks}%`, accent: "blue" },
+        { icon: Trophy, label: t("examinations.report.topScore"), value: `${topScore}%`, accent: "amber" },
+        { icon: Star, label: t("examinations.report.passRate"), value: `${passRate}%`, accent: "green" },
+      ]}
+    />
   );
 }
 

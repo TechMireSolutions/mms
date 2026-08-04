@@ -2,6 +2,8 @@ import React from "react";
 import { Plus, Gift } from "lucide-react";
 import { Session } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 import { TabarrukList } from "@/tenant/features/sessions/components/tabs/TabarrukList";
@@ -33,12 +35,11 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
 
   return (
     <section aria-label={t("sessions.tabarruk.ariaLabel")} className="space-y-4">
-      <article className="flex items-start gap-3 px-4 py-3 rounded-xl bg-warning/10 border border-warning/20">
-        <Gift className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" aria-hidden="true" />
-        <p className="text-sm text-warning leading-relaxed m-0">
-          {t("sessions.tabarruk.description")}
-        </p>
-      </article>
+      <WarningCallout
+        icon={Gift}
+        description={t("sessions.tabarruk.description")}
+        className="items-start"
+      />
 
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.tabarruk.count", { count: tabarrukItems.length })}</p>
@@ -53,10 +54,11 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
       </header>
 
       {tabarrukItems.length === 0 ? (
-        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
-          <Gift className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t("sessions.tabarruk.emptyTitle")}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={Gift}
+          title={t("sessions.tabarruk.emptyTitle")}
+        />
       ) : (
         <TabarrukList
           items={tabarrukItems}

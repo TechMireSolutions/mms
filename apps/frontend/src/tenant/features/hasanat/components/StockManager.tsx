@@ -4,6 +4,7 @@ import { Plus, Package } from 'lucide-react';
 import { Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StockAddBatchModal } from '@/tenant/features/hasanat/components/StockAddBatchModal';
 
@@ -91,10 +92,11 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
       })}
 
       {batches.length === 0 && (
-        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
-          <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t('hasanat.stock.empty')}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={Package}
+          title={t('hasanat.stock.empty')}
+        />
       )}
 
       {canWrite && (

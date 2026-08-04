@@ -1,5 +1,5 @@
 import { type AppTranslationKey } from "@mms/shared";
-import { Download, Filter, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Download, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -21,9 +21,7 @@ interface JournalEntriesAdvancedToolbarProps {
   search: string;
   statusFilter: string;
   showFilters: boolean;
-  selectedIds: string[];
   canWrite: boolean;
-  canDelete: boolean;
   showDeleted: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onModeChange: (mode: JournalMode) => void;
@@ -31,7 +29,6 @@ interface JournalEntriesAdvancedToolbarProps {
   onStatusFilterChange: (value: string) => void;
   onShowFiltersChange: (showFilters: boolean) => void;
   onOpenNew: () => void;
-  onBulkAction: () => void;
   onExportCsv: () => void;
 }
 
@@ -43,9 +40,7 @@ export function JournalEntriesAdvancedToolbar({
   search,
   statusFilter,
   showFilters,
-  selectedIds,
   canWrite,
-  canDelete,
   showDeleted,
   columnCustomizer,
   onModeChange,
@@ -53,7 +48,6 @@ export function JournalEntriesAdvancedToolbar({
   onStatusFilterChange,
   onShowFiltersChange,
   onOpenNew,
-  onBulkAction,
   onExportCsv,
 }: JournalEntriesAdvancedToolbarProps) {
   const { t } = useTranslation();
@@ -102,17 +96,6 @@ export function JournalEntriesAdvancedToolbar({
           updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
           labels={columnCustomizer.labels}
         />
-      )}
-      {canDelete && selectedIds.length > 0 && (
-        <Button
-          type="button"
-          variant={showDeleted ? "outline" : "destructive"}
-          onClick={onBulkAction}
-          className="flex items-center gap-1.5 rounded-xl text-sm font-semibold"
-        >
-          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-          {showDeleted ? t("accounting.trash.restore") : t("common.delete")} ({selectedIds.length})
-        </Button>
       )}
       {canWrite && !showDeleted && (
         <Button

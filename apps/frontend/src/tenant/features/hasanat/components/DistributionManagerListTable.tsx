@@ -2,11 +2,13 @@ import React from "react";
 import { motion } from "framer-motion";
 import { User, Users2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DistributionRowActions } from "@/tenant/features/hasanat/components/DistributionRowActions";
 import {
+  DISTRIBUTION_COLUMN_KEYS,
   getDistributionDenomination,
   getDistributionStatuses,
   type DistributionManagerListProps,
@@ -20,7 +22,7 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
     denoms,
     selectedIds,
     allFilteredSelected,
-    visibleColumns,
+    isColumnVisible,
     statusLabels,
     statusConfig,
     canWrite,
@@ -38,6 +40,10 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
   } = props;
   const { t } = useTranslation();
   const statuses = getDistributionStatuses(statusConfig);
+  const visibleColCount =
+    DISTRIBUTION_COLUMN_KEYS.filter(isColumnVisible).length +
+    (canDelete ? 1 : 0) +
+    1;
 
   return (
     <div className="overflow-x-auto">
@@ -54,42 +60,42 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
                 />
               </th>
             )}
-            {visibleColumns.card && (
+            {isColumnVisible("card") && (
               <ResizableTableHead columnKey="card" width={getColumnWidth?.("card")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.card")}
               </ResizableTableHead>
             )}
-            {visibleColumns.recipient && (
+            {isColumnVisible("recipient") && (
               <ResizableTableHead columnKey="recipient" width={getColumnWidth?.("recipient")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.recipient")}
               </ResizableTableHead>
             )}
-            {visibleColumns.recipientClass && (
+            {isColumnVisible("recipientClass") && (
               <ResizableTableHead columnKey="recipientClass" width={getColumnWidth?.("recipientClass")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.recipientClass")}
               </ResizableTableHead>
             )}
-            {visibleColumns.quantity && (
+            {isColumnVisible("quantity") && (
               <ResizableTableHead columnKey="quantity" width={getColumnWidth?.("quantity")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.quantity")}
               </ResizableTableHead>
             )}
-            {visibleColumns.reason && (
+            {isColumnVisible("reason") && (
               <ResizableTableHead columnKey="reason" width={getColumnWidth?.("reason")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.reason")}
               </ResizableTableHead>
             )}
-            {visibleColumns.issuedDate && (
+            {isColumnVisible("issuedDate") && (
               <ResizableTableHead columnKey="issuedDate" width={getColumnWidth?.("issuedDate")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.issuedDate")}
               </ResizableTableHead>
             )}
-            {visibleColumns.issuedBy && (
+            {isColumnVisible("issuedBy") && (
               <ResizableTableHead columnKey="issuedBy" width={getColumnWidth?.("issuedBy")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.issuedBy")}
               </ResizableTableHead>
             )}
-            {visibleColumns.status && (
+            {isColumnVisible("status") && (
               <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("hasanat.columns.distribution.status")}
               </ResizableTableHead>
@@ -101,7 +107,7 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
         </thead>
         <tbody className="divide-y divide-border/50">
           {distributions.length === 0 ? (
-            <tr><td colSpan={canDelete ? 10 : 9} className="py-10 text-center text-sm text-muted-foreground">{t("hasanat.empty.distributions")}</td></tr>
+            <tr><td colSpan={visibleColCount} className="py-4"><EmptyState title={t("hasanat.empty.distributions")} compact /></td></tr>
           ) : (
             distributions.map((distribution, index) => {
               const denomination = getDistributionDenomination(denoms, distribution.denominationId);
@@ -116,7 +122,7 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
                       />
                     </td>
                   )}
-                  {visibleColumns.card && (
+                  {isColumnVisible("card") && (
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className="text-base" aria-hidden="true">{denomination?.icon || "⭐"}</span>
@@ -127,7 +133,7 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
                       </div>
                     </td>
                   )}
-                  {visibleColumns.recipient && (
+                  {isColumnVisible("recipient") && (
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         {distribution.recipientType === "faculty" ? <Users2 className="w-3 h-3 text-muted-foreground" aria-hidden="true" /> : <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />}
@@ -135,26 +141,26 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
                       </div>
                     </td>
                   )}
-                  {visibleColumns.recipientClass && (
+                  {isColumnVisible("recipientClass") && (
                     <td className="px-4 py-3 text-sm text-muted-foreground">{distribution.recipientClass || "—"}</td>
                   )}
-                  {visibleColumns.quantity && (
+                  {isColumnVisible("quantity") && (
                     <td className="px-4 py-3">
                       <span className="text-sm font-bold text-foreground">{distribution.quantity}</span>
                     </td>
                   )}
-                  {visibleColumns.reason && (
+                  {isColumnVisible("reason") && (
                     <td className="px-4 py-3 max-w-[10rem]">
                       <p className="text-sm text-muted-foreground truncate m-0">{distribution.reason}</p>
                     </td>
                   )}
-                  {visibleColumns.issuedDate && (
+                  {isColumnVisible("issuedDate") && (
                     <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{distribution.issuedDate}</td>
                   )}
-                  {visibleColumns.issuedBy && (
+                  {isColumnVisible("issuedBy") && (
                     <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{distribution.issuedBy || "—"}</td>
                   )}
-                  {visibleColumns.status && (
+                  {isColumnVisible("status") && (
                     <td className="px-4 py-3">
                       <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
                     </td>

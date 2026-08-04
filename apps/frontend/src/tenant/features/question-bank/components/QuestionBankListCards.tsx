@@ -27,9 +27,8 @@ interface QuestionBankListCardsProps {
   canDelete: boolean;
   canTrashRows: boolean;
   showDeleted: boolean;
-  showText: boolean;
   showSourceCitation: boolean;
-  isColumnVisible?: (key: string) => boolean;
+  isColumnVisible: (key: string) => boolean;
   onEditQuestion: (question: Question) => void;
   onTrashAction: (id: string) => void;
   onToggleSelected: (id: string, checked: boolean) => void;
@@ -46,7 +45,6 @@ export function QuestionBankListCards({
   canDelete,
   canTrashRows,
   showDeleted,
-  showText,
   showSourceCitation,
   isColumnVisible,
   onEditQuestion,
@@ -68,7 +66,7 @@ export function QuestionBankListCards({
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              {showText && config.isFieldEnabled("text") && (
+              {isColumnVisible("text") && config.isFieldEnabled("text") && (
                 <p className="mb-2 text-sm font-semibold leading-snug text-foreground">{question.text}</p>
               )}
               {listMetaFields.length > 0 && (
@@ -139,7 +137,7 @@ export function QuestionBankListCards({
                 );
               })()}
               {config.orderedFields
-                .filter((field) => !SYSTEM_FIELD_IDS.has(field.id) && config.isFieldEnabled(field.id) && (isColumnVisible ? isColumnVisible(field.id) : true))
+                .filter((field) => !SYSTEM_FIELD_IDS.has(field.id) && config.isFieldEnabled(field.id) && isColumnVisible(field.id))
                 .map((field) => {
                   const fieldValue = (question as unknown as Record<string, unknown>)[field.id];
                   if (fieldValue === undefined || fieldValue === "") return null;

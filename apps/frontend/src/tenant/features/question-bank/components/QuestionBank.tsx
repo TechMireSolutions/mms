@@ -1,9 +1,13 @@
 import React, { useMemo } from 'react';
+import { Trash2 } from 'lucide-react';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/useQuestionBankFilters';
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
+import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
+import { BulkSelectionRestoreAction } from '@/components/ui/BulkSelectionActions';
+import { Button } from '@/components/ui/button';
 import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
 import { QuestionBankList } from '@/tenant/features/question-bank/components/QuestionBankList';
 import { QuestionBankToolbar } from '@/tenant/features/question-bank/components/QuestionBankToolbar';
@@ -13,6 +17,9 @@ import {
   useQuestionBankDisplayConfig,
   useQuestionBankTrashHandlers,
 } from '@/tenant/features/question-bank/components/useQuestionBankDisplayConfig';
+import { useTranslation } from '@/hooks/useTranslation';
+
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 interface QuestionBankProps {
   questions: Question[];
@@ -57,6 +64,7 @@ export function QuestionBank({
   onColumnResize,
   columnCustomizer,
 }: QuestionBankProps): React.ReactElement {
+  const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const config = useQuestionBankConfig(questions);
   const {
@@ -94,16 +102,12 @@ export function QuestionBank({
     onEditQuestionChange?.(question);
   };
 
-  const showText = isColumnVisible ? isColumnVisible('text') : true;
-  const showCategory = isColumnVisible ? isColumnVisible('category') : true;
-  const showLanguage = isColumnVisible ? isColumnVisible('language') : true;
-  const showType = isColumnVisible ? isColumnVisible('type') : true;
-  const showDifficulty = isColumnVisible ? isColumnVisible('difficulty') : true;
-  const showSource = isColumnVisible ? isColumnVisible('source') : true;
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
+  const showSource = columnVisible('source');
 
   const listMetaFields = useMemo(
-    () => buildQuestionBankListMetaFields(config, isColumnVisible),
-    [config, isColumnVisible],
+    () => buildQuestionBankListMetaFields(config, columnVisible),
+    [config, columnVisible],
   );
 
   const showSourceCitation = useMemo(
@@ -121,8 +125,34 @@ export function QuestionBank({
     setShowModal(true);
   };
 
+  const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
+
   return (
     <div className="space-y-4">
+      {canBulkTrash && (
+        <BulkSelectionBar
+          placement="floating"
+          selectedCount={selectedIds.length}
+          countLabel={t('questionBank.trash.selected', { count: selectedIds.length })}
+        >
+          {showDeleted ? (
+            <BulkSelectionRestoreAction
+              label={t('questionBank.trash.restore')}
+              onClick={() => { void handleBulkTrashAction(); }}
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => { void handleBulkTrashAction(); }}
+              className="flex min-h-11 items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t('common.delete')}
+            </Button>
+          )}
+        </BulkSelectionBar>
+      )}
+
       <QuestionBankToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -130,18 +160,14 @@ export function QuestionBank({
         search={search}
         filterCats={filterCats}
         filterDiff={filterDiff}
-        selectedCount={selectedIds.length}
         hideToolbarAdd={hideToolbarAdd}
         canWrite={canWrite}
-        canDelete={canDelete}
         showDeleted={showDeleted}
-        canBulkTrash={Boolean(showDeleted ? onBulkRestore : onBulkDelete)}
         columnCustomizer={columnCustomizer}
         onSearchChange={setSearch}
         onFilterCatsChange={setFilterCats}
         onFilterDiffChange={setFilterDiff}
         onAddQuestion={openNewQuestion}
-        onBulkTrashAction={() => { void handleBulkTrashAction(); }}
       />
 
       {filtered.length === 0 && <QuestionBankEmptyState />}
@@ -159,15 +185,9 @@ export function QuestionBank({
           canDelete={canDelete}
           canTrashRows={canDelete && Boolean(showDeleted ? onRestore : onDelete)}
           showDeleted={showDeleted}
-          showText={showText}
-          showCategory={showCategory}
-          showLanguage={showLanguage}
-          showType={showType}
-          showDifficulty={showDifficulty}
-          showSource={showSource}
           showSourceCitation={showSourceCitation}
           allFilteredSelected={allFilteredSelected}
-          isColumnVisible={isColumnVisible}
+          isColumnVisible={columnVisible}
           getColumnWidth={getColumnWidth}
           onColumnResize={onColumnResize}
           onEditQuestion={openEditQuestion}

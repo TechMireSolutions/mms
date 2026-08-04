@@ -6,6 +6,7 @@ import { useTeachersByIds } from '@/tenant/hooks/collections/teachers';
 import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';
 import { assignClassTeacher } from '@/lib/teachers/teacherAssignment';
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ClassCard } from "@/tenant/features/sessions/components/tabs/ClassCard";
@@ -94,11 +95,12 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
       </header>
 
       {(!session.classes || session.classes.length === 0) ? (
-        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
-          <GraduationCap className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t("sessions.classes.emptyTitle")}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 m-0">{t("sessions.classes.emptySubtitle")}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={GraduationCap}
+          title={t("sessions.classes.emptyTitle")}
+          description={t("sessions.classes.emptySubtitle")}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {session.classes.map((sessionClass) => (

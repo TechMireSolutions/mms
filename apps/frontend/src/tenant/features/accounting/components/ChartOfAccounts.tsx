@@ -11,7 +11,7 @@ import { type AppTranslationKey } from "@mms/shared";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
-
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 interface ChartOfAccountsProps {
   accounts: Account[];
@@ -63,11 +63,7 @@ export function ChartOfAccounts({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
-  const showCode = isColumnVisible ? isColumnVisible("code") : true;
-  const showName = isColumnVisible ? isColumnVisible("name") : true;
-  const showSubtype = isColumnVisible ? isColumnVisible("subtype") : true;
-  const showDescription = isColumnVisible ? isColumnVisible("description") : true;
-  const showNormalBalance = isColumnVisible ? isColumnVisible("normalBalance") : true;
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   const handleSave = async (account: Account) => {
     await onChange((prev) => {
@@ -136,11 +132,7 @@ export function ChartOfAccounts({
         filteredAccounts={filtered}
         balanceConfig={balanceConfig}
         canWrite={canWrite}
-        showCode={showCode}
-        showName={showName}
-        showSubtype={showSubtype}
-        showDescription={showDescription}
-        showNormalBalance={showNormalBalance}
+        isColumnVisible={columnVisible}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
         onEdit={(account) => setModal({ ...account })}

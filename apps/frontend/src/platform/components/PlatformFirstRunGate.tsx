@@ -23,7 +23,11 @@ export function PlatformFirstRunGate(): React.JSX.Element {
   if (isError) {
     return (
       <div className="flex min-h-dvh items-center justify-center p-6">
-        <ErrorState title={t('apex.loadError')} onRetry={() => void refetch()} />
+        <ErrorState
+          title={t('platform.loadFailed')}
+          description={t('platform.loadFailedHint')}
+          onRetry={() => void refetch()}
+        />
       </div>
     );
   }

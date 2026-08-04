@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { DistributionFormModal } from "@/tenant/features/obligations/components/DistributionFormModal";
 import { WakalaFormModal } from "@/tenant/features/obligations/components/WakalaFormModal";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { WakalaTypeCard } from "@/tenant/features/obligations/components/WakalaTypeCard";
 import { useWakalaTypeManager } from "@/tenant/features/obligations/components/useWakalaTypeManager";
 import type { WakalaTypeManagerProps } from "@/tenant/features/obligations/components/wakalaTypeManagerTypes";
@@ -45,7 +46,7 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
 
       <section aria-label={t("obligations.wakala.listAria")} className="space-y-3">
         {wakalaTypes.length === 0 && (
-          <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border">{t("obligations.wakala.empty")}</div>
+          <EmptyState variant="dashed" title={t("obligations.wakala.empty")} compact />
         )}
         {wakalaTypes.map((wakalaType) => {
           const rep = getRep(wakalaType.mujtahid_representative_id);

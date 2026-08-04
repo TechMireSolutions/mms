@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Trophy, Award } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { getInitials } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -13,13 +14,7 @@ interface ResultsViewRankingsListProps {
   exam: Exam;
   rankedResults: RankedResult[];
   passFailConfig: Record<string, StatusBadgeConfigItem>;
-  showRank: boolean;
-  showStudent: boolean;
-  showClassRoll: boolean;
-  showMarks: boolean;
-  showPercentage: boolean;
-  showGrade: boolean;
-  showPassFail: boolean;
+  isColumnVisible: (key: string) => boolean;
   onSelectResult: (result: RankedResult) => void;
   onCertificate: (result: RankedResult) => void;
   t: TranslationFunction;
@@ -29,17 +24,16 @@ export function ResultsViewRankingsList({
   exam,
   rankedResults,
   passFailConfig,
-  showRank,
-  showStudent,
-  showClassRoll,
-  showMarks,
-  showPercentage,
-  showGrade,
-  showPassFail,
+  isColumnVisible,
   onSelectResult,
   onCertificate,
   t,
 }: ResultsViewRankingsListProps): React.ReactElement {
+  const showStudent = isColumnVisible("student");
+  const showClassRoll = isColumnVisible("classRoll");
+  const showMarks = isColumnVisible("marks");
+  const showPercentage = isColumnVisible("percentage");
+
   return (
     <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm" aria-label={t("examinations.rankings")}>
       <div className="px-4 py-3 border-b border-border/40 flex min-w-0 items-center gap-2 ps-6.5 bg-muted/20">
@@ -47,7 +41,7 @@ export function ResultsViewRankingsList({
         <h3 className="min-w-0 truncate text-sm font-bold text-foreground m-0">{t("examinations.rankingsTitle", { name: exam.name })}</h3>
       </div>
       {rankedResults.length === 0 ? (
-        <div className="py-10 text-center text-sm text-muted-foreground" role="status">{t("examinations.empty.results")}</div>
+        <EmptyState variant="dashed" title={t("examinations.empty.results")} compact />
       ) : (
         <div className="divide-y divide-border/50 ps-6.5" role="list">
           {rankedResults.map((rankedResult) => (
@@ -60,7 +54,7 @@ export function ResultsViewRankingsList({
               role="listitem"
               aria-label={t("examinations.viewResultAria", { name: rankedResult.student?.name || t("examinations.columns.results.student") })}
             >
-              {showRank && (
+              {isColumnVisible("rank") && (
                 <div className="w-8 text-center flex-shrink-0">
                   {rankedResult.rank <= 3 ? (
                     <span className="text-lg" aria-label={t("examinations.rankLabel", { rank: rankedResult.rank })}>{RANK_ICONS[rankedResult.rank - 1]}</span>
@@ -110,7 +104,7 @@ export function ResultsViewRankingsList({
                 <div className="text-end flex-shrink-0 text-sm text-muted-foreground">{rankedResult.pct}%</div>
               )}
 
-              {showGrade && (
+              {isColumnVisible("grade") && (
                 <span
                   className="text-sm font-bold px-2.5 py-1 rounded-lg flex-shrink-0"
                   style={{ color: rankedResult.grade.color, background: rankedResult.grade.bg, border: `1px solid ${rankedResult.grade.border}` }}
@@ -119,7 +113,7 @@ export function ResultsViewRankingsList({
                 </span>
               )}
 
-              {showPassFail && (
+              {isColumnVisible("passFail") && (
                 <StatusBadge
                   status={rankedResult.passed ? "pass" : "fail"}
                   config={passFailConfig}

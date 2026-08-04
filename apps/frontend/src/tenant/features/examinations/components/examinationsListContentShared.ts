@@ -8,22 +8,11 @@ export interface ExamClassOption {
   name: string;
 }
 
-export interface ExaminationsVisibleColumns {
-  name: boolean;
-  subject: boolean;
-  date: boolean;
-  duration: boolean;
-  status: boolean;
-  totalMarks: boolean;
-  passingMarks: boolean;
-  classes: boolean;
-}
-
 export interface ExaminationsListContentProps {
   viewMode: WorkDirectoryViewMode;
   exams: Exam[];
   selectedIds: string[];
-  visibleColumns: ExaminationsVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   classes: ExamClassOption[];
   enrollments: Enrollment[];
   allFilteredSelected: boolean;

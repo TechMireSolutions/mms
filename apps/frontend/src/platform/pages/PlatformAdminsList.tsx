@@ -49,7 +49,12 @@ export function PlatformAdminsList({
       {loading ? (
         <RouteStatusFallback />
       ) : fetchError ? (
-        <ErrorState title={t('apex.loadError')} onRetry={onRetry} compact />
+        <ErrorState
+          title={t('platform.loadFailed')}
+          description={t('platform.loadFailedHint')}
+          onRetry={onRetry}
+          compact
+        />
       ) : admins && admins.length > 0 ? (
         <motion.div
           variants={containerVariants}

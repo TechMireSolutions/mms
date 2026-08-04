@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -22,7 +23,7 @@ function ErrorBoundaryFallback({
 }): React.ReactElement {
   const { t } = useTranslation();
   return (
-    <div className="p-6 bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm my-4">
+    <div className={`${WORK_SURFACE} p-6 my-4`}>
       <ErrorState
         title={t("errors.boundary.title")}
         description={error?.message || t("errors.boundary.description")}

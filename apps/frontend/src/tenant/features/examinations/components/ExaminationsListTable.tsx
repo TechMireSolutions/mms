@@ -17,7 +17,7 @@ export function ExaminationsListTable(props: ExaminationsListTableProps): React.
   const {
     exams,
     selectedIds,
-    visibleColumns,
+    isColumnVisible,
     classes,
     enrollments,
     allFilteredSelected,
@@ -50,42 +50,42 @@ export function ExaminationsListTable(props: ExaminationsListTableProps): React.
                 />
               </th>
             )}
-            {visibleColumns.name && (
+            {isColumnVisible("name") && (
               <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.name")}
               </ResizableTableHead>
             )}
-            {visibleColumns.subject && (
+            {isColumnVisible("subject") && (
               <ResizableTableHead columnKey="subject" width={getColumnWidth?.("subject")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.subject")}
               </ResizableTableHead>
             )}
-            {visibleColumns.date && (
+            {isColumnVisible("date") && (
               <ResizableTableHead columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.date")}
               </ResizableTableHead>
             )}
-            {visibleColumns.duration && (
+            {isColumnVisible("duration") && (
               <ResizableTableHead columnKey="duration" width={getColumnWidth?.("duration")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.duration")}
               </ResizableTableHead>
             )}
-            {visibleColumns.status && (
+            {isColumnVisible("status") && (
               <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.status")}
               </ResizableTableHead>
             )}
-            {visibleColumns.totalMarks && (
+            {isColumnVisible("totalMarks") && (
               <ResizableTableHead columnKey="totalMarks" width={getColumnWidth?.("totalMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.totalMarks")}
               </ResizableTableHead>
             )}
-            {visibleColumns.passingMarks && (
+            {isColumnVisible("passingMarks") && (
               <ResizableTableHead columnKey="passingMarks" width={getColumnWidth?.("passingMarks")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.passingMarks")}
               </ResizableTableHead>
             )}
-            {visibleColumns.classes && (
+            {isColumnVisible("classes") && (
               <ResizableTableHead columnKey="classes" width={getColumnWidth?.("classes")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("examinations.columns.exam.classes")}
               </ResizableTableHead>
@@ -110,32 +110,32 @@ export function ExaminationsListTable(props: ExaminationsListTableProps): React.
                     />
                   </td>
                 )}
-                {visibleColumns.name && (
+                {isColumnVisible("name") && (
                   <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{exam.name}</td>
                 )}
-                {visibleColumns.subject && (
+                {isColumnVisible("subject") && (
                   <td className="px-4 py-3 text-sm text-muted-foreground">{exam.subject}</td>
                 )}
-                {visibleColumns.date && (
+                {isColumnVisible("date") && (
                   <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(exam.date, true)}</td>
                 )}
-                {visibleColumns.duration && (
+                {isColumnVisible("duration") && (
                   <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                     {t("examinations.durationMinutes", { minutes: exam.duration })}
                   </td>
                 )}
-                {visibleColumns.status && (
+                {isColumnVisible("status") && (
                   <td className="px-4 py-3">
                     <StatusBadge status={exam.status} config={statusConfig} size="sm" />
                   </td>
                 )}
-                {visibleColumns.totalMarks && (
+                {isColumnVisible("totalMarks") && (
                   <td className="px-4 py-3 text-sm font-bold text-foreground">{exam.totalMarks}</td>
                 )}
-                {visibleColumns.passingMarks && (
+                {isColumnVisible("passingMarks") && (
                   <td className="px-4 py-3 text-sm text-foreground">{exam.passingMarks}</td>
                 )}
-                {visibleColumns.classes && (
+                {isColumnVisible("classes") && (
                   <td className="px-4 py-3 text-xs text-muted-foreground max-w-[10rem] truncate">
                     {assignedClasses.map((sessionClass) => sessionClass.name).join(", ") || "—"}
                   </td>

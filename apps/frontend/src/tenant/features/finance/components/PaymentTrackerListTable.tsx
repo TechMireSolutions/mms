@@ -3,16 +3,16 @@ import { RotateCcw, Trash2 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Payment } from '@/lib/data/financeData';
-import type { PaymentTrackerVisibleColumns } from '@/tenant/features/finance/components/PaymentTrackerList';
 
 interface PaymentTrackerListTableProps {
   payments: Payment[];
   selectedIds: string[];
-  visibleColumns: PaymentTrackerVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   visibleColCount: number;
   allSelected: boolean;
   canDelete: boolean;
@@ -30,7 +30,7 @@ interface PaymentTrackerListTableProps {
 export function PaymentTrackerListTable({
   payments,
   selectedIds,
-  visibleColumns,
+  isColumnVisible,
   visibleColCount,
   allSelected,
   canDelete,
@@ -72,37 +72,37 @@ export function PaymentTrackerListTable({
               />
             </th>
           )}
-          {visibleColumns.date && (
+          {isColumnVisible("date") && (
             <ResizableTableHead columnKey="date" width={getColumnWidth?.('date')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
               {t('finance.columns.paymentDate')}
             </ResizableTableHead>
           )}
-          {visibleColumns.student && (
+          {isColumnVisible("student") && (
             <ResizableTableHead columnKey="student" width={getColumnWidth?.('student')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
               {t('finance.columns.student')}
             </ResizableTableHead>
           )}
-          {visibleColumns.invoice && (
+          {isColumnVisible("invoice") && (
             <ResizableTableHead columnKey="invoice" width={getColumnWidth?.('invoice')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
               {t('finance.columns.invoice')}
             </ResizableTableHead>
           )}
-          {visibleColumns.amount && (
+          {isColumnVisible("amount") && (
             <ResizableTableHead columnKey="amount" width={getColumnWidth?.('amount')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
               {t('finance.columns.amount')}
             </ResizableTableHead>
           )}
-          {visibleColumns.method && (
+          {isColumnVisible("method") && (
             <ResizableTableHead columnKey="method" width={getColumnWidth?.('method')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
               {t('finance.columns.method')}
             </ResizableTableHead>
           )}
-          {visibleColumns.receivedBy && (
+          {isColumnVisible("receivedBy") && (
             <ResizableTableHead columnKey="receivedBy" width={getColumnWidth?.('receivedBy')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
               {t('finance.columns.receivedBy')}
             </ResizableTableHead>
           )}
-          {visibleColumns.note && (
+          {isColumnVisible("note") && (
             <ResizableTableHead columnKey="note" width={getColumnWidth?.('note')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
               {t('finance.columns.note')}
             </ResizableTableHead>
@@ -112,7 +112,7 @@ export function PaymentTrackerListTable({
       </thead>
       <tbody className="divide-y divide-border/50">
         {payments.length === 0 ? (
-          <tr><td colSpan={visibleColCount || 1} className="py-10 text-center text-sm text-muted-foreground">{t('finance.empty.payments')}</td></tr>
+          <tr><td colSpan={visibleColCount || 1} className="py-4"><EmptyState title={t('finance.empty.payments')} compact /></td></tr>
         ) : (
           payments.map((payment, index) => (
             <motion.tr
@@ -131,13 +131,13 @@ export function PaymentTrackerListTable({
                   />
                 </td>
               )}
-              {visibleColumns.date && <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>}
-              {visibleColumns.student && <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>}
-              {visibleColumns.invoice && <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{payment.invoiceId}</td>}
-              {visibleColumns.amount && <td className="px-4 py-3 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</td>}
-              {visibleColumns.method && <td className="px-4 py-3"><StatusBadge status={payment.method} config={methodConfig} size="sm" /></td>}
-              {visibleColumns.receivedBy && <td className="px-4 py-3 text-sm text-muted-foreground">{payment.receivedBy || '—'}</td>}
-              {visibleColumns.note && <td className="max-w-[10rem] truncate px-4 py-3 text-sm text-muted-foreground">{payment.note || '—'}</td>}
+              {isColumnVisible("date") && <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>}
+              {isColumnVisible("student") && <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>}
+              {isColumnVisible("invoice") && <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{payment.invoiceId}</td>}
+              {isColumnVisible("amount") && <td className="px-4 py-3 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</td>}
+              {isColumnVisible("method") && <td className="px-4 py-3"><StatusBadge status={payment.method} config={methodConfig} size="sm" /></td>}
+              {isColumnVisible("receivedBy") && <td className="px-4 py-3 text-sm text-muted-foreground">{payment.receivedBy || '—'}</td>}
+              {isColumnVisible("note") && <td className="max-w-[10rem] truncate px-4 py-3 text-sm text-muted-foreground">{payment.note || '—'}</td>}
               {canDelete && <td className="px-3 py-3">{renderRowAction(payment.id)}</td>}
             </motion.tr>
           ))

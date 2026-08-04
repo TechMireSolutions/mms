@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { formatDate } from "@mms/shared";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Account } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -30,9 +31,11 @@ export function GeneralLedgerEntries({
 
   if (linesWithRunning.length === 0) {
     return (
-      <div className="py-12 text-center rounded-xl border border-border text-sm text-muted-foreground" role="status">
-        {dateFrom || dateTo ? t("accounting.ledger.noPostedTransactionsPeriod") : t("accounting.ledger.noPostedTransactions")}
-      </div>
+      <EmptyState
+        variant="dashed"
+        title={dateFrom || dateTo ? t("accounting.ledger.noPostedTransactionsPeriod") : t("accounting.ledger.noPostedTransactions")}
+        compact
+      />
     );
   }
 

@@ -11,7 +11,6 @@ import {
 import {
   computeJournalGrandTotals,
   filterJournalEntries,
-  resolveJournalVisibleColumns,
 } from '@/tenant/features/accounting/components/journalEntriesControllerFilters';
 import {
   createJournalBulkActionHandler,
@@ -44,7 +43,6 @@ export function useJournalEntriesController({
   onRestore,
   onBulkDelete,
   onBulkRestore,
-  isColumnVisible,
 }: JournalEntriesProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
@@ -91,11 +89,6 @@ export function useJournalEntriesController({
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
-
-  const { showRef, showDate, showDescription, showTags, showDebit, showCredit, showStatus } = useMemo(
-    () => resolveJournalVisibleColumns(isColumnVisible),
-    [isColumnVisible],
-  );
 
   const actionDeps = {
     entries,
@@ -161,13 +154,6 @@ export function useJournalEntriesController({
     filtered,
     selectedIds,
     allFilteredSelected,
-    showRef,
-    showDate,
-    showDescription,
-    showTags,
-    showDebit,
-    showCredit,
-    showStatus,
     grandDebit,
     grandCredit,
     search,

@@ -1,6 +1,8 @@
-import { Archive, BookOpen, Plus, RotateCcw } from "lucide-react";
+import { Archive, BookOpen, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Button } from "@/components/ui/button";
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
+import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ListPagination } from "@/components/ui/ListPagination";
@@ -38,12 +40,7 @@ interface SessionsWorkListProps {
   selectedIds: string[];
   allVisibleSelected: boolean;
   someVisibleSelected: boolean;
-  showName: boolean;
-  showType: boolean;
-  showDuration: boolean;
-  showFee: boolean;
-  showEnrolled: boolean;
-  showStatus: boolean;
+  isColumnVisible: (key: string) => boolean;
   sortField: SessionSortField;
   sortDir: "asc" | "desc";
   columnLayout: SessionsWorkColumnLayout;
@@ -76,12 +73,7 @@ export function SessionsWorkList({
   selectedIds,
   allVisibleSelected,
   someVisibleSelected,
-  showName,
-  showType,
-  showDuration,
-  showFee,
-  showEnrolled,
-  showStatus,
+  isColumnVisible,
   sortField,
   sortDir,
   columnLayout,
@@ -103,24 +95,27 @@ export function SessionsWorkList({
 
   return (
     <>
-      {selectedIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/90 border border-primary/20 shadow-md backdrop-blur-md">
-          <span className="text-sm font-semibold text-foreground">
-            {t("sessions.selectedCount", { count: selectedIds.length })}
-          </span>
-          {showDeleted ? (
-            <Button type="button" variant="outline" onClick={onRequestBulkRestore}>
-              <RotateCcw className="w-4 h-4 me-2" />
-              {t("sessions.restore")}
-            </Button>
-          ) : (
-            <Button type="button" variant="destructive" onClick={onRequestBulkDelete}>
-              <Archive className="w-4 h-4 me-2" />
-              {t("sessions.archive")}
-            </Button>
-          )}
-        </div>
-      )}
+      <BulkSelectionBar
+        placement="floating"
+        selectedCount={selectedIds.length}
+        countLabel={t("sessions.selectedCount", { count: selectedIds.length })}
+      >
+        {showDeleted ? (
+          <BulkSelectionRestoreAction
+            label={t("sessions.restore")}
+            onClick={onRequestBulkRestore}
+          />
+        ) : (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onRequestBulkDelete}
+            className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
+          >
+            <Archive className="w-3.5 h-3.5" /> {t("sessions.archive")}
+          </Button>
+        )}
+      </BulkSelectionBar>
 
       {isError ? (
         <ErrorState
@@ -150,12 +145,7 @@ export function SessionsWorkList({
           selectedIds={selectedIds}
           allVisibleSelected={allVisibleSelected}
           someVisibleSelected={someVisibleSelected}
-          showName={showName}
-          showType={showType}
-          showDuration={showDuration}
-          showFee={showFee}
-          showEnrolled={showEnrolled}
-          showStatus={showStatus}
+          isColumnVisible={isColumnVisible}
           sortField={sortField}
           sortDir={sortDir}
           columnLayout={columnLayout}

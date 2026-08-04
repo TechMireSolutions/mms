@@ -20,7 +20,7 @@ export function ObligationCollectionListCards(props: ObligationCollectionListCar
   const {
     collections,
     selectedIds,
-    visibleColumns,
+    isColumnVisible,
     canDelete,
     showDeleted,
     paymentModeConfig,
@@ -54,15 +54,15 @@ export function ObligationCollectionListCards(props: ObligationCollectionListCar
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                {visibleColumns.receiptNo && (
+                {isColumnVisible("receiptNo") && (
                   <p className="font-mono text-xs font-bold text-primary">{collection.receipt_no}</p>
                 )}
-                {visibleColumns.sender && (
+                {isColumnVisible("sender") && (
                   <p className="truncate text-sm font-semibold text-foreground">{sender?.name || "—"}</p>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {visibleColumns.amount && (
+                {isColumnVisible("amount") && (
                   <span className="text-sm font-bold text-foreground">
                     {formatObligationCollectionAmount(collection)}
                   </span>
@@ -77,13 +77,13 @@ export function ObligationCollectionListCards(props: ObligationCollectionListCar
               </div>
             </div>
             <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              {visibleColumns.receivedDate && (
+              {isColumnVisible("receivedDate") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.receivedDate")}</dt>
                   <dd className="text-foreground">{formatDate(collection.received_date)}</dd>
                 </div>
               )}
-              {visibleColumns.obligationType && (
+              {isColumnVisible("obligationType") && (
                 <div>
                   <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("obligations.columns.obligationType")}</dt>
                   <dd>
@@ -93,7 +93,7 @@ export function ObligationCollectionListCards(props: ObligationCollectionListCar
                   </dd>
                 </div>
               )}
-              {visibleColumns.repMujtahid && (
+              {isColumnVisible("repMujtahid") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.repMujtahid")}</dt>
                   <dd className="text-foreground">
@@ -102,7 +102,7 @@ export function ObligationCollectionListCards(props: ObligationCollectionListCar
                   </dd>
                 </div>
               )}
-              {visibleColumns.paymentMode && (
+              {isColumnVisible("paymentMode") && (
                 <div>
                   <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("obligations.columns.paymentMode")}</dt>
                   <dd><StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" /></dd>

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { User, Users2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DistributionRowActions } from "@/tenant/features/hasanat/components/DistributionRowActions";
@@ -21,7 +22,7 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
     distributions,
     denoms,
     selectedIds,
-    visibleColumns,
+    isColumnVisible,
     statusLabels,
     statusConfig,
     canWrite,
@@ -40,7 +41,7 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
   return (
     <div className="space-y-3 p-3">
       {distributions.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{t("hasanat.empty.distributions")}</p>
+        <EmptyState title={t("hasanat.empty.distributions")} compact />
       ) : (
         distributions.map((distribution, index) => {
           const denomination = getDistributionDenomination(denoms, distribution.denominationId);
@@ -54,7 +55,7 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0">
-                  {visibleColumns.recipient && (
+                  {isColumnVisible("recipient") && (
                     <div className="flex items-center gap-1.5">
                       {distribution.recipientType === "faculty"
                         ? <Users2 className="w-3 h-3 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -62,14 +63,14 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
                       <h4 className="min-w-0 truncate text-sm font-semibold text-foreground">{distribution.recipientName}</h4>
                     </div>
                   )}
-                  {visibleColumns.card && (
-                    <div className={`flex items-center gap-2 ${visibleColumns.recipient ? "mt-1" : ""}`}>
+                  {isColumnVisible("card") && (
+                    <div className={`flex items-center gap-2 ${isColumnVisible("recipient") ? "mt-1" : ""}`}>
                       <span className="text-base" aria-hidden="true">{denomination?.icon || "⭐"}</span>
                       <div className="min-w-0">
-                        {!visibleColumns.recipient && (
+                        {!isColumnVisible("recipient") && (
                           <h4 className="truncate text-sm font-semibold text-foreground">{distribution.denominationName}</h4>
                         )}
-                        {visibleColumns.recipient && (
+                        {isColumnVisible("recipient") && (
                           <p className="truncate text-xs text-muted-foreground">{distribution.denominationName}</p>
                         )}
                         {denomination && (
@@ -81,36 +82,36 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
                     </div>
                   )}
                 </div>
-                {visibleColumns.status && (
+                {isColumnVisible("status") && (
                   <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
                 )}
               </div>
               <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                {visibleColumns.recipientClass && (
+                {isColumnVisible("recipientClass") && (
                   <div>
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.recipientClass")}</dt>
                     <dd className="text-foreground">{distribution.recipientClass || "—"}</dd>
                   </div>
                 )}
-                {visibleColumns.quantity && (
+                {isColumnVisible("quantity") && (
                   <div>
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.quantity")}</dt>
                     <dd className="font-bold text-foreground">{distribution.quantity}</dd>
                   </div>
                 )}
-                {visibleColumns.reason && (
-                  <div className={visibleColumns.recipientClass || visibleColumns.quantity ? "" : "sm:col-span-2"}>
+                {isColumnVisible("reason") && (
+                  <div className={isColumnVisible("recipientClass") || isColumnVisible("quantity") ? "" : "sm:col-span-2"}>
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.reason")}</dt>
                     <dd className="break-words text-foreground">{distribution.reason || "—"}</dd>
                   </div>
                 )}
-                {visibleColumns.issuedDate && (
+                {isColumnVisible("issuedDate") && (
                   <div>
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.issuedDate")}</dt>
                     <dd className="text-foreground">{distribution.issuedDate}</dd>
                   </div>
                 )}
-                {visibleColumns.issuedBy && (
+                {isColumnVisible("issuedBy") && (
                   <div>
                     <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.issuedBy")}</dt>
                     <dd className="break-words text-foreground">{distribution.issuedBy || "—"}</dd>

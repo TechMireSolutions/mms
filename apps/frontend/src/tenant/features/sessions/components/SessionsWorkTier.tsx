@@ -149,12 +149,7 @@ export function SessionsWorkTier({
         selectedIds={selectedIds}
         allVisibleSelected={allVisibleSelected}
         someVisibleSelected={someVisibleSelected}
-        showName={columnLayout.isColumnVisible("name")}
-        showType={columnLayout.isColumnVisible("type")}
-        showDuration={columnLayout.isColumnVisible("duration")}
-        showFee={columnLayout.isColumnVisible("fee")}
-        showEnrolled={columnLayout.isColumnVisible("enrolled")}
-        showStatus={columnLayout.isColumnVisible("status")}
+        isColumnVisible={columnLayout.isColumnVisible}
         sortField={sortField}
         sortDir={sortDir}
         columnLayout={columnLayout}

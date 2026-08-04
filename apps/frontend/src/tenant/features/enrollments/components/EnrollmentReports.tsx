@@ -6,7 +6,7 @@ import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface EnrollmentReportsProps {
@@ -67,36 +67,38 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
 
   return (
     <section className="space-y-6" aria-label={t("enrollments.reports.aria")}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          icon={Users}
-          label={t("enrollments.metrics.total")}
-          value={total}
-          sub={t("enrollments.reports.confirmedSub", { count: confirmed })}
-          accent="primary"
-        />
-        <StatCard
-          icon={TrendingUp}
-          label={t("enrollments.metrics.confirmed")}
-          value={confirmed}
-          sub={t("enrollments.reports.pendingSub", { count: pending })}
-          accent="success"
-        />
-        <StatCard
-          icon={BookOpen}
-          label={t("enrollments.metrics.cancelled")}
-          value={cancelled}
-          sub={t("enrollments.reports.cancelledSub", { count: cancelled, total })}
-          accent="destructive"
-        />
-        <StatCard
-          icon={DollarSign}
-          label={t("enrollments.reports.revenueDue")}
-          value={formatCurrency(totalFees)}
-          sub={t("enrollments.reports.paidSub", { amount: formatCurrency(paidFees) })}
-          accent="warning"
-        />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          {
+            icon: Users,
+            label: t("enrollments.metrics.total"),
+            value: total,
+            sub: t("enrollments.reports.confirmedSub", { count: confirmed }),
+            accent: "primary",
+          },
+          {
+            icon: TrendingUp,
+            label: t("enrollments.metrics.confirmed"),
+            value: confirmed,
+            sub: t("enrollments.reports.pendingSub", { count: pending }),
+            accent: "success",
+          },
+          {
+            icon: BookOpen,
+            label: t("enrollments.metrics.cancelled"),
+            value: cancelled,
+            sub: t("enrollments.reports.cancelledSub", { count: cancelled, total }),
+            accent: "destructive",
+          },
+          {
+            icon: DollarSign,
+            label: t("enrollments.reports.revenueDue"),
+            value: formatCurrency(totalFees),
+            sub: t("enrollments.reports.paidSub", { amount: formatCurrency(paidFees) }),
+            accent: "warning",
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">

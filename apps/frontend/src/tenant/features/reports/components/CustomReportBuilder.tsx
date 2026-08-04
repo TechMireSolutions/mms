@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { X, Sliders } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CustomReportBuilderConfigPanel } from './CustomReportBuilderConfigPanel';
 import { CustomReportBuilderPreviewPanel } from './CustomReportBuilderPreviewPanel';
@@ -46,7 +47,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
-      className="rounded-3xl border border-border/50 bg-card/45 backdrop-blur-2xl shadow-2xl overflow-hidden text-start"
+      className={`${WORK_SURFACE} overflow-hidden text-start`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-5 border-b border-border/50 bg-card/30">
         <div className="flex min-w-0 items-center gap-3">

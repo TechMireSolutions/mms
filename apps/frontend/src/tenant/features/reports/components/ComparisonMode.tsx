@@ -21,6 +21,7 @@ import {
 import { translateComparisonMetricName } from "./comparisonModeMetricLabels";
 import { ComparisonModeSelectors } from "./ComparisonModeSelectors";
 import type { ComparisonDataItem, ComparisonModeProps, DateRange } from "./comparisonModeTypes";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 /**
  * ComparisonMode component that displays side-by-side session or date range comparisons.
@@ -154,7 +155,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
-      className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm overflow-hidden"
+      className={`${WORK_SURFACE} overflow-hidden`}
     >
       <div className="flex flex-col gap-3 px-4 py-3 bg-primary/5 border-b border-border/50 text-start sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">

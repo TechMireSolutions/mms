@@ -1,10 +1,13 @@
-import { ChevronDown, Download, Mail, MessageCircle, MessageSquare, RotateCcw, Tag } from "lucide-react";
+import { ChevronDown, Download, Tag } from "lucide-react";
 import type { ReactElement } from "react";
 import {
   BulkSelectionBar,
   bulkSelectionActionClassName,
-  bulkSelectionRestoreClassName,
 } from "@/components/ui/BulkSelectionBar";
+import {
+  BulkSelectionMessagingActions,
+  BulkSelectionRestoreAction,
+} from "@/components/ui/BulkSelectionActions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -60,46 +63,22 @@ export function StudentListSelectionBar({
     >
       {showDeleted ? (
         canDelete && (
-          <Button
-            type="button"
-            variant="outline"
+          <BulkSelectionRestoreAction
+            label={t("students.bulkRestore")}
             onClick={onRequestBulkRestore}
-            className={bulkSelectionRestoreClassName}
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> {t("students.bulkRestore")}
-          </Button>
+          />
         )
       ) : (
         <>
           {canWriteMessaging && (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onMessage("whatsapp")}
-                className={bulkSelectionActionClassName}
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-success" /> {t("students.list.actionWhatsApp")}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onMessage("sms")}
-                className={bulkSelectionActionClassName}
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-info" /> {t("students.list.actionSms")}
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onMessage("email")}
-                className={bulkSelectionActionClassName}
-              >
-                <Mail className="w-3.5 h-3.5 text-primary" /> {t("students.list.actionEmail")}
-              </Button>
-            </>
+            <BulkSelectionMessagingActions
+              onChannel={onMessage}
+              labels={{
+                whatsapp: t("students.list.actionWhatsApp"),
+                sms: t("students.list.actionSms"),
+                email: t("students.list.actionEmail"),
+              }}
+            />
           )}
 
           {canExport && onBulkExport && (

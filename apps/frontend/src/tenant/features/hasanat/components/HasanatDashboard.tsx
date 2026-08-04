@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { motion } from "framer-motion";
 import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
@@ -51,15 +51,6 @@ export function HasanatDashboard({
     [t, palette, totalActive, totalRedeemed, totalReturned, totalRemaining],
   );
 
-  const stats = [
-    { label: t("hasanat.stats.totalStock"), value: totalStock, icon: Layers, color: "text-primary", bg: "bg-primary/10", border: "border-primary/10", accent: "primary" as const },
-    { label: t("hasanat.stats.available"), value: totalRemaining, icon: Package, color: "text-success", bg: "bg-success/10", border: "border-success/20", accent: "success" as const },
-    { label: t("hasanat.stats.distributed"), value: totalDistributed, icon: Star, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20", accent: "warning" as const },
-    { label: t("hasanat.stats.redeemed"), value: totalRedeemed, icon: Gift, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", accent: "info" as const },
-    { label: t("hasanat.stats.active"), value: totalActive, icon: TrendingUp, color: "text-info", bg: "bg-info/10", border: "border-info/20", accent: "info" as const },
-    { label: t("hasanat.stats.returned"), value: totalReturned, icon: RotateCcw, color: "text-muted-foreground", bg: "bg-muted", border: "border-border", accent: "destructive" as const },
-  ];
-
   // Per-denomination stock
   interface DenStockEntry extends Denomination {
     total: number;
@@ -75,19 +66,17 @@ export function HasanatDashboard({
 
   return (
     <div className="space-y-5">
-      {/* Stat cards */}
-      <section aria-label={t("hasanat.dashboard.statsAria")} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {stats.map((stat, index) => (
-          <StatCard
-            key={stat.label}
-            icon={stat.icon}
-            label={stat.label}
-            value={stat.value}
-            accent={stat.accent}
-            delayIndex={index}
-            variant="compact"
-          />
-        ))}
+      <section aria-label={t("hasanat.dashboard.statsAria")}>
+        <ModuleCommandMetricsGrid
+          items={[
+            { label: t("hasanat.stats.totalStock"), value: totalStock, icon: Layers, accent: "primary" },
+            { label: t("hasanat.stats.available"), value: totalRemaining, icon: Package, accent: "success" },
+            { label: t("hasanat.stats.distributed"), value: totalDistributed, icon: Star, accent: "warning" },
+            { label: t("hasanat.stats.redeemed"), value: totalRedeemed, icon: Gift, accent: "info" },
+            { label: t("hasanat.stats.active"), value: totalActive, icon: TrendingUp, accent: "info" },
+            { label: t("hasanat.stats.returned"), value: totalReturned, icon: RotateCcw, accent: "destructive" },
+          ]}
+        />
       </section>
 
       {/* Charts row */}

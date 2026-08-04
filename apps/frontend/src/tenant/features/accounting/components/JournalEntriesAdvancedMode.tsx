@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
+import { Trash2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
+import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import { Button } from "@/components/ui/button";
 import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
 import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
@@ -13,16 +17,6 @@ import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 type JournalMode = "simple" | "advanced";
 type JournalModalMode = "new" | "edit" | "view" | null;
 
-interface JournalEntriesVisibleColumns {
-  ref: boolean;
-  date: boolean;
-  description: boolean;
-  tags: boolean;
-  debit: boolean;
-  credit: boolean;
-  status: boolean;
-}
-
 interface JournalEntriesAdvancedModeProps {
   mode: JournalMode;
   modeTabs: Array<{ key: JournalMode; label: string }>;
@@ -32,7 +26,7 @@ interface JournalEntriesAdvancedModeProps {
   fiscalYears: FiscalYear[];
   selectedIds: string[];
   allFilteredSelected: boolean;
-  visibleColumns: JournalEntriesVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   journalStatusConfig: Record<string, StatusBadgeConfigItem>;
   grandDebit: number;
   grandCredit: number;
@@ -76,6 +70,30 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
 
   return (
     <section aria-label={t("accounting.journal.advancedAria")} className="space-y-4">
+      {props.canDelete && (
+        <BulkSelectionBar
+          placement="floating"
+          selectedCount={props.selectedIds.length}
+          countLabel={t("accounting.trash.selected", { count: props.selectedIds.length })}
+        >
+          {props.showDeleted ? (
+            <BulkSelectionRestoreAction
+              label={t("accounting.trash.restore")}
+              onClick={props.onBulkAction}
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={props.onBulkAction}
+              className="flex min-h-11 items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.delete")}
+            </Button>
+          )}
+        </BulkSelectionBar>
+      )}
+
       <JournalEntriesAdvancedToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -84,9 +102,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         search={props.search}
         statusFilter={props.statusFilter}
         showFilters={props.showFilters}
-        selectedIds={props.selectedIds}
         canWrite={props.canWrite}
-        canDelete={props.canDelete}
         showDeleted={props.showDeleted}
         columnCustomizer={props.columnCustomizer}
         onModeChange={props.onModeChange}
@@ -94,7 +110,6 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         onStatusFilterChange={props.onStatusFilterChange}
         onShowFiltersChange={props.onShowFiltersChange}
         onOpenNew={props.onOpenNew}
-        onBulkAction={props.onBulkAction}
         onExportCsv={props.onExportCsv}
       />
 
@@ -115,7 +130,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         selectedIds={props.selectedIds}
         canDelete={props.canDelete}
         allFilteredSelected={props.allFilteredSelected}
-        visibleColumns={props.visibleColumns}
+        isColumnVisible={props.isColumnVisible}
         journalStatusConfig={props.journalStatusConfig}
         grandDebit={props.grandDebit}
         grandCredit={props.grandCredit}

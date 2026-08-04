@@ -1,5 +1,5 @@
 import type { Dispatch, JSX, SetStateAction } from 'react';
-import { ChevronDown, Filter, Plus, RotateCcw, Search, Trash2, X } from 'lucide-react';
+import { ChevronDown, Filter, Plus, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,18 +25,14 @@ interface QuestionBankToolbarProps {
   search: string;
   filterCats: string[];
   filterDiff: string[];
-  selectedCount: number;
   hideToolbarAdd: boolean;
   canWrite: boolean;
-  canDelete: boolean;
   showDeleted: boolean;
-  canBulkTrash: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onFilterCatsChange: Dispatch<SetStateAction<string[]>>;
   onFilterDiffChange: Dispatch<SetStateAction<string[]>>;
   onAddQuestion: () => void;
-  onBulkTrashAction: () => void;
 }
 
 export function QuestionBankToolbar({
@@ -46,18 +42,14 @@ export function QuestionBankToolbar({
   search,
   filterCats,
   filterDiff,
-  selectedCount,
   hideToolbarAdd,
   canWrite,
-  canDelete,
   showDeleted,
-  canBulkTrash,
   columnCustomizer,
   onSearchChange,
   onFilterCatsChange,
   onFilterDiffChange,
   onAddQuestion,
-  onBulkTrashAction,
 }: QuestionBankToolbarProps): JSX.Element {
   const { t } = useTranslation();
 
@@ -169,18 +161,6 @@ export function QuestionBankToolbar({
         >
           <Plus className="h-3.5 w-3.5" aria-hidden />
           {t('questionBank.addQuestion')}
-        </Button>
-      )}
-      {canDelete && selectedCount > 0 && canBulkTrash && (
-        <Button
-          type="button"
-          size="sm"
-          variant={showDeleted ? 'outline' : 'destructive'}
-          onClick={onBulkTrashAction}
-          className="gap-1.5"
-        >
-          {showDeleted ? <RotateCcw className="h-3.5 w-3.5" aria-hidden /> : <Trash2 className="h-3.5 w-3.5" aria-hidden />}
-          {showDeleted ? t('questionBank.trash.restore') : t('common.delete')} ({selectedCount})
         </Button>
       )}
       <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />

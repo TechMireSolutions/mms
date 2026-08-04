@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { formatDateTime, todayISO, type AppTranslationKey } from "@mms/shared";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -150,11 +151,13 @@ export function AuditLog({ filters }: AuditLogProps) {
 
       {/* Log */}
       {log.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <ClipboardList className="w-10 h-10 text-muted-foreground/30 mb-3" />
-          <p className="text-sm font-semibold text-foreground">{t("attendance.audit.emptyTitle")}</p>
-          <p className="text-xs text-muted-foreground mt-1">{t("attendance.audit.emptyDesc")}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={ClipboardList}
+          title={t("attendance.audit.emptyTitle")}
+          description={t("attendance.audit.emptyDesc")}
+          compact
+        />
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
           <div className="space-y-3 p-3 md:hidden">

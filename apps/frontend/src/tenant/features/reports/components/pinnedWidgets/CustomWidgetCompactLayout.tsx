@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { Switch } from "@/components/ui/switch";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { METADATA_FIELDS, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import { ProgressRing } from "@/tenant/features/reports/components/pinnedWidgets/WidgetProgressRing";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
@@ -56,7 +57,7 @@ export function CustomWidgetCompactLayout({
         whileTap={{ scale: 0.96 }}
         transition={{ type: "spring", stiffness: 450, damping: 20 }}
         onClick={() => onMetricClick(widget)}
-        className="w-[6.25rem] h-[6.25rem] p-2.5 text-center flex flex-col justify-between items-center rounded-2xl cursor-pointer outline-none select-none relative overflow-hidden surface-glass hover:border-primary/20 hover:shadow-md"
+        className={`w-[6.25rem] h-[6.25rem] p-2.5 text-center flex flex-col justify-between items-center cursor-pointer outline-none select-none relative overflow-hidden ${WORK_SURFACE} hover:border-primary/20 hover:shadow-md`}
         type="button"
       >
         <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
@@ -115,7 +116,7 @@ export function CustomWidgetCompactLayout({
 
   if (resolvedWidgetType === "switch") {
     return (
-      <div className="w-[6.25rem] h-[6.25rem] p-2 text-center flex flex-col justify-between items-center rounded-2xl surface-glass overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md">
+      <div className={`w-[6.25rem] h-[6.25rem] p-2 text-center flex flex-col justify-between items-center ${WORK_SURFACE} overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md`}>
         <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
           {resolveWidgetTitle(widget, t)}
         </span>
@@ -166,7 +167,7 @@ function CompactMetricButton({
       className={`w-[6.25rem] h-[6.25rem] ${isProgress ? "p-1.5" : "p-2"} text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
         alertScheme
           ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse`
-          : "surface-glass hover:border-primary/20 hover:shadow-md"
+          : `${WORK_SURFACE} hover:border-primary/20 hover:shadow-md`
       }`}
       type="button"
     >

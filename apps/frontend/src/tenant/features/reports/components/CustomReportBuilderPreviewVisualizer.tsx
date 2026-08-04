@@ -1,5 +1,6 @@
 import type { JSX } from "react";
 import { Settings } from "lucide-react";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type PreviewRow } from "./customReportBuilderFields";
 
@@ -17,7 +18,7 @@ export function CustomReportBuilderPreviewVisualizer({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-3xl border border-border/80 overflow-hidden shadow-xl bg-card/65 backdrop-blur-md flex-1 min-h-[13.75rem]">
+    <div className={`${WORK_SURFACE} overflow-hidden flex-1 min-h-[13.75rem]`}>
       {previewData.length === 0 ? (
         <div className="w-full h-full flex flex-col justify-center items-center gap-2 py-12 text-muted-foreground text-xs italic">
           <Settings className="w-7 h-7 animate-spin text-muted-foreground opacity-30" />

@@ -1,5 +1,7 @@
 import React from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { School } from "lucide-react";
 import { TeacherListCards } from "@/tenant/features/teachers/components/TeacherListCards";
@@ -23,7 +25,7 @@ export function TeacherListContent(props: TeacherListContentProps): React.JSX.El
   }
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl overflow-hidden shadow-sm">
+    <div className={cn(WORK_SURFACE, "overflow-hidden")}>
       {viewMode === "cards" ? <TeacherListCards {...props} /> : <TeacherListTable {...props} />}
     </div>
   );

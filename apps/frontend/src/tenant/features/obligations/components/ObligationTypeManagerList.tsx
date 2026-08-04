@@ -1,6 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { ObligationType } from '@/lib/data/obligationsData';
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -41,7 +42,7 @@ export function ObligationTypeManagerList({
   return (
     <section aria-label={t("obligations.types")} className="rounded-xl border border-border overflow-hidden">
       {types.length === 0 ? (
-        <p className="px-4 py-10 text-center text-sm text-muted-foreground md:hidden">{t("obligations.types.empty")}</p>
+        <EmptyState title={t("obligations.types.empty")} compact className="md:hidden" />
       ) : (
         <div className="space-y-3 p-3 md:hidden">
           {types.map((obligationType) => (
@@ -84,7 +85,7 @@ export function ObligationTypeManagerList({
           </thead>
           <tbody className="divide-y divide-border">
             {types.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-10 text-center text-sm text-muted-foreground">{t("obligations.types.empty")}</td></tr>
+              <tr><td colSpan={4} className="py-4"><EmptyState title={t("obligations.types.empty")} compact /></td></tr>
             )}
             {types.map((obligationType) => (
               <tr key={obligationType.id} className="hover:bg-muted/20 transition-colors">

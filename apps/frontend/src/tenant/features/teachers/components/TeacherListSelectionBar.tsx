@@ -1,10 +1,14 @@
 import type { ReactElement } from 'react';
-import { ChevronDown, Mail, MessageCircle, MessageSquare, RotateCcw, Tag } from 'lucide-react';
+import { ChevronDown, Tag } from 'lucide-react';
 import {
   BulkSelectionBar,
   bulkSelectionActionClassName,
-  bulkSelectionRestoreClassName,
 } from '@/components/ui/BulkSelectionBar';
+import {
+  BulkSelectionMessagingActions,
+  BulkSelectionRestoreAction,
+  type BulkSelectionMessageChannel,
+} from '@/components/ui/BulkSelectionActions';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -49,6 +53,12 @@ export function TeacherListSelectionBar({
 }: TeacherListSelectionBarProps): ReactElement {
   const { t } = useTranslation();
 
+  const handleChannel = (channel: BulkSelectionMessageChannel): void => {
+    if (channel === 'whatsapp') onWhatsApp?.(selectedTeachers);
+    else if (channel === 'sms') onSms?.(selectedTeachers);
+    else onEmail?.(selectedTeachers);
+  };
+
   return (
     <BulkSelectionBar
       placement="floating"
@@ -57,46 +67,27 @@ export function TeacherListSelectionBar({
     >
       {showDeleted ? (
         canDelete && (
-          <Button
-            type="button"
-            variant="outline"
+          <BulkSelectionRestoreAction
+            label={t('teachers.bulkRestore')}
             onClick={onRequestBulkRestore}
-            className={bulkSelectionRestoreClassName}
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> {t('teachers.bulkRestore')}
-          </Button>
+          />
         )
       ) : (
         <>
-          {onWhatsApp && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onWhatsApp(selectedTeachers)}
-              className={bulkSelectionActionClassName}
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-success" /> {t('teachers.list.actionWhatsApp')}
-            </Button>
-          )}
-          {onSms && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onSms(selectedTeachers)}
-              className={bulkSelectionActionClassName}
-            >
-              <MessageSquare className="w-3.5 h-3.5 text-info" /> {t('teachers.list.actionSms')}
-            </Button>
-          )}
-          {onEmail && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onEmail(selectedTeachers)}
-              className={bulkSelectionActionClassName}
-            >
-              <Mail className="w-3.5 h-3.5 text-primary" /> {t('teachers.list.actionEmail')}
-            </Button>
+          {(onWhatsApp || onSms || onEmail) && (
+            <BulkSelectionMessagingActions
+              onChannel={handleChannel}
+              labels={{
+                whatsapp: t('teachers.list.actionWhatsApp'),
+                sms: t('teachers.list.actionSms'),
+                email: t('teachers.list.actionEmail'),
+              }}
+              channels={{
+                whatsapp: Boolean(onWhatsApp),
+                sms: Boolean(onSms),
+                email: Boolean(onEmail),
+              }}
+            />
           )}
           {canWrite && onBulkStatusChange && (
             <DropdownMenu>

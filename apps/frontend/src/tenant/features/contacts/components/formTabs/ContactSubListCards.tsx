@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CardRemoveButton } from "@/components/ui/FormPrimitives";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 
@@ -57,20 +58,6 @@ export function ListFieldCard({
   );
 }
 
-export interface EmptyListCardProps {
-  icon: ElementType;
-  message: string;
-}
-
-export function EmptyListCard({ icon: Icon, message }: EmptyListCardProps): JSX.Element {
-  return (
-    <div className="text-center py-8 border border-dashed border-border/80 rounded-2xl bg-muted/5 backdrop-blur-sm">
-      <Icon className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-      <p className="text-xs text-muted-foreground">{message}</p>
-    </div>
-  );
-}
-
 export function FieldInlineError({ message }: { message?: string }): JSX.Element | null {
   if (!message) return null;
   return <p className="text-xs text-destructive mt-1 font-medium">{message}</p>;
@@ -78,7 +65,7 @@ export function FieldInlineError({ message }: { message?: string }): JSX.Element
 
 export interface ContactSubListShellProps {
   isEmpty: boolean;
-  emptyIcon: ElementType;
+  emptyIcon: React.ComponentType<{ className?: string }>;
   emptyMessage: string;
   addLabel: string;
   onAdd: () => void;
@@ -107,7 +94,9 @@ export function ContactSubListShell({
 
   return (
     <div className="space-y-3 text-start">
-      {isEmpty ? <EmptyListCard icon={emptyIcon} message={emptyMessage} /> : null}
+      {isEmpty ? (
+        <EmptyState variant="dashed" icon={emptyIcon} title={emptyMessage} compact />
+      ) : null}
       <div className="space-y-3">{children}</div>
       {allowAdd ? (
         <Button

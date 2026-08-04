@@ -1,5 +1,6 @@
 import { formatDate } from "@mms/shared";
 import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -17,9 +18,7 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
 
   if (rows.length === 0) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground rounded-xl border border-dashed border-border" role="status">
-        {t("accounting.cashbook.noTransactions")}
-      </div>
+      <EmptyState variant="dashed" title={t("accounting.cashbook.noTransactions")} compact />
     );
   }
 

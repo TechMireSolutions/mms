@@ -10,12 +10,13 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
-import { EnrollmentListContent, type EnrollmentListVisibleColumns } from "@/tenant/features/enrollments/components/EnrollmentListContent";
+import { EnrollmentListContent } from "@/tenant/features/enrollments/components/EnrollmentListContent";
 import { EnrollmentListToolbar } from "@/tenant/features/enrollments/components/EnrollmentListToolbar";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 const PAGE_SIZE = 12;
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 interface EnrollmentListProps {
   enrollments: Enrollment[];
@@ -93,15 +94,7 @@ export function EnrollmentList({
 
   const { data: students = [] } = useStudentsByIds(paginatedEnrollments.map((enrollment) => enrollment.studentId));
 
-  const visibleColumns: EnrollmentListVisibleColumns = {
-    student: isColumnVisible ? isColumnVisible("student") : true,
-    session: isColumnVisible ? isColumnVisible("session") : true,
-    class: isColumnVisible ? isColumnVisible("class") : true,
-    enrolledDate: isColumnVisible ? isColumnVisible("enrolledDate") : true,
-    finalFee: isColumnVisible ? isColumnVisible("finalFee") : true,
-    status: isColumnVisible ? isColumnVisible("status") : true,
-    payment: isColumnVisible ? isColumnVisible("payment") : true,
-  };
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
@@ -142,7 +135,7 @@ export function EnrollmentList({
         page={page}
         pageSize={PAGE_SIZE}
         students={students}
-        visibleColumns={visibleColumns}
+        isColumnVisible={columnVisible}
         canWrite={canWrite}
         canDelete={canDelete}
         showDeleted={showDeleted}

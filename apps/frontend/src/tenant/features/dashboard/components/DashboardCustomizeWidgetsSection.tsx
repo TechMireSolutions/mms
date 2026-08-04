@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { isSeededDashboardWidget, resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 
 export interface DashboardCustomizeWidgetsSectionProps {
   customWidgets: CustomWidget[];
@@ -30,7 +31,7 @@ export function DashboardCustomizeWidgetsSection({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/65 dark:bg-card/40 backdrop-blur-2xl p-6 shadow-xl">
+    <div className={`${WORK_SURFACE} p-6`}>
       <fieldset className="space-y-4 border-0 p-0 m-0">
         <legend className="text-xs font-black text-primary uppercase tracking-widest leading-none mb-1">
           {t('dashboard.chartsWidgetsSettings')}

@@ -19,7 +19,7 @@ export function ExaminationsListCards(props: ExaminationsListCardsProps): React.
   const {
     exams,
     selectedIds,
-    visibleColumns,
+    isColumnVisible,
     classes,
     enrollments,
     canWrite,
@@ -49,41 +49,41 @@ export function ExaminationsListCards(props: ExaminationsListCardsProps): React.
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
-                {visibleColumns.name && <h4 className="truncate text-sm font-semibold text-foreground">{exam.name}</h4>}
-                {visibleColumns.subject && <p className="truncate text-xs text-muted-foreground">{exam.subject}</p>}
+                {isColumnVisible("name") && <h4 className="truncate text-sm font-semibold text-foreground">{exam.name}</h4>}
+                {isColumnVisible("subject") && <p className="truncate text-xs text-muted-foreground">{exam.subject}</p>}
               </div>
-              {visibleColumns.status && (
+              {isColumnVisible("status") && (
                 <div className="shrink-0">
                   <StatusBadge status={exam.status} config={statusConfig} size="sm" />
                 </div>
               )}
             </div>
             <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              {visibleColumns.date && (
+              {isColumnVisible("date") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.date")}</dt>
                   <dd className="text-foreground">{formatDate(exam.date, true)}</dd>
                 </div>
               )}
-              {visibleColumns.duration && (
+              {isColumnVisible("duration") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.duration")}</dt>
                   <dd className="text-foreground">{t("examinations.durationMinutes", { minutes: exam.duration })}</dd>
                 </div>
               )}
-              {visibleColumns.totalMarks && (
+              {isColumnVisible("totalMarks") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.totalMarks")}</dt>
                   <dd className="font-semibold text-foreground">{exam.totalMarks}</dd>
                 </div>
               )}
-              {visibleColumns.passingMarks && (
+              {isColumnVisible("passingMarks") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.passingMarks")}</dt>
                   <dd className="text-foreground">{exam.passingMarks}</dd>
                 </div>
               )}
-              {visibleColumns.classes && (
+              {isColumnVisible("classes") && (
                 <div className="sm:col-span-2">
                   <dt className="text-xs font-semibold text-muted-foreground">{t("examinations.columns.exam.classes")}</dt>
                   <dd className="text-foreground">

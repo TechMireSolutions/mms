@@ -8,6 +8,7 @@ import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { EventModal } from '@/tenant/features/sessions/components/tabs/EventModal';
 
 interface EventsTabProps {
@@ -76,10 +77,11 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps): Reac
       </header>
 
       {events.length === 0 ? (
-        <div className="py-12 text-center rounded-xl border-2 border-dashed border-border">
-          <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm font-medium text-foreground m-0">{t('sessions.events.emptyTitle')}</p>
-        </div>
+        <EmptyState
+          variant="dashed"
+          icon={Calendar}
+          title={t('sessions.events.emptyTitle')}
+        />
       ) : (
         <div className="relative">
           <div className="absolute start-[1.125rem] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />

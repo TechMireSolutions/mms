@@ -18,7 +18,7 @@ import {
   useStudentsPaginated,
   useStudentsWidgetAggregates,
 } from '@/tenant/hooks/collections/students';
-import { StatCard } from '@/components/ui/StatCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { ExportToolbar, type ExportColumn } from '@/components/ui/ExportToolbar';
 import { ListPagination } from '@/components/ui/ListPagination';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -236,12 +236,41 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={Users} label={t('students.report.totalStudents')} value={metrics?.total ?? 0} color="primary" isActive={!reportStatusFilter} onClick={() => { setReportStatusFilter(null); setActiveSubTab('list'); }} />
-        <StatCard icon={UserCheck} label={t('students.report.active')} value={metrics?.active ?? 0} color="green" isActive={reportStatusFilter === 'active'} onClick={() => { setReportStatusFilter(reportStatusFilter === 'active' ? null : 'active'); setActiveSubTab('list'); }} />
-        <StatCard icon={UserX} label={t('students.report.inactive')} value={metrics?.inactive ?? 0} color="red" isActive={reportStatusFilter === 'inactive'} onClick={() => { setReportStatusFilter(reportStatusFilter === 'inactive' ? null : 'inactive'); setActiveSubTab('list'); }} />
-        <StatCard icon={TrendingUp} label={t('students.report.genderSplit')} value={t('students.report.genderSplitValue', { male, female })} color="blue" onClick={() => { setActiveSubTab('list'); }} />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          {
+            icon: Users,
+            label: t('students.report.totalStudents'),
+            value: metrics?.total ?? 0,
+            accent: 'primary',
+            isActive: !reportStatusFilter,
+            onClick: () => { setReportStatusFilter(null); setActiveSubTab('list'); },
+          },
+          {
+            icon: UserCheck,
+            label: t('students.report.active'),
+            value: metrics?.active ?? 0,
+            accent: 'green',
+            isActive: reportStatusFilter === 'active',
+            onClick: () => { setReportStatusFilter(reportStatusFilter === 'active' ? null : 'active'); setActiveSubTab('list'); },
+          },
+          {
+            icon: UserX,
+            label: t('students.report.inactive'),
+            value: metrics?.inactive ?? 0,
+            accent: 'red',
+            isActive: reportStatusFilter === 'inactive',
+            onClick: () => { setReportStatusFilter(reportStatusFilter === 'inactive' ? null : 'inactive'); setActiveSubTab('list'); },
+          },
+          {
+            icon: TrendingUp,
+            label: t('students.report.genderSplit'),
+            value: t('students.report.genderSplitValue', { male, female }),
+            accent: 'blue',
+            onClick: () => { setActiveSubTab('list'); },
+          },
+        ]}
+      />
 
       <StudentReportFilterBanner
         hasBaseStatusFilter={Boolean(filters.status && filters.status !== 'all')}

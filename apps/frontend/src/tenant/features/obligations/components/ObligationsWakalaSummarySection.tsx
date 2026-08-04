@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ObligationDistribution } from "@/lib/data/obligationsData";
@@ -57,7 +58,7 @@ export function ObligationsWakalaSummarySection({
         />
       </header>
       {wakalaSummary.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground" role="alert">{t("obligations.summary.emptyFiltered")}</div>
+        <EmptyState variant="dashed" title={t("obligations.summary.emptyFiltered")} compact role="alert" />
       ) : (
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="space-y-3 p-3 md:hidden">

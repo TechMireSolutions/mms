@@ -5,15 +5,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { JournalEntry } from "@/lib/data/accountingData";
 
-export interface JournalEntriesVisibleColumns {
-  ref: boolean;
-  date: boolean;
-  description: boolean;
-  tags: boolean;
-  debit: boolean;
-  credit: boolean;
-  status: boolean;
-}
+export const JOURNAL_LEADING_COLUMN_KEYS = ["ref", "date", "description", "tags"] as const;
 
 export interface JournalEntriesListProps {
   viewMode: WorkDirectoryViewMode;
@@ -21,7 +13,7 @@ export interface JournalEntriesListProps {
   selectedIds: string[];
   canDelete: boolean;
   allFilteredSelected: boolean;
-  visibleColumns: JournalEntriesVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   journalStatusConfig: Record<string, StatusBadgeConfigItem>;
   grandDebit: number;
   grandCredit: number;
@@ -39,13 +31,8 @@ export function getJournalEntryLineTotals(entry: JournalEntry): { totalDebit: nu
   return { totalDebit, totalCredit };
 }
 
-export function getVisibleLeadingColumnCount(visibleColumns: JournalEntriesVisibleColumns): number {
-  return (
-    (visibleColumns.ref ? 1 : 0) +
-    (visibleColumns.date ? 1 : 0) +
-    (visibleColumns.description ? 1 : 0) +
-    (visibleColumns.tags ? 1 : 0)
-  );
+export function getVisibleLeadingColumnCount(isColumnVisible: (key: string) => boolean): number {
+  return JOURNAL_LEADING_COLUMN_KEYS.filter(isColumnVisible).length;
 }
 
 export function getJournalEntriesCountLabel(

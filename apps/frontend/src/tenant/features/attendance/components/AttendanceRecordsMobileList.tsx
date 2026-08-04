@@ -1,6 +1,7 @@
 import type React from 'react';
 import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/input';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
@@ -8,13 +9,7 @@ import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
 
 interface AttendanceRecordsMobileListProps {
   paginatedRecords: AttendanceRecord[];
-  showDate: boolean;
-  showClass: boolean;
-  showStudent: boolean;
-  showStatus: boolean;
-  showTimeIn: boolean;
-  showTimeOut: boolean;
-  showNotes: boolean;
+  isColumnVisible: (key: string) => boolean;
   editingRecord: AttendanceRecord | null;
   statuses: AttendanceStatus[];
   updateDraft: <K extends keyof AttendanceRecord>(key: K, value: AttendanceRecord[K]) => void;
@@ -25,13 +20,7 @@ interface AttendanceRecordsMobileListProps {
 
 export function AttendanceRecordsMobileList({
   paginatedRecords,
-  showDate,
-  showClass,
-  showStudent,
-  showStatus,
-  showTimeIn,
-  showTimeOut,
-  showNotes,
+  isColumnVisible,
   editingRecord,
   statuses,
   updateDraft,
@@ -40,7 +29,7 @@ export function AttendanceRecordsMobileList({
   t,
 }: AttendanceRecordsMobileListProps): React.JSX.Element {
   if (paginatedRecords.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">{t('attendance.empty.records')}</p>;
+    return <EmptyState title={t('attendance.empty.records')} compact />;
   }
 
   return (
@@ -53,10 +42,10 @@ export function AttendanceRecordsMobileList({
         >
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
-              {showStudent && <h4 className="truncate text-sm font-semibold text-foreground">{attendanceRecord.studentName}</h4>}
-              {showClass && <p className="truncate text-xs text-muted-foreground">{classLabel(attendanceRecord.classId)}</p>}
+              {isColumnVisible("student") && <h4 className="truncate text-sm font-semibold text-foreground">{attendanceRecord.studentName}</h4>}
+              {isColumnVisible("class") && <p className="truncate text-xs text-muted-foreground">{classLabel(attendanceRecord.classId)}</p>}
             </div>
-            {showStatus && (
+            {isColumnVisible("status") && (
               <AttendanceRecordStatusCell
                 attendanceRecord={attendanceRecord}
                 editingRecord={editingRecord}
@@ -66,13 +55,13 @@ export function AttendanceRecordsMobileList({
             )}
           </div>
           <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-            {showDate && (
+            {isColumnVisible("date") && (
               <div>
                 <dt className="text-xs font-semibold text-muted-foreground">{t('attendance.columns.date')}</dt>
                 <dd className="font-mono text-foreground">{formatDate(attendanceRecord.date, true)}</dd>
               </div>
             )}
-            {showTimeIn && (
+            {isColumnVisible("timeIn") && (
               <div>
                 <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('attendance.columns.timeIn')}</dt>
                 <dd>
@@ -84,7 +73,7 @@ export function AttendanceRecordsMobileList({
                 </dd>
               </div>
             )}
-            {showTimeOut && (
+            {isColumnVisible("timeOut") && (
               <div>
                 <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('attendance.columns.timeOut')}</dt>
                 <dd>
@@ -96,7 +85,7 @@ export function AttendanceRecordsMobileList({
                 </dd>
               </div>
             )}
-            {showNotes && (
+            {isColumnVisible("notes") && (
               <div className="sm:col-span-2">
                 <dt className="text-xs font-semibold text-muted-foreground">{t('attendance.columns.notes')}</dt>
                 <dd className="break-words text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</dd>

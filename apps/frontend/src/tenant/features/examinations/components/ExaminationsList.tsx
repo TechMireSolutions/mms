@@ -1,15 +1,20 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { Trash2 } from "lucide-react";
 import { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
+import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import { Button } from "@/components/ui/button";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { ExaminationsListContent, type ExaminationsVisibleColumns } from "@/tenant/features/examinations/components/ExaminationsListContent";
+import { ExaminationsListContent } from "@/tenant/features/examinations/components/ExaminationsListContent";
 import { ExaminationsListToolbar } from "@/tenant/features/examinations/components/ExaminationsListToolbar";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 interface ExamsListProps {
   exams: Exam[];
@@ -136,16 +141,7 @@ export default function ExamsList({
     setSelectedIds([]);
   };
 
-  const visibleColumns: ExaminationsVisibleColumns = {
-    name: isColumnVisible ? isColumnVisible("name") : true,
-    subject: isColumnVisible ? isColumnVisible("subject") : true,
-    date: isColumnVisible ? isColumnVisible("date") : true,
-    duration: isColumnVisible ? isColumnVisible("duration") : true,
-    status: isColumnVisible ? isColumnVisible("status") : true,
-    totalMarks: isColumnVisible ? isColumnVisible("totalMarks") : true,
-    passingMarks: isColumnVisible ? isColumnVisible("passingMarks") : true,
-    classes: isColumnVisible ? isColumnVisible("classes") : true,
-  };
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     upcoming:  { label: statusLabels.upcoming,  cls: SEMANTIC_BADGE.info },
@@ -157,20 +153,41 @@ export default function ExamsList({
 
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")}>
+      {canDelete && (
+        <BulkSelectionBar
+          placement="floating"
+          selectedCount={selectedIds.length}
+          countLabel={t("examinations.trash.selected", { count: selectedIds.length })}
+        >
+          {showDeleted ? (
+            <BulkSelectionRestoreAction
+              label={t("examinations.trash.restore")}
+              onClick={() => { void handleBulkAction(); }}
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => { void handleBulkAction(); }}
+              className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
+            >
+              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.delete")}
+            </Button>
+          )}
+        </BulkSelectionBar>
+      )}
+
       <ExaminationsListToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}
         filterStatus={filterStatus}
-        selectedCount={selectedIds.length}
         canWrite={canWrite}
-        canDelete={canDelete}
         showDeleted={showDeleted}
         columnCustomizer={columnCustomizer}
         statusLabels={statusLabels}
         onSearchChange={setSearch}
         onToggleStatus={toggleStatus}
-        onBulkAction={() => { void handleBulkAction(); }}
         onNew={onNew}
       />
 
@@ -178,7 +195,7 @@ export default function ExamsList({
         viewMode={viewMode}
         exams={filtered}
         selectedIds={selectedIds}
-        visibleColumns={visibleColumns}
+        isColumnVisible={columnVisible}
         classes={classes}
         enrollments={enrollments}
         allFilteredSelected={allFilteredSelected}

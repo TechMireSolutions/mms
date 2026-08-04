@@ -21,15 +21,9 @@ interface QuestionBankListProps {
   canDelete: boolean;
   canTrashRows: boolean;
   showDeleted: boolean;
-  showText: boolean;
-  showCategory: boolean;
-  showLanguage: boolean;
-  showType: boolean;
-  showDifficulty: boolean;
-  showSource: boolean;
   showSourceCitation: boolean;
   allFilteredSelected: boolean;
-  isColumnVisible?: (key: string) => boolean;
+  isColumnVisible: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   onEditQuestion: (question: Question) => void;
@@ -52,7 +46,6 @@ export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
         canDelete={props.canDelete}
         canTrashRows={props.canTrashRows}
         showDeleted={props.showDeleted}
-        showText={props.showText}
         showSourceCitation={props.showSourceCitation}
         isColumnVisible={props.isColumnVisible}
         onEditQuestion={props.onEditQuestion}
@@ -73,12 +66,7 @@ export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
       canDelete={props.canDelete}
       canTrashRows={props.canTrashRows}
       showDeleted={props.showDeleted}
-      showText={props.showText}
-      showCategory={props.showCategory}
-      showLanguage={props.showLanguage}
-      showType={props.showType}
-      showDifficulty={props.showDifficulty}
-      showSource={props.showSource}
+      isColumnVisible={props.isColumnVisible}
       allFilteredSelected={props.allFilteredSelected}
       getColumnWidth={props.getColumnWidth}
       onColumnResize={props.onColumnResize}

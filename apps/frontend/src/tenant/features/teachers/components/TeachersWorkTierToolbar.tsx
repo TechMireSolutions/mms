@@ -11,6 +11,8 @@ import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { teacherStatusLabel } from "@/tenant/features/teachers/teacherPageUtils";
 
@@ -54,7 +56,7 @@ export function TeachersWorkTierToolbar({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 bg-card/40 backdrop-blur-xl border border-border/50 p-3 rounded-2xl shadow-sm">
+    <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
       <SearchBar
         value={search}
         onChange={onSearchChange}

@@ -26,12 +26,7 @@ export interface QuestionBankTableRowProps {
   canDelete: boolean;
   canTrashRows: boolean;
   showDeleted: boolean;
-  showText: boolean;
-  showCategory: boolean;
-  showLanguage: boolean;
-  showType: boolean;
-  showDifficulty: boolean;
-  showSource: boolean;
+  isColumnVisible: (key: string) => boolean;
   onEditQuestion: (question: Question) => void;
   onTrashAction: (id: string) => void;
   onToggleSelected: (id: string, checked: boolean) => void;
@@ -48,18 +43,14 @@ export function QuestionBankTableRow({
   canDelete,
   canTrashRows,
   showDeleted,
-  showText,
-  showCategory,
-  showLanguage,
-  showType,
-  showDifficulty,
-  showSource,
+  isColumnVisible,
   onEditQuestion,
   onTrashAction,
   onToggleSelected,
 }: QuestionBankTableRowProps): JSX.Element {
   const { t } = useTranslation();
   const getCategory = (id: string) => config.categories.find((category) => category.id === id);
+  const showSource = isColumnVisible('source');
   const citation = showSource
     ? formatQuestionSourcesCitation(question, t, config.sourceBooks)
     : '';
@@ -80,12 +71,12 @@ export function QuestionBankTableRow({
           />
         </td>
       )}
-      {showText && (
+      {isColumnVisible('text') && (
         <td className="max-w-[17.5rem] px-4 py-3 text-sm font-semibold text-foreground">
           <p className="m-0 line-clamp-2">{question.text}</p>
         </td>
       )}
-      {showCategory && (
+      {isColumnVisible('category') && (
         <td className="px-4 py-3">
           <div className="flex flex-wrap gap-1">
             {getQuestionCategoryIds(question).map((categoryId) => {
@@ -98,17 +89,17 @@ export function QuestionBankTableRow({
           </div>
         </td>
       )}
-      {showLanguage && (
+      {isColumnVisible('language') && (
         <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
           {config.questionLanguageLabel(question.questionLanguage)}
         </td>
       )}
-      {showType && (
+      {isColumnVisible('type') && (
         <td className="whitespace-nowrap px-4 py-3">
           <StatusBadge status={question.type} config={typeConfig} size="sm" />
         </td>
       )}
-      {showDifficulty && (
+      {isColumnVisible('difficulty') && (
         <td className="px-4 py-3">
           <StatusBadge status={question.difficulty} config={difficultyConfig} size="sm" />
         </td>

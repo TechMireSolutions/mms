@@ -7,7 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { ROUTES } from "@/lib/config/routes";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { usePlatformWorkspaces } from "@/platform/hooks/usePlatformWorkspaces";
 import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions";
 import { CardSkeleton } from "@/components/ui/LoadingState";
@@ -74,33 +74,32 @@ export default function PlatformConsole(): React.JSX.Element {
 
         {canWorkspaces ? (
           <>
-            <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <motion.div variants={itemVariants}>
               {metricsReady ? (
-                <>
-                  <StatCard
-                    label={t("platform.manageMadrasas")}
-                    value={totalWorkspaces}
-                    icon={Building2}
-                    accent="primary"
-                    delayIndex={0}
-                  />
-                  <StatCard
-                    label={t("platform.workspaceActive")}
-                    value={activeWorkspaces}
-                    icon={Globe}
-                    accent="success"
-                    delayIndex={1}
-                  />
-                  <StatCard
-                    label={t("platform.workspaceInactive")}
-                    value={disabledWorkspaces}
-                    icon={Ban}
-                    accent="destructive"
-                    delayIndex={2}
-                  />
-                </>
+                <ModuleCommandMetricsGrid
+                  items={[
+                    {
+                      icon: Building2,
+                      label: t("platform.manageMadrasas"),
+                      value: totalWorkspaces,
+                      accent: "primary",
+                    },
+                    {
+                      icon: Globe,
+                      label: t("platform.workspaceActive"),
+                      value: activeWorkspaces,
+                      accent: "success",
+                    },
+                    {
+                      icon: Ban,
+                      label: t("platform.workspaceInactive"),
+                      value: disabledWorkspaces,
+                      accent: "destructive",
+                    },
+                  ]}
+                />
               ) : (
-                <CardSkeleton count={3} className="col-span-full grid-cols-1 sm:grid-cols-3" />
+                <CardSkeleton count={3} className="grid-cols-1 sm:grid-cols-3" />
               )}
             </motion.div>
 

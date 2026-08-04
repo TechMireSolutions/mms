@@ -4,7 +4,7 @@ import { AlertCircle, DollarSign, Tag, TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import {
   FinancialMonthFilterBanner,
   FinancialReportCharts,
@@ -130,12 +130,14 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={DollarSign}  label={t("finance.report.totalCollected")}  value={formatCurrency(totalCollected)}                   color="green"   />
-        <StatCard icon={AlertCircle} label={t("finance.report.outstanding")}     value={formatCurrency(totalOutstanding)}                 color="red"     />
-        <StatCard icon={TrendingUp}  label={t("finance.report.netRevenue")}      value={formatCurrency(totalCollected - totalOutstanding)} color="primary" />
-        <StatCard icon={Tag}         label={t("finance.report.totalDiscounted")} value={formatCurrency(totalDiscounted)}                  color="amber"   />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          { icon: DollarSign, label: t("finance.report.totalCollected"), value: formatCurrency(totalCollected), accent: "green" },
+          { icon: AlertCircle, label: t("finance.report.outstanding"), value: formatCurrency(totalOutstanding), accent: "red" },
+          { icon: TrendingUp, label: t("finance.report.netRevenue"), value: formatCurrency(totalCollected - totalOutstanding), accent: "primary" },
+          { icon: Tag, label: t("finance.report.totalDiscounted"), value: formatCurrency(totalDiscounted), accent: "amber" },
+        ]}
+      />
 
       <FinancialReportCharts
         monthlyFeeCollection={monthlyFeeCollection}

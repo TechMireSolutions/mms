@@ -4,6 +4,7 @@ import { BarChart2, GitCompare, Wrench, LayoutDashboard, Sparkles, CreditCard, B
 import { useTranslation } from "@/hooks/useTranslation";
 import { Card } from "@/components/ui/card";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { scrollDocumentToTop } from "@/lib/routing/scrollDocumentToTop";
 import ReportFilters from "@/tenant/features/reports/components/ReportFilters";
@@ -95,7 +96,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap bg-card/40 backdrop-blur-xl border border-border/50 p-4 rounded-3xl shadow-sm print:hidden">
+      <div className={`${WORK_SURFACE} flex items-center justify-between gap-4 flex-wrap p-4 rounded-3xl print:hidden`}>
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
             <BarChart2 className="w-5 h-5" />

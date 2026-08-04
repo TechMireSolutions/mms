@@ -4,16 +4,16 @@ import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 
 export type DistributionStatus = Distribution["status"];
 
-export interface DistributionVisibleColumns {
-  card: boolean;
-  recipient: boolean;
-  recipientClass: boolean;
-  quantity: boolean;
-  reason: boolean;
-  issuedDate: boolean;
-  issuedBy: boolean;
-  status: boolean;
-}
+export const DISTRIBUTION_COLUMN_KEYS = [
+  "card",
+  "recipient",
+  "recipientClass",
+  "quantity",
+  "reason",
+  "issuedDate",
+  "issuedBy",
+  "status",
+] as const;
 
 export interface DistributionManagerListProps {
   viewMode: WorkDirectoryViewMode;
@@ -21,7 +21,7 @@ export interface DistributionManagerListProps {
   denoms: Denomination[];
   selectedIds: string[];
   allFilteredSelected: boolean;
-  visibleColumns: DistributionVisibleColumns;
+  isColumnVisible: (key: string) => boolean;
   statusLabels: Record<DistributionStatus, string>;
   statusConfig: Record<DistributionStatus, StatusBadgeConfigItem>;
   canWrite: boolean;

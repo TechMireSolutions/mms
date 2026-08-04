@@ -7,7 +7,7 @@ import { type AppTranslationKey } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { PaymentTrackerList, type PaymentTrackerVisibleColumns } from "@/tenant/features/finance/components/PaymentTrackerList";
+import { PaymentTrackerList, PAYMENT_TRACKER_COLUMN_KEYS } from "@/tenant/features/finance/components/PaymentTrackerList";
 import { PaymentMethodSummary, PaymentSelectionBar } from "@/tenant/features/finance/components/PaymentTrackerToolbar";
 
 const METHOD_LABEL_KEYS: Record<string, AppTranslationKey> = {
@@ -19,9 +19,7 @@ const METHOD_LABEL_KEYS: Record<string, AppTranslationKey> = {
   Other: "finance.paymentMethod.other",
 };
 
-
-
-interface PaymentTrackerProps {
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;interface PaymentTrackerProps {
   payments: Payment[];
   canDelete?: boolean;
   showDeleted?: boolean;
@@ -67,24 +65,9 @@ export function PaymentTracker({
     return amountByMethod;
   }, {});
 
-  const visibleColumns: PaymentTrackerVisibleColumns = {
-    date: isColumnVisible ? isColumnVisible("date") : true,
-    student: isColumnVisible ? isColumnVisible("student") : true,
-    invoice: isColumnVisible ? isColumnVisible("invoice") : true,
-    amount: isColumnVisible ? isColumnVisible("amount") : true,
-    method: isColumnVisible ? isColumnVisible("method") : true,
-    receivedBy: isColumnVisible ? isColumnVisible("receivedBy") : true,
-    note: isColumnVisible ? isColumnVisible("note") : true,
-  };
-
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
   const visibleColCount =
-    (visibleColumns.date ? 1 : 0) +
-    (visibleColumns.student ? 1 : 0) +
-    (visibleColumns.invoice ? 1 : 0) +
-    (visibleColumns.amount ? 1 : 0) +
-    (visibleColumns.method ? 1 : 0) +
-    (visibleColumns.receivedBy ? 1 : 0) +
-    (visibleColumns.note ? 1 : 0) +
+    PAYMENT_TRACKER_COLUMN_KEYS.filter(columnVisible).length +
     (canDelete ? 2 : 0);
   const allSelected = payments.length > 0 && payments.every((payment) => selectedIds.includes(payment.id));
 
@@ -112,7 +95,7 @@ export function PaymentTracker({
       <PaymentTrackerList
         payments={payments}
         selectedIds={selectedIds}
-        visibleColumns={visibleColumns}
+        isColumnVisible={columnVisible}
         visibleColCount={visibleColCount}
         allSelected={allSelected}
         canDelete={canDelete}

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
@@ -53,7 +54,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
       </div>
 
       {rows.length === 0 ? (
-        <div className="py-16 text-center rounded-xl border border-border text-sm text-muted-foreground">{t("accounting.ledger.noPostedTransactionsPeriod")}</div>
+        <EmptyState variant="dashed" title={t("accounting.ledger.noPostedTransactionsPeriod")} compact />
       ) : (
         <>
           {ACCOUNT_TYPES.map((type) => (

@@ -7,6 +7,7 @@ import { ComposedDashboardWidget, isComposedWidgetType } from "@/components/dash
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { METADATA_FIELDS, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import { ProgressRing } from "@/tenant/features/reports/components/pinnedWidgets/WidgetProgressRing";
@@ -84,10 +85,10 @@ export function CustomWidgetComfortableLayout({
       layout
       whileHover={{ y: -4, scale: 1.015 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className={`rounded-2xl p-5 flex flex-col justify-between shadow-sm relative group hover:shadow-surface-lg transition-all overflow-hidden ${
+      className={`p-5 flex flex-col justify-between shadow-sm relative group hover:shadow-surface-lg transition-all overflow-hidden ${
         alertScheme
-          ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-[1.5px]`
-          : "surface-glass"
+          ? `rounded-2xl ${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-[1.5px]`
+          : WORK_SURFACE
       }`}
     >
       <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] transition-colors duration-300 ${

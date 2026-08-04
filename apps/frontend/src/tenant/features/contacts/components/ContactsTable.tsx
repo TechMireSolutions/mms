@@ -9,6 +9,7 @@ import {
   type ContactsColumnConfig,
 } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactsTableHeader } from "@/tenant/features/contacts/components/ContactsTableHeader";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 export type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 
@@ -65,7 +66,7 @@ export default function ContactsTable({
   const someSelected = selected.length > 0 && selected.length < contacts.length;
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-xs">
+    <div className={`${WORK_SURFACE} overflow-x-auto shadow-xs`}>
       <table className="w-full text-sm table-fixed">
         <ContactsTableHeader
           columns={columns}

@@ -38,28 +38,3 @@ export function computeJournalGrandTotals(filtered: JournalEntry[]): { grandDebi
   }
   return { grandDebit, grandCredit };
 }
-
-export interface JournalVisibleColumns {
-  showRef: boolean;
-  showDate: boolean;
-  showDescription: boolean;
-  showTags: boolean;
-  showDebit: boolean;
-  showCredit: boolean;
-  showStatus: boolean;
-}
-
-export function resolveJournalVisibleColumns(
-  isColumnVisible?: (key: string) => boolean,
-): JournalVisibleColumns {
-  const visible = (key: string) => (isColumnVisible ? isColumnVisible(key) : true);
-  return {
-    showRef: visible('ref'),
-    showDate: visible('date'),
-    showDescription: visible('description'),
-    showTags: visible('tags'),
-    showDebit: visible('debit'),
-    showCredit: visible('credit'),
-    showStatus: visible('status'),
-  };
-}

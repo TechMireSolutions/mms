@@ -19,7 +19,7 @@ export function EnrollmentListCards(props: EnrollmentListCardsProps): React.JSX.
   const {
     enrollments,
     students,
-    visibleColumns,
+    isColumnVisible,
     canWrite,
     canDelete,
     showDeleted,
@@ -47,7 +47,7 @@ export function EnrollmentListCards(props: EnrollmentListCardsProps): React.JSX.
             className="space-y-3 rounded-xl border border-border bg-card p-3"
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
-              {visibleColumns.student && (
+              {isColumnVisible("student") && (
                 <div className="min-w-0">
                   <h4 className="truncate text-sm font-semibold text-foreground">{studentDisplayName}</h4>
                   {student?.grNumber && (
@@ -57,7 +57,7 @@ export function EnrollmentListCards(props: EnrollmentListCardsProps): React.JSX.
                   )}
                 </div>
               )}
-              {visibleColumns.finalFee && (
+              {isColumnVisible("finalFee") && (
                 <span className="shrink-0 text-sm font-semibold text-foreground">
                   {formatCurrency(enrollment.finalFee)}
                   {enrollment.discountPct > 0 && (
@@ -72,31 +72,31 @@ export function EnrollmentListCards(props: EnrollmentListCardsProps): React.JSX.
               )}
             </div>
             <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              {visibleColumns.session && (
+              {isColumnVisible("session") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.session")}</dt>
                   <dd className="truncate text-foreground">{enrollment.sessionName}</dd>
                 </div>
               )}
-              {visibleColumns.class && (
+              {isColumnVisible("class") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.class")}</dt>
                   <dd className="text-foreground">{enrollment.className || "—"}</dd>
                 </div>
               )}
-              {visibleColumns.enrolledDate && (
+              {isColumnVisible("enrolledDate") && (
                 <div>
                   <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.enrolledDate")}</dt>
                   <dd className="font-mono text-muted-foreground">{formatDate(enrollment.enrolledDate)}</dd>
                 </div>
               )}
-              {visibleColumns.status && (
+              {isColumnVisible("status") && (
                 <div>
                   <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.status")}</dt>
                   <dd><StatusBadge status={enrollment.status} config={statusConfig} size="sm" /></dd>
                 </div>
               )}
-              {visibleColumns.payment && (
+              {isColumnVisible("payment") && (
                 <div>
                   <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.payment")}</dt>
                   <dd>

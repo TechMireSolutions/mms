@@ -20,7 +20,7 @@ export function ObligationCollectionListTable(props: ObligationCollectionListTab
   const {
     collections,
     selectedIds,
-    visibleColumns,
+    isColumnVisible,
     allFilteredSelected,
     canDelete,
     showDeleted,
@@ -57,37 +57,37 @@ export function ObligationCollectionListTable(props: ObligationCollectionListTab
                 />
               </th>
             )}
-            {visibleColumns.receiptNo && (
+            {isColumnVisible("receiptNo") && (
               <ResizableTableHead columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("obligations.columns.receiptNo")}
               </ResizableTableHead>
             )}
-            {visibleColumns.receivedDate && (
+            {isColumnVisible("receivedDate") && (
               <ResizableTableHead columnKey="receivedDate" width={getColumnWidth?.("receivedDate")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("obligations.columns.receivedDate")}
               </ResizableTableHead>
             )}
-            {visibleColumns.sender && (
+            {isColumnVisible("sender") && (
               <ResizableTableHead columnKey="sender" width={getColumnWidth?.("sender")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("obligations.columns.sender")}
               </ResizableTableHead>
             )}
-            {visibleColumns.obligationType && (
+            {isColumnVisible("obligationType") && (
               <ResizableTableHead columnKey="obligationType" width={getColumnWidth?.("obligationType")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("obligations.columns.obligationType")}
               </ResizableTableHead>
             )}
-            {visibleColumns.repMujtahid && (
+            {isColumnVisible("repMujtahid") && (
               <ResizableTableHead columnKey="repMujtahid" width={getColumnWidth?.("repMujtahid")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("obligations.columns.repMujtahid")}
               </ResizableTableHead>
             )}
-            {visibleColumns.amount && (
+            {isColumnVisible("amount") && (
               <ResizableTableHead columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("obligations.columns.amount")}
               </ResizableTableHead>
             )}
-            {visibleColumns.paymentMode && (
+            {isColumnVisible("paymentMode") && (
               <ResizableTableHead columnKey="paymentMode" width={getColumnWidth?.("paymentMode")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
                 {t("obligations.columns.paymentMode")}
               </ResizableTableHead>
@@ -112,32 +112,32 @@ export function ObligationCollectionListTable(props: ObligationCollectionListTab
                     />
                   </td>
                 )}
-                {visibleColumns.receiptNo && (
+                {isColumnVisible("receiptNo") && (
                   <td className="px-3 py-2.5">
                     <span className="font-mono text-xs font-bold text-primary">{collection.receipt_no}</span>
                   </td>
                 )}
-                {visibleColumns.receivedDate && (
+                {isColumnVisible("receivedDate") && (
                   <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{formatDate(collection.received_date)}</td>
                 )}
-                {visibleColumns.sender && (
+                {isColumnVisible("sender") && (
                   <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{sender?.name || "—"}</td>
                 )}
-                {visibleColumns.obligationType && (
+                {isColumnVisible("obligationType") && (
                   <td className="px-3 py-2.5">
                     <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{obligationType?.name || "—"}</span>
                   </td>
                 )}
-                {visibleColumns.repMujtahid && (
+                {isColumnVisible("repMujtahid") && (
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">
                     <span>{rep?.name || "—"}</span>
                     {mujtahid && <span className="text-xs block text-muted-foreground/70">{mujtahid.name}</span>}
                   </td>
                 )}
-                {visibleColumns.amount && (
+                {isColumnVisible("amount") && (
                   <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{formatObligationCollectionAmount(collection)}</td>
                 )}
-                {visibleColumns.paymentMode && (
+                {isColumnVisible("paymentMode") && (
                   <td className="px-3 py-2.5">
                     <StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />
                   </td>

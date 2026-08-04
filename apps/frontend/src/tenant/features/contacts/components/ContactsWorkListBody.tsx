@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { TableSkeleton, CardSkeleton } from "@/components/ui/LoadingState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
@@ -117,7 +118,7 @@ export function ContactsWorkListBody({
           aria-busy={useServerWork && isWorkFetching ? true : undefined}
         >
           {workContacts.length === 0 ? (
-            <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur-xl p-6">
+            <div className={`${WORK_SURFACE} border-border/40 p-6`}>
               <EmptyState
                 icon={UserX}
                 title={

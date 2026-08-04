@@ -6,6 +6,7 @@ import {
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Checkbox } from '@/components/ui/checkbox';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import type { StatItem } from '@/tenant/features/dashboard/components/StatisticsGrid';
 import type { Permission } from '@mms/shared';
 import { defaultWidgetScope } from '@/tenant/features/dashboard/components/dashboardCustomizePanelShared';
@@ -73,7 +74,7 @@ export default function DashboardCustomizePanel({
       </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-start">
-        <div className="rounded-2xl border border-border/60 bg-card/65 dark:bg-card/40 backdrop-blur-2xl p-6 shadow-xl">
+        <div className={`${WORK_SURFACE} p-6`}>
           <fieldset className="space-y-4 border-0 p-0 m-0">
             <legend className="text-xs font-black text-primary uppercase tracking-widest leading-none mb-1">
               {t('dashboard.metricCardsSettings')}

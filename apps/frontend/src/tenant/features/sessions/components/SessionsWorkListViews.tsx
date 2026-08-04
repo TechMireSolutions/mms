@@ -40,12 +40,7 @@ interface SessionsWorkTableProps extends SessionsWorkViewProps {
   selectedIds: string[];
   allVisibleSelected: boolean;
   someVisibleSelected: boolean;
-  showName: boolean;
-  showType: boolean;
-  showDuration: boolean;
-  showFee: boolean;
-  showEnrolled: boolean;
-  showStatus: boolean;
+  isColumnVisible: (key: string) => boolean;
   sortField: SessionSortField;
   sortDir: "asc" | "desc";
   columnLayout: SessionsWorkColumnLayout;

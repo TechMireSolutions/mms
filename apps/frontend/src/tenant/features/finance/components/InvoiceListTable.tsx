@@ -16,7 +16,7 @@ export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Elemen
   const {
     invoices,
     selectedIds,
-    visibleColumns,
+    isColumnVisible,
     visibleColCount,
     canWrite,
     canDelete,
@@ -52,42 +52,42 @@ export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Elemen
                 />
               </th>
             )}
-            {visibleColumns.invoice && (
+            {isColumnVisible("invoice") && (
               <ResizableTableHead columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.invoice")}
               </ResizableTableHead>
             )}
-            {visibleColumns.student && (
+            {isColumnVisible("student") && (
               <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.student")}
               </ResizableTableHead>
             )}
-            {visibleColumns.sessionClass && (
+            {isColumnVisible("sessionClass") && (
               <ResizableTableHead columnKey="sessionClass" width={getColumnWidth?.("sessionClass")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.sessionClass")}
               </ResizableTableHead>
             )}
-            {visibleColumns.baseFee && (
+            {isColumnVisible("baseFee") && (
               <ResizableTableHead columnKey="baseFee" width={getColumnWidth?.("baseFee")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.baseFee")}
               </ResizableTableHead>
             )}
-            {visibleColumns.discount && (
+            {isColumnVisible("discount") && (
               <ResizableTableHead columnKey="discount" width={getColumnWidth?.("discount")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.discount")}
               </ResizableTableHead>
             )}
-            {visibleColumns.final && (
+            {isColumnVisible("final") && (
               <ResizableTableHead columnKey="final" width={getColumnWidth?.("final")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.final")}
               </ResizableTableHead>
             )}
-            {visibleColumns.status && (
+            {isColumnVisible("status") && (
               <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.status")}
               </ResizableTableHead>
             )}
-            {visibleColumns.dueDate && (
+            {isColumnVisible("dueDate") && (
               <ResizableTableHead columnKey="dueDate" width={getColumnWidth?.("dueDate")} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
                 {t("finance.columns.dueDate")}
               </ResizableTableHead>
@@ -118,28 +118,28 @@ export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Elemen
                     />
                   </td>
                 )}
-                {visibleColumns.invoice && (
+                {isColumnVisible("invoice") && (
                   <td className="px-4 py-3">
                     <span className="text-xs font-mono font-semibold text-muted-foreground">{invoice.id}</span>
                   </td>
                 )}
-                {visibleColumns.student && (
+                {isColumnVisible("student") && (
                   <td className="px-4 py-3">
                     <p className="text-sm font-semibold text-foreground whitespace-nowrap m-0">{invoice.studentName}</p>
                   </td>
                 )}
-                {visibleColumns.sessionClass && (
+                {isColumnVisible("sessionClass") && (
                   <td className="px-4 py-3">
                     <p className="text-sm text-foreground m-0">{invoice.class}</p>
                     <p className="text-xs text-muted-foreground m-0">{invoice.session}</p>
                   </td>
                 )}
-                {visibleColumns.baseFee && (
+                {isColumnVisible("baseFee") && (
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-sm text-foreground">{formatCurrency(invoice.baseFee)}</span>
                   </td>
                 )}
-                {visibleColumns.discount && (
+                {isColumnVisible("discount") && (
                   <td className="px-4 py-3">
                     {invoice.discountAmt > 0 ? (
                       <div>
@@ -149,7 +149,7 @@ export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Elemen
                     ) : <span className="text-sm text-muted-foreground">—</span>}
                   </td>
                 )}
-                {visibleColumns.final && (
+                {isColumnVisible("final") && (
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className="text-sm font-bold text-foreground">{formatCurrency(invoice.finalAmt)}</span>
                     {invoice.paidAmt && invoice.status === "partial" && (
@@ -157,12 +157,12 @@ export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Elemen
                     )}
                   </td>
                 )}
-                {visibleColumns.status && (
+                {isColumnVisible("status") && (
                   <td className="px-4 py-3">
                     <StatusBadge status={invoice.status} config={statusConfig} size="sm" />
                   </td>
                 )}
-                {visibleColumns.dueDate && (
+                {isColumnVisible("dueDate") && (
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`text-sm ${invoice.status === "overdue" ? "text-destructive font-semibold" : "text-muted-foreground"}`}>{formatDate(invoice.dueDate)}</span>
                   </td>

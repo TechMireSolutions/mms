@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getAttendanceStatusInfo, type AttendanceStatus } from "@/lib/data/attendanceData";
 import { MarkAttendanceFieldControl } from "@/tenant/features/attendance/components/MarkAttendanceFieldControl";
@@ -28,7 +29,7 @@ export function MarkAttendanceGrid({
     <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
       <div className="space-y-3 p-3 md:hidden">
         {rows.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">{t("attendance.mark.noStudents")}</p>
+          <EmptyState title={t("attendance.mark.noStudents")} compact />
         ) : rows.map((row) => {
           const statusInfo = getAttendanceStatusInfo(row.status, statuses);
           return (
@@ -77,7 +78,7 @@ export function MarkAttendanceGrid({
           </thead>
           <tbody className="divide-y divide-border">
             {rows.length === 0 ? (
-              <tr><td colSpan={enabledFields.length + 2} className="px-4 py-10 text-center text-muted-foreground text-sm">{t("attendance.mark.noStudents")}</td></tr>
+              <tr><td colSpan={enabledFields.length + 2} className="py-4"><EmptyState title={t("attendance.mark.noStudents")} compact /></td></tr>
             ) : rows.map((row) => {
               const statusInfo = getAttendanceStatusInfo(row.status, statuses);
               return (

@@ -5,6 +5,7 @@ import {
   workspaceRoleLabel,
 } from '@mms/shared';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { UserRoleBadge } from '@/tenant/features/users/components/UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { PermissionMatrix } from '@/tenant/features/users/components/PermissionMatrix';
@@ -46,9 +47,7 @@ export function RolesPermissions(): React.JSX.Element {
             ) : null}
           </div>
           {roles.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
-              {t('users.permissions.emptyRoles')}
-            </div>
+            <EmptyState variant="dashed" title={t('users.permissions.emptyRoles')} compact />
           ) : null}
           {roles.map((workspaceRole) => (
             <div

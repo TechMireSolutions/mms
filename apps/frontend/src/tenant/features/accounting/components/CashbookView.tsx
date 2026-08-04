@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -31,10 +31,19 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
 
   return (
     <div className="space-y-4">
-      <section aria-label={t("accounting.cashbook.summaryAria")} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatCard icon={TrendingUp} label={t("accounting.cashbook.moneyIn")} value={formatCurrency(totalIn)} accent="success" />
-        <StatCard icon={TrendingDown} label={t("accounting.cashbook.moneyOut")} value={formatCurrency(totalOut)} accent="destructive" />
-        <StatCard icon={ArrowUpDown} label={t("accounting.cashbook.netBalance")} value={formatCurrency(Math.abs(balance))} accent={balance >= 0 ? "success" : "destructive"} />
+      <section aria-label={t("accounting.cashbook.summaryAria")}>
+        <ModuleCommandMetricsGrid
+          items={[
+            { icon: TrendingUp, label: t("accounting.cashbook.moneyIn"), value: formatCurrency(totalIn), accent: "success" },
+            { icon: TrendingDown, label: t("accounting.cashbook.moneyOut"), value: formatCurrency(totalOut), accent: "destructive" },
+            {
+              icon: ArrowUpDown,
+              label: t("accounting.cashbook.netBalance"),
+              value: formatCurrency(Math.abs(balance)),
+              accent: balance >= 0 ? "success" : "destructive",
+            },
+          ]}
+        />
       </section>
 
       <nav aria-label={t("accounting.cashbook.filterAria")} className="flex flex-wrap items-center gap-2">

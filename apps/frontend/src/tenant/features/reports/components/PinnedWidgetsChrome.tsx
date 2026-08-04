@@ -3,6 +3,7 @@ import { LayoutDashboard, SlidersHorizontal } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface DashboardControlOptionProps {
@@ -60,7 +61,7 @@ export function PinnedWidgetsChrome({
 
   return (
     <>
-      <div className="flex flex-col gap-3 p-4 rounded-2xl surface-glass shadow-sm select-none sm:flex-row sm:items-center sm:justify-between">
+      <div className={`flex flex-col gap-3 p-4 ${WORK_SURFACE} select-none sm:flex-row sm:items-center sm:justify-between`}>
         <div className="flex min-w-0 items-center gap-2">
           <div className="w-10 h-10 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
             <LayoutDashboard className="w-5 h-5" />
@@ -87,7 +88,7 @@ export function PinnedWidgetsChrome({
       </div>
 
       {showControls && (
-        <div className="p-5 rounded-2xl space-y-4 surface-glass shadow-sm select-none">
+        <div className={`p-5 space-y-4 ${WORK_SURFACE} select-none`}>
           <div>
             <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.controlsTitle")}</h4>
             <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.widgets.controlsSubtitle")}</p>

@@ -1,10 +1,16 @@
+import { Trash2 } from "lucide-react";
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
+import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import { Button } from "@/components/ui/button";
 import { DistributeModal } from "./DistributeModal";
 import { DistributionManagerList } from "./DistributionManagerList";
 import { DistributionManagerToolbar } from "./DistributionManagerToolbar";
 import { useDistributionManagerState } from "./useDistributionManagerState";
+
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 export interface DistributionManagerProps {
   distributions: Distribution[];
@@ -70,7 +76,6 @@ export function DistributionManager({
     selectedIds,
     setSelectedIds,
     filtered,
-    visibleColumns,
     toggleStatus,
     handleDistribute,
     changeStatus,
@@ -89,11 +94,36 @@ export function DistributionManager({
     onRestore,
     onBulkDelete,
     onBulkRestore,
-    isColumnVisible,
   });
+
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   return (
     <section aria-label={t("hasanat.distribution.aria")} className="space-y-4">
+      {canDelete && (
+        <BulkSelectionBar
+          placement="floating"
+          selectedCount={selectedIds.length}
+          countLabel={t("hasanat.trash.selected", { count: selectedIds.length })}
+        >
+          {showDeleted ? (
+            <BulkSelectionRestoreAction
+              label={t("hasanat.trash.restore")}
+              onClick={() => { void handleBulkAction(); }}
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => { void handleBulkAction(); }}
+              className="flex min-h-11 items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.delete")}
+            </Button>
+          )}
+        </BulkSelectionBar>
+      )}
+
       <DistributionManagerToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -101,14 +131,11 @@ export function DistributionManager({
         filterStatus={filterStatus}
         statusLabels={statusLabels}
         statusConfig={statusConfig}
-        selectedCount={selectedIds.length}
         canWrite={canWrite}
-        canDelete={canDelete}
         showDeleted={showDeleted}
         columnCustomizer={columnCustomizer}
         onSearchChange={setSearch}
         onToggleStatus={toggleStatus}
-        onBulkAction={() => { void handleBulkAction(); }}
         onOpenModal={() => setShowModal(true)}
       />
 
@@ -118,7 +145,7 @@ export function DistributionManager({
         denoms={denoms}
         selectedIds={selectedIds}
         allFilteredSelected={allFilteredSelected}
-        visibleColumns={visibleColumns}
+        isColumnVisible={columnVisible}
         statusLabels={statusLabels}
         statusConfig={statusConfig}
         canWrite={canWrite}

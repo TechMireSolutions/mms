@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -7,7 +6,7 @@ import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ObligationType } from "@/lib/data/obligationsData";
-import { RotateCcw, Search, Trash2 } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface ObligationCollectionListToolbarProps {
   viewMode: WorkDirectoryViewMode;
@@ -15,28 +14,24 @@ interface ObligationCollectionListToolbarProps {
   search: string;
   typeFilter: string;
   obligationTypes: ObligationType[];
-  selectedCount: number;
   canDelete: boolean;
   showDeleted: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
   onToggleShowDeleted?: () => void;
-  onBulkAction: () => void;
 }
 
 export function ObligationCollectionListToolbar({
   search,
   typeFilter,
   obligationTypes,
-  selectedCount,
   canDelete,
   showDeleted,
   columnCustomizer,
   onSearchChange,
   onTypeFilterChange,
   onToggleShowDeleted,
-  onBulkAction,
   viewMode,
   onViewModeChange,
 }: ObligationCollectionListToolbarProps): React.JSX.Element {
@@ -83,17 +78,6 @@ export function ObligationCollectionListToolbar({
           showActiveLabel={t("obligations.trash.showActive")}
           showDeletedLabel={t("obligations.trash.showDeleted")}
         />
-      )}
-      {canDelete && selectedCount > 0 && (
-        <Button
-          type="button"
-          variant={showDeleted ? "outline" : "destructive"}
-          onClick={onBulkAction}
-          className="gap-1.5"
-        >
-          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-          {showDeleted ? t("obligations.trash.restore") : t("common.delete")} ({selectedCount})
-        </Button>
       )}
     </section>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import { Users } from "lucide-react";
 import { motion } from "framer-motion";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { COLOR_MAP, ICONS_LIST } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import type { computeCustomCard } from "@/tenant/features/reports/components/reportMetadata";
 
@@ -20,7 +21,7 @@ export function CustomWidgetCardLayout({ computedCard }: CustomWidgetCardLayoutP
       layout
       whileHover={{ y: -4, scale: 1.015 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className="rounded-2xl surface-glass p-5 hover:shadow-surface-lg transition-all relative text-start flex flex-col justify-between min-h-[8.75rem] font-sans overflow-hidden group"
+      className={`${WORK_SURFACE} p-5 hover:shadow-surface-lg transition-all relative text-start flex flex-col justify-between min-h-[8.75rem] font-sans overflow-hidden group`}
     >
       <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] ${colorClasses.bar}/60 group-hover:${colorClasses.bar} transition-colors duration-300`} />
       <div className={`absolute -end-8 -top-8 w-20 h-20 rounded-full ${colorClasses.glow} transition-all duration-500`} />

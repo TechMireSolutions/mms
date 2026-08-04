@@ -3,6 +3,7 @@ import { CheckCircle2, Clock, HardDriveDownload, RefreshCw, AlertTriangle } from
 import { BACKUP_HISTORY_MAX, formatDateTime, type WorkspaceBackupRecord } from '@mms/shared';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -41,10 +42,7 @@ export default function BackupHistorySection({
 
       <div className="divide-y divide-border/40">
         {backups.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
-            <Clock className="h-8 w-8 text-muted-foreground/30 mb-2" aria-hidden />
-            <p className="text-xs font-medium text-muted-foreground">{t('backup.historyEmpty')}</p>
-          </div>
+          <EmptyState icon={Clock} title={t('backup.historyEmpty')} compact />
         ) : (
           backups.map((backup) => {
             const isRestoringThis = restoreId === backup.id;

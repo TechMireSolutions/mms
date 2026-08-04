@@ -2,7 +2,7 @@ import React from "react";
 import { Users, MessageCircle, UserPlus, AlertCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsReportAnalytics } from "@/tenant/hooks/collections/contacts";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 
@@ -48,36 +48,38 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
 
   return (
     <div className="space-y-6 text-start p-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard
-          icon={Users}
-          label={t("contacts.report.totalContacts")}
-          value={totalContacts}
-          accent="primary"
-          onClick={() => applyContactsWorkDrillDown({})}
-        />
-        <StatCard
-          icon={MessageCircle}
-          label={t("contacts.report.whatsappVerified")}
-          value={`${whatsappRate}%`}
-          accent="warning"
-          onClick={() => applyContactsWorkDrillDown({ quickFilter: "whatsapp" })}
-        />
-        <StatCard
-          icon={UserPlus}
-          label={t("contacts.report.newLast30Days")}
-          value={newLast30Days}
-          accent="secondary"
-          onClick={() => applyContactsWorkDrillDown({ quickFilter: "recent" })}
-        />
-        <StatCard
-          icon={AlertCircle}
-          label={t("contacts.report.missingContactInfo")}
-          value={missingInfoCount}
-          accent="destructive"
-          onClick={() => applyContactsWorkDrillDown({ quickFilter: "missingInfo" })}
-        />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          {
+            icon: Users,
+            label: t("contacts.report.totalContacts"),
+            value: totalContacts,
+            accent: "primary",
+            onClick: () => applyContactsWorkDrillDown({}),
+          },
+          {
+            icon: MessageCircle,
+            label: t("contacts.report.whatsappVerified"),
+            value: `${whatsappRate}%`,
+            accent: "warning",
+            onClick: () => applyContactsWorkDrillDown({ quickFilter: "whatsapp" }),
+          },
+          {
+            icon: UserPlus,
+            label: t("contacts.report.newLast30Days"),
+            value: newLast30Days,
+            accent: "secondary",
+            onClick: () => applyContactsWorkDrillDown({ quickFilter: "recent" }),
+          },
+          {
+            icon: AlertCircle,
+            label: t("contacts.report.missingContactInfo"),
+            value: missingInfoCount,
+            accent: "destructive",
+            onClick: () => applyContactsWorkDrillDown({ quickFilter: "missingInfo" }),
+          },
+        ]}
+      />
     </div>
   );
 }

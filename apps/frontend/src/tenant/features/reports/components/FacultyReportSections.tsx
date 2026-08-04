@@ -6,7 +6,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -58,12 +58,14 @@ interface FacultyReportKpiSectionProps {
 
 export function FacultyReportKpiSection({ t, totalFaculty, totalStudents, totalClasses, avgStudents }: FacultyReportKpiSectionProps): React.JSX.Element {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <StatCard icon={GraduationCap} label={t("teachers.report.totalFaculty")} value={totalFaculty} color="primary" />
-      <StatCard icon={Users} label={t("teachers.report.totalStudents")} value={totalStudents} color="blue" />
-      <StatCard icon={Layers} label={t("teachers.report.totalClasses")} value={totalClasses} color="violet" />
-      <StatCard icon={BookOpen} label={t("teachers.report.avgStudentsFaculty")} value={avgStudents} color="green" />
-    </div>
+    <ModuleCommandMetricsGrid
+      items={[
+        { icon: GraduationCap, label: t("teachers.report.totalFaculty"), value: totalFaculty, accent: "primary" },
+        { icon: Users, label: t("teachers.report.totalStudents"), value: totalStudents, accent: "blue" },
+        { icon: Layers, label: t("teachers.report.totalClasses"), value: totalClasses, accent: "violet" },
+        { icon: BookOpen, label: t("teachers.report.avgStudentsFaculty"), value: avgStudents, accent: "green" },
+      ]}
+    />
   );
 }
 

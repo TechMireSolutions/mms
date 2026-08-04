@@ -1,4 +1,4 @@
-import { ChevronDown, Filter, Plus, RotateCcw, Search, Trash2, X } from "lucide-react";
+import { ChevronDown, Filter, Plus, Search, X } from "lucide-react";
 
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
@@ -26,14 +26,11 @@ interface DistributionManagerToolbarProps {
   filterStatus: DistributionStatus[];
   statusLabels: Record<DistributionStatus, string>;
   statusConfig: Record<DistributionStatus, StatusBadgeConfigItem>;
-  selectedCount: number;
   canWrite: boolean;
-  canDelete: boolean;
   showDeleted: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: DistributionStatus) => void;
-  onBulkAction: () => void;
   onOpenModal: () => void;
 }
 
@@ -42,14 +39,11 @@ export function DistributionManagerToolbar({
   filterStatus,
   statusLabels,
   statusConfig,
-  selectedCount,
   canWrite,
-  canDelete,
   showDeleted,
   columnCustomizer,
   onSearchChange,
   onToggleStatus,
-  onBulkAction,
   onOpenModal,
   viewMode,
   onViewModeChange,
@@ -106,17 +100,6 @@ export function DistributionManagerToolbar({
             updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
             labels={columnCustomizer.labels}
           />
-        )}
-        {canDelete && selectedCount > 0 && (
-          <Button
-            type="button"
-            variant={showDeleted ? "outline" : "destructive"}
-            onClick={onBulkAction}
-            className="flex items-center gap-1.5 whitespace-nowrap"
-          >
-            {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-            {showDeleted ? t("hasanat.trash.restore") : t("common.delete")} ({selectedCount})
-          </Button>
         )}
         {canWrite && !showDeleted && (
           <Button type="button" onClick={onOpenModal} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors whitespace-nowrap">

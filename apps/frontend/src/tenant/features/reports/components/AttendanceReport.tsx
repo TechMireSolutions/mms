@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AttendanceReportCharts } from "./AttendanceReportCharts";
 import { AttendanceReportDashboardWidgets } from "./AttendanceReportDashboardWidgets";
@@ -142,12 +142,14 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
 
   return (
     <div className="space-y-4 text-start">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard icon={UserCheck} label={t("attendance.report.avgAttendance")} value={`${avgRate}%`} color="green" />
-        <StatCard icon={Users} label={t("attendance.report.classesCount")} value={filteredSummary.length} color="primary" />
-        <StatCard icon={Award} label={t("attendance.report.perfectAttendance")} value={perfect} color="amber" />
-        <StatCard icon={AlertTriangle} label={t("attendance.report.belowThreshold")} value={belowThreshold} color="red" />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          { icon: UserCheck, label: t("attendance.report.avgAttendance"), value: `${avgRate}%`, accent: "green" },
+          { icon: Users, label: t("attendance.report.classesCount"), value: filteredSummary.length, accent: "primary" },
+          { icon: Award, label: t("attendance.report.perfectAttendance"), value: perfect, accent: "amber" },
+          { icon: AlertTriangle, label: t("attendance.report.belowThreshold"), value: belowThreshold, accent: "red" },
+        ]}
+      />
 
       <AttendanceReportCharts summary={filteredSummary} onToggleClassFilter={toggleClassFilter} />
       <AttendanceReportFilterBanner selectedClass={selectedClass} onClearClassFilter={() => setSelectedClass(null)} />

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { DollarSign, Scale, TrendingDown, TrendingUp } from "lucide-react";
 import { computeFinancials, type Account, type AccountingSettings, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
-import { StatCard } from "@/components/ui/StatCard";
+import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -131,14 +131,19 @@ export function FinancialReports({ accounts, entries, fiscalYears }: FinancialRe
         variant="bordered"
       />
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label={t("accounting.reports.totalRevenue")}  value={formatCurrency(revenue)}   icon={TrendingUp}   accent="success" />
-        <StatCard label={t("accounting.reports.totalExpenses")} value={formatCurrency(expenses)}  icon={TrendingDown} accent="destructive" />
-        <StatCard label={t("accounting.reports.netSurplus")}    value={formatCurrency(Math.abs(netSurplus))}
-          icon={DollarSign} accent={netSurplus >= 0 ? "primary" : "destructive"} />
-        <StatCard label={t("accounting.reports.totalAssets")}   value={formatCurrency(assets)}    icon={Scale}        accent="info" />
-      </div>
+      <ModuleCommandMetricsGrid
+        items={[
+          { label: t("accounting.reports.totalRevenue"), value: formatCurrency(revenue), icon: TrendingUp, accent: "success" },
+          { label: t("accounting.reports.totalExpenses"), value: formatCurrency(expenses), icon: TrendingDown, accent: "destructive" },
+          {
+            label: t("accounting.reports.netSurplus"),
+            value: formatCurrency(Math.abs(netSurplus)),
+            icon: DollarSign,
+            accent: netSurplus >= 0 ? "primary" : "destructive",
+          },
+          { label: t("accounting.reports.totalAssets"), value: formatCurrency(assets), icon: Scale, accent: "info" },
+        ]}
+      />
 
       <SubTabBar
         tabs={reportViews}

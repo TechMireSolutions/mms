@@ -1,6 +1,7 @@
 import React from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -41,30 +42,30 @@ export function PerformanceAnalyticsPanels({
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-warning/30 bg-warning/10 p-4"
-          role="alert"
         >
-          <div className="mb-3 flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
-            <h3 className="text-sm font-bold text-warning">{t("questionBank.analytics.weakAreas")}</h3>
-          </div>
-          <div className="flex flex-wrap gap-2.5" role="list">
-            {weakAreas.map((categoryResult) => (
-              <div
-                key={categoryResult.name}
-                className="flex items-center gap-1.5 rounded-lg border border-warning/30 bg-card px-2.5 py-1.5"
-                role="listitem"
-              >
-                <span className="text-base" aria-hidden>{categoryResult.icon}</span>
-                <div>
-                  <p className="text-sm font-bold text-warning">{categoryResult.name}</p>
-                  <p className="text-xs text-warning/90">
-                    {t("questionBank.analytics.accuracy", { percent: categoryResult.accuracy })}
-                  </p>
+          <WarningCallout
+            title={t("questionBank.analytics.weakAreas")}
+            className="items-start p-4"
+            role="alert"
+          >
+            <div className="mt-3 flex flex-wrap gap-2.5" role="list">
+              {weakAreas.map((categoryResult) => (
+                <div
+                  key={categoryResult.name}
+                  className="flex items-center gap-1.5 rounded-lg border border-warning/30 bg-card px-2.5 py-1.5"
+                  role="listitem"
+                >
+                  <span className="text-base" aria-hidden>{categoryResult.icon}</span>
+                  <div>
+                    <p className="text-sm font-bold text-warning m-0">{categoryResult.name}</p>
+                    <p className="text-xs text-warning/90 m-0">
+                      {t("questionBank.analytics.accuracy", { percent: categoryResult.accuracy })}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </WarningCallout>
         </motion.div>
       )}
 

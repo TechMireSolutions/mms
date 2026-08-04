@@ -3,7 +3,6 @@ import type { Distribution } from '@/lib/data/hasanatData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import type { DistributionVisibleColumns } from "./DistributionManagerList";
 
 type DistributionStatus = Distribution["status"];
 
@@ -18,7 +17,6 @@ export interface UseDistributionManagerStateOptions {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
-  isColumnVisible?: (key: string) => boolean;
 }
 
 export function useDistributionManagerState({
@@ -32,7 +30,6 @@ export function useDistributionManagerState({
   onRestore,
   onBulkDelete,
   onBulkRestore,
-  isColumnVisible,
 }: UseDistributionManagerStateOptions) {
   const { t } = useTranslation();
   const statusLabels = useMemo(
@@ -78,17 +75,6 @@ export function useDistributionManagerState({
   useEffect(() => {
     setSelectedIds([]);
   }, [showDeleted]);
-
-  const visibleColumns: DistributionVisibleColumns = {
-    card: isColumnVisible ? isColumnVisible("card") : true,
-    recipient: isColumnVisible ? isColumnVisible("recipient") : true,
-    recipientClass: isColumnVisible ? isColumnVisible("recipientClass") : true,
-    quantity: isColumnVisible ? isColumnVisible("quantity") : true,
-    reason: isColumnVisible ? isColumnVisible("reason") : true,
-    issuedDate: isColumnVisible ? isColumnVisible("issuedDate") : true,
-    issuedBy: isColumnVisible ? isColumnVisible("issuedBy") : true,
-    status: isColumnVisible ? isColumnVisible("status") : true,
-  };
 
   const toggleStatus = (status: DistributionStatus) => setFilterStatus((selectedStatuses) => selectedStatuses.includes(status) ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status) : [...selectedStatuses, status]);
 
@@ -141,7 +127,6 @@ export function useDistributionManagerState({
     selectedIds,
     setSelectedIds,
     filtered,
-    visibleColumns,
     toggleStatus,
     handleDistribute,
     changeStatus,

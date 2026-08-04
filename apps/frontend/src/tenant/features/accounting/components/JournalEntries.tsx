@@ -5,6 +5,8 @@ import { useJournalEntriesController } from '@/tenant/features/accounting/compon
 
 export type { JournalEntriesProps } from '@/tenant/features/accounting/components/journalEntriesTypes';
 
+const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
+
 /**
  * JournalEntries Component
  *
@@ -16,12 +18,14 @@ export function JournalEntries(props: JournalEntriesProps) {
     entries,
     accounts,
     fiscalYears,
+    isColumnVisible,
     getColumnWidth,
     onColumnResize,
     columnCustomizer,
   } = props;
 
   const controller = useJournalEntriesController(props);
+  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   if (controller.mode === 'simple') {
     return (
@@ -59,15 +63,7 @@ export function JournalEntries(props: JournalEntriesProps) {
       fiscalYears={fiscalYears}
       selectedIds={controller.selectedIds}
       allFilteredSelected={controller.allFilteredSelected}
-      visibleColumns={{
-        ref: controller.showRef,
-        date: controller.showDate,
-        description: controller.showDescription,
-        tags: controller.showTags,
-        debit: controller.showDebit,
-        credit: controller.showCredit,
-        status: controller.showStatus,
-      }}
+      isColumnVisible={columnVisible}
       journalStatusConfig={controller.journalStatusConfig}
       grandDebit={controller.grandDebit}
       grandCredit={controller.grandCredit}

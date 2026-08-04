@@ -43,6 +43,7 @@ export default function WorkspaceRegistryList({
     return (
       <ErrorState
         title={t("apex.loadError")}
+        description={t("apex.loadFailedHint")}
         onRetry={() => void refetch()}
       />
     );
