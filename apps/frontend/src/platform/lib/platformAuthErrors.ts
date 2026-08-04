@@ -22,6 +22,8 @@ const PLATFORM_AUTH_ERROR_KEYS: Partial<Record<PlatformApiErrorType, AppTranslat
   user_exists: "platform.adminAlreadyExists",
   user_not_found: "platform.adminNotFound",
   forbidden: "platform.actionForbidden",
+  remote_migrate_disabled: "platform.profileMigrateRestartDisabled",
+  migrate_restart_in_progress: "platform.profileMigrateRestartInProgress",
   rate_limit_exceeded: "platform.rateLimited",
   validation_error: "platform.validationFailed",
   auth_required: "platform.authRequired",

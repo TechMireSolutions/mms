@@ -10,6 +10,7 @@ import { useWorkspaceRegistry } from "@/platform/hooks/useWorkspaceRegistry";
 import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { containerVariants, cardVariants } from "@/platform/lib/animations";
 
 type WorkspaceLinkDestination = typeof ROUTES.login | typeof ROUTES.forgotPassword;
@@ -53,7 +54,10 @@ export default function WorkspaceRegistryList({
 
   if (items.length === 0) {
     return (
-      <p className="py-2 text-center text-sm text-muted-foreground">{t(emptyMessageKey)}</p>
+      <EmptyState
+        title={t(emptyMessageKey)}
+        compact
+      />
     );
   }
 

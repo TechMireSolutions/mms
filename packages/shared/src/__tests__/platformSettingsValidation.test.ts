@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { platformSettingsUpdateSchema, resetDatabaseSchema, RESET_DATABASE_CONFIRM } from '../platformSettingsTypes.js';
+import {
+  platformSettingsUpdateSchema,
+  resetDatabaseSchema,
+  RESET_DATABASE_CONFIRM,
+  migrateAndRestartSchema,
+  MIGRATE_AND_RESTART_CONFIRM,
+} from '../platformSettingsTypes.js';
 
 describe('platformSettingsValidation', () => {
   describe('platformSettingsUpdateSchema', () => {
@@ -47,6 +53,36 @@ describe('platformSettingsValidation', () => {
     it('rejects invalid confirmation string', () => {
       const invalid = { confirm: 'RESET', password: 'secret' };
       const result = resetDatabaseSchema.safeParse(invalid);
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('migrateAndRestartSchema', () => {
+    it('accepts exact confirmation string with password', () => {
+      const valid = { confirm: MIGRATE_AND_RESTART_CONFIRM, password: 'secret' };
+      const result = migrateAndRestartSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects missing password', () => {
+      const invalid = { confirm: MIGRATE_AND_RESTART_CONFIRM };
+      const result = migrateAndRestartSchema.safeParse(invalid);
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid confirmation string', () => {
+      const invalid = { confirm: 'RESTART', password: 'secret' };
+      const result = migrateAndRestartSchema.safeParse(invalid);
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects unknown keys (strict)', () => {
+      const invalid = {
+        confirm: MIGRATE_AND_RESTART_CONFIRM,
+        password: 'secret',
+        extra: true,
+      };
+      const result = migrateAndRestartSchema.safeParse(invalid);
       expect(result.success).toBe(false);
     });
   });

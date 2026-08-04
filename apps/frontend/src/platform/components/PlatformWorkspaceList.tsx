@@ -35,8 +35,8 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   if (isError) {
     return (
       <ErrorState
-        title={t('apex.loadError')}
-        description={t('apex.loadFailedHint')}
+        title={t('platform.loadFailed')}
+        description={t('platform.loadFailedHint')}
         onRetry={() => void refetch()}
       />
     );

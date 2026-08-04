@@ -518,6 +518,16 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
 
   "platform.profileDestroyDatabasePrompt": "لتأكيد الإجراء، يرجى كتابة \"{confirm}\" أدناه:",
   "platform.profileDestroyDatabaseSuccess": "تم إعادة ضبط قاعدة البيانات بنجاح. تمت استعادة كافة مساحات العمل والمستخدمين إلى بذورها الافتراضية.",
+  "platform.profileMigrateRestart": "الترحيل وإعادة التشغيل",
+  "platform.profileMigrateRestartDesc": "يطبق ترحيلات قاعدة البيانات المعلقة، ثم يعيد تحميل عملية الخادم. لا يمسح البيانات.",
+  "platform.profileMigrateRestartButton": "ترحيل وإعادة تشغيل الخادم",
+  "platform.profileMigrateRestartTitle": "ترحيل وإعادة تشغيل الخادم؟",
+  "platform.profileMigrateRestartConfirm": "الترحيل وإعادة التشغيل",
+  "platform.profileMigrateRestartPrompt": "لتأكيد الإجراء، يرجى كتابة \"{confirm}\" أدناه:",
+  "platform.profileMigrateRestartSuccess": "تم قبول الترحيل وإعادة التشغيل. ستُنفَّذ الترحيلات قريبًا ثم يعاد تحميل الخادم.",
+  "platform.profileMigrateRestartDisabled": "الترحيل وإعادة التشغيل عن بُعد معطّل على هذا الخادم. عيّن PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART=true ثم أعد تحميل الخادم.",
+  "platform.profileMigrateRestartInProgress": "عملية ترحيل وإعادة تشغيل جارية بالفعل. انتظر حتى تنتهي ثم حاول مرة أخرى.",
+  "platform.profileMigrateRestartWaiting": "في انتظار عودة الخادم للعمل…",
 
   "account.title": "ملفي الشخصي",
   "account.subtitle": "تحديث بيانات الاتصال وبريد تسجيل الدخول",

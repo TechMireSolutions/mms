@@ -8,9 +8,11 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 
 import { containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 import { PlatformProfileCard } from "./account/PlatformProfileCard";
+import { PlatformMigrateRestartCard } from "./account/PlatformMigrateRestartCard";
 import { PlatformResetDatabaseCard } from "./account/PlatformResetDatabaseCard";
 import { PlatformProfileNameForm } from "./account/PlatformProfileNameForm";
 import { PlatformProfilePasswordForm } from "./account/PlatformProfilePasswordForm";
@@ -54,10 +56,11 @@ export default function PlatformAccount(): React.JSX.Element {
             className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start"
           >
             <motion.div variants={cardVariants} className="space-y-6">
-              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+              <h2 className={`${DETAIL_SECTION_TITLE} text-start`}>
                 {t("platform.myAccount")}
               </h2>
               <PlatformProfileCard profile={profile} />
+              {isSuperUser && <PlatformMigrateRestartCard />}
               {isSuperUser && <PlatformResetDatabaseCard />}
             </motion.div>
 

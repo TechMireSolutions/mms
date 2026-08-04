@@ -44,8 +44,8 @@ export default function ApexHome(): React.JSX.Element {
       <AuthPageFrame dir="ltr">
         <div className="relative z-10 w-full max-w-md">
           <ErrorState
-            title={t("errors.boundary.title")}
-            description={t("errors.boundary.description")}
+            title={t("platform.loadFailed")}
+            description={t("platform.loadFailedHint")}
             onRetry={() => void refetch()}
           />
         </div>

@@ -67,6 +67,7 @@ pnpm test             # Run Vitest suites for all workspaces
 | `MMS_APP_DOMAIN` | Backend | Apex + `*.` tenant host resolution (production). |
 | `PLATFORM_APP_URL` | Backend | Apex origin for platform email links / CORS pairing with `ALLOWED_ORIGIN`. |
 | `PLATFORM_ALLOW_ENV_BOOTSTRAP` | Backend | When `true`, seed super-user from `PLATFORM_ADMIN_EMAIL` + password env — otherwise first-run UI (`mms-auth-security.md`). |
+| `PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART` | Backend | When `true`, apex `super_user` may `POST /api/platform/admin/system/migrate-and-restart` (password + confirm). Default off. |
 | `NODE_ENV` | Backend | Run environment (`production` restricts CORS / cookie options). |
 
 **Client bundle hygiene:** Only `VITE_*` (and Vite-injected `import.meta.env`) may ship in the frontend bundle. **Ban** leaking `JWT_SECRET`, `DATABASE_URL`, or other server secrets into FE code / Vite `define` — bumps/env layout → `mms-dependencies.md` when touching tooling.

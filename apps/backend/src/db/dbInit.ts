@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import pg from 'pg';
 import { resolveBackendRoot } from '../config/loadEnv.js';
+import { loadServerConfig } from '../config/serverConfig.js';
 import { purgeExpiredAuthArtifacts } from '../services/auth/authArtifactService.js';
 import { initPlatformSettings } from '../services/platform/platformSettingsService.js';
 import { ensurePlatformSuperUserFromEnv } from '../services/platform/platformUserService.js';
@@ -63,45 +65,41 @@ const dataMigrationsToRun = [
   { id: '041', load: async () => (await import('./migrations/041_migrate_contact_setup_config.js')).runMigration041 },
 ];
 
+/** Resolve Drizzle SQL migrations folder (src in tsx, dist in production). */
+export function resolveMigrationsFolder(): string {
+  const backendRoot = resolveBackendRoot();
+  const srcMigrations = join(backendRoot, 'src/db/migrations_drizzle');
+  const distMigrations = join(backendRoot, 'dist/db/migrations_drizzle');
+  return existsSync(srcMigrations) ? srcMigrations : distMigrations;
+}
+
+/**
+ * Apply pending Drizzle DDL migrations only (no data migrations / seed).
+ * Safe to call repeatedly — already-applied migrations are no-ops.
+ * Schema conflicts fail closed (no “already exists” swallow).
+ *
+ * Uses a disposable `pg.Client` (never pool.connect/release) so session-scoped
+ * `app.rls_bypass=on` cannot poison the shared pool under live traffic.
+ */
+export async function applyDrizzleMigrations(): Promise<{ migrationsFolder: string }> {
+  initializeDatabaseConnection();
+  const migrationsFolder = resolveMigrationsFolder();
+  const { databaseUrl } = loadServerConfig();
+  const migrateClient = new pg.Client({ connectionString: databaseUrl });
+  await migrateClient.connect();
+  try {
+    await migrateClient.query(`SELECT set_config('app.rls_bypass', 'on', false)`);
+    const migrateDb = drizzle(migrateClient, { schema });
+    await migrate(migrateDb, { migrationsFolder });
+  } finally {
+    await migrateClient.end().catch(() => undefined);
+  }
+  return { migrationsFolder };
+}
+
 export async function initDb(): Promise<void> {
   try {
-    initializeDatabaseConnection();
-    const pool = getPool();
-
-    const backendRoot = resolveBackendRoot();
-    const srcMigrations = join(backendRoot, 'src/db/migrations_drizzle');
-    const distMigrations = join(backendRoot, 'dist/db/migrations_drizzle');
-    const migrationsFolder = existsSync(srcMigrations) ? srcMigrations : distMigrations;
-    const migrateClient = await pool.connect();
-    try {
-      await migrateClient.query(`SELECT set_config('app.rls_bypass', 'on', false)`);
-      const migrateDb = drizzle(migrateClient, { schema });
-      try {
-        await migrate(migrateDb, { migrationsFolder });
-      } catch (err: unknown) {
-        const pgErr = err as {
-          code?: string;
-          message?: string;
-          cause?: { code?: string; message?: string };
-        };
-        const code = pgErr?.code || pgErr?.cause?.code;
-        const msg = pgErr?.message || pgErr?.cause?.message || String(err);
-        if (
-          code === '42P07' ||
-          code === '42710' ||
-          code === '42P06' ||
-          msg.includes('already exists')
-        ) {
-          console.warn(
-            `[dbInit] Pre-existing schema relations or constraints detected (${code ?? 'already exists'}), continuing startup cleanly...`,
-          );
-        } else {
-          throw err;
-        }
-      }
-    } finally {
-      migrateClient.release();
-    }
+    await applyDrizzleMigrations();
 
     await runDataMigrations();
     await purgeExpiredAuthArtifacts();

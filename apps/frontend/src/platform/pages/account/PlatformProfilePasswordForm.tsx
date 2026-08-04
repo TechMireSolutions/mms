@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/button";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { FieldErrorMessage } from "@/components/ui/FormField";
+import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUpdatePlatformPassword } from "@/platform/hooks/usePlatformProfile";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
@@ -14,6 +15,7 @@ import {
 } from "@/platform/lib/platformValidation";
 import { notify } from "@/lib/notify";
 import { ROUTES } from "@/lib/config/routes";
+import { PLATFORM_PROFILE_SUBMIT_CLASS } from "./platformAccountStyles";
 
 export function PlatformProfilePasswordForm(): React.JSX.Element {
   const { t } = useTranslation();
@@ -52,14 +54,14 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
 
   return (
     <>
-      <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+      <h2 className={`${DETAIL_SECTION_TITLE} text-start`}>
         {t("platform.profileChangePassword")}
       </h2>
 
       <Card accentColor="emerald" className="p-0 overflow-hidden">
         <form onSubmit={(event) => void handleChangePassword(event)} className="p-6 space-y-4 text-start">
           <h3 className="text-sm font-bold text-foreground">{t("platform.profileChangePassword")}</h3>
-          {passwordError ? <Alert message={passwordError} /> : null}
+          {passwordError ? <FieldErrorMessage message={passwordError} /> : null}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <PasswordInput
@@ -89,7 +91,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
             />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            <Button type="submit" className="w-fit px-6 font-bold min-h-11 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updatePassword.isPending}>
+            <Button type="submit" className={PLATFORM_PROFILE_SUBMIT_CLASS} disabled={updatePassword.isPending}>
               {updatePassword.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />

@@ -34,3 +34,29 @@ export const resetDatabaseSchema = z.object({
 
 export type ResetDatabaseInput = z.infer<typeof resetDatabaseSchema>;
 
+/** Confirmation token for platform super-user migrate + process reload. */
+export const MIGRATE_AND_RESTART_CONFIRM = 'MIGRATE_AND_RESTART' as const;
+
+/**
+ * Body for `POST /api/platform/admin/system/migrate-and-restart`.
+ * Requires current platform password step-up (same pattern as database reset).
+ */
+export const migrateAndRestartSchema = z
+  .object({
+    confirm: z.literal(MIGRATE_AND_RESTART_CONFIRM, {
+      message: `Confirmation string must be "${MIGRATE_AND_RESTART_CONFIRM}"`,
+    }),
+    password: z.string().min(1),
+  })
+  .strict();
+
+export type MigrateAndRestartInput = z.infer<typeof migrateAndRestartSchema>;
+
+/** Success body for `POST /api/platform/admin/system/migrate-and-restart`. */
+export interface MigrateAndRestartAccepted {
+  success: true;
+  accepted: true;
+  message: string;
+  delayMs: number;
+}
+

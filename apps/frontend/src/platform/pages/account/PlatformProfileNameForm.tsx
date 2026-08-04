@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL, DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useUpdatePlatformProfileName } from "@/platform/hooks/usePlatformProfile";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { getPlatformNameError } from "@/platform/lib/platformValidation";
 import { notify } from "@/lib/notify";
+import { PLATFORM_PROFILE_SUBMIT_CLASS } from "./platformAccountStyles";
 
 export function PlatformProfileNameForm({
   initialName,
@@ -47,14 +48,14 @@ export function PlatformProfileNameForm({
 
   return (
     <>
-      <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+      <h2 className={`${DETAIL_SECTION_TITLE} text-start`}>
         {t("platform.profileName")}
       </h2>
       
       <Card accentColor="info" className="p-0 overflow-hidden">
         <form onSubmit={(event) => void handleSaveName(event)} className="p-6 space-y-4 text-start">
           <h3 className="text-sm font-bold text-foreground">{t("platform.profileName")}</h3>
-          {nameError ? <Alert message={nameError} /> : null}
+          {nameError ? <FieldErrorMessage message={nameError} /> : null}
           <div className="space-y-1.5">
             <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
             <Input
@@ -66,7 +67,7 @@ export function PlatformProfileNameForm({
               className="min-h-11"
             />
           </div>
-          <Button type="submit" className="w-fit px-6 font-bold min-h-11 rounded-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={updateName.isPending || name === platformUser?.name}>
+          <Button type="submit" className={PLATFORM_PROFILE_SUBMIT_CLASS} disabled={updateName.isPending || name === platformUser?.name}>
             {updateName.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />

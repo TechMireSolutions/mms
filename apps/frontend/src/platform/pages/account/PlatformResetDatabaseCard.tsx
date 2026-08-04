@@ -1,26 +1,14 @@
-import React, { useState, useId } from "react";
-import { Loader2 } from "lucide-react";
+import React, { useState } from "react";
 import { RESET_DATABASE_CONFIRM } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import PasswordInput from "@/components/ui/PasswordInput";
-import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useResetPlatformDatabase } from "@/platform/hooks/usePlatformSettings";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { ROUTES } from "@/lib/config/routes";
 import { clearAllClientStorage } from "@/lib/db";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { PlatformTypedConfirmDialog } from "@/platform/components/PlatformTypedConfirmDialog";
 
 export function PlatformResetDatabaseCard(): React.JSX.Element {
   const { t } = useTranslation();
@@ -30,7 +18,6 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
   const [confirmText, setConfirmText] = useState("");
   const [password, setPassword] = useState("");
   const [resetError, setResetError] = useState<string | null>(null);
-  const confirmInputId = useId();
 
   const handleResetDatabase = async (): Promise<void> => {
     if (confirmText.trim() !== RESET_DATABASE_CONFIRM || !password.trim()) return;
@@ -75,71 +62,35 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
         </Button>
       </Card>
 
-      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-destructive font-bold">{t("platform.profileDestroyDatabaseTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("platform.profileDestroyDatabaseDesc")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-3 my-2 text-start">
-            <label htmlFor={confirmInputId} className="block text-xs text-muted-foreground font-semibold cursor-pointer">
-              {t("platform.profileDestroyDatabasePrompt", { confirm: RESET_DATABASE_CONFIRM })}
-            </label>
-            <Input
-              id={confirmInputId}
-              name="confirmResetText"
-              type="text"
-              value={confirmText}
-              onChange={(event) => {
-                setConfirmText(event.target.value);
-                if (resetError) setResetError(null);
-              }}
-              placeholder={RESET_DATABASE_CONFIRM}
-              disabled={resetDbMutation.isPending}
-              className="min-h-11"
-            />
-            <PasswordInput
-              id="reset-db-password"
-              name="resetDbPassword"
-              label={t("platform.profileCurrentPassword")}
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                if (resetError) setResetError(null);
-              }}
-              disabled={resetDbMutation.isPending}
-            />
-            {resetError ? (
-              <FieldErrorMessage message={resetError} />
-            ) : null}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={resetDbMutation.isPending}>{t("common.cancel")}</AlertDialogCancel>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={
-                resetDbMutation.isPending
-                || confirmText.trim() !== RESET_DATABASE_CONFIRM
-                || !password.trim()
-              }
-              onClick={handleResetDatabase}
-            >
-              {resetDbMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
-                  {t("platform.profileDestroyDatabaseConfirm")}
-                </>
-              ) : (
-                t("platform.profileDestroyDatabaseConfirm")
-              )}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <PlatformTypedConfirmDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        title={t("platform.profileDestroyDatabaseTitle")}
+        description={t("platform.profileDestroyDatabaseDesc")}
+        confirmLabel={t("platform.profileDestroyDatabasePrompt", {
+          confirm: RESET_DATABASE_CONFIRM,
+        })}
+        expectedConfirm={RESET_DATABASE_CONFIRM}
+        confirmValue={confirmText}
+        onConfirmValueChange={(value) => {
+          setConfirmText(value);
+          if (resetError) setResetError(null);
+        }}
+        confirmInputName="confirmResetText"
+        confirmPlaceholder={RESET_DATABASE_CONFIRM}
+        password={password}
+        onPasswordChange={(value) => {
+          setPassword(value);
+          if (resetError) setResetError(null);
+        }}
+        passwordInputId="reset-db-password"
+        passwordInputName="resetDbPassword"
+        error={resetError}
+        pending={resetDbMutation.isPending}
+        confirmButtonLabel={t("platform.profileDestroyDatabaseConfirm")}
+        confirmVariant="destructive"
+        onConfirm={() => void handleResetDatabase()}
+      />
     </>
   );
 }

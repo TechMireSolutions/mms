@@ -518,6 +518,16 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
 
   "platform.profileDestroyDatabasePrompt": "تصدیق کے لیے، براہ کرم نیچے \"{confirm}\" لکھیں:",
   "platform.profileDestroyDatabaseSuccess": "ڈیٹا بیس کامیابی سے ری سیٹ ہو گیا۔ تمام فائلیں اور صارف پہلے سے طے شدہ حالت میں واپس آ گئے۔",
+  "platform.profileMigrateRestart": "مائگریٹ اور ری اسٹارٹ",
+  "platform.profileMigrateRestartDesc": "زیر التوا ڈیٹا بیس مائگریشنز لاگو کرتا ہے، پھر بیک اینڈ عمل کو دوبارہ لوڈ کرتا ہے۔ ڈیٹا نہیں مٹاتا۔",
+  "platform.profileMigrateRestartButton": "مائگریٹ اور بیک اینڈ ری اسٹارٹ",
+  "platform.profileMigrateRestartTitle": "مائگریٹ اور بیک اینڈ ری اسٹارٹ کریں؟",
+  "platform.profileMigrateRestartConfirm": "مائگریٹ اور ری اسٹارٹ",
+  "platform.profileMigrateRestartPrompt": "تصدیق کے لیے، براہ کرم نیچے \"{confirm}\" لکھیں:",
+  "platform.profileMigrateRestartSuccess": "مائگریٹ اور ری اسٹارٹ قبول ہو گیا۔ جلد مائگریشنز چلیں گی، پھر بیک اینڈ دوبارہ لوڈ ہوگا۔",
+  "platform.profileMigrateRestartDisabled": "اس سرور پر ریموٹ مائگریٹ اور ری اسٹارٹ بند ہے۔ PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART=true سیٹ کریں اور بیک اینڈ دوبارہ لوڈ کریں۔",
+  "platform.profileMigrateRestartInProgress": "مائگریٹ اور ری اسٹارٹ پہلے سے جاری ہے۔ ختم ہونے کا انتظار کریں، پھر دوبارہ کوشش کریں۔",
+  "platform.profileMigrateRestartWaiting": "بیک اینڈ کے واپس آن لائن آنے کا انتظار…",
 
   "account.title": "میرا پروفائل",
   "account.subtitle": "رابطہ کی تفصیلات اور سائن ان ای میل اپ ڈیٹ کریں",

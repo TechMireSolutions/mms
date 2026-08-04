@@ -13,6 +13,8 @@ import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions"
 import { CardSkeleton } from "@/components/ui/LoadingState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 import { containerVariantsConsole as containerVariants, itemVariants } from "@/platform/lib/animations";
 
@@ -29,12 +31,12 @@ export default function PlatformConsole(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const { platformUser, isSuperUser, canWorkspaces, canOnboard } = usePlatformPermissions();
-  const { data: workspaces, isLoading: workspacesLoading } = usePlatformWorkspaces();
+  const { data: workspaces, isLoading: workspacesLoading, isError: workspacesError } = usePlatformWorkspaces();
 
   const totalWorkspaces = workspaces?.length ?? 0;
   const activeWorkspaces = workspaces?.filter((w) => w.enabled).length ?? 0;
   const disabledWorkspaces = workspaces?.filter((w) => w.enabled === false).length ?? 0;
-  const metricsReady = !workspacesLoading && workspaces !== undefined;
+  const metricsReady = !workspacesLoading && !workspacesError && workspaces !== undefined;
 
   const headerActions = canOnboard ? (
     <Button
@@ -75,7 +77,7 @@ export default function PlatformConsole(): React.JSX.Element {
         {canWorkspaces ? (
           <>
             <motion.div variants={itemVariants}>
-              {metricsReady ? (
+              {workspacesError ? null : metricsReady ? (
                 <ModuleCommandMetricsGrid
                   items={[
                     {
@@ -105,7 +107,7 @@ export default function PlatformConsole(): React.JSX.Element {
 
             <motion.div
               variants={itemVariants}
-              className="bg-card/30 border border-border/40 rounded-2xl p-6 backdrop-blur-sm shadow-sm space-y-6"
+              className={cn(WORK_SURFACE, "p-6 space-y-6")}
             >
               <Suspense fallback={<WorkspaceListFallback />}>
                 <PlatformWorkspaceList />

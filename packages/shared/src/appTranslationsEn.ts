@@ -503,6 +503,16 @@ export const APP_TRANSLATIONS_EN = {
 
   "platform.profileDestroyDatabasePrompt": "To confirm, please type \"{confirm}\" below:",
   "platform.profileDestroyDatabaseSuccess": "Database reset successfully. All workspaces, users, and contacts have been restored to default seeds.",
+  "platform.profileMigrateRestart": "Migrate & Restart",
+  "platform.profileMigrateRestartDesc": "Applies pending database migrations, then reloads the backend process. Does not wipe data.",
+  "platform.profileMigrateRestartButton": "Migrate and Restart Backend",
+  "platform.profileMigrateRestartTitle": "Migrate and restart the backend?",
+  "platform.profileMigrateRestartConfirm": "Migrate & Restart",
+  "platform.profileMigrateRestartPrompt": "To confirm, please type \"{confirm}\" below:",
+  "platform.profileMigrateRestartSuccess": "Migrate and restart accepted. Migrations will run shortly, then the backend will reload.",
+  "platform.profileMigrateRestartDisabled": "Remote migrate and restart is disabled on this server. Set PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART=true and reload the backend.",
+  "platform.profileMigrateRestartInProgress": "A migrate and restart is already in progress. Wait for it to finish, then try again.",
+  "platform.profileMigrateRestartWaiting": "Waiting for the backend to come back online…",
 
   "account.title": "My profile",
   "account.subtitle": "Update your contact details and sign-in email",

@@ -18,6 +18,8 @@ const EN: Record<string, string> = {
   'platform.databaseError': 'Database error',
   'platform.resourceNotFound': 'Not found',
   'platform.rateLimited': 'Rate limited',
+  'platform.profileMigrateRestartDisabled': 'Remote migrate disabled',
+  'platform.profileMigrateRestartInProgress': 'Migrate already in progress',
   'platform.setupSessionExpired': 'Setup expired',
   'platform.adminAlreadyExists': 'Admin exists',
   'errors.boundary.description': 'Something went wrong. Reload the page or try again later.',
@@ -48,6 +50,12 @@ describe('platformAuthErrors', () => {
     );
     expect(mapPlatformAuthError(new ApiError(429, 'rl', 'rate_limit_exceeded'), t)).toBe(
       'Rate limited',
+    );
+    expect(mapPlatformAuthError(new ApiError(403, 'off', 'remote_migrate_disabled'), t)).toBe(
+      'Remote migrate disabled',
+    );
+    expect(mapPlatformAuthError(new ApiError(409, 'busy', 'migrate_restart_in_progress'), t)).toBe(
+      'Migrate already in progress',
     );
     expect(mapPlatformAuthError(new ApiError(404, 'gone', 'invalid_setup'), t)).toBe('Setup expired');
     expect(mapPlatformAuthError(new ApiError(409, 'dup', 'user_exists'), t)).toBe('Admin exists');

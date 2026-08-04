@@ -10,6 +10,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { DETAIL_SECTION_TITLE } from '@/components/ui/formStyles';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { containerVariants, cardVariants } from '@/platform/lib/animations';
 import { PlatformEditAdminAccessDialog } from '@/platform/components/PlatformEditAdminAccessDialog';
@@ -43,7 +44,7 @@ export function PlatformAdminsList({
 
   return (
     <div className="lg:col-span-2 space-y-4 text-start">
-      <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+      <h2 className={DETAIL_SECTION_TITLE}>
         {t('platform.manageAdmins')}
       </h2>
 

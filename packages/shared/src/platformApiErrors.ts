@@ -37,6 +37,8 @@ export const PLATFORM_HTTP_ERROR_TYPES = [
   'rate_limit_exceeded',
   'not_found',
   'database_error',
+  'remote_migrate_disabled',
+  'migrate_restart_in_progress',
 ] as const;
 
 /** @see PLATFORM_HTTP_ERROR_TYPES */

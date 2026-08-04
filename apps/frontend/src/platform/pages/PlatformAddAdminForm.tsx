@@ -4,7 +4,7 @@ import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS, type PlatformAdminPermissions } fro
 import PasswordInput from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL, DETAIL_SECTION_TITLE } from '@/components/ui/formStyles';
 import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
@@ -61,7 +61,7 @@ export function PlatformAddAdminForm(): React.JSX.Element {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground text-start">
+      <h2 className={`${DETAIL_SECTION_TITLE} text-start`}>
         {t('platform.addAdmin')}
       </h2>
       <Button
