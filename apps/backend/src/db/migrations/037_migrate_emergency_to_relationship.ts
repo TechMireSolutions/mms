@@ -27,6 +27,23 @@ export async function runMigration037(): Promise<void> {
         updated_at = NOW()
       WHERE custom_data ? 'emergencyContacts'
     `);
+
+    await tx.execute(sql`
+      DELETE FROM custom_tabs WHERE key = 'emergency'
+    `);
+
+    const fieldConfigRows = await tx.select().from(schema.contactFieldConfigs);
+    for (const row of fieldConfigRows) {
+      if (!row.config || typeof row.config !== 'object' || Array.isArray(row.config)) continue;
+      const config = row.config as unknown as FieldConfig;
+      const migrated = migrateEmergencyTabToRelationship(config);
+      if (JSON.stringify(config) === JSON.stringify(migrated)) continue;
+      await tx
+        .update(schema.contactFieldConfigs)
+        .set({ config: migrated as unknown as Record<string, unknown> })
+        .where(eq(schema.contactFieldConfigs.workspaceSubdomain, row.workspaceSubdomain));
+      configCount += 1;
+    }
   });
 
   const objectRows = await db.select().from(schema.objects);

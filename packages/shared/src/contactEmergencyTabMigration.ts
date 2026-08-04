@@ -86,20 +86,30 @@ export function migrateContactColumnPreferenceKeys<T extends { key: string }>(pr
 
 function migrateTabs(tabs: TabDefinition[] | undefined): TabDefinition[] | undefined {
   if (!Array.isArray(tabs)) return tabs;
-  return tabs.map((tab) => {
+  const migrated = tabs.map((tab) => {
     if (!tab || typeof tab !== 'object') return tab;
     const nextKey = normalizeContactFormTabId(tab.key);
-    if (nextKey === tab.key) return tab;
     const legacyLabelKey = tab.labelKey as string | undefined;
     return {
       ...tab,
       key: nextKey,
-      label: tab.label === 'Emergency' ? 'Relationship' : tab.label,
+      label:
+        nextKey === CONTACT_RELATIONSHIP_FORM_TAB &&
+        (tab.label === 'Emergency' || tab.key === LEGACY_EMERGENCY_FORM_TAB)
+          ? 'Relationship'
+          : tab.label,
       labelKey:
         legacyLabelKey === 'contacts.form.tabEmergency' || legacyLabelKey === 'contacts.tabs.emergency'
           ? 'contacts.form.tabRelationship'
           : tab.labelKey,
     };
+  });
+  const seenKeys = new Set<string>();
+  return migrated.filter((tab) => {
+    if (!tab || typeof tab !== 'object') return true;
+    if (seenKeys.has(tab.key)) return false;
+    seenKeys.add(tab.key);
+    return true;
   });
 }
 
@@ -118,7 +128,16 @@ function migrateFields(
 
 function migrateStringList(list: string[] | undefined): string[] | undefined {
   if (!Array.isArray(list)) return list;
-  return list.map((entry) => normalizeContactFormTabId(entry));
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const entry of list) {
+    const normalized = normalizeContactFormTabId(entry);
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      result.push(normalized);
+    }
+  }
+  return result;
 }
 
 function migrateColumnRegistry(

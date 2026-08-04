@@ -1,4 +1,4 @@
-import { DEFAULT_FORM_TABS, type TabDefinition } from "@mms/shared";
+import { DEFAULT_FORM_TABS, normalizeContactFormTabId, type TabDefinition } from "@mms/shared";
 import { apiJson } from "@/lib/apiClient";
 
 /** Row shape returned by `GET /api/custom-tabs`. */
@@ -42,11 +42,41 @@ export function mergeContactsFormTabsFromApi(
 ): TabDefinition[] {
   const baseTabs =
     documentFormTabs && documentFormTabs.length > 0 ? documentFormTabs : [...DEFAULT_FORM_TABS];
-  if (apiTabs.length === 0) return baseTabs;
-  return [
-    ...apiTabs,
-    ...baseTabs.filter((baseTab) => !apiTabs.some((apiTab) => apiTab.key === baseTab.key)),
-  ];
+
+  const normalizedApi = apiTabs.map((tab) => ({
+    ...tab,
+    key: normalizeContactFormTabId(tab.key),
+    label:
+      tab.key === "emergency" || tab.label === "Emergency"
+        ? "Relationship"
+        : tab.label,
+  }));
+
+  const normalizedBase = baseTabs.map((tab) => ({
+    ...tab,
+    key: normalizeContactFormTabId(tab.key),
+    label:
+      tab.key === "emergency" || tab.label === "Emergency"
+        ? "Relationship"
+        : tab.label,
+  }));
+
+  const merged =
+    normalizedApi.length === 0
+      ? normalizedBase
+      : [
+          ...normalizedApi,
+          ...normalizedBase.filter(
+            (baseTab) => !normalizedApi.some((apiTab) => apiTab.key === baseTab.key),
+          ),
+        ];
+
+  const seenKeys = new Set<string>();
+  return merged.filter((tab) => {
+    if (seenKeys.has(tab.key)) return false;
+    seenKeys.add(tab.key);
+    return true;
+  });
 }
 
 /** Fetch Contacts form tabs from typed `/api/custom-tabs`. */
