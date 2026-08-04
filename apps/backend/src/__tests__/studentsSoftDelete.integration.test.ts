@@ -86,7 +86,13 @@ describe('students soft delete routes', () => {
   });
 
   it('GET /api/students lists with includeDeleted options', async () => {
-    mockLoadStudentsPage.mockResolvedValue({ items: [], total: 0 });
+    mockLoadStudentsPage.mockResolvedValue({
+      students: [{ id: 's-deleted', deletedAt: '2026-01-15T00:00:00.000Z' }],
+      total: 1,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
@@ -100,6 +106,9 @@ describe('students soft delete routes', () => {
     expect(mockLoadStudentsPage).toHaveBeenCalledWith(
       expect.objectContaining({ includeDeleted: true }),
     );
+    const body = res.json() as { students: Array<{ id: string; deletedAt?: string | null }> };
+    expect(body.students).toHaveLength(1);
+    expect(body.students.every((row) => Boolean(row.deletedAt))).toBe(true);
     await app.close();
   });
 });

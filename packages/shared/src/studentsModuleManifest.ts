@@ -1,6 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
-import { normalizeStoredStudent } from './studentUtils.js';
+import { normalizeStoredStudent, stripStudentClientSoftDeleteFields } from './studentUtils.js';
 
 export const studentCoreSchema = z.object({
   id: z.union([z.string(), z.number()]).optional(),
@@ -21,10 +21,16 @@ export const studentCoreSchema = z.object({
   fatherName: z.string().optional(),
   motherName: z.string().optional(),
   guardianName: z.string().optional(),
+  // Custom Setup fields remain allowed; soft-delete keys are stripped in normalizeStoredStudent.
 }).passthrough();
 
-export const studentRecordSchema = studentCoreSchema.transform((record) =>
-  normalizeStoredStudent(record),
+/** Write/read student row schema — strips client soft-delete metadata on parse. */
+export const studentRecordSchema = z.preprocess(
+  (raw) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+    return stripStudentClientSoftDeleteFields({ ...(raw as Record<string, unknown>) });
+  },
+  studentCoreSchema.transform((record) => normalizeStoredStudent(record)),
 );
 
 export const studentListSchema = z.array(studentCoreSchema).transform((list) =>
@@ -54,7 +60,7 @@ export const STUDENTS_MODULE_MANIFEST = {
     reports: 'students.read',
   } satisfies Record<string, Permission>,
   work: {
-    directoryViews: ['list', 'cards'] as const,
+    directoryViews: ['table', 'cards'] as const,
     bulkActions: ['export', 'delete', 'status'] as const,
   },
   setupSubTabs: ['fields', 'preferences'] as const,

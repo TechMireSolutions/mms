@@ -9,6 +9,8 @@ export interface GenericRepoOptions {
   conflictTarget?: AnyPgColumn | AnyPgColumn[];
   /** When true, mirrors record.deletedAt into the table's deleted_at column. */
   syncDeletedAtColumn?: boolean;
+  /** When true, mirrors record.contactId into the table's contact_id column (keeps JSONB). */
+  syncContactIdColumn?: boolean;
 }
 
 /** Soft-delete scope for list queries on tables with a typed deleted_at column. */
@@ -21,6 +23,7 @@ export interface ListByWorkspaceOptions {
 type GenericTableRow = {
   id: string | number;
   customData: unknown;
+  contactId?: string | null;
   deletedAt?: Date | null;
   deletedBy?: string | null;
   deletionReason?: string | null;
@@ -31,6 +34,7 @@ type GenericTable = AnyPgTable & {
   workspaceSubdomain: AnyPgColumn;
   customData: AnyPgColumn;
   updatedAt: AnyPgColumn;
+  contactId?: AnyPgColumn;
   deletedAt?: AnyPgColumn;
   deletedBy?: AnyPgColumn;
   deletionReason?: AnyPgColumn;
@@ -42,6 +46,12 @@ function deletedAtFromRecord(record: { deletedAt?: unknown }): Date | null {
   if (raw instanceof Date) return Number.isNaN(raw.getTime()) ? null : raw;
   const parsed = new Date(String(raw));
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function contactIdFromRecord(record: { contactId?: unknown }): string | null {
+  if (record.contactId == null || record.contactId === '') return null;
+  const trimmed = String(record.contactId).trim();
+  return trimmed || null;
 }
 
 function softDeleteAuditFromRecord(record: {
@@ -60,15 +70,26 @@ function softDeleteAuditFromRecord(record: {
 }
 
 export function createGenericRepository<
-  T extends { id: string | number; deletedAt?: unknown; deletedBy?: unknown; deletionReason?: unknown },
+  T extends {
+    id: string | number;
+    contactId?: unknown;
+    deletedAt?: unknown;
+    deletedBy?: unknown;
+    deletionReason?: unknown;
+  },
   Table extends GenericTable,
 >(table: Table, options: GenericRepoOptions = {}) {
-  const { updateStrategy = 'merge', syncDeletedAtColumn = false } = options;
+  const {
+    updateStrategy = 'merge',
+    syncDeletedAtColumn = false,
+    syncContactIdColumn = false,
+  } = options;
   const dbTable: AnyPgTable = table;
   const shouldSyncDeletedAt = Boolean(syncDeletedAtColumn && table.deletedAt);
   const shouldSyncSoftDeleteAudit = Boolean(
     shouldSyncDeletedAt && table.deletedBy && table.deletionReason,
   );
+  const shouldSyncContactId = Boolean(syncContactIdColumn && table.contactId);
 
   function rowToRecord(row: GenericTableRow): T {
     const data = {
@@ -114,6 +135,9 @@ export function createGenericRepository<
       const audit = softDeleteAuditFromRecord(record);
       payload.deletedBy = audit.deletedBy;
       payload.deletionReason = audit.deletionReason;
+    }
+    if (shouldSyncContactId) {
+      payload.contactId = contactIdFromRecord(record);
     }
     return payload;
   }
@@ -266,6 +290,9 @@ export function createGenericRepository<
         WHEN excluded.deleted_at IS NULL THEN NULL
         ELSE COALESCE(excluded.deletion_reason, ${table.deletionReason})
       END`;
+    }
+    if (shouldSyncContactId) {
+      conflictSet.contactId = sql`excluded.contact_id`;
     }
 
     await withTenantTransaction(subdomain, async (tx) => {

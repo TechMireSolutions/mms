@@ -145,10 +145,10 @@ export default function StudentsSettings(): React.ReactElement {
                 </div>
                 <SegmentedPillFilter
                   size="sm"
-                  value={(settingsDraft.defaultViewLayout || "list") as "list" | "cards"}
+                  value={(settingsDraft.defaultViewLayout || "table") as "table" | "cards"}
                   onChange={(value) => upd("defaultViewLayout", value)}
                   options={[
-                    { value: "list", label: t("students.settings.listView") },
+                    { value: "table", label: t("students.settings.tableView") },
                     { value: "cards", label: t("students.settings.cardGrid") },
                   ]}
                 />

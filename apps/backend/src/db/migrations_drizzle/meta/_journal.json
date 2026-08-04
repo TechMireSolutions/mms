@@ -78,6 +78,20 @@
       "when": 1785782000000,
       "tag": "0010_contact_setup_config",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785831000000,
+      "tag": "0011_students_soft_delete_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785832800000,
+      "tag": "0012_students_contact_id",
+      "breakpoints": true
     }
   ]
 }

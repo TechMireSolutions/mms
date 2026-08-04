@@ -29,10 +29,6 @@ interface StudentsWorkTierProps {
   useServerWork: boolean;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
-  isTableView: boolean;
-  workLimit: number;
-  shownCount: number;
-  workTruncated: boolean;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
@@ -42,9 +38,9 @@ interface StudentsWorkTierProps {
   onRetry: () => void;
   onPageChange: (page: number) => void;
   onEdit: (student: Student) => void;
-  onDelete: (studentId: string) => void;
+  onDelete: (studentId: string, deletionReason?: string) => void;
   onRestore: (studentId: string) => void;
-  onBulkDelete: (studentIds: string[]) => void;
+  onBulkDelete: (studentIds: string[], deletionReason?: string) => void;
   onBulkRestore: (studentIds: string[]) => void;
   onBulkStatusChange: (studentIds: string[], status: string) => void;
 }
@@ -66,10 +62,6 @@ export function StudentsWorkTier({
   useServerWork,
   viewMode,
   onViewModeChange,
-  isTableView,
-  workLimit,
-  shownCount,
-  workTruncated,
   columnLayout,
   onSearchChange,
   onToggleStatus,
@@ -96,6 +88,15 @@ export function StudentsWorkTier({
       ? [{ key: "gender", label: toTitleCase(studentFilterGender), onRemove: () => onGenderChange("") }]
       : []),
   ];
+
+  const serverPagination = workPageData
+    ? {
+        total: workPageData.total,
+        page: workPageData.page,
+        limit: workPageData.limit,
+        hasMore: workPageData.hasMore,
+      }
+    : undefined;
 
   return (
     <motion.div
@@ -126,20 +127,15 @@ export function StudentsWorkTier({
 
       <FilterChips chips={studentFilterChips} onClearAll={onClearFilters} />
 
-      {workTruncated && (
-        <p className="text-xs text-muted-foreground px-1">
-          {t("students.workTruncated", {
-            limit: workLimit,
-            total: shownCount,
-          })}
-        </p>
-      )}
-
       <ErrorBoundary>
         {isWorkPageLoading ? (
           <TableSkeleton rows={6} cols={columnLayout.columnRegistry.length} />
         ) : isWorkPageError ? (
-          <ErrorState title={t("students.loadFailed")} onRetry={onRetry} />
+          <ErrorState
+            title={t("students.loadFailed")}
+            description={t("students.loadFailedHint")}
+            onRetry={onRetry}
+          />
         ) : (
           <>
             <StudentList
@@ -151,16 +147,7 @@ export function StudentsWorkTier({
               showDeleted={showDeleted}
               canWrite={canWrite}
               canDelete={canDelete}
-              serverPagination={
-                isTableView && workPageData && !showDeleted
-                  ? {
-                      total: workPageData.total,
-                      page: workPageData.page,
-                      limit: workPageData.limit,
-                      hasMore: workPageData.hasMore,
-                    }
-                  : undefined
-              }
+              serverPagination={serverPagination}
               onEdit={onEdit}
               onDelete={onDelete}
               onRestore={onRestore}
@@ -168,7 +155,7 @@ export function StudentsWorkTier({
               onBulkRestore={onBulkRestore}
               onBulkStatusChange={onBulkStatusChange}
             />
-            {useServerWork && isTableView && workPageData && !showDeleted && (
+            {useServerWork && workPageData && (
               <ListPagination
                 page={workPageData.page}
                 total={workPageData.total}

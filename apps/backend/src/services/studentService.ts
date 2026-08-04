@@ -1,11 +1,10 @@
 import {
   normalizeStoredStudent,
-  computeStudentsWidgetAggregates,
-  paginateStudents,
   computeNextGrNumber,
-  findStudentRegistrationConflict,
-  collectStudentLinkedContactIds,
+  backfillMissingStudentGrNumbers,
   hydrateStudentFromContacts,
+  normalizeStudentsSettings,
+  todayISO,
   type StudentGrNumberSettings,
   type StudentDuplicateCheckInput,
   type StudentsListQuery,
@@ -15,9 +14,11 @@ import {
   studentRecordSchema,
 } from '@mms/shared';
 import { loadContactsByIds } from './contactService.js';
+import { fetchObject } from './dbSyncService.js';
 import {
   createGenericRelationalService,
   createContactHydratedService,
+  hydrateRecordsFromContacts,
   type GenericServiceOptions,
 } from './genericRelationalService.js';
 import {
@@ -25,8 +26,23 @@ import {
   findStudentById,
   findStudentsByIds,
   saveStudent,
+  bulkSaveStudents,
 } from '../db/repositories/studentRepository.js';
+import {
+  listStudentsPage,
+  countStudentsActive,
+  aggregateStudentsCommandMetrics,
+} from '../db/repositories/studentRepositoryList.js';
+import {
+  aggregateStudentsWidgetQueries,
+  listStudentLinkedContactIdsSql,
+  countStudentsForNextGrNumber,
+  findStudentRegistrationConflictSql,
+} from '../db/repositories/studentRepositoryWidgets.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { broadcastTenantUpdate } from './websocketService.js';
+
+const STUDENTS_SETTINGS_KEY = 'students_settings';
 
 type StudentRepo = GenericServiceOptions<StudentRecord>['repo'];
 const crud = createGenericRelationalService<StudentRecord>({
@@ -72,7 +88,7 @@ export async function bulkUpdateStudentStatus(
   return { succeeded, failed: ids.length - succeeded };
 }
 
-const hydrated = createContactHydratedService<Student, StudentRecord>({
+const hydrated = createContactHydratedService<Student, Student>({
   listByWorkspaceFn: listStudentsByWorkspace,
   findByIdFn: findStudentById,
   findByIdsFn: findStudentsByIds,
@@ -83,7 +99,7 @@ const hydrated = createContactHydratedService<Student, StudentRecord>({
     row.guardianContactId,
   ],
   loadContactsByIdsFn: loadContactsByIds,
-  hydrateFn: (row, contacts) => hydrateStudentFromContacts(row as never, contacts as never) as unknown as StudentRecord,
+  hydrateFn: (row, contacts) => hydrateStudentFromContacts(row, contacts as never),
 });
 
 export const loadStudents = hydrated.loadAll;
@@ -93,28 +109,101 @@ export const loadStudentsByIds = hydrated.loadByIds;
 export async function loadStudentsWidgetAggregates(
   queries: StudentsWidgetQuery[],
 ): Promise<Record<string, import('@mms/shared').StudentsWidgetAggregateResult>> {
-  const rows = await loadStudents();
-  return computeStudentsWidgetAggregates(rows as Record<string, unknown>[], queries);
+  const tenant = getRequestTenant();
+  if (!tenant) return {};
+  return aggregateStudentsWidgetQueries(tenant, queries);
 }
 
-export async function loadStudentsPage(query: StudentsListQuery & { includeDeleted?: boolean }) {
-  const rows = await loadStudents({ includeDeleted: query.includeDeleted });
-  return paginateStudents(rows as import('@mms/shared').Student[], query);
+export async function loadStudentsPage(query: StudentsListQuery) {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { students: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 50, hasMore: false };
+  }
+  const page = await listStudentsPage(tenant, query);
+  const hydratedStudents = await hydrateRecordsFromContacts(
+    page.students,
+    (row) => [
+      row.contactId,
+      row.fatherContactId,
+      row.motherContactId,
+      row.guardianContactId,
+    ],
+    (row, contacts) => hydrateStudentFromContacts(row, contacts as never),
+    loadContactsByIds,
+  );
+  return {
+    ...page,
+    students: hydratedStudents,
+  };
 }
 
+export async function countStudents(): Promise<number> {
+  const tenant = getRequestTenant();
+  if (!tenant) return 0;
+  return countStudentsActive(tenant);
+}
 
+export async function loadStudentsCommandMetrics() {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      suspended: 0,
+      newThisPeriod: 0,
+    };
+  }
+  return aggregateStudentsCommandMetrics(tenant);
+}
 
 export async function loadStudentLinkedContactIds(excludeStudentId?: string) {
-  const all = await loadStudents();
-  return collectStudentLinkedContactIds(all, excludeStudentId);
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listStudentLinkedContactIdsSql(tenant, excludeStudentId);
 }
 
 export async function computeNextGrNumberForDate(regDate: string, settings: StudentGrNumberSettings) {
-  const all = await loadStudents();
-  return computeNextGrNumber(all, settings, regDate);
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return computeNextGrNumber([], settings, regDate);
+  }
+  const restartAnnually = settings.grNumberRestartAnnually !== false;
+  const count = await countStudentsForNextGrNumber(tenant, regDate, restartAnnually);
+  const template = settings.grNumberTemplate || '{seq}-{year}';
+  const digits = settings.grNumberDigits || 4;
+  const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
+  const seqStr = String(count + 1).padStart(digits, '0');
+  return template.replace('{seq}', seqStr).replace('{year}', String(year));
 }
 
 export async function checkStudentRegistrationDuplicate(input: StudentDuplicateCheckInput) {
-  const all = await loadStudents();
-  return { reason: findStudentRegistrationConflict(all, input) };
+  const tenant = getRequestTenant();
+  if (!tenant) return { reason: null };
+  const reason = await findStudentRegistrationConflictSql(tenant, input);
+  return { reason };
+}
+
+/** One-shot backfill of missing GR numbers for active students (Setup/Work writers). */
+export async function migrateStudentsMissingGrNumbers(): Promise<{ updated: number }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { updated: 0 };
+
+  const rawSettings = await fetchObject(STUDENTS_SETTINGS_KEY);
+  const settings = normalizeStudentsSettings(rawSettings);
+  const active = await listStudentsByWorkspace(tenant, { deleted: 'active' });
+  const updated = backfillMissingStudentGrNumbers(
+    active as StudentRecord[],
+    {
+      grNumberTemplate: settings.grNumberTemplate,
+      grNumberDigits: settings.grNumberDigits,
+      grNumberRestartAnnually: settings.grNumberRestartAnnually,
+    },
+    todayISO(),
+  );
+  if (updated.length === 0) return { updated: 0 };
+
+  await bulkSaveStudents(tenant, updated as Student[]);
+  broadcastTenantUpdate(tenant, 'collection', 'students');
+  return { updated: updated.length };
 }

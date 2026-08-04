@@ -5,8 +5,10 @@ import { createGenericRepository } from './genericRepository.js';
 const repo = createGenericRepository<Student, typeof students>(students, {
   conflictTarget: [students.workspaceSubdomain, students.id],
   syncDeletedAtColumn: true,
+  syncContactIdColumn: true,
 });
 
+export const studentRowToRecord = repo.rowToRecord;
 export const listStudentsByWorkspace = repo.listByWorkspace;
 export const findStudentById = repo.findById;
 export const findStudentsByIds = repo.findByIds;
@@ -15,3 +17,4 @@ export const bulkSaveStudents = repo.bulkSave;
 export const deleteStudent = repo.deleteById;
 export const replaceStudentsForWorkspace = repo.replaceForWorkspace;
 export const deleteStudentsByWorkspace = repo.deleteByWorkspace;
+export const countStudentsByWorkspace = repo.countByWorkspace;

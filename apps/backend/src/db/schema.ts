@@ -203,12 +203,20 @@ export const students = pgTable('students', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  contactId: text('contact_id'),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('students_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('students_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('students_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_contact_active_idx')
+    .on(table.workspaceSubdomain, table.contactId)
+    .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
   index('students_custom_data_gin_idx').using('gin', table.customData),
 ]);
 

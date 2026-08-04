@@ -108,6 +108,8 @@ describe("rbacService", () => {
     expect(isAllowedCollectionName("messages_u:peer")).toBe(false);
     expect(isAllowedCollectionName("whatsappTemplates")).toBe(false);
     expect(isAllowedCollectionName("whatsappTemplates_u:other-user")).toBe(false);
+    expect(isAllowedCollectionName("students")).toBe(false);
+    expect(isAllowedCollectionName("contacts")).toBe(false);
     expect(canWriteCollection(admin, "whatsappTemplates")).toBe(false);
     expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(false);
     expect(canWriteCollection(admin, "currencies")).toBe(true);

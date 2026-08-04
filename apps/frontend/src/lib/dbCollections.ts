@@ -12,7 +12,6 @@ import {
 } from "@/lib/dbLinkHydration.js";
 
 const BUSINESS_COLLECTIONS = new Set([
-  "students",
   "teachers",
   "enrollments",
   "attendance_records",

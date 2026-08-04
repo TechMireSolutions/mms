@@ -98,3 +98,46 @@ export function collectStudentLinkedContactIds(
     .map((row) => row.contactId)
     .filter((id): id is string | number => id != null && id !== '');
 }
+
+type StudentGrBackfillRow = StudentRow & { grNumber?: string; registeredDate?: string };
+
+/**
+ * Assigns GR numbers to students missing `grNumber` using the same rules as legacy FE migration.
+ * Mutates a working copy; returns only rows that received a new GR.
+ */
+export function backfillMissingStudentGrNumbers<T extends StudentGrBackfillRow>(
+  students: T[],
+  settings: StudentGrNumberSettings,
+  fallbackRegisteredDate: string,
+): T[] {
+  const working = students.map((row) => ({ ...row }));
+  const updated: T[] = [];
+  const template = settings.grNumberTemplate || '{seq}-{year}';
+  const digits = settings.grNumberDigits || 4;
+  const restartAnnually = settings.grNumberRestartAnnually !== false;
+
+  working.forEach((studentRecord, studentIndex) => {
+    if (studentRecord.grNumber) return;
+    const registeredDate = studentRecord.registeredDate || fallbackRegisteredDate;
+    const year = registeredDate ? new Date(registeredDate).getFullYear() : new Date().getFullYear();
+
+    let nextSeq = 1;
+    if (restartAnnually) {
+      const yearlyStudents = working.slice(0, studentIndex).filter((prev) => {
+        const prevDate = prev.registeredDate || '';
+        if (prevDate.startsWith(String(year))) return true;
+        if (prev.grNumber && String(prev.grNumber).includes(String(year))) return true;
+        return false;
+      });
+      nextSeq = yearlyStudents.length + 1;
+    } else {
+      nextSeq = studentIndex + 1;
+    }
+
+    const seqStr = String(nextSeq).padStart(digits, '0');
+    studentRecord.grNumber = template.replace('{seq}', seqStr).replace('{year}', String(year));
+    updated.push(studentRecord);
+  });
+
+  return updated;
+}

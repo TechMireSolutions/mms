@@ -23,7 +23,11 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   nameSingular: string;
   loadPageFn?: (query: TQuery & { includeDeleted: boolean }) => Promise<unknown>;
   loadAllFn: (options?: { includeDeleted?: boolean }) => Promise<TRecord[]>;
+  /** Prefer SQL count — avoids hydrate-all for `/count`. */
+  loadCountFn?: () => Promise<number>;
   computeMetricsFn?: (records: TRecord[], request: FastifyRequest) => Promise<unknown> | unknown;
+  /** Prefer SQL aggregates — avoids hydrate-all for `/metrics`. */
+  loadMetricsFn?: (request: FastifyRequest) => Promise<unknown>;
   loadWidgetAggregatesFn?: (queries: unknown[]) => Promise<unknown>;
   loadByIdsFn?: (ids: string[]) => Promise<TRecord[]>;
   loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
@@ -50,7 +54,9 @@ export function registerStandardExtendedRoutes<
     nameSingular,
     loadPageFn,
     loadAllFn,
+    loadCountFn,
     computeMetricsFn,
+    loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
     columnPreferencesObjectKey,
@@ -73,17 +79,19 @@ export function registerStandardExtendedRoutes<
   registerCountRoute(fastify, {
     path: prefix ? `${prefix}/count` : '/count',
     collection,
-    loadAllFn: () => loadAllFn(),
+    loadCountFn,
+    loadAllFn: loadCountFn ? undefined : () => loadAllFn(),
     errorMessagePrefix,
   });
 
-  if (computeMetricsFn) {
+  if (loadMetricsFn || computeMetricsFn) {
     registerMetricsRoute(fastify, {
       path: prefix ? `${prefix}/metrics` : '/metrics',
       collection,
       loadMetricsFn: async (request) => {
+        if (loadMetricsFn) return loadMetricsFn(request);
         const records = await loadAllFn();
-        return computeMetricsFn(records, request);
+        return computeMetricsFn!(records, request);
       },
       errorMessagePrefix: nameSingular,
     });
@@ -160,7 +168,9 @@ export function registerStandardTenantRoutes<
     namePlural,
     loadPageFn,
     loadAllFn,
+    loadCountFn,
     computeMetricsFn,
+    loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
     columnPreferencesObjectKey,
@@ -186,7 +196,9 @@ export function registerStandardTenantRoutes<
     nameSingular,
     loadPageFn,
     loadAllFn,
+    loadCountFn,
     computeMetricsFn,
+    loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
     columnPreferencesObjectKey,

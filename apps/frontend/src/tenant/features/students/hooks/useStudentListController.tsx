@@ -50,6 +50,7 @@ export function useStudentListController({
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
   const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -167,6 +168,8 @@ export function useStudentListController({
     setConfirmBulkDeleteOpen,
     confirmBulkRestoreOpen,
     setConfirmBulkRestoreOpen,
+    pendingDeleteId,
+    setPendingDeleteId,
     paginatedStudents,
     allSelected,
     someSelected,

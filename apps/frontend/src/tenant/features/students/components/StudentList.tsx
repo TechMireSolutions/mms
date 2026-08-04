@@ -19,9 +19,9 @@ export interface StudentListServerPagination {
 export interface StudentListProps {
   students: Student[];
   onEdit: (student: Student) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, deletionReason?: string) => void;
   onRestore?: (id: string) => void;
-  onBulkDelete?: (ids: string[]) => void;
+  onBulkDelete?: (ids: string[], deletionReason?: string) => void;
   onBulkRestore?: (ids: string[]) => void;
   onBulkStatusChange?: (ids: string[], status: string) => void;
   viewMode: WorkDirectoryViewMode;
@@ -83,7 +83,7 @@ export default function StudentList({
         onRowClick={list.handleRowClick}
         onViewStudent={list.setViewStudent}
         onEdit={onEdit}
-        onDelete={onDelete}
+        onDelete={(studentId) => list.setPendingDeleteId(studentId)}
         onRestore={onRestore}
         onOpenComposer={list.openComposer}
         onPageChange={list.setCurrentPage}
@@ -113,16 +113,38 @@ export default function StudentList({
       <StudentListProfileDrawer
         student={list.viewStudent}
         canWrite={canWrite}
+        canDelete={canDelete}
         onClose={() => list.setViewStudent(null)}
         onEdit={(student) => {
           list.setViewStudent(null);
           onEdit(student);
         }}
+        onRestore={onRestore}
       />
 
       <StudentListMessageModal
         messagingTarget={list.messagingTarget}
         onClose={list.closeComposer}
+      />
+
+      <ConfirmAlertDialog
+        open={list.pendingDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) list.setPendingDeleteId(null);
+        }}
+        title={list.t("students.deleteConfirmTitle")}
+        description={list.t("students.deleteConfirmDescription")}
+        confirmLabel={list.t("students.list.remove")}
+        cancelLabel={list.t("common.cancel")}
+        destructive
+        optionalReason={{
+          label: list.t("students.deletionReasonLabel"),
+          placeholder: list.t("students.deletionReasonPlaceholder"),
+        }}
+        onConfirm={(reason) => {
+          if (list.pendingDeleteId) onDelete(list.pendingDeleteId, reason);
+          list.setPendingDeleteId(null);
+        }}
       />
 
       <ConfirmAlertDialog
@@ -132,8 +154,13 @@ export default function StudentList({
         description={list.t("students.list.confirmRemoveSelected", { count: list.selectedIds.length })}
         confirmLabel={list.t("students.list.remove")}
         cancelLabel={list.t("common.cancel")}
-        onConfirm={() => {
-          onBulkDelete?.(list.selectedIds);
+        destructive
+        optionalReason={{
+          label: list.t("students.deletionReasonLabel"),
+          placeholder: list.t("students.deletionReasonPlaceholder"),
+        }}
+        onConfirm={(reason) => {
+          onBulkDelete?.(list.selectedIds, reason);
           list.setSelectedIds([]);
           list.setConfirmBulkDeleteOpen(false);
         }}

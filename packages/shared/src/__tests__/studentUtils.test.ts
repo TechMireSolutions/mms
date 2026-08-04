@@ -28,6 +28,23 @@ describe('studentUtils', () => {
       expect((normalized as any).phone).toBeUndefined();
       expect((normalized as any).fatherName).toBeUndefined();
     });
+    it('strips client soft-delete metadata from student record', () => {
+      const input = {
+        id: 'student-2',
+        contactId: 'contact-100',
+        grNumber: 'GR-002',
+        status: 'active',
+        deletedAt: '2026-01-01T00:00:00.000Z',
+        deletedBy: 'u-evil',
+        deletionReason: 'should not persist',
+      };
+
+      const normalized = normalizeStoredStudent(input);
+      expect(normalized.id).toBe('student-2');
+      expect((normalized as { deletedAt?: string }).deletedAt).toBeUndefined();
+      expect((normalized as { deletedBy?: string }).deletedBy).toBeUndefined();
+      expect((normalized as { deletionReason?: string }).deletionReason).toBeUndefined();
+    });
   });
 
   describe('hydrateStudentFromContacts', () => {

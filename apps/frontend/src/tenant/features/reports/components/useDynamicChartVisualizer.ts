@@ -3,12 +3,14 @@ import {
   DEFAULT_CHART_PALETTE_ID,
   getChartPaletteColors,
   type ContactsWidgetOperation,
+  type StudentsWidgetOperation,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { getObject } from '@/lib/db';
 import { useReportCollectionRows } from '@/lib/reports/useReportCollections';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
+import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { METADATA_FIELDS, type VisualizerConfig } from '@/tenant/features/reports/components/reportMetadata';
 import type {
   AggregatedItem,
@@ -29,8 +31,14 @@ import { buildDynamicChartVisualizerHandlers } from '@/tenant/features/reports/c
 
 const METADATA_CONFIGS: Record<string, CollectionMeta> = METADATA_FIELDS as unknown as Record<string, CollectionMeta>;
 const CONTACTS_VISUALIZER_QUERY_ID = 'contacts-visualizer';
+const STUDENTS_VISUALIZER_QUERY_ID = 'students-visualizer';
 
 function toContactsWidgetOperation(operation: ChartOperation): ContactsWidgetOperation {
+  if (operation === 'sum' || operation === 'avg') return operation;
+  return 'count';
+}
+
+function toStudentsWidgetOperation(operation: ChartOperation): StudentsWidgetOperation {
   if (operation === 'sum' || operation === 'avg') return operation;
   return 'count';
 }
@@ -73,8 +81,9 @@ export function useDynamicChartVisualizer({
   const { containerWidth, axisFontSize, legendFontSize, tickGap } = useDynamicChartVisualizerContainer(chartRef);
   const activeMeta = METADATA_CONFIGS[collectionKey];
   const isContacts = collectionKey === 'contacts';
+  const isStudents = collectionKey === 'students';
   const { rows: collectionRows, denominations } = useReportCollectionRows(
-    isContacts ? '' : collectionKey,
+    isContacts || isStudents ? '' : collectionKey,
   );
 
   const contactsVisualizerWidgets = useMemo(() => {
@@ -98,8 +107,33 @@ export function useDynamicChartVisualizer({
     ];
   }, [isContacts, operation, targetField, xAxisField, filters]);
 
+  const studentsVisualizerWidgets = useMemo(() => {
+    if (!isStudents) return [];
+    return [
+      {
+        id: STUDENTS_VISUALIZER_QUERY_ID,
+        collection: 'students',
+        operation: toStudentsWidgetOperation(operation),
+        targetField: targetField || undefined,
+        xAxisField,
+        filters: filters
+          .filter((rule) => rule.field && rule.value)
+          .map((rule) => ({
+            field: rule.field,
+            operator: rule.operator as 'equals' | 'contains' | 'gt' | 'lt' | undefined,
+            value: rule.value,
+          })),
+        chartLimit: 20,
+      },
+    ];
+  }, [isStudents, operation, targetField, xAxisField, filters]);
+
   const { data: contactsAggregates } = useContactsWidgetAggregates(contactsVisualizerWidgets, {
     enabled: isContacts,
+  });
+
+  const { data: studentsAggregates } = useStudentsWidgetAggregates(studentsVisualizerWidgets, {
+    enabled: isStudents,
   });
 
   useDynamicChartVisualizerMetaEffects({
@@ -126,6 +160,15 @@ export function useDynamicChartVisualizer({
       }));
       return sortAndCapAggregatedItems(items, xAxisField, operation);
     }
+    if (isStudents) {
+      const chartData = studentsAggregates?.[STUDENTS_VISUALIZER_QUERY_ID]?.chartData ?? [];
+      const items: AggregatedItem[] = chartData.map((row) => ({
+        name: row.name,
+        value: row.value,
+        count: row.value,
+      }));
+      return sortAndCapAggregatedItems(items, xAxisField, operation);
+    }
     return aggregateVisualizerRows({
       collectionKey,
       collectionRows,
@@ -137,7 +180,9 @@ export function useDynamicChartVisualizer({
     });
   }, [
     isContacts,
+    isStudents,
     contactsAggregates,
+    studentsAggregates,
     collectionKey,
     xAxisField,
     operation,

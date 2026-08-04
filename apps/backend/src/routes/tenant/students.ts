@@ -16,10 +16,13 @@ import {
   computeNextGrNumberForDate,
   checkStudentRegistrationDuplicate,
   loadStudentsWidgetAggregates,
+  loadStudentsCommandMetrics,
+  countStudents,
   updateStudentById,
+  migrateStudentsMissingGrNumbers,
 } from '../../services/studentService.js';
 import type { User } from '@mms/shared';
-import { STUDENTS_MODULE_MANIFEST, computeStudentsCommandMetrics, studentRecordSchema } from '@mms/shared';
+import { STUDENTS_MODULE_MANIFEST, studentRecordSchema } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import {
   studentsListQuerySchema,
@@ -41,28 +44,28 @@ export default async function studentsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Register Standard Tenant Routes ---
   registerStandardTenantRoutes(fastify, {
     collection: 'students',
-    schema: studentRecordSchema,
+    schema: studentRecordSchema as never,
     listQuerySchema: studentsListQuerySchema,
     defaultPageSize: STUDENTS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'students',
     nameSingular: 'student',
     namePlural: 'students',
     loadPageFn: (query) => loadStudentsPage(query),
-    loadAllFn: loadStudents,
-    loadByIdFn: loadStudentById,
-    createFn: createStudent,
-    updateFn: updateStudentById,
+    loadAllFn: loadStudents as never,
+    loadCountFn: countStudents,
+    loadByIdFn: loadStudentById as never,
+    createFn: createStudent as never,
+    updateFn: updateStudentById as never,
     deleteFn: deleteStudentById,
     restoreFn: restoreStudentById,
-    computeMetricsFn: (students) => computeStudentsCommandMetrics(students),
+    loadMetricsFn: loadStudentsCommandMetrics,
     loadWidgetAggregatesFn: loadStudentsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
-    loadByIdsFn: loadStudentsByIds,
+    loadByIdsFn: loadStudentsByIds as never,
     loadLinkedContactIdsFn: loadStudentLinkedContactIds,
     columnPreferencesObjectKey: STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-    validateDynamicFn: validateStudentDynamic,
+    validateDynamicFn: validateStudentDynamic as never,
     canWriteDeletedCheck: (user) => canDeleteCollection(user, 'students'),
   });
 
@@ -109,7 +112,6 @@ export default async function studentsRoutes(
     }
   });
 
-  // --- Custom GET Next GR Number ---
   fastify.get('/next-gr-number', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'students')) return sendForbidden(reply);
@@ -124,7 +126,6 @@ export default async function studentsRoutes(
     return reply.send({ grNumber });
   });
 
-  // --- Custom POST Duplicate Check ---
   fastify.post('/duplicate-check', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
@@ -132,5 +133,16 @@ export default async function studentsRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const result = await checkStudentRegistrationDuplicate(parsed.data);
     return reply.send(result);
+  });
+
+  fastify.post('/migrate-gr-numbers', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
+    try {
+      const result = await migrateStudentsMissingGrNumbers();
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to migrate student GR numbers');
+    }
   });
 }

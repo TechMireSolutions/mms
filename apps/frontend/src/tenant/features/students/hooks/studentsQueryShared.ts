@@ -62,6 +62,8 @@ export interface StudentsWidgetAggregateWidgetInput {
   filterOperator?: 'equals' | 'contains' | 'gt' | 'lt';
   filterValue?: string;
   xAxisField?: string;
+  filters?: Array<{ field: string; operator?: 'equals' | 'contains' | 'gt' | 'lt'; value?: string }>;
+  chartLimit?: number;
 }
 
 export type { StudentsListPageResult };

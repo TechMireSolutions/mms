@@ -69,7 +69,7 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
   grNumberTemplate: "{seq}-{year}",
   grNumberDigits: 4,
   grNumberRestartAnnually: true,
-  defaultViewLayout: "list",
+  defaultViewLayout: "table",
   fields: {
     gender: { enabled: true, required: true },
     dob: { enabled: true, required: true },

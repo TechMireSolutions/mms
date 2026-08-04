@@ -5,11 +5,18 @@ import {
   normalizeContactLinkedRecord,
   normalizeParentContactLinks,
 } from './contactLinkPolicy.js';
+import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
 import type { Student } from './studentTypes.js';
 
-/** Strips contact-owned fields before persisting a student row. */
+/** Strip client soft-delete metadata from student create/update payloads. */
+export function stripStudentClientSoftDeleteFields<T extends Record<string, unknown>>(record: T): T {
+  return stripContactClientSoftDeleteFields(record);
+}
+
+/** Strips contact-owned fields and client soft-delete metadata before persisting a student row. */
 export function normalizeStoredStudent<T extends Record<string, unknown>>(record: T): T {
-  let normalizedStudent = normalizeContactLinkedRecord(record);
+  let normalizedStudent = stripStudentClientSoftDeleteFields(record);
+  normalizedStudent = normalizeContactLinkedRecord(normalizedStudent);
   normalizedStudent = normalizeParentContactLinks(normalizedStudent);
   return normalizedStudent;
 }

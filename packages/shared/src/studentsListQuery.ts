@@ -10,6 +10,8 @@ export interface StudentsListQuery {
   gender?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
+  /** When true, SQL list returns deleted-only rows (Work trash). */
+  includeDeleted?: boolean;
 }
 
 export interface StudentsListPageResult {

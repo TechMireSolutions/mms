@@ -3,6 +3,12 @@ import { matchesWidgetFilter } from './utils.js';
 export type StudentsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
 export type StudentsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
 
+export interface StudentsWidgetFilter {
+  field: string;
+  operator?: StudentsWidgetFilterOperator;
+  value?: string;
+}
+
 export interface StudentsWidgetQuery {
   id: string;
   operation: StudentsWidgetOperation;
@@ -11,6 +17,8 @@ export interface StudentsWidgetQuery {
   filterOperator?: StudentsWidgetFilterOperator;
   filterValue?: string;
   xAxisField?: string;
+  filters?: StudentsWidgetFilter[];
+  chartLimit?: number;
 }
 
 export interface StudentsWidgetAggregateResult {
@@ -117,6 +125,8 @@ export function studentsWidgetQueryFromWidget(widget: {
   filterOperator?: StudentsWidgetFilterOperator;
   filterValue?: string;
   xAxisField?: string;
+  filters?: StudentsWidgetFilter[];
+  chartLimit?: number;
 }): StudentsWidgetQuery {
   return {
     id: widget.id,
@@ -126,5 +136,7 @@ export function studentsWidgetQueryFromWidget(widget: {
     filterOperator: widget.filterOperator,
     filterValue: widget.filterValue,
     xAxisField: widget.xAxisField,
+    filters: widget.filters,
+    chartLimit: widget.chartLimit,
   };
 }

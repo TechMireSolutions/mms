@@ -23,7 +23,7 @@ interface StudentListSelectionProps {
   onRowClick: (event: MouseEvent, student: Student) => void;
   onViewStudent: (student: Student) => void;
   onEdit: (student: Student) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, deletionReason?: string) => void;
   onRestore?: (id: string) => void;
 }
 

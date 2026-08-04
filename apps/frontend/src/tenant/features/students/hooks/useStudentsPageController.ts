@@ -33,7 +33,7 @@ export function useStudentsPageController() {
   const [showDeleted, setShowDeleted] = useState(false);
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
-  useGrMigration(settings, mutations.updateStudent, activeTab, canWrite);
+  useGrMigration(activeTab, canWrite);
 
   const columnLayout = useStudentColumnLayout(settings);
 
@@ -51,13 +51,10 @@ export function useStudentsPageController() {
   });
 
   const useServerWork = activeTab === 'work';
-  const isTableView = viewMode === 'table';
-  const workLimit = isTableView
-    ? STUDENTS_MODULE_MANIFEST.defaultPageSize
-    : STUDENTS_MODULE_MANIFEST.maxPageSize;
+  const workLimit = STUDENTS_MODULE_MANIFEST.defaultPageSize;
 
   const workPageQuery = useStudentsPaginated({
-    page: isTableView ? listPage : 1,
+    page: listPage,
     limit: workLimit,
     search: studentSearch,
     status: studentFilterStatus.length > 0 ? studentFilterStatus.join(',') : undefined,
@@ -70,12 +67,11 @@ export function useStudentsPageController() {
     setListPage(1);
   }, [studentSearch, studentFilterStatus, studentFilterGender, viewMode, showDeleted]);
 
-  const workStudents = useMemo(() => {
-    const rows = (workPageQuery.data?.students ?? []) as Student[];
-    return showDeleted ? rows.filter((row) => Boolean(row.deletedAt)) : rows;
-  }, [workPageQuery.data, showDeleted]);
-  const shownCount = showDeleted ? workStudents.length : (workPageQuery.data?.total ?? 0);
-  const workTruncated = useServerWork && !isTableView && Boolean(workPageQuery.data?.hasMore);
+  const workStudents = useMemo(
+    () => (workPageQuery.data?.students ?? []) as Student[],
+    [workPageQuery.data],
+  );
+  const shownCount = workPageQuery.data?.total ?? 0;
 
   const handleSaveStudent = async (studentToSave: Student) => {
     if (editStudent) {
@@ -122,12 +118,9 @@ export function useStudentsPageController() {
     useServerWork,
     viewMode,
     setViewMode,
-    isTableView,
-    workLimit,
     workPageQuery,
     workStudents,
     shownCount,
-    workTruncated,
     handleSaveStudent,
     toggleStudentStatus,
     setListPage,

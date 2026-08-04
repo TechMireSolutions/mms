@@ -47,12 +47,9 @@ export default function Students() {
     useServerWork,
     viewMode,
     setViewMode,
-    isTableView,
-    workLimit,
     workPageQuery,
     workStudents,
     shownCount,
-    workTruncated,
     handleSaveStudent,
     toggleStudentStatus,
     setListPage,
@@ -117,10 +114,6 @@ export default function Students() {
               useServerWork={useServerWork}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
-              isTableView={isTableView}
-              workLimit={workLimit}
-              shownCount={shownCount}
-              workTruncated={workTruncated}
               columnLayout={columnLayout}
               onSearchChange={setStudentSearch}
               onToggleStatus={toggleStudentStatus}
@@ -133,19 +126,39 @@ export default function Students() {
               onRetry={() => void workPageQuery.refetch()}
               onPageChange={setListPage}
               onEdit={(studentToEdit) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
-              onDelete={(studentId) => deleteStudent.mutate(String(studentId))}
+              onDelete={(studentId, deletionReason) => {
+                void deleteStudent.mutateAsync(
+                  { id: String(studentId), deletionReason },
+                  {
+                    onSuccess: () => notify.success(t('students.deleteSuccess')),
+                    onError: () => notify.error(t('students.deleteFailed')),
+                  },
+                );
+              }}
               onRestore={(studentId) => {
-                restoreStudent.mutate(String(studentId), {
+                void restoreStudent.mutateAsync(String(studentId), {
                   onSuccess: () => notify.success(t('students.restoreSuccess')),
+                  onError: () => notify.error(t('students.restoreFailed')),
                 });
               }}
-              onBulkDelete={(studentIds) => bulkDeleteStudents.mutate(studentIds.map(String))}
+              onBulkDelete={(studentIds, deletionReason) => {
+                void bulkDeleteStudents.mutateAsync(
+                  { ids: studentIds.map(String), deletionReason },
+                  {
+                    onSuccess: () => notify.success(t('students.deleteSuccess')),
+                    onError: () => notify.error(t('students.deleteFailed')),
+                  },
+                );
+              }}
               onBulkRestore={(studentIds) => {
-                bulkRestoreStudents.mutate(studentIds.map(String), {
+                void bulkRestoreStudents.mutateAsync(studentIds.map(String), {
                   onSuccess: () => notify.success(t('students.restoreSuccess')),
+                  onError: () => notify.error(t('students.restoreFailed')),
                 });
               }}
-              onBulkStatusChange={(studentIds, status) => bulkUpdateStudentStatus.mutate({ ids: studentIds.map(String), status })}
+              onBulkStatusChange={(studentIds, status) => {
+                void bulkUpdateStudentStatus.mutateAsync({ ids: studentIds.map(String), status });
+              }}
             />
           ) : activeTab === 'reports' ? (
             <StudentsReportsTier />

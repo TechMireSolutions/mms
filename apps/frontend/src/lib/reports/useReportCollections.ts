@@ -25,8 +25,6 @@ import {
 } from '@/tenant/hooks/collections/questionBank';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import {
-  fetchAllStudentsForQuery,
-  STUDENTS_QUERY_KEY,
   type StudentRecord,
 } from '@/tenant/hooks/collections/students';
 import {
@@ -67,8 +65,9 @@ export function useWidgetCollections(options?: {
   const needs = (collection: ReportCollection): boolean =>
     queryEnabled && (required === null || required.has(collection));
 
-  // Contacts widgets/charts read SQL aggregates — do not page-walk the directory here.
+  // Contacts + students widgets/charts read SQL aggregates — do not page-walk directories here.
   const contacts: Contact[] = [];
+  const students: Student[] = [];
   const sessions = useSessionsCollection({ enabled: needs('sessions') });
   const financeInvoices = useFinanceInvoicesCollection({ enabled: needs('finance_invoices') });
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
@@ -84,13 +83,6 @@ export function useWidgetCollections(options?: {
     enabled: needs('assessment_results'),
   });
 
-  const studentsQuery = useQuery({
-    queryKey: [...STUDENTS_QUERY_KEY, 'report-all'] as const,
-    queryFn: () => fetchAllStudentsForQuery({}),
-    enabled: needs('students'),
-    staleTime: 30_000,
-  });
-
   const teachersQuery = useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'report-all'] as const,
     queryFn: () => fetchAllTeachersForQuery({}),
@@ -99,7 +91,7 @@ export function useWidgetCollections(options?: {
   });
 
   return {
-    students: (studentsQuery.data ?? []) as unknown as Student[],
+    students,
     teachers: (teachersQuery.data ?? []) as Teacher[],
     sessions,
     finance_invoices: financeInvoices,
@@ -126,8 +118,9 @@ export function useReportCollectionRows(
   const { isAuthenticated } = useAuth();
   const key = collectionKey;
 
-  // Contacts chart visualizer uses POST /widget-aggregates SQL GROUP BY — no row dump.
+  // Contacts + students chart visualizers use POST /widget-aggregates — no row dump.
   const contacts: Contact[] = [];
+  const students: Student[] = [];
   const sessions = useSessionsCollection({ enabled: isAuthenticated && key === 'sessions' });
   const financeInvoices = useFinanceInvoicesCollection({
     enabled: isAuthenticated && key === 'finance_invoices',
@@ -149,13 +142,6 @@ export function useReportCollectionRows(
     enabled: isAuthenticated && key === 'assessment_results',
   });
 
-  const studentsQuery = useQuery({
-    queryKey: [...STUDENTS_QUERY_KEY, 'report-all'] as const,
-    queryFn: () => fetchAllStudentsForQuery({}),
-    enabled: isAuthenticated && key === 'students',
-    staleTime: 30_000,
-  });
-
   const teachersQuery = useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'report-all'] as const,
     queryFn: () => fetchAllTeachersForQuery({}),
@@ -169,7 +155,7 @@ export function useReportCollectionRows(
       rows = contacts as unknown as Record<string, unknown>[];
       break;
     case 'students':
-      rows = (studentsQuery.data ?? []) as unknown as Record<string, unknown>[];
+      rows = students as unknown as Record<string, unknown>[];
       break;
     case 'teachers':
       rows = (teachersQuery.data ?? []) as unknown as Record<string, unknown>[];

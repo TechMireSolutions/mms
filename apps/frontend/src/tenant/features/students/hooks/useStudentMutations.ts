@@ -43,16 +43,22 @@ export function useStudentMutations() {
   });
 
   const deleteStudent = useMutation({
-    mutationFn: async (id: string) =>
-      apiFetch(`${STUDENTS_API}/${id}`, { method: 'DELETE' }),
+    mutationFn: async ({ id, deletionReason }: { id: string; deletionReason?: string }) =>
+      apiJson<{ success: boolean }>(`${STUDENTS_API}/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        body: JSON.stringify(deletionReason ? { deletionReason } : {}),
+      }),
     onSuccess: invalidate,
   });
 
   const bulkDeleteStudents = useMutation({
-    mutationFn: async (ids: string[]) =>
+    mutationFn: async ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) =>
       apiJson<{ success: boolean; succeeded: number; failed: number }>(`${STUDENTS_API}/bulk-delete`, {
         method: 'POST',
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({
+          ids,
+          ...(deletionReason ? { deletionReason } : {}),
+        }),
       }),
     onSuccess: invalidate,
   });

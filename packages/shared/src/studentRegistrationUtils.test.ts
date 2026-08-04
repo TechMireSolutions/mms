@@ -3,6 +3,7 @@ import {
   collectStudentLinkedContactIds,
   computeNextGrNumber,
   findStudentRegistrationConflict,
+  backfillMissingStudentGrNumbers,
 } from './studentRegistrationUtils.js';
 
 const settings = {
@@ -52,5 +53,21 @@ describe('collectStudentLinkedContactIds', () => {
       's1',
     );
     expect(ids).toEqual([2]);
+  });
+});
+
+describe('backfillMissingStudentGrNumbers', () => {
+  it('fills missing GR using year restart rules', () => {
+    const updated = backfillMissingStudentGrNumbers(
+      [
+        { id: 's1', registeredDate: '2026-01-01', grNumber: '0001-2026' },
+        { id: 's2', registeredDate: '2026-02-01' },
+      ],
+      settings,
+      '2026-03-01',
+    );
+    expect(updated).toHaveLength(1);
+    expect(updated[0]?.id).toBe('s2');
+    expect(updated[0]?.grNumber).toBe('0002-2026');
   });
 });

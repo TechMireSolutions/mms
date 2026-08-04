@@ -32,6 +32,7 @@ interface StudentDetailFieldsSectionProps {
   motherPhone?: string;
   guardianPhone?: string;
   openComposer: (channel: "sms" | "whatsapp", recipients: MessagingRecipient[]) => void;
+  messagingEnabled?: boolean;
 }
 
 export function StudentDetailFieldsSection({
@@ -45,8 +46,10 @@ export function StudentDetailFieldsSection({
   motherPhone,
   guardianPhone,
   openComposer,
+  messagingEnabled = true,
 }: StudentDetailFieldsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
+  const canMessage = messagingEnabled;
 
   return (
     <div className="space-y-4">
@@ -99,8 +102,16 @@ export function StudentDetailFieldsSection({
                 badgeText="text-info"
                 name={fatherName}
                 phone={fatherPhone}
-                onWhatsApp={fatherPhone ? () => openComposer("whatsapp", [toMessagingRecipient({ id: fatherId, name: fatherName, phone: fatherPhone })]) : undefined}
-                onSms={fatherPhone ? () => openComposer("sms", [toMessagingRecipient({ id: fatherId, name: fatherName, phone: fatherPhone })]) : undefined}
+                onWhatsApp={
+                  canMessage && fatherPhone
+                    ? () => openComposer("whatsapp", [toMessagingRecipient({ id: fatherId, name: fatherName, phone: fatherPhone })])
+                    : undefined
+                }
+                onSms={
+                  canMessage && fatherPhone
+                    ? () => openComposer("sms", [toMessagingRecipient({ id: fatherId, name: fatherName, phone: fatherPhone })])
+                    : undefined
+                }
               />
             );
           }
@@ -118,8 +129,16 @@ export function StudentDetailFieldsSection({
                 badgeText="text-secondary"
                 name={motherName}
                 phone={motherPhone}
-                onWhatsApp={motherPhone ? () => openComposer("whatsapp", [toMessagingRecipient({ id: motherId, name: motherName, phone: motherPhone })]) : undefined}
-                onSms={motherPhone ? () => openComposer("sms", [toMessagingRecipient({ id: motherId, name: motherName, phone: motherPhone })]) : undefined}
+                onWhatsApp={
+                  canMessage && motherPhone
+                    ? () => openComposer("whatsapp", [toMessagingRecipient({ id: motherId, name: motherName, phone: motherPhone })])
+                    : undefined
+                }
+                onSms={
+                  canMessage && motherPhone
+                    ? () => openComposer("sms", [toMessagingRecipient({ id: motherId, name: motherName, phone: motherPhone })])
+                    : undefined
+                }
               />
             );
           }
@@ -137,8 +156,16 @@ export function StudentDetailFieldsSection({
                 badgeText="text-primary"
                 name={guardianName}
                 phone={guardianPhone}
-                onWhatsApp={guardianPhone ? () => openComposer("whatsapp", [toMessagingRecipient({ id: guardianId, name: guardianName, phone: guardianPhone })]) : undefined}
-                onSms={guardianPhone ? () => openComposer("sms", [toMessagingRecipient({ id: guardianId, name: guardianName, phone: guardianPhone })]) : undefined}
+                onWhatsApp={
+                  canMessage && guardianPhone
+                    ? () => openComposer("whatsapp", [toMessagingRecipient({ id: guardianId, name: guardianName, phone: guardianPhone })])
+                    : undefined
+                }
+                onSms={
+                  canMessage && guardianPhone
+                    ? () => openComposer("sms", [toMessagingRecipient({ id: guardianId, name: guardianName, phone: guardianPhone })])
+                    : undefined
+                }
               />
             );
           }

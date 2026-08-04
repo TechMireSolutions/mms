@@ -1,5 +1,6 @@
 import { getRequestTenant } from '../lib/tenantContext.js';
 import type { ZodType } from 'zod';
+import type { ListByWorkspaceOptions } from '../db/repositories/genericRepository.js';
 
 interface SoftDeleteFields {
   deletedAt?: string | null;
@@ -9,7 +10,7 @@ interface SoftDeleteFields {
 
 export interface GenericServiceOptions<T> {
   repo: {
-    listByWorkspace: (subdomain: string) => Promise<T[]>;
+    listByWorkspace: (subdomain: string, options?: ListByWorkspaceOptions) => Promise<T[]>;
     findById: (subdomain: string, id: string) => Promise<T | null>;
     save: (subdomain: string, record: T) => Promise<void>;
   };
@@ -32,8 +33,10 @@ export function createGenericRelationalService<
   async function loadAll(opts?: { includeDeleted?: boolean }): Promise<T[]> {
     const tenant = getRequestTenant();
     if (!tenant) return [];
-    const all = await repo.listByWorkspace(tenant);
-    return opts?.includeDeleted ? all : all.filter((row) => !row.deletedAt);
+    // includeDeleted matches Contacts: trash = deleted-only (not active+deleted).
+    return repo.listByWorkspace(tenant, {
+      deleted: opts?.includeDeleted ? 'deleted' : 'active',
+    });
   }
 
   async function create(record: T): Promise<T> {
@@ -163,11 +166,17 @@ export async function hydrateRecordsFromContacts<TRaw, THydrated>(
   return records.map((row) => hydrate(row, contactsData));
 }
 
+export type ListByWorkspaceWithDeletedFn<TRaw> = (
+  subdomain: string,
+  options?: ListByWorkspaceOptions,
+) => Promise<TRaw[]>;
+
 /**
- * Loads all database records (optionally including deleted) and hydrates them from contacts.
+ * Loads database records (SQL soft-delete scoped) and hydrates them from contacts.
+ * includeDeleted → deleted-only (Contacts trash parity).
  */
 export async function loadHydratedAll<TRaw extends { deletedAt?: string | null | undefined }, THydrated>(
-  listFn: (subdomain: string) => Promise<TRaw[]>,
+  listFn: ListByWorkspaceWithDeletedFn<TRaw>,
   collectContactIdsFn: (record: TRaw) => Array<string | number | null | undefined>,
   hydrateFn: (record: TRaw, contacts: unknown[]) => THydrated,
   loadContactsByIdsFn: (ids: string[]) => Promise<unknown[]>,
@@ -175,9 +184,10 @@ export async function loadHydratedAll<TRaw extends { deletedAt?: string | null |
 ): Promise<THydrated[]> {
   const tenant = getRequestTenant();
   if (!tenant) return [];
-  const rawRows = await listFn(tenant);
-  const filtered = options?.includeDeleted ? rawRows : rawRows.filter((row) => !row.deletedAt);
-  return hydrateRecordsFromContacts(filtered, collectContactIdsFn, hydrateFn, loadContactsByIdsFn);
+  const rawRows = await listFn(tenant, {
+    deleted: options?.includeDeleted ? 'deleted' : 'active',
+  });
+  return hydrateRecordsFromContacts(rawRows, collectContactIdsFn, hydrateFn, loadContactsByIdsFn);
 }
 
 /**
@@ -221,7 +231,7 @@ export async function loadHydratedByIds<TRaw, THydrated>(
 }
 
 export interface ContactHydratedServiceOptions<TRaw, THydrated> {
-  listByWorkspaceFn: (subdomain: string) => Promise<TRaw[]>;
+  listByWorkspaceFn: ListByWorkspaceWithDeletedFn<TRaw>;
   findByIdFn: (subdomain: string, id: string) => Promise<TRaw | null>;
   findByIdsFn: (subdomain: string, ids: string[]) => Promise<TRaw[]>;
   collectContactIdsFn: (record: TRaw) => Array<string | number | null | undefined>;
@@ -276,5 +286,3 @@ export function createContactHydratedService<
     loadByIds,
   };
 }
-
-
