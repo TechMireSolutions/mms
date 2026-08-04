@@ -5,6 +5,7 @@ import { calcAge } from '@/lib/data/studentsData';
 import { runFullEligibility, suggestClass, CheckResult } from '@/lib/data/enrollmentData';
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
@@ -118,10 +119,11 @@ export function EligibilityCheck(): React.ReactElement {
               </div>
             )}
             {warnCount > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning/10 border border-warning/30">
-                <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-                <span className="text-xs font-bold text-warning">{t("enrollments.eligibility.warnings", { count: warnCount })}</span>
-              </div>
+              <WarningCallout
+                density="compact"
+                className="rounded-xl py-1.5"
+                description={t("enrollments.eligibility.warnings", { count: warnCount })}
+              />
             )}
           </div>
 

@@ -4,6 +4,7 @@ import { runFullEligibility, CheckResult } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useTranslation } from "@/hooks/useTranslation";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 
 const ICONS: Record<string, React.ReactElement> = {
   pass: <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />,
@@ -63,10 +64,11 @@ export function Step3Eligibility({ student, session, suggestedClass }: Step3Elig
           </div>
         )}
         {warnCount > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning/10 border border-warning/30">
-            <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
-            <span className="text-xs font-bold text-warning">{t("enrollments.wizard.step3Warnings", { count: warnCount })}</span>
-          </div>
+          <WarningCallout
+            density="compact"
+            className="rounded-xl py-1.5"
+            description={t("enrollments.wizard.step3Warnings", { count: warnCount })}
+          />
         )}
       </div>
 

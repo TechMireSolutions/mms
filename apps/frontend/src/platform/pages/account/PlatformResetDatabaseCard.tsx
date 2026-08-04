@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useResetPlatformDatabase } from "@/platform/hooks/usePlatformSettings";
@@ -112,9 +113,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
               disabled={resetDbMutation.isPending}
             />
             {resetError ? (
-              <p className="text-xs text-destructive font-bold" role="alert">
-                {resetError}
-              </p>
+              <FieldErrorMessage message={resetError} />
             ) : null}
           </div>
           <AlertDialogFooter>

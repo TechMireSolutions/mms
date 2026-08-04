@@ -1,5 +1,5 @@
 import React from "react";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { isListSummaryWidgetType } from "@/components/dashboard-widgets/registry";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -115,7 +115,7 @@ export function WidgetBuilderOptionsPanel({
             value={builderTitle}
             onChange={(event) => setBuilderTitle(event.target.value)}
             placeholder={t("reports.widgets.builder.placeholderTitle")}
-            className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
+            className={FORM_INPUT_BUILDER}
           />
         </div>
 

@@ -1,6 +1,7 @@
 import type { Dispatch, JSX, SetStateAction } from "react";
 import { Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -107,10 +108,12 @@ export function CustomReportBuilderConfigPanel({
         </div>
         <div className="rounded-2xl border border-border bg-background/30 p-2.5 space-y-1 max-h-52 overflow-y-auto custom-scrollbar">
           {availableFields.length === 0 ? (
-            <div className="text-center py-6 text-muted-foreground italic text-xs flex flex-col items-center gap-1">
-              <Check className="w-5 h-5 text-success" />
-              {t("reports.builder.allFieldsSelected")}
-            </div>
+            <EmptyState
+              title={t("reports.builder.allFieldsSelected")}
+              icon={Check}
+              compact
+              className="italic"
+            />
           ) : (
             availableFields.map((availableField) => (
               <Button

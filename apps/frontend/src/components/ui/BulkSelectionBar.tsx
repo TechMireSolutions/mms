@@ -9,6 +9,10 @@ export type BulkSelectionTone = "glass" | "tint" | "plain";
 export const bulkSelectionActionClassName =
   "px-3 py-1.5 rounded-lg border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors min-h-11 flex items-center gap-1.5";
 
+/** Shared destructive delete button classes for floating bulk bars. */
+export const bulkSelectionDeleteClassName =
+  "px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11 flex items-center gap-1.5";
+
 /** Shared restore outline button classes for floating bulk bars. */
 export const bulkSelectionRestoreClassName =
   "px-3 py-1.5 rounded-lg border-primary/40 text-primary text-xs font-semibold hover:bg-primary/10 transition-colors min-h-11 flex items-center gap-1.5";

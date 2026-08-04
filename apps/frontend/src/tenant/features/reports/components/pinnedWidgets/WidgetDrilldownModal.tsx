@@ -1,9 +1,9 @@
 import React from "react";
-import { X, EyeOff } from "lucide-react";
-import { motion } from "framer-motion";
+import { EyeOff } from "lucide-react";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Modal } from "@/components/ui/Modal";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { useWidgetDrilldownModal } from "@/tenant/features/reports/components/pinnedWidgets/useWidgetDrilldownModal";
@@ -35,35 +35,15 @@ export function WidgetDrilldownModal({
   } = useWidgetDrilldownModal(widget);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm font-sans"
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        transition={{ type: "spring", duration: 0.35, bounce: 0.15 }}
-        className="w-full max-w-2xl bg-card dark:bg-card/90 border border-border/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-start"
-      >
-        <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border/45 bg-muted/20 p-6">
-          <div className="min-w-0 space-y-1">
-            <span className="block text-xs font-black uppercase tracking-widest text-primary">{t("reports.widgets.drilldownTitle")}</span>
-            <h3 className="truncate text-base font-black text-foreground">{t("reports.widgets.records", { title: resolveWidgetTitle(widget, t) })}</h3>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="shrink-0 rounded-full border border-border text-muted-foreground shadow-none transition-all hover:bg-muted hover:text-foreground"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="p-4 border-b border-border/45 bg-muted/10 flex flex-wrap items-center justify-between gap-2">
+    <Modal
+      open
+      onClose={onClose}
+      size="lg"
+      title={t("reports.widgets.records", { title: resolveWidgetTitle(widget, t) })}
+      subtitle={t("reports.widgets.drilldownTitle")}
+      panelClassName="max-h-[85vh] flex flex-col"
+      headerExtra={
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
           <SearchBar
             value={search}
             onChange={handleSearchChange}
@@ -74,27 +54,10 @@ export function WidgetDrilldownModal({
             {t("reports.widgets.foundCount", { count: filteredRecords.length })}
           </span>
         </div>
-
-        <div className="flex-1 overflow-y-auto p-6">
-          {filteredRecords.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground space-y-2">
-              <EyeOff className="w-8 h-8 mx-auto opacity-40" />
-              <p className="text-xs font-bold uppercase tracking-wider">{t("reports.widgets.noRecords")}</p>
-            </div>
-          ) : (
-            <WidgetDrilldownModalRecords
-              t={t}
-              widget={widget}
-              paginatedItems={paginatedItems}
-              studentNameMap={studentNameMap}
-              handleToggleStatus={handleToggleStatus}
-              handleDeleteDist={handleDeleteDist}
-            />
-          )}
-        </div>
-
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-border/45 bg-muted/20 flex items-center justify-end select-none text-xs gap-4">
+      }
+      footer={
+        totalPages > 1 ? (
+          <div className="flex w-full items-center justify-end gap-4 text-xs">
             <span className="text-xs font-bold text-muted-foreground">
               {t("reports.widgets.foundCount", { count: filteredRecords.length })}
             </span>
@@ -104,8 +67,25 @@ export function WidgetDrilldownModal({
               onPageChange={setCurrentPage}
             />
           </div>
-        )}
-      </motion.div>
-    </motion.div>
+        ) : undefined
+      }
+    >
+      {filteredRecords.length === 0 ? (
+        <EmptyState
+          title={t("reports.widgets.noRecords")}
+          icon={EyeOff}
+          compact
+        />
+      ) : (
+        <WidgetDrilldownModalRecords
+          t={t}
+          widget={widget}
+          paginatedItems={paginatedItems}
+          studentNameMap={studentNameMap}
+          handleToggleStatus={handleToggleStatus}
+          handleDeleteDist={handleDeleteDist}
+        />
+      )}
+    </Modal>
   );
 }

@@ -7,6 +7,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   MotionTableRow,
   OutstandingFeeMessagingActions,
@@ -58,8 +59,8 @@ export function OutstandingFeesTableDesktopBody({
         <TableBody className="divide-y divide-border/40">
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={canWriteMessaging ? 5 : 4} className="text-center py-8 text-xs text-muted-foreground select-none">
-                {t("finance.report.noInvoicesMatch")}
+              <TableCell colSpan={canWriteMessaging ? 5 : 4} className="p-0">
+                <EmptyState title={t("finance.report.noInvoicesMatch")} compact icon={null} className="select-none" />
               </TableCell>
             </TableRow>
           ) : (

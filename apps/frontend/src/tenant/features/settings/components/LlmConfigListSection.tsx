@@ -2,6 +2,7 @@ import type React from 'react';
 import { Brain, Plus, Search } from 'lucide-react';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsCallout } from '@/components/ui/SettingsShell';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
@@ -82,18 +83,14 @@ export function LlmConfigListSection({
           )}
 
           {configs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed p-8 text-center">
-              <Brain className="h-10 w-10 text-muted-foreground/60 mb-2" />
-              <p className="font-semibold text-sm">{t('settings.llmNoConfigsTitle')}</p>
-              <p className="text-xs text-muted-foreground mb-4">
-                {t('settings.llmNoConfigsDesc')}
-              </p>
-            </div>
+            <EmptyState
+              title={t('settings.llmNoConfigsTitle')}
+              description={t('settings.llmNoConfigsDesc')}
+              icon={Brain}
+              variant="dashed"
+            />
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border p-8 text-center bg-muted/10">
-              <Search className="h-8 w-8 text-muted-foreground/60 mb-2" />
-              <p className="font-medium text-xs">{t('settings.llmNoMatches')}</p>
-            </div>
+            <EmptyState title={t('settings.llmNoMatches')} icon={Search} compact />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {filtered.map((config) => (

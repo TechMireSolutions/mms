@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, Clock, Pause, Play, XCircle, Zap } from 'lucide-react';
+import { Clock, Pause, Play, XCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
+import { WarningCallout } from '@/components/ui/WarningCallout';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DispatchSpeed } from './useMessageComposerDispatch';
 
@@ -37,9 +38,25 @@ export function MessageComposerDispatchControls({
     <>
       <AnimatePresence>
         {skippedCount > 0 && (
-          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="flex flex-col gap-2 rounded-lg border border-warning/20 bg-warning/10 p-2.5 text-xs text-warning sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-2"><AlertCircle className="h-4 w-4 shrink-0" /><span className="min-w-0">{t('messaging.skippedNotice', { count: String(skippedCount), type: isEmail ? t('messaging.emailAddress') : t('messaging.phoneNumber') })}</span></div>
-            <Button type="button" variant="link" onClick={onShowSkipped} className="inline-flex min-h-11 shrink-0 items-center self-end p-0 text-xs font-semibold sm:self-auto">{t('messaging.viewSkipped')}</Button>
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
+            <WarningCallout
+              density="compact"
+              className="rounded-lg sm:items-center"
+              description={t('messaging.skippedNotice', {
+                count: String(skippedCount),
+                type: isEmail ? t('messaging.emailAddress') : t('messaging.phoneNumber'),
+              })}
+              action={
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={onShowSkipped}
+                  className="inline-flex min-h-11 shrink-0 items-center self-end p-0 text-xs font-semibold sm:self-auto"
+                >
+                  {t('messaging.viewSkipped')}
+                </Button>
+              }
+            />
           </motion.div>
         )}
       </AnimatePresence>

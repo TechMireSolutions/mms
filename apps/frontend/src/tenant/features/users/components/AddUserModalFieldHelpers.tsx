@@ -1,18 +1,14 @@
 import React from "react";
-import { AlertCircle } from "lucide-react";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 
 interface FieldErrorProps {
   msg?: string;
 }
 
+/** @deprecated Prefer `FieldErrorMessage` from FormPrimitives / FormField. */
 export function FieldError({ msg }: FieldErrorProps): JSX.Element | null {
-  if (!msg) return null;
-  return (
-    <p className="flex items-center gap-1 text-xs text-destructive font-medium mt-1">
-      <AlertCircle className="w-3 h-3" /> {msg}
-    </p>
-  );
+  return <FieldErrorMessage message={msg} />;
 }
 
 interface LabelProps {

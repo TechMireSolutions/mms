@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import {
   OutstandingFeeMessagingActions,
@@ -36,9 +37,7 @@ export function OutstandingFeesTableMobileList({
 }: OutstandingFeesTableMobileListProps) {
   if (rows.length === 0) {
     return (
-      <p className="py-8 text-center text-xs text-muted-foreground select-none">
-        {t("finance.report.noInvoicesMatch")}
-      </p>
+      <EmptyState title={t("finance.report.noInvoicesMatch")} compact icon={null} className="select-none" />
     );
   }
 

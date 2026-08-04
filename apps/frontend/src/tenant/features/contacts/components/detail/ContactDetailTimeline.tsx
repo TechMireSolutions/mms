@@ -6,6 +6,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACTIVITY_TYPE_I18N } from "@/lib/contacts/contactI18n";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ICON_MAP } from "./contactDetailStyles";
@@ -61,10 +62,11 @@ export function ContactDetailTimeline({
       <div className="space-y-6 relative ps-3">
         <div className="absolute start-[3px] top-0 bottom-0 w-0.5 bg-border/50" />
         {(!activities || activities.length === 0) ? (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-30">
-            <History className="w-12 h-12 mb-2" />
-            <p className="text-xs font-bold uppercase tracking-widest">{t('contacts.detail.quietTimeline')}</p>
-          </div>
+          <EmptyState
+            title={t('contacts.detail.quietTimeline')}
+            icon={History}
+            className="opacity-30 uppercase tracking-widest"
+          />
         ) : (
           activities.map((act, idx) => {
             const Icon = ICON_MAP[act.type] || History;

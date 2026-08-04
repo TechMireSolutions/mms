@@ -1,5 +1,5 @@
 import React from "react";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -124,7 +124,7 @@ export function WidgetBuilderMetricOptions({
             value={builderFilterValue}
             onChange={(event) => setBuilderFilterValue(event.target.value)}
             placeholder={t("reports.widgets.builder.placeholderValue")}
-            className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11 disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
           />
         </div>
       </div>

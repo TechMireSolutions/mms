@@ -23,7 +23,7 @@ export function StudentListContent(props: StudentListContentProps) {
 
   if (props.paginatedStudents.length === 0) {
     return (
-      <div className={`${WORK_SURFACE} overflow-hidden bg-card/45`}>
+      <div className={`${WORK_SURFACE} overflow-hidden`}>
         <EmptyState
           icon={GraduationCap}
           title={t("students.list.emptyTitle")}
@@ -34,7 +34,7 @@ export function StudentListContent(props: StudentListContentProps) {
   }
 
   return (
-    <div className={`${WORK_SURFACE} overflow-hidden bg-card/45`}>
+    <div className={`${WORK_SURFACE} overflow-hidden`}>
       <div className="overflow-x-auto">
         <StudentListDesktopTable {...props} />
       </div>

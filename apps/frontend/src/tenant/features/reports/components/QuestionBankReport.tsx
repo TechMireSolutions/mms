@@ -96,7 +96,7 @@ export default function QuestionBankReport(): React.JSX.Element {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title={t("questionBank.analytics.difficultyBreakdown")}>
           {difficultyData.some((item) => item.questions > 0 || item.tests > 0) ? (
-            <div className="h-[11.25rem]" aria-hidden>
+            <div className="h-chart-sm" aria-hidden>
               <SafeResponsiveContainer width="100%" height={180}>
                 <BarChart data={difficultyData} barSize={28}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -115,7 +115,7 @@ export default function QuestionBankReport(): React.JSX.Element {
 
         <SectionCard title={t("questionBank.analytics.categoryBreakdown")}>
           {categoryData.some((item) => item.questions > 0) ? (
-            <div className="h-[11.25rem]" aria-hidden>
+            <div className="h-chart-sm" aria-hidden>
               <SafeResponsiveContainer width="100%" height={180}>
                 <BarChart data={categoryData} barSize={28} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />

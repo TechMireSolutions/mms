@@ -35,7 +35,7 @@ export function ResultsViewRankingsList({
   const showPercentage = isColumnVisible("percentage");
 
   return (
-    <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm" aria-label={t("examinations.rankings")}>
+    <Card accentColor="warning" className="p-0 overflow-hidden" aria-label={t("examinations.rankings")}>
       <div className="px-4 py-3 border-b border-border/40 flex min-w-0 items-center gap-2 ps-6.5 bg-muted/20">
         <Trophy className="w-4 h-4 shrink-0 text-warning" aria-hidden="true" />
         <h3 className="min-w-0 truncate text-sm font-bold text-foreground m-0">{t("examinations.rankingsTitle", { name: exam.name })}</h3>

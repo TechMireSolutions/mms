@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export { WidgetBuilderIconPicker, type WidgetBuilderIconTab } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderIconPicker";
@@ -79,7 +79,7 @@ export function WidgetBuilderCardTextOptions({
             value={fixedSubText}
             onChange={(event) => setFixedSubText(event.target.value)}
             placeholder={t("reports.widgets.builder.placeholderSubtitle")}
-            className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
+            className={FORM_INPUT_BUILDER}
           />
         </div>
       )}

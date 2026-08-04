@@ -1,6 +1,7 @@
 import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -96,11 +97,11 @@ export function DuplicateDetectionModal({
             <p className="text-sm">{t("common.loading")}</p>
           </div>
         ) : activePairs.length === 0 ? (
-          <div className="py-12 text-center">
-            <Check className="w-10 h-10 text-primary mx-auto mb-3" />
-            <p className="text-sm font-semibold text-foreground">{t("contacts.duplicates.allResolved")}</p>
-            <p className="text-xs text-muted-foreground mt-1">{t("contacts.duplicates.listClean")}</p>
-          </div>
+          <EmptyState
+            title={t("contacts.duplicates.allResolved")}
+            description={t("contacts.duplicates.listClean")}
+            icon={Check}
+          />
         ) : (
           <>
             <p className="text-xs text-muted-foreground">{t("contacts.duplicates.dismissSessionHint")}</p>

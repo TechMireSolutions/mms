@@ -23,7 +23,7 @@ After **creating or editing code**, run a completion review **before** marking t
 | Auth / tenant / RLS / RBAC touched | Relevant backend `inject()` allow+deny test — or state skip reason |
 | New `t()` keys | Add to `appTranslationsEn.ts` then ar/ur/fa packs |
 | Shell / layout / touch / RTL / tables | Spot-check 375 / 768 / 1440; run responsive specs named in `mms-ui-ux-design.md` §7 when AppLayout, PlatformPageShell, toast layer, or shared table/button primitives change |
-| AppLayout / FormModal / DataTable primitives | Note or run a11y axe smoke from `mms-testing-observability.md` (serious/critical) |
+| AppLayout / FormModal / Table primitives | Note or run a11y axe smoke from `mms-testing-observability.md` (serious/critical) |
 
 4. **Lint diagnostics** — check edited files; fix new issues you introduced.
 5. **Cleanup** — remove unused imports, dead code, and debug logging in the change boundary.

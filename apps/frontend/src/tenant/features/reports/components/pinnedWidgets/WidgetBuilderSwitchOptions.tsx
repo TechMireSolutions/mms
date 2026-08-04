@@ -1,5 +1,5 @@
 import React from "react";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -115,7 +115,7 @@ export function WidgetBuilderSwitchOptions({
             value={switchLabelOn}
             onChange={(event) => setSwitchLabelOn(event.target.value)}
             placeholder={t("reports.widgets.builder.placeholderActive")}
-            className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
+            className={FORM_INPUT_BUILDER}
           />
         </div>
         <div className="space-y-1">
@@ -125,7 +125,7 @@ export function WidgetBuilderSwitchOptions({
             value={switchLabelOff}
             onChange={(event) => setSwitchLabelOff(event.target.value)}
             placeholder={t("reports.widgets.builder.placeholderInactive")}
-            className="bg-card/40 backdrop-blur-md font-semibold text-xs py-1.5 min-h-11"
+            className={FORM_INPUT_BUILDER}
           />
         </div>
       </div>

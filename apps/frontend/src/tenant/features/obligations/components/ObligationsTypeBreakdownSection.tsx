@@ -52,7 +52,7 @@ export function ObligationsTypeBreakdownSection({
           const sharePercent = totalAmount ? (typeBreakdownItem.total / totalAmount) * 100 : 0;
 
           return (
-            <Card key={typeBreakdownItem.name} accentColor="primary" className="p-4 space-y-1.5 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md transition-all">
+            <Card key={typeBreakdownItem.name} accentColor="primary" className="p-4 space-y-1.5 transition-all">
               <header className="flex min-w-0 items-center justify-between gap-2">
                 <h3 className="min-w-0 truncate text-xs font-bold text-foreground m-0">{typeBreakdownItem.name}</h3>
                 <span className="shrink-0 text-xs px-1.5 py-0.5 rounded-full font-bold text-white" style={{ background: colors[index % colors.length] }}>

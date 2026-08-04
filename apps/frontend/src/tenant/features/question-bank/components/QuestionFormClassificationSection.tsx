@@ -1,7 +1,7 @@
 import { Tag } from "lucide-react";
 import { APP_LANGUAGES, formatLanguageSelectLabel, type AppLanguageCode, type AppTranslationKey, type QuestionDifficulty } from "@mms/shared";
 import { Card } from "@/components/ui/card";
-import { Field } from "@/components/ui/FormPrimitives";
+import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_SELECT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -65,9 +65,7 @@ export function QuestionFormClassificationSection({
           required
           translate={(key) => t(key as AppTranslationKey)}
         />
-        {errors.categoryIds && (
-          <p className="text-xs text-destructive font-medium">{errors.categoryIds}</p>
-        )}
+        <FieldErrorMessage message={errors.categoryIds} />
       </Card>
     </div>
   );

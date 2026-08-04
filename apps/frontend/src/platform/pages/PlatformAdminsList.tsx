@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { containerVariants, cardVariants } from '@/platform/lib/animations';
 import { PlatformEditAdminAccessDialog } from '@/platform/components/PlatformEditAdminAccessDialog';
@@ -183,9 +184,11 @@ export function PlatformAdminsList({
           </AnimatePresence>
         </motion.div>
       ) : (
-        <div className="text-center py-12 border-2 border-dashed border-border/30 rounded-2xl bg-muted/5">
-          <p className="text-sm text-muted-foreground">{t('platform.noAdmins')}</p>
-        </div>
+        <EmptyState
+          title={t('platform.noAdmins')}
+          variant="dashed"
+          className="border-border/30 bg-muted/5 rounded-2xl"
+        />
       )}
 
       {editingAdmin ? (

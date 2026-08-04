@@ -6,7 +6,7 @@ import type { DistributionManagerListProps } from "@/tenant/features/hasanat/com
 
 export function DistributionManagerList(props: DistributionManagerListProps): React.JSX.Element {
   return (
-    <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
+    <Card accentColor="primary" className="p-0 overflow-hidden">
       {props.viewMode === "cards" ? (
         <DistributionManagerListCards {...props} />
       ) : (

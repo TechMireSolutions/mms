@@ -5,6 +5,7 @@ import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMoney, formatDate } from "@mms/shared";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import {
@@ -106,8 +107,8 @@ export function OverdueObligationsWidgetList({
               <TableBody className="divide-y divide-border/40">
                 {paginatedStudents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={canWriteMessaging ? 6 : 5} className="text-center py-8 text-xs text-muted-foreground select-none">
-                      {t("finance.report.noInvoicesMatch")}
+                    <TableCell colSpan={canWriteMessaging ? 6 : 5} className="p-0">
+                      <EmptyState title={t("finance.report.noInvoicesMatch")} compact icon={null} className="select-none" />
                     </TableCell>
                   </TableRow>
                 ) : (

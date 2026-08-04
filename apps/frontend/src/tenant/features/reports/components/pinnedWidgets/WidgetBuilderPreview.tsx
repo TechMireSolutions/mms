@@ -4,6 +4,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 interface WidgetBuilderPreviewProps {
   previewWidget: CustomWidget;
@@ -31,7 +33,7 @@ export function WidgetBuilderPreview({
   const { t } = useTranslation();
 
   return (
-    <div className="p-4 rounded-2xl border border-border bg-card/10 backdrop-blur-xl flex flex-col justify-between relative min-h-[21.875rem]">
+    <div className={cn(WORK_SURFACE, "p-4 flex flex-col justify-between relative min-h-[21.875rem]")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between text-start">
           <span className="text-xs font-black text-muted-foreground uppercase tracking-widest block">{t("reports.widgets.builder.testerPreview")}</span>
@@ -52,7 +54,7 @@ export function WidgetBuilderPreview({
 
         <div className="flex items-center justify-center py-4 bg-muted/10 rounded-2xl border border-dashed border-border/60 min-h-[13.75rem]">
           <div
-            className="overflow-hidden border border-border shadow-lg rounded-3xl transition-all duration-100 flex items-center justify-center bg-card/40 backdrop-blur-md animate-fade-in"
+            className={cn(WORK_SURFACE_INNER, "overflow-hidden shadow-lg rounded-3xl transition-all duration-100 flex items-center justify-center animate-fade-in")}
             style={{ width: scalerSize, height: scalerSize }}
           >
             <CustomWidgetRenderer

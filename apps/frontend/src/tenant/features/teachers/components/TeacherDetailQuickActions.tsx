@@ -1,5 +1,6 @@
 import { useTranslation } from "@/hooks/useTranslation";
 import { QuickActionButton } from "@/components/ui/QuickActionButton";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { Mail, MessageCircle, MessageSquare, Phone } from "lucide-react";
 import { toMessagingRecipient, type Teacher } from "@mms/shared";
 
@@ -18,8 +19,7 @@ interface TeacherDetailQuickActionsProps {
   onOpenComposer: (channel: MessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 
-const QUICK_ACTION_BASE =
-  "border-border bg-card/45 backdrop-blur-sm text-center shadow-none";
+const QUICK_ACTION_BASE = `${WORK_SURFACE_INNER} text-center shadow-none`;
 
 export function TeacherDetailQuickActions({
   teacher,

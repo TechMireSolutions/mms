@@ -1,7 +1,9 @@
 import { Mail, MessageCircle, MessageSquare, RotateCcw } from "lucide-react";
+import type React from "react";
 import type { ReactElement } from "react";
 import {
   bulkSelectionActionClassName,
+  bulkSelectionDeleteClassName,
   bulkSelectionRestoreClassName,
 } from "@/components/ui/BulkSelectionBar";
 import { Button } from "@/components/ui/button";
@@ -81,6 +83,32 @@ export function BulkSelectionRestoreAction({
       className={bulkSelectionRestoreClassName}
     >
       <RotateCcw className="w-3.5 h-3.5" /> {label}
+    </Button>
+  );
+}
+
+export interface BulkSelectionDeleteActionProps {
+  label: string;
+  onClick: () => void;
+  /** Optional leading icon (defaults to none). Pass Trash2/Archive as needed. */
+  icon?: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
+}
+
+/** Destructive delete/trash action for Work bulk bars. */
+export function BulkSelectionDeleteAction({
+  label,
+  onClick,
+  icon: Icon,
+}: BulkSelectionDeleteActionProps): ReactElement {
+  return (
+    <Button
+      type="button"
+      variant="destructive"
+      onClick={onClick}
+      className={bulkSelectionDeleteClassName}
+    >
+      {Icon ? <Icon className="w-3.5 h-3.5" aria-hidden /> : null}
+      {label}
     </Button>
   );
 }

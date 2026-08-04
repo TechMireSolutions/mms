@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
@@ -116,13 +117,17 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
       <section className="p-5 space-y-4">
         {displayRecords.length === 0 ? (
-          <div className="text-center py-8">
-            <Users className="w-9 h-9 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground m-0">{t("dashboard.widgets.noAttendanceRecorded")}</p>
-            <Link to={ROUTES.attendance} className="inline-flex min-h-11 items-center text-xs text-primary font-bold hover:underline mt-1.5">
-              {t("dashboard.widgets.markAttendance")}
-            </Link>
-          </div>
+          <EmptyState
+            title={t("dashboard.widgets.noAttendanceRecorded")}
+            icon={Users}
+            compact
+            className="uppercase tracking-wider"
+            action={
+              <Link to={ROUTES.attendance} className="inline-flex min-h-11 items-center text-xs text-primary font-bold hover:underline">
+                {t("dashboard.widgets.markAttendance")}
+              </Link>
+            }
+          />
         ) : (
           <>
             {/* Overall rate */}

@@ -17,7 +17,7 @@ export function ResultsViewStats({ stats, t }: ResultsViewStatsProps): React.Rea
         { label: t("examinations.stats.passed"), value: stats.passed },
         { label: t("examinations.stats.failed"), value: stats.failed },
       ].map((stat) => (
-        <Card accentColor="primary" key={stat.label} className="p-3.5 text-center shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+        <Card accentColor="primary" key={stat.label} className="p-3.5 text-center">
           <p className="text-xl font-bold text-foreground leading-none">{stat.value}</p>
           <p className="text-xs text-muted-foreground mt-1.5 mb-0">{stat.label}</p>
         </Card>

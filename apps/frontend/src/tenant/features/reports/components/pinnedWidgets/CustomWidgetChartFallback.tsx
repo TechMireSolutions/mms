@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { computeWidgetChartData } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
@@ -25,9 +26,13 @@ export default function CustomWidgetChartFallback({
 
   if (chartData.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/40 rounded-xl bg-card/20">
-        <span className="text-xs font-bold uppercase tracking-wider">{t("reports.widgets.noChartData")}</span>
-      </div>
+      <EmptyState
+        title={t("reports.widgets.noChartData")}
+        variant="dashed"
+        compact
+        icon={null}
+        className="h-full border-border/40 bg-card/20 rounded-xl uppercase tracking-wider"
+      />
     );
   }
 

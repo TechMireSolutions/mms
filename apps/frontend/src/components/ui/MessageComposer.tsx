@@ -6,6 +6,7 @@ import {
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
+import { WarningCallout } from '@/components/ui/WarningCallout';
 import { useMessageTemplates } from '@/hooks/useMessaging';
 import { useTranslation } from '@/hooks/useTranslation';
 import { MessageComposerDispatchControls } from './messageComposer/MessageComposerDispatchControls';
@@ -142,9 +143,10 @@ export default function MessageComposer({
       <div className="space-y-4">
         <p className="text-xs leading-relaxed text-muted-foreground">{note}</p>
         {dispatch.pendingAudit ? (
-          <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning" role="status">
-            {t('messaging.pendingAuditHint')}
-          </p>
+          <WarningCallout
+            density="compact"
+            description={t('messaging.pendingAuditHint')}
+          />
         ) : null}
         <MessageComposerDispatchControls
           skippedCount={dispatch.skippedRecipients.length}

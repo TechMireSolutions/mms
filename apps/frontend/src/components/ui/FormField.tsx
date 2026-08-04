@@ -1,6 +1,8 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
 import { LABEL } from "@/components/ui/formPrimitiveStyles";
+import { FORM_ERROR } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 interface FieldProps {
   label: React.ReactNode;
@@ -9,6 +11,30 @@ interface FieldProps {
   error?: string;
   id?: string;
   children: React.ReactNode;
+}
+
+/** Inline field validation message — use for errors outside `<Field>`. */
+export function FieldErrorMessage({
+  message,
+  id,
+  className,
+}: {
+  message?: string;
+  id?: string;
+  className?: string;
+}): React.JSX.Element | null {
+  if (!message) return null;
+  return (
+    <p
+      id={id}
+      role="alert"
+      aria-live="polite"
+      className={cn(FORM_ERROR, "font-medium flex items-center gap-1", className)}
+    >
+      <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+      <span>{message}</span>
+    </p>
+  );
 }
 
 interface InputLikeProps {
@@ -103,10 +129,7 @@ export function Field({ label, required = false, hint = undefined, error = undef
       </label>
       {enhancedChildren}
       {error ? (
-        <p id={errorId} role="alert" aria-live="polite" className="text-xs text-destructive mt-1 font-medium flex items-center gap-1">
-          <AlertCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
-          <span>{error}</span>
-        </p>
+        <FieldErrorMessage message={error} id={errorId} />
       ) : (
         hint && <p id={hintId} className="text-xs text-muted-foreground mt-1">{hint}</p>
       )}

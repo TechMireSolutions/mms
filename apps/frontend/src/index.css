@@ -66,6 +66,16 @@
     0 4px 6px -2px hsl(var(--foreground) / 0.06),
     0 12px 32px -8px hsl(var(--foreground) / 0.12);
 
+  /* Repeated layout sizes (Rule of Three) */
+  --height-chart-sm: 11.25rem;
+  --height-chart-md: 12.5rem;
+  --height-chart-lg: 15rem;
+  --max-width-toast: 26.25rem;
+  --max-width-filter-sm: 9.375rem;
+  --z-index-modal: 50;
+  --z-index-modal-priority: 60;
+  --z-index-toast: 100;
+
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-fade-in: fade-in 0.4s ease-out forwards;

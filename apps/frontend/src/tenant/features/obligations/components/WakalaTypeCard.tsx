@@ -1,9 +1,11 @@
 import React from "react";
-import { Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { WakalaDistributionList } from "@/tenant/features/obligations/components/WakalaDistributionList";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -80,12 +82,15 @@ export function WakalaTypeCard({
 
       <div className="bg-muted/20">
         {!isComplete && total > 0 && (
-          <div className="flex items-center gap-1.5 px-4 py-2 bg-warning/10 border-b border-warning/20 text-xs text-warning" role="alert">
-            <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.wakala.incompleteAlert", { pct: total.toFixed(1) })}
-          </div>
+          <WarningCallout
+            density="compact"
+            role="alert"
+            className="rounded-none border-x-0 border-t-0"
+            description={t("obligations.wakala.incompleteAlert", { pct: total.toFixed(1) })}
+          />
         )}
         {wakalaDistributions.length === 0 ? (
-          <p className="px-4 py-3 text-xs text-muted-foreground m-0">{t("obligations.wakala.noDistributions")}</p>
+          <EmptyState title={t("obligations.wakala.noDistributions")} compact icon={null} className="px-4 py-3" />
         ) : (
           <WakalaDistributionList
             distributions={wakalaDistributions}

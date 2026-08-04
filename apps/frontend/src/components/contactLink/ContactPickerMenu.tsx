@@ -9,6 +9,7 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 
 export interface ContactPickerMenuProps {
@@ -54,11 +55,13 @@ export function ContactPickerMenu({
         </div>
       )}
       {matches.length === 0 && !isSearching && (
-        <div className="px-4.5 py-4 text-xs text-muted-foreground flex flex-col items-center justify-center gap-1.5 text-center bg-muted/5">
-          <User className="w-5 h-5 text-muted-foreground/45" />
-          <p className="font-semibold text-foreground/80">{emptyTitle}</p>
-          <p className="text-xs text-muted-foreground">{emptyHint}</p>
-        </div>
+        <EmptyState
+          title={emptyTitle}
+          description={emptyHint}
+          icon={User}
+          compact
+          className="bg-muted/5"
+        />
       )}
       {matches.map((contact) => {
         const contactPhone = getPrimaryPhone(contact);

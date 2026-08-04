@@ -8,6 +8,7 @@ import {
   type Contact,
 } from '@mms/shared';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingState';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import {
@@ -116,7 +117,7 @@ export function MessagingWorkRecipientsList({
           );
         })}
         {contacts.length === 0 && (
-          <p className="py-6 text-center text-sm text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
+          <EmptyState title={t('messaging.selectRecipientsDesc')} compact icon={null} />
         )}
       </div>
       ) : (
@@ -187,8 +188,8 @@ export function MessagingWorkRecipientsList({
           })}
           {contacts.length === 0 && (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">
-                {t('messaging.selectRecipientsDesc')}
+              <TableCell colSpan={4} className="p-0">
+                <EmptyState title={t('messaging.selectRecipientsDesc')} compact icon={null} />
               </TableCell>
             </TableRow>
           )}

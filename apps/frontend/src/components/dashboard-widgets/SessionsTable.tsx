@@ -6,6 +6,7 @@ import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { ROUTES } from "@/lib/config/routes";
@@ -111,11 +112,9 @@ export default function SessionsTable({ title }: { title?: string }) {
         />
       </div>
 
-      <div className="divide-y divide-border/40 min-h-[12.5rem]">
+      <div className="divide-y divide-border/40 min-h-chart-md">
         {paginatedSessions.length === 0 ? (
-          <div className="text-center py-12 text-xs text-muted-foreground select-none">
-            {t("sessions.report.noData")}
-          </div>
+          <EmptyState title={t("sessions.report.noData")} compact icon={null} className="select-none" />
         ) : (
           paginatedSessions.map((session, sessionIndex) => (
             <motion.article

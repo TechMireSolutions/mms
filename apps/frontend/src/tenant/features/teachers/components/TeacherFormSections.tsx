@@ -2,7 +2,7 @@ import type React from "react";
 import { Briefcase, GraduationCap, Hash, School, User } from "lucide-react";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Field } from "@/components/ui/FormPrimitives";
+import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { FORM_INPUT } from "@/components/ui/formStyles";
@@ -55,9 +55,7 @@ export function TeacherBasicSection({
           emptyHint={t("teachers.form.noContactsHint")}
           error={!!errors.contactId}
         />
-        {errors.contactId && (
-          <p className="text-xs text-destructive mt-1 font-medium">{errors.contactId}</p>
-        )}
+        <FieldErrorMessage message={errors.contactId} />
       </Card>
 
       <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm z-10">

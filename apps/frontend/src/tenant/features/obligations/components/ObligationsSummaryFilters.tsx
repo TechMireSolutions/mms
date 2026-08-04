@@ -48,7 +48,7 @@ export function ObligationsSummaryFilters({
   const { t } = useTranslation();
 
   return (
-    <Card accentColor="primary" className="p-4 space-y-3 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
+    <Card accentColor="primary" className="p-4 space-y-3">
       <header className="flex items-center gap-2 mb-1 ps-1">
         <Filter className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         <h2 className="text-sm font-bold text-foreground m-0">{t("obligations.summary.filters.title")}</h2>

@@ -1,7 +1,7 @@
 import { HelpCircle } from "lucide-react";
 import { type AppTranslationKey, type QuestionType } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/FormPrimitives";
+import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
@@ -71,9 +71,7 @@ export function QuestionFormAnswerFields({
             </div>
           ))}
         </div>
-        {errors.answer && (
-          <p className="text-xs text-destructive mt-1 font-medium">{errors.answer}</p>
-        )}
+        <FieldErrorMessage message={errors.answer} />
       </div>
     );
   }
@@ -95,9 +93,7 @@ export function QuestionFormAnswerFields({
             </Button>
           ))}
         </div>
-        {errors.answer && (
-          <p className="text-xs text-destructive mt-1 font-medium">{errors.answer}</p>
-        )}
+        <FieldErrorMessage message={errors.answer} />
       </div>
     );
   }

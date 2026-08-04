@@ -159,7 +159,7 @@ export function AuditLog({ filters }: AuditLogProps) {
           compact
         />
       ) : (
-        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+        <Card accentColor="primary" className="p-0 overflow-hidden">
           <div className="space-y-3 p-3 md:hidden">
             {log.map((entry, index) => (
               <article key={index} className="space-y-2 rounded-xl border border-border bg-card p-3">

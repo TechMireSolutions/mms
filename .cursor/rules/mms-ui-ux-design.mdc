@@ -23,11 +23,13 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `Switch` (`@/components/ui/switch`)
   - `FormModal` / `Modal` (`@/components/ui/FormModal`)
   - `DetailDrawerShell` (`@/components/ui/DetailDrawerShell`)
-  - `DataTable` (`@/components/ui/DataTable`)
-  - `StatCard` (`@/components/ui/StatCard`)
-  - `ErrorState` (`@/components/ui/ErrorState`) — title + **hint** description + retry
+  - `Table` (`@/components/ui/table`) — shadcn table primitives; feature modules compose directory tables (no separate `DataTable` wrapper)
+  - `StatCard` (`@/components/ui/StatCard`) — single tiles OK; **strips** of StatCards → `ModuleCommandMetricsGrid`
+  - `EmptyState` (`@/components/ui/EmptyState`) — list/directory empties; `title` **required** (no English default); prefer `variant="dashed"` for bordered/dashed empties; do not hand-roll `py-12/16 text-center` + dashed-border shells
+  - `ErrorState` (`@/components/ui/ErrorState`) — title + **hint** description + retry (tenant Work **and** platform apex lists)
   - `WarningCallout` (`@/components/ui/WarningCallout`) — warning/archive banners (drawer archived state, setup/prefs warnings); do not fork amber callout markup in features
   - `BulkSelectionBar` (`@/components/ui/BulkSelectionBar`) — Work multi-select bars (`floating` \| `inline`); reuse exported action class helpers; do not fork selection-bar chrome per module
+  - `BulkSelectionActions` (`@/components/ui/BulkSelectionActions`) — `BulkSelectionRestoreAction` / `BulkSelectionMessagingActions` as bar children; do not fork outline restore/messaging buttons
   - `QuickActionButton` (`@/components/ui/QuickActionButton`) — directory/detail quick actions (Call / WA / SMS / Email pattern)
   - `ExportToolbar` (`@/components/ui/ExportToolbar`)
   - `SafeResponsiveContainer` (`@/components/ui/SafeResponsiveContainer`)
@@ -40,10 +42,12 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 - Render all enabled registry/custom fields — no hard-coded key allowlists that drop Setup fields — `mms-fields.mdc`.
 
 ### Work surface & chrome
-- Prefer `WORK_SURFACE` / `WORK_SURFACE_INNER` / `DETAIL_SECTION_TITLE` from `formStyles` for directory/detail panels instead of one-off glass/card stacks.
-- Multi-select bars → `BulkSelectionBar` only (`floating` \| `inline` + exported action classes).
+- Prefer `WORK_SURFACE` / `WORK_SURFACE_INNER` / `DETAIL_SECTION_TITLE` from `formStyles` for directory/detail **and** report/widget/customize panels — ban re-forking `surface-glass` or duplicated `bg-card/45 backdrop-blur-*` glass stacks for that chrome (redundant glass on `<Card>` is out of scope — Card already embeds it).
+- Empties → `EmptyState` only (`title` via `t()`; `variant="dashed"` when bordered).
+- Multi-select bars → `BulkSelectionBar` only (`floating` \| `inline` + exported action classes). Mount the bar on the list/parent when selection is non-empty; trash/restore/messaging children via `BulkSelectionActions`. Do **not** put trash/restore beside Filters/Add in Work toolbars.
 - Warning/archive banners → `WarningCallout` only (Contacts / Students / Teachers drawers as reference).
 - Quick actions → `QuickActionButton` (do not reintroduce Contacts-only deep copies).
+- Column visibility → pass `isColumnVisible(key)` into table/cards (optional `ALWAYS_COLUMN_VISIBLE` fallback); ban parent `visibleColumns` / `show*` boolean object fans.
 
 ### Design Token Strictness
 - **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
@@ -72,7 +76,7 @@ Use `useFilteredModuleTierTabs({ canViewSetup, canViewReports })` so forbidden t
   - `< lg`: Stacked section headings; tap expands the section contents.
   - `≥ lg`: Horizontal underline tabs for module tiers; sidebar + panels for Settings.
 - **Pills & SubTabs**: Use `SubTabBar` for inner sub-tabs (like Setup -> Fields/Prefs). Do not build custom pill bars.
-- **Command Metrics Grid**: Use `<ModuleCommandMetricsGrid />` (`components/ui/ModuleCommandMetricsGrid.tsx`) for rendering quick command metric strips with staggered entrance animations. Do not write custom inline grids or cards for metrics.
+- **Command Metrics Grid**: Use `<ModuleCommandMetricsGrid />` (`components/ui/ModuleCommandMetricsGrid.tsx`) for command-centre **and** report KPI **StatCard strips** (staggered entrance). Do not write custom `grid-cols-*` StatCard strips for that pattern. Intentional exceptions (not metrics strips): filter nav grids, centered Card KPI tiles (e.g. ResultsViewStats), Budget/AccountingDashboard custom tiles, and the dense reports home `KPICardsGrid` (trend/subtext density differs from `StatCard`).
 - **Module Page Shell**: Always wrap all top-level module pages, settings pages, and account profile pages inside `<ModulePageShell />` (`components/ui/ModulePageShell.tsx`) to unify page container margins, SEO metadata header rendering, and PageHeader layout configurations. Do not write duplicate page container wrapper markup or headers in module entrypoints.
 
 ---

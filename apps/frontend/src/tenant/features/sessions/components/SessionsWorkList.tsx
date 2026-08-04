@@ -1,8 +1,7 @@
 import { Archive, BookOpen, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { Button } from "@/components/ui/button";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import { BulkSelectionDeleteAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ListPagination } from "@/components/ui/ListPagination";
@@ -106,14 +105,11 @@ export function SessionsWorkList({
             onClick={onRequestBulkRestore}
           />
         ) : (
-          <Button
-            type="button"
-            variant="destructive"
+          <BulkSelectionDeleteAction
+            label={t("sessions.archive")}
             onClick={onRequestBulkDelete}
-            className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
-          >
-            <Archive className="w-3.5 h-3.5" /> {t("sessions.archive")}
-          </Button>
+            icon={Archive}
+          />
         )}
       </BulkSelectionBar>
 

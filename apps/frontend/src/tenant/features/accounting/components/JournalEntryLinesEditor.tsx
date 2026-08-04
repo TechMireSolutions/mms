@@ -6,6 +6,7 @@ import {
 } from '@/lib/data/accountingData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -102,7 +103,7 @@ export function JournalEntryLinesEditor({
                             {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
                           </span>
                         )}
-                        {errors[`line${lineIndex}`] && <p className="text-xs text-destructive m-0" role="alert">{errors[`line${lineIndex}`]}</p>}
+                        <FieldErrorMessage message={errors[`line${lineIndex}`]} className="m-0" />
                       </td>
                       <td className="px-3 py-2 hidden md:table-cell">
                         <Input
@@ -170,8 +171,8 @@ export function JournalEntryLinesEditor({
           {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
           {isBalanced ? t("accounting.journal.form.balanced") : t("accounting.journal.form.unbalanced", { diff: formatCurrency(Math.abs(totalDebit - totalCredit)) })}
         </div>
-        {errors.lines && <p className="text-xs text-destructive mt-1" role="alert">{errors.lines}</p>}
-        {errors.balance && <p className="text-xs text-destructive mt-1" role="alert">{errors.balance}</p>}
+        <FieldErrorMessage message={errors.lines} />
+        <FieldErrorMessage message={errors.balance} />
       </fieldset>
     </Card>
   );

@@ -7,6 +7,7 @@ import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface EnrollmentReportsProps {
@@ -101,9 +102,9 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card accentColor="primary" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+        <Card accentColor="primary" className="p-4">
           <h3 className="text-sm font-bold text-foreground mb-3">{t("enrollments.reports.byStatus")}</h3>
-          <div className="h-[12.5rem]" aria-hidden="true">
+          <div className="h-chart-md" aria-hidden="true">
             <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
               <PieChart>
                 <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
@@ -116,14 +117,12 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
           </div>
         </Card>
 
-        <Card accentColor="info" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+        <Card accentColor="info" className="p-4">
           <h3 className="text-sm font-bold text-foreground mb-3">{t("enrollments.reports.bySession")}</h3>
           {sessionData.length === 0 ? (
-            <div className="flex items-center justify-center h-[12.5rem] text-muted-foreground text-sm" role="status">
-              {t("enrollments.reports.noData")}
-            </div>
+            <EmptyState title={t("enrollments.reports.noData")} compact icon={null} className="h-chart-md" />
           ) : (
-            <div className="h-[12.5rem]" aria-hidden="true">
+            <div className="h-chart-md" aria-hidden="true">
               <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
                 <BarChart data={sessionData} barSize={20}>
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} />
@@ -137,13 +136,13 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
         </Card>
       </div>
 
-      <Card accentColor="success" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+      <Card accentColor="success" className="p-0 overflow-hidden">
         <div className="px-4 py-2.5 bg-muted/20 border-b border-border/40 ps-6.5">
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">{t("enrollments.reports.revenueBySession")}</h3>
         </div>
         <div className="divide-y divide-border/50 ps-6.5" role="list">
           {sessionData.length === 0 ? (
-            <p className="text-center py-8 text-sm text-muted-foreground" role="status">{t("enrollments.reports.noData")}</p>
+            <EmptyState title={t("enrollments.reports.noData")} compact icon={null} />
           ) : (
             sessionData.map((sessionStats) => (
               <div key={sessionStats.name} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3" role="listitem">

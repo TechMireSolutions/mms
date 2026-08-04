@@ -42,7 +42,7 @@ export function ActivityLogsList({
 
   return (
     <>
-      <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+      <Card accentColor="primary" className="p-0 overflow-hidden">
         <div className="space-y-3 p-3 md:hidden">
           {paginated.map((log) => (
             <article

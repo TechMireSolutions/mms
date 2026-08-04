@@ -5,6 +5,7 @@ import {
   bulkSelectionActionClassName,
 } from "@/components/ui/BulkSelectionBar";
 import {
+  BulkSelectionDeleteAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
 } from "@/components/ui/BulkSelectionActions";
@@ -122,14 +123,10 @@ export function StudentListSelectionBar({
           {canDelete && (
             <>
               <div className="h-4 w-px bg-border" />
-              <Button
-                type="button"
-                variant="destructive"
+              <BulkSelectionDeleteAction
+                label={t("students.list.remove")}
                 onClick={onRequestBulkDelete}
-                className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
-              >
-                {t("students.list.remove")}
-              </Button>
+              />
             </>
           )}
         </>

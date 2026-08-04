@@ -23,7 +23,7 @@ export function EnrollmentListContent(props: EnrollmentListContentProps): React.
           compact
         />
       ) : (
-        <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+        <Card accentColor="primary" className="p-0 overflow-hidden">
           {props.viewMode === "cards" ? (
             <EnrollmentListCards {...props} />
           ) : (

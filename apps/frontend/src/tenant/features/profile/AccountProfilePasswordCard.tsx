@@ -3,6 +3,7 @@ import { Loader2, Lock } from "lucide-react";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { PasswordStrengthResult } from "./passwordStrength";
 
@@ -38,7 +39,7 @@ export function AccountProfilePasswordCard({
   const { t } = useTranslation();
 
   return (
-    <Card className="relative overflow-hidden group/password-card shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+    <Card className="relative overflow-hidden group/password-card shadow-md">
       <div className="absolute start-0 top-0 bottom-0 w-1 bg-success/45 transition-colors group-hover/password-card:bg-success" />
       <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 ps-6.5">
         <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -119,11 +120,14 @@ export function AccountProfilePasswordCard({
                 autoComplete="new-password"
                 className="min-h-11"
               />
-              {newPassword && confirmPassword && (
-                <p className={`text-xs mt-1 font-medium ${newPassword === confirmPassword ? "text-success" : "text-destructive"}`}>
-                  {newPassword === confirmPassword ? t("account.passwordSecure") : t("account.passwordMismatch")}
+              {newPassword && confirmPassword && newPassword === confirmPassword ? (
+                <p className="text-xs mt-1 font-medium text-success">
+                  {t("account.passwordSecure")}
                 </p>
-              )}
+              ) : null}
+              {newPassword && confirmPassword && newPassword !== confirmPassword ? (
+                <FieldErrorMessage message={t("account.passwordMismatch")} />
+              ) : null}
             </div>
             <div className="flex flex-wrap gap-2 pt-2">
               <Button

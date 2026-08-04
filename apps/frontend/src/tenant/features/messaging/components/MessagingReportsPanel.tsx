@@ -12,6 +12,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
@@ -198,16 +199,13 @@ export function MessagingReportsPanel({
       </div>
 
       {metricsPending ? (
-        <div
-          className="h-[15rem] animate-pulse rounded-xl border border-border bg-muted/20"
+        <Skeleton
+          className="h-chart-lg w-full rounded-xl border border-border"
           role="status"
-          aria-live="polite"
           aria-busy="true"
-        >
-          <span className="sr-only">{t('common.loading')}</span>
-        </div>
+        />
       ) : (
-        <Suspense fallback={<div className="h-[15rem] animate-pulse rounded-xl border border-border bg-muted/20" aria-hidden />}>
+        <Suspense fallback={<Skeleton className="h-chart-lg w-full rounded-xl border border-border" aria-hidden />}>
           <MessagingReportsVolumeChart chartData={chartData} />
         </Suspense>
       )}

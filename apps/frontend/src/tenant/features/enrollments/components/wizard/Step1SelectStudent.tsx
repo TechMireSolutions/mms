@@ -8,6 +8,7 @@ import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { useStudentsByIds, useStudentsPaginated } from "@/tenant/hooks/collections/students";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
@@ -73,7 +74,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
 
       <div className="space-y-2 max-h-80 overflow-y-auto pe-1" role="radiogroup" aria-label={t("enrollments.wizard.step1StudentsAria")}>
         {!isFetching && students.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground text-sm" role="status">{t("enrollments.wizard.noStudents")}</div>
+          <EmptyState title={t("enrollments.wizard.noStudents")} compact icon={null} />
         )}
         {students.map((student) => {
           const age = calcAge(student.dob);

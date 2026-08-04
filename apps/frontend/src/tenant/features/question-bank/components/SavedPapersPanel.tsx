@@ -2,6 +2,7 @@ import React from "react";
 import { FileText } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { type QuestionBankTest, formatDate } from "@mms/shared";
 
 interface SavedPapersPanelProps {
@@ -30,9 +31,13 @@ export function SavedPapersPanel({
       </div>
 
       {sortedPapers.length === 0 ? (
-        <p className="m-0 rounded-lg border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
-          {t("questionBank.noSavedPapers")}
-        </p>
+        <EmptyState
+          title={t("questionBank.noSavedPapers")}
+          variant="dashed"
+          compact
+          icon={null}
+          className="rounded-lg"
+        />
       ) : (
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {sortedPapers.map((paper) => {

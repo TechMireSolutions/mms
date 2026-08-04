@@ -4,6 +4,8 @@ import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 import { useTranslation } from "@/hooks/useTranslation";
@@ -83,7 +85,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
         </div>
 
         {/* Fee breakdown */}
-        <article className="relative overflow-hidden group/breakdown rounded-xl border border-border bg-card/45 backdrop-blur-xs shadow-sm">
+        <article className={cn(WORK_SURFACE_INNER, "relative overflow-hidden group/breakdown rounded-xl")}>
           <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/60" />
           <header className="px-4 py-2 bg-muted/30 border-b border-border ps-5">
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("finance.detail.breakdown")}</h4>

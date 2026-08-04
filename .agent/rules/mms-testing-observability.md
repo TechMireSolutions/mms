@@ -31,7 +31,7 @@ Governs testing patterns, logging hygiene, error reporting, and frontend resilie
 - Ban fixed `waitForTimeout` sleeps; wait on UI/network assertions instead.
 - Backend integration tests that touch tenant tables must set RLS context the same way as production (`withTenantTransaction` / SET LOCAL).
 - Layout/responsiveness: keep specs named in **`mms-ui-ux-design.md` §7** green after shell/RTL/touch/table changes.
-- **a11y**: Prefer `@axe-core/playwright` (or equivalent) smoke on shell + one Work directory at 375/1440; fail on serious/critical — when AppLayout / FormModal / DataTable primitives change.
+- **a11y**: Prefer `@axe-core/playwright` (or equivalent) smoke on shell + one Work directory at 375/1440; fail on serious/critical — when AppLayout / FormModal / Table primitives change.
 - CI orchestration + trace artifacts → **`mms-ops-infrastructure.md`**.
 
 ---

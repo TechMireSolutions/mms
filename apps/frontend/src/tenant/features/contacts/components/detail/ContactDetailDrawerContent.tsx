@@ -8,6 +8,7 @@ import { FieldGroupCard } from "@/tenant/features/contacts/components/detail/Con
 import { ContactDetailOverview } from "@/tenant/features/contacts/components/detail/ContactDetailOverview";
 import { ContactDetailTimeline } from "@/tenant/features/contacts/components/detail/ContactDetailTimeline";
 import { ContactDetailFiles } from "@/tenant/features/contacts/components/detail/ContactDetailFiles";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { DetailFieldView } from "@/tenant/features/contacts/hooks/useContactDetailViewModel";
 
 interface ContactDetailDrawerContentProps {
@@ -137,9 +138,12 @@ export function ContactDetailDrawerContent({
         {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
           <div className="space-y-4">
             {customTabFields.length === 0 ? (
-              <p className="py-12 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                {t("contacts.detail.emptyCustomTab")}
-              </p>
+              <EmptyState
+                title={t("contacts.detail.emptyCustomTab")}
+                compact
+                icon={null}
+                className="uppercase tracking-widest"
+              />
             ) : (
               customTabFields.map(({ groupName, fields }) => (
                 <FieldGroupCard

@@ -1,6 +1,6 @@
 import type React from "react";
 import type { ComponentType } from "react";
-import { Field } from "@/components/ui/FormPrimitives";
+import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export type StudentFieldErrorGetter = (fieldId: string) => string | undefined;
@@ -11,8 +11,7 @@ export interface StudentStatusSelectOption {
 }
 
 export function FieldError({ message }: { message?: string }): React.JSX.Element | null {
-  if (!message) return null;
-  return <p className="text-xs text-destructive mt-1 font-medium">{message}</p>;
+  return <FieldErrorMessage message={message} />;
 }
 
 export function ContactProfileValue({

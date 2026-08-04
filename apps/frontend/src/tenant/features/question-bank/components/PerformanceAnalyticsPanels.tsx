@@ -71,7 +71,7 @@ export function PerformanceAnalyticsPanels({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard accentColor="primary" title={t("questionBank.analytics.classTrend")}>
-          <div className="h-[11.25rem]" aria-hidden>
+          <div className="h-chart-sm" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -89,7 +89,7 @@ export function PerformanceAnalyticsPanels({
 
         <SectionCard accentColor="info" title={t("questionBank.analytics.categoryAccuracy")}>
           {radarData.length >= 3 ? (
-            <div className="h-[11.25rem]" aria-hidden>
+            <div className="h-chart-sm" aria-hidden>
               <SafeResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="hsl(var(--border))" />
@@ -103,7 +103,7 @@ export function PerformanceAnalyticsPanels({
               </SafeResponsiveContainer>
             </div>
           ) : (
-            <div className="flex h-[11.25rem] items-center justify-center text-sm text-muted-foreground" role="status">
+            <div className="flex h-chart-sm items-center justify-center text-sm text-muted-foreground" role="status">
               {t("questionBank.analytics.radarInsufficient")}
             </div>
           )}
@@ -112,7 +112,7 @@ export function PerformanceAnalyticsPanels({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard accentColor="success" title={t("questionBank.analytics.studentPerformance")}>
-          <div className="h-[11.25rem]" aria-hidden>
+          <div className="h-chart-sm" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={studentStats} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
@@ -129,7 +129,7 @@ export function PerformanceAnalyticsPanels({
         </SectionCard>
 
         <SectionCard accentColor="warning" title={t("questionBank.analytics.difficultyBreakdown")}>
-          <div className="h-[11.25rem]" aria-hidden>
+          <div className="h-chart-sm" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={diffData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />

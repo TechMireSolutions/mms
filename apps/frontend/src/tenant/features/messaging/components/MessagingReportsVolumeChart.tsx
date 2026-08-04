@@ -1,6 +1,7 @@
 import React from "react";
 import { BarChart2 } from "lucide-react";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -30,7 +31,7 @@ export function MessagingReportsVolumeChart({
         <p className="text-xs text-muted-foreground">{t("messaging.volumeBreakdownDesc")}</p>
       </div>
       {chartData.length > 0 ? (
-        <div className="flex h-[15rem] w-full items-center justify-center">
+        <div className="flex h-chart-lg w-full items-center justify-center">
           <SafeResponsiveContainer height={240}>
             <PieChart>
               <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
@@ -44,10 +45,12 @@ export function MessagingReportsVolumeChart({
           </SafeResponsiveContainer>
         </div>
       ) : (
-        <div className="flex h-[15rem] flex-col items-center justify-center text-muted-foreground">
-          <BarChart2 className="mb-2 h-8 w-8 opacity-45" />
-          <p className="text-xs font-semibold">{t("messaging.noDispatches")}</p>
-        </div>
+        <EmptyState
+          title={t("messaging.noDispatches")}
+          icon={BarChart2}
+          compact
+          className="h-chart-lg"
+        />
       )}
     </div>
   );

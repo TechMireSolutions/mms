@@ -7,6 +7,7 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { sumScores, testTotalMarks, type StatsSummary } from "@/tenant/features/question-bank/components/autoGradingShared";
 import { AutoGradingResultRow } from "@/tenant/features/question-bank/components/AutoGradingResultRow";
 import { AutoGradingStats } from "@/tenant/features/question-bank/components/AutoGradingStats";
@@ -79,9 +80,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
               </span>
             </div>
             {testResults.length === 0 ? (
-              <div className="py-10 text-center text-sm text-muted-foreground" role="status">
-                {t("questionBank.grading.noResults")}
-              </div>
+              <EmptyState title={t("questionBank.grading.noResults")} compact icon={null} />
             ) : (
               <div role="list">
                 {testResults

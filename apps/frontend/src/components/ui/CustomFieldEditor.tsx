@@ -5,6 +5,7 @@ import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -74,7 +75,7 @@ export function FieldEditor({
             autoFocus
           />
           {isDuplicateLabel && (
-            <p className="text-xs text-destructive mt-1">{t("fields.duplicateName")}</p>
+            <FieldErrorMessage message={t("fields.duplicateName")} />
           )}
           {trimmedLabel.length > 0 && trimmedLabel.length < 2 && (
             <p className="text-xs text-warning mt-1">{t("fields.nameTooShort")}</p>

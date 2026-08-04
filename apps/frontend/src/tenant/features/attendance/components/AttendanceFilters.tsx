@@ -80,7 +80,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
   });
 
   return (
-    <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+    <Card accentColor="primary" className="p-0 overflow-hidden">
       <div
         role="button"
         tabIndex={0}

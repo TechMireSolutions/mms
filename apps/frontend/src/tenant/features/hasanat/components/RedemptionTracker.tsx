@@ -91,7 +91,7 @@ export function RedemptionTracker({
           title={t("hasanat.empty.redemptions")}
         />
       ) : (
-        <Card accentColor="primary" className="shadow-sm hover:shadow-md border-border/80 p-0 overflow-hidden bg-card/45 backdrop-blur-sm">
+        <Card accentColor="primary" className="p-0 overflow-hidden">
           <div className="space-y-3 p-3 md:hidden">
             {redemptions.map((redemption, index) => (
               <motion.article

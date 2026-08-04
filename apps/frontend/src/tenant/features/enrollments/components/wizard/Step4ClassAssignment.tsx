@@ -3,6 +3,7 @@ import { Layers, Users, CheckCircle2 } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { Student } from '@/lib/data/studentsData';
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -80,10 +81,11 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
       {/* Class list */}
       <div className="space-y-2" role="radiogroup" aria-label={t("enrollments.wizard.step4ClassesAria")}>
         {classes.length === 0 && (
-          <div className="text-center py-10 text-sm text-muted-foreground" role="status">
-            <Layers className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" aria-hidden="true" />
-            {t("enrollments.wizard.step4Empty")}
-          </div>
+          <EmptyState
+            title={t("enrollments.wizard.step4Empty")}
+            icon={Layers}
+            compact
+          />
         )}
         {classes.map((sessionClass) => {
           const selected   = value?.id === sessionClass.id;

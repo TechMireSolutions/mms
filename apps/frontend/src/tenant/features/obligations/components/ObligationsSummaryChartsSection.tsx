@@ -42,7 +42,7 @@ export function ObligationsSummaryChartsSection({
 
   return (
     <section aria-label={t("obligations.summary.charts.aria")} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card accentColor="primary" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
+      <Card accentColor="primary" className="p-4">
         <SectionTitle icon={BarChart2} title={t("obligations.summary.charts.byTypeTitle")} subtitle={t("obligations.summary.charts.byTypeSubtitle")} />
         <SafeResponsiveContainer height={200}>
           <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -57,7 +57,7 @@ export function ObligationsSummaryChartsSection({
       </Card>
 
       {monthlyTrend.length > 1 ? (
-        <Card accentColor="info" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
+        <Card accentColor="info" className="p-4">
           <SectionTitle icon={TrendingUp} title={t("obligations.summary.charts.monthlyTrendTitle")} subtitle={t("obligations.summary.charts.monthlyTrendSubtitle")} />
           <SafeResponsiveContainer height={200}>
             <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -69,7 +69,7 @@ export function ObligationsSummaryChartsSection({
           </SafeResponsiveContainer>
         </Card>
       ) : (
-        <Card accentColor="success" className="p-4 bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md">
+        <Card accentColor="success" className="p-4">
           <SectionTitle icon={Layers} title={t("obligations.summary.charts.distributionTitle")} subtitle={t("obligations.summary.charts.distributionSubtitle")} />
           <SafeResponsiveContainer height={200}>
             <PieChart>

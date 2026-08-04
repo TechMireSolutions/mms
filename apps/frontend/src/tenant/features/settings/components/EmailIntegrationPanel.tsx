@@ -5,6 +5,7 @@ import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { FieldErrorMessage } from '@/components/ui/FormField';
 import { SettingsCallout, SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { useEmailIntegrationPanel } from '@/tenant/features/settings/components/useEmailIntegrationPanel';
 
@@ -149,7 +150,7 @@ export default function EmailIntegrationPanel({
       </div>
 
       {form.lastError && !form.lastTestOk ? (
-        <p className="text-xs text-destructive">{form.lastError}</p>
+        <FieldErrorMessage message={form.lastError} />
       ) : null}
 
       <div className="flex flex-wrap gap-2">

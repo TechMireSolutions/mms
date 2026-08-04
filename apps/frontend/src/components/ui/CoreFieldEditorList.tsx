@@ -4,6 +4,7 @@ import { FieldDefinition } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FieldItem } from "@/components/ui/CoreFieldEditorFieldItem";
 import { FieldEditor } from "@/components/ui/CustomFieldsBuilder";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 
 
@@ -65,9 +66,13 @@ export function CoreFieldEditorList({
 
   if (fields.length === 0) {
     return (
-      <p className="text-xs text-muted-foreground text-center py-4 border-2 border-dashed border-border rounded-lg bg-card">
-        {t("fields.noFieldsAvailable")}
-      </p>
+      <EmptyState
+        title={t("fields.noFieldsAvailable")}
+        variant="dashed"
+        compact
+        icon={null}
+        className="rounded-lg bg-card"
+      />
     );
   }
 

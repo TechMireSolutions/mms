@@ -4,6 +4,7 @@ import { Bell, AlertTriangle, Calendar, User, DollarSign, X } from 'lucide-react
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { WidgetCard } from '@/components/ui/WidgetCard';
 
 interface NotificationsPanelProps {
@@ -55,13 +56,13 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
       <div className="divide-y divide-border/40 max-h-[21.25rem] overflow-y-auto">
         <AnimatePresence initial={false}>
           {visible.length === 0 ? (
-            <div className="py-12 text-center px-5 flex flex-col items-center justify-center select-none">
-              <div className="w-10 h-10 rounded-full bg-muted/65 flex items-center justify-center mb-3">
-                <Bell className="w-5 h-5 text-muted-foreground/55" />
-              </div>
-              <p className="text-xs font-black uppercase text-foreground/80 m-0 tracking-wider">{t('notifications.empty')}</p>
-              <p className="text-xs text-muted-foreground mt-1.5 m-0 max-w-[12.5rem] leading-normal">{t('notifications.emptyHint')}</p>
-            </div>
+            <EmptyState
+              title={t('notifications.empty')}
+              description={t('notifications.emptyHint')}
+              icon={Bell}
+              compact
+              className="select-none px-5"
+            />
           ) : (
             visible.map((notif) => {
               const meta = ICONS[notif.type] || ICONS.event;

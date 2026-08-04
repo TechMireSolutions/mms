@@ -3,6 +3,7 @@ import { LayoutDashboard, Pencil, Pin, PinOff, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetWorkDrillDown";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
@@ -11,6 +12,8 @@ import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinne
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 import { METADATA_FIELDS, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 const WIDGET_TYPE_LABEL_KEYS: Partial<Record<NonNullable<CustomWidget["widgetType"]>, AppTranslationKey>> = {
   kpi: "reports.widgets.builder.typeKpi",
@@ -49,11 +52,13 @@ export function PinnedWidgetsGrid({
 }: PinnedWidgetsGridProps): React.JSX.Element {
   if (filteredWidgets.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border/50 bg-card/10 backdrop-blur p-8 text-center">
-        <LayoutDashboard className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-        <h4 className="text-sm font-black text-foreground uppercase tracking-widest">{t("reports.widgets.emptyTitle")}</h4>
-        <p className="text-xs text-muted-foreground mt-1">{t("reports.widgets.emptyDescription")}</p>
-      </div>
+      <EmptyState
+        title={t("reports.widgets.emptyTitle")}
+        description={t("reports.widgets.emptyDescription")}
+        icon={LayoutDashboard}
+        variant="dashed"
+        className="border-border/50 bg-card/10"
+      />
     );
   }
 
@@ -66,7 +71,7 @@ export function PinnedWidgetsGrid({
             key={widget.id}
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-md p-5 space-y-4 shadow-sm relative group text-start font-sans"
+            className={cn(WORK_SURFACE, "p-5 space-y-4 relative group text-start font-sans")}
           >
             <div className="flex min-w-0 items-start justify-between gap-2">
               <div className="min-w-0 flex-1 space-y-0.5">

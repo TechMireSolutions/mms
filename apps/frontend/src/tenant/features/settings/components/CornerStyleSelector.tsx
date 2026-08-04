@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { FORM_CARD } from '@/components/ui/formStyles';
 
 interface CornerStyleSelectorProps {
   value: BrandingCornerStyle;
@@ -69,7 +70,7 @@ export default function CornerStyleSelector({
   const resolvedRadius = resolveBrandingCornerRadius(value);
 
   return (
-    <div className="flex flex-col gap-6 p-5 bg-card/45 backdrop-blur-sm rounded-2xl border border-border/80 shadow-xs">
+    <div className={cn(FORM_CARD, "flex flex-col gap-6 p-5 shadow-xs")}>
       {/* Live Preview Box */}
       <div 
         className="flex items-center justify-center py-8 bg-muted/10 rounded-xl border border-border/40 relative overflow-hidden transition-all duration-300"

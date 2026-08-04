@@ -1,5 +1,6 @@
 import React from 'react';
 import { Info } from 'lucide-react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import {
   BarChart,
   Bar,
@@ -70,11 +71,13 @@ export function DynamicChartVisualizerChart({
 }: DynamicChartVisualizerChartProps): React.JSX.Element | null {
   if (processedData.length === 0) {
     return (
-      <div className="h-[15.625rem] flex flex-col items-center justify-center text-muted-foreground border border-dashed border-border/50 rounded-3xl bg-card/20">
-        <Info className="w-6 h-6 mb-2 opacity-40 animate-bounce" />
-        <p className="text-xs font-bold text-foreground">{t('reports.visualizer.noData')}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{t('reports.visualizer.noDataSubtitle')}</p>
-      </div>
+      <EmptyState
+        title={t('reports.visualizer.noData')}
+        description={t('reports.visualizer.noDataSubtitle')}
+        icon={Info}
+        variant="dashed"
+        className="h-[15.625rem] border-border/50 bg-card/20 rounded-3xl"
+      />
     );
   }
 

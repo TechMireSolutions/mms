@@ -2,6 +2,7 @@ import type { Dispatch, JSX, SetStateAction } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Database, FileSpreadsheet, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey } from "@mms/shared";
 import { DraggableField } from "./CustomReportBuilderDraggableField";
@@ -60,10 +61,12 @@ export function CustomReportBuilderPreviewPanel({
         </div>
         <div className="rounded-2xl border border-border bg-background/30 p-3 shadow-inner">
           {selectedFields.length === 0 ? (
-            <div className="text-center py-6 text-xs text-muted-foreground italic flex flex-col items-center justify-center gap-1.5">
-              <Database className="w-6 h-6 opacity-40 text-muted-foreground" />
-              {t("reports.builder.emptyColumns")}
-            </div>
+            <EmptyState
+              title={t("reports.builder.emptyColumns")}
+              icon={Database}
+              compact
+              className="italic"
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pe-1 custom-scrollbar text-start">
               <AnimatePresence>

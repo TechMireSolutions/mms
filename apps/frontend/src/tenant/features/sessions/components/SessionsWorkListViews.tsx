@@ -5,6 +5,8 @@ import type {
   SessionsWorkColumnLayout,
   SessionsWorkViewProps,
 } from "@/tenant/features/sessions/components/sessionsWorkListViewsShared";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 export function SessionsWorkCardGrid({
   sessions,
@@ -51,7 +53,7 @@ interface SessionsWorkTableProps extends SessionsWorkViewProps {
 
 export function SessionsWorkTable(props: SessionsWorkTableProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card/45 shadow-sm backdrop-blur-xl">
+    <div className={cn(WORK_SURFACE, "overflow-hidden")}>
       <SessionsWorkTableDesktop {...props} />
     </div>
   );

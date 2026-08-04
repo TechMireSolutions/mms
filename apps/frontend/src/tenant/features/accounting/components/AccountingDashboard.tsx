@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useAccountingDashboardModel } from '@/tenant/features/accounting/components/useAccountingDashboardModel';
 import { useAccountingMetrics } from '@/tenant/features/accounting/hooks/useAccountingApi';
 
@@ -88,7 +89,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         <Card accentColor="primary" className="lg:col-span-2 p-5 ps-6.5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.revenueVsExpenses')}</h3>
           {monthlyData.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t('accounting.dashboard.noPostedData')}</div>
+            <EmptyState title={t('accounting.dashboard.noPostedData')} compact icon={null} className="h-48" />
           ) : (
             <div aria-hidden="true">
               <SafeResponsiveContainer height={200}>
@@ -108,7 +109,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         <Card accentColor="info" className="p-5 ps-6.5">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.expenseBreakdown')}</h3>
           {expenseBreakdown.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">{t('accounting.dashboard.noExpenseData')}</div>
+            <EmptyState title={t('accounting.dashboard.noExpenseData')} compact icon={null} className="h-48" />
           ) : (
             <>
               <div aria-hidden="true">

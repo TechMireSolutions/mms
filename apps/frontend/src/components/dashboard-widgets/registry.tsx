@@ -1,6 +1,7 @@
 import React from 'react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SessionsTable = React.lazy(() => import('@/components/dashboard-widgets/SessionsTable'));
 const OutstandingFeesTable = React.lazy(() => import('@/components/dashboard-widgets/OutstandingFeesTable'));
@@ -61,8 +62,8 @@ const TITLE_WIDGETS = new Set<ComposedWidgetType>([
 ]);
 
 const FALLBACK_CLASS = {
-  compact: 'min-h-[8.75rem] bg-muted/20 animate-pulse rounded-3xl',
-  tall: 'min-h-[18.75rem] bg-muted/20 animate-pulse rounded-3xl',
+  compact: 'min-h-[8.75rem] rounded-3xl',
+  tall: 'min-h-[18.75rem] rounded-3xl',
 } as const;
 
 interface ComposedDashboardWidgetProps {
@@ -118,7 +119,7 @@ export function ComposedDashboardWidget({
 
   return (
     <ErrorBoundary>
-      <React.Suspense fallback={<div className={fallbackClass} />}>
+      <React.Suspense fallback={<Skeleton className={fallbackClass} />}>
         {content}
       </React.Suspense>
     </ErrorBoundary>

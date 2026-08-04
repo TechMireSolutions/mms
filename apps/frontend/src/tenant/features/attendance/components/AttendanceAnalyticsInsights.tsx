@@ -45,7 +45,7 @@ export function AttendanceAnalyticsInsights({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.45, ease: "easeOut" }}
       >
-        <Card accentColor="success" className="p-4 shadow-sm hover:shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+        <Card accentColor="success" className="p-4">
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.topPerformersTitle")}</h2>
           <div className="space-y-2">
             {topStudents.map((studentRate, index) => (

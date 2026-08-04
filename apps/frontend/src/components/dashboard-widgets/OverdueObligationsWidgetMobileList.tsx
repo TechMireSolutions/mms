@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Scale } from "lucide-react";
 import { formatMoney, formatDate } from "@mms/shared";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import {
   OverdueUrgencyBadge,
@@ -31,9 +32,7 @@ export function OverdueObligationsWidgetMobileList({
 }: OverdueObligationsWidgetMobileListProps): React.ReactElement {
   if (paginatedStudents.length === 0) {
     return (
-      <p className="py-8 text-center text-xs text-muted-foreground select-none">
-        {t("finance.report.noInvoicesMatch")}
-      </p>
+      <EmptyState title={t("finance.report.noInvoicesMatch")} compact icon={null} className="select-none" />
     );
   }
 

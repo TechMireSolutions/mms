@@ -3,6 +3,8 @@ import { SlidersHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
+import { cn } from '@/lib/utils';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { useTranslation } from '@/hooks/useTranslation';
 import DynamicCardBuilder from './DynamicCardBuilder';
@@ -66,7 +68,7 @@ export function KPISummarySettings({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="space-y-4 overflow-hidden rounded-2xl border border-border bg-card/40 p-4 font-sans backdrop-blur-lg"
+            className={cn(WORK_SURFACE, "space-y-4 overflow-hidden p-4 font-sans")}
           >
             <div className="flex flex-col items-start justify-between gap-3 border-b border-border pb-3 sm:flex-row sm:items-center">
               <div>

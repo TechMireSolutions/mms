@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { isSeededDashboardWidget, resolveWidgetTitle } from '@/lib/dashboardWidgets';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 
 export interface DashboardCustomizeWidgetsSectionProps {
@@ -49,7 +50,7 @@ export function DashboardCustomizeWidgetsSection({
 
         <div className="space-y-2 max-h-[16.25rem] overflow-y-auto pe-1">
           {customWidgets.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic py-4 text-center">{t('dashboard.noWidgets')}</p>
+            <EmptyState title={t('dashboard.noWidgets')} compact icon={null} className="italic" />
           ) : (
             customWidgets.map((widget) => (
               <div

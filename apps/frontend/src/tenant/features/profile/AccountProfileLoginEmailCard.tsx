@@ -49,7 +49,7 @@ export function AccountProfileLoginEmailCard({
   const { t } = useTranslation();
 
   return (
-    <Card className="relative overflow-hidden group/login-card shadow-md border-border/80 bg-card/45 backdrop-blur-sm">
+    <Card className="relative overflow-hidden group/login-card shadow-md">
       <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/login-card:bg-primary" />
       <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 ps-6.5">
         <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">

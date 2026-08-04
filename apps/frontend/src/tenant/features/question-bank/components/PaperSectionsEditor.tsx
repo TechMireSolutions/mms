@@ -3,6 +3,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import type { QuestionBankQuestion as Question } from "@mms/shared";
 import type { PaperSection } from "@/tenant/features/question-bank/components/paperBuilderUtils";
@@ -100,9 +101,13 @@ export function PaperSectionsEditor({
 
               <div className="mt-3 space-y-2">
                 {section.questionIds.length === 0 ? (
-                  <p className="m-0 rounded-lg border border-dashed border-border px-3 py-3 text-xs text-muted-foreground">
-                    {t("questionBank.noSectionQuestions")}
-                  </p>
+                  <EmptyState
+                    title={t("questionBank.noSectionQuestions")}
+                    variant="dashed"
+                    compact
+                    icon={null}
+                    className="rounded-lg"
+                  />
                 ) : (
                   section.questionIds.map((questionId, questionIndex) => {
                     const question = questionsById.get(questionId);

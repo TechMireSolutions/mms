@@ -138,7 +138,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
           </div>
 
           {/* Marks entry table */}
-          <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm">
+          <Card accentColor="primary" className="p-0 overflow-hidden">
             <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 ps-6.5 bg-muted/20">
               <Users className="w-4 h-4 text-primary" aria-hidden="true" />
               <h3 className="text-sm font-bold text-foreground">{t("examinations.marks")}</h3>

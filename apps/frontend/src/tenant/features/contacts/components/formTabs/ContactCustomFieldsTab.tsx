@@ -1,6 +1,7 @@
 import React from "react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { cn } from "@/lib/utils";
@@ -37,9 +38,7 @@ export function ContactCustomFieldsTab({
   if (customFields.length === 0) {
     if (hideWhenEmpty) return null;
     return (
-      <p className="text-sm text-muted-foreground py-6 text-center">
-        {t("contacts.form.customFieldsEmpty")}
-      </p>
+      <EmptyState title={t("contacts.form.customFieldsEmpty")} compact icon={null} />
     );
   }
 

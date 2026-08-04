@@ -82,7 +82,7 @@ export function ModuleFieldsSetupTabCard({
   const fieldOptional = copy?.fieldOptional ?? t("fields.setup.fieldOptional");
 
   return (
-    <Card key={tabId} accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm border-border/80 shadow-sm hover:shadow-md text-start">
+    <Card key={tabId} accentColor="primary" className="p-0 overflow-hidden text-start">
       <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/20 border-b border-border/40 ps-6.5">
         <div className="flex items-center justify-center">
           <Checkbox

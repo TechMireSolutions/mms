@@ -4,6 +4,8 @@ import { WidgetBuilderPreview } from "@/tenant/features/reports/components/pinne
 import { WidgetBuilderHeader } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderHeader";
 import { WidgetBuilderOptionsPanel } from "@/tenant/features/reports/components/pinnedWidgets/WidgetBuilderOptionsPanel";
 import { useWidgetBuilderState } from "@/tenant/features/reports/components/pinnedWidgets/useWidgetBuilderState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 interface WidgetBuilderProps {
   initialCollection: CustomWidget["collection"];
@@ -50,7 +52,7 @@ export function WidgetBuilder({
   });
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card/40 backdrop-blur-lg p-6 space-y-4 font-sans text-start">
+    <div className={cn(WORK_SURFACE, "overflow-hidden p-6 space-y-4 font-sans text-start")}>
       <WidgetBuilderHeader />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">

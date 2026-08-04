@@ -60,7 +60,7 @@ export function Modal({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className={cn("fixed inset-0 flex items-center justify-center p-3 sm:p-4", priority ? "z-[60]" : "z-50")}>
+        <div className={cn("fixed inset-0 flex items-center justify-center p-3 sm:p-4", priority ? "z-modal-priority" : "z-modal")}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

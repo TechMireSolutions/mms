@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import { FormSelect, type FormSelectOption } from "@/components/ui/FormSelect";
 import {
@@ -85,9 +86,13 @@ export function PaperQuestionPicker({
 
       <div className="max-h-[22.5rem] space-y-2 overflow-y-auto pe-1 sm:max-h-[28.75rem] lg:max-h-[35rem]">
         {questions.length === 0 ? (
-          <p className="m-0 rounded-lg border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
-            {t("questionBank.noQuestionsAvailable")}
-          </p>
+          <EmptyState
+            title={t("questionBank.noQuestionsAvailable")}
+            variant="dashed"
+            compact
+            icon={null}
+            className="rounded-lg"
+          />
         ) : (
           questions.map((question) => {
             const selected = selectedQuestionIds.has(question.id);

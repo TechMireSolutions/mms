@@ -1,5 +1,6 @@
 import { AnimatePresence } from "framer-motion";
 import { Users } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { MarkAttendanceActions } from "@/tenant/features/attendance/components/MarkAttendanceActions";
 import { MarkAttendanceClassBar } from "@/tenant/features/attendance/components/MarkAttendanceClassBar";
@@ -19,11 +20,11 @@ export function MarkAttendance(props: MarkAttendanceProps) {
 
   if (!controller.filters.classId) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Users className="w-12 h-12 text-muted-foreground/40 mb-3" aria-hidden="true" />
-        <h2 className="text-base font-semibold text-foreground m-0">{controller.t("attendance.mark.selectClassTitle")}</h2>
-        <p className="text-sm text-muted-foreground mt-1">{controller.t("attendance.mark.selectClassDesc")}</p>
-      </div>
+      <EmptyState
+        title={controller.t("attendance.mark.selectClassTitle")}
+        description={controller.t("attendance.mark.selectClassDesc")}
+        icon={Users}
+      />
     );
   }
 

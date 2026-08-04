@@ -4,8 +4,7 @@ import { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
-import { Button } from "@/components/ui/button";
+import { BulkSelectionDeleteAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -165,14 +164,11 @@ export default function ExamsList({
               onClick={() => { void handleBulkAction(); }}
             />
           ) : (
-            <Button
-              type="button"
-              variant="destructive"
+            <BulkSelectionDeleteAction
+              label={t("common.delete")}
               onClick={() => { void handleBulkAction(); }}
-              className="px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors min-h-11"
-            >
-              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.delete")}
-            </Button>
+              icon={Trash2}
+            />
           )}
         </BulkSelectionBar>
       )}

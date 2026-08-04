@@ -126,14 +126,14 @@ export function AttendanceRecordsToolbar({
         id="date-from"
         value={dateFrom}
         onChange={(value) => { setDateFrom(value); setPage(1); }}
-        className="w-full min-w-0 max-w-full text-sm rounded-xl border border-border bg-background px-3 py-2 sm:max-w-[9.375rem]"
+        className="w-full min-w-0 max-w-full text-sm rounded-xl border border-border bg-background px-3 py-2 sm:max-w-filter-sm"
       />
 
       <DatePicker
         id="date-to"
         value={dateTo}
         onChange={(value) => { setDateTo(value); setPage(1); }}
-        className="w-full min-w-0 max-w-full text-sm rounded-xl border border-border bg-background px-3 py-2 sm:max-w-[9.375rem]"
+        className="w-full min-w-0 max-w-full text-sm rounded-xl border border-border bg-background px-3 py-2 sm:max-w-filter-sm"
       />
 
       <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />

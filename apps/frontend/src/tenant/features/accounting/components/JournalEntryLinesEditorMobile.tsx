@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ACCOUNT_TYPE_META, type Account } from '@/lib/data/accountingData';
 import { Button } from '@/components/ui/button';
+import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { FORM_LABEL } from '@/components/ui/formStyles';
@@ -66,7 +67,7 @@ export function JournalEntryLinesEditorMobile({
                   {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
                 </span>
               )}
-              {errors[`line${lineIndex}`] && <p className="text-xs text-destructive m-0" role="alert">{errors[`line${lineIndex}`]}</p>}
+              <FieldErrorMessage message={errors[`line${lineIndex}`]} className="m-0" />
             </div>
             <div>
               <label className={FORM_LABEL}>{t("accounting.ledger.columns.lineNote")}</label>

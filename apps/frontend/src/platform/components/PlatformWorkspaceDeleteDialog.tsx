@@ -4,6 +4,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FORM_LABEL } from '@/components/ui/formStyles';
+import { FieldErrorMessage } from '@/components/ui/FormField';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -84,9 +85,7 @@ export function PlatformWorkspaceDeleteDialog({
           />
           <p className="text-xs text-muted-foreground">{t('platform.deleteWorkspacePasswordHint')}</p>
           {passwordError ? (
-            <p className="text-xs text-destructive font-semibold" role="alert">
-              {passwordError}
-            </p>
+            <FieldErrorMessage message={passwordError} />
           ) : null}
         </div>
         <AlertDialogFooter>

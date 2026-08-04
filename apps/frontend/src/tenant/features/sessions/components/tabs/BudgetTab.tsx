@@ -6,6 +6,7 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { BudgetTransactionModal, type TransactionEntry } from "./BudgetTransactionModal";
 
 interface BudgetTabProps {
@@ -93,7 +94,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
         </header>
         <div className="rounded-xl border border-border overflow-hidden">
           {(!budget.incomes || budget.incomes.length === 0) ? (
-            <p className="py-6 text-center text-sm text-muted-foreground m-0">{t("sessions.budget.emptyIncome")}</p>
+            <EmptyState title={t("sessions.budget.emptyIncome")} compact icon={null} />
           ) : (
             budget.incomes.map((incomeEntry: BudgetIncome, index: number) => (
               <article key={incomeEntry.id} className={`flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
@@ -129,7 +130,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
         </header>
         <div className="rounded-xl border border-border overflow-hidden">
           {(!budget.expenses || budget.expenses.length === 0) ? (
-            <p className="py-6 text-center text-sm text-muted-foreground m-0">{t("sessions.budget.emptyExpenses")}</p>
+            <EmptyState title={t("sessions.budget.emptyExpenses")} compact icon={null} />
           ) : (
             budget.expenses.map((expenseEntry: BudgetExpense, index: number) => (
               <article key={expenseEntry.id} className={`flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 ${index > 0 ? "border-t border-border/50" : ""}`}>

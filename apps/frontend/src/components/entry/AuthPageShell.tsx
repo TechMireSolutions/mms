@@ -38,7 +38,7 @@ export function AuthCardShell({
   return (
     <div
       className={cn(
-        "relative z-10 w-full max-w-[26.25rem]",
+        "relative z-10 w-full max-w-toast",
         !reducedMotion && "animate-fade-in",
         className,
       )}

@@ -1,5 +1,6 @@
 import { getInitials } from '@mms/shared';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -75,7 +76,11 @@ export function MessageComposerRecipients({
               </li>
             );
           })}
-          {displayedRecipients.length === 0 && <li className="py-2 text-center text-xs text-muted-foreground">{t('messaging.noRecipientsFound')}</li>}
+          {displayedRecipients.length === 0 && (
+            <li className="list-none">
+              <EmptyState title={t('messaging.noRecipientsFound')} compact icon={null} />
+            </li>
+          )}
         </ul>
       </div>
       {eligibleRecipients.length === 0 && <p className="text-xs font-medium text-destructive">{isEmail ? t('messaging.selectRecipientsDesc') : isSms ? t('messaging.smsNoEligibleContacts') : t('messaging.whatsappSkippedNote')}</p>}

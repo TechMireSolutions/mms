@@ -5,6 +5,7 @@ import { SEMANTIC_BADGE, WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 /**
  * Format a date string to a localized PK date.
@@ -52,7 +53,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
 
       <div className="space-y-3" role="radiogroup" aria-label={t("enrollments.wizard.step2SessionsAria")}>
         {activeSessions.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground text-sm" role="status">{t("enrollments.wizard.step2Empty")}</div>
+          <EmptyState title={t("enrollments.wizard.step2Empty")} compact icon={null} />
         )}
         {activeSessions.map((session) => {
           const selected = value?.id === session.id;

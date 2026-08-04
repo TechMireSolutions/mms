@@ -94,7 +94,7 @@ export function UsersListContent({
   };
 
   return (
-    <Card accentColor="primary" className="overflow-hidden border-border/80 bg-card/45 p-0 shadow-sm backdrop-blur-sm">
+    <Card accentColor="primary" className="overflow-hidden p-0">
       {viewMode === 'cards' ? (
         <UsersListMobileCards {...listProps} />
       ) : (

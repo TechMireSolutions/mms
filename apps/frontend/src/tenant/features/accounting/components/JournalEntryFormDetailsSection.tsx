@@ -3,6 +3,7 @@ import { BookOpen } from "lucide-react";
 import { type FiscalYear } from '@/lib/data/accountingData';
 import { Card } from "@/components/ui/card";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FieldErrorMessage } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -35,7 +36,7 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
               onChange={(dateValue) => setForm({ ...form, date: dateValue })}
               required
             />
-            {errors.date && <p className="text-xs text-destructive mt-1" role="alert">{errors.date}</p>}
+            <FieldErrorMessage message={errors.date} />
           </div>
           <div>
             <label htmlFor="journal-entry-financial-year" className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
@@ -60,7 +61,7 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
                 aria-invalid={!!errors.description}
               />
             </div>
-            {errors.description && <p className="text-xs text-destructive mt-1" role="alert">{errors.description}</p>}
+            <FieldErrorMessage message={errors.description} />
           </div>
         </div>
       </fieldset>

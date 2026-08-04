@@ -3,6 +3,7 @@ import { Plus, Trash2, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { getFieldLabel } from "@/tenant/features/reports/components/reportMetadata";
 import type { FilterRule } from "@/tenant/features/reports/components/dynamicChartVisualizerTypes";
@@ -41,7 +42,13 @@ export function DynamicChartVisualizerFiltersPanel({
 
       <div className="space-y-2.5 max-h-[13.75rem] overflow-y-auto pe-1">
         {filters.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic py-3 text-center bg-card/10 rounded-2xl border border-dashed border-border/40">{t("reports.visualizer.noFilters")}</p>
+          <EmptyState
+            title={t("reports.visualizer.noFilters")}
+            variant="dashed"
+            compact
+            icon={null}
+            className="italic border-border/40 bg-card/10 rounded-2xl"
+          />
         ) : (
           filters.map((rule) => (
             <div key={rule.id} className="flex flex-col gap-2 rounded-2xl border border-border bg-card/30 p-2.5 sm:flex-row sm:items-center">

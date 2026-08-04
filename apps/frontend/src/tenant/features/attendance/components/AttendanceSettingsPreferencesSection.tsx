@@ -23,7 +23,7 @@ export function AttendanceSettingsPreferencesSection({
 }: AttendanceSettingsPreferencesSectionProps): React.JSX.Element {
   return (
     <>
-      <Card accentColor="primary" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+      <Card accentColor="primary" className="p-0 overflow-hidden">
         <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
           <Clock className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.timingRules")}</h2>
@@ -67,7 +67,7 @@ export function AttendanceSettingsPreferencesSection({
         </div>
       </Card>
 
-      <Card accentColor="info" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+      <Card accentColor="info" className="p-0 overflow-hidden">
         <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
           <QrCode className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.qrAttendance")}</h2>
@@ -79,7 +79,7 @@ export function AttendanceSettingsPreferencesSection({
         </div>
       </Card>
 
-      <Card accentColor="warning" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+      <Card accentColor="warning" className="p-0 overflow-hidden">
         <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
           <Bell className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.alerts")}</h2>
@@ -110,7 +110,7 @@ export function AttendanceSettingsPreferencesSection({
         </div>
       </Card>
 
-      <Card accentColor="success" className="p-0 overflow-hidden bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md border-border/80">
+      <Card accentColor="success" className="p-0 overflow-hidden">
         <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
           <Scan className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.advanced")}</h2>

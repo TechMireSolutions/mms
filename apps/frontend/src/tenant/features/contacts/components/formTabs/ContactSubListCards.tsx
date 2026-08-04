@@ -2,7 +2,7 @@ import React, { ElementType, ReactNode, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CardRemoveButton } from "@/components/ui/FormPrimitives";
+import { CardRemoveButton, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
@@ -59,8 +59,7 @@ export function ListFieldCard({
 }
 
 export function FieldInlineError({ message }: { message?: string }): JSX.Element | null {
-  if (!message) return null;
-  return <p className="text-xs text-destructive mt-1 font-medium">{message}</p>;
+  return <FieldErrorMessage message={message} />;
 }
 
 export interface ContactSubListShellProps {
