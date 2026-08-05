@@ -6,6 +6,7 @@ import {
   ContactDetailPhonesSection,
   ContactDetailSocialsSection,
 } from "./ContactDetailChannelSections";
+import { ContactDetailCustomCollections } from "./ContactDetailCustomCollections";
 
 export interface ContactDetailCollectionsProps {
   contact: Contact;
@@ -29,6 +30,8 @@ export function ContactDetailCollections({
 }: ContactDetailCollectionsProps): JSX.Element {
   const {
     enabledTabIds,
+    fields,
+    fieldConfig,
     phoneLabels,
     emailLabels,
     addressLabels,
@@ -65,6 +68,13 @@ export function ContactDetailCollections({
       {enabledTabIds.has("socials") && visibleCollectionFields.socials.length > 0 && (
         <ContactDetailSocialsSection contact={contact} socialPlatforms={socialPlatforms} />
       )}
+
+      <ContactDetailCustomCollections
+        contact={contact}
+        fields={fields}
+        enabledTabIds={enabledTabIds}
+        formTabs={fieldConfig.formTabs}
+      />
     </>
   );
 }

@@ -103,7 +103,7 @@ export function useModuleFieldsEditor({
     toggleTabEnabled: (id: string) => toggleTabEnabledImpl(id, setEnabledTabs, setRequiredTabs),
     toggleTabRequired: (id: string) => toggleTabRequiredImpl(id, setRequiredTabs),
     toggleFieldEnabled: (tabId: string, fieldId: string) =>
-      toggleFieldEnabledImpl(tabId, fieldId, setTabFieldEnabled, setTabFieldRequired),
+      toggleFieldEnabledImpl(tabId, fieldId, setTabFieldEnabled, setTabFieldRequired, setTabFieldUnique),
     toggleFieldRequired: (tabId: string, fieldId: string) =>
       toggleFieldRequiredImpl(tabId, fieldId, setTabFieldRequired),
     toggleFieldUnique: (tabId: string, fieldId: string) =>
@@ -128,6 +128,8 @@ export function useModuleFieldsEditor({
         setTabFields,
         setTabFieldRequired,
         setTabFieldUnique,
+        setTabFieldDefaultValues,
+        setTabFieldPermissions,
       ),
     handleDeleteField: (tabId: string, fieldId: string) =>
       handleDeleteFieldImpl(tabId, fieldId, setTabFields, setTabFieldOrder),

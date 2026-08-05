@@ -44,6 +44,7 @@ export function toggleFieldEnabled(
   fieldId: string,
   setTabFieldEnabled: StringSetMapSetter,
   setTabFieldRequired: StringSetMapSetter,
+  setTabFieldUnique: StringSetMapSetter,
 ): void {
   setTabFieldEnabled((currentEnabledFields) => {
     const updatedFieldIds = new Set(currentEnabledFields[tabId]);
@@ -53,6 +54,11 @@ export function toggleFieldEnabled(
         const updatedRequiredFieldIds = new Set(currentRequiredFields[tabId]);
         updatedRequiredFieldIds.delete(fieldId);
         return { ...currentRequiredFields, [tabId]: updatedRequiredFieldIds };
+      });
+      setTabFieldUnique((currentUniqueFields) => {
+        const updatedUniqueFieldIds = new Set(currentUniqueFields[tabId] || []);
+        updatedUniqueFieldIds.delete(fieldId);
+        return { ...currentUniqueFields, [tabId]: updatedUniqueFieldIds };
       });
     } else {
       updatedFieldIds.add(fieldId);
@@ -150,6 +156,10 @@ export function handleEditField(
   setTabFields: Dispatch<SetStateAction<Record<string, FieldDefinition[]>>>,
   setTabFieldRequired: StringSetMapSetter,
   setTabFieldUnique: StringSetMapSetter,
+  setTabFieldDefaultValues?: Dispatch<SetStateAction<Record<string, Record<string, unknown>>>>,
+  setTabFieldPermissions?: Dispatch<
+    SetStateAction<Record<string, Record<string, string[]>>>
+  >,
 ): void {
   setTabFields((currentTabFields) => ({
     ...currentTabFields,
@@ -159,6 +169,24 @@ export function handleEditField(
   }));
   syncFlagSet(tabId, updatedField.key, Boolean(updatedField.required), setTabFieldRequired);
   syncFlagSet(tabId, updatedField.key, Boolean(updatedField.unique), setTabFieldUnique);
+  if (setTabFieldDefaultValues) {
+    setTabFieldDefaultValues((current) => ({
+      ...current,
+      [tabId]: {
+        ...(current[tabId] || {}),
+        [updatedField.key]: updatedField.defaultValue,
+      },
+    }));
+  }
+  if (setTabFieldPermissions) {
+    setTabFieldPermissions((current) => ({
+      ...current,
+      [tabId]: {
+        ...(current[tabId] || {}),
+        [updatedField.key]: updatedField.permissions ?? [],
+      },
+    }));
+  }
 }
 
 export function handleDeleteField(

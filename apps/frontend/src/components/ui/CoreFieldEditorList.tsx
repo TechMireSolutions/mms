@@ -7,7 +7,6 @@ import { FieldEditor } from "@/components/ui/CustomFieldsBuilder";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 
-
 interface CoreFieldEditorListProps {
   tabId: string;
   fields: FieldDefinition[];
@@ -24,7 +23,7 @@ interface CoreFieldEditorListProps {
   onChangeDefaults?: (fieldId: string, val: unknown) => void;
   onChangePermissions?: (fieldId: string, roles: string[]) => void;
   onEditField?: (field: FieldDefinition) => void;
-  onDeleteField?: (fieldId: string) => void;
+  onDeleteField?: (fieldId: string) => void | boolean | Promise<void | boolean>;
   labels?: {
     required?: string;
     optional?: string;
@@ -87,6 +86,8 @@ export function CoreFieldEditorList({
                 <Draggable key={field.key} draggableId={field.key} index={index}>
                   {(drag, snapshot) => {
                     const { style, ...draggableProps } = drag.draggableProps;
+                    const fieldPermissions =
+                      permissions[field.key] ?? field.permissions ?? [];
                     return (
                       <div ref={drag.innerRef} {...draggableProps} style={style as React.CSSProperties} className="flex flex-col gap-1.5">
                         <FieldItem
@@ -100,16 +101,33 @@ export function CoreFieldEditorList({
                           dragHandleProps={drag.dragHandleProps}
                           isDragging={snapshot.isDragging}
                           defaultValue={defaultValues[field.key]}
-                          permissions={permissions[field.key]}
-                          onChangeDefaults={onChangeDefaults ? (fieldValue) => onChangeDefaults(field.key, fieldValue) : undefined}
-                          onChangePermissions={onChangePermissions && !core ? (roles) => onChangePermissions(field.key, roles) : undefined}
-                          onEdit={() => { setEditingId(editingId === field.key ? null : field.key); setFullEditingId(null); }}
-                          onEditField={onEditField && !core ? () => { setFullEditingId(fullEditingId === field.key ? null : field.key); setEditingId(null); } : undefined}
+                          permissions={fieldPermissions}
+                          onChangeDefaults={
+                            core && onChangeDefaults
+                              ? (fieldValue) => onChangeDefaults(field.key, fieldValue)
+                              : undefined
+                          }
+                          onEdit={
+                            core && onChangeDefaults
+                              ? () => {
+                                  setEditingId(editingId === field.key ? null : field.key);
+                                  setFullEditingId(null);
+                                }
+                              : undefined
+                          }
+                          onEditField={
+                            onEditField && !core
+                              ? () => {
+                                  setFullEditingId(fullEditingId === field.key ? null : field.key);
+                                  setEditingId(null);
+                                }
+                              : undefined
+                          }
                           onDeleteField={onDeleteField && !core ? () => onDeleteField(field.key) : undefined}
                           isCoreField={core}
                           labels={labels}
                         />
-                        {editingId === field.key && !fullEditingId && (
+                        {editingId === field.key && core && (
                           <div className="ms-8 p-3 rounded-lg border border-border bg-muted/20 space-y-3 text-start">
                             <div>
                               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
@@ -122,28 +140,30 @@ export function CoreFieldEditorList({
                                 placeholder={t("fields.defaultValuePlaceholder")}
                               />
                             </div>
-                            {!core && (
-                              <div>
-                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1">
-                                  {t("fields.permissionsLabel")}
-                                </label>
-                                <Input
-                                  className="text-xs py-2 min-h-11 bg-background"
-                                  value={(permissions[field.key] || []).join(", ")}
-                                  onChange={(event) => onChangePermissions?.(field.key, event.target.value.split(",").map((role) => role.trim()).filter(Boolean))}
-                                  placeholder={t("fields.permissionsPlaceholder")}
-                                />
-                              </div>
-                            )}
                           </div>
                         )}
                         {fullEditingId === field.key && onEditField && (
                           <div className="ms-8 mt-1">
                             <FieldEditor
-                              field={field}
+                              field={{
+                                ...field,
+                                enabled: enabledSet.has(field.key),
+                                required: requiredSet.has(field.key),
+                                unique: isUniqueField?.(tabId, field.key) || false,
+                                defaultValue: defaultValues[field.key] ?? field.defaultValue,
+                                permissions: fieldPermissions,
+                              }}
                               existingLabels={fields.map((fieldDefinition) => fieldDefinition.label)}
+                              listManagedFlags
                               onSave={(updatedField) => {
-                                onEditField(updatedField);
+                                onEditField({
+                                  ...updatedField,
+                                  enabled: enabledSet.has(field.key),
+                                  required: requiredSet.has(field.key),
+                                  unique: isUniqueField?.(tabId, field.key) || false,
+                                });
+                                onChangeDefaults?.(field.key, updatedField.defaultValue);
+                                onChangePermissions?.(field.key, updatedField.permissions ?? []);
                                 setFullEditingId(null);
                               }}
                               onCancel={() => setFullEditingId(null)}

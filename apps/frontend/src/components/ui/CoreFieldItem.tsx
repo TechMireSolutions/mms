@@ -51,7 +51,7 @@ export const CoreFieldItem = memo(function CoreFieldItem({
   const lblRequired = labels?.required || t("common.required");
   const lblOptional = labels?.optional || t("common.optional");
   const lblUnique = labels?.unique || t("common.unique");
-  const lblStandard = labels?.standard || t("common.standard");
+  const lblNotUnique = labels?.standard || t("common.notUnique");
 
   return (
     <div
@@ -128,7 +128,7 @@ export const CoreFieldItem = memo(function CoreFieldItem({
                   : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               }`}
           >
-            {isUnique ? lblUnique : lblStandard}
+            {isUnique ? lblUnique : lblNotUnique}
           </Button>
         )}
 
@@ -139,6 +139,7 @@ export const CoreFieldItem = memo(function CoreFieldItem({
             variant="ghost"
             className="flex h-11 w-11 min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg p-0 text-muted-foreground/80 shadow-none transition-colors hover:bg-muted hover:text-foreground"
             title={t("fields.editDefaultsTitle")}
+            aria-label={t("fields.editDefaultsTitle")}
           >
             <SlidersHorizontal className="w-4 h-4" />
           </Button>

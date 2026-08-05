@@ -4,6 +4,7 @@ import { buildFieldsMap } from "./moduleFieldsEditorBuildMap";
 import {
   handleCustomFieldsChange,
   handleEditField,
+  toggleFieldEnabled,
 } from "./moduleFieldsEditorFieldHandlers";
 
 function field(partial: Partial<FieldDefinition> & { key: string }): FieldDefinition {
@@ -21,6 +22,36 @@ function field(partial: Partial<FieldDefinition> & { key: string }): FieldDefini
 }
 
 describe("moduleFieldsEditorFieldHandlers Set sync", () => {
+  it("clears required and unique when disabling a field", () => {
+    let tabFieldEnabled: Record<string, Set<string>> = {
+      basic: new Set(["cnic"]),
+    };
+    let tabFieldRequired: Record<string, Set<string>> = {
+      basic: new Set(["cnic"]),
+    };
+    let tabFieldUnique: Record<string, Set<string>> = {
+      basic: new Set(["cnic"]),
+    };
+
+    toggleFieldEnabled(
+      "basic",
+      "cnic",
+      (updater) => {
+        tabFieldEnabled = typeof updater === "function" ? updater(tabFieldEnabled) : updater;
+      },
+      (updater) => {
+        tabFieldRequired = typeof updater === "function" ? updater(tabFieldRequired) : updater;
+      },
+      (updater) => {
+        tabFieldUnique = typeof updater === "function" ? updater(tabFieldUnique) : updater;
+      },
+    );
+
+    expect(tabFieldEnabled.basic.has("cnic")).toBe(false);
+    expect(tabFieldRequired.basic.has("cnic")).toBe(false);
+    expect(tabFieldUnique.basic.has("cnic")).toBe(false);
+  });
+
   it("persists FieldEditor required/unique via Sets in buildFieldsMap", () => {
     let tabFields: Record<string, FieldDefinition[]> = {
       custom: [field({ key: "loyaltyNotes" })],
@@ -58,8 +89,8 @@ describe("moduleFieldsEditorFieldHandlers Set sync", () => {
       {},
     );
 
-    expect(map.custom[0].required).toBe(true);
-    expect(map.custom[0].unique).toBe(true);
+    expect(map.custom?.[0]?.required).toBe(true);
+    expect(map.custom?.[0]?.unique).toBe(true);
   });
 
   it("opts new custom fields into required/unique Sets from FieldEditor flags", () => {
@@ -103,9 +134,9 @@ describe("moduleFieldsEditorFieldHandlers Set sync", () => {
       },
     );
 
-    expect(tabFieldEnabled.custom.has("score")).toBe(true);
-    expect(tabFieldRequired.custom.has("score")).toBe(true);
-    expect(tabFieldUnique.custom.has("score")).toBe(true);
+    expect(tabFieldEnabled.custom?.has("score")).toBe(true);
+    expect(tabFieldRequired.custom?.has("score")).toBe(true);
+    expect(tabFieldUnique.custom?.has("score")).toBe(true);
 
     const map = buildFieldsMap(
       [{ key: "custom", label: "Custom", enabled: true, order: 0 }],
@@ -117,11 +148,34 @@ describe("moduleFieldsEditorFieldHandlers Set sync", () => {
       {},
       {},
     );
-    expect(map.custom[0]).toMatchObject({
+    expect(map.custom?.[0]).toMatchObject({
       key: "score",
       required: true,
       unique: true,
       enabled: true,
+    });
+  });
+
+  it("buildFieldsMap writes enabled/required/unique from Sets", () => {
+    const map = buildFieldsMap(
+      [{ key: "basic", label: "Basic", enabled: true, order: 0 }],
+      {
+        basic: [
+          field({ key: "cnic", enabled: false, required: false, unique: false }),
+        ],
+      },
+      { basic: new Set(["cnic"]) },
+      { basic: new Set(["cnic"]) },
+      { basic: new Set(["cnic"]) },
+      { basic: ["cnic"] },
+      {},
+      {},
+    );
+    expect(map.basic?.[0]).toMatchObject({
+      key: "cnic",
+      enabled: true,
+      required: true,
+      unique: true,
     });
   });
 });

@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { CoreFieldEditorList } from "@/components/ui/CoreFieldEditorList";
 import { CustomFieldsBuilder, type CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
 import {
@@ -35,8 +36,11 @@ interface ModuleFieldsSetupTabCardProps {
   onReorderFields: (tabId: string, reorderedFields: FieldDefinition[]) => void;
   onCustomFieldsChange: (tabId: string, newFields: CustomFieldConfig[]) => void;
   onEditField: (tabId: string, updatedField: FieldDefinition) => void;
-  onDeleteField: (tabId: string, fieldId: string) => void;
-  onDeleteTab: (key: string) => void;
+  onDeleteField: (
+    tabId: string,
+    fieldId: string,
+  ) => void | boolean | Promise<void | boolean>;
+  onDeleteTab: (key: string) => void | boolean | Promise<void | boolean>;
   onStartRenameTab: (tabId: string, currentLabel: string) => void;
   onChangeDefaults: (tabId: string, fieldId: string, fieldValue: unknown) => void;
   onChangePermissions: (tabId: string, fieldId: string, roles: string[]) => void;
@@ -66,6 +70,7 @@ export function ModuleFieldsSetupTabCard({
   onChangePermissions,
 }: ModuleFieldsSetupTabCardProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [tabDeleteOpen, setTabDeleteOpen] = useState(false);
   const tabId = tab.key;
   const tabLabel = toTitleCase(tab.labelKey ? t(tab.labelKey) : tab.label);
   const isProtected = isProtectedTab ? isProtectedTab(tabId) : Boolean(tab.isSystem);
@@ -110,7 +115,7 @@ export function ModuleFieldsSetupTabCard({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => onDeleteTab(tabId)}
+                  onClick={() => setTabDeleteOpen(true)}
                   className="min-h-11 min-w-11 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none flex items-center justify-center"
                   aria-label={t("common.delete")}
                   title={t("common.delete")}
@@ -125,7 +130,7 @@ export function ModuleFieldsSetupTabCard({
         <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
           {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
         </span>
-        {!locked && isOn && (
+        {isOn && (
           <Button
             type="button"
             variant="ghost"
@@ -182,6 +187,16 @@ export function ModuleFieldsSetupTabCard({
           </div>
         </div>
       )}
+
+      <ConfirmAlertDialog
+        open={tabDeleteOpen}
+        onOpenChange={setTabDeleteOpen}
+        title={t("common.delete")}
+        description={t("fields.deleteTabConfirm", { name: tabLabel })}
+        confirmLabel={t("common.delete")}
+        destructive
+        onConfirm={() => onDeleteTab(tabId)}
+      />
     </Card>
   );
 }

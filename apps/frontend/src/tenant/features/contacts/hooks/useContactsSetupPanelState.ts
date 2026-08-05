@@ -95,6 +95,7 @@ export function useContactsSetupPanelState({
   }, [countryCodes, isPreferencesDirty]);
 
   const isFieldsDirty = useMemo(() => {
+    const formTabsForCompare = resolveSetupFormTabs(config.formTabs);
     const persistedEnabled =
       config.enabledTabs && config.enabledTabs.length > 0
         ? config.enabledTabs
@@ -103,7 +104,7 @@ export function useContactsSetupPanelState({
       fields: config.fields,
       enabledTabs: persistedEnabled,
       requiredTabs: config.requiredTabs || [],
-      formTabs: resolveSetupFormTabs(config.formTabs),
+      formTabs: formTabsForCompare,
     });
     const draft = fieldsSetupSnapshot({
       fields: fieldsEditor.buildFieldsMap(),

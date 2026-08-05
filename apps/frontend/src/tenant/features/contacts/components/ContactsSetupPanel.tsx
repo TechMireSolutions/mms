@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Save } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import {
   FieldConfig,
   isContactLockedEnabledTab,
@@ -115,8 +115,18 @@ export default function ContactsSetupPanel({
           disabled={isSaving || (showPrefs ? !isPrefsDirty : !isFieldsDirty)}
           className="flex items-center gap-2 px-5 min-h-11"
         >
-          <Save className="w-4 h-4" aria-hidden="true" />
-          <span>{saved ? t("contacts.form.saved") : t("contacts.setup.saveAndApply")}</span>
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Save className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span>
+            {isSaving
+              ? t("global.saving")
+              : saved
+                ? t("contacts.form.saved")
+                : t("contacts.setup.saveAndApply")}
+          </span>
         </Button>
       </div>
     </div>

@@ -24,10 +24,12 @@ export function useModuleFieldsSetupHandlers({ editor, onStateChange }: UseModul
 
   const runDeleteAction = async (
     action: () => void | boolean | Promise<void | boolean>,
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     const result = await Promise.resolve(action());
     // Guards return false when blocked; sync deletes return void (treat as success).
-    if (result !== false && onStateChange) onStateChange();
+    if (result === false) return false;
+    if (onStateChange) onStateChange();
+    return true;
   };
 
   return {
@@ -51,9 +53,10 @@ export function useModuleFieldsSetupHandlers({ editor, onStateChange }: UseModul
     handleEditFieldLocal: (tabId: string, updatedField: FieldDefinition) =>
       triggerChange(() => editor.handleEditField(tabId, updatedField)),
     handleDeleteFieldLocal: (tabId: string, fieldId: string) =>
-      void runDeleteAction(() => editor.handleDeleteField(tabId, fieldId)),
+      runDeleteAction(() => editor.handleDeleteField(tabId, fieldId)),
     handleAddTabLocal: (label: string) => triggerChange(() => editor.handleAddTab(label)),
-    handleDeleteTabLocal: (key: string) => void runDeleteAction(() => editor.handleDeleteTab(key)),
+    handleDeleteTabLocal: (key: string) =>
+      runDeleteAction(() => editor.handleDeleteTab(key)),
     handleRenameTabLocal: (key: string, newLabel: string) => triggerChange(() => editor.handleRenameTab(key, newLabel)),
     triggerChange,
   };

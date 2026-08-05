@@ -1,11 +1,10 @@
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { GripVertical, SlidersHorizontal } from "lucide-react";
 import { FieldDefinition } from "@mms/shared";
-import { FieldEditor } from "@/components/ui/CustomFieldsBuilder";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface FieldItemProps {
@@ -24,7 +23,7 @@ interface FieldItemProps {
   onChangeDefaults?: (fieldValue: unknown) => void;
   onChangePermissions?: (roles: string[]) => void;
   onEditField?: () => void;
-  onDeleteField?: () => void;
+  onDeleteField?: () => void | boolean | Promise<void | boolean>;
   isCoreField?: boolean;
   labels?: {
     required?: string;
@@ -46,17 +45,20 @@ export const FieldItem = memo(function FieldItem({
   isDragging,
   onEdit,
   onChangeDefaults,
-  onChangePermissions,
   onEditField,
   onDeleteField,
   isCoreField = false,
   labels,
 }: FieldItemProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const lblRequired = labels?.required || t("common.required");
   const lblOptional = labels?.optional || t("common.optional");
   const lblUnique = labels?.unique || t("common.unique");
-  const lblStandard = labels?.standard || t("common.standard");
+  const lblNotUnique = labels?.standard || t("common.notUnique");
+  const fieldLabel = field.labelKey ? t(field.labelKey) : field.label;
+  // Core fields: defaults panel only. Customs: full FieldEditor (no Sliders).
+  const showDefaultsToggle = Boolean(onChangeDefaults && isCoreField && onEdit);
 
   return (
     <div
@@ -86,9 +88,7 @@ export const FieldItem = memo(function FieldItem({
 
       <div className="min-w-0 flex-1 basis-[10rem] text-start">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-bold leading-snug text-foreground">
-            {field.labelKey ? t(field.labelKey) : field.label}
-          </p>
+          <p className="text-sm font-bold leading-snug text-foreground">{fieldLabel}</p>
           {isUnique && !onToggleUnique && (
             <span className="rounded border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-xs font-bold text-warning dark:border-warning/30 dark:bg-warning/20 dark:text-warning">
               {lblUnique}
@@ -102,77 +102,92 @@ export const FieldItem = memo(function FieldItem({
         ) : null}
       </div>
 
-      <div className="ms-auto flex min-w-0 flex-wrap items-center justify-end gap-1.5">
-      {isEnabled && (
-        <Button
-          type="button"
-          onClick={onToggleRequired}
-          variant="outline"
-          size="sm"
-          className={`flex-shrink-0 rounded-md border px-3 text-xs font-semibold shadow-none transition-all
-              ${
-                isRequired
-                  ? "border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15"
-                  : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-              }`}
-        >
-          {isRequired ? lblRequired : lblOptional}
-        </Button>
-      )}
+      <div className="ms-auto flex min-w-0 basis-full flex-wrap items-center justify-end gap-1.5 sm:basis-auto">
+        {isEnabled && (
+          <Button
+            type="button"
+            onClick={onToggleRequired}
+            variant="outline"
+            size="sm"
+            className={`min-h-11 flex-1 rounded-md border px-3 text-xs font-semibold shadow-none transition-all sm:flex-initial
+                ${
+                  isRequired
+                    ? "border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15"
+                    : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                }`}
+          >
+            {isRequired ? lblRequired : lblOptional}
+          </Button>
+        )}
 
-      {isEnabled && onToggleUnique && (
-        <Button
-          type="button"
-          onClick={onToggleUnique}
-          variant="outline"
-          size="sm"
-          className={`flex-shrink-0 rounded-md border px-3 text-xs font-semibold shadow-none transition-all
-              ${
-                isUnique
-                  ? "border-warning/20 bg-warning/10 text-warning hover:bg-warning/15"
-                  : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-              }`}
-        >
-          {isUnique ? lblUnique : lblStandard}
-        </Button>
-      )}
+        {isEnabled && onToggleUnique && (
+          <Button
+            type="button"
+            onClick={onToggleUnique}
+            variant="outline"
+            size="sm"
+            className={`min-h-11 flex-1 rounded-md border px-3 text-xs font-semibold shadow-none transition-all sm:flex-initial
+                ${
+                  isUnique
+                    ? "border-warning/20 bg-warning/10 text-warning hover:bg-warning/15"
+                    : "border-transparent bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                }`}
+          >
+            {isUnique ? lblUnique : lblNotUnique}
+          </Button>
+        )}
 
-      {(onChangeDefaults || onChangePermissions) && (
-        <Button
-          type="button"
-          onClick={onEdit}
-          variant="ghost"
-          className="flex h-11 w-11 min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg p-0 text-muted-foreground/80 shadow-none transition-colors hover:bg-muted hover:text-foreground"
-          title={t("fields.editDefaultsTitle")}
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-        </Button>
-      )}
+        {showDefaultsToggle && (
+          <Button
+            type="button"
+            onClick={onEdit}
+            variant="ghost"
+            className="flex h-11 w-11 min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-lg p-0 text-muted-foreground/80 shadow-none transition-colors hover:bg-muted hover:text-foreground"
+            title={t("fields.editDefaultsTitle")}
+            aria-label={t("fields.editDefaultsTitle")}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+          </Button>
+        )}
 
-      {onEditField && (
-        <Button
-          type="button"
-          onClick={onEditField}
-          variant="ghost"
-          className="flex min-h-11 flex-shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-muted-foreground/80 shadow-none transition-colors hover:bg-muted hover:text-foreground"
-          title={t("fields.editCustomFieldTitle")}
-        >
-          <span>{t("common.edit")}</span>
-        </Button>
-      )}
+        {onEditField && (
+          <Button
+            type="button"
+            onClick={onEditField}
+            variant="ghost"
+            className="flex min-h-11 flex-shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-muted-foreground/80 shadow-none transition-colors hover:bg-muted hover:text-foreground"
+            title={t("fields.editCustomFieldTitle")}
+            aria-label={t("fields.editCustomFieldTitle")}
+          >
+            <span>{t("common.edit")}</span>
+          </Button>
+        )}
+
+        {onDeleteField && (
+          <Button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            variant="ghost"
+            className="flex min-h-11 flex-shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-destructive shadow-none transition-colors hover:bg-destructive/10 hover:text-destructive"
+            title={t("fields.deleteCustomFieldTitle")}
+            aria-label={t("fields.deleteCustomFieldTitle")}
+          >
+            <span>{t("common.delete")}</span>
+          </Button>
+        )}
+      </div>
 
       {onDeleteField && (
-        <Button
-          type="button"
-          onClick={onDeleteField}
-          variant="ghost"
-          className="flex min-h-11 flex-shrink-0 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-destructive shadow-none transition-colors hover:bg-destructive/10 hover:text-destructive"
+        <ConfirmAlertDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
           title={t("fields.deleteCustomFieldTitle")}
-        >
-          <span>{t("common.delete")}</span>
-        </Button>
+          description={t("fields.deleteConfirm", { name: fieldLabel })}
+          confirmLabel={t("common.delete")}
+          destructive
+          onConfirm={() => onDeleteField()}
+        />
       )}
-      </div>
     </div>
   );
 });

@@ -27,7 +27,11 @@ export interface ConfirmAlertDialogProps {
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  onConfirm: (reason?: string) => void;
+  /**
+   * Return `false` to keep the dialog open (e.g. delete guard blocked).
+   * `void` / `true` / resolved non-false closes the dialog.
+   */
+  onConfirm: (reason?: string) => void | boolean | Promise<void | boolean>;
   destructive?: boolean;
   optionalReason?: ConfirmAlertDialogOptionalReason;
 }
@@ -46,15 +50,34 @@ export function ConfirmAlertDialog({
 }: ConfirmAlertDialogProps): React.JSX.Element {
   const { t } = useTranslation();
   const [reason, setReason] = useState("");
+  const [confirming, setConfirming] = useState(false);
   const reasonInputId = useId();
 
   useEffect(() => {
-    if (!open) setReason("");
+    if (!open) {
+      setReason("");
+      setConfirming(false);
+    }
   }, [open]);
 
-  const handleConfirm = (): void => {
-    const trimmed = reason.trim();
-    onConfirm(optionalReason ? (trimmed || undefined) : undefined);
+  const handleConfirm = async (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ): Promise<void> => {
+    // Prevent Radix auto-close so callers can keep the dialog open on guard failure.
+    event.preventDefault();
+    if (confirming) return;
+    setConfirming(true);
+    try {
+      const trimmed = reason.trim();
+      const result = await Promise.resolve(
+        onConfirm(optionalReason ? trimmed || undefined : undefined),
+      );
+      if (result !== false) {
+        onOpenChange(false);
+      }
+    } finally {
+      setConfirming(false);
+    }
   };
 
   return (
@@ -80,9 +103,12 @@ export function ConfirmAlertDialog({
           </div>
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelLabel ?? t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogCancel disabled={confirming}>
+            {cancelLabel ?? t("common.cancel")}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
+            disabled={confirming}
             className={buttonVariants({ variant: destructive ? "destructive" : "default" })}
           >
             {confirmLabel ?? t("common.yes")}

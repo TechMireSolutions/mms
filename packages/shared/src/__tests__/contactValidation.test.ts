@@ -213,3 +213,72 @@ describe('isUrlOrSocialHandle', () => {
     expect(isUrlOrSocialHandle('bad value')).toBe(false);
   });
 });
+
+describe('buildDynamicContactSchema Setup Fields round-trip', () => {
+  it('skips disabled required fields and still requires enabled ones', () => {
+    const config: FieldConfig = {
+      version: 1,
+      enabledTabs: ['basic'],
+      requiredTabs: [],
+      fields: {
+        basic: [
+          {
+            key: 'firstName',
+            label: 'First Name',
+            type: 'text',
+            enabled: true,
+            order: 1,
+            required: true,
+          },
+          {
+            key: 'hiddenRequired',
+            label: 'Hidden',
+            type: 'text',
+            enabled: false,
+            order: 2,
+            required: true,
+          },
+          {
+            key: 'visibleRequired',
+            label: 'Visible Required',
+            type: 'text',
+            enabled: true,
+            order: 3,
+            required: true,
+          },
+        ],
+      },
+    };
+
+    const schema = buildDynamicContactSchema(
+      config,
+      new Set(config.enabledTabs),
+      new Set(config.requiredTabs),
+      config.fields,
+      'en',
+    );
+
+    expect(
+      schema.safeParse({
+        firstName: 'John',
+        visibleRequired: 'ok',
+      }).success,
+    ).toBe(true);
+
+    expect(
+      schema.safeParse({
+        firstName: 'John',
+        visibleRequired: '',
+      }).success,
+    ).toBe(false);
+
+    // Disabled required field must not gate the payload.
+    expect(
+      schema.safeParse({
+        firstName: 'John',
+        visibleRequired: 'ok',
+        hiddenRequired: '',
+      }).success,
+    ).toBe(true);
+  });
+});

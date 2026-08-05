@@ -35,8 +35,8 @@ type FieldsEditorLike = {
   enabledTabs: Set<string>;
   tabFields: Record<string, FieldDefinition[]>;
   buildFieldsMap: () => FieldConfig["fields"];
-  handleDeleteField: (tabId: string, fieldId: string) => void;
-  handleDeleteTab: (tabId: string) => void;
+  handleDeleteField: (tabId: string, fieldId: string) => void | boolean | Promise<void | boolean>;
+  handleDeleteTab: (tabId: string) => void | boolean | Promise<void | boolean>;
 };
 
 export function useContactsSetupSaveActions({

@@ -1,10 +1,12 @@
 import type { ChangeEvent, FormEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Contact } from "@mms/shared";
+import { isContactCustomCollectionTab, listEnabledCustomContactFormFields, type Contact } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { DETAIL_SYSTEM_TAB_KEYS } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { FieldGroupCard } from "@/tenant/features/contacts/components/detail/ContactDetailShared";
+import { ContactDetailCustomCollections } from "@/tenant/features/contacts/components/detail/ContactDetailCustomCollections";
 import { ContactDetailOverview } from "@/tenant/features/contacts/components/detail/ContactDetailOverview";
 import { ContactDetailTimeline } from "@/tenant/features/contacts/components/detail/ContactDetailTimeline";
 import { ContactDetailFiles } from "@/tenant/features/contacts/components/detail/ContactDetailFiles";
@@ -74,6 +76,8 @@ export function ContactDetailDrawerContent({
 }: ContactDetailDrawerContentProps): JSX.Element {
   const reducedMotion = useReducedMotion();
   const { t } = useTranslation();
+  const { enabledTabIds, fields, fieldConfig } = useContactConfig();
+  const isCustomCollectionTab = isContactCustomCollectionTab(activeTab);
   const customTabFields = Object.entries(grouped)
     .map(([groupName, fieldsList]) => ({
       groupName,
@@ -135,7 +139,27 @@ export function ContactDetailDrawerContent({
           />
         )}
 
-        {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
+        {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && isCustomCollectionTab && (
+          <div className="space-y-4">
+            <ContactDetailCustomCollections
+              contact={contactState}
+              fields={fields}
+              enabledTabIds={enabledTabIds}
+              formTabs={fieldConfig.formTabs}
+              onlyTabId={activeTab}
+            />
+            {listEnabledCustomContactFormFields(fields, activeTab).length === 0 ? (
+              <EmptyState
+                title={t("contacts.detail.emptyCustomTab")}
+                compact
+                icon={null}
+                className="uppercase tracking-widest"
+              />
+            ) : null}
+          </div>
+        )}
+
+        {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && !isCustomCollectionTab && (
           <div className="space-y-4">
             {customTabFields.length === 0 ? (
               <EmptyState
@@ -145,11 +169,11 @@ export function ContactDetailDrawerContent({
                 className="uppercase tracking-widest"
               />
             ) : (
-              customTabFields.map(({ groupName, fields }) => (
+              customTabFields.map(({ groupName, fields: groupFields }) => (
                 <FieldGroupCard
                   key={groupName}
                   group={groupName}
-                  fields={fields}
+                  fields={groupFields}
                   formatValue={formatFieldValue}
                   getRawValue={(key) => (contactState as Record<string, unknown>)[key]}
                 />

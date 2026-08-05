@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FieldErrorMessage } from "@/components/ui/FormField";
+import { FieldEditorRolePermissions } from "@/components/ui/FieldEditorRolePermissions";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -22,6 +23,8 @@ interface FieldEditorProps {
   existingLabels?: string[];
   onSave: (field: CustomFieldConfig) => void;
   onCancel: () => void;
+  /** When true, Required/Unique stay on the list chips — hide editor toggles. */
+  listManagedFlags?: boolean;
 }
 
 export interface DraftFieldState extends Omit<CustomFieldConfig, "options"> {
@@ -34,6 +37,7 @@ export function FieldEditor({
   existingLabels = [],
   onSave,
   onCancel,
+  listManagedFlags = false,
 }: FieldEditorProps): React.JSX.Element {
   const { t } = useTranslation();
   const fieldTypeOptions = FIELD_TYPE_KEYS.map((typeOption) => ({
@@ -42,6 +46,7 @@ export function FieldEditor({
   }));
   const [draft, setDraft] = useState<DraftFieldState>(() => ({
     ...field,
+    permissions: field.permissions ?? [],
     options: normalizeOptions(field.options),
     _optionsString: optionsToString(normalizeOptions(field.options)),
   }));
@@ -59,7 +64,11 @@ export function FieldEditor({
   const handleSave = (): void => {
     if (!isValid) return;
     const { _optionsString, ...fieldWithoutTransientOptions } = draft;
-    onSave({ ...fieldWithoutTransientOptions, options: normalizeOptions(_optionsString) });
+    onSave({
+      ...fieldWithoutTransientOptions,
+      options: normalizeOptions(_optionsString),
+      permissions: draft.permissions ?? [],
+    });
   };
 
   return (
@@ -95,7 +104,8 @@ export function FieldEditor({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className={FORM_LABEL} htmlFor={`desc-${draft.key}`}>
-            {t("fields.descriptionLabel")} <span className="normal-case font-normal text-muted-foreground/70">{t("fields.adminNote")}</span>
+            {t("fields.descriptionLabel")}{" "}
+            <span className="normal-case font-normal text-muted-foreground/70">{t("fields.adminNote")}</span>
           </label>
           <Input
             id={`desc-${draft.key}`}
@@ -118,7 +128,8 @@ export function FieldEditor({
       {draft.type !== "boolean" && draft.type !== "tags" && (
         <div>
           <label className={FORM_LABEL} htmlFor={`defVal-${draft.key}`}>
-            {t("fields.defaultValueLabel")} <span className="normal-case font-normal text-muted-foreground/70">{t("fields.defaultValueHint")}</span>
+            {t("fields.defaultValueLabel")}{" "}
+            <span className="normal-case font-normal text-muted-foreground/70">{t("fields.defaultValueHint")}</span>
           </label>
           <Input
             id={`defVal-${draft.key}`}
@@ -131,23 +142,33 @@ export function FieldEditor({
 
       <CustomFieldEditorTypeSections draft={draft} upd={upd} />
 
+      <FieldEditorRolePermissions
+        fieldKey={draft.key}
+        selected={draft.permissions ?? []}
+        onChange={(roles) => upd("permissions", roles)}
+      />
+
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2 select-none text-sm font-medium text-foreground">
-          <Checkbox
-            checked={draft.required}
-            onCheckedChange={() => upd("required", !draft.required)}
-            aria-label={t("fields.toggleRequiredAria")}
-          />
-          <span>{t("common.required")}</span>
-        </div>
-        <div className="flex items-center gap-2 select-none text-sm font-medium text-foreground">
-          <Checkbox
-            checked={draft.unique}
-            onCheckedChange={() => upd("unique", !draft.unique)}
-            aria-label={t("fields.toggleUniqueAria")}
-          />
-          <span>{t("common.unique")}</span>
-        </div>
+        {!listManagedFlags && (
+          <>
+            <div className="flex items-center gap-2 select-none text-sm font-medium text-foreground">
+              <Checkbox
+                checked={draft.required}
+                onCheckedChange={() => upd("required", !draft.required)}
+                aria-label={t("fields.toggleRequiredAria")}
+              />
+              <span>{t("common.required")}</span>
+            </div>
+            <div className="flex items-center gap-2 select-none text-sm font-medium text-foreground">
+              <Checkbox
+                checked={draft.unique}
+                onCheckedChange={() => upd("unique", !draft.unique)}
+                aria-label={t("fields.toggleUniqueAria")}
+              />
+              <span>{t("common.unique")}</span>
+            </div>
+          </>
+        )}
         <div className="flex-1" />
         <Button
           type="button"

@@ -48,12 +48,12 @@ export function ModuleFieldsSetup({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-info/10 border border-info/30 text-sm text-info text-start">
+      <div className="flex items-start gap-2 p-3 rounded-lg bg-info/10 border border-info/30 text-sm text-info text-start">
         <Info className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
-        <div>
-          <h4 className="font-semibold text-xs">{introTitle}</h4>
-          <p className="text-xs mt-0.5 text-info/90">{introDescription}</p>
-        </div>
+        <p className="text-xs text-info/90">
+          <span className="font-semibold text-info">{introTitle}. </span>
+          {introDescription}
+        </p>
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2 text-start">
