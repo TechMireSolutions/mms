@@ -13,29 +13,18 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PUPPETEER_SKIP_DOWNLOAD: 'true'
-
 jobs:
   typecheck-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: 'pnpm'
@@ -56,65 +45,35 @@ jobs:
 
   unit:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
       DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
+      NODE_ENV: 'test'
+
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Start PostgreSQL and Setup Database
-        run: |
-          sudo systemctl start postgresql.service
-          pg_isready
-          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-          sudo -u postgres psql -c "CREATE DATABASE mms;"
-
-      - name: Run Test Suite
-        run: pnpm test
-
-  e2e:
-    runs-on: ubuntu-latest
-    env:
-      JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
-      DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v7
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: 'pnpm'
@@ -125,15 +84,60 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @mms/shared build
 
-      - name: Start PostgreSQL and Setup Database
-        run: |
-          sudo systemctl start postgresql.service
-          pg_isready
-          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-          sudo -u postgres psql -c "CREATE DATABASE mms;"
+      # Step added: Runs database migrations before testing
+      - name: Run DB Migrations / Push Schema
+        run: pnpm --filter apps/backend run db:migrate # or Prisma/Drizzle/Knex migrate command
+
+      - name: Run Test Suite
+        run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
+      DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
+      NODE_ENV: 'test'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter @mms/shared build
+
+      # Step added: Runs database migrations before running E2E tests
+      - name: Run DB Migrations / Push Schema
+        run: pnpm --filter apps/backend run db:migrate
 
       - name: Cache Playwright Browsers
-        uses: actions/cache@v6
+        uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package.json') }}
@@ -141,7 +145,7 @@ jobs:
             playwright-${{ runner.os }}-
 
       - name: Install Playwright Browsers
-        run: pnpm --filter e2e-tests exec playwright install chromium
+        run: pnpm --filter e2e-tests exec playwright install chromium --with-deps
 
       - name: Run responsive shell E2E
         run: pnpm test:e2e tests/responsive-shell.spec.ts
@@ -149,28 +153,19 @@ jobs:
       - name: Run authenticated responsive E2E
         run: pnpm test:e2e tests/responsive-authenticated.spec.ts
 
-  # Production dist for deploy.yml (main push only). Schema migrations run on backend startup (initDb).
   build-dist:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [typecheck-lint, unit, e2e]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: 'pnpm'
