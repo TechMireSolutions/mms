@@ -97,6 +97,7 @@ export async function assertPrimaryControlsMeetTouchTarget(
   page: Page,
   options: TouchTargetOptions = {},
 ): Promise<void> {
+  await page.waitForLoadState('domcontentloaded');
   const undersized = await page.evaluate((within) => {
     const root = within ? document.querySelector(within) : document;
     if (!root) return [{ tag: 'missing-root', text: within || 'document', aria: null, width: 0, height: 0 }];

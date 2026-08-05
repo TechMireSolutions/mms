@@ -1,0 +1,123 @@
+import { test, expect } from '@playwright/test';
+import { resetPlatformUsers } from '../helpers/tenantBootstrap.js';
+
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-least-32-chars-long';
+
+test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
+  const subdomain = `testmadrasa${Date.now()}`;
+  const adminEmail = `admin@${subdomain}.com`;
+  const adminPassword = 'Madrasa@1234';
+  const changedAdminPassword = 'Madrasa@5678';
+  const platformEmail = 'platform@test.com';
+  const platformPassword = 'Pa$$w0rd123';
+
+  test.beforeAll(() => {
+    resetPlatformUsers();
+  });
+
+  test('should setup platform, onboard a new madrasa, force first password change, and load tenant dashboard', async ({ page }) => {
+    test.setTimeout(120_000);
+    const browserFailures: string[] = [];
+
+    page.on('console', msg => {
+      if (msg.type() === 'error' || msg.text().includes('error')) {
+        console.log(`[BROWSER CONSOLE ERROR] ${msg.text()}`);
+      }
+    });
+    page.on('pageerror', err => {
+      browserFailures.push(`Unhandled browser exception: ${err.message}`);
+    });
+    page.on('response', response => {
+      if (response.status() >= 500) {
+        const url = response.url();
+        if (
+          response.status() === 502 &&
+          (url.includes('/api/platform/auth/setup/status') || url.includes('/api/public/deployment-config'))
+        ) {
+          return;
+        }
+        browserFailures.push(`HTTP ${response.status()}: ${response.request().method()} ${url}`);
+      }
+    });
+
+    // 1. Navigate to platform landing page
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    // 2. Perform first-run platform setup
+    await page.waitForSelector('#platform-setup-email');
+    await page.fill('#platform-setup-name', 'Platform Admin');
+    await page.fill('#platform-setup-email', platformEmail);
+    await page.fill('#platform-setup-password', platformPassword);
+    await page.click('button[type="submit"]');
+
+    const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
+    const signInEmailInput = page.locator('#platform-email');
+    await platformConsoleHeading.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
+
+    if (await signInEmailInput.isVisible()) {
+      await signInEmailInput.fill(platformEmail);
+      await page.fill('#platform-password', platformPassword);
+      await page.click('button[type="submit"]');
+    }
+
+    await expect(page.locator('h1')).toContainText('Platform console');
+
+    // 3. Open Onboarding Wizard & Fill Step 1
+    await page.click('a[href="/onboarding"]');
+    await page.waitForURL('**/onboarding');
+    await page.waitForSelector('#wizard-step-title');
+    await expect(page.locator('#wizard-step-title')).toContainText('Institution & theme');
+
+    await page.fill('#onboarding-name', 'Test Madrasa');
+    await page.fill('#onboarding-tagline', 'Learn with excellence');
+    await page.selectOption('#onboarding-country', 'United Kingdom');
+    await page.fill('#onboarding-subdomain', subdomain);
+    await expect(page.locator('text=Your URL:')).toBeVisible();
+
+    // 4. Onboarding Step 2 (Admin setup)
+    await page.click('button:has-text("Continue")');
+    await page.waitForSelector('#firstName');
+
+    await page.fill('#firstName', 'Test');
+    await page.fill('#lastName', 'Admin');
+    await page.fill('#email', adminEmail);
+    await page.fill('#password', adminPassword);
+    await page.fill('#confirmPassword', adminPassword);
+    await page.check('#terms');
+    await page.click('button:has-text("Create workspace")');
+
+    await expect(page).toHaveURL('http://localhost:5173/');
+    await expect(page.locator('h1')).toContainText('Platform console');
+
+    // 5. Navigate to tenant login page & login with temporary password
+    const tenantLoginUrl = `http://${subdomain}.localhost:5173/login`;
+    await page.goto(tenantLoginUrl);
+    await page.waitForLoadState('domcontentloaded');
+
+    await page.fill('input[name="email"]', adminEmail);
+    await page.fill('input[name="password"]', adminPassword);
+    await page.click('button[type="submit"]');
+
+    // 6. Complete mandatory temporary password change
+    await page.waitForURL(`http://${subdomain}.localhost:5173/force-password-change`);
+    await expect(page.locator('h1')).toContainText('Change your temporary password');
+    await page.fill('#current-password', adminPassword);
+    await page.fill('#new-password', changedAdminPassword);
+    await page.fill('#confirm-password', changedAdminPassword);
+    await page.click('button[type="submit"]');
+
+    // 7. Login with permanent credentials and verify welcome banner
+    await page.waitForURL(`http://${subdomain}.localhost:5173/login`);
+    await page.fill('input[name="email"]', adminEmail);
+    await page.fill('input[name="password"]', changedAdminPassword);
+    await page.click('button[type="submit"]');
+
+    await page.waitForURL(`http://${subdomain}.localhost:5173/`);
+    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1')).toContainText('Assalamu Alaikum, Test Admin');
+
+    expect(browserFailures, browserFailures.join('\n')).toEqual([]);
+  });
+});
