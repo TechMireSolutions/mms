@@ -2,6 +2,7 @@ import { Globe, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { normalizeDialCode } from "@/lib/contacts/countryCodeOptions";
 
@@ -33,12 +34,8 @@ export function ContactsCountryCodesSection({
   };
 
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
-        <Globe className="w-4 h-4 text-primary" aria-hidden="true" />
-        <span className="text-sm font-bold text-foreground">{t("contacts.setup.countryCodes")}</span>
-      </div>
-      <div className="p-4 space-y-3">
+    <SectionCard title={t("contacts.setup.countryCodes")} icon={Globe}>
+      <div className="space-y-3">
         <p className="text-xs text-muted-foreground">{t("contacts.setup.countryCodesDesc")}</p>
         <ul className="space-y-2">
           {countryCodes.map((entry, index) => (
@@ -90,6 +87,6 @@ export function ContactsCountryCodesSection({
           {t("contacts.setup.addCountryCode")}
         </Button>
       </div>
-    </section>
+    </SectionCard>
   );
 }

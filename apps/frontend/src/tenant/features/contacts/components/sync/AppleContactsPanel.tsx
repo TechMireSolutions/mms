@@ -1,6 +1,7 @@
 import React from "react";
 import { Smartphone } from "lucide-react";
 import { type Contact } from "@mms/shared";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAppleContactsPanel } from "@/tenant/features/contacts/hooks/useAppleContactsPanel";
 import {
@@ -28,15 +29,12 @@ export function AppleContactsPanel({
   const apple = useAppleContactsPanel({ onImport, canWrite });
 
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center gap-2">
-        <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
-          <Smartphone className="w-3.5 h-3.5 text-muted-foreground" />
-        </div>
-        <span className="text-sm font-bold text-foreground">{t("contacts.sync.appleTitle")}</span>
-        <span className="text-xs text-muted-foreground">{t("contacts.sync.vcardLabel")}</span>
-      </div>
-      <div className="p-4 space-y-4 text-start">
+    <SectionCard
+      title={t("contacts.sync.appleTitle")}
+      subtitle={t("contacts.sync.vcardLabel")}
+      icon={Smartphone}
+    >
+      <div className="space-y-4 text-start">
         <AppleContactsExportGuide t={t} />
 
         {canWrite && (
@@ -78,6 +76,6 @@ export function AppleContactsPanel({
           t={t}
         />
       </div>
-    </section>
+    </SectionCard>
   );
 }

@@ -1,17 +1,15 @@
 import React from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { Field } from "@/components/ui/FormPrimitives";
-import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import {
   listEnabledCustomContactFormFields,
   type Contact,
   type FieldDefinition,
 } from "@mms/shared";
 import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
+import { ContactCustomFieldControls } from "./ContactCustomFieldControls";
 
 type CustomCollectionRow = Record<string, unknown>;
 
@@ -84,45 +82,22 @@ export function ContactCustomCollectionTab({
             onRemove={() => setRows(rows.filter((_, i) => i !== idx))}
             removeLabel={t("contacts.form.removeCustomTabEntry", { index: idx + 1 })}
           >
-            <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
-              {rowFields.map((field) => {
-                const fieldId = `cf-${formInstanceId}-${tabId}-${idx}-${field.key}`;
-                const error = getListItemError(tabId, field.key, idx);
-                const inputField: FieldDefinition = { ...field, key: fieldId };
-                return (
-                  <div
-                    key={field.key}
-                    className={
-                      field.type === "textarea" || field.type === "tags"
-                        ? "@md:col-span-2"
-                        : undefined
-                    }
-                  >
-                    <Field
-                      label={resolveRegistryLabel(field, t)}
-                      required={field.required}
-                      error={error}
-                      id={fieldId}
-                    >
-                      <CustomFieldInput
-                        field={inputField}
-                        value={row[field.key]}
-                        onChange={(nextValue) => {
-                          setRows(
-                            rows.map((entry, entryIndex) =>
-                              entryIndex === idx
-                                ? { ...entry, [field.key]: nextValue }
-                                : entry,
-                            ),
-                          );
-                        }}
-                        error={Boolean(error)}
-                      />
-                    </Field>
-                  </div>
-                );
-              })}
-            </div>
+            <ContactCustomFieldControls
+              t={t}
+              items={rowFields.map((field) => ({
+                field,
+                fieldId: `cf-${formInstanceId}-${tabId}-${idx}-${field.key}`,
+                value: row[field.key],
+                error: getListItemError(tabId, field.key, idx),
+                onChange: (nextValue: unknown) => {
+                  setRows(
+                    rows.map((entry, entryIndex) =>
+                      entryIndex === idx ? { ...entry, [field.key]: nextValue } : entry,
+                    ),
+                  );
+                },
+              }))}
+            />
           </ListFieldCard>
         ))}
       </AnimatePresence>

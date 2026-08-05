@@ -12,6 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
+import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
+import { cn } from "@/lib/utils";
 import { DETAIL_STYLES } from "./contactDetailStyles";
 
 export interface ContactDetailNetworkProps {
@@ -109,9 +115,12 @@ export function ContactDetailNetwork({
 
       <div className="space-y-3">
         {links.length === 0 ? (
-          <p className="rounded-xl border border-border/60 bg-muted/20 px-3 py-3 text-sm text-muted-foreground">
-            {t("contacts.detail.emptyRelationships")}
-          </p>
+          <EmptyState
+            title={t("contacts.detail.emptyRelationships")}
+            compact
+            icon={null}
+            className="items-start rounded-xl border border-border/60 bg-muted/20 px-3 py-3 text-start"
+          />
         ) : (
           links.map((relationship, relationshipIndex) => {
             const target = relationship.contactId
@@ -182,11 +191,11 @@ export function ContactDetailNetwork({
                     ) : showLegacyCall ? (
                       <a
                         href={formatTelHref(legacyPhone)}
-                        className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl border border-border/50 bg-muted/40 text-muted-foreground shadow-none transition-colors hover:border-primary/20 hover:bg-primary/10 hover:text-primary"
+                        className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.call, "inline-flex items-center justify-center")}
                         title={t("contacts.detail.callPhone", { phone: legacyPhone })}
                         aria-label={t("contacts.detail.callPhone", { phone: legacyPhone })}
                       >
-                        <Phone aria-hidden="true" className="w-4 h-4" />
+                        <Phone aria-hidden="true" className="h-4 w-4" />
                       </a>
                     ) : null}
 

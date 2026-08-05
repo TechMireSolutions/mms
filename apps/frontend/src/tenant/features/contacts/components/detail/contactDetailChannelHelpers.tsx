@@ -1,7 +1,16 @@
 import type { Contact, EmailAddress, PhoneNumber } from "@mms/shared";
+import { EmptyState } from "@/components/ui/EmptyState";
 
-export function EmptyCollectionHint({ message }: { message: string }): React.JSX.Element {
-  return <p className="p-3 text-sm text-muted-foreground">{message}</p>;
+/** Dense empty hint inside detail collection sections (EmptyState SSOT). */
+export function DetailCollectionEmpty({ title }: { title: string }): React.JSX.Element {
+  return (
+    <EmptyState
+      title={title}
+      compact
+      icon={null}
+      className="items-start px-3 py-3 text-start"
+    />
+  );
 }
 
 export function withPrimaryPhone(contact: Contact, phone: PhoneNumber): Contact {

@@ -4,6 +4,37 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export type WarningCalloutDensity = "compact" | "banner";
+export type WarningCalloutTone = "warning" | "info" | "destructive" | "success";
+
+const TONE_CLASSES: Record<
+  WarningCalloutTone,
+  { shell: string; icon: string; descriptionWithTitle: string; bannerText: string }
+> = {
+  warning: {
+    shell: "border-warning/30 bg-warning/10",
+    icon: "text-warning",
+    descriptionWithTitle: "text-warning/90",
+    bannerText: "text-warning",
+  },
+  info: {
+    shell: "border-info/30 bg-info/10",
+    icon: "text-info",
+    descriptionWithTitle: "text-info/90",
+    bannerText: "text-info",
+  },
+  destructive: {
+    shell: "border-destructive/30 bg-destructive/10",
+    icon: "text-destructive",
+    descriptionWithTitle: "text-destructive/90",
+    bannerText: "text-destructive",
+  },
+  success: {
+    shell: "border-success/30 bg-success/10",
+    icon: "text-success",
+    descriptionWithTitle: "text-success/90",
+    bannerText: "text-success",
+  },
+};
 
 export interface WarningCalloutProps {
   icon?: LucideIcon;
@@ -13,6 +44,8 @@ export interface WarningCalloutProps {
   action?: ReactNode;
   role?: "status" | "alert";
   density?: WarningCalloutDensity;
+  /** Visual tone — defaults to warning (amber). */
+  tone?: WarningCalloutTone;
   className?: string;
 }
 
@@ -24,18 +57,21 @@ export function WarningCallout({
   action,
   role = "status",
   density = "banner",
+  tone = "warning",
   className,
 }: WarningCalloutProps): React.JSX.Element {
   const isCompact = density === "compact";
+  const tones = TONE_CLASSES[tone];
 
   return (
     <div
       role={role}
       className={cn(
-        "flex gap-2 rounded-xl border border-warning/30 bg-warning/10",
+        "flex gap-2 rounded-xl border",
+        tones.shell,
         isCompact
           ? "items-start px-3 py-2.5 text-xs font-medium text-foreground"
-          : "items-center px-4 py-3 text-sm text-warning",
+          : cn("items-center px-4 py-3 text-sm", tones.bannerText),
         action ? "justify-between" : undefined,
         className,
       )}
@@ -43,7 +79,8 @@ export function WarningCallout({
       <div className={cn("flex min-w-0 gap-2", isCompact ? "items-start" : "items-center")}>
         <Icon
           className={cn(
-            "shrink-0 text-warning",
+            "shrink-0",
+            tones.icon,
             isCompact ? "mt-0.5 h-3.5 w-3.5" : "h-4 w-4",
           )}
           aria-hidden
@@ -51,7 +88,7 @@ export function WarningCallout({
         <div className="min-w-0">
           {title ? <p className="m-0 font-semibold">{title}</p> : null}
           {description ? (
-            <p className={cn("m-0", title ? "text-warning/90" : undefined)}>{description}</p>
+            <p className={cn("m-0", title ? tones.descriptionWithTitle : undefined)}>{description}</p>
           ) : null}
           {children}
         </div>

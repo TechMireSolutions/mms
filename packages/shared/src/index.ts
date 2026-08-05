@@ -60,6 +60,7 @@ export * from './contactFieldDependencies.js';
 export * from './contactsReportFields.js';
 export * from './contactTypes.js';
 export * from './contactDuplicateUtils.js';
+export * from './contactRelationshipRules.js';
 export * from './contactsModuleManifest.js';
 export * from './contactLookupTypes.js';
 export * from './contactSetupConfigTypes.js';

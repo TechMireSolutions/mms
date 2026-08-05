@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -32,13 +33,9 @@ export function ContactsPreferencesGeneralSection({
   }, [prefs.namePrefixesToIgnore, isPrefsDirty]);
 
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
-        <Users className="w-4 h-4 text-primary" />
-        <span className="text-sm font-bold text-foreground">{t("contacts.setup.generalPreferences")}</span>
-      </div>
-      <div className="p-4 space-y-1">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+    <SectionCard title={t("contacts.setup.generalPreferences")} icon={Users}>
+      <div className="space-y-1">
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={FORM_LABEL} htmlFor="defaultCountry">{t("contacts.setup.defaultCountry")}</label>
             <FormSelect
@@ -69,7 +66,7 @@ export function ContactsPreferencesGeneralSection({
           </div>
         </div>
 
-        <div className="border-t border-border/60 pt-3 mt-3 space-y-2">
+        <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
           <ToggleRow
             label={t("contacts.setup.showDetailedSolarAge")}
             description={t("contacts.setup.showDetailedSolarAgeDesc")}
@@ -90,11 +87,11 @@ export function ContactsPreferencesGeneralSection({
           />
         </div>
 
-        <div className="border-t border-border/60 pt-3 mt-3">
+        <div className="mt-3 border-t border-border/60 pt-3">
           <label className={FORM_LABEL} htmlFor="namePrefixesToIgnore">
             {t("contacts.setup.namePrefixesToIgnore")}
           </label>
-          <p className="text-xs text-muted-foreground mb-2">
+          <p className="mb-2 text-xs text-muted-foreground">
             {t("contacts.setup.namePrefixesToIgnoreDesc")}
           </p>
           <Input
@@ -113,6 +110,6 @@ export function ContactsPreferencesGeneralSection({
           />
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }

@@ -7,7 +7,7 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { EmptyCollectionHint } from "./contactDetailChannelHelpers";
+import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
 import { isEmptyValue } from "./contactDetailStyles";
 
@@ -110,7 +110,7 @@ export function ContactDetailCustomCollections({
         return (
           <DetailSection key={tab.key} title={title}>
             {rows.length === 0 ? (
-              <EmptyCollectionHint message={t("contacts.form.noCustomTabEntriesYet")} />
+              <DetailCollectionEmpty title={t("contacts.form.noCustomTabEntriesYet")} />
             ) : (
               rows.map((row, rowIndex) => {
                 const summary = formatRowSummary(row, rowFields, (field) =>

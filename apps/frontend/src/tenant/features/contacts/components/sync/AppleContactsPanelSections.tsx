@@ -4,6 +4,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { ChangeEvent, DragEvent, RefObject } from "react";
 
@@ -67,16 +68,18 @@ export function AppleContactsImportResult({
   t: TranslationFunction;
 }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl bg-success/10 border border-success/30 text-sm text-success">
-      <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-success" />
-      <div>
-        <p className="font-semibold">{t("contacts.sync.importComplete")}</p>
-        <p className="text-xs text-success/90 mt-0.5">
+    <WarningCallout
+      icon={CheckCircle2}
+      tone="success"
+      density="compact"
+      title={t("contacts.sync.importComplete")}
+      description={
+        <>
           {t("contacts.sync.importedCount", { count: result.imported })}
           {result.skipped > 0 ? ` · ${t("contacts.sync.skippedCount", { count: result.skipped })}` : ""}
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }
 

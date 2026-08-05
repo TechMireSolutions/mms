@@ -1,6 +1,7 @@
 import type { JSX, ReactNode } from "react";
 import { Tag } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import { COLLECTION_CONTAINER_CLASS, ICON_MAP } from "./contactDetailStyles";
@@ -37,21 +38,16 @@ export function FieldGroupCard({ group, fields, formatValue, getRawValue }: Fiel
         const isGender = field.key === "gender";
         const rawGender = isGender ? String(getRawValue?.(field.key) ?? val ?? "") : "";
         const Icon = isGender ? getGenderIcon(rawGender) : ICON_MAP[field.key] || Tag;
-        const iconClass = isGender
-          ? getGenderIconClass(rawGender)
-          : "text-muted-foreground group-hover/row:text-primary";
+        const iconClassName = isGender ? getGenderIconClass(rawGender) : undefined;
         return (
-          <div key={field.key} className="flex items-center gap-3 p-3 group/row">
-            <div className="p-2 rounded-lg bg-muted/80 group-hover/row:bg-primary/10 transition-colors">
-              <Icon className={`w-3.5 h-3.5 transition-colors ${iconClass}`} aria-hidden />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="block text-xs font-bold text-muted-foreground uppercase tracking-tight leading-none mb-1">
-                {field.label}
-              </span>
-              <span className="text-sm font-semibold text-foreground truncate block">{val}</span>
-            </div>
-          </div>
+          <DetailAttributeRow
+            key={field.key}
+            variant="inset"
+            icon={Icon}
+            label={field.label}
+            value={val}
+            iconClassName={iconClassName}
+          />
         );
       })}
     </DetailSection>

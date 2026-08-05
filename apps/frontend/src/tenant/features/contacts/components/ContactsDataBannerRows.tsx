@@ -26,29 +26,29 @@ export function ContactsPendingBanner({
   t: TranslationFunction;
 }): React.JSX.Element {
   return (
-    <div
-      className="flex items-center justify-between gap-3 rounded-xl border border-info/30 bg-info/10 px-4 py-3 text-sm text-info"
+    <WarningCallout
+      icon={CloudUpload}
+      tone="info"
       role="status"
-    >
-      <div className="flex items-center gap-2 min-w-0">
-        <CloudUpload className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-        <span>
-          {flushing
-            ? t("contacts.sync.syncingPending")
-            : t("contacts.sync.pending", { count: pendingCount })}
-        </span>
-      </div>
-      {!flushing && pendingCount > 0 && (
-        <Button
-          type="button"
-          variant="link"
-          onClick={onFlush}
-          className="shrink-0 text-xs font-semibold underline hover:no-underline min-h-11 px-2 text-info shadow-none"
-        >
-          {t("contacts.sync.retryNow")}
-        </Button>
-      )}
-    </div>
+      density="banner"
+      description={
+        flushing
+          ? t("contacts.sync.syncingPending")
+          : t("contacts.sync.pending", { count: pendingCount })
+      }
+      action={
+        !flushing && pendingCount > 0 ? (
+          <Button
+            type="button"
+            variant="link"
+            onClick={onFlush}
+            className="min-h-11 shrink-0 px-2 text-xs font-semibold text-info underline shadow-none hover:no-underline"
+          >
+            {t("contacts.sync.retryNow")}
+          </Button>
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -70,12 +70,12 @@ export function ContactsConflictBanner({
       density="banner"
       description={t("contacts.sync.conflicts", { count: conflictCount })}
       action={
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             type="button"
             variant="link"
             onClick={onReview}
-            className="text-xs font-semibold underline hover:no-underline min-h-11 px-2 text-warning shadow-none"
+            className="min-h-11 px-2 text-xs font-semibold text-warning underline shadow-none hover:no-underline"
           >
             {t("contacts.sync.reviewConflicts")}
           </Button>
@@ -83,7 +83,7 @@ export function ContactsConflictBanner({
             type="button"
             variant="link"
             onClick={onDismissAll}
-            className="text-xs font-semibold underline hover:no-underline opacity-80 min-h-11 px-2 text-warning shadow-none"
+            className="min-h-11 px-2 text-xs font-semibold text-warning underline opacity-80 shadow-none hover:no-underline"
           >
             {t("contacts.sync.dismissConflicts")}
           </Button>
@@ -95,12 +95,12 @@ export function ContactsConflictBanner({
 
 export function ContactsFetchErrorBanner({ t }: { t: TranslationFunction }): React.JSX.Element {
   return (
-    <div
-      className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+    <WarningCallout
+      icon={AlertCircle}
+      tone="destructive"
       role="alert"
-    >
-      <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-      <span>{t("contacts.sync.failed")}</span>
-    </div>
+      density="banner"
+      description={t("contacts.sync.failed")}
+    />
   );
 }

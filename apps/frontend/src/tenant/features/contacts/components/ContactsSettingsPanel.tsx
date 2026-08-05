@@ -4,6 +4,7 @@ import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { shouldOpenContactsSyncSetup } from "@/lib/contacts/googleContactsOAuth";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
@@ -25,9 +26,12 @@ function LazyFallback(): JSX.Element {
 function SetupReadOnlyMessage(): JSX.Element {
   const { t } = useTranslation();
   return (
-    <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-      {t("contacts.setupReadOnly")}
-    </p>
+    <EmptyState
+      title={t("contacts.setupReadOnly")}
+      compact
+      icon={null}
+      className="items-start rounded-xl border border-border bg-muted/20 px-4 py-6 text-start"
+    />
   );
 }
 

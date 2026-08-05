@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import { cn } from "@/lib/utils";
 
 export interface CollectionRowAction {
   key: string;
@@ -32,9 +33,9 @@ export interface CollectionRowItemProps {
 
 function RowActionButton({ action }: { action: CollectionRowAction }): JSX.Element {
   const Icon = action.icon;
-  const className = `min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg transition-colors ${
-    action.className ?? "text-primary hover:bg-primary/10"
-  }`;
+  const className = action.className
+    ? cn("inline-flex items-center justify-center", action.className)
+    : "min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10";
 
   if (action.href) {
     return (
@@ -46,7 +47,7 @@ function RowActionButton({ action }: { action: CollectionRowAction }): JSX.Eleme
         title={action.title}
         className={className}
       >
-        <Icon className="w-3.5 h-3.5" />
+        <Icon className="h-3.5 w-3.5" />
       </a>
     );
   }
@@ -59,9 +60,9 @@ function RowActionButton({ action }: { action: CollectionRowAction }): JSX.Eleme
       onClick={action.onClick}
       aria-label={action.title}
       title={action.title}
-      className={`rounded-lg shadow-none ${className}`}
+      className={cn("shadow-none", className)}
     >
-      <Icon className="w-3.5 h-3.5" />
+      <Icon className="h-3.5 w-3.5" />
     </Button>
   );
 }

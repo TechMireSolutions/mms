@@ -3,6 +3,7 @@ import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 
 const DUPLICATE_DETECTION_FIELD_OPTIONS = [
@@ -32,12 +33,8 @@ export function ContactsPreferencesDuplicateSection({
   };
 
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center gap-2.5 px-4 py-3 bg-muted/30 border-b border-border">
-        <Copy className="w-4 h-4 text-primary" />
-        <span className="text-sm font-bold text-foreground">{t("contacts.setup.duplicateDetection")}</span>
-      </div>
-      <div className="p-4 space-y-4">
+    <SectionCard title={t("contacts.setup.duplicateDetection")} icon={Copy}>
+      <div className="space-y-4">
         <p className="text-xs text-muted-foreground">{t("contacts.setup.duplicateDetectionDesc")}</p>
         <fieldset className="space-y-2">
           <legend className={FORM_LABEL}>{t("contacts.setup.duplicateFields")}</legend>
@@ -62,7 +59,7 @@ export function ContactsPreferencesDuplicateSection({
             })}
           </div>
         </fieldset>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={FORM_LABEL} htmlFor="dupThresholdHigh">
               {t("contacts.setup.duplicateThresholdHigh")}
@@ -103,6 +100,6 @@ export function ContactsPreferencesDuplicateSection({
           </div>
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }

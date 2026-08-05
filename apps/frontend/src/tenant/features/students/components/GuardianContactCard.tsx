@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { MessageCircle, MessageSquare, Phone } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { formatTelHref } from "@/lib/contacts/contactPhoneDisplay";
+import { MessageCircle, MessageSquare, Phone } from "lucide-react";
 
 interface GuardianContactCardProps {
   label: string;
@@ -48,11 +53,11 @@ export function GuardianContactCard({
                 variant="ghost"
                 size="icon"
                 onClick={onWhatsApp}
-                className="rounded-lg border border-border hover:bg-success/10 hover:border-success/30 text-success transition-colors"
+                className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.whatsapp)}
                 title={t("students.list.actionWhatsApp")}
                 aria-label={t("students.list.actionWhatsApp")}
               >
-                <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>
             )}
             {onSms && (
@@ -61,20 +66,20 @@ export function GuardianContactCard({
                 variant="ghost"
                 size="icon"
                 onClick={onSms}
-                className="rounded-lg border border-border hover:bg-info/10 hover:border-info/30 text-info transition-colors"
+                className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.sms)}
                 title={t("students.list.actionSms")}
                 aria-label={t("students.list.actionSms")}
               >
-                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+                <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>
             )}
             <a
               href={formatTelHref(phone)}
-              className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.call, "inline-flex items-center justify-center")}
               aria-label={t("students.detail.callPhone", { phone })}
               title={t("students.detail.callPhone", { phone })}
             >
-              <Phone className="w-3.5 h-3.5" aria-hidden="true" />
+              <Phone className="h-3.5 w-3.5" aria-hidden="true" />
             </a>
           </div>
         )}

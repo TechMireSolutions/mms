@@ -35,7 +35,7 @@ function ContactInfoPill({
       <CopyBtn
         text={copyText}
         showToast
-        className="opacity-60 group-hover/pill:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+        className="min-h-11 min-w-11 opacity-60 transition-opacity text-muted-foreground hover:text-foreground group-hover/pill:opacity-100"
       />
     </div>
   );

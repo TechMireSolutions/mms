@@ -1,9 +1,12 @@
 import React from "react";
 import {
   Globe,
+  Info,
   Key, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGoogleContactsSync } from "@/tenant/features/contacts/hooks/useGoogleContactsSync";
 import {
@@ -27,39 +30,40 @@ export function GoogleContactsPanel({
   // BE google-sync routes require contacts.write.
   const sync = useGoogleContactsSync({ canWrite });
 
-  return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/30 px-4 py-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted">
-            <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-          </div>
-          <span className="min-w-0 truncate text-sm font-bold text-foreground">{t('contacts.sync.googleTitle')}</span>
-          {sync.isConnected && (
-            <span className="shrink-0 rounded-full border border-success/30 bg-success/10 px-1.5 py-0.5 text-xs font-bold text-success">
-              {t('contacts.sync.connected')}
-            </span>
-          )}
-        </div>
-        {canWrite && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => sync.setShowSetup((v) => !v)}
-            className="flex min-h-11 shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground shadow-none"
-          >
-            <Key className="w-3 h-3" />
-            <span>{sync.isConfigured ? t('contacts.sync.editCredentials') : t('contacts.sync.setup')}</span>
-            {sync.showSetup ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </Button>
-        )}
-      </div>
+  const title = (
+    <span className="flex min-w-0 flex-wrap items-center gap-2">
+      <span className="min-w-0 truncate">{t("contacts.sync.googleTitle")}</span>
+      {sync.isConnected && (
+        <span className="shrink-0 rounded-full border border-success/30 bg-success/10 px-1.5 py-0.5 text-xs font-bold text-success">
+          {t("contacts.sync.connected")}
+        </span>
+      )}
+    </span>
+  );
 
-      <div className="p-4 space-y-4 text-start">
+  const actions = canWrite ? (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={() => sync.setShowSetup((v) => !v)}
+      className="flex min-h-11 shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:text-foreground"
+    >
+      <Key className="h-3 w-3" />
+      <span>{sync.isConfigured ? t("contacts.sync.editCredentials") : t("contacts.sync.setup")}</span>
+      {sync.showSetup ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+    </Button>
+  ) : undefined;
+
+  return (
+    <SectionCard title={title} icon={Globe} actions={actions}>
+      <div className="space-y-4 text-start">
         {!canWrite && (
-          <p className="text-xs text-muted-foreground rounded-lg border border-border bg-muted/20 px-3 py-2.5">
-            {t('contacts.sync.writeRequired')}
-          </p>
+          <WarningCallout
+            icon={Info}
+            tone="info"
+            density="compact"
+            description={t("contacts.sync.writeRequired")}
+          />
         )}
 
         {!sync.isConfigured && !sync.showSetup && canWrite && (
@@ -107,6 +111,6 @@ export function GoogleContactsPanel({
           />
         )}
       </div>
-    </section>
+    </SectionCard>
   );
 }

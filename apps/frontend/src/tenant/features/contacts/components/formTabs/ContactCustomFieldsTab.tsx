@@ -1,15 +1,12 @@
 import React from "react";
-import { Field } from "@/components/ui/FormPrimitives";
-import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { cn } from "@/lib/utils";
 import {
   listEnabledCustomContactFormFields,
   type Contact,
   type FieldDefinition,
 } from "@mms/shared";
+import { ContactCustomFieldControls } from "./ContactCustomFieldControls";
 
 export function ContactCustomFieldsTab({
   contactDraft,
@@ -43,33 +40,20 @@ export function ContactCustomFieldsTab({
   }
 
   return (
-    <div className={cn("grid grid-cols-1 gap-4 @md:grid-cols-2", className)}>
-      {customFields.map((field) => {
+    <ContactCustomFieldControls
+      className={className}
+      t={t}
+      items={customFields.map((field) => {
         const fieldId = `cf-${formInstanceId}-${field.key}`;
-        const error = getFieldError(field.key);
-        const rawValue = (contactDraft as Record<string, unknown>)[field.key];
-        const inputField: FieldDefinition = { ...field, key: fieldId };
-        return (
-          <div
-            key={field.key}
-            className={field.type === "textarea" || field.type === "tags" ? "@md:col-span-2" : undefined}
-          >
-            <Field
-              label={resolveRegistryLabel(field, t)}
-              required={field.required}
-              error={error}
-              id={fieldId}
-            >
-              <CustomFieldInput
-                field={inputField}
-                value={rawValue}
-                onChange={(nextValue) => updateDraft({ [field.key]: nextValue } as Partial<Contact>)}
-                error={Boolean(error)}
-              />
-            </Field>
-          </div>
-        );
+        return {
+          field,
+          fieldId,
+          value: (contactDraft as Record<string, unknown>)[field.key],
+          error: getFieldError(field.key),
+          onChange: (nextValue: unknown) =>
+            updateDraft({ [field.key]: nextValue } as Partial<Contact>),
+        };
       })}
-    </div>
+    />
   );
 }

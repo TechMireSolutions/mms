@@ -8,9 +8,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatTelHref, resolvePhoneLabel } from "@/lib/contacts/contactI18n";
 import { CollectionRowItem, DetailSection, type CollectionRowAction } from "./ContactDetailShared";
 import {
-  EmptyCollectionHint,
+  DetailCollectionEmpty,
   withPrimaryPhone,
 } from "./contactDetailChannelHelpers";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
+import { cn } from "@/lib/utils";
 
 export function ContactDetailPhonesSection({
   contact,
@@ -33,7 +38,7 @@ export function ContactDetailPhonesSection({
   return (
     <DetailSection title={t("contacts.form.phonesLabel")}>
       {phones.length === 0 ? (
-        <EmptyCollectionHint message={t("contacts.detail.emptyPhones")} />
+        <DetailCollectionEmpty title={t("contacts.detail.emptyPhones")} />
       ) : (
         phones.map((phone, phoneIndex) => {
           const formattedPhone =
@@ -48,7 +53,7 @@ export function ContactDetailPhonesSection({
               icon: Phone,
               title: t("contacts.detail.callPhone", { phone: formattedPhone }),
               href: formatTelHref(formattedPhone),
-              className: "text-info hover:bg-info/10",
+              className: cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.call),
             });
           }
 
@@ -58,7 +63,7 @@ export function ContactDetailPhonesSection({
               icon: MessageCircle,
               title: t("contacts.detail.whatsappPhone", { phone: formattedPhone }),
               onClick: () => onWhatsApp([withPrimaryPhone(contact, phone)]),
-              className: "text-success hover:bg-success/10",
+              className: cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.whatsapp),
             });
           }
 
@@ -68,7 +73,7 @@ export function ContactDetailPhonesSection({
               icon: MessageSquare,
               title: t("contacts.detail.smsPhone", { phone: formattedPhone }),
               onClick: () => onSms([withPrimaryPhone(contact, phone)]),
-              className: "text-primary hover:bg-primary/10",
+              className: cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.sms),
             });
           }
 

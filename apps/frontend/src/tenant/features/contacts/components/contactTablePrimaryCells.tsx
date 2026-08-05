@@ -10,7 +10,12 @@ import { resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
 import { TableCell } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import type { useTranslation } from "@/hooks/useTranslation";
 import type { CSSProperties } from "react";
 
@@ -111,7 +116,7 @@ export function renderContactPhoneCell({
                   title={t("contacts.whatsapp")}
                   aria-label={t("contacts.whatsapp")}
                   variant="ghost"
-                  className="min-h-11 min-w-11 flex items-center justify-center p-0 rounded transition-all hover:bg-muted/80 text-success hover:text-success/80 cursor-pointer"
+                  className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.whatsapp, "p-0 cursor-pointer")}
                   type="button"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
