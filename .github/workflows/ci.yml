@@ -84,9 +84,8 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @mms/shared build
 
-      # Step added: Runs database migrations before testing
-      - name: Run DB Migrations / Push Schema
-        run: pnpm --filter apps/backend run db:migrate # or Prisma/Drizzle/Knex migrate command
+      - name: Run DB Migrations
+        run: pnpm --filter mms-backend run db:migrate
 
       - name: Run Test Suite
         run: pnpm test
@@ -132,9 +131,8 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @mms/shared build
 
-      # Step added: Runs database migrations before running E2E tests
-      - name: Run DB Migrations / Push Schema
-        run: pnpm --filter apps/backend run db:migrate
+      - name: Run DB Migrations
+        run: pnpm --filter mms-backend run db:migrate
 
       - name: Cache Playwright Browsers
         uses: actions/cache@v4
