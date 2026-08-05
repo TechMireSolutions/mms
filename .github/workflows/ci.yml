@@ -92,6 +92,11 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
     services:
       postgres:
         image: postgres:16
@@ -134,22 +139,23 @@ jobs:
       - name: Run DB Migrations
         run: pnpm --filter mms-backend run db:migrate
 
-      - name: Cache Playwright Browsers
+      - name: Cache Playwright Binaries
         uses: actions/cache@v4
+        id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package.json') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter e2e-tests exec playwright install chromium --with-deps
 
-      - name: Run responsive shell E2E
-        run: pnpm test:e2e tests/responsive-shell.spec.ts
+      - name: Install Playwright OS Dependencies (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter e2e-tests exec playwright install-deps chromium
 
-      - name: Run authenticated responsive E2E
-        run: pnpm test:e2e tests/responsive-authenticated.spec.ts
+      - name: Run E2E Tests with Sharding
+        run: pnpm test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
   build-dist:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
