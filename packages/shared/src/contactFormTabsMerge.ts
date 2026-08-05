@@ -1,8 +1,3 @@
-/**
- * Merge Contacts form tabs from typed `/api/custom-tabs` with seed/document fallbacks.
- * When API returns rows, those are membership SSOT; only missing {@link DEFAULT_FORM_TABS}
- * seeds are appended — never arbitrary document-only custom tabs (avoids resurrecting deletes).
- */
 import type { FieldDefinition, TabDefinition } from './contactFieldSchemaTypes.js';
 import { normalizeContactFormTabId } from './contactEmergencyTabMigration.js';
 import {

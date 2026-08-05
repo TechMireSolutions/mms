@@ -1,11 +1,8 @@
 import {
   getContactSeedFormTab,
-  mergeContactsFormTabsFromApi,
   type TabDefinition,
 } from "@mms/shared";
 import { apiJson } from "@/lib/apiClient";
-
-export { mergeContactsFormTabsFromApi };
 
 /** Row shape returned by `GET /api/custom-tabs`. */
 export interface CustomTabApiRow {

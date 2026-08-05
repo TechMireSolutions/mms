@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_FORM_TABS } from '@mms/shared';
 
 const mockGetConfig = vi.fn();
 const mockUpsertConfig = vi.fn();
@@ -93,85 +94,25 @@ describe('contact setup config services', () => {
         { key: 'custom_notes', label: 'Notes', enabled: true, order: 10, isSystem: false },
       ],
     });
-    mockLoadCustomTabs.mockResolvedValue([
-      {
-        key: 'basic',
-        label: 'Identity',
+    mockLoadCustomTabs.mockResolvedValue(
+      DEFAULT_FORM_TABS.map((tab) => ({
+        key: tab.key,
+        label: tab.label,
         enabled: true,
-        sortOrder: 0,
+        sortOrder: tab.order,
         isSystem: true,
         icon: null,
         permissions: null,
         description: null,
         color: null,
-      },
-      {
-        key: 'phones',
-        label: 'Phones',
-        enabled: true,
-        sortOrder: 1,
-        isSystem: true,
-        icon: null,
-        permissions: null,
-        description: null,
-        color: null,
-      },
-      {
-        key: 'emails',
-        label: 'Emails',
-        enabled: true,
-        sortOrder: 2,
-        isSystem: true,
-        icon: null,
-        permissions: null,
-        description: null,
-        color: null,
-      },
-      {
-        key: 'addresses',
-        label: 'Addresses',
-        enabled: true,
-        sortOrder: 3,
-        isSystem: true,
-        icon: null,
-        permissions: null,
-        description: null,
-        color: null,
-      },
-      {
-        key: 'socials',
-        label: 'Socials',
-        enabled: true,
-        sortOrder: 4,
-        isSystem: true,
-        icon: null,
-        permissions: null,
-        description: null,
-        color: null,
-      },
-      {
-        key: 'relationship',
-        label: 'Relationship',
-        enabled: true,
-        sortOrder: 5,
-        isSystem: true,
-        icon: null,
-        permissions: null,
-        description: null,
-        color: null,
-      },
-    ]);
+      })),
+    );
 
     const loaded = await loadContactFieldConfig();
     expect(loaded?.formTabs?.map((tab) => tab.key)).not.toContain('custom_notes');
-    expect(loaded?.formTabs?.map((tab) => tab.key)).toEqual([
-      'basic',
-      'phones',
-      'emails',
-      'addresses',
-      'socials',
-      'relationship',
-    ]);
+    expect(loaded?.formTabs?.map((tab) => tab.key)).toEqual(
+      DEFAULT_FORM_TABS.map((tab) => tab.key),
+    );
   });
 
   it('normalizes preferences on save', async () => {

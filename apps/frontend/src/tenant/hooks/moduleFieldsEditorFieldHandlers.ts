@@ -47,16 +47,16 @@ export function toggleFieldEnabled(
   setTabFieldUnique: StringSetMapSetter,
 ): void {
   setTabFieldEnabled((currentEnabledFields) => {
-    const updatedFieldIds = new Set(currentEnabledFields[tabId] || []);
+    const updatedFieldIds = new Set(currentEnabledFields[tabId] ?? []);
     if (updatedFieldIds.has(fieldId)) {
       updatedFieldIds.delete(fieldId);
       setTabFieldRequired((currentRequiredFields) => {
-        const updatedRequiredFieldIds = new Set(currentRequiredFields[tabId] || []);
+        const updatedRequiredFieldIds = new Set(currentRequiredFields[tabId] ?? []);
         updatedRequiredFieldIds.delete(fieldId);
         return { ...currentRequiredFields, [tabId]: updatedRequiredFieldIds };
       });
       setTabFieldUnique((currentUniqueFields) => {
-        const updatedUniqueFieldIds = new Set(currentUniqueFields[tabId] || []);
+        const updatedUniqueFieldIds = new Set(currentUniqueFields[tabId] ?? []);
         updatedUniqueFieldIds.delete(fieldId);
         return { ...currentUniqueFields, [tabId]: updatedUniqueFieldIds };
       });
@@ -73,7 +73,7 @@ export function toggleFieldRequired(
   setTabFieldRequired: StringSetMapSetter,
 ): void {
   setTabFieldRequired((currentRequiredFields) => {
-    const updatedFieldIds = new Set(currentRequiredFields[tabId] || []);
+    const updatedFieldIds = new Set(currentRequiredFields[tabId] ?? []);
     if (updatedFieldIds.has(fieldId)) {
       updatedFieldIds.delete(fieldId);
     } else {
@@ -89,7 +89,7 @@ export function toggleFieldUnique(
   setTabFieldUnique: StringSetMapSetter,
 ): void {
   setTabFieldUnique((currentUniqueFields) => {
-    const updatedFieldIds = new Set(currentUniqueFields[tabId] || []);
+    const updatedFieldIds = new Set(currentUniqueFields[tabId] ?? []);
     if (updatedFieldIds.has(fieldId)) {
       updatedFieldIds.delete(fieldId);
     } else {
@@ -122,7 +122,7 @@ export function handleCustomFieldsChange(
   const newKeys = newFields.map((field) => field.key);
   setTabFieldOrder((currentFieldOrder) => ({
     ...currentFieldOrder,
-    [tabId]: syncOrder(currentFieldOrder[tabId] || [], newKeys),
+    [tabId]: syncOrder(currentFieldOrder[tabId] ?? [], newKeys),
   }));
   setTabFields((currentTabFields) => ({
     ...currentTabFields,

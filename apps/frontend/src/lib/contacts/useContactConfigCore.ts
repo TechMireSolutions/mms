@@ -17,12 +17,10 @@ import {
   FieldConfig,
   ContactPreferences,
   ColumnRegistryEntry,
+  mergeContactsFormTabsFromApi,
   type TabDefinition,
 } from "@mms/shared";
-import {
-  loadContactsFormTabs,
-  mergeContactsFormTabsFromApi,
-} from "@/lib/contacts/contactsCustomTabsApi";
+import { loadContactsFormTabs } from "@/lib/contacts/contactsCustomTabsApi";
 import {
   loadPreferences,
   savePreferences,

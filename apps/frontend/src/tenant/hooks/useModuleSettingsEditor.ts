@@ -85,9 +85,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     defaultRequiredTabs,
   });
 
-  // Sync preferences/settings draft only when persisted content changes — same
-  // fingerprint gate as fields-editor rehydrate (avoids identity-only churn).
-  // Always record the fingerprint so identity churn cannot replay a skipped sync.
+  // Sync settings draft when persisted content changes (skip while draft dirty).
   const prevSettingsFingerprintRef = useRef<string | null>(null);
   const settingsDraftDirtyRef = useRef(false);
   useEffect(() => {
@@ -138,9 +136,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     defaultRequiredTabs,
   };
 
-  // Rehydrate fields editor only when persisted settings *content* changes, and
-  // never over unsaved edits — a config reload landing mid-edit (custom-tab sync,
-  // Query refetch, WS invalidate) used to wipe freshly added fields and tabs.
+  // Rehydrate fields editor on content change; skip while draft dirty.
   useEffect(() => {
     if (isDraftDirtyRef.current()) return;
     const {

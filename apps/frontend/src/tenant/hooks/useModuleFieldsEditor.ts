@@ -55,7 +55,7 @@ export function useModuleFieldsEditor({
       setter(value);
     };
 
-  const dirtySetters = {
+  const dirtySetters: TabHandlerSetters = {
     setFormTabs: trackDirty(setFormTabs),
     setEnabledTabs: trackDirty(setEnabledTabs),
     setRequiredTabs: trackDirty(setRequiredTabs),
@@ -67,8 +67,6 @@ export function useModuleFieldsEditor({
     setTabFieldPermissions: trackDirty(setTabFieldPermissions),
     setTabFieldOrder: trackDirty(setTabFieldOrder),
   };
-
-  const tabHandlerSetters: TabHandlerSetters = dirtySetters;
 
   const resetAllState = (
     tabs: TabDefinition[],
@@ -156,8 +154,8 @@ export function useModuleFieldsEditor({
       ),
     handleDeleteField: (tabId: string, fieldId: string) =>
       handleDeleteFieldImpl(tabId, fieldId, dirtySetters.setTabFields, dirtySetters.setTabFieldOrder),
-    handleAddTab: (label: string) => handleAddTabImpl(label, formTabs, tabHandlerSetters),
-    handleDeleteTab: (key: string) => handleDeleteTabImpl(key, tabHandlerSetters),
+    handleAddTab: (label: string) => handleAddTabImpl(label, formTabs, dirtySetters),
+    handleDeleteTab: (key: string) => handleDeleteTabImpl(key, dirtySetters),
     handleRenameTab: (key: string, newLabel: string) =>
       handleRenameTabImpl(key, newLabel, dirtySetters.setFormTabs),
     buildFieldsMap: () =>

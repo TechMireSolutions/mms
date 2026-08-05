@@ -82,7 +82,7 @@ Tables: column registry `{ key, label, enabled, order, sortable, width }`.
 ## Tab enablement SSOT (Contacts)
 
 - Prefer `resolveContactEnabledTabIds` — when `formTabs` exist they win; do not blind-union `DEFAULT_ENABLED_TABS`.
-- Locked tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic`, `custom`) + `useModuleSettingsEditor({ lockedEnabledTabs })` on save/sync.
+- Locked tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic`) + `useModuleSettingsEditor({ lockedEnabledTabs })` on save/sync.
 - Fields Save: dirty-gated; sync `columnRegistry` via `syncContactColumnRegistryWithFields` on Fields save.
 
 ## Forms
