@@ -20,6 +20,8 @@ export default defineConfig({
         '**/responsive-authenticated.spec.ts',
       ]
     : [],
+  /* Skip heavy local-only tests on CI */
+  grepInvert: process.env.CI ? /@local-only/ : undefined,
   /* Maximum time one test can run for. */
   timeout: 45 * 1000,
   expect: {
