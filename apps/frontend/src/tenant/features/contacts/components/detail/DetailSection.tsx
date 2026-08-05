@@ -1,3 +1,4 @@
+import type { JSX, ReactNode } from "react";
 import { Tag } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
@@ -6,7 +7,7 @@ import { COLLECTION_CONTAINER_CLASS, ICON_MAP } from "./contactDetailStyles";
 
 export interface DetailSectionProps {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function DetailSection({ title, children }: DetailSectionProps): JSX.Element {

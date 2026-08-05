@@ -2,6 +2,8 @@ import { useCallback, useMemo } from "react";
 import {
   buildDynamicContactSchema,
   formatZodIssues,
+  CONTACT_LOOKUP_FIELD_TARGETS,
+  type ContactLookupStringKind,
   type FieldDefinition,
   type ValidationError,
 } from "@mms/shared";
@@ -10,25 +12,25 @@ import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 
 /**
- * Overlay live EditableSelect collections onto field-config options so Zod
- * accepts values the form dropdown already shows (e.g. Husband/Wife).
+ * Overlay live lookup option lists onto field-config options so Zod accepts
+ * values the form dropdown already shows (e.g. a freshly added relationship type).
  */
 function withLiveSelectOptions(
   fields: Record<string, FieldDefinition[]>,
-  overlays: Array<{ tabId: string; fieldKey: string; options: string[] }>,
+  liveOptions: Record<ContactLookupStringKind, string[]>,
 ): Record<string, FieldDefinition[]> {
   let next = fields;
-  for (const { tabId, fieldKey, options } of overlays) {
-    if (!options.length || !next[tabId]) continue;
-    const tabFields = next[tabId];
-    const index = tabFields.findIndex((field) => field.key === fieldKey);
+  for (const [kind, target] of Object.entries(CONTACT_LOOKUP_FIELD_TARGETS)) {
+    const options = liveOptions[kind as ContactLookupStringKind];
+    const tabFields = next[target.tabId];
+    if (!options.length || !tabFields) continue;
+    const index = tabFields.findIndex((field) => field.key === target.fieldId);
     if (index < 0) continue;
-    if (next === fields) {
-      next = { ...fields };
-    }
-    const clonedTab = [...(next[tabId] ?? [])];
-    clonedTab[index] = { ...clonedTab[index], options: [...options] };
-    next[tabId] = clonedTab;
+    if (next === fields) next = { ...fields };
+    const overlaidTab = tabFields.map((field, fieldIndex) =>
+      fieldIndex === index ? { ...field, options: [...options] } : field,
+    );
+    next[target.tabId] = overlaidTab;
   }
   return next;
 }
@@ -52,23 +54,15 @@ export function useContactValidation(): (contactDraft: unknown) => ValidationErr
 
   const fieldsForValidation = useMemo(
     () =>
-      withLiveSelectOptions(fields, [
-        { tabId: "relationship", fieldKey: "relationship", options: relationships },
-        { tabId: "phones", fieldKey: "label", options: phoneLabels },
-        { tabId: "emails", fieldKey: "label", options: emailLabels },
-        { tabId: "addresses", fieldKey: "label", options: addressLabels },
-        { tabId: "socials", fieldKey: "platform", options: socialPlatforms },
-        { tabId: "basic", fieldKey: "gender", options: genders },
-      ]),
-    [
-      fields,
-      relationships,
-      phoneLabels,
-      emailLabels,
-      addressLabels,
-      socialPlatforms,
-      genders,
-    ],
+      withLiveSelectOptions(fields, {
+        genders,
+        socialPlatforms,
+        relationships,
+        phoneLabels,
+        emailLabels,
+        addressLabels,
+      }),
+    [fields, genders, socialPlatforms, relationships, phoneLabels, emailLabels, addressLabels],
   );
 
   return useCallback(

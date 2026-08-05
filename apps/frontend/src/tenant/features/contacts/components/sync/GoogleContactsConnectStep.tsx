@@ -1,8 +1,9 @@
+import type { JSX } from "react";
 import { ExternalLink, Globe, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldErrorMessage } from "@/components/ui/FormField";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_ERROR_BOX, FORM_LABEL } from "@/components/ui/formStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export function GoogleContactsConnectStep({
@@ -23,7 +24,7 @@ export function GoogleContactsConnectStep({
   onAuthCodeChange: (value: string) => void;
   onExchangeCode: () => void;
   t: TranslationFunction;
-}) {
+}): JSX.Element {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">{t("contacts.sync.credentialsSaved")}</p>
@@ -65,12 +66,10 @@ export function GoogleContactsConnectStep({
         </div>
       )}
 
-      {error && !showAuthCode && (
-        <FieldErrorMessage
-          message={error}
-          className="mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
-        />
-      )}
+      <FieldErrorMessage
+        message={!showAuthCode ? error : undefined}
+        className={FORM_ERROR_BOX}
+      />
     </div>
   );
 }

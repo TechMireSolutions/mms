@@ -1,6 +1,5 @@
 import type { Contact, RelationshipPair } from '@mms/shared';
 
-
 export type RelationshipRole =
   | 'parent'
   | 'child'
@@ -211,9 +210,9 @@ export function composeRelationship(first: RelationshipRole, second: Relationshi
 }
 
 /**
-  * Resolves the reciprocal (2nd side) relationship label for a source contact.
-  * Checks custom dynamic 2-side pairs, standard built-in roles, and falls back to symmetric labeling.
-  */
+ * Resolves the reciprocal (2nd side) relationship label for a source contact.
+ * Checks custom dynamic 2-side pairs, standard built-in roles, then falls back to symmetric labeling.
+ */
 export function resolveInverseRelationship(
   relationship: string,
   sourceContact: Contact,
@@ -255,4 +254,3 @@ export function resolveInverseRelationship(
   const trimmed = relationship.trim();
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
-

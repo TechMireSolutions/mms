@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
 import { MessageCircle, MessageSquare, Phone } from "lucide-react";
-import { cleanTelUri } from "@/tenant/features/students/components/studentDetailUtils";
+import { formatTelHref } from "@/lib/contacts/contactPhoneDisplay";
 
 interface GuardianContactCardProps {
   label: string;
@@ -69,7 +69,7 @@ export function GuardianContactCard({
               </Button>
             )}
             <a
-              href={cleanTelUri(phone)}
+              href={formatTelHref(phone)}
               className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               aria-label={t("students.detail.callPhone", { phone })}
               title={t("students.detail.callPhone", { phone })}

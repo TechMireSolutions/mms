@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { ReactElement } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { SystemUser } from '@mms/shared';
 import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
@@ -11,14 +11,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 
-type UsersListMessageChannel = 'sms' | 'whatsapp' | 'email';
-
 interface UsersListSelectionBarProps {
   selectedIds: string[];
   selectedUsers: SystemUser[];
   showDeleted: boolean;
   canDelete: boolean;
-  onMessage?: (channel: UsersListMessageChannel, users: SystemUser[]) => void;
+  onMessage?: (channel: BulkSelectionMessageChannel, users: SystemUser[]) => void;
   onBulkDelete: (ids: string[]) => void;
   onBulkRestore: (ids: string[]) => void;
   onClearSelection: () => void;
@@ -33,7 +31,7 @@ export function UsersListSelectionBar({
   onBulkDelete,
   onBulkRestore,
   onClearSelection,
-}: UsersListSelectionBarProps): JSX.Element {
+}: UsersListSelectionBarProps): ReactElement {
   const { t } = useTranslation();
 
   const handleChannel = (channel: BulkSelectionMessageChannel): void => {

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type JSX } from "react";
 import { motion } from "framer-motion";
 import { type Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -7,6 +7,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Checkbox } from "@/components/ui/checkbox";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
 
@@ -59,7 +60,7 @@ export default function ContactCards({
   columns = [],
   onSelectAll,
   allSelected = false,
-}: ContactCardsProps): React.JSX.Element {
+}: ContactCardsProps): JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const { prefs, countryCodesMap, countryCodes } = useContactConfig();
@@ -81,7 +82,7 @@ export default function ContactCards({
   return (
     <>
       {onSelectAll && contacts.length > 0 && (
-        <div className={`${WORK_SURFACE} mb-3.5 flex items-center justify-between border-border/40 px-4 py-3`}>
+        <div className={cn(WORK_SURFACE, "mb-3.5 flex items-center justify-between border-border/40 px-4 py-3")}>
           <div className="flex items-center gap-2.5">
             <div className="flex min-h-11 min-w-11 items-center justify-center">
               <Checkbox

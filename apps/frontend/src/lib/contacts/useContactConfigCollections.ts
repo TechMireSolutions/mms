@@ -1,6 +1,10 @@
 import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { ContactLookupKind, FieldConfig } from "@mms/shared";
+import {
+  CONTACT_LOOKUP_FIELD_TARGETS,
+  type ContactLookupStringKind,
+  type FieldConfig,
+} from "@mms/shared";
 import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
 import { syncOptionsInConfig } from "@/lib/contacts/preferencesStorage";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -57,7 +61,8 @@ export function useContactConfigCollections({
   );
 
   const persistStringKind = useCallback(
-    async (kind: ContactLookupKind, options: string[], tabId: string, fieldId: string) => {
+    async (kind: ContactLookupStringKind, options: string[]) => {
+      const { tabId, fieldId } = CONTACT_LOOKUP_FIELD_TARGETS[kind];
       await lookupMutation.mutateAsync({ kind, items: options });
       await syncFieldOptions(tabId, fieldId, options);
     },
@@ -65,27 +70,27 @@ export function useContactConfigCollections({
   );
 
   const updateGenders = useCallback(
-    (options: string[]) => persistStringKind("genders", options, "basic", "gender"),
+    (options: string[]) => persistStringKind("genders", options),
     [persistStringKind],
   );
   const updateSocialPlatforms = useCallback(
-    (options: string[]) => persistStringKind("socialPlatforms", options, "socials", "platform"),
+    (options: string[]) => persistStringKind("socialPlatforms", options),
     [persistStringKind],
   );
   const updateRelationships = useCallback(
-    (options: string[]) => persistStringKind("relationships", options, "relationship", "relationship"),
+    (options: string[]) => persistStringKind("relationships", options),
     [persistStringKind],
   );
   const updatePhoneLabels = useCallback(
-    (options: string[]) => persistStringKind("phoneLabels", options, "phones", "label"),
+    (options: string[]) => persistStringKind("phoneLabels", options),
     [persistStringKind],
   );
   const updateEmailLabels = useCallback(
-    (options: string[]) => persistStringKind("emailLabels", options, "emails", "label"),
+    (options: string[]) => persistStringKind("emailLabels", options),
     [persistStringKind],
   );
   const updateAddressLabels = useCallback(
-    (options: string[]) => persistStringKind("addressLabels", options, "addresses", "label"),
+    (options: string[]) => persistStringKind("addressLabels", options),
     [persistStringKind],
   );
   const updateCountryCodes = useCallback(

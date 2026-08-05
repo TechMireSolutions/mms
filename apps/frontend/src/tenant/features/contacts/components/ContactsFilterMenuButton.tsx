@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react";
+import type { JSX } from "react";
 import {
   CONTACTS_QUICK_FILTER_OPTIONS,
   isContactsQuickFilter,
@@ -42,14 +42,13 @@ export function ContactsFilterMenuButton({
   sortOptions,
   onSort,
   t,
-}: ContactsFilterMenuButtonProps) {
+}: ContactsFilterMenuButtonProps): JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <ModuleFiltersMenuTrigger
           label={t("contacts.filters")}
           activeCount={activeFilterCount}
-          icon={SlidersHorizontal}
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-card border border-border">

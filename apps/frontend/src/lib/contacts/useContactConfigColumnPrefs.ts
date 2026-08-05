@@ -27,6 +27,12 @@ function toContactColumnPreferences(
   });
 }
 
+function loadLocalColumnPreferences(scopedUserId: string): ContactColumnPreference[] | null {
+  if (!scopedUserId) return null;
+  const stored = loadModuleColumnPreferences("contacts", scopedUserId);
+  return stored ? migrateContactColumnPreferenceKeys(stored) : null;
+}
+
 export function useContactConfigColumnPrefs(userId: string | number | undefined) {
   const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useContactColumnPrefs({
     enabled: Boolean(userId),
@@ -41,9 +47,7 @@ export function useContactConfigColumnPrefs(userId: string | number | undefined)
     if (localUserColumnOverlay) {
       return migrateContactColumnPreferenceKeys(localUserColumnOverlay);
     }
-    const scopedUserId = userId ? String(userId) : "";
-    const localRaw = scopedUserId ? loadModuleColumnPreferences("contacts", scopedUserId) : null;
-    const local = localRaw ? migrateContactColumnPreferenceKeys(localRaw) : null;
+    const local = loadLocalColumnPreferences(userId ? String(userId) : "");
     if (columnPrefsLoaded && serverColumnPrefs && serverColumnPrefs.length > 0) {
       const server = migrateContactColumnPreferenceKeys(serverColumnPrefs);
       return mergeModuleColumnPreferences(server, local) ?? server;
@@ -66,8 +70,7 @@ export function useContactConfigColumnPrefs(userId: string | number | undefined)
     if (!columnPrefsLoaded) return;
 
     const scopedUserId = String(userId);
-    const localRaw = loadModuleColumnPreferences("contacts", scopedUserId);
-    const local = localRaw ? migrateContactColumnPreferenceKeys(localRaw) : null;
+    const local = loadLocalColumnPreferences(scopedUserId);
 
     if (serverColumnPrefs && serverColumnPrefs.length > 0) {
       const server = migrateContactColumnPreferenceKeys(serverColumnPrefs);

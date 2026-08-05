@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { Archive } from "lucide-react";
 import {
   formatDate,
@@ -29,7 +30,7 @@ export function ContactCardMetadataGrid({
   otherColumns: ContactsColumnConfig[];
   visibleColumnIds: Set<string>;
   t: TranslationFunction;
-}) {
+}): JSX.Element | null {
   if (otherColumns.length === 0) {
     return null;
   }
@@ -87,7 +88,7 @@ export function ContactCardDeletedBanner({
 }: {
   contact: Contact;
   t: TranslationFunction;
-}) {
+}): JSX.Element | null {
   if (!contact.deletedAt) {
     return null;
   }

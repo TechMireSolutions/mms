@@ -1,12 +1,13 @@
+import type { JSX } from "react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldErrorMessage } from "@/components/ui/FormField";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_ERROR_BOX, FORM_LABEL } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-export function GoogleContactsSetupHint({ t }: { t: TranslationFunction }) {
+export function GoogleContactsSetupHint({ t }: { t: TranslationFunction }): JSX.Element {
   return (
     <WarningCallout
       icon={AlertCircle}
@@ -37,7 +38,7 @@ export function GoogleContactsSetupForm({
   onSave: () => void;
   onCancel: () => void;
   t: TranslationFunction;
-}) {
+}): JSX.Element {
   return (
     <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
       <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">
@@ -68,7 +69,7 @@ export function GoogleContactsSetupForm({
       </div>
       <FieldErrorMessage
         message={error || undefined}
-        className="mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+        className={FORM_ERROR_BOX}
       />
       <div className="flex gap-2">
         <Button

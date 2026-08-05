@@ -129,11 +129,6 @@ export function TeachersWorkTierToolbar({
           onToggle={onToggleDeleted}
           showActiveLabel={t("teachers.showActive")}
           showDeletedLabel={t("teachers.showDeleted")}
-          className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-            showDeleted
-              ? "border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10"
-              : "border-border bg-card text-muted-foreground hover:text-foreground"
-          }`}
         />
       )}
     </div>

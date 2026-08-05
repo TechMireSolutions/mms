@@ -1,6 +1,6 @@
-import type { JSX } from 'react';
+import type { ReactElement } from 'react';
 import {
-  CheckSquare, SlidersHorizontal, XSquare,
+  CheckSquare, XSquare,
 } from 'lucide-react';
 import type { MessagingGenderFilter, MessagingRoleFilter } from '@mms/shared';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ModuleFiltersMenuTrigger } from '@/components/ui/ModuleFiltersMenuButton';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -50,7 +51,7 @@ export function MessagingWorkRecipientsToolbar({
   onRoleFilterChange,
   onSelectReachable,
   onClearSelection,
-}: MessagingWorkRecipientsToolbarProps): JSX.Element {
+}: MessagingWorkRecipientsToolbarProps): ReactElement {
   const { t } = useTranslation();
   const defaultRole = roleOptions[0]?.value ?? 'all';
   const defaultGender = genderOptions[0]?.value ?? 'all';
@@ -66,23 +67,10 @@ export function MessagingWorkRecipientsToolbar({
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-                activeFilterCount > 0
-                  ? 'border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5'
-                  : 'border-border bg-card text-foreground'
-              }`}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t('common.filters')}</span>
-              {activeFilterCount > 0 && (
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
+            <ModuleFiltersMenuTrigger
+              label={t('common.filters')}
+              activeCount={activeFilterCount}
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 border border-border bg-card">
             <DropdownMenuLabel className="text-xs">{t('messaging.filterByRole')}</DropdownMenuLabel>

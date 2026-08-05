@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { Download, Trash2, Users } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import {
@@ -94,7 +95,6 @@ export function ContactsBulkActionBar({
                   count: selectedTargets.waTargets.length,
                 }),
                 sms: t("contacts.smsBulk", { count: selectedTargets.smsReady.length }),
-                email: t("contacts.columns.email"),
               }}
               channels={{
                 whatsapp: showWhatsApp,

@@ -6,7 +6,6 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import {
   DetailDrawerArchivedBanner,
   DetailDrawerRestoreOrEditAction,
-  formatArchivedBannerDate,
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import { formatEntityStamp } from "@/lib/formatEntityStamp";
 
@@ -45,13 +44,11 @@ export function ContactDetailDrawerArchivedBanner({
   contact: Contact;
 }): React.JSX.Element | null {
   const { t } = useTranslation();
-  const date = formatArchivedBannerDate(contact.deletedAt);
-  if (!date) return null;
 
   return (
     <DetailDrawerArchivedBanner
       deletedAt={contact.deletedAt}
-      description={t("contacts.detail.archivedBanner", { date })}
+      describe={(date) => t("contacts.detail.archivedBanner", { date })}
     />
   );
 }

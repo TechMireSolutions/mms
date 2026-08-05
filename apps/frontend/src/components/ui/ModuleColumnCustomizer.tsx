@@ -4,6 +4,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ModuleColumnCustomizerList } from '@/components/ui/ModuleColumnCustomizerList';
+import {
+  WORK_TOOLBAR_TRIGGER,
+  WORK_TOOLBAR_TRIGGER_IDLE,
+} from '@/components/ui/formStyles';
+import { cn } from '@/lib/utils';
 import type {
   ModuleColumnCustomizerLabels,
   ModuleColumnCustomizerProps,
@@ -98,7 +103,7 @@ export function ModuleColumnCustomizer({
     <Popover>
       <PopoverTrigger
         type="button"
-        className="flex items-center gap-1.5 px-3 min-h-11 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE)}
       >
         <Settings2 className="w-3.5 h-3.5" />
         <span>{labels.trigger}</span>

@@ -1,4 +1,5 @@
-import { Mail, Phone } from "lucide-react";
+import type { JSX } from "react";
+import { Mail, Phone, type LucideIcon } from "lucide-react";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
@@ -13,10 +14,10 @@ function ContactInfoPill({
   text,
   copyText,
 }: {
-  icon: typeof Phone | typeof Mail;
+  icon: LucideIcon;
   text: string;
   copyText: string;
-}) {
+}): JSX.Element {
   return (
     <div
       className={cn(
@@ -54,7 +55,7 @@ export function ContactCardInfoPills({
   email: string | null;
   showPhonePill: boolean;
   showEmailPill: boolean;
-}) {
+}): JSX.Element | null {
   if (!showPhonePill && !showEmailPill) {
     return null;
   }

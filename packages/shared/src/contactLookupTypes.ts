@@ -53,3 +53,21 @@ export function isContactLookupKind(value: string): value is ContactLookupKind {
 export function isContactLookupCountryKind(kind: ContactLookupKind): boolean {
   return kind === 'countryCodes';
 }
+
+/**
+ * Field-config target whose `options` mirror each string lookup kind — used both
+ * when Setup persists a list and when validation overlays the live list.
+ */
+export const CONTACT_LOOKUP_FIELD_TARGETS = {
+  genders: { tabId: 'basic', fieldId: 'gender' },
+  socialPlatforms: { tabId: 'socials', fieldId: 'platform' },
+  relationships: { tabId: 'relationship', fieldId: 'relationship' },
+  phoneLabels: { tabId: 'phones', fieldId: 'label' },
+  emailLabels: { tabId: 'emails', fieldId: 'label' },
+  addressLabels: { tabId: 'addresses', fieldId: 'label' },
+} as const satisfies Record<
+  Exclude<ContactLookupKind, 'countryCodes'>,
+  { tabId: string; fieldId: string }
+>;
+
+export type ContactLookupStringKind = keyof typeof CONTACT_LOOKUP_FIELD_TARGETS;

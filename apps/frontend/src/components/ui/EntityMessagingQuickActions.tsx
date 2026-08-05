@@ -1,4 +1,3 @@
-import type { LucideIcon } from "lucide-react";
 import { Mail, MessageCircle, MessageSquare, Phone } from "lucide-react";
 import { QuickActionButton } from "@/components/ui/QuickActionButton";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
@@ -29,7 +28,7 @@ export interface EntityMessagingQuickActionsProps {
   className?: string;
 }
 
-const ACTION_BASE = cn(WORK_SURFACE_INNER, MESSAGING_QUICK_ACTION_BASE, "text-center shadow-none");
+const ACTION_BASE = cn(WORK_SURFACE_INNER, MESSAGING_QUICK_ACTION_BASE, "shadow-none");
 
 /**
  * Presentational Call / WhatsApp / SMS / Email grid for person-directory detail drawers.
@@ -46,9 +45,9 @@ export function EntityMessagingQuickActions({
   className,
 }: EntityMessagingQuickActionsProps): React.JSX.Element | null {
   const showCall = Boolean(primaryPhone);
-  const showWhatsApp = messagingEnabled && Boolean(onWhatsApp && primaryPhone);
-  const showSms = messagingEnabled && Boolean(onSms && primaryPhone);
-  const showEmail = messagingEnabled && Boolean(onEmail && primaryEmail);
+  const showWhatsApp = Boolean(messagingEnabled && onWhatsApp && primaryPhone);
+  const showSms = Boolean(messagingEnabled && onSms && primaryPhone);
+  const showEmail = Boolean(messagingEnabled && onEmail && primaryEmail);
   if (!showCall && !showWhatsApp && !showSms && !showEmail) return null;
 
   return (
@@ -56,7 +55,7 @@ export function EntityMessagingQuickActions({
       {showCall && primaryPhone ? (
         <QuickActionButton
           label={labels.call}
-          icon={Phone as LucideIcon}
+          icon={Phone}
           href={formatTelHref(primaryPhone)}
           ariaLabel={callAriaLabel ?? `${labels.call} ${primaryPhone}`}
           className={cn(ACTION_BASE, MESSAGING_QUICK_ACTION_TONES.call)}
@@ -65,7 +64,7 @@ export function EntityMessagingQuickActions({
       {showWhatsApp && onWhatsApp ? (
         <QuickActionButton
           label={labels.whatsapp}
-          icon={MessageCircle as LucideIcon}
+          icon={MessageCircle}
           onClick={onWhatsApp}
           className={cn(ACTION_BASE, MESSAGING_QUICK_ACTION_TONES.whatsapp)}
         />
@@ -73,7 +72,7 @@ export function EntityMessagingQuickActions({
       {showSms && onSms ? (
         <QuickActionButton
           label={labels.sms}
-          icon={MessageSquare as LucideIcon}
+          icon={MessageSquare}
           onClick={onSms}
           className={cn(ACTION_BASE, MESSAGING_QUICK_ACTION_TONES.sms)}
         />
@@ -81,7 +80,7 @@ export function EntityMessagingQuickActions({
       {showEmail && onEmail ? (
         <QuickActionButton
           label={labels.email}
-          icon={Mail as LucideIcon}
+          icon={Mail}
           onClick={onEmail}
           className={cn(ACTION_BASE, MESSAGING_QUICK_ACTION_TONES.email)}
         />

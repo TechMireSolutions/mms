@@ -18,12 +18,7 @@ export function ContactDetailOverviewQuickActions({
   onEmail?: (contacts: Contact[]) => void;
 }): React.JSX.Element | null {
   const { t } = useTranslation();
-  const allowOutbound = !contact.deletedAt;
-  if (!allowOutbound) return null;
-
-  const showWhatsApp = Boolean(onWhatsApp && hasWhatsApp(contact));
-  const showSms = Boolean(onSms && primaryPhone);
-  const showEmail = Boolean(onEmail && primaryEmail);
+  if (contact.deletedAt) return null;
 
   return (
     <EntityMessagingQuickActions
@@ -36,10 +31,9 @@ export function ContactDetailOverviewQuickActions({
         email: t("contacts.detail.emailAction"),
       }}
       callAriaLabel={`${t("contacts.detail.call")} ${primaryPhone ?? ""}`}
-      onWhatsApp={showWhatsApp && onWhatsApp ? () => onWhatsApp([contact]) : undefined}
-      onSms={showSms && onSms ? () => onSms([contact]) : undefined}
-      onEmail={showEmail && onEmail ? () => onEmail([contact]) : undefined}
-      messagingEnabled
+      onWhatsApp={onWhatsApp && hasWhatsApp(contact) ? () => onWhatsApp([contact]) : undefined}
+      onSms={onSms && primaryPhone ? () => onSms([contact]) : undefined}
+      onEmail={onEmail && primaryEmail ? () => onEmail([contact]) : undefined}
     />
   );
 }

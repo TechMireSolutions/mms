@@ -11,6 +11,7 @@ import {
 import { ContactsTableHeader } from "@/tenant/features/contacts/components/ContactsTableHeader";
 import { TableBody } from "@/components/ui/table";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 
@@ -67,7 +68,7 @@ export default function ContactsTable({
   const someSelected = selected.length > 0 && selected.length < contacts.length;
 
   return (
-    <div className={`${WORK_SURFACE} overflow-x-auto shadow-xs`}>
+    <div className={cn(WORK_SURFACE, "overflow-x-auto shadow-xs")}>
       <table className="w-full text-sm table-fixed">
         <ContactsTableHeader
           columns={columns}

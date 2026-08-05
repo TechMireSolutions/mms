@@ -1,11 +1,12 @@
-import type { ComponentType, ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 export type DetailAttributeRowVariant = "card" | "list";
 
 export interface DetailAttributeRowProps {
-  icon: ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   label: string;
   value: ReactNode;
   variant?: DetailAttributeRowVariant;

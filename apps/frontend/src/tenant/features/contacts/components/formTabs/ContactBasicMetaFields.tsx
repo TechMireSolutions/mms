@@ -1,5 +1,5 @@
 import React from "react";
-import { FileText, Star } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -85,12 +85,6 @@ export function ContactBasicMetaFields({
               checked={Boolean(contactDraft.isSyed)}
               onCheckedChange={(checked) => updateDraft({ isSyed: Boolean(checked) })}
               className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-            />
-            <Star
-              className={cn(
-                "w-4 h-4 transition-colors",
-                contactDraft.isSyed ? "fill-primary text-primary" : "text-muted-foreground/60",
-              )}
             />
             <span className="text-xs font-semibold">{t("contacts.fields.isSyed")}</span>
           </label>

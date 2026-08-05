@@ -1,5 +1,4 @@
-import { Mail, MessageCircle, MessageSquare, RotateCcw, ChevronDown, Tag } from "lucide-react";
-import type React from "react";
+import { Mail, MessageCircle, MessageSquare, RotateCcw, ChevronDown, Tag, type LucideIcon } from "lucide-react";
 import type { ReactElement } from "react";
 import {
   bulkSelectionActionClassName,
@@ -22,7 +21,7 @@ export interface BulkSelectionMessagingActionsProps {
   labels: {
     whatsapp: string;
     sms: string;
-    email: string;
+    email?: string;
   };
   /** Channels to render. Omit a channel to hide it. Default: all three. */
   channels?: Partial<Record<BulkSelectionMessageChannel, boolean>>;
@@ -58,7 +57,7 @@ export function BulkSelectionMessagingActions({
           <MessageSquare className="w-3.5 h-3.5 text-info" /> {labels.sms}
         </Button>
       )}
-      {channels.email !== false && (
+      {channels.email !== false && labels.email && (
         <Button
           type="button"
           variant="outline"
@@ -98,7 +97,7 @@ export interface BulkSelectionDeleteActionProps {
   label: string;
   onClick: () => void;
   /** Optional leading icon (defaults to none). Pass Trash2/Archive as needed. */
-  icon?: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
+  icon?: LucideIcon;
 }
 
 /** Destructive delete/trash action for Work bulk bars. */

@@ -1,16 +1,17 @@
-import type React from "react";
+import type { LucideIcon } from "lucide-react";
+import type { JSX, ReactNode } from "react";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 
 interface StudentDetailAttributeRowProps {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }
 
 export function StudentDetailAttributeRow({
   icon,
   label,
   value,
-}: StudentDetailAttributeRowProps): React.JSX.Element {
+}: StudentDetailAttributeRowProps): JSX.Element {
   return <DetailAttributeRow icon={icon} label={label} value={value} variant="card" />;
 }

@@ -106,7 +106,7 @@ export function ContactCardItem({
       className={cn(
         FORM_CARD,
         "p-4 ps-5.5 space-y-4 shadow-xs",
-        reducedMotion ? "" : "hover:shadow-md",
+        reducedMotion ? "hover:shadow-none" : "hover:shadow-md",
         isSelected
           ? "border-primary/50 bg-primary/5 shadow-xs shadow-primary/5"
           : "border-border/50 hover:border-primary/35",

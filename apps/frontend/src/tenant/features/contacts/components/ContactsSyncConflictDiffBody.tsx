@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { Loader2 } from "lucide-react";
 import type { Contact, SyncFieldPick } from "@mms/shared";
 import { resolveSyncFieldLabel } from "@/lib/contacts/contactI18n";
@@ -10,12 +11,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 type SyncDiff = {
   field: string;
   local: string;
   server: string;
 };
+
+function conflictPickButtonClass(selected: boolean, dense: boolean): string {
+  return cn(
+    "text-start break-all w-full rounded h-auto justify-start font-normal",
+    dense ? "px-1" : "px-2 py-1.5 min-h-11",
+    selected ? "bg-primary/15 ring-1 ring-primary/40" : "hover:bg-muted/50",
+  );
+}
 
 export function ContactsSyncConflictDiffBody({
   local,
@@ -41,7 +51,7 @@ export function ContactsSyncConflictDiffBody({
   onKeepMine: () => void;
   onUseServer: () => void;
   t: TranslationFunction;
-}) {
+}): JSX.Element {
   return (
     <div className="border-t border-warning/20 px-3 py-2.5 bg-background/40 space-y-3">
       {serverLoading && (
@@ -68,11 +78,7 @@ export function ContactsSyncConflictDiffBody({
                       type="button"
                       variant="ghost"
                       onClick={() => onTogglePick(diff.field, "local")}
-                      className={`text-start break-all w-full rounded px-2 py-1.5 h-auto justify-start font-normal min-h-11 ${
-                        fieldPicks[diff.field] === "local"
-                          ? "bg-primary/15 ring-1 ring-primary/40"
-                          : "hover:bg-muted/50"
-                      }`}
+                      className={conflictPickButtonClass(fieldPicks[diff.field] === "local", false)}
                     >
                       {diff.local}
                     </Button>
@@ -83,11 +89,7 @@ export function ContactsSyncConflictDiffBody({
                       type="button"
                       variant="ghost"
                       onClick={() => onTogglePick(diff.field, "server")}
-                      className={`text-start break-all w-full rounded px-2 py-1.5 h-auto justify-start font-normal min-h-11 ${
-                        fieldPicks[diff.field] === "server"
-                          ? "bg-primary/15 ring-1 ring-primary/40"
-                          : "hover:bg-muted/50"
-                      }`}
+                      className={conflictPickButtonClass(fieldPicks[diff.field] === "server", false)}
                     >
                       {diff.server}
                     </Button>
@@ -122,11 +124,7 @@ export function ContactsSyncConflictDiffBody({
                         type="button"
                         variant="ghost"
                         onClick={() => onTogglePick(diff.field, "local")}
-                        className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
-                          fieldPicks[diff.field] === "local"
-                            ? "bg-primary/15 ring-1 ring-primary/40"
-                            : "hover:bg-muted/50"
-                        }`}
+                        className={conflictPickButtonClass(fieldPicks[diff.field] === "local", true)}
                       >
                         {diff.local}
                       </Button>
@@ -136,11 +134,7 @@ export function ContactsSyncConflictDiffBody({
                         type="button"
                         variant="ghost"
                         onClick={() => onTogglePick(diff.field, "server")}
-                        className={`text-start break-all w-full rounded px-1 h-auto justify-start font-normal ${
-                          fieldPicks[diff.field] === "server"
-                            ? "bg-primary/15 ring-1 ring-primary/40"
-                            : "hover:bg-muted/50"
-                        }`}
+                        className={conflictPickButtonClass(fieldPicks[diff.field] === "server", true)}
                       >
                         {diff.server}
                       </Button>

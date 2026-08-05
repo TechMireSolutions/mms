@@ -46,6 +46,7 @@ export function EditableSelect({
   const [isAdding, setIsAdding] = useState(false);
   const customInputId = React.useId();
   const canAdd = Boolean(onUpdateOptions || onCommitAdd);
+  const addInputLabel = addPlaceholder ?? t("contacts.form.addNewTypePlaceholder");
 
   const handleAdd = async (close: () => void): Promise<void> => {
     if (!canAdd || isAdding) return;
@@ -92,8 +93,9 @@ export function EditableSelect({
         if (!open) setCustomValue("");
       }}
       footer={
-        canAdd
-          ? ({ close }) => (
+        !canAdd
+          ? undefined
+          : ({ close }) => (
               <div className="p-2 space-y-2 bg-muted/20 flex-shrink-0">
                 {addHint ? (
                   <p className="px-0.5 text-[11px] leading-snug text-muted-foreground">{addHint}</p>
@@ -112,8 +114,8 @@ export function EditableSelect({
                         void handleAdd(close);
                       }
                     }}
-                    placeholder={addPlaceholder ?? t("contacts.form.addNewTypePlaceholder")}
-                    aria-label={addPlaceholder ?? t("contacts.form.addNewTypePlaceholder")}
+                    placeholder={addInputLabel}
+                    aria-label={addInputLabel}
                     disabled={isAdding}
                     className={INPUT_CLASS}
                   />
@@ -131,7 +133,6 @@ export function EditableSelect({
                 </div>
               </div>
             )
-          : null
       }
     />
   );

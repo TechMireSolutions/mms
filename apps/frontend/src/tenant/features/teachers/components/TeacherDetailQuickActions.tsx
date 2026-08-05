@@ -22,7 +22,6 @@ export function TeacherDetailQuickActions({
   onOpenComposer,
 }: TeacherDetailQuickActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  if (!primaryPhone && !(primaryEmail && canWriteMessaging)) return null;
 
   return (
     <EntityMessagingQuickActions

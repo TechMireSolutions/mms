@@ -17,9 +17,9 @@ export interface OptionSelectPopoverProps {
   className?: string;
   id?: string;
   name?: string;
-  contentMinWidthClass?: string;
   onOpenChange?: (open: boolean) => void;
-  footer?: ReactNode | ((api: { close: () => void }) => ReactNode);
+  /** Rendered below the option list; `close` dismisses the popover. */
+  footer?: (api: { close: () => void }) => ReactNode;
 }
 
 /** Shared option listbox popover used by EditableSelect (Contacts form option lists). */
@@ -32,7 +32,6 @@ export function OptionSelectPopover({
   className = "w-28",
   id,
   name,
-  contentMinWidthClass = "min-w-[13rem]",
   onOpenChange,
   footer,
 }: OptionSelectPopoverProps): React.JSX.Element {
@@ -102,10 +101,7 @@ export function OptionSelectPopover({
         align="start"
         sideOffset={6}
         collisionPadding={8}
-        className={cn(
-          "p-0 w-[var(--radix-popover-trigger-width)] max-h-[var(--radix-popover-content-available-height)] flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl divide-y divide-border/60",
-          contentMinWidthClass,
-        )}
+        className="p-0 w-[var(--radix-popover-trigger-width)] min-w-[13rem] max-h-[var(--radix-popover-content-available-height)] flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl divide-y divide-border/60"
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();
@@ -115,11 +111,12 @@ export function OptionSelectPopover({
             moveHighlight(-1);
           } else if (
             event.key === "Enter" &&
-            highlightedIndex >= 0 &&
             (event.target as HTMLElement).tagName !== "INPUT"
           ) {
+            const highlighted = options[highlightedIndex];
+            if (highlighted === undefined) return;
             event.preventDefault();
-            select(options[highlightedIndex]);
+            select(highlighted);
           }
         }}
       >
@@ -166,7 +163,7 @@ export function OptionSelectPopover({
             <div className="px-3 py-2 text-sm text-muted-foreground italic">{t("contacts.form.noOptions")}</div>
           )}
         </div>
-        {typeof footer === "function" ? footer({ close: () => handleOpenChange(false) }) : footer}
+        {footer?.({ close: () => handleOpenChange(false) })}
       </PopoverContent>
     </Popover>
   );

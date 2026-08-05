@@ -1,6 +1,10 @@
 /** Shared validation error line below form fields. */
 export const FORM_ERROR = 'text-xs text-destructive mt-1';
 
+/** Boxed field error (sync forms, dense panels). */
+export const FORM_ERROR_BOX =
+  'mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2';
+
 /** Shared label class for modal / registry-driven forms. */
 export const FORM_LABEL =
   'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground';
@@ -45,6 +49,26 @@ export const WORK_SURFACE_INNER =
 
 /** Sticky Work directory table header cells (checkbox / frozen name cols). */
 export const WORK_STICKY_HEAD = 'bg-muted/95 backdrop-blur-md';
+
+/** Work toolbar filter / trash / clear trigger base. */
+export const WORK_TOOLBAR_TRIGGER =
+  'flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted';
+
+/** Active state for Work toolbar triggers (filters with count, trash on). */
+export const WORK_TOOLBAR_TRIGGER_ACTIVE =
+  'border-primary/40 bg-primary/10 text-primary hover:text-primary hover:bg-primary/10';
+
+/** Idle state for Work toolbar triggers. */
+export const WORK_TOOLBAR_TRIGGER_IDLE =
+  'border-border bg-card text-muted-foreground hover:text-foreground';
+
+/** Filter-menu active (slightly softer than trash active). */
+export const WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE =
+  'border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5';
+
+/** Filter-menu idle (foreground text, not muted). */
+export const WORK_TOOLBAR_TRIGGER_FILTER_IDLE =
+  'border-border bg-card text-foreground';
 
 /** Detail drawer / profile section headings. */
 export const DETAIL_SECTION_TITLE =

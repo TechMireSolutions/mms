@@ -1,6 +1,8 @@
+import type { JSX } from "react";
 import { CheckCircle2, Loader2, Unlink, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldErrorMessage } from "@/components/ui/FormField";
+import { FORM_ERROR_BOX } from "@/components/ui/formStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export function GoogleContactsConnectedState({
@@ -25,7 +27,7 @@ export function GoogleContactsConnectedState({
   onDisconnect: () => void;
   onSync: () => void;
   t: TranslationFunction;
-}) {
+}): JSX.Element {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 p-3 rounded-xl bg-success/10 border border-success/30 text-success">
@@ -49,7 +51,7 @@ export function GoogleContactsConnectedState({
 
       <FieldErrorMessage
         message={error || undefined}
-        className="mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+        className={FORM_ERROR_BOX}
       />
 
       {syncResult && (

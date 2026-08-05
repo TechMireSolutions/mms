@@ -1,4 +1,5 @@
-import React from "react";
+import type { LucideIcon } from "lucide-react";
+import type { JSX, ReactNode } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 
@@ -7,10 +8,10 @@ export function TeacherDetailAttributeRow({
   label,
   value,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   label: string;
-  value: React.ReactNode;
-}): React.JSX.Element {
+  value: ReactNode;
+}): JSX.Element {
   const { t } = useTranslation();
   return (
     <DetailAttributeRow

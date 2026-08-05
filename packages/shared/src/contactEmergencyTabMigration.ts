@@ -1,17 +1,16 @@
 /** Migrates legacy contacts "emergency" form tab / column keys to "relationship". */
 import type { ColumnRegistryEntry, FieldConfig, FieldDefinition, TabDefinition } from './contactFieldSchemaTypes.js';
 
-/** @deprecated Legacy form-tab id — remapped by {@link migrateEmergencyTabToRelationship}. */
-export const LEGACY_EMERGENCY_FORM_TAB = 'emergency';
-export const CONTACT_RELATIONSHIP_FORM_TAB = 'relationship';
+const LEGACY_EMERGENCY_FORM_TAB = 'emergency';
+const CONTACT_RELATIONSHIP_FORM_TAB = 'relationship';
 
 /** Legacy Work-column keys → modern relationship column keys. */
-export const LEGACY_EMERGENCY_COLUMN_KEY_MAP = {
+const LEGACY_EMERGENCY_COLUMN_KEY_MAP = {
   emergency_contact: 'relationship_contact',
   emergency_relationship: 'relationship_type',
 } as const;
 
-export type LegacyEmergencyColumnKey = keyof typeof LEGACY_EMERGENCY_COLUMN_KEY_MAP;
+type LegacyEmergencyColumnKey = keyof typeof LEGACY_EMERGENCY_COLUMN_KEY_MAP;
 
 /** Remaps a form / enabled-tab id from legacy emergency → relationship. */
 export function normalizeContactFormTabId(tabId: string): string {
@@ -28,6 +27,14 @@ export function normalizeContactColumnKey(columnKey: string): string {
 /** Remaps saved-report field ids (`emergencyContact` → `relationshipContact`). */
 export function normalizeContactReportFieldId(fieldId: string): string {
   return fieldId === 'emergencyContact' ? 'relationshipContact' : fieldId;
+}
+
+/** Renames the stored tab label when a legacy emergency tab becomes relationship. */
+export function normalizeContactTabLabel(tabKey: string, label: string): string {
+  const isLegacy = tabKey === LEGACY_EMERGENCY_FORM_TAB || label === 'Emergency';
+  return isLegacy && normalizeContactFormTabId(tabKey) === CONTACT_RELATIONSHIP_FORM_TAB
+    ? 'Relationship'
+    : label;
 }
 
 export function isRelationshipContactColumnKey(columnKey: string): boolean {
@@ -93,11 +100,7 @@ function migrateTabs(tabs: TabDefinition[] | undefined): TabDefinition[] | undef
     return {
       ...tab,
       key: nextKey,
-      label:
-        nextKey === CONTACT_RELATIONSHIP_FORM_TAB &&
-        (tab.label === 'Emergency' || tab.key === LEGACY_EMERGENCY_FORM_TAB)
-          ? 'Relationship'
-          : tab.label,
+      label: normalizeContactTabLabel(tab.key, tab.label),
       labelKey:
         legacyLabelKey === 'contacts.form.tabEmergency' || legacyLabelKey === 'contacts.tabs.emergency'
           ? 'contacts.form.tabRelationship'

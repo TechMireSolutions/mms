@@ -2,6 +2,7 @@ import {
   mergeContactsFormTabsFromApi,
   migrateEmergencyTabToRelationship,
   normalizeContactFormTabId,
+  normalizeContactTabLabel,
   type FieldConfig,
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
@@ -28,20 +29,17 @@ export async function loadContactFieldConfig(): Promise<FieldConfig | null> {
   const config = migrateEmergencyTabToRelationship(raw as unknown as FieldConfig);
 
   const tabRows = await loadCustomTabs('contacts');
-  const customFormTabs = tabRows.map((row) => {
-    const key = normalizeContactFormTabId(row.key);
-    return {
-      key,
-      label: key === 'relationship' && (row.label === 'Emergency' || row.key === 'emergency') ? 'Relationship' : row.label,
-      icon: row.icon ?? undefined,
-      enabled: row.enabled,
-      order: row.sortOrder,
-      permissions: (row.permissions as string[]) ?? undefined,
-      description: row.description ?? undefined,
-      color: row.color ?? undefined,
-      isSystem: row.isSystem,
-    };
-  });
+  const customFormTabs = tabRows.map((row) => ({
+    key: normalizeContactFormTabId(row.key),
+    label: normalizeContactTabLabel(row.key, row.label),
+    icon: row.icon ?? undefined,
+    enabled: row.enabled,
+    order: row.sortOrder,
+    permissions: (row.permissions as string[]) ?? undefined,
+    description: row.description ?? undefined,
+    color: row.color ?? undefined,
+    isSystem: row.isSystem,
+  }));
 
   return {
     ...config,

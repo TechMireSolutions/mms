@@ -1,9 +1,9 @@
-import type { Contact } from "@mms/shared";
 import {
   getPrimaryAddress,
   hasWhatsApp,
   isRelationshipContactColumnKey,
   isRelationshipTypeColumnKey,
+  type Contact,
 } from "@mms/shared";
 
 /** Whether a card metadata column has renderable data for the contact. */

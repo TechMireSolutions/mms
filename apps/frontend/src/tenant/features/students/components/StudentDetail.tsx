@@ -5,7 +5,6 @@ import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import {
   DetailDrawerArchivedBanner,
   DetailDrawerRestoreOrEditAction,
-  formatArchivedBannerDate,
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
 import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
@@ -56,7 +55,6 @@ export default function StudentDetail({
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
-  const archivedDate = formatArchivedBannerDate(student.deletedAt);
 
   const headerActions = (
     <DetailDrawerRestoreOrEditAction
@@ -67,7 +65,6 @@ export default function StudentDetail({
       editLabel={t("students.detail.editTitle")}
       onRestore={onRestore ? () => onRestore(String(student.id)) : undefined}
       onEdit={onEdit ? () => onEdit(student) : undefined}
-      className="rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
     />
   );
 
@@ -85,12 +82,10 @@ export default function StudentDetail({
         ariaLabel={t("students.detail.ariaLabel")}
         headerActions={headerActions}
         headerExtra={
-          isArchived && archivedDate ? (
-            <DetailDrawerArchivedBanner
-              deletedAt={student.deletedAt}
-              description={t("students.detail.archivedBanner", { date: archivedDate })}
-            />
-          ) : undefined
+          <DetailDrawerArchivedBanner
+            deletedAt={student.deletedAt}
+            describe={(date) => t("students.detail.archivedBanner", { date })}
+          />
         }
         footer={
           <div className="flex items-center gap-1.5">

@@ -1,9 +1,14 @@
 import { SlidersHorizontal, type LucideIcon } from "lucide-react";
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  WORK_TOOLBAR_TRIGGER,
+  WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE,
+  WORK_TOOLBAR_TRIGGER_FILTER_IDLE,
+} from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
-export interface ModuleFiltersMenuTriggerProps {
+export interface ModuleFiltersMenuTriggerProps extends ComponentPropsWithoutRef<"button"> {
   label: string;
   activeCount?: number;
   icon?: LucideIcon;
@@ -22,6 +27,7 @@ export const ModuleFiltersMenuTrigger = forwardRef<HTMLButtonElement, ModuleFilt
       icon: Icon = SlidersHorizontal,
       className,
       children,
+      type = "button",
       ...rest
     },
     ref,
@@ -31,13 +37,11 @@ export const ModuleFiltersMenuTrigger = forwardRef<HTMLButtonElement, ModuleFilt
     return (
       <Button
         ref={ref}
-        type="button"
+        type={type}
         variant="ghost"
         className={cn(
-          "flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted",
-          isActive
-            ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
-            : "border-border bg-card text-foreground",
+          WORK_TOOLBAR_TRIGGER,
+          isActive ? WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE : WORK_TOOLBAR_TRIGGER_FILTER_IDLE,
           className,
         )}
         {...rest}

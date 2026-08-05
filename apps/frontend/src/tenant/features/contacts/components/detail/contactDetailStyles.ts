@@ -3,7 +3,6 @@ import {
   LucideIcon, LayoutDashboard, History, FileText, Zap, User,
 } from "lucide-react";
 import { DEFAULT_DETAIL_TABS } from "@mms/shared";
-import { MESSAGING_QUICK_ACTION_TONES } from "@/components/ui/messagingActionStyles";
 
 export const ICON_MAP: Record<string, LucideIcon> = {
   // tab keys
@@ -25,10 +24,6 @@ export const DETAIL_SYSTEM_TAB_KEYS = new Set(DEFAULT_DETAIL_TABS.map((tab) => t
 export const DEFAULT_DETAIL_TAB_BY_KEY = new Map(DEFAULT_DETAIL_TABS.map((tab) => [tab.key, tab]));
 
 export const DETAIL_STYLES = {
-  whatsappActive: MESSAGING_QUICK_ACTION_TONES.whatsapp,
-  smsAction: MESSAGING_QUICK_ACTION_TONES.sms,
-  callAction: MESSAGING_QUICK_ACTION_TONES.call,
-  emailAction: MESSAGING_QUICK_ACTION_TONES.email,
   networkHeader: "bg-success/10 border-success/30",
   networkIcon: "bg-success/10 text-success",
   networkTitle: "text-success",
