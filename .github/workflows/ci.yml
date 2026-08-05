@@ -95,8 +95,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2]
-        shardTotal: [2]
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
     services:
       postgres:
         image: postgres:16
@@ -133,8 +133,11 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build shared package
-        run: pnpm --filter @mms/shared build
+      - name: Fast Build Apps
+        run: |
+          pnpm --filter @mms/shared build
+          pnpm --filter mms-backend build
+          pnpm --filter mms-frontend build
 
       - name: Run DB Migrations
         run: pnpm --filter mms-backend run db:migrate
@@ -156,6 +159,51 @@ jobs:
 
       - name: Run E2E Tests with Sharding
         run: pnpm test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      - name: Upload Blob Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: e2e/blob-report
+          retention-days: 1
+
+  merge-reports:
+    if: always()
+    needs: [e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download Blob Reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge Playwright Reports
+        run: pnpm --filter e2e-tests run merge-reports ../all-blob-reports --reporter html
+
+      - name: Upload HTML Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: e2e/playwright-report
+          retention-days: 7
 
   build-dist:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -21,28 +21,33 @@ export default defineConfig({
       ]
     : [],
   /* Maximum time one test can run for. */
-  timeout: 60 * 1000,
+  timeout: 45 * 1000,
   expect: {
-    timeout: 10 * 1000,
+    timeout: 5 * 1000,
   },
   /* Run tests in files in parallel */
-  fullyParallel: false,
+  fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   /* Opt out of parallel tests on local due to shared database/state, use 2 workers on CI. */
   workers: process.env.CI ? 2 : 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? 'github' : 'html',
+  reporter: process.env.CI
+    ? [
+        ['github'],
+        ['blob', { outputDir: 'blob-report' }],
+      ]
+    : [['html', { open: 'never' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.BASE_URL || 'http://localhost:5173',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    video: 'retain-on-failure',
+    trace: 'retain-on-failure',
+    video: 'off',
     screenshot: 'only-on-failure',
 
     /* Ignore HTTP errors because of dev SSL or proxy certificates */
@@ -65,8 +70,8 @@ export default defineConfig({
         cwd: '..',
         url: 'http://127.0.0.1:5173',
         reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-        stdout: 'pipe',
+        timeout: 90 * 1000,
+        stdout: 'ignore',
         stderr: 'pipe',
       },
 });
