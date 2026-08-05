@@ -6,6 +6,7 @@ export * from './contactPreferencesSetupValidation.js';
 export * from './contactFieldSeed.js';
 export * from './contactRetiredFields.js';
 export * from './contactTabRegistry.js';
+export * from './contactFormTabsMerge.js';
 export * from './contactEmergencyTabMigration.js';
 export * from './contactRelationshipHydrate.js';
 export * from './contactGoogleSyncTypes.js';

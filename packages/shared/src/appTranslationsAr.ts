@@ -3622,7 +3622,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.form.tabAddresses": "العناوين",
   "contacts.form.tabSocials": "وسائل التواصل الاجتماعي",
   "contacts.form.tabRelationship": "العلاقات",
-  "contacts.form.tabCustom": "حقول مخصصة",
+  "contacts.form.tabCustom": "مخصص",
   "contacts.form.customFieldsEmpty": "لا توجد حقول مخصصة مفعّلة. أضفها من الإعدادات ← الحقول.",
   "contacts.form.addCustomTabEntry": "إضافة إدخال",
   "contacts.form.noCustomTabEntriesYet": "لا توجد إدخالات بعد.",

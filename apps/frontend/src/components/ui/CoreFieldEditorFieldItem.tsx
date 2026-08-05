@@ -82,6 +82,7 @@ export const FieldItem = memo(function FieldItem({
       <Checkbox
         checked={isEnabled}
         onCheckedChange={onToggleEnabled}
+        onClick={(event) => event.stopPropagation()}
         aria-label={t("fields.enableAria")}
         className="w-4 h-4"
       />
@@ -106,9 +107,13 @@ export const FieldItem = memo(function FieldItem({
         {isEnabled && (
           <Button
             type="button"
-            onClick={onToggleRequired}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleRequired();
+            }}
             variant="outline"
             size="sm"
+            aria-pressed={isRequired}
             className={`min-h-11 flex-1 rounded-md border px-3 text-xs font-semibold shadow-none transition-all sm:flex-initial
                 ${
                   isRequired
@@ -123,9 +128,13 @@ export const FieldItem = memo(function FieldItem({
         {isEnabled && onToggleUnique && (
           <Button
             type="button"
-            onClick={onToggleUnique}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleUnique();
+            }}
             variant="outline"
             size="sm"
+            aria-pressed={isUnique}
             className={`min-h-11 flex-1 rounded-md border px-3 text-xs font-semibold shadow-none transition-all sm:flex-initial
                 ${
                   isUnique

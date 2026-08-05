@@ -3766,7 +3766,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.form.tabAddresses": "Addresses",
   "contacts.form.tabSocials": "Socials",
   "contacts.form.tabRelationship": "Relationship",
-  "contacts.form.tabCustom": "Custom fields",
+  "contacts.form.tabCustom": "Custom",
   "contacts.form.customFieldsEmpty": "No custom fields are enabled. Add them in Setup → Fields.",
   "contacts.form.addCustomTabEntry": "Add entry",
   "contacts.form.noCustomTabEntriesYet": "No entries yet.",

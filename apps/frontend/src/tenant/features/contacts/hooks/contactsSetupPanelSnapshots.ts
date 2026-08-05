@@ -4,6 +4,7 @@ import {
   type TabDefinition,
   DEFAULT_FORM_TABS,
   isContactLockedEnabledTab,
+  omitContactLegacyCustomFormTabUnlessUsed,
   withContactLockedEnabledTabs,
 } from "@mms/shared";
 
@@ -97,13 +98,20 @@ export function fieldsSetupSnapshot(input: {
   });
 }
 
-export function resolveSetupFormTabs(formTabs: TabDefinition[] | undefined): TabDefinition[] {
-  return formTabs && formTabs.length > 0 ? formTabs : DEFAULT_FORM_TABS;
+export function resolveSetupFormTabs(
+  formTabs: TabDefinition[] | undefined,
+  fields?: FieldConfig["fields"],
+): TabDefinition[] {
+  const base = formTabs && formTabs.length > 0 ? formTabs : DEFAULT_FORM_TABS;
+  return omitContactLegacyCustomFormTabUnlessUsed(base, fields);
 }
 
-export function resolveSetupEnabledTabs(formTabs: TabDefinition[] | undefined): string[] {
+export function resolveSetupEnabledTabs(
+  formTabs: TabDefinition[] | undefined,
+  fields?: FieldConfig["fields"],
+): string[] {
   return withContactLockedEnabledTabs(
-    resolveSetupFormTabs(formTabs)
+    resolveSetupFormTabs(formTabs, fields)
       .filter((tab) => tab.enabled !== false)
       .map((tab) => tab.key),
   );

@@ -4,7 +4,7 @@ import type { RelationshipPair } from './contactEntityTypes.js';
 
 export const CONFIG_VERSION = 2;
 
-export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "relationship", "custom"];
+export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "relationship"];
 export const DEFAULT_REQUIRED_TABS: string[] = [];
 
 export const GENDERS = ["male", "female"];

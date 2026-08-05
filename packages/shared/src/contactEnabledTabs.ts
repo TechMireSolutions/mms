@@ -1,14 +1,19 @@
 import type { FieldConfig, TabDefinition } from './contactFieldSchemaTypes.js';
 import { canViewContactTab } from './contactFieldAccess.js';
 import { DEFAULT_ENABLED_TABS } from './contactPreferenceDefaults.js';
-import { DEFAULT_FORM_TABS } from './contactTabRegistry.js';
+import {
+  CONTACT_LEGACY_CUSTOM_FORM_TAB_KEY,
+  DEFAULT_FORM_TABS,
+} from './contactTabRegistry.js';
 
 /** Form tabs Setup cannot disable; the form always treats them as on. */
-export const CONTACT_LOCKED_ENABLED_TABS = ['basic', 'custom'] as const;
+export const CONTACT_LOCKED_ENABLED_TABS = ['basic'] as const;
 
-const CONTACT_SEED_FORM_TAB_KEYS = new Set(
-  DEFAULT_FORM_TABS.map((tab) => tab.key.toLowerCase()),
-);
+/** Seed form tabs (not tenant `custom_*` collection tabs), including retired `custom`. */
+const CONTACT_SEED_FORM_TAB_KEYS = new Set([
+  ...DEFAULT_FORM_TABS.map((tab) => tab.key.toLowerCase()),
+  CONTACT_LEGACY_CUSTOM_FORM_TAB_KEY,
+]);
 
 /** True when `tabKey` is a locked always-on Contacts form tab. */
 export function isContactLockedEnabledTab(tabKey: string): boolean {

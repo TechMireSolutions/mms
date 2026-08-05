@@ -3622,7 +3622,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.form.tabAddresses": "پتے",
   "contacts.form.tabSocials": "سوشل روابط",
   "contacts.form.tabRelationship": "تعلقات",
-  "contacts.form.tabCustom": "حسبِ ضرورت فیلڈز",
+  "contacts.form.tabCustom": "حسبِ ضرورت",
   "contacts.form.customFieldsEmpty": "کوئی حسبِ ضرورت فیلڈ فعال نہیں۔ انہیں سیٹ اپ ← فیلڈز میں شامل کریں۔",
   "contacts.form.addCustomTabEntry": "اندراج شامل کریں",
   "contacts.form.noCustomTabEntriesYet": "ابھی کوئی اندراج نہیں۔",

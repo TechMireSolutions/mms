@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { type FieldDefinition, type TabDefinition } from "@mms/shared";
 import { buildFieldsMap } from "./moduleFieldsEditorBuildMap";
 import {
@@ -46,18 +46,29 @@ export function useModuleFieldsEditor({
   const [tabFieldPermissions, setTabFieldPermissions] = useState(initialDerived.tabFieldPermissions);
   const [tabFieldOrder, setTabFieldOrder] = useState(initialDerived.tabFieldOrder);
 
-  const tabHandlerSetters: TabHandlerSetters = {
-    setFormTabs,
-    setEnabledTabs,
-    setRequiredTabs,
-    setTabFields,
-    setTabFieldEnabled,
-    setTabFieldRequired,
-    setTabFieldUnique,
-    setTabFieldDefaultValues,
-    setTabFieldPermissions,
-    setTabFieldOrder,
+  /** True once the user edits the draft — blocks rehydrate from clobbering unsaved work. */
+  const draftDirtyRef = useRef(false);
+
+  const trackDirty = <T,>(setter: Dispatch<SetStateAction<T>>): Dispatch<SetStateAction<T>> =>
+    (value) => {
+      draftDirtyRef.current = true;
+      setter(value);
+    };
+
+  const dirtySetters = {
+    setFormTabs: trackDirty(setFormTabs),
+    setEnabledTabs: trackDirty(setEnabledTabs),
+    setRequiredTabs: trackDirty(setRequiredTabs),
+    setTabFields: trackDirty(setTabFields),
+    setTabFieldEnabled: trackDirty(setTabFieldEnabled),
+    setTabFieldRequired: trackDirty(setTabFieldRequired),
+    setTabFieldUnique: trackDirty(setTabFieldUnique),
+    setTabFieldDefaultValues: trackDirty(setTabFieldDefaultValues),
+    setTabFieldPermissions: trackDirty(setTabFieldPermissions),
+    setTabFieldOrder: trackDirty(setTabFieldOrder),
   };
+
+  const tabHandlerSetters: TabHandlerSetters = dirtySetters;
 
   const resetAllState = (
     tabs: TabDefinition[],
@@ -65,6 +76,7 @@ export function useModuleFieldsEditor({
     enabledT: string[],
     requiredT: string[],
   ) => {
+    draftDirtyRef.current = false;
     setFormTabs(tabs);
     setTabFields(fields);
     setEnabledTabs(new Set(enabledT));
@@ -81,61 +93,73 @@ export function useModuleFieldsEditor({
 
   return {
     formTabs,
-    setFormTabs,
+    setFormTabs: dirtySetters.setFormTabs,
     tabFields,
-    setTabFields,
+    setTabFields: dirtySetters.setTabFields,
     enabledTabs,
-    setEnabledTabs,
+    setEnabledTabs: dirtySetters.setEnabledTabs,
     requiredTabs,
-    setRequiredTabs,
+    setRequiredTabs: dirtySetters.setRequiredTabs,
     tabFieldEnabled,
-    setTabFieldEnabled,
+    setTabFieldEnabled: dirtySetters.setTabFieldEnabled,
     tabFieldRequired,
-    setTabFieldRequired,
+    setTabFieldRequired: dirtySetters.setTabFieldRequired,
     tabFieldUnique,
-    setTabFieldUnique,
+    setTabFieldUnique: dirtySetters.setTabFieldUnique,
     tabFieldDefaultValues,
-    setTabFieldDefaultValues,
+    setTabFieldDefaultValues: dirtySetters.setTabFieldDefaultValues,
     tabFieldPermissions,
-    setTabFieldPermissions,
+    setTabFieldPermissions: dirtySetters.setTabFieldPermissions,
     tabFieldOrder,
-    setTabFieldOrder,
-    toggleTabEnabled: (id: string) => toggleTabEnabledImpl(id, setEnabledTabs, setRequiredTabs),
-    toggleTabRequired: (id: string) => toggleTabRequiredImpl(id, setRequiredTabs),
+    setTabFieldOrder: dirtySetters.setTabFieldOrder,
+    isDraftDirty: (): boolean => draftDirtyRef.current,
+    markDraftPristine: (): void => {
+      draftDirtyRef.current = false;
+    },
+    toggleTabEnabled: (id: string) =>
+      toggleTabEnabledImpl(id, dirtySetters.setEnabledTabs, dirtySetters.setRequiredTabs),
+    toggleTabRequired: (id: string) => toggleTabRequiredImpl(id, dirtySetters.setRequiredTabs),
     toggleFieldEnabled: (tabId: string, fieldId: string) =>
-      toggleFieldEnabledImpl(tabId, fieldId, setTabFieldEnabled, setTabFieldRequired, setTabFieldUnique),
+      toggleFieldEnabledImpl(
+        tabId,
+        fieldId,
+        dirtySetters.setTabFieldEnabled,
+        dirtySetters.setTabFieldRequired,
+        dirtySetters.setTabFieldUnique,
+      ),
     toggleFieldRequired: (tabId: string, fieldId: string) =>
-      toggleFieldRequiredImpl(tabId, fieldId, setTabFieldRequired),
+      toggleFieldRequiredImpl(tabId, fieldId, dirtySetters.setTabFieldRequired),
     toggleFieldUnique: (tabId: string, fieldId: string) =>
-      toggleFieldUniqueImpl(tabId, fieldId, setTabFieldUnique),
+      toggleFieldUniqueImpl(tabId, fieldId, dirtySetters.setTabFieldUnique),
     handleReorder: (tabId: string, reorderedFields: FieldDefinition[]) =>
-      handleReorderImpl(tabId, reorderedFields, setTabFieldOrder),
+      handleReorderImpl(tabId, reorderedFields, dirtySetters.setTabFieldOrder),
     resetAllState,
     handleCustomFieldsChange: (tabId: string, newFields: Parameters<typeof handleCustomFieldsChangeImpl>[1]) =>
       handleCustomFieldsChangeImpl(
         tabId,
         newFields,
-        setTabFieldOrder,
-        setTabFields,
-        setTabFieldEnabled,
-        setTabFieldRequired,
-        setTabFieldUnique,
+        dirtySetters.setTabFieldOrder,
+        dirtySetters.setTabFields,
+        dirtySetters.setTabFieldEnabled,
+        dirtySetters.setTabFieldRequired,
+        dirtySetters.setTabFieldUnique,
       ),
     handleEditField: (tabId: string, updatedField: FieldDefinition) =>
       handleEditFieldImpl(
         tabId,
         updatedField,
-        setTabFields,
-        setTabFieldRequired,
-        setTabFieldUnique,
-        setTabFieldDefaultValues,
-        setTabFieldPermissions,
+        dirtySetters.setTabFields,
+        dirtySetters.setTabFieldRequired,
+        dirtySetters.setTabFieldUnique,
+        dirtySetters.setTabFieldDefaultValues,
+        dirtySetters.setTabFieldPermissions,
       ),
     handleDeleteField: (tabId: string, fieldId: string) =>
-      handleDeleteFieldImpl(tabId, fieldId, setTabFields, setTabFieldOrder),
+      handleDeleteFieldImpl(tabId, fieldId, dirtySetters.setTabFields, dirtySetters.setTabFieldOrder),
     handleAddTab: (label: string) => handleAddTabImpl(label, formTabs, tabHandlerSetters),
     handleDeleteTab: (key: string) => handleDeleteTabImpl(key, tabHandlerSetters),
-    handleRenameTab: (key: string, newLabel: string) => handleRenameTabImpl(key, newLabel, setFormTabs),
+    handleRenameTab: (key: string, newLabel: string) =>
+      handleRenameTabImpl(key, newLabel, dirtySetters.setFormTabs),
     buildFieldsMap: () =>
       buildFieldsMap(
         formTabs,

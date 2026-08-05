@@ -1,6 +1,6 @@
 import {
   type ContactPreferences,
-  DEFAULT_FORM_TABS,
+  getContactSeedFormTab,
   INITIAL_FIELD_SEED,
   isContactLockedEnabledTab,
 } from "@mms/shared";
@@ -22,7 +22,7 @@ export function wrapContactsSetupFieldsEditor({
     handleDeleteField,
     handleDeleteTab,
     formTabs: fieldsEditor.formTabs.map((tab) => {
-      const seed = DEFAULT_FORM_TABS.find((entry) => entry.key === tab.key);
+      const seed = getContactSeedFormTab(tab.key);
       return {
         ...tab,
         labelKey: tab.labelKey ?? seed?.labelKey,

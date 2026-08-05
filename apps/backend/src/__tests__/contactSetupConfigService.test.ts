@@ -80,6 +80,100 @@ describe('contact setup config services', () => {
     expect(saved.enabledTabs).toEqual(['basic']);
   });
 
+  it('does not re-append custom tabs deleted from custom_tabs but still on document formTabs', async () => {
+    mockGetConfig.mockResolvedValue({
+      version: 1,
+      enabledTabs: ['basic', 'custom_notes'],
+      requiredTabs: [],
+      fields: {
+        basic: [{ key: 'firstName', label: 'First Name', type: 'text', enabled: true, order: 0 }],
+      },
+      formTabs: [
+        { key: 'basic', label: 'Identity', enabled: true, order: 0, isSystem: true },
+        { key: 'custom_notes', label: 'Notes', enabled: true, order: 10, isSystem: false },
+      ],
+    });
+    mockLoadCustomTabs.mockResolvedValue([
+      {
+        key: 'basic',
+        label: 'Identity',
+        enabled: true,
+        sortOrder: 0,
+        isSystem: true,
+        icon: null,
+        permissions: null,
+        description: null,
+        color: null,
+      },
+      {
+        key: 'phones',
+        label: 'Phones',
+        enabled: true,
+        sortOrder: 1,
+        isSystem: true,
+        icon: null,
+        permissions: null,
+        description: null,
+        color: null,
+      },
+      {
+        key: 'emails',
+        label: 'Emails',
+        enabled: true,
+        sortOrder: 2,
+        isSystem: true,
+        icon: null,
+        permissions: null,
+        description: null,
+        color: null,
+      },
+      {
+        key: 'addresses',
+        label: 'Addresses',
+        enabled: true,
+        sortOrder: 3,
+        isSystem: true,
+        icon: null,
+        permissions: null,
+        description: null,
+        color: null,
+      },
+      {
+        key: 'socials',
+        label: 'Socials',
+        enabled: true,
+        sortOrder: 4,
+        isSystem: true,
+        icon: null,
+        permissions: null,
+        description: null,
+        color: null,
+      },
+      {
+        key: 'relationship',
+        label: 'Relationship',
+        enabled: true,
+        sortOrder: 5,
+        isSystem: true,
+        icon: null,
+        permissions: null,
+        description: null,
+        color: null,
+      },
+    ]);
+
+    const loaded = await loadContactFieldConfig();
+    expect(loaded?.formTabs?.map((tab) => tab.key)).not.toContain('custom_notes');
+    expect(loaded?.formTabs?.map((tab) => tab.key)).toEqual([
+      'basic',
+      'phones',
+      'emails',
+      'addresses',
+      'socials',
+      'relationship',
+    ]);
+  });
+
   it('normalizes preferences on save', async () => {
     mockUpsertPrefs.mockResolvedValue(undefined);
     const saved = await saveContactPreferences({ defaultCountry: 'PK' } as never);

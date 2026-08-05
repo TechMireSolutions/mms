@@ -8,6 +8,7 @@ import {
   CONFIG_VERSION,
   prepareContactPreferencesSetupSave,
   syncContactColumnRegistryWithFields,
+  isContactLockedEnabledTab,
   withContactLockedEnabledTabs,
   type ContactPreferencesSetupIssue,
 } from "@mms/shared";
@@ -139,10 +140,9 @@ export function useContactsSetupSaveActions({
       const enabledSet = new Set(enabledTabIds);
       const formTabs = fieldsEditor.formTabs.map((tab) => ({
         ...tab,
-        enabled:
-          tab.key === "basic" || tab.key === "custom"
-            ? true
-            : enabledSet.has(tab.key.toLowerCase()),
+        enabled: isContactLockedEnabledTab(tab.key)
+          ? true
+          : enabledSet.has(tab.key.toLowerCase()),
       }));
       // Typed custom_tabs via REST — do not dual-write formTabs into contact_field_config.
       await syncContactsCustomTabs(formTabs);

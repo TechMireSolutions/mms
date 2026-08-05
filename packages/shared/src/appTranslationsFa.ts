@@ -1213,7 +1213,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.form.tabAddresses": "آدرس‌ها",
   "contacts.form.tabSocials": "شبکه‌های اجتماعی",
   "contacts.form.tabRelationship": "روابط",
-  "contacts.form.tabCustom": "فیلدهای سفارشی",
+  "contacts.form.tabCustom": "سفارشی",
   "contacts.form.customFieldsEmpty": "هیچ فیلد سفارشی فعال نیست. آن‌ها را در تنظیمات ← فیلدها اضافه کنید.",
   "contacts.form.addCustomTabEntry": "افزودن ورودی",
   "contacts.form.noCustomTabEntriesYet": "هنوز ورودی‌ای وجود ندارد.",

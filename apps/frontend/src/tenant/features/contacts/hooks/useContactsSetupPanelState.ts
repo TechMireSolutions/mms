@@ -49,13 +49,13 @@ export function useContactsSetupPanelState({
   );
 
   const initialTabs = useMemo<TabDefinition[]>(
-    () => resolveSetupFormTabs(config.formTabs),
-    [config.formTabs],
+    () => resolveSetupFormTabs(config.formTabs, config.fields),
+    [config.formTabs, config.fields],
   );
 
   const defaultEnabledTabs = useMemo(
-    () => resolveSetupEnabledTabs(config.formTabs),
-    [config.formTabs],
+    () => resolveSetupEnabledTabs(config.formTabs, config.fields),
+    [config.formTabs, config.fields],
   );
 
   const lockedEnabledTabs = useMemo(() => [...CONTACT_LOCKED_ENABLED_TABS], []);
@@ -95,7 +95,7 @@ export function useContactsSetupPanelState({
   }, [countryCodes, isPreferencesDirty]);
 
   const isFieldsDirty = useMemo(() => {
-    const formTabsForCompare = resolveSetupFormTabs(config.formTabs);
+    const formTabsForCompare = resolveSetupFormTabs(config.formTabs, config.fields);
     const persistedEnabled =
       config.enabledTabs && config.enabledTabs.length > 0
         ? config.enabledTabs

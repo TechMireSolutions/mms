@@ -48,7 +48,7 @@ export default function ContactForm({
   const { enabledTabIds, fields, fieldConfig } = useContactConfig();
   const [tab, setTab] = useState("basic");
   const hasCustomFields = listEnabledCustomContactFormFields(fields, "custom").length > 0;
-  const formTabs = resolveContactFormTabs(fieldConfig.formTabs);
+  const formTabs = resolveContactFormTabs(fieldConfig.formTabs, fields);
   const formInstanceId = String(contact?.id ?? "new");
 
   const draft = useContactFormDraft({

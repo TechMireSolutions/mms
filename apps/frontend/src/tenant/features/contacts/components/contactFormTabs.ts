@@ -1,7 +1,9 @@
 import { User, Phone, Mail, MapPin, Share2, Heart, SlidersHorizontal } from "lucide-react";
 import {
   DEFAULT_FORM_TABS,
+  omitContactLegacyCustomFormTabUnlessUsed,
   type AppTranslationKey,
+  type FieldConfig,
   type TabDefinition,
 } from "@mms/shared";
 
@@ -23,8 +25,14 @@ export type ContactFormTabItem = {
 };
 
 /** Build form modal tabs from persisted Setup `formTabs` (includes user-created tabs). */
-export function resolveContactFormTabs(formTabs?: TabDefinition[]): ContactFormTabItem[] {
-  const source = (formTabs && formTabs.length > 0 ? formTabs : DEFAULT_FORM_TABS)
+export function resolveContactFormTabs(
+  formTabs?: TabDefinition[],
+  fields?: FieldConfig["fields"],
+): ContactFormTabItem[] {
+  const source = omitContactLegacyCustomFormTabUnlessUsed(
+    formTabs && formTabs.length > 0 ? formTabs : DEFAULT_FORM_TABS,
+    fields,
+  )
     .slice()
     .sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 

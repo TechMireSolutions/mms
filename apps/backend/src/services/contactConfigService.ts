@@ -1,5 +1,5 @@
 import {
-  DEFAULT_FORM_TABS,
+  mergeContactsFormTabsFromApi,
   migrateEmergencyTabToRelationship,
   normalizeContactFormTabId,
   type FieldConfig,
@@ -43,23 +43,9 @@ export async function loadContactFieldConfig(): Promise<FieldConfig | null> {
     };
   });
 
-  const baseTabs = config.formTabs && config.formTabs.length > 0 ? config.formTabs : DEFAULT_FORM_TABS;
-  const rawFormTabs =
-    customFormTabs.length > 0
-      ? [...customFormTabs, ...baseTabs.filter((bt) => !customFormTabs.some((ct) => ct.key === bt.key))]
-      : baseTabs;
-
-  const seenKeys = new Set<string>();
-  const formTabs = rawFormTabs.filter((tab) => {
-    const key = normalizeContactFormTabId(tab.key);
-    if (seenKeys.has(key)) return false;
-    seenKeys.add(key);
-    return true;
-  });
-
   return {
     ...config,
-    formTabs,
+    formTabs: mergeContactsFormTabsFromApi(config.formTabs, customFormTabs, config.fields),
   };
 }
 

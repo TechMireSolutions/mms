@@ -47,11 +47,11 @@ export function toggleFieldEnabled(
   setTabFieldUnique: StringSetMapSetter,
 ): void {
   setTabFieldEnabled((currentEnabledFields) => {
-    const updatedFieldIds = new Set(currentEnabledFields[tabId]);
+    const updatedFieldIds = new Set(currentEnabledFields[tabId] || []);
     if (updatedFieldIds.has(fieldId)) {
       updatedFieldIds.delete(fieldId);
       setTabFieldRequired((currentRequiredFields) => {
-        const updatedRequiredFieldIds = new Set(currentRequiredFields[tabId]);
+        const updatedRequiredFieldIds = new Set(currentRequiredFields[tabId] || []);
         updatedRequiredFieldIds.delete(fieldId);
         return { ...currentRequiredFields, [tabId]: updatedRequiredFieldIds };
       });
@@ -73,7 +73,7 @@ export function toggleFieldRequired(
   setTabFieldRequired: StringSetMapSetter,
 ): void {
   setTabFieldRequired((currentRequiredFields) => {
-    const updatedFieldIds = new Set(currentRequiredFields[tabId]);
+    const updatedFieldIds = new Set(currentRequiredFields[tabId] || []);
     if (updatedFieldIds.has(fieldId)) {
       updatedFieldIds.delete(fieldId);
     } else {

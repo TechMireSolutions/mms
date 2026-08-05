@@ -6,6 +6,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   loadFieldConfig,
   saveFieldConfig,
@@ -34,6 +35,7 @@ import { useContactConfigTabFields } from "@/lib/contacts/useContactConfigTabFie
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
+  CONTACTS_FIELD_CONFIG_QUERY_KEY,
   useContactFieldConfigQuery,
   useContactPreferencesQuery,
 } from "@/tenant/features/contacts/hooks/useContactSetupConfig";
@@ -53,6 +55,7 @@ export function useContactConfigCore({
 }) {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const tabsAbortRef = useRef<AbortController | null>(null);
   const lastGoodFormTabsRef = useRef<TabDefinition[] | null>(null);
   const hasHydratedTabsOnceRef = useRef(false);
@@ -116,7 +119,11 @@ export function useContactConfigCore({
       try {
         const apiTabs = await loadContactsFormTabs(controller.signal);
         if (controller.signal.aborted) return;
-        const formTabs = mergeContactsFormTabsFromApi(documentConfig.formTabs, apiTabs);
+        const formTabs = mergeContactsFormTabsFromApi(
+          documentConfig.formTabs,
+          apiTabs,
+          documentConfig.fields,
+        );
         rememberFormTabs(formTabs);
         setFieldConfigState({
           ...documentConfig,
@@ -130,7 +137,11 @@ export function useContactConfigCore({
         setFieldConfigState({
           ...documentConfig,
           formTabs: fallbackTabs
-            ? mergeContactsFormTabsFromApi(documentConfig.formTabs, fallbackTabs)
+            ? mergeContactsFormTabsFromApi(
+                documentConfig.formTabs,
+                fallbackTabs,
+                documentConfig.fields,
+              )
             : documentConfig.formTabs,
         });
         hasHydratedTabsOnceRef.current = true;
@@ -163,9 +174,14 @@ export function useContactConfigCore({
   const updateConfigAsync = useCallback(async (nextConfig: FieldConfig): Promise<void> => {
     const saved = await saveFieldConfigAsync(nextConfig);
     const withTabs = { ...saved, formTabs: nextConfig.formTabs ?? saved.formTabs };
+    // Drop in-flight tab hydrates that may still hold pre-save Query document fields.
+    tabsAbortRef.current?.abort();
+    tabsAbortRef.current = null;
     rememberFormTabs(withTabs.formTabs);
+    setFieldConfigMemory(withTabs);
     setFieldConfigState(withTabs);
-  }, [rememberFormTabs]);
+    queryClient.setQueryData(CONTACTS_FIELD_CONFIG_QUERY_KEY, withTabs);
+  }, [queryClient, rememberFormTabs]);
 
   const updatePrefs = useCallback((newPrefs: Partial<ContactPreferences>) => {
     setPrefsState((currentPreferences) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { type TabDefinition } from "@mms/shared";
 import { type ModuleSettingsShape } from "@/hooks/useModuleConfig";
+import { moduleSettingsEditorFingerprint } from "./moduleSettingsEditorFingerprint";
 import { useModuleFieldsEditor } from "./useModuleFieldsEditor";
 import { useSavedFlash } from "./useSavedFlash";
 
@@ -73,14 +74,32 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     }
   }, [saved, flashSaved, clearSaved]);
 
-  // Sync draft whenever upstream settings change
+  // Content fingerprint — ignore fieldConfig object identity churn from Query/context.
+  const settingsRehydrateFingerprint = moduleSettingsEditorFingerprint({
+    fields: settings.fields,
+    enabledTabs: settings.enabledTabs,
+    requiredTabs: settings.requiredTabs,
+    formTabs: settings.formTabs as TabDefinition[] | undefined,
+    tabRegistry,
+    resolvedDefaultEnabledTabs,
+    defaultRequiredTabs,
+  });
+
+  // Sync preferences/settings draft only when persisted content changes — same
+  // fingerprint gate as fields-editor rehydrate (avoids identity-only churn).
+  // Always record the fingerprint so identity churn cannot replay a skipped sync.
+  const prevSettingsFingerprintRef = useRef<string | null>(null);
+  const settingsDraftDirtyRef = useRef(false);
   useEffect(() => {
-    if (settings) {
-      setSettingsDraft(settings);
-    }
-  }, [settings]);
+    if (!settings) return;
+    if (prevSettingsFingerprintRef.current === settingsRehydrateFingerprint) return;
+    prevSettingsFingerprintRef.current = settingsRehydrateFingerprint;
+    if (settingsDraftDirtyRef.current) return;
+    setSettingsDraft(settings);
+  }, [settings, settingsRehydrateFingerprint]);
 
   const upd = useCallback(<K extends keyof T>(field: K, value: T[K]): void => {
+    settingsDraftDirtyRef.current = true;
     setSettingsDraft((curr) => ({ ...curr, [field]: value }));
     setSaved(false);
   }, [setSaved]);
@@ -103,40 +122,60 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   const resetRef = useRef(fieldsEditor.resetAllState);
   resetRef.current = fieldsEditor.resetAllState;
 
-  // Rehydrate fields editor only when persisted settings / registry change.
-  // Do not depend on draft Sets — comparing draft vs settings snapped tab/field
-  // checkboxes back on every toggle.
-  useEffect(() => {
-    if (!settings) return;
+  const isDraftDirtyRef = useRef(fieldsEditor.isDraftDirty);
+  isDraftDirtyRef.current = fieldsEditor.isDraftDirty;
 
-    const coreTabKeys = new Set(tabRegistry.map((tab) => tab.key.toLowerCase()));
-    const customTabs = (settings.formTabs || []).filter(
+  const rehydrateInputRef = useRef({
+    settings,
+    tabRegistry,
+    resolvedDefaultEnabledTabs,
+    defaultRequiredTabs,
+  });
+  rehydrateInputRef.current = {
+    settings,
+    tabRegistry,
+    resolvedDefaultEnabledTabs,
+    defaultRequiredTabs,
+  };
+
+  // Rehydrate fields editor only when persisted settings *content* changes, and
+  // never over unsaved edits — a config reload landing mid-edit (custom-tab sync,
+  // Query refetch, WS invalidate) used to wipe freshly added fields and tabs.
+  useEffect(() => {
+    if (isDraftDirtyRef.current()) return;
+    const {
+      settings: currentSettings,
+      tabRegistry: currentTabRegistry,
+      resolvedDefaultEnabledTabs: currentDefaultEnabled,
+      defaultRequiredTabs: currentDefaultRequired,
+    } = rehydrateInputRef.current;
+    if (!currentSettings) return;
+
+    const coreTabKeys = new Set(currentTabRegistry.map((tab) => tab.key.toLowerCase()));
+    const customTabs = (currentSettings.formTabs || []).filter(
       (tab: TabDefinition) => !coreTabKeys.has(tab.key.toLowerCase()),
     );
     const currentActiveEnabledTabs = withLockedEnabledTabs(
-      settings.enabledTabs && settings.enabledTabs.length > 0
-        ? settings.enabledTabs
-        : resolvedDefaultEnabledTabs,
+      currentSettings.enabledTabs && currentSettings.enabledTabs.length > 0
+        ? currentSettings.enabledTabs
+        : currentDefaultEnabled,
     );
 
     const enabledSet = new Set(currentActiveEnabledTabs);
 
-    const updatedTabs = [...tabRegistry, ...customTabs].map((tab) => ({
+    const updatedTabs = [...currentTabRegistry, ...customTabs].map((tab) => ({
       ...tab,
       enabled: isLockedEnabledTab(tab.key) ? true : enabledSet.has(tab.key.toLowerCase()),
     }));
 
     resetRef.current(
       updatedTabs,
-      settings.fields || {},
+      currentSettings.fields || {},
       currentActiveEnabledTabs,
-      (settings.requiredTabs || defaultRequiredTabs).map((t) => t.toLowerCase()),
+      (currentSettings.requiredTabs || currentDefaultRequired).map((t) => t.toLowerCase()),
     );
   }, [
-    settings,
-    tabRegistry,
-    resolvedDefaultEnabledTabs,
-    defaultRequiredTabs,
+    settingsRehydrateFingerprint,
     withLockedEnabledTabs,
     isLockedEnabledTab,
   ]);
@@ -170,6 +209,9 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     } else {
       updateSettings(nextSettings);
     }
+    // Draft is now persisted — let the post-save reload rehydrate server truth.
+    settingsDraftDirtyRef.current = false;
+    fieldsEditor.markDraftPristine();
     if (options.markSaved !== false) setSaved(true);
   }, [
     settings,
@@ -197,4 +239,3 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     saveSettingsAsync,
   };
 }
-
