@@ -119,7 +119,7 @@ async function assertModuleRouteLayout(page: Page, path: string, ready: string):
   await assertVisibleTablesScrollWrapped(page, path);
 }
 
-test.describe.serial('Authenticated tenant shell responsive layout', () => {
+test.describe.serial('Authenticated tenant shell responsive layout', { tag: '@local-only' }, () => {
   test.beforeAll(() => {
     resetPlatformUsers();
   });

@@ -23,6 +23,10 @@ export interface TenantBootstrapCredentials {
  * Clears platform users so first-run setup is always available.
  */
 export function resetPlatformUsers(): void {
+  if (process.env.E2E_TARGET === 'production' || process.env.NODE_ENV === 'production') {
+    console.warn('[E2E SAFEGUARD] Skipping platform users reset on production environment.');
+    return;
+  }
   execSync('npx tsx src/scripts/reset-platform-users.ts', {
     cwd: backendDir,
     encoding: 'utf8',

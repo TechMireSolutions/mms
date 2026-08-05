@@ -18,7 +18,7 @@ import {
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-least-32-chars-long';
 
-test.describe.serial('Tenant Operations & Module Flows E2E', () => {
+test.describe.serial('Tenant Operations & Module Flows E2E', { tag: '@local-only' }, () => {
   const subdomain = `ops${Date.now()}`;
   const credentials: TenantBootstrapCredentials = {
     subdomain,

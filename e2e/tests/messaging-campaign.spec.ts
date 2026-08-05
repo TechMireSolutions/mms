@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
  * Lightweight unauthenticated smoke — authenticated messaging tiers are covered in
  * `onboarding-login.spec.ts` (serial suite after tenant onboard).
  */
-test.describe('Messaging Module E2E Flow', () => {
+test.describe('Messaging Module E2E Flow', { tag: '@smoke' }, () => {
   test('unauthenticated /messaging redirects away from tenant work shell', async ({ page }) => {
     await page.goto('/messaging');
     await page.waitForLoadState('domcontentloaded');

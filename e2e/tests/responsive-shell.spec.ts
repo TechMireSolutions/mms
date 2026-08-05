@@ -26,7 +26,7 @@ async function openPublicRoute(page: Page, url: string, ready?: string): Promise
   }
 }
 
-test.describe('Unknown tenant host redirect', () => {
+test.describe('Unknown tenant host redirect', { tag: '@smoke' }, () => {
   test('hard-redirects unregistered subdomain to apex tenant-not-found', async ({ page }) => {
     const missingSubdomain = `missing${Date.now()}`;
     await page.goto(`http://${missingSubdomain}.localhost:5173/settings`).catch(() => {});
@@ -48,7 +48,7 @@ test.describe('Unknown tenant host redirect', () => {
   });
 });
 
-test.describe('Public shell responsive layout', () => {
+test.describe('Public shell responsive layout', { tag: '@smoke' }, () => {
   for (const viewport of RESPONSIVE_VIEWPORTS) {
     for (const route of PUBLIC_ROUTES) {
       test(`${viewport.name} (${viewport.width}px) ${route.path} has no horizontal overflow`, async ({ page }) => {

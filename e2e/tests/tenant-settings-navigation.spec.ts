@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
  * Apex navigation smoke. Authenticated tenant settings are covered in
  * `onboarding-login.spec.ts` after onboard.
  */
-test.describe('Tenant Navigation and Module Tab Switching E2E Flow', () => {
+test.describe('Tenant Navigation and Module Tab Switching E2E Flow', { tag: '@smoke' }, () => {
   test('should render platform home page and expose a sign-in path', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');

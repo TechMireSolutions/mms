@@ -4,7 +4,7 @@ import { resetPlatformUsers } from '../helpers/tenantBootstrap.js';
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-least-32-chars-long';
 
-test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', () => {
+test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@local-only' }, () => {
   const subdomain = `testmadrasa${Date.now()}`;
   const adminEmail = `admin@${subdomain}.com`;
   const adminPassword = 'Madrasa@1234';

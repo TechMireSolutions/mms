@@ -24,6 +24,12 @@ export function useRelationshipTypeOptions(
     );
     if (!result.ok) {
       if (result.reason === "duplicate") {
+        const existingLabel = relationshipOptions.find(
+          (opt) => opt.trim().toLowerCase() === forward.trim().toLowerCase(),
+        );
+        if (existingLabel) {
+          return existingLabel;
+        }
         notify.warning(t("contacts.form.duplicateRelationshipPair"));
       }
       return null;

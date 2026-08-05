@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "test:e2e": "playwright test",
+    "test:e2e:prod": "E2E_TARGET=production playwright test --grep @smoke",
+    "test:e2e:smoke": "playwright test --grep @smoke",
+    "test:e2e:local": "playwright test --grep-invert @local-only",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

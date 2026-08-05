@@ -1,10 +1,16 @@
 import { expect, type Page } from '@playwright/test';
 
-export const RESPONSIVE_VIEWPORTS = [
-  { name: 'mobile', width: 375, height: 812 },
-  { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1440, height: 900 },
-] as const;
+const isProdTarget = process.env.E2E_TARGET === 'production';
+
+export const RESPONSIVE_VIEWPORTS = (
+  isProdTarget
+    ? [{ name: 'desktop', width: 1440, height: 900 }]
+    : [
+        { name: 'mobile', width: 375, height: 812 },
+        { name: 'tablet', width: 768, height: 1024 },
+        { name: 'desktop', width: 1440, height: 900 },
+      ]
+) as readonly { name: string; width: number; height: number }[];
 
 export type ResponsiveViewport = (typeof RESPONSIVE_VIEWPORTS)[number];
 

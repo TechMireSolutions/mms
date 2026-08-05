@@ -82,21 +82,24 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await expect(editJaneDialog).toBeVisible({ timeout: 15_000 });
   await editJaneDialog.getByRole('tab', { name: 'Relationship' }).click();
   await editJaneDialog.getByRole('button', { name: /Add relationship/i }).click();
+  // Link contact John Doe
   const relContactPicker = editJaneDialog.getByRole('combobox', { name: /Link contact/i }).first();
   await relContactPicker.fill('John Doe');
   const johnRelOption = page.getByRole('option', { name: /John Doe/ }).first();
   await expect(johnRelOption).toBeVisible({ timeout: 15_000 });
   await johnRelOption.click();
 
-  // Ensure relTypeSelect option Father is set if needed without leaving popover open
+  // Set relationship type to Father
   const relTypeSelect = editJaneDialog.locator('#relationship-type-0');
-  const currentRelValue = await relTypeSelect.getAttribute('value').catch(() => '');
-  if (!currentRelValue || !currentRelValue.toLowerCase().includes('father')) {
-    await relTypeSelect.click();
-    const fatherOption = page.getByRole('option', { name: /^Father$/i }).first();
-    if (await fatherOption.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await fatherOption.click();
-    }
+  await relTypeSelect.click();
+  const fatherOption = page.getByRole('option', { name: /^Father$/i }).first();
+  if (await fatherOption.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await fatherOption.click();
+  } else {
+    const addInput = page.getByPlaceholder(/Husband : Wife/i).first();
+    await expect(addInput).toBeVisible({ timeout: 10_000 });
+    await addInput.fill('Father : Child');
+    await addInput.press('Enter');
   }
 
   await waitForToastOverlayToClear(page, 'before saving Jane relationship');
@@ -132,6 +135,10 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
  * Executes backend class & enrollment seed script for a given subdomain
  */
 export function seedTestClassAndEnrollment(subdomain: string): void {
+  if (process.env.E2E_TARGET === 'production' || process.env.NODE_ENV === 'production') {
+    console.warn('[E2E SAFEGUARD] Skipping class seed on production environment.');
+    return;
+  }
   try {
     const output = execSync(`npx tsx src/scripts/seed-test-class.ts ${subdomain}`, {
       cwd: backendDir,
