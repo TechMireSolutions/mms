@@ -21,7 +21,7 @@ interface StudentDetailSessionsSectionProps {
 
 export function StudentDetailSessionsSection({ sessions }: StudentDetailSessionsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const emptyDash = t("contacts.table.emptyDash");
+  const emptyDash = t("students.table.emptyDash");
 
   return (
     <div className="space-y-3">

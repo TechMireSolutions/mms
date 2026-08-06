@@ -2,7 +2,7 @@ import { useMemo, type ComponentProps } from "react";
 import type { Contact } from "@mms/shared";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
-import { getDirectoryPageSelection } from "@/tenant/features/contacts/hooks/contactsDirectorySelection";
+import { getDirectoryPageSelection } from "@/lib/directorySelection";
 import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
 import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
 import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";

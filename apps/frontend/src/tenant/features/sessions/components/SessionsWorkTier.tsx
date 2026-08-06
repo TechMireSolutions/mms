@@ -59,6 +59,7 @@ interface SessionsWorkTierProps {
   onRestore: (id: string) => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
+  onClearSelection: () => void;
   onPageChange: (page: number) => void;
 }
 
@@ -105,6 +106,7 @@ export function SessionsWorkTier({
   onRestore,
   onRequestBulkDelete,
   onRequestBulkRestore,
+  onClearSelection,
   onPageChange,
 }: SessionsWorkTierProps): React.JSX.Element {
   return (
@@ -165,6 +167,7 @@ export function SessionsWorkTier({
         onRestore={onRestore}
         onRequestBulkDelete={onRequestBulkDelete}
         onRequestBulkRestore={onRequestBulkRestore}
+        onClearSelection={onClearSelection}
         onPageChange={onPageChange}
       />
     </motion.div>

@@ -1,8 +1,10 @@
 import type { ReactElement } from 'react';
+import { Users } from 'lucide-react';
 import {
   BulkSelectionBar,
 } from '@/components/ui/BulkSelectionBar';
 import {
+  BulkSelectionClearAction,
   BulkSelectionDeleteAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
@@ -54,9 +56,17 @@ export function TeacherListSelectionBar({
 
   return (
     <BulkSelectionBar
-      placement="floating"
+      placement="inline"
+      tone="glass"
       selectedCount={selectedIds.length}
       countLabel={t('teachers.selectedCount', { count: selectedIds.length })}
+      leading={<Users className="w-4 h-4 text-primary" aria-hidden />}
+      trailing={
+        <BulkSelectionClearAction
+          label={t('common.deselect')}
+          onClick={onClearSelection}
+        />
+      }
     >
       {showDeleted ? (
         canDelete && (

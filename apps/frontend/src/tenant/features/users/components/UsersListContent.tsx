@@ -13,6 +13,8 @@ interface UsersListContentProps {
   viewMode: WorkDirectoryViewMode;
   users: SystemUser[];
   selectedIds: string[];
+  allSelected: boolean;
+  someSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
@@ -35,6 +37,8 @@ interface UsersListContentProps {
 export function UsersListContent({
   users,
   selectedIds,
+  allSelected,
+  someSelected,
   canWrite,
   canDelete,
   showDeleted,
@@ -100,6 +104,8 @@ export function UsersListContent({
       ) : (
         <UsersListDesktopTable
           {...listProps}
+          allSelected={allSelected}
+          someSelected={someSelected}
           onToggleAll={onToggleAll}
           getColumnWidth={getColumnWidth}
           onColumnResize={onColumnResize}

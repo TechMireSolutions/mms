@@ -82,6 +82,7 @@ export default function Sessions() {
               onRestore={c.handleRestore}
               onRequestBulkDelete={() => c.setConfirmBulkDeleteOpen(true)}
               onRequestBulkRestore={() => c.setConfirmBulkRestoreOpen(true)}
+              onClearSelection={c.clearSelection}
               onPageChange={c.setListPage}
             />
           ) : c.activeTab === 'reports' ? (

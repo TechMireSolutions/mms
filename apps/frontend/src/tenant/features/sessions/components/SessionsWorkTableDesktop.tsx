@@ -87,7 +87,7 @@ export function SessionsWorkTableDesktop({
                 <Checkbox
                   checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
                   onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-                  aria-label={t("sessions.selectedCount", { count: sessions.length })}
+                  aria-label={t("sessions.table.selectAll")}
                 />
               </th>
             )}
@@ -127,20 +127,40 @@ export function SessionsWorkTableDesktop({
         <tbody className="divide-y divide-border/50">
           {sessions.map((sessionItem) => {
             const { totalEnrolled, totalCapacity } = getSessionEnrollmentTotals(sessionItem);
+            const isSelected = selectedIds.includes(sessionItem.id);
             return (
-              <tr key={sessionItem.id} onClick={() => !showDeleted && onOpenDetail(sessionItem)} className="group cursor-pointer transition-colors hover:bg-muted/20">
+              <tr
+                key={sessionItem.id}
+                className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
+              >
                 {canSelectSessions && (
-                  <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
-                    <Checkbox checked={selectedIds.includes(sessionItem.id)} onCheckedChange={(checked) => onToggleSelectedSession(sessionItem.id, checked === true)} aria-label={sessionItem.name} />
+                  <td className="px-4 py-3">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => onToggleSelectedSession(sessionItem.id, checked === true)}
+                      aria-label={sessionItem.name}
+                    />
                   </td>
                 )}
-                {isColumnVisible("name") && <td className="px-4 py-3 font-semibold text-foreground transition-colors group-hover:text-primary">{sessionItem.name}</td>}
+                {isColumnVisible("name") && (
+                  <td className="px-4 py-3">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => onOpenDetail(sessionItem)}
+                      className="min-h-11 h-auto max-w-full p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
+                      title={sessionItem.name}
+                    >
+                      <span className="block truncate">{sessionItem.name}</span>
+                    </Button>
+                  </td>
+                )}
                 {isColumnVisible("type") && <td className="px-4 py-3"><StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" /></td>}
                 {isColumnVisible("duration") && <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}</td>}
                 {isColumnVisible("fee") && <td className="px-4 py-3 text-xs font-medium">{formatMoney(sessionItem.baseFee, sessionItem.currency)}</td>}
                 {isColumnVisible("enrolled") && <td className="px-4 py-3 text-xs text-muted-foreground">{totalEnrolled}/{totalCapacity || t("common.notSpecified")}</td>}
                 {isColumnVisible("status") && <td className="px-4 py-3"><StatusBadge status={sessionItem.status} config={statusConfig} size="sm" /></td>}
-                {canDelete && <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>{renderSessionListActions(sessionItem.id)}</td>}
+                {canDelete && <td className="px-4 py-3">{renderSessionListActions(sessionItem.id)}</td>}
               </tr>
             );
           })}

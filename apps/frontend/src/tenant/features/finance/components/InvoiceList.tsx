@@ -12,6 +12,10 @@ import { InvoiceListContent } from "@/tenant/features/finance/components/Invoice
 import { InvoiceListSelectionBar } from "@/tenant/features/finance/components/InvoiceListSelectionBar";
 import { InvoiceListToolbar } from "@/tenant/features/finance/components/InvoiceListToolbar";
 import { INVOICE_LIST_COLUMN_KEYS } from "@/tenant/features/finance/components/invoiceListContentShared";
+import {
+  getDirectoryPageSelection,
+  togglePageIdsInSelection,
+} from "@/lib/directorySelection";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -92,7 +96,8 @@ export function InvoiceList({
     });
   }, [invoices, search, filterStatus]);
 
-  const allSelected = filtered.length > 0 && filtered.every((invoice) => selectedIds.includes(invoice.id));
+  const pageIds = filtered.map((invoice) => invoice.id);
+  const { allSelected } = getDirectoryPageSelection(pageIds, selectedIds);
 
   const toggleStatus = (status: string) => setFilterStatus((currentStatuses) => currentStatuses.includes(status)
     ? currentStatuses.filter((selectedStatus) => selectedStatus !== status)
@@ -122,6 +127,7 @@ export function InvoiceList({
           selectedCount={selectedIds.length}
           showDeleted={showDeleted}
           onRequestBulkAction={() => setConfirmBulkOpen(true)}
+          onClearSelection={() => setSelectedIds([])}
         />
       )}
 
@@ -140,7 +146,7 @@ export function InvoiceList({
         formatCurrency={formatCurrency}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
-        onSelectAll={(checked) => setSelectedIds(checked ? filtered.map((invoice) => invoice.id) : [])}
+        onSelectAll={(_checked) => setSelectedIds((current) => togglePageIdsInSelection(current, pageIds))}
         onToggleSelected={toggleSelected}
         onView={onView}
         onRecord={onRecord}

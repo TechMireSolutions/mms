@@ -61,7 +61,7 @@ export const STUDENTS_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['table', 'cards'] as const,
-    bulkActions: ['export', 'delete', 'status'] as const,
+    bulkActions: ['whatsapp', 'sms', 'email', 'export', 'delete', 'status'] as const,
   },
   setupSubTabs: ['fields', 'preferences', 'lookups'] as const,
   softDelete: {

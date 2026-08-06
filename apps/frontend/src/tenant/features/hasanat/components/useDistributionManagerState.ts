@@ -3,6 +3,11 @@ import type { Distribution } from '@/lib/data/hasanatData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import {
+  getDirectoryPageSelection,
+  toggleIdInSelection,
+  togglePageIdsInSelection,
+} from "@/lib/directorySelection";
 
 type DistributionStatus = Distribution["status"];
 
@@ -98,10 +103,15 @@ export function useDistributionManagerState({
   };
 
   const toggleSelected = (id: string) => {
-    setSelectedIds((prev) => prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]);
+    setSelectedIds((prev) => toggleIdInSelection(prev, id));
   };
 
-  const allFilteredSelected = filtered.length > 0 && filtered.every((distribution) => selectedIds.includes(distribution.id));
+  const pageIds = filtered.map((distribution) => distribution.id);
+  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
+
+  const toggleSelectAll = () => {
+    setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
+  };
 
   const handleBulkAction = async () => {
     if (selectedIds.length === 0) return;
@@ -132,6 +142,7 @@ export function useDistributionManagerState({
     changeStatus,
     handleRowTrashAction,
     toggleSelected,
+    toggleSelectAll,
     allFilteredSelected,
     handleBulkAction,
   };

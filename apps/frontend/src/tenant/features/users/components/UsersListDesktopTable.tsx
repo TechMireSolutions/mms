@@ -12,6 +12,8 @@ import { UsersListRowActions } from '@/tenant/features/users/components/UsersLis
 interface UsersListDesktopTableProps {
   users: SystemUser[];
   selectedIds: string[];
+  allSelected: boolean;
+  someSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
@@ -30,6 +32,8 @@ interface UsersListDesktopTableProps {
 export function UsersListDesktopTable({
   users,
   selectedIds,
+  allSelected,
+  someSelected,
   canWrite,
   canDelete,
   showDeleted,
@@ -54,9 +58,9 @@ export function UsersListDesktopTable({
             {canDelete && (
               <th className="w-8 px-3 py-2.5">
                 <Checkbox
-                  checked={selectedIds.length === users.length && users.length > 0}
+                  checked={someSelected ? 'indeterminate' : allSelected}
                   onCheckedChange={onToggleAll}
-                  aria-label={t('users.selectAll')}
+                  aria-label={allSelected ? t('common.deselect') : t('users.selectAll')}
                 />
               </th>
             )}

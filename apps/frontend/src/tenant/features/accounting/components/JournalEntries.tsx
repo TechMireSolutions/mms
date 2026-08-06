@@ -98,6 +98,7 @@ export function JournalEntries(props: JournalEntriesProps) {
       onExportCsv={controller.exportCSV}
       onToggleSelected={controller.toggleSelected}
       onToggleAll={controller.toggleAllFiltered}
+      onClearSelection={controller.clearSelection}
       onSave={controller.handleSave}
       onCloseModal={() => {
         controller.setModal(null);

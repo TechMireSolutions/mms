@@ -76,12 +76,13 @@ export function useSessionsPageController() {
     someVisibleSelected,
     toggleSelectAll,
     toggleSelectedSession,
+    clearSelection,
   } = useSessionsSelection(sessions);
 
   useEffect(() => {
     setListPage(1);
     setSelectedIds([]);
-  }, [search, filterStatus, filterType, showDeleted, sortField, sortDir, viewMode, setSelectedIds]);
+  }, [search, filterStatus, filterType, showDeleted, sortField, sortDir, setSelectedIds]);
 
   useModuleCreateHotkey({
     enabled: canWrite && !showDeleted,
@@ -202,6 +203,7 @@ export function useSessionsPageController() {
     handleSort,
     toggleSelectAll,
     toggleSelectedSession,
+    clearSelection,
     handleRestore,
     handleSave,
     handleUpdate,

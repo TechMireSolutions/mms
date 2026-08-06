@@ -1,7 +1,9 @@
 import { calcAge, formatDate, primaryResponsibleAdultDisplayName } from "@mms/shared";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { TableCell } from "@/components/ui/table";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -26,7 +28,6 @@ type StudentListDesktopTableRowProps = Pick<
   | "isFieldEnabled"
   | "columnRegistry"
   | "onSelectOne"
-  | "onRowClick"
   | "onViewStudent"
   | "onEdit"
   | "onDelete"
@@ -51,7 +52,6 @@ export function StudentListDesktopTableRow({
   isFieldEnabled,
   columnRegistry,
   onSelectOne,
-  onRowClick,
   onViewStudent,
   onEdit,
   onDelete,
@@ -59,10 +59,11 @@ export function StudentListDesktopTableRow({
   onOpenComposer,
 }: StudentListDesktopTableRowProps) {
   const { t } = useTranslation();
-  const emptyDash = t("contacts.table.emptyDash");
+  const emptyDash = t("students.table.emptyDash");
   const studentIdStr = String(studentRow.id);
   const isSelected = selectedIds.includes(studentIdStr);
   const age = calcAge(studentRow.dob);
+  const displayName = studentRow.name || "";
   const sessionNames = sessions
     .filter((session) => studentRow.enrolledSessions?.includes(session.id))
     .map((session) => session.name);
@@ -79,25 +80,31 @@ export function StudentListDesktopTableRow({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: Math.min(rowIndex * 0.03, 0.2) }}
-      onClick={(event) => onRowClick(event, studentRow)}
-      className={`hover:bg-muted/20 cursor-pointer transition-colors group ${
+      className={`hover:bg-muted/20 transition-colors group ${
         isSelected ? "bg-primary/5" : ""
       }`}
     >
-      <td className="px-4 py-3">
+      <TableCell className="px-4 py-3">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelectOne(studentIdStr)}
+          aria-label={t("students.table.selectStudent", { name: displayName })}
         />
-      </td>
-      <td className="px-4 py-3">
+      </TableCell>
+      <TableCell className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <UserAvatar id={studentIdStr} name={studentRow.name || ""} className="w-8 h-8 rounded-full text-xs font-bold" />
-          <div>
+          <UserAvatar id={studentIdStr} name={displayName} className="w-8 h-8 rounded-full text-xs font-bold" />
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                {studentRow.name}
-              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onViewStudent(studentRow)}
+                className="min-h-11 h-auto max-w-full p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
+                title={displayName}
+              >
+                <span className="block truncate">{displayName}</span>
+              </Button>
               <GrBadge grNumber={studentRow.grNumber} />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -105,26 +112,26 @@ export function StudentListDesktopTableRow({
             </p>
           </div>
         </div>
-      </td>
+      </TableCell>
       {isColumnVisible("dob") ? (
-        <td className="px-4 py-3 hidden sm:table-cell">
+        <TableCell className="px-4 py-3 hidden sm:table-cell">
           <p className="text-sm font-medium text-foreground">
             {age ? t("students.list.ageYears", { age }) : emptyDash}
           </p>
           <p className="text-xs text-muted-foreground">
             {formatDate(studentRow.dob, true)}
           </p>
-        </td>
+        </TableCell>
       ) : null}
       {isColumnVisible("parents") ? (
-        <td className="px-4 py-3 hidden md:table-cell">
+        <TableCell className="px-4 py-3 hidden md:table-cell">
           <p className="text-sm text-foreground">
             {primaryResponsibleAdultDisplayName(studentRow) || emptyDash}
           </p>
-        </td>
+        </TableCell>
       ) : null}
       {isColumnVisible("sessions") ? (
-        <td className="px-4 py-3 hidden lg:table-cell">
+        <TableCell className="px-4 py-3 hidden lg:table-cell">
           <div className="flex flex-wrap gap-1">
             {sessionNames.length === 0 ? (
               <span className="text-xs text-muted-foreground italic">
@@ -141,12 +148,12 @@ export function StudentListDesktopTableRow({
               ))
             )}
           </div>
-        </td>
+        </TableCell>
       ) : null}
       {isColumnVisible("status") ? (
-        <td className="px-4 py-3 hidden sm:table-cell">
+        <TableCell className="px-4 py-3 hidden sm:table-cell">
           <StatusBadge status={studentRow.status || "active"} config={statusBadgeConfig} />
-        </td>
+        </TableCell>
       ) : null}
       {customColumns.map((col) => {
         const fieldKey = studentCustomFieldKeyFromColumn(col.key);
@@ -154,14 +161,14 @@ export function StudentListDesktopTableRow({
           ? (studentRow as Record<string, unknown>)[fieldKey]
           : undefined;
         return (
-          <td key={col.key} className="px-4 py-3 hidden xl:table-cell">
+          <TableCell key={col.key} className="px-4 py-3 hidden xl:table-cell">
             <p className="text-sm text-foreground truncate">
               {formatStudentListCustomValue(raw, t)}
             </p>
-          </td>
+          </TableCell>
         );
       })}
-      <td className="px-4 py-3">
+      <TableCell className="px-4 py-3">
         <StudentListActionsMenu
           student={studentRow}
           studentId={studentIdStr}
@@ -178,7 +185,7 @@ export function StudentListDesktopTableRow({
           onRestore={onRestore}
           onOpenComposer={onOpenComposer}
         />
-      </td>
+      </TableCell>
     </motion.tr>
   );
 }

@@ -1,29 +1,36 @@
-import { useEffect, useMemo, useState } from 'react';
-import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
-import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
-import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { type Student, STUDENTS_MODULE_MANIFEST, resolveStudentStatuses } from '@mms/shared';
-import { useStudentCount } from '@/tenant/features/students/hooks/useStudentCount';
-import { useStudentsPaginated, useStudentMutations, type StudentRecord } from '@/tenant/features/students/hooks/useStudents';
-import { useStudentColumnLayout } from '@/tenant/features/students/hooks/useStudentColumnLayout';
-import { useStudentConfig } from '@/hooks/useStandardModuleConfig';
-import { useGrMigration } from '@/tenant/features/students/hooks/useGrMigration';
-import type { StudentListSortField } from '@/tenant/features/students/components/StudentListContentTypes';
+import { useEffect, useMemo, useState } from "react";
+import { usePersistedTabState } from "@/hooks/usePersistedTabState";
+import { useModuleWorkKeyboardShortcuts } from "@/hooks/useModuleWorkKeyboardShortcuts";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { type Student, STUDENTS_MODULE_MANIFEST, resolveStudentStatuses } from "@mms/shared";
+import { useStudentCount } from "@/tenant/features/students/hooks/useStudentCount";
+import { useStudentsPaginated, useStudentMutations } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
+import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
+import { useGrMigration } from "@/tenant/features/students/hooks/useGrMigration";
+import { useStudentsDirectoryFilters } from "@/tenant/features/students/hooks/useStudentsDirectoryFilters";
+import { useStudentsSelectionTargets } from "@/tenant/features/students/hooks/useStudentsSelectionTargets";
+import { useStudentsWorkActions } from "@/tenant/features/students/hooks/useStudentsWorkActions";
+import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+
+/** Stable id for Students Work search — used by `/` / Cmd+K focus shortcut. */
+export const STUDENTS_WORK_SEARCH_INPUT_ID = "students-work-search";
 
 const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
-  name: 'name',
-  age: 'dob',
-  fatherName: 'fatherName',
-  status: 'status',
-  grNumber: 'grNumber',
+  name: "name",
+  age: "dob",
+  fatherName: "fatherName",
+  status: "status",
+  grNumber: "grNumber",
 };
 
 export function useStudentsPageController() {
   const {
     canWrite,
     canDelete,
+    canExport,
     canReports: canViewReports,
     canViewSetup,
     canEditSetup,
@@ -37,58 +44,52 @@ export function useStudentsPageController() {
   const mutations = useStudentMutations();
   const { settings, statuses: configuredStatuses, genderFilters } = useStudentConfig();
   const studentStatusOptions = resolveStudentStatuses(configuredStatuses);
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('students_active_tab', 'work');
+  const [activeTab, setActiveTab] = usePersistedTabState<string>("students_active_tab", "work");
   const [showStudentForm, setShowStudentForm] = useState(false);
-  const [listPage, setListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [editStudent, setEditStudent] = useState<Student | null>(null);
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
-  const [sortField, setSortField] = useState<StudentListSortField | null>('grNumber');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useGrMigration(activeTab, canEditSetup);
 
   const columnLayout = useStudentColumnLayout(settings);
+  const directory = useStudentsDirectoryFilters();
+  const { setListPage } = directory;
 
-  const [studentSearch, setStudentSearch] = useState('');
-  const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
-  const [studentFilterGender, setStudentFilterGender] = useState('');
-  const [editStudent, setEditStudent] = useState<Student | null>(null);
+  useEffect(() => {
+    setListPage(1);
+  }, [viewMode, setListPage]);
 
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
+  useModuleWorkKeyboardShortcuts({
+    searchInputId: STUDENTS_WORK_SEARCH_INPUT_ID,
+    selectedCount: directory.selectedIds.length,
+    hasActiveFilters: directory.hasActiveFilters,
+    clearFilters: directory.clearFilters,
+    clearSelection: directory.clearSelection,
+    canWrite,
+    showDeleted: directory.showDeleted,
     onCreate: () => {
       setEditStudent(null);
       setShowStudentForm(true);
     },
   });
 
-  const useServerWork = activeTab === 'work';
+  const useServerWork = activeTab === "work";
   const workLimit = STUDENTS_MODULE_MANIFEST.defaultPageSize;
 
   const workPageQuery = useStudentsPaginated({
-    page: listPage,
+    page: directory.listPage,
     limit: workLimit,
-    search: studentSearch,
-    status: studentFilterStatus.length > 0 ? studentFilterStatus.join(',') : undefined,
-    gender: studentFilterGender || undefined,
-    sortField: sortField ? SORT_FIELD_TO_API[sortField] : undefined,
-    sortDir: sortField ? sortDir : undefined,
-    includeDeleted: showDeleted,
+    search: directory.studentSearch,
+    status:
+      directory.studentFilterStatus.length > 0
+        ? directory.studentFilterStatus.join(",")
+        : undefined,
+    gender: directory.studentFilterGender || undefined,
+    sortField: directory.sortField ? SORT_FIELD_TO_API[directory.sortField] : undefined,
+    sortDir: directory.sortField ? directory.sortDir : undefined,
+    includeDeleted: directory.showDeleted,
     enabled: useServerWork,
   });
-
-  useEffect(() => {
-    setListPage(1);
-  }, [studentSearch, studentFilterStatus, studentFilterGender, viewMode, showDeleted, sortField, sortDir]);
-
-  const handleServerSort = (field: StudentListSortField) => {
-    if (sortField === field) {
-      setSortDir((current) => (current === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDir('asc');
-    }
-  };
 
   const workStudents = useMemo(
     () => (workPageQuery.data?.students ?? []) as Student[],
@@ -96,59 +97,76 @@ export function useStudentsPageController() {
   );
   const shownCount = workPageQuery.data?.total ?? 0;
 
-  const handleSaveStudent = async (studentToSave: Student) => {
-    if (editStudent) {
-      await mutations.updateStudent.mutateAsync({
-        id: String(studentToSave.id),
-        student: studentToSave as StudentRecord,
-      });
-    } else {
-      await mutations.createStudent.mutateAsync(studentToSave as StudentRecord);
-    }
+  const selectedTargets = useStudentsSelectionTargets({
+    selectedIds: directory.selectedIds,
+    workStudents,
+  });
+
+  const workActions = useStudentsWorkActions({ editStudent, mutations });
+
+  const openCreateForm = () => {
+    setEditStudent(null);
+    setShowStudentForm(true);
   };
 
-  const toggleStudentStatus = (status: string) =>
-    setStudentFilterStatus((selectedStatuses) =>
-      selectedStatuses.includes(status)
-        ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
-        : [...selectedStatuses, status],
-    );
+  const openEditForm = (studentToEdit: Student) => {
+    setEditStudent(studentToEdit);
+    setShowStudentForm(true);
+  };
+
+  const closeStudentForm = () => {
+    setShowStudentForm(false);
+    setEditStudent(null);
+  };
 
   return {
     canWrite,
     canDelete,
+    canExport,
     visibleTabs,
     serverCount,
-    mutations,
     settings,
     studentStatusOptions,
     genderFilters,
     activeTab,
     setActiveTab,
     showStudentForm,
-    setShowStudentForm,
-    showDeleted,
-    setShowDeleted,
-    columnLayout,
-    studentSearch,
-    setStudentSearch,
-    studentFilterStatus,
-    setStudentFilterStatus,
-    studentFilterGender,
-    setStudentFilterGender,
     editStudent,
-    setEditStudent,
+    openCreateForm,
+    openEditForm,
+    closeStudentForm,
+    showDeleted: directory.showDeleted,
+    toggleShowDeleted: directory.toggleShowDeleted,
+    columnLayout,
+    studentSearch: directory.studentSearch,
+    setStudentSearch: directory.setStudentSearch,
+    studentFilterStatus: directory.studentFilterStatus,
+    studentFilterGender: directory.studentFilterGender,
+    setStudentFilterGender: directory.setStudentFilterGender,
     useServerWork,
     viewMode,
     setViewMode,
     workPageQuery,
     workStudents,
     shownCount,
-    handleSaveStudent,
-    toggleStudentStatus,
-    setListPage,
-    sortField,
-    sortDir,
-    handleServerSort,
+    selectedIds: directory.selectedIds,
+    selectedTargets,
+    handleSelectOne: directory.handleSelectOne,
+    handleSelectAll: directory.handleSelectAll,
+    clearSelection: directory.clearSelection,
+    handleSaveStudent: workActions.handleSaveStudent,
+    handleDelete: workActions.handleDelete,
+    handleRestore: workActions.handleRestore,
+    handleBulkDelete: workActions.handleBulkDelete,
+    handleBulkRestore: workActions.handleBulkRestore,
+    handleBulkStatusChange: workActions.handleBulkStatusChange,
+    toggleStudentStatus: directory.toggleStudentStatus,
+    setListPage: directory.setListPage,
+    sortField: directory.sortField,
+    sortDir: directory.sortDir,
+    handleServerSort: directory.handleServerSort,
+    clearFilters: directory.clearFilters,
+    hasActiveFilters: directory.hasActiveFilters,
+    bulkActions: STUDENTS_MODULE_MANIFEST.work.bulkActions,
   };
 }

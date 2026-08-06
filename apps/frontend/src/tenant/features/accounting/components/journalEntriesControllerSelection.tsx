@@ -1,5 +1,10 @@
 import type { Dispatch, FormEvent, ReactNode, SetStateAction } from 'react';
 import type { JournalEntry } from '@/lib/data/accountingData';
+import {
+  getDirectoryPageSelection,
+  toggleIdInSelection,
+  togglePageIdsInSelection,
+} from '@/lib/directorySelection';
 import { JournalEntryActions } from '@/tenant/features/accounting/components/JournalEntryActions';
 import { parseNaturalLanguage, type QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
 
@@ -8,18 +13,17 @@ export function createJournalSelectionHandlers(
   selectedIds: string[],
   setSelectedIds: Dispatch<SetStateAction<string[]>>,
 ) {
+  const pageIds = filtered.map((entry) => entry.id);
+
   const toggleSelected = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id],
-    );
+    setSelectedIds((prev) => toggleIdInSelection(prev, id));
   };
 
-  const toggleAllFiltered = (checked: boolean) => {
-    if (checked) setSelectedIds(filtered.map((entry) => entry.id));
-    else setSelectedIds([]);
+  const toggleAllFiltered = (_checked: boolean) => {
+    setSelectedIds((prev) => togglePageIdsInSelection(prev, pageIds));
   };
 
-  const allFilteredSelected = filtered.length > 0 && filtered.every((entry) => selectedIds.includes(entry.id));
+  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
 
   return { toggleSelected, toggleAllFiltered, allFilteredSelected };
 }

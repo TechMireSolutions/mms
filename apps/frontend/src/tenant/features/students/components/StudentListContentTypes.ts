@@ -1,4 +1,4 @@
-import type { MouseEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { ModuleColumnRegistryEntry, Student, toMessagingRecipient } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -26,7 +26,6 @@ interface StudentListSelectionProps {
   /** Tenant Work column registry (system + custom:*). */
   columnRegistry: ModuleColumnRegistryEntry[];
   onSelectOne: (id: string) => void;
-  onRowClick: (event: MouseEvent, student: Student) => void;
   onViewStudent: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: string, deletionReason?: string) => void | Promise<void>;
@@ -63,8 +62,7 @@ export interface StudentListTableProps extends StudentListSelectionProps {
 export interface StudentListContentProps extends StudentListTableProps {
   students: Student[];
   viewMode: WorkDirectoryViewMode;
-  currentPage: number;
-  pageSize: number;
-  hasServerPagination: boolean;
-  onPageChange: (page: number) => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
+  onShowActive?: () => void;
 }

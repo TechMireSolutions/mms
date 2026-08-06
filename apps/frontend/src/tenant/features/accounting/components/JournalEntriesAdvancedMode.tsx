@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import { BulkSelectionClearAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
 import { Button } from "@/components/ui/button";
 import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
@@ -56,6 +56,7 @@ interface JournalEntriesAdvancedModeProps {
   onExportCsv: () => void;
   onToggleSelected: (id: string) => void;
   onToggleAll: (checked: boolean) => void;
+  onClearSelection: () => void;
   onSave: (entry: JournalEntry) => void | Promise<void>;
   onCloseModal: () => void;
   onEditSelected: () => void;
@@ -72,9 +73,16 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
     <section aria-label={t("accounting.journal.advancedAria")} className="space-y-4">
       {props.canDelete && (
         <BulkSelectionBar
-          placement="floating"
+          placement="inline"
+          tone="glass"
           selectedCount={props.selectedIds.length}
           countLabel={t("accounting.trash.selected", { count: props.selectedIds.length })}
+          trailing={
+            <BulkSelectionClearAction
+              label={t("common.deselect")}
+              onClick={props.onClearSelection}
+            />
+          }
         >
           {props.showDeleted ? (
             <BulkSelectionRestoreAction

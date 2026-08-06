@@ -175,3 +175,26 @@ export function BulkSelectionStatusAction({
     </DropdownMenu>
   );
 }
+
+export interface BulkSelectionClearActionProps {
+  label: string;
+  onClick: () => void;
+}
+
+/** Trailing Deselect control for Work bulk bars. */
+export function BulkSelectionClearAction({
+  label,
+  onClick,
+}: BulkSelectionClearActionProps): ReactElement {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={onClick}
+      className="text-muted-foreground hover:text-foreground font-medium"
+    >
+      {label}
+    </Button>
+  );
+}

@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { DEFAULT_TEACHERS_SETTINGS, type AppTranslationKey, toTitleCase } from '@mms/shared';
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
+import {
+  getDirectoryPageSelection,
+  toggleIdInSelection,
+  togglePageIdsInSelection,
+} from '@/lib/directorySelection';
 import type { Teacher } from '@/lib/data/teachersData';
 import type { TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -111,24 +116,16 @@ export function useTeacherListState({
     }
   };
 
-  const allSelected = sorted.length > 0 && selectedIds.length === sorted.length;
-  const someSelected = selectedIds.length > 0 && selectedIds.length < sorted.length;
+  const pageIds = sorted.map((teacher) => String(teacher.id));
+  const { allSelected, someSelected } = getDirectoryPageSelection(pageIds, selectedIds);
   const selectedTeachers = teachers.filter((teacher) => selectedIds.includes(String(teacher.id)));
 
   const handleSelectAll = () => {
-    if (selectedIds.length === sorted.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(sorted.map((teacher) => String(teacher.id)));
-    }
+    setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
   };
 
   const handleSelectOne = (id: string) => {
-    setSelectedIds((previousSelectedIds) =>
-      previousSelectedIds.includes(id)
-        ? previousSelectedIds.filter((selectedId) => selectedId !== id)
-        : [...previousSelectedIds, id],
-    );
+    setSelectedIds((previousSelectedIds) => toggleIdInSelection(previousSelectedIds, id));
   };
 
   return {

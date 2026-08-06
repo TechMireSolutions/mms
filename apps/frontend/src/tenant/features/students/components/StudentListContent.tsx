@@ -1,7 +1,7 @@
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { ListPagination } from "@/components/ui/ListPagination";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentListCards } from "@/tenant/features/students/components/StudentListCards";
 import { StudentListDesktopTable } from "@/tenant/features/students/components/StudentListDesktopTable";
@@ -16,53 +16,59 @@ export type {
 
 export function StudentListContent(props: StudentListContentProps) {
   const { t } = useTranslation();
+  const {
+    hasActiveFilters = false,
+    showDeleted,
+    canWrite,
+    onClearFilters,
+    onShowActive,
+  } = props;
 
   if (props.paginatedStudents.length === 0) {
+    const emptyDescription = hasActiveFilters
+      ? t("students.tryAdjustingFilters")
+      : showDeleted
+        ? t("students.emptyTrashHint")
+        : canWrite
+          ? t("students.clickAddStudent")
+          : t("students.emptyDirectoryReadOnly");
+
+    const emptyAction = hasActiveFilters && onClearFilters ? (
+      <Button type="button" variant="outline" size="sm" onClick={onClearFilters} className="gap-1.5">
+        <RefreshCw className="w-3 h-3" /> {t("students.clearFilters")}
+      </Button>
+    ) : showDeleted && onShowActive ? (
+      <Button type="button" variant="outline" size="sm" onClick={onShowActive} className="gap-1.5">
+        <RefreshCw className="w-3 h-3" /> {t("students.showActive")}
+      </Button>
+    ) : null;
+
     return (
-      <div className={`${WORK_SURFACE} overflow-hidden`}>
+      <div className={`${WORK_SURFACE} border-border/40 p-6`}>
         <EmptyState
           variant="dashed"
           icon={GraduationCap}
-          title={t("students.list.emptyTitle")}
-          description={t("students.list.emptyDesc")}
+          title={
+            hasActiveFilters
+              ? t("students.noStudentsMatchFilters")
+              : showDeleted
+                ? t("students.noDeletedStudents")
+                : t("students.noStudentsYet")
+          }
+          description={emptyDescription}
+          action={emptyAction}
         />
       </div>
     );
   }
 
   if (props.viewMode === "cards") {
-    return (
-      <div className="space-y-4">
-        <StudentListCards {...props} />
-        {!props.hasServerPagination ? (
-          <ListPagination
-            page={props.currentPage}
-            total={props.students.length}
-            limit={props.pageSize}
-            onPageChange={props.onPageChange}
-            i18nNamespace="students"
-            variant="range"
-          />
-        ) : null}
-      </div>
-    );
+    return <StudentListCards {...props} />;
   }
 
   return (
     <div className={`${WORK_SURFACE} overflow-hidden`}>
-      <div className="overflow-x-auto">
-        <StudentListDesktopTable {...props} />
-      </div>
-      {props.students.length > 0 && !props.hasServerPagination ? (
-        <ListPagination
-          page={props.currentPage}
-          total={props.students.length}
-          limit={props.pageSize}
-          onPageChange={props.onPageChange}
-          i18nNamespace="students"
-          variant="range"
-        />
-      ) : null}
+      <StudentListDesktopTable {...props} />
     </div>
   );
 }

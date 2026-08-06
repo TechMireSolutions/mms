@@ -54,7 +54,7 @@ export function StudentRegistrationSection({
 
   const registeredDateText = studentDraft.registeredDate
     ? formatDateTime(studentDraft.registeredDate, true)
-    : t("contacts.table.emptyDash");
+    : t("students.table.emptyDash");
 
   const grLabel = resolveStudentFieldLabel(fields, "registration", "grNumber", "students.form.grNumber", t);
   const statusLabel = resolveStudentFieldLabel(fields, "registration", "status", "students.form.status", t);

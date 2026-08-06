@@ -3,12 +3,12 @@ import { Trash2 } from 'lucide-react';
 import type { SystemUser } from '@mms/shared';
 import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
 import {
+  BulkSelectionClearAction,
   BulkSelectionDeleteAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
   type BulkSelectionMessageChannel,
 } from '@/components/ui/BulkSelectionActions';
-import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface UsersListSelectionBarProps {
@@ -41,13 +41,14 @@ export function UsersListSelectionBar({
   return (
     <BulkSelectionBar
       placement="inline"
-      tone="tint"
+      tone="glass"
       selectedCount={selectedIds.length}
       countLabel={t('users.selectedCount', { count: selectedIds.length })}
       trailing={
-        <Button type="button" size="sm" variant="ghost" onClick={onClearSelection}>
-          {t('users.bulkClear')}
-        </Button>
+        <BulkSelectionClearAction
+          label={t('common.deselect')}
+          onClick={onClearSelection}
+        />
       }
     >
       {onMessage && !showDeleted && (

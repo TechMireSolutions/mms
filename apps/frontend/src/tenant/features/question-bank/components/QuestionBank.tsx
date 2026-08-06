@@ -6,7 +6,7 @@ import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/us
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
-import { BulkSelectionRestoreAction } from '@/components/ui/BulkSelectionActions';
+import { BulkSelectionClearAction, BulkSelectionRestoreAction } from '@/components/ui/BulkSelectionActions';
 import { Button } from '@/components/ui/button';
 import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
 import { QuestionBankList } from '@/tenant/features/question-bank/components/QuestionBankList';
@@ -131,9 +131,16 @@ export function QuestionBank({
     <div className="space-y-4">
       {canBulkTrash && (
         <BulkSelectionBar
-          placement="floating"
+          placement="inline"
+          tone="glass"
           selectedCount={selectedIds.length}
           countLabel={t('questionBank.trash.selected', { count: selectedIds.length })}
+          trailing={
+            <BulkSelectionClearAction
+              label={t('common.deselect')}
+              onClick={() => setSelectedIds([])}
+            />
+          }
         >
           {showDeleted ? (
             <BulkSelectionRestoreAction

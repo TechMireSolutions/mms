@@ -24,7 +24,7 @@ export function SessionsWorkCardGrid({
         <SessionCard
           key={sessionItem.id}
           session={sessionItem}
-          onClick={() => !showDeleted && onOpenDetail(sessionItem)}
+          onView={() => onOpenDetail(sessionItem)}
           onDelete={onRequestDelete}
           onRestore={onRestore}
           canDelete={canDelete}

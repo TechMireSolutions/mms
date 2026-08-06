@@ -48,7 +48,7 @@ export function StudentDetailFieldsSection({
 }: StudentDetailFieldsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const canMessage = messagingEnabled;
-  const emptyDash = t("contacts.table.emptyDash");
+  const emptyDash = t("students.table.emptyDash");
 
   return (
     <div className="space-y-4">

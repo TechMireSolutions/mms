@@ -185,5 +185,5 @@ export function useStudentsSettingsSave({
     t,
   ]);
 
-  return { saving, isDirty, handleSave };
+  return { saving, isDirty, isFieldsDirty, isPrefsDirty, handleSave };
 }

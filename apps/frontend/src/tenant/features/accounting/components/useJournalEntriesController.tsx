@@ -153,6 +153,7 @@ export function useJournalEntriesController({
     nlSuggestion,
     filtered,
     selectedIds,
+    clearSelection: () => setSelectedIds([]),
     allFilteredSelected,
     grandDebit,
     grandCredit,

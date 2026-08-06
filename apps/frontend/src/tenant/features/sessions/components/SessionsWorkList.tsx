@@ -1,7 +1,11 @@
 import { Archive, BookOpen, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionDeleteAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import {
+  BulkSelectionClearAction,
+  BulkSelectionDeleteAction,
+  BulkSelectionRestoreAction,
+} from "@/components/ui/BulkSelectionActions";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ListPagination } from "@/components/ui/ListPagination";
@@ -55,6 +59,7 @@ interface SessionsWorkListProps {
   onRestore: (id: string) => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
+  onClearSelection: () => void;
   onPageChange: (page: number) => void;
 }
 
@@ -88,6 +93,7 @@ export function SessionsWorkList({
   onRestore,
   onRequestBulkDelete,
   onRequestBulkRestore,
+  onClearSelection,
   onPageChange,
 }: SessionsWorkListProps) {
   const { t } = useTranslation();
@@ -95,9 +101,16 @@ export function SessionsWorkList({
   return (
     <>
       <BulkSelectionBar
-        placement="floating"
+        placement="inline"
+        tone="glass"
         selectedCount={selectedIds.length}
         countLabel={t("sessions.selectedCount", { count: selectedIds.length })}
+        trailing={
+          <BulkSelectionClearAction
+            label={t("common.deselect")}
+            onClick={onClearSelection}
+          />
+        }
       >
         {showDeleted ? (
           <BulkSelectionRestoreAction

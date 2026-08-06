@@ -3,13 +3,13 @@ import { formatDate, formatDateTime } from "@mms/shared";
 /** Format a student custom field value for Work table/cards/detail read rows. */
 export function formatStudentListCustomValue(
   value: unknown,
-  t: (key: "common.yes" | "common.no" | "contacts.table.emptyDash") => string,
+  t: (key: "common.yes" | "common.no" | "students.table.emptyDash") => string,
 ): string {
-  if (value == null) return t("contacts.table.emptyDash");
-  if (typeof value === "string" && !value.trim()) return t("contacts.table.emptyDash");
+  if (value == null) return t("students.table.emptyDash");
+  if (typeof value === "string" && !value.trim()) return t("students.table.emptyDash");
   if (Array.isArray(value)) {
     const joined = value.map(String).filter(Boolean).join(", ");
-    return joined || t("contacts.table.emptyDash");
+    return joined || t("students.table.emptyDash");
   }
   if (typeof value === "boolean") {
     return value ? t("common.yes") : t("common.no");

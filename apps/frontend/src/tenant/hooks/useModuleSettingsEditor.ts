@@ -224,6 +224,41 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     void saveSettingsAsync(preferencesDraft, additionalFields);
   }, [saveSettingsAsync]);
 
+  /** Reset fields + preferences drafts to last persisted settings (Setup dirty-tab discard). */
+  const discardDrafts = useCallback(() => {
+    settingsDraftDirtyRef.current = false;
+    setSettingsDraft(settings);
+
+    const coreTabKeys = new Set(tabRegistry.map((tab) => tab.key.toLowerCase()));
+    const customTabs = (settings.formTabs || []).filter(
+      (tab: TabDefinition) => !coreTabKeys.has(tab.key.toLowerCase()),
+    );
+    const currentActiveEnabledTabs = withLockedEnabledTabs(
+      settings.enabledTabs && settings.enabledTabs.length > 0
+        ? settings.enabledTabs
+        : resolvedDefaultEnabledTabs,
+    );
+    const enabledSet = new Set(currentActiveEnabledTabs);
+    const updatedTabs = [...tabRegistry, ...customTabs].map((tab) => ({
+      ...tab,
+      enabled: isLockedEnabledTab(tab.key) ? true : enabledSet.has(tab.key.toLowerCase()),
+    }));
+
+    resetRef.current(
+      updatedTabs,
+      settings.fields || {},
+      currentActiveEnabledTabs,
+      (settings.requiredTabs || defaultRequiredTabs).map((tab) => tab.toLowerCase()),
+    );
+  }, [
+    settings,
+    tabRegistry,
+    withLockedEnabledTabs,
+    isLockedEnabledTab,
+    resolvedDefaultEnabledTabs,
+    defaultRequiredTabs,
+  ]);
+
   return {
     settings,
     settingsDraft,
@@ -233,5 +268,6 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     upd,
     saveSettings,
     saveSettingsAsync,
+    discardDrafts,
   };
 }

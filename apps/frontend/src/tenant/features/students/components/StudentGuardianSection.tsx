@@ -93,7 +93,7 @@ export function StudentGuardianSection({
               const name = contact?.name || link.name || (link.contactId ? t("common.loading") : undefined);
               if (!name) return null;
               const phone = contact ? getPrimaryPhone(contact) || undefined : link.phone || undefined;
-              const emptyDash = t("contacts.table.emptyDash");
+              const emptyDash = t("students.table.emptyDash");
               const gender = contact?.gender ?? link.gender;
               const { display, label } = formatLocalizedRelationshipParts(
                 link.relationship,

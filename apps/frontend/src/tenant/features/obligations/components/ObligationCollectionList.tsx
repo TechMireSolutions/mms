@@ -9,8 +9,12 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import { BulkSelectionClearAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
 import { Button } from "@/components/ui/button";
+import {
+  getDirectoryPageSelection,
+  togglePageIdsInSelection,
+} from "@/lib/directorySelection";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ObligationCollectionListContent } from "@/tenant/features/obligations/components/ObligationCollectionListContent";
@@ -110,7 +114,8 @@ export function ObligationCollectionList({
     Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
   }), [t]);
 
-  const allFilteredSelected = filtered.length > 0 && filtered.every((collection) => selectedIds.includes(collection.id));
+  const pageIds = filtered.map((collection) => collection.id);
+  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
 
   const handleBulkAction = async () => {
     if (selectedIds.length === 0) return;
@@ -128,9 +133,16 @@ export function ObligationCollectionList({
     <div className="space-y-4">
       {canDelete && (
         <BulkSelectionBar
-          placement="floating"
+          placement="inline"
+          tone="glass"
           selectedCount={selectedIds.length}
           countLabel={t("obligations.trash.selected", { count: selectedIds.length })}
+          trailing={
+            <BulkSelectionClearAction
+              label={t("common.deselect")}
+              onClick={() => setSelectedIds([])}
+            />
+          }
         >
           {showDeleted ? (
             <BulkSelectionRestoreAction
@@ -185,11 +197,13 @@ export function ObligationCollectionList({
         onAddNew={onAddNew}
         onView={onView}
         onPrint={setPrintCollection}
-        onSelectAll={(checked) => setSelectedIds(checked ? filtered.map((collection) => collection.id) : [])}
+        onSelectAll={(_checked) => setSelectedIds((current) => togglePageIdsInSelection(current, pageIds))}
         onToggleSelected={(id, checked) => {
           setSelectedIds((currentSelectedIds) =>
             checked
-              ? [...currentSelectedIds, id]
+              ? currentSelectedIds.includes(id)
+                ? currentSelectedIds
+                : [...currentSelectedIds, id]
               : currentSelectedIds.filter((selectedId) => selectedId !== id),
           );
         }}

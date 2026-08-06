@@ -47,7 +47,7 @@ export function ContactsTableHeader({
           <Checkbox
             checked={someSelected ? "indeterminate" : allSelected}
             onCheckedChange={() => onSelectAll()}
-            aria-label={allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
+            aria-label={allSelected ? t("common.deselect") : t("contacts.table.selectAll")}
             className="cursor-pointer"
           />
         </TableHead>

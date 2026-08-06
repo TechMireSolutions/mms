@@ -104,7 +104,7 @@ export default function ContactCards({
               />
             </div>
             <label htmlFor="select-all-cards" className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors">
-              {allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
+              {allSelected ? t("common.deselect") : t("contacts.table.selectAll")}
             </label>
           </div>
           <span className="text-xs font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/10">

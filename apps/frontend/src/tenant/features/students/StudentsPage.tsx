@@ -1,18 +1,17 @@
-import React from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
-import { AnimatePresence } from 'framer-motion';
-import { UserPlus, GraduationCap } from 'lucide-react';
-import { notify } from '@/lib/notify';
-import { ModulePageShell } from '@/components/ui/ModulePageShell';
-import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
-import { ActionButton } from '@/components/ui/ActionButton';
-import StudentForm from '@/tenant/features/students/components/StudentForm';
-import type { Student } from '@mms/shared';
-import { StudentsCommandMetrics } from '@/tenant/features/students/components/StudentsCommandMetrics';
-import { StudentsReportsTier } from '@/tenant/features/students/components/StudentsReportsTier';
-import { StudentsSetupTier } from '@/tenant/features/students/components/StudentsSetupTier';
-import { StudentsWorkTier } from '@/tenant/features/students/components/StudentsWorkTier';
-import { useStudentsPageController } from '@/tenant/features/students/hooks/useStudentsPageController';
+import React from "react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { AnimatePresence } from "framer-motion";
+import { UserPlus, GraduationCap } from "lucide-react";
+import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import { ActionButton } from "@/components/ui/ActionButton";
+import StudentForm from "@/tenant/features/students/components/StudentForm";
+import type { Student } from "@mms/shared";
+import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
+import { StudentsReportsTier } from "@/tenant/features/students/components/StudentsReportsTier";
+import { StudentsSetupTier } from "@/tenant/features/students/components/StudentsSetupTier";
+import { StudentsWorkTier } from "@/tenant/features/students/components/StudentsWorkTier";
+import { useStudentsPageController } from "@/tenant/features/students/hooks/useStudentsPageController";
 
 /**
  * Students Directory and Records Page.
@@ -23,68 +22,68 @@ export default function Students() {
   const {
     canWrite,
     canDelete,
+    canExport,
     visibleTabs,
     serverCount,
-    mutations,
-    settings,
     studentStatusOptions,
     genderFilters,
     activeTab,
     setActiveTab,
     showStudentForm,
-    setShowStudentForm,
+    editStudent,
+    openCreateForm,
+    openEditForm,
+    closeStudentForm,
     showDeleted,
-    setShowDeleted,
+    toggleShowDeleted,
     columnLayout,
     studentSearch,
     setStudentSearch,
     studentFilterStatus,
-    setStudentFilterStatus,
     studentFilterGender,
     setStudentFilterGender,
-    editStudent,
-    setEditStudent,
     useServerWork,
     viewMode,
     setViewMode,
     workPageQuery,
     workStudents,
     shownCount,
+    selectedIds,
+    selectedTargets,
+    handleSelectOne,
+    handleSelectAll,
+    clearSelection,
     handleSaveStudent,
+    handleDelete,
+    handleRestore,
+    handleBulkDelete,
+    handleBulkRestore,
+    handleBulkStatusChange,
     toggleStudentStatus,
     setListPage,
     sortField,
     sortDir,
     handleServerSort,
+    clearFilters,
+    hasActiveFilters,
+    bulkActions,
   } = useStudentsPageController();
-
-  const {
-    deleteStudent,
-    bulkDeleteStudents,
-    restoreStudent,
-    bulkRestoreStudents,
-    bulkUpdateStudentStatus,
-  } = mutations;
 
   return (
     <ModulePageShell
-      seoTitle={`MMS - ${t('nav.students')}`}
-      seoDescription={t('page.students.subtitle')}
+      seoTitle={`MMS - ${t("nav.students")}`}
+      seoDescription={t("page.students.subtitle")}
       headerIcon={GraduationCap}
-      headerTitle={t('nav.students')}
+      headerTitle={t("nav.students")}
       headerSubtitle={
         serverCount != null
-          ? `${t('page.students.subtitle')} · ${serverCount} ${t('nav.students').toLowerCase()}`
-          : t('page.students.subtitle')
+          ? `${t("page.students.subtitle")} · ${serverCount} ${t("nav.students").toLowerCase()}`
+          : t("page.students.subtitle")
       }
       headerActions={
         canWrite && !showDeleted ? (
-          <ActionButton
-            variant="primary"
-            icon={UserPlus}
-            onClick={() => { setEditStudent(null); setShowStudentForm(true); }}
-          >
-            {t('action.addStudent')}
+          <ActionButton variant="primary" icon={UserPlus} onClick={openCreateForm}>
+            {t("action.addStudent")}
           </ActionButton>
         ) : undefined
       }
@@ -99,7 +98,7 @@ export default function Students() {
         panelIdPrefix="students-tab"
       >
         <AnimatePresence mode="wait">
-          {activeTab === 'work' ? (
+          {activeTab === "work" ? (
             <StudentsWorkTier
               studentSearch={studentSearch}
               studentFilterStatus={studentFilterStatus}
@@ -109,6 +108,8 @@ export default function Students() {
               showDeleted={showDeleted}
               canWrite={canWrite}
               canDelete={canDelete}
+              canExport={canExport}
+              bulkActions={bulkActions}
               workStudents={workStudents}
               workPageData={workPageQuery.data}
               isWorkPageLoading={workPageQuery.isLoading}
@@ -121,71 +122,29 @@ export default function Students() {
               onSearchChange={setStudentSearch}
               onToggleStatus={toggleStudentStatus}
               onGenderChange={setStudentFilterGender}
-              onToggleDeleted={() => setShowDeleted((previous) => !previous)}
-              onClearFilters={() => {
-                setStudentFilterStatus([]);
-                setStudentFilterGender('');
-              }}
+              onToggleDeleted={toggleShowDeleted}
+              onClearFilters={clearFilters}
+              hasActiveFilters={hasActiveFilters}
+              selectedIds={selectedIds}
+              selectedTargets={selectedTargets}
+              onSelectOne={handleSelectOne}
+              onSelectAll={handleSelectAll}
+              onClearSelection={clearSelection}
               onRetry={() => void workPageQuery.refetch()}
               onPageChange={setListPage}
-              onEdit={(studentToEdit) => { setEditStudent(studentToEdit); setShowStudentForm(true); }}
-              onDelete={async (studentId, deletionReason) => {
-                try {
-                  await deleteStudent.mutateAsync({ id: String(studentId), deletionReason });
-                  notify.success(t('students.deleteSuccess'));
-                } catch (error) {
-                  notify.error(t('students.deleteFailed'));
-                  throw error;
-                }
-              }}
-              onRestore={async (studentId) => {
-                try {
-                  await restoreStudent.mutateAsync(String(studentId));
-                  notify.success(t('students.restoreSuccess'));
-                } catch (error) {
-                  notify.error(t('students.restoreFailed'));
-                  throw error;
-                }
-              }}
-              onBulkDelete={async (studentIds, deletionReason) => {
-                try {
-                  await bulkDeleteStudents.mutateAsync({
-                    ids: studentIds.map(String),
-                    deletionReason,
-                  });
-                  notify.success(t('students.deleteSuccess'));
-                } catch (error) {
-                  notify.error(t('students.deleteFailed'));
-                  throw error;
-                }
-              }}
-              onBulkRestore={async (studentIds) => {
-                try {
-                  await bulkRestoreStudents.mutateAsync(studentIds.map(String));
-                  notify.success(t('students.restoreSuccess'));
-                } catch (error) {
-                  notify.error(t('students.restoreFailed'));
-                  throw error;
-                }
-              }}
-              onBulkStatusChange={async (studentIds, status) => {
-                try {
-                  await bulkUpdateStudentStatus.mutateAsync({
-                    ids: studentIds.map(String),
-                    status,
-                  });
-                  notify.success(t('students.bulkStatusSuccess'));
-                } catch {
-                  notify.error(t('students.bulkStatusFailed'));
-                }
-              }}
+              onEdit={openEditForm}
+              onDelete={handleDelete}
+              onRestore={handleRestore}
+              onBulkDelete={handleBulkDelete}
+              onBulkRestore={handleBulkRestore}
+              onBulkStatusChange={handleBulkStatusChange}
               sortField={sortField}
               sortDir={sortDir}
               onServerSort={handleServerSort}
             />
-          ) : activeTab === 'reports' ? (
+          ) : activeTab === "reports" ? (
             <StudentsReportsTier />
-          ) : activeTab === 'setup' ? (
+          ) : activeTab === "setup" ? (
             <StudentsSetupTier />
           ) : null}
         </AnimatePresence>
@@ -195,7 +154,7 @@ export default function Students() {
         {showStudentForm && (
           <StudentForm
             student={editStudent as unknown as Partial<Student> | null}
-            onClose={() => { setShowStudentForm(false); setEditStudent(null); }}
+            onClose={closeStudentForm}
             onSave={handleSaveStudent}
           />
         )}

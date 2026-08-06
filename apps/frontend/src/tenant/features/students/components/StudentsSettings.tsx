@@ -16,10 +16,12 @@ import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { WarningCallout } from "@/components/ui/WarningCallout";
-import { Loader2, Save, GraduationCap } from "lucide-react";
+import { Loader2, Save, GraduationCap, Lock } from "lucide-react";
 import { useStudentsSetupFieldDeleteGuard } from "@/tenant/features/students/hooks/useStudentsSetupFieldDeleteGuard";
 import { useStudentsSetupTabDeleteGuard } from "@/tenant/features/students/hooks/useStudentsSetupTabDeleteGuard";
 import { useStudentsSettingsSave } from "@/tenant/features/students/hooks/useStudentsSettingsSave";
@@ -43,6 +45,7 @@ export default function StudentsSettings(): React.ReactElement {
     saved,
     setSaved,
     upd,
+    discardDrafts,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: STUDENT_TAB_REGISTRY,
@@ -92,11 +95,12 @@ export default function StudentsSettings(): React.ReactElement {
   );
 
   const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key || "fields");
+  const [pendingSubTab, setPendingSubTab] = useState<string | null>(null);
   const showFields = sub === "fields";
   const showPrefs = sub === "preferences";
   const showLookups = sub === "lookups";
 
-  const { saving, isDirty, handleSave } = useStudentsSettingsSave({
+  const { saving, isDirty, isFieldsDirty, isPrefsDirty, handleSave } = useStudentsSettingsSave({
     settings,
     settingsDraft,
     fieldsEditor,
@@ -104,18 +108,37 @@ export default function StudentsSettings(): React.ReactElement {
     setSaved,
   });
 
+  const discardConfirmOpen = pendingSubTab != null;
+  const discardConfirmIsFields = sub === "fields" && isFieldsDirty;
+
+  const handleSubTabChange = (next: string): void => {
+    if (next === sub) return;
+    if ((sub === "fields" && isFieldsDirty) || (sub === "preferences" && isPrefsDirty)) {
+      setPendingSubTab(next);
+      return;
+    }
+    setSub(next);
+  };
+
+  const handleConfirmDiscard = (): void => {
+    if (!pendingSubTab) return;
+    discardDrafts();
+    setSub(pendingSubTab);
+    setPendingSubTab(null);
+  };
+
   return (
     <div className="space-y-4">
       <SubTabBar
         tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
         value={sub}
-        onChange={setSub}
+        onChange={handleSubTabChange}
       />
 
       {!canEditSetup ? (
-        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-          {t("students.setupReadOnly")}
-        </p>
+        <div className={`${WORK_SURFACE} border-border/40 p-6`}>
+          <EmptyState variant="dashed" icon={Lock} title={t("students.setupReadOnly")} />
+        </div>
       ) : (
         <section className={`${WORK_SURFACE} p-5 space-y-5`} aria-labelledby="students-settings-title">
           <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
@@ -177,6 +200,23 @@ export default function StudentsSettings(): React.ReactElement {
           ) : null}
         </section>
       )}
+
+      <ConfirmAlertDialog
+        open={discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) setPendingSubTab(null);
+        }}
+        title={t("settings.unsavedChanges")}
+        description={
+          discardConfirmIsFields
+            ? t("students.setup.discardUnsavedFieldsConfirm")
+            : t("students.setup.discardUnsavedPreferencesConfirm")
+        }
+        confirmLabel={t("common.yes")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={handleConfirmDiscard}
+      />
     </div>
   );
 }

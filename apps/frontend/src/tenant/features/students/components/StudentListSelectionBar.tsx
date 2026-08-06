@@ -1,30 +1,35 @@
 import type { ReactElement } from "react";
+import { GraduationCap, Trash2 } from "lucide-react";
+import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
 import {
-  BulkSelectionBar,
-} from "@/components/ui/BulkSelectionBar";
-import {
+  BulkSelectionClearAction,
   BulkSelectionDeleteAction,
   BulkSelectionExportAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
   BulkSelectionStatusAction,
+  type BulkSelectionMessageChannel,
 } from "@/components/ui/BulkSelectionActions";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-
-type MessageChannel = "whatsapp" | "sms" | "email";
+import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
 
 interface StudentListSelectionBarProps {
-  selectedIds: string[];
+  selectedCount: number;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
   canWriteMessaging?: boolean;
   canExport?: boolean;
+  bulkActions?: readonly string[];
+  selectedTargets: StudentsSelectionTargets;
   studentStatusOptions: readonly string[];
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
-  onMessage: (channel: MessageChannel) => void;
-  onBulkStatusChange?: (ids: string[], status: string) => void;
+  onWhatsApp: (targets: Student[]) => void;
+  onSms: (targets: Student[]) => void;
+  onEmail: (targets: Student[]) => void;
+  onBulkStatusChange?: (status: string) => void;
   onBulkExport?: () => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
@@ -32,15 +37,19 @@ interface StudentListSelectionBarProps {
 }
 
 export function StudentListSelectionBar({
-  selectedIds,
+  selectedCount,
   showDeleted,
   canWrite,
   canDelete,
   canWriteMessaging = false,
   canExport = false,
+  bulkActions = STUDENTS_MODULE_MANIFEST.work.bulkActions,
+  selectedTargets,
   studentStatusOptions,
   statusBadgeConfig,
-  onMessage,
+  onWhatsApp,
+  onSms,
+  onEmail,
   onBulkStatusChange,
   onBulkExport,
   onRequestBulkDelete,
@@ -49,11 +58,30 @@ export function StudentListSelectionBar({
 }: StudentListSelectionBarProps): ReactElement {
   const { t } = useTranslation();
 
+  const showWhatsApp = bulkActions.includes("whatsapp") && canWriteMessaging;
+  const showSms = bulkActions.includes("sms") && canWriteMessaging;
+  const showEmail = bulkActions.includes("email") && canWriteMessaging;
+  const showMessaging = !showDeleted && (showWhatsApp || showSms || showEmail);
+
+  const handleChannel = (channel: BulkSelectionMessageChannel): void => {
+    if (channel === "whatsapp") onWhatsApp(selectedTargets.waTargets);
+    else if (channel === "sms") onSms(selectedTargets.smsReady);
+    else if (channel === "email") onEmail(selectedTargets.emailReady);
+  };
+
   return (
     <BulkSelectionBar
-      placement="floating"
-      selectedCount={selectedIds.length}
-      countLabel={t("students.selectedCount", { count: selectedIds.length })}
+      placement="inline"
+      tone="glass"
+      selectedCount={selectedCount}
+      countLabel={t("students.selectedCount", { count: selectedCount })}
+      leading={<GraduationCap className="w-4 h-4 text-primary" aria-hidden />}
+      trailing={
+        <BulkSelectionClearAction
+          label={t("common.deselect")}
+          onClick={onClearSelection}
+        />
+      }
     >
       {showDeleted ? (
         canDelete && (
@@ -64,42 +92,51 @@ export function StudentListSelectionBar({
         )
       ) : (
         <>
-          {canWriteMessaging && (
+          {showMessaging && (
             <BulkSelectionMessagingActions
-              onChannel={onMessage}
+              onChannel={handleChannel}
               labels={{
-                whatsapp: t("students.list.actionWhatsApp"),
-                sms: t("students.list.actionSms"),
-                email: t("students.list.actionEmail"),
+                whatsapp: t("students.whatsappBulk", {
+                  count: selectedTargets.waTargets.length,
+                }),
+                sms: t("students.smsBulk", { count: selectedTargets.smsReady.length }),
+                email: t("students.emailBulk", {
+                  count: selectedTargets.emailReady.length,
+                }),
+              }}
+              channels={{
+                whatsapp: showWhatsApp,
+                sms: showSms,
+                email: showEmail,
               }}
             />
           )}
 
-          {canExport && onBulkExport && (
+          {bulkActions.includes("export") && canExport && onBulkExport && (
             <BulkSelectionExportAction
               label={t("students.bulkExport")}
               onClick={onBulkExport}
             />
           )}
 
-          {canWrite && onBulkStatusChange && (
+          {bulkActions.includes("status") && canWrite && onBulkStatusChange && (
             <BulkSelectionStatusAction
               label={t("students.columns.status")}
               statuses={studentStatusOptions}
               statusBadgeConfig={statusBadgeConfig}
               onSelectStatus={(statusVal) => {
-                onBulkStatusChange(selectedIds, statusVal);
-                onClearSelection();
+                onBulkStatusChange(statusVal);
               }}
             />
           )}
 
-          {canDelete && (
+          {bulkActions.includes("delete") && canDelete && (
             <>
               <div className="h-4 w-px bg-border" />
               <BulkSelectionDeleteAction
                 label={t("students.list.remove")}
                 onClick={onRequestBulkDelete}
+                icon={Trash2}
               />
             </>
           )}

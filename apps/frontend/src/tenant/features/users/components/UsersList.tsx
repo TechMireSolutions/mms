@@ -8,6 +8,11 @@ import { formatDate } from '@mms/shared';
 import { UsersListContent } from '@/tenant/features/users/components/UsersListContent';
 import { UsersListFilters } from '@/tenant/features/users/components/UsersListFilters';
 import { UsersListSelectionBar } from '@/tenant/features/users/components/UsersListSelectionBar';
+import {
+  getDirectoryPageSelection,
+  toggleIdInSelection,
+  togglePageIdsInSelection,
+} from '@/lib/directorySelection';
 
 export interface UsersListProps {
   users: SystemUser[];
@@ -69,10 +74,13 @@ export function UsersList({
     [users, search, roleFilter, statusFilter, showDeleted],
   );
 
+  const pageIds = filtered.map((user) => user.id);
+  const { allSelected, someSelected } = getDirectoryPageSelection(pageIds, selected);
+
   const toggleSelect = (id: string): void =>
-    setSelected((selectedIds) => (selectedIds.includes(id) ? selectedIds.filter((selectedId) => selectedId !== id) : [...selectedIds, id]));
+    setSelected((selectedIds) => toggleIdInSelection(selectedIds, id));
   const toggleAll = (): void =>
-    setSelected(selected.length === filtered.length ? [] : filtered.map((user) => user.id));
+    setSelected((current) => togglePageIdsInSelection(current, pageIds));
 
   const fmtDate = (ts: string): string => {
     if (!ts) return t('users.never');
@@ -114,6 +122,8 @@ export function UsersList({
         viewMode={viewMode}
         users={filtered}
         selectedIds={selected}
+        allSelected={allSelected}
+        someSelected={someSelected}
         canWrite={canWrite}
         canDelete={canDelete}
         showDeleted={showDeleted}

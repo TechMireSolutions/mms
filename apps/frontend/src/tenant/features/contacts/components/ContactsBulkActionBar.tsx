@@ -3,13 +3,13 @@ import { Trash2, Users } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
 import {
+  BulkSelectionClearAction,
   BulkSelectionDeleteAction,
   BulkSelectionExportAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
   type BulkSelectionMessageChannel,
 } from "@/components/ui/BulkSelectionActions";
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface ContactsBulkActionBarProps {
@@ -65,15 +65,10 @@ export function ContactsBulkActionBar({
       countLabel={t("contacts.selectedCount", { count: selectedCount })}
       leading={<Users className="w-4 h-4 text-primary" aria-hidden />}
       trailing={
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
+        <BulkSelectionClearAction
+          label={t("common.deselect")}
           onClick={onClearSelection}
-          className="text-muted-foreground hover:text-foreground font-medium"
-        >
-          {t("contacts.deselect")}
-        </Button>
+        />
       }
     >
       {viewingDeleted ? (

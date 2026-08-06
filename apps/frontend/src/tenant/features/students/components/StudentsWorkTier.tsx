@@ -4,7 +4,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ListPagination } from "@/components/ui/ListPagination";
-import { TableSkeleton } from "@/components/ui/LoadingState";
+import { TableSkeleton, CardSkeleton } from "@/components/ui/LoadingState";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
@@ -12,6 +12,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import StudentList from "@/tenant/features/students/components/StudentList";
 import { StudentsWorkTierToolbar } from "@/tenant/features/students/components/StudentsWorkTierToolbar";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
+import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
 
 interface StudentsWorkTierProps {
   studentSearch: string;
@@ -22,6 +24,9 @@ interface StudentsWorkTierProps {
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
+  canExport: boolean;
+  bulkActions: readonly string[];
+  hasActiveFilters: boolean;
   workStudents: Student[];
   workPageData: StudentsListPageResult | undefined;
   isWorkPageLoading: boolean;
@@ -36,6 +41,11 @@ interface StudentsWorkTierProps {
   onGenderChange: (value: string) => void;
   onToggleDeleted: () => void;
   onClearFilters: () => void;
+  selectedIds: string[];
+  selectedTargets: StudentsSelectionTargets;
+  onSelectOne: (id: string) => void;
+  onSelectAll: (pageIds: string[]) => void;
+  onClearSelection: () => void;
   onRetry: () => void;
   onPageChange: (page: number) => void;
   onEdit: (student: Student) => void;
@@ -44,9 +54,9 @@ interface StudentsWorkTierProps {
   onBulkDelete: (studentIds: string[], deletionReason?: string) => void | Promise<void>;
   onBulkRestore: (studentIds: string[]) => void | Promise<void>;
   onBulkStatusChange: (studentIds: string[], status: string) => void | Promise<void>;
-  sortField?: import("@/tenant/features/students/components/StudentListContentTypes").StudentListSortField | null;
-  sortDir?: "asc" | "desc";
-  onServerSort?: (field: import("@/tenant/features/students/components/StudentListContentTypes").StudentListSortField) => void;
+  sortField: StudentListSortField | null;
+  sortDir: "asc" | "desc";
+  onServerSort: (field: StudentListSortField) => void;
 }
 
 export function StudentsWorkTier({
@@ -58,6 +68,9 @@ export function StudentsWorkTier({
   showDeleted,
   canWrite,
   canDelete,
+  canExport,
+  bulkActions,
+  hasActiveFilters,
   workStudents,
   workPageData,
   isWorkPageLoading,
@@ -72,6 +85,11 @@ export function StudentsWorkTier({
   onGenderChange,
   onToggleDeleted,
   onClearFilters,
+  selectedIds,
+  selectedTargets,
+  onSelectOne,
+  onSelectAll,
+  onClearSelection,
   onRetry,
   onPageChange,
   onEdit,
@@ -80,8 +98,8 @@ export function StudentsWorkTier({
   onBulkDelete,
   onBulkRestore,
   onBulkStatusChange,
-  sortField = null,
-  sortDir = "desc",
+  sortField,
+  sortDir,
   onServerSort,
 }: StudentsWorkTierProps) {
   const { t } = useTranslation();
@@ -95,15 +113,6 @@ export function StudentsWorkTier({
       ? [{ key: "gender", label: formatContactGenderLabel(studentFilterGender, t), onRemove: () => onGenderChange("") }]
       : []),
   ];
-
-  const serverPagination = workPageData
-    ? {
-        total: workPageData.total,
-        page: workPageData.page,
-        limit: workPageData.limit,
-        hasMore: workPageData.hasMore,
-      }
-    : undefined;
 
   return (
     <motion.div
@@ -123,6 +132,7 @@ export function StudentsWorkTier({
         genderFilters={genderFilters}
         showDeleted={showDeleted}
         canDelete={canDelete}
+        hasActiveFilters={hasActiveFilters}
         columnLayout={columnLayout}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
@@ -137,7 +147,11 @@ export function StudentsWorkTier({
 
       <ErrorBoundary>
         {isWorkPageLoading ? (
-          <TableSkeleton rows={6} cols={columnLayout.columnRegistry.length} />
+          viewMode === "cards" ? (
+            <CardSkeleton count={6} className="grid-cols-1 sm:grid-cols-2" />
+          ) : (
+            <TableSkeleton rows={6} cols={columnLayout.columnRegistry.length} />
+          )
         ) : isWorkPageError ? (
           <ErrorState
             title={t("students.loadFailed")}
@@ -156,12 +170,21 @@ export function StudentsWorkTier({
               showDeleted={showDeleted}
               canWrite={canWrite}
               canDelete={canDelete}
-              serverPagination={serverPagination}
-              serverSort={
-                onServerSort
-                  ? { sortField, sortDir, onSort: onServerSort }
-                  : undefined
-              }
+              canExport={canExport}
+              bulkActions={bulkActions}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={onClearFilters}
+              onShowActive={() => {
+                if (showDeleted) onToggleDeleted();
+              }}
+              selectedIds={selectedIds}
+              selectedTargets={selectedTargets}
+              onSelectOne={onSelectOne}
+              onSelectAll={onSelectAll}
+              onClearSelection={onClearSelection}
+              sortField={sortField}
+              sortDir={sortDir}
+              onServerSort={onServerSort}
               onEdit={onEdit}
               onDelete={onDelete}
               onRestore={onRestore}
@@ -169,7 +192,7 @@ export function StudentsWorkTier({
               onBulkRestore={onBulkRestore}
               onBulkStatusChange={onBulkStatusChange}
             />
-            {useServerWork && workPageData && (
+            {useServerWork && workPageData && workStudents.length > 0 ? (
               <ListPagination
                 page={workPageData.page}
                 total={workPageData.total}
@@ -179,10 +202,10 @@ export function StudentsWorkTier({
                 i18nNamespace="students"
                 variant="range"
               />
-            )}
-            {useServerWork && isWorkPageFetching && (
+            ) : null}
+            {useServerWork && isWorkPageFetching ? (
               <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
-            )}
+            ) : null}
           </>
         )}
       </ErrorBoundary>

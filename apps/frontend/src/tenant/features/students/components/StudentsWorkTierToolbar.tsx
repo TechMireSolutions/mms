@@ -1,12 +1,20 @@
+import { RefreshCw } from "lucide-react";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
+import {
+  WORK_SURFACE,
+  WORK_TOOLBAR_TRIGGER,
+  WORK_TOOLBAR_TRIGGER_IDLE,
+} from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { StudentsFilterMenuButton } from "@/tenant/features/students/components/StudentsFilterMenuButton";
+import { STUDENTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/students/hooks/useStudentsPageController";
 
 interface StudentsWorkTierToolbarProps {
   studentSearch: string;
@@ -16,6 +24,7 @@ interface StudentsWorkTierToolbarProps {
   genderFilters: string[];
   showDeleted: boolean;
   canDelete: boolean;
+  hasActiveFilters: boolean;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
@@ -34,6 +43,7 @@ export function StudentsWorkTierToolbar({
   genderFilters,
   showDeleted,
   canDelete,
+  hasActiveFilters,
   columnLayout,
   viewMode,
   onViewModeChange,
@@ -48,6 +58,7 @@ export function StudentsWorkTierToolbar({
   return (
     <div className={`flex flex-col sm:flex-row gap-3 ${WORK_SURFACE} p-3`}>
       <SearchBar
+        id={STUDENTS_WORK_SEARCH_INPUT_ID}
         value={studentSearch}
         onChange={onSearchChange}
         placeholder={t("students.searchPlaceholder")}
@@ -63,6 +74,18 @@ export function StudentsWorkTierToolbar({
         onGenderChange={onGenderChange}
         onClearFilters={onClearFilters}
       />
+
+      {hasActiveFilters ? (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onClearFilters}
+          className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE)}
+        >
+          <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>{t("students.clearFilters")}</span>
+        </Button>
+      ) : null}
 
       {canDelete && (
         <ModuleTrashToggle

@@ -3,7 +3,7 @@ import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import { BulkSelectionClearAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
 import { Button } from "@/components/ui/button";
 import { DistributeModal } from "./DistributeModal";
 import { DistributionManagerList } from "./DistributionManagerList";
@@ -81,6 +81,7 @@ export function DistributionManager({
     changeStatus,
     handleRowTrashAction,
     toggleSelected,
+    toggleSelectAll,
     allFilteredSelected,
     handleBulkAction,
   } = useDistributionManagerState({
@@ -102,9 +103,16 @@ export function DistributionManager({
     <section aria-label={t("hasanat.distribution.aria")} className="space-y-4">
       {canDelete && (
         <BulkSelectionBar
-          placement="floating"
+          placement="inline"
+          tone="glass"
           selectedCount={selectedIds.length}
           countLabel={t("hasanat.trash.selected", { count: selectedIds.length })}
+          trailing={
+            <BulkSelectionClearAction
+              label={t("common.deselect")}
+              onClick={() => setSelectedIds([])}
+            />
+          }
         >
           {showDeleted ? (
             <BulkSelectionRestoreAction
@@ -156,10 +164,7 @@ export function DistributionManager({
         onMessage={onMessage}
         onChangeStatus={changeStatus}
         onToggleSelected={toggleSelected}
-        onToggleAll={(checked) => {
-          if (checked) setSelectedIds(filtered.map((distribution) => distribution.id));
-          else setSelectedIds([]);
-        }}
+        onToggleAll={() => toggleSelectAll()}
         onRowTrashAction={(id) => { void handleRowTrashAction(id); }}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}

@@ -4,7 +4,16 @@ import { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionDeleteAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
+import {
+  BulkSelectionClearAction,
+  BulkSelectionDeleteAction,
+  BulkSelectionRestoreAction,
+} from "@/components/ui/BulkSelectionActions";
+import {
+  getDirectoryPageSelection,
+  toggleIdInSelection,
+  togglePageIdsInSelection,
+} from "@/lib/directorySelection";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -113,10 +122,11 @@ export default function ExamsList({
     setFilterStatus((currentStatuses) => (currentStatuses.includes(status) ? currentStatuses.filter((candidate) => candidate !== status) : [...currentStatuses, status]));
 
   const toggleSelected = (id: string) => {
-    setSelectedIds((prev) => prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]);
+    setSelectedIds((prev) => toggleIdInSelection(prev, id));
   };
 
-  const allFilteredSelected = filtered.length > 0 && filtered.every((exam) => selectedIds.includes(exam.id));
+  const pageIds = filtered.map((exam) => exam.id);
+  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
 
   const handleRowTrashAction = async (id: string) => {
     if (showDeleted) {
@@ -154,9 +164,16 @@ export default function ExamsList({
     <section className="space-y-4" aria-label={t("examinations.exams")}>
       {canDelete && (
         <BulkSelectionBar
-          placement="floating"
+          placement="inline"
+          tone="glass"
           selectedCount={selectedIds.length}
           countLabel={t("examinations.trash.selected", { count: selectedIds.length })}
+          trailing={
+            <BulkSelectionClearAction
+              label={t("common.deselect")}
+              onClick={() => setSelectedIds([])}
+            />
+          }
         >
           {showDeleted ? (
             <BulkSelectionRestoreAction
@@ -203,7 +220,7 @@ export default function ExamsList({
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
         onEdit={onEdit}
-        onSelectAll={(checked) => setSelectedIds(checked ? filtered.map((exam) => exam.id) : [])}
+        onSelectAll={(_checked) => setSelectedIds((current) => togglePageIdsInSelection(current, pageIds))}
         onToggleSelected={toggleSelected}
         onTrashAction={(id) => { void handleRowTrashAction(id); }}
       />

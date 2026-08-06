@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { calcAge, primaryResponsibleAdultDisplayName } from "@mms/shared";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -30,7 +31,6 @@ export function StudentListCards({
   columnRegistry,
   onSelectAll,
   onSelectOne,
-  onRowClick,
   onViewStudent,
   onEdit,
   onDelete,
@@ -38,7 +38,7 @@ export function StudentListCards({
   onOpenComposer,
 }: StudentListCardsProps) {
   const { t } = useTranslation();
-  const emptyDash = t("contacts.table.emptyDash");
+  const emptyDash = t("students.table.emptyDash");
   const pageCountLabel = `${paginatedStudents.length} ${t("nav.students").toLowerCase()}`;
   const customColumns = columnRegistry.filter(
     (col) => col.key.startsWith("custom:") && isColumnVisible(col.key),
@@ -60,13 +60,13 @@ export function StudentListCards({
               htmlFor="students-select-all-cards"
               className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors"
             >
-              {allSelected ? t("contacts.deselect") : t("contacts.table.selectAll")}
+              {allSelected ? t("common.deselect") : t("students.table.selectAll")}
             </label>
           </div>
           <span className="text-xs font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/10">
             {selectedIds.length > 0 ? (
               <>
-                {t("contacts.selectedCount", { count: selectedIds.length })}
+                {t("students.selectedCount", { count: selectedIds.length })}
                 <span className="mx-1.5 text-border" aria-hidden="true">·</span>
                 {pageCountLabel}
               </>
@@ -83,21 +83,15 @@ export function StudentListCards({
           const isSelected = selectedIds.includes(studentIdStr);
           const age = calcAge(studentCard.dob);
           const parentName = primaryResponsibleAdultDisplayName(studentCard);
+          const displayName = studentCard.name || "";
 
           return (
             <motion.div
               key={studentIdStr}
-              onClick={(event) => onRowClick(event, studentCard)}
-              className={`relative ${WORK_SURFACE} p-5 hover:shadow-md transition-all group cursor-pointer ${
+              className={`relative ${WORK_SURFACE} p-5 hover:shadow-md transition-all group ${
                 isSelected ? "border-primary bg-primary/5" : "hover:border-primary/20"
               }`}
             >
-              <div className="absolute top-3 start-3">
-                <Checkbox
-                  checked={isSelected}
-                  onCheckedChange={() => onSelectOne(studentIdStr)}
-                />
-              </div>
               <div className="absolute top-3 end-3">
                 <StudentListActionsMenu
                   student={studentCard}
@@ -117,15 +111,34 @@ export function StudentListCards({
                 />
               </div>
 
-              <div className="flex flex-col items-center text-center mt-3 mb-4">
-                <UserAvatar id={studentIdStr} name={studentCard.name || ""} className="w-12 h-12 rounded-full text-sm font-bold shadow-sm" />
-                <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-36">
-                  {studentCard.name}
-                </h4>
-                <GrBadge grNumber={studentCard.grNumber} className="mt-1" />
+              <div className="flex gap-3 items-start">
+                <div className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center">
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => onSelectOne(studentIdStr)}
+                    aria-label={t("students.table.selectStudent", { name: displayName })}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-auto p-0 hover:bg-transparent flex flex-1 flex-col items-center text-center min-w-0 shadow-none justify-start"
+                  onClick={() => onViewStudent(studentCard)}
+                  aria-label={`${t("students.table.viewProfile")} - ${displayName}`}
+                >
+                  <UserAvatar
+                    id={studentIdStr}
+                    name={displayName}
+                    className="w-12 h-12 rounded-full text-sm font-bold shadow-sm group-hover:scale-105 transition-transform duration-200"
+                  />
+                  <h4 className="text-sm font-bold text-foreground mt-2 group-hover:text-primary transition-colors truncate w-full max-w-36">
+                    {displayName}
+                  </h4>
+                  <GrBadge grNumber={studentCard.grNumber} className="mt-1" />
+                </Button>
               </div>
 
-              <div className="space-y-2 border-t border-border/40 pt-3 text-xs">
+              <div className="space-y-2 border-t border-border/40 pt-3 text-xs mt-4">
                 {isFieldEnabled("gender") ? (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("students.gender")}:</span>
