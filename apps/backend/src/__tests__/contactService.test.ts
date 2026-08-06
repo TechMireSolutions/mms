@@ -98,15 +98,9 @@ function inferredLink(contactId: string, relationship: string, inferenceDepth?: 
 
 /** Pair fixtures for reciprocal depth-1 tests only (no depth-2/3 ontology). */
 const DEFAULT_TEST_RELATIONSHIP_PAIRS = [
-  { id: 'p1', forward: 'Father', inverse: 'Child', inverseMale: 'Son', inverseFemale: 'Daughter' },
-  { id: 'p2', forward: 'Mother', inverse: 'Child', inverseMale: 'Son', inverseFemale: 'Daughter' },
-  { id: 'p4', forward: 'Brother', inverse: 'Sibling', inverseMale: 'Brother', inverseFemale: 'Sister' },
-  { id: 'p5', forward: 'Sister', inverse: 'Sibling', inverseMale: 'Brother', inverseFemale: 'Sister' },
-  { id: 'p7', forward: 'Husband', inverse: 'Spouse', inverseMale: 'Husband', inverseFemale: 'Wife' },
-  { id: 'p9', forward: 'Spouse', inverse: 'Spouse', inverseMale: 'Husband', inverseFemale: 'Wife' },
-  { id: 'p10', forward: 'Guardian', inverse: 'Dependent' },
-  { id: 'p22', forward: 'Other', inverse: 'Other' },
-  { id: 'p23', forward: 'Mentor', inverse: 'Mentor' },
+  { id: 'parent_child', forward: 'Parent', inverse: 'Child' },
+  { id: 'husband_wife', forward: 'Husband', inverse: 'Wife' },
+  { id: 'guardian_dependent', forward: 'Guardian', inverse: 'Dependent' },
 ];
 
 describe('contactService relationship reciprocal mapping', () => {
@@ -237,7 +231,7 @@ describe('contactService relationship reciprocal mapping', () => {
       name: 'Aisha Khan',
       firstName: 'Aisha',
       gender: 'Female',
-      relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Parent' }],
     });
     const target = contact({
       id: 'b',
@@ -255,25 +249,25 @@ describe('contactService relationship reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Child', 1)]),
       }),
     ]);
     expect(mockInvalidateDuplicateScanCache).toHaveBeenCalled();
   });
 
-  it('creates reciprocal 2-sided relationship links for dynamic relationship types', async () => {
+  it('creates reciprocal links for Husband/Wife system pairs', async () => {
     const source = contact({
       id: 'a',
       name: 'Dr. Tariq',
       firstName: 'Tariq',
       gender: 'Male',
-      relationshipContacts: [{ contactId: 'b', relationship: 'Mentor' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Husband' }],
     });
     const target = contact({
       id: 'b',
       name: 'Zayn Ahmad',
       firstName: 'Zayn',
-      gender: 'Male',
+      gender: 'Female',
       relationshipContacts: [],
     });
     mockFindContactsByIds.mockResolvedValue([target]);
@@ -283,12 +277,12 @@ describe('contactService relationship reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Mentor', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Wife', 1)]),
       }),
     ]);
   });
 
-  it('uses configured dynamic relationship pairs for custom reciprocal link creation', async () => {
+  it('uses explicit custom pairs override for reciprocal link creation in tests', async () => {
     const source = contact({
       id: 'a',
       name: 'Dr. Tariq',
@@ -317,8 +311,6 @@ describe('contactService relationship reciprocal mapping', () => {
     ]);
   });
 
-
-
   it('updates the reciprocal relationship link when editing an existing contact', async () => {
     const existingSource = contact({
       id: 'a',
@@ -341,63 +333,51 @@ describe('contactService relationship reciprocal mapping', () => {
 
     await updateContactById('a', {
       ...existingSource,
-      relationshipContacts: [{ contactId: 'b', relationship: 'Son' }],
+      relationshipContacts: [{ contactId: 'b', relationship: 'Child' }],
     });
 
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
         relationshipContacts: expect.arrayContaining([
-          inferredLink('a', 'Father', 1),
+          inferredLink('a', 'Parent', 1),
           link('c', 'Sister'),
         ]),
       }),
     ]);
   });
 
-  it('maps sibling, spouse, guardian, and other reciprocal terms from source gender', async () => {
+  it('maps guardian and husband reciprocal terms from the system catalog', async () => {
     const source = contact({
       id: 'a',
       name: 'Ahmed Khan',
       firstName: 'Ahmed',
       gender: 'Male',
       relationshipContacts: [
-        { contactId: 'b', relationship: 'Sister' },
-        { contactId: 'c', relationship: 'Spouse' },
+        { contactId: 'c', relationship: 'Husband' },
         { contactId: 'd', relationship: 'Guardian' },
-        { contactId: 'e', relationship: 'Other' },
       ],
     });
     mockFindContactsByIds.mockResolvedValue([
-      contact({ id: 'b', name: 'Sibling', firstName: 'Sibling' }),
-      contact({ id: 'c', name: 'Spouse', firstName: 'Spouse' }),
+      contact({ id: 'c', name: 'Spouse One', firstName: 'Spouse', gender: 'Female' }),
       contact({ id: 'd', name: 'Guardian', firstName: 'Guardian' }),
-      contact({ id: 'e', name: 'Other', firstName: 'Other' }),
     ]);
 
     await upsertContact(source);
 
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
-        id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Brother', 1)]),
-      }),
-      expect.objectContaining({
         id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Husband', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Wife', 1)]),
       }),
       expect.objectContaining({
         id: 'd',
         relationshipContacts: expect.arrayContaining([inferredLink('a', 'Dependent', 1)]),
       }),
-      expect.objectContaining({
-        id: 'e',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Other', 1)]),
-      }),
     ]);
   });
 
-  it('skips reciprocal inference when relationshipPairs are empty', async () => {
+  it('skips reciprocal inference for labels outside the system catalog', async () => {
     mockLoadContactPreferences.mockResolvedValue({ relationshipPairs: [] });
     const source = contact({
       id: 'a',
@@ -421,7 +401,7 @@ describe('contactService relationship reciprocal mapping', () => {
       name: 'Aisha Khan',
       firstName: 'Aisha',
       gender: 'Female',
-      relationships: [{ contactId: 'b', relationship: 'Father' }],
+      relationships: [{ contactId: 'b', relationship: 'Parent' }],
     });
     mockFindContactsByIds.mockResolvedValue([
       contact({ id: 'b', name: 'Bilal Khan', firstName: 'Bilal', gender: 'Male' }),
@@ -432,7 +412,7 @@ describe('contactService relationship reciprocal mapping', () => {
     expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
+        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Child', 1)]),
       }),
     ]);
   });

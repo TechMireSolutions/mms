@@ -1,0 +1,177 @@
+import {
+  DEFAULT_STUDENT_ENABLED_TABS,
+  DEFAULT_STUDENT_REQUIRED_TABS,
+  INITIAL_STUDENT_FIELD_SEED,
+  STUDENT_TAB_REGISTRY,
+} from './settingsTypes.js';
+import type { FieldDefinition, TabDefinition } from './contactTypes.js';
+import type { StudentsSettings } from './settingsTypes.js';
+import {
+  refreshModuleTierTabKeys,
+  refreshModuleTierTabLabels,
+} from './moduleTierTabs.js';
+
+export const OBSOLETE_STUDENT_SETUP_TABS = new Set(['guardian', 'academic']);
+export const OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS = new Set([
+  'fatherLink',
+  'motherLink',
+  'guardianLink',
+]);
+export const STUDENT_SETTINGS_VERSION = 4;
+
+function isLegacyFlatFields(fields: unknown): boolean {
+  if (!fields || typeof fields !== 'object') return false;
+  const values = Object.values(fields);
+  if (values.length === 0) return false;
+  return !Array.isArray(values[0]);
+}
+
+function normalizeTabs(tabs: unknown): StudentsSettings['formTabs'] | undefined {
+  if (!Array.isArray(tabs)) return undefined;
+  return tabs
+    .filter((tab) => tab && typeof tab === 'object')
+    .map((tab) => {
+      const tabRecord = tab as Record<string, unknown>;
+      if (!tabRecord.key && typeof tabRecord.id === 'string') {
+        return { ...tabRecord, key: tabRecord.id };
+      }
+      return tabRecord;
+    }) as unknown as StudentsSettings['formTabs'];
+}
+
+function mergeFieldLists(
+  primary: FieldDefinition[],
+  incoming: FieldDefinition[],
+): FieldDefinition[] {
+  const merged = [...primary];
+  for (const field of incoming) {
+    if (merged.some((existing) => existing.key === field.key)) continue;
+    merged.push({ ...field });
+  }
+  merged.forEach((field, index) => {
+    field.order = index;
+  });
+  return merged;
+}
+
+/** Collapse guardian → basic and academic → registration (Setup Fields v3). */
+export function migrateStudentSetupFieldsToTwoTabs(
+  fields: Record<string, FieldDefinition[]>,
+): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = { ...fields };
+  const basic = mergeFieldLists(next.basic ?? [], next.guardian ?? []);
+  const registration = mergeFieldLists(next.registration ?? [], next.academic ?? []);
+  next.basic = basic;
+  next.registration = registration;
+  delete next.guardian;
+  delete next.academic;
+  return next;
+}
+
+/** Replace father/mother/guardian triad with single contactRelationships field. */
+export function migrateStudentGuardianLinkFields(
+  fields: Record<string, FieldDefinition[]>,
+): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = {};
+  let enableRelationships = false;
+  let sawObsolete = false;
+
+  for (const [tabId, tabFields] of Object.entries(fields)) {
+    const kept: FieldDefinition[] = [];
+    for (const field of tabFields ?? []) {
+      if (OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS.has(field.key)) {
+        sawObsolete = true;
+        if (field.enabled !== false) enableRelationships = true;
+        continue;
+      }
+      kept.push(field);
+    }
+    next[tabId] = kept;
+  }
+
+  const basic = [...(next.basic ?? [])];
+  const hasContactRelationships = basic.some((field) => field.key === 'contactRelationships');
+  if (!hasContactRelationships) {
+    const seed = INITIAL_STUDENT_FIELD_SEED.basic?.find((field) => field.key === 'contactRelationships');
+    if (seed) {
+      basic.push({
+        ...seed,
+        enabled: sawObsolete ? enableRelationships : seed.enabled,
+        order: basic.length,
+      });
+    }
+  } else if (sawObsolete && enableRelationships) {
+    for (const field of basic) {
+      if (field.key === 'contactRelationships') field.enabled = true;
+    }
+  }
+  basic.forEach((field, index) => {
+    field.order = index;
+  });
+  next.basic = basic;
+  return next;
+}
+
+export function remapStudentEnabledTabs(tabs: string[] | undefined): string[] {
+  const source = tabs ?? [];
+  const out: string[] = [];
+  let hadAcademic = false;
+  for (const tab of source) {
+    if (tab === 'guardian') continue;
+    if (tab === 'academic') {
+      hadAcademic = true;
+      continue;
+    }
+    if (!out.includes(tab)) out.push(tab);
+  }
+  if (hadAcademic && !out.includes('registration')) {
+    out.push('registration');
+  }
+  if (out.length === 0) {
+    return [...DEFAULT_STUDENT_ENABLED_TABS];
+  }
+  return out;
+}
+
+function remapStudentRequiredTabs(tabs: string[] | undefined): string[] {
+  if (!tabs || tabs.length === 0) return [...DEFAULT_STUDENT_REQUIRED_TABS];
+  return remapStudentEnabledTabs(tabs);
+}
+
+function rebuildStudentFormTabs(existing: TabDefinition[] | undefined): TabDefinition[] {
+  const registryKeys = new Set(STUDENT_TAB_REGISTRY.map((tab) => tab.key));
+  const extras = (normalizeTabs(existing) ?? []).filter(
+    (tab) => !registryKeys.has(tab.key) && !OBSOLETE_STUDENT_SETUP_TABS.has(tab.key),
+  );
+  return refreshModuleTierTabLabels(
+    refreshModuleTierTabKeys([...STUDENT_TAB_REGISTRY, ...extras]),
+  );
+}
+
+/** Apply Setup Fields tab collapse + guardian triad → contactRelationships (v4). */
+export function applyStudentSetupVersionMigrate(draft: Partial<StudentsSettings>): void {
+  const storedVersion = typeof draft.version === 'number' ? draft.version : 0;
+  if (storedVersion >= STUDENT_SETTINGS_VERSION) {
+    if (draft.fields && typeof draft.fields === 'object' && !isLegacyFlatFields(draft.fields)) {
+      let fields = draft.fields as Record<string, FieldDefinition[]>;
+      if (fields.guardian || fields.academic) {
+        fields = migrateStudentSetupFieldsToTwoTabs(fields);
+      }
+      draft.fields = migrateStudentGuardianLinkFields(fields);
+    }
+    return;
+  }
+
+  if (draft.fields && typeof draft.fields === 'object' && !isLegacyFlatFields(draft.fields)) {
+    draft.fields = migrateStudentGuardianLinkFields(
+      migrateStudentSetupFieldsToTwoTabs(draft.fields as Record<string, FieldDefinition[]>),
+    );
+  }
+
+  draft.enabledTabs = remapStudentEnabledTabs(draft.enabledTabs);
+  draft.requiredTabs = remapStudentRequiredTabs(draft.requiredTabs);
+  draft.formTabs = rebuildStudentFormTabs(draft.formTabs);
+  draft.version = STUDENT_SETTINGS_VERSION;
+}
+
+export { isLegacyFlatFields, normalizeTabs };

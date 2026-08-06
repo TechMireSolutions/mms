@@ -38,19 +38,11 @@ export default function StudentDetail({
     closeComposer,
     canWriteMessaging,
     sortedEnabledFields,
-    fatherContact,
-    motherContact,
-    guardianContact,
-    fatherName,
-    motherName,
-    guardianName,
+    relationshipLinks,
     age,
     enrolledSessionDetails,
     primaryPhone,
     primaryEmail,
-    fatherPhone,
-    motherPhone,
-    guardianPhone,
     hasVisibleDetailFields,
   } = useStudentDetailModel(student);
 
@@ -109,23 +101,10 @@ export default function StudentDetail({
 
         {hasVisibleDetailFields && (
           <StudentDetailFieldsSection
-            student={{
-              ...student,
-              fatherContactId: fatherContact?.id != null ? String(fatherContact.id) : student.fatherContactId,
-              motherContactId: motherContact?.id != null ? String(motherContact.id) : student.motherContactId,
-              guardianContactId: guardianContact?.id != null ? String(guardianContact.id) : student.guardianContactId,
-              fatherName: fatherName || student.fatherName,
-              motherName: motherName || student.motherName,
-              guardianName: guardianName || student.guardianName,
-            }}
+            student={student}
             sortedEnabledFields={sortedEnabledFields}
             age={age}
-            fatherContact={fatherContact}
-            motherContact={motherContact}
-            guardianContact={guardianContact}
-            fatherPhone={fatherPhone}
-            motherPhone={motherPhone}
-            guardianPhone={guardianPhone}
+            relationshipLinks={relationshipLinks}
             openComposer={openComposer}
             messagingEnabled={!isArchived && canWriteMessaging}
           />

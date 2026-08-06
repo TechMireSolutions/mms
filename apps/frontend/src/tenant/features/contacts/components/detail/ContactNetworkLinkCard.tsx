@@ -1,0 +1,116 @@
+import { ArrowUpRight } from "lucide-react";
+import type { Contact } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
+import { DETAIL_STYLES } from "./contactDetailStyles";
+
+export interface ContactNetworkLinkCardProps {
+  displayName: string;
+  relationshipLabel: string;
+  avatarId: string | number;
+  avatar?: string | null;
+  target?: Contact;
+  targetPhone: string | null;
+  targetEmail: string | null;
+  legacyPhone: string;
+  showTargetMessaging: boolean;
+  showLegacyCall: boolean;
+  canNavigate: boolean;
+  linkedId?: string | number;
+  onNavigateToContact: (targetId: string | number) => void;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
+}
+
+export function ContactNetworkLinkCard({
+  displayName,
+  relationshipLabel,
+  avatarId,
+  avatar,
+  target,
+  targetPhone,
+  targetEmail,
+  legacyPhone,
+  showTargetMessaging,
+  showLegacyCall,
+  canNavigate,
+  linkedId,
+  onNavigateToContact,
+  onWhatsApp,
+  onSms,
+  onEmail,
+}: ContactNetworkLinkCardProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const resolvedName = displayName || t("contacts.detail.unknownContact");
+  const hasActions = showTargetMessaging || showLegacyCall || canNavigate;
+
+  return (
+    <Card className={`flex flex-col gap-2.5 p-4 ${DETAIL_STYLES.networkItemCard}`}>
+      <div className="flex min-w-0 items-start gap-3">
+        <UserAvatar
+          id={avatarId}
+          name={resolvedName}
+          avatar={avatar}
+          className="w-10 h-10 rounded-xl text-xs flex-shrink-0"
+        />
+        <div className="min-w-0 flex-1 space-y-1">
+          <h5 className="text-sm font-bold text-foreground leading-snug break-words">
+            {resolvedName}
+          </h5>
+          <p
+            className={`text-xs font-semibold uppercase tracking-widest ${DETAIL_STYLES.networkRelType}`}
+          >
+            {relationshipLabel}
+          </p>
+        </div>
+      </div>
+
+      {hasActions ? (
+        <div className="flex flex-wrap items-center gap-1.5 ps-[3.25rem]">
+          {showTargetMessaging && target ? (
+            <ContactCardMessagingButtons
+              contact={target}
+              displayName={resolvedName}
+              phone={targetPhone}
+              email={targetEmail}
+              showArchived={false}
+              onWhatsApp={onWhatsApp}
+              onSms={onSms}
+              onEmail={onEmail}
+            />
+          ) : showLegacyCall ? (
+            <EntityMessagingIconActions
+              primaryPhone={legacyPhone}
+              labels={{ call: t("contacts.detail.call") }}
+              callAriaLabel={t("contacts.detail.callPhone", { phone: legacyPhone })}
+              messagingEnabled={false}
+              showCall
+            />
+          ) : null}
+
+          {canNavigate && linkedId != null ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={
+                displayName
+                  ? t("contacts.detail.viewContact", { name: displayName })
+                  : t("contacts.fields.linkedContact")
+              }
+              onClick={() => onNavigateToContact(linkedId)}
+              className={`min-h-11 min-w-11 rounded-xl border border-border/50 transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`}
+              type="button"
+            >
+              <ArrowUpRight className="w-4 h-4" />
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+    </Card>
+  );
+}

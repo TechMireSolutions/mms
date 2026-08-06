@@ -29,7 +29,7 @@ export interface StudentSaveFlowInput {
 }
 
 function focusStudentValidationField(formInstanceId: string, fieldId: string): void {
-  const readOnlyFocusIds = new Set(["gender", "dob", "guardianLink", "fatherLink", "motherLink"]);
+  const readOnlyFocusIds = new Set(["gender", "dob", "contactRelationships"]);
   const candidates = [
     `sf-${formInstanceId}-${fieldId}`,
     fieldId,

@@ -1,4 +1,4 @@
-import { ArrowUpRight, Phone, Users as UsersIcon } from "lucide-react";
+import { Users as UsersIcon } from "lucide-react";
 import {
   Contact,
   getDisplayName,
@@ -7,17 +7,9 @@ import {
   hasWhatsApp,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatContactOptionLabel, formatTelHref } from "@/lib/contacts/contactI18n";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { UserAvatar } from "@/components/ui/UserAvatar";
-import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
-import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  MESSAGING_ICON_BTN,
-  MESSAGING_ICON_BTN_TONES,
-} from "@/components/ui/messagingActionStyles";
-import { cn } from "@/lib/utils";
+import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
+import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
+import { ContactNetworkLinkCard } from "./ContactNetworkLinkCard";
 import { DETAIL_STYLES } from "./contactDetailStyles";
 
 export interface ContactDetailNetworkProps {
@@ -115,11 +107,9 @@ export function ContactDetailNetwork({
 
       <div className="space-y-3">
         {links.length === 0 ? (
-          <EmptyState
+          <DetailCollectionEmpty
             title={t("contacts.detail.emptyRelationships")}
-            compact
-            icon={null}
-            className="items-start rounded-xl border border-border/60 bg-muted/20 px-3 py-3 text-start"
+            variant="bordered"
           />
         ) : (
           links.map((relationship, relationshipIndex) => {
@@ -140,7 +130,6 @@ export function ContactDetailNetwork({
             const targetPhone = target ? getPrimaryPhone(target) : null;
             const targetEmail = target ? getPrimaryEmail(target) : null;
             const legacyPhone = relationship.phone?.trim() || "";
-            // Align with ContactCardMessagingButtons mount rules.
             const showTargetMessaging =
               Boolean(target) &&
               allowOutbound &&
@@ -149,75 +138,27 @@ export function ContactDetailNetwork({
                 (Boolean(onWhatsApp) && target != null && hasWhatsApp(target)) ||
                 (Boolean(onSms) && Boolean(targetPhone)));
             const showLegacyCall = allowOutbound && !target && Boolean(legacyPhone);
-            const hasActions = showTargetMessaging || showLegacyCall || canNavigate;
 
             return (
-              <Card
+              <ContactNetworkLinkCard
                 key={`${relationship.contactId || relationship.name || "link"}-${relationshipIndex}`}
-                className={`flex flex-col gap-2.5 p-4 ${DETAIL_STYLES.networkItemCard}`}
-              >
-                <div className="flex min-w-0 items-start gap-3">
-                  <UserAvatar
-                    id={target?.id ?? (relationship.contactId || relationship.name || relationshipIndex)}
-                    name={displayName || t("contacts.detail.unknownContact")}
-                    avatar={target?.avatar}
-                    className="w-10 h-10 rounded-xl text-xs flex-shrink-0"
-                  />
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <h5 className="text-sm font-bold text-foreground leading-snug break-words">
-                      {displayName || t("contacts.detail.unknownContact")}
-                    </h5>
-                    <p
-                      className={`text-xs font-semibold uppercase tracking-widest ${DETAIL_STYLES.networkRelType}`}
-                    >
-                      {relationshipLabel}
-                    </p>
-                  </div>
-                </div>
-
-                {hasActions ? (
-                  <div className="flex flex-wrap items-center gap-1.5 ps-[3.25rem]">
-                    {showTargetMessaging && target ? (
-                      <ContactCardMessagingButtons
-                        contact={target}
-                        displayName={displayName || t("contacts.detail.unknownContact")}
-                        phone={targetPhone}
-                        email={targetEmail}
-                        showArchived={false}
-                        onWhatsApp={onWhatsApp}
-                        onSms={onSms}
-                        onEmail={onEmail}
-                      />
-                    ) : showLegacyCall ? (
-                      <a
-                        href={formatTelHref(legacyPhone)}
-                        className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.call, "inline-flex items-center justify-center")}
-                        title={t("contacts.detail.callPhone", { phone: legacyPhone })}
-                        aria-label={t("contacts.detail.callPhone", { phone: legacyPhone })}
-                      >
-                        <Phone aria-hidden="true" className="h-4 w-4" />
-                      </a>
-                    ) : null}
-
-                    {canNavigate ? (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={
-                          displayName
-                            ? t("contacts.detail.viewContact", { name: displayName })
-                            : t("contacts.fields.linkedContact")
-                        }
-                        onClick={() => onNavigateToContact(linkedId)}
-                        className={`min-h-11 min-w-11 rounded-xl border border-border/50 transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`}
-                        type="button"
-                      >
-                        <ArrowUpRight className="w-4 h-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : null}
-              </Card>
+                displayName={displayName}
+                relationshipLabel={relationshipLabel}
+                avatarId={target?.id ?? (relationship.contactId || relationship.name || relationshipIndex)}
+                avatar={target?.avatar}
+                target={target}
+                targetPhone={targetPhone}
+                targetEmail={targetEmail}
+                legacyPhone={legacyPhone}
+                showTargetMessaging={showTargetMessaging}
+                showLegacyCall={showLegacyCall}
+                canNavigate={canNavigate}
+                linkedId={linkedId}
+                onNavigateToContact={onNavigateToContact}
+                onWhatsApp={onWhatsApp}
+                onSms={onSms}
+                onEmail={onEmail}
+              />
             );
           })
         )}

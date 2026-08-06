@@ -15,9 +15,7 @@ export const INITIAL_STUDENT_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
     { key: "gender", label: "Gender", type: "select", options: ["Male", "Female"], enabled: true, order: 0, required: true, description: "Must be defined (not empty) on the linked contact profile." },
     { key: "dob", label: "Date of Birth", type: "date", enabled: true, order: 1, required: true, description: "Must be provided (not empty) on the linked contact profile." },
-    { key: "fatherLink", label: "Father", type: "text", enabled: true, order: 2, required: false, description: "Shown from the linked contact’s Father relationship in Contacts (not a picker on this form)." },
-    { key: "motherLink", label: "Mother", type: "text", enabled: true, order: 3, required: false, description: "Shown from the linked contact’s Mother relationship in Contacts (not a picker on this form)." },
-    { key: "guardianLink", label: "Guardian", type: "text", enabled: true, order: 4, required: false, description: "Shown from the linked contact’s Guardian relationship in Contacts (not a picker on this form)." },
+    { key: "contactRelationships", label: "Relationships", type: "text", enabled: true, order: 2, required: false, description: "Shown from the linked contact’s Relationships in Contacts (Parent/Child, Husband/Wife, Guardian/Dependent)." },
   ],
   registration: [
     { key: "registeredDate", label: "Registration Date", type: "date", enabled: true, order: 0, required: true, description: "Timestamp set when the student profile is registered; displayed read-only on the form." },
@@ -29,7 +27,7 @@ export const DEFAULT_STUDENT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "grNumber", label: "GR Number", enabled: true, order: 1, sortable: true, width: 120 },
   { key: "gender", label: "Gender", enabled: true, order: 2, sortable: true, width: 100 },
   { key: "status", label: "Status", enabled: true, order: 3, sortable: true, width: 100 },
-  { key: "fatherName", label: "Father Name", enabled: true, order: 4, sortable: true, width: 150 },
+  { key: "fatherName", label: "Parent / Guardian", enabled: true, order: 4, sortable: true, width: 150 },
   { key: "registeredDate", label: "Registered Date", enabled: true, order: 5, sortable: true, width: 130 },
 ];
 

@@ -16,9 +16,7 @@ describe("moduleFieldSetupDefaults", () => {
     expect(INITIAL_STUDENT_FIELD_SEED.basic?.map((field) => field.key)).toEqual([
       "gender",
       "dob",
-      "fatherLink",
-      "motherLink",
-      "guardianLink",
+      "contactRelationships",
     ]);
     expect(INITIAL_STUDENT_FIELD_SEED.registration?.map((field) => field.key)).toEqual([
       "registeredDate",

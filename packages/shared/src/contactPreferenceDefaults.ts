@@ -44,8 +44,8 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
 
 /**
  * Merges stored contact preferences onto defaults.
- * Relationship pairs are resolved via {@link resolveRelationshipPairs}
- * (empty allowed; legacy built-ins stripped). Option order is sanitized to
+ * Relationship pairs always resolve to the fixed system catalog
+ * ({@link resolveRelationshipPairs}). Option order is sanitized to
  * the current pair-derived label set.
  */
 export function normalizeContactPreferences(

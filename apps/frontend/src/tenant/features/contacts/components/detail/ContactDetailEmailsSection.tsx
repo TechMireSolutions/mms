@@ -1,17 +1,12 @@
-import { Mail } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveEmailLabel } from "@/lib/contacts/contactI18n";
-import { CollectionRowItem, DetailSection, type CollectionRowAction } from "./ContactDetailShared";
+import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
 import {
   DetailCollectionEmpty,
   withPrimaryEmail,
 } from "./contactDetailChannelHelpers";
-import {
-  MESSAGING_ICON_BTN,
-  MESSAGING_ICON_BTN_TONES,
-} from "@/components/ui/messagingActionStyles";
-import { cn } from "@/lib/utils";
+import { buildDetailEmailMessagingActions } from "./contactDetailMessagingActions";
 
 export function ContactDetailEmailsSection({
   contact,
@@ -32,16 +27,14 @@ export function ContactDetailEmailsSection({
       ) : (
         emails.map((email, emailIndex) => {
           const rawEmail = String(email.address || "").trim();
-          const actions: CollectionRowAction[] = [];
-          if (onEmail && rawEmail) {
-            actions.push({
-              key: "email",
-              icon: Mail,
-              title: t("contacts.detail.emailContact", { email: rawEmail }),
-              onClick: () => onEmail([withPrimaryEmail(contact, { ...email, address: rawEmail })]),
-              className: cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.email),
-            });
-          }
+          const actions =
+            onEmail && rawEmail
+              ? buildDetailEmailMessagingActions({
+                  emailTitle: t("contacts.detail.emailContact", { email: rawEmail }),
+                  onEmail: () =>
+                    onEmail([withPrimaryEmail(contact, { ...email, address: rawEmail })]),
+                })
+              : [];
 
           return (
             <CollectionRowItem

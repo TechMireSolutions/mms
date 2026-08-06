@@ -1,63 +1,157 @@
-import { useMemo } from "react";
+import { useMemo, type ComponentProps } from "react";
 import type { ContactsPageTabPanelProps } from "@/tenant/features/contacts/components/ContactsPageTabPanel";
-import {
-  buildContactsPageTabPanelProps,
-  type UseContactsPageTabPanelPropsInput,
-} from "@/tenant/features/contacts/hooks/buildContactsPageTabPanelProps";
+import type ContactCards from "@/tenant/features/contacts/components/ContactCards";
+import type ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
+import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
+import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
+import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
+import type { useContactsPageOverlayState } from "@/tenant/features/contacts/hooks/useContactsPageOverlayState";
+import type { useContactsSelectionTargets } from "@/tenant/features/contacts/hooks/useContactsSelectionTargets";
 
-export type { UseContactsPageTabPanelPropsInput } from "@/tenant/features/contacts/hooks/buildContactsPageTabPanelProps";
-export { buildContactsPageTabPanelProps } from "@/tenant/features/contacts/hooks/buildContactsPageTabPanelProps";
+type Directory = ReturnType<typeof useContactsDirectory>;
+type Overlay = ReturnType<typeof useContactsPageOverlayState>;
+type Messaging = ReturnType<typeof useContactsMessagingActions>;
+type Actions = ReturnType<typeof useContactsPageActions>;
+type SelectedTargets = ReturnType<typeof useContactsSelectionTargets>;
+type DirectoryColumn = { id: string; label: string; sortField?: string; width?: number };
 
-export function useContactsPageTabPanelProps(
-  input: UseContactsPageTabPanelPropsInput,
-): ContactsPageTabPanelProps {
+/** Maps directory / overlay slices into ContactsPageTabPanelProps. */
+export function useContactsPageTabPanelProps({
+  effectiveTab,
+  directory,
+  overlay,
+  messaging,
+  actions,
+  selectedTargets,
+  viewingDeleted,
+  bulkActions,
+  canExport,
+  canWrite,
+  canDelete,
+  canEditSetup,
+  tableColumns,
+  commonDirectoryProps,
+  tableProps,
+  handleBulkExport,
+}: {
+  effectiveTab: string;
+  directory: Directory;
+  overlay: Pick<Overlay, "viewMode" | "setViewMode">;
+  messaging: Pick<Messaging, "canWriteMessaging" | "handleWhatsApp" | "handleSms">;
+  actions: Pick<
+    Actions,
+    "requestBulkDelete" | "requestBulkRestore" | "handleImport"
+  >;
+  selectedTargets: SelectedTargets;
+  viewingDeleted: boolean;
+  bulkActions: readonly string[];
+  canExport: boolean;
+  canWrite: boolean;
+  canDelete: boolean;
+  canEditSetup: boolean;
+  tableColumns: DirectoryColumn[];
+  commonDirectoryProps: ComponentProps<typeof ContactCards>;
+  tableProps: ComponentProps<typeof ContactsTable>;
+  handleBulkExport: () => void | Promise<void>;
+}): ContactsPageTabPanelProps {
   return useMemo(
-    () => buildContactsPageTabPanelProps(input),
+    (): ContactsPageTabPanelProps => ({
+      effectiveTab,
+      search: directory.search,
+      onSearchChange: directory.setSearch,
+      filterGender: directory.filterGender,
+      onGenderChange: directory.setFilterGender,
+      quickFilter: directory.quickFilter,
+      onQuickFilterChange: directory.setQuickFilter,
+      sortField: directory.sortField,
+      sortDir: directory.sortDir,
+      onSort: directory.handleSort,
+      hasActiveFilters: directory.hasActiveFilters,
+      activeFilterCount: directory.activeFilterCount,
+      onClearFilters: directory.clearFilters,
+      viewingDeleted,
+      onShowDeletedChange: (next: boolean) => {
+        directory.setShowDeletedArchives(next);
+        directory.setSelected([]);
+      },
+      canViewDeleted: canDelete,
+      viewMode: overlay.viewMode,
+      onViewModeChange: overlay.setViewMode,
+      shownCount: directory.shownCount,
+      selected: directory.selected,
+      onClearSelection: () => directory.setSelected([]),
+      selectedTargets,
+      bulkActions,
+      canWriteMessaging: messaging.canWriteMessaging,
+      canExport,
+      canDelete,
+      onWhatsApp: messaging.handleWhatsApp,
+      onSms: messaging.handleSms,
+      onBulkExport: handleBulkExport,
+      onRequestBulkDelete: actions.requestBulkDelete,
+      onRequestBulkRestore: actions.requestBulkRestore,
+      isWorkError: directory.isWorkError,
+      isWorkLoading: directory.isWorkLoading,
+      isWorkFetching: directory.isWorkFetching,
+      onRetryWork: () => {
+        void directory.refetchWork();
+      },
+      workContacts: directory.workContacts,
+      tableColumns,
+      commonDirectoryProps,
+      tableProps,
+      useServerWork: directory.useServerWork,
+      workPageData: directory.workPageData,
+      onPageChange: directory.setListPage,
+      canWrite,
+      canEditSetup,
+      onImport: actions.handleImport,
+    }),
     [
-      input.effectiveTab,
-      input.search,
-      input.setSearch,
-      input.filterGender,
-      input.setFilterGender,
-      input.quickFilter,
-      input.setQuickFilter,
-      input.sortField,
-      input.sortDir,
-      input.handleSort,
-      input.hasActiveFilters,
-      input.activeFilterCount,
-      input.clearFilters,
-      input.viewingDeleted,
-      input.setShowDeletedArchives,
-      input.setSelected,
-      input.canDelete,
-      input.viewMode,
-      input.setViewMode,
-      input.shownCount,
-      input.selected,
-      input.selectedTargets,
-      input.bulkActions,
-      input.canWriteMessaging,
-      input.canExport,
-      input.handleWhatsApp,
-      input.handleSms,
-      input.handleBulkExport,
-      input.requestBulkDelete,
-      input.requestBulkRestore,
-      input.isWorkError,
-      input.isWorkLoading,
-      input.isWorkFetching,
-      input.refetchWork,
-      input.workContacts,
-      input.tableColumns,
-      input.commonDirectoryProps,
-      input.tableProps,
-      input.useServerWork,
-      input.workPageData,
-      input.setListPage,
-      input.canWrite,
-      input.canEditSetup,
-      input.handleImport,
+      effectiveTab,
+      directory.search,
+      directory.setSearch,
+      directory.filterGender,
+      directory.setFilterGender,
+      directory.quickFilter,
+      directory.setQuickFilter,
+      directory.sortField,
+      directory.sortDir,
+      directory.handleSort,
+      directory.hasActiveFilters,
+      directory.activeFilterCount,
+      directory.clearFilters,
+      directory.setShowDeletedArchives,
+      directory.setSelected,
+      directory.shownCount,
+      directory.selected,
+      directory.isWorkError,
+      directory.isWorkLoading,
+      directory.isWorkFetching,
+      directory.refetchWork,
+      directory.workContacts,
+      directory.useServerWork,
+      directory.workPageData,
+      directory.setListPage,
+      viewingDeleted,
+      overlay.viewMode,
+      overlay.setViewMode,
+      selectedTargets,
+      bulkActions,
+      messaging.canWriteMessaging,
+      messaging.handleWhatsApp,
+      messaging.handleSms,
+      canExport,
+      canWrite,
+      canDelete,
+      canEditSetup,
+      handleBulkExport,
+      actions.requestBulkDelete,
+      actions.requestBulkRestore,
+      actions.handleImport,
+      tableColumns,
+      commonDirectoryProps,
+      tableProps,
     ],
   );
 }

@@ -73,13 +73,11 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
   fields: {
     gender: { enabled: true, required: true },
     dob: { enabled: true, required: true },
-    fatherLink: { enabled: true, required: false },
-    motherLink: { enabled: true, required: false },
-    guardianLink: { enabled: true, required: false },
+    contactRelationships: { enabled: true, required: false },
     registeredDate: { enabled: true, required: true },
   },
   customFields: [],
-  fieldOrder: ["gender", "dob", "fatherLink", "motherLink", "guardianLink", "registeredDate"],
+  fieldOrder: ["gender", "dob", "contactRelationships", "registeredDate"],
 };
 
 export interface StudentFieldDef {
@@ -95,9 +93,7 @@ export interface StudentFieldDef {
 export const DEFAULT_STUDENT_FIELD_DEFS: StudentFieldDef[] = [
   { id: "gender", label: "Gender" },
   { id: "dob", label: "Date of Birth" },
-  { id: "fatherLink", label: "Father" },
-  { id: "motherLink", label: "Mother" },
-  { id: "guardianLink", label: "Guardian" },
+  { id: "contactRelationships", label: "Relationships" },
   { id: "registeredDate", label: "Registration Date" },
 ];
 
@@ -149,7 +145,7 @@ export function getSortedStudentFields(
   }));
 
   const fieldDefinitions = [...defaultFieldDefinitions, ...customFieldDefinitions];
-  const order = fieldOrder || ["gender", "dob", "fatherLink", "motherLink", "guardianLink", "registeredDate"];
+  const order = fieldOrder || ["gender", "dob", "contactRelationships", "registeredDate"];
 
   const orderIndexByFieldId = Object.fromEntries(order.map((fieldId, index) => [fieldId, index]));
   return fieldDefinitions.sort((leftField, rightField) => {

@@ -6,7 +6,7 @@ import {
 } from './index.js';
 
 describe('normalizeStudentsSettings', () => {
-  it('migrates legacy flat student fields into Identity + Registration (v3)', () => {
+  it('migrates legacy flat student fields into Identity + Registration (v4)', () => {
     const settings = normalizeStudentsSettings({
       ...DEFAULT_STUDENTS_SETTINGS,
       fields: {
@@ -16,7 +16,7 @@ describe('normalizeStudentsSettings', () => {
       },
     });
 
-    expect(settings.version).toBe(3);
+    expect(settings.version).toBe(4);
     expect(settings.enabledTabs).toEqual(['registration']);
     expect(Array.isArray(settings.fields?.basic)).toBe(true);
     expect(Array.isArray(settings.fields?.registration)).toBe(true);
@@ -24,7 +24,8 @@ describe('normalizeStudentsSettings', () => {
     expect(settings.fields?.academic).toBeUndefined();
     const fields = settings.fields as Record<string, FieldDefinition[]>;
     expect(fields.basic.find((field) => field.key === 'gender')?.required).toBe(false);
-    expect(fields.basic.find((field) => field.key === 'fatherLink')?.enabled).toBe(false);
+    expect(fields.basic.find((field) => field.key === 'fatherLink')).toBeUndefined();
+    expect(fields.basic.find((field) => field.key === 'contactRelationships')?.enabled).toBe(false);
   });
 
   it('preserves modern tabbed fields even when a stored version is missing', () => {
@@ -46,16 +47,13 @@ describe('normalizeStudentsSettings', () => {
     });
 
     const fields = settings.fields as Record<string, FieldDefinition[]>;
-    expect(settings.version).toBe(3);
-    expect(fields.basic).toEqual([
-      expect.objectContaining({
-        key: 'studentCode',
-        required: true,
-      }),
-    ]);
+    expect(settings.version).toBe(4);
+    expect(fields.basic.map((field) => field.key)).toContain('studentCode');
+    expect(fields.basic.find((field) => field.key === 'studentCode')?.required).toBe(true);
+    expect(fields.basic.find((field) => field.key === 'contactRelationships')).toBeDefined();
   });
 
-  it('merges guardian into basic and academic into registration at v3', () => {
+  it('merges guardian into basic and replaces triad with contactRelationships at v4', () => {
     const settings = normalizeStudentsSettings({
       ...DEFAULT_STUDENTS_SETTINGS,
       version: 2,
@@ -123,7 +121,7 @@ describe('normalizeStudentsSettings', () => {
       },
     });
 
-    expect(settings.version).toBe(3);
+    expect(settings.version).toBe(4);
     expect(settings.enabledTabs).toEqual(['registration']);
     expect(settings.fields?.guardian).toBeUndefined();
     expect(settings.fields?.academic).toBeUndefined();
@@ -132,9 +130,10 @@ describe('normalizeStudentsSettings', () => {
     expect(fields.basic.map((field) => field.key)).toEqual([
       'gender',
       'house',
-      'fatherLink',
       'emergencyNote',
+      'contactRelationships',
     ]);
+    expect(fields.basic.find((field) => field.key === 'contactRelationships')?.enabled).toBe(true);
     expect(fields.registration.map((field) => field.key)).toEqual([
       'registeredDate',
       'scholarshipNote',

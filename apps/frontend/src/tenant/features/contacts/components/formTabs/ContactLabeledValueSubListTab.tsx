@@ -5,7 +5,7 @@ import type { AppTranslationKey } from "@mms/shared";
 import { listEnabledCustomContactFormFields, type Contact } from "@mms/shared";
 import { Input } from "@/components/ui/input";
 import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
+import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
   withSubListCustomFieldDefaults,
@@ -90,7 +90,7 @@ export function ContactLabeledValueSubListTab({
   const showLabel = isFieldEnabled(listKey, labelFieldKey);
   const showValue = isFieldEnabled(listKey, valueFieldKey);
   const customFields = listEnabledCustomContactFormFields(fields, listKey);
-  const allowAdd = showLabel || showValue || customFields.length > 0;
+  const allowAdd = resolveSubListAllowAdd([showLabel, showValue], customFields.length);
   const items = (contactDraft[listKey] as ListItem[] | undefined) ?? [];
 
   const makeEmpty = () =>

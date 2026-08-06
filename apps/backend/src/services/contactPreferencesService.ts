@@ -1,11 +1,11 @@
 import {
   CONTACTS_SAVED_REPORT_CATEGORY,
-  LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS,
   applyRelationshipOptionOrder,
   canDeleteContactsSavedReport,
   canViewContactsSavedReport,
   deriveRelationshipOptionsFromPairs,
   normalizeContactPreferences,
+  relationshipPairsMatchDefaults,
   type ContactColumnPreference,
   type ContactPreferences,
   type ContactsSavedReport,
@@ -53,16 +53,10 @@ function filterColumnPreferences(preferences: unknown[]): ModuleColumnPreference
   );
 }
 
-function rawHadLegacyRelationshipPairs(raw: Record<string, unknown>): boolean {
+function rawNeedsRelationshipPairsRewrite(raw: Record<string, unknown>): boolean {
   const pairs = raw.relationshipPairs;
-  if (!Array.isArray(pairs)) return false;
-  return pairs.some(
-    (pair) =>
-      pair != null &&
-      typeof pair === 'object' &&
-      typeof (pair as RelationshipPair).id === 'string' &&
-      LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS.has((pair as RelationshipPair).id as string),
-  );
+  if (!Array.isArray(pairs)) return true;
+  return !relationshipPairsMatchDefaults(pairs as RelationshipPair[]);
 }
 
 function relationshipLabelListsMatch(
@@ -167,8 +161,8 @@ export async function loadContactPreferences(): Promise<ContactPreferences | nul
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
   const normalized = normalizeContactPreferences(record as Partial<ContactPreferences>);
-  // One-shot: drop former built-in pairs from stored prefs.
-  if (rawHadLegacyRelationshipPairs(record)) {
+  // One-shot: rewrite stored pairs to the fixed system catalog when they diverge.
+  if (rawNeedsRelationshipPairsRewrite(record)) {
     await upsertContactModulePreferences(
       requireTenant(),
       normalized as unknown as Record<string, unknown>,

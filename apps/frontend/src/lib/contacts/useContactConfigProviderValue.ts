@@ -13,9 +13,9 @@ import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
 
 /**
  * Builds ContactConfig context value.
- * Relationship-type options are pair-derived only (`prefs.relationshipPairs`) —
- * do not pass lookup `relationships` here (lookups remain a write mirror via
- * `updateRelationships`).
+ * Relationship-type options are derived from the fixed system pair catalog
+ * (`resolveRelationshipPairs` → Parent/Child, Husband/Wife, Guardian/Dependent).
+ * Lookups kind `relationships` remains a write mirror only.
  */
 export function useContactConfigProviderValue({
   fieldConfig,
@@ -93,7 +93,7 @@ export function useContactConfigProviderValue({
     [countryCodes, countryCodesMap, prefs],
   );
 
-  /** Form Relationship-type dropdown — user-created pairs only (no prebuilt seed). */
+  /** Form Relationship-type dropdown — fixed system catalog (Parent/Child, …). */
   const resolvedRelationships = useMemo(() => {
     const derived = deriveRelationshipOptionsFromPairs(
       resolveRelationshipPairs(prefs.relationshipPairs),

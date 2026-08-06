@@ -1,63 +1,70 @@
 import { useMemo, type ComponentProps } from "react";
+import type { Contact } from "@mms/shared";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 import { getDirectoryPageSelection } from "@/tenant/features/contacts/hooks/contactsDirectorySelection";
-import type { Contact } from "@mms/shared";
+import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
+import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
+import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
+import type { useContactsPageOverlayState } from "@/tenant/features/contacts/hooks/useContactsPageOverlayState";
 
+type Directory = ReturnType<typeof useContactsDirectory>;
+type Overlay = ReturnType<typeof useContactsPageOverlayState>;
+type Messaging = ReturnType<typeof useContactsMessagingActions>;
+type Actions = ReturnType<typeof useContactsPageActions>;
+
+/** Builds ContactCards / ContactsTable props from page directory slices. */
 export function useContactsPageDirectoryProps({
-  workContacts,
-  selected,
-  handleSelect,
-  handleSelectAll,
-  setViewContact,
-  handleEdit,
-  handleDelete,
-  handleRestore,
+  directory,
+  overlay,
+  messaging,
+  actions,
   viewingDeleted,
-  canWriteMessaging,
-  handleWhatsApp,
-  handleSms,
-  handleEmail,
-  allContactsForLinks,
   canWrite,
   canDelete,
   tableColumns,
-  sortField,
-  sortDir,
-  handleSort,
 }: {
-  workContacts: Contact[];
-  selected: Array<string | number>;
-  handleSelect: (id: string | number) => void;
-  handleSelectAll: () => void;
-  setViewContact: (contact: Contact | null) => void;
-  handleEdit: (contact: Contact) => void;
-  handleDelete: (id: string | number) => void;
-  handleRestore: (id: string | number) => void;
+  directory: Directory;
+  overlay: Pick<Overlay, "setViewContact">;
+  messaging: Pick<Messaging, "canWriteMessaging" | "handleWhatsApp" | "handleSms" | "handleEmail">;
+  actions: Pick<Actions, "handleEdit" | "handleDelete" | "handleRestore">;
   viewingDeleted: boolean;
-  canWriteMessaging: boolean;
-  handleWhatsApp: (contacts: Contact[]) => void;
-  handleSms: (contacts: Contact[]) => void;
-  handleEmail: (contacts: Contact[]) => void;
-  allContactsForLinks: Contact[];
   canWrite: boolean;
   canDelete: boolean;
   tableColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
-  sortField: string;
-  sortDir: "asc" | "desc";
-  handleSort: (field: string) => void;
 }) {
+  const {
+    workContacts,
+    selected,
+    handleSelect,
+    handleSelectAll,
+    allContactsForLinks,
+    sortField,
+    sortDir,
+    handleSort,
+  } = directory;
+
   const messagingHandlers = useMemo(() => {
-    if (!canWriteMessaging || viewingDeleted) {
+    if (!messaging.canWriteMessaging || viewingDeleted) {
       return { onWhatsApp: undefined, onSms: undefined, onEmail: undefined };
     }
-    return { onWhatsApp: handleWhatsApp, onSms: handleSms, onEmail: handleEmail };
-  }, [canWriteMessaging, viewingDeleted, handleWhatsApp, handleSms, handleEmail]);
+    return {
+      onWhatsApp: messaging.handleWhatsApp,
+      onSms: messaging.handleSms,
+      onEmail: messaging.handleEmail,
+    };
+  }, [
+    messaging.canWriteMessaging,
+    messaging.handleWhatsApp,
+    messaging.handleSms,
+    messaging.handleEmail,
+    viewingDeleted,
+  ]);
 
   const pageSelection = useMemo(
     () =>
       getDirectoryPageSelection(
-        workContacts.map((contact) => contact.id),
+        workContacts.map((contact: Contact) => contact.id),
         selected,
       ),
     [workContacts, selected],
@@ -69,10 +76,10 @@ export function useContactsPageDirectoryProps({
       selected,
       onSelect: handleSelect,
       onSelectAll: handleSelectAll,
-      onView: setViewContact,
-      onEdit: handleEdit,
-      onDelete: handleDelete,
-      onRestore: handleRestore,
+      onView: overlay.setViewContact,
+      onEdit: actions.handleEdit,
+      onDelete: actions.handleDelete,
+      onRestore: actions.handleRestore,
       showArchived: viewingDeleted,
       ...messagingHandlers,
       allContacts: allContactsForLinks,
@@ -87,10 +94,10 @@ export function useContactsPageDirectoryProps({
       selected,
       handleSelect,
       handleSelectAll,
-      setViewContact,
-      handleEdit,
-      handleDelete,
-      handleRestore,
+      overlay.setViewContact,
+      actions.handleEdit,
+      actions.handleDelete,
+      actions.handleRestore,
       viewingDeleted,
       messagingHandlers,
       allContactsForLinks,
@@ -107,10 +114,10 @@ export function useContactsPageDirectoryProps({
       selected,
       onSelect: handleSelect,
       onSelectAll: handleSelectAll,
-      onView: setViewContact,
-      onEdit: handleEdit,
-      onDelete: handleDelete,
-      onRestore: handleRestore,
+      onView: overlay.setViewContact,
+      onEdit: actions.handleEdit,
+      onDelete: actions.handleDelete,
+      onRestore: actions.handleRestore,
       showArchived: viewingDeleted,
       ...messagingHandlers,
       allContacts: allContactsForLinks,
@@ -128,10 +135,10 @@ export function useContactsPageDirectoryProps({
       selected,
       handleSelect,
       handleSelectAll,
-      setViewContact,
-      handleEdit,
-      handleDelete,
-      handleRestore,
+      overlay.setViewContact,
+      actions.handleEdit,
+      actions.handleDelete,
+      actions.handleRestore,
       viewingDeleted,
       messagingHandlers,
       allContactsForLinks,

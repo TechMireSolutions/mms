@@ -21,7 +21,7 @@ describe('buildCustomFieldSchema', () => {
     expect(schema.safeParse('').success).toBe(false);
   });
 
-  it('accepts standard and custom relationship terms on relationship fields', () => {
+  it('accepts only system catalog labels on relationship fields', () => {
     const schema = buildCustomFieldSchema(
       field({
         key: 'relationship',
@@ -32,7 +32,9 @@ describe('buildCustomFieldSchema', () => {
       }),
     );
     expect(schema.safeParse('Husband').success).toBe(true);
-    expect(schema.safeParse('Mentor').success).toBe(true);
+    expect(schema.safeParse('Parent').success).toBe(true);
+    expect(schema.safeParse('Mentor').success).toBe(false);
+    expect(schema.safeParse('Spouse').success).toBe(false);
   });
 
   it('rejects unlisted options for non-relationship select fields', () => {

@@ -2,6 +2,7 @@ import type { Contact, RelationshipPair } from './contactEntityTypes.js';
 import {
   deriveRelationshipOptionsFromPairs,
   normalizeRelationshipTerm,
+  resolveRelationshipPairs,
 } from './contactRelationshipPairUtils.js';
 
 export { normalizeRelationshipTerm } from './contactRelationshipPairUtils.js';
@@ -31,22 +32,24 @@ function isMale(contact: Contact): boolean {
 }
 
 /**
- * True when `label` appears in the tenant’s pair-derived relationship option set.
+ * True when `label` appears in the system pair-derived relationship option set.
+ * Pass `pairs` to override (tests); otherwise uses {@link DEFAULT_RELATIONSHIP_PAIRS}.
  */
 export function isAllowedRelationshipLabel(
   label: string,
-  pairs: RelationshipPair[] | undefined,
+  pairs?: RelationshipPair[] | undefined,
 ): boolean {
   const norm = normalizeRelationshipTerm(label);
   if (!norm) return false;
-  return deriveRelationshipOptionsFromPairs(pairs ?? []).some(
+  const catalog = pairs ?? resolveRelationshipPairs();
+  return deriveRelationshipOptionsFromPairs(catalog).some(
     (option) => normalizeRelationshipTerm(option) === norm,
   );
 }
 
 /**
  * Resolves the reciprocal relationship label from configured pairs only.
- * Returns null when no pair matches — never invents built-in labels.
+ * Uses the system catalog when `customPairs` is omitted or empty.
  */
 export function resolveInverseRelationship(
   relationship: string,
@@ -54,11 +57,12 @@ export function resolveInverseRelationship(
   customPairs?: RelationshipPair[],
 ): string | null {
   if (!relationship || !relationship.trim()) return null;
-  if (!customPairs || customPairs.length === 0) return null;
+  const pairs =
+    customPairs && customPairs.length > 0 ? customPairs : resolveRelationshipPairs();
 
   const norm = normalizeRelationshipTerm(relationship);
 
-  for (const pair of customPairs) {
+  for (const pair of pairs) {
     const normFwd = normalizeRelationshipTerm(pair.forward);
     const normInv = normalizeRelationshipTerm(pair.inverse);
     const normInvMale = normalizeRelationshipTerm(pair.inverseMale);

@@ -1,14 +1,32 @@
 import type { Contact, EmailAddress, PhoneNumber } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { cn } from "@/lib/utils";
+
+const DETAIL_COLLECTION_EMPTY_CLASS: Record<
+  "plain" | "bordered" | "borderedRelaxed",
+  string
+> = {
+  plain: "items-start px-3 py-3 text-start",
+  bordered: "items-start rounded-xl border border-border/60 bg-muted/20 px-3 py-3 text-start",
+  borderedRelaxed: "items-start rounded-xl border border-border bg-muted/20 px-4 py-6 text-start",
+};
 
 /** Dense empty hint inside detail collection sections (EmptyState SSOT). */
-export function DetailCollectionEmpty({ title }: { title: string }): React.JSX.Element {
+export function DetailCollectionEmpty({
+  title,
+  variant = "plain",
+  className,
+}: {
+  title: string;
+  variant?: keyof typeof DETAIL_COLLECTION_EMPTY_CLASS;
+  className?: string;
+}): React.JSX.Element {
   return (
     <EmptyState
       title={title}
       compact
       icon={null}
-      className="items-start px-3 py-3 text-start"
+      className={cn(DETAIL_COLLECTION_EMPTY_CLASS[variant], className)}
     />
   );
 }

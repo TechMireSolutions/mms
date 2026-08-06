@@ -1,43 +1,41 @@
+import { useCallback } from "react";
+import { CONTACTS_MODULE_MANIFEST, resolveModuleTierTab } from "@mms/shared";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { resolveModuleTierTab } from "@mms/shared";
-import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactsCrudActions } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
+import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
+import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
+import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useContactsConflictPanel } from "@/tenant/features/contacts/hooks/useContactsConflictPanel";
+import { useContactsCrudActions } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
 import { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
 import { useContactsExportActions } from "@/tenant/features/contacts/hooks/useContactsExportActions";
-import { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
 import { useContactsKeyboardShortcuts } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
+import { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
 import { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
+import { useContactsPageDirectoryProps } from "@/tenant/features/contacts/hooks/useContactsPageDirectoryProps";
+import { useContactsPageOverlayProps } from "@/tenant/features/contacts/hooks/useContactsPageOverlayProps";
 import { useContactsPageOverlayState } from "@/tenant/features/contacts/hooks/useContactsPageOverlayState";
+import { useContactsPageTabPanelProps } from "@/tenant/features/contacts/hooks/useContactsPageTabPanelProps";
 import { useContactsSelectionTargets } from "@/tenant/features/contacts/hooks/useContactsSelectionTargets";
-import { buildContactsPageStateReturn } from "@/tenant/features/contacts/hooks/buildContactsPageStateReturn";
 
-export interface UseContactsPageStateOptions {
-  prefs: {
-    defaultCountry?: string;
-    defaultCity?: string;
-    defaultProvince?: string;
-  };
-  tableColumns: Array<{ id: string; label: string }>;
-  canWrite: boolean;
-  canDelete: boolean;
-  canExport: boolean;
-  canViewReports: boolean;
-  canViewSetup: boolean;
-  initialShowDeletedArchives?: boolean;
-}
-
-export function useContactsPageState({
-  prefs,
-  tableColumns,
-  canWrite,
-  canDelete,
-  canExport,
-  canViewReports,
-  canViewSetup,
-  initialShowDeletedArchives = false,
-}: UseContactsPageStateOptions) {
+/**
+ * Contacts page orchestrator — composes domain slices and builds view prop bags
+ * without a flatten→rebuild intermediate.
+ */
+export function useContactsPageController() {
+  const {
+    canRead,
+    canWrite,
+    canDelete,
+    canExport,
+    canReports: canViewReports,
+    canViewSetup,
+    canEditSetup,
+  } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
+  const bulkActions = CONTACTS_MODULE_MANIFEST.work.bulkActions;
+  const { prefs } = useContactConfig();
+  const tableColumns = useContactColumns();
   const { t } = useTranslation();
   const crud = useContactsCrudActions();
   const { logExportAudit, handleError } = crud;
@@ -46,21 +44,25 @@ export function useContactsPageState({
     canViewSetup,
     canViewReports,
   });
-
   const overlay = useContactsPageOverlayState();
   const { pendingCount, conflictCount, flushing, flush, openConflictReview } =
     useContactsConflictPanel(overlay.setConflictPanelOpen);
-
   const messaging = useContactsMessagingActions();
+
   const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
   const effectiveTab = resolveModuleTierTab(activeTab, visibleTopTabs.map((tab) => tab.id));
+
+  useGoogleContactsOAuthListener(
+    useCallback(() => {
+      setActiveTab("setup");
+    }, [setActiveTab]),
+  );
 
   const directory = useContactsDirectory({
     effectiveTab,
     setActiveTab,
     editContact: overlay.editContact,
     viewContact: overlay.viewContact,
-    initialShowDeletedArchives,
   });
 
   const actions = useContactsPageActions({
@@ -114,24 +116,72 @@ export function useContactsPageState({
     onCreate: actions.handleCreateContact,
   });
 
-  return buildContactsPageStateReturn({
-    t,
-    visibleTopTabs,
-    effectiveTab,
-    activeTab,
-    setActiveTab,
+  const viewingDeleted = directory.showDeletedArchives;
+
+  const { messagingHandlers, commonDirectoryProps, tableProps } = useContactsPageDirectoryProps({
     directory,
     overlay,
     messaging,
     actions,
-    handleExportCSV,
-    handleBulkExport,
+    viewingDeleted,
+    canWrite,
+    canDelete,
+    tableColumns,
+  });
+
+  const tabPanelProps = useContactsPageTabPanelProps({
+    effectiveTab,
+    directory,
+    overlay,
+    messaging,
+    actions,
     selectedTargets,
+    viewingDeleted,
+    bulkActions,
+    canExport,
+    canWrite,
+    canDelete,
+    canEditSetup,
+    tableColumns,
+    commonDirectoryProps,
+    tableProps,
+    handleBulkExport,
+  });
+
+  const overlayProps = useContactsPageOverlayProps({
+    canWrite,
+    canDelete,
     prefs,
-    openConflictReview,
+    overlay,
+    messaging,
+    actions,
+    messagingHandlers,
+    allContactsForLinks: directory.allContactsForLinks,
+    selectedCount: directory.selected.length,
+  });
+
+  return {
+    t,
+    visibleTopTabs,
+    effectiveTab,
+    setActiveTab,
+    canExport,
+    canRead,
+    canWrite,
+    viewingDeleted,
+    openingDuplicates: overlay.openingDuplicates,
+    handleOpenDuplicates: actions.handleOpenDuplicates,
+    handleExportCSV,
+    handleNew: actions.handleCreateContact,
+    shownCount: directory.shownCount,
     pendingCount,
     conflictCount,
     flushing,
     flush,
-  });
+    openConflictReview,
+    conflictPanelOpen: overlay.conflictPanelOpen,
+    setConflictPanelOpen: overlay.setConflictPanelOpen,
+    tabPanelProps,
+    overlayProps,
+  };
 }

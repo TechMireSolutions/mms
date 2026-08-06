@@ -61,7 +61,7 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
 }
 
 /**
- * Registers student Jane Doe and links John Doe as Father guardian
+ * Registers student Jane Doe and links John Doe as Parent
  */
 export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await page.click('button:has-text("Add Student")');
@@ -89,18 +89,12 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await expect(johnRelOption).toBeVisible({ timeout: 15_000 });
   await johnRelOption.click();
 
-  // Set relationship type to Father
+  // Set relationship type to Parent (system catalog FormSelect)
   const relTypeSelect = editJaneDialog.locator('#relationship-type-0');
   await relTypeSelect.click();
-  const fatherOption = page.getByRole('option', { name: /^Father$/i }).first();
-  if (await fatherOption.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await fatherOption.click();
-  } else {
-    const addInput = page.getByPlaceholder(/Parent : Child/i).first();
-    await expect(addInput).toBeVisible({ timeout: 10_000 });
-    await addInput.fill('Father : Child');
-    await addInput.press('Enter');
-  }
+  const parentOption = page.getByRole('option', { name: /^Parent$/i }).first();
+  await expect(parentOption).toBeVisible({ timeout: 10_000 });
+  await parentOption.click();
 
   await waitForToastOverlayToClear(page, 'before saving Jane relationship');
 

@@ -3,6 +3,7 @@ import {
   type Contact,
   normalizeStoredStudent,
   getPrimaryEmail,
+  listStudentContactRelationships,
   resolveStudentGuardianLinks,
   type StudentDuplicateReason,
   type AppTranslationKey,
@@ -41,6 +42,8 @@ export function validateStudentDraft(
     context.requiredTabs,
     context.fields,
     context.language,
+    undefined,
+    context.linkedContact ?? null,
   );
 
   const guardians = resolveStudentGuardianLinks(studentDraft, context.linkedContact ?? null);
@@ -93,15 +96,14 @@ export function prepareStudentForSave(input: PrepareStudentSaveInput): Student {
   }) as Student;
 }
 
-/** Exclude the student's guardians (from Contacts relationships) from the student-contact picker. */
+/** Exclude the student's relationship links (from Contacts) from the student-contact picker. */
 export function buildStudentContactExcludeIds(
-  studentDraft: Partial<Student>,
   linkedStudentContactIds: Array<string | number>,
   linkedContact?: Contact | null,
 ): string[] {
-  const guardians = resolveStudentGuardianLinks(studentDraft, linkedContact ?? null);
-  const list = [guardians.fatherContactId, guardians.motherContactId, guardians.guardianContactId]
+  const relatedIds = listStudentContactRelationships(linkedContact ?? null)
+    .map((link) => link.contactId)
     .filter(Boolean)
     .map(String);
-  return [...list, ...linkedStudentContactIds.map(String)];
+  return [...relatedIds, ...linkedStudentContactIds.map(String)];
 }

@@ -20,6 +20,7 @@ export function StudentListCards({
   canWriteMessaging = false,
   statusBadgeConfig,
   isFieldEnabled,
+  showParents,
   onSelectOne,
   onRowClick,
   onViewStudent,
@@ -101,16 +102,12 @@ export function StudentListCards({
                   <span className="font-semibold text-foreground">{age ? t("students.list.ageYears", { age }) : "—"}</span>
                 </div>
               )}
-              {isFieldEnabled("fatherLink") && studentCard.fatherName && (
+              {showParents && (studentCard.fatherName || studentCard.guardianName) && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("students.detail.father")}:</span>
-                  <span className="font-semibold text-foreground truncate max-w-24">{studentCard.fatherName}</span>
-                </div>
-              )}
-              {isFieldEnabled("guardianLink") && studentCard.guardianName && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("students.detail.guardian")}:</span>
-                  <span className="font-semibold text-foreground truncate max-w-24">{studentCard.guardianName}</span>
+                  <span className="text-muted-foreground">{t("students.columns.parents")}:</span>
+                  <span className="font-semibold text-foreground truncate max-w-24">
+                    {studentCard.fatherName || studentCard.guardianName}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between items-center">

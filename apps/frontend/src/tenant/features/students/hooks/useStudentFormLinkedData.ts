@@ -54,8 +54,8 @@ export function useStudentFormLinkedData({
   }, [grManuallyEdited, updateDraft]);
 
   const excludeIds = useMemo(
-    () => buildStudentContactExcludeIds(studentDraft, linkedStudentContactIds, linkedContact),
-    [studentDraft, linkedStudentContactIds, linkedContact],
+    () => buildStudentContactExcludeIds(linkedStudentContactIds, linkedContact),
+    [linkedStudentContactIds, linkedContact],
   );
 
   const isGrAutoAssigned = !student?.id && !!studentDraft.grNumber && studentDraft.grNumber === nextGrNumber && !grManuallyEdited.current;

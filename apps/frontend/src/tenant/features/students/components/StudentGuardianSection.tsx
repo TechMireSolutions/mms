@@ -9,11 +9,12 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   CONTACTS_MODULE_MANIFEST,
   getPrimaryPhone,
-  resolveStudentGuardianLinks,
+  listStudentContactRelationships,
   type Contact,
   type Student,
 } from "@mms/shared";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
+import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
 import { useContactsByIds } from "@/tenant/hooks/collections/contacts";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 
@@ -29,68 +30,22 @@ export function StudentGuardianSection({
   studentDraft,
   linkedContact,
   isFieldEnabled,
-}: StudentGuardianSectionProps): React.JSX.Element {
+}: StudentGuardianSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const { canWrite: canWriteContacts } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
   const [editContactOpen, setEditContactOpen] = useState(false);
 
-  const guardians = resolveStudentGuardianLinks(studentDraft, linkedContact ?? null);
-  const relatedIds = [
-    guardians.fatherContactId,
-    guardians.motherContactId,
-    guardians.guardianContactId,
-  ].filter(Boolean) as string[];
-  const { data: relatedContacts = [] } = useContactsByIds(relatedIds);
+  const showRelationships = isFieldEnabled("contactRelationships");
+  const links = listStudentContactRelationships(linkedContact ?? null);
+  const relatedIds = links.map((link) => link.contactId).filter(Boolean) as string[];
+  const { data: relatedContacts = [] } = useContactsByIds(showRelationships ? relatedIds : []);
   const byId = new Map(relatedContacts.map((contact) => [String(contact.id), contact]));
 
-  const showFather = isFieldEnabled("fatherLink");
-  const showMother = isFieldEnabled("motherLink");
-  const showGuardian = isFieldEnabled("guardianLink");
+  if (!showRelationships) {
+    return null;
+  }
 
-  const rows: Array<{
-    key: string;
-    visible: boolean;
-    label: string;
-    badgeCode: string;
-    badgeBg: string;
-    badgeText: string;
-    contactId?: string;
-    fallbackName?: string;
-  }> = [
-    {
-      key: "father",
-      visible: showFather,
-      label: t("students.form.fatherLink"),
-      badgeCode: "FA",
-      badgeBg: "bg-info/15",
-      badgeText: "text-info",
-      contactId: guardians.fatherContactId,
-      fallbackName: guardians.fatherName,
-    },
-    {
-      key: "mother",
-      visible: showMother,
-      label: t("students.form.motherLink"),
-      badgeCode: "MO",
-      badgeBg: "bg-primary/15",
-      badgeText: "text-primary",
-      contactId: guardians.motherContactId,
-      fallbackName: guardians.motherName,
-    },
-    {
-      key: "guardian",
-      visible: showGuardian,
-      label: t("students.form.guardianLink"),
-      badgeCode: "GU",
-      badgeBg: "bg-warning/15",
-      badgeText: "text-warning",
-      contactId: guardians.guardianContactId,
-      fallbackName: guardians.guardianName,
-    },
-  ];
-
-  const visibleRows = rows.filter((row) => row.visible);
-  const hasAnyLink = visibleRows.some((row) => row.contactId || row.fallbackName);
+  const hasAnyLink = links.length > 0;
   const canOpenContactEditor = Boolean(linkedContact?.id) && canWriteContacts;
 
   return (
@@ -132,18 +87,18 @@ export function StudentGuardianSection({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {visibleRows.map((row) => {
-              const contact = row.contactId ? byId.get(String(row.contactId)) : undefined;
-              const name = contact?.name || row.fallbackName || (row.contactId ? t("common.loading") : undefined);
+            {links.map((link, index) => {
+              const contact = link.contactId ? byId.get(String(link.contactId)) : undefined;
+              const name = contact?.name || link.name || (link.contactId ? t("common.loading") : undefined);
               if (!name) return null;
-              const phone = contact ? getPrimaryPhone(contact) || undefined : undefined;
+              const phone = contact ? getPrimaryPhone(contact) || undefined : link.phone || undefined;
               return (
                 <GuardianContactCard
-                  key={row.key}
-                  label={row.label}
-                  badgeCode={row.badgeCode}
-                  badgeBg={row.badgeBg}
-                  badgeText={row.badgeText}
+                  key={`${link.relationship}-${link.contactId ?? name}-${index}`}
+                  label={link.relationship}
+                  badgeCode={relationshipBadgeCode(link.relationship)}
+                  badgeBg="bg-info/15"
+                  badgeText="text-info"
                   name={name}
                   phone={phone || undefined}
                 />

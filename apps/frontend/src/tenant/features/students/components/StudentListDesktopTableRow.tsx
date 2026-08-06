@@ -110,21 +110,9 @@ export function StudentListDesktopTableRow({
       )}
       {showParents && (
         <td className="px-4 py-3 hidden md:table-cell">
-          {isFieldEnabled("fatherLink") && (
-            <p className="text-sm text-foreground">
-              {studentRow.fatherName || "—"}
-            </p>
-          )}
-          {isFieldEnabled("motherLink") && (
-            <p className="text-xs text-muted-foreground">
-              {studentRow.motherName || "—"}
-            </p>
-          )}
-          {isFieldEnabled("guardianLink") && (
-            <p className="text-xs text-muted-foreground">
-              {studentRow.guardianName || "—"}
-            </p>
-          )}
+          <p className="text-sm text-foreground">
+            {studentRow.fatherName || studentRow.guardianName || "—"}
+          </p>
         </td>
       )}
       {showSessions && (

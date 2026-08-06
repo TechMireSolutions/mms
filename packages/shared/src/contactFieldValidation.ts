@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { translateApp, translateAppParams, type AppTranslationKey } from "./appTranslations.js";
 import type { FieldDefinition } from "./contactTypes.js";
+import { isAllowedRelationshipLabel } from "./contactRelationshipRules.js";
 
 const EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
 
@@ -17,10 +18,10 @@ const TEXT_LIKE_FIELD_TYPES: ReadonlySet<FieldDefinition['type']> = new Set([
 ]);
 
 function isValidOption(options: unknown[], targetValue: string, fieldKey?: string): boolean {
-  // Relationship labels are owned by prefs `relationshipPairs` (lookups/field-config are
-  // write mirrors), so field-config options can lag a freshly added pair. Accept any
-  // label rather than reject a valid save.
-  if (fieldKey === "relationship") return true;
+  // Relationship labels are the fixed system catalog (prefs pairs are hardcoded).
+  if (fieldKey === "relationship") {
+    return isAllowedRelationshipLabel(targetValue);
+  }
   const normalizedTarget = targetValue.trim().toLowerCase();
   return options.some((option) =>
     typeof option === "string" && option.trim().toLowerCase() === normalizedTarget

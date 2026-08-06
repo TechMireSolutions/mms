@@ -5,13 +5,23 @@ import type { FieldDefinition } from "./contactTypes.js";
 import type { StudentsSettings } from "./settingsTypes.js";
 import { buildCustomFieldSchema, type ValidationError } from "./contactValidation.js";
 import { canViewContactTab, canViewContactField } from "./contactFieldAccess.js";
+import { hasResponsibleAdultLink } from "./studentGuardianFromContacts.js";
 
+type PrimaryContactLike = Parameters<typeof hasResponsibleAdultLink>[0];
 
-const EMAIL_RE = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-
+function hasResponsibleAdultSlots(studentDraft: Record<string, unknown>): boolean {
+  const name = (value: unknown) => typeof value === "string" && value.trim().length > 0;
+  return Boolean(
+    studentDraft.fatherContactId ||
+      studentDraft.guardianContactId ||
+      name(studentDraft.fatherName) ||
+      name(studentDraft.guardianName),
+  );
+}
 
 /**
  * Compiles a comprehensive Zod validation schema representing dynamic student checks.
+ * Pass `primaryContact` when available so `requireGuardian` uses Parent/Guardian relationship links.
  */
 export function buildDynamicStudentSchema(
   settings: StudentsSettings,
@@ -20,6 +30,7 @@ export function buildDynamicStudentSchema(
   fields: Record<string, FieldDefinition[]>,
   language = "en",
   viewerRole?: string,
+  primaryContact?: PrimaryContactLike,
 ): z.ZodTypeAny {
   const schemaObject: Record<string, z.ZodTypeAny> = {};
 
@@ -52,38 +63,14 @@ export function buildDynamicStudentSchema(
       if (viewerRole && !canViewContactField(viewerRole, field)) {
         return;
       }
-      // Map logic link fields to their model properties
-      if (field.key === "fatherLink" || field.key === "motherLink" || field.key === "guardianLink") {
-        const labelKey =
-          field.key === "fatherLink"
-            ? "students.form.fatherLink"
-            : field.key === "motherLink"
-              ? "students.form.motherLink"
-              : "students.form.guardianLink";
-        const label = translateApp(labelKey as AppTranslationKey, language);
-        const targetKey = field.key === "fatherLink" ? "fatherContactId" : field.key === "motherLink" ? "motherContactId" : "guardianContactId";
-        const linkInvalidMsg = translateApp("students.form.linkContactInvalid" as AppTranslationKey, language).replace(
-          "{label}",
-          label,
-        );
-
-        const linkSchema = z.union([z.string(), z.number()], {
-          error: linkInvalidMsg,
-        });
-
-        if (field.required) {
-          schemaObject[targetKey] = linkSchema;
-        } else {
-          schemaObject[targetKey] = z.preprocess((contactIdValue) => {
-            if (contactIdValue === "" || contactIdValue === null || contactIdValue === undefined) {
-              return undefined;
-            }
-            return contactIdValue;
-          }, linkSchema.optional());
-        }
-      } else {
-        schemaObject[field.key] = buildCustomFieldSchema(field);
+      // Relationships from Contacts are display-only (Parent/Guardian/…).
+      if (field.key === "contactRelationships") {
+        return;
       }
+      if (field.key === "fatherLink" || field.key === "motherLink" || field.key === "guardianLink") {
+        return;
+      }
+      schemaObject[field.key] = buildCustomFieldSchema(field);
     });
   });
 
@@ -91,10 +78,11 @@ export function buildDynamicStudentSchema(
 
   if (settings.requireGuardian) {
     baseSchema = baseSchema.refine((studentDraft: Record<string, unknown>) => {
-      return Boolean(studentDraft.fatherContactId || studentDraft.motherContactId || studentDraft.guardianContactId);
+      if (primaryContact && hasResponsibleAdultLink(primaryContact)) return true;
+      return hasResponsibleAdultSlots(studentDraft);
     }, {
       message: translateApp("students.form.guardianRequired" as AppTranslationKey, language),
-      path: ["guardianContactId"],
+      path: ["contactRelationships"],
     });
   }
 
@@ -118,9 +106,9 @@ export function formatStudentZodIssues(
     let mappedFieldId = fieldId;
     let tabId = "basic";
 
-    if (fieldId === "fatherContactId") mappedFieldId = "fatherLink";
-    if (fieldId === "motherContactId") mappedFieldId = "motherLink";
-    if (fieldId === "guardianContactId") mappedFieldId = "guardianLink";
+    if (fieldId === "fatherContactId" || fieldId === "motherContactId" || fieldId === "guardianContactId") {
+      mappedFieldId = "contactRelationships";
+    }
 
     for (const [tId, tabFields] of Object.entries(fields)) {
       if (tabFields.some((f) => f.key === mappedFieldId || f.key === fieldId)) {

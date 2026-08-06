@@ -58,6 +58,14 @@ export function ListFieldCard({
   );
 }
 
+/** True when any Setup field for the sub-list is enabled or custom fields exist. */
+export function resolveSubListAllowAdd(
+  enabledFieldFlags: boolean[],
+  customFieldsLength: number,
+): boolean {
+  return enabledFieldFlags.some(Boolean) || customFieldsLength > 0;
+}
+
 export interface ContactSubListShellProps {
   isEmpty: boolean;
   emptyIcon: React.ComponentType<{ className?: string }>;

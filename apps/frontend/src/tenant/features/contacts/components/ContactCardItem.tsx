@@ -140,7 +140,7 @@ export function ContactCardItem({
         t={t}
       />
 
-      <ContactCardDeletedBanner contact={contact} t={t} />
+      <ContactCardDeletedBanner contact={contact} />
 
       <ContactCardActions
         contact={contact}

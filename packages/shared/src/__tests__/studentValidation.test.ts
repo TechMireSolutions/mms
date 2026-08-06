@@ -19,16 +19,21 @@ describe('studentValidation', () => {
   const mockFields: Record<string, FieldDefinition[]> = {
     basic: [
       { key: 'category', label: 'Category', type: 'select', enabled: true, required: false, order: 1 },
-      { key: 'fatherLink', label: 'Father Link', type: 'text', enabled: true, required: false, order: 2 },
-      { key: 'motherLink', label: 'Mother Link', type: 'text', enabled: true, required: false, order: 3 },
-      { key: 'guardianLink', label: 'Guardian Link', type: 'text', enabled: true, required: false, order: 4 },
+      {
+        key: 'contactRelationships',
+        label: 'Relationships',
+        type: 'text',
+        enabled: true,
+        required: false,
+        order: 2,
+      },
     ],
     registration: [
       { key: 'registeredDate', label: 'Registration Date', type: 'date', enabled: true, required: false, order: 0 },
     ],
   };
 
-  it('validates a correct student payload with father guardian linked', () => {
+  it('validates a correct student payload with parent guardian linked', () => {
     const schema = buildDynamicStudentSchema(
       mockSettings,
       mockEnabledTabIds,
@@ -71,7 +76,7 @@ describe('studentValidation', () => {
     }
   });
 
-  it('fails validation when requireGuardian is enabled and no guardian is linked', () => {
+  it('fails validation when requireGuardian is enabled and no Parent/Guardian is linked', () => {
     const schema = buildDynamicStudentSchema(
       mockSettings,
       mockEnabledTabIds,
@@ -89,9 +94,47 @@ describe('studentValidation', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       const formatted = formatStudentZodIssues(result.error, missingGuardianPayload, mockFields);
-      expect(formatted.some((err) => err.message.includes('guardian'))).toBe(true);
-      expect(formatted.find((err) => err.message.includes('guardian'))?.tabId).toBe('basic');
+      expect(formatted.some((err) => err.fieldId === 'contactRelationships')).toBe(true);
+      expect(formatted.find((err) => err.fieldId === 'contactRelationships')?.tabId).toBe('basic');
     }
+  });
+
+  it('passes requireGuardian when primary contact has a Parent relationship link', () => {
+    const schema = buildDynamicStudentSchema(
+      mockSettings,
+      mockEnabledTabIds,
+      mockRequiredTabIds,
+      mockFields,
+      'en',
+      undefined,
+      {
+        relationshipContacts: [{ contactId: 'c-parent', relationship: 'Parent', name: 'Abu' }],
+      },
+    );
+
+    const result = schema.safeParse({
+      contactId: 'c-100',
+      grNumber: 'GR-1234',
+      status: 'active',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('passes requireGuardian when only hydrated fatherName slot is present', () => {
+    const schema = buildDynamicStudentSchema(
+      mockSettings,
+      mockEnabledTabIds,
+      mockRequiredTabIds,
+      mockFields,
+    );
+
+    const result = schema.safeParse({
+      contactId: 'c-100',
+      grNumber: 'GR-1234',
+      status: 'active',
+      fatherName: 'Legacy Parent',
+    });
+    expect(result.success).toBe(true);
   });
 
   it('maps registration field errors to the registration form tab', () => {

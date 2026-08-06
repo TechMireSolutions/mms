@@ -13,7 +13,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 
 /**
  * Overlay live lookup option lists onto field-config options so Zod accepts
- * values the form dropdown already shows (e.g. a freshly added relationship type).
+ * values the form dropdown already shows (including system relationship labels).
  */
 function withLiveSelectOptions(
   fields: Record<string, FieldDefinition[]>,

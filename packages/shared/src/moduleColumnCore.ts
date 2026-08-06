@@ -129,10 +129,7 @@ export function buildStudentWorkColumnRegistry(
     registryColumns.push({ key: 'dob', label: labels.dob, enabled: true, order: order++ });
   }
 
-  const parentsEnabled =
-    fields.fatherLink?.enabled !== false ||
-    fields.motherLink?.enabled !== false ||
-    fields.guardianLink?.enabled !== false;
+  const parentsEnabled = fields.contactRelationships?.enabled !== false;
   if (parentsEnabled) {
     registryColumns.push({ key: 'parents', label: labels.parents, enabled: true, order: order++ });
   }

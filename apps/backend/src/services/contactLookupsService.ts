@@ -5,6 +5,7 @@ import {
   DEFAULT_EMAIL_LABELS,
   DEFAULT_PHONE_LABELS,
   GENDERS,
+  RELATIONSHIPS,
   SOCIAL_PLATFORMS,
   curatedContactCountryCodes,
   isContactLookupCountryKind,
@@ -37,7 +38,7 @@ function defaultStringItems(kind: Exclude<ContactLookupKind, 'countryCodes'>): s
     case 'socialPlatforms':
       return [...SOCIAL_PLATFORMS];
     case 'relationships':
-      return [];
+      return [...RELATIONSHIPS];
     case 'phoneLabels':
       return [...DEFAULT_PHONE_LABELS];
     case 'emailLabels':

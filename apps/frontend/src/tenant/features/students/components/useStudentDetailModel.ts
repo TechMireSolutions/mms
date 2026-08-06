@@ -1,9 +1,13 @@
 import { useMemo } from "react";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
+  listStudentContactRelationships,
   resolveStudentGuardianLinks,
+  STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
+  STUDENT_PARENT_RELATIONSHIP_LABEL,
   type FieldDefinition,
   type Student,
+  type StudentContactRelationshipLink,
   calcAge,
   getPrimaryPhone,
   getPrimaryEmail,
@@ -23,6 +27,10 @@ export function useStudentDetailModel(student: Student) {
   const { data: primaryContact } = useContactById(
     student.contactId != null ? String(student.contactId) : undefined,
   );
+  const relationshipLinks = useMemo(
+    () => listStudentContactRelationships(primaryContact ?? null),
+    [primaryContact],
+  );
   const guardians = useMemo(
     () => resolveStudentGuardianLinks(student, primaryContact ?? null),
     [student, primaryContact],
@@ -30,11 +38,11 @@ export function useStudentDetailModel(student: Student) {
   const linkedIds = useMemo(
     () => [
       student.contactId,
+      ...relationshipLinks.map((link) => link.contactId),
       guardians.fatherContactId,
-      guardians.motherContactId,
       guardians.guardianContactId,
     ],
-    [student.contactId, guardians.fatherContactId, guardians.motherContactId, guardians.guardianContactId],
+    [student.contactId, relationshipLinks, guardians.fatherContactId, guardians.guardianContactId],
   );
   const contacts = useContactsByIds(linkedIds);
   const contactList = contacts.data ?? [];
@@ -88,9 +96,37 @@ export function useStudentDetailModel(student: Student) {
   const studentContact = contactList.find((contact) => String(contact.id) === String(student.contactId))
     ?? primaryContact
     ?? undefined;
-  const fatherContact = contactList.find((contact) => String(contact.id) === String(guardians.fatherContactId));
-  const motherContact = contactList.find((contact) => String(contact.id) === String(guardians.motherContactId));
-  const guardianContact = contactList.find((contact) => String(contact.id) === String(guardians.guardianContactId));
+
+  const graphLinks: StudentContactRelationshipLink[] = relationshipLinks.map((link) => {
+    const contact = link.contactId
+      ? contactList.find((entry) => String(entry.id) === String(link.contactId))
+      : undefined;
+    return {
+      ...link,
+      name: contact?.name || link.name,
+      phone: (contact ? getPrimaryPhone(contact) : null) || link.phone,
+    };
+  });
+
+  const hydratedLinks: StudentContactRelationshipLink[] =
+    graphLinks.length > 0
+      ? graphLinks
+      : [
+          ...(guardians.fatherContactId || guardians.fatherName
+            ? [{
+                ...(guardians.fatherContactId ? { contactId: guardians.fatherContactId } : {}),
+                ...(guardians.fatherName ? { name: guardians.fatherName } : {}),
+                relationship: STUDENT_PARENT_RELATIONSHIP_LABEL,
+              } satisfies StudentContactRelationshipLink]
+            : []),
+          ...(guardians.guardianContactId || guardians.guardianName
+            ? [{
+                ...(guardians.guardianContactId ? { contactId: guardians.guardianContactId } : {}),
+                ...(guardians.guardianName ? { name: guardians.guardianName } : {}),
+                relationship: STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
+              } satisfies StudentContactRelationshipLink]
+            : []),
+        ];
 
   const age = calcAge(student.dob);
   const enrolledSessionDetails = sessions.filter((session) => student.enrolledSessions?.includes(session.id));
@@ -98,18 +134,12 @@ export function useStudentDetailModel(student: Student) {
   const primaryPhone = (studentContact ? getPrimaryPhone(studentContact) : null) || student.phone;
   const primaryEmail = (studentContact ? getPrimaryEmail(studentContact) : null) || student.email;
 
-  const fatherPhone = fatherContact ? (getPrimaryPhone(fatherContact) || undefined) : undefined;
-  const motherPhone = motherContact ? (getPrimaryPhone(motherContact) || undefined) : undefined;
-  const guardianPhone = guardianContact ? (getPrimaryPhone(guardianContact) || undefined) : undefined;
-
   const hasVisibleDetailFields = sortedEnabledFields.some((field) =>
-    field.key === "fatherLink"
-      ? (fatherContact || guardians.fatherName)
-      : field.key === "motherLink"
-        ? (motherContact || guardians.motherName)
-        : field.key === "guardianLink"
-          ? (guardianContact || guardians.guardianName)
-          : true,
+    field.key === "contactRelationships"
+      ? hydratedLinks.some((link) => link.name || link.contactId)
+      : field.key === "fatherLink" || field.key === "motherLink" || field.key === "guardianLink"
+        ? false
+        : true,
   );
 
   return {
@@ -121,19 +151,11 @@ export function useStudentDetailModel(student: Student) {
     canWriteMessaging,
     sortedEnabledFields,
     studentContact,
-    fatherContact,
-    motherContact,
-    guardianContact,
-    fatherName: fatherContact?.name || guardians.fatherName,
-    motherName: motherContact?.name || guardians.motherName,
-    guardianName: guardianContact?.name || guardians.guardianName,
+    relationshipLinks: hydratedLinks,
     age,
     enrolledSessionDetails,
     primaryPhone,
     primaryEmail,
-    fatherPhone,
-    motherPhone,
-    guardianPhone,
     hasVisibleDetailFields,
   };
 }

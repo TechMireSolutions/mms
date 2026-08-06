@@ -71,7 +71,7 @@ export function buildDemoStudentContacts(): Contact[] {
       updatedAt: DEMO_STUDENT_DATE,
       phones: [{ label: 'Mobile', number: phone }],
       emails: [{ label: 'Personal', address: email }],
-      relationships: [{ contactId: parentId, relationship: 'Mother' }],
+      relationships: [{ contactId: parentId, relationship: 'Parent' }],
       activities: [],
     });
   }

@@ -112,7 +112,6 @@ export function ContactFormTabContent({
         <ContactRelationshipTab
           {...listBase}
           relationshipOptions={draft.relationshipOptions}
-          onUpdateRelationships={draft.updateRelationships}
         />
       );
     case "custom":

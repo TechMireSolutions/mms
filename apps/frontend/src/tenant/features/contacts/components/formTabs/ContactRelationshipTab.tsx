@@ -1,17 +1,12 @@
 import React from "react";
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import {
-  listEnabledCustomContactFormFields,
-  parseRelationshipPairInput,
-} from "@mms/shared";
+import { listEnabledCustomContactFormFields } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
-import { Field, EditableSelect, FieldErrorMessage } from "@/components/ui/FormPrimitives";
-import { WarningCallout } from "@/components/ui/WarningCallout";
+import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
-import { useRelationshipTypeOptions } from "@/tenant/features/contacts/hooks/useRelationshipTypeOptions";
-import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
+import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
   withSubListCustomFieldDefaults,
@@ -20,14 +15,24 @@ import type { ContactSubListTabBaseProps } from "./types";
 
 export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
-  onUpdateRelationships: (relationships: string[]) => void;
+}
+
+function relationshipSelectOptions(
+  catalog: readonly string[],
+  currentValue: string | undefined,
+): string[] {
+  const value = typeof currentValue === "string" ? currentValue.trim() : "";
+  if (!value) return [...catalog];
+  const exists = catalog.some(
+    (option) => option.trim().toLowerCase() === value.toLowerCase(),
+  );
+  return exists ? [...catalog] : [...catalog, value];
 }
 
 export function ContactRelationshipTab({
   contactDraft,
   getLocalId,
   relationshipOptions,
-  onUpdateRelationships,
   isFieldEnabled,
   isFieldRequired,
   getListItemError,
@@ -39,15 +44,14 @@ export function ContactRelationshipTab({
   removeSubListItem,
 }: ContactRelationshipTabProps): JSX.Element {
   const { t } = useTranslation();
-  const { addPair, updateOptions } = useRelationshipTypeOptions(
-    relationshipOptions,
-    onUpdateRelationships,
-  );
   const links = contactDraft.relationshipContacts || [];
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
   const customFields = listEnabledCustomContactFormFields(fields, "relationship");
-  const allowAdd = showLinkedContact || showRelationshipType || customFields.length > 0;
+  const allowAdd = resolveSubListAllowAdd(
+    [showLinkedContact, showRelationshipType],
+    customFields.length,
+  );
   const contactIdRequired = isFieldRequired("relationship", "contactId");
 
   const emptyLink = () =>
@@ -69,28 +73,11 @@ export function ContactRelationshipTab({
     return linked;
   };
 
-  const commitRelationshipPair = async (raw: string): Promise<string | null> => {
-    const parsed = parseRelationshipPairInput(raw);
-    if (!parsed.ok) {
-      notify.warning(t("contacts.form.invalidRelationshipPair"));
-      return null;
-    }
-    const { forward, inverse, inverseMale, inverseFemale } = parsed;
-    return addPair({ forward, inverse, inverseMale, inverseFemale });
-  };
-
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
         {t("contacts.form.relationshipInstructions")}
       </p>
-      {showRelationshipType && relationshipOptions.length === 0 ? (
-        <WarningCallout
-          tone="info"
-          density="compact"
-          description={t("contacts.form.noRelationshipTypesYet")}
-        />
-      ) : null}
       <ContactSubListShell
         isEmpty={links.length === 0}
         emptyIcon={Heart}
@@ -104,6 +91,7 @@ export function ContactRelationshipTab({
           {links.map((link, idx) => {
             const pickerError = getListItemError("relationship", "contactId", idx);
             const typeError = getListItemError("relationship", "relationship", idx);
+            const typeValue = link.relationship || relationshipOptions[0] || "";
             return (
               <ListFieldCard
                 key={getLocalId("relationship", idx)}
@@ -145,18 +133,13 @@ export function ContactRelationshipTab({
                       required={isFieldRequired("relationship", "relationship")}
                       error={typeError}
                     >
-                      <EditableSelect
-                        options={relationshipOptions}
-                        value={link.relationship || relationshipOptions[0] || ""}
+                      <FormSelect
+                        options={relationshipSelectOptions(relationshipOptions, link.relationship)}
+                        value={typeValue}
                         onChange={(val) =>
                           updateSubListItem("relationshipContacts", idx, { relationship: val })
                         }
-                        onUpdateOptions={(next) => {
-                          void updateOptions(next);
-                        }}
-                        onCommitAdd={commitRelationshipPair}
-                        addHint={t("contacts.form.addRelationshipPairHint")}
-                        addPlaceholder={t("contacts.form.relationshipPairPlaceholder")}
+                        placeholder={t("common.selectPlaceholder")}
                         className="w-full"
                         id={`relationship-type-${idx}`}
                         name={`relationship-type-${idx}`}

@@ -3,7 +3,7 @@ import { MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
+import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
   withSubListCustomFieldDefaults,
@@ -51,8 +51,10 @@ export function ContactAddressesTab({
   const showState = isFieldEnabled("addresses", "state");
   const showCountry = isFieldEnabled("addresses", "country");
   const customFields = listEnabledCustomContactFormFields(fields, "addresses");
-  const allowAdd =
-    showLabel || showLine1 || showCity || showState || showCountry || customFields.length > 0;
+  const allowAdd = resolveSubListAllowAdd(
+    [showLabel, showLine1, showCity, showState, showCountry],
+    customFields.length,
+  );
   const addresses = contactDraft.addresses || [];
   const emptyAddress = () =>
     withSubListCustomFieldDefaults(

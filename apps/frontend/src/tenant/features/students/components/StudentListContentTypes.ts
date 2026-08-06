@@ -30,6 +30,7 @@ interface StudentListSelectionProps {
 
 export interface StudentListCardsProps extends StudentListSelectionProps {
   paginatedStudents: Student[];
+  showParents: boolean;
   onOpenComposer?: (
     mode: "whatsapp" | "sms" | "email",
     recipients: StudentListMessagingRecipient[],

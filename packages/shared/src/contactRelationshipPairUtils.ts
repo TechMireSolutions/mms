@@ -1,36 +1,12 @@
 /** Relationship pair defaults and pure helpers for Contacts preferences. */
 import type { RelationshipPair } from './contactEntityTypes.js';
 
-/**
- * Former seeded pair ids. Stripped on resolve so Workspaces only keep
- * user-created dynamic pairs (ids like `pair_…`).
- */
-export const LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS: ReadonlySet<string> = new Set([
-  "parent_child",
-  "father_child",
-  "mother_child",
-  "spouse",
-  "husband_wife",
-  "sibling",
-  "brother_sibling",
-  "sister_sibling",
-  "guardian_dependent",
-  "grandparent_grandchild",
-  "aunt_uncle",
-  "cousin",
-  "inlaw",
-  "other",
-]);
-
-/** No prebuilt pairs — relationship types are user-created only. */
-export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [];
-
-export type ParsedRelationshipPairInput = {
-  forward: string;
-  inverse: string;
-  inverseMale?: string;
-  inverseFemale?: string;
-};
+/** Fixed system relationship pairs — the only allowed catalog. */
+export const DEFAULT_RELATIONSHIP_PAIRS: RelationshipPair[] = [
+  { id: "parent_child", forward: "Parent", inverse: "Child" },
+  { id: "husband_wife", forward: "Husband", inverse: "Wife" },
+  { id: "guardian_dependent", forward: "Guardian", inverse: "Dependent" },
+];
 
 type RelationshipPairLabels = Pick<
   RelationshipPair,
@@ -50,159 +26,38 @@ export function normalizeRelationshipTerm(relationship: unknown): string {
 }
 
 /**
- * Returns configured user pairs. Missing/empty → `[]`.
- * Drops legacy built-in seed ids so only dynamic pairs remain.
+ * Always returns a clone of {@link DEFAULT_RELATIONSHIP_PAIRS}.
+ * Stored custom / legacy pairs are ignored (hardcoded catalog).
  */
 export function resolveRelationshipPairs(
-  pairs?: RelationshipPair[] | null,
+  _pairs?: RelationshipPair[] | null,
 ): RelationshipPair[] {
-  if (!Array.isArray(pairs) || pairs.length === 0) {
-    return [];
-  }
-  return pairs.filter(
-    (pair) => typeof pair.id !== "string" || !LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS.has(pair.id),
-  );
+  return DEFAULT_RELATIONSHIP_PAIRS.map((pair) => ({ ...pair }));
 }
 
-/**
- * True when an equivalent forward/inverse pair already exists (case-insensitive;
- * order-independent so Mentor↔Mentee matches Mentee↔Mentor), or when any new
- * label (including gendered inverses) collides with an existing pair's labels.
- */
-export function isDuplicateRelationshipPair(
-  pairs: readonly RelationshipPair[],
-  input: ParsedRelationshipPairInput,
+/** True when stored pairs already match the system catalog (by id + labels). */
+export function relationshipPairsMatchDefaults(
+  pairs?: RelationshipPair[] | null,
 ): boolean {
-  const direct = relationshipPairKey(input.forward, input.inverse);
-  const swapped = relationshipPairKey(input.inverse, input.forward);
-  const newLabels = relationshipPairLabelKeys(input);
-  return pairs.some((pair) => {
-    const existing = relationshipPairKey(pair.forward, pair.inverse);
-    if (existing === direct || existing === swapped) return true;
-    const existingLabels = relationshipPairLabelKeys(pair);
-    for (const key of newLabels) {
-      if (existingLabels.has(key)) return true;
-    }
+  if (!Array.isArray(pairs) || pairs.length !== DEFAULT_RELATIONSHIP_PAIRS.length) {
     return false;
-  });
-}
-
-function relationshipPairKey(forward: string, inverse: string): string {
-  return `${normalizeRelationshipTerm(forward)}::${normalizeRelationshipTerm(inverse)}`;
+  }
+  for (let index = 0; index < DEFAULT_RELATIONSHIP_PAIRS.length; index += 1) {
+    const expected = DEFAULT_RELATIONSHIP_PAIRS[index]!;
+    const actual = pairs[index]!;
+    if (
+      actual.id !== expected.id ||
+      normalizeRelationshipTerm(actual.forward) !== normalizeRelationshipTerm(expected.forward) ||
+      normalizeRelationshipTerm(actual.inverse) !== normalizeRelationshipTerm(expected.inverse)
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function relationshipPairLabelList(pair: RelationshipPairLabels): Array<string | undefined> {
   return [pair.forward, pair.inverse, pair.inverseMale, pair.inverseFemale];
-}
-
-function relationshipPairLabelKeys(pair: RelationshipPairLabels): Set<string> {
-  const keys = new Set<string>();
-  for (const label of relationshipPairLabelList(pair)) {
-    const key = normalizeRelationshipTerm(label);
-    if (key) keys.add(key);
-  }
-  return keys;
-}
-
-const RELATIONSHIP_PAIR_SEPARATOR = /\s*[:/↔]\s*/;
-const RELATIONSHIP_GENDERED_INVERSE_SEPARATOR = /\s*\|\s*/;
-
-/**
- * Parses a single-field relationship pair string (e.g. `Husband : Wife`).
- * Gendered inverses: `Parent : Child | Son | Daughter` (neutral | male | female).
- * No separator → self-inverse (both sides the same label).
- */
-export function parseRelationshipPairInput(
-  raw: string,
-):
-  | ({ ok: true } & ParsedRelationshipPairInput)
-  | { ok: false; reason: "empty" | "malformed" } {
-  const trimmed = raw.trim();
-  if (!trimmed) return { ok: false, reason: "empty" };
-
-  const match = RELATIONSHIP_PAIR_SEPARATOR.exec(trimmed);
-  if (!match || match.index == null) {
-    return { ok: true, forward: trimmed, inverse: trimmed };
-  }
-
-  const forward = trimmed.slice(0, match.index).trim();
-  const inverseSide = trimmed.slice(match.index + match[0].length).trim();
-  if (!forward || !inverseSide) return { ok: false, reason: "empty" };
-
-  const segments = inverseSide
-    .split(RELATIONSHIP_GENDERED_INVERSE_SEPARATOR)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
-
-  if (segments.length === 1) {
-    const [inverse] = segments;
-    if (!inverse) return { ok: false, reason: "empty" };
-    return { ok: true, forward, inverse };
-  }
-  if (segments.length === 3) {
-    const [inverse, inverseMale, inverseFemale] = segments;
-    if (!inverse || !inverseMale || !inverseFemale) {
-      return { ok: false, reason: "malformed" };
-    }
-    return { ok: true, forward, inverse, inverseMale, inverseFemale };
-  }
-  return { ok: false, reason: "malformed" };
-}
-
-/**
- * Appends a 2-sided pair (optionally with gendered inverses) and returns the next
- * pairs list plus flattened option labels.
- */
-export function buildRelationshipPairAddition(
-  existingPairs: readonly RelationshipPair[],
-  existingLabels: readonly string[],
-  input: ParsedRelationshipPairInput,
-):
-  | { ok: true; pairs: RelationshipPair[]; labels: string[]; selected: string }
-  | { ok: false; reason: "empty" | "duplicate" } {
-  const forward = input.forward.trim();
-  const inverse = input.inverse.trim();
-  const inverseMale = input.inverseMale?.trim() || undefined;
-  const inverseFemale = input.inverseFemale?.trim() || undefined;
-  if (!forward || !inverse) return { ok: false, reason: "empty" };
-
-  const normalized: ParsedRelationshipPairInput = {
-    forward,
-    inverse,
-    ...(inverseMale ? { inverseMale } : {}),
-    ...(inverseFemale ? { inverseFemale } : {}),
-  };
-  if (isDuplicateRelationshipPair(existingPairs, normalized)) {
-    return { ok: false, reason: "duplicate" };
-  }
-
-  const pair: RelationshipPair = {
-    id: `pair_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-    ...normalized,
-  };
-  return {
-    ok: true,
-    pairs: [...existingPairs, pair],
-    labels: mergeRelationshipOptionLabels(existingLabels, relationshipPairLabelList(normalized)),
-    selected: forward,
-  };
-}
-
-/**
- * Removes pairs that reference a dropped dropdown label (forward, inverse, or gendered).
- * Empty results are returned as-is (no built-in fallback).
- */
-export function pruneRelationshipPairsForRemovedLabel(
-  pairs: readonly RelationshipPair[],
-  removedLabel: string,
-): RelationshipPair[] {
-  const key = normalizeRelationshipTerm(removedLabel);
-  if (!key) return [...pairs];
-  return pairs.filter((pair) => {
-    return !relationshipPairLabelList(pair).some(
-      (label) => normalizeRelationshipTerm(label) === key,
-    );
-  });
 }
 
 /**
@@ -251,35 +106,6 @@ export function sanitizeRelationshipOptionOrder(
   labels: readonly string[],
 ): string[] {
   return applyRelationshipOptionOrder(labels, preferredOrder);
-}
-
-/**
- * Applies dropdown remove + reorder onto prefs pairs and option order.
- * Removals prune pairs that reference dropped labels; reorder is stored as
- * `relationshipOptionOrder` so FE derivation can match EditableSelect order.
- */
-export function applyRelationshipOptionsUpdate(
-  pairs: readonly RelationshipPair[],
-  previousOptions: readonly string[],
-  nextOptions: readonly string[],
-): { pairs: RelationshipPair[]; labels: string[]; optionOrder: string[] } {
-  const removed = previousOptions.filter(
-    (option) =>
-      !nextOptions.some(
-        (next) => normalizeRelationshipTerm(next) === normalizeRelationshipTerm(option),
-      ),
-  );
-  let nextPairs = [...pairs];
-  for (const label of removed) {
-    nextPairs = pruneRelationshipPairsForRemovedLabel(nextPairs, label);
-  }
-  const derived = deriveRelationshipOptionsFromPairs(nextPairs);
-  const labels = applyRelationshipOptionOrder(derived, nextOptions);
-  return {
-    pairs: nextPairs,
-    labels,
-    optionOrder: sanitizeRelationshipOptionOrder(nextOptions, labels),
-  };
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   DEFAULT_EMAIL_LABELS,
   DEFAULT_ADDRESS_LABELS,
   COUNTRY_CODES,
+  RELATIONSHIPS,
 } from "@mms/shared";
 
 /** Seeds Setup option collections from shared DEFAULT_* constants (SSOT). */
@@ -20,8 +21,7 @@ export function getContactConfigCollectionDefaults(): {
   return {
     genders: [...GENDERS],
     socialPlatforms: [...SOCIAL_PLATFORMS],
-    /** Relationship types are user-created pairs only — no prebuilt seed. */
-    relationships: [],
+    relationships: [...RELATIONSHIPS],
     phoneLabels: [...DEFAULT_PHONE_LABELS],
     emailLabels: [...DEFAULT_EMAIL_LABELS],
     addressLabels: [...DEFAULT_ADDRESS_LABELS],

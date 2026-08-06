@@ -1,6 +1,5 @@
 import type { JSX } from "react";
 import {
-  formatDate,
   isRelationshipContactColumnKey,
   isRelationshipTypeColumnKey,
   isRelationshipWorkColumnKey,
@@ -8,7 +7,7 @@ import {
   type ContactPreferences,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { DetailDrawerArchivedBanner } from "@/components/ui/DetailDrawerArchiveChrome";
+import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
@@ -83,24 +82,8 @@ export function ContactCardMetadataGrid({
 
 export function ContactCardDeletedBanner({
   contact,
-  t,
 }: {
   contact: Contact;
-  t: TranslationFunction;
 }): JSX.Element | null {
-  if (!contact.deletedAt) {
-    return null;
-  }
-
-  return (
-    <DetailDrawerArchivedBanner
-      deletedAt={contact.deletedAt}
-      title={t("contacts.table.deletedAt", { date: formatDate(contact.deletedAt) })}
-      description={
-        contact.deletionReason
-          ? `${t("contacts.deletionReasonLabel")}: ${contact.deletionReason}`
-          : undefined
-      }
-    />
-  );
+  return <ContactArchivedBanner contact={contact} />;
 }

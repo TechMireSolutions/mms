@@ -61,9 +61,10 @@ export async function applyContactRelationshipInference(
   const sourceLinks = linksForContact(sourceContact).filter((entry) => entry.contactId !== sourceId);
   if (sourceLinks.length === 0) return;
 
-  const resolvedPairs = resolveRelationshipPairs(
-    customPairs ?? (await loadContactPreferences())?.relationshipPairs,
-  );
+  const resolvedPairs =
+    customPairs && customPairs.length > 0
+      ? customPairs
+      : resolveRelationshipPairs((await loadContactPreferences())?.relationshipPairs);
   if (resolvedPairs.length === 0) return;
 
   const firstIds = Array.from(new Set(sourceLinks.map((entry) => entry.contactId)));

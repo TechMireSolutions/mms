@@ -94,7 +94,7 @@ describe('studentUtils', () => {
         emails: [{ label: 'Personal', address: 'fatima@example.com' }],
         phones: [{ label: 'Mobile', number: '3001112233', countryCode: '+92' }],
         relationshipContacts: [
-          { contactId: 'c-father', relationship: 'Father', name: 'Tariq Ahmed' },
+          { contactId: 'c-father', relationship: 'Parent', name: 'Tariq Ahmed' },
         ],
       },
       {

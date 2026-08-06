@@ -148,7 +148,14 @@ describe('contact setup config services', () => {
       relationshipPairs: [{ id: 'pair_custom', forward: 'Mentor', inverse: 'Mentee' }],
     } as never);
 
-    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', ['Mentor', 'Mentee']);
+    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', [
+      'Parent',
+      'Child',
+      'Husband',
+      'Wife',
+      'Guardian',
+      'Dependent',
+    ]);
     expect(mockUpsertConfig).toHaveBeenCalled();
   });
 
@@ -157,7 +164,7 @@ describe('contact setup config services', () => {
     await expect(loadContactPreferences()).resolves.toBeNull();
   });
 
-  it('strips legacy relationship pairs and rewrites relationship mirrors', async () => {
+  it('rewrites custom relationship pairs to the system catalog and mirrors', async () => {
     mockGetPrefs.mockResolvedValue({
       defaultCountry: 'Pakistan',
       relationshipPairs: [
@@ -187,14 +194,23 @@ describe('contact setup config services', () => {
 
     const loaded = await loadContactPreferences();
     expect(loaded?.relationshipPairs).toEqual([
-      { id: 'pair_custom', forward: 'Mentor', inverse: 'Mentee' },
+      { id: 'parent_child', forward: 'Parent', inverse: 'Child' },
+      { id: 'husband_wife', forward: 'Husband', inverse: 'Wife' },
+      { id: 'guardian_dependent', forward: 'Guardian', inverse: 'Dependent' },
     ]);
     expect(mockUpsertPrefs).toHaveBeenCalled();
-    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', ['Mentor', 'Mentee']);
+    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', [
+      'Parent',
+      'Child',
+      'Husband',
+      'Wife',
+      'Guardian',
+      'Dependent',
+    ]);
     expect(mockUpsertConfig).toHaveBeenCalled();
   });
 
-  it('rewrites stale relationship lookups when prefs are already clean', async () => {
+  it('rewrites stale relationship lookups when prefs pairs are empty', async () => {
     mockGetPrefs.mockResolvedValue({
       defaultCountry: 'Pakistan',
       relationshipPairs: [],
@@ -203,7 +219,14 @@ describe('contact setup config services', () => {
     mockGetConfig.mockResolvedValue(null);
 
     await loadContactPreferences();
-    expect(mockUpsertPrefs).not.toHaveBeenCalled();
-    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', []);
+    expect(mockUpsertPrefs).toHaveBeenCalled();
+    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', [
+      'Parent',
+      'Child',
+      'Husband',
+      'Wife',
+      'Guardian',
+      'Dependent',
+    ]);
   });
 });

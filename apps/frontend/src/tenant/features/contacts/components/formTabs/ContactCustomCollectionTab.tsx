@@ -8,7 +8,11 @@ import {
   type Contact,
   type FieldDefinition,
 } from "@mms/shared";
-import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
+import {
+  ListFieldCard,
+  ContactSubListShell,
+  resolveSubListAllowAdd,
+} from "./ContactSubListCards";
 import { ContactCustomFieldControls } from "./ContactCustomFieldControls";
 
 type CustomCollectionRow = Record<string, unknown>;
@@ -47,6 +51,7 @@ export function ContactCustomCollectionTab({
   const { t } = useTranslation();
   const rowFields = listEnabledCustomContactFormFields(fields, tabId);
   const rows = readRows(contactDraft, tabId);
+  const allowAdd = resolveSubListAllowAdd([], rowFields.length);
 
   const setRows = (next: CustomCollectionRow[]) => {
     updateDraft({ [tabId]: next } as Partial<Contact>);
@@ -64,6 +69,7 @@ export function ContactCustomCollectionTab({
       emptyIcon={SlidersHorizontal}
       emptyMessage={t("contacts.form.noCustomTabEntriesYet")}
       addLabel={t("contacts.form.addCustomTabEntry")}
+      allowAdd={allowAdd}
       onAdd={() => setRows([...rows, emptyRow(rowFields)])}
       onEnsureRow={() => {
         if (rows.length === 0) setRows([emptyRow(rowFields)]);

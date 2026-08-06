@@ -106,7 +106,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" aria-hidden="true" /> {t("enrollments.wizard.step1Age", { age: age ?? "?" })}</span>
-                  <span>{t("students.form.fatherLink")}: {student.fatherName}</span>
+                  <span>{t("students.columns.parents")}: {student.fatherName || student.guardianName || "—"}</span>
                   {student.city && <span>{student.city}</span>}
                 </div>
                 {student.enrolledSessions && student.enrolledSessions.length > 0 && (

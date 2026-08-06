@@ -89,14 +89,14 @@ export default function StudentList({
           { header: t("students.columns.grNumber"), key: "grNumber" },
           { header: t("students.columns.gender"), key: "gender" },
           { header: t("students.columns.status"), key: "status" },
-          { header: t("students.columns.fatherName"), key: "fatherName" },
+          { header: t("students.columns.parents"), key: "fatherName" },
         ],
         rows: list.selectedStudents.map((student) => ({
           name: student.name ?? "",
           grNumber: student.grNumber ?? "",
           gender: student.gender ?? "",
           status: student.status ?? "",
-          fatherName: student.fatherName ?? "",
+          fatherName: student.fatherName || student.guardianName || "",
         })),
       });
       notify.success(t("students.exportSuccess"));

@@ -35,7 +35,7 @@ describe('listEnabledCustomStudentFormFields', () => {
   it('excludes disabled and system seed keys', () => {
     const fields = {
       basic: [
-        field({ key: 'fatherLink' }),
+        field({ key: 'contactRelationships' }),
         field({ key: 'hiddenCustom', enabled: false }),
         field({ key: 'visibleCustom', enabled: true }),
       ],
@@ -44,8 +44,8 @@ describe('listEnabledCustomStudentFormFields', () => {
     expect(listEnabledCustomStudentFormFields(fields, 'basic').map((f) => f.key)).toEqual([
       'visibleCustom',
     ]);
-    expect(listStudentSystemFormFieldKeys().has('fatherLink')).toBe(true);
-    expect(isStudentSystemFormField('basic', 'fatherLink')).toBe(true);
+    expect(listStudentSystemFormFieldKeys().has('contactRelationships')).toBe(true);
+    expect(isStudentSystemFormField('basic', 'contactRelationships')).toBe(true);
   });
 
   it('aggregates all tabs when tabId is omitted', () => {

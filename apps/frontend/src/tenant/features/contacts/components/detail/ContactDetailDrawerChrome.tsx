@@ -3,10 +3,8 @@ import type { Contact } from "@mms/shared";
 import { formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import {
-  DetailDrawerArchivedBanner,
-  DetailDrawerRestoreOrEditAction,
-} from "@/components/ui/DetailDrawerArchiveChrome";
+import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
+import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
 import { formatEntityStamp } from "@/lib/formatEntityStamp";
 
 export function ContactDetailDrawerHeaderActions({
@@ -43,14 +41,7 @@ export function ContactDetailDrawerArchivedBanner({
 }: {
   contact: Contact;
 }): React.JSX.Element | null {
-  const { t } = useTranslation();
-
-  return (
-    <DetailDrawerArchivedBanner
-      deletedAt={contact.deletedAt}
-      describe={(date) => t("contacts.detail.archivedBanner", { date })}
-    />
-  );
+  return <ContactArchivedBanner contact={contact} />;
 }
 
 export function ContactDetailDrawerTabBar({

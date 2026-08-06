@@ -44,9 +44,7 @@ export function useStudentListController({
     : isFieldEnabled("dob");
   const showParents = isColumnVisible
     ? isColumnVisible("parents")
-    : isFieldEnabled("fatherLink") ||
-      isFieldEnabled("motherLink") ||
-      isFieldEnabled("guardianLink");
+    : isFieldEnabled("contactRelationships");
   const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
   const showStatus = isColumnVisible ? isColumnVisible("status") : true;
 
@@ -108,8 +106,8 @@ export function useStudentListController({
         const secondDate = secondSortValue ? new Date(secondSortValue).getTime() : 0;
         return sortDir === "asc" ? secondDate - firstDate : firstDate - secondDate;
       } else if (sortField === "fatherName") {
-        firstSortValue = (firstStudent.fatherName || "").toLowerCase();
-        secondSortValue = (secondStudent.fatherName || "").toLowerCase();
+        firstSortValue = (firstStudent.fatherName || firstStudent.guardianName || "").toLowerCase();
+        secondSortValue = (secondStudent.fatherName || secondStudent.guardianName || "").toLowerCase();
       } else if (sortField === "status") {
         firstSortValue = (firstStudent.status || "").toLowerCase();
         secondSortValue = (secondStudent.status || "").toLowerCase();

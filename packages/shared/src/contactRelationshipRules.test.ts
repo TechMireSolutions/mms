@@ -28,13 +28,22 @@ describe('normalizeRelationshipTerm', () => {
 });
 
 describe('resolveInverseRelationship', () => {
-  it('returns null for labels without configured pairs', () => {
+  it('returns null for labels outside the system catalog', () => {
     expect(
       resolveInverseRelationship('Father', contact({ id: '1', gender: 'female' })),
     ).toBeNull();
     expect(
       resolveInverseRelationship('Father', contact({ id: '1', gender: 'female' }), []),
     ).toBeNull();
+  });
+
+  it('uses system pairs when custom pairs are omitted', () => {
+    expect(
+      resolveInverseRelationship('Parent', contact({ id: '1', gender: 'male' })),
+    ).toBe('Child');
+    expect(
+      resolveInverseRelationship('Wife', contact({ id: '1', gender: 'female' })),
+    ).toBe('Husband');
   });
 
   it('uses custom pair inverse when configured', () => {
@@ -77,17 +86,23 @@ describe('resolveInverseRelationship', () => {
 });
 
 describe('isAllowedRelationshipLabel', () => {
-  const pairs = [
-    {
-      id: 'pair_1',
-      forward: 'Father',
-      inverse: 'Child',
-      inverseMale: 'Son',
-      inverseFemale: 'Daughter',
-    },
-  ];
+  it('allows only system catalog labels by default', () => {
+    expect(isAllowedRelationshipLabel('Parent')).toBe(true);
+    expect(isAllowedRelationshipLabel('dependent')).toBe(true);
+    expect(isAllowedRelationshipLabel('Mentor')).toBe(false);
+    expect(isAllowedRelationshipLabel('Father')).toBe(false);
+  });
 
-  it('allows only pair-derived labels', () => {
+  it('allows only pair-derived labels when pairs are provided', () => {
+    const pairs = [
+      {
+        id: 'pair_1',
+        forward: 'Father',
+        inverse: 'Child',
+        inverseMale: 'Son',
+        inverseFemale: 'Daughter',
+      },
+    ];
     expect(isAllowedRelationshipLabel('Father', pairs)).toBe(true);
     expect(isAllowedRelationshipLabel('daughter', pairs)).toBe(true);
     expect(isAllowedRelationshipLabel('Mother', pairs)).toBe(false);
