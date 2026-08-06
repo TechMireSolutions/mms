@@ -1,6 +1,7 @@
 import {
   CONTACTS_SAVED_REPORT_CATEGORY,
   LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS,
+  applyRelationshipOptionOrder,
   canDeleteContactsSavedReport,
   canViewContactsSavedReport,
   deriveRelationshipOptionsFromPairs,
@@ -74,6 +75,16 @@ function relationshipLabelListsMatch(
   return left.every((label) => rightKeys.has(label.trim().toLowerCase()));
 }
 
+function relationshipLabelSequencesMatch(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  if (left.length !== right.length) return false;
+  return left.every(
+    (label, index) => label.trim().toLowerCase() === (right[index] ?? '').trim().toLowerCase(),
+  );
+}
+
 function syncRelationshipOptionsInFieldConfig(
   config: FieldConfig,
   options: string[],
@@ -101,22 +112,49 @@ function syncRelationshipOptionsInFieldConfig(
 /** Align lookups + field-config options with pair-derived relationship labels. */
 async function syncRelationshipMirrorsFromPairs(
   pairs: RelationshipPair[] | undefined,
-): Promise<void> {
-  const labels = deriveRelationshipOptionsFromPairs(pairs ?? []);
+  optionOrder?: string[] | null,
+): Promise<string[]> {
+  const labels = applyRelationshipOptionOrder(
+    deriveRelationshipOptionsFromPairs(pairs ?? []),
+    optionOrder,
+  );
   const currentLookups = await loadContactLookupKind('relationships');
   const lookupLabels = Array.isArray(currentLookups)
     ? currentLookups.filter((entry): entry is string => typeof entry === 'string')
     : [];
-  if (!relationshipLabelListsMatch(lookupLabels, labels)) {
+  if (!relationshipLabelSequencesMatch(lookupLabels, labels)) {
     await replaceContactLookupKind('relationships', labels);
   }
 
   const fieldConfig = await loadContactFieldConfig();
-  if (!fieldConfig) return;
-  const synced = syncRelationshipOptionsInFieldConfig(fieldConfig, labels);
-  if (synced !== fieldConfig) {
-    await saveContactFieldConfig(synced);
+  if (fieldConfig) {
+    const synced = syncRelationshipOptionsInFieldConfig(fieldConfig, labels);
+    if (synced !== fieldConfig) {
+      await saveContactFieldConfig(synced);
+    }
   }
+  return labels;
+}
+
+/**
+ * Rewrite `relationships` lookup (+ field-config options) from prefs SSOT.
+ * Ignores any client-supplied label list for that kind.
+ */
+export async function mirrorRelationshipLookupsFromPreferences(): Promise<string[]> {
+  const prefs = await loadContactPreferencesWithoutMirror();
+  return syncRelationshipMirrorsFromPairs(
+    prefs.relationshipPairs,
+    prefs.relationshipOptionOrder,
+  );
+}
+
+async function loadContactPreferencesWithoutMirror(): Promise<ContactPreferences> {
+  const raw = await getContactModulePreferencesByWorkspace(requireTenant());
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return normalizeContactPreferences(null);
+  }
+  const record = raw as Record<string, unknown>;
+  return normalizeContactPreferences(record as Partial<ContactPreferences>);
 }
 
 export async function getUserColumnPreferences(userId: string): Promise<ContactColumnPreference[]> {
@@ -137,7 +175,10 @@ export async function loadContactPreferences(): Promise<ContactPreferences | nul
     );
   }
   // Align lookups + field-config options with pair-derived labels (purges stale seeds).
-  await syncRelationshipMirrorsFromPairs(normalized.relationshipPairs);
+  await syncRelationshipMirrorsFromPairs(
+    normalized.relationshipPairs,
+    normalized.relationshipOptionOrder,
+  );
   return normalized;
 }
 
@@ -146,7 +187,10 @@ export async function saveContactPreferences(
 ): Promise<ContactPreferences> {
   const normalized = normalizeContactPreferences(preferences);
   await upsertContactModulePreferences(requireTenant(), normalized as unknown as Record<string, unknown>);
-  await syncRelationshipMirrorsFromPairs(normalized.relationshipPairs);
+  await syncRelationshipMirrorsFromPairs(
+    normalized.relationshipPairs,
+    normalized.relationshipOptionOrder,
+  );
   return normalized;
 }
 

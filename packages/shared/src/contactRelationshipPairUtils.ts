@@ -202,6 +202,73 @@ export function deriveRelationshipOptionsFromPairs(pairs: RelationshipPair[]): s
 }
 
 /**
+ * Reorders pair-derived labels to match a preferred UI order (case-insensitive).
+ * Labels not in `preferredOrder` append in their derived order. Preferred entries
+ * that are not in `labels` are ignored (stale order after removals).
+ */
+export function applyRelationshipOptionOrder(
+  labels: readonly string[],
+  preferredOrder?: readonly string[] | null,
+): string[] {
+  if (!preferredOrder || preferredOrder.length === 0) return [...labels];
+  const byKey = new Map(labels.map((label) => [label.trim().toLowerCase(), label] as const));
+  const ordered: string[] = [];
+  const seen = new Set<string>();
+  for (const preferred of preferredOrder) {
+    const key = preferred.trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    const match = byKey.get(key);
+    if (!match) continue;
+    ordered.push(match);
+    seen.add(key);
+  }
+  for (const label of labels) {
+    const key = label.trim().toLowerCase();
+    if (seen.has(key)) continue;
+    ordered.push(label);
+    seen.add(key);
+  }
+  return ordered;
+}
+
+/**
+ * Keeps only order entries that still exist in the current label set.
+ */
+export function sanitizeRelationshipOptionOrder(
+  preferredOrder: readonly string[] | null | undefined,
+  labels: readonly string[],
+): string[] {
+  return applyRelationshipOptionOrder(labels, preferredOrder);
+}
+
+/**
+ * Applies dropdown remove + reorder onto prefs pairs and option order.
+ * Removals prune pairs that reference dropped labels; reorder is stored as
+ * `relationshipOptionOrder` so FE derivation can match EditableSelect order.
+ */
+export function applyRelationshipOptionsUpdate(
+  pairs: readonly RelationshipPair[],
+  previousOptions: readonly string[],
+  nextOptions: readonly string[],
+): { pairs: RelationshipPair[]; labels: string[]; optionOrder: string[] } {
+  const removed = previousOptions.filter(
+    (option) =>
+      !nextOptions.some((next) => next.trim().toLowerCase() === option.trim().toLowerCase()),
+  );
+  let nextPairs = [...pairs];
+  for (const label of removed) {
+    nextPairs = pruneRelationshipPairsForRemovedLabel(nextPairs, label);
+  }
+  const derived = deriveRelationshipOptionsFromPairs(nextPairs);
+  const labels = applyRelationshipOptionOrder(derived, nextOptions);
+  return {
+    pairs: nextPairs,
+    labels,
+    optionOrder: sanitizeRelationshipOptionOrder(nextOptions, labels),
+  };
+}
+
+/**
  * Merges relationship option lists case-insensitively, preserving first-seen casing.
  * Pair-derived labels are listed before existing collection options.
  */

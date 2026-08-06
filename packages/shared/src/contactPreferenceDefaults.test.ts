@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_RELATIONSHIP_PAIRS,
   LEGACY_BUILTIN_RELATIONSHIP_PAIR_IDS,
+  applyRelationshipOptionOrder,
+  applyRelationshipOptionsUpdate,
   buildRelationshipPairAddition,
   deriveRelationshipOptionsFromPairs,
   isDuplicateRelationshipPair,
@@ -239,6 +241,35 @@ describe('pruneRelationshipPairsForRemovedLabel', () => {
   });
 });
 
+describe('applyRelationshipOptionOrder', () => {
+  it('reorders labels to preferred order and drops stale preferred entries', () => {
+    expect(
+      applyRelationshipOptionOrder(
+        ['Father', 'Child', 'Son', 'Daughter'],
+        ['Daughter', 'Father', 'Unknown', 'Child'],
+      ),
+    ).toEqual(['Daughter', 'Father', 'Child', 'Son']);
+  });
+});
+
+describe('applyRelationshipOptionsUpdate', () => {
+  it('prunes removed labels and stores preferred order', () => {
+    const result = applyRelationshipOptionsUpdate(
+      [
+        { id: 'a', forward: 'Father', inverse: 'Child', inverseMale: 'Son', inverseFemale: 'Daughter' },
+        { id: 'b', forward: 'Mentor', inverse: 'Mentee' },
+      ],
+      ['Father', 'Child', 'Son', 'Daughter', 'Mentor', 'Mentee'],
+      ['Daughter', 'Father', 'Child', 'Son'],
+    );
+    expect(result.pairs).toEqual([
+      { id: 'a', forward: 'Father', inverse: 'Child', inverseMale: 'Son', inverseFemale: 'Daughter' },
+    ]);
+    expect(result.labels).toEqual(['Daughter', 'Father', 'Child', 'Son']);
+    expect(result.optionOrder).toEqual(['Daughter', 'Father', 'Child', 'Son']);
+  });
+});
+
 describe('normalizeContactPreferences', () => {
   it('keeps empty relationship pairs (no built-in restore)', () => {
     const normalized = normalizeContactPreferences({
@@ -247,5 +278,16 @@ describe('normalizeContactPreferences', () => {
     });
     expect(normalized.defaultCity).toBe('Karachi');
     expect(normalized.relationshipPairs).toEqual([]);
+    expect(normalized.relationshipOptionOrder).toEqual([]);
+  });
+
+  it('sanitizes relationshipOptionOrder to pair-derived labels', () => {
+    const normalized = normalizeContactPreferences({
+      relationshipPairs: [
+        { id: 'a', forward: 'Father', inverse: 'Child', inverseMale: 'Son', inverseFemale: 'Daughter' },
+      ],
+      relationshipOptionOrder: ['Daughter', 'Stale', 'Father'],
+    });
+    expect(normalized.relationshipOptionOrder).toEqual(['Daughter', 'Father', 'Child', 'Son']);
   });
 });

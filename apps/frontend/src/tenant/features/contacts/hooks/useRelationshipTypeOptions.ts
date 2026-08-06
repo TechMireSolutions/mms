@@ -1,6 +1,6 @@
 import {
+  applyRelationshipOptionsUpdate,
   buildRelationshipPairAddition,
-  pruneRelationshipPairsForRemovedLabel,
   resolveRelationshipPairs,
   type ParsedRelationshipPairInput,
 } from "@mms/shared";
@@ -35,7 +35,10 @@ export function useRelationshipTypeOptions(
       return null;
     }
     try {
-      await updatePrefsAsync({ relationshipPairs: result.pairs });
+      await updatePrefsAsync({
+        relationshipPairs: result.pairs,
+        relationshipOptionOrder: result.labels,
+      });
       await Promise.resolve(onUpdateRelationships(result.labels));
       return result.selected;
     } catch {
@@ -45,19 +48,17 @@ export function useRelationshipTypeOptions(
   };
 
   const updateOptions = async (nextOptions: string[]): Promise<void> => {
-    const removed = relationshipOptions.filter(
-      (option) =>
-        !nextOptions.some((next) => next.trim().toLowerCase() === option.trim().toLowerCase()),
-    );
     try {
-      if (removed.length > 0) {
-        let pairs = resolveRelationshipPairs(prefs.relationshipPairs);
-        for (const label of removed) {
-          pairs = pruneRelationshipPairsForRemovedLabel(pairs, label);
-        }
-        await updatePrefsAsync({ relationshipPairs: pairs });
-      }
-      await Promise.resolve(onUpdateRelationships(nextOptions));
+      const applied = applyRelationshipOptionsUpdate(
+        resolveRelationshipPairs(prefs.relationshipPairs),
+        relationshipOptions,
+        nextOptions,
+      );
+      await updatePrefsAsync({
+        relationshipPairs: applied.pairs,
+        relationshipOptionOrder: applied.optionOrder,
+      });
+      await Promise.resolve(onUpdateRelationships(applied.labels));
     } catch {
       notify.error(t("contacts.saveFailed"));
     }

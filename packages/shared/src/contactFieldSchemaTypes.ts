@@ -109,6 +109,8 @@ export interface ContactPreferences {
   showLunarDob?: boolean;
   showDetailedLunarAge?: boolean;
   relationshipPairs?: RelationshipPair[];
+  /** Preferred Relationship-type dropdown order (subset of pair-derived labels). */
+  relationshipOptionOrder?: string[];
 }
 
 

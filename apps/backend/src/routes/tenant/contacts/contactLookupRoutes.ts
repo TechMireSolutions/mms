@@ -14,6 +14,7 @@ import {
   loadContactLookupsMap,
   replaceContactLookupKind,
 } from '../../../services/contactLookupsService.js';
+import { mirrorRelationshipLookupsFromPreferences } from '../../../services/contactPreferencesService.js';
 import { auditContact } from './contactRouteHelpers.js';
 
 /** Contacts Setup lookup option lists (typed `contact_lookups`). */
@@ -56,6 +57,19 @@ export const contactLookupRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
+      // Relationship labels are prefs-owned (`relationshipPairs` + option order).
+      // Ignore client items and rewrite the lookup mirror from preferences.
+      if (kind === 'relationships') {
+        const saved = await mirrorRelationshipLookupsFromPreferences();
+        await auditContact(
+          user,
+          'contact.lookups',
+          `Mirrored contact lookup kind "relationships" from preferences (${saved.length} items)`,
+          'lookups:relationships',
+        );
+        return reply.send({ success: true, kind, items: saved, mirroredFromPrefs: true });
+      }
+
       const saved = await replaceContactLookupKind(kind, items as never);
       await auditContact(
         user,

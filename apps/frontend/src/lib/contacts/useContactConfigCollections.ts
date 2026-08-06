@@ -63,8 +63,11 @@ export function useContactConfigCollections({
   const persistStringKind = useCallback(
     async (kind: ContactLookupStringKind, options: string[]) => {
       const { tabId, fieldId } = CONTACT_LOOKUP_FIELD_TARGETS[kind];
-      await lookupMutation.mutateAsync({ kind, items: options });
-      await syncFieldOptions(tabId, fieldId, options);
+      const saved = await lookupMutation.mutateAsync({ kind, items: options });
+      const nextOptions = Array.isArray(saved)
+        ? saved.filter((item): item is string => typeof item === "string")
+        : options;
+      await syncFieldOptions(tabId, fieldId, nextOptions);
     },
     [lookupMutation, syncFieldOptions],
   );

@@ -3,7 +3,9 @@ import type { ContactPreferences } from './contactFieldSchemaTypes.js';
 import { COLOR_PALETTES } from './contactPreferenceConstants.js';
 import {
   DEFAULT_RELATIONSHIP_PAIRS,
+  deriveRelationshipOptionsFromPairs,
   resolveRelationshipPairs,
+  sanitizeRelationshipOptionOrder,
 } from './contactRelationshipPairUtils.js';
 
 export * from './contactPreferenceConstants.js';
@@ -37,12 +39,14 @@ export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
   showDetailedLunarAge: false,
   namePrefixesToIgnore: ["syed", "syeda"],
   relationshipPairs: DEFAULT_RELATIONSHIP_PAIRS,
+  relationshipOptionOrder: [],
 };
 
 /**
  * Merges stored contact preferences onto defaults.
  * Relationship pairs are resolved via {@link resolveRelationshipPairs}
- * (empty allowed; legacy built-ins stripped).
+ * (empty allowed; legacy built-ins stripped). Option order is sanitized to
+ * the current pair-derived label set.
  */
 export function normalizeContactPreferences(
   partial?: Partial<ContactPreferences> | null,
@@ -52,5 +56,10 @@ export function normalizeContactPreferences(
     ...(partial && typeof partial === "object" && !Array.isArray(partial) ? partial : {}),
   };
   merged.relationshipPairs = resolveRelationshipPairs(merged.relationshipPairs);
+  const labels = deriveRelationshipOptionsFromPairs(merged.relationshipPairs);
+  merged.relationshipOptionOrder = sanitizeRelationshipOptionOrder(
+    merged.relationshipOptionOrder,
+    labels,
+  );
   return merged;
 }

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import {
+  applyRelationshipOptionOrder,
   deriveRelationshipOptionsFromPairs,
   resolveRelationshipPairs,
   type ColumnRegistryEntry,
@@ -93,11 +94,12 @@ export function useContactConfigProviderValue({
   );
 
   /** Form Relationship-type dropdown — user-created pairs only (no prebuilt seed). */
-  const resolvedRelationships = useMemo(
-    () =>
-      deriveRelationshipOptionsFromPairs(resolveRelationshipPairs(prefs.relationshipPairs)),
-    [prefs.relationshipPairs],
-  );
+  const resolvedRelationships = useMemo(() => {
+    const derived = deriveRelationshipOptionsFromPairs(
+      resolveRelationshipPairs(prefs.relationshipPairs),
+    );
+    return applyRelationshipOptionOrder(derived, prefs.relationshipOptionOrder);
+  }, [prefs.relationshipPairs, prefs.relationshipOptionOrder]);
 
   return useMemo(
     () => ({
