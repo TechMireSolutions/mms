@@ -28,6 +28,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
     showDeleted,
     canWrite,
     canDelete,
+    isColumnVisible,
     visibleCustomFields,
     statusConfig,
     onSelectAll,
@@ -43,6 +44,16 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const pageCountLabel = `${teachers.length} ${t("nav.teachers").toLowerCase()}`;
+
+  const resolveColumnVisible =
+    isColumnVisible ??
+    ((key: string) => {
+      if (key === "specialization") return showSpecialization;
+      if (key === "qualification") return showQualification;
+      if (key === "joinDate") return showJoinDate;
+      if (key === "status") return showStatus;
+      return true;
+    });
 
   return (
     <>
@@ -85,10 +96,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
 
               <TeacherCardMetadata
                 teacher={teacher}
-                showSpecialization={showSpecialization}
-                showQualification={showQualification}
-                showJoinDate={showJoinDate}
-                showStatus={showStatus}
+                isColumnVisible={resolveColumnVisible}
                 visibleCustomFields={visibleCustomFields}
                 statusConfig={statusConfig}
               />

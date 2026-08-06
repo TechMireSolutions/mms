@@ -87,6 +87,7 @@ export function TeacherList({
         showDeleted={showDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
+        isColumnVisible={isColumnVisible}
         visibleCustomFields={visibleCustomFields}
         statusConfig={statusConfig}
         sortField={sortField}

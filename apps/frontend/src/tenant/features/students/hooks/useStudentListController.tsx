@@ -67,7 +67,6 @@ export function useStudentListController({
     t,
     isColumnVisible: resolveColumnVisible,
     isFieldEnabled,
-    sortField,
     viewStudent,
     setViewStudent,
     openComposer,

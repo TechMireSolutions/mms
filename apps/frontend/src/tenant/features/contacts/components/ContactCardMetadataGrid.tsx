@@ -6,6 +6,7 @@ import {
   type Contact,
   type ContactPreferences,
 } from "@mms/shared";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
@@ -56,24 +57,16 @@ export function ContactCardMetadataGrid({
               : col.label;
 
         return (
-          <div
-            key={col.id}
-            className="flex flex-col gap-0.5 bg-muted/40 dark:bg-muted/15 px-2.5 py-1.5 rounded-xl border border-border/30 dark:border-border/10 text-start min-w-0"
-          >
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight truncate leading-none">
-              {colLabel}
-            </span>
-            <div className="text-xs font-semibold text-foreground truncate mt-0.5">
-              <ContactMetadataCell
-                colId={col.id}
-                contact={contact}
-                prefs={prefs}
-                allContacts={allContacts}
-                contactsMap={contactsMap}
-                variant="card"
-              />
-            </div>
-          </div>
+          <DirectoryCardMetaTile key={col.id} label={colLabel}>
+            <ContactMetadataCell
+              colId={col.id}
+              contact={contact}
+              prefs={prefs}
+              allContacts={allContacts}
+              contactsMap={contactsMap}
+              variant="card"
+            />
+          </DirectoryCardMetaTile>
         );
       })}
     </div>

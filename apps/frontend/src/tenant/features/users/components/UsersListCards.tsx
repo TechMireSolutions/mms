@@ -8,7 +8,7 @@ import { UserCardActions } from "@/tenant/features/users/components/UserCardActi
 import { UserCardHeader } from "@/tenant/features/users/components/UserCardHeader";
 import { UserCardMetadata } from "@/tenant/features/users/components/UserCardMetadata";
 
-interface UsersListMobileCardsProps {
+interface UsersListCardsProps {
   users: SystemUser[];
   selectedIds: string[];
   allSelected: boolean;
@@ -26,7 +26,8 @@ interface UsersListMobileCardsProps {
   onResetPassword: (user: SystemUser) => void;
 }
 
-export function UsersListMobileCards({
+/** Work directory cards for Users — shared directory card chrome. */
+export function UsersListCards({
   users,
   selectedIds,
   allSelected,
@@ -42,7 +43,7 @@ export function UsersListMobileCards({
   onDelete,
   onRestore,
   onResetPassword,
-}: UsersListMobileCardsProps): React.JSX.Element {
+}: UsersListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const pageCountLabel = `${users.length} ${t("nav.users").toLowerCase()}`;

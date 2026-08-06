@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { UsersListDesktopTable } from "@/tenant/features/users/components/UsersListDesktopTable";
-import { UsersListMobileCards } from "@/tenant/features/users/components/UsersListMobileCards";
+import { UsersListCards } from "@/tenant/features/users/components/UsersListCards";
 
 interface UsersListContentProps {
   viewMode: WorkDirectoryViewMode;
@@ -101,7 +101,7 @@ export function UsersListContent({
   };
 
   if (viewMode === "cards") {
-    return <UsersListMobileCards {...listProps} />;
+    return <UsersListCards {...listProps} />;
   }
 
   return (

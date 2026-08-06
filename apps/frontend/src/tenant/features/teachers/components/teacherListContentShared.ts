@@ -20,6 +20,7 @@ export interface TeacherListContentProps {
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
+  isColumnVisible?: (key: string) => boolean;
   visibleCustomFields: TeacherCustomField[];
   statusConfig: Record<string, StatusBadgeConfigItem>;
   sortField: TeacherSortField;

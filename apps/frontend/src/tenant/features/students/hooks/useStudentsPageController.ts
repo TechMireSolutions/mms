@@ -127,7 +127,6 @@ export function useStudentsPageController() {
     canExport,
     visibleTabs,
     serverCount,
-    settings,
     studentStatusOptions,
     genderFilters,
     activeTab,

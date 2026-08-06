@@ -20,8 +20,6 @@ import type { ContactsColumnConfig } from "@/tenant/features/contacts/components
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
-
 export interface ContactCardItemProps {
   contact: Contact;
   isSelected: boolean;

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { calcAge, primaryResponsibleAdultDisplayName, type Student } from "@mms/shared";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -15,17 +16,6 @@ type StudentCardMetadataProps = Pick<
 > & {
   student: Student;
 };
-
-function MetaTile({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-0.5 bg-muted/40 dark:bg-muted/15 px-2.5 py-1.5 rounded-xl border border-border/30 dark:border-border/10 text-start min-w-0">
-      <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight truncate leading-none">
-        {label}
-      </span>
-      <div className="text-xs font-semibold text-foreground truncate mt-0.5">{children}</div>
-    </div>
-  );
-}
 
 /** Students domain metadata tiles — Contacts card metadata chrome. */
 export function StudentCardMetadata({
@@ -47,39 +37,39 @@ export function StudentCardMetadata({
 
   if (isFieldEnabled("gender")) {
     tiles.push(
-      <MetaTile key="gender" label={t("students.gender")}>
+      <DirectoryCardMetaTile key="gender" label={t("students.gender")}>
         {student.gender ? formatContactGenderLabel(student.gender, t) : emptyDash}
-      </MetaTile>,
+      </DirectoryCardMetaTile>,
     );
   }
   if (isColumnVisible("dob")) {
     tiles.push(
-      <MetaTile key="dob" label={t("students.columns.dob")}>
+      <DirectoryCardMetaTile key="dob" label={t("students.columns.dob")}>
         {age ? t("students.list.ageYears", { age }) : emptyDash}
-      </MetaTile>,
+      </DirectoryCardMetaTile>,
     );
   }
   if (isColumnVisible("parents") && parentName) {
     tiles.push(
-      <MetaTile key="parents" label={t("students.columns.parents")}>
+      <DirectoryCardMetaTile key="parents" label={t("students.columns.parents")}>
         {parentName}
-      </MetaTile>,
+      </DirectoryCardMetaTile>,
     );
   }
   if (isColumnVisible("status")) {
     tiles.push(
-      <MetaTile key="status" label={t("students.columns.status")}>
+      <DirectoryCardMetaTile key="status" label={t("students.columns.status")}>
         <StatusBadge status={student.status || "active"} config={statusBadgeConfig} />
-      </MetaTile>,
+      </DirectoryCardMetaTile>,
     );
   }
   for (const col of customColumns) {
     const fieldKey = studentCustomFieldKeyFromColumn(col.key);
     const raw = fieldKey ? (student as Record<string, unknown>)[fieldKey] : undefined;
     tiles.push(
-      <MetaTile key={col.key} label={col.label}>
+      <DirectoryCardMetaTile key={col.key} label={col.label}>
         {formatStudentListCustomValue(raw, t)}
-      </MetaTile>,
+      </DirectoryCardMetaTile>,
     );
   }
 

@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AnimatePresence } from "framer-motion";
 import { UserPlus, GraduationCap } from "lucide-react";

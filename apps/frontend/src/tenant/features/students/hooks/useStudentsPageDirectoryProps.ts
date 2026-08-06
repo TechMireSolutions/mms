@@ -21,7 +21,6 @@ export function useStudentsPageDirectoryProps({
   );
 
   return {
-    pageIds,
     allSelected: pageSelection.allSelected,
     someSelected: pageSelection.someSelected,
   };
