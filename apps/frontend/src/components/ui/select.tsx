@@ -140,3 +140,11 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
 }
+
+/** True when the event target is inside a portaled Radix Select menu. */
+export function isRadixSelectPortalTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest("[data-radix-select-content], [data-radix-select-viewport]"))
+  )
+}

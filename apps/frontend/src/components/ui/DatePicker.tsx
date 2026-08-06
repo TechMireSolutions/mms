@@ -2,6 +2,7 @@ import * as React from "react"
 import { Calendar as CalendarIcon, X } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { isRadixSelectPortalTarget } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useDatePickerState } from "@/components/ui/useDatePickerState"
@@ -38,6 +39,7 @@ export function DatePicker({
   "aria-describedby": ariaDescribedBy,
 }: DatePickerProps) {
   const { t } = useTranslation()
+  const rootRef = React.useRef<HTMLDivElement>(null)
   const {
     open,
     setOpen,
@@ -60,8 +62,25 @@ export function DatePicker({
   const resolvedName = name || fallbackId
   const resolvedPlaceholder = placeholder || dateFormat
 
+  const keepOpenForChrome = (event: { target: EventTarget | null; preventDefault: () => void }) => {
+    const target = event.target
+    if (isRadixSelectPortalTarget(target)) {
+      event.preventDefault()
+      return
+    }
+    if (target instanceof Node && rootRef.current?.contains(target)) {
+      event.preventDefault()
+    }
+  }
+
   return (
-    <div className={cn("relative flex min-h-11 w-full items-center rounded-lg border border-border bg-background px-3 text-sm text-foreground transition-all focus-within:border-primary/40 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20", className)}>
+    <div
+      ref={rootRef}
+      className={cn(
+        "relative flex min-h-11 w-full items-center rounded-lg border border-border bg-background px-3 text-sm text-foreground transition-all focus-within:border-primary/40 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20",
+        className,
+      )}
+    >
       <Popover modal open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           type="button"
@@ -74,25 +93,8 @@ export function DatePicker({
         <PopoverContent
           className="w-auto p-0 border border-border/80 shadow-xl bg-background/90 backdrop-blur-xl rounded-xl"
           align="start"
-          // Native month/year <select> focus jumps must not dismiss the calendar.
-          onFocusOutside={(event) => event.preventDefault()}
-          onPointerDownOutside={(event) => {
-            const target = event.target
-            if (!(target instanceof Element)) return
-            // Keep open when the OS picker reports a target still inside the popover.
-            if (target.closest("[data-radix-popper-content-wrapper]")) {
-              event.preventDefault()
-              return
-            }
-            // Keep open while a caption <select> inside the calendar holds focus.
-            const active = document.activeElement
-            if (
-              active instanceof HTMLSelectElement &&
-              active.closest("[data-radix-popper-content-wrapper]")
-            ) {
-              event.preventDefault()
-            }
-          }}
+          onInteractOutside={keepOpenForChrome}
+          onFocusOutside={keepOpenForChrome}
         >
           <Calendar
             mode="single"

@@ -5,7 +5,12 @@ import {
   formatDatePartsWithMonthName,
   formatIsoDateToDisplay,
   parseDisplayDateToIso,
+  parseIsoDate,
+  isDateWithinIsoBounds,
+  resolveDatePickerMonthBounds,
   DATE_FORMAT_PRESET_IDS,
+  DATE_PICKER_YEAR_PAST,
+  DATE_PICKER_YEAR_FUTURE,
 } from '../dateFormatUtils.js';
 
 describe('dateFormatUtils', () => {
@@ -44,7 +49,7 @@ describe('dateFormatUtils', () => {
   describe('formatIsoDateToDisplay and parseDisplayDateToIso', () => {
     it('converts ISO dates to display format and parses back accurately', () => {
       const iso = '2026-07-21';
-      
+
       const displayUK = formatIsoDateToDisplay(iso, 'DD/MM/YYYY');
       expect(displayUK).toBe('21/07/2026');
       expect(parseDisplayDateToIso(displayUK, 'DD/MM/YYYY')).toBe('2026-07-21');
@@ -59,6 +64,29 @@ describe('dateFormatUtils', () => {
       expect(formatIsoDateToDisplay('invalid', 'DD/MM/YYYY')).toBe('invalid');
       expect(parseDisplayDateToIso('  ', 'DD/MM/YYYY')).toBe('');
       expect(parseDisplayDateToIso('not-a-date', 'DD/MM/YYYY')).toBe('');
+    });
+  });
+
+  describe('isDateWithinIsoBounds / resolveDatePickerMonthBounds', () => {
+    it('enforces optional min and max ISO bounds', () => {
+      const mid = parseIsoDate('2026-06-15')!;
+      expect(isDateWithinIsoBounds(mid)).toBe(true);
+      expect(isDateWithinIsoBounds(mid, '2026-06-15', '2026-06-15')).toBe(true);
+      expect(isDateWithinIsoBounds(mid, '2026-06-16')).toBe(false);
+      expect(isDateWithinIsoBounds(mid, undefined, '2026-06-14')).toBe(false);
+    });
+
+    it('resolves caption month window from ISO bounds or defaults', () => {
+      const bounded = resolveDatePickerMonthBounds('2020-03-01', '2030-08-01');
+      expect(bounded.startMonth.getFullYear()).toBe(2020);
+      expect(bounded.startMonth.getMonth()).toBe(0);
+      expect(bounded.endMonth.getFullYear()).toBe(2030);
+      expect(bounded.endMonth.getMonth()).toBe(11);
+
+      const open = resolveDatePickerMonthBounds();
+      const year = new Date().getFullYear();
+      expect(open.startMonth.getFullYear()).toBe(year - DATE_PICKER_YEAR_PAST);
+      expect(open.endMonth.getFullYear()).toBe(year + DATE_PICKER_YEAR_FUTURE);
     });
   });
 });

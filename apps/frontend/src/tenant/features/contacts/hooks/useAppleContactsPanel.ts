@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type DragEvent,
   type RefObject,
 } from "react";
 import { Contact, parseVCard } from "@mms/shared";
@@ -69,24 +68,9 @@ export function useAppleContactsPanel({
     processFile(file);
   };
 
-  const handleDragOver = (event: DragEvent<HTMLButtonElement>): void => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (canWrite) setIsDragging(true);
-  };
-
-  const handleDragLeave = (event: DragEvent<HTMLButtonElement>): void => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLButtonElement>): void => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
+  const handleDroppedFiles = (files: FileList | null): void => {
     if (!canWrite) return;
-    const file = event.dataTransfer.files?.[0];
+    const file = files?.[0];
     if (file) processFile(file);
   };
 
@@ -152,11 +136,10 @@ export function useAppleContactsPanel({
     exportCount,
     result,
     isDragging,
+    setIsDragging,
     fileRef: fileRef as RefObject<HTMLInputElement | null>,
     handleFile,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
+    handleDroppedFiles,
     handleImport,
     handleExport,
     clearPreview,

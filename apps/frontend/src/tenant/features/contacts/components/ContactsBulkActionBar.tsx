@@ -1,12 +1,10 @@
 import type { JSX } from "react";
-import { Download, Trash2, Users } from "lucide-react";
+import { Trash2, Users } from "lucide-react";
 import type { Contact } from "@mms/shared";
-import {
-  BulkSelectionBar,
-  bulkSelectionActionClassName,
-} from "@/components/ui/BulkSelectionBar";
+import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
 import {
   BulkSelectionDeleteAction,
+  BulkSelectionExportAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
   type BulkSelectionMessageChannel,
@@ -104,15 +102,10 @@ export function ContactsBulkActionBar({
             />
           )}
           {bulkActions.includes("export") && canExport && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
+            <BulkSelectionExportAction
+              label={t("contacts.bulkExport")}
               onClick={onBulkExport}
-              className={bulkSelectionActionClassName}
-            >
-              <Download className="w-3.5 h-3.5" /> {t("contacts.bulkExport")}
-            </Button>
+            />
           )}
           {bulkActions.includes("delete") && canDelete && (
             <>

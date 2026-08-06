@@ -1,4 +1,3 @@
-import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   getPrimaryEmail,
@@ -10,10 +9,7 @@ import { resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CopyBtn } from "@/components/ui/CopyBtn";
-import {
-  MESSAGING_ICON_BTN,
-  MESSAGING_ICON_BTN_TONES,
-} from "@/components/ui/messagingActionStyles";
+import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { useTranslation } from "@/hooks/useTranslation";
@@ -113,21 +109,18 @@ export function renderContactPhoneCell({
                 {formattedNumber}
               </span>
             </div>
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1"
+              onClick={(event) => event.stopPropagation()}
+            >
               {onWhatsApp && hasWa ? (
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onWhatsApp([contact]);
-                  }}
-                  title={t("contacts.whatsapp")}
-                  aria-label={t("contacts.whatsapp")}
-                  variant="ghost"
-                  className={cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES.whatsapp, "p-0 cursor-pointer")}
-                  type="button"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                </Button>
+                <EntityMessagingIconActions
+                  primaryPhone={primaryPhone}
+                  showCall={false}
+                  labels={{ whatsapp: t("contacts.whatsapp") }}
+                  onWhatsApp={() => onWhatsApp([contact])}
+                  className="gap-1"
+                />
               ) : null}
               <CopyBtn text={primaryPhone} />
             </div>

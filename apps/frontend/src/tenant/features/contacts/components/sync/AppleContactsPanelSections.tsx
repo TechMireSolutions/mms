@@ -1,12 +1,11 @@
 import {
   CheckCircle2,
   Download,
-  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import type { ChangeEvent, DragEvent, RefObject } from "react";
+import type { ChangeEvent, RefObject } from "react";
 
 export { AppleContactsPreviewList } from "@/tenant/features/contacts/components/sync/AppleContactsPreviewList";
 
@@ -21,42 +20,6 @@ export function AppleContactsExportGuide({ t }: { t: TranslationFunction }) {
         <li>{t("contacts.sync.appleExportStep4")}</li>
       </ol>
     </div>
-  );
-}
-
-export function AppleContactsDropzone({
-  isDragging,
-  onOpenPicker,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  t,
-}: {
-  isDragging: boolean;
-  onOpenPicker: () => void;
-  onDragOver: (event: DragEvent<HTMLButtonElement>) => void;
-  onDragLeave: (event: DragEvent<HTMLButtonElement>) => void;
-  onDrop: (event: DragEvent<HTMLButtonElement>) => void;
-  t: TranslationFunction;
-}) {
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onOpenPicker}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      className={`w-full flex flex-col items-center justify-center gap-2 py-7 border-2 border-dashed rounded-xl text-muted-foreground transition-all cursor-pointer bg-card h-auto shadow-none ${
-        isDragging
-          ? "border-primary bg-primary/10"
-          : "border-border hover:border-primary/40 hover:bg-primary/5"
-      }`}
-    >
-      <FileText className="w-7 h-7 opacity-40" />
-      <span className="text-sm font-semibold text-foreground">{t("contacts.sync.uploadVcf")}</span>
-      <span className="text-xs">{t("contacts.sync.dragDropBrowse")}</span>
-    </Button>
   );
 }
 

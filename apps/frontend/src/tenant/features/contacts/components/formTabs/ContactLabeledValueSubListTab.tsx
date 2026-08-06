@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
 import { listEnabledCustomContactFormFields, type Contact } from "@mms/shared";
@@ -16,8 +17,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 type ListItem = Record<string, unknown>;
 type TranslateFn = (key: AppTranslationKey) => string;
 
+export interface ContactLabeledValueFieldContext {
+  item: ListItem;
+  index: number;
+  updateItem: (idx: number, patch: ListItem) => void;
+}
+
 export interface ContactLabeledValueSubListTabProps extends ContactSubListTabBaseProps {
-  listKey: Extract<ContactSubListKey, "emails" | "socials">;
+  listKey: Extract<ContactSubListKey, "emails" | "socials" | "phones">;
   labelFieldKey: string;
   valueFieldKey: string;
   options: string[];
@@ -34,10 +41,17 @@ export interface ContactLabeledValueSubListTabProps extends ContactSubListTabBas
   valueInputType?: React.HTMLInputTypeAttribute;
   valueInputIdPrefix: string;
   labelSelectIdPrefix: string;
+  /** Optional leading control beside the value input (e.g. dial-code select). */
+  valueLeadingAddon?: (ctx: ContactLabeledValueFieldContext) => ReactNode;
+  /** Override default string patch when the value input changes (e.g. phone parse). */
+  onValueChange?: (
+    ctx: ContactLabeledValueFieldContext & { value: string },
+  ) => void;
+  onValueBlur?: (index: number) => void;
 }
 
 /**
- * Shared Emails / Socials form tab shell: label EditableSelect + single value Input.
+ * Shared Emails / Socials / Phones form tab shell: label EditableSelect + value Input.
  */
 export function ContactLabeledValueSubListTab({
   contactDraft,
@@ -59,6 +73,9 @@ export function ContactLabeledValueSubListTab({
   valueInputType = "text",
   valueInputIdPrefix,
   labelSelectIdPrefix,
+  valueLeadingAddon,
+  onValueChange,
+  onValueBlur,
   getListItemError,
   isFieldEnabled,
   isFieldRequired,
@@ -104,6 +121,37 @@ export function ContactLabeledValueSubListTab({
           const labelValue = resolveLabel(item[labelFieldKey], options, t);
           const rawValue = item[valueFieldKey];
           const stringValue = typeof rawValue === "string" ? rawValue : "";
+          const fieldCtx: ContactLabeledValueFieldContext = {
+            item,
+            index: idx,
+            updateItem,
+          };
+          const valueInput = (
+            <div className="group/input relative flex min-w-0 flex-1 items-center">
+              <Icon className="pointer-events-none absolute start-3.5 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within/input:text-primary" />
+              <Input
+                type={valueInputType}
+                id={`${valueInputIdPrefix}-${idx}`}
+                name={`${valueInputIdPrefix}-${idx}`}
+                value={stringValue}
+                required={isFieldRequired(listKey, valueFieldKey)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (onValueChange) {
+                    onValueChange({ ...fieldCtx, value });
+                    return;
+                  }
+                  updateItem(idx, { [valueFieldKey]: value });
+                }}
+                onBlur={onValueBlur ? () => onValueBlur(idx) : undefined}
+                placeholder={valuePlaceholder}
+                className={cn(
+                  "ps-10",
+                  valueError && "border-destructive focus-visible:ring-destructive",
+                )}
+              />
+            </div>
+          );
           return (
             <ListFieldCard
               key={getLocalId(listKey, idx)}
@@ -132,22 +180,14 @@ export function ContactLabeledValueSubListTab({
               <div className="space-y-3">
                 {showValue ? (
                   <>
-                    <div className="relative flex items-center group/input">
-                      <Icon className="pointer-events-none absolute start-3.5 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within/input:text-primary" />
-                      <Input
-                        type={valueInputType}
-                        id={`${valueInputIdPrefix}-${idx}`}
-                        name={`${valueInputIdPrefix}-${idx}`}
-                        value={stringValue}
-                        required={isFieldRequired(listKey, valueFieldKey)}
-                        onChange={(e) => updateItem(idx, { [valueFieldKey]: e.target.value })}
-                        placeholder={valuePlaceholder}
-                        className={cn(
-                          "ps-10",
-                          valueError && "border-destructive focus-visible:ring-destructive",
-                        )}
-                      />
-                    </div>
+                    {valueLeadingAddon ? (
+                      <div className="flex w-full items-center gap-2">
+                        {valueLeadingAddon(fieldCtx)}
+                        {valueInput}
+                      </div>
+                    ) : (
+                      valueInput
+                    )}
                     <FieldErrorMessage message={valueError} />
                   </>
                 ) : null}

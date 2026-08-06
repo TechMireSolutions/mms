@@ -7,24 +7,35 @@ import { formatEntityStamp } from "@/lib/formatEntityStamp";
 
 export interface DetailDrawerArchivedBannerProps {
   deletedAt: unknown;
-  /** Build banner description from a formatted date string. */
-  describe: (formattedDate: string) => string;
+  /** Build banner description from a formatted date string (drawer chrome). */
+  describe?: (formattedDate: string) => string;
+  /** Optional title (directory cards); when set, takes precedence over describe-only layout. */
+  title?: string;
+  /** Optional body text (e.g. deletion reason on cards). */
+  description?: string;
 }
 
-/** Soft-delete archive banner for entity detail drawers. */
+/** Soft-delete archive banner for entity detail drawers and directory cards. */
 export function DetailDrawerArchivedBanner({
   deletedAt,
   describe,
+  title,
+  description,
 }: DetailDrawerArchivedBannerProps): React.JSX.Element | null {
   const stamp = formatEntityStamp(deletedAt);
   if (!stamp) return null;
+
+  const formatted = formatDate(stamp);
+  const resolvedDescription = description ?? (describe ? describe(formatted) : undefined);
+  if (!title && !resolvedDescription) return null;
 
   return (
     <WarningCallout
       icon={Archive}
       density="compact"
       role="status"
-      description={describe(formatDate(stamp))}
+      title={title}
+      description={resolvedDescription}
     />
   );
 }

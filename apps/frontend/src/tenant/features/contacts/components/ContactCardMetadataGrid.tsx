@@ -1,5 +1,4 @@
 import type { JSX } from "react";
-import { Archive } from "lucide-react";
 import {
   formatDate,
   isRelationshipContactColumnKey,
@@ -9,7 +8,7 @@ import {
   type ContactPreferences,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { WarningCallout } from "@/components/ui/WarningCallout";
+import { DetailDrawerArchivedBanner } from "@/components/ui/DetailDrawerArchiveChrome";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
@@ -94,10 +93,8 @@ export function ContactCardDeletedBanner({
   }
 
   return (
-    <WarningCallout
-      icon={Archive}
-      density="compact"
-      role="status"
+    <DetailDrawerArchivedBanner
+      deletedAt={contact.deletedAt}
       title={t("contacts.table.deletedAt", { date: formatDate(contact.deletedAt) })}
       description={
         contact.deletionReason

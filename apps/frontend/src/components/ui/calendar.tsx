@@ -1,9 +1,10 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
-import { DayPicker, DayPickerProps } from "react-day-picker"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { DayPicker, type DayPickerProps } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { CalendarDropdown } from "@/components/ui/CalendarDropdown"
 
 export type CalendarProps = DayPickerProps
 
@@ -11,10 +12,11 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  components,
   ...props
 }: CalendarProps) {
   return (
-    (<DayPicker
+    <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
@@ -33,8 +35,7 @@ function Calendar({
         ),
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex",
-        weekday:
-          "text-muted-foreground rounded-md w-8 font-normal text-xs",
+        weekday: "text-muted-foreground rounded-md w-8 font-normal text-xs",
         week: "flex w-full mt-2",
         day: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-e-md",
@@ -57,50 +58,22 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
-        dropdowns: "flex justify-center gap-1.5 items-center z-20",
+        dropdowns: "flex justify-center gap-1.5 items-center",
         ...classNames,
       }}
+      {...props}
       components={{
-        Chevron: ({ className, orientation, ...props }) => {
+        Chevron: ({ className: chevronClassName, orientation, ...chevronProps }) => {
           if (orientation === "left") {
-            return <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
+            return <ChevronLeft className={cn("h-4 w-4", chevronClassName)} {...chevronProps} />
           }
-          return <ChevronRight className={cn("h-4 w-4", className)} {...props} />
+          return <ChevronRight className={cn("h-4 w-4", chevronClassName)} {...chevronProps} />
         },
-        Dropdown: ({ className, options, value, onChange, ...props }) => {
-          const stopDismiss = (event: React.SyntheticEvent) => {
-            event.stopPropagation()
-          }
-          return (
-            <div
-              className="relative inline-flex items-center"
-              onPointerDown={stopDismiss}
-              onClick={stopDismiss}
-            >
-              <select
-                className={cn(
-                  "appearance-none min-h-11 bg-transparent ps-2.5 pe-6 py-2 text-sm font-semibold rounded-md border border-border hover:bg-muted/50 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all",
-                  className
-                )}
-                value={value}
-                onChange={onChange}
-                {...props}
-                onPointerDown={stopDismiss}
-                onClick={stopDismiss}
-              >
-                {options?.map((opt) => (
-                  <option key={opt.value} value={opt.value} disabled={opt.disabled} className="bg-background text-foreground">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="h-3 w-3 absolute end-1.5 pointer-events-none opacity-50" />
-            </div>
-          )
-        }
+        Dropdown: CalendarDropdown,
+        ...components,
       }}
-      {...props} />)
-  );
+    />
+  )
 }
 Calendar.displayName = "Calendar"
 

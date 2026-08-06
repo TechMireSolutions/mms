@@ -1,16 +1,14 @@
-import { Download } from "lucide-react";
 import type { ReactElement } from "react";
 import {
   BulkSelectionBar,
-  bulkSelectionActionClassName,
 } from "@/components/ui/BulkSelectionBar";
 import {
   BulkSelectionDeleteAction,
+  BulkSelectionExportAction,
   BulkSelectionMessagingActions,
   BulkSelectionRestoreAction,
   BulkSelectionStatusAction,
 } from "@/components/ui/BulkSelectionActions";
-import { Button } from "@/components/ui/button";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -78,14 +76,10 @@ export function StudentListSelectionBar({
           )}
 
           {canExport && onBulkExport && (
-            <Button
-              type="button"
-              variant="outline"
+            <BulkSelectionExportAction
+              label={t("students.bulkExport")}
               onClick={onBulkExport}
-              className={bulkSelectionActionClassName}
-            >
-              <Download className="w-3.5 h-3.5 text-primary" /> {t("students.bulkExport")}
-            </Button>
+            />
           )}
 
           {canWrite && onBulkStatusChange && (

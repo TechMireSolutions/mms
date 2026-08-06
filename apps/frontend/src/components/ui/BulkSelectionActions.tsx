@@ -1,4 +1,4 @@
-import { Mail, MessageCircle, MessageSquare, RotateCcw, ChevronDown, Tag, type LucideIcon } from "lucide-react";
+import { Download, Mail, MessageCircle, MessageSquare, RotateCcw, ChevronDown, Tag, type LucideIcon } from "lucide-react";
 import type { ReactElement } from "react";
 import {
   bulkSelectionActionClassName,
@@ -68,6 +68,30 @@ export function BulkSelectionMessagingActions({
         </Button>
       )}
     </>
+  );
+}
+
+export interface BulkSelectionExportActionProps {
+  label: string;
+  onClick: () => void | Promise<void>;
+}
+
+/** Outline export action for Work bulk bars. */
+export function BulkSelectionExportAction({
+  label,
+  onClick,
+}: BulkSelectionExportActionProps): ReactElement {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => {
+        void onClick();
+      }}
+      className={bulkSelectionActionClassName}
+    >
+      <Download className="w-3.5 h-3.5" aria-hidden /> {label}
+    </Button>
   );
 }
 

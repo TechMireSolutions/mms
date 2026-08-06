@@ -1,11 +1,11 @@
 import React from "react";
 import { Smartphone } from "lucide-react";
 import { type Contact } from "@mms/shared";
+import { DashedFileDropZone } from "@/components/ui/DashedFileDropZone";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAppleContactsPanel } from "@/tenant/features/contacts/hooks/useAppleContactsPanel";
 import {
-  AppleContactsDropzone,
   AppleContactsExportBar,
   AppleContactsExportGuide,
   AppleContactsFileInput,
@@ -46,13 +46,17 @@ export function AppleContactsPanel({
         )}
 
         {canWrite && apple.previewList.length === 0 && !apple.result && (
-          <AppleContactsDropzone
+          <DashedFileDropZone
             isDragging={apple.isDragging}
             onOpenPicker={apple.openFilePicker}
-            onDragOver={apple.handleDragOver}
-            onDragLeave={apple.handleDragLeave}
-            onDrop={apple.handleDrop}
-            t={t}
+            onDraggingChange={(dragging) => {
+              if (canWrite) apple.setIsDragging(dragging);
+            }}
+            onFiles={apple.handleDroppedFiles}
+            title={t("contacts.sync.uploadVcf")}
+            description={t("contacts.sync.dragDropBrowse")}
+            inputAriaLabel={t("contacts.sync.uploadVcf")}
+            className="bg-card"
           />
         )}
 
