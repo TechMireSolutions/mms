@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar } from 'lucide-react';
-import { DatePicker } from '@/components/ui/DatePicker';
+import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,8 @@ export function ReportFilterFieldsPanel({
   classes,
 }: ReportFilterFieldsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
+  const showDateFrom = allowed.includes('dateFrom');
+  const showDateTo = allowed.includes('dateTo');
 
   return (
     <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">
@@ -70,22 +72,34 @@ export function ReportFilterFieldsPanel({
         </div>
       )}
 
-      {allowed.includes('dateFrom') && (
-        <div className="flex flex-col gap-1 text-start min-w-[8.125rem] flex-1">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-            <Calendar className="w-3 h-3" />{t('reports.filters.from')}
-          </label>
-          <DatePicker value={filters.dateFrom} onChange={(value) => onFieldChange('dateFrom', value)} />
-        </div>
-      )}
-
-      {allowed.includes('dateTo') && (
-        <div className="flex flex-col gap-1 text-start min-w-[8.125rem] flex-1">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-            <Calendar className="w-3 h-3" />{t('reports.filters.to')}
-          </label>
-          <DatePicker value={filters.dateTo} onChange={(value) => onFieldChange('dateTo', value)} />
-        </div>
+      {(showDateFrom || showDateTo) && (
+        <DateRangeFilterBar
+          idPrefix="report-filters"
+          dateFrom={filters.dateFrom}
+          dateTo={filters.dateTo}
+          onDateFromChange={(value) => onFieldChange('dateFrom', value)}
+          onDateToChange={(value) => onFieldChange('dateTo', value)}
+          showFrom={showDateFrom}
+          showTo={showDateTo}
+          fromLabel={
+            showDateFrom ? (
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="h-3 w-3" aria-hidden="true" />
+                {t('reports.filters.from')}
+              </span>
+            ) : undefined
+          }
+          toLabel={
+            showDateTo ? (
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="h-3 w-3" aria-hidden="true" />
+                {t('reports.filters.to')}
+              </span>
+            ) : undefined
+          }
+          className="min-w-[8.125rem] flex-1 gap-4"
+          pickerClassName="w-full min-w-0"
+        />
       )}
 
       {allowed.includes('student') && (

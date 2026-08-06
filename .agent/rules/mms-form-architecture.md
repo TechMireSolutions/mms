@@ -17,7 +17,7 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Form inputs share `min-h-11` via `FORM_INPUT` in `formStyles.ts` SSOT — no ad-hoc input chrome.
 - Inline field/panel errors → `FieldErrorMessage` + `FORM_ERROR` (do not fork `text-xs text-destructive` lines). Auth entry fields may apply `FORM_ERROR` class directly.
 - Form cards → `FORM_CARD`; dense builder inputs → `FORM_INPUT_BUILDER` — do not invent parallel glass stacks in features.
-- Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `EditableSelect`).
+- Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`).
 - **Stable Heights**: Tabbed forms use `<FormModal tall>` with a tall viewport height + `max-h-[43.75rem]` and scrollable body `flex-1 overflow-y-auto`. Prefer `dvh`/`svh` (+ `safe-area-inset` padding) over raw `vh` when touching FormModal chrome — iOS keyboard/browser chrome.
 - **Scroll Containment**: `useBodyScrollLock()` + `overscroll-contain` on scrollable modal boxes.
 - **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — `mms-ui-ux-design.md` §7.
@@ -27,7 +27,9 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Ban dynamic form compilers / visual schema generators on the FE.
 - Option lists: tenant ContactConfig / module registries — not hardcoded `@mms/shared` `DEFAULT_*` as live form options.
 - Stacked pickers need descending `z-index` so overlays are not clipped.
-- Dates: `<DatePicker>` only — never raw `<input type="date">`.
+- Dates: `<DatePicker>` / `RegistryDateField` only — never raw `<input type="date">`. Calendar is **Gregorian** only; Hijri/lunar helpers are display-only.
+- Times: `<TimePicker>` only — never raw `<input type="time">`.
+- Datetimes: `<DateTimePicker>` only (DatePicker + TimePicker) — never `datetime-local`.
 - Gate create/edit entry and save CTAs with `canWrite` — do not toast success / close when the mutation never ran.
 
 ## 2. State & React 19 defaults

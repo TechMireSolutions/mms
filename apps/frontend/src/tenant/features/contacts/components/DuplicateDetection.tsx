@@ -24,7 +24,6 @@ export default function DuplicateDetection({
 }: DuplicateDetectionProps): JSX.Element {
   const {
     prefs,
-    colors,
     pairsLoading,
     pairsFetching,
     pairsError,
@@ -47,7 +46,6 @@ export default function DuplicateDetection({
     <>
       <DuplicateDetectionModal
         prefs={prefs}
-        colors={colors}
         pairsLoading={pairsLoading}
         pairsFetching={pairsFetching}
         pairsError={pairsError}

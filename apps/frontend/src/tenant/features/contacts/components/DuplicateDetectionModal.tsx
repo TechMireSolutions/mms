@@ -1,19 +1,17 @@
-import { AlertTriangle, Check, Loader2 } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ContactsPanelSuspenseFallback } from "@/tenant/features/contacts/components/ContactsPanelSuspenseFallback";
 import { DuplicatePairCard } from "@/tenant/features/contacts/components/DuplicatePairCard";
-import {
-  getDuplicateThemeColors,
-  type DuplicatePair,
-} from "@/tenant/features/contacts/components/duplicateDetectionTypes";
+import type { DuplicatePair } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 
 export function DuplicateDetectionModal({
   prefs,
-  colors,
   pairsLoading,
   pairsFetching,
   pairsError,
@@ -31,7 +29,6 @@ export function DuplicateDetectionModal({
   onRetry,
 }: {
   prefs: ContactPreferences;
-  colors: ReturnType<typeof getDuplicateThemeColors>;
   pairsLoading: boolean;
   pairsFetching: boolean;
   pairsError: boolean;
@@ -71,18 +68,20 @@ export function DuplicateDetectionModal({
     >
       <div className="space-y-5">
         {totalMerged > 0 && (
-          <div className={`flex items-center gap-2 rounded-xl px-4 py-2.5 ${colors.successBg}`}>
-            <Check className={`w-4 h-4 ${colors.successText}`} />
-            <p className={`text-xs font-medium ${colors.successText}`}>
-              {t("contacts.duplicates.countMerged", { count: totalMerged })}
-            </p>
-          </div>
+          <WarningCallout
+            tone="success"
+            density="compact"
+            icon={Check}
+            description={t("contacts.duplicates.countMerged", { count: totalMerged })}
+          />
         )}
 
         {!canWrite && activePairs.length > 0 && (
-          <div className={`rounded-xl px-4 py-2.5 border ${colors.warningBg}`}>
-            <p className={`text-xs ${colors.warningText}`}>{t("contacts.duplicatesReadOnly")}</p>
-          </div>
+          <WarningCallout
+            tone="warning"
+            density="compact"
+            description={t("contacts.duplicatesReadOnly")}
+          />
         )}
 
         {pairsError ? (
@@ -92,10 +91,7 @@ export function DuplicateDetectionModal({
             onRetry={onRetry}
           />
         ) : pairsLoading ? (
-          <div className="py-12 flex flex-col items-center gap-2 text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin" />
-            <p className="text-sm">{t("common.loading")}</p>
-          </div>
+          <ContactsPanelSuspenseFallback spinnerClassName="h-8 w-8" />
         ) : activePairs.length === 0 ? (
           <EmptyState
             title={t("contacts.duplicates.allResolved")}

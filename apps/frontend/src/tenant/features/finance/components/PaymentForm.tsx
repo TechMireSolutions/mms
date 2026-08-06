@@ -169,8 +169,10 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               />
             </Field>
 
-            <Field label={t("finance.columns.paymentDate")} required error={errors.date}>
+            <Field label={t("finance.columns.paymentDate")} required error={errors.date} id="payment-date">
               <DatePicker
+                id="payment-date"
+                name="date"
                 value={paymentDraft.date || ""}
                 onChange={(val) => updateDraft({ date: val })}
                 required

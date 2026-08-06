@@ -1097,6 +1097,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "datePicker.openAria": "باز کردن تقویم",
   "datePicker.clearAria": "پاک کردن تاریخ",
   "datePicker.enterFormatAria": "تاریخ را با قالب {format} وارد کنید",
+  "dateTimePicker.dateAria": "تاریخ",
+  "dateTimePicker.timeAria": "زمان",
   "pagination.previousAria": "صفحه قبل",
   "pagination.nextAria": "صفحه بعد",
   "nav.sectionAria": "ناوبری بخش",

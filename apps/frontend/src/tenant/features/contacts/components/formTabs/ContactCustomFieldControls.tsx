@@ -30,7 +30,7 @@ export function ContactCustomFieldControls({
         return (
           <div
             key={field.key}
-            className={field.type === "textarea" || field.type === "tags" ? "@md:col-span-2" : undefined}
+            className={field.type === "textarea" || field.type === "tags" || field.type === "datetime" ? "@md:col-span-2" : undefined}
           >
             <Field
               label={resolveRegistryLabel(field, t)}

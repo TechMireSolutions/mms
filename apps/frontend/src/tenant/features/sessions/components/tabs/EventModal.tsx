@@ -8,6 +8,7 @@ import { FORM_LABEL } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { TimePicker } from '@/components/ui/TimePicker';
 import { type AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -68,6 +69,7 @@ export function EventModal({ open, event, onClose, onSave, saving }: EventModalP
             <label className={FORM_LABEL} htmlFor="event-date">{t('sessions.events.form.date')}<RequiredMark /></label>
             <DatePicker
               id="event-date"
+              name="date"
               value={eventDraft.date || ''}
               onChange={(value) => updateEventDraft('date', value)}
               required
@@ -75,11 +77,11 @@ export function EventModal({ open, event, onClose, onSave, saving }: EventModalP
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="event-time">{t('sessions.events.form.time')}</label>
-            <Input
+            <TimePicker
               id="event-time"
-              type="time"
+              name="time"
               value={eventDraft.time || ''}
-              onChange={(inputEvent) => updateEventDraft('time', inputEvent.target.value)}
+              onChange={(nextValue) => updateEventDraft('time', nextValue)}
             />
           </div>
         </div>

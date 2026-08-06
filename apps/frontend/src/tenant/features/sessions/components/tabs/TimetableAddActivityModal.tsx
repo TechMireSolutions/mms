@@ -6,6 +6,7 @@ import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { TimePicker } from "@/components/ui/TimePicker";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { TIMETABLE_EMPTY_DRAFT } from "@/tenant/features/sessions/components/tabs/timetableTabConfig";
@@ -70,11 +71,23 @@ export function TimetableAddActivityModal({ open, onClose, onSave, saving }: Tim
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-start">{t("sessions.timetable.form.startTime")}</label>
-            <Input id="activity-start" type="time" value={activityDraft.startTime || ""} onChange={(event) => updateActivityDraft("startTime", event.target.value)} required />
+            <TimePicker
+              id="activity-start"
+              name="startTime"
+              value={activityDraft.startTime || ""}
+              onChange={(nextValue) => updateActivityDraft("startTime", nextValue)}
+              required
+            />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="activity-end">{t("sessions.timetable.form.endTime")}</label>
-            <Input id="activity-end" type="time" value={activityDraft.endTime || ""} onChange={(event) => updateActivityDraft("endTime", event.target.value)} required />
+            <TimePicker
+              id="activity-end"
+              name="endTime"
+              value={activityDraft.endTime || ""}
+              onChange={(nextValue) => updateActivityDraft("endTime", nextValue)}
+              required
+            />
           </div>
         </div>
         <div>

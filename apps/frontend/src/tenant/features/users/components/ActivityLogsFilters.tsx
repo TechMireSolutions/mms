@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { ACTIVITY_ACTION_VALUES, type SystemUser } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DatePicker } from '@/components/ui/DatePicker';
+import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 
@@ -73,8 +73,14 @@ export function ActivityLogsFilters({
         aria-label={t('users.activityFilterAction')}
         className="w-auto min-w-[10rem]"
       />
-      <DatePicker value={dateFrom} onChange={onDateFromChange} className="text-sm" />
-      <DatePicker value={dateTo} onChange={onDateToChange} className="text-sm" />
+      <DateRangeFilterBar
+        idPrefix="activity-logs"
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={onDateFromChange}
+        onDateToChange={onDateToChange}
+        pickerClassName="w-full min-w-0 text-sm sm:w-36"
+      />
     </div>
   );
 }

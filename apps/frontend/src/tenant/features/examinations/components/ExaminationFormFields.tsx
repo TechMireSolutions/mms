@@ -127,6 +127,7 @@ export function ExaminationFormFields({
             <Field label={t("examinations.form.fields.examDate")} required error={errors.date}>
               <DatePicker
                 id="exam-date"
+                name="date"
                 value={examDraft.date || ""}
                 onChange={(val) => updateDraft({ date: val })}
                 required

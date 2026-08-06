@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatePicker } from '@/components/ui/DatePicker';
+import { RegistryDateField } from '@/components/ui/RegistryDateField';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
@@ -67,7 +67,7 @@ export function AccountModalCustomField({
           required={field.required}
         />
       ) : field.type === 'date' ? (
-        <DatePicker
+        <RegistryDateField
           id={`account-${field.id}`}
           name={field.id}
           value={value as string}

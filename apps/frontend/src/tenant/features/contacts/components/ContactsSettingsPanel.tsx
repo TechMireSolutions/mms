@@ -1,5 +1,4 @@
 import { useMemo, useState, lazy, Suspense } from "react";
-import { Loader2 } from "lucide-react";
 import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -9,19 +8,10 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { shouldOpenContactsSyncSetup } from "@/lib/contacts/googleContactsOAuth";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import type { Contact } from "@mms/shared";
+import { ContactsPanelSuspenseFallback } from "@/tenant/features/contacts/components/ContactsPanelSuspenseFallback";
 
 const ContactsSetupPanel = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupPanel"));
 const ContactSyncPanel = lazy(() => import("@/tenant/features/contacts/components/ContactSyncPanel"));
-
-function LazyFallback(): JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
-      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground shrink-0" aria-hidden="true" />
-      <span className="sr-only">{t("common.loading")}</span>
-    </div>
-  );
-}
 
 function SetupReadOnlyMessage(): JSX.Element {
   const { t } = useTranslation();
@@ -106,10 +96,10 @@ export default function ContactsSettingsPanel({
         value={sub}
         onChange={handleSubTabChange}
       />
-      <Suspense fallback={<LazyFallback />}>
+      <Suspense fallback={<ContactsPanelSuspenseFallback />}>
         {sub === "fields" &&
           (!formTabsReady ? (
-            <LazyFallback />
+            <ContactsPanelSuspenseFallback />
           ) : canEditSetup ? (
             <ContactsSetupPanel
               config={fieldConfig}

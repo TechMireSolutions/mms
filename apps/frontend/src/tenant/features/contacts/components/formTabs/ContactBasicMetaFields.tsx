@@ -40,6 +40,7 @@ export function ContactBasicMetaFields({
             name="dob"
             value={contactDraft.dob || undefined}
             onChange={(dateStr) => updateDraft({ dob: dateStr })}
+            required={isFieldRequired("basic", "dob")}
           />
         </Field>
       )}

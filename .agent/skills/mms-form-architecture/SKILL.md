@@ -1,6 +1,6 @@
 ---
 name: mms-form-architecture
-description: Implements static FormModal forms with shared Zod DTOs, React 19 defaults, decimal-as-string money, tenant RLS saves, and authenticated multipart uploads. Use when building or auditing create/edit forms, FormModal tabs, DatePicker/phone fields, or upload flows.
+description: Implements static FormModal forms with shared Zod DTOs, React 19 defaults, decimal-as-string money, tenant RLS saves, and authenticated multipart uploads. Use when building or auditing create/edit forms, FormModal tabs, DatePicker/TimePicker/DateTimePicker/phone fields, or upload flows.
 ---
 
 # MMS Form Architecture Skill
@@ -27,7 +27,7 @@ Related: `mms-ui-ux-design.md` §7 (dialog `@container`), `mms-fields.md`, `mms-
 - [ ] Focus-return to opener on close
 - [ ] No Server Actions / useActionState for tenant writes
 - [ ] Shared Zod write/read DTOs; soft-delete stripped on write
-- [ ] formStyles + DatePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`
+- [ ] formStyles + DatePicker / TimePicker / DateTimePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`
 - [ ] Empty collection arrays persist; no scalar resurrection
 - [ ] canWrite gates; no fire-and-forget mutate close
 - [ ] Upload sniff + size + dimension/page caps

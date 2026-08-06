@@ -158,7 +158,7 @@ export function DistributeModalFields({
           return (
             <div key="issuedDate">
               <label htmlFor="issue-date" className={FORM_LABEL}>{t("hasanat.form.issuedDate")}<RequiredMark /></label>
-              <DatePicker id="issue-date" value={data.issuedDate || ""} onChange={(value) => updateField("issuedDate", value)} required />
+              <DatePicker id="issue-date" name="issuedDate" value={data.issuedDate || ""} onChange={(value) => updateField("issuedDate", value)} required />
             </div>
           );
         }

@@ -43,7 +43,7 @@ export interface ContactCardItemProps {
   contactsMap: Map<string, Contact> | null;
   allContacts: Contact[];
   otherColumns: ContactsColumnConfig[];
-  visibleColumnIds: Set<string>;
+  isColumnVisible: (key: string) => boolean;
   showArchived: boolean;
   canWrite: boolean;
   canDelete: boolean;
@@ -66,7 +66,7 @@ export function ContactCardItem({
   contactsMap,
   allContacts,
   otherColumns,
-  visibleColumnIds,
+  isColumnVisible,
   showArchived,
   canWrite,
   canDelete,
@@ -89,8 +89,6 @@ export function ContactCardItem({
     countryCodes,
   );
   const email = getPrimaryEmail(contact);
-  const showPhonePill = visibleColumnIds.size === 0 || visibleColumnIds.has("phone");
-  const showEmailPill = visibleColumnIds.size === 0 || visibleColumnIds.has("email");
 
   return (
     <motion.div
@@ -129,8 +127,7 @@ export function ContactCardItem({
         countryCode={countryCode}
         phoneDisplay={phoneDisplay}
         email={email}
-        showPhonePill={showPhonePill}
-        showEmailPill={showEmailPill}
+        isColumnVisible={isColumnVisible}
       />
 
       <ContactCardMetadataGrid
@@ -139,7 +136,7 @@ export function ContactCardItem({
         allContacts={allContacts}
         contactsMap={contactsMap}
         otherColumns={otherColumns}
-        visibleColumnIds={visibleColumnIds}
+        isColumnVisible={isColumnVisible}
         t={t}
       />
 

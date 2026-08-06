@@ -2,8 +2,8 @@ import React from "react";
 import { MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import { EditableSelect, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
   withSubListCustomFieldDefaults,
@@ -135,7 +135,7 @@ export function ContactAddressesTab({
                         )}
                       />
                     </div>
-                    <FieldInlineError message={line1Error} />
+                    <FieldErrorMessage message={line1Error} />
                   </div>
                 ) : null}
                 {showCity || showState || showCountry ? (
@@ -153,7 +153,7 @@ export function ContactAddressesTab({
                             cityError && "border-destructive focus-visible:ring-destructive",
                           )}
                         />
-                        <FieldInlineError message={cityError} />
+                        <FieldErrorMessage message={cityError} />
                       </div>
                     ) : null}
                     {showState ? (
@@ -169,7 +169,7 @@ export function ContactAddressesTab({
                             stateError && "border-destructive focus-visible:ring-destructive",
                           )}
                         />
-                        <FieldInlineError message={stateError} />
+                        <FieldErrorMessage message={stateError} />
                       </div>
                     ) : null}
                     {showCountry ? (
@@ -184,7 +184,7 @@ export function ContactAddressesTab({
                           name={`address-country-${idx}`}
                           placeholder={t("contacts.fields.country")}
                         />
-                        <FieldInlineError message={countryError} />
+                        <FieldErrorMessage message={countryError} />
                       </div>
                     ) : null}
                   </div>

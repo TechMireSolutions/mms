@@ -56,6 +56,7 @@ export function TabarrukModal({ open, entry, onClose, onSave, saving }: Tabarruk
             <label className={FORM_LABEL} htmlFor="tabarruk-date">{t("sessions.tabarruk.form.date")}</label>
             <DatePicker
               id="tabarruk-date"
+              name="date"
               value={tabarrukDraft.date || ""}
               onChange={(value) => updateTabarrukDraft("date", value)}
             />

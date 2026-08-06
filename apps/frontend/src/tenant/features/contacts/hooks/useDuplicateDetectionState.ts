@@ -11,10 +11,7 @@ import { useContactsDuplicatePairs } from "@/tenant/features/contacts/hooks/useC
 import { DUPLICATE_REASON_I18N } from "@/lib/contacts/contactI18n";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
-import {
-  getDuplicateThemeColors,
-  type DuplicatePair,
-} from "@/tenant/features/contacts/components/DuplicateDetectionParts";
+import type { DuplicatePair } from "@/tenant/features/contacts/components/DuplicateDetectionParts";
 
 function mapPairToViewModel(
   pair: {
@@ -42,7 +39,6 @@ export function useDuplicateDetectionState({
 }) {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
-  const colors = useMemo(() => getDuplicateThemeColors(prefs), [prefs]);
   const [dupPage, setDupPage] = useState(1);
   const {
     data: serverPairs,
@@ -122,7 +118,6 @@ export function useDuplicateDetectionState({
 
   return {
     prefs,
-    colors,
     pairsLoading,
     pairsFetching,
     pairsError,

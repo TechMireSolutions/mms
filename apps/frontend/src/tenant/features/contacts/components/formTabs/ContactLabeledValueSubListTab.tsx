@@ -3,8 +3,8 @@ import { AnimatePresence } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
 import { listEnabledCustomContactFormFields, type Contact } from "@mms/shared";
 import { Input } from "@/components/ui/input";
-import { EditableSelect, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
   withSubListCustomFieldDefaults,
@@ -148,7 +148,7 @@ export function ContactLabeledValueSubListTab({
                         )}
                       />
                     </div>
-                    <FieldInlineError message={valueError} />
+                    <FieldErrorMessage message={valueError} />
                   </>
                 ) : null}
                 <ContactSubListCustomFields

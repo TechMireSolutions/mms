@@ -32,6 +32,7 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
             <label htmlFor="je-date" className={FORM_LABEL}>{t("accounting.journal.form.dateLabel")}</label>
             <DatePicker
               id="je-date"
+              name="date"
               value={form.date}
               onChange={(dateValue) => setForm({ ...form, date: dateValue })}
               required

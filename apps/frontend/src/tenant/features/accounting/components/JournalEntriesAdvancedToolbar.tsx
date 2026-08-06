@@ -1,7 +1,7 @@
 import { type AppTranslationKey } from "@mms/shared";
 import { Download, Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -132,14 +132,16 @@ export function JournalEntriesAdvancedFilters({
 
   return (
     <div className="flex flex-wrap gap-3 p-4 rounded-xl border border-border bg-muted/30">
-      <div>
-        <label htmlFor="filter-from" className="text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.fromDate")}</label>
-        <DatePicker id="filter-from" value={dateFrom} onChange={onDateFromChange} />
-      </div>
-      <div>
-        <label htmlFor="filter-to" className="text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.toDate")}</label>
-        <DatePicker id="filter-to" value={dateTo} onChange={onDateToChange} />
-      </div>
+      <DateRangeFilterBar
+        idPrefix="filter"
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={onDateFromChange}
+        onDateToChange={onDateToChange}
+        fromLabel={t("accounting.journal.dashboard.fromDate")}
+        toLabel={t("accounting.journal.dashboard.toDate")}
+        pickerClassName="w-full min-w-0 sm:w-40"
+      />
       <div>
         <label htmlFor="filter-tag" className="text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.dashboard.tag")}</label>
         <FormSelect

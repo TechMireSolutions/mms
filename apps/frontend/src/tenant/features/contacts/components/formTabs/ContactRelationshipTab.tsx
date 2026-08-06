@@ -6,12 +6,12 @@ import {
   parseRelationshipPairInput,
 } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
-import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
+import { Field, EditableSelect, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { useRelationshipTypeOptions } from "@/tenant/features/contacts/hooks/useRelationshipTypeOptions";
-import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
   withSubListCustomFieldDefaults,
@@ -135,7 +135,7 @@ export function ContactRelationshipTab({
                         name={`relationship-contact-${idx}`}
                         error={Boolean(pickerError)}
                       />
-                      <FieldInlineError message={pickerError} />
+                      <FieldErrorMessage message={pickerError} />
                     </>
                   ) : null}
 

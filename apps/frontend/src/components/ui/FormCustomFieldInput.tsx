@@ -1,8 +1,9 @@
 import type React from "react";
-import { DatePicker } from "@/components/ui/DatePicker";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DateTimePicker } from "@/components/ui/DateTimePicker";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
+import { RegistryDateField } from "@/components/ui/RegistryDateField";
 import { Textarea } from "@/components/ui/textarea";
 import { FormCustomFieldFileInput } from "@/components/ui/FormCustomFieldFileInput";
 import { TagsInput } from "@/components/ui/FormTagsInput";
@@ -116,27 +117,15 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   }
 
   if (field.type === "datetime") {
-    let formattedVal = "";
-    if (displayValue) {
-      try {
-        const parsedDate = new Date(String(displayValue));
-        if (!isNaN(parsedDate.getTime())) {
-          formattedVal = parsedDate.toISOString().slice(0, 16);
-        }
-      } catch {
-        formattedVal = String(displayValue);
-      }
-    }
     return (
-      <Input
+      <DateTimePicker
         id={field.key}
         name={field.key}
-        type="datetime-local"
-        value={formattedVal}
-        onChange={(event) => onChange(event.target.value ? new Date(event.target.value).toISOString() : null)}
+        value={displayValue ? String(displayValue) : null}
+        onChange={(nextValue) => onChange(nextValue)}
+        required={field.required}
         disabled={disabled}
-        readOnly={disabled}
-        className={error ? "border-destructive focus-visible:ring-destructive" : ""}
+        error={error}
       />
     );
   }
@@ -169,11 +158,12 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
 
   if (field.type === "date") {
     return (
-      <DatePicker
+      <RegistryDateField
         id={field.key}
         name={field.key}
         value={String(displayValue)}
         onChange={(dateVal) => onChange(dateVal)}
+        required={field.required}
         disabled={disabled}
         className={error ? "border-destructive focus-within:border-destructive focus-within:ring-destructive" : ""}
       />

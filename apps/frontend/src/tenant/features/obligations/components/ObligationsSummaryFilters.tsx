@@ -1,6 +1,6 @@
 import { Filter, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -75,22 +75,17 @@ export function ObligationsSummaryFilters({
             className="w-full ps-8 pe-3 py-2 text-xs rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        <div>
-          <DatePicker
-            value={dateFrom}
-            onChange={onDateFromChange}
-            placeholder={t("obligations.summary.filters.fromDate")}
-            className="w-full px-2 py-2 text-xs rounded-lg border border-border bg-background"
-          />
-        </div>
-        <div>
-          <DatePicker
-            value={dateTo}
-            onChange={onDateToChange}
-            placeholder={t("obligations.summary.filters.toDate")}
-            className="w-full px-2 py-2 text-xs rounded-lg border border-border bg-background"
-          />
-        </div>
+        <DateRangeFilterBar
+          idPrefix="obligations-summary"
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateFromChange={onDateFromChange}
+          onDateToChange={onDateToChange}
+          fromPlaceholder={t("obligations.summary.filters.fromDate")}
+          toPlaceholder={t("obligations.summary.filters.toDate")}
+          className="col-span-2"
+          pickerClassName="w-full min-w-0 flex-1 text-xs"
+        />
         <FormSelect
           aria-label={t("obligations.summary.filters.byRepresentativeAria")}
           value={repFilter}

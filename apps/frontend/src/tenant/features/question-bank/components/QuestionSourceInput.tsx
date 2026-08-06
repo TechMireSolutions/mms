@@ -2,6 +2,7 @@ import type React from "react";
 
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
+import { RegistryDateField } from "@/components/ui/RegistryDateField";
 import { Textarea } from "@/components/ui/textarea";
 import type { ModuleFieldDef } from "@mms/shared";
 
@@ -32,15 +33,32 @@ export function QuestionSourceInput({
     );
   }
 
+  if (field.type === "date") {
+    return (
+      <div key={field.id}>
+        <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
+        <RegistryDateField
+          id={inputId}
+          name={field.id}
+          value={value}
+          onChange={onChange}
+          required={required}
+        />
+      </div>
+    );
+  }
+
   return (
     <div key={field.id}>
       <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
       <Input
         id={inputId}
-        type={field.type === "date" ? "date" : "text"}
+        name={field.id}
+        type="text"
         className={FORM_INPUT}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        required={required}
       />
     </div>
   );

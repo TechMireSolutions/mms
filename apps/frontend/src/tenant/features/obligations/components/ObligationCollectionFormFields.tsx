@@ -73,7 +73,13 @@ export function ObligationCollectionFormFields({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {formField('received_date', t('obligations.form.receivedDate'), true,
-              <DatePicker value={form.received_date} onChange={(val) => setForm({ ...form, received_date: val })} required />,
+              <DatePicker
+                id="received_date"
+                name="received_date"
+                value={form.received_date}
+                onChange={(val) => setForm({ ...form, received_date: val })}
+                required
+              />,
             )}
             {formField('payment_mode', t('obligations.form.paymentMode'), true,
               <FormSelect

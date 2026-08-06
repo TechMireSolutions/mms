@@ -1,6 +1,8 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
+import { RegistryDateField } from "@/components/ui/RegistryDateField";
+import { TimePicker } from "@/components/ui/TimePicker";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
@@ -37,12 +39,11 @@ export function MarkAttendanceFieldControl({
     return (
       <>
         <label htmlFor={inputId} className="sr-only">{field.label}</label>
-        <Input
+        <TimePicker
           id={inputId}
           name={field.id}
-          type="time"
           value={value}
-          onChange={(event) => onFieldChange(row.studentId, field.id, event.target.value)}
+          onChange={(nextValue) => onFieldChange(row.studentId, field.id, nextValue)}
           disabled={row.status === "absent"}
           className="w-full min-w-[6.5rem] text-xs disabled:opacity-40 md:max-w-[8rem]"
         />
@@ -98,13 +99,29 @@ export function MarkAttendanceFieldControl({
     );
   }
 
+  if (field.type === "date") {
+    return (
+      <>
+        <label htmlFor={inputId} className="sr-only">{field.label}</label>
+        <RegistryDateField
+          id={inputId}
+          name={field.id}
+          value={stringValue}
+          onChange={(value) => onFieldChange(row.studentId, field.id, value)}
+          required={field.required}
+          className="w-full min-w-0 text-xs"
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <label htmlFor={inputId} className="sr-only">{field.label}</label>
       <Input
         id={inputId}
         name={field.id}
-        type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
+        type={field.type === "number" ? "number" : "text"}
         value={stringValue}
         onChange={(event) => onFieldChange(row.studentId, field.id, event.target.value)}
         placeholder={field.placeholder || t("common.enterPlaceholder")}

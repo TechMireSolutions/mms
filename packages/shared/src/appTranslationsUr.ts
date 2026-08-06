@@ -5304,6 +5304,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "datePicker.openAria": "کیلنڈر کھولیں",
   "datePicker.clearAria": "تاریخ صاف کریں",
   "datePicker.enterFormatAria": "تاریخ {format} فارمیٹ میں درج کریں",
+  "dateTimePicker.dateAria": "تاریخ",
+  "dateTimePicker.timeAria": "وقت",
   "pagination.previousAria": "پچھلا صفحہ",
   "pagination.nextAria": "اگلا صفحہ",
   "nav.sectionAria": "سیکشن نیویگیشن",

@@ -8,13 +8,10 @@ export interface DuplicatePair {
   contacts: [Contact, Contact];
 }
 
+/** Theme token for “from duplicate” highlight chips in merge preview. */
 export function getDuplicateThemeColors(prefs?: Partial<ContactPreferences>) {
   const merged = { ...DEFAULT_CONTACT_PREFERENCES, ...prefs };
   return {
-    warningBg: merged.duplicateDetectionColorWarning,
-    warningText: merged.duplicateDetectionColorWarningText,
-    successBg: merged.duplicateDetectionColorSuccess,
-    successText: merged.duplicateDetectionColorSuccessText,
     highlightBg: merged.duplicateDetectionColorHighlight,
   };
 }

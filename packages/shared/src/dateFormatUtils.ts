@@ -217,15 +217,113 @@ export function getDateFormatPresets(): readonly DateFormatPreset[] {
   return PRESETS;
 }
 
-/** Returns today's date as a `YYYY-MM-DD` UTC date string. */
-export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 /** Formats a local Date object as a `YYYY-MM-DD` storage string. */
 export function formatDateToIso(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/** Returns today's date as a local-calendar `YYYY-MM-DD` storage string. */
+export function todayISO(): string {
+  return formatDateToIso(new Date());
+}
+
+/**
+ * Parses a `YYYY-MM-DD` storage string into a local Date at midnight.
+ * Returns `undefined` when the string is missing or not a valid calendar day.
+ */
+export function parseIsoDate(isoStr?: string): Date | undefined {
+  if (!isoStr) return undefined;
+  const [year, month, day] = isoStr.split('-').map(Number);
+  if (year == null || month == null || day == null || isNaN(year) || isNaN(month) || isNaN(day)) {
+    return undefined;
+  }
+  return new Date(year, month - 1, day);
+}
+
+/** Returns the year portion of a `YYYY-MM-DD` string, or `undefined` if invalid. */
+export function parseIsoYear(isoStr?: string): number | undefined {
+  if (!isoStr) return undefined;
+  const [year] = isoStr.split('-').map(Number);
+  return year == null || isNaN(year) ? undefined : year;
+}
+
+export interface TimeHHmmParts {
+  hours: number;
+  minutes: number;
+}
+
+/**
+ * Parses `HH:mm` or `HH:mm:ss` into hours/minutes.
+ * Returns `null` when the string is missing or not a valid clock time.
+ */
+export function parseTimeHHmm(value: string): TimeHHmmParts | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(trimmed);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+  return { hours, minutes };
+}
+
+/** Formats hours/minutes as a zero-padded `HH:mm` storage string. */
+export function formatTimeHHmm(hours: number, minutes: number): string {
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+/**
+ * Normalizes a browser time value to `HH:mm`, or `""` when empty/invalid.
+ * Accepts `HH:mm` and `HH:mm:ss`.
+ */
+export function normalizeTimeHHmm(value: string): string {
+  const parsed = parseTimeHHmm(value);
+  if (!parsed) return '';
+  return formatTimeHHmm(parsed.hours, parsed.minutes);
+}
+
+export interface IsoDateTimeParts {
+  date: string;
+  time: string;
+}
+
+/**
+ * Splits an ISO datetime into local-calendar `YYYY-MM-DD` + `HH:mm` for picker UI.
+ * Returns `null` when the value cannot be parsed as a valid Date.
+ */
+export function splitIsoDateTime(iso: string): IsoDateTimeParts | null {
+  const trimmed = iso.trim();
+  if (!trimmed) return null;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return {
+    date: formatDateToIso(parsed),
+    time: formatTimeHHmm(parsed.getHours(), parsed.getMinutes()),
+  };
+}
+
+/**
+ * Combines local-calendar `YYYY-MM-DD` + `HH:mm` into an ISO-8601 string.
+ * Empty date returns `null`. Missing/invalid time defaults to `00:00`.
+ */
+export function combineIsoDateAndTime(date: string, time: string): string | null {
+  const datePart = date.trim();
+  if (!datePart) return null;
+  const localDate = parseIsoDate(datePart);
+  if (!localDate) return null;
+  const timeParts = parseTimeHHmm(time.trim() || '00:00') ?? { hours: 0, minutes: 0 };
+  localDate.setHours(timeParts.hours, timeParts.minutes, 0, 0);
+  return localDate.toISOString();
 }

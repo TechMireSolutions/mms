@@ -76,10 +76,8 @@ export default function ContactCards({
   const reducedMotion = useReducedMotion();
   const { prefs, countryCodesMap, countryCodes } = useContactConfig();
 
-  const visibleColumnIds = useMemo(
-    () => new Set(columns.map((col) => col.id)),
-    [columns],
-  );
+  const isColumnVisible = (id: string): boolean =>
+    columns.length === 0 || columns.some((col) => col.id === id);
 
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
@@ -142,7 +140,7 @@ export default function ContactCards({
             contactsMap={contactsMap}
             allContacts={allContacts}
             otherColumns={otherColumns}
-            visibleColumnIds={visibleColumnIds}
+            isColumnVisible={isColumnVisible}
             showArchived={showArchived}
             canWrite={canWrite}
             canDelete={canDelete}

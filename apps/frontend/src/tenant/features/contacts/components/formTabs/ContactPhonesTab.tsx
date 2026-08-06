@@ -2,8 +2,8 @@ import React from "react";
 import { Phone } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import { EditableSelect, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
-import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { ListFieldCard, ContactSubListShell } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
   withSubListCustomFieldDefaults,
@@ -153,7 +153,7 @@ export function ContactPhonesTab({
                         />
                       </div>
                     </div>
-                    <FieldInlineError message={numError} />
+                    <FieldErrorMessage message={numError} />
                   </>
                 ) : null}
                 <ContactSubListCustomFields

@@ -3,6 +3,7 @@ import { AlertTriangle, GitMerge, Loader2 } from "lucide-react";
 import { mergeContacts, getDisplayName } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -67,13 +68,17 @@ export function MergePreview({
       }
     >
       <div className="space-y-4">
-        <div className={`${colors.warningBg} rounded-xl p-3 flex gap-2.5`}>
-          <AlertTriangle className={`w-4 h-4 ${colors.warningText} flex-shrink-0 mt-0.5`} />
-          <p className={`text-xs ${colors.warningText}`}>
-            <strong>{getDisplayName(other)}</strong> {t("contacts.duplicates.mergeWarning")}{" "}
-            <strong>{getDisplayName(keep)}</strong>.
-          </p>
-        </div>
+        <WarningCallout
+          tone="warning"
+          density="compact"
+          icon={AlertTriangle}
+          description={
+            <>
+              <strong>{getDisplayName(other)}</strong> {t("contacts.duplicates.mergeWarning")}{" "}
+              <strong>{getDisplayName(keep)}</strong>.
+            </>
+          }
+        />
 
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">

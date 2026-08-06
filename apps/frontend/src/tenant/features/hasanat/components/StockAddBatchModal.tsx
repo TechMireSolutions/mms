@@ -98,7 +98,7 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
           </div>
           <div>
             <label htmlFor="add-date" className={FORM_LABEL}>{t('hasanat.stock.date')}</label>
-            <DatePicker id="add-date" value={data.addedDate || ''} onChange={(value) => updateField('addedDate', value)} />
+            <DatePicker id="add-date" name="addedDate" value={data.addedDate || ''} onChange={(value) => updateField('addedDate', value)} />
           </div>
         </div>
         <UserActorSelect

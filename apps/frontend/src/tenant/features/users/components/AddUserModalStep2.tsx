@@ -2,8 +2,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CalendarClock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { RegistryDateField } from "@/components/ui/RegistryDateField";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input as UiInput } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -51,10 +51,12 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
               className="overflow-hidden mt-2"
             >
               <DatePicker
+                id="users-role-expiry"
+                name="roleExpiry"
                 value={form.roleExpiry || ""}
                 min={todayISO()}
                 onChange={(val) => setForm((previousForm) => ({ ...previousForm, roleExpiry: val }))}
-                className={FORM_INPUT}
+                className="w-full"
               />
             </motion.div>
           )}
@@ -105,7 +107,9 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                       required={field.required}
                     />
                   ) : field.type === "date" ? (
-                    <DatePicker
+                    <RegistryDateField
+                      id={`users-custom-${field.id}`}
+                      name={field.id}
                       value={String(value)}
                       onChange={(val) => updateFieldValue(val)}
                       required={field.required}

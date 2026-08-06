@@ -143,9 +143,10 @@ export function AuditLog({ filters }: AuditLogProps) {
         
         <DatePicker
           id="audit-date-select"
+          name="auditDate"
           value={date}
           onChange={setDate}
-          className="text-sm rounded-xl border border-border bg-background px-3 py-2"
+          className="text-sm"
         />
       </div>
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateSmsSegments } from "./smsUtils.js";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, applyTitleCaseToContact, formatMoney, formatNumber, formatDateToIso, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft, syncContactScalarFields, mergeContactEditSavePayload } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, applyTitleCaseToContact, formatMoney, formatNumber, formatDateToIso, todayISO, parseIsoDate, parseIsoYear, parseTimeHHmm, formatTimeHHmm, normalizeTimeHHmm, splitIsoDateTime, combineIsoDateAndTime, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft, syncContactScalarFields, mergeContactEditSavePayload } from "./utils.js";
 
 
 
@@ -306,6 +306,87 @@ describe("formatDateToIso", () => {
 
     const date2 = new Date(2026, 11, 25); // Dec 25, 2026
     expect(formatDateToIso(date2)).toBe("2026-12-25");
+  });
+});
+
+describe("todayISO", () => {
+  it("returns local calendar day matching formatDateToIso", () => {
+    expect(todayISO()).toBe(formatDateToIso(new Date()));
+  });
+});
+
+describe("parseIsoDate", () => {
+  it("parses YYYY-MM-DD into a local midnight Date", () => {
+    const parsed = parseIsoDate("2026-01-05");
+    expect(parsed).toBeInstanceOf(Date);
+    expect(parsed?.getFullYear()).toBe(2026);
+    expect(parsed?.getMonth()).toBe(0);
+    expect(parsed?.getDate()).toBe(5);
+  });
+
+  it("returns undefined for missing or invalid input", () => {
+    expect(parseIsoDate()).toBeUndefined();
+    expect(parseIsoDate("")).toBeUndefined();
+    expect(parseIsoDate("not-a-date")).toBeUndefined();
+  });
+});
+
+describe("parseTimeHHmm", () => {
+  it("parses HH:mm and HH:mm:ss", () => {
+    expect(parseTimeHHmm("09:05")).toEqual({ hours: 9, minutes: 5 });
+    expect(parseTimeHHmm("23:59:30")).toEqual({ hours: 23, minutes: 59 });
+  });
+
+  it("rejects invalid clock times", () => {
+    expect(parseTimeHHmm("")).toBeNull();
+    expect(parseTimeHHmm("24:00")).toBeNull();
+    expect(parseTimeHHmm("12:60")).toBeNull();
+    expect(parseTimeHHmm("noon")).toBeNull();
+  });
+});
+
+describe("formatTimeHHmm / normalizeTimeHHmm", () => {
+  it("zero-pads hours and minutes", () => {
+    expect(formatTimeHHmm(9, 5)).toBe("09:05");
+  });
+
+  it("strips seconds from browser time values", () => {
+    expect(normalizeTimeHHmm("09:05:30")).toBe("09:05");
+    expect(normalizeTimeHHmm("")).toBe("");
+    expect(normalizeTimeHHmm("bad")).toBe("");
+  });
+});
+
+describe("splitIsoDateTime / combineIsoDateAndTime", () => {
+  it("round-trips local date and time through ISO", () => {
+    const combined = combineIsoDateAndTime("2026-01-05", "14:30");
+    expect(combined).toBeTruthy();
+    const parts = splitIsoDateTime(combined!);
+    expect(parts).toEqual({ date: "2026-01-05", time: "14:30" });
+  });
+
+  it("returns null for empty date or invalid ISO", () => {
+    expect(combineIsoDateAndTime("", "14:30")).toBeNull();
+    expect(combineIsoDateAndTime("not-a-date", "14:30")).toBeNull();
+    expect(splitIsoDateTime("")).toBeNull();
+    expect(splitIsoDateTime("not-a-date")).toBeNull();
+  });
+
+  it("defaults missing time to midnight when combining", () => {
+    const combined = combineIsoDateAndTime("2026-01-05", "");
+    expect(combined).toBeTruthy();
+    expect(splitIsoDateTime(combined!)).toEqual({ date: "2026-01-05", time: "00:00" });
+  });
+});
+
+describe("parseIsoYear", () => {
+  it("returns the year portion of an ISO date", () => {
+    expect(parseIsoYear("2026-01-05")).toBe(2026);
+  });
+
+  it("returns undefined for missing or invalid input", () => {
+    expect(parseIsoYear()).toBeUndefined();
+    expect(parseIsoYear("")).toBeUndefined();
   });
 });
 

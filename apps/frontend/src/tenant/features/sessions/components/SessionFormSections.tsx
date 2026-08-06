@@ -76,17 +76,23 @@ export function SessionDetailsSection({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label={t("sessions.form.startDate")} required error={errors.startDate}>
+          <Field label={t("sessions.form.startDate")} required error={errors.startDate} id="session-start-date">
             <DatePicker
+              id="session-start-date"
+              name="startDate"
               value={sessionDraft.startDate || undefined}
               onChange={(dateStr) => onDraftChange({ startDate: dateStr })}
+              required
             />
           </Field>
 
-          <Field label={t("sessions.form.endDate")} required error={errors.endDate}>
+          <Field label={t("sessions.form.endDate")} required error={errors.endDate} id="session-end-date">
             <DatePicker
+              id="session-end-date"
+              name="endDate"
               value={sessionDraft.endDate || undefined}
               onChange={(dateStr) => onDraftChange({ endDate: dateStr })}
+              required
             />
           </Field>
         </div>

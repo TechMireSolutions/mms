@@ -170,6 +170,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <label htmlFor="filter-date" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.date")}</label>
                 <DatePicker
                   id="filter-date"
+                  name="date"
                   value={filters.date}
                   onChange={(value) => setFilterValue("date", value)}
                 />

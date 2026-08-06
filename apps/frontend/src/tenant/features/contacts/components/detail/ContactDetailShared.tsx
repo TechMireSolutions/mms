@@ -9,7 +9,3 @@ export {
   type DetailSectionProps,
   type FieldGroupCardProps,
 } from "./DetailSection";
-export {
-  QuickActionButton,
-  type QuickActionButtonProps,
-} from "./QuickActionButton";

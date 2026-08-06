@@ -1,7 +1,7 @@
 import React from "react";
 import type { AppTranslationKey } from "@mms/shared";
 import { ACCOUNT_TYPES, AccountType, Account } from '@/lib/data/accountingData';
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -52,17 +52,16 @@ export function GeneralLedgerFilters({
         options={filteredAccounts.map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}
         className="col-span-2 sm:col-span-1"
       />
-      <DatePicker
-        id="ledger-date-from"
-        value={dateFrom}
-        onChange={onDateFromChange}
-        placeholder={t("accounting.ledger.from")}
-      />
-      <DatePicker
-        id="ledger-date-to"
-        value={dateTo}
-        onChange={onDateToChange}
-        placeholder={t("accounting.ledger.to")}
+      <DateRangeFilterBar
+        idPrefix="ledger-date"
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={onDateFromChange}
+        onDateToChange={onDateToChange}
+        fromPlaceholder={t("accounting.ledger.from")}
+        toPlaceholder={t("accounting.ledger.to")}
+        className="col-span-2"
+        pickerClassName="w-full min-w-0 flex-1"
       />
     </nav>
   );

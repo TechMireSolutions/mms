@@ -95,6 +95,7 @@ export function AccountingFiscalYearModal({
             <label htmlFor="financial-year-start" className={FORM_LABEL}>{t("accounting.settings.fy.startDateField")}</label>
             <DatePicker
               id="financial-year-start"
+              name="startDate"
               value={form.startDate || ""}
               onChange={(startDateValue) => setForm({ ...form, startDate: startDateValue })}
               required
@@ -104,6 +105,7 @@ export function AccountingFiscalYearModal({
             <label htmlFor="financial-year-end" className={FORM_LABEL}>{t("accounting.settings.fy.endDateField")}</label>
             <DatePicker
               id="financial-year-end"
+              name="endDate"
               value={form.endDate || ""}
               onChange={(endDateValue) => setForm({ ...form, endDate: endDateValue })}
               required

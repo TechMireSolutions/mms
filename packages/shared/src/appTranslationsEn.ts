@@ -5450,6 +5450,8 @@ export const APP_TRANSLATIONS_EN = {
   "datePicker.openAria": "Open calendar popup",
   "datePicker.clearAria": "Clear date",
   "datePicker.enterFormatAria": "Enter date in {format} format",
+  "dateTimePicker.dateAria": "Date",
+  "dateTimePicker.timeAria": "Time",
   "pagination.previousAria": "Previous page",
   "pagination.nextAria": "Next page",
   "nav.sectionAria": "Section navigation",

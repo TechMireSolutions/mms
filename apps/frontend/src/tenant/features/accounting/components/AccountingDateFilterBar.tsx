@@ -1,9 +1,10 @@
 import React from "react";
 import { Download } from "lucide-react";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { Button } from "@/components/ui/button";
 import type { FiscalYear } from "@/lib/data/accountingData";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 
 interface AccountingDateFilterBarProps {
   dateFrom: string;
@@ -17,8 +18,7 @@ interface AccountingDateFilterBarProps {
 }
 
 /**
- * Reusable date filter bar for accounting screens.
- * Integrates "From", "To" dates, quick active FY and all time resets, and optional CSV export button.
+ * Accounting date filter bar — shared DateRangeFilterBar + FY / all-time / CSV slots.
  */
 export function AccountingDateFilterBar({
   dateFrom,
@@ -31,74 +31,61 @@ export function AccountingDateFilterBar({
   variant = "simple",
 }: AccountingDateFilterBarProps) {
   const { t } = useTranslation();
-  const containerClass =
-    variant === "bordered"
-      ? "flex flex-wrap items-center gap-3 p-4 rounded-xl border border-border bg-muted/20"
-      : "flex flex-wrap items-center gap-3";
 
   return (
-    <nav aria-label={`${idPrefix} Date Filters`} className={containerClass}>
-      <div className="flex items-center gap-2 text-sm">
-        <label htmlFor={`${idPrefix}-from`} className="text-xs font-semibold text-muted-foreground uppercase">
-          {t("accounting.ledger.from")}
-        </label>
-        <DatePicker
-          id={`${idPrefix}-from`}
-          value={dateFrom}
-          onChange={onDateFromChange}
-          className="w-full min-w-0 sm:w-40"
-        />
-      </div>
-      <div className="flex items-center gap-2 text-sm">
-        <label htmlFor={`${idPrefix}-to`} className="text-xs font-semibold text-muted-foreground uppercase">
-          {t("accounting.ledger.to")}
-        </label>
-        <DatePicker
-          id={`${idPrefix}-to`}
-          value={dateTo}
-          onChange={onDateToChange}
-          className="w-full min-w-0 sm:w-40"
-        />
-      </div>
+    <nav aria-label={`${idPrefix} Date Filters`}>
+      <DateRangeFilterBar
+        idPrefix={idPrefix}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={onDateFromChange}
+        onDateToChange={onDateToChange}
+        fromLabel={t("accounting.ledger.from")}
+        toLabel={t("accounting.ledger.to")}
+        className={cn(
+          variant === "bordered" &&
+            "rounded-xl border border-border bg-muted/20 p-4",
+        )}
+      >
+        {activeFiscalYear ? (
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            onClick={() => {
+              onDateFromChange(activeFiscalYear.startDate);
+              onDateToChange(activeFiscalYear.endDate);
+            }}
+            className="min-h-11 p-0 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
+          >
+            {t("accounting.ledger.activeFy", { label: activeFiscalYear.label })}
+          </Button>
+        ) : null}
 
-      {activeFiscalYear && (
         <Button
           type="button"
           variant="link"
           size="sm"
           onClick={() => {
-            onDateFromChange(activeFiscalYear.startDate);
-            onDateToChange(activeFiscalYear.endDate);
+            onDateFromChange("");
+            onDateToChange("");
           }}
-          className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors p-0 min-h-11"
+          className="min-h-11 p-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          {t("accounting.ledger.activeFy", { label: activeFiscalYear.label })}
+          {t("accounting.ledger.allTime")}
         </Button>
-      )}
 
-      <Button
-        type="button"
-        variant="link"
-        size="sm"
-        onClick={() => {
-          onDateFromChange("");
-          onDateToChange("");
-        }}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors p-0 min-h-11"
-      >
-        {t("accounting.ledger.allTime")}
-      </Button>
-
-      {onExportCSV && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onExportCSV}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors ms-auto min-h-11"
-        >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.ledger.exportCsv")}
-        </Button>
-      )}
+        {onExportCSV ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onExportCSV}
+            className="ms-auto flex min-h-11 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> {t("accounting.ledger.exportCsv")}
+          </Button>
+        ) : null}
+      </DateRangeFilterBar>
     </nav>
   );
 }

@@ -2,7 +2,7 @@ import type React from 'react';
 import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Input } from '@/components/ui/input';
+import { TimePicker } from '@/components/ui/TimePicker';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
@@ -66,9 +66,14 @@ export function AttendanceRecordsMobileList({
                 <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('attendance.columns.timeIn')}</dt>
                 <dd>
                   {editingRecord?.id === attendanceRecord.id
-                    ? <Input type="time" value={editingRecord.timeIn} onChange={(event) => updateDraft('timeIn', event.target.value)}
+                    ? <TimePicker
+                        id={`attendance-mobile-time-in-${attendanceRecord.id}`}
+                        name="timeIn"
+                        value={editingRecord.timeIn}
+                        onChange={(nextValue) => updateDraft('timeIn', nextValue)}
                         aria-label={t('attendance.columns.timeIn')}
-                        className="w-full min-w-0 text-xs" />
+                        className="w-full min-w-0 text-xs"
+                      />
                     : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || '—'}</span>}
                 </dd>
               </div>
@@ -78,9 +83,14 @@ export function AttendanceRecordsMobileList({
                 <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('attendance.columns.timeOut')}</dt>
                 <dd>
                   {editingRecord?.id === attendanceRecord.id
-                    ? <Input type="time" value={editingRecord.timeOut} onChange={(event) => updateDraft('timeOut', event.target.value)}
+                    ? <TimePicker
+                        id={`attendance-mobile-time-out-${attendanceRecord.id}`}
+                        name="timeOut"
+                        value={editingRecord.timeOut}
+                        onChange={(nextValue) => updateDraft('timeOut', nextValue)}
                         aria-label={t('attendance.columns.timeOut')}
-                        className="w-full min-w-0 text-xs" />
+                        className="w-full min-w-0 text-xs"
+                      />
                     : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || '—'}</span>}
                 </dd>
               </div>

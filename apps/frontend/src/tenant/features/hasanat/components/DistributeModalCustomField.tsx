@@ -1,5 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { DatePicker } from "@/components/ui/DatePicker";
+import { RegistryDateField } from "@/components/ui/RegistryDateField";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Field, RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT } from "@/components/ui/formStyles";
@@ -73,7 +73,13 @@ export function DistributeModalCustomField({
           required={field.required}
         />
       ) : field.type === "date" ? (
-        <DatePicker id={fieldId} name={field.id} value={String(fieldValue)} onChange={(value) => updateField(field.id, value)} required={field.required} />
+        <RegistryDateField
+          id={fieldId}
+          name={field.id}
+          value={String(fieldValue)}
+          onChange={(value) => updateField(field.id, value)}
+          required={field.required}
+        />
       ) : (
         <Input
           id={fieldId}

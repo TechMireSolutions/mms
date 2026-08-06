@@ -46,16 +46,16 @@ export function ContactCardInfoPills({
   countryCode,
   phoneDisplay,
   email,
-  showPhonePill,
-  showEmailPill,
+  isColumnVisible,
 }: {
   phone: string | null;
   countryCode: string;
   phoneDisplay: string;
   email: string | null;
-  showPhonePill: boolean;
-  showEmailPill: boolean;
+  isColumnVisible: (key: string) => boolean;
 }): JSX.Element | null {
+  const showPhonePill = isColumnVisible("phone");
+  const showEmailPill = isColumnVisible("email");
   if (!showPhonePill && !showEmailPill) {
     return null;
   }

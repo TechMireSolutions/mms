@@ -41,6 +41,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
           <label htmlFor="wizard-date" className={FORM_LABEL}>{t("accounting.columns.journal.date")}</label>
           <DatePicker
             id="wizard-date"
+            name="date"
             value={form.date}
             onChange={(dateValue) => setForm({ ...form, date: dateValue })}
           />

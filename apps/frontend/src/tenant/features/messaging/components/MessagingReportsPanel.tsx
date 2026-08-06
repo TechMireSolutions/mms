@@ -7,7 +7,7 @@ import {
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/DatePicker';
+import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -152,17 +152,15 @@ export function MessagingReportsPanel({
             <SegmentedPillFilter options={channelSelectOptions} value={channel} onChange={(value) => setChannel(value as typeof channel)} size="sm" />
             <SegmentedPillFilter options={statusOptions} value={status} onChange={(value) => setStatus(value as typeof status)} size="sm" />
             <FormSelect id="logCategory" value={category} onChange={setCategory} options={categorySelectOptions} />
-            <DatePicker
-              value={startDate}
-              onChange={setStartDate}
-              className="text-sm"
-              placeholder={t('messaging.dateFrom')}
-            />
-            <DatePicker
-              value={endDate}
-              onChange={setEndDate}
-              className="text-sm"
-              placeholder={t('messaging.dateTo')}
+            <DateRangeFilterBar
+              idPrefix="messaging-reports"
+              dateFrom={startDate}
+              dateTo={endDate}
+              onDateFromChange={setStartDate}
+              onDateToChange={setEndDate}
+              fromPlaceholder={t('messaging.dateFrom')}
+              toPlaceholder={t('messaging.dateTo')}
+              pickerClassName="w-full min-w-0 text-sm sm:w-36"
             />
           </div>
           <div className="flex items-center gap-2">

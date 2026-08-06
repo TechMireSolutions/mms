@@ -141,8 +141,10 @@ export function TeacherEmploymentSection({
           />
         </Field>
 
-        <Field label={t("teachers.field.joinDate")}>
+        <Field label={t("teachers.field.joinDate")} id="teacher-join-date">
           <DatePicker
+            id="teacher-join-date"
+            name="joinDate"
             value={teacherDraft.joinDate || undefined}
             onChange={(dateStr) => onDraftChange({ joinDate: dateStr })}
           />

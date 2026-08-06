@@ -73,6 +73,7 @@ export function BudgetTransactionModal({ open, type, currency, onClose, onSave, 
             <label className={FORM_LABEL} htmlFor="tx-date">{t("sessions.budget.form.date")}</label>
             <DatePicker
               id="tx-date"
+              name="date"
               value={transactionDraft.date}
               onChange={(value) => updateTransactionDraft("date", value)}
               required

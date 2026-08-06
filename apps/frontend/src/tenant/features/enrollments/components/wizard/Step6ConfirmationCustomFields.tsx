@@ -2,6 +2,7 @@ import React from 'react';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { RegistryDateField } from '@/components/ui/RegistryDateField';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -90,11 +91,19 @@ export function Step6ConfirmationCustomFields({
                   />
                   <span className="text-xs font-medium text-foreground">{field.label}</span>
                 </label>
+              ) : field.type === 'date' ? (
+                <RegistryDateField
+                  id={`custom-${field.id}`}
+                  name={field.id}
+                  value={stringValue}
+                  onChange={(val) => onCustomFieldChange(field.id, val)}
+                  required={field.required}
+                />
               ) : (
                 <Input
                   id={`custom-${field.id}`}
                   name={field.id}
-                  type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}
+                  type={field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}
                   value={stringValue}
                   onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
                   placeholder={field.placeholder || t('enrollments.wizard.step6EnterField', { label: field.label.toLowerCase() })}

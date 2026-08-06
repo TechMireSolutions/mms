@@ -6,7 +6,7 @@ import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { AttendanceRecordsMobileList } from './AttendanceRecordsMobileList';
 import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
-import { Input } from '@/components/ui/input';
+import { TimePicker } from '@/components/ui/TimePicker';
 import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
 
@@ -131,9 +131,14 @@ export function AttendanceRecordsTable({
                 {isColumnVisible("timeIn") && (
                   <td className="px-3 py-2.5">
                     {editingRecord?.id === attendanceRecord.id
-                      ? <Input type="time" value={editingRecord.timeIn} onChange={(event) => updateDraft('timeIn', event.target.value)}
+                      ? <TimePicker
+                          id={`attendance-time-in-${attendanceRecord.id}`}
+                          name="timeIn"
+                          value={editingRecord.timeIn}
+                          onChange={(nextValue) => updateDraft('timeIn', nextValue)}
                           aria-label={t('attendance.columns.timeIn')}
-                          className="w-full min-w-[6.5rem] max-w-[8rem] text-xs" />
+                          className="w-full min-w-[6.5rem] max-w-[8rem] text-xs"
+                        />
                       : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeIn || '—'}</span>
                     }
                   </td>
@@ -141,9 +146,14 @@ export function AttendanceRecordsTable({
                 {isColumnVisible("timeOut") && (
                   <td className="px-3 py-2.5">
                     {editingRecord?.id === attendanceRecord.id
-                      ? <Input type="time" value={editingRecord.timeOut} onChange={(event) => updateDraft('timeOut', event.target.value)}
+                      ? <TimePicker
+                          id={`attendance-time-out-${attendanceRecord.id}`}
+                          name="timeOut"
+                          value={editingRecord.timeOut}
+                          onChange={(nextValue) => updateDraft('timeOut', nextValue)}
                           aria-label={t('attendance.columns.timeOut')}
-                          className="w-full min-w-[6.5rem] max-w-[8rem] text-xs" />
+                          className="w-full min-w-[6.5rem] max-w-[8rem] text-xs"
+                        />
                       : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeOut || '—'}</span>
                     }
                   </td>

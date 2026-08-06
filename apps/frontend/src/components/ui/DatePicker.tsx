@@ -17,6 +17,9 @@ export interface DatePickerProps {
   id?: string
   name?: string
   required?: boolean
+  "aria-label"?: string
+  "aria-invalid"?: boolean
+  "aria-describedby"?: string
 }
 
 export function DatePicker({
@@ -30,6 +33,9 @@ export function DatePicker({
   id,
   name,
   required,
+  "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
 }: DatePickerProps) {
   const { t } = useTranslation()
   const {
@@ -89,7 +95,9 @@ export function DatePicker({
         className="min-h-11 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={t("datePicker.enterFormatAria", { format: dateFormat })}
+        aria-label={ariaLabel || t("datePicker.enterFormatAria", { format: dateFormat })}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
       />
 
       {value && !disabled && (

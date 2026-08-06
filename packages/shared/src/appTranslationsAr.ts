@@ -5303,6 +5303,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "datePicker.openAria": "فتح نافذة التقويم",
   "datePicker.clearAria": "مسح التاريخ",
   "datePicker.enterFormatAria": "أدخل التاريخ بتنسيق {format}",
+  "dateTimePicker.dateAria": "التاريخ",
+  "dateTimePicker.timeAria": "الوقت",
   "pagination.previousAria": "الصفحة السابقة",
   "pagination.nextAria": "الصفحة التالية",
   "nav.sectionAria": "تنقل الأقسام",

@@ -106,6 +106,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
             <label htmlFor="red-date" className={FORM_LABEL}>{t("hasanat.columns.redemption.date")}</label>
             <DatePicker
               id="red-date"
+              name="date"
               value={data.date || ""}
               onChange={(value) => updateField("date", value)}
             />

@@ -20,7 +20,7 @@ export function ContactCardMetadataGrid({
   allContacts,
   contactsMap,
   otherColumns,
-  visibleColumnIds,
+  isColumnVisible,
   t,
 }: {
   contact: Contact;
@@ -28,21 +28,21 @@ export function ContactCardMetadataGrid({
   allContacts: Contact[];
   contactsMap: Map<string, Contact> | null;
   otherColumns: ContactsColumnConfig[];
-  visibleColumnIds: Set<string>;
+  isColumnVisible: (key: string) => boolean;
   t: TranslationFunction;
 }): JSX.Element | null {
   if (otherColumns.length === 0) {
     return null;
   }
 
-  const hasVisibleRelationshipContact = [...visibleColumnIds].some((id) =>
-    isRelationshipContactColumnKey(id),
+  const hasVisibleRelationshipContact = otherColumns.some((col) =>
+    isRelationshipContactColumnKey(col.id) && isColumnVisible(col.id),
   );
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
       {otherColumns.map((col) => {
-        if (col.id === "socials_url" && visibleColumnIds.has("socials_platform")) {
+        if (col.id === "socials_url" && isColumnVisible("socials_platform")) {
           return null;
         }
         if (isRelationshipTypeColumnKey(col.id) && hasVisibleRelationshipContact) {
