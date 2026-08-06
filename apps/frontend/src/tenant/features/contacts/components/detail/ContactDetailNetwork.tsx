@@ -1,13 +1,14 @@
 import { Users as UsersIcon } from "lucide-react";
 import {
   Contact,
+  deriveSiblingLinks,
   getDisplayName,
   getPrimaryEmail,
   getPrimaryPhone,
   hasWhatsApp,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
+import { formatLocalizedRelationshipLabel } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import { ContactNetworkLinkCard } from "./ContactNetworkLinkCard";
 import { DETAIL_STYLES } from "./contactDetailStyles";
@@ -27,6 +28,7 @@ type NetworkLink = {
   phone?: string;
   relationship?: string;
   inferred?: boolean;
+  derivedSibling?: boolean;
 };
 
 function resolveLinkedDisplayName(
@@ -51,6 +53,7 @@ function collectNetworkLinks(contact: Contact): NetworkLink[] {
     phone?: string;
     relationship?: string;
     inferred?: boolean;
+    derivedSibling?: boolean;
   }) => {
     const contactId = entry.contactId == null ? "" : String(entry.contactId).trim();
     const name = (entry.name || "").trim();
@@ -60,12 +63,14 @@ function collectNetworkLinks(contact: Contact): NetworkLink[] {
     const key = contactId || (name ? `name:${name.toLowerCase()}` : `phone:${phone}`);
     const existing = byKey.get(key);
     if (existing && existing.inferred !== true && entry.inferred === true) return;
+    if (existing && entry.derivedSibling) return;
     byKey.set(key, {
       contactId,
       name: name || existing?.name,
       phone: phone || existing?.phone,
       relationship: entry.relationship || existing?.relationship,
       inferred: entry.inferred === true,
+      ...(entry.derivedSibling ? { derivedSibling: true } : {}),
     });
   };
 
@@ -73,6 +78,27 @@ function collectNetworkLinks(contact: Contact): NetworkLink[] {
   for (const entry of contact.relationships ?? []) add(entry);
 
   return [...byKey.values()];
+}
+
+function mergeDerivedSiblingLinks(contact: Contact, allContacts: Contact[]): NetworkLink[] {
+  const stored = collectNetworkLinks(contact);
+  const existingIds = new Set(
+    stored.map((link) => link.contactId).filter((id) => id.length > 0),
+  );
+  const peers = allContacts.length > 0 ? allContacts : [contact];
+  const siblings = deriveSiblingLinks(contact, peers).filter(
+    (link) => !existingIds.has(link.contactId),
+  );
+  return [
+    ...stored,
+    ...siblings.map((link) => ({
+      contactId: link.contactId,
+      name: link.name,
+      relationship: link.relationship,
+      inferred: true,
+      derivedSibling: true as const,
+    })),
+  ];
 }
 
 export function ContactDetailNetwork({
@@ -84,7 +110,7 @@ export function ContactDetailNetwork({
   onEmail,
 }: ContactDetailNetworkProps): JSX.Element {
   const { t } = useTranslation();
-  const links = collectNetworkLinks(contact);
+  const links = mergeDerivedSiblingLinks(contact, allContacts);
   const parentAllowsOutbound = !contact.deletedAt;
 
   return (
@@ -122,8 +148,11 @@ export function ContactDetailNetwork({
               t("contacts.detail.unknownContact"),
             );
             const relationshipLabel =
-              formatContactOptionLabel(relationship.relationship, t) ||
-              t("contacts.detail.linkedContact");
+              formatLocalizedRelationshipLabel(
+                relationship.relationship,
+                target?.gender,
+                t,
+              ) || t("contacts.detail.linkedContact");
             const linkedId = target?.id ?? (relationship.contactId || undefined);
             const canNavigate = linkedId != null && String(linkedId).length > 0;
             const allowOutbound = parentAllowsOutbound && !target?.deletedAt;

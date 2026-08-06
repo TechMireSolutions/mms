@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Contact } from './contactEntityTypes.js';
 import {
+  formatRelationshipDisplayLabel,
   isAllowedRelationshipLabel,
   normalizeRelationshipTerm,
   resolveInverseRelationship,
@@ -82,6 +83,37 @@ describe('resolveInverseRelationship', () => {
     expect(
       resolveInverseRelationship('Father', contact({ id: '2', gender: 'male' }), [pair]),
     ).toBe('Son');
+  });
+});
+
+describe('formatRelationshipDisplayLabel', () => {
+  it('maps Parent/Child by linked gender', () => {
+    expect(formatRelationshipDisplayLabel('Parent', 'female')).toBe('Mother');
+    expect(formatRelationshipDisplayLabel('Parent', 'male')).toBe('Father');
+    expect(formatRelationshipDisplayLabel('Child', 'female')).toBe('Daughter');
+    expect(formatRelationshipDisplayLabel('Child', 'male')).toBe('Son');
+  });
+
+  it('keeps Parent/Child when gender is unknown', () => {
+    expect(formatRelationshipDisplayLabel('Parent', undefined)).toBe('Parent');
+    expect(formatRelationshipDisplayLabel('Child', '')).toBe('Child');
+    expect(formatRelationshipDisplayLabel('Parent', 'other')).toBe('Parent');
+  });
+
+  it('maps Sibling by linked gender', () => {
+    expect(formatRelationshipDisplayLabel('Sibling', 'female')).toBe('Sister');
+    expect(formatRelationshipDisplayLabel('Sibling', 'male')).toBe('Brother');
+    expect(formatRelationshipDisplayLabel('Sibling', undefined)).toBe('Sibling');
+  });
+
+  it('leaves other catalog labels unchanged', () => {
+    expect(formatRelationshipDisplayLabel('Guardian', 'female')).toBe('Guardian');
+    expect(formatRelationshipDisplayLabel('Husband', 'male')).toBe('Husband');
+  });
+
+  it('is case-insensitive on the stored relationship term', () => {
+    expect(formatRelationshipDisplayLabel('parent', 'Woman')).toBe('Mother');
+    expect(formatRelationshipDisplayLabel('CHILD', 'Boy')).toBe('Son');
   });
 });
 

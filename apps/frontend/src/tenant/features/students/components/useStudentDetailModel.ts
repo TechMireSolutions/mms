@@ -97,14 +97,21 @@ export function useStudentDetailModel(student: Student) {
     ?? primaryContact
     ?? undefined;
 
+  const contactGender = (contactId?: string) => {
+    if (!contactId) return undefined;
+    return contactList.find((entry) => String(entry.id) === String(contactId))?.gender;
+  };
+
   const graphLinks: StudentContactRelationshipLink[] = relationshipLinks.map((link) => {
     const contact = link.contactId
       ? contactList.find((entry) => String(entry.id) === String(link.contactId))
       : undefined;
+    const gender = contact?.gender;
     return {
       ...link,
       name: contact?.name || link.name,
       phone: (contact ? getPrimaryPhone(contact) : null) || link.phone,
+      ...(gender ? { gender } : {}),
     };
   });
 
@@ -116,6 +123,9 @@ export function useStudentDetailModel(student: Student) {
             ? [{
                 ...(guardians.fatherContactId ? { contactId: guardians.fatherContactId } : {}),
                 ...(guardians.fatherName ? { name: guardians.fatherName } : {}),
+                ...(contactGender(guardians.fatherContactId)
+                  ? { gender: contactGender(guardians.fatherContactId)! }
+                  : {}),
                 relationship: STUDENT_PARENT_RELATIONSHIP_LABEL,
               } satisfies StudentContactRelationshipLink]
             : []),
@@ -123,6 +133,9 @@ export function useStudentDetailModel(student: Student) {
             ? [{
                 ...(guardians.guardianContactId ? { contactId: guardians.guardianContactId } : {}),
                 ...(guardians.guardianName ? { name: guardians.guardianName } : {}),
+                ...(contactGender(guardians.guardianContactId)
+                  ? { gender: contactGender(guardians.guardianContactId)! }
+                  : {}),
                 relationship: STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
               } satisfies StudentContactRelationshipLink]
             : []),

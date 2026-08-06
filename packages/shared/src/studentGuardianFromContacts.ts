@@ -16,6 +16,8 @@ export type StudentContactRelationshipLink = {
   contactId?: string;
   name?: string;
   phone?: string;
+  /** Linked contact gender when known (for Parent/Child display mapping). */
+  gender?: string;
   relationship: string;
 };
 

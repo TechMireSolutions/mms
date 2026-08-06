@@ -8,11 +8,13 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   CONTACTS_MODULE_MANIFEST,
+  formatRelationshipDisplayLabel,
   getPrimaryPhone,
   listStudentContactRelationships,
   type Contact,
   type Student,
 } from "@mms/shared";
+import { formatLocalizedRelationshipLabel } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
 import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
 import { useContactsByIds } from "@/tenant/hooks/collections/contacts";
@@ -92,11 +94,20 @@ export function StudentGuardianSection({
               const name = contact?.name || link.name || (link.contactId ? t("common.loading") : undefined);
               if (!name) return null;
               const phone = contact ? getPrimaryPhone(contact) || undefined : link.phone || undefined;
+              const displayRelationship = formatRelationshipDisplayLabel(
+                link.relationship,
+                contact?.gender,
+              );
+              const label = formatLocalizedRelationshipLabel(
+                link.relationship,
+                contact?.gender,
+                t,
+              );
               return (
                 <GuardianContactCard
                   key={`${link.relationship}-${link.contactId ?? name}-${index}`}
-                  label={link.relationship}
-                  badgeCode={relationshipBadgeCode(link.relationship)}
+                  label={label}
+                  badgeCode={relationshipBadgeCode(displayRelationship)}
                   badgeBg="bg-info/15"
                   badgeText="text-info"
                   name={name}

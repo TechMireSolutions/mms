@@ -5,11 +5,13 @@ import {
   type StudentContactRelationshipLink,
   formatDate,
   formatDateTime,
+  formatRelationshipDisplayLabel,
   toMessagingRecipient,
   toTitleCase,
 } from "@mms/shared";
 import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatLocalizedRelationshipLabel } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
 import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
 import { StudentDetailAttributeRow } from "@/tenant/features/students/components/StudentDetailAttributeRow";
@@ -88,11 +90,20 @@ export function StudentDetailFieldsSection({
               if (!name) return null;
               const contactId = link.contactId || `rel-${index}`;
               const phone = link.phone;
+              const displayRelationship = formatRelationshipDisplayLabel(
+                link.relationship,
+                link.gender,
+              );
+              const label = formatLocalizedRelationshipLabel(
+                link.relationship,
+                link.gender,
+                t,
+              );
               return (
                 <GuardianContactCard
                   key={`${link.relationship}-${contactId}-${index}`}
-                  label={link.relationship}
-                  badgeCode={relationshipBadgeCode(link.relationship)}
+                  label={label}
+                  badgeCode={relationshipBadgeCode(displayRelationship)}
                   badgeBg="bg-info/10"
                   badgeText="text-info"
                   name={name}

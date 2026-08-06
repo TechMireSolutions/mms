@@ -21,14 +21,51 @@ export interface PlannedRelationship {
   inferenceDepth: number;
 }
 
+function genderIsFemale(gender?: string | null): boolean {
+  const normalized = typeof gender === 'string' ? gender.trim().toLowerCase() : '';
+  return normalized === 'female' || normalized === 'f' || normalized === 'woman' || normalized === 'girl';
+}
+
+function genderIsMale(gender?: string | null): boolean {
+  const normalized = typeof gender === 'string' ? gender.trim().toLowerCase() : '';
+  return normalized === 'male' || normalized === 'm' || normalized === 'man' || normalized === 'boy';
+}
+
 function isFemale(contact: Contact): boolean {
-  const gender = typeof contact.gender === 'string' ? contact.gender.trim().toLowerCase() : '';
-  return gender === 'female' || gender === 'f' || gender === 'woman' || gender === 'girl';
+  return genderIsFemale(contact.gender);
 }
 
 function isMale(contact: Contact): boolean {
-  const gender = typeof contact.gender === 'string' ? contact.gender.trim().toLowerCase() : '';
-  return gender === 'male' || gender === 'm' || gender === 'man' || gender === 'boy';
+  return genderIsMale(contact.gender);
+}
+
+/**
+ * Display-only Parent/Child → Father/Mother/Son/Daughter based on the linked person's gender.
+ * Stored catalog labels and other types are returned unchanged (trimmed).
+ */
+export function formatRelationshipDisplayLabel(
+  relationship: string,
+  gender?: string | null,
+): string {
+  const trimmed = typeof relationship === 'string' ? relationship.trim() : '';
+  if (!trimmed) return '';
+  const term = normalizeRelationshipTerm(trimmed);
+  if (term === 'parent') {
+    if (genderIsFemale(gender)) return 'Mother';
+    if (genderIsMale(gender)) return 'Father';
+    return trimmed;
+  }
+  if (term === 'child') {
+    if (genderIsFemale(gender)) return 'Daughter';
+    if (genderIsMale(gender)) return 'Son';
+    return trimmed;
+  }
+  if (term === 'sibling') {
+    if (genderIsFemale(gender)) return 'Sister';
+    if (genderIsMale(gender)) return 'Brother';
+    return 'Sibling';
+  }
+  return trimmed;
 }
 
 /**
