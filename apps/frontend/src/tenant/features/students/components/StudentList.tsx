@@ -1,24 +1,15 @@
-import { type ReactElement } from "react";
-import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import {
-  primaryResponsibleAdultDisplayName,
-  STUDENTS_MODULE_MANIFEST,
-  type Student,
-} from "@mms/shared";
+import type { ReactElement } from "react";
+import { type Student } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentListContent } from "@/tenant/features/students/components/StudentListContent";
 import { StudentListConfirmDialogs } from "@/tenant/features/students/components/StudentListConfirmDialogs";
 import { StudentListMessageModal } from "@/tenant/features/students/components/StudentListMessageModal";
 import { StudentListProfileDrawer } from "@/tenant/features/students/components/StudentListProfileDrawer";
-import { StudentListSelectionBar } from "@/tenant/features/students/components/StudentListSelectionBar";
 import { useStudentListController } from "@/tenant/features/students/hooks/useStudentListController";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
-import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
-import { exportExcel } from "@/components/ui/exportToolbarUtils";
-import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
-import { studentStatusLabel } from "@/lib/students/studentStatusUi";
-import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
+import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 
 export interface StudentListProps {
   students: Student[];
@@ -27,7 +18,6 @@ export interface StudentListProps {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[], deletionReason?: string) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
-  onBulkStatusChange?: (ids: string[], status: string) => void | Promise<void>;
   viewMode: WorkDirectoryViewMode;
   isColumnVisible?: (key: string) => boolean;
   columnRegistry?: import("@mms/shared").ModuleColumnRegistryEntry[];
@@ -37,20 +27,30 @@ export interface StudentListProps {
   sortDir: "asc" | "desc";
   onServerSort: (field: StudentListSortField) => void;
   selectedIds: string[];
-  selectedTargets: StudentsSelectionTargets;
+  allSelected: boolean;
+  someSelected: boolean;
   onSelectOne: (id: string) => void;
   onSelectAll: (pageIds: string[]) => void;
   onClearSelection: () => void;
   showDeleted?: boolean;
   canWrite?: boolean;
   canDelete?: boolean;
-  canExport?: boolean;
-  bulkActions?: readonly string[];
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
   onShowActive?: () => void;
+  openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
+  closeComposer: () => void;
+  canWriteMessaging: boolean;
+  messagingTarget: ReturnType<typeof useMessageComposerState>["messagingTarget"];
+  confirmBulkDeleteOpen: boolean;
+  onConfirmBulkDeleteOpenChange: (open: boolean) => void;
+  confirmBulkRestoreOpen: boolean;
+  onConfirmBulkRestoreOpenChange: (open: boolean) => void;
+  pendingDeleteId: string | null;
+  onPendingDeleteIdChange: (id: string | null) => void;
 }
 
+/** Students directory content + overlays — bulk bar mounts on WorkTier (Contacts-shaped). */
 export default function StudentList({
   students,
   onEdit,
@@ -58,7 +58,6 @@ export default function StudentList({
   onRestore,
   onBulkDelete,
   onBulkRestore,
-  onBulkStatusChange,
   viewMode,
   isColumnVisible,
   columnRegistry = [],
@@ -68,67 +67,48 @@ export default function StudentList({
   sortDir,
   onServerSort,
   selectedIds,
-  selectedTargets,
+  allSelected,
+  someSelected,
   onSelectOne,
   onSelectAll,
   onClearSelection,
   showDeleted = false,
   canWrite = true,
   canDelete = true,
-  canExport = false,
-  bulkActions = STUDENTS_MODULE_MANIFEST.work.bulkActions,
   hasActiveFilters = false,
   onClearFilters,
   onShowActive,
+  openComposer,
+  closeComposer,
+  canWriteMessaging,
+  messagingTarget,
+  confirmBulkDeleteOpen,
+  onConfirmBulkDeleteOpenChange,
+  confirmBulkRestoreOpen,
+  onConfirmBulkRestoreOpenChange,
+  pendingDeleteId,
+  onPendingDeleteIdChange,
 }: StudentListProps): ReactElement {
-  const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const list = useStudentListController({
     students,
-    selectedIds,
     onSelectOne,
     onSelectAll,
+    allSelected,
+    someSelected,
     isColumnVisible,
     sortField,
     sortDir,
     onSort: onServerSort,
+    openComposer,
+    canWriteMessaging,
   });
-
-  const selectedStudents = students.filter((student) =>
-    selectedIds.includes(String(student.id)),
-  );
+  const statusBadgeConfig = studentStatusBadgeConfig(list.t);
 
   const handleRestore = async (studentId: string): Promise<void> => {
     if (!onRestore) return;
     await onRestore(studentId);
     list.setViewStudent(null);
-  };
-
-  const handleBulkExport = async () => {
-    try {
-      await exportExcel({
-        title: t("nav.students"),
-        filename: "students_export",
-        moduleId: "students",
-        columns: [
-          { header: t("students.columns.name"), key: "name" },
-          { header: t("students.columns.grNumber"), key: "grNumber" },
-          { header: t("students.columns.gender"), key: "gender" },
-          { header: t("students.columns.status"), key: "status" },
-          { header: t("students.columns.parents"), key: "fatherName" },
-        ],
-        rows: selectedStudents.map((student) => ({
-          name: student.name ?? "",
-          grNumber: student.grNumber ?? "",
-          gender: student.gender ? formatContactGenderLabel(student.gender, t) : "",
-          status: studentStatusLabel(t, student.status || "active"),
-          fatherName: primaryResponsibleAdultDisplayName(student),
-        })),
-      });
-      notify.success(t("students.exportSuccess"));
-    } catch {
-      notify.error(t("students.exportFailed"));
-    }
   };
 
   return (
@@ -145,7 +125,7 @@ export default function StudentList({
         canWrite={canWrite}
         canDelete={canDelete}
         canWriteMessaging={list.canWriteMessaging}
-        statusBadgeConfig={list.statusBadgeConfig}
+        statusBadgeConfig={statusBadgeConfig}
         isColumnVisible={list.isColumnVisible}
         isFieldEnabled={list.isFieldEnabled}
         columnRegistry={columnRegistry}
@@ -155,7 +135,7 @@ export default function StudentList({
         onSelectOne={list.handleSelectOne}
         onViewStudent={list.setViewStudent}
         onEdit={onEdit}
-        onDelete={(studentId) => list.setPendingDeleteId(studentId)}
+        onDelete={(studentId) => onPendingDeleteIdChange(studentId)}
         onRestore={onRestore ? handleRestore : undefined}
         onOpenComposer={list.openComposer}
         getColumnWidth={getColumnWidth}
@@ -164,42 +144,6 @@ export default function StudentList({
         onClearFilters={onClearFilters}
         onShowActive={onShowActive}
       />
-
-      {selectedIds.length > 0 ? (
-        <StudentListSelectionBar
-          selectedCount={selectedIds.length}
-          showDeleted={showDeleted}
-          canWrite={canWrite}
-          canDelete={canDelete}
-          canWriteMessaging={list.canWriteMessaging}
-          canExport={canExport}
-          bulkActions={bulkActions}
-          selectedTargets={selectedTargets}
-          studentStatusOptions={list.studentStatusOptions}
-          statusBadgeConfig={list.statusBadgeConfig}
-          onWhatsApp={(targets) => list.openSelectionMessage("whatsapp", targets)}
-          onSms={(targets) => list.openSelectionMessage("sms", targets)}
-          onEmail={(targets) => list.openSelectionMessage("email", targets)}
-          onBulkStatusChange={
-            onBulkStatusChange
-              ? (status) => {
-                  void onBulkStatusChange(selectedIds, status);
-                  onClearSelection();
-                }
-              : undefined
-          }
-          onBulkExport={() => {
-            void handleBulkExport();
-          }}
-          onRequestBulkDelete={() => {
-            if (onBulkDelete) list.setConfirmBulkDeleteOpen(true);
-          }}
-          onRequestBulkRestore={() => {
-            if (onBulkRestore) list.setConfirmBulkRestoreOpen(true);
-          }}
-          onClearSelection={onClearSelection}
-        />
-      ) : null}
 
       <StudentListProfileDrawer
         student={list.viewStudent}
@@ -213,18 +157,15 @@ export default function StudentList({
         onRestore={onRestore ? handleRestore : undefined}
       />
 
-      <StudentListMessageModal
-        messagingTarget={list.messagingTarget}
-        onClose={list.closeComposer}
-      />
+      <StudentListMessageModal messagingTarget={messagingTarget} onClose={closeComposer} />
 
       <StudentListConfirmDialogs
-        pendingDeleteId={list.pendingDeleteId}
-        onPendingDeleteIdChange={list.setPendingDeleteId}
-        confirmBulkDeleteOpen={list.confirmBulkDeleteOpen}
-        onConfirmBulkDeleteOpenChange={list.setConfirmBulkDeleteOpen}
-        confirmBulkRestoreOpen={list.confirmBulkRestoreOpen}
-        onConfirmBulkRestoreOpenChange={list.setConfirmBulkRestoreOpen}
+        pendingDeleteId={pendingDeleteId}
+        onPendingDeleteIdChange={onPendingDeleteIdChange}
+        confirmBulkDeleteOpen={confirmBulkDeleteOpen}
+        onConfirmBulkDeleteOpenChange={onConfirmBulkDeleteOpenChange}
+        confirmBulkRestoreOpen={confirmBulkRestoreOpen}
+        onConfirmBulkRestoreOpenChange={onConfirmBulkRestoreOpenChange}
         selectedIds={selectedIds}
         deleteTitle={list.t("students.deleteConfirmTitle")}
         deleteDescription={list.t("students.deleteConfirmDescription")}

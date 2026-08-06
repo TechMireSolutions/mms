@@ -20,6 +20,7 @@ export interface StudentsFilterMenuButtonProps {
   studentFilterGender: string;
   studentStatusOptions: readonly string[];
   genderFilters: string[];
+  activeFilterCount: number;
   onToggleStatus: (status: string) => void;
   onGenderChange: (value: string) => void;
   onClearFilters: () => void;
@@ -30,13 +31,12 @@ export function StudentsFilterMenuButton({
   studentFilterGender,
   studentStatusOptions,
   genderFilters,
+  activeFilterCount,
   onToggleStatus,
   onGenderChange,
   onClearFilters,
 }: StudentsFilterMenuButtonProps) {
   const { t } = useTranslation();
-  const activeFilterCount =
-    studentFilterStatus.length + (studentFilterGender ? 1 : 0);
 
   return (
     <DropdownMenu>

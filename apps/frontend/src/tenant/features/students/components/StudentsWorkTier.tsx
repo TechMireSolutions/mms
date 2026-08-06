@@ -1,19 +1,18 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { type Student, type StudentsListPageResult } from "@mms/shared";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ErrorState } from "@/components/ui/ErrorState";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { TableSkeleton, CardSkeleton } from "@/components/ui/LoadingState";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
-import StudentList from "@/tenant/features/students/components/StudentList";
+import { StudentsBulkActionBar } from "@/tenant/features/students/components/StudentsBulkActionBar";
+import { StudentsWorkListBody } from "@/tenant/features/students/components/StudentsWorkListBody";
 import { StudentsWorkTierToolbar } from "@/tenant/features/students/components/StudentsWorkTierToolbar";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
+import { useStudentsWorkOverlays } from "@/tenant/features/students/hooks/useStudentsWorkOverlays";
 
 interface StudentsWorkTierProps {
   studentSearch: string;
@@ -27,6 +26,7 @@ interface StudentsWorkTierProps {
   canExport: boolean;
   bulkActions: readonly string[];
   hasActiveFilters: boolean;
+  activeFilterCount: number;
   workStudents: Student[];
   workPageData: StudentsListPageResult | undefined;
   isWorkPageLoading: boolean;
@@ -43,6 +43,8 @@ interface StudentsWorkTierProps {
   onClearFilters: () => void;
   selectedIds: string[];
   selectedTargets: StudentsSelectionTargets;
+  allSelected: boolean;
+  someSelected: boolean;
   onSelectOne: (id: string) => void;
   onSelectAll: (pageIds: string[]) => void;
   onClearSelection: () => void;
@@ -71,6 +73,7 @@ export function StudentsWorkTier({
   canExport,
   bulkActions,
   hasActiveFilters,
+  activeFilterCount,
   workStudents,
   workPageData,
   isWorkPageLoading,
@@ -87,6 +90,8 @@ export function StudentsWorkTier({
   onClearFilters,
   selectedIds,
   selectedTargets,
+  allSelected,
+  someSelected,
   onSelectOne,
   onSelectAll,
   onClearSelection,
@@ -103,6 +108,14 @@ export function StudentsWorkTier({
   onServerSort,
 }: StudentsWorkTierProps) {
   const { t } = useTranslation();
+  const selectedStudents = useMemo(
+    () => workStudents.filter((student) => selectedIds.includes(String(student.id))),
+    [workStudents, selectedIds],
+  );
+  const overlays = useStudentsWorkOverlays({
+    selectedStudents,
+  });
+
   const studentFilterChips = [
     ...studentFilterStatus.map((status) => ({
       key: status,
@@ -110,7 +123,13 @@ export function StudentsWorkTier({
       onRemove: () => onToggleStatus(status),
     })),
     ...(studentFilterGender
-      ? [{ key: "gender", label: formatContactGenderLabel(studentFilterGender, t), onRemove: () => onGenderChange("") }]
+      ? [
+          {
+            key: "gender",
+            label: formatContactGenderLabel(studentFilterGender, t),
+            onRemove: () => onGenderChange(""),
+          },
+        ]
       : []),
   ];
 
@@ -133,6 +152,7 @@ export function StudentsWorkTier({
         showDeleted={showDeleted}
         canDelete={canDelete}
         hasActiveFilters={hasActiveFilters}
+        activeFilterCount={activeFilterCount}
         columnLayout={columnLayout}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
@@ -145,70 +165,80 @@ export function StudentsWorkTier({
 
       <FilterChips chips={studentFilterChips} onClearAll={onClearFilters} />
 
-      <ErrorBoundary>
-        {isWorkPageLoading ? (
-          viewMode === "cards" ? (
-            <CardSkeleton count={6} className="grid-cols-1 sm:grid-cols-2" />
-          ) : (
-            <TableSkeleton rows={6} cols={columnLayout.columnRegistry.length} />
-          )
-        ) : isWorkPageError ? (
-          <ErrorState
-            title={t("students.loadFailed")}
-            description={t("students.loadFailedHint")}
-            onRetry={onRetry}
-          />
-        ) : (
-          <>
-            <StudentList
-              students={workStudents}
-              viewMode={viewMode}
-              isColumnVisible={columnLayout.isColumnVisible}
-              columnRegistry={columnLayout.columnRegistry}
-              getColumnWidth={columnLayout.getColumnWidth}
-              onColumnResize={columnLayout.setColumnWidth}
-              showDeleted={showDeleted}
-              canWrite={canWrite}
-              canDelete={canDelete}
-              canExport={canExport}
-              bulkActions={bulkActions}
-              hasActiveFilters={hasActiveFilters}
-              onClearFilters={onClearFilters}
-              onShowActive={() => {
-                if (showDeleted) onToggleDeleted();
-              }}
-              selectedIds={selectedIds}
-              selectedTargets={selectedTargets}
-              onSelectOne={onSelectOne}
-              onSelectAll={onSelectAll}
-              onClearSelection={onClearSelection}
-              sortField={sortField}
-              sortDir={sortDir}
-              onServerSort={onServerSort}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onRestore={onRestore}
-              onBulkDelete={onBulkDelete}
-              onBulkRestore={onBulkRestore}
-              onBulkStatusChange={onBulkStatusChange}
-            />
-            {useServerWork && workPageData && workStudents.length > 0 ? (
-              <ListPagination
-                page={workPageData.page}
-                total={workPageData.total}
-                limit={workPageData.limit}
-                hasMore={workPageData.hasMore}
-                onPageChange={onPageChange}
-                i18nNamespace="students"
-                variant="range"
-              />
-            ) : null}
-            {useServerWork && isWorkPageFetching ? (
-              <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
-            ) : null}
-          </>
-        )}
-      </ErrorBoundary>
+      <StudentsBulkActionBar
+        selectedCount={selectedIds.length}
+        showDeleted={showDeleted}
+        canWrite={canWrite}
+        canDelete={canDelete}
+        canWriteMessaging={overlays.canWriteMessaging}
+        canExport={canExport}
+        bulkActions={bulkActions}
+        selectedTargets={selectedTargets}
+        studentStatusOptions={studentStatusOptions}
+        statusBadgeConfig={overlays.statusBadgeConfig}
+        onWhatsApp={(targets) => overlays.openSelectionMessage("whatsapp", targets)}
+        onSms={(targets) => overlays.openSelectionMessage("sms", targets)}
+        onEmail={(targets) => overlays.openSelectionMessage("email", targets)}
+        onBulkStatusChange={(status) => {
+          void onBulkStatusChange(selectedIds, status);
+          onClearSelection();
+        }}
+        onBulkExport={() => {
+          void overlays.handleBulkExport();
+        }}
+        onRequestBulkDelete={() => {
+          overlays.setConfirmBulkDeleteOpen(true);
+        }}
+        onRequestBulkRestore={() => {
+          overlays.setConfirmBulkRestoreOpen(true);
+        }}
+        onClearSelection={onClearSelection}
+      />
+
+      <StudentsWorkListBody
+        isWorkPageLoading={isWorkPageLoading}
+        isWorkPageError={isWorkPageError}
+        isWorkPageFetching={isWorkPageFetching}
+        onRetry={onRetry}
+        workStudents={workStudents}
+        workPageData={workPageData}
+        useServerWork={useServerWork}
+        viewMode={viewMode}
+        columnLayout={columnLayout}
+        onPageChange={onPageChange}
+        selectedIds={selectedIds}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        onSelectOne={onSelectOne}
+        onSelectAll={onSelectAll}
+        onClearSelection={onClearSelection}
+        showDeleted={showDeleted}
+        canWrite={canWrite}
+        canDelete={canDelete}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={onClearFilters}
+        onShowActive={() => {
+          if (showDeleted) onToggleDeleted();
+        }}
+        sortField={sortField}
+        sortDir={sortDir}
+        onServerSort={onServerSort}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onRestore={onRestore}
+        onBulkDelete={onBulkDelete}
+        onBulkRestore={onBulkRestore}
+        openComposer={overlays.openComposer}
+        closeComposer={overlays.closeComposer}
+        canWriteMessaging={overlays.canWriteMessaging}
+        messagingTarget={overlays.messagingTarget}
+        confirmBulkDeleteOpen={overlays.confirmBulkDeleteOpen}
+        onConfirmBulkDeleteOpenChange={overlays.setConfirmBulkDeleteOpen}
+        confirmBulkRestoreOpen={overlays.confirmBulkRestoreOpen}
+        onConfirmBulkRestoreOpenChange={overlays.setConfirmBulkRestoreOpen}
+        pendingDeleteId={overlays.pendingDeleteId}
+        onPendingDeleteIdChange={overlays.setPendingDeleteId}
+      />
     </motion.div>
   );
 }

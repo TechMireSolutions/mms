@@ -24,9 +24,13 @@ export function TeacherListContent(props: TeacherListContentProps): React.JSX.El
     );
   }
 
+  if (viewMode === "cards") {
+    return <TeacherListCards {...props} />;
+  }
+
   return (
     <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-      {viewMode === "cards" ? <TeacherListCards {...props} /> : <TeacherListTable {...props} />}
+      <TeacherListTable {...props} />
     </div>
   );
 }

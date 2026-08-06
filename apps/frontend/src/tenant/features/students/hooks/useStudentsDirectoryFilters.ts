@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   toggleIdInSelection,
   togglePageIdsInSelection,
@@ -12,13 +13,14 @@ export function useStudentsDirectoryFilters() {
   const [sortField, setSortField] = useState<StudentListSortField | null>("grNumber");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [studentSearch, setStudentSearch] = useState("");
+  const debouncedSearch = useDebounce(studentSearch, 250);
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
   const [studentFilterGender, setStudentFilterGender] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setListPage(1);
-  }, [studentSearch, studentFilterStatus, studentFilterGender, showDeleted, sortField, sortDir]);
+  }, [debouncedSearch, studentFilterStatus, studentFilterGender, showDeleted, sortField, sortDir]);
 
   useEffect(() => {
     setSelectedIds([]);
@@ -38,6 +40,11 @@ export function useStudentsDirectoryFilters() {
     Boolean(studentSearch.trim()) ||
     studentFilterStatus.length > 0 ||
     Boolean(studentFilterGender);
+
+  const activeFilterCount =
+    studentFilterStatus.length +
+    (studentFilterGender ? 1 : 0) +
+    (studentSearch.trim() ? 1 : 0);
 
   const handleServerSort = useCallback(
     (field: StudentListSortField) => {
@@ -82,6 +89,7 @@ export function useStudentsDirectoryFilters() {
     handleServerSort,
     studentSearch,
     setStudentSearch,
+    debouncedSearch,
     studentFilterStatus,
     setStudentFilterStatus,
     studentFilterGender,
@@ -92,6 +100,7 @@ export function useStudentsDirectoryFilters() {
     handleSelectAll,
     clearFilters,
     hasActiveFilters,
+    activeFilterCount,
     toggleStudentStatus,
   };
 }

@@ -1,21 +1,24 @@
-import type { JSX } from 'react';
-import { motion } from 'framer-motion';
-import type { SystemUser } from '@mms/shared';
-import { Checkbox } from '@/components/ui/checkbox';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
-import { useTranslation } from '@/hooks/useTranslation';
-import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
-import { UsersListAvatar } from '@/tenant/features/users/components/UsersListAvatar';
-import { UsersListRowActions } from '@/tenant/features/users/components/UsersListRowActions';
+import type { SystemUser } from "@mms/shared";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useTranslation } from "@/hooks/useTranslation";
+import { UserCardActions } from "@/tenant/features/users/components/UserCardActions";
+import { UserCardHeader } from "@/tenant/features/users/components/UserCardHeader";
+import { UserCardMetadata } from "@/tenant/features/users/components/UserCardMetadata";
 
 interface UsersListMobileCardsProps {
   users: SystemUser[];
   selectedIds: string[];
+  allSelected: boolean;
+  someSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
   formatLoginDate: (timestamp: string) => string;
   onToggleSelect: (id: string) => void;
+  onToggleAll: () => void;
   onView: (user: SystemUser) => void;
   onEdit: (user: SystemUser) => void;
   onDelete: (id: string) => void;
@@ -26,84 +29,73 @@ interface UsersListMobileCardsProps {
 export function UsersListMobileCards({
   users,
   selectedIds,
+  allSelected,
+  someSelected,
   canWrite,
   canDelete,
   showDeleted,
   formatLoginDate,
   onToggleSelect,
+  onToggleAll,
   onView,
   onEdit,
   onDelete,
   onRestore,
   onResetPassword,
-}: UsersListMobileCardsProps): JSX.Element {
+}: UsersListMobileCardsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+  const pageCountLabel = `${users.length} ${t("nav.users").toLowerCase()}`;
 
   return (
-    <div className="space-y-3 p-3">
-      {users.map((user) => (
-        <motion.article
-          key={user.id}
-          layout
-          className="space-y-3 rounded-xl border border-border bg-card p-3"
-        >
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <UsersListAvatar user={user} />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">{user.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            {canDelete ? (
-              <Checkbox
-                checked={selectedIds.includes(user.id)}
-                onCheckedChange={() => onToggleSelect(user.id)}
-                aria-label={t('users.selectRow', { name: user.name })}
+    <>
+      {canDelete && users.length > 0 ? (
+        <DirectoryCardsSelectAllBar
+          checkboxId="users-select-all-cards"
+          allSelected={allSelected}
+          someSelected={someSelected}
+          onSelectAll={onToggleAll}
+          selectLabel={t("users.selectAll")}
+          deselectLabel={t("common.deselect")}
+          selectedCount={selectedIds.length}
+          selectedCountLabel={t("users.selectedCount", { count: selectedIds.length })}
+          pageCountLabel={pageCountLabel}
+        />
+      ) : null}
+
+      <DirectoryCardsGrid>
+        {users.map((user) => {
+          const isSelected = selectedIds.includes(user.id);
+          return (
+            <DirectoryEntityCard
+              key={user.id}
+              isSelected={isSelected}
+              reducedMotion={reducedMotion}
+            >
+              <UserCardHeader
+                user={user}
+                isSelected={isSelected}
+                showSelect={canDelete}
+                onToggleSelect={onToggleSelect}
+                onView={onView}
+                reducedMotion={reducedMotion}
               />
-            ) : null}
-          </div>
-          <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('users.colRole')}</dt>
-              <dd><UserRoleBadge roleId={user.role} /></dd>
-            </div>
-            <div>
-              <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('users.colStatus')}</dt>
-              <dd><UserStatusBadge status={user.status} /></dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t('users.colLastLogin')}</dt>
-              <dd className="text-xs text-muted-foreground">{formatLoginDate(user.lastLogin)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t('users.colCreated')}</dt>
-              <dd className="font-mono text-xs text-muted-foreground">{user.createdDate}</dd>
-            </div>
-            <div>
-              <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('users.col2fa')}</dt>
-              <dd>
-                <SettingsMetaBadge variant={user.twoFactorEnabled ? 'success' : 'muted'}>
-                  {user.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
-                </SettingsMetaBadge>
-              </dd>
-            </div>
-          </dl>
-          <div className="flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
-            <UsersListRowActions
-              user={user}
-              canWrite={canWrite}
-              canDelete={canDelete}
-              showDeleted={showDeleted}
-              onView={onView}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onRestore={onRestore}
-              onResetPassword={onResetPassword}
-            />
-          </div>
-        </motion.article>
-      ))}
-    </div>
+              <UserCardMetadata user={user} formatLoginDate={formatLoginDate} />
+              <UserCardActions
+                user={user}
+                canWrite={canWrite}
+                canDelete={canDelete}
+                showDeleted={showDeleted}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onRestore={onRestore}
+                onResetPassword={onResetPassword}
+              />
+            </DirectoryEntityCard>
+          );
+        })}
+      </DirectoryCardsGrid>
+    </>
   );
 }

@@ -15,7 +15,7 @@ import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
 
-interface StudentListSelectionBarProps {
+export interface StudentsBulkActionBarProps {
   selectedCount: number;
   showDeleted: boolean;
   canWrite: boolean;
@@ -36,7 +36,8 @@ interface StudentListSelectionBarProps {
   onClearSelection: () => void;
 }
 
-export function StudentListSelectionBar({
+/** Students Work bulk bar — Contacts-shaped composition over shared BulkSelectionActions. */
+export function StudentsBulkActionBar({
   selectedCount,
   showDeleted,
   canWrite,
@@ -55,7 +56,7 @@ export function StudentListSelectionBar({
   onRequestBulkDelete,
   onRequestBulkRestore,
   onClearSelection,
-}: StudentListSelectionBarProps): ReactElement {
+}: StudentsBulkActionBarProps): ReactElement {
   const { t } = useTranslation();
 
   const showWhatsApp = bulkActions.includes("whatsapp") && canWriteMessaging;

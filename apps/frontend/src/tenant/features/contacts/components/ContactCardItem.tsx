@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   type Contact,
   type ContactPreferences,
@@ -9,8 +8,7 @@ import {
   resolveContactPhoneDisplay,
   getContactAccentBarClass,
 } from "@/lib/contacts/contactI18n";
-import { FORM_CARD } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { ContactCardActions } from "@/tenant/features/contacts/components/ContactCardActions";
 import { ContactCardHeader } from "@/tenant/features/contacts/components/ContactCardHeader";
 import {
@@ -23,16 +21,6 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
-
-export const contactCardItemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
-};
-
-const contactCardItemVariantsReduced = {
-  hidden: { opacity: 1, y: 0 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0 } },
-};
 
 export interface ContactCardItemProps {
   contact: Contact;
@@ -91,28 +79,11 @@ export function ContactCardItem({
   const email = getPrimaryEmail(contact);
 
   return (
-    <motion.div
-      layout={!reducedMotion}
-      variants={reducedMotion ? contactCardItemVariantsReduced : contactCardItemVariants}
-      whileHover={
-        reducedMotion
-          ? undefined
-          : { y: -4, scale: 1.01, transition: { duration: 0.2 } }
-      }
-      className={cn(
-        FORM_CARD,
-        "p-4 ps-5.5 space-y-4 shadow-xs",
-        reducedMotion ? "hover:shadow-none" : "hover:shadow-md",
-        isSelected
-          ? "border-primary/50 bg-primary/5 shadow-xs shadow-primary/5"
-          : "border-border/50 hover:border-primary/35",
-      )}
+    <DirectoryEntityCard
+      isSelected={isSelected}
+      reducedMotion={reducedMotion}
+      accentClassName={getContactAccentBarClass(isSelected, contact.gender)}
     >
-      <div
-        aria-hidden="true"
-        className={`absolute start-0 top-0 bottom-0 w-1.5 ${getContactAccentBarClass(isSelected, contact.gender)} ${reducedMotion ? "" : "transition-colors duration-300"}`}
-      />
-
       <ContactCardHeader
         contact={contact}
         isSelected={isSelected}
@@ -158,6 +129,6 @@ export function ContactCardItem({
         onSms={onSms}
         onEmail={onEmail}
       />
-    </motion.div>
+    </DirectoryEntityCard>
   );
 }

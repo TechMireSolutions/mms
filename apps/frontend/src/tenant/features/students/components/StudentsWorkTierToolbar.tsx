@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { StudentsFilterMenuButton } from "@/tenant/features/students/components/StudentsFilterMenuButton";
-import { STUDENTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/students/hooks/useStudentsPageController";
+import { STUDENTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/students/hooks/useStudentsKeyboardShortcuts";
 
 interface StudentsWorkTierToolbarProps {
   studentSearch: string;
@@ -25,6 +25,7 @@ interface StudentsWorkTierToolbarProps {
   showDeleted: boolean;
   canDelete: boolean;
   hasActiveFilters: boolean;
+  activeFilterCount: number;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
@@ -44,6 +45,7 @@ export function StudentsWorkTierToolbar({
   showDeleted,
   canDelete,
   hasActiveFilters,
+  activeFilterCount,
   columnLayout,
   viewMode,
   onViewModeChange,
@@ -70,6 +72,7 @@ export function StudentsWorkTierToolbar({
         studentFilterGender={studentFilterGender}
         studentStatusOptions={studentStatusOptions}
         genderFilters={genderFilters}
+        activeFilterCount={activeFilterCount}
         onToggleStatus={onToggleStatus}
         onGenderChange={onGenderChange}
         onClearFilters={onClearFilters}

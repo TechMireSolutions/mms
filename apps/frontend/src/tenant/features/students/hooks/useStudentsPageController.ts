@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleWorkKeyboardShortcuts } from "@/hooks/useModuleWorkKeyboardShortcuts";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -11,12 +10,11 @@ import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStud
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useGrMigration } from "@/tenant/features/students/hooks/useGrMigration";
 import { useStudentsDirectoryFilters } from "@/tenant/features/students/hooks/useStudentsDirectoryFilters";
+import { useStudentsKeyboardShortcuts } from "@/tenant/features/students/hooks/useStudentsKeyboardShortcuts";
+import { useStudentsPageDirectoryProps } from "@/tenant/features/students/hooks/useStudentsPageDirectoryProps";
 import { useStudentsSelectionTargets } from "@/tenant/features/students/hooks/useStudentsSelectionTargets";
 import { useStudentsWorkActions } from "@/tenant/features/students/hooks/useStudentsWorkActions";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
-
-/** Stable id for Students Work search — used by `/` / Cmd+K focus shortcut. */
-export const STUDENTS_WORK_SEARCH_INPUT_ID = "students-work-search";
 
 const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
   name: "name",
@@ -59,8 +57,7 @@ export function useStudentsPageController() {
     setListPage(1);
   }, [viewMode, setListPage]);
 
-  useModuleWorkKeyboardShortcuts({
-    searchInputId: STUDENTS_WORK_SEARCH_INPUT_ID,
+  useStudentsKeyboardShortcuts({
     selectedCount: directory.selectedIds.length,
     hasActiveFilters: directory.hasActiveFilters,
     clearFilters: directory.clearFilters,
@@ -79,7 +76,7 @@ export function useStudentsPageController() {
   const workPageQuery = useStudentsPaginated({
     page: directory.listPage,
     limit: workLimit,
-    search: directory.studentSearch,
+    search: directory.debouncedSearch,
     status:
       directory.studentFilterStatus.length > 0
         ? directory.studentFilterStatus.join(",")
@@ -96,6 +93,11 @@ export function useStudentsPageController() {
     [workPageQuery.data],
   );
   const shownCount = workPageQuery.data?.total ?? 0;
+
+  const { allSelected, someSelected } = useStudentsPageDirectoryProps({
+    workStudents,
+    selectedIds: directory.selectedIds,
+  });
 
   const selectedTargets = useStudentsSelectionTargets({
     selectedIds: directory.selectedIds,
@@ -151,6 +153,8 @@ export function useStudentsPageController() {
     shownCount,
     selectedIds: directory.selectedIds,
     selectedTargets,
+    allSelected,
+    someSelected,
     handleSelectOne: directory.handleSelectOne,
     handleSelectAll: directory.handleSelectAll,
     clearSelection: directory.clearSelection,
@@ -167,6 +171,7 @@ export function useStudentsPageController() {
     handleServerSort: directory.handleServerSort,
     clearFilters: directory.clearFilters,
     hasActiveFilters: directory.hasActiveFilters,
+    activeFilterCount: directory.activeFilterCount,
     bulkActions: STUDENTS_MODULE_MANIFEST.work.bulkActions,
   };
 }

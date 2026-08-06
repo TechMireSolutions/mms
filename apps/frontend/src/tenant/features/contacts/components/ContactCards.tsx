@@ -1,13 +1,10 @@
 import { useMemo, type JSX } from "react";
-import { motion } from "framer-motion";
 import { type Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Checkbox } from "@/components/ui/checkbox";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
 
@@ -41,16 +38,6 @@ interface ContactCardsProps {
   someSelected?: boolean;
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-};
-
 /** Mobile-first card directory with dynamic, config-driven preferences. */
 export default function ContactCards({
   contacts,
@@ -73,7 +60,6 @@ export default function ContactCards({
   someSelected = false,
 }: ContactCardsProps): JSX.Element {
   const { t } = useTranslation();
-  const reducedMotion = useReducedMotion();
   const { prefs, countryCodesMap, countryCodes } = useContactConfig();
 
   const isColumnVisible = (id: string): boolean =>
@@ -93,42 +79,21 @@ export default function ContactCards({
 
   return (
     <>
-      {onSelectAll && contacts.length > 0 && (
-        <div className={cn(WORK_SURFACE, "mb-3.5 flex items-center justify-between border-border/40 px-4 py-3")}>
-          <div className="flex items-center gap-2.5">
-            <div className="flex min-h-11 min-w-11 items-center justify-center">
-              <Checkbox
-                checked={someSelected ? "indeterminate" : allSelected}
-                onCheckedChange={onSelectAll}
-                id="select-all-cards"
-              />
-            </div>
-            <label htmlFor="select-all-cards" className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors">
-              {allSelected ? t("common.deselect") : t("contacts.table.selectAll")}
-            </label>
-          </div>
-          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/10">
-            {selected.length > 0 ? (
-              <>
-                {t("contacts.selectedCount", { count: selected.length })}
-                <span className="mx-1.5 text-border" aria-hidden="true">
-                  ·
-                </span>
-                {pageCountLabel}
-              </>
-            ) : (
-              pageCountLabel
-            )}
-          </span>
-        </div>
-      )}
+      {onSelectAll && contacts.length > 0 ? (
+        <DirectoryCardsSelectAllBar
+          checkboxId="contacts-select-all-cards"
+          allSelected={allSelected}
+          someSelected={someSelected}
+          onSelectAll={onSelectAll}
+          selectLabel={t("contacts.table.selectAll")}
+          deselectLabel={t("common.deselect")}
+          selectedCount={selected.length}
+          selectedCountLabel={t("contacts.selectedCount", { count: selected.length })}
+          pageCountLabel={pageCountLabel}
+        />
+      ) : null}
 
-      <motion.div
-        variants={reducedMotion ? undefined : containerVariants}
-        initial={reducedMotion ? false : "hidden"}
-        animate={reducedMotion ? undefined : "visible"}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-      >
+      <DirectoryCardsGrid>
         {contacts.map((contact) => (
           <ContactCardItem
             key={contact.id}
@@ -154,7 +119,7 @@ export default function ContactCards({
             onEmail={onEmail}
           />
         ))}
-      </motion.div>
+      </DirectoryCardsGrid>
     </>
   );
 }

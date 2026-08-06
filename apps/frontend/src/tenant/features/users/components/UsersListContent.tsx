@@ -1,13 +1,13 @@
-import type { JSX } from 'react';
-import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import { UserPlus } from 'lucide-react';
-import type { SystemUser } from '@mms/shared';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { useTranslation } from '@/hooks/useTranslation';
-import { UsersListDesktopTable } from '@/tenant/features/users/components/UsersListDesktopTable';
-import { UsersListMobileCards } from '@/tenant/features/users/components/UsersListMobileCards';
+import type { JSX } from "react";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import { UserPlus } from "lucide-react";
+import type { SystemUser } from "@mms/shared";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { useTranslation } from "@/hooks/useTranslation";
+import { UsersListDesktopTable } from "@/tenant/features/users/components/UsersListDesktopTable";
+import { UsersListMobileCards } from "@/tenant/features/users/components/UsersListMobileCards";
 
 interface UsersListContentProps {
   viewMode: WorkDirectoryViewMode;
@@ -64,17 +64,17 @@ export function UsersListContent({
     return (
       <EmptyState
         icon={UserPlus}
-        title={t('users.emptyTitle')}
+        title={t("users.emptyTitle")}
         description={
-          showDeleted || search || roleFilter !== 'all' || statusFilter !== 'all'
-            ? t('users.emptyFiltered')
-            : t('users.emptyHint')
+          showDeleted || search || roleFilter !== "all" || statusFilter !== "all"
+            ? t("users.emptyFiltered")
+            : t("users.emptyHint")
         }
         action={
-          canWrite && !showDeleted && !search && roleFilter === 'all' && statusFilter === 'all' ? (
+          canWrite && !showDeleted && !search && roleFilter === "all" && statusFilter === "all" ? (
             <Button type="button" onClick={onAddUser}>
               <UserPlus className="h-3.5 w-3.5" />
-              {t('users.addFirst')}
+              {t("users.addFirst")}
             </Button>
           ) : null
         }
@@ -85,11 +85,14 @@ export function UsersListContent({
   const listProps = {
     users,
     selectedIds,
+    allSelected,
+    someSelected,
     canWrite,
     canDelete,
     showDeleted,
     formatLoginDate,
     onToggleSelect,
+    onToggleAll,
     onView,
     onEdit,
     onDelete,
@@ -97,20 +100,17 @@ export function UsersListContent({
     onResetPassword,
   };
 
+  if (viewMode === "cards") {
+    return <UsersListMobileCards {...listProps} />;
+  }
+
   return (
     <Card accentColor="primary" className="overflow-hidden p-0">
-      {viewMode === 'cards' ? (
-        <UsersListMobileCards {...listProps} />
-      ) : (
-        <UsersListDesktopTable
-          {...listProps}
-          allSelected={allSelected}
-          someSelected={someSelected}
-          onToggleAll={onToggleAll}
-          getColumnWidth={getColumnWidth}
-          onColumnResize={onColumnResize}
-        />
-      )}
+      <UsersListDesktopTable
+        {...listProps}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={onColumnResize}
+      />
     </Card>
   );
 }

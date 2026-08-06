@@ -18,6 +18,8 @@ interface StudentListActionsMenuProps {
   canWrite: boolean;
   canDelete: boolean;
   includeMessaging?: boolean;
+  /** When true, omit View (card/table already exposes a View control). */
+  hideViewItem?: boolean;
   triggerClassName: string;
   contentClassName: string;
   iconClassName: string;
@@ -38,6 +40,7 @@ export function StudentListActionsMenu({
   canWrite,
   canDelete,
   includeMessaging = false,
+  hideViewItem = false,
   triggerClassName,
   contentClassName,
   iconClassName,
@@ -59,9 +62,11 @@ export function StudentListActionsMenu({
       <DropdownMenuContent align="end" className={contentClassName}>
         {!showDeleted && (
           <>
-            <DropdownMenuItem onClick={() => onViewStudent(student)}>
-              <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
-            </DropdownMenuItem>
+            {!hideViewItem && (
+              <DropdownMenuItem onClick={() => onViewStudent(student)}>
+                <Eye className="w-3.5 h-3.5 me-2" /> {t("students.list.viewProfile")}
+              </DropdownMenuItem>
+            )}
             {canWrite && (
               <DropdownMenuItem onClick={() => onEdit(student)}>
                 <Edit2 className="w-3.5 h-3.5 me-2" /> {t("students.list.editStudent")}

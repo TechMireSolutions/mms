@@ -104,7 +104,7 @@ export const USERS_MODULE_MANIFEST = {
     reports: 'users.manage',
   } satisfies Record<string, Permission>,
   work: {
-    directoryViews: ['list'] as const,
+    directoryViews: ['table', 'cards'] as const,
     bulkActions: ['delete'] as const,
   },
   defaultPageSize: 50,

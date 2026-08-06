@@ -9,6 +9,8 @@ interface UsersListRowActionsProps {
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
+  /** When true, omit View (card already exposes a View control). */
+  hideViewItem?: boolean;
   onView: (user: SystemUser) => void;
   onEdit: (user: SystemUser) => void;
   onDelete: (id: string) => void;
@@ -21,6 +23,7 @@ export function UsersListRowActions({
   canWrite,
   canDelete,
   showDeleted,
+  hideViewItem = false,
   onView,
   onEdit,
   onDelete,
@@ -31,15 +34,17 @@ export function UsersListRowActions({
 
   return (
     <div className="flex items-center justify-end gap-1">
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        onClick={() => onView(user)}
-        aria-label={t('users.actionView', { name: user.name })}
-      >
-        <Eye className="h-3.5 w-3.5" />
-      </Button>
+      {!hideViewItem && (
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={() => onView(user)}
+          aria-label={t('users.actionView', { name: user.name })}
+        >
+          <Eye className="h-3.5 w-3.5" />
+        </Button>
+      )}
       {canWrite && !showDeleted && (
         <>
           <Button

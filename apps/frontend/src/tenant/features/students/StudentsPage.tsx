@@ -66,6 +66,9 @@ export default function Students() {
     handleServerSort,
     clearFilters,
     hasActiveFilters,
+    activeFilterCount,
+    allSelected,
+    someSelected,
     bulkActions,
   } = useStudentsPageController();
 
@@ -125,8 +128,11 @@ export default function Students() {
               onToggleDeleted={toggleShowDeleted}
               onClearFilters={clearFilters}
               hasActiveFilters={hasActiveFilters}
+              activeFilterCount={activeFilterCount}
               selectedIds={selectedIds}
               selectedTargets={selectedTargets}
+              allSelected={allSelected}
+              someSelected={someSelected}
               onSelectOne={handleSelectOne}
               onSelectAll={handleSelectAll}
               onClearSelection={clearSelection}
