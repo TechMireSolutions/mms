@@ -1,4 +1,5 @@
 import React, { useId } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,10 +48,10 @@ export function DetailDrawerShell({
     ? { duration: 0 }
     : { type: "spring" as const, damping: 28, stiffness: 260 };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end">
+        <div className="fixed inset-0 z-modal flex items-center justify-end">
           {/* Backdrop */}
           <motion.div
             initial={reducedMotion ? false : { opacity: 0 }}
@@ -129,6 +130,7 @@ export function DetailDrawerShell({
           </motion.aside>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

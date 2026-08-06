@@ -45,6 +45,8 @@ export function DatePicker({
     fallbackId,
     dateFormat,
     dateValue,
+    displayMonth,
+    setDisplayMonth,
     disabledDays,
     startMonth,
     endMonth,
@@ -60,7 +62,7 @@ export function DatePicker({
 
   return (
     <div className={cn("relative flex min-h-11 w-full items-center rounded-lg border border-border bg-background px-3 text-sm text-foreground transition-all focus-within:border-primary/40 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/20", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover modal open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           type="button"
           disabled={disabled}
@@ -69,11 +71,35 @@ export function DatePicker({
         >
           <CalendarIcon className="h-4 w-4 opacity-70" />
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 border border-border/80 shadow-xl bg-background/90 backdrop-blur-xl rounded-xl" align="start">
+        <PopoverContent
+          className="w-auto p-0 border border-border/80 shadow-xl bg-background/90 backdrop-blur-xl rounded-xl"
+          align="start"
+          // Native month/year <select> focus jumps must not dismiss the calendar.
+          onFocusOutside={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => {
+            const target = event.target
+            if (!(target instanceof Element)) return
+            // Keep open when the OS picker reports a target still inside the popover.
+            if (target.closest("[data-radix-popper-content-wrapper]")) {
+              event.preventDefault()
+              return
+            }
+            // Keep open while a caption <select> inside the calendar holds focus.
+            const active = document.activeElement
+            if (
+              active instanceof HTMLSelectElement &&
+              active.closest("[data-radix-popper-content-wrapper]")
+            ) {
+              event.preventDefault()
+            }
+          }}
+        >
           <Calendar
             mode="single"
             selected={dateValue}
             onSelect={handleSelect}
+            month={displayMonth}
+            onMonthChange={setDisplayMonth}
             disabled={disabledDays}
             captionLayout="dropdown"
             startMonth={startMonth}

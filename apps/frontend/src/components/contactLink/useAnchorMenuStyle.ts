@@ -21,7 +21,7 @@ export function useAnchorMenuStyle(
         position: "fixed",
         left: rect.left,
         width: rect.width,
-        zIndex: 70,
+        zIndex: "var(--z-index-popover)",
         maxHeight,
         ...(placeAbove
           ? { bottom: window.innerHeight - rect.top + gap, top: "auto" }

@@ -53,6 +53,16 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
 
   const dateValue = React.useMemo(() => parseIsoDate(value), [value])
 
+  /** Month shown in the calendar — jump to the filled value when opening. */
+  const [displayMonth, setDisplayMonth] = React.useState<Date>(
+    () => dateValue ?? new Date(),
+  )
+
+  React.useEffect(() => {
+    if (!open) return
+    setDisplayMonth(dateValue ?? new Date())
+  }, [open, dateValue])
+
   const disabledDays = React.useMemo(() => {
     const rules: Matcher[] = []
     const minDate = parseIsoDate(min)
@@ -84,6 +94,7 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
     lastParsedRef.current = formatted
     onChange?.(formatted)
     setInputValue(formatValueToDisplay(formatted, dateFormat))
+    setDisplayMonth(date)
     setOpen(false)
   }
 
@@ -99,6 +110,7 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
         if (minDate && parsedDate < minDate) return
         const maxDate = parseIsoDate(max)
         if (maxDate && parsedDate > maxDate) return
+        setDisplayMonth(parsedDate)
       }
       lastParsedRef.current = parsed
       onChange?.(parsed)
@@ -129,6 +141,7 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
           setInputValue(formatValueToDisplay(value || "", dateFormat))
           return
         }
+        setDisplayMonth(parsedDate)
       }
       lastParsedRef.current = parsed
       onChange?.(parsed)
@@ -152,6 +165,8 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
     fallbackId,
     dateFormat,
     dateValue,
+    displayMonth,
+    setDisplayMonth,
     disabledDays,
     startMonth,
     endMonth,

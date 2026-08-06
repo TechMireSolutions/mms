@@ -37,6 +37,18 @@ type RelationshipPairLabels = Pick<
   "forward" | "inverse" | "inverseMale" | "inverseFemale"
 >;
 
+/** Normalize relationship labels for case-/punctuation-insensitive matching. */
+export function normalizeRelationshipTerm(relationship: unknown): string {
+  if (typeof relationship !== "string") return "";
+  return relationship
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, "-")
+    .replace(/\s*-\s*/g, "-")
+    .replace(/\s+in\s+law/g, "-in-law")
+    .replace(/\s+/g, " ");
+}
+
 /**
  * Returns configured user pairs. Missing/empty → `[]`.
  * Drops legacy built-in seed ids so only dynamic pairs remain.
@@ -76,7 +88,7 @@ export function isDuplicateRelationshipPair(
 }
 
 function relationshipPairKey(forward: string, inverse: string): string {
-  return `${forward.trim().toLowerCase()}::${inverse.trim().toLowerCase()}`;
+  return `${normalizeRelationshipTerm(forward)}::${normalizeRelationshipTerm(inverse)}`;
 }
 
 function relationshipPairLabelList(pair: RelationshipPairLabels): Array<string | undefined> {
@@ -86,8 +98,8 @@ function relationshipPairLabelList(pair: RelationshipPairLabels): Array<string |
 function relationshipPairLabelKeys(pair: RelationshipPairLabels): Set<string> {
   const keys = new Set<string>();
   for (const label of relationshipPairLabelList(pair)) {
-    const trimmed = typeof label === "string" ? label.trim().toLowerCase() : "";
-    if (trimmed) keys.add(trimmed);
+    const key = normalizeRelationshipTerm(label);
+    if (key) keys.add(key);
   }
   return keys;
 }
@@ -184,11 +196,11 @@ export function pruneRelationshipPairsForRemovedLabel(
   pairs: readonly RelationshipPair[],
   removedLabel: string,
 ): RelationshipPair[] {
-  const key = removedLabel.trim().toLowerCase();
+  const key = normalizeRelationshipTerm(removedLabel);
   if (!key) return [...pairs];
   return pairs.filter((pair) => {
     return !relationshipPairLabelList(pair).some(
-      (label) => typeof label === "string" && label.trim().toLowerCase() === key,
+      (label) => normalizeRelationshipTerm(label) === key,
     );
   });
 }
@@ -211,11 +223,11 @@ export function applyRelationshipOptionOrder(
   preferredOrder?: readonly string[] | null,
 ): string[] {
   if (!preferredOrder || preferredOrder.length === 0) return [...labels];
-  const byKey = new Map(labels.map((label) => [label.trim().toLowerCase(), label] as const));
+  const byKey = new Map(labels.map((label) => [normalizeRelationshipTerm(label), label] as const));
   const ordered: string[] = [];
   const seen = new Set<string>();
   for (const preferred of preferredOrder) {
-    const key = preferred.trim().toLowerCase();
+    const key = normalizeRelationshipTerm(preferred);
     if (!key || seen.has(key)) continue;
     const match = byKey.get(key);
     if (!match) continue;
@@ -223,7 +235,7 @@ export function applyRelationshipOptionOrder(
     seen.add(key);
   }
   for (const label of labels) {
-    const key = label.trim().toLowerCase();
+    const key = normalizeRelationshipTerm(label);
     if (seen.has(key)) continue;
     ordered.push(label);
     seen.add(key);
@@ -253,7 +265,9 @@ export function applyRelationshipOptionsUpdate(
 ): { pairs: RelationshipPair[]; labels: string[]; optionOrder: string[] } {
   const removed = previousOptions.filter(
     (option) =>
-      !nextOptions.some((next) => next.trim().toLowerCase() === option.trim().toLowerCase()),
+      !nextOptions.some(
+        (next) => normalizeRelationshipTerm(next) === normalizeRelationshipTerm(option),
+      ),
   );
   let nextPairs = [...pairs];
   for (const label of removed) {
@@ -285,8 +299,8 @@ function uniqueRelationshipLabels(labels: readonly (string | undefined | null)[]
   for (const label of labels) {
     const trimmed = typeof label === "string" ? label.trim() : "";
     if (!trimmed) continue;
-    const key = trimmed.toLowerCase();
-    if (seen.has(key)) continue;
+    const key = normalizeRelationshipTerm(trimmed);
+    if (!key || seen.has(key)) continue;
     seen.add(key);
     options.push(trimmed);
   }

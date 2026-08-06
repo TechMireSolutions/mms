@@ -68,8 +68,15 @@ function Calendar({
           return <ChevronRight className={cn("h-4 w-4", className)} {...props} />
         },
         Dropdown: ({ className, options, value, onChange, ...props }) => {
+          const stopDismiss = (event: React.SyntheticEvent) => {
+            event.stopPropagation()
+          }
           return (
-            <div className="relative inline-flex items-center">
+            <div
+              className="relative inline-flex items-center"
+              onPointerDown={stopDismiss}
+              onClick={stopDismiss}
+            >
               <select
                 className={cn(
                   "appearance-none min-h-11 bg-transparent ps-2.5 pe-6 py-2 text-sm font-semibold rounded-md border border-border hover:bg-muted/50 cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all",
@@ -78,6 +85,8 @@ function Calendar({
                 value={value}
                 onChange={onChange}
                 {...props}
+                onPointerDown={stopDismiss}
+                onClick={stopDismiss}
               >
                 {options?.map((opt) => (
                   <option key={opt.value} value={opt.value} disabled={opt.disabled} className="bg-background text-foreground">

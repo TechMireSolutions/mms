@@ -53,7 +53,7 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
 ### Design Token Strictness
 - **No Hardcoded Tailwind Values**: NEVER use hardcoded hex or one-off palette classes (e.g. `bg-gray-100`, `text-blue-500`, `rounded-[2rem]`).
 - **Use Semantic Design Tokens**: Define tokens **only** in `index.css` `@theme` (Tailwind v4) — ban feature-level `@theme` / raw hex. Prefer CSS `@layer` for base/components/utilities. Keep FormModal `@container` queries.
-- **Layout size tokens (Rule of Three)**: Prefer `@theme` utilities `h-chart-sm|md|lg`, `max-w-toast`, `max-w-filter-sm`, `z-modal` / `z-modal-priority` / `z-toast` — ban ad-hoc rem chart heights, toast max-widths, or modal/toast `z-index` when these apply. Promote a repeated layout size to `@theme` after **3** occurrences — `mms-dry.md`.
+- **Layout size tokens (Rule of Three)**: Prefer `@theme` utilities `h-chart-sm|md|lg`, `max-w-toast`, `max-w-filter-sm`, `z-modal` / `z-modal-priority` / `z-popover` / `z-toast` — ban ad-hoc rem chart heights, toast max-widths, or modal/toast `z-index` when these apply. Promote a repeated layout size to `@theme` after **3** occurrences — `mms-dry.md`.
 - **Touch-target exception**: Design-system primitives may use approved sizes from `formStyles` / primitives (e.g. `min-h-11`, `min-w-11`) — do not invent new arbitrary values in feature code.
 - **Semantic Colors**: For success/warning/destructive affordances, use semantic tokens (e.g., `text-destructive`, `bg-destructive/10`, theme `--success`).
 - **Glass tokens**: Reuse `formStyles` surfaces / existing `surface-glass` utility — do **not** invent new blur stacks in features. Do **not** require glassmorphism on every card.

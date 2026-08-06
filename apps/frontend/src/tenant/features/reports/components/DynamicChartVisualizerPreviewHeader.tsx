@@ -109,7 +109,7 @@ export function VisualizerPreviewHeader({
 
         <div className="flex items-center gap-1.5 relative">
           {showPdfSettings && (
-            <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-50 flex flex-col gap-3.5 min-w-[12.5rem] backdrop-blur-xl">
+            <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-popover flex flex-col gap-3.5 min-w-[12.5rem] backdrop-blur-xl">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
                 <div className="flex gap-1 p-1 bg-muted rounded-xl">

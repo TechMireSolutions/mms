@@ -74,6 +74,7 @@
   --max-width-filter-sm: 9.375rem;
   --z-index-modal: 50;
   --z-index-modal-priority: 60;
+  --z-index-popover: 70;
   --z-index-toast: 100;
 
   --animate-accordion-down: accordion-down 0.2s ease-out;

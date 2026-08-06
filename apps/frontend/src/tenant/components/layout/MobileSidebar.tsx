@@ -85,7 +85,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   return (
     <>
       <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
+        className="fixed inset-0 z-modal bg-black/40 backdrop-blur-sm lg:hidden"
         onClick={() => {
           if (Date.now() - openedAt > 150) {
             onClose();
@@ -98,7 +98,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
         role="dialog"
         aria-modal="true"
         aria-label={t("nav.openMenu")}
-        className="fixed start-0 top-0 z-50 flex h-full w-[min(17.5rem,85vw)] flex-col bg-sidebar shadow-2xl lg:hidden"
+        className="fixed start-0 top-0 z-modal flex h-full w-[min(17.5rem,85vw)] flex-col bg-sidebar shadow-2xl lg:hidden"
       >
         <div className="flex h-16 flex-shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-5">
           <div className="flex min-w-0 flex-1 items-center gap-3">

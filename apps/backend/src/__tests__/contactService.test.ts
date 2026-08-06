@@ -50,8 +50,9 @@ vi.mock('../services/contactLookupsService.js', () => ({
   loadContactLookupKind: vi.fn().mockResolvedValue([]),
 }));
 
+const mockLoadContactPreferences = vi.fn();
 vi.mock('../services/contactPreferencesService.js', () => ({
-  loadContactPreferences: vi.fn().mockResolvedValue(null),
+  loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
 }));
 
 vi.mock('../db/database.js', () => ({
@@ -95,10 +96,26 @@ function inferredLink(contactId: string, relationship: string, inferenceDepth?: 
   });
 }
 
+/** Pair fixtures for reciprocal depth-1 tests only (no depth-2/3 ontology). */
+const DEFAULT_TEST_RELATIONSHIP_PAIRS = [
+  { id: 'p1', forward: 'Father', inverse: 'Child', inverseMale: 'Son', inverseFemale: 'Daughter' },
+  { id: 'p2', forward: 'Mother', inverse: 'Child', inverseMale: 'Son', inverseFemale: 'Daughter' },
+  { id: 'p4', forward: 'Brother', inverse: 'Sibling', inverseMale: 'Brother', inverseFemale: 'Sister' },
+  { id: 'p5', forward: 'Sister', inverse: 'Sibling', inverseMale: 'Brother', inverseFemale: 'Sister' },
+  { id: 'p7', forward: 'Husband', inverse: 'Spouse', inverseMale: 'Husband', inverseFemale: 'Wife' },
+  { id: 'p9', forward: 'Spouse', inverse: 'Spouse', inverseMale: 'Husband', inverseFemale: 'Wife' },
+  { id: 'p10', forward: 'Guardian', inverse: 'Dependent' },
+  { id: 'p22', forward: 'Other', inverse: 'Other' },
+  { id: 'p23', forward: 'Mentor', inverse: 'Mentor' },
+];
+
 describe('contactService relationship reciprocal mapping', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetRequestTenant.mockReturnValue('demo');
+    mockLoadContactPreferences.mockImplementation(async () => ({
+      relationshipPairs: DEFAULT_TEST_RELATIONSHIP_PAIRS,
+    }));
     mockListContactsByWorkspace.mockResolvedValue([]);
     mockListContactsPage.mockResolvedValue({
       contacts: [],
@@ -380,7 +397,8 @@ describe('contactService relationship reciprocal mapping', () => {
     ]);
   });
 
-  it('infers grandparents, uncle or aunt, and cousins two nodes deep without extra manual entry', async () => {
+  it('skips reciprocal inference when relationshipPairs are empty', async () => {
+    mockLoadContactPreferences.mockResolvedValue({ relationshipPairs: [] });
     const source = contact({
       id: 'a',
       name: 'Aisha Khan',
@@ -388,378 +406,16 @@ describe('contactService relationship reciprocal mapping', () => {
       gender: 'Female',
       relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
     });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Bilal Khan',
-        firstName: 'Bilal',
-        gender: 'Male',
-        relationshipContacts: [
-          { contactId: 'c', relationship: 'Mother' },
-          { contactId: 'd', relationship: 'Brother' },
-        ],
-      }),
-      contact({ id: 'c', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
-      contact({
-        id: 'd',
-        name: 'Danish Khan',
-        firstName: 'Danish',
-        gender: 'Male',
-        relationshipContacts: [{ contactId: 'e', relationship: 'Daughter' }],
-      }),
-      contact({ id: 'e', name: 'Eman Khan', firstName: 'Eman', gender: 'Female' }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
-
-    await upsertContact(source);
-
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
-      expect.objectContaining({
-        id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
-      }),
-      expect.objectContaining({
-        id: 'a',
-        relationshipContacts: expect.arrayContaining([
-          link('b', 'Father'),
-          inferredLink('c', 'Grandmother', 2),
-          inferredLink('d', 'Uncle', 2),
-          inferredLink('e', 'Cousin', 3),
-        ]),
-      }),
-      expect.objectContaining({
-        id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
-      }),
-      expect.objectContaining({
-        id: 'd',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Niece', 2)]),
-      }),
-      expect.objectContaining({
-        id: 'e',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Cousin', 3)]),
-      }),
-    ]));
-  });
-
-  it('infers in-law relationships through a spouse primary relationship', async () => {
-    const source = contact({
-      id: 'a',
-      name: 'Ahmed Khan',
-      firstName: 'Ahmed',
-      gender: 'Male',
-      relationshipContacts: [{ contactId: 'b', relationship: 'Spouse' }],
-    });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Sara Khan',
-        firstName: 'Sara',
-        gender: 'Female',
-        relationshipContacts: [
-          { contactId: 'c', relationship: 'Father' },
-          { contactId: 'd', relationship: 'Sister' },
-        ],
-      }),
-      contact({ id: 'c', name: 'Bilal Khan', firstName: 'Bilal', gender: 'Male' }),
-      contact({ id: 'd', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
-
-    await upsertContact(source);
-
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
-      expect.objectContaining({
-        id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Husband', 1)]),
-      }),
-      expect.objectContaining({
-        id: 'a',
-        relationshipContacts: expect.arrayContaining([
-          link('b', 'Spouse'),
-          inferredLink('c', 'Father-In-Law', 2),
-          inferredLink('d', 'Sister-In-Law', 2),
-        ]),
-      }),
-      expect.objectContaining({
-        id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Son-In-Law', 2)]),
-      }),
-      expect.objectContaining({
-        id: 'd',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Brother-In-Law', 2)]),
-      }),
-    ]));
-  });
-
-  it('infers co-parent and sibling network joins without duplicate manual entry', async () => {
-    const source = contact({
-      id: 'a',
-      name: 'Aisha Khan',
-      firstName: 'Aisha',
-      gender: 'Female',
-      relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
-    });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Bilal Khan',
-        firstName: 'Bilal',
-        gender: 'Male',
-        relationshipContacts: [
-          { contactId: 'c', relationship: 'Spouse' },
-          { contactId: 'd', relationship: 'Sister' },
-        ],
-      }),
-      contact({ id: 'c', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
-      contact({
-        id: 'd',
-        name: 'Eman Khan',
-        firstName: 'Eman',
-        gender: 'Female',
-        relationshipContacts: [{ contactId: 'e', relationship: 'Son' }],
-      }),
-      contact({ id: 'e', name: 'Omar Khan', firstName: 'Omar', gender: 'Male' }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
-
-    await upsertContact(source);
-
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
-      expect.objectContaining({
-        id: 'a',
-        relationshipContacts: expect.arrayContaining([
-          link('b', 'Father'),
-          inferredLink('c', 'Mother', 2),
-          inferredLink('d', 'Aunt', 2),
-          inferredLink('e', 'Cousin', 3),
-        ]),
-      }),
-      expect.objectContaining({
-        id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 2)]),
-      }),
-      expect.objectContaining({
-        id: 'e',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Cousin', 3)]),
-      }),
-    ]));
-  });
-
-  it('infers additional children and siblings from child and sibling primary links', async () => {
-    const source = contact({
-      id: 'a',
-      name: 'Ahmed Khan',
-      firstName: 'Ahmed',
-      gender: 'Male',
-      relationshipContacts: [
-        { contactId: 'b', relationship: 'Son' },
-        { contactId: 'd', relationship: 'Brother' },
-      ],
-    });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Bilal Khan',
-        firstName: 'Bilal',
-        gender: 'Male',
-        relationshipContacts: [{ contactId: 'c', relationship: 'Sister' }],
-      }),
-      contact({ id: 'c', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
-      contact({
-        id: 'd',
-        name: 'Danish Khan',
-        firstName: 'Danish',
-        gender: 'Male',
-        relationshipContacts: [{ contactId: 'e', relationship: 'Sister' }],
-      }),
-      contact({ id: 'e', name: 'Eman Khan', firstName: 'Eman', gender: 'Female' }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
-
-    await upsertContact(source);
-
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
-      expect.objectContaining({
-        id: 'a',
-        relationshipContacts: expect.arrayContaining([
-          link('b', 'Son'),
-          link('d', 'Brother'),
-          inferredLink('c', 'Daughter', 2),
-          inferredLink('e', 'Sister', 2),
-        ]),
-      }),
-      expect.objectContaining({
-        id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Father', 2)]),
-      }),
-      expect.objectContaining({
-        id: 'e',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Brother', 2)]),
-      }),
-    ]));
-  });
-
-  it('uses neutral relationship labels when gender is unavailable', async () => {
-    const source = contact({
-      id: 'a',
-      name: 'Unknown Source',
-      firstName: 'Unknown',
-      gender: '',
-      relationshipContacts: [{ contactId: 'b', relationship: 'Parent' }],
-    });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Unknown Parent',
-        firstName: 'Unknown',
-        gender: '',
-        relationshipContacts: [
-          { contactId: 'c', relationship: 'Parent' },
-          { contactId: 'd', relationship: 'Sibling' },
-        ],
-      }),
-      contact({ id: 'c', name: 'Unknown Grandparent', firstName: 'Unknown', gender: '' }),
-      contact({ id: 'd', name: 'Unknown Aunt Uncle', firstName: 'Unknown', gender: '' }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
-
-    await upsertContact(source);
-
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
-      expect.objectContaining({
-        id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Child', 1)]),
-      }),
-      expect.objectContaining({
-        id: 'a',
-        relationshipContacts: expect.arrayContaining([
-          link('b', 'Parent'),
-          inferredLink('c', 'Grandparent', 2),
-          inferredLink('d', 'Aunt/Uncle', 2),
-        ]),
-      }),
-      expect.objectContaining({
-        id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Grandchild', 2)]),
-      }),
-      expect.objectContaining({
-        id: 'd',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Niece/Nephew', 2)]),
-      }),
-    ]));
-  });
-
-  it('does not overwrite an existing direct relationship with an inferred relationship', async () => {
-    const source = contact({
-      id: 'a',
-      name: 'Aisha Khan',
-      firstName: 'Aisha',
-      gender: 'Female',
-      relationshipContacts: [
-        { contactId: 'b', relationship: 'Father' },
-        { contactId: 'c', relationship: 'Guardian' },
-      ],
-    });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Bilal Khan',
-        firstName: 'Bilal',
-        gender: 'Male',
-        relationshipContacts: [{ contactId: 'c', relationship: 'Mother' }],
-      }),
-      contact({ id: 'c', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
-
-    await upsertContact(source);
-
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
-      expect.objectContaining({
-        id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
-      }),
-      expect.objectContaining({
-        id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Dependent', 1)]),
-      }),
+    mockFindContactsByIds.mockResolvedValue([
+      contact({ id: 'b', name: 'Bilal Khan', firstName: 'Bilal', gender: 'Male' }),
     ]);
-    expect(mockBulkSaveContacts).not.toHaveBeenCalledWith(
-      'demo',
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'a',
-          relationshipContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
-        }),
-      ]),
-    );
-  });
-
-  it('does not infer a relationship pair when the other contact already has an explicit direct link', async () => {
-    const source = contact({
-      id: 'a',
-      name: 'Aisha Khan',
-      firstName: 'Aisha',
-      gender: 'Female',
-      relationshipContacts: [{ contactId: 'b', relationship: 'Father' }],
-    });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Bilal Khan',
-        firstName: 'Bilal',
-        gender: 'Male',
-        relationshipContacts: [{ contactId: 'c', relationship: 'Mother' }],
-      }),
-      contact({
-        id: 'c',
-        name: 'Nadia Khan',
-        firstName: 'Nadia',
-        gender: 'Female',
-        relationshipContacts: [{ contactId: 'a', relationship: 'Guardian' }],
-      }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
 
     await upsertContact(source);
 
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
-      expect.objectContaining({
-        id: 'b',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
-      }),
-    ]);
-    expect(mockBulkSaveContacts).not.toHaveBeenCalledWith(
-      'demo',
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'a',
-          relationshipContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
-        }),
-        expect.objectContaining({
-          id: 'c',
-          relationshipContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
-        }),
-      ]),
-    );
+    expect(mockBulkSaveContacts).not.toHaveBeenCalled();
   });
 
-  it('uses saved relationship links as inference triggers too', async () => {
+  it('writes reciprocal links from legacy relationships[] as well as relationshipContacts', async () => {
     const source = contact({
       id: 'a',
       name: 'Aisha Khan',
@@ -767,36 +423,18 @@ describe('contactService relationship reciprocal mapping', () => {
       gender: 'Female',
       relationships: [{ contactId: 'b', relationship: 'Father' }],
     });
-    const family = [
-      contact({
-        id: 'b',
-        name: 'Bilal Khan',
-        firstName: 'Bilal',
-        gender: 'Male',
-        relationships: [{ contactId: 'c', relationship: 'Mother' }],
-      }),
-      contact({ id: 'c', name: 'Nadia Khan', firstName: 'Nadia', gender: 'Female' }),
-    ];
-    mockFindContactsByIds.mockImplementation((_tenant: string, ids: string[]) =>
-      Promise.resolve(family.filter((entry) => ids.includes(String(entry.id)))),
-    );
+    mockFindContactsByIds.mockResolvedValue([
+      contact({ id: 'b', name: 'Bilal Khan', firstName: 'Bilal', gender: 'Male' }),
+    ]);
 
     await upsertContact(source);
 
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', expect.arrayContaining([
+    expect(mockBulkSaveContacts).toHaveBeenCalledWith('demo', [
       expect.objectContaining({
         id: 'b',
         relationshipContacts: expect.arrayContaining([inferredLink('a', 'Daughter', 1)]),
       }),
-      expect.objectContaining({
-        id: 'a',
-        relationshipContacts: expect.arrayContaining([inferredLink('c', 'Grandmother', 2)]),
-      }),
-      expect.objectContaining({
-        id: 'c',
-        relationshipContacts: expect.arrayContaining([inferredLink('a', 'Granddaughter', 2)]),
-      }),
-    ]));
+    ]);
   });
 
   it('merges PUT updates onto the existing contact without wiping collections', async () => {

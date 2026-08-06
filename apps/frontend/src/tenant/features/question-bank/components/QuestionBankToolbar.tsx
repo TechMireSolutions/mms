@@ -91,7 +91,7 @@ export function QuestionBankToolbar({
               <ChevronDown className="h-3 w-3" aria-hidden />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-50 w-48 rounded-xl border border-border bg-card p-1 shadow-lg">
+          <DropdownMenuContent align="end" className="w-48 rounded-xl border border-border bg-card p-1 shadow-lg">
             <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold">
               {t('questionBank.filterByCategory')}
             </DropdownMenuLabel>
@@ -129,7 +129,7 @@ export function QuestionBankToolbar({
               <ChevronDown className="h-3 w-3" aria-hidden />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-50 w-36 rounded-xl border border-border bg-card p-1 shadow-lg">
+          <DropdownMenuContent align="end" className="w-36 rounded-xl border border-border bg-card p-1 shadow-lg">
             <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold">
               {t('questionBank.filterDifficulty')}
             </DropdownMenuLabel>
