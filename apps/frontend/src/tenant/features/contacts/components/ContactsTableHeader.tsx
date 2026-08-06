@@ -85,7 +85,9 @@ export function ContactsTableHeader({
             </ResizableTableHead>
           );
         })}
-        <TableHead className="px-4 py-3 w-16 h-auto" />
+        <TableHead className="px-4 py-3 w-16 h-auto">
+          <span className="sr-only">{t("contacts.table.actions")}</span>
+        </TableHead>
       </TableRow>
     </TableHeader>
   );

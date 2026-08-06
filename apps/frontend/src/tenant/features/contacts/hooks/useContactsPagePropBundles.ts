@@ -40,7 +40,6 @@ export function useContactsPagePropBundles({
     handleSms: state.handleSms,
     handleEmail: state.handleEmail,
     allContactsForLinks: state.allContactsForLinks,
-    handleUpdateContact: state.handleUpdateContact,
     canWrite,
     canDelete,
     tableColumns,

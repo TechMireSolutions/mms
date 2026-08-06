@@ -2,14 +2,16 @@ import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell } from "@/components/ui/table";
-import { getDisplayName, Contact, type ContactPreferences } from "@mms/shared";
+import { getDisplayName, type Contact, type ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
 import {
   columnWidthStyle,
+  contactStickyCellBg,
   type ContactsColumnConfig,
 } from "@/tenant/features/contacts/components/contactTableTypes";
+import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig };
 export { columnWidthStyle };
@@ -71,9 +73,17 @@ export const ContactTableRow = memo(function ContactTableRow({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.1 }}
-      className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
+      className={cn(
+        "hover:bg-muted/20 transition-colors group",
+        isSelected && "bg-primary/5",
+      )}
     >
-      <TableCell className="w-12 min-w-12 px-4 py-3 sticky start-0 z-20 bg-card group-hover:bg-muted/40 transition-colors border-e border-border/30">
+      <TableCell
+        className={cn(
+          "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 transition-colors border-e border-border/30",
+          contactStickyCellBg(isSelected),
+        )}
+      >
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelect(contact.id)}
@@ -93,6 +103,7 @@ export const ContactTableRow = memo(function ContactTableRow({
           contactsMap,
           allContacts,
           showArchived,
+          isSelected,
           t,
           onView,
           onWhatsApp,

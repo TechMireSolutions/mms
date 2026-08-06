@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { MoreHorizontal } from "lucide-react";
-import { Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from "@mms/shared";
+import { type Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   DropdownMenu,
@@ -24,6 +24,10 @@ export interface ContactActionMenuProps {
   canWrite?: boolean;
   canDelete?: boolean;
   triggerClassName?: string;
+  /** When true, omit View (face header/footer already opens the profile). */
+  hideViewItem?: boolean;
+  /** When true, omit messaging items (face icon strip already covers channels). */
+  hideMessagingItems?: boolean;
 }
 
 /**
@@ -43,6 +47,8 @@ export function ContactActionMenu({
   canWrite = false,
   canDelete = false,
   triggerClassName,
+  hideViewItem = false,
+  hideMessagingItems = false,
 }: ContactActionMenuProps): React.JSX.Element {
   const { t } = useTranslation();
   const primaryEmail = getPrimaryEmail(contact);
@@ -80,7 +86,9 @@ export function ContactActionMenu({
   const showWhatsApp = Boolean(onWhatsApp) && waAvailable;
   const showEmail = Boolean(onEmail) && Boolean(primaryEmail);
   const showSms = Boolean(onSms) && Boolean(primaryPhone);
-  const showMessaging = !showArchived && (showWhatsApp || showEmail || showSms);
+  const showMessaging =
+    !hideMessagingItems && !showArchived && (showWhatsApp || showEmail || showSms);
+  const showViewItem = Boolean(onView) && !hideViewItem;
 
   return (
     <DropdownMenu>
@@ -99,7 +107,7 @@ export function ContactActionMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <ContactActionMenuItems
-          onView={onView}
+          onView={showViewItem ? onView : undefined}
           canWrite={canWrite}
           showArchived={showArchived}
           canDelete={canDelete}

@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
-import { type Contact } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
-import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
+import {
+  ContactCardMessagingButtons,
+  hasContactCardFaceChannels,
+} from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,15 @@ export function ContactCardActions({
   const reducedMotion = useReducedMotion();
   const scaleHover = reducedMotion ? 1 : 1.02;
   const scaleTap = reducedMotion ? 1 : 0.98;
+  const hasFaceChannels = hasContactCardFaceChannels({
+    contact,
+    phone,
+    email,
+    showArchived,
+    onWhatsApp,
+    onSms,
+    onEmail,
+  });
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/40 pt-3 dark:border-border/20">
@@ -86,6 +98,8 @@ export function ContactCardActions({
           showArchived={showArchived}
           canWrite={canWrite}
           canDelete={canDelete}
+          hideViewItem={Boolean(onView)}
+          hideMessagingItems={hasFaceChannels}
           triggerClassName="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer shadow-none"
         />
       </div>

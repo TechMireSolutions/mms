@@ -13,6 +13,33 @@ import { cn } from "@/lib/utils";
 
 const MotionButton = motion.create(Button);
 
+/** True when the card face shows Call / WA / SMS / Email controls. */
+export function hasContactCardFaceChannels({
+  contact,
+  phone,
+  email,
+  showArchived = false,
+  onWhatsApp,
+  onSms,
+  onEmail,
+}: {
+  contact: Contact;
+  phone: string | null;
+  email: string | null;
+  showArchived?: boolean;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
+}): boolean {
+  if (showArchived) return false;
+  return (
+    Boolean(phone) ||
+    Boolean(onWhatsApp && hasWhatsApp(contact)) ||
+    Boolean(onSms && phone) ||
+    Boolean(onEmail && email)
+  );
+}
+
 export function ContactCardMessagingButtons({
   contact,
   displayName,

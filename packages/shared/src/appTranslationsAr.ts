@@ -3809,7 +3809,6 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.table.viewProfile": "عرض الملف",
   "contacts.table.edit": "تعديل",
   "contacts.table.deleteContact": "حذف جهة الاتصال",
-  "contacts.table.selectedCount": "محدد",
   "contacts.table.contact": "جهة اتصال",
   "contacts.table.contacts": "جهات اتصال",
   "contacts.table.dateAdded": "تاريخ الإضافة",

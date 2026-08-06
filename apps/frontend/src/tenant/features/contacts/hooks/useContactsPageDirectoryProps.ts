@@ -1,6 +1,7 @@
 import { useMemo, type ComponentProps } from "react";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
+import { getDirectoryPageSelection } from "@/tenant/features/contacts/hooks/contactsDirectorySelection";
 import type { Contact } from "@mms/shared";
 
 export function useContactsPageDirectoryProps({
@@ -18,7 +19,6 @@ export function useContactsPageDirectoryProps({
   handleSms,
   handleEmail,
   allContactsForLinks,
-  handleUpdateContact,
   canWrite,
   canDelete,
   tableColumns,
@@ -40,7 +40,6 @@ export function useContactsPageDirectoryProps({
   handleSms: (contacts: Contact[]) => void;
   handleEmail: (contacts: Contact[]) => void;
   allContactsForLinks: Contact[];
-  handleUpdateContact: (contact: Contact) => Promise<void>;
   canWrite: boolean;
   canDelete: boolean;
   tableColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
@@ -54,6 +53,15 @@ export function useContactsPageDirectoryProps({
     }
     return { onWhatsApp: handleWhatsApp, onSms: handleSms, onEmail: handleEmail };
   }, [canWriteMessaging, viewingDeleted, handleWhatsApp, handleSms, handleEmail]);
+
+  const pageSelection = useMemo(
+    () =>
+      getDirectoryPageSelection(
+        workContacts.map((contact) => contact.id),
+        selected,
+      ),
+    [workContacts, selected],
+  );
 
   const commonDirectoryProps = useMemo(
     (): ComponentProps<typeof ContactCards> => ({
@@ -71,7 +79,8 @@ export function useContactsPageDirectoryProps({
       canWrite,
       canDelete,
       columns: tableColumns,
-      allSelected: workContacts.length > 0 && selected.length === workContacts.length,
+      allSelected: pageSelection.allSelected,
+      someSelected: pageSelection.someSelected,
     }),
     [
       workContacts,
@@ -85,10 +94,10 @@ export function useContactsPageDirectoryProps({
       viewingDeleted,
       messagingHandlers,
       allContactsForLinks,
-      handleUpdateContact,
       canWrite,
       canDelete,
       tableColumns,
+      pageSelection,
     ],
   );
 
@@ -111,6 +120,8 @@ export function useContactsPageDirectoryProps({
       sortField,
       sortDir,
       onSort: handleSort,
+      allSelected: pageSelection.allSelected,
+      someSelected: pageSelection.someSelected,
     }),
     [
       workContacts,
@@ -130,6 +141,7 @@ export function useContactsPageDirectoryProps({
       sortField,
       sortDir,
       handleSort,
+      pageSelection,
     ],
   );
 

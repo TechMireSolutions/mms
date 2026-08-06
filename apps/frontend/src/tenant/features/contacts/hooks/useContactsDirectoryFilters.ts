@@ -72,10 +72,20 @@ export function useContactsDirectoryFilters({
     );
   }, []);
 
+  /** Toggle current-page ids into/out of selection (keeps selections from other pages). */
   const handleSelectAll = useCallback((workContactIds: Array<string | number>) => {
-    setSelected((selectedIds) =>
-      selectedIds.length === workContactIds.length ? [] : workContactIds,
-    );
+    setSelected((selectedIds) => {
+      if (workContactIds.length === 0) return selectedIds;
+      const selectedSet = new Set(selectedIds);
+      const allOnPage = workContactIds.every((id) => selectedSet.has(id));
+      if (allOnPage) {
+        const pageSet = new Set(workContactIds);
+        return selectedIds.filter((id) => !pageSet.has(id));
+      }
+      const next = new Set(selectedIds);
+      for (const id of workContactIds) next.add(id);
+      return [...next];
+    });
   }, []);
 
   const clearFilters = useCallback(() => {

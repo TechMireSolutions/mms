@@ -11,6 +11,15 @@ import { cn } from "@/lib/utils";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
 
+/** Columns shown in the card header/pills — excluded from the metadata grid. */
+const CONTACT_CARD_FACE_COLUMN_IDS = new Set([
+  "name",
+  "phone",
+  "email",
+  "gender",
+  "isSyed",
+]);
+
 interface ContactCardsProps {
   contacts: Contact[];
   selected: (string | number)[];
@@ -29,6 +38,7 @@ interface ContactCardsProps {
   columns?: ContactsColumnConfig[];
   onSelectAll?: () => void;
   allSelected?: boolean;
+  someSelected?: boolean;
 }
 
 const containerVariants = {
@@ -60,6 +70,7 @@ export default function ContactCards({
   columns = [],
   onSelectAll,
   allSelected = false,
+  someSelected = false,
 }: ContactCardsProps): JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -70,14 +81,17 @@ export default function ContactCards({
     [columns],
   );
 
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
 
   const otherColumns = useMemo(
-    () => columns.filter(
-      (col) => col.id !== "name" && col.id !== "phone" && col.id !== "email",
-    ),
+    () => columns.filter((col) => !CONTACT_CARD_FACE_COLUMN_IDS.has(col.id)),
     [columns],
   );
+
+  const pageCountLabel = `${contacts.length} ${
+    contacts.length === 1 ? t("contacts.form.contact") : t("contacts.table.contacts")
+  }`;
 
   return (
     <>
@@ -86,7 +100,7 @@ export default function ContactCards({
           <div className="flex items-center gap-2.5">
             <div className="flex min-h-11 min-w-11 items-center justify-center">
               <Checkbox
-                checked={allSelected ? true : (selected.length > 0 ? "indeterminate" : false)}
+                checked={someSelected ? "indeterminate" : allSelected}
                 onCheckedChange={onSelectAll}
                 id="select-all-cards"
               />
@@ -96,7 +110,17 @@ export default function ContactCards({
             </label>
           </div>
           <span className="text-xs font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/10">
-            {contacts.length} {contacts.length === 1 ? t("contacts.form.contact") : t("contacts.table.contacts")}
+            {selected.length > 0 ? (
+              <>
+                {t("contacts.selectedCount", { count: selected.length })}
+                <span className="mx-1.5 text-border" aria-hidden="true">
+                  ·
+                </span>
+                {pageCountLabel}
+              </>
+            ) : (
+              pageCountLabel
+            )}
           </span>
         </div>
       )}
@@ -111,7 +135,7 @@ export default function ContactCards({
           <ContactCardItem
             key={contact.id}
             contact={contact}
-            isSelected={selected.includes(contact.id)}
+            isSelected={selectedSet.has(contact.id)}
             prefs={prefs}
             countryCodesMap={countryCodesMap}
             countryCodes={countryCodes}

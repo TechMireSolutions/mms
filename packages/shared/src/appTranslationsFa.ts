@@ -1913,7 +1913,6 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.picker.createWithQuery": "ایجاد مخاطب «{query}»",
   "contacts.table.selectAll": "انتخاب همه",
   "contacts.table.selectContact": "انتخاب {name}",
-  "contacts.table.selectedCount": "انتخاب شده",
   "contacts.table.solarAgeLabel": "سن شمسی:",
   "contacts.table.viewProfile": "مشاهده پروفایل",
   "contacts.table.yesSyed": "سید",

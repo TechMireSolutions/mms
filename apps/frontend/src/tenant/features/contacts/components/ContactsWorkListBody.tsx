@@ -120,6 +120,7 @@ export function ContactsWorkListBody({
           {workContacts.length === 0 ? (
             <div className={`${WORK_SURFACE} border-border/40 p-6`}>
               <EmptyState
+                variant="dashed"
                 icon={UserX}
                 title={
                   hasActiveFilters

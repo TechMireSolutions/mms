@@ -101,8 +101,6 @@ export function ContactCardItem({
           ? undefined
           : { y: -4, scale: 1.01, transition: { duration: 0.2 } }
       }
-      role="region"
-      aria-label={displayName}
       className={cn(
         FORM_CARD,
         "p-4 ps-5.5 space-y-4 shadow-xs",

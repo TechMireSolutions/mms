@@ -1,4 +1,4 @@
-import { getDisplayName, type Contact, type ContactPreferences } from "@mms/shared";
+import { type Contact, type ContactPreferences } from "@mms/shared";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import type { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -24,6 +24,7 @@ export function renderContactTableCell({
   contactsMap,
   allContacts,
   showArchived,
+  isSelected,
   t,
   onView,
   onWhatsApp,
@@ -38,6 +39,7 @@ export function renderContactTableCell({
   contactsMap: Map<string, Contact> | null;
   allContacts: Contact[];
   showArchived: boolean;
+  isSelected: boolean;
   t: Translate;
   onView?: (contact: Contact) => void;
   onWhatsApp?: (contacts: Contact[]) => void;
@@ -52,6 +54,7 @@ export function renderContactTableCell({
         displayName,
         widthStyle,
         showArchived,
+        isSelected,
         t,
         onView,
       });
@@ -81,8 +84,4 @@ export function renderContactTableCell({
         />
       );
   }
-}
-
-export function getContactTableDisplayName(contact: Contact): string {
-  return getDisplayName(contact);
 }

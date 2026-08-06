@@ -19,17 +19,17 @@ export async function waitForToastOverlayToClear(page: Page, context: string): P
 export async function createTestContactJaneDoe(page: Page): Promise<void> {
   await page.click('button:has-text("Add Contact")');
   await page.waitForSelector('input[name="firstName"]');
-  
-  await page.fill('input[name="firstName"]', 'Jane');
-  await page.fill('input[name="lastName"]', 'Doe');
-
-  await page.click('#cf-new-gender');
-  await page.click('role=option[name="Female"]');
-
-  await page.fill('input[name="dob"]', '15/05/2015');
-  await page.locator('input[name="dob"]').blur();
-
   const janeDialog = page.getByRole('dialog', { name: 'Add New Contact' });
+  
+  await janeDialog.locator('input[name="firstName"]').fill('Jane');
+  await janeDialog.locator('input[name="lastName"]').fill('Doe');
+
+  await janeDialog.locator('#cf-new-gender').click();
+  await page.locator('[role="option"]').filter({ hasText: /^Female$/i }).click();
+
+  await janeDialog.locator('input[name="dob"]').fill('15/05/2015');
+  await janeDialog.locator('input[name="dob"]').blur();
+
   await janeDialog.getByRole('tab', { name: 'Phones' }).click();
   await janeDialog.locator('#phone-number-0').fill('3001234567');
   await janeDialog.locator('#phone-number-0').blur();
@@ -50,7 +50,7 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
   await johnDialog.locator('input[name="firstName"]').fill('John');
   await johnDialog.locator('input[name="lastName"]').fill('Doe');
   await johnDialog.locator('#cf-new-gender').click();
-  await page.getByRole('option', { name: 'Male', exact: true }).click();
+  await page.locator('[role="option"]').filter({ hasText: /^Male$/i }).click();
   await johnDialog.getByRole('tab', { name: 'Emails' }).click();
   await johnDialog.locator('#email-address-0').fill('john.doe.e2e@example.com');
   await johnDialog.locator('#email-address-0').blur();
@@ -96,7 +96,7 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
   if (await fatherOption.isVisible({ timeout: 5000 }).catch(() => false)) {
     await fatherOption.click();
   } else {
-    const addInput = page.getByPlaceholder(/Husband : Wife/i).first();
+    const addInput = page.getByPlaceholder(/Parent : Child/i).first();
     await expect(addInput).toBeVisible({ timeout: 10_000 });
     await addInput.fill('Father : Child');
     await addInput.press('Enter');

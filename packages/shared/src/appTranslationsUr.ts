@@ -3809,7 +3809,6 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.table.viewProfile": "پروفائل دیکھیں",
   "contacts.table.edit": "ترمیم",
   "contacts.table.deleteContact": "رابطہ حذف",
-  "contacts.table.selectedCount": "منتخب",
   "contacts.table.contact": "رابطہ",
   "contacts.table.contacts": "رابطے",
   "contacts.table.dateAdded": "شامل کی تاریخ",

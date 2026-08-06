@@ -3953,7 +3953,6 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.table.viewProfile": "View profile",
   "contacts.table.edit": "Edit",
   "contacts.table.deleteContact": "Delete contact",
-  "contacts.table.selectedCount": "selected",
   "contacts.table.contact": "contact",
   "contacts.table.contacts": "contacts",
   "contacts.table.dateAdded": "Date added",

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Contact } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
@@ -35,6 +35,8 @@ export interface ContactsTableProps {
   allContacts?: Contact[];
   canWrite?: boolean;
   canDelete?: boolean;
+  allSelected?: boolean;
+  someSelected?: boolean;
 }
 
 export default function ContactsTable({
@@ -57,15 +59,17 @@ export default function ContactsTable({
   allContacts = [],
   canWrite = false,
   canDelete = false,
+  allSelected = false,
+  someSelected = false,
 }: ContactsTableProps): React.JSX.Element {
   const { prefs, countryCodesMap, countryCodes, getColumnWidth, setColumnWidth } = useContactConfig();
   const { t } = useTranslation();
 
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
   const selectedSet = useMemo(() => new Set(selected), [selected]);
-
-  const allSelected = contacts.length > 0 && selected.length === contacts.length;
-  const someSelected = selected.length > 0 && selected.length < contacts.length;
+  const pageCountLabel = `${contacts.length} ${
+    contacts.length !== 1 ? t("contacts.table.contacts") : t("contacts.form.contact")
+  }`;
 
   return (
     <div className={cn(WORK_SURFACE, "overflow-x-auto shadow-xs")}>
@@ -116,9 +120,17 @@ export default function ContactsTable({
 
       <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between bg-muted/5">
         <p className="text-xs text-muted-foreground">
-          {selected.length > 0
-            ? `${selected.length} / ${contacts.length} ${t("contacts.table.selectedCount")}`
-            : `${contacts.length} ${contacts.length !== 1 ? t("contacts.table.contacts") : t("contacts.form.contact")}`}
+          {selected.length > 0 ? (
+            <>
+              <span>{t("contacts.selectedCount", { count: selected.length })}</span>
+              <span className="mx-1.5 text-border" aria-hidden="true">
+                ·
+              </span>
+              <span>{pageCountLabel}</span>
+            </>
+          ) : (
+            pageCountLabel
+          )}
         </p>
       </div>
     </div>
