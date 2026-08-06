@@ -1,27 +1,30 @@
-import { calcAge, formatDate, toTitleCase } from "@mms/shared";
+import { calcAge, formatDate, primaryResponsibleAdultDisplayName } from "@mms/shared";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 import { StudentListActionsMenu } from "@/tenant/features/students/components/StudentListActionsMenu";
+import {
+  formatStudentListCustomValue,
+  studentCustomFieldKeyFromColumn,
+} from "@/tenant/features/students/components/studentListCustomColumns";
 import type { StudentListTableProps } from "@/tenant/features/students/components/StudentListContentTypes";
 
 type StudentListDesktopTableRowProps = Pick<
   StudentListTableProps,
   | "sessions"
   | "selectedIds"
-  | "showDob"
-  | "showParents"
-  | "showSessions"
-  | "showStatus"
   | "showDeleted"
   | "canWrite"
   | "canDelete"
   | "canWriteMessaging"
   | "statusBadgeConfig"
+  | "isColumnVisible"
   | "isFieldEnabled"
+  | "columnRegistry"
   | "onSelectOne"
   | "onRowClick"
   | "onViewStudent"
@@ -39,16 +42,14 @@ export function StudentListDesktopTableRow({
   rowIndex,
   sessions,
   selectedIds,
-  showDob,
-  showParents,
-  showSessions,
-  showStatus,
   showDeleted,
   canWrite,
   canDelete,
   canWriteMessaging = false,
   statusBadgeConfig,
+  isColumnVisible,
   isFieldEnabled,
+  columnRegistry,
   onSelectOne,
   onRowClick,
   onViewStudent,
@@ -58,12 +59,19 @@ export function StudentListDesktopTableRow({
   onOpenComposer,
 }: StudentListDesktopTableRowProps) {
   const { t } = useTranslation();
+  const emptyDash = t("contacts.table.emptyDash");
   const studentIdStr = String(studentRow.id);
   const isSelected = selectedIds.includes(studentIdStr);
   const age = calcAge(studentRow.dob);
   const sessionNames = sessions
     .filter((session) => studentRow.enrolledSessions?.includes(session.id))
     .map((session) => session.name);
+  const genderLabel = isFieldEnabled("gender") && studentRow.gender
+    ? formatContactGenderLabel(studentRow.gender, t)
+    : "";
+  const customColumns = columnRegistry.filter(
+    (col) => col.key.startsWith("custom:") && isColumnVisible(col.key),
+  );
 
   return (
     <motion.tr
@@ -93,29 +101,29 @@ export function StudentListDesktopTableRow({
               <GrBadge grNumber={studentRow.grNumber} />
             </div>
             <p className="text-xs text-muted-foreground">
-              {isFieldEnabled("gender") && studentRow.gender ? `${toTitleCase(studentRow.gender)} · ` : ""}{studentRow.phone || t("students.list.noPhone")}
+              {genderLabel ? `${genderLabel} · ` : ""}{studentRow.phone || t("students.list.noPhone")}
             </p>
           </div>
         </div>
       </td>
-      {showDob && (
+      {isColumnVisible("dob") ? (
         <td className="px-4 py-3 hidden sm:table-cell">
           <p className="text-sm font-medium text-foreground">
-            {age ? t("students.list.ageYears", { age }) : "—"}
+            {age ? t("students.list.ageYears", { age }) : emptyDash}
           </p>
           <p className="text-xs text-muted-foreground">
             {formatDate(studentRow.dob, true)}
           </p>
         </td>
-      )}
-      {showParents && (
+      ) : null}
+      {isColumnVisible("parents") ? (
         <td className="px-4 py-3 hidden md:table-cell">
           <p className="text-sm text-foreground">
-            {studentRow.fatherName || studentRow.guardianName || "—"}
+            {primaryResponsibleAdultDisplayName(studentRow) || emptyDash}
           </p>
         </td>
-      )}
-      {showSessions && (
+      ) : null}
+      {isColumnVisible("sessions") ? (
         <td className="px-4 py-3 hidden lg:table-cell">
           <div className="flex flex-wrap gap-1">
             {sessionNames.length === 0 ? (
@@ -134,12 +142,25 @@ export function StudentListDesktopTableRow({
             )}
           </div>
         </td>
-      )}
-      {showStatus && (
+      ) : null}
+      {isColumnVisible("status") ? (
         <td className="px-4 py-3 hidden sm:table-cell">
           <StatusBadge status={studentRow.status || "active"} config={statusBadgeConfig} />
         </td>
-      )}
+      ) : null}
+      {customColumns.map((col) => {
+        const fieldKey = studentCustomFieldKeyFromColumn(col.key);
+        const raw = fieldKey
+          ? (studentRow as Record<string, unknown>)[fieldKey]
+          : undefined;
+        return (
+          <td key={col.key} className="px-4 py-3 hidden xl:table-cell">
+            <p className="text-sm text-foreground truncate">
+              {formatStudentListCustomValue(raw, t)}
+            </p>
+          </td>
+        );
+      })}
       <td className="px-4 py-3">
         <StudentListActionsMenu
           student={studentRow}

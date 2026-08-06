@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { connectTenantDatabaseSocket } from '@/lib/tenantWebSocket';
 import { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
 import { invalidateMessagingQueries } from '@/tenant/features/messaging/hooks/invalidateMessagingQueries';
+import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
 
 /**
  * Subscribes to tenant `/api/ws` and invalidates Query keys for live collection updates.
@@ -21,6 +22,10 @@ export function useTenantDatabaseUpdates(): void {
         if (message.type !== 'collection') return;
         if (message.key === 'contacts') {
           invalidateContactsQueries(queryClient);
+          return;
+        }
+        if (message.key === 'students') {
+          invalidateStudentsQueries(queryClient);
           return;
         }
         if (message.key === 'message_logs' || message.key === 'message_templates') {

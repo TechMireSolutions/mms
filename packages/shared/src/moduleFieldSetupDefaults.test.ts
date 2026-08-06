@@ -14,12 +14,16 @@ describe("moduleFieldSetupDefaults", () => {
       STUDENT_TAB_REGISTRY.map((tab) => tab.key).sort(),
     );
     expect(INITIAL_STUDENT_FIELD_SEED.basic?.map((field) => field.key)).toEqual([
+      "contactId",
       "gender",
       "dob",
       "contactRelationships",
     ]);
     expect(INITIAL_STUDENT_FIELD_SEED.registration?.map((field) => field.key)).toEqual([
+      "grNumber",
+      "status",
       "registeredDate",
+      "notes",
     ]);
   });
 

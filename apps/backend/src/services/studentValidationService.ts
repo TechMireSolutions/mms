@@ -1,20 +1,16 @@
 import { z } from 'zod';
 import {
   buildDynamicStudentSchema,
-  normalizeStudentsSettings,
   verifyBlueprintVersion,
   getPrimaryPhone,
   getPrimaryEmail,
   resolveStudentGuardianLinks,
-  type StudentsSettings,
   type Contact,
   type FieldDefinition,
 } from '@mms/shared';
-import { fetchObject } from './dbSyncService.js';
+import { loadStudentsSettingsCombined } from './studentConfigService.js';
 import { loadContactsByIds } from './contactService.js';
 import { validateOrThrow } from '../lib/zodRequest.js';
-
-const CONFIG_KEY = 'students_settings';
 
 // Cache compiled schema by tenant and config version: `${tenant}:${configVersion}`
 const schemaCache = new Map<string, z.ZodTypeAny>();
@@ -78,11 +74,7 @@ export async function validateStudentDynamic(
   student: unknown,
   language = 'en',
 ): Promise<void> {
-  const raw = await fetchObject(CONFIG_KEY);
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return; // No config, nothing to validate.
-  }
-  const settings = normalizeStudentsSettings(raw) as StudentsSettings;
+  const settings = await loadStudentsSettingsCombined();
 
   // Version Lock check (Rule 16.3 / CS-6)
   const submittedBlueprintId = getSubmittedBlueprintId(student);

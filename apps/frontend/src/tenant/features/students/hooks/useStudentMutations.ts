@@ -1,24 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { normalizeStoredStudent, type StudentRecord } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { STUDENT_COUNT_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentCount';
-import {
-  STUDENTS_API,
-  STUDENTS_METRICS_QUERY_KEY,
-  STUDENTS_QUERY_KEY,
-  STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
-} from '@/tenant/features/students/hooks/studentsQueryShared';
+import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
+import { STUDENTS_API } from '@/tenant/features/students/hooks/studentsQueryShared';
 
 /** Server mutations for Student records (create, update, delete, bulk delete, bulk status). */
 export function useStudentMutations() {
   const queryClient = useQueryClient();
-
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: STUDENT_COUNT_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: STUDENTS_METRICS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY });
-  };
+  const invalidate = () => invalidateStudentsQueries(queryClient);
 
   const createStudent = useMutation({
     mutationFn: async (student: StudentRecord) => {

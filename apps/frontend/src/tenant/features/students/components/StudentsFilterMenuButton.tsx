@@ -1,5 +1,4 @@
 import { RotateCcw, SlidersHorizontal } from "lucide-react";
-import { toTitleCase } from "@mms/shared";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -12,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ModuleFiltersMenuTrigger } from "@/components/ui/ModuleFiltersMenuButton";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -80,7 +80,7 @@ export function StudentsFilterMenuButton({
         <DropdownMenuRadioGroup value={studentFilterGender} onValueChange={onGenderChange}>
           {["", ...genderFilters].map((genderFilter) => (
             <DropdownMenuRadioItem key={genderFilter || "all"} value={genderFilter} className="text-sm">
-              {genderFilter ? toTitleCase(genderFilter) : t("students.allGenders")}
+              {genderFilter ? formatContactGenderLabel(genderFilter, t) : t("students.allGenders")}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

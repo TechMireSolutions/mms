@@ -199,6 +199,35 @@ export const contactUserColumnPrefs = pgTable('contact_user_column_prefs', {
   index('contact_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
+/** Students Setup field registry (was document-store `students_settings` fields slice). */
+export const studentFieldConfigs = pgTable('student_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Students Setup preferences — GR / auto-id (was document-store `students_settings` prefs slice). */
+export const studentModulePreferences = pgTable('student_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Per-user Students Work column layout (was document-store `student_user_column_preferences`). */
+export const studentUserColumnPrefs = pgTable('student_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('student_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
 export const students = pgTable('students', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),

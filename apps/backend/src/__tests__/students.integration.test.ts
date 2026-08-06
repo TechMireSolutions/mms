@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import { adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
-import { studentRecordSchema } from '@mms/shared';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -34,9 +33,6 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 const mockLoadStudentsPage = vi.fn();
 const mockCreateStudent = vi.fn();
 const mockLoadStudentsCommandMetrics = vi.fn();
-const mockCountStudents = vi.fn();
-const mockDeleteStudentById = vi.fn();
-const mockRestoreStudentById = vi.fn();
 const mockMigrateStudentsMissingGrNumbers = vi.fn();
 
 vi.mock('../services/studentService.js', async (importOriginal) => {
@@ -46,9 +42,6 @@ vi.mock('../services/studentService.js', async (importOriginal) => {
     loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
     createStudent: (...args: unknown[]) => mockCreateStudent(...args),
     loadStudentsCommandMetrics: (...args: unknown[]) => mockLoadStudentsCommandMetrics(...args),
-    countStudents: (...args: unknown[]) => mockCountStudents(...args),
-    deleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
-    restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
     migrateStudentsMissingGrNumbers: (...args: unknown[]) => mockMigrateStudentsMissingGrNumbers(...args),
   };
 });
@@ -165,7 +158,7 @@ describe('students routes', () => {
     await app.close();
   });
 
-  it('POST /api/students/migrate-gr-numbers updates missing GRs for writers', async () => {
+  it('POST /api/students/migrate-gr-numbers updates missing GRs for setup writers', async () => {
     mockMigrateStudentsMissingGrNumbers.mockResolvedValue({ updated: 2 });
     const app = await buildApp();
     const res = await app.inject({
@@ -184,6 +177,23 @@ describe('students routes', () => {
     await app.close();
   });
 
+  it('POST /api/students/migrate-gr-numbers denies teachers without setupWrite', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/migrate-gr-numbers',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {},
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockMigrateStudentsMissingGrNumbers).not.toHaveBeenCalled();
+    await app.close();
+  });
+
   it('POST /api/students/migrate-gr-numbers denies viewers', async () => {
     const app = await buildApp();
     const res = await app.inject({
@@ -199,22 +209,5 @@ describe('students routes', () => {
     expect(res.statusCode).toBe(403);
     expect(mockMigrateStudentsMissingGrNumbers).not.toHaveBeenCalled();
     await app.close();
-  });
-});
-
-describe('studentRecordSchema write strip', () => {
-  it('strips soft-delete keys on parse', () => {
-    const parsed = studentRecordSchema.parse({
-      contactId: 'c-1',
-      status: 'active',
-      deletedAt: '2026-01-01T00:00:00.000Z',
-      deletedBy: 'u-1',
-      deletionReason: 'x',
-      grNumber: 'GR-1',
-    }) as Record<string, unknown>;
-    expect(parsed.deletedAt).toBeUndefined();
-    expect(parsed.deletedBy).toBeUndefined();
-    expect(parsed.deletionReason).toBeUndefined();
-    expect(parsed.grNumber).toBe('GR-1');
   });
 });

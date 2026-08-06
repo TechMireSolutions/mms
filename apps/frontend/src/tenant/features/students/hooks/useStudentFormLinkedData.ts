@@ -4,12 +4,14 @@ import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { formatDate, todayISO, type Student } from "@mms/shared";
 import { useStudentLinkedContactIds, useStudentNextGrNumber } from "@/tenant/features/students/hooks/useStudents";
 import { buildStudentContactExcludeIds } from "@/tenant/features/students/hooks/studentFormValidation";
+import { isStudentCreate } from "@/tenant/features/students/hooks/studentFormHandlers";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface UseStudentFormLinkedDataOptions {
   student?: Partial<Student> | null;
   studentDraft: Partial<Student>;
   settings: {
+    autoGenerateId?: boolean;
     grNumberTemplate?: string;
     grNumberDigits?: number;
     grNumberRestartAnnually?: boolean;
@@ -27,6 +29,8 @@ export function useStudentFormLinkedData({
   updateDraft,
   t,
 }: UseStudentFormLinkedDataOptions) {
+  const autoGenerateId = settings.autoGenerateId !== false;
+
   const { data: linkedContact } = useContactById(
     studentDraft.contactId ? String(studentDraft.contactId) : undefined,
     !!studentDraft.contactId,
@@ -45,7 +49,7 @@ export function useStudentFormLinkedData({
     template: settings.grNumberTemplate,
     digits: settings.grNumberDigits,
     restartAnnually: settings.grNumberRestartAnnually,
-    enabled: !student?.id,
+    enabled: isStudentCreate(student) && autoGenerateId,
   });
 
   const handleGrNumberChange = useCallback((value: string) => {
@@ -58,7 +62,12 @@ export function useStudentFormLinkedData({
     [linkedStudentContactIds, linkedContact],
   );
 
-  const isGrAutoAssigned = !student?.id && !!studentDraft.grNumber && studentDraft.grNumber === nextGrNumber && !grManuallyEdited.current;
+  const isGrAutoAssigned =
+    autoGenerateId
+    && isStudentCreate(student)
+    && !!studentDraft.grNumber
+    && studentDraft.grNumber === nextGrNumber
+    && !grManuallyEdited.current;
 
   return {
     linkedContact,
@@ -66,6 +75,7 @@ export function useStudentFormLinkedData({
     linkedGenderLabel,
     linkedDob,
     nextGrNumber,
+    autoGenerateId,
     handleGrNumberChange,
     excludeIds,
     isGrAutoAssigned,

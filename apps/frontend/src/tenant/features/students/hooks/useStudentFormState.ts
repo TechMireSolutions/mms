@@ -4,10 +4,11 @@ import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { studentStatusBadgeConfig, studentStatusLabel } from "@/lib/students/studentStatusUi";
-import { getInitialStudentDraft } from "@/tenant/features/students/components/studentFormDraft";
+import { getInitialStudentDraft, studentDraftSnapshot } from "@/tenant/features/students/components/studentFormDraft";
 import type { StudentStatusSelectOption } from "@/tenant/features/students/components/StudentFormSectionShared";
 import { useStudentFormLinkedData } from "@/tenant/features/students/hooks/useStudentFormLinkedData";
 import { useStudentFormActionHandlers } from "@/tenant/features/students/hooks/useStudentFormActionHandlers";
+import { isStudentCreate } from "@/tenant/features/students/hooks/studentFormHandlers";
 import { resolveStudentFormModalTabs, normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import {
@@ -27,11 +28,12 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
-  const { settings, statuses: configStatuses, isFieldEnabled } = useStudentConfig();
+  const { settings, statuses: configStatuses, isFieldEnabled, isFieldRequired } = useStudentConfig();
 
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<import("@mms/shared").ValidationError[]>([]);
   const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => getInitialStudentDraft(student));
+  const [baselineSnapshot, setBaselineSnapshot] = useState(() => studentDraftSnapshot(getInitialStudentDraft(student)));
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<import("@mms/shared").StudentDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
   const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
@@ -53,7 +55,9 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   }, [configStatuses, studentDraft.status, t]);
 
   useEffect(() => {
-    setStudentDraft(getInitialStudentDraft(student));
+    const nextDraft = getInitialStudentDraft(student);
+    setStudentDraft(nextDraft);
+    setBaselineSnapshot(studentDraftSnapshot(nextDraft));
     setValidationErrors([]);
     setActiveTab("basic");
     grManuallyEdited.current = false;
@@ -63,22 +67,28 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     setStudentDraft((prev) => ({ ...prev, ...patch }));
   };
 
+  const isDirty = studentDraftSnapshot(studentDraft) !== baselineSnapshot;
+
   const enabledTabs = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
 
   const visibleTabs = useMemo(
     () =>
-      resolveStudentFormModalTabs(enabledTabs).map((tabItem) => ({
+      resolveStudentFormModalTabs(settings.formTabs, enabledTabs, fields).map((tabItem) => ({
         key: tabItem.key,
         icon: tabItem.icon,
         label: resolveRegistryLabel(tabItem, t),
       })),
-    [enabledTabs, t],
+    [settings.formTabs, enabledTabs, fields, t],
   );
 
   useEffect(() => {
     const normalized = normalizeStudentFormModalTab(activeTab);
-    if (normalized !== activeTab || !visibleTabs.some((tabItem) => tabItem.key === normalized)) {
-      setActiveTab(normalized === "registration" ? "registration" : "basic");
+    if (normalized !== activeTab) {
+      setActiveTab(normalized);
+      return;
+    }
+    if (!visibleTabs.some((tabItem) => tabItem.key === normalized)) {
+      setActiveTab(visibleTabs[0]?.key ?? "basic");
     }
   }, [activeTab, visibleTabs]);
 
@@ -93,6 +103,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     linkedGenderLabel,
     linkedDob,
     nextGrNumber,
+    autoGenerateId,
     handleGrNumberChange,
     excludeIds,
     isGrAutoAssigned,
@@ -105,15 +116,21 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     t,
   });
 
+  // Autofill next GR for create without marking the form dirty.
   useEffect(() => {
-    if (student?.id || !nextGrNumber) return;
-    if (!studentDraft.grNumber && !grManuallyEdited.current) {
-      updateDraft({ grNumber: nextGrNumber });
-    }
-  }, [nextGrNumber, student?.id, studentDraft.grNumber]);
+    if (!isStudentCreate(student) || !autoGenerateId || !nextGrNumber) return;
+    if (grManuallyEdited.current) return;
+    setStudentDraft((prev) => {
+      if (prev.grNumber) return prev;
+      const nextDraft = { ...prev, grNumber: nextGrNumber };
+      setBaselineSnapshot(studentDraftSnapshot(nextDraft));
+      return nextDraft;
+    });
+  }, [nextGrNumber, student, autoGenerateId]);
 
   const handleValidationTab = (tabId: string, _fieldId: string) => {
-    setActiveTab(normalizeStudentFormModalTab(tabId));
+    const normalized = normalizeStudentFormModalTab(tabId);
+    setActiveTab(visibleTabs.some((tab) => tab.key === normalized) ? normalized : (visibleTabs[0]?.key ?? "basic"));
   };
 
   const actions = useStudentFormActionHandlers({
@@ -121,6 +138,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     studentDraft,
     linkedContact,
     nextGrNumber,
+    autoGenerateId,
     settings,
     enabledTabs,
     language,
@@ -164,7 +182,10 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     typedDuplicateReason,
     excludeIds,
     isGrAutoAssigned,
+    grInputDisabled: autoGenerateId && isStudentCreate(student) && Boolean(nextGrNumber),
+    isDirty,
     isFieldEnabled,
+    isFieldRequired,
     handleGrNumberChange,
     updateDraft,
     ...actions,

@@ -1,15 +1,17 @@
 import { type ReactElement } from "react";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { primaryResponsibleAdultDisplayName, STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { StudentListContent } from "@/tenant/features/students/components/StudentListContent";
+import { StudentListConfirmDialogs } from "@/tenant/features/students/components/StudentListConfirmDialogs";
 import { StudentListMessageModal } from "@/tenant/features/students/components/StudentListMessageModal";
 import { StudentListProfileDrawer } from "@/tenant/features/students/components/StudentListProfileDrawer";
 import { StudentListSelectionBar } from "@/tenant/features/students/components/StudentListSelectionBar";
 import { useStudentListController } from "@/tenant/features/students/hooks/useStudentListController";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 import { exportExcel } from "@/components/ui/exportToolbarUtils";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 
@@ -30,6 +32,7 @@ export interface StudentListProps {
   onBulkStatusChange?: (ids: string[], status: string) => void | Promise<void>;
   viewMode: WorkDirectoryViewMode;
   isColumnVisible?: (key: string) => boolean;
+  columnRegistry?: import("@mms/shared").ModuleColumnRegistryEntry[];
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   serverPagination?: StudentListServerPagination;
@@ -53,6 +56,7 @@ export default function StudentList({
   onBulkStatusChange,
   viewMode,
   isColumnVisible,
+  columnRegistry = [],
   getColumnWidth,
   onColumnResize,
   serverPagination,
@@ -94,9 +98,9 @@ export default function StudentList({
         rows: list.selectedStudents.map((student) => ({
           name: student.name ?? "",
           grNumber: student.grNumber ?? "",
-          gender: student.gender ?? "",
-          status: student.status ?? "",
-          fatherName: student.fatherName || student.guardianName || "",
+          gender: student.gender ? formatContactGenderLabel(student.gender, t) : "",
+          status: studentStatusLabel(t, student.status || "active"),
+          fatherName: primaryResponsibleAdultDisplayName(student),
         })),
       });
       notify.success(t("students.exportSuccess"));
@@ -115,10 +119,6 @@ export default function StudentList({
         selectedIds={list.selectedIds}
         allSelected={list.allSelected}
         someSelected={list.someSelected}
-        showDob={list.showDob}
-        showParents={list.showParents}
-        showSessions={list.showSessions}
-        showStatus={list.showStatus}
         showDeleted={showDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
@@ -127,7 +127,9 @@ export default function StudentList({
         pageSize={list.pageSize}
         hasServerPagination={Boolean(serverPagination)}
         statusBadgeConfig={list.statusBadgeConfig}
+        isColumnVisible={list.isColumnVisible}
         isFieldEnabled={list.isFieldEnabled}
+        columnRegistry={columnRegistry}
         renderSortIcon={list.renderSortIcon}
         onSort={list.handleSort}
         onSelectAll={list.handleSelectAll}
@@ -181,57 +183,32 @@ export default function StudentList({
         onClose={list.closeComposer}
       />
 
-      <ConfirmAlertDialog
-        open={list.pendingDeleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) list.setPendingDeleteId(null);
-        }}
-        title={list.t("students.deleteConfirmTitle")}
-        description={list.t("students.deleteConfirmDescription")}
-        confirmLabel={list.t("students.list.remove")}
+      <StudentListConfirmDialogs
+        pendingDeleteId={list.pendingDeleteId}
+        onPendingDeleteIdChange={list.setPendingDeleteId}
+        confirmBulkDeleteOpen={list.confirmBulkDeleteOpen}
+        onConfirmBulkDeleteOpenChange={list.setConfirmBulkDeleteOpen}
+        confirmBulkRestoreOpen={list.confirmBulkRestoreOpen}
+        onConfirmBulkRestoreOpenChange={list.setConfirmBulkRestoreOpen}
+        selectedIds={list.selectedIds}
+        deleteTitle={list.t("students.deleteConfirmTitle")}
+        deleteDescription={list.t("students.deleteConfirmDescription")}
+        removeLabel={list.t("students.list.remove")}
         cancelLabel={list.t("common.cancel")}
-        destructive
-        optionalReason={{
-          label: list.t("students.deletionReasonLabel"),
-          placeholder: list.t("students.deletionReasonPlaceholder"),
-        }}
-        onConfirm={(reason) => {
-          if (list.pendingDeleteId) onDelete(list.pendingDeleteId, reason);
-          list.setPendingDeleteId(null);
-        }}
-      />
-
-      <ConfirmAlertDialog
-        open={list.confirmBulkDeleteOpen}
-        onOpenChange={list.setConfirmBulkDeleteOpen}
-        title={list.t("students.list.remove")}
-        description={list.t("students.list.confirmRemoveSelected", { count: list.selectedIds.length })}
-        confirmLabel={list.t("students.list.remove")}
-        cancelLabel={list.t("common.cancel")}
-        destructive
-        optionalReason={{
-          label: list.t("students.deletionReasonLabel"),
-          placeholder: list.t("students.deletionReasonPlaceholder"),
-        }}
-        onConfirm={(reason) => {
-          onBulkDelete?.(list.selectedIds, reason);
-          list.setSelectedIds([]);
-          list.setConfirmBulkDeleteOpen(false);
-        }}
-      />
-
-      <ConfirmAlertDialog
-        open={list.confirmBulkRestoreOpen}
-        onOpenChange={list.setConfirmBulkRestoreOpen}
-        title={list.t("students.bulkRestore")}
-        description={list.t("students.bulkRestoreConfirm", { count: list.selectedIds.length })}
-        confirmLabel={list.t("students.restore")}
-        cancelLabel={list.t("common.cancel")}
-        onConfirm={() => {
-          onBulkRestore?.(list.selectedIds);
-          list.setSelectedIds([]);
-          list.setConfirmBulkRestoreOpen(false);
-        }}
+        deletionReasonLabel={list.t("students.deletionReasonLabel")}
+        deletionReasonPlaceholder={list.t("students.deletionReasonPlaceholder")}
+        confirmRemoveSelectedDescription={list.t("students.list.confirmRemoveSelected", {
+          count: list.selectedIds.length,
+        })}
+        bulkRestoreTitle={list.t("students.bulkRestore")}
+        bulkRestoreDescription={list.t("students.bulkRestoreConfirm", {
+          count: list.selectedIds.length,
+        })}
+        restoreLabel={list.t("students.restore")}
+        onDelete={onDelete}
+        onBulkDelete={onBulkDelete}
+        onBulkRestore={onBulkRestore}
+        onClearSelection={() => list.setSelectedIds([])}
       />
     </div>
   );

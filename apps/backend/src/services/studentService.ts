@@ -1,10 +1,9 @@
 import {
   normalizeStoredStudent,
   computeNextGrNumber,
-  backfillMissingStudentGrNumbers,
   hydrateStudentFromContacts,
   resolveStudentGuardianLinks,
-  normalizeStudentsSettings,
+  normalizeStudentModulePreferences,
   todayISO,
   type Contact,
   type StudentGrNumberSettings,
@@ -16,7 +15,6 @@ import {
   studentRecordSchema,
 } from '@mms/shared';
 import { loadContactsByIds } from './contactService.js';
-import { fetchObject } from './dbSyncService.js';
 import {
   createGenericRelationalService,
   type GenericServiceOptions,
@@ -26,12 +24,12 @@ import {
   findStudentById,
   findStudentsByIds,
   saveStudent,
-  bulkSaveStudents,
 } from '../db/repositories/studentRepository.js';
 import {
   listStudentsPage,
   countStudentsActive,
   aggregateStudentsCommandMetrics,
+  listActiveStudentsMissingGrNumber,
 } from '../db/repositories/studentRepositoryList.js';
 import {
   aggregateStudentsWidgetQueries,
@@ -41,8 +39,7 @@ import {
 } from '../db/repositories/studentRepositoryWidgets.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { broadcastTenantUpdate } from './websocketService.js';
-
-const STUDENTS_SETTINGS_KEY = 'students_settings';
+import { loadStudentModulePreferences } from './studentPreferencesService.js';
 
 type ContactWithRelationships = Contact & {
   relationshipContacts?: Array<{ contactId?: string | number; relationship?: string; name?: string }>;
@@ -237,26 +234,33 @@ export async function checkStudentRegistrationDuplicate(input: StudentDuplicateC
   return { reason };
 }
 
-/** One-shot backfill of missing GR numbers for active students (Setup/Work writers). */
+/** One-shot backfill of missing GR numbers for active students (Setup writers). */
 export async function migrateStudentsMissingGrNumbers(): Promise<{ updated: number }> {
   const tenant = getRequestTenant();
   if (!tenant) return { updated: 0 };
 
-  const rawSettings = await fetchObject(STUDENTS_SETTINGS_KEY);
-  const settings = normalizeStudentsSettings(rawSettings);
-  const active = await listStudentsByWorkspace(tenant, { deleted: 'active' });
-  const updated = backfillMissingStudentGrNumbers(
-    active as StudentRecord[],
-    {
-      grNumberTemplate: settings.grNumberTemplate,
-      grNumberDigits: settings.grNumberDigits,
-      grNumberRestartAnnually: settings.grNumberRestartAnnually,
-    },
-    todayISO(),
-  );
-  if (updated.length === 0) return { updated: 0 };
+  const settings = normalizeStudentModulePreferences(await loadStudentModulePreferences());
+  const missing = await listActiveStudentsMissingGrNumber(tenant);
+  if (missing.length === 0) return { updated: 0 };
 
-  await bulkSaveStudents(tenant, updated as Student[]);
+  const fallbackDate = todayISO();
+  const prefs = {
+    grNumberTemplate: settings.grNumberTemplate,
+    grNumberDigits: settings.grNumberDigits,
+    grNumberRestartAnnually: settings.grNumberRestartAnnually,
+  };
+  let updated = 0;
+  for (const row of missing) {
+    const registeredDate =
+      typeof row.registeredDate === 'string' && row.registeredDate.trim()
+        ? row.registeredDate
+        : fallbackDate;
+    // Persist each row before the next count so SQL next-GR stays monotonic.
+    const grNumber = await computeNextGrNumberForDate(registeredDate, prefs);
+    await saveStudent(tenant, { ...row, grNumber });
+    updated += 1;
+  }
+
   broadcastTenantUpdate(tenant, 'collection', 'students');
-  return { updated: updated.length };
+  return { updated };
 }

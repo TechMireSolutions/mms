@@ -6,6 +6,7 @@ const repo = createGenericRepository<Student, typeof students>(students, {
   conflictTarget: [students.workspaceSubdomain, students.id],
   syncDeletedAtColumn: true,
   syncContactIdColumn: true,
+  updateStrategy: 'overwrite',
 });
 
 export const studentRowToRecord = repo.rowToRecord;

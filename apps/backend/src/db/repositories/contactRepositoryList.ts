@@ -22,7 +22,7 @@ function existsActiveStudentLinkSql(subdomain: string): SQL {
     SELECT 1 FROM ${students}
     WHERE ${students.workspaceSubdomain} = ${subdomain}
       AND ${students.deletedAt} IS NULL
-      AND NULLIF(trim(${students.customData}->>'contactId'), '') = ${contacts.id}
+      AND NULLIF(trim(${students.contactId}), '') = ${contacts.id}
   )`;
 }
 

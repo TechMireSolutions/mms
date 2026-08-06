@@ -14,8 +14,18 @@ export type DerivedSiblingLink = {
   /** True for drawer/metadata merge only — never written to storage. */
   derivedSibling: true;
   name?: string;
-  phone?: string;
   gender?: string;
+};
+
+/** Stored relationship edge plus optional derived Sibling rows for drawer/metadata. */
+export type MergedRelationshipLink = {
+  contactId: string;
+  name?: string;
+  phone?: string;
+  relationship?: string;
+  gender?: string;
+  inferred?: boolean;
+  derivedSibling?: boolean;
 };
 
 type ContactLike = {
@@ -137,4 +147,47 @@ export function deriveSiblingLinks(
   }
 
   return links.sort((left, right) => left.contactId.localeCompare(right.contactId));
+}
+
+/**
+ * Merge stored relationshipContacts + legacy `relationships` with display-only Sibling rows.
+ * Dedupes derived siblings against stored contact ids; preserves derived name/gender.
+ */
+export function mergeStoredAndDerivedSiblingLinks(
+  subject: ContactLike,
+  contacts: readonly ContactLike[],
+): MergedRelationshipLink[] {
+  const stored: MergedRelationshipLink[] = collectContactRelationshipLinks(subject).map((link) => {
+    const contactId = link.contactId == null ? '' : String(link.contactId).trim();
+    const name = (link.name || '').trim();
+    const phone = (link.phone || '').trim();
+    const relationship = (link.relationship || '').trim();
+    return {
+      contactId,
+      ...(name ? { name } : {}),
+      ...(phone ? { phone } : {}),
+      ...(relationship ? { relationship } : {}),
+      ...(link.inferred === true ? { inferred: true } : {}),
+    };
+  });
+
+  const existingIds = new Set(
+    stored.map((link) => link.contactId).filter((id) => id.length > 0),
+  );
+  const peers = contacts.length > 0 ? contacts : [subject];
+  const siblings = deriveSiblingLinks(subject, peers).filter(
+    (link) => !existingIds.has(link.contactId),
+  );
+
+  return [
+    ...stored,
+    ...siblings.map((link) => ({
+      contactId: link.contactId,
+      relationship: link.relationship,
+      inferred: true as const,
+      derivedSibling: true as const,
+      ...(link.name ? { name: link.name } : {}),
+      ...(link.gender ? { gender: link.gender } : {}),
+    })),
+  ];
 }

@@ -92,6 +92,13 @@
       "when": 1785832800000,
       "tag": "0012_students_contact_id",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785835000000,
+      "tag": "0013_student_setup_config",
+      "breakpoints": true
     }
   ]
 }

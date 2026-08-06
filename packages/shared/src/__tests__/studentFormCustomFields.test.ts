@@ -45,7 +45,12 @@ describe('listEnabledCustomStudentFormFields', () => {
       'visibleCustom',
     ]);
     expect(listStudentSystemFormFieldKeys().has('contactRelationships')).toBe(true);
+    expect(listStudentSystemFormFieldKeys().has('contactId')).toBe(true);
+    expect(listStudentSystemFormFieldKeys().has('grNumber')).toBe(true);
+    expect(listStudentSystemFormFieldKeys().has('notes')).toBe(true);
     expect(isStudentSystemFormField('basic', 'contactRelationships')).toBe(true);
+    expect(isStudentSystemFormField('basic', 'contactId')).toBe(true);
+    expect(isStudentSystemFormField('registration', 'status')).toBe(true);
   });
 
   it('aggregates all tabs when tabId is omitted', () => {

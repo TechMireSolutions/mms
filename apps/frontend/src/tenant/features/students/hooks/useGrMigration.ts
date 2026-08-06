@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiJson } from '@/lib/apiClient';
+import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
 import { STUDENTS_API } from '@/tenant/features/students/hooks/studentsQueryShared';
 
 const STUDENTS_GR_MIGRATION_KEY = 'mms_students_gr_migration_v1';
@@ -14,14 +16,15 @@ function grMigrationAlreadyDone(): boolean {
 
 /**
  * One-shot GR number backfill for legacy students missing `grNumber`.
- * Calls server migrate endpoint once for writers on the Work tab.
+ * Calls server migrate endpoint once for Setup writers on the Work tab (matches BE setupWrite).
  */
-export function useGrMigration(activeTab: string, canWrite: boolean): void {
+export function useGrMigration(activeTab: string, canEditSetup: boolean): void {
+  const queryClient = useQueryClient();
   const [needsMigrationScan, setNeedsMigrationScan] = useState(() => !grMigrationAlreadyDone());
   const migrationAppliedRef = useRef(false);
 
   useEffect(() => {
-    if (!canWrite || !needsMigrationScan || activeTab !== 'work') return;
+    if (!canEditSetup || !needsMigrationScan || activeTab !== 'work') return;
     let cancelled = false;
 
     void (async () => {
@@ -33,6 +36,7 @@ export function useGrMigration(activeTab: string, canWrite: boolean): void {
           body: JSON.stringify({}),
         });
         if (cancelled) return;
+        invalidateStudentsQueries(queryClient);
         try {
           localStorage.setItem(STUDENTS_GR_MIGRATION_KEY, '1');
         } catch (err: unknown) {
@@ -48,5 +52,5 @@ export function useGrMigration(activeTab: string, canWrite: boolean): void {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, canWrite, needsMigrationScan]);
+  }, [activeTab, canEditSetup, needsMigrationScan, queryClient]);
 }

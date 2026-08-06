@@ -19,6 +19,13 @@ export function useContactsDirectoryLinks({
     return rows;
   }, [workContacts, editContact, viewContact]);
 
+  const siblingSubjects = useMemo(() => {
+    const subjects: Contact[] = [];
+    if (viewContact) subjects.push(viewContact);
+    if (editContact) subjects.push(editContact);
+    return subjects;
+  }, [viewContact, editContact]);
+
   const linkedContactIds = useMemo(
     () => collectLinkedContactIds(linkSourceContacts),
     [linkSourceContacts],
@@ -32,16 +39,19 @@ export function useContactsDirectoryLinks({
   );
 
   const siblingContactIds = useMemo(() => {
-    const subjects = [viewContact, editContact].filter(Boolean) as Contact[];
-    if (subjects.length === 0) return [] as string[];
+    const knownIds = new Set(
+      partialDirectory
+        .map((contact) => (contact.id == null ? "" : String(contact.id).trim()))
+        .filter(Boolean),
+    );
     const ids = new Set<string>();
-    for (const subject of subjects) {
+    for (const subject of siblingSubjects) {
       for (const link of deriveSiblingLinks(subject, partialDirectory)) {
-        ids.add(link.contactId);
+        if (!knownIds.has(link.contactId)) ids.add(link.contactId);
       }
     }
     return [...ids];
-  }, [viewContact, editContact, partialDirectory]);
+  }, [siblingSubjects, partialDirectory]);
 
   const { data: resolvedSiblingContacts = [] } = useContactsByIds(siblingContactIds);
 

@@ -22,7 +22,8 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   errorMessagePrefix: string;
   nameSingular: string;
   loadPageFn?: (query: TQuery & { includeDeleted: boolean }) => Promise<unknown>;
-  loadAllFn: (options?: { includeDeleted?: boolean }) => Promise<TRecord[]>;
+  /** Optional — omit when SQL `loadCountFn` / `loadMetricsFn` / paginated list cover HTTP reads. */
+  loadAllFn?: (options?: { includeDeleted?: boolean }) => Promise<TRecord[]>;
   /** Prefer SQL count — avoids hydrate-all for `/count`. */
   loadCountFn?: () => Promise<number>;
   computeMetricsFn?: (records: TRecord[], request: FastifyRequest) => Promise<unknown> | unknown;
@@ -80,18 +81,26 @@ export function registerStandardExtendedRoutes<
     path: prefix ? `${prefix}/count` : '/count',
     collection,
     loadCountFn,
-    loadAllFn: loadCountFn ? undefined : () => loadAllFn(),
+    loadAllFn: loadCountFn || !loadAllFn ? undefined : () => loadAllFn(),
     errorMessagePrefix,
   });
 
-  if (loadMetricsFn || computeMetricsFn) {
+  if (loadMetricsFn) {
+    registerMetricsRoute(fastify, {
+      path: prefix ? `${prefix}/metrics` : '/metrics',
+      collection,
+      loadMetricsFn,
+      errorMessagePrefix: nameSingular,
+    });
+  } else if (computeMetricsFn && loadAllFn) {
+    const loadAll = loadAllFn;
+    const computeMetrics = computeMetricsFn;
     registerMetricsRoute(fastify, {
       path: prefix ? `${prefix}/metrics` : '/metrics',
       collection,
       loadMetricsFn: async (request) => {
-        if (loadMetricsFn) return loadMetricsFn(request);
-        const records = await loadAllFn();
-        return computeMetricsFn!(records, request);
+        const records = await loadAll();
+        return computeMetrics(records, request);
       },
       errorMessagePrefix: nameSingular,
     });

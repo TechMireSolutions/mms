@@ -133,8 +133,9 @@ export default function Students() {
                 try {
                   await deleteStudent.mutateAsync({ id: String(studentId), deletionReason });
                   notify.success(t('students.deleteSuccess'));
-                } catch {
+                } catch (error) {
                   notify.error(t('students.deleteFailed'));
+                  throw error;
                 }
               }}
               onRestore={async (studentId) => {
@@ -153,16 +154,18 @@ export default function Students() {
                     deletionReason,
                   });
                   notify.success(t('students.deleteSuccess'));
-                } catch {
+                } catch (error) {
                   notify.error(t('students.deleteFailed'));
+                  throw error;
                 }
               }}
               onBulkRestore={async (studentIds) => {
                 try {
                   await bulkRestoreStudents.mutateAsync(studentIds.map(String));
                   notify.success(t('students.restoreSuccess'));
-                } catch {
+                } catch (error) {
                   notify.error(t('students.restoreFailed'));
+                  throw error;
                 }
               }}
               onBulkStatusChange={async (studentIds, status) => {

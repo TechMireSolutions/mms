@@ -20,9 +20,11 @@ export interface StudentFormTabContentProps {
   linkedDob: string;
   excludeIds: string[];
   isGrAutoAssigned: boolean;
+  grInputDisabled: boolean;
   statusSelectOptions: StudentStatusSelectOption[];
   fields: Record<string, FieldDefinition[]>;
   isFieldEnabled: (fieldId: string) => boolean;
+  isFieldRequired: (fieldId: string) => boolean;
   getFieldError: StudentFieldErrorGetter;
   onContactSelect: (id: string | number | null) => void;
   onStudentAvatarChange: (avatarUrl: string) => void | Promise<void>;
@@ -40,9 +42,11 @@ export function StudentFormTabContent({
   linkedDob,
   excludeIds,
   isGrAutoAssigned,
+  grInputDisabled,
   statusSelectOptions,
   fields,
   isFieldEnabled,
+  isFieldRequired,
   getFieldError,
   onContactSelect,
   onStudentAvatarChange,
@@ -55,13 +59,20 @@ export function StudentFormTabContent({
         <StudentRegistrationSection
           studentDraft={studentDraft}
           isGrAutoAssigned={isGrAutoAssigned}
+          grInputDisabled={grInputDisabled}
           statusSelectOptions={statusSelectOptions}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
           getFieldError={getFieldError}
           onGrNumberChange={onGrNumberChange}
           onDraftChange={onDraftChange}
         />
         <StudentNotesSection
           notes={studentDraft.notes}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
           onDraftChange={onDraftChange}
         />
         <StudentCustomFieldsBlock
@@ -76,33 +87,53 @@ export function StudentFormTabContent({
     );
   }
 
+  if (tab === "basic") {
+    return (
+      <div className="space-y-6 pb-6">
+        <StudentContactSection
+          contactId={studentDraft.contactId}
+          excludeIds={excludeIds}
+          linkedGenderRaw={linkedGenderRaw}
+          linkedGenderLabel={linkedGenderLabel}
+          linkedDob={linkedDob}
+          genderError={getFieldError("gender")}
+          dobError={getFieldError("dob")}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          getFieldError={getFieldError}
+          onContactSelect={onContactSelect}
+          onStudentAvatarChange={onStudentAvatarChange}
+        />
+        <StudentGuardianSection
+          formInstanceId={formInstanceId}
+          studentDraft={studentDraft}
+          linkedContact={linkedContact}
+          isFieldEnabled={isFieldEnabled}
+        />
+        <StudentCustomFieldsBlock
+          studentDraft={studentDraft}
+          formInstanceId={formInstanceId}
+          fields={fields}
+          tabId="basic"
+          getFieldError={getFieldError}
+          updateDraft={onDraftChange}
+        />
+      </div>
+    );
+  }
+
+  // Setup custom tabs — customs only for that tabId.
   return (
     <div className="space-y-6 pb-6">
-      <StudentContactSection
-        contactId={studentDraft.contactId}
-        excludeIds={excludeIds}
-        linkedGenderRaw={linkedGenderRaw}
-        linkedGenderLabel={linkedGenderLabel}
-        linkedDob={linkedDob}
-        genderError={getFieldError("gender")}
-        dobError={getFieldError("dob")}
-        getFieldError={getFieldError}
-        onContactSelect={onContactSelect}
-        onStudentAvatarChange={onStudentAvatarChange}
-      />
-      <StudentGuardianSection
-        formInstanceId={formInstanceId}
-        studentDraft={studentDraft}
-        linkedContact={linkedContact}
-        isFieldEnabled={isFieldEnabled}
-      />
       <StudentCustomFieldsBlock
         studentDraft={studentDraft}
         formInstanceId={formInstanceId}
         fields={fields}
-        tabId="basic"
+        tabId={tab}
         getFieldError={getFieldError}
         updateDraft={onDraftChange}
+        hideWhenEmpty={false}
       />
     </div>
   );

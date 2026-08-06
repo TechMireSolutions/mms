@@ -1,9 +1,12 @@
 import {
-  DEFAULT_STUDENTS_SETTINGS,
   DEFAULT_TEACHERS_SETTINGS,
   type StudentsSettings,
   type TeachersSettings,
 } from './settingsTypes.js';
+import type { FieldDefinition } from './contactTypes.js';
+import { listEnabledCustomStudentFormFields } from './studentFormCustomFields.js';
+import { syncStudentColumnRegistryWithFields } from './studentColumnRegistrySync.js';
+import { DEFAULT_STUDENT_COLUMN_REGISTRY } from './moduleFieldSetupPersons.js';
 
 /** Per-user Work directory column layout (globle1 §3.4). */
 export interface ModuleColumnPreference {
@@ -118,35 +121,48 @@ export function buildStudentWorkColumnRegistry(
   settings: StudentsSettings,
   labels: StudentWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  const fields = (settings.fields ?? DEFAULT_STUDENTS_SETTINGS.fields ?? {}) as Record<string, { enabled?: boolean }>;
-  const customFields = settings.customFields ?? [];
-  const registryColumns: ModuleColumnRegistryEntry[] = [
-    { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
-  ];
-  let order = 1;
+  const fields = (settings.fields ?? {}) as Record<string, FieldDefinition[]>;
+  const enabledTabs = settings.enabledTabs ?? ['registration'];
+  const synced = syncStudentColumnRegistryWithFields(
+    settings.columnRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY,
+    fields,
+    enabledTabs,
+  );
 
-  if (fields.dob?.enabled !== false) {
-    registryColumns.push({ key: 'dob', label: labels.dob, enabled: true, order: order++ });
-  }
+  const labelByKey: Record<string, string> = {
+    name: labels.name,
+    dob: labels.dob,
+    parents: labels.parents,
+    sessions: labels.sessions,
+    status: labels.status,
+  };
 
-  const parentsEnabled = fields.contactRelationships?.enabled !== false;
-  if (parentsEnabled) {
-    registryColumns.push({ key: 'parents', label: labels.parents, enabled: true, order: order++ });
-  }
+  const customByKey = new Map(
+    listEnabledCustomStudentFormFields(fields).map((field) => [field.key, field]),
+  );
 
-  registryColumns.push({ key: 'sessions', label: labels.sessions, enabled: true, order: order++ });
-  registryColumns.push({ key: 'status', label: labels.status, enabled: true, order: order++ });
-
-  for (const field of customFields) {
-    registryColumns.push({
-      key: `custom:${field.id}`,
-      label: field.label,
-      enabled: true,
-      order: order++,
-    });
-  }
-
-  return registryColumns;
+  return synced.map((col) => {
+    if (col.key.startsWith('custom:')) {
+      const fieldKey = col.key.slice('custom:'.length);
+      const field = customByKey.get(fieldKey);
+      return {
+        key: col.key,
+        label: field?.label || col.label,
+        enabled: col.enabled !== false,
+        order: col.order,
+        width: col.width,
+        fixed: col.fixed,
+      };
+    }
+    return {
+      key: col.key,
+      label: labelByKey[col.key] || col.label,
+      enabled: col.enabled !== false,
+      order: col.order,
+      width: col.width,
+      fixed: col.fixed || col.key === 'name',
+    };
+  });
 }
 
 export function isModuleColumnVisible(

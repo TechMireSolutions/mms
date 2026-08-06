@@ -44,6 +44,7 @@ export default function StudentDetail({
     primaryPhone,
     primaryEmail,
     hasVisibleDetailFields,
+    showNotesSection,
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
@@ -110,7 +111,7 @@ export default function StudentDetail({
           />
         )}
 
-        {student.notes && <StudentDetailNotesSection notes={student.notes} />}
+        {showNotesSection && student.notes ? <StudentDetailNotesSection notes={student.notes} /> : null}
 
         <StudentDetailSessionsSection sessions={enrolledSessionDetails} />
       </DetailDrawerShell>

@@ -1,10 +1,14 @@
 import type { ModuleColumnPreference, UserModuleColumnPreferencesMap } from '@mms/shared';
-import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   getContactUserColumnPrefs,
   setContactUserColumnPrefs,
 } from '../db/repositories/contactUserColumnPrefsRepository.js';
+import {
+  getStudentUserColumnPrefs,
+  setStudentUserColumnPrefs,
+} from '../db/repositories/studentUserColumnPrefsRepository.js';
 import { fetchObject, persistObject } from './dbSyncService.js';
 
 async function loadUserColumnPreferencesMap(objectKey: string): Promise<UserModuleColumnPreferencesMap> {
@@ -38,6 +42,10 @@ function isContactsColumnKey(objectKey: string): boolean {
   return objectKey === CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey;
 }
 
+function isStudentsColumnKey(objectKey: string): boolean {
+  return objectKey === STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey;
+}
+
 function requireTenant(): string {
   const tenant = getRequestTenant();
   if (!tenant) throw new Error('Tenant context required');
@@ -50,6 +58,10 @@ export async function getUserColumnPreferencesForModule(
 ): Promise<ModuleColumnPreference[]> {
   if (isContactsColumnKey(objectKey)) {
     const prefs = await getContactUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isStudentsColumnKey(objectKey)) {
+    const prefs = await getStudentUserColumnPrefs(requireTenant(), userId);
     return filterPreferences(prefs);
   }
   const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);
@@ -65,6 +77,10 @@ export async function setUserColumnPreferencesForModule(
 ): Promise<void> {
   if (isContactsColumnKey(objectKey)) {
     await setContactUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isStudentsColumnKey(objectKey)) {
+    await setStudentUserColumnPrefs(requireTenant(), userId, preferences);
     return;
   }
   const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);

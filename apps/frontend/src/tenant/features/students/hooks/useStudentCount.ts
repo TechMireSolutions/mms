@@ -5,8 +5,11 @@ import { apiJson } from "@/lib/apiClient";
 
 export const STUDENT_COUNT_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.collectionKey, "count"] as const;
 
-async function fetchStudentCount(): Promise<number> {
-  const countResponse = await apiJson<{ count: number }>(`${STUDENTS_MODULE_MANIFEST.restBasePath}/count`);
+async function fetchStudentCount(signal?: AbortSignal): Promise<number> {
+  const countResponse = await apiJson<{ count: number }>(
+    `${STUDENTS_MODULE_MANIFEST.restBasePath}/count`,
+    { signal },
+  );
   return countResponse.count;
 }
 
@@ -15,7 +18,7 @@ export function useStudentCount() {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: STUDENT_COUNT_QUERY_KEY,
-    queryFn: fetchStudentCount,
+    queryFn: ({ signal }) => fetchStudentCount(signal),
     enabled: isAuthenticated,
     staleTime: 30_000,
   });

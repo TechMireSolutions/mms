@@ -1,6 +1,5 @@
 import { getDefaultCollectionsForSeed, getDefaultObjects } from '../db/seeds.js';
 import {
-  DEFAULT_STUDENTS_SETTINGS,
   DEFAULT_TEACHERS_SETTINGS,
   DEFAULT_SESSIONS_SETTINGS,
   DEFAULT_ATTENDANCE_SETTINGS,
@@ -49,10 +48,12 @@ export async function getMinimalCollectionsForSeed(): Promise<Record<string, unk
 
 export function getMinimalObjects(): Record<string, unknown> {
   const objects = sanitizeContactSeedObjects(getDefaultObjects());
+  const next = { ...objects };
+  delete next.students_settings;
+  delete next.student_user_column_preferences;
   return {
-    ...objects,
+    ...next,
     teachers_settings: objects.teachers_settings ?? DEFAULT_TEACHERS_SETTINGS,
-    students_settings: objects.students_settings ?? DEFAULT_STUDENTS_SETTINGS,
     sessions_settings: objects.sessions_settings ?? DEFAULT_SESSIONS_SETTINGS,
     attendance_settings: objects.attendance_settings ?? DEFAULT_ATTENDANCE_SETTINGS,
     question_bank_settings: objects.question_bank_settings ?? DEFAULT_QUESTION_BANK_SETTINGS,

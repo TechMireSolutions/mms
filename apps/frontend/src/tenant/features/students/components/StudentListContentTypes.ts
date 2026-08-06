@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from "react";
-import type { Student, toMessagingRecipient } from "@mms/shared";
+import type { ModuleColumnRegistryEntry, Student, toMessagingRecipient } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
@@ -19,18 +19,25 @@ interface StudentListSelectionProps {
   canDelete: boolean;
   canWriteMessaging?: boolean;
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
+  /** Work column prefs — call in leaves (no show* fans). */
+  isColumnVisible: (key: string) => boolean;
+  /** Setup Fields gate for profile chrome under the name (e.g. gender). */
   isFieldEnabled: (key: string) => boolean;
+  /** Tenant Work column registry (system + custom:*). */
+  columnRegistry: ModuleColumnRegistryEntry[];
   onSelectOne: (id: string) => void;
   onRowClick: (event: MouseEvent, student: Student) => void;
   onViewStudent: (student: Student) => void;
   onEdit: (student: Student) => void;
-  onDelete: (id: string, deletionReason?: string) => void;
+  onDelete: (id: string, deletionReason?: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;
 }
 
 export interface StudentListCardsProps extends StudentListSelectionProps {
   paginatedStudents: Student[];
-  showParents: boolean;
+  allSelected: boolean;
+  someSelected: boolean;
+  onSelectAll: () => void;
   onOpenComposer?: (
     mode: "whatsapp" | "sms" | "email",
     recipients: StudentListMessagingRecipient[],
@@ -42,10 +49,6 @@ export interface StudentListTableProps extends StudentListSelectionProps {
   sessions: StudentListSession[];
   allSelected: boolean;
   someSelected: boolean;
-  showDob: boolean;
-  showParents: boolean;
-  showSessions: boolean;
-  showStatus: boolean;
   renderSortIcon: (field: StudentListSortField | null) => ReactNode;
   onSort: (field: StudentListSortField) => void;
   onSelectAll: () => void;

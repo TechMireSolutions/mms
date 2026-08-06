@@ -1,17 +1,19 @@
 import React from "react";
 import { Calendar, Clock, FileText, User } from "lucide-react";
 import {
+  type AppTranslationKey,
   type Student,
   type StudentContactRelationshipLink,
+  OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
+  STUDENT_DETAIL_HERO_FIELD_KEYS,
   formatDate,
   formatDateTime,
-  formatRelationshipDisplayLabel,
   toMessagingRecipient,
-  toTitleCase,
 } from "@mms/shared";
 import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatLocalizedRelationshipLabel } from "@/lib/contacts/formatLocalizedRelationshipLabel";
+import { formatContactGenderLabel, resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import { formatLocalizedRelationshipParts } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
 import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
 import { StudentDetailAttributeRow } from "@/tenant/features/students/components/StudentDetailAttributeRow";
@@ -20,6 +22,7 @@ import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shar
 interface SortedField {
   key: string;
   label: string;
+  labelKey?: AppTranslationKey;
   type: string;
   tab: string;
   enabled: boolean;
@@ -45,19 +48,29 @@ export function StudentDetailFieldsSection({
 }: StudentDetailFieldsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const canMessage = messagingEnabled;
+  const emptyDash = t("contacts.table.emptyDash");
 
   return (
     <div className="space-y-4">
       <h4 className={`${DETAIL_SECTION_TITLE} ps-1`}>{t("students.detail.sectionDetails")}</h4>
       <div className="space-y-2.5">
         {sortedEnabledFields.map((field) => {
+          if (
+            STUDENT_DETAIL_HERO_FIELD_KEYS.has(field.key)
+            || OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS.has(field.key)
+          ) {
+            return null;
+          }
+
+          const fieldLabel = resolveRegistryLabel(field, t);
+
           if (field.key === "gender") {
             return (
               <StudentDetailAttributeRow
                 key="gender"
                 icon={User}
-                label={t("students.gender")}
-                value={student.gender ? toTitleCase(student.gender) : t("common.notSpecified")}
+                label={fieldLabel}
+                value={student.gender ? formatContactGenderLabel(student.gender, t) : emptyDash}
               />
             );
           }
@@ -67,8 +80,8 @@ export function StudentDetailFieldsSection({
               <StudentDetailAttributeRow
                 key="dob"
                 icon={Calendar}
-                label={t("students.columns.dob")}
-                value={`${student.dob ? formatDate(student.dob, true) : "—"} ${age ? t("students.list.ageYears", { age }) : ""}`}
+                label={fieldLabel}
+                value={`${student.dob ? formatDate(student.dob, true) : emptyDash} ${age ? t("students.list.ageYears", { age }) : ""}`}
               />
             );
           }
@@ -78,8 +91,8 @@ export function StudentDetailFieldsSection({
               <StudentDetailAttributeRow
                 key="registeredDate"
                 icon={Clock}
-                label={t("students.form.registeredDate")}
-                value={student.registeredDate ? formatDateTime(student.registeredDate, true) : "—"}
+                label={fieldLabel}
+                value={student.registeredDate ? formatDateTime(student.registeredDate, true) : emptyDash}
               />
             );
           }
@@ -90,11 +103,7 @@ export function StudentDetailFieldsSection({
               if (!name) return null;
               const contactId = link.contactId || `rel-${index}`;
               const phone = link.phone;
-              const displayRelationship = formatRelationshipDisplayLabel(
-                link.relationship,
-                link.gender,
-              );
-              const label = formatLocalizedRelationshipLabel(
+              const { display, label } = formatLocalizedRelationshipParts(
                 link.relationship,
                 link.gender,
                 t,
@@ -103,7 +112,7 @@ export function StudentDetailFieldsSection({
                 <GuardianContactCard
                   key={`${link.relationship}-${contactId}-${index}`}
                   label={label}
-                  badgeCode={relationshipBadgeCode(displayRelationship)}
+                  badgeCode={relationshipBadgeCode(display, emptyDash)}
                   badgeBg="bg-info/10"
                   badgeText="text-info"
                   name={name}
@@ -123,14 +132,6 @@ export function StudentDetailFieldsSection({
             });
           }
 
-          if (
-            field.key === "fatherLink" ||
-            field.key === "motherLink" ||
-            field.key === "guardianLink"
-          ) {
-            return null;
-          }
-
           const rawValue = (student as Record<string, unknown>)[field.key];
           const displayValue = formatStudentCustomFieldValue(rawValue, field.type, t);
           if (displayValue == null) return null;
@@ -138,7 +139,7 @@ export function StudentDetailFieldsSection({
             <StudentDetailAttributeRow
               key={field.key}
               icon={FileText}
-              label={field.label}
+              label={fieldLabel}
               value={displayValue}
             />
           );

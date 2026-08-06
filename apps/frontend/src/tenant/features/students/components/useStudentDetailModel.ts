@@ -3,8 +3,10 @@ import {
   DEFAULT_STUDENT_ENABLED_TABS,
   listStudentContactRelationships,
   resolveStudentGuardianLinks,
+  STUDENT_DETAIL_HERO_FIELD_KEYS,
   STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
   STUDENT_PARENT_RELATIONSHIP_LABEL,
+  OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
   type FieldDefinition,
   type Student,
   type StudentContactRelationshipLink,
@@ -61,6 +63,7 @@ export function useStudentDetailModel(student: Student) {
     const list: Array<{
       key: string;
       label: string;
+      labelKey?: FieldDefinition["labelKey"];
       type: string;
       tab: string;
       enabled: boolean;
@@ -74,6 +77,7 @@ export function useStudentDetailModel(student: Student) {
           list.push({
             key: fieldDefinition.key,
             label: fieldDefinition.label,
+            labelKey: fieldDefinition.labelKey,
             type: fieldDefinition.type,
             tab: tabId,
             enabled: fieldDefinition.enabled,
@@ -97,11 +101,6 @@ export function useStudentDetailModel(student: Student) {
     ?? primaryContact
     ?? undefined;
 
-  const contactGender = (contactId?: string) => {
-    if (!contactId) return undefined;
-    return contactList.find((entry) => String(entry.id) === String(contactId))?.gender;
-  };
-
   const graphLinks: StudentContactRelationshipLink[] = relationshipLinks.map((link) => {
     const contact = link.contactId
       ? contactList.find((entry) => String(entry.id) === String(link.contactId))
@@ -115,6 +114,13 @@ export function useStudentDetailModel(student: Student) {
     };
   });
 
+  const fatherGender = guardians.fatherContactId
+    ? contactList.find((entry) => String(entry.id) === String(guardians.fatherContactId))?.gender
+    : undefined;
+  const guardianGender = guardians.guardianContactId
+    ? contactList.find((entry) => String(entry.id) === String(guardians.guardianContactId))?.gender
+    : undefined;
+
   const hydratedLinks: StudentContactRelationshipLink[] =
     graphLinks.length > 0
       ? graphLinks
@@ -123,9 +129,7 @@ export function useStudentDetailModel(student: Student) {
             ? [{
                 ...(guardians.fatherContactId ? { contactId: guardians.fatherContactId } : {}),
                 ...(guardians.fatherName ? { name: guardians.fatherName } : {}),
-                ...(contactGender(guardians.fatherContactId)
-                  ? { gender: contactGender(guardians.fatherContactId)! }
-                  : {}),
+                ...(fatherGender ? { gender: fatherGender } : {}),
                 relationship: STUDENT_PARENT_RELATIONSHIP_LABEL,
               } satisfies StudentContactRelationshipLink]
             : []),
@@ -133,9 +137,7 @@ export function useStudentDetailModel(student: Student) {
             ? [{
                 ...(guardians.guardianContactId ? { contactId: guardians.guardianContactId } : {}),
                 ...(guardians.guardianName ? { name: guardians.guardianName } : {}),
-                ...(contactGender(guardians.guardianContactId)
-                  ? { gender: contactGender(guardians.guardianContactId)! }
-                  : {}),
+                ...(guardianGender ? { gender: guardianGender } : {}),
                 relationship: STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
               } satisfies StudentContactRelationshipLink]
             : []),
@@ -147,13 +149,20 @@ export function useStudentDetailModel(student: Student) {
   const primaryPhone = (studentContact ? getPrimaryPhone(studentContact) : null) || student.phone;
   const primaryEmail = (studentContact ? getPrimaryEmail(studentContact) : null) || student.email;
 
-  const hasVisibleDetailFields = sortedEnabledFields.some((field) =>
-    field.key === "contactRelationships"
-      ? hydratedLinks.some((link) => link.name || link.contactId)
-      : field.key === "fatherLink" || field.key === "motherLink" || field.key === "guardianLink"
-        ? false
-        : true,
-  );
+  const hasVisibleDetailFields = sortedEnabledFields.some((field) => {
+    if (
+      STUDENT_DETAIL_HERO_FIELD_KEYS.has(field.key)
+      || OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS.has(field.key)
+    ) {
+      return false;
+    }
+    if (field.key === "contactRelationships") {
+      return hydratedLinks.some((link) => link.name || link.contactId);
+    }
+    return true;
+  });
+
+  const showNotesSection = Boolean(student.notes) && sortedEnabledFields.some((field) => field.key === "notes");
 
   return {
     t,
@@ -170,5 +179,6 @@ export function useStudentDetailModel(student: Student) {
     primaryPhone,
     primaryEmail,
     hasVisibleDetailFields,
+    showNotesSection,
   };
 }

@@ -28,13 +28,15 @@ export default function StudentForm({
         {form.linkedContact.name}
       </span>
       <div className="flex items-center gap-1.5">
-        <GrBadge grNumber={form.studentDraft.grNumber} />
-        <StatusBadge status={form.studentDraft.status || "active"} size="sm" config={form.statusBadgeConfig} />
+        {form.isFieldEnabled("grNumber") ? <GrBadge grNumber={form.studentDraft.grNumber} /> : null}
+        {form.isFieldEnabled("status") ? (
+          <StatusBadge status={form.studentDraft.status || "active"} size="sm" config={form.statusBadgeConfig} />
+        ) : null}
       </div>
     </div>
-  ) : (
+  ) : form.isFieldEnabled("contactId") ? (
     <RequiredBanner message={form.t("students.form.contactRequired")} />
-  );
+  ) : null;
 
   return (
     <>
@@ -54,7 +56,10 @@ export default function StudentForm({
         saveLabel={form.saving ? form.t("students.form.saving") : student ? form.t("students.form.saveUpdate") : form.t("students.form.saveRegister")}
         onSave={form.handleSave}
         saving={form.saving}
-        saveDisabled={!form.studentDraft.contactId}
+        saveDisabled={
+          (form.isFieldEnabled("contactId") && !form.studentDraft.contactId)
+          || (Boolean(student?.id) && !form.isDirty)
+        }
         error={form.validationErrorSummary ?? (form.errorSummary || undefined)}
         footerStart={footerStart}
       >
@@ -68,9 +73,11 @@ export default function StudentForm({
           linkedDob={form.linkedDob}
           excludeIds={form.excludeIds}
           isGrAutoAssigned={form.isGrAutoAssigned}
+          grInputDisabled={form.grInputDisabled}
           statusSelectOptions={form.statusSelectOptions}
           fields={form.fields}
           isFieldEnabled={form.isFieldEnabled}
+          isFieldRequired={form.isFieldRequired}
           getFieldError={form.getFieldError}
           onContactSelect={form.handleContactSelect}
           onStudentAvatarChange={form.handleStudentAvatarChange}

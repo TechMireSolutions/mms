@@ -26,6 +26,7 @@ export function useStudentsPageController() {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
+    canEditSetup,
   } = useModulePermissions(STUDENTS_MODULE_MANIFEST);
 
   const visibleTabs = useFilteredModuleTierTabs({
@@ -44,7 +45,7 @@ export function useStudentsPageController() {
   const [sortField, setSortField] = useState<StudentListSortField | null>('grNumber');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
-  useGrMigration(activeTab, canWrite);
+  useGrMigration(activeTab, canEditSetup);
 
   const columnLayout = useStudentColumnLayout(settings);
 

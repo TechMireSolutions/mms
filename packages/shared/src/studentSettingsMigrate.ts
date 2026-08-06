@@ -17,7 +17,7 @@ export const OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS = new Set([
   'motherLink',
   'guardianLink',
 ]);
-export const STUDENT_SETTINGS_VERSION = 4;
+export const STUDENT_SETTINGS_VERSION = 5;
 
 function isLegacyFlatFields(fields: unknown): boolean {
   if (!fields || typeof fields !== 'object') return false;
@@ -148,24 +148,80 @@ function rebuildStudentFormTabs(existing: TabDefinition[] | undefined): TabDefin
   );
 }
 
-/** Apply Setup Fields tab collapse + guardian triad → contactRelationships (v4). */
-export function applyStudentSetupVersionMigrate(draft: Partial<StudentsSettings>): void {
-  const storedVersion = typeof draft.version === 'number' ? draft.version : 0;
-  if (storedVersion >= STUDENT_SETTINGS_VERSION) {
-    if (draft.fields && typeof draft.fields === 'object' && !isLegacyFlatFields(draft.fields)) {
-      let fields = draft.fields as Record<string, FieldDefinition[]>;
-      if (fields.guardian || fields.academic) {
-        fields = migrateStudentSetupFieldsToTwoTabs(fields);
+/** Inject missing INITIAL_STUDENT_FIELD_SEED keys without wiping customs. */
+export function ensureStudentSeedFields(
+  fields: Record<string, FieldDefinition[]>,
+): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = { ...fields };
+
+  for (const [tabId, seedFields] of Object.entries(INITIAL_STUDENT_FIELD_SEED)) {
+    const current = [...(next[tabId] ?? [])];
+    const existingKeys = new Set(current.map((field) => field.key));
+    const missing = seedFields
+      .filter((seed) => !existingKeys.has(seed.key))
+      .sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
+
+    let inserted = false;
+    for (const seed of missing) {
+      const lowerSeedKeys = new Set(
+        seedFields.filter((candidate) => (candidate.order ?? 0) < (seed.order ?? 0)).map((candidate) => candidate.key),
+      );
+      let insertAt = current.length;
+      let foundLower = false;
+      for (let index = current.length - 1; index >= 0; index -= 1) {
+        const field = current[index];
+        if (field && lowerSeedKeys.has(field.key)) {
+          insertAt = index + 1;
+          foundLower = true;
+          break;
+        }
       }
-      draft.fields = migrateStudentGuardianLinkFields(fields);
+      if (!foundLower) {
+        insertAt = Math.min(seed.order ?? 0, current.length);
+      }
+      current.splice(insertAt, 0, { ...seed });
+      inserted = true;
     }
-    return;
+
+    const seedByKey = new Map(seedFields.map((seed) => [seed.key, seed]));
+    for (const field of current) {
+      const seed = seedByKey.get(field.key);
+      if (!seed) continue;
+      if (!field.labelKey && seed.labelKey) field.labelKey = seed.labelKey;
+      if (!field.descriptionKey && seed.descriptionKey) field.descriptionKey = seed.descriptionKey;
+      if (!field.description && seed.description) field.description = seed.description;
+      // Domain lock: student rows always link a contact.
+      if (field.key === "contactId") {
+        field.enabled = true;
+        field.required = true;
+      }
+    }
+
+    if (inserted) {
+      current.forEach((field, index) => {
+        field.order = index;
+      });
+    }
+    next[tabId] = current;
   }
 
+  return next;
+}
+
+/** Apply Setup Fields tab collapse + guardian triad → contactRelationships (v4) + full form seed (v5). */
+export function applyStudentSetupVersionMigrate(draft: Partial<StudentsSettings>): void {
+  const storedVersion = typeof draft.version === 'number' ? draft.version : 0;
+
   if (draft.fields && typeof draft.fields === 'object' && !isLegacyFlatFields(draft.fields)) {
-    draft.fields = migrateStudentGuardianLinkFields(
-      migrateStudentSetupFieldsToTwoTabs(draft.fields as Record<string, FieldDefinition[]>),
-    );
+    let fields = draft.fields as Record<string, FieldDefinition[]>;
+    if (fields.guardian || fields.academic) {
+      fields = migrateStudentSetupFieldsToTwoTabs(fields);
+    }
+    draft.fields = ensureStudentSeedFields(migrateStudentGuardianLinkFields(fields));
+  }
+
+  if (storedVersion >= STUDENT_SETTINGS_VERSION) {
+    return;
   }
 
   draft.enabledTabs = remapStudentEnabledTabs(draft.enabledTabs);

@@ -21,8 +21,8 @@ export const studentCoreSchema = z.object({
   fatherName: z.string().optional(),
   motherName: z.string().optional(),
   guardianName: z.string().optional(),
-  // Custom Setup fields remain allowed; soft-delete keys are stripped in normalizeStoredStudent.
-}).passthrough();
+  // Custom Setup fields: stripped unknown soft-delete keys in normalize; extras allowed via catchall.
+}).catchall(z.unknown());
 
 /** Write/read student row schema — strips client soft-delete metadata on parse. */
 export const studentRecordSchema = z.preprocess(

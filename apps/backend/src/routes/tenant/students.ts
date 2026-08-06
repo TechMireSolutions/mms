@@ -8,7 +8,6 @@ import {
   bulkSoftDeleteStudents,
   bulkRestoreStudents,
   bulkUpdateStudentStatus,
-  loadStudents,
   loadStudentsPage,
   loadStudentsByIds,
   loadStudentById,
@@ -22,7 +21,7 @@ import {
   migrateStudentsMissingGrNumbers,
 } from '../../services/studentService.js';
 import type { User } from '@mms/shared';
-import { STUDENTS_MODULE_MANIFEST, studentRecordSchema } from '@mms/shared';
+import { STUDENTS_MODULE_MANIFEST, roleHasPermission, studentRecordSchema } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import {
   studentsListQuerySchema,
@@ -34,6 +33,7 @@ import {
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
+import { studentSetupConfigRoutes } from './students/studentSetupConfigRoutes.js';
 
 /**
  * Server-first student resource routes (TanStack Query on FE).
@@ -44,6 +44,8 @@ export default async function studentsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
+  await fastify.register(studentSetupConfigRoutes);
+
   registerStandardTenantRoutes(fastify, {
     collection: 'students',
     schema: studentRecordSchema as never,
@@ -53,7 +55,6 @@ export default async function studentsRoutes(
     nameSingular: 'student',
     namePlural: 'students',
     loadPageFn: (query) => loadStudentsPage(query),
-    loadAllFn: loadStudents as never,
     loadCountFn: countStudents,
     loadByIdFn: loadStudentById as never,
     createFn: createStudent as never,
@@ -137,7 +138,9 @@ export default async function studentsRoutes(
 
   fastify.post('/migrate-gr-numbers', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
+    if (!roleHasPermission(user.role, STUDENTS_MODULE_MANIFEST.permissions.setupWrite)) {
+      return sendForbidden(reply);
+    }
     try {
       const result = await migrateStudentsMissingGrNumbers();
       return reply.send({ success: true, ...result });

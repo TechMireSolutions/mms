@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { toTitleCase, type Student, type StudentsListPageResult } from "@mms/shared";
+import { type Student, type StudentsListPageResult } from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { TableSkeleton } from "@/components/ui/LoadingState";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
 import StudentList from "@/tenant/features/students/components/StudentList";
@@ -91,7 +92,7 @@ export function StudentsWorkTier({
       onRemove: () => onToggleStatus(status),
     })),
     ...(studentFilterGender
-      ? [{ key: "gender", label: toTitleCase(studentFilterGender), onRemove: () => onGenderChange("") }]
+      ? [{ key: "gender", label: formatContactGenderLabel(studentFilterGender, t), onRemove: () => onGenderChange("") }]
       : []),
   ];
 
@@ -149,6 +150,7 @@ export function StudentsWorkTier({
               students={workStudents}
               viewMode={viewMode}
               isColumnVisible={columnLayout.isColumnVisible}
+              columnRegistry={columnLayout.columnRegistry}
               getColumnWidth={columnLayout.getColumnWidth}
               onColumnResize={columnLayout.setColumnWidth}
               showDeleted={showDeleted}

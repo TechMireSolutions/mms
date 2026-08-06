@@ -12,16 +12,14 @@ type StudentListDesktopTableProps = Pick<
   | "selectedIds"
   | "allSelected"
   | "someSelected"
-  | "showDob"
-  | "showParents"
-  | "showSessions"
-  | "showStatus"
   | "showDeleted"
   | "canWrite"
   | "canDelete"
   | "canWriteMessaging"
   | "statusBadgeConfig"
+  | "isColumnVisible"
   | "isFieldEnabled"
+  | "columnRegistry"
   | "renderSortIcon"
   | "onSort"
   | "onSelectAll"
@@ -42,16 +40,14 @@ export function StudentListDesktopTable({
   selectedIds,
   allSelected,
   someSelected,
-  showDob,
-  showParents,
-  showSessions,
-  showStatus,
   showDeleted,
   canWrite,
   canDelete,
   canWriteMessaging,
   statusBadgeConfig,
+  isColumnVisible,
   isFieldEnabled,
+  columnRegistry,
   renderSortIcon,
   onSort,
   onSelectAll,
@@ -66,6 +62,9 @@ export function StudentListDesktopTable({
   onColumnResize,
 }: StudentListDesktopTableProps) {
   const { t } = useTranslation();
+  const customColumns = columnRegistry.filter(
+    (col) => col.key.startsWith("custom:") && isColumnVisible(col.key),
+  );
 
   return (
     <div className="overflow-x-auto">
@@ -89,7 +88,7 @@ export function StudentListDesktopTable({
                 {t("students.columns.name")} {renderSortIcon("name")}
               </div>
             </ResizableTableHead>
-            {showDob && (
+            {isColumnVisible("dob") ? (
               <ResizableTableHead
                 columnKey="dob"
                 width={getColumnWidth?.("dob")}
@@ -101,8 +100,8 @@ export function StudentListDesktopTable({
                   {t("students.columns.dob")} {renderSortIcon("age")}
                 </div>
               </ResizableTableHead>
-            )}
-            {showParents && (
+            ) : null}
+            {isColumnVisible("parents") ? (
               <ResizableTableHead
                 columnKey="parents"
                 width={getColumnWidth?.("parents")}
@@ -114,13 +113,13 @@ export function StudentListDesktopTable({
                   {t("students.columns.parents")} {renderSortIcon("fatherName")}
                 </div>
               </ResizableTableHead>
-            )}
-            {showSessions && (
+            ) : null}
+            {isColumnVisible("sessions") ? (
               <ResizableTableHead columnKey="sessions" width={getColumnWidth?.("sessions")} onResize={onColumnResize} className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                 {t("students.columns.sessions")}
               </ResizableTableHead>
-            )}
-            {showStatus && (
+            ) : null}
+            {isColumnVisible("status") ? (
               <ResizableTableHead
                 columnKey="status"
                 width={getColumnWidth?.("status")}
@@ -132,7 +131,18 @@ export function StudentListDesktopTable({
                   {t("students.columns.status")} {renderSortIcon("status")}
                 </div>
               </ResizableTableHead>
-            )}
+            ) : null}
+            {customColumns.map((col) => (
+              <ResizableTableHead
+                key={col.key}
+                columnKey={col.key}
+                width={getColumnWidth?.(col.key) ?? col.width}
+                onResize={onColumnResize}
+                className="px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden xl:table-cell"
+              >
+                {col.label}
+              </ResizableTableHead>
+            ))}
             <th className="px-4 py-3 w-12" />
           </tr>
         </thead>
@@ -145,16 +155,14 @@ export function StudentListDesktopTable({
                 rowIndex={rowIndex}
                 sessions={sessions}
                 selectedIds={selectedIds}
-                showDob={showDob}
-                showParents={showParents}
-                showSessions={showSessions}
-                showStatus={showStatus}
                 showDeleted={showDeleted}
                 canWrite={canWrite}
                 canDelete={canDelete}
                 canWriteMessaging={canWriteMessaging}
                 statusBadgeConfig={statusBadgeConfig}
+                isColumnVisible={isColumnVisible}
                 isFieldEnabled={isFieldEnabled}
+                columnRegistry={columnRegistry}
                 onSelectOne={onSelectOne}
                 onRowClick={onRowClick}
                 onViewStudent={onViewStudent}

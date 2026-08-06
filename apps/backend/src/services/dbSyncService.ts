@@ -22,6 +22,10 @@ import {
   sortCollectionNamesForRestore,
   withCompleteRelationalRestoreCollections,
 } from '../db/relationalReplaceMapping.js';
+import {
+  hydrateStudentsSetupCollectionsFromLegacyObjects,
+  STUDENTS_LEGACY_SETUP_OBJECT_KEYS,
+} from '../db/hydrateStudentsSetupFromLegacyBackup.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { throwIfSyncAborted } from '../lib/syncLimits.js';
 import { clearTenantBackgroundJobs } from './backgroundJobService.js';
@@ -76,10 +80,20 @@ export async function synchronizeData(
   payload: TenantDatabaseSnapshot,
   signal?: AbortSignal,
 ): Promise<void> {
-  const collections = withCompleteRelationalRestoreCollections(payload.collections);
-  const { objects } = payload;
   // Only a full workspace backup carries users; partial syncs must not prune.
   const isFullRestore = Array.isArray(payload.collections?.users);
+  const collections = withCompleteRelationalRestoreCollections(
+    isFullRestore
+      ? hydrateStudentsSetupCollectionsFromLegacyObjects(
+          { ...(payload.collections ?? {}) },
+          payload.objects,
+        )
+      : payload.collections,
+  );
+  const { objects } = payload;
+  const skipLegacyStudentsSetupObjects = new Set<string>(
+    isFullRestore ? STUDENTS_LEGACY_SETUP_OBJECT_KEYS : [],
+  );
 
   const restoredCollectionKeys = new Set<string>();
 
@@ -113,6 +127,7 @@ export async function synchronizeData(
       for (const [key, objectValue] of Object.entries(objects)) {
         throwIfSyncAborted(signal);
         if (isServerOnlyObjectKey(key)) continue;
+        if (skipLegacyStudentsSetupObjects.has(key)) continue;
         await dbSaveObject(key, objectValue);
         restoredKeys.add(key);
       }

@@ -63,6 +63,8 @@ const dataMigrationsToRun = [
   { id: '039', load: async () => (await import('./migrations/039_curate_contact_country_codes.js')).runMigration039 },
   { id: '040', load: async () => (await import('./migrations/040_migrate_contact_lookups.js')).runMigration040 },
   { id: '041', load: async () => (await import('./migrations/041_migrate_contact_setup_config.js')).runMigration041 },
+  { id: '042', load: async () => (await import('./migrations/042_migrate_student_setup_config.js')).runMigration042 },
+  { id: '043', load: async () => (await import('./migrations/043_clear_legacy_student_setup_objects.js')).runMigration043 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in tsx, dist in production). */

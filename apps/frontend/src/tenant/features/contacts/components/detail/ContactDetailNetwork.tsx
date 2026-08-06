@@ -1,12 +1,12 @@
 import { Users as UsersIcon } from "lucide-react";
 import {
-  Contact,
-  deriveSiblingLinks,
   getDisplayName,
   getPrimaryEmail,
   getPrimaryPhone,
   hasWhatsApp,
+  mergeStoredAndDerivedSiblingLinks,
 } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatLocalizedRelationshipLabel } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
@@ -22,17 +22,8 @@ export interface ContactDetailNetworkProps {
   onEmail?: (contacts: Contact[]) => void;
 }
 
-type NetworkLink = {
-  contactId: string;
-  name?: string;
-  phone?: string;
-  relationship?: string;
-  inferred?: boolean;
-  derivedSibling?: boolean;
-};
-
 function resolveLinkedDisplayName(
-  entry: NetworkLink,
+  entry: { contactId: string; name?: string },
   target: Contact | undefined,
   unknownLabel: string,
 ): string {
@@ -41,64 +32,6 @@ function resolveLinkedDisplayName(
   if (legacyName) return legacyName;
   if (entry.contactId.trim().length > 0) return unknownLabel;
   return "";
-}
-
-/** Merge relationshipContacts + legacy `relationships`; prefer non-inferred when both exist. */
-function collectNetworkLinks(contact: Contact): NetworkLink[] {
-  const byKey = new Map<string, NetworkLink>();
-
-  const add = (entry: {
-    contactId?: string | number | null;
-    name?: string;
-    phone?: string;
-    relationship?: string;
-    inferred?: boolean;
-    derivedSibling?: boolean;
-  }) => {
-    const contactId = entry.contactId == null ? "" : String(entry.contactId).trim();
-    const name = (entry.name || "").trim();
-    const phone = (entry.phone || "").trim();
-    if (!contactId && !name && !phone) return;
-
-    const key = contactId || (name ? `name:${name.toLowerCase()}` : `phone:${phone}`);
-    const existing = byKey.get(key);
-    if (existing && existing.inferred !== true && entry.inferred === true) return;
-    if (existing && entry.derivedSibling) return;
-    byKey.set(key, {
-      contactId,
-      name: name || existing?.name,
-      phone: phone || existing?.phone,
-      relationship: entry.relationship || existing?.relationship,
-      inferred: entry.inferred === true,
-      ...(entry.derivedSibling ? { derivedSibling: true } : {}),
-    });
-  };
-
-  for (const entry of contact.relationshipContacts ?? []) add(entry);
-  for (const entry of contact.relationships ?? []) add(entry);
-
-  return [...byKey.values()];
-}
-
-function mergeDerivedSiblingLinks(contact: Contact, allContacts: Contact[]): NetworkLink[] {
-  const stored = collectNetworkLinks(contact);
-  const existingIds = new Set(
-    stored.map((link) => link.contactId).filter((id) => id.length > 0),
-  );
-  const peers = allContacts.length > 0 ? allContacts : [contact];
-  const siblings = deriveSiblingLinks(contact, peers).filter(
-    (link) => !existingIds.has(link.contactId),
-  );
-  return [
-    ...stored,
-    ...siblings.map((link) => ({
-      contactId: link.contactId,
-      name: link.name,
-      relationship: link.relationship,
-      inferred: true,
-      derivedSibling: true as const,
-    })),
-  ];
 }
 
 export function ContactDetailNetwork({
@@ -110,7 +43,7 @@ export function ContactDetailNetwork({
   onEmail,
 }: ContactDetailNetworkProps): JSX.Element {
   const { t } = useTranslation();
-  const links = mergeDerivedSiblingLinks(contact, allContacts);
+  const links = mergeStoredAndDerivedSiblingLinks(contact, allContacts);
   const parentAllowsOutbound = !contact.deletedAt;
 
   return (
@@ -150,7 +83,7 @@ export function ContactDetailNetwork({
             const relationshipLabel =
               formatLocalizedRelationshipLabel(
                 relationship.relationship,
-                target?.gender,
+                target?.gender ?? relationship.gender,
                 t,
               ) || t("contacts.detail.linkedContact");
             const linkedId = target?.id ?? (relationship.contactId || undefined);

@@ -10,7 +10,7 @@ import type {
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { notify } from "@/lib/notify";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/students/hooks/studentFormValidation";
-import { buildContactSelectPatch } from "@/tenant/features/students/hooks/studentFormHandlers";
+import { buildContactSelectPatch, resolveStudentGrForSave } from "@/tenant/features/students/hooks/studentFormHandlers";
 import {
   confirmPendingStudentSave,
   runStudentSaveFlow,
@@ -21,6 +21,7 @@ export interface UseStudentFormActionHandlersOptions {
   studentDraft: Partial<Student>;
   linkedContact: Contact | null | undefined;
   nextGrNumber: string | undefined;
+  autoGenerateId: boolean;
   settings: StudentsSettings;
   enabledTabs: Set<string>;
   language: string;
@@ -46,6 +47,7 @@ export function useStudentFormActionHandlers({
   studentDraft,
   linkedContact,
   nextGrNumber,
+  autoGenerateId,
   settings,
   enabledTabs,
   language,
@@ -77,8 +79,14 @@ export function useStudentFormActionHandlers({
   }, [clearDuplicatePrompt, setDuplicateConfirmOpen]);
 
   const handleSave = () => {
-    void runStudentSaveFlow({
+    const draftForSave = resolveStudentGrForSave(
+      student,
       studentDraft,
+      nextGrNumber,
+      autoGenerateId,
+    );
+    void runStudentSaveFlow({
+      studentDraft: draftForSave,
       student,
       linkedContact,
       linkedGenderRaw: linkedContact?.gender?.trim() || "",
@@ -104,8 +112,11 @@ export function useStudentFormActionHandlers({
   };
 
   const confirmDuplicateSave = () => {
+    const pending = pendingSaveData
+      ? resolveStudentGrForSave(student, pendingSaveData, nextGrNumber, autoGenerateId)
+      : null;
     void confirmPendingStudentSave({
-      pendingSaveData,
+      pendingSaveData: pending,
       student,
       blueprintVersion: settings.version,
       t,
@@ -118,7 +129,7 @@ export function useStudentFormActionHandlers({
   };
 
   const handleContactSelect = (id: string | number | null): void => {
-    const patch = buildContactSelectPatch(id, student, studentDraft, nextGrNumber);
+    const patch = buildContactSelectPatch(id, student, studentDraft, nextGrNumber, autoGenerateId);
     if (patch) updateDraft(patch);
   };
 

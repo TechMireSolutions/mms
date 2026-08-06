@@ -22,10 +22,13 @@ import {
 } from './studentSettingsMigrate.js';
 
 export {
+  ensureStudentSeedFields,
   migrateStudentGuardianLinkFields,
   migrateStudentSetupFieldsToTwoTabs,
   remapStudentEnabledTabs,
   STUDENT_SETTINGS_VERSION,
+  OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
+  OBSOLETE_STUDENT_SETUP_TABS,
 } from './studentSettingsMigrate.js';
 
 function cloneStudentSettings(settings: StudentsSettings): StudentsSettings {
@@ -66,9 +69,10 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
     for (const [tabKey, seedFields] of Object.entries(INITIAL_STUDENT_FIELD_SEED)) {
       migratedFields[tabKey] = seedFields.map((field) => {
         if (field.key === 'contactRelationships') {
-          const triadKeys = ['fatherLink', 'motherLink', 'guardianLink'] as const;
-          const sawTriad = triadKeys.some((key) => legacyFields[key] != null);
-          const anyTriadEnabled = triadKeys.some(
+          const sawTriad = [...OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS].some(
+            (key) => legacyFields[key] != null,
+          );
+          const anyTriadEnabled = [...OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS].some(
             (key) => legacyFields[key]?.enabled !== false && legacyFields[key] != null,
           );
           const legacyCfg = legacyFields.contactRelationships;
@@ -152,6 +156,26 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
       (tab) => tab && typeof tab === 'object' && typeof tab.key === 'string' && tab.key.trim().length > 0,
     );
   }
+
+  // Strip retired Setup Preferences keys from legacy students_settings documents.
+  const legacyPrefs = merged as StudentsSettings & {
+    requireGuardian?: unknown;
+    requirePhoto?: unknown;
+    defaultViewLayout?: unknown;
+    idPrefix?: unknown;
+    defaultGender?: unknown;
+    minAge?: unknown;
+    maxAge?: unknown;
+    allowSiblingDiscount?: unknown;
+  };
+  delete legacyPrefs.requireGuardian;
+  delete legacyPrefs.requirePhoto;
+  delete legacyPrefs.defaultViewLayout;
+  delete legacyPrefs.idPrefix;
+  delete legacyPrefs.defaultGender;
+  delete legacyPrefs.minAge;
+  delete legacyPrefs.maxAge;
+  delete legacyPrefs.allowSiblingDiscount;
 
   return merged;
 }

@@ -40,7 +40,8 @@ function isMale(contact: Contact): boolean {
 }
 
 /**
- * Display-only Parent/Child → Father/Mother/Son/Daughter based on the linked person's gender.
+ * Display-only gender mapping for linked-person labels:
+ * Parent → Father/Mother, Child → Son/Daughter, Sibling → Brother/Sister.
  * Stored catalog labels and other types are returned unchanged (trimmed).
  */
 export function formatRelationshipDisplayLabel(

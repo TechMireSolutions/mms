@@ -1,6 +1,6 @@
 import { Globe, ExternalLink } from "lucide-react";
 import type { AppTranslationKey, Contact } from "@mms/shared";
-import { deriveSiblingLinks } from "@mms/shared";
+import { mergeStoredAndDerivedSiblingLinks } from "@mms/shared";
 import { formatLocalizedRelationshipLabel } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 
 export function renderSocialMetadata({
@@ -72,35 +72,13 @@ export function renderRelationshipMetadata({
   renderJoinedList: (items: (string | undefined | null)[], showTitle?: boolean) => React.ReactNode;
   t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 }): React.ReactNode {
-  const stored = (contact.relationshipContacts || []).filter(
+  const peers = contactsMap ? [...contactsMap.values()] : [];
+  const list = mergeStoredAndDerivedSiblingLinks(contact, peers).filter(
     (link) =>
       (link.name || "").trim() ||
       link.contactId ||
       (link.relationship || "").trim(),
   );
-  const existingIds = new Set(
-    stored
-      .map((link) => (link.contactId == null ? "" : String(link.contactId).trim()))
-      .filter(Boolean),
-  );
-  const peers = contactsMap ? [...contactsMap.values()] : [];
-  const siblings = deriveSiblingLinks(contact, peers.length > 0 ? peers : [contact]).filter(
-    (link) => !existingIds.has(link.contactId),
-  );
-
-  type MetaLink = {
-    contactId?: string | number;
-    name?: string;
-    relationship?: string;
-  };
-  const list: MetaLink[] = [
-    ...stored,
-    ...siblings.map((link) => ({
-      contactId: link.contactId,
-      name: link.name,
-      relationship: link.relationship,
-    })),
-  ];
   if (list.length === 0) return emptyNode;
 
   const items = list.map((link) => {
@@ -110,7 +88,11 @@ export function renderRelationshipMetadata({
       name = linked ? linked.name : `${t("contacts.table.contactIdPrefix")}${link.contactId}`;
     }
     const relationship = link.relationship
-      ? formatLocalizedRelationshipLabel(link.relationship.trim(), linked?.gender, t)
+      ? formatLocalizedRelationshipLabel(
+          link.relationship.trim(),
+          linked?.gender ?? link.gender,
+          t,
+        )
       : "";
     if (name && relationship) return `${name} (${relationship})`;
     return name || relationship;

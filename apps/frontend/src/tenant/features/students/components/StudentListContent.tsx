@@ -17,18 +17,33 @@ export type {
 export function StudentListContent(props: StudentListContentProps) {
   const { t } = useTranslation();
 
-  if (props.viewMode === "cards") {
-    return <StudentListCards {...props} />;
-  }
-
   if (props.paginatedStudents.length === 0) {
     return (
       <div className={`${WORK_SURFACE} overflow-hidden`}>
         <EmptyState
+          variant="dashed"
           icon={GraduationCap}
           title={t("students.list.emptyTitle")}
           description={t("students.list.emptyDesc")}
         />
+      </div>
+    );
+  }
+
+  if (props.viewMode === "cards") {
+    return (
+      <div className="space-y-4">
+        <StudentListCards {...props} />
+        {!props.hasServerPagination ? (
+          <ListPagination
+            page={props.currentPage}
+            total={props.students.length}
+            limit={props.pageSize}
+            onPageChange={props.onPageChange}
+            i18nNamespace="students"
+            variant="range"
+          />
+        ) : null}
       </div>
     );
   }

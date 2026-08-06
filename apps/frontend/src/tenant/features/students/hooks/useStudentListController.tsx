@@ -1,6 +1,11 @@
 import { useState, useMemo, useEffect, type MouseEvent } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { type Student, resolveStudentStatuses, toMessagingRecipient } from "@mms/shared";
+import {
+  type Student,
+  primaryResponsibleAdultDisplayName,
+  resolveStudentStatuses,
+  toMessagingRecipient,
+} from "@mms/shared";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
@@ -39,14 +44,12 @@ export function useStudentListController({
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const studentStatusOptions = useMemo(() => resolveStudentStatuses(statuses), [statuses]);
 
-  const showDob = isColumnVisible
-    ? isColumnVisible("dob")
-    : isFieldEnabled("dob");
-  const showParents = isColumnVisible
-    ? isColumnVisible("parents")
-    : isFieldEnabled("contactRelationships");
-  const showSessions = isColumnVisible ? isColumnVisible("sessions") : true;
-  const showStatus = isColumnVisible ? isColumnVisible("status") : true;
+  const resolveColumnVisible = (key: string): boolean => {
+    if (isColumnVisible) return isColumnVisible(key);
+    if (key === "dob") return isFieldEnabled("dob");
+    if (key === "parents") return isFieldEnabled("contactRelationships");
+    return true;
+  };
 
   const [localSortField, setLocalSortField] = useState<StudentListSortField | null>("grNumber");
   const [localSortDir, setLocalSortDir] = useState<"asc" | "desc">("desc");
@@ -54,7 +57,6 @@ export function useStudentListController({
   const sortDir = serverSort?.sortDir ?? localSortDir;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
   const [viewStudent, setViewStudent] = useState<Student | null>(null);
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
   const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
@@ -64,7 +66,7 @@ export function useStudentListController({
   useEffect(() => {
     setCurrentPage(1);
     setSelectedIds([]);
-  }, [students.length, pageSize, showDeleted]);
+  }, [students.length, showDeleted]);
 
   const handleSort = (field: NonNullable<typeof sortField>) => {
     if (serverSort) {
@@ -106,8 +108,8 @@ export function useStudentListController({
         const secondDate = secondSortValue ? new Date(secondSortValue).getTime() : 0;
         return sortDir === "asc" ? secondDate - firstDate : firstDate - secondDate;
       } else if (sortField === "fatherName") {
-        firstSortValue = (firstStudent.fatherName || firstStudent.guardianName || "").toLowerCase();
-        secondSortValue = (secondStudent.fatherName || secondStudent.guardianName || "").toLowerCase();
+        firstSortValue = primaryResponsibleAdultDisplayName(firstStudent).toLowerCase();
+        secondSortValue = primaryResponsibleAdultDisplayName(secondStudent).toLowerCase();
       } else if (sortField === "status") {
         firstSortValue = (firstStudent.status || "").toLowerCase();
         secondSortValue = (secondStudent.status || "").toLowerCase();
@@ -122,11 +124,8 @@ export function useStudentListController({
     });
   }, [students, sortField, sortDir, serverPagination]);
 
-  const paginatedStudents = useMemo(() => {
-    if (serverPagination) return sortedStudents;
-    const start = (currentPage - 1) * pageSize;
-    return sortedStudents.slice(start, start + pageSize);
-  }, [sortedStudents, currentPage, pageSize, serverPagination]);
+  const paginatedStudents = sortedStudents;
+  const pageSize = serverPagination?.limit ?? (sortedStudents.length || 50);
 
   const handleSelectAll = () => {
     if (selectedIds.length === paginatedStudents.length) {
@@ -172,10 +171,7 @@ export function useStudentListController({
     t,
     statusBadgeConfig,
     studentStatusOptions,
-    showDob,
-    showParents,
-    showSessions,
-    showStatus,
+    isColumnVisible: resolveColumnVisible,
     isFieldEnabled,
     sortField,
     selectedIds,

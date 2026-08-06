@@ -24,6 +24,9 @@ export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   contact_field_configs: 26,
   contact_module_preferences: 27,
   contact_user_column_prefs: 28,
+  student_field_configs: 29,
+  student_module_preferences: 30,
+  student_user_column_prefs: 31,
   users: 900,
 };
 
@@ -241,6 +244,21 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/contactUserColumnPrefsRepository.js',
     fnName: 'replaceContactUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllContactUserColumnPrefsByWorkspace',
+  },
+  student_field_configs: {
+    importPath: './repositories/studentFieldConfigRepository.js',
+    fnName: 'replaceStudentFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllStudentFieldConfigsByWorkspace',
+  },
+  student_module_preferences: {
+    importPath: './repositories/studentModulePreferencesRepository.js',
+    fnName: 'replaceStudentModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllStudentModulePreferencesByWorkspace',
+  },
+  student_user_column_prefs: {
+    importPath: './repositories/studentUserColumnPrefsRepository.js',
+    fnName: 'replaceStudentUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllStudentUserColumnPrefsByWorkspace',
   },
   saved_reports: {
     importPath: './repositories/savedReportsRepository.js',

@@ -5,49 +5,100 @@ import type { FieldDefinition } from "./contactTypes.js";
 import type { StudentsSettings } from "./settingsTypes.js";
 import { buildCustomFieldSchema, type ValidationError } from "./contactValidation.js";
 import { canViewContactTab, canViewContactField } from "./contactFieldAccess.js";
-import { hasResponsibleAdultLink } from "./studentGuardianFromContacts.js";
+import { STUDENT_REGISTRATION_SEED_FIELD_KEYS } from "./moduleFieldSetupPersons.js";
+import { OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS } from "./studentSettingsMigrate.js";
+import { listEnabledCustomStudentFormFields } from "./studentFormCustomFields.js";
+import { stripStudentClientSoftDeleteFields } from "./studentUtils.js";
 
-type PrimaryContactLike = Parameters<typeof hasResponsibleAdultLink>[0];
+/** Top-level keys always accepted on student form drafts / writes (system model). */
+export const STUDENT_WRITE_SYSTEM_KEYS = [
+  "id",
+  "_blueprintId",
+  "contactId",
+  "fatherContactId",
+  "motherContactId",
+  "guardianContactId",
+  "studentId",
+  "grNumber",
+  "status",
+  "enrollmentDate",
+  "registeredDate",
+  "notes",
+  "name",
+  "gender",
+  "dob",
+  "phone",
+  "email",
+  "city",
+  "avatar",
+  "fatherName",
+  "motherName",
+  "guardianName",
+  "enrolledSessions",
+  "createdAt",
+  "updatedAt",
+  "createdBy",
+  "updatedBy",
+] as const;
 
-function hasResponsibleAdultSlots(studentDraft: Record<string, unknown>): boolean {
-  const name = (value: unknown) => typeof value === "string" && value.trim().length > 0;
-  return Boolean(
-    studentDraft.fatherContactId ||
-      studentDraft.guardianContactId ||
-      name(studentDraft.fatherName) ||
-      name(studentDraft.guardianName),
-  );
+const STUDENT_WRITE_SYSTEM_KEY_SET = new Set<string>(STUDENT_WRITE_SYSTEM_KEYS);
+
+/** Enabled Setup custom field keys beyond the system student model. */
+export function collectStudentWriteExtraFieldKeys(
+  fields: Record<string, FieldDefinition[]> | null | undefined,
+): string[] {
+  if (!fields) return [];
+  return listEnabledCustomStudentFormFields(fields)
+    .map((field) => field.key)
+    .filter((key) => !STUDENT_WRITE_SYSTEM_KEY_SET.has(key));
 }
 
 /**
- * Compiles a comprehensive Zod validation schema representing dynamic student checks.
- * Pass `primaryContact` when available so `requireGuardian` uses Parent/Guardian relationship links.
+ * Compiles a Zod validation schema for student form drafts.
+ * System keys + enabled registry fields; unknown keys rejected via `.strict()`.
  */
 export function buildDynamicStudentSchema(
   settings: StudentsSettings,
   enabledTabIds: Set<string>,
-  requiredTabIds: Set<string>,
+  _requiredTabIds: Set<string>,
   fields: Record<string, FieldDefinition[]>,
   language = "en",
   viewerRole?: string,
-  primaryContact?: PrimaryContactLike,
 ): z.ZodTypeAny {
-  const schemaObject: Record<string, z.ZodTypeAny> = {};
+  const schemaObject: Record<string, z.ZodTypeAny> = {
+    id: z.union([z.string(), z.number()]).optional(),
+    _blueprintId: z.union([z.string(), z.number()]).optional(),
+    contactId: z.union([z.string(), z.number()]).nullish(),
+    fatherContactId: z.union([z.string(), z.number()]).nullish(),
+    motherContactId: z.union([z.string(), z.number()]).nullish(),
+    guardianContactId: z.union([z.string(), z.number()]).nullish(),
+    studentId: z.string().optional(),
+    grNumber: z.string().optional(),
+    status: z.string().optional(),
+    enrollmentDate: z.string().optional(),
+    registeredDate: z.string().optional(),
+    notes: z.string().optional(),
+    name: z.string().optional(),
+    gender: z.string().optional(),
+    dob: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().optional(),
+    city: z.string().optional(),
+    avatar: z.string().nullish(),
+    fatherName: z.string().optional(),
+    motherName: z.string().optional(),
+    guardianName: z.string().optional(),
+    enrolledSessions: z.array(z.string()).optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+    createdBy: z.string().optional(),
+    updatedBy: z.string().optional(),
+  };
 
   const contactRequiredMsg = translateApp("students.form.contactRequired" as AppTranslationKey, language);
-  schemaObject.contactId = z.union([z.string(), z.number()], {
-    error: contactRequiredMsg,
-  }).refine((contactIdValue) => contactIdValue !== null && contactIdValue !== undefined && contactIdValue !== "", {
-    message: contactRequiredMsg,
-  });
-
   const grRequiredMsg = translateApp("students.form.grNumberRequired" as AppTranslationKey, language);
-  schemaObject.grNumber = z.string({ message: grRequiredMsg }).min(1, grRequiredMsg);
-
   const statusRequiredMsg = translateApp("students.form.statusRequired" as AppTranslationKey, language);
-  schemaObject.status = z.string().min(1, statusRequiredMsg);
 
-  // Process dynamic tab fields
   Object.keys(fields).forEach((tabId) => {
     if (!enabledTabIds.has(tabId) && tabId !== "basic") return;
 
@@ -63,30 +114,42 @@ export function buildDynamicStudentSchema(
       if (viewerRole && !canViewContactField(viewerRole, field)) {
         return;
       }
-      // Relationships from Contacts are display-only (Parent/Guardian/…).
       if (field.key === "contactRelationships") {
         return;
       }
-      if (field.key === "fatherLink" || field.key === "motherLink" || field.key === "guardianLink") {
+      if (OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS.has(field.key)) {
+        return;
+      }
+      if (field.key === "contactId") {
+        schemaObject.contactId = z.union([z.string(), z.number()], {
+          error: contactRequiredMsg,
+        }).refine((contactIdValue) => contactIdValue !== null && contactIdValue !== undefined && contactIdValue !== "", {
+          message: contactRequiredMsg,
+        });
+        return;
+      }
+      if (field.key === "grNumber") {
+        schemaObject.grNumber = field.required
+          ? z.string({ message: grRequiredMsg }).min(1, grRequiredMsg)
+          : z.string().optional();
+        return;
+      }
+      if (field.key === "status") {
+        schemaObject.status = field.required
+          ? z.string().min(1, statusRequiredMsg)
+          : z.string().optional();
         return;
       }
       schemaObject[field.key] = buildCustomFieldSchema(field);
     });
   });
 
-  let baseSchema = z.object(schemaObject).passthrough();
+  const objectSchema = z.object(schemaObject).strict();
 
-  if (settings.requireGuardian) {
-    baseSchema = baseSchema.refine((studentDraft: Record<string, unknown>) => {
-      if (primaryContact && hasResponsibleAdultLink(primaryContact)) return true;
-      return hasResponsibleAdultSlots(studentDraft);
-    }, {
-      message: translateApp("students.form.guardianRequired" as AppTranslationKey, language),
-      path: ["contactRelationships"],
-    });
-  }
-
-  return baseSchema;
+  return z.preprocess((raw) => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
+    return stripStudentClientSoftDeleteFields({ ...(raw as Record<string, unknown>) });
+  }, objectSchema);
 }
 
 /**
@@ -117,15 +180,19 @@ export function formatStudentZodIssues(
       }
     }
 
-    // FormModal has Identity (`basic`) + Registration (`registration`) only.
-    const registrationFieldIds = new Set(["grNumber", "status", "registeredDate", "notes"]);
-    if (registrationFieldIds.has(mappedFieldId) || tabId === "academic" || tabId === "registration") {
-      tabId = "registration";
-    } else {
-      tabId = "basic";
+    // Prefer the Setup tab that owns the field; keep custom_* tabs intact.
+    let resolvedTabId = tabId;
+    if (
+      STUDENT_REGISTRATION_SEED_FIELD_KEYS.has(mappedFieldId)
+      || tabId === "academic"
+      || tabId === "registration"
+    ) {
+      resolvedTabId = "registration";
+    } else if (tabId === "basic" || tabId === "guardian") {
+      resolvedTabId = "basic";
     }
 
-    errors.push({ fieldId: mappedFieldId, tabId, message });
+    errors.push({ fieldId: mappedFieldId, tabId: resolvedTabId, message });
   });
   return errors;
 }

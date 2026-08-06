@@ -2,6 +2,8 @@ import type React from "react";
 import type { ComponentType } from "react";
 import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
+import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import type { AppTranslationKey, FieldDefinition } from "@mms/shared";
 
 export type StudentFieldErrorGetter = (fieldId: string) => string | undefined;
 
@@ -10,9 +12,28 @@ export interface StudentStatusSelectOption {
   label: string;
 }
 
-export function FieldError({ message }: { message?: string }): React.JSX.Element | null {
-  return <FieldErrorMessage message={message} />;
+export function findStudentTabField(
+  fields: Record<string, FieldDefinition[]>,
+  tabId: string,
+  key: string,
+): FieldDefinition | undefined {
+  return (fields[tabId] ?? []).find((field) => field.key === key);
 }
+
+/** Registry label with form-copy fallback when the seed field is missing from settings. */
+export function resolveStudentFieldLabel(
+  fields: Record<string, FieldDefinition[]>,
+  tabId: string,
+  key: string,
+  fallbackKey: AppTranslationKey,
+  t: (key: AppTranslationKey) => string,
+): string {
+  const field = findStudentTabField(fields, tabId, key);
+  return field ? resolveRegistryLabel(field, t) : t(fallbackKey);
+}
+
+export { FieldErrorMessage } from "@/components/ui/FormPrimitives";
+export { FieldErrorMessage as FieldError };
 
 export function ContactProfileValue({
   label,

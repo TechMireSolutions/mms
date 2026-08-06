@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { Contact } from '../contactEntityTypes.js';
-import { deriveSiblingLinks } from '../contactSiblingDerivation.js';
+import {
+  deriveSiblingLinks,
+  mergeStoredAndDerivedSiblingLinks,
+} from '../contactSiblingDerivation.js';
 
 function contact(
   partial: Partial<Contact> & {
     id: string;
     relationshipContacts?: Contact['relationshipContacts'];
+    relationships?: Contact['relationships'];
   },
 ): Contact {
   return {
@@ -107,5 +111,103 @@ describe('deriveSiblingLinks', () => {
         name: 'Sibling Two',
       },
     ]);
+  });
+});
+
+describe('mergeStoredAndDerivedSiblingLinks', () => {
+  it('preserves derived sibling gender and name', () => {
+    const parent = contact({
+      id: 'p1',
+      relationshipContacts: [
+        { contactId: 'c1', relationship: 'Child' },
+        { contactId: 'c2', relationship: 'Child' },
+      ],
+    });
+    const child1 = contact({
+      id: 'c1',
+      relationshipContacts: [{ contactId: 'p1', relationship: 'Parent' }],
+    });
+    const child2 = contact({
+      id: 'c2',
+      name: 'Sister Two',
+      gender: 'female',
+      relationshipContacts: [{ contactId: 'p1', relationship: 'Parent' }],
+    });
+
+    const merged = mergeStoredAndDerivedSiblingLinks(child1, [parent, child1, child2]);
+    expect(merged).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          contactId: 'p1',
+          relationship: 'Parent',
+        }),
+        expect.objectContaining({
+          contactId: 'c2',
+          relationship: 'Sibling',
+          derivedSibling: true,
+          name: 'Sister Two',
+          gender: 'female',
+          inferred: true,
+        }),
+      ]),
+    );
+  });
+
+  it('dedupes derived siblings against stored relationshipContacts ids', () => {
+    const parent = contact({
+      id: 'p1',
+      relationshipContacts: [
+        { contactId: 'c1', relationship: 'Child' },
+        { contactId: 'c2', relationship: 'Child' },
+      ],
+    });
+    const child1 = contact({
+      id: 'c1',
+      relationshipContacts: [
+        { contactId: 'p1', relationship: 'Parent' },
+        { contactId: 'c2', relationship: 'Sibling', name: 'Already linked' },
+      ],
+    });
+    const child2 = contact({
+      id: 'c2',
+      gender: 'female',
+      relationshipContacts: [{ contactId: 'p1', relationship: 'Parent' }],
+    });
+
+    const merged = mergeStoredAndDerivedSiblingLinks(child1, [parent, child1, child2]);
+    const c2Links = merged.filter((link) => link.contactId === 'c2');
+    expect(c2Links).toHaveLength(1);
+    expect(c2Links[0]).toMatchObject({
+      contactId: 'c2',
+      relationship: 'Sibling',
+      name: 'Already linked',
+    });
+    expect(c2Links[0]?.derivedSibling).toBeUndefined();
+  });
+
+  it('includes legacy relationships ids in dedupe set', () => {
+    const parent = contact({
+      id: 'p1',
+      relationshipContacts: [
+        { contactId: 'c1', relationship: 'Child' },
+        { contactId: 'c2', relationship: 'Child' },
+      ],
+    });
+    const child1 = contact({
+      id: 'c1',
+      relationshipContacts: [{ contactId: 'p1', relationship: 'Parent' }],
+      relationships: [{ contactId: 'c2', relationship: 'Sibling' }],
+    });
+    const child2 = contact({
+      id: 'c2',
+      gender: 'female',
+      relationshipContacts: [{ contactId: 'p1', relationship: 'Parent' }],
+    });
+
+    const merged = mergeStoredAndDerivedSiblingLinks(child1, [parent, child1, child2]);
+    const c2Links = merged.filter((link) => link.contactId === 'c2');
+    expect(c2Links).toHaveLength(1);
+    expect(c2Links[0]?.derivedSibling).toBeUndefined();
+    expect(c2Links[0]?.relationship).toBe('Sibling');
   });
 });

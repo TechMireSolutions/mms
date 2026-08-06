@@ -42,8 +42,6 @@ export function validateStudentDraft(
     context.requiredTabs,
     context.fields,
     context.language,
-    undefined,
-    context.linkedContact ?? null,
   );
 
   const guardians = resolveStudentGuardianLinks(studentDraft, context.linkedContact ?? null);

@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type Student,
@@ -41,7 +41,8 @@ function buildSearchSql(search: string): SQL | null {
     OR lower(COALESCE(${students.customData}->>'guardianName', '')) LIKE ${pattern}
     OR EXISTS (
       SELECT 1 FROM contacts c
-      WHERE c.id = ${students.contactId}
+      WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
+        AND c.id = ${students.contactId}
         AND (
           lower(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')) LIKE ${pattern}
           OR lower(COALESCE(c.custom_data->>'firstName', '')) LIKE ${pattern}
@@ -196,5 +197,26 @@ export async function aggregateStudentsCommandMetrics(
       suspended: Number(row?.suspended ?? 0),
       newThisPeriod: Number(row?.newThisPeriod ?? 0),
     };
+  });
+}
+
+/** Active students missing `custom_data.grNumber` (null or blank). */
+export async function listActiveStudentsMissingGrNumber(
+  workspaceSubdomain: string,
+): Promise<Student[]> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(students)
+      .where(
+        and(
+          eq(students.workspaceSubdomain, subdomain),
+          isNull(students.deletedAt),
+          sql`NULLIF(trim(COALESCE(${students.customData}->>'grNumber', '')), '') IS NULL`,
+        ),
+      )
+      .orderBy(asc(students.id));
+    return rows.map(studentRowToRecord);
   });
 }

@@ -90,6 +90,46 @@ describe('dbSyncService collection persistence', () => {
     expect(dbDeleteCollection).not.toHaveBeenCalled();
   });
 
+  it('hydrates typed Students Setup from legacy objects on full restore and skips re-saving them', async () => {
+    const { synchronizeData } = await import('../services/dbSyncService.js');
+    await synchronizeData({
+      collections: { users: [{ id: 'u-1' }] },
+      objects: {
+        branding: { madrasaName: 'Demo' },
+        students_settings: {
+          fields: {},
+          autoGenerateId: true,
+          grNumberTemplate: '{seq}-{year}',
+          grNumberDigits: 4,
+          grNumberRestartAnnually: true,
+        },
+        student_user_column_preferences: {
+          'u-admin': [{ key: 'name', enabled: true, order: 0 }],
+        },
+      },
+    });
+
+    const fieldCall = dbSaveCollection.mock.calls.find((call) => call[0] === 'student_field_configs');
+    const prefsCall = dbSaveCollection.mock.calls.find(
+      (call) => call[0] === 'student_module_preferences',
+    );
+    const columnCall = dbSaveCollection.mock.calls.find(
+      (call) => call[0] === 'student_user_column_prefs',
+    );
+    expect(fieldCall?.[1]).toEqual([expect.objectContaining({ config: expect.any(Object) })]);
+    expect(prefsCall?.[1]).toEqual([
+      expect.objectContaining({ preferences: expect.objectContaining({ autoGenerateId: true }) }),
+    ]);
+    expect(columnCall?.[1]).toEqual([
+      { userId: 'u-admin', preferences: [{ key: 'name', enabled: true, order: 0 }] },
+    ]);
+
+    const savedObjectKeys = dbSaveObject.mock.calls.map((call) => call[0] as string);
+    expect(savedObjectKeys).toContain('branding');
+    expect(savedObjectKeys).not.toContain('students_settings');
+    expect(savedObjectKeys).not.toContain('student_user_column_preferences');
+  });
+
   it('prunes tenant objects the full backup does not carry', async () => {
     dbListTenantObjectLogicalKeys.mockResolvedValue([
       'branding',
