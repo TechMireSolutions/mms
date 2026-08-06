@@ -8,6 +8,7 @@ import {
   composeStudentsSettings,
   normalizeStudentModulePreferences,
   normalizeStudentsSettings,
+  emptyStudentLookupsMap,
   type StudentsSettings,
 } from '@mms/shared';
 import { useQueryClient } from '@tanstack/react-query';
@@ -30,11 +31,9 @@ import {
   setStudentFieldConfigMemory,
   setStudentPreferencesMemory,
 } from '@/tenant/features/students/hooks/studentSetupConfigApi';
-import { STUDENT_CONFIG_COLLECTION_KEYS, STUDENT_CONFIG_OBJECT_KEYS } from './standardModuleConfigRegistryKeys';
+import { useStudentLookupsQuery } from '@/tenant/features/students/hooks/useStudentLookups';
 
 export type {
-  StudentGuardianContactDefault,
-  StudentGuardianContactDefaults,
   StandardModuleId,
   StandardModuleSettingsMap,
   StandardModuleConfigExtraMap,
@@ -88,7 +87,7 @@ export function useTeacherConfig() {
 
 /**
  * Students settings authority is typed REST + TanStack Query (not document-store getObject).
- * Lookups (statuses / gender / discount) remain live collections until a lookups pass.
+ * Lookups (statuses / genderFilters / discountTypes) load from `/api/students/lookups`.
  */
 export function useStudentConfig() {
   const registry = STANDARD_MODULES_CONFIG_REGISTRY.students;
@@ -96,29 +95,12 @@ export function useStudentConfig() {
   const settings = useComposedStudentsSettings();
   const fieldMutation = useStudentFieldConfigMutation();
   const prefsMutation = useStudentPreferencesMutation();
+  const lookupsQuery = useStudentLookupsQuery();
 
-  const aux = useLiveCollectionsAndObjects(
-    {
-      statuses: {
-        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => [],
-      },
-      genderFilters: {
-        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.genderFilters,
-        default: () => [],
-      },
-      discountTypes: {
-        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.discountTypes,
-        default: () => [],
-      },
-    },
-    {
-      guardianContactDefaults: {
-        dbKey: STUDENT_CONFIG_OBJECT_KEYS.guardianContactDefaults,
-        default: () => ({}),
-      },
-    },
-  );
+  const lookups = lookupsQuery.data ?? emptyStudentLookupsMap();
+  const statuses = lookups.statuses;
+  const genderFilters = lookups.genderFilters;
+  const discountTypes = lookups.discountTypes;
 
   const defaultSettings = registry.defaultSettings;
   const defaultFieldDefs = registry.defaultFieldDefs as unknown as ModuleFieldDef[];
@@ -204,8 +186,9 @@ export function useStudentConfig() {
     loadSettings,
     isFieldEnabled,
     isFieldRequired,
-    ...aux.collections,
-    ...aux.objects,
+    statuses,
+    genderFilters,
+    discountTypes,
   } as ReturnType<typeof useModuleConfig<StudentsSettings>> &
     StandardModuleConfigExtraMap['students'];
 }

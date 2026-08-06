@@ -19,6 +19,7 @@ export const DUPLICATE_ERROR_KEYS: Record<StudentDuplicateReason, AppTranslation
   contact: "students.form.contactAlreadyStudent",
   email: "students.form.duplicateEmail",
   nameDob: "students.form.duplicateNameDob",
+  grNumber: "students.form.duplicateGrNumber",
 };
 
 export interface StudentValidationContext {
@@ -62,6 +63,7 @@ export interface StudentDuplicateCheckInput {
   studentId?: string;
   contactId: string;
   linkedContact?: Contact | null;
+  grNumber?: string;
 }
 
 export async function checkStudentFormDuplicate(
@@ -74,6 +76,7 @@ export async function checkStudentFormDuplicate(
     email,
     name: input.linkedContact?.name,
     dob: input.linkedContact?.dob || undefined,
+    grNumber: input.grNumber,
   });
 }
 

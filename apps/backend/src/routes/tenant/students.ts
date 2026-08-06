@@ -34,6 +34,7 @@ import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 import { studentSetupConfigRoutes } from './students/studentSetupConfigRoutes.js';
+import { studentLookupRoutes } from './students/studentLookupRoutes.js';
 
 /**
  * Server-first student resource routes (TanStack Query on FE).
@@ -45,6 +46,7 @@ export default async function studentsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   await fastify.register(studentSetupConfigRoutes);
+  await fastify.register(studentLookupRoutes);
 
   registerStandardTenantRoutes(fastify, {
     collection: 'students',

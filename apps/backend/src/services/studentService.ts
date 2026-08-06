@@ -30,6 +30,7 @@ import {
   countStudentsActive,
   aggregateStudentsCommandMetrics,
   listActiveStudentsMissingGrNumber,
+  bulkUpdateStudentsStatusSql,
 } from '../db/repositories/studentRepositoryList.js';
 import {
   aggregateStudentsWidgetQueries,
@@ -111,8 +112,44 @@ const crud = createGenericRelationalService<StudentRecord>({
   normalizeFn: normalizeStoredStudent as (record: StudentRecord) => StudentRecord,
 });
 
-export const createStudent = crud.create;
-export const updateStudentById = crud.updateById;
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const code = 'code' in error ? String((error as { code?: unknown }).code ?? '') : '';
+  if (code === '23505') return true;
+  const cause = 'cause' in error ? (error as { cause?: unknown }).cause : undefined;
+  return isUniqueViolation(cause);
+}
+
+function throwGrUniqueConflict(error: unknown): never {
+  if (isUniqueViolation(error)) {
+    const conflict = new Error('A student with this GR number already exists.') as Error & {
+      statusCode: number;
+      type: string;
+    };
+    conflict.statusCode = 409;
+    conflict.type = 'conflict';
+    throw conflict;
+  }
+  throw error;
+}
+
+export const createStudent = async (record: StudentRecord): Promise<StudentRecord> => {
+  try {
+    return await crud.create(record);
+  } catch (error: unknown) {
+    throwGrUniqueConflict(error);
+  }
+};
+export const updateStudentById = async (
+  id: string,
+  record: StudentRecord,
+): Promise<StudentRecord | null> => {
+  try {
+    return await crud.updateById(id, record);
+  } catch (error: unknown) {
+    throwGrUniqueConflict(error);
+  }
+};
 export const deleteStudentById = crud.deleteById;
 export const restoreStudentById = crud.restoreById;
 export const bulkSoftDeleteStudents = crud.bulkDeleteByIds;
@@ -125,21 +162,14 @@ export async function bulkUpdateStudentStatus(
   const tenant = getRequestTenant();
   if (!tenant) return { succeeded: 0, failed: ids.length };
 
-  const outcomes = await Promise.all(
-    ids.map(async (id) => {
-      const existing = await findStudentById(tenant, id);
-      if (!existing || existing.deletedAt) return false;
-      const updated = await updateStudentById(id, {
-        ...(existing as StudentRecord),
-        status,
-        id,
-      });
-      return Boolean(updated);
-    }),
-  );
+  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
 
-  const succeeded = outcomes.filter(Boolean).length;
-  return { succeeded, failed: ids.length - succeeded };
+  const succeeded = await bulkUpdateStudentsStatusSql(tenant, uniqueIds, status);
+  if (succeeded > 0) {
+    broadcastTenantUpdate(tenant, 'collection', 'students');
+  }
+  return { succeeded, failed: uniqueIds.length - succeeded };
 }
 
 export async function loadStudents(options?: { includeDeleted?: boolean }): Promise<Student[]> {
@@ -257,7 +287,11 @@ export async function migrateStudentsMissingGrNumbers(): Promise<{ updated: numb
         : fallbackDate;
     // Persist each row before the next count so SQL next-GR stays monotonic.
     const grNumber = await computeNextGrNumberForDate(registeredDate, prefs);
-    await saveStudent(tenant, { ...row, grNumber });
+    try {
+      await saveStudent(tenant, { ...row, grNumber });
+    } catch (error: unknown) {
+      throwGrUniqueConflict(error);
+    }
     updated += 1;
   }
 

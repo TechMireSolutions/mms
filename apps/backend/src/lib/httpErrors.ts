@@ -35,6 +35,13 @@ export function sendDatabaseError(
   return reply.status(500).send({ type: 'database_error', message });
 }
 
+export function sendConflict(
+  reply: FastifyReply,
+  message = 'Conflict',
+): ReturnType<FastifyReply['status']> {
+  return reply.status(409).send({ type: 'conflict', message });
+}
+
 export function sendInvalidCurrentPassword(
   reply: FastifyReply,
   message = 'Current password is incorrect',

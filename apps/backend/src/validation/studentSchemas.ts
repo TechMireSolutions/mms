@@ -22,6 +22,7 @@ export const studentsDuplicateCheckBodySchema = z.object({
   email: z.string().max(320).optional(),
   name: z.string().max(500).optional(),
   dob: z.string().max(32).optional(),
+  grNumber: z.string().max(64).optional(),
 });
 
 export const studentsBulkIdsSchema = bulkIdsBodySchema;

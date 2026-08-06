@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../services/rbacService.js';
-import { sendForbidden, sendDatabaseError, sendNotFound } from './httpErrors.js';
+import { sendForbidden, sendDatabaseError, sendNotFound, sendConflict } from './httpErrors.js';
 import { parseRequest, replyValidationError, executeDynamicValidation } from './zodRequest.js';
 import {
   resourceIdParamsSchema,
@@ -120,6 +120,14 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         return reply.status(201).send({ [nameSingular]: item });
       } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : `Failed to create ${nameSingular}`;
+        const statusCode =
+          typeof error === 'object' &&
+          error !== null &&
+          'statusCode' in error &&
+          typeof (error as { statusCode: unknown }).statusCode === 'number'
+            ? (error as { statusCode: number }).statusCode
+            : 0;
+        if (statusCode === 409) return sendConflict(reply, errMsg);
         return sendDatabaseError(reply, errMsg);
       }
     });
@@ -160,6 +168,14 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         return reply.send({ [nameSingular]: updated });
       } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : `Failed to update ${nameSingular}`;
+        const statusCode =
+          typeof error === 'object' &&
+          error !== null &&
+          'statusCode' in error &&
+          typeof (error as { statusCode: unknown }).statusCode === 'number'
+            ? (error as { statusCode: number }).statusCode
+            : 0;
+        if (statusCode === 409) return sendConflict(reply, errMsg);
         return sendDatabaseError(reply, errMsg);
       }
     });

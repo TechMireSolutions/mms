@@ -11,9 +11,10 @@ export type StudentDuplicateCheckInput = {
   email?: string;
   name?: string;
   dob?: string;
+  grNumber?: string;
 };
 
-export type StudentDuplicateReason = 'contact' | 'email' | 'nameDob';
+export type StudentDuplicateReason = 'contact' | 'email' | 'nameDob' | 'grNumber';
 
 type StudentRow = {
   id?: string | number;
@@ -76,6 +77,11 @@ export function findStudentRegistrationConflict(
 
     if (email && row.email && email === row.email.trim().toLowerCase()) {
       return 'email';
+    }
+
+    const grNumber = input.grNumber?.trim().toLowerCase();
+    if (grNumber && row.grNumber && grNumber === String(row.grNumber).trim().toLowerCase()) {
+      return 'grNumber';
     }
 
     if (name && dob && row.name && row.dob) {

@@ -228,11 +228,19 @@ export const studentUserColumnPrefs = pgTable('student_user_column_prefs', {
   index('student_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
+/**
+ * Students entity rows.
+ * Typed `status` / `gr_number` (0017) dual-write with JSONB API SSOT.
+ * Expression indexes (gender 0016; status/GR on typed cols 0017) are SQL SSOT.
+ * Composite FK `contact_id` → contacts (0019) ON DELETE SET NULL.
+ */
 export const students = pgTable('students', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   contactId: text('contact_id'),
+  status: text('status'),
+  grNumber: text('gr_number'),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
   deletedBy: text('deleted_by'),
   deletionReason: text('deletion_reason'),
@@ -247,6 +255,32 @@ export const students = pgTable('students', {
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
   index('students_custom_data_gin_idx').using('gin', table.customData),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('set null'),
+]);
+
+/**
+ * Students Setup option lists (statuses, genderFilters, discountTypes).
+ * Replaces document-store collections studentStatuses / studentGenderFilters / studentDiscountTypes.
+ */
+export const studentLookups = pgTable('student_lookups', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(),
+  label: text('label').notNull(),
+  meta: jsonb('meta').$type<Record<string, unknown> | null>(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  uniqueIndex('student_lookups_workspace_kind_sort_idx').on(
+    table.workspaceSubdomain,
+    table.kind,
+    table.sortOrder,
+  ),
+  index('student_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
 ]);
 
 export const teachers = pgTable('teachers', {

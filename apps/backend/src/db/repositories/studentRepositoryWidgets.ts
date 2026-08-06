@@ -209,7 +209,7 @@ export async function countStudentsForNextGrNumber(
           base,
           sql`(
             COALESCE(${students.customData}->>'registeredDate', '') LIKE ${`${yearStr}%`}
-            OR COALESCE(${students.customData}->>'grNumber', '') LIKE ${`%${yearStr}%`}
+            OR COALESCE(${students.grNumber}, '') LIKE ${`%${yearStr}%`}
           )`,
         ),
       );
@@ -225,8 +225,9 @@ export async function findStudentRegistrationConflictSql(
     email?: string;
     name?: string;
     dob?: string;
+    grNumber?: string;
   },
-): Promise<'contact' | 'email' | 'nameDob' | null> {
+): Promise<'contact' | 'email' | 'nameDob' | 'grNumber' | null> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantTransaction(subdomain, async (tx) => {
     const exclude = input.excludeId?.trim();
@@ -264,6 +265,21 @@ export async function findStudentRegistrationConflictSql(
         )
         .limit(1);
       if (rows.length > 0) return 'email';
+    }
+
+    const grNumber = input.grNumber?.trim().toLowerCase();
+    if (grNumber) {
+      const rows = await tx
+        .select({ id: students.id })
+        .from(students)
+        .where(
+          and(
+            ...baseConditions,
+            sql`lower(trim(COALESCE(${students.grNumber}, ''))) = ${grNumber}`,
+          ),
+        )
+        .limit(1);
+      if (rows.length > 0) return 'grNumber';
     }
 
     const name = input.name?.trim().toLowerCase();

@@ -44,6 +44,14 @@ describe('findStudentRegistrationConflict', () => {
   it('skips excluded id', () => {
     expect(findStudentRegistrationConflict(roster, { excludeId: 's1', contactId: 10 })).toBeNull();
   });
+
+  it('detects GR number conflict (case-insensitive)', () => {
+    const withGr = [{ id: 's1', contactId: 10, grNumber: 'GR-0001' }];
+    expect(findStudentRegistrationConflict(withGr, { grNumber: 'gr-0001' })).toBe('grNumber');
+    expect(
+      findStudentRegistrationConflict(withGr, { excludeId: 's1', grNumber: 'GR-0001' }),
+    ).toBeNull();
+  });
 });
 
 describe('collectStudentLinkedContactIds', () => {

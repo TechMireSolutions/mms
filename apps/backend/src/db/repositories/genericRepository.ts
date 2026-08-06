@@ -11,6 +11,10 @@ export interface GenericRepoOptions {
   syncDeletedAtColumn?: boolean;
   /** When true, mirrors record.contactId into the table's contact_id column (keeps JSONB). */
   syncContactIdColumn?: boolean;
+  /** When true, mirrors record.status into the table's status column (keeps JSONB). */
+  syncStatusColumn?: boolean;
+  /** When true, mirrors record.grNumber into the table's gr_number column (keeps JSONB). */
+  syncGrNumberColumn?: boolean;
 }
 
 /** Soft-delete scope for list queries on tables with a typed deleted_at column. */
@@ -24,6 +28,8 @@ type GenericTableRow = {
   id: string | number;
   customData: unknown;
   contactId?: string | null;
+  status?: string | null;
+  grNumber?: string | null;
   deletedAt?: Date | null;
   deletedBy?: string | null;
   deletionReason?: string | null;
@@ -35,6 +41,8 @@ type GenericTable = AnyPgTable & {
   customData: AnyPgColumn;
   updatedAt: AnyPgColumn;
   contactId?: AnyPgColumn;
+  status?: AnyPgColumn;
+  grNumber?: AnyPgColumn;
   deletedAt?: AnyPgColumn;
   deletedBy?: AnyPgColumn;
   deletionReason?: AnyPgColumn;
@@ -51,6 +59,18 @@ function deletedAtFromRecord(record: { deletedAt?: unknown }): Date | null {
 function contactIdFromRecord(record: { contactId?: unknown }): string | null {
   if (record.contactId == null || record.contactId === '') return null;
   const trimmed = String(record.contactId).trim();
+  return trimmed || null;
+}
+
+function statusFromRecord(record: { status?: unknown }): string | null {
+  if (record.status == null || record.status === '') return 'active';
+  const trimmed = String(record.status).trim().toLowerCase();
+  return trimmed || 'active';
+}
+
+function grNumberFromRecord(record: { grNumber?: unknown }): string | null {
+  if (record.grNumber == null || record.grNumber === '') return null;
+  const trimmed = String(record.grNumber).trim();
   return trimmed || null;
 }
 
@@ -73,6 +93,8 @@ export function createGenericRepository<
   T extends {
     id: string | number;
     contactId?: unknown;
+    status?: unknown;
+    grNumber?: unknown;
     deletedAt?: unknown;
     deletedBy?: unknown;
     deletionReason?: unknown;
@@ -83,6 +105,8 @@ export function createGenericRepository<
     updateStrategy = 'merge',
     syncDeletedAtColumn = false,
     syncContactIdColumn = false,
+    syncStatusColumn = false,
+    syncGrNumberColumn = false,
   } = options;
   const dbTable: AnyPgTable = table;
   const shouldSyncDeletedAt = Boolean(syncDeletedAtColumn && table.deletedAt);
@@ -90,6 +114,8 @@ export function createGenericRepository<
     shouldSyncDeletedAt && table.deletedBy && table.deletionReason,
   );
   const shouldSyncContactId = Boolean(syncContactIdColumn && table.contactId);
+  const shouldSyncStatus = Boolean(syncStatusColumn && table.status);
+  const shouldSyncGrNumber = Boolean(syncGrNumberColumn && table.grNumber);
 
   function rowToRecord(row: GenericTableRow): T {
     const data = {
@@ -117,6 +143,29 @@ export function createGenericRepository<
       }
     }
 
+    // Prefer typed mirrors over JSONB (FK SET NULL / dual-write drift).
+    if (shouldSyncContactId) {
+      if (row.contactId) {
+        (data as { contactId?: string }).contactId = String(row.contactId);
+      } else {
+        delete (data as { contactId?: string }).contactId;
+      }
+    }
+    if (shouldSyncStatus) {
+      const status =
+        typeof row.status === 'string' && row.status.trim()
+          ? row.status.trim().toLowerCase()
+          : 'active';
+      (data as { status?: string }).status = status;
+    }
+    if (shouldSyncGrNumber) {
+      if (typeof row.grNumber === 'string' && row.grNumber.trim()) {
+        (data as { grNumber?: string }).grNumber = row.grNumber.trim();
+      } else {
+        delete (data as { grNumber?: string }).grNumber;
+      }
+    }
+
     return data;
   }
 
@@ -138,6 +187,12 @@ export function createGenericRepository<
     }
     if (shouldSyncContactId) {
       payload.contactId = contactIdFromRecord(record);
+    }
+    if (shouldSyncStatus) {
+      payload.status = statusFromRecord(record);
+    }
+    if (shouldSyncGrNumber) {
+      payload.grNumber = grNumberFromRecord(record);
     }
     return payload;
   }
@@ -293,6 +348,12 @@ export function createGenericRepository<
     }
     if (shouldSyncContactId) {
       conflictSet.contactId = sql`excluded.contact_id`;
+    }
+    if (shouldSyncStatus) {
+      conflictSet.status = sql`excluded.status`;
+    }
+    if (shouldSyncGrNumber) {
+      conflictSet.grNumber = sql`excluded.gr_number`;
     }
 
     await withTenantTransaction(subdomain, async (tx) => {

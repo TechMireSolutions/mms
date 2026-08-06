@@ -50,14 +50,9 @@ import {
   ATTENDANCE_CONFIG_COLLECTION_KEYS,
   DEFAULT_ATTENDANCE_STATUSES,
   SESSION_CONFIG_COLLECTION_KEYS,
-  STUDENT_CONFIG_COLLECTION_KEYS,
-  STUDENT_CONFIG_OBJECT_KEYS,
   TEACHER_CONFIG_COLLECTION_KEYS,
-  type StudentGuardianContactDefaults,
 } from '@/hooks/standardModuleConfigRegistryKeys';
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
-
-export type { StudentGuardianContactDefault, StudentGuardianContactDefaults } from '@/hooks/standardModuleConfigRegistryKeys';
 
 export const STANDARD_MODULES_CONFIG_REGISTRY = {
   accounting: {
@@ -116,26 +111,6 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     defaultSettings: DEFAULT_STUDENTS_SETTINGS,
     defaultFieldDefs: DEFAULT_STUDENT_FIELD_DEFS,
     normalizeFn: normalizeStudentsSettings,
-    collections: {
-      statuses: {
-        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => [],
-      },
-      genderFilters: {
-        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.genderFilters,
-        default: () => [],
-      },
-      discountTypes: {
-        dbKey: STUDENT_CONFIG_COLLECTION_KEYS.discountTypes,
-        default: () => [],
-      },
-    },
-    objects: {
-      guardianContactDefaults: {
-        dbKey: STUDENT_CONFIG_OBJECT_KEYS.guardianContactDefaults,
-        default: () => ({}),
-      },
-    },
   },
   teachers: {
     settingsObjectKey: TEACHERS_MODULE_MANIFEST.settingsObjectKey,
@@ -192,8 +167,7 @@ export type StandardModuleConfigExtraMap = {
   students: {
     statuses: string[];
     genderFilters: string[];
-    discountTypes: Array<{ id: string; label: string; pct: number }>;
-    guardianContactDefaults: StudentGuardianContactDefaults;
+    discountTypes: string[];
   };
   teachers: { statuses: string[]; specializations: string[] };
   users: Record<string, never>;

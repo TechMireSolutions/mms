@@ -13,15 +13,10 @@ import {
   saveObject,
 } from '../database.js';
 
-const STUDENT_CONFIG_COLLECTIONS = [
-  'studentStatuses',
-  'studentGenderFilters',
-  'studentDiscountTypes',
-] as const;
+const STUDENT_CONFIG_COLLECTIONS = [] as const;
 
 const STUDENT_CONFIG_OBJECTS = [
   'students_settings',
-  'studentGuardianContactDefaults',
 ] as const;
 
 function mergeStudentSettingsDefaults(existing: unknown, defaults: unknown): unknown {

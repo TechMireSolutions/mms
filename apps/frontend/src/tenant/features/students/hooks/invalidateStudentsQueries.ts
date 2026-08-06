@@ -9,8 +9,9 @@ import {
   STUDENTS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
 } from '@/tenant/features/students/hooks/studentsQueryShared';
+import { STUDENTS_LOOKUPS_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentLookups';
 
-/** Invalidate Students list/metrics/setup Query keys (mutations + live push). */
+/** Invalidate Students list/metrics/setup/lookups Query keys (mutations + live push). */
 export function invalidateStudentsQueries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: STUDENT_COUNT_QUERY_KEY });
@@ -18,4 +19,5 @@ export function invalidateStudentsQueries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: STUDENTS_FIELD_CONFIG_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: STUDENTS_PREFERENCES_QUERY_KEY });
+  void queryClient.invalidateQueries({ queryKey: STUDENTS_LOOKUPS_QUERY_KEY });
 }

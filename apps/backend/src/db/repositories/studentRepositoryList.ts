@@ -1,4 +1,4 @@
-import { and, asc, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type Student,
@@ -21,11 +21,15 @@ const STUDENT_SORT_FIELDS = new Set([
 ]);
 
 function statusExpr(): SQL {
-  return sql`lower(trim(COALESCE(${students.customData}->>'status', 'active')))`;
+  return sql`lower(trim(COALESCE(${students.status}, 'active')))`;
 }
 
 function genderExpr(): SQL {
   return sql`lower(trim(COALESCE(${students.customData}->>'gender', '')))`;
+}
+
+function grNumberExpr(): SQL {
+  return sql`lower(trim(COALESCE(${students.grNumber}, '')))`;
 }
 
 function buildSearchSql(search: string): SQL | null {
@@ -34,7 +38,7 @@ function buildSearchSql(search: string): SQL | null {
   const pattern = `%${normalized}%`;
   return sql`(
     lower(COALESCE(${students.customData}->>'name', '')) LIKE ${pattern}
-    OR lower(COALESCE(${students.customData}->>'grNumber', '')) LIKE ${pattern}
+    OR lower(COALESCE(${students.grNumber}, '')) LIKE ${pattern}
     OR lower(COALESCE(${students.customData}->>'studentId', '')) LIKE ${pattern}
     OR COALESCE(${students.customData}->>'cnic', '') LIKE ${pattern}
     OR lower(COALESCE(${students.customData}->>'fatherName', '')) LIKE ${pattern}
@@ -62,6 +66,18 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
     return dir === 'desc'
       ? sql`${students.updatedAt} desc nulls last`
       : sql`${students.updatedAt} asc nulls last`;
+  }
+  if (field === 'grNumber') {
+    const grSort = grNumberExpr();
+    return dir === 'desc' ? sql`${grSort} desc nulls last` : sql`${grSort} asc nulls last`;
+  }
+  if (field === 'status') {
+    const statusSort = statusExpr();
+    return dir === 'desc' ? sql`${statusSort} desc nulls last` : sql`${statusSort} asc nulls last`;
+  }
+  if (field === 'gender') {
+    const genderSort = genderExpr();
+    return dir === 'desc' ? sql`${genderSort} desc nulls last` : sql`${genderSort} asc nulls last`;
   }
   return dir === 'desc'
     ? sql`${students.customData}->>${field} desc nulls last`
@@ -200,7 +216,7 @@ export async function aggregateStudentsCommandMetrics(
   });
 }
 
-/** Active students missing `custom_data.grNumber` (null or blank). */
+/** Active students missing typed `gr_number` (null or blank). */
 export async function listActiveStudentsMissingGrNumber(
   workspaceSubdomain: string,
 ): Promise<Student[]> {
@@ -213,10 +229,49 @@ export async function listActiveStudentsMissingGrNumber(
         and(
           eq(students.workspaceSubdomain, subdomain),
           isNull(students.deletedAt),
-          sql`NULLIF(trim(COALESCE(${students.customData}->>'grNumber', '')), '') IS NULL`,
+          sql`NULLIF(trim(COALESCE(${students.grNumber}, '')), '') IS NULL`,
         ),
       )
       .orderBy(asc(students.id));
     return rows.map(studentRowToRecord);
+  });
+}
+
+/**
+ * Set typed `status` + `custom_data.status` for active students in one UPDATE.
+ * Returns how many rows were updated; callers treat missing/deleted ids as failed.
+ */
+export async function bulkUpdateStudentsStatusSql(
+  workspaceSubdomain: string,
+  ids: string[],
+  status: string,
+): Promise<number> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  if (!subdomain || uniqueIds.length === 0) return 0;
+  const normalizedStatus = status.trim().toLowerCase() || 'active';
+
+  return withTenantTransaction(subdomain, async (tx) => {
+    const updated = await tx
+      .update(students)
+      .set({
+        status: normalizedStatus,
+        customData: sql`jsonb_set(
+          COALESCE(${students.customData}, '{}'::jsonb),
+          '{status}',
+          to_jsonb(${normalizedStatus}::text),
+          true
+        )`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(students.workspaceSubdomain, subdomain),
+          inArray(students.id, uniqueIds),
+          isNull(students.deletedAt),
+        ),
+      )
+      .returning({ id: students.id });
+    return updated.length;
   });
 }

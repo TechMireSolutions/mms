@@ -99,6 +99,48 @@
       "when": 1785835000000,
       "tag": "0013_student_setup_config",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1786041000000,
+      "tag": "0014_students_hot_path_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1786042200000,
+      "tag": "0015_students_gr_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786044000000,
+      "tag": "0016_students_gender_active_idx",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786045000000,
+      "tag": "0017_students_status_gr_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786046000000,
+      "tag": "0018_student_lookups",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786047000000,
+      "tag": "0019_students_contact_fk",
+      "breakpoints": true
     }
   ]
 }

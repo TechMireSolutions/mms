@@ -45,6 +45,7 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'saved_reports',
       'sessions',
       'student_field_configs',
+      'student_lookups',
       'student_module_preferences',
       'student_user_column_prefs',
       'students',
@@ -64,8 +65,8 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
   it('restores contacts before users to preserve contact_id foreign keys', () => {
     expect(sortCollectionNamesForRestore(['users', 'students', 'contacts', 'message_logs'])).toEqual([
       'contacts',
-      'message_logs',
       'students',
+      'message_logs',
       'users',
     ]);
   });
@@ -105,6 +106,7 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'contact_lookups',
       'contact_module_preferences',
       'contact_user_column_prefs',
+      'student_lookups',
       'student_field_configs',
       'student_module_preferences',
       'student_user_column_prefs',

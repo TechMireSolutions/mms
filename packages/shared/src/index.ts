@@ -64,6 +64,7 @@ export * from './contactRelationshipRules.js';
 export * from './contactSiblingDerivation.js';
 export * from './contactsModuleManifest.js';
 export * from './contactLookupTypes.js';
+export * from './studentLookupTypes.js';
 export * from './contactSetupConfigTypes.js';
 export * from './studentSetupConfigTypes.js';
 export * from './contactsPreferencesTypes.js';

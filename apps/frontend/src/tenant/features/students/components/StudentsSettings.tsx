@@ -24,10 +24,12 @@ import { useStudentsSetupFieldDeleteGuard } from "@/tenant/features/students/hoo
 import { useStudentsSetupTabDeleteGuard } from "@/tenant/features/students/hooks/useStudentsSetupTabDeleteGuard";
 import { useStudentsSettingsSave } from "@/tenant/features/students/hooks/useStudentsSettingsSave";
 import { StudentsSettingsPreferencesPanel } from "@/tenant/features/students/components/StudentsSettingsPreferencesPanel";
+import { StudentsSettingsLookupsPanel } from "@/tenant/features/students/components/StudentsSettingsLookupsPanel";
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   fields: "students.setup.fields",
   preferences: "students.setup.preferences",
+  lookups: "students.setup.lookups",
 };
 
 export default function StudentsSettings(): React.ReactElement {
@@ -92,6 +94,7 @@ export default function StudentsSettings(): React.ReactElement {
   const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key || "fields");
   const showFields = sub === "fields";
   const showPrefs = sub === "preferences";
+  const showLookups = sub === "lookups";
 
   const { saving, isDirty, handleSave } = useStudentsSettingsSave({
     settings,
@@ -124,7 +127,7 @@ export default function StudentsSettings(): React.ReactElement {
             </h3>
           </div>
 
-          {isDirty ? (
+          {!showLookups && isDirty ? (
             <WarningCallout
               role="alert"
               density="banner"
@@ -140,6 +143,8 @@ export default function StudentsSettings(): React.ReactElement {
             <StudentsSettingsPreferencesPanel settingsDraft={settingsDraft} upd={upd} />
           ) : null}
 
+          {showLookups ? <StudentsSettingsLookupsPanel /> : null}
+
           {showFields ? (
             <ModuleFieldsSetup
               editor={guardedEditor}
@@ -152,22 +157,24 @@ export default function StudentsSettings(): React.ReactElement {
             />
           ) : null}
 
-          <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-            <Button
-              type="button"
-              onClick={() => { void handleSave(); }}
-              disabled={saving || !isDirty}
-              aria-busy={saving}
-              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
-            >
-              {saving ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <Save className="w-3.5 h-3.5" aria-hidden="true" />
-              )}{" "}
-              {saved ? t("students.settings.saveSuccess") : t("students.settings.saveSettings")}
-            </Button>
-          </footer>
+          {!showLookups ? (
+            <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
+              <Button
+                type="button"
+                onClick={() => { void handleSave(); }}
+                disabled={saving || !isDirty}
+                aria-busy={saving}
+                className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
+              >
+                {saving ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" aria-hidden="true" />
+                )}{" "}
+                {saved ? t("students.settings.saveSuccess") : t("students.settings.saveSettings")}
+              </Button>
+            </footer>
+          ) : null}
         </section>
       )}
     </div>

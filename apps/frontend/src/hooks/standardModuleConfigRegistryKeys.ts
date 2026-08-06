@@ -1,23 +1,5 @@
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
 
-export const STUDENT_CONFIG_COLLECTION_KEYS = {
-  statuses: 'studentStatuses',
-  genderFilters: 'studentGenderFilters',
-  discountTypes: 'studentDiscountTypes',
-} as const;
-
-export const STUDENT_CONFIG_OBJECT_KEYS = {
-  guardianContactDefaults: 'studentGuardianContactDefaults',
-} as const;
-
-export interface StudentGuardianContactDefault {
-  filterGender?: string;
-  createGender?: string;
-  lockGender?: boolean;
-}
-
-export type StudentGuardianContactDefaults = Record<string, StudentGuardianContactDefault>;
-
 export const TEACHER_CONFIG_COLLECTION_KEYS = {
   statuses: 'teacherStatuses',
   specializations: 'teacherSpecializations',

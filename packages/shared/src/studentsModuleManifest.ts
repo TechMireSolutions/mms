@@ -63,7 +63,7 @@ export const STUDENTS_MODULE_MANIFEST = {
     directoryViews: ['table', 'cards'] as const,
     bulkActions: ['export', 'delete', 'status'] as const,
   },
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['fields', 'preferences', 'lookups'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

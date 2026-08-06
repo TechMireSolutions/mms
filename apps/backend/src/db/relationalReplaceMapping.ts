@@ -19,11 +19,13 @@ export interface RelationalCollectionMapping {
  */
 export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   contacts: 10,
+  students: 15,
   custom_tabs: 20,
   contact_lookups: 25,
   contact_field_configs: 26,
   contact_module_preferences: 27,
   contact_user_column_prefs: 28,
+  student_lookups: 28,
   student_field_configs: 29,
   student_module_preferences: 30,
   student_user_column_prefs: 31,
@@ -229,6 +231,11 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/contactLookupsRepository.js',
     fnName: 'replaceContactLookupsForWorkspace',
     snapshotFnName: 'listAllContactLookupsByWorkspace',
+  },
+  student_lookups: {
+    importPath: './repositories/studentLookupsRepository.js',
+    fnName: 'replaceStudentLookupsForWorkspace',
+    snapshotFnName: 'listAllStudentLookupsByWorkspace',
   },
   contact_field_configs: {
     importPath: './repositories/contactFieldConfigRepository.js',

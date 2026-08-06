@@ -11,9 +11,6 @@ import {
 const MINIMAL_SEEDED_COLLECTIONS = new Set([
   'currencies',
   'genders',
-  'studentStatuses',
-  'studentGenderFilters',
-  'studentDiscountTypes',
   'socialPlatforms',
   'phoneLabels',
   'emailLabels',

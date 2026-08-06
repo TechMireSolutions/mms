@@ -46,6 +46,18 @@ vi.mock('../services/studentPreferencesService.js', () => ({
   saveStudentModulePreferences: (...args: unknown[]) => mockSaveStudentModulePreferences(...args),
 }));
 
+const mockLoadStudentLookupsMap = vi.fn();
+const mockReplaceStudentLookupKind = vi.fn();
+
+vi.mock('../services/studentLookupsService.js', () => ({
+  loadStudentLookupsMap: (...args: unknown[]) => mockLoadStudentLookupsMap(...args),
+  replaceStudentLookupKind: (...args: unknown[]) => mockReplaceStudentLookupKind(...args),
+}));
+
+vi.mock('../services/auditService.js', () => ({
+  recordAudit: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe('students Setup routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
@@ -135,6 +147,62 @@ describe('students Setup routes', () => {
     });
     expect(prefsWriteOk.statusCode).toBe(200);
     expect(mockSaveStudentModulePreferences).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET/PUT /api/students/lookups require read / setupWrite', async () => {
+    mockLoadStudentLookupsMap.mockResolvedValue({
+      statuses: ['active'],
+      genderFilters: ['male', 'female'],
+      discountTypes: [],
+    });
+    mockReplaceStudentLookupKind.mockResolvedValue(['active', 'inactive']);
+
+    const app = await buildApp();
+
+    const readDenied = await app.inject({
+      method: 'GET',
+      url: '/api/students/lookups',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(readDenied.statusCode).toBe(403);
+
+    const readOk = await app.inject({
+      method: 'GET',
+      url: '/api/students/lookups',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(readOk.statusCode).toBe(200);
+    expect(readOk.json()).toMatchObject({ lookups: { statuses: ['active'] } });
+
+    const writeDenied = await app.inject({
+      method: 'PUT',
+      url: '/api/students/lookups/statuses',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: { items: ['active', 'inactive'] },
+    });
+    expect(writeDenied.statusCode).toBe(403);
+
+    const writeOk = await app.inject({
+      method: 'PUT',
+      url: '/api/students/lookups/statuses',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { items: ['active', 'inactive'] },
+    });
+    expect(writeOk.statusCode).toBe(200);
+    expect(mockReplaceStudentLookupKind).toHaveBeenCalledWith('statuses', ['active', 'inactive']);
     await app.close();
   });
 });

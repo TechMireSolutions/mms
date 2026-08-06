@@ -68,8 +68,10 @@ export function useStudentById(studentId: string | undefined, enabled = true) {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: studentDetailQueryKey(studentId ?? ''),
-    queryFn: async () => {
-      const studentResponse = await apiJson<{ student: StudentRecord }>(`${STUDENTS_API}/${studentId}`);
+    queryFn: async ({ signal }) => {
+      const studentResponse = await apiJson<{ student: StudentRecord }>(`${STUDENTS_API}/${studentId}`, {
+        signal,
+      });
       return studentResponse.student as unknown as Student;
     },
     enabled: isAuthenticated && enabled && Boolean(studentId),
@@ -85,8 +87,11 @@ export function useStudentLinkedContactIds(
   const queryString = excludeStudentId ? `?excludeId=${encodeURIComponent(excludeStudentId)}` : '';
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'linked-contact-ids', excludeStudentId ?? ''] as const,
-    queryFn: async () => {
-      const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(`${STUDENTS_API}/linked-contact-ids${queryString}`);
+    queryFn: async ({ signal }) => {
+      const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(
+        `${STUDENTS_API}/linked-contact-ids${queryString}`,
+        { signal },
+      );
       return linkedContactsResponse.contactIds;
     },
     enabled: isAuthenticated && enabled,
@@ -106,8 +111,11 @@ export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {
 
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'next-gr-number', params] as const,
-    queryFn: async () => {
-      const nextGrNumberResponse = await apiJson<{ grNumber: string }>(`${STUDENTS_API}/next-gr-number?${queryParams.toString()}`);
+    queryFn: async ({ signal }) => {
+      const nextGrNumberResponse = await apiJson<{ grNumber: string }>(
+        `${STUDENTS_API}/next-gr-number?${queryParams.toString()}`,
+        { signal },
+      );
       return nextGrNumberResponse.grNumber;
     },
     enabled: isAuthenticated && enabled && Boolean(params.registeredDate),
@@ -141,10 +149,11 @@ export function useStudentsByIds(ids: (string | number | null | undefined)[]) {
 
   return useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'resolve', signature] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const studentsResponse = await apiJson<{ students: StudentRecord[] }>(`${STUDENTS_API}/resolve`, {
         method: 'POST',
         body: JSON.stringify({ ids: normalized }),
+        signal,
       });
       return studentsResponse.students as unknown as Student[];
     },
@@ -167,12 +176,13 @@ export function useStudentsWidgetAggregates(
 
   return useQuery({
     queryKey: [...STUDENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const aggregateResponse = await apiJson<{ results: Record<string, StudentsWidgetAggregateResult> }>(
         `${STUDENTS_API}/widget-aggregates`,
         {
           method: 'POST',
           body: JSON.stringify({ widgets: studentQueries }),
+          signal,
         },
       );
       return aggregateResponse?.results ?? {};
