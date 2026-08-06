@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isContactCustomCollectionTab,
   isContactLockedEnabledTab,
+  isContactLockedField,
   isContactSeedFormTab,
   resolveContactEnabledTabIds,
   withContactLockedEnabledTabs,
@@ -14,6 +15,12 @@ describe('contactEnabledTabs', () => {
     expect(isContactLockedEnabledTab('Basic')).toBe(true);
     expect(isContactLockedEnabledTab('custom')).toBe(false);
     expect(isContactLockedEnabledTab('phones')).toBe(false);
+  });
+
+  it('recognizes locked fields', () => {
+    expect(isContactLockedField('basic', 'firstName')).toBe(true);
+    expect(isContactLockedField('basic', 'lastName')).toBe(false);
+    expect(isContactLockedField('phones', 'firstName')).toBe(false);
   });
 
   it('recognizes seeded form tabs including retired custom', () => {

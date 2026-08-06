@@ -50,12 +50,10 @@ export function ContactBasicAvatarSection({
 
           <label
             htmlFor={avatarInputId}
-            className="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-full bg-black/45 text-white opacity-100 transition-opacity duration-300 @md:opacity-0 @md:group-hover:opacity-100 @md:focus-within:opacity-100"
+            aria-label={t("account.changePhoto")}
+            className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/40 text-white opacity-100 backdrop-blur-[1px] transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100"
           >
-            <Camera className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">
-              {t("account.changePhoto")}
-            </span>
+            <Camera className="h-6 w-6 scale-90 transition-transform duration-300 group-hover:scale-100" aria-hidden />
             <input
               id={avatarInputId}
               name="avatarFile"
@@ -63,7 +61,6 @@ export function ContactBasicAvatarSection({
               accept="image/*"
               className="hidden"
               onChange={handleAvatarChange}
-              aria-label={t("account.changePhoto")}
             />
           </label>
         </div>

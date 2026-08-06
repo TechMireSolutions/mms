@@ -90,7 +90,7 @@ export default function ContactForm({
 
     return formTabs.filter((tabItem) => {
       if (tabItem.key === "basic") return true;
-      if (tabItem.key === "custom") return hasCustomFields;
+      if (tabItem.key === "custom") return enabledTabIds.has("custom") && hasCustomFields;
       return enabledTabIds.has(tabItem.key);
     }).map((tabItem) => {
       const count = countMap[tabItem.key];

@@ -17,8 +17,9 @@ const TEXT_LIKE_FIELD_TYPES: ReadonlySet<FieldDefinition['type']> = new Set([
 ]);
 
 function isValidOption(options: unknown[], targetValue: string, fieldKey?: string): boolean {
-  // Relationship labels are owned by `contact_lookups`, so field-config options can
-  // lag behind a freshly added pair. Accept any label rather than reject a valid save.
+  // Relationship labels are owned by prefs `relationshipPairs` (lookups/field-config are
+  // write mirrors), so field-config options can lag a freshly added pair. Accept any
+  // label rather than reject a valid save.
   if (fieldKey === "relationship") return true;
   const normalizedTarget = targetValue.trim().toLowerCase();
   return options.some((option) =>

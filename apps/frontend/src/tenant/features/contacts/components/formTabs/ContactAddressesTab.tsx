@@ -4,11 +4,15 @@ import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { EditableSelect, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
 import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import {
+  ContactSubListCustomFields,
+  withSubListCustomFieldDefaults,
+} from "./ContactSubListCustomFields";
 import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
-import { Address } from "@mms/shared";
+import { Address, listEnabledCustomContactFormFields } from "@mms/shared";
 
 export interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
   addressLabels: string[];
@@ -33,6 +37,8 @@ export function ContactAddressesTab({
   getListItemError,
   isFieldEnabled,
   isFieldRequired,
+  fields,
+  formInstanceId,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
@@ -44,15 +50,22 @@ export function ContactAddressesTab({
   const showCity = isFieldEnabled("addresses", "city");
   const showState = isFieldEnabled("addresses", "state");
   const showCountry = isFieldEnabled("addresses", "country");
-  const allowAdd = showLabel || showLine1 || showCity || showState || showCountry;
+  const customFields = listEnabledCustomContactFormFields(fields, "addresses");
+  const allowAdd =
+    showLabel || showLine1 || showCity || showState || showCountry || customFields.length > 0;
   const addresses = contactDraft.addresses || [];
-  const emptyAddress = () => ({
-    label: resolveAddressLabel(undefined, addressLabels, t),
-    line1: "",
-    city: defaultCity,
-    state: defaultProvince,
-    country: defaultCountry,
-  });
+  const emptyAddress = () =>
+    withSubListCustomFieldDefaults(
+      {
+        label: resolveAddressLabel(undefined, addressLabels, t),
+        line1: "",
+        city: defaultCity,
+        state: defaultProvince,
+        country: defaultCountry,
+      },
+      fields,
+      "addresses",
+    );
   const addAddress = () => {
     addSubListItem("addresses", emptyAddress());
   };
@@ -60,7 +73,8 @@ export function ContactAddressesTab({
     ensureSubListItem("addresses", emptyAddress());
   };
   const removeAddress = (idx: number) => removeSubListItem("addresses", idx);
-  const updateAddress = (idx: number, patch: Partial<Address>) => updateSubListItem("addresses", idx, patch);
+  const updateAddress = (idx: number, patch: Partial<Address> & Record<string, unknown>) =>
+    updateSubListItem("addresses", idx, patch);
 
   return (
     <ContactSubListShell
@@ -76,6 +90,8 @@ export function ContactAddressesTab({
         {addresses.map((addr, idx) => {
           const line1Error = getListItemError("addresses", "line1", idx);
           const cityError = getListItemError("addresses", "city", idx);
+          const stateError = getListItemError("addresses", "state", idx);
+          const countryError = getListItemError("addresses", "country", idx);
           return (
             <ListFieldCard
               key={getLocalId("addresses", idx)}
@@ -104,8 +120,8 @@ export function ContactAddressesTab({
               <div className="space-y-3">
                 {showLine1 ? (
                   <div>
-                    <div className="relative flex items-center group/input">
-                      <MapPin className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+                    <div className="group/input relative flex items-center">
+                      <MapPin className="pointer-events-none absolute start-3.5 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within/input:text-primary" />
                       <Input
                         id={`address-line1-${idx}`}
                         name={`address-line1-${idx}`}
@@ -122,7 +138,7 @@ export function ContactAddressesTab({
                     <FieldInlineError message={line1Error} />
                   </div>
                 ) : null}
-                {(showCity || showState || showCountry) ? (
+                {showCity || showState || showCountry ? (
                   <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-3">
                     {showCity ? (
                       <div>
@@ -141,29 +157,47 @@ export function ContactAddressesTab({
                       </div>
                     ) : null}
                     {showState ? (
-                      <Input
-                        id={`address-state-${idx}`}
-                        name={`address-state-${idx}`}
-                        value={addr.state || ""}
-                        required={isFieldRequired("addresses", "state")}
-                        onChange={(e) => updateAddress(idx, { state: e.target.value })}
-                        placeholder={t("contacts.fields.state")}
-                      />
+                      <div>
+                        <Input
+                          id={`address-state-${idx}`}
+                          name={`address-state-${idx}`}
+                          value={addr.state || ""}
+                          required={isFieldRequired("addresses", "state")}
+                          onChange={(e) => updateAddress(idx, { state: e.target.value })}
+                          placeholder={t("contacts.fields.state")}
+                          className={cn(
+                            stateError && "border-destructive focus-visible:ring-destructive",
+                          )}
+                        />
+                        <FieldInlineError message={stateError} />
+                      </div>
                     ) : null}
                     {showCountry ? (
-                      <EditableSelect
-                        options={countryOptions}
-                        value={addr.country || defaultCountry || countryOptions[0] || ""}
-                        onChange={(val) => updateAddress(idx, { country: val })}
-                        onUpdateOptions={onUpdateCountryOptions}
-                        className="w-full min-w-0"
-                        id={`address-country-${idx}`}
-                        name={`address-country-${idx}`}
-                        placeholder={t("contacts.fields.country")}
-                      />
+                      <div>
+                        <EditableSelect
+                          options={countryOptions}
+                          value={addr.country || defaultCountry || countryOptions[0] || ""}
+                          onChange={(val) => updateAddress(idx, { country: val })}
+                          onUpdateOptions={onUpdateCountryOptions}
+                          className="w-full min-w-0"
+                          id={`address-country-${idx}`}
+                          name={`address-country-${idx}`}
+                          placeholder={t("contacts.fields.country")}
+                        />
+                        <FieldInlineError message={countryError} />
+                      </div>
                     ) : null}
                   </div>
                 ) : null}
+                <ContactSubListCustomFields
+                  tabId="addresses"
+                  fields={fields}
+                  formInstanceId={formInstanceId}
+                  rowIndex={idx}
+                  row={addr}
+                  getListItemError={getListItemError}
+                  onPatch={(patch) => updateAddress(idx, patch)}
+                />
               </div>
             </ListFieldCard>
           );

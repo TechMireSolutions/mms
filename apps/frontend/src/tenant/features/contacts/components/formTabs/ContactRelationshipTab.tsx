@@ -1,14 +1,22 @@
 import React from "react";
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { parseRelationshipPairInput, type RelationshipContact } from "@mms/shared";
-import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
+import {
+  listEnabledCustomContactFormFields,
+  parseRelationshipPairInput,
+} from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
-import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
-import type { ContactSubListTabBaseProps } from "./types";
+import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { useRelationshipTypeOptions } from "@/tenant/features/contacts/hooks/useRelationshipTypeOptions";
+import { ListFieldCard, ContactSubListShell, FieldInlineError } from "./ContactSubListCards";
+import {
+  ContactSubListCustomFields,
+  withSubListCustomFieldDefaults,
+} from "./ContactSubListCustomFields";
+import type { ContactSubListTabBaseProps } from "./types";
 
 export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
@@ -23,6 +31,8 @@ export function ContactRelationshipTab({
   isFieldEnabled,
   isFieldRequired,
   getListItemError,
+  fields,
+  formInstanceId,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
@@ -36,12 +46,19 @@ export function ContactRelationshipTab({
   const links = contactDraft.relationshipContacts || [];
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
-  const allowAdd = showLinkedContact || showRelationshipType;
+  const customFields = listEnabledCustomContactFormFields(fields, "relationship");
+  const allowAdd = showLinkedContact || showRelationshipType || customFields.length > 0;
+  const contactIdRequired = isFieldRequired("relationship", "contactId");
 
-  const emptyLink = (): RelationshipContact => ({
-    relationship: relationshipOptions[0] || "",
-    contactId: "",
-  });
+  const emptyLink = () =>
+    withSubListCustomFieldDefaults(
+      {
+        relationship: relationshipOptions[0] || "",
+        contactId: "",
+      },
+      fields,
+      "relationship",
+    );
 
   const excludeIds = (idx: number): (string | number)[] => {
     const linked = links
@@ -58,7 +75,8 @@ export function ContactRelationshipTab({
       notify.warning(t("contacts.form.invalidRelationshipPair"));
       return null;
     }
-    return addPair(parsed.forward, parsed.inverse);
+    const { forward, inverse, inverseMale, inverseFemale } = parsed;
+    return addPair({ forward, inverse, inverseMale, inverseFemale });
   };
 
   return (
@@ -66,6 +84,13 @@ export function ContactRelationshipTab({
       <p className="text-xs text-muted-foreground">
         {t("contacts.form.relationshipInstructions")}
       </p>
+      {showRelationshipType && relationshipOptions.length === 0 ? (
+        <WarningCallout
+          tone="info"
+          density="compact"
+          description={t("contacts.form.noRelationshipTypesYet")}
+        />
+      ) : null}
       <ContactSubListShell
         isEmpty={links.length === 0}
         emptyIcon={Heart}
@@ -78,6 +103,7 @@ export function ContactRelationshipTab({
         <AnimatePresence initial={false}>
           {links.map((link, idx) => {
             const pickerError = getListItemError("relationship", "contactId", idx);
+            const typeError = getListItemError("relationship", "relationship", idx);
             return (
               <ListFieldCard
                 key={getLocalId("relationship", idx)}
@@ -95,6 +121,7 @@ export function ContactRelationshipTab({
                     <>
                       <ContactPicker
                         label={t("contacts.form.linkContact")}
+                        required={contactIdRequired}
                         value={link.contactId ?? null}
                         onChange={(id) => {
                           updateSubListItem("relationshipContacts", idx, {
@@ -106,6 +133,7 @@ export function ContactRelationshipTab({
                         emptyTitle={t("contacts.form.noContactsFound")}
                         id={`relationship-contact-${idx}`}
                         name={`relationship-contact-${idx}`}
+                        error={Boolean(pickerError)}
                       />
                       <FieldInlineError message={pickerError} />
                     </>
@@ -115,6 +143,7 @@ export function ContactRelationshipTab({
                     <Field
                       label={t("contacts.form.relationshipType")}
                       required={isFieldRequired("relationship", "relationship")}
+                      error={typeError}
                     >
                       <EditableSelect
                         options={relationshipOptions}
@@ -134,6 +163,18 @@ export function ContactRelationshipTab({
                       />
                     </Field>
                   ) : null}
+
+                  <ContactSubListCustomFields
+                    tabId="relationship"
+                    fields={fields}
+                    formInstanceId={formInstanceId}
+                    rowIndex={idx}
+                    row={link}
+                    getListItemError={getListItemError}
+                    onPatch={(patch) =>
+                      updateSubListItem("relationshipContacts", idx, patch)
+                    }
+                  />
                 </div>
               </ListFieldCard>
             );

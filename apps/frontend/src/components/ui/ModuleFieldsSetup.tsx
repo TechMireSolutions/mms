@@ -17,6 +17,8 @@ interface ModuleFieldsSetupProps {
   isProtectedTab?: (tabId: string) => boolean;
   /** When set, tabs that cannot be disabled (Contacts: basic/custom). Default: none locked. */
   isLockedTab?: (tabId: string) => boolean;
+  /** When set, fields that cannot be disabled or un-required (Contacts: firstName). */
+  isLockedField?: (tabId: string, fieldKey: string) => boolean;
   onStateChange?: () => void;
   copy?: ModuleFieldsSetupCopy;
   labels?: {
@@ -32,6 +34,7 @@ export function ModuleFieldsSetup({
   isCoreField,
   isProtectedTab,
   isLockedTab,
+  isLockedField,
   onStateChange,
   copy,
   labels,
@@ -77,6 +80,7 @@ export function ModuleFieldsSetup({
             isCoreField={isCoreField}
             isProtectedTab={isProtectedTab}
             isLockedTab={isLockedTab}
+            isLockedField={isLockedField}
             copy={copy}
             labels={labels}
             isUniqueField={handlers.isUniqueField}

@@ -2,6 +2,7 @@ import {
   buildRelationshipPairAddition,
   pruneRelationshipPairsForRemovedLabel,
   resolveRelationshipPairs,
+  type ParsedRelationshipPairInput,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -15,17 +16,16 @@ export function useRelationshipTypeOptions(
   const { t } = useTranslation();
   const { prefs, updatePrefsAsync } = useContactConfig();
 
-  const addPair = async (forward: string, inverse: string): Promise<string | null> => {
+  const addPair = async (input: ParsedRelationshipPairInput): Promise<string | null> => {
     const result = buildRelationshipPairAddition(
       resolveRelationshipPairs(prefs.relationshipPairs),
       relationshipOptions,
-      forward,
-      inverse,
+      input,
     );
     if (!result.ok) {
       if (result.reason === "duplicate") {
         const existingLabel = relationshipOptions.find(
-          (opt) => opt.trim().toLowerCase() === forward.trim().toLowerCase(),
+          (opt) => opt.trim().toLowerCase() === input.forward.trim().toLowerCase(),
         );
         if (existingLabel) {
           return existingLabel;

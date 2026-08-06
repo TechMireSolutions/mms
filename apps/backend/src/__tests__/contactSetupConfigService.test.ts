@@ -122,6 +122,36 @@ describe('contact setup config services', () => {
     expect(mockUpsertPrefs).toHaveBeenCalledWith('demo', expect.objectContaining({ defaultCountry: 'PK' }));
   });
 
+  it('syncs relationship mirrors when preferences are saved', async () => {
+    mockUpsertPrefs.mockResolvedValue(undefined);
+    mockLoadLookupKind.mockResolvedValue(['Stale']);
+    mockGetConfig.mockResolvedValue({
+      version: 1,
+      enabledTabs: ['relationship'],
+      requiredTabs: [],
+      fields: {
+        relationship: [
+          {
+            key: 'relationship',
+            label: 'Relationship',
+            type: 'select',
+            enabled: true,
+            order: 1,
+            options: ['Stale'],
+          },
+        ],
+      },
+    });
+
+    await saveContactPreferences({
+      defaultCountry: 'Pakistan',
+      relationshipPairs: [{ id: 'pair_custom', forward: 'Mentor', inverse: 'Mentee' }],
+    } as never);
+
+    expect(mockReplaceLookupKind).toHaveBeenCalledWith('relationships', ['Mentor', 'Mentee']);
+    expect(mockUpsertConfig).toHaveBeenCalled();
+  });
+
   it('returns null preferences when empty', async () => {
     mockGetPrefs.mockResolvedValue(null);
     await expect(loadContactPreferences()).resolves.toBeNull();

@@ -6,12 +6,29 @@ import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTab
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
 import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
 import { ContactCustomCollectionTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomCollectionTab";
+import type { ContactSubListTabBaseProps } from "@/tenant/features/contacts/components/formTabs/types";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { normalizeContactFormTabId } from "@mms/shared";
 
 export { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
 type FormDraft = ReturnType<typeof useContactFormDraft>;
+
+function subListBaseProps(draft: FormDraft): ContactSubListTabBaseProps {
+  return {
+    contactDraft: draft.contactDraft,
+    getLocalId: draft.getLocalId,
+    getListItemError: draft.getListItemError,
+    isFieldEnabled: draft.isFieldEnabled,
+    isFieldRequired: draft.isFieldRequired,
+    fields: draft.fields,
+    formInstanceId: draft.formInstanceId,
+    addSubListItem: draft.addSubListItem,
+    ensureSubListItem: draft.ensureSubListItem,
+    updateSubListItem: draft.updateSubListItem,
+    removeSubListItem: draft.removeSubListItem,
+  };
+}
 
 export function ContactFormTabContent({
   tab,
@@ -28,6 +45,8 @@ export function ContactFormTabContent({
   defaultCity: string;
   defaultProvince: string;
 }): JSX.Element | null {
+  const listBase = subListBaseProps(draft);
+
   switch (normalizeContactFormTabId(tab)) {
     case "basic":
       return (
@@ -50,44 +69,27 @@ export function ContactFormTabContent({
     case "phones":
       return (
         <ContactPhonesTab
-          contactDraft={draft.contactDraft}
-          getLocalId={draft.getLocalId}
+          {...listBase}
           phoneLabels={draft.phoneLabels}
           onUpdatePhoneLabels={draft.updatePhoneLabels}
           defaultCountryCode={draft.defaultCountryCode}
           countryCodeOptions={draft.countryCodeOptions}
           onUpdateDialCodeOptions={draft.updateDialCodeOptions}
-          getListItemError={draft.getListItemError}
-          isFieldEnabled={draft.isFieldEnabled}
-          isFieldRequired={draft.isFieldRequired}
-          addSubListItem={draft.addSubListItem}
-          ensureSubListItem={draft.ensureSubListItem}
-          updateSubListItem={draft.updateSubListItem}
-          removeSubListItem={draft.removeSubListItem}
           handlePhoneBlur={draft.handlePhoneBlur}
         />
       );
     case "emails":
       return (
         <ContactEmailsTab
-          contactDraft={draft.contactDraft}
-          getLocalId={draft.getLocalId}
+          {...listBase}
           emailLabels={draft.emailLabels}
           onUpdateEmailLabels={draft.updateEmailLabels}
-          getListItemError={draft.getListItemError}
-          isFieldEnabled={draft.isFieldEnabled}
-          isFieldRequired={draft.isFieldRequired}
-          addSubListItem={draft.addSubListItem}
-          ensureSubListItem={draft.ensureSubListItem}
-          updateSubListItem={draft.updateSubListItem}
-          removeSubListItem={draft.removeSubListItem}
         />
       );
     case "addresses":
       return (
         <ContactAddressesTab
-          contactDraft={draft.contactDraft}
-          getLocalId={draft.getLocalId}
+          {...listBase}
           addressLabels={draft.addressLabels}
           onUpdateAddressLabels={draft.updateAddressLabels}
           countryOptions={draft.countryOptions}
@@ -95,45 +97,22 @@ export function ContactFormTabContent({
           defaultCity={defaultCity}
           defaultProvince={defaultProvince}
           defaultCountry={defaultCountry}
-          getListItemError={draft.getListItemError}
-          isFieldEnabled={draft.isFieldEnabled}
-          isFieldRequired={draft.isFieldRequired}
-          addSubListItem={draft.addSubListItem}
-          ensureSubListItem={draft.ensureSubListItem}
-          updateSubListItem={draft.updateSubListItem}
-          removeSubListItem={draft.removeSubListItem}
         />
       );
     case "socials":
       return (
         <ContactSocialsTab
-          contactDraft={draft.contactDraft}
-          getLocalId={draft.getLocalId}
+          {...listBase}
           socialPlatforms={draft.socialPlatforms}
           onUpdateSocialPlatforms={draft.updateSocialPlatforms}
-          getListItemError={draft.getListItemError}
-          isFieldEnabled={draft.isFieldEnabled}
-          isFieldRequired={draft.isFieldRequired}
-          addSubListItem={draft.addSubListItem}
-          ensureSubListItem={draft.ensureSubListItem}
-          updateSubListItem={draft.updateSubListItem}
-          removeSubListItem={draft.removeSubListItem}
         />
       );
     case "relationship":
       return (
         <ContactRelationshipTab
-          contactDraft={draft.contactDraft}
-          getLocalId={draft.getLocalId}
+          {...listBase}
           relationshipOptions={draft.relationshipOptions}
           onUpdateRelationships={draft.updateRelationships}
-          isFieldEnabled={draft.isFieldEnabled}
-          isFieldRequired={draft.isFieldRequired}
-          getListItemError={draft.getListItemError}
-          addSubListItem={draft.addSubListItem}
-          ensureSubListItem={draft.ensureSubListItem}
-          updateSubListItem={draft.updateSubListItem}
-          removeSubListItem={draft.removeSubListItem}
         />
       );
     case "custom":
@@ -148,7 +127,6 @@ export function ContactFormTabContent({
         />
       );
     default:
-      // Tenant-created Setup tabs — multi-entry collections (like phones/emails).
       return (
         <ContactCustomCollectionTab
           contactDraft={draft.contactDraft}

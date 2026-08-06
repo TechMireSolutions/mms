@@ -3,6 +3,7 @@ import { Loader2, Save } from "lucide-react";
 import {
   FieldConfig,
   isContactLockedEnabledTab,
+  isContactLockedField,
   isContactSeedFormTab,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -87,6 +88,7 @@ export default function ContactsSetupPanel({
           isCoreField={isCoreField}
           isProtectedTab={isContactSeedFormTab}
           isLockedTab={isContactLockedEnabledTab}
+          isLockedField={isContactLockedField}
           onStateChange={() => setSaved(false)}
           copy={{
             introTitle: t("contacts.setup.fieldsIntroTitle"),

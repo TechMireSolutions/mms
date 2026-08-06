@@ -20,6 +20,7 @@ interface ModuleFieldsSetupTabCardProps {
   isCoreField: (tabId: string, fieldKey: string) => boolean;
   isProtectedTab?: (tabId: string) => boolean;
   isLockedTab?: (tabId: string) => boolean;
+  isLockedField?: (tabId: string, fieldKey: string) => boolean;
   copy?: ModuleFieldsSetupCopy;
   labels?: {
     required?: string;
@@ -52,6 +53,7 @@ export function ModuleFieldsSetupTabCard({
   isCoreField,
   isProtectedTab,
   isLockedTab,
+  isLockedField,
   copy,
   labels,
   isUniqueField,
@@ -154,12 +156,19 @@ export function ModuleFieldsSetupTabCard({
             fields={getOrderedFields(tabDefs, editor.tabFieldOrder[tabId])}
             enabledSet={enabledSet}
             requiredSet={requiredSet}
-            onToggleEnabled={(fieldId: string) => onToggleFieldEnabled(tabId, fieldId)}
-            onToggleRequired={(fieldId: string) => onToggleFieldRequired(tabId, fieldId)}
+            onToggleEnabled={(fieldId: string) => {
+              if (isLockedField?.(tabId, fieldId)) return;
+              onToggleFieldEnabled(tabId, fieldId);
+            }}
+            onToggleRequired={(fieldId: string) => {
+              if (isLockedField?.(tabId, fieldId)) return;
+              onToggleFieldRequired(tabId, fieldId);
+            }}
             onToggleUnique={(fieldId: string) => onToggleFieldUnique(tabId, fieldId)}
             onReorder={(reordered: FieldDefinition[]) => onReorderFields(tabId, reordered)}
             isUniqueField={isUniqueField}
             isCoreField={(key: string) => isCoreField(tabId, key)}
+            isLockedField={(key: string) => isLockedField?.(tabId, key) === true}
             defaultValues={editor.tabFieldDefaultValues[tabId]}
             permissions={editor.tabFieldPermissions[tabId]}
             onChangeDefaults={(fieldId: string, fieldValue: unknown) => onChangeDefaults(tabId, fieldId, fieldValue)}

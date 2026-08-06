@@ -2,6 +2,7 @@ import React from "react";
 import { Search, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { RequiredMark } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContactPickerMenu } from "./ContactPickerMenu";
@@ -13,6 +14,7 @@ import type { Contact } from "@mms/shared";
 interface ContactPickerSearchInputProps {
   t: TranslationFunction;
   label: string;
+  required?: boolean;
   resolvedId: string;
   resolvedName: string;
   query: string;
@@ -44,6 +46,7 @@ interface ContactPickerSearchInputProps {
 export function ContactPickerSearchInput({
   t,
   label,
+  required = false,
   resolvedId,
   resolvedName,
   query,
@@ -73,7 +76,10 @@ export function ContactPickerSearchInput({
 }: ContactPickerSearchInputProps): React.JSX.Element {
   return (
     <div className="relative">
-      <label htmlFor={resolvedId} className={FORM_LABEL}>{label}</label>
+      <label htmlFor={resolvedId} className={FORM_LABEL}>
+        {label}
+        {required ? <RequiredMark /> : null}
+      </label>
       <div ref={anchorRef} className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/75 pointer-events-none" />
         <Input

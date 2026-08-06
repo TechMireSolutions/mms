@@ -39,10 +39,28 @@ describe('parseRelationshipPairInput', () => {
     });
   });
 
-  it('rejects empty input or empty sides', () => {
+  it('parses gendered inverse sides as neutral | male | female', () => {
+    expect(parseRelationshipPairInput('Parent : Child | Son | Daughter')).toEqual({
+      ok: true,
+      forward: 'Parent',
+      inverse: 'Child',
+      inverseMale: 'Son',
+      inverseFemale: 'Daughter',
+    });
+  });
+
+  it('rejects empty input, empty sides, or malformed gendered forms', () => {
     expect(parseRelationshipPairInput('  ')).toEqual({ ok: false, reason: 'empty' });
     expect(parseRelationshipPairInput('Husband :')).toEqual({ ok: false, reason: 'empty' });
     expect(parseRelationshipPairInput(': Wife')).toEqual({ ok: false, reason: 'empty' });
+    expect(parseRelationshipPairInput('Parent : Son | Daughter')).toEqual({
+      ok: false,
+      reason: 'malformed',
+    });
+    expect(parseRelationshipPairInput('Parent : Child | Son | Daughter | Extra')).toEqual({
+      ok: false,
+      reason: 'malformed',
+    });
   });
 });
 
@@ -119,23 +137,48 @@ describe('isDuplicateRelationshipPair', () => {
   const pairs = [{ id: 'mentor', forward: 'Mentor', inverse: 'Mentee' }];
 
   it('matches order-independently and case-insensitively', () => {
-    expect(isDuplicateRelationshipPair(pairs, 'mentor', 'mentee')).toBe(true);
-    expect(isDuplicateRelationshipPair(pairs, 'Mentee', 'Mentor')).toBe(true);
-    expect(isDuplicateRelationshipPair(pairs, 'Uncle', 'Nephew')).toBe(false);
+    expect(isDuplicateRelationshipPair(pairs, { forward: 'mentor', inverse: 'mentee' })).toBe(true);
+    expect(isDuplicateRelationshipPair(pairs, { forward: 'Mentee', inverse: 'Mentor' })).toBe(true);
+    expect(isDuplicateRelationshipPair(pairs, { forward: 'Uncle', inverse: 'Nephew' })).toBe(false);
+  });
+
+  it('treats overlapping labels including gendered inverses as duplicates', () => {
+    const gendered = [
+      {
+        id: 'parent',
+        forward: 'Parent',
+        inverse: 'Child',
+        inverseMale: 'Son',
+        inverseFemale: 'Daughter',
+      },
+    ];
+    expect(isDuplicateRelationshipPair(gendered, { forward: 'Guardian', inverse: 'Son' })).toBe(true);
+    expect(
+      isDuplicateRelationshipPair(gendered, {
+        forward: 'Uncle',
+        inverse: 'Nephew',
+        inverseMale: 'Son',
+        inverseFemale: 'Niece',
+      }),
+    ).toBe(true);
+    expect(isDuplicateRelationshipPair(gendered, { forward: 'Uncle', inverse: 'Nephew' })).toBe(false);
   });
 });
 
 describe('buildRelationshipPairAddition', () => {
   it('rejects empty or duplicate pairs', () => {
     expect(
-      buildRelationshipPairAddition([{ id: 'a', forward: 'Mentor', inverse: 'Mentee' }], [], '  ', 'Mentee'),
+      buildRelationshipPairAddition(
+        [{ id: 'a', forward: 'Mentor', inverse: 'Mentee' }],
+        [],
+        { forward: '  ', inverse: 'Mentee' },
+      ),
     ).toEqual({ ok: false, reason: 'empty' });
     expect(
       buildRelationshipPairAddition(
         [{ id: 'a', forward: 'Mentor', inverse: 'Mentee' }],
         ['Mentor'],
-        'Mentee',
-        'Mentor',
+        { forward: 'Mentee', inverse: 'Mentor' },
       ),
     ).toEqual({ ok: false, reason: 'duplicate' });
   });
@@ -144,8 +187,7 @@ describe('buildRelationshipPairAddition', () => {
     const result = buildRelationshipPairAddition(
       [{ id: 'a', forward: 'Father', inverse: 'Child' }],
       ['Father', 'Child'],
-      'Mentor',
-      'Mentee',
+      { forward: 'Mentor', inverse: 'Mentee' },
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -156,8 +198,26 @@ describe('buildRelationshipPairAddition', () => {
     expect(result.pairs[1]?.id).toMatch(/^pair_/);
   });
 
+  it('stores gendered inverses and merges their labels', () => {
+    const result = buildRelationshipPairAddition([], [], {
+      forward: 'Parent',
+      inverse: 'Child',
+      inverseMale: 'Son',
+      inverseFemale: 'Daughter',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.pairs[0]).toMatchObject({
+      forward: 'Parent',
+      inverse: 'Child',
+      inverseMale: 'Son',
+      inverseFemale: 'Daughter',
+    });
+    expect(result.labels).toEqual(['Parent', 'Child', 'Son', 'Daughter']);
+  });
+
   it('allows self-inverse pairs', () => {
-    const result = buildRelationshipPairAddition([], [], 'Spouse', 'Spouse');
+    const result = buildRelationshipPairAddition([], [], { forward: 'Spouse', inverse: 'Spouse' });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.labels).toEqual(['Spouse']);

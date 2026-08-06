@@ -30,6 +30,7 @@ export interface ContactPickerProps {
   createLabel?: string;
   createWithQueryLabel?: (query: string) => string;
   error?: boolean;
+  required?: boolean;
   id?: string;
   name?: string;
 }
@@ -51,6 +52,7 @@ export default function ContactPicker({
   createLabel,
   createWithQueryLabel,
   error = false,
+  required = false,
   id,
   name,
 }: ContactPickerProps): React.JSX.Element {
@@ -80,6 +82,7 @@ export default function ContactPicker({
       <ContactPickerSelected
         selected={picker.selected}
         label={label}
+        required={required}
         value={value}
         resolvedId={picker.resolvedId}
         resolvedName={picker.resolvedName}
@@ -96,6 +99,7 @@ export default function ContactPicker({
     <ContactPickerSearchInput
       t={picker.t}
       label={label}
+      required={required}
       resolvedId={picker.resolvedId}
       resolvedName={picker.resolvedName}
       query={picker.query}

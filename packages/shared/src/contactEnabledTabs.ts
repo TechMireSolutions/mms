@@ -9,17 +9,31 @@ import {
 /** Form tabs Setup cannot disable; the form always treats them as on. */
 export const CONTACT_LOCKED_ENABLED_TABS = ['basic'] as const;
 
-/** Seed form tabs (not tenant `custom_*` collection tabs), including retired `custom`. */
-const CONTACT_SEED_FORM_TAB_KEYS = new Set([
-  ...DEFAULT_FORM_TABS.map((tab) => tab.key.toLowerCase()),
-  CONTACT_LEGACY_CUSTOM_FORM_TAB_KEY,
-]);
+/**
+ * Field keys Setup cannot disable or un-require (write schema always needs firstName).
+ * Tab id → locked field keys.
+ */
+export const CONTACT_LOCKED_FIELD_KEYS: Readonly<Record<string, readonly string[]>> = {
+  basic: ['firstName'],
+};
 
 /** True when `tabKey` is a locked always-on Contacts form tab. */
 export function isContactLockedEnabledTab(tabKey: string): boolean {
   const key = tabKey.toLowerCase();
   return CONTACT_LOCKED_ENABLED_TABS.some((locked) => locked === key);
 }
+
+/** True when Setup must keep this field enabled and required. */
+export function isContactLockedField(tabId: string, fieldKey: string): boolean {
+  const locked = CONTACT_LOCKED_FIELD_KEYS[tabId.toLowerCase()];
+  return locked?.includes(fieldKey) === true;
+}
+
+/** Seed form tabs (not tenant `custom_*` collection tabs), including retired `custom`. */
+const CONTACT_SEED_FORM_TAB_KEYS = new Set([
+  ...DEFAULT_FORM_TABS.map((tab) => tab.key.toLowerCase()),
+  CONTACT_LEGACY_CUSTOM_FORM_TAB_KEY,
+]);
 
 /** True when `tabKey` is a seeded Contacts form tab (not a tenant custom tab). */
 export function isContactSeedFormTab(tabKey: string): boolean {

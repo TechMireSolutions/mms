@@ -793,6 +793,36 @@ describe("cleanContactDraft", () => {
     expect(cleaned.relationshipContacts).toEqual([{ relationship: "Mother", contactId: "c-2" }]);
   });
 
+  it("keeps addresses with city/state/country even when line1 is blank", () => {
+    const cleaned = cleanContactDraft({
+      addresses: [
+        { label: "Home", line1: "", city: "", state: "", country: "" },
+        { label: "Work", line1: "", city: "Karachi", state: "", country: "" },
+      ],
+    });
+    expect(cleaned.addresses).toEqual([
+      { label: "Work", line1: "", city: "Karachi", state: "", country: "" },
+    ]);
+  });
+
+  it("keeps list rows that only have custom field content", () => {
+    const cleaned = cleanContactDraft({
+      phones: [
+        { label: "Mobile", number: "", countryCode: "+92", note: "" },
+        { label: "Mobile", number: "", countryCode: "+92", note: "School line" },
+      ],
+    } as unknown as Partial<Contact>);
+    expect(cleaned.phones).toEqual([
+      {
+        label: "Mobile",
+        number: "",
+        countryCode: "+92",
+        note: "School line",
+        isPrimary: true,
+      },
+    ]);
+  });
+
   it("clears legacy relationships when relationship contacts are emptied", () => {
     const cleaned = cleanContactDraft({
       relationshipContacts: [{ relationship: "Father", contactId: "" }],

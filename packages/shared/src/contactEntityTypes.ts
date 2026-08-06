@@ -27,17 +27,6 @@ export interface WhatsAppProvider {
   verifyPhoneNumber(phoneNumber: string): Promise<WhatsAppVerificationResult>;
 }
 
-/** Supported interpersonal relationship types. */
-export type RelationshipType = 
-  | 'father'
-  | 'mother'
-  | 'guardian'
-  | 'child'
-  | 'spouse'
-  | 'sibling'
-  | 'colleague'
-  | 'other';
-
 /** Phone number model for contacts with label, country code, and verification status. */
 export interface PhoneNumber {
   label: string;
@@ -85,7 +74,7 @@ export interface RelationshipContact {
 /** Inter-contact relationship reference link. */
 export interface ContactRelationship {
   contactId: string | number;
-  relationship?: RelationshipType | string;
+  relationship?: string;
   notes?: string;
 }
 
@@ -97,8 +86,6 @@ export interface RelationshipPair {
   inverseMale?: string;
   inverseFemale?: string;
 }
-
-
 
 /** Audit log activity item recorded on a contact timeline. */
 export interface ContactActivity {

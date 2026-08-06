@@ -3,6 +3,7 @@ import {
   type FieldConfig,
   type FieldDefinition,
   INITIAL_FIELD_SEED,
+  isContactLockedField,
   resolveContactEnabledTabIds,
 } from "@mms/shared";
 
@@ -29,6 +30,7 @@ export function useContactConfigTabFields({
 
   const isTabFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {
+      if (isContactLockedField(tabId, fieldId)) return true;
       const tabFieldsList = fields[tabId];
       if (!tabFieldsList || tabFieldsList.length === 0) {
         const seedField = (INITIAL_FIELD_SEED[tabId] || []).find(
@@ -44,6 +46,7 @@ export function useContactConfigTabFields({
 
   const isTabFieldRequired = useCallback(
     (tabId: string, fieldId: string) => {
+      if (isContactLockedField(tabId, fieldId)) return true;
       const field = (fields[tabId] || []).find((fieldDefinition) => fieldDefinition.key === fieldId);
       return field?.required ?? false;
     },

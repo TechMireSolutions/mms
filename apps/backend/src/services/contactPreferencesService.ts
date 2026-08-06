@@ -146,6 +146,7 @@ export async function saveContactPreferences(
 ): Promise<ContactPreferences> {
   const normalized = normalizeContactPreferences(preferences);
   await upsertContactModulePreferences(requireTenant(), normalized as unknown as Record<string, unknown>);
+  await syncRelationshipMirrorsFromPairs(normalized.relationshipPairs);
   return normalized;
 }
 

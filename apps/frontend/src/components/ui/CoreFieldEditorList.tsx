@@ -18,6 +18,7 @@ interface CoreFieldEditorListProps {
   onReorder: (reordered: FieldDefinition[]) => void;
   isUniqueField?: (tabId: string, fieldId: string) => boolean;
   isCoreField?: (fieldKey: string) => boolean;
+  isLockedField?: (fieldKey: string) => boolean;
   defaultValues?: Record<string, unknown>;
   permissions?: Record<string, string[]>;
   onChangeDefaults?: (fieldId: string, val: unknown) => void;
@@ -43,6 +44,7 @@ export function CoreFieldEditorList({
   onReorder,
   isUniqueField,
   isCoreField,
+  isLockedField,
   defaultValues = {},
   permissions = {},
   onChangeDefaults,
@@ -82,6 +84,7 @@ export function CoreFieldEditorList({
           <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3 bg-transparent">
             {fields.map((field, index) => {
               const core = isCoreField ? isCoreField(field.key) : false;
+              const locked = isLockedField?.(field.key) === true;
               return (
                 <Draggable key={field.key} draggableId={field.key} index={index}>
                   {(drag, snapshot) => {
@@ -92,12 +95,13 @@ export function CoreFieldEditorList({
                       <div ref={drag.innerRef} {...draggableProps} style={style as React.CSSProperties} className="flex flex-col gap-1.5">
                         <FieldItem
                           field={field}
-                          isEnabled={enabledSet.has(field.key)}
-                          isRequired={requiredSet.has(field.key)}
+                          isEnabled={locked ? true : enabledSet.has(field.key)}
+                          isRequired={locked ? true : requiredSet.has(field.key)}
                           isUnique={isUniqueField?.(tabId, field.key) || false}
                           onToggleEnabled={() => onToggleEnabled(field.key)}
                           onToggleRequired={() => onToggleRequired(field.key)}
                           onToggleUnique={onToggleUnique ? () => onToggleUnique(field.key) : undefined}
+                          enablementLocked={locked}
                           dragHandleProps={drag.dragHandleProps}
                           isDragging={snapshot.isDragging}
                           defaultValue={defaultValues[field.key]}

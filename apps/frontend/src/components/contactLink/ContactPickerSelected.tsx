@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { genderBadgeClass } from "@/lib/semanticTone";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { RequiredMark } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -18,6 +19,7 @@ import { GenderIcon } from "@/components/ui/GenderIcon";
 export interface ContactPickerSelectedProps {
   selected: Contact;
   label: string;
+  required?: boolean;
   value: string | number | null;
   resolvedId: string;
   resolvedName: string;
@@ -31,6 +33,7 @@ export interface ContactPickerSelectedProps {
 export function ContactPickerSelected({
   selected,
   label,
+  required = false,
   value,
   resolvedId,
   resolvedName,
@@ -48,7 +51,10 @@ export function ContactPickerSelected({
 
   return (
     <div className="relative">
-      <label htmlFor={resolvedId} className={FORM_LABEL}>{label}</label>
+      <label htmlFor={resolvedId} className={FORM_LABEL}>
+        {label}
+        {required ? <RequiredMark /> : null}
+      </label>
       <div className="group relative flex items-center gap-3.5 p-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.01] to-primary/[0.04] dark:from-primary/[0.02] dark:to-primary/[0.06] shadow-sm hover:shadow-md transition-all duration-200">
         <div
           onClick={() => onAvatarChange && fileInputRef.current?.click()}

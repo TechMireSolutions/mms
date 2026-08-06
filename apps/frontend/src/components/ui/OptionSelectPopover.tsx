@@ -151,9 +151,9 @@ export function OptionSelectPopover({
                     size="icon"
                     onClick={(event) => handleRemove(option, event)}
                     className={`rounded transition-colors ${REMOVE_BTN}`}
-                    title={t("contacts.form.removeOption", { option })}
+                    aria-label={t("contacts.form.removeOption", { option })}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-3.5 h-3.5" aria-hidden />
                   </Button>
                 ) : null}
               </div>

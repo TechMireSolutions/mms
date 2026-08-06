@@ -1,4 +1,4 @@
-import type { Contact } from "@mms/shared";
+import type { Contact, FieldDefinition } from "@mms/shared";
 
 export type ContactSubListKey = "phones" | "emails" | "addresses" | "socials" | "relationshipContacts";
 
@@ -12,10 +12,11 @@ export type EnsureSubListItem = <K extends ContactSubListKey>(
   newItem: NonNullable<Contact[K]>[number],
 ) => void;
 
+/** Patch may include Setup custom field keys beyond the typed system shape. */
 export type UpdateSubListItem = <K extends ContactSubListKey>(
   fieldKey: K,
   idx: number,
-  patch: Partial<NonNullable<Contact[K]>[number]>,
+  patch: Partial<NonNullable<Contact[K]>[number]> & Record<string, unknown>,
 ) => void;
 
 export type RemoveSubListItem = (fieldKey: ContactSubListKey, idx: number) => void;
@@ -33,4 +34,6 @@ export interface ContactSubListTabBaseProps extends ContactSubListMutationProps 
   getListItemError: (tabId: string, fieldId: string, index: number) => string | undefined;
   isFieldEnabled: (tabId: string, fieldId: string) => boolean;
   isFieldRequired: (tabId: string, fieldId: string) => boolean;
+  fields: Record<string, FieldDefinition[]>;
+  formInstanceId: string;
 }

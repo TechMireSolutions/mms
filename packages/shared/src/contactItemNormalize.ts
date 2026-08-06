@@ -39,6 +39,92 @@ const CONTACT_ENTITY_ARRAY_KEYS = new Set([
   "emergencyContacts",
 ]);
 
+const PHONE_SYSTEM_KEYS = new Set([
+  "label",
+  "type",
+  "number",
+  "phone",
+  "value",
+  "num",
+  "countryCode",
+  "code",
+  "isPrimary",
+  "whatsappStatus",
+]);
+const EMAIL_SYSTEM_KEYS = new Set([
+  "label",
+  "type",
+  "address",
+  "email",
+  "value",
+  "isPrimary",
+  "isVerified",
+]);
+const ADDRESS_SYSTEM_KEYS = new Set([
+  "label",
+  "type",
+  "line1",
+  "address",
+  "street",
+  "value",
+  "city",
+  "state",
+  "province",
+  "country",
+  "isPrimary",
+]);
+const SOCIAL_SYSTEM_KEYS = new Set(["platform", "type", "url", "link", "value"]);
+const RELATIONSHIP_SYSTEM_KEYS = new Set([
+  "relationship",
+  "relation",
+  "type",
+  "contactId",
+  "id",
+  "targetId",
+  "name",
+  "phone",
+  "inferred",
+  "inferredFromContactId",
+  "inferenceDepth",
+]);
+
+function valueHasContent(value: unknown): boolean {
+  if (value == null) return false;
+  if (typeof value === "boolean") return false;
+  if (typeof value === "number") return !Number.isNaN(value);
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  return false;
+}
+
+function retainExtraKeys(
+  obj: Record<string, unknown>,
+  consumedKeys: ReadonlySet<string>,
+): Record<string, unknown> {
+  const extras: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (consumedKeys.has(key)) continue;
+    extras[key] = value;
+  }
+  return extras;
+}
+
+/** True when a list row has no primary content and no custom field values. */
+function isBlankContactListRow(
+  row: unknown,
+  primaryKeys: readonly string[],
+  systemKeys: ReadonlySet<string>,
+): boolean {
+  if (!row || typeof row !== "object" || Array.isArray(row)) return true;
+  const obj = row as Record<string, unknown>;
+  if (primaryKeys.some((key) => valueHasContent(obj[key]))) return false;
+  for (const [key, value] of Object.entries(obj)) {
+    if (systemKeys.has(key)) continue;
+    if (valueHasContent(value)) return false;
+  }
+  return true;
+}
+
 /**
  * Strips blank phones, emails, addresses, socials, relationship contacts, and custom-tab rows.
  */
@@ -49,23 +135,38 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
 
   if (Array.isArray(result.phones)) {
     result.phones = ensureSinglePrimaryFlag(
-      result.phones.filter((phone) => (phone.number || "").trim().length > 0),
+      result.phones.filter(
+        (phone) => !isBlankContactListRow(phone, ["number"], PHONE_SYSTEM_KEYS),
+      ),
     );
   }
   if (Array.isArray(result.emails)) {
     result.emails = ensureSinglePrimaryFlag(
-      result.emails.filter((email) => (email.address || "").trim().length > 0),
+      result.emails.filter(
+        (email) => !isBlankContactListRow(email, ["address"], EMAIL_SYSTEM_KEYS),
+      ),
     );
   }
   if (Array.isArray(result.addresses)) {
-    result.addresses = result.addresses.filter((address) => (address.line1 || "").trim().length > 0);
+    result.addresses = result.addresses.filter(
+      (address) =>
+        !isBlankContactListRow(
+          address,
+          ["line1", "city", "state", "country"],
+          ADDRESS_SYSTEM_KEYS,
+        ),
+    );
   }
   if (Array.isArray(result.socials)) {
-    result.socials = result.socials.filter((social) => (social.url || "").trim().length > 0);
+    result.socials = result.socials.filter(
+      (social) => !isBlankContactListRow(social, ["url"], SOCIAL_SYSTEM_KEYS),
+    );
   }
   if (Array.isArray(result.relationshipContacts)) {
     result.relationshipContacts = result.relationshipContacts
-      .filter((link) => link.contactId != null && String(link.contactId).trim().length > 0)
+      .filter(
+        (link) => !isBlankContactListRow(link, ["contactId"], RELATIONSHIP_SYSTEM_KEYS),
+      )
       .map((link) => ({
         ...link,
         contactId: String(link.contactId).trim(),
@@ -89,14 +190,7 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
 
 function isBlankCustomCollectionRow(row: unknown): boolean {
   if (!row || typeof row !== "object" || Array.isArray(row)) return true;
-  return Object.values(row as Record<string, unknown>).every((value) => {
-    if (value == null) return true;
-    if (typeof value === "boolean") return true;
-    if (typeof value === "number") return Number.isNaN(value);
-    if (typeof value === "string") return value.trim().length === 0;
-    if (Array.isArray(value)) return value.length === 0;
-    return false;
-  });
+  return Object.values(row as Record<string, unknown>).every((value) => !valueHasContent(value));
 }
 
 /** Ensures exactly one `isPrimary` flag among list items (first when none set). */
@@ -139,6 +233,7 @@ export function normalizePhoneItem(
       rawStatus === "UNCHECKED" ? "PENDING" : (rawStatus as ContactPhone["whatsappStatus"]);
     const parsed = parsePhoneNumber(rawNum, countryCode);
     return {
+      ...retainExtraKeys(obj, PHONE_SYSTEM_KEYS),
       label,
       number: parsed.number || rawNum,
       countryCode: parsed.countryCode || countryCode,
@@ -168,7 +263,7 @@ export function normalizeEmailItem(
     const label = String(obj.label || obj.type || defaultLabel).trim() || defaultLabel;
     const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
     const isVerified = typeof obj.isVerified === "boolean" ? obj.isVerified : undefined;
-    return { label, address, isPrimary, isVerified };
+    return { ...retainExtraKeys(obj, EMAIL_SYSTEM_KEYS), label, address, isPrimary, isVerified };
   }
   return { label: defaultLabel, address: "", isPrimary: index === 0 };
 }
@@ -213,7 +308,15 @@ export function normalizeAddressItem(
     const country = String(obj.country || defaultCountry).trim();
     const label = String(obj.label || obj.type || defaultLabel).trim() || defaultLabel;
     const isPrimary = typeof obj.isPrimary === "boolean" ? obj.isPrimary : index === 0;
-    return { label, line1, city, state, country, isPrimary };
+    return {
+      ...retainExtraKeys(obj, ADDRESS_SYSTEM_KEYS),
+      label,
+      line1,
+      city,
+      state,
+      country,
+      isPrimary,
+    };
   }
   return {
     label: defaultLabel,
@@ -241,7 +344,7 @@ export function normalizeSocialItem(
     const obj = item as Record<string, unknown>;
     const url = String(obj.url || obj.link || obj.value || "").trim();
     const platform = String(obj.platform || obj.type || defaultPlatform).trim() || defaultPlatform;
-    return { platform, url };
+    return { ...retainExtraKeys(obj, SOCIAL_SYSTEM_KEYS), platform, url };
   }
   return { platform: defaultPlatform, url: "" };
 }
@@ -264,7 +367,11 @@ export function normalizeRelationshipContactItem(
     const relationship =
       String(obj.relationship || obj.relation || obj.type || defaultRelationship).trim() ||
       defaultRelationship;
-    return { relationship, contactId };
+    return {
+      ...retainExtraKeys(obj, RELATIONSHIP_SYSTEM_KEYS),
+      relationship,
+      contactId,
+    };
   }
   return { relationship: defaultRelationship, contactId: "" };
 }

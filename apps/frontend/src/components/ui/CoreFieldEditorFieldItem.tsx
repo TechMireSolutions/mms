@@ -15,6 +15,8 @@ interface FieldItemProps {
   onToggleEnabled: () => void;
   onToggleRequired: () => void;
   onToggleUnique?: () => void;
+  /** When true, enable/required toggles are disabled (Contacts firstName). */
+  enablementLocked?: boolean;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isDragging: boolean;
   onEdit?: () => void;
@@ -41,6 +43,7 @@ export const FieldItem = memo(function FieldItem({
   onToggleEnabled,
   onToggleRequired,
   onToggleUnique,
+  enablementLocked = false,
   dragHandleProps,
   isDragging,
   onEdit,
@@ -84,6 +87,7 @@ export const FieldItem = memo(function FieldItem({
         onCheckedChange={onToggleEnabled}
         onClick={(event) => event.stopPropagation()}
         aria-label={t("fields.enableAria")}
+        disabled={enablementLocked}
         className="w-4 h-4"
       />
 
@@ -113,6 +117,7 @@ export const FieldItem = memo(function FieldItem({
             }}
             variant="outline"
             size="sm"
+            disabled={enablementLocked}
             aria-pressed={isRequired}
             className={`min-h-11 flex-1 rounded-md border px-3 text-xs font-semibold shadow-none transition-all sm:flex-initial
                 ${
