@@ -113,23 +113,28 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
 
   const saveButton = registerDialog.getByRole('button', { name: /Register student|Save/i }).first();
   await expect(saveButton).toBeEnabled({ timeout: 15_000 });
-  await saveButton.click({ force: true });
+
+  const studentCreatePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/students') &&
+      response.request().method() === 'POST' &&
+      !response.url().includes('/duplicate-check') &&
+      !response.url().includes('/bulk'),
+    { timeout: 30_000 },
+  ).catch(() => null);
+
+  await saveButton.click();
 
   const saveAnywayButton = page.getByRole('button', { name: /Save anyway/i });
-  for (let i = 0; i < 3; i++) {
-    if (await saveAnywayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await saveAnywayButton.click({ force: true });
-    }
-    if (await registerDialog.isHidden().catch(() => false)) {
-      break;
-    }
-    if (await saveButton.isVisible().catch(() => false)) {
-      await saveButton.click({ force: true }).catch(() => null);
-    }
+  if (await saveAnywayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await saveAnywayButton.click();
   }
 
+  await studentCreatePromise;
   await expect(registerDialog).toBeHidden({ timeout: 20_000 });
-  await expect(page.locator('text=Jane Doe').first()).toBeVisible({ timeout: 20_000 });
+  await expect(
+    page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
+  ).toBeVisible({ timeout: 20_000 });
 }
 
 /**

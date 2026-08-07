@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type {
   Contact,
   FieldDefinition,
@@ -78,7 +78,11 @@ export function useStudentFormActionHandlers({
     else setDuplicateConfirmOpen(true);
   }, [clearDuplicatePrompt, setDuplicateConfirmOpen]);
 
+  const savingRef = useRef(false);
+
   const handleSave = () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
     const draftForSave = resolveStudentGrForSave(
       student,
       studentDraft,
@@ -104,7 +108,10 @@ export function useStudentFormActionHandlers({
       onClose,
       onValidationTab,
       setValidationErrors,
-      setSaving,
+      setSaving: (value: boolean) => {
+        savingRef.current = value;
+        setSaving(value);
+      },
       setPendingSaveData,
       setTypedDuplicateReason,
       setDuplicateConfirmOpen,
