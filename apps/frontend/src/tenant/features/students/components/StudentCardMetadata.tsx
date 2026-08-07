@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { calcAge, primaryResponsibleAdultDisplayName, type Student } from "@mms/shared";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   formatStudentListCustomValue,
@@ -12,17 +12,16 @@ import type { StudentListCardsProps } from "@/tenant/features/students/component
 
 type StudentCardMetadataProps = Pick<
   StudentListCardsProps,
-  "statusBadgeConfig" | "isColumnVisible" | "isFieldEnabled" | "columnRegistry"
+  "statusBadgeConfig" | "isColumnVisible" | "columnRegistry"
 > & {
   student: Student;
 };
 
-/** Students domain metadata tiles — Contacts card metadata chrome. */
+/** Students domain metadata tiles — Contacts card metadata chrome (gender lives in header). */
 export function StudentCardMetadata({
   student,
   statusBadgeConfig,
   isColumnVisible,
-  isFieldEnabled,
   columnRegistry,
 }: StudentCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -35,13 +34,6 @@ export function StudentCardMetadata({
 
   const tiles: ReactNode[] = [];
 
-  if (isFieldEnabled("gender")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="gender" label={t("students.gender")}>
-        {student.gender ? formatContactGenderLabel(student.gender, t) : emptyDash}
-      </DirectoryCardMetaTile>,
-    );
-  }
   if (isColumnVisible("dob")) {
     tiles.push(
       <DirectoryCardMetaTile key="dob" label={t("students.columns.dob")}>
@@ -75,9 +67,5 @@ export function StudentCardMetadata({
 
   if (tiles.length === 0) return null;
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
-      {tiles}
-    </div>
-  );
+  return <DirectoryCardMetaGrid>{tiles}</DirectoryCardMetaGrid>;
 }

@@ -60,14 +60,7 @@ export function formatContactGenderLabel(
   return translated === key ? toTitleCase(gender) : translated;
 }
 
-/** Resolves border accent indicator styling for contact cards based on selection and gender. */
-export function getContactAccentBarClass(isSelected: boolean, gender?: string | null): string {
-  if (isSelected) return "bg-primary/70 group-hover:bg-primary";
-  const g = gender?.toLowerCase();
-  if (g === "male") return "bg-info/50 group-hover:bg-info";
-  if (g === "female") return "bg-secondary/50 group-hover:bg-secondary";
-  return "bg-muted-foreground/35 group-hover:bg-muted-foreground/60";
-}
+export { getGenderAccentBarClass as getContactAccentBarClass } from "@/lib/directoryCardAccent";
 
 /** Resolves localized label for duplicate detection fields. */
 export function getDuplicateFieldLabel(

@@ -1,4 +1,6 @@
 import { toMessagingRecipient, type Student } from "@mms/shared";
+import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
+import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -46,9 +48,9 @@ export function StudentCardActions({
   const hasFaceChannels = messagingEnabled && (Boolean(phone) || Boolean(email));
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/40 pt-3 dark:border-border/20">
-      {messagingEnabled ? (
-        <div className="me-auto">
+    <DirectoryCardFooter
+      leading={
+        hasFaceChannels ? (
           <EntityMessagingIconActions
             primaryPhone={phone}
             primaryEmail={email}
@@ -82,33 +84,34 @@ export function StudentCardActions({
                 : undefined
             }
           />
-        </div>
-      ) : null}
-
-      <div className="flex shrink-0 items-center gap-1.5">
-        <DirectoryCardViewButton
-          label={t("students.actionViewShort")}
-          ariaLabel={`${t("students.list.viewProfile")} - ${displayName}`}
-          onClick={() => onViewStudent(student)}
-        />
-        <StudentListActionsMenu
-          student={student}
-          studentId={studentId}
-          showDeleted={showDeleted}
-          canWrite={canWrite}
-          canDelete={canDelete}
-          includeMessaging={messagingEnabled && !hasFaceChannels}
-          hideViewItem
-          triggerClassName="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer shadow-none"
-          contentClassName="w-40"
-          iconClassName="w-3.5 h-3.5"
-          onViewStudent={onViewStudent}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onRestore={onRestore}
-          onOpenComposer={onOpenComposer}
-        />
-      </div>
-    </div>
+        ) : undefined
+      }
+      trailing={
+        <>
+          <DirectoryCardViewButton
+            label={t("students.actionViewShort")}
+            ariaLabel={`${t("students.list.viewProfile")} - ${displayName}`}
+            onClick={() => onViewStudent(student)}
+          />
+          <StudentListActionsMenu
+            student={student}
+            studentId={studentId}
+            showDeleted={showDeleted}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            includeMessaging={messagingEnabled && !hasFaceChannels}
+            hideViewItem
+            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            contentClassName="w-40"
+            iconClassName="w-3.5 h-3.5"
+            onViewStudent={onViewStudent}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onRestore={onRestore}
+            onOpenComposer={onOpenComposer}
+          />
+        </>
+      }
+    />
   );
 }
