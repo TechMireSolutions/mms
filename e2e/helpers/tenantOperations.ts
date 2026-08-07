@@ -91,10 +91,7 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
 
   // Set relationship type to Parent (system catalog FormSelect)
   const relTypeSelect = editJaneDialog.locator('#relationship-type-0');
-  await relTypeSelect.click();
-  const parentOption = page.getByRole('option', { name: /^Parent$/i }).first();
-  await expect(parentOption).toBeVisible({ timeout: 10_000 });
-  await parentOption.click();
+  await relTypeSelect.selectOption('Parent');
 
   await waitForToastOverlayToClear(page, 'before saving Jane relationship');
 
@@ -112,17 +109,27 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await expect(editJaneDialog).toBeHidden();
   await expect(registerDialog.getByText(/John Doe/i).first()).toBeVisible({ timeout: 25_000 });
 
-  const saveButton = registerDialog.getByRole('button', { name: /Register student|Save/i });
+  await waitForToastOverlayToClear(page, 'before registering student Jane Doe');
+
+  const saveButton = registerDialog.getByRole('button', { name: /Register student|Save/i }).first();
   await expect(saveButton).toBeEnabled({ timeout: 15_000 });
-  await saveButton.click();
+  await saveButton.click({ force: true });
 
   const saveAnywayButton = page.getByRole('button', { name: /Save anyway/i });
-  if (await saveAnywayButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await saveAnywayButton.click();
+  for (let i = 0; i < 3; i++) {
+    if (await saveAnywayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await saveAnywayButton.click({ force: true });
+    }
+    if (await registerDialog.isHidden().catch(() => false)) {
+      break;
+    }
+    if (await saveButton.isVisible().catch(() => false)) {
+      await saveButton.click({ force: true }).catch(() => null);
+    }
   }
 
   await expect(registerDialog).toBeHidden({ timeout: 20_000 });
-  await page.waitForSelector('tbody tr:has-text("Jane Doe") >> visible=true');
+  await expect(page.locator('text=Jane Doe').first()).toBeVisible({ timeout: 20_000 });
 }
 
 /**

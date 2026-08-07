@@ -49,11 +49,12 @@ test.describe.serial('Tenant Operations & Module Flows E2E', { tag: '@local-only
     // 2. Soft-delete trash toggle check on Students
     await page.goto(`${credentials.tenantOrigin}/students`);
     await page.waitForLoadState('domcontentloaded');
-    const trashToggle = page.getByRole('button', { name: /Show deleted|Show active/i });
+    const trashToggle = page.getByRole('button', { name: /Show deleted|Show active/i }).first();
     await expect(trashToggle).toBeVisible({ timeout: 20_000 });
     await trashToggle.click();
-    await expect(page.getByRole('button', { name: /Show active/i })).toBeVisible();
-    await page.getByRole('button', { name: /Show active/i }).click();
+    const showActiveBtn = page.getByRole('button', { name: /Show active/i }).first();
+    await expect(showActiveBtn).toBeVisible();
+    await showActiveBtn.click();
 
     // 3. Settings shell check
     await page.goto(`${credentials.tenantOrigin}/settings`);
