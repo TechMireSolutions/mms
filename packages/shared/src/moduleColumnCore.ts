@@ -110,10 +110,16 @@ export function getModuleColumnWidth(
 
 export interface StudentWorkColumnLabels {
   name: string;
+  grNumber: string;
+  gender: string;
+  phone: string;
+  email: string;
   dob: string;
   parents: string;
   sessions: string;
   status: string;
+  registeredDate: string;
+  notes: string;
 }
 
 /** Builds tenant-default Work column registry for Students (before per-user overlay). */
@@ -131,10 +137,16 @@ export function buildStudentWorkColumnRegistry(
 
   const labelByKey: Record<string, string> = {
     name: labels.name,
+    grNumber: labels.grNumber,
+    gender: labels.gender,
+    phone: labels.phone,
+    email: labels.email,
     dob: labels.dob,
     parents: labels.parents,
     sessions: labels.sessions,
     status: labels.status,
+    registeredDate: labels.registeredDate,
+    notes: labels.notes,
   };
 
   const customByKey = new Map(

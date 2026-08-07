@@ -13,6 +13,7 @@ import type { StudentListCardsProps } from "@/tenant/features/students/component
 
 export function StudentListCards({
   paginatedStudents,
+  sessions,
   selectedIds,
   allSelected,
   someSelected,
@@ -22,7 +23,6 @@ export function StudentListCards({
   canWriteMessaging = false,
   statusBadgeConfig,
   isColumnVisible,
-  isFieldEnabled,
   columnRegistry,
   onSelectAll,
   onSelectOne,
@@ -59,7 +59,6 @@ export function StudentListCards({
           const displayName = studentCard.name || "";
           const phone = studentCard.phone?.trim() || null;
           const email = studentCard.email?.trim() || null;
-          const showGender = isFieldEnabled("gender");
 
           return (
             <DirectoryEntityCard
@@ -73,7 +72,8 @@ export function StudentListCards({
                 studentId={studentIdStr}
                 isSelected={isSelected}
                 displayName={displayName}
-                showGender={showGender}
+                showGrNumber={isColumnVisible("grNumber")}
+                showGender={isColumnVisible("gender")}
                 onSelectOne={onSelectOne}
                 onViewStudent={onViewStudent}
                 reducedMotion={reducedMotion}
@@ -83,12 +83,13 @@ export function StudentListCards({
                 phone={phone}
                 phoneDisplay={phone}
                 email={email}
-                showPhone={isFieldEnabled("phone")}
-                showEmail={isFieldEnabled("email")}
+                showPhone={isColumnVisible("phone")}
+                showEmail={isColumnVisible("email")}
               />
 
               <StudentCardMetadata
                 student={studentCard}
+                sessions={sessions}
                 statusBadgeConfig={statusBadgeConfig}
                 isColumnVisible={isColumnVisible}
                 columnRegistry={columnRegistry}

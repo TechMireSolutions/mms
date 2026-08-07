@@ -18,10 +18,11 @@ import type { StudentListSortField } from "@/tenant/features/students/components
 
 const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
   name: "name",
-  age: "dob",
-  fatherName: "fatherName",
+  dob: "dob",
   status: "status",
   grNumber: "grNumber",
+  gender: "gender",
+  registeredDate: "registeredDate",
 };
 
 export function useStudentsPageController() {

@@ -16,6 +16,7 @@ const STUDENT_SORT_FIELDS = new Set([
   'status',
   'gender',
   'registeredDate',
+  'dob',
   'studentId',
   'updatedAt',
 ]);
@@ -78,6 +79,10 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
   if (field === 'gender') {
     const genderSort = genderExpr();
     return dir === 'desc' ? sql`${genderSort} desc nulls last` : sql`${genderSort} asc nulls last`;
+  }
+  if (field === 'dob') {
+    const dobSort = sql`NULLIF(trim(COALESCE(${students.customData}->>'dob', '')), '')`;
+    return dir === 'desc' ? sql`${dobSort} desc nulls last` : sql`${dobSort} asc nulls last`;
   }
   return dir === 'desc'
     ? sql`${students.customData}->>${field} desc nulls last`

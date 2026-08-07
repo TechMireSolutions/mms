@@ -14,10 +14,16 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
     () =>
       buildStudentWorkColumnRegistry(settings, {
         name: t('students.columns.name'),
+        grNumber: t('students.columns.grNumber'),
+        gender: t('students.columns.gender'),
+        phone: t('students.columns.phone'),
+        email: t('students.columns.email'),
         dob: t('students.columns.dob'),
         parents: t('students.columns.parents'),
         sessions: t('students.columns.sessions'),
         status: t('students.columns.status'),
+        registeredDate: t('students.columns.registeredDate'),
+        notes: t('students.columns.notes'),
       }),
     [settings, t],
   );

@@ -3,7 +3,13 @@ import type { ModuleColumnRegistryEntry, Student, toMessagingRecipient } from "@
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
-export type StudentListSortField = "name" | "age" | "fatherName" | "status" | "grNumber";
+export type StudentListSortField =
+  | "name"
+  | "grNumber"
+  | "status"
+  | "gender"
+  | "registeredDate"
+  | "dob";
 
 export interface StudentListSession {
   id: string;
@@ -21,8 +27,6 @@ interface StudentListSelectionProps {
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   /** Work column prefs — call in leaves (no show* fans). */
   isColumnVisible: (key: string) => boolean;
-  /** Setup Fields gate for profile chrome under the name (e.g. gender). */
-  isFieldEnabled: (key: string) => boolean;
   /** Tenant Work column registry (system + custom:*). */
   columnRegistry: ModuleColumnRegistryEntry[];
   onSelectOne: (id: string) => void;
@@ -34,6 +38,7 @@ interface StudentListSelectionProps {
 
 export interface StudentListCardsProps extends StudentListSelectionProps {
   paginatedStudents: Student[];
+  sessions: StudentListSession[];
   allSelected: boolean;
   someSelected: boolean;
   onSelectAll: () => void;

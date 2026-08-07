@@ -142,18 +142,37 @@ export const STUDENT_DETAIL_HERO_FIELD_KEYS = new Set([
 
 export const DEFAULT_STUDENT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "name", label: "Name", labelKey: "students.columns.name", enabled: true, order: 0, sortable: true, width: 200, fixed: true },
-  { key: "dob", label: "Date of Birth", labelKey: "students.columns.dob", enabled: true, order: 1, sortable: true, width: 120 },
-  { key: "parents", label: "Parents", labelKey: "students.columns.parents", enabled: true, order: 2, sortable: true, width: 150 },
-  { key: "sessions", label: "Sessions", labelKey: "students.columns.sessions", enabled: true, order: 3, sortable: false, width: 160 },
-  { key: "status", label: "Status", labelKey: "students.columns.status", enabled: true, order: 4, sortable: true, width: 100 },
+  { key: "grNumber", label: "GR Number", labelKey: "students.columns.grNumber", enabled: true, order: 1, sortable: true, width: 110 },
+  { key: "gender", label: "Gender", labelKey: "students.columns.gender", enabled: true, order: 2, sortable: true, width: 100 },
+  { key: "phone", label: "Phone", labelKey: "students.columns.phone", enabled: true, order: 3, sortable: false, width: 140 },
+  { key: "email", label: "Email", labelKey: "students.columns.email", enabled: true, order: 4, sortable: false, width: 180 },
+  { key: "dob", label: "Date of Birth", labelKey: "students.columns.dob", enabled: true, order: 5, sortable: true, width: 120 },
+  { key: "parents", label: "Parents", labelKey: "students.columns.parents", enabled: true, order: 6, sortable: false, width: 150 },
+  { key: "sessions", label: "Sessions", labelKey: "students.columns.sessions", enabled: true, order: 7, sortable: false, width: 160 },
+  { key: "status", label: "Status", labelKey: "students.columns.status", enabled: true, order: 8, sortable: true, width: 100 },
+  { key: "registeredDate", label: "Registration Date", labelKey: "students.columns.registeredDate", enabled: true, order: 9, sortable: true, width: 140 },
+  { key: "notes", label: "Notes", labelKey: "students.columns.notes", enabled: false, order: 10, sortable: false, width: 180 },
 ];
 
 /** Maps Work column keys to Setup Fields tab/field for enablement sync. */
 export const STUDENT_COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: string }> = {
+  grNumber: { tabId: "registration", fieldId: "grNumber" },
+  gender: { tabId: "basic", fieldId: "gender" },
   dob: { tabId: "basic", fieldId: "dob" },
   parents: { tabId: "basic", fieldId: "contactRelationships" },
   status: { tabId: "registration", fieldId: "status" },
+  registeredDate: { tabId: "registration", fieldId: "registeredDate" },
+  notes: { tabId: "registration", fieldId: "notes" },
 };
+
+/** Face chrome on Work cards — excluded from the metadata tile grid. */
+export const STUDENT_CARD_FACE_COLUMN_IDS = new Set([
+  "name",
+  "grNumber",
+  "gender",
+  "phone",
+  "email",
+]);
 
 // ─── Default Teachers Field Setup Constants ────────────────────────────────────
 

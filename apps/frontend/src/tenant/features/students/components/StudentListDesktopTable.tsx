@@ -11,6 +11,10 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentListDesktopTableRow } from "@/tenant/features/students/components/StudentListDesktopTableRow";
 import type { StudentListTableProps } from "@/tenant/features/students/components/StudentListContentTypes";
+import {
+  getStudentVisibleWorkColumns,
+  toStudentListSortField,
+} from "@/tenant/features/students/components/studentListVisibleColumns";
 
 type StudentListDesktopTableProps = Pick<
   StudentListTableProps,
@@ -25,7 +29,6 @@ type StudentListDesktopTableProps = Pick<
   | "canWriteMessaging"
   | "statusBadgeConfig"
   | "isColumnVisible"
-  | "isFieldEnabled"
   | "columnRegistry"
   | "renderSortIcon"
   | "onSort"
@@ -56,7 +59,6 @@ export function StudentListDesktopTable({
   canWriteMessaging,
   statusBadgeConfig,
   isColumnVisible,
-  isFieldEnabled,
   columnRegistry,
   renderSortIcon,
   onSort,
@@ -71,9 +73,7 @@ export function StudentListDesktopTable({
   onColumnResize,
 }: StudentListDesktopTableProps) {
   const { t } = useTranslation();
-  const customColumns = columnRegistry.filter(
-    (col) => col.key.startsWith("custom:") && isColumnVisible(col.key),
-  );
+  const visibleColumns = getStudentVisibleWorkColumns(columnRegistry, isColumnVisible);
 
   return (
     <Table className="table-fixed">
@@ -86,77 +86,27 @@ export function StudentListDesktopTable({
               aria-label={allSelected ? t("common.deselect") : t("students.table.selectAll")}
             />
           </TableHead>
-          <ResizableTableHead
-            columnKey="name"
-            width={getColumnWidth?.("name")}
-            onResize={onColumnResize}
-            onClick={() => onSort("name")}
-            className={SORTABLE_HEAD_CLASS}
-          >
-            <div className="flex items-center gap-1">
-              {t("students.columns.name")} {renderSortIcon("name")}
-            </div>
-          </ResizableTableHead>
-          {isColumnVisible("dob") ? (
-            <ResizableTableHead
-              columnKey="dob"
-              width={getColumnWidth?.("dob")}
-              onResize={onColumnResize}
-              onClick={() => onSort("age")}
-              className={`${SORTABLE_HEAD_CLASS} hidden sm:table-cell`}
-            >
-              <div className="flex items-center gap-1">
-                {t("students.columns.dob")} {renderSortIcon("age")}
-              </div>
-            </ResizableTableHead>
-          ) : null}
-          {isColumnVisible("parents") ? (
-            <ResizableTableHead
-              columnKey="parents"
-              width={getColumnWidth?.("parents")}
-              onResize={onColumnResize}
-              onClick={() => onSort("fatherName")}
-              className={`${SORTABLE_HEAD_CLASS} hidden md:table-cell`}
-            >
-              <div className="flex items-center gap-1">
-                {t("students.columns.parents")} {renderSortIcon("fatherName")}
-              </div>
-            </ResizableTableHead>
-          ) : null}
-          {isColumnVisible("sessions") ? (
-            <ResizableTableHead
-              columnKey="sessions"
-              width={getColumnWidth?.("sessions")}
-              onResize={onColumnResize}
-              className={`${HEAD_CLASS} hidden lg:table-cell`}
-            >
-              {t("students.columns.sessions")}
-            </ResizableTableHead>
-          ) : null}
-          {isColumnVisible("status") ? (
-            <ResizableTableHead
-              columnKey="status"
-              width={getColumnWidth?.("status")}
-              onResize={onColumnResize}
-              onClick={() => onSort("status")}
-              className={`${SORTABLE_HEAD_CLASS} hidden sm:table-cell`}
-            >
-              <div className="flex items-center gap-1">
-                {t("students.columns.status")} {renderSortIcon("status")}
-              </div>
-            </ResizableTableHead>
-          ) : null}
-          {customColumns.map((col) => (
-            <ResizableTableHead
-              key={col.key}
-              columnKey={col.key}
-              width={getColumnWidth?.(col.key) ?? col.width}
-              onResize={onColumnResize}
-              className={`${HEAD_CLASS} hidden xl:table-cell`}
-            >
-              {col.label}
-            </ResizableTableHead>
-          ))}
+          {visibleColumns.map((col) => {
+            const sortField = toStudentListSortField(col.key);
+            return (
+              <ResizableTableHead
+                key={col.key}
+                columnKey={col.key}
+                width={getColumnWidth?.(col.key) ?? col.width}
+                onResize={onColumnResize}
+                onClick={sortField ? () => onSort(sortField) : undefined}
+                className={sortField ? SORTABLE_HEAD_CLASS : HEAD_CLASS}
+              >
+                {sortField ? (
+                  <div className="flex items-center gap-1">
+                    {col.label} {renderSortIcon(sortField)}
+                  </div>
+                ) : (
+                  col.label
+                )}
+              </ResizableTableHead>
+            );
+          })}
           <TableHead className="px-4 py-3 w-12" />
         </TableRow>
       </TableHeader>
@@ -175,8 +125,7 @@ export function StudentListDesktopTable({
               canWriteMessaging={canWriteMessaging}
               statusBadgeConfig={statusBadgeConfig}
               isColumnVisible={isColumnVisible}
-              isFieldEnabled={isFieldEnabled}
-              columnRegistry={columnRegistry}
+              visibleColumns={visibleColumns}
               onSelectOne={onSelectOne}
               onViewStudent={onViewStudent}
               onEdit={onEdit}

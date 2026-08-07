@@ -127,7 +127,6 @@ export default function StudentList({
         canWriteMessaging={list.canWriteMessaging}
         statusBadgeConfig={statusBadgeConfig}
         isColumnVisible={list.isColumnVisible}
-        isFieldEnabled={list.isFieldEnabled}
         columnRegistry={columnRegistry}
         renderSortIcon={list.renderSortIcon}
         onSort={list.handleSort}

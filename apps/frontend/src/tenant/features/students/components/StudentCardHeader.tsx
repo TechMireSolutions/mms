@@ -12,6 +12,7 @@ export interface StudentCardHeaderProps {
   studentId: string;
   isSelected: boolean;
   displayName: string;
+  showGrNumber?: boolean;
   showGender?: boolean;
   onSelectOne: (id: string) => void;
   onViewStudent: (student: Student) => void;
@@ -24,6 +25,7 @@ export function StudentCardHeader({
   studentId,
   isSelected,
   displayName,
+  showGrNumber = false,
   showGender = false,
   onSelectOne,
   onViewStudent,
@@ -44,7 +46,7 @@ export function StudentCardHeader({
       reducedMotion={reducedMotion}
       subtitle={
         <DirectoryCardSubtitleStack>
-          <GrBadge grNumber={student.grNumber} />
+          {showGrNumber ? <GrBadge grNumber={student.grNumber} /> : null}
           {showGender ? (
             <PersonIdentityMeta gender={student.gender} className="font-semibold truncate" />
           ) : null}

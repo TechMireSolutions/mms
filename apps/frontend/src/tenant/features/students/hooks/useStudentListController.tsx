@@ -40,7 +40,13 @@ export function useStudentListController({
   const resolveColumnVisible = (key: string): boolean => {
     if (isColumnVisible) return isColumnVisible(key);
     if (key === "dob") return isFieldEnabled("dob");
+    if (key === "gender") return isFieldEnabled("gender");
+    if (key === "grNumber") return isFieldEnabled("grNumber");
     if (key === "parents") return isFieldEnabled("contactRelationships");
+    if (key === "status") return isFieldEnabled("status");
+    if (key === "registeredDate") return isFieldEnabled("registeredDate");
+    if (key === "notes") return isFieldEnabled("notes");
+    if (key === "phone" || key === "email" || key === "sessions" || key === "name") return true;
     return true;
   };
 
@@ -66,7 +72,6 @@ export function useStudentListController({
   return {
     t,
     isColumnVisible: resolveColumnVisible,
-    isFieldEnabled,
     viewStudent,
     setViewStudent,
     openComposer,
