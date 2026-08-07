@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
-import { ContactsWorkDirectory } from "@/tenant/features/contacts/components/ContactsWorkDirectory";
-import type { ContactsWorkDirectoryProps } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
+import { ContactsWorkTier } from "@/tenant/features/contacts/components/ContactsWorkTier";
+import type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 import type { Contact } from "@mms/shared";
 import ContactsSettingsPanel from "@/tenant/features/contacts/components/ContactsSettingsPanel";
 
-export interface ContactsPageTabPanelProps extends ContactsWorkDirectoryProps {
+export interface ContactsPageTabPanelProps extends ContactsWorkTierProps {
   effectiveTab: string;
   canWrite: boolean;
   canEditSetup: boolean;
@@ -24,7 +24,7 @@ export function ContactsPageTabPanel({
     <AnimatePresence mode="wait">
       {effectiveTab === "work" ? (
         <motion.div key="work" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <ContactsWorkDirectory {...directoryProps} canWrite={canWrite} />
+          <ContactsWorkTier {...directoryProps} canWrite={canWrite} />
         </motion.div>
       ) : effectiveTab === "reports" ? (
         <motion.div

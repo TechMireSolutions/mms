@@ -7,7 +7,7 @@ import {
   getStudentModulePreferencesByWorkspace,
   upsertStudentModulePreferences,
 } from '../db/repositories/studentModulePreferencesRepository.js';
-import { broadcastTenantUpdate } from './websocketService.js';
+import { broadcastCollection } from './websocketService.js';
 
 function requireTenant(): string {
   const tenant = getRequestTenant();
@@ -30,6 +30,6 @@ export async function saveStudentModulePreferences(
     tenant,
     normalized as unknown as Record<string, unknown>,
   );
-  broadcastTenantUpdate(tenant, 'collection', 'students');
+  await broadcastCollection('students');
   return normalized;
 }

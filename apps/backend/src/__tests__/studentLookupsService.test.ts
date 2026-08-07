@@ -15,6 +15,7 @@ vi.mock('../lib/tenantContext.js', () => ({
 }));
 
 vi.mock('../services/websocketService.js', () => ({
+  broadcastCollection: vi.fn(),
   broadcastTenantUpdate: vi.fn(),
 }));
 

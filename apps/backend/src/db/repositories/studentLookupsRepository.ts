@@ -1,108 +1,39 @@
-import { and, asc, eq } from 'drizzle-orm';
 import type { StudentLookupKind } from '@mms/shared';
 import { studentLookups } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import {
+  createModuleLookupsRepo,
+  type ModuleLookupRowInput,
+} from './moduleSetupRepoFactories.js';
 
-export interface StudentLookupRowInput {
+
+type LookupDbRow = {
   id: string;
-  kind: StudentLookupKind;
+  workspaceSubdomain: string;
+  kind: string;
   label: string;
-  meta?: Record<string, unknown> | null;
+  meta: Record<string, unknown> | null;
   sortOrder: number;
+  updatedAt: Date;
+};
+
+export interface StudentLookupRowInput extends Omit<ModuleLookupRowInput, 'kind'> {
+  kind: StudentLookupKind;
 }
 
-export async function listStudentLookupsByWorkspace(workspaceSubdomain: string) {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
-    return tx
-      .select()
-      .from(studentLookups)
-      .where(eq(studentLookups.workspaceSubdomain, subdomain))
-      .orderBy(asc(studentLookups.kind), asc(studentLookups.sortOrder));
-  });
-}
+const repo = createModuleLookupsRepo({ table: studentLookups });
 
-export async function listStudentLookupsByKind(
+export const listStudentLookupsByWorkspace = ((ws: string) => repo.listByWorkspace(ws)) as (ws: string) => Promise<LookupDbRow[]>;
+export const listStudentLookupsByKind = (
   workspaceSubdomain: string,
   kind: StudentLookupKind,
-) {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
-    return tx
-      .select()
-      .from(studentLookups)
-      .where(
-        and(
-          eq(studentLookups.workspaceSubdomain, subdomain),
-          eq(studentLookups.kind, kind),
-        ),
-      )
-      .orderBy(asc(studentLookups.sortOrder));
-  });
-}
-
-/** Replace one kind's ordered rows inside a single tenant transaction. */
-export async function replaceStudentLookupsForKind(
+): Promise<LookupDbRow[]> =>
+  repo.listByKind(workspaceSubdomain, kind) as Promise<LookupDbRow[]>;
+export const replaceStudentLookupsForKind = (
   workspaceSubdomain: string,
   kind: StudentLookupKind,
   rows: StudentLookupRowInput[],
-): Promise<void> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const now = new Date();
-
-  await withTenantTransaction(subdomain, async (tx) => {
-    await tx
-      .delete(studentLookups)
-      .where(
-        and(
-          eq(studentLookups.workspaceSubdomain, subdomain),
-          eq(studentLookups.kind, kind),
-        ),
-      );
-
-    if (rows.length === 0) return;
-
-    await tx.insert(studentLookups).values(
-      rows.map((row) => ({
-        id: row.id,
-        workspaceSubdomain: subdomain,
-        kind: row.kind,
-        label: row.label,
-        meta: row.meta ?? null,
-        sortOrder: row.sortOrder,
-        updatedAt: now,
-      })),
-    );
-  });
-}
-
+) => repo.replaceForKind(workspaceSubdomain, kind, rows);
 /** Full-workspace list for admin backup snapshots. */
-export async function listAllStudentLookupsByWorkspace(workspaceSubdomain: string) {
-  return listStudentLookupsByWorkspace(workspaceSubdomain);
-}
-
+export const listAllStudentLookupsByWorkspace = repo.listAllByWorkspace;
 /** Admin restore wipe+replace for the whole workspace. */
-export async function replaceStudentLookupsForWorkspace(
-  workspaceSubdomain: string,
-  records: Array<Record<string, unknown>>,
-): Promise<void> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const now = new Date();
-
-  await withTenantTransaction(subdomain, async (tx) => {
-    await tx.delete(studentLookups).where(eq(studentLookups.workspaceSubdomain, subdomain));
-    if (records.length === 0) return;
-
-    await tx.insert(studentLookups).values(
-      records.map((record, index) => ({
-        id: String(record.id ?? `${subdomain}:lookup:${index}`),
-        workspaceSubdomain: subdomain,
-        kind: String(record.kind ?? ''),
-        label: String(record.label ?? ''),
-        meta: (record.meta as Record<string, unknown> | null | undefined) ?? null,
-        sortOrder: typeof record.sortOrder === 'number' ? record.sortOrder : index,
-        updatedAt: now,
-      })),
-    );
-  });
-}
+export const replaceStudentLookupsForWorkspace = repo.replaceForWorkspace;

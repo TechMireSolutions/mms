@@ -71,7 +71,7 @@ export function useContactsPageTabPanelProps({
       onClearFilters: directory.clearFilters,
       viewingDeleted,
       onShowDeletedChange: (next: boolean) => {
-        directory.setShowDeletedArchives(next);
+        directory.setViewingDeleted(next);
         directory.setSelected([]);
       },
       canViewDeleted: canDelete,
@@ -121,7 +121,7 @@ export function useContactsPageTabPanelProps({
       directory.hasActiveFilters,
       directory.activeFilterCount,
       directory.clearFilters,
-      directory.setShowDeletedArchives,
+      directory.setViewingDeleted,
       directory.setSelected,
       directory.shownCount,
       directory.selected,

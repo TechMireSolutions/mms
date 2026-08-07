@@ -23,7 +23,7 @@ type StudentListDesktopTableProps = Pick<
   | "selectedIds"
   | "allSelected"
   | "someSelected"
-  | "showDeleted"
+  | "viewingDeleted"
   | "canWrite"
   | "canDelete"
   | "canWriteMessaging"
@@ -53,7 +53,7 @@ export function StudentListDesktopTable({
   selectedIds,
   allSelected,
   someSelected,
-  showDeleted,
+  viewingDeleted,
   canWrite,
   canDelete,
   canWriteMessaging,
@@ -119,7 +119,7 @@ export function StudentListDesktopTable({
               rowIndex={rowIndex}
               sessions={sessions}
               selectedIds={selectedIds}
-              showDeleted={showDeleted}
+              viewingDeleted={viewingDeleted}
               canWrite={canWrite}
               canDelete={canDelete}
               canWriteMessaging={canWriteMessaging}

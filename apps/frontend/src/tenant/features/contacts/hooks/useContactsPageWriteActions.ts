@@ -7,7 +7,7 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
-import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsCsvExport";
+import { startContactsDuplicateScan } from "@/lib/backgroundJobs/startServerContactsBackgroundJobs";
 import { CONTACTS_DUPLICATES_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContacts";
 import type { useContactsCrudActions } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
 

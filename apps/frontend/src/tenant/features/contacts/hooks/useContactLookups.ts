@@ -1,16 +1,17 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CONTACTS_MODULE_MANIFEST,
   type ContactLookupKind,
   type ContactLookupCountryCode,
   type ContactLookupsMap,
-} from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
-import { useAuth } from '@/lib/contexts/AuthContext';
-import { CONTACTS_API } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
-import { getContactConfigCollectionDefaults } from '@/lib/contacts/contactConfigSeeds';
+} from "@mms/shared";
+import { apiJson } from "@/lib/apiClient";
+import { createModuleLookupsHooks } from "@/lib/query/createModuleLookupsHooks";
+import { getContactConfigCollectionDefaults } from "@/lib/contacts/contactConfigSeeds";
+import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 
-export const CONTACTS_LOOKUPS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'lookups'] as const;
+export const CONTACTS_LOOKUPS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, "lookups"] as const;
+
+type ContactLookupItems = string[] | ContactLookupCountryCode[];
 
 const defaults = (): ContactLookupsMap => {
   const seeded = getContactConfigCollectionDefaults();
@@ -34,45 +35,26 @@ export async function fetchContactLookups(signal?: AbortSignal): Promise<Contact
 
 export async function putContactLookupKind(
   kind: ContactLookupKind,
-  items: string[] | ContactLookupCountryCode[],
-): Promise<string[] | ContactLookupCountryCode[]> {
-  const response = await apiJson<{ items: string[] | ContactLookupCountryCode[] }>(
-    `${CONTACTS_API}/lookups/${kind}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
-    },
-  );
+  items: ContactLookupItems,
+): Promise<ContactLookupItems> {
+  const response = await apiJson<{ items: ContactLookupItems }>(`${CONTACTS_API}/lookups/${kind}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
   return response.items;
 }
 
-export function useContactLookupsQuery() {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: CONTACTS_LOOKUPS_QUERY_KEY,
-    queryFn: ({ signal }) => fetchContactLookups(signal),
-    enabled: isAuthenticated,
-    placeholderData: defaults(),
-  });
-}
+const lookupsHooks = createModuleLookupsHooks<
+  ContactLookupsMap,
+  ContactLookupKind,
+  ContactLookupItems
+>({
+  queryKey: CONTACTS_LOOKUPS_QUERY_KEY,
+  fetchLookups: fetchContactLookups,
+  putLookupKind: putContactLookupKind,
+  defaults,
+});
 
-export function useContactLookupMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      kind,
-      items,
-    }: {
-      kind: ContactLookupKind;
-      items: string[] | ContactLookupCountryCode[];
-    }) => putContactLookupKind(kind, items),
-    onSuccess: (items, variables) => {
-      queryClient.setQueryData<ContactLookupsMap>(CONTACTS_LOOKUPS_QUERY_KEY, (current) => {
-        const base = current ?? defaults();
-        return { ...base, [variables.kind]: items } as ContactLookupsMap;
-      });
-      void queryClient.invalidateQueries({ queryKey: CONTACTS_LOOKUPS_QUERY_KEY });
-    },
-  });
-}
+export const useContactLookupsQuery = lookupsHooks.useLookupsQuery;
+export const useContactLookupMutation = lookupsHooks.useLookupMutation;

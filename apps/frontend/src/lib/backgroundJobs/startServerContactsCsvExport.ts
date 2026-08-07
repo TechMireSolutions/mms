@@ -1,7 +1,5 @@
 import type { BackgroundJobRecord, ContactExportColumn, ContactsListQuery } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
-import { upsertLocalBackgroundJob } from '@/lib/backgroundJobs/backgroundJobStore';
-import { pollBackgroundJobUntilDone } from '@/lib/backgroundJobs/pollBackgroundJob';
+import { startServerModuleCsvExport } from '@/lib/backgroundJobs/startServerModuleCsvExport';
 
 export async function startServerContactsCsvExport(options: {
   query: ContactsListQuery;
@@ -10,58 +8,14 @@ export async function startServerContactsCsvExport(options: {
   label: string;
   ids?: Array<string | number>;
 }): Promise<BackgroundJobRecord> {
-  const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(
-    '/api/contacts/export/csv',
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        query: options.query,
-        columns: options.columns,
-        filename: options.filename,
-        label: options.label,
-        ids: options.ids,
-      }),
+  return startServerModuleCsvExport({
+    path: '/api/contacts/export/csv',
+    body: {
+      query: options.query,
+      columns: options.columns,
+      filename: options.filename,
+      label: options.label,
+      ids: options.ids,
     },
-  );
-  upsertLocalBackgroundJob(jobResponse.job);
-
-  if (jobResponse.job.status === 'running') {
-    return pollBackgroundJobUntilDone(jobResponse.job.id);
-  }
-  return jobResponse.job;
-}
-
-export async function startServerContactsVcfExport(options: {
-  filename: string;
-  label: string;
-}): Promise<BackgroundJobRecord> {
-  const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(
-    '/api/contacts/export/vcf',
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        filename: options.filename,
-        label: options.label,
-      }),
-    },
-  );
-  upsertLocalBackgroundJob(jobResponse.job);
-
-  if (jobResponse.job.status === 'running') {
-    return pollBackgroundJobUntilDone(jobResponse.job.id);
-  }
-  return jobResponse.job;
-}
-
-export async function startContactsDuplicateScan(label?: string): Promise<BackgroundJobRecord> {
-  const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(
-    '/api/contacts/duplicates/scan',
-    { method: 'POST', body: JSON.stringify({ label }) },
-  );
-  upsertLocalBackgroundJob(jobResponse.job);
-
-  if (jobResponse.job.status === 'running') {
-    return pollBackgroundJobUntilDone(jobResponse.job.id);
-  }
-  return jobResponse.job;
+  });
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { softDeleteBodySchema, bulkIdsBodySchema } from './commonSchemas.js';
+import { csvExportBodySchema, moduleExportAuditBodySchema, moduleSetupAuditBodySchema } from './csvExportBodySchema.js';
 import {
   phoneNumberSchema,
   emailAddressSchema,
@@ -43,10 +44,7 @@ export const contactBulkDeleteSchema = bulkIdsBodySchema;
 
 export const contactDeleteBodySchema = softDeleteBodySchema;
 
-export const contactExportAuditSchema = z.object({
-  count: z.number().int().min(0).max(1_000_000),
-  scope: z.enum(['all', 'filtered', 'selection']).optional(),
-});
+export const contactExportAuditSchema = moduleExportAuditBodySchema;
 
 export function buildContactMergeBodySchema(extraFieldKeys: string[] = []) {
   return z.object({
@@ -95,31 +93,9 @@ export const contactsDuplicatesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).optional(),
 });
 
-export const contactSetupAuditSchema = z.object({
-  area: z.enum(['fields', 'preferences', 'sync']),
-  summary: z.string().min(1).max(500),
-});
+export const contactSetupAuditSchema = moduleSetupAuditBodySchema;
 
-const exportColumnSchema = z.object({
-  id: z.string().min(1).max(64),
-  label: z.string().min(1).max(200),
-});
-
-export const contactsCsvExportBodySchema = z.object({
-  query: contactsListQuerySchema.optional(),
-  /** Explicit id selection — prefer over page-local FE filtering. */
-  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500).optional(),
-  columns: z.array(exportColumnSchema).max(50).optional(),
-  filename: z.string().min(1).max(200).optional(),
-  label: z.string().min(1).max(500).optional(),
-  /** Client retry key — reused as the background job id when provided. */
-  idempotencyKey: z
-    .string()
-    .min(8)
-    .max(128)
-    .regex(/^[a-zA-Z0-9_-]+$/)
-    .optional(),
-});
+export const contactsCsvExportBodySchema = csvExportBodySchema(contactsListQuerySchema);
 
 export const contactsVcfExportBodySchema = z.object({
   filename: z.string().min(1).max(200).optional(),

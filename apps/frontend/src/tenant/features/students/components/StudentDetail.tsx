@@ -1,10 +1,11 @@
-import React, { lazy, Suspense } from "react";
+import React from "react";
 import { GraduationCap } from "lucide-react";
 import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import {
   DetailDrawerRestoreOrEditAction,
 } from "@/components/ui/DetailDrawerArchiveChrome";
+import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
 import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
@@ -19,9 +20,10 @@ export interface StudentDetailProps {
   onEdit?: (student: Student) => void;
   canDelete?: boolean;
   onRestore?: (studentId: string) => void | Promise<void>;
+  /** Page-owned composer — do not create a second MessageComposer in the drawer. */
+  openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
+  canWriteMessaging: boolean;
 }
-
-const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
 
 export default function StudentDetail({
   student,
@@ -29,14 +31,12 @@ export default function StudentDetail({
   onEdit,
   canDelete = false,
   onRestore,
+  openComposer,
+  canWriteMessaging,
 }: StudentDetailProps): React.JSX.Element {
   const {
     t,
     statusBadgeConfig,
-    messagingTarget,
-    openComposer,
-    closeComposer,
-    canWriteMessaging,
     sortedEnabledFields,
     relationshipLinks,
     age,
@@ -62,64 +62,52 @@ export default function StudentDetail({
   );
 
   return (
-    <>
-      <DetailDrawerShell
-        onClose={onClose}
-        title={t("students.detail.title")}
-        subtitle={
-          isArchived
-            ? t("students.detail.archivedSubtitle")
-            : t("students.detail.grSubtitle", { gr: student.grNumber || t("common.notSpecified") })
-        }
-        icon={GraduationCap}
-        ariaLabel={t("students.detail.ariaLabel")}
-        headerActions={headerActions}
-        headerExtra={<StudentArchivedBanner student={student} />}
-        footer={
-          <div className="flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`} />
-            <span className={`text-xs font-bold uppercase ${isArchived ? "text-warning" : "text-success"}`}>
-              {isArchived ? t("students.detail.archivedSubtitle") : t("students.detail.synced")}
-            </span>
-          </div>
-        }
-      >
-        <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
+    <DetailDrawerShell
+      onClose={onClose}
+      title={t("students.detail.title")}
+      subtitle={
+        isArchived
+          ? t("students.detail.archivedSubtitle")
+          : t("students.detail.grSubtitle", { gr: student.grNumber || t("common.notSpecified") })
+      }
+      icon={GraduationCap}
+      ariaLabel={t("students.detail.ariaLabel")}
+      headerActions={headerActions}
+      headerExtra={<StudentArchivedBanner student={student} />}
+      footer={
+        <div className="flex items-center gap-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`} />
+          <span className={`text-xs font-bold uppercase ${isArchived ? "text-warning" : "text-success"}`}>
+            {isArchived ? t("students.detail.archivedSubtitle") : t("students.detail.synced")}
+          </span>
+        </div>
+      }
+    >
+      <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
 
-        {!isArchived && canWriteMessaging && (
-          <StudentDetailQuickActions
-            student={student}
-            primaryPhone={primaryPhone}
-            primaryEmail={primaryEmail}
-            openComposer={openComposer}
-          />
-        )}
-
-        {hasVisibleDetailFields && (
-          <StudentDetailFieldsSection
-            student={student}
-            sortedEnabledFields={sortedEnabledFields}
-            age={age}
-            relationshipLinks={relationshipLinks}
-            openComposer={openComposer}
-            messagingEnabled={!isArchived && canWriteMessaging}
-          />
-        )}
-
-        {showNotesSection && student.notes ? <StudentDetailNotesSection notes={student.notes} /> : null}
-
-        <StudentDetailSessionsSection sessions={enrolledSessionDetails} />
-      </DetailDrawerShell>
-
-      {messagingTarget && !isArchived && canWriteMessaging && (
-        <Suspense fallback={null}>
-          <MessageComposer
-            channel={messagingTarget.channel}
-            recipients={messagingTarget.recipients}
-            onClose={closeComposer}
-          />
-        </Suspense>
+      {!isArchived && canWriteMessaging && (
+        <StudentDetailQuickActions
+          student={student}
+          primaryPhone={primaryPhone}
+          primaryEmail={primaryEmail}
+          openComposer={openComposer}
+        />
       )}
-    </>
+
+      {hasVisibleDetailFields && (
+        <StudentDetailFieldsSection
+          student={student}
+          sortedEnabledFields={sortedEnabledFields}
+          age={age}
+          relationshipLinks={relationshipLinks}
+          openComposer={openComposer}
+          messagingEnabled={!isArchived && canWriteMessaging}
+        />
+      )}
+
+      {showNotesSection && student.notes ? <StudentDetailNotesSection notes={student.notes} /> : null}
+
+      <StudentDetailSessionsSection sessions={enrolledSessionDetails} />
+    </DetailDrawerShell>
   );
 }

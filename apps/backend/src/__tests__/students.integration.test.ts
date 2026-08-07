@@ -34,6 +34,16 @@ const mockLoadStudentsPage = vi.fn();
 const mockCreateStudent = vi.fn();
 const mockLoadStudentsCommandMetrics = vi.fn();
 const mockMigrateStudentsMissingGrNumbers = vi.fn();
+const mockLoadStudentFieldUsageCount = vi.fn();
+const mockLoadStudentFieldUsageCounts = vi.fn();
+const mockEnqueueBackgroundJob = vi.fn();
+const mockGetUserBackgroundJob = vi.fn();
+const mockRecordAudit = vi.fn();
+const mockBulkSoftDeleteStudents = vi.fn();
+const mockBulkRestoreStudents = vi.fn();
+const mockDeleteStudentById = vi.fn();
+const mockRestoreStudentById = vi.fn();
+const mockUpdateStudentById = vi.fn();
 
 vi.mock('../services/studentService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/studentService.js')>();
@@ -41,8 +51,15 @@ vi.mock('../services/studentService.js', async (importOriginal) => {
     ...actual,
     loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
     createStudent: (...args: unknown[]) => mockCreateStudent(...args),
+    updateStudentById: (...args: unknown[]) => mockUpdateStudentById(...args),
     loadStudentsCommandMetrics: (...args: unknown[]) => mockLoadStudentsCommandMetrics(...args),
     migrateStudentsMissingGrNumbers: (...args: unknown[]) => mockMigrateStudentsMissingGrNumbers(...args),
+    loadStudentFieldUsageCount: (...args: unknown[]) => mockLoadStudentFieldUsageCount(...args),
+    loadStudentFieldUsageCounts: (...args: unknown[]) => mockLoadStudentFieldUsageCounts(...args),
+    bulkSoftDeleteStudents: (...args: unknown[]) => mockBulkSoftDeleteStudents(...args),
+    bulkRestoreStudents: (...args: unknown[]) => mockBulkRestoreStudents(...args),
+    deleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
+    restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
   };
 });
 
@@ -50,10 +67,33 @@ vi.mock('../services/studentValidationService.js', () => ({
   validateStudentDynamic: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../services/auditService.js', () => ({
+  recordAudit: (...args: unknown[]) => mockRecordAudit(...args),
+}));
+
+vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/backgroundJobWorkerService.js')>();
+  return {
+    ...actual,
+    enqueueBackgroundJob: (...args: unknown[]) => mockEnqueueBackgroundJob(...args),
+    getUserBackgroundJob: (...args: unknown[]) => mockGetUserBackgroundJob(...args),
+  };
+});
+
 describe('students routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     vi.clearAllMocks();
+    mockEnqueueBackgroundJob.mockResolvedValue({
+      id: 'job_students_export',
+      moduleId: 'students',
+      kind: 'export',
+      status: 'running',
+      label: 'Students CSV',
+      createdAt: '2026-06-21T00:00:00.000Z',
+    });
+    mockGetUserBackgroundJob.mockResolvedValue(null);
+    mockRecordAudit.mockResolvedValue(undefined);
   });
 
   it('GET /api/students?includeDeleted=true returns deleted-only page totals', async () => {
@@ -113,6 +153,37 @@ describe('students routes', () => {
     expect(created.deletedBy).toBeUndefined();
     expect(created.deletionReason).toBeUndefined();
     expect(created.contactId).toBe('c-1');
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.create',
+        summary: expect.stringContaining('Created student'),
+      }),
+    );
+    await app.close();
+  });
+
+  it('PUT /api/students/:id audits update for admin', async () => {
+    mockUpdateStudentById.mockResolvedValue({ id: 's1', contactId: 'c-1', status: 'active' });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/students/s1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { contactId: 'c-1', status: 'active' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockUpdateStudentById).toHaveBeenCalled();
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.update',
+        entityId: 's1',
+        summary: expect.stringContaining('Updated student s1'),
+      }),
+    );
     await app.close();
   });
 
@@ -208,6 +279,335 @@ describe('students routes', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockMigrateStudentsMissingGrNumbers).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/students/field-usage/:fieldKey returns 403 without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/students/field-usage/customNotes',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadStudentFieldUsageCount).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/students/field-usage/:fieldKey returns count for authorized roles', async () => {
+    mockLoadStudentFieldUsageCount.mockResolvedValueOnce(4);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/students/field-usage/customNotes',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ count: 4 });
+    expect(mockLoadStudentFieldUsageCount).toHaveBeenCalledWith('customNotes');
+    await app.close();
+  });
+
+  it('POST /api/students/field-usage returns 403 without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/field-usage',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { fieldKeys: ['customNotes', 'city'] },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadStudentFieldUsageCounts).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/students/field-usage returns batch counts for authorized roles', async () => {
+    mockLoadStudentFieldUsageCounts.mockResolvedValueOnce({ customNotes: 2, city: 0 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/field-usage',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { fieldKeys: ['customNotes', 'city'] },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ counts: { customNotes: 2, city: 0 } });
+    expect(mockLoadStudentFieldUsageCounts).toHaveBeenCalledWith(['customNotes', 'city']);
+    await app.close();
+  });
+
+  it('POST /api/students/export/csv queues and audits exports on the server', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        label: 'Students CSV',
+        columns: [{ id: 'name', label: 'Name' }],
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      'u-teacher',
+      expect.objectContaining({ moduleId: 'students', kind: 'export', label: 'Students CSV' }),
+      expect.objectContaining({
+        columns: [{ id: 'name', label: 'Name' }],
+        label: 'Students CSV',
+        viewerRole: 'teacher',
+        allowDeleted: false,
+      }),
+    );
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.export.queue',
+        entityId: expect.any(String),
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/students/export/csv accepts selection ids', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        label: 'Selection CSV',
+        columns: [{ id: 'name', label: 'Name' }],
+        ids: ['s1', 's2'],
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      'u-teacher',
+      expect.objectContaining({ kind: 'export' }),
+      expect.objectContaining({
+        query: expect.objectContaining({ includeIds: ['s1', 's2'] }),
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/students/export/csv returns 403 without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { label: 'Denied CSV' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockEnqueueBackgroundJob).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/students/export/csv strips includeDeleted without students.delete', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/export/csv',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        label: 'Trash CSV',
+        query: { includeDeleted: 'true', search: 'ali' },
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      'u-teacher',
+      expect.objectContaining({ kind: 'export' }),
+      expect.objectContaining({
+        allowDeleted: false,
+        query: { search: 'ali' },
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/students/export-audit records export audit for read roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/export-audit',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { count: 12, scope: 'filtered' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true });
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.export',
+        summary: 'Exported 12 student(s) (filtered)',
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/students/export-audit returns 403 for viewer', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/export-audit',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { count: 1, scope: 'selection' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockRecordAudit).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/students/setup-audit requires setup write permission', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/setup-audit',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { area: 'fields', summary: 'Changed fields' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockRecordAudit).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/students/setup-audit records setup changes for admin', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/setup-audit',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { area: 'fields', summary: 'Changed fields' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true });
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.setup',
+        entityId: 'setup:fields',
+        summary: 'Changed fields',
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/students/bulk-delete audits soft-delete for admin', async () => {
+    mockBulkSoftDeleteStudents.mockResolvedValue({ succeeded: 2, failed: 0 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/bulk-delete',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { ids: ['s1', 's2'], deletionReason: 'Cleanup' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockBulkSoftDeleteStudents).toHaveBeenCalledWith(['s1', 's2'], 'u-admin', 'Cleanup');
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.bulk_soft_delete',
+        summary: expect.stringContaining('Soft-deleted 2 student(s)'),
+      }),
+    );
+    await app.close();
+  });
+
+  it('DELETE /api/students/:id audits soft-delete for admin', async () => {
+    mockDeleteStudentById.mockResolvedValue({ id: 's1' });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/students/s1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { deletionReason: 'Duplicate' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteStudentById).toHaveBeenCalledWith('s1', 'u-admin', 'Duplicate');
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.soft_delete',
+        entityId: 's1',
+        summary: expect.stringContaining('Soft-deleted student s1'),
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/students/:id/restore audits restore for admin', async () => {
+    mockRestoreStudentById.mockResolvedValue({ id: 's1' });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/s1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1');
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.restore',
+        entityId: 's1',
+      }),
+    );
     await app.close();
   });
 });

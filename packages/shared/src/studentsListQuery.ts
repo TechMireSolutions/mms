@@ -1,4 +1,6 @@
+import { z } from 'zod';
 import type { Student } from './studentTypes.js';
+import { baseListQuerySchema } from './apiSchemas.js';
 import { compareByField, paginateArray } from './utils.js';
 
 export interface StudentsListQuery {
@@ -13,6 +15,14 @@ export interface StudentsListQuery {
   /** When true, SQL list returns deleted-only rows (Work trash). */
   includeDeleted?: boolean;
 }
+
+/** Validates Students Work list query received over HTTP (Contacts-shaped SSOT). */
+export const studentsListQuerySchema = baseListQuerySchema.extend({
+  status: z.string().max(200).optional(),
+  gender: z.string().optional(),
+});
+
+export type StudentsListQueryParsed = z.infer<typeof studentsListQuerySchema>;
 
 export interface StudentsListPageResult {
   students: Student[];

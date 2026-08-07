@@ -176,6 +176,92 @@ export function registerIncludableBulkRoutes<T>(
 }
 
 /**
+ * Registers only POST `/bulk-delete` + `/bulk-restore` (Contacts/Students + soft-deletable modules).
+ * Use when single delete/restore are registered elsewhere (standard tenant routes / custom handlers).
+ */
+export type SoftDeletableBulkTrashRoutesOptions = {
+  /** Route prefix; use `/` for module root (contacts/students plugins). */
+  path?: string;
+  collection: string;
+  errorMessagePrefix: string;
+  bulkBodySchema?: ZodType<{ ids: Array<string | number>; deletionReason?: string }>;
+  bulkDeleteFn: (
+    ids: string[],
+    userId: string,
+    reason?: string,
+  ) => Promise<{ succeeded: number; failed: number }>;
+  /** Second `userId` arg for modules that audit restore actor (Contacts). */
+  bulkRestoreFn: (
+    ids: string[],
+    userId: string,
+  ) => Promise<{ succeeded: number; failed: number }>;
+  canDelete?: (user: User) => boolean;
+  onAfterBulkDelete?: (
+    user: User,
+    result: { succeeded: number; failed: number },
+    deletionReason?: string,
+  ) => Promise<void>;
+  onAfterBulkRestore?: (
+    user: User,
+    result: { succeeded: number; failed: number },
+  ) => Promise<void>;
+};
+
+export function registerSoftDeletableBulkTrashRoutes(
+  fastify: FastifyInstance,
+  options: SoftDeletableBulkTrashRoutesOptions,
+): void {
+  const path = options.path ?? '/';
+  const bulkDeletePath = path === '/' ? '/bulk-delete' : `${path}/bulk-delete`;
+  const bulkRestorePath = path === '/' ? '/bulk-restore' : `${path}/bulk-restore`;
+  const bulkBodySchema = options.bulkBodySchema ?? bulkIdsBodySchema;
+  const canDelete =
+    options.canDelete ?? ((user: User) => canDeleteCollection(user, options.collection));
+
+  fastify.post(bulkDeletePath, async (request, reply) => {
+    const user = request.user as User;
+    if (!canDelete(user)) return sendForbidden(reply);
+    const parsed = parseRequest(bulkBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const ids = parsed.data.ids.map(String);
+      const result = await options.bulkDeleteFn(
+        ids,
+        String(user.id),
+        parsed.data.deletionReason,
+      );
+      await options.onAfterBulkDelete?.(user, result, parsed.data.deletionReason);
+      return reply.send({ success: true, ...result });
+    } catch (error: unknown) {
+      return sendDatabaseError(
+        reply,
+        `Failed to bulk delete ${options.errorMessagePrefix}`,
+        error,
+      );
+    }
+  });
+
+  fastify.post(bulkRestorePath, async (request, reply) => {
+    const user = request.user as User;
+    if (!canDelete(user)) return sendForbidden(reply);
+    const parsed = parseRequest(bulkBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const ids = parsed.data.ids.map(String);
+      const result = await options.bulkRestoreFn(ids, String(user.id));
+      await options.onAfterBulkRestore?.(user, result);
+      return reply.send({ success: true, ...result });
+    } catch (error: unknown) {
+      return sendDatabaseError(
+        reply,
+        `Failed to bulk restore ${options.errorMessagePrefix}`,
+        error,
+      );
+    }
+  });
+}
+
+/**
  * Registers GET(+trash)/PUT bulk/soft-delete/restore for a soft-deletable collection.
  */
 export function registerSoftDeletableBulkRoutes<T>(
@@ -201,8 +287,6 @@ export function registerSoftDeletableBulkRoutes<T>(
     mapDeleteError,
   } = options;
 
-  const bulkDeletePath = path === '/' ? '/bulk-delete' : `${path}/bulk-delete`;
-  const bulkRestorePath = path === '/' ? '/bulk-restore' : `${path}/bulk-restore`;
   const idPath = path === '/' ? '/:id' : `${path}/:id`;
   const restorePath = path === '/' ? '/:id/restore' : `${path}/:id/restore`;
 
@@ -217,36 +301,13 @@ export function registerSoftDeletableBulkRoutes<T>(
   });
 
   // Static bulk paths before /:id to avoid parametric capture.
-  fastify.post(bulkDeletePath, async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
-    const parsed = parseRequest(bulkBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const ids = parsed.data.ids.map(String);
-      const result = await bulkDeleteFn(
-        ids,
-        String(user.id),
-        parsed.data.deletionReason,
-      );
-      return reply.send({ success: true, ...result });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, `Failed to bulk delete ${errorMessagePrefix}`, error);
-    }
-  });
-
-  fastify.post(bulkRestorePath, async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
-    const parsed = parseRequest(bulkBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const ids = parsed.data.ids.map(String);
-      const result = await bulkRestoreFn(ids);
-      return reply.send({ success: true, ...result });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, `Failed to bulk restore ${errorMessagePrefix}`, error);
-    }
+  registerSoftDeletableBulkTrashRoutes(fastify, {
+    path,
+    collection,
+    errorMessagePrefix,
+    bulkBodySchema,
+    bulkDeleteFn,
+    bulkRestoreFn: (ids) => bulkRestoreFn(ids),
   });
 
   fastify.delete<{ Params: { id: string } }>(idPath, async (request, reply) => {

@@ -1,31 +1,36 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { type Student, STUDENTS_MODULE_MANIFEST, resolveStudentStatuses } from "@mms/shared";
+import {
+  STUDENTS_MODULE_MANIFEST,
+  resolveModuleTierTab,
+  resolveStudentStatuses,
+} from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentCount } from "@/tenant/features/students/hooks/useStudentCount";
-import { useStudentsPaginated, useStudentMutations } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentMutations } from "@/tenant/features/students/hooks/useStudents";
 import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useGrMigration } from "@/tenant/features/students/hooks/useGrMigration";
 import { useStudentsDirectoryFilters } from "@/tenant/features/students/hooks/useStudentsDirectoryFilters";
 import { useStudentsKeyboardShortcuts } from "@/tenant/features/students/hooks/useStudentsKeyboardShortcuts";
 import { useStudentsPageDirectoryProps } from "@/tenant/features/students/hooks/useStudentsPageDirectoryProps";
+import { useStudentsPageFormState } from "@/tenant/features/students/hooks/useStudentsPageFormState";
+import { useStudentsPageTabPanelProps } from "@/tenant/features/students/hooks/useStudentsPageTabPanelProps";
+import { useStudentsPageWorkQuery } from "@/tenant/features/students/hooks/useStudentsPageWorkQuery";
 import { useStudentsSelectionTargets } from "@/tenant/features/students/hooks/useStudentsSelectionTargets";
-import { useStudentsWorkActions } from "@/tenant/features/students/hooks/useStudentsWorkActions";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
-
-const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
-  name: "name",
-  dob: "dob",
-  status: "status",
-  grNumber: "grNumber",
-  gender: "gender",
-  registeredDate: "registeredDate",
-};
+import { useStudentsCrudActions } from "@/tenant/features/students/hooks/useStudentsCrudActions";
+import { useStudentsPageOverlayState } from "@/tenant/features/students/hooks/useStudentsPageOverlayState";
+import { useStudentsPageOverlayProps } from "@/tenant/features/students/hooks/useStudentsPageOverlayProps";
+import {
+  defaultStudentsExportColumns,
+  useStudentsExportActions,
+} from "@/tenant/features/students/hooks/useStudentsExportActions";
 
 export function useStudentsPageController() {
+  const { t } = useTranslation();
   const {
     canWrite,
     canDelete,
@@ -44,11 +49,14 @@ export function useStudentsPageController() {
   const { settings, statuses: configuredStatuses, genderFilters } = useStudentConfig();
   const studentStatusOptions = resolveStudentStatuses(configuredStatuses);
   const [activeTab, setActiveTab] = usePersistedTabState<string>("students_active_tab", "work");
-  const [showStudentForm, setShowStudentForm] = useState(false);
-  const [editStudent, setEditStudent] = useState<Student | null>(null);
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    visibleTabs.map((tab) => tab.id),
+  );
+  const formState = useStudentsPageFormState();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
-  useGrMigration(activeTab, canEditSetup);
+  useGrMigration(effectiveTab, canEditSetup);
 
   const columnLayout = useStudentColumnLayout(settings);
   const directory = useStudentsDirectoryFilters();
@@ -64,36 +72,21 @@ export function useStudentsPageController() {
     clearFilters: directory.clearFilters,
     clearSelection: directory.clearSelection,
     canWrite,
-    showDeleted: directory.showDeleted,
-    onCreate: () => {
-      setEditStudent(null);
-      setShowStudentForm(true);
-    },
+    showDeleted: directory.viewingDeleted,
+    onCreate: formState.openCreateForm,
   });
 
-  const useServerWork = activeTab === "work";
-  const workLimit = STUDENTS_MODULE_MANIFEST.defaultPageSize;
-
-  const workPageQuery = useStudentsPaginated({
-    page: directory.listPage,
-    limit: workLimit,
-    search: directory.debouncedSearch,
-    status:
-      directory.studentFilterStatus.length > 0
-        ? directory.studentFilterStatus.join(",")
-        : undefined,
-    gender: directory.studentFilterGender || undefined,
-    sortField: directory.sortField ? SORT_FIELD_TO_API[directory.sortField] : undefined,
-    sortDir: directory.sortField ? directory.sortDir : undefined,
-    includeDeleted: directory.showDeleted,
+  const useServerWork = effectiveTab === "work";
+  const { workPageQuery, workStudents, shownCount } = useStudentsPageWorkQuery({
     enabled: useServerWork,
+    listPage: directory.listPage,
+    debouncedSearch: directory.debouncedSearch,
+    studentFilterStatus: directory.studentFilterStatus,
+    studentFilterGender: directory.studentFilterGender,
+    sortField: directory.sortField,
+    sortDir: directory.sortDir,
+    viewingDeleted: directory.viewingDeleted,
   });
-
-  const workStudents = useMemo(
-    () => (workPageQuery.data?.students ?? []) as Student[],
-    [workPageQuery.data],
-  );
-  const shownCount = workPageQuery.data?.total ?? 0;
 
   const { allSelected, someSelected } = useStudentsPageDirectoryProps({
     workStudents,
@@ -105,52 +98,61 @@ export function useStudentsPageController() {
     workStudents,
   });
 
-  const workActions = useStudentsWorkActions({ editStudent, mutations });
+  const workActions = useStudentsCrudActions({
+    editStudent: formState.editStudent,
+    mutations,
+  });
 
-  const openCreateForm = () => {
-    setEditStudent(null);
-    setShowStudentForm(true);
-  };
+  const overlays = useStudentsPageOverlayState();
 
-  const openEditForm = (studentToEdit: Student) => {
-    setEditStudent(studentToEdit);
-    setShowStudentForm(true);
-  };
+  const exportColumns = useMemo(() => {
+    const visible = columnLayout.columnRegistry.filter(
+      (col) => columnLayout.isColumnVisible(col.key) && col.key !== "sessions",
+    );
+    if (visible.length === 0) return defaultStudentsExportColumns(t);
+    return visible.map((col) => ({
+      id: col.key,
+      label: col.label || col.key,
+    }));
+  }, [columnLayout, t]);
 
-  const closeStudentForm = () => {
-    setShowStudentForm(false);
-    setEditStudent(null);
-  };
+  const { handleExportCSV, handleBulkExport } = useStudentsExportActions({
+    tableColumns: exportColumns,
+    canExport,
+    search: directory.studentSearch,
+    filterStatus: directory.studentFilterStatus,
+    filterGender: directory.studentFilterGender,
+    sortField: directory.sortField,
+    sortDir: directory.sortDir,
+    viewingDeleted: directory.viewingDeleted,
+    selectedIds: directory.selectedIds,
+    logExportAudit: mutations.logExportAudit,
+  });
 
-  return {
+  const tabPanelProps = useStudentsPageTabPanelProps(effectiveTab, {
+    studentSearch: directory.studentSearch,
+    studentFilterStatus: directory.studentFilterStatus,
+    studentFilterGender: directory.studentFilterGender,
+    studentStatusOptions,
+    genderFilters,
+    viewingDeleted: directory.viewingDeleted,
     canWrite,
     canDelete,
     canExport,
-    visibleTabs,
-    serverCount,
-    studentStatusOptions,
-    genderFilters,
-    activeTab,
-    setActiveTab,
-    showStudentForm,
-    editStudent,
-    openCreateForm,
-    openEditForm,
-    closeStudentForm,
-    showDeleted: directory.showDeleted,
-    toggleShowDeleted: directory.toggleShowDeleted,
-    columnLayout,
-    studentSearch: directory.studentSearch,
-    setStudentSearch: directory.setStudentSearch,
-    studentFilterStatus: directory.studentFilterStatus,
-    studentFilterGender: directory.studentFilterGender,
-    setStudentFilterGender: directory.setStudentFilterGender,
+    bulkActions: STUDENTS_MODULE_MANIFEST.work.bulkActions,
+    workStudents,
+    workPageQuery,
     useServerWork,
     viewMode,
     setViewMode,
-    workPageQuery,
-    workStudents,
-    shownCount,
+    columnLayout,
+    setStudentSearch: directory.setStudentSearch,
+    toggleStudentStatus: directory.toggleStudentStatus,
+    setStudentFilterGender: directory.setStudentFilterGender,
+    toggleViewingDeleted: directory.toggleViewingDeleted,
+    clearFilters: directory.clearFilters,
+    hasActiveFilters: directory.hasActiveFilters,
+    activeFilterCount: directory.activeFilterCount,
     selectedIds: directory.selectedIds,
     selectedTargets,
     allSelected,
@@ -158,20 +160,48 @@ export function useStudentsPageController() {
     handleSelectOne: directory.handleSelectOne,
     handleSelectAll: directory.handleSelectAll,
     clearSelection: directory.clearSelection,
-    handleSaveStudent: workActions.handleSaveStudent,
-    handleDelete: workActions.handleDelete,
-    handleRestore: workActions.handleRestore,
-    handleBulkDelete: workActions.handleBulkDelete,
-    handleBulkRestore: workActions.handleBulkRestore,
-    handleBulkStatusChange: workActions.handleBulkStatusChange,
-    toggleStudentStatus: directory.toggleStudentStatus,
     setListPage: directory.setListPage,
+    openEditForm: formState.openEditForm,
+    handleRestore: workActions.handleRestore,
+    handleBulkStatusChange: workActions.handleBulkStatusChange,
+    handleBulkExport,
     sortField: directory.sortField,
     sortDir: directory.sortDir,
     handleServerSort: directory.handleServerSort,
-    clearFilters: directory.clearFilters,
-    hasActiveFilters: directory.hasActiveFilters,
-    activeFilterCount: directory.activeFilterCount,
-    bulkActions: STUDENTS_MODULE_MANIFEST.work.bulkActions,
+    workOverlays: {
+      statusBadgeConfig: overlays.statusBadgeConfig,
+      openComposer: overlays.openComposer,
+      openSelectionMessage: overlays.openSelectionMessage,
+      canWriteMessaging: overlays.canWriteMessaging,
+      setConfirmBulkDeleteOpen: overlays.setConfirmBulkDeleteOpen,
+      setConfirmBulkRestoreOpen: overlays.setConfirmBulkRestoreOpen,
+      setDeleteTarget: overlays.setDeleteTarget,
+      setViewStudent: overlays.setViewStudent,
+    },
+  });
+
+  const pageOverlaysProps = useStudentsPageOverlayProps({
+    canWrite,
+    canDelete,
+    formState,
+    overlays,
+    workActions,
+    selectedIds: directory.selectedIds,
+    clearSelection: directory.clearSelection,
+  });
+
+  return {
+    canWrite,
+    canExport,
+    visibleTabs,
+    serverCount,
+    activeTab: effectiveTab,
+    setActiveTab,
+    viewingDeleted: directory.viewingDeleted,
+    shownCount,
+    openCreateForm: formState.openCreateForm,
+    handleExportCSV,
+    tabPanelProps,
+    pageOverlaysProps,
   };
 }

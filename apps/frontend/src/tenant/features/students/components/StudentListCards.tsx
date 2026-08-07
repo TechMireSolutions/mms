@@ -17,7 +17,7 @@ export function StudentListCards({
   selectedIds,
   allSelected,
   someSelected,
-  showDeleted,
+  viewingDeleted,
   canWrite,
   canDelete,
   canWriteMessaging = false,
@@ -101,7 +101,7 @@ export function StudentListCards({
                 student={studentCard}
                 studentId={studentIdStr}
                 displayName={displayName}
-                showDeleted={showDeleted}
+                viewingDeleted={viewingDeleted}
                 canWrite={canWrite}
                 canDelete={canDelete}
                 canWriteMessaging={canWriteMessaging}

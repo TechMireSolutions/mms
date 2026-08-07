@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
+import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 
 export function StudentsReportsTier() {
   return (
@@ -10,9 +10,13 @@ export function StudentsReportsTier() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.18 }}
+      className="space-y-4"
     >
       <ErrorBoundary>
-        <ModuleReports category="students" />
+        <div className="space-y-4">
+          <KPISummary category="students" />
+          <ModuleReports category="students" />
+        </div>
       </ErrorBoundary>
     </motion.div>
   );

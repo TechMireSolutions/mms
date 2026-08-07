@@ -1,13 +1,8 @@
 import type { ReactElement } from "react";
-import { GraduationCap, Trash2 } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
+import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
 import {
-  BulkSelectionClearAction,
-  BulkSelectionDeleteAction,
-  BulkSelectionExportAction,
-  BulkSelectionMessagingActions,
-  BulkSelectionRestoreAction,
   BulkSelectionStatusAction,
   type BulkSelectionMessageChannel,
 } from "@/components/ui/BulkSelectionActions";
@@ -17,7 +12,7 @@ import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/
 
 export interface StudentsBulkActionBarProps {
   selectedCount: number;
-  showDeleted: boolean;
+  viewingDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
   canWriteMessaging?: boolean;
@@ -36,10 +31,10 @@ export interface StudentsBulkActionBarProps {
   onClearSelection: () => void;
 }
 
-/** Students Work bulk bar — Contacts-shaped composition over shared BulkSelectionActions. */
+/** Students Work bulk bar — Contacts-shaped composition over shared ModuleWorkBulkActionBar. */
 export function StudentsBulkActionBar({
   selectedCount,
-  showDeleted,
+  viewingDeleted,
   canWrite,
   canDelete,
   canWriteMessaging = false,
@@ -62,7 +57,7 @@ export function StudentsBulkActionBar({
   const showWhatsApp = bulkActions.includes("whatsapp") && canWriteMessaging;
   const showSms = bulkActions.includes("sms") && canWriteMessaging;
   const showEmail = bulkActions.includes("email") && canWriteMessaging;
-  const showMessaging = !showDeleted && (showWhatsApp || showSms || showEmail);
+  const showMessaging = !viewingDeleted && (showWhatsApp || showSms || showEmail);
 
   const handleChannel = (channel: BulkSelectionMessageChannel): void => {
     if (channel === "whatsapp") onWhatsApp(selectedTargets.waTargets);
@@ -71,32 +66,21 @@ export function StudentsBulkActionBar({
   };
 
   return (
-    <BulkSelectionBar
-      placement="inline"
-      tone="glass"
+    <ModuleWorkBulkActionBar
       selectedCount={selectedCount}
+      viewingDeleted={viewingDeleted}
       countLabel={t("students.selectedCount", { count: selectedCount })}
       leading={<GraduationCap className="w-4 h-4 text-primary" aria-hidden />}
-      trailing={
-        <BulkSelectionClearAction
-          label={t("common.deselect")}
-          onClick={onClearSelection}
-        />
-      }
-    >
-      {showDeleted ? (
-        canDelete && (
-          <BulkSelectionRestoreAction
-            label={t("students.bulkRestore")}
-            onClick={onRequestBulkRestore}
-          />
-        )
-      ) : (
-        <>
-          {showMessaging && (
-            <BulkSelectionMessagingActions
-              onChannel={handleChannel}
-              labels={{
+      deselectLabel={t("common.deselect")}
+      canDelete={canDelete}
+      restoreLabel={t("students.bulkRestore")}
+      onRequestBulkRestore={onRequestBulkRestore}
+      onClearSelection={onClearSelection}
+      messaging={
+        showMessaging
+          ? {
+              onChannel: handleChannel,
+              labels: {
                 whatsapp: t("students.whatsappBulk", {
                   count: selectedTargets.waTargets.length,
                 }),
@@ -104,45 +88,37 @@ export function StudentsBulkActionBar({
                 email: t("students.emailBulk", {
                   count: selectedTargets.emailReady.length,
                 }),
-              }}
-              channels={{
+              },
+              channels: {
                 whatsapp: showWhatsApp,
                 sms: showSms,
                 email: showEmail,
-              }}
-            />
-          )}
-
-          {bulkActions.includes("export") && canExport && onBulkExport && (
-            <BulkSelectionExportAction
-              label={t("students.bulkExport")}
-              onClick={onBulkExport}
-            />
-          )}
-
-          {bulkActions.includes("status") && canWrite && onBulkStatusChange && (
-            <BulkSelectionStatusAction
-              label={t("students.columns.status")}
-              statuses={studentStatusOptions}
-              statusBadgeConfig={statusBadgeConfig}
-              onSelectStatus={(statusVal) => {
-                onBulkStatusChange(statusVal);
-              }}
-            />
-          )}
-
-          {bulkActions.includes("delete") && canDelete && (
-            <>
-              <div className="h-4 w-px bg-border" />
-              <BulkSelectionDeleteAction
-                label={t("students.list.remove")}
-                onClick={onRequestBulkDelete}
-                icon={Trash2}
-              />
-            </>
-          )}
-        </>
-      )}
-    </BulkSelectionBar>
+              },
+            }
+          : undefined
+      }
+      exportAction={
+        bulkActions.includes("export") && canExport && onBulkExport
+          ? { label: t("students.bulkExport"), onClick: onBulkExport }
+          : undefined
+      }
+      extraActions={
+        bulkActions.includes("status") && canWrite && onBulkStatusChange ? (
+          <BulkSelectionStatusAction
+            label={t("students.columns.status")}
+            statuses={studentStatusOptions}
+            statusBadgeConfig={statusBadgeConfig}
+            onSelectStatus={(statusVal) => {
+              onBulkStatusChange(statusVal);
+            }}
+          />
+        ) : undefined
+      }
+      deleteAction={
+        bulkActions.includes("delete") && canDelete
+          ? { label: t("students.list.remove"), onClick: onRequestBulkDelete }
+          : undefined
+      }
+    />
   );
 }

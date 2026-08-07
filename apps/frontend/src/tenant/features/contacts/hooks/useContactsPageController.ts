@@ -94,7 +94,7 @@ export function useContactsPageController() {
     sortField: directory.sortField,
     sortDir: directory.sortDir,
     quickFilter: directory.quickFilter,
-    showDeletedArchives: directory.showDeletedArchives,
+    viewingDeleted: directory.viewingDeleted,
     selected: directory.selected,
     logExportAudit,
     handleError,
@@ -112,11 +112,11 @@ export function useContactsPageController() {
     clearFilters: directory.clearFilters,
     clearSelection: () => directory.setSelected([]),
     canWrite,
-    showDeletedArchives: directory.showDeletedArchives,
+    viewingDeleted: directory.viewingDeleted,
     onCreate: actions.handleCreateContact,
   });
 
-  const viewingDeleted = directory.showDeletedArchives;
+  const viewingDeleted = directory.viewingDeleted;
 
   const { messagingHandlers, commonDirectoryProps, tableProps } = useContactsPageDirectoryProps({
     directory,

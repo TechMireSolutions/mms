@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ContactsPanelSuspenseFallback } from "@/tenant/features/contacts/components/ContactsPanelSuspenseFallback";
+import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { DuplicatePairCard } from "@/tenant/features/contacts/components/DuplicatePairCard";
 import type { DuplicatePair } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 
@@ -91,7 +91,7 @@ export function DuplicateDetectionModal({
             onRetry={onRetry}
           />
         ) : pairsLoading ? (
-          <ContactsPanelSuspenseFallback spinnerClassName="h-8 w-8" />
+          <ModulePanelSuspenseFallback spinnerClassName="h-8 w-8" />
         ) : activePairs.length === 0 ? (
           <EmptyState
             title={t("contacts.duplicates.allResolved")}

@@ -14,7 +14,7 @@ import type { StudentListMessagingRecipient } from "@/tenant/features/students/c
 interface StudentListActionsMenuProps {
   student: Student;
   studentId: string;
-  showDeleted: boolean;
+  viewingDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
   includeMessaging?: boolean;
@@ -36,7 +36,7 @@ interface StudentListActionsMenuProps {
 export function StudentListActionsMenu({
   student,
   studentId,
-  showDeleted,
+  viewingDeleted,
   canWrite,
   canDelete,
   includeMessaging = false,
@@ -60,7 +60,7 @@ export function StudentListActionsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className={contentClassName}>
-        {!showDeleted && (
+        {!viewingDeleted && (
           <>
             {!hideViewItem && (
               <DropdownMenuItem onClick={() => onViewStudent(student)}>
@@ -101,7 +101,7 @@ export function StudentListActionsMenu({
             )}
           </>
         )}
-        {showDeleted && canDelete && onRestore && (
+        {viewingDeleted && canDelete && onRestore && (
           <DropdownMenuItem onClick={() => onRestore(studentId)}>
             <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("students.restore")}
           </DropdownMenuItem>

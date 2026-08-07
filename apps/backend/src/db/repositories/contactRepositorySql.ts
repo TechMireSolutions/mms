@@ -1,5 +1,6 @@
 import { sql, type SQL } from 'drizzle-orm';
 import { contacts } from '../schema.js';
+import { jsonbCustomDataFieldNonEmptySql } from './jsonbFieldUsage.js';
 
 /** JSONB array path, or empty array when missing/non-array (avoids jsonb_array_elements errors). */
 export function jsonbArrayOrEmpty(field: 'phones' | 'emails' | 'addresses'): SQL {
@@ -75,21 +76,5 @@ export function hasWhatsAppSql(): SQL {
  * `@mms/shared` `countContactsWithFieldValue` (string trim, array length, other types count).
  */
 export function contactFieldNonEmptySql(fieldKey: string): SQL {
-  return sql`(
-    ${contacts.customData}->${fieldKey} IS NOT NULL
-    AND ${contacts.customData}->${fieldKey} <> 'null'::jsonb
-    AND (
-      (
-        jsonb_typeof(${contacts.customData}->${fieldKey}) = 'string'
-        AND NULLIF(trim(${contacts.customData}->>${fieldKey}), '') IS NOT NULL
-      )
-      OR (
-        jsonb_typeof(${contacts.customData}->${fieldKey}) = 'array'
-        AND jsonb_array_length(${contacts.customData}->${fieldKey}) > 0
-      )
-      OR (
-        jsonb_typeof(${contacts.customData}->${fieldKey}) NOT IN ('string', 'array', 'null')
-      )
-    )
-  )`;
+  return jsonbCustomDataFieldNonEmptySql(contacts.customData, fieldKey);
 }

@@ -3,12 +3,10 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { ContactsQuickFilter } from "@mms/shared";
-import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkDirectoryTypes";
+import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
+import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import {
-  ContactsClearFiltersButton,
-  ContactsFilterMenuButton,
-} from "@/tenant/features/contacts/components/ContactsToolbarControls";
+import { ContactsFilterMenuButton } from "@/tenant/features/contacts/components/ContactsToolbarControls";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 import { CONTACTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
 
@@ -24,7 +22,7 @@ interface ContactsToolbarProps {
   hasActiveFilters: boolean;
   activeFilterCount: number;
   onClearFilters: () => void;
-  showDeletedArchives?: boolean;
+  viewingDeleted?: boolean;
   onShowDeletedChange?: (show: boolean) => void;
   canViewDeleted?: boolean;
   viewMode: ContactsWorkViewMode;
@@ -44,7 +42,7 @@ export default function ContactsToolbar({
   hasActiveFilters,
   activeFilterCount,
   onClearFilters,
-  showDeletedArchives = false,
+  viewingDeleted = false,
   onShowDeletedChange,
   canViewDeleted = false,
   viewMode,
@@ -98,13 +96,16 @@ export default function ContactsToolbar({
           />
 
           {hasActiveFilters && (
-            <ContactsClearFiltersButton onClearFilters={onClearFilters} t={t} />
+            <ModuleClearFiltersButton
+              onClearFilters={onClearFilters}
+              label={t("contacts.clearFilters")}
+            />
           )}
 
           {canViewDeleted && onShowDeletedChange && (
             <ModuleTrashToggle
-              showDeleted={showDeletedArchives}
-              onToggle={() => onShowDeletedChange(!showDeletedArchives)}
+              showDeleted={viewingDeleted}
+              onToggle={() => onShowDeletedChange(!viewingDeleted)}
               showActiveLabel={t("contacts.showActive")}
               showDeletedLabel={t("contacts.showDeleted")}
             />

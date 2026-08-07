@@ -2,6 +2,8 @@ import { notify } from "@/lib/notify";
 import type { Student, ValidationError, StudentDuplicateReason } from "@mms/shared";
 import type { Contact } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { getApiValidationMessage } from "@/lib/apiValidationMessage";
+import { reportClientError } from "@/lib/clientErrorReporting";
 import {
   validateStudentDraft,
   checkStudentFormDuplicate,
@@ -59,6 +61,15 @@ function focusStudentValidationField(formInstanceId: string, fieldId: string): v
   });
 }
 
+function notifyStudentSaveFailed(t: TranslationFunction, err: unknown, scope: string): void {
+  const validationMessage = getApiValidationMessage(err);
+  notify.error(
+    t("students.saveFailed"),
+    validationMessage ? { description: validationMessage } : undefined,
+  );
+  reportClientError(err, { scope });
+}
+
 export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<void> {
   input.setValidationErrors([]);
 
@@ -107,7 +118,7 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<v
     });
     input.onClose();
   } catch (err: unknown) {
-    notify.error(input.t("settings.serverSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
+    notifyStudentSaveFailed(input.t, err, "students.form_save");
   } finally {
     input.setSaving(false);
   }
@@ -137,7 +148,7 @@ export async function confirmPendingStudentSave(input: {
     input.setDuplicateConfirmOpen(false);
     input.onClose();
   } catch (err: unknown) {
-    notify.error(input.t("settings.serverSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
+    notifyStudentSaveFailed(input.t, err, "students.form_save_confirm");
   } finally {
     input.setSaving(false);
   }

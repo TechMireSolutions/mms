@@ -6,9 +6,12 @@ import {
   CONTACT_LOCKED_ENABLED_TABS,
   INITIAL_FIELD_SEED,
   normalizeContactDialCode,
+  getContactSeedFormTab,
+  isContactLockedEnabledTab,
 } from "@mms/shared";
 import type { CountryCodeEntry } from "@/lib/contacts/countryCodeOptions";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useContactsSetupSaveActions } from "@/tenant/features/contacts/hooks/useContactsSetupSaveActions";
 import {
@@ -16,10 +19,7 @@ import {
   resolveSetupEnabledTabs,
   resolveSetupFormTabs,
 } from "@/tenant/features/contacts/hooks/contactsSetupPanelSnapshots";
-import {
-  buildCountrySelectOptions,
-  wrapContactsSetupFieldsEditor,
-} from "@/tenant/features/contacts/hooks/contactsSetupPanelEditor";
+import { buildCountrySelectOptions } from "@/tenant/features/contacts/hooks/contactsSetupPanelEditor";
 
 export function useContactsSetupPanelState({
   config,
@@ -158,10 +158,13 @@ export function useContactsSetupPanelState({
 
   const wrappedFieldsEditor = useMemo(
     () =>
-      wrapContactsSetupFieldsEditor({
+      wrapModuleSetupFieldsEditor({
         fieldsEditor,
         handleDeleteField: handleDeleteFieldWithGuard,
         handleDeleteTab: handleDeleteTabWithGuard,
+        getSeedTab: getContactSeedFormTab,
+        initialFieldSeed: INITIAL_FIELD_SEED,
+        isLockedTab: isContactLockedEnabledTab,
       }),
     [fieldsEditor, handleDeleteFieldWithGuard, handleDeleteTabWithGuard],
   );

@@ -182,7 +182,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreEnrollmentById).toHaveBeenCalledWith('e1');
+    expect(mockRestoreEnrollmentById).toHaveBeenCalledWith('e1', 'u-admin');
     await app.close();
   });
 
@@ -216,7 +216,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreAttendanceRecordById).toHaveBeenCalledWith('a1');
+    expect(mockRestoreAttendanceRecordById).toHaveBeenCalledWith('a1', 'u-admin');
     await app.close();
   });
 
@@ -250,7 +250,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreInvoiceById).toHaveBeenCalledWith('i1');
+    expect(mockRestoreInvoiceById).toHaveBeenCalledWith('i1', 'u-admin');
     await app.close();
   });
 
@@ -284,7 +284,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestorePaymentById).toHaveBeenCalledWith('p1');
+    expect(mockRestorePaymentById).toHaveBeenCalledWith('p1', 'u-admin');
     await app.close();
   });
 

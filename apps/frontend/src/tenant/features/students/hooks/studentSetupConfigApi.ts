@@ -45,9 +45,10 @@ export async function saveStudentFieldConfigAsync(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  // formTabs SSOT is custom_tabs (merged on BE GET) — prefer response over client body.
   const saved = normalizeStudentsSettings({
     ...(response.config ?? body),
-    formTabs: config.formTabs ?? response.config?.formTabs,
+    formTabs: response.config?.formTabs ?? config.formTabs,
   });
   memoryFieldConfig = saved;
   return saved;

@@ -1,7 +1,5 @@
-import { useCallback } from "react";
 import type { StudentsSettings } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
+import { useModuleSetupFieldDeleteGuard } from "@/lib/setup/useModuleSetupDeleteGuards";
 import {
   preflightStudentFieldDelete,
   type StudentsFieldsDraftSnapshot,
@@ -17,22 +15,9 @@ export function useStudentsSetupFieldDeleteGuard({
   fieldsDraft: StudentsFieldsDraftSnapshot;
   onDeleteField: (tabId: string, fieldId: string) => void;
 }) {
-  const { t } = useTranslation();
-
-  return useCallback(
-    async (tabId: string, fieldId: string): Promise<boolean> => {
-      const allowed = preflightStudentFieldDelete(fieldId, {
-        settings,
-        fieldsDraft,
-        onBlocked: (messageKey, params) => {
-          notify.error(t(messageKey as Parameters<typeof t>[0], params));
-        },
-      });
-      if (!allowed) return false;
-
-      onDeleteField(tabId, fieldId);
-      return true;
-    },
-    [settings, fieldsDraft, onDeleteField, t],
-  );
+  return useModuleSetupFieldDeleteGuard({
+    preflightFieldDelete: preflightStudentFieldDelete,
+    context: { settings, fieldsDraft },
+    onDeleteField,
+  });
 }

@@ -1,16 +1,10 @@
-import { RefreshCw } from "lucide-react";
+import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { Button } from "@/components/ui/button";
-import {
-  WORK_SURFACE,
-  WORK_TOOLBAR_TRIGGER,
-  WORK_TOOLBAR_TRIGGER_IDLE,
-} from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { StudentsFilterMenuButton } from "@/tenant/features/students/components/StudentsFilterMenuButton";
@@ -22,7 +16,7 @@ interface StudentsWorkTierToolbarProps {
   studentFilterGender: string;
   studentStatusOptions: readonly string[];
   genderFilters: string[];
-  showDeleted: boolean;
+  viewingDeleted: boolean;
   canDelete: boolean;
   hasActiveFilters: boolean;
   activeFilterCount: number;
@@ -42,7 +36,7 @@ export function StudentsWorkTierToolbar({
   studentFilterGender,
   studentStatusOptions,
   genderFilters,
-  showDeleted,
+  viewingDeleted,
   canDelete,
   hasActiveFilters,
   activeFilterCount,
@@ -79,20 +73,15 @@ export function StudentsWorkTierToolbar({
       />
 
       {hasActiveFilters ? (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onClearFilters}
-          className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE)}
-        >
-          <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{t("students.clearFilters")}</span>
-        </Button>
+        <ModuleClearFiltersButton
+          onClearFilters={onClearFilters}
+          label={t("students.clearFilters")}
+        />
       ) : null}
 
       {canDelete && (
         <ModuleTrashToggle
-          showDeleted={showDeleted}
+          showDeleted={viewingDeleted}
           onToggle={onToggleDeleted}
           showActiveLabel={t("students.showActive")}
           showDeletedLabel={t("students.showDeleted")}

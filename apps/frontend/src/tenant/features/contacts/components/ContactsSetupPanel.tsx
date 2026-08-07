@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { Loader2, Save } from "lucide-react";
 import {
   FieldConfig,
   isContactLockedEnabledTab,
@@ -7,9 +6,8 @@ import {
   isContactSeedFormTab,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-import { WarningCallout } from "@/components/ui/WarningCallout";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { ContactsPreferencesSection } from "@/tenant/features/contacts/components/ContactsPreferencesSection";
 import { useContactsSetupPanelState } from "@/tenant/features/contacts/hooks/useContactsSetupPanelState";
 
@@ -72,16 +70,12 @@ export default function ContactsSetupPanel({
     onPrefsDirtyChange?.(isPrefsDirty);
   }, [showPrefs, isPrefsDirty, onPrefsDirtyChange]);
 
+  const isDirty = showPrefs ? isPrefsDirty : isFieldsDirty;
+  // Prefs warning lives in ContactsPreferencesSection; Fields uses the shared footer.
+  const unsavedWarning = showFields ? t("contacts.setup.unsavedFieldsWarning") : undefined;
+
   return (
     <div className="space-y-6 max-w-3xl text-start">
-      {showFields && isFieldsDirty && (
-        <WarningCallout
-          role="alert"
-          density="banner"
-          description={t("contacts.setup.unsavedFieldsWarning")}
-        />
-      )}
-
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}
@@ -110,27 +104,17 @@ export default function ContactsSetupPanel({
       )}
 
       {/* Explicit Save (not auto-save): intentional for Contacts Setup Fields audit + column sync. */}
-      <div className="flex items-center gap-3 pt-2 border-t border-border sticky bottom-0 bg-background pb-2 flex-wrap">
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving || (showPrefs ? !isPrefsDirty : !isFieldsDirty)}
-          className="flex items-center gap-2 px-5 min-h-11"
-        >
-          {isSaving ? (
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Save className="w-4 h-4" aria-hidden="true" />
-          )}
-          <span>
-            {isSaving
-              ? t("global.saving")
-              : saved
-                ? t("contacts.form.saved")
-                : t("contacts.setup.saveAndApply")}
-          </span>
-        </Button>
-      </div>
+      <ModuleSetupSaveFooter
+        dirty={isDirty}
+        saving={isSaving}
+        saved={saved}
+        unsavedWarning={unsavedWarning}
+        saveLabel={isSaving ? t("global.saving") : t("contacts.setup.saveAndApply")}
+        savedLabel={t("contacts.form.saved")}
+        onSave={handleSave}
+        footerClassName="sticky bottom-0 bg-background mt-0 pt-2 pb-2 justify-start border-border flex-wrap gap-3"
+        buttonClassName="flex items-center gap-2 px-5 min-h-11 ms-0"
+      />
     </div>
   );
 }

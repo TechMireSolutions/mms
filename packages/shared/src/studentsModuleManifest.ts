@@ -40,12 +40,15 @@ export const studentListSchema = z.array(studentCoreSchema).transform((list) =>
 export type StudentRecord = z.infer<typeof studentCoreSchema>;
 
 
-/** Students module manifest — aligns with globle1 universal module architecture. */
+/** Students module manifest — SSOT for tiers, permissions, Work, soft-delete, export. */
 export const STUDENTS_MODULE_MANIFEST = {
   moduleId: 'students',
   entityType: 'Student',
   collectionKey: 'students',
+  /** Legacy remap / backup key — typed field-config lives on `student_field_configs`. */
   settingsObjectKey: 'students_settings',
+  configObjectKey: 'student_field_config',
+  preferencesObjectKey: 'student_module_preferences',
   columnPreferencesObjectKey: 'student_user_column_preferences',
   restBasePath: '/api/students',
   analyticsCategory: 'students',
@@ -64,13 +67,19 @@ export const STUDENTS_MODULE_MANIFEST = {
     bulkActions: ['whatsapp', 'sms', 'email', 'export', 'delete', 'status'] as const,
   },
   setupSubTabs: ['fields', 'preferences', 'lookups'] as const,
+  defaultExportFilename: 'students.csv',
+  searchableFieldKeys: ['name', 'grNumber', 'studentId', 'cnic', 'fatherName', 'guardianName'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,
+    /** Active Work exports exclude trash; Work trash UI omits export CTAs. */
     exportsIncludeDeleted: false,
     captureDeletionReason: true,
   },
-  /** Default Work directory page size when using server pagination (globle1 §10). */
+  /** Rows above this count use chunked / page-walk export with progress. */
+  exportInlineMaxRows: 500,
+  exportChunkSize: 100,
+  /** Default Work directory page size when using server pagination. */
   defaultPageSize: 50,
   maxPageSize: 500,
 } as const;

@@ -1,64 +1,61 @@
 import {
   type FieldDefinition,
   type StudentsSettings,
+  type ColumnRegistryEntry,
   DEFAULT_STUDENT_COLUMN_REGISTRY,
+  STUDENTS_MODULE_MANIFEST,
   getStudentFieldRemovalIssues,
   syncStudentColumnRegistryWithFields,
 } from "@mms/shared";
+import {
+  createModuleFieldDeletePreflight,
+  type ModuleFieldsDraftSnapshot,
+  type ModuleSetupDeleteNotify,
+} from "@/lib/setup/moduleFieldDeletePreflight";
 
-export type StudentsFieldsDraftSnapshot = {
-  buildFieldsMap: () => Record<string, FieldDefinition[]>;
-  enabledTabs: Iterable<string>;
-};
+export type StudentsFieldsDraftSnapshot = ModuleFieldsDraftSnapshot<FieldDefinition>;
 
-export type StudentsSetupDeleteNotify = (
-  messageKey: string,
-  params?: { count: number },
-) => void;
+export type StudentsSetupDeleteNotify = ModuleSetupDeleteNotify;
 
-type PrefightContext = {
+type StudentPreflightContext = {
   settings: StudentsSettings;
   fieldsDraft: StudentsFieldsDraftSnapshot;
   onBlocked: StudentsSetupDeleteNotify;
 };
 
-/**
- * Dependency checks before removing a Students Setup field.
- * Blocks system seeds and fields still enabled in the Work column registry.
- * (No live usage API yet — unlike Contacts.)
- */
-export function preflightStudentFieldDelete(
-  fieldId: string,
-  context: PrefightContext,
-): boolean {
-  const draftFields = context.fieldsDraft.buildFieldsMap() || {};
-  const draftColumnRegistry = syncStudentColumnRegistryWithFields(
-    context.settings.columnRegistry || DEFAULT_STUDENT_COLUMN_REGISTRY,
-    draftFields,
-    context.fieldsDraft.enabledTabs,
-  );
-
-  const issues = getStudentFieldRemovalIssues({
-    fieldKey: fieldId,
-    columnRegistry: draftColumnRegistry,
+const { preflightFieldDelete, preflightFieldsDelete } =
+  createModuleFieldDeletePreflight<
+    FieldDefinition,
+    ColumnRegistryEntry,
+    StudentPreflightContext
+  >({
+    restBasePath: STUDENTS_MODULE_MANIFEST.restBasePath,
+    usageMessageKey: "students.setup.fieldHasStudentData",
+    saveFailedKey: "students.setup.saveFailed",
+    defaultColumnRegistry: DEFAULT_STUDENT_COLUMN_REGISTRY,
+    syncColumnRegistryWithFields: syncStudentColumnRegistryWithFields,
+    getColumnRegistry: (context) => context.settings.columnRegistry,
+    getRemovalIssues: (fieldKey, columnRegistry) =>
+      getStudentFieldRemovalIssues({
+        fieldKey,
+        columnRegistry,
+      }),
   });
-  if (issues.length === 0) return true;
 
-  const issue = issues[0];
-  context.onBlocked(
-    issue.messageKey,
-    issue.count !== undefined ? { count: issue.count } : undefined,
-  );
-  return false;
+/** Shared dependency + live usage checks before removing a Students Setup field. */
+export async function preflightStudentFieldDelete(
+  fieldId: string,
+  context: StudentPreflightContext,
+): Promise<boolean> {
+  return preflightFieldDelete(fieldId, context);
 }
 
-/** Runs {@link preflightStudentFieldDelete} for each field; stops on first blocker. */
-export function preflightStudentFieldsDelete(
+/**
+ * Prefights many field deletes: sync deps first, then one batch usage POST.
+ */
+export async function preflightStudentFieldsDelete(
   fieldIds: string[],
-  context: PrefightContext,
-): boolean {
-  for (const fieldId of fieldIds) {
-    if (!preflightStudentFieldDelete(fieldId, context)) return false;
-  }
-  return true;
+  context: StudentPreflightContext,
+): Promise<boolean> {
+  return preflightFieldsDelete(fieldIds, context);
 }

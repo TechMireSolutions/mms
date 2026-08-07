@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { normalizeStoredStudent, type StudentRecord } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
-import { STUDENTS_API } from '@/tenant/features/students/hooks/studentsQueryShared';
+import { STUDENTS_API } from '@/tenant/features/students/hooks/studentsQueryKeys';
 
 /** Server mutations for Student records (create, update, delete, bulk delete, bulk status). */
 export function useStudentMutations() {
@@ -76,6 +76,25 @@ export function useStudentMutations() {
     onSuccess: invalidate,
   });
 
+  const logExportAudit = useMutation({
+    mutationFn: async (payload: {
+      count: number;
+      scope: 'all' | 'filtered' | 'selection';
+    }) =>
+      apiJson<{ success: boolean }>(`${STUDENTS_API}/export-audit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  });
+
+  const logSetupAudit = useMutation({
+    mutationFn: async (payload: { area: 'fields' | 'preferences'; summary: string }) =>
+      apiJson<{ success: boolean }>(`${STUDENTS_API}/setup-audit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  });
+
   return {
     createStudent,
     updateStudent,
@@ -84,5 +103,7 @@ export function useStudentMutations() {
     restoreStudent,
     bulkRestoreStudents,
     bulkUpdateStudentStatus,
+    logExportAudit,
+    logSetupAudit,
   };
 }

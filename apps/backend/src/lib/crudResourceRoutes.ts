@@ -11,6 +11,7 @@ import {
 } from '../validation/commonSchemas.js';
 import { registerColumnPreferencesRoutes } from './columnPreferencesRouter.js';
 import type { ResourceRecord } from './crudRouterTypes.js';
+import type { SoftDeleteRouteErrorMapper } from './crudBulkRoutes.js';
 
 export interface ResourceRoutesOptions<T extends ResourceRecord> {
   prefix?: string;
@@ -21,7 +22,8 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   createFn?: (data: T) => Promise<unknown>;
   updateFn?: (id: string, data: T) => Promise<unknown | null>;
   deleteFn?: (id: string, userId: string, reason?: string) => Promise<unknown | null>;
-  restoreFn?: (id: string) => Promise<unknown | null>;
+  /** Soft-restore; `userId` is the acting user (Contacts uniqueness/audit actors). */
+  restoreFn?: (id: string, userId: string) => Promise<unknown | null>;
   nameSingular: string;
   namePlural: string;
   customGetRoute?: boolean;
@@ -30,6 +32,27 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   customPutRoute?: boolean;
   columnPreferencesObjectKey?: string;
   validateDynamicFn?: (tenant: string, data: T, lang: string, user: User) => Promise<void>;
+  /** Override collection delete capability (defaults to canDeleteCollection). */
+  canDelete?: (user: User) => boolean;
+  /** Optional post-create audit hook. */
+  onAfterCreate?: (user: User, item: unknown) => Promise<void>;
+  /** Optional post-update audit hook. */
+  onAfterUpdate?: (user: User, id: string, updated: unknown) => Promise<void>;
+  /** Optional post-soft-delete audit hook (Students SSOT with Contacts). */
+  onAfterDelete?: (
+    user: User,
+    id: string,
+    deletionReason?: string,
+  ) => Promise<void>;
+  /** Optional post-restore audit hook. */
+  onAfterRestore?: (user: User, id: string) => Promise<void>;
+  /** Replace default `{ success: true }` restore payload (Contacts returns sanitized entity). */
+  buildRestoreResponse?: (
+    restored: unknown,
+    user: User,
+  ) => Promise<Record<string, unknown>> | Record<string, unknown>;
+  /** Map domain restore failures (e.g. unique field conflicts) to HTTP replies. */
+  mapRestoreError?: SoftDeleteRouteErrorMapper;
 }
 
 /**
@@ -57,6 +80,13 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     customPutRoute = false,
     columnPreferencesObjectKey,
     validateDynamicFn,
+    canDelete = (user) => canDeleteCollection(user, collection),
+    onAfterCreate,
+    onAfterUpdate,
+    onAfterDelete,
+    onAfterRestore,
+    buildRestoreResponse,
+    mapRestoreError,
   } = options;
 
   // GET / or GET /prefix
@@ -117,6 +147,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
 
       try {
         const item = await createFn(parsed.data);
+        await onAfterCreate?.(user, item);
         return reply.status(201).send({ [nameSingular]: item });
       } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : `Failed to create ${nameSingular}`;
@@ -165,6 +196,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         if (!updated) {
           return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
+        await onAfterUpdate?.(user, params.data.id, updated);
         return reply.send({ [nameSingular]: updated });
       } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : `Failed to update ${nameSingular}`;
@@ -185,7 +217,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
   if (deleteFn) {
     fastify.delete<{ Params: { id: string } }>(`${prefix}/:id`, async (request, reply) => {
       const user = request.user as User;
-      if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
+      if (!canDelete(user)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
       if (!params.ok) return replyValidationError(reply, params.message);
       const body = parseRequest(softDeleteBodySchema, request.body ?? {});
@@ -195,6 +227,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         if (!deleted) {
           return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
+        await onAfterDelete?.(user, params.data.id, body.data.deletionReason);
         return reply.send({ success: true });
       } catch {
         return sendDatabaseError(reply, `Failed to delete ${nameSingular}`);
@@ -206,16 +239,24 @@ export function registerResourceRoutes<T extends ResourceRecord>(
   if (restoreFn) {
     fastify.post(`${prefix}/:id/restore`, async (request, reply) => {
       const user = request.user as User;
-      if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
+      if (!canDelete(user)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
       if (!params.ok) return replyValidationError(reply, params.message);
       try {
-        const restored = await restoreFn(params.data.id);
+        const restored = await restoreFn(params.data.id, String(user.id));
         if (!restored) {
           return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found or not deleted`);
         }
-        return reply.send({ success: true });
-      } catch {
+        await onAfterRestore?.(user, params.data.id);
+        const payload = buildRestoreResponse
+          ? await buildRestoreResponse(restored, user)
+          : { success: true };
+        return reply.send(payload);
+      } catch (error: unknown) {
+        const mapped = mapRestoreError?.(error);
+        if (mapped) {
+          return reply.status(mapped.statusCode).send(mapped.body);
+        }
         return sendDatabaseError(reply, `Failed to restore ${nameSingular}`);
       }
     });

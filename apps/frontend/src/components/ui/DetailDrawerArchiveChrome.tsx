@@ -40,6 +40,39 @@ export function DetailDrawerArchivedBanner({
   );
 }
 
+export interface EntityArchivedBannerProps {
+  deletedAt: unknown;
+  deletionReason?: string | null;
+  /** Localized title including formatted archive date. */
+  titleWithDate: (formattedDate: string) => string;
+  /** Localized label prefix for deletion reason (e.g. "Reason"). */
+  reasonLabel: string;
+}
+
+/**
+ * Soft-delete archive banner shared by Contacts / Students (and peer directories).
+ * Builds title + optional reason description; chrome via {@link DetailDrawerArchivedBanner}.
+ */
+export function EntityArchivedBanner({
+  deletedAt,
+  deletionReason,
+  titleWithDate,
+  reasonLabel,
+}: EntityArchivedBannerProps): React.JSX.Element | null {
+  const stamp = formatEntityStamp(deletedAt);
+  if (!stamp) return null;
+
+  return (
+    <DetailDrawerArchivedBanner
+      deletedAt={deletedAt}
+      title={titleWithDate(formatDate(stamp))}
+      description={
+        deletionReason ? `${reasonLabel}: ${deletionReason}` : undefined
+      }
+    />
+  );
+}
+
 export interface DetailDrawerRestoreOrEditActionProps {
   isArchived: boolean;
   canRestore: boolean;

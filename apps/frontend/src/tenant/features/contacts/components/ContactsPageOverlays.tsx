@@ -1,32 +1,19 @@
 import { lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
 import type { Contact, StandardMessagingRecipient } from "@mms/shared";
+import {
+  ModuleDrawerLoadingSkeleton,
+  ModuleOverlayLoadingFallback,
+} from "@/components/ui/ModuleOverlayLoadingChrome";
 import {
   ContactsPageConfirmDialogs,
 } from "@/tenant/features/contacts/components/ContactsPageConfirmDialogs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
 const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
-
-function OverlayLoadingFallback(): React.JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-black/20"
-      role="status"
-      aria-live="polite"
-    >
-      <Loader2 className="h-6 w-6 animate-spin text-primary" aria-hidden />
-      <span className="sr-only">{t("common.loading")}</span>
-    </div>
-  );
-}
 
 export interface ContactsPageOverlaysProps {
   canWrite: boolean;
@@ -100,16 +87,15 @@ export function ContactsPageOverlays({
   onBulkRestoreOpenChange,
   onConfirmBulkRestore,
 }: ContactsPageOverlaysProps): React.JSX.Element {
-  const { t } = useTranslation();
   const { formTabsReady } = useContactConfig();
   const formNeedsTabs = showForm || Boolean(viewContact);
   const tabsPending = formNeedsTabs && !formTabsReady;
 
   return (
     <>
-      {tabsPending ? <OverlayLoadingFallback /> : null}
+      {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
 
-      <Suspense fallback={<OverlayLoadingFallback />}>
+      <Suspense fallback={<ModuleOverlayLoadingFallback />}>
         <AnimatePresence>
           {formTabsReady ? (
             <ContactForm
@@ -141,23 +127,7 @@ export function ContactsPageOverlays({
       </Suspense>
 
       {viewContact && formTabsReady && (
-        <Suspense
-          fallback={
-            <div className="fixed inset-0 z-modal flex items-center justify-end bg-black/20">
-              <div
-                className="flex h-full w-full max-w-full flex-col gap-3 border-s border-border bg-card p-5 sm:max-w-sm"
-                role="status"
-                aria-live="polite"
-              >
-                <span className="sr-only">{t("common.loading")}</span>
-                <Skeleton className="h-5 w-2/3 rounded" aria-hidden />
-                <Skeleton className="h-11 w-full rounded-xl" aria-hidden />
-                <Skeleton className="h-24 w-full rounded-2xl" aria-hidden />
-                <Skeleton className="h-32 w-full rounded-2xl" aria-hidden />
-              </div>
-            </div>
-          }
-        >
+        <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
           <ContactDetailDrawer
             contact={viewContact}
             onClose={onCloseView}

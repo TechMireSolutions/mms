@@ -1,65 +1,13 @@
-import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { type Student, type StudentsListPageResult } from "@mms/shared";
 import { FilterChips } from "@/components/ui/FilterChips";
-import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
-import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
+import { buildStudentsWorkFilterChips } from "@/tenant/features/students/components/buildStudentsWorkFilterChips";
 import { StudentsBulkActionBar } from "@/tenant/features/students/components/StudentsBulkActionBar";
 import { StudentsWorkListBody } from "@/tenant/features/students/components/StudentsWorkListBody";
 import { StudentsWorkTierToolbar } from "@/tenant/features/students/components/StudentsWorkTierToolbar";
-import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
-import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
-import { useStudentsWorkOverlays } from "@/tenant/features/students/hooks/useStudentsWorkOverlays";
+import type { StudentsWorkTierProps } from "@/tenant/features/students/components/StudentsWorkTierTypes";
 
-interface StudentsWorkTierProps {
-  studentSearch: string;
-  studentFilterStatus: string[];
-  studentFilterGender: string;
-  studentStatusOptions: readonly string[];
-  genderFilters: string[];
-  showDeleted: boolean;
-  canWrite: boolean;
-  canDelete: boolean;
-  canExport: boolean;
-  bulkActions: readonly string[];
-  hasActiveFilters: boolean;
-  activeFilterCount: number;
-  workStudents: Student[];
-  workPageData: StudentsListPageResult | undefined;
-  isWorkPageLoading: boolean;
-  isWorkPageError: boolean;
-  isWorkPageFetching: boolean;
-  useServerWork: boolean;
-  viewMode: WorkDirectoryViewMode;
-  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
-  columnLayout: ReturnType<typeof useStudentColumnLayout>;
-  onSearchChange: (value: string) => void;
-  onToggleStatus: (status: string) => void;
-  onGenderChange: (value: string) => void;
-  onToggleDeleted: () => void;
-  onClearFilters: () => void;
-  selectedIds: string[];
-  selectedTargets: StudentsSelectionTargets;
-  allSelected: boolean;
-  someSelected: boolean;
-  onSelectOne: (id: string) => void;
-  onSelectAll: (pageIds: string[]) => void;
-  onClearSelection: () => void;
-  onRetry: () => void;
-  onPageChange: (page: number) => void;
-  onEdit: (student: Student) => void;
-  onDelete: (studentId: string, deletionReason?: string) => void | Promise<void>;
-  onRestore: (studentId: string) => void | Promise<void>;
-  onBulkDelete: (studentIds: string[], deletionReason?: string) => void | Promise<void>;
-  onBulkRestore: (studentIds: string[]) => void | Promise<void>;
-  onBulkStatusChange: (studentIds: string[], status: string) => void | Promise<void>;
-  sortField: StudentListSortField | null;
-  sortDir: "asc" | "desc";
-  onServerSort: (field: StudentListSortField) => void;
-}
+export type { StudentsWorkTierProps } from "@/tenant/features/students/components/StudentsWorkTierTypes";
 
 export function StudentsWorkTier({
   studentSearch,
@@ -67,7 +15,7 @@ export function StudentsWorkTier({
   studentFilterGender,
   studentStatusOptions,
   genderFilters,
-  showDeleted,
+  viewingDeleted,
   canWrite,
   canDelete,
   canExport,
@@ -98,40 +46,23 @@ export function StudentsWorkTier({
   onRetry,
   onPageChange,
   onEdit,
-  onDelete,
   onRestore,
-  onBulkDelete,
-  onBulkRestore,
   onBulkStatusChange,
+  onBulkExport,
   sortField,
   sortDir,
   onServerSort,
+  workOverlays,
 }: StudentsWorkTierProps) {
   const { t } = useTranslation();
-  const selectedStudents = useMemo(
-    () => workStudents.filter((student) => selectedIds.includes(String(student.id))),
-    [workStudents, selectedIds],
-  );
-  const overlays = useStudentsWorkOverlays({
-    selectedStudents,
-  });
 
-  const studentFilterChips = [
-    ...studentFilterStatus.map((status) => ({
-      key: status,
-      label: studentStatusLabel(t, status),
-      onRemove: () => onToggleStatus(status),
-    })),
-    ...(studentFilterGender
-      ? [
-          {
-            key: "gender",
-            label: formatContactGenderLabel(studentFilterGender, t),
-            onRemove: () => onGenderChange(""),
-          },
-        ]
-      : []),
-  ];
+  const studentFilterChips = buildStudentsWorkFilterChips({
+    studentFilterStatus,
+    studentFilterGender,
+    onToggleStatus,
+    onGenderChange,
+    t,
+  });
 
   return (
     <motion.div
@@ -149,7 +80,7 @@ export function StudentsWorkTier({
         studentFilterGender={studentFilterGender}
         studentStatusOptions={studentStatusOptions}
         genderFilters={genderFilters}
-        showDeleted={showDeleted}
+        viewingDeleted={viewingDeleted}
         canDelete={canDelete}
         hasActiveFilters={hasActiveFilters}
         activeFilterCount={activeFilterCount}
@@ -167,30 +98,30 @@ export function StudentsWorkTier({
 
       <StudentsBulkActionBar
         selectedCount={selectedIds.length}
-        showDeleted={showDeleted}
+        viewingDeleted={viewingDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
-        canWriteMessaging={overlays.canWriteMessaging}
+        canWriteMessaging={workOverlays.canWriteMessaging}
         canExport={canExport}
         bulkActions={bulkActions}
         selectedTargets={selectedTargets}
         studentStatusOptions={studentStatusOptions}
-        statusBadgeConfig={overlays.statusBadgeConfig}
-        onWhatsApp={(targets) => overlays.openSelectionMessage("whatsapp", targets)}
-        onSms={(targets) => overlays.openSelectionMessage("sms", targets)}
-        onEmail={(targets) => overlays.openSelectionMessage("email", targets)}
+        statusBadgeConfig={workOverlays.statusBadgeConfig}
+        onWhatsApp={(targets) => workOverlays.openSelectionMessage("whatsapp", targets)}
+        onSms={(targets) => workOverlays.openSelectionMessage("sms", targets)}
+        onEmail={(targets) => workOverlays.openSelectionMessage("email", targets)}
         onBulkStatusChange={(status) => {
           void onBulkStatusChange(selectedIds, status);
           onClearSelection();
         }}
         onBulkExport={() => {
-          void overlays.handleBulkExport();
+          void onBulkExport();
         }}
         onRequestBulkDelete={() => {
-          overlays.setConfirmBulkDeleteOpen(true);
+          workOverlays.setConfirmBulkDeleteOpen(true);
         }}
         onRequestBulkRestore={() => {
-          overlays.setConfirmBulkRestoreOpen(true);
+          workOverlays.setConfirmBulkRestoreOpen(true);
         }}
         onClearSelection={onClearSelection}
       />
@@ -211,33 +142,23 @@ export function StudentsWorkTier({
         someSelected={someSelected}
         onSelectOne={onSelectOne}
         onSelectAll={onSelectAll}
-        onClearSelection={onClearSelection}
-        showDeleted={showDeleted}
+        viewingDeleted={viewingDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={onClearFilters}
         onShowActive={() => {
-          if (showDeleted) onToggleDeleted();
+          if (viewingDeleted) onToggleDeleted();
         }}
         sortField={sortField}
         sortDir={sortDir}
         onServerSort={onServerSort}
         onEdit={onEdit}
-        onDelete={onDelete}
         onRestore={onRestore}
-        onBulkDelete={onBulkDelete}
-        onBulkRestore={onBulkRestore}
-        openComposer={overlays.openComposer}
-        closeComposer={overlays.closeComposer}
-        canWriteMessaging={overlays.canWriteMessaging}
-        messagingTarget={overlays.messagingTarget}
-        confirmBulkDeleteOpen={overlays.confirmBulkDeleteOpen}
-        onConfirmBulkDeleteOpenChange={overlays.setConfirmBulkDeleteOpen}
-        confirmBulkRestoreOpen={overlays.confirmBulkRestoreOpen}
-        onConfirmBulkRestoreOpenChange={overlays.setConfirmBulkRestoreOpen}
-        pendingDeleteId={overlays.pendingDeleteId}
-        onPendingDeleteIdChange={overlays.setPendingDeleteId}
+        onViewStudent={workOverlays.setViewStudent}
+        openComposer={workOverlays.openComposer}
+        canWriteMessaging={workOverlays.canWriteMessaging}
+        onDeleteTargetChange={workOverlays.setDeleteTarget}
       />
     </motion.div>
   );

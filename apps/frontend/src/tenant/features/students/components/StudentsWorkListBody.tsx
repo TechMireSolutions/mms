@@ -1,9 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { GraduationCap } from "lucide-react";
 import type { Student, StudentsListPageResult } from "@mms/shared";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { TableSkeleton, CardSkeleton } from "@/components/ui/LoadingState";
+import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmpty";
+import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import StudentList from "@/tenant/features/students/components/StudentList";
@@ -13,7 +11,15 @@ import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/us
 export interface StudentsWorkListBodyProps
   extends Omit<
     StudentListProps,
-    "students" | "viewMode" | "isColumnVisible" | "columnRegistry" | "getColumnWidth" | "onColumnResize"
+    | "students"
+    | "viewMode"
+    | "isColumnVisible"
+    | "columnRegistry"
+    | "getColumnWidth"
+    | "onColumnResize"
+    | "hasActiveFilters"
+    | "onClearFilters"
+    | "onShowActive"
   > {
   isWorkPageLoading: boolean;
   isWorkPageError: boolean;
@@ -25,9 +31,12 @@ export interface StudentsWorkListBodyProps
   viewMode: WorkDirectoryViewMode;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
   onPageChange: (page: number) => void;
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
+  onShowActive: () => void;
 }
 
-/** Loading / error / directory / pagination — Contacts WorkListBody analogue. */
+/** Loading / error / empty / directory / pagination — Contacts WorkListBody analogue. */
 export function StudentsWorkListBody({
   isWorkPageLoading,
   isWorkPageError,
@@ -39,75 +48,71 @@ export function StudentsWorkListBody({
   viewMode,
   columnLayout,
   onPageChange,
+  hasActiveFilters,
+  onClearFilters,
+  onShowActive,
+  viewingDeleted = false,
+  canWrite = true,
   ...listProps
 }: StudentsWorkListBodyProps) {
   const { t } = useTranslation();
 
+  const emptyDescription = hasActiveFilters
+    ? t("students.tryAdjustingFilters")
+    : viewingDeleted
+      ? t("students.emptyTrashHint")
+      : canWrite
+        ? t("students.clickAddStudent")
+        : t("students.emptyDirectoryReadOnly");
+
   return (
-    <AnimatePresence mode="wait">
-      {isWorkPageError ? (
-        <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <ErrorState
-            title={t("students.loadFailed")}
-            description={t("students.loadFailedHint")}
-            onRetry={onRetry}
-          />
-        </motion.div>
-      ) : isWorkPageLoading ? (
-        <motion.div
-          key="skeleton"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          aria-busy="true"
-          role="status"
-          aria-live="polite"
-        >
-          {viewMode === "cards" ? (
-            <CardSkeleton count={6} className="grid-cols-1 sm:grid-cols-2" />
-          ) : (
-            <TableSkeleton rows={6} cols={columnLayout.columnRegistry.length} />
-          )}
-          <span className="sr-only">{t("common.loading")}</span>
-        </motion.div>
+    <ModuleWorkListStateShell
+      isError={isWorkPageError}
+      isLoading={isWorkPageLoading}
+      isFetching={isWorkPageFetching}
+      onRetry={onRetry}
+      errorTitle={t("students.loadFailed")}
+      errorHint={t("students.loadFailedHint")}
+      viewMode={viewMode}
+      skeletonColumnCount={columnLayout.columnRegistry.length}
+      useServerWork={useServerWork}
+      pageData={workPageData}
+      onPageChange={onPageChange}
+      i18nNamespace="students"
+      showPagination={workStudents.length > 0}
+      loadingLabel={t("common.loading")}
+    >
+      {workStudents.length === 0 ? (
+        <ModuleWorkDirectoryEmpty
+          icon={GraduationCap}
+          title={
+            hasActiveFilters
+              ? t("students.noStudentsMatchFilters")
+              : viewingDeleted
+                ? t("students.noDeletedStudents")
+                : t("students.noStudentsYet")
+          }
+          description={emptyDescription}
+          hasActiveFilters={hasActiveFilters}
+          viewingDeleted={viewingDeleted}
+          onClearFilters={onClearFilters}
+          onShowActive={onShowActive}
+          clearFiltersLabel={t("students.clearFilters")}
+          showActiveLabel={t("students.showActive")}
+        />
       ) : (
-        <motion.div
-          key="list-view"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          aria-busy={useServerWork && isWorkPageFetching ? true : undefined}
-        >
-          <ErrorBoundary>
-            <StudentList
-              students={workStudents}
-              viewMode={viewMode}
-              isColumnVisible={columnLayout.isColumnVisible}
-              columnRegistry={columnLayout.columnRegistry}
-              getColumnWidth={columnLayout.getColumnWidth}
-              onColumnResize={columnLayout.setColumnWidth}
-              {...listProps}
-            />
-            {useServerWork && workPageData && workStudents.length > 0 ? (
-              <ListPagination
-                page={workPageData.page}
-                total={workPageData.total}
-                limit={workPageData.limit}
-                hasMore={workPageData.hasMore}
-                onPageChange={onPageChange}
-                i18nNamespace="students"
-                variant="range"
-              />
-            ) : null}
-            {useServerWork && isWorkPageFetching ? (
-              <p className="text-xs text-muted-foreground px-1" role="status" aria-live="polite">
-                {t("common.loading")}
-              </p>
-            ) : null}
-          </ErrorBoundary>
-        </motion.div>
+        <StudentList
+          students={workStudents}
+          viewMode={viewMode}
+          isColumnVisible={columnLayout.isColumnVisible}
+          columnRegistry={columnLayout.columnRegistry}
+          getColumnWidth={columnLayout.getColumnWidth}
+          onColumnResize={columnLayout.setColumnWidth}
+          viewingDeleted={viewingDeleted}
+          canWrite={canWrite}
+          {...listProps}
+        />
       )}
-    </AnimatePresence>
+    </ModuleWorkListStateShell>
   );
 }

@@ -14,6 +14,12 @@ vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => 'demo',
 }));
 
+const mockBroadcastCollection = vi.fn();
+
+vi.mock('../services/websocketService.js', () => ({
+  broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
+}));
+
 import {
   loadContactLookupKind,
   loadContactLookupsMap,
@@ -25,10 +31,12 @@ describe('contactLookupsService', () => {
     mockListByWorkspace.mockReset();
     mockListByKind.mockReset();
     mockReplaceKind.mockReset();
+    mockBroadcastCollection.mockReset();
   });
 
   it('returns shared defaults when no typed rows exist', async () => {
     mockListByWorkspace.mockResolvedValue([]);
+    mockListByKind.mockResolvedValue([]);
     const map = await loadContactLookupsMap('demo');
     expect(map.genders.length).toBeGreaterThan(0);
     expect(map.phoneLabels.length).toBeGreaterThan(0);
@@ -63,5 +71,12 @@ describe('contactLookupsService', () => {
         }),
       ],
     );
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('contacts');
+  });
+
+  it('broadcasts contacts after replacing string lookup kinds', async () => {
+    mockReplaceKind.mockResolvedValue(undefined);
+    await replaceContactLookupKind('phoneLabels', ['Mobile', 'Work'], 'demo');
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('contacts');
   });
 });

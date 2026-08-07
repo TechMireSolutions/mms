@@ -1,20 +1,23 @@
 import { useCallback } from "react";
-import type { ContactsQuickFilter, AppTranslationKey } from "@mms/shared";
+import type {
+  ContactExportColumn,
+  ContactsListQuery,
+  ContactsQuickFilter,
+  AppTranslationKey,
+} from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
-import { notify } from "@/lib/notify";
-import { safeAudit } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
+import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 
 export interface UseContactsExportActionsOptions {
-  tableColumns: Array<{ id: string; label: string }>;
+  tableColumns: ContactExportColumn[];
   canExport: boolean;
   search: string;
   filterGender: string;
   sortField: string;
   sortDir: "asc" | "desc";
   quickFilter: ContactsQuickFilter;
-  showDeletedArchives: boolean;
+  viewingDeleted: boolean;
   selected: (string | number)[];
   logExportAudit: {
     mutateAsync: (payload: {
@@ -34,97 +37,44 @@ export function useContactsExportActions({
   sortField,
   sortDir,
   quickFilter,
-  showDeletedArchives,
+  viewingDeleted,
   selected,
   logExportAudit,
   handleError,
   t,
 }: UseContactsExportActionsOptions) {
-  const handleExportCSV = useCallback(async () => {
-    if (!canExport || showDeletedArchives) return;
+  const buildFilteredQuery = useCallback(
+    (): ContactsListQuery => ({
+      search,
+      gender: filterGender || undefined,
+      sortField,
+      sortDir,
+      quickFilter,
+    }),
+    [search, filterGender, sortField, sortDir, quickFilter],
+  );
 
-    const filename = t("contacts.exportFilename");
-    const label = t("contacts.jobs.exportLabelServer");
+  const onError = useCallback(
+    (err: unknown, scope: string) => {
+      handleError(err, scope, "contacts.exportFailed");
+    },
+    [handleError],
+  );
 
-    try {
-      const job = await startServerContactsCsvExport({
-        query: {
-          search,
-          gender: filterGender || undefined,
-          sortField,
-          sortDir,
-          quickFilter,
-        },
-        columns: tableColumns,
-        filename,
-        label,
-      });
-      if (job.hasDownload && job.status === "completed") {
-        await downloadBackgroundJobArtifact(job.id, filename);
-      }
-      notify.success(t("contacts.exportSuccess"));
-      safeAudit(
-        logExportAudit.mutateAsync({ count: job.progress?.total ?? 0, scope: "filtered" }),
-        "contacts.export_audit",
-      );
-    } catch (err) {
-      handleError(err, "contacts.server_export_csv", "contacts.exportFailed");
-    }
-  }, [
+  return useModuleServerCsvExportActions<ContactExportColumn, ContactsListQuery>({
     canExport,
-    showDeletedArchives,
-    search,
-    filterGender,
-    sortField,
-    sortDir,
-    quickFilter,
-    tableColumns,
-    t,
+    trashMode: viewingDeleted,
+    selectedIds: selected,
+    columns: tableColumns,
+    filename: t("contacts.exportFilename"),
+    label: t("contacts.jobs.exportLabelServer"),
+    successMessage: t("contacts.exportSuccess"),
+    auditScope: "contacts.export_audit",
+    filteredErrorScope: "contacts.server_export_csv",
+    selectionErrorScope: "contacts.server_export_csv_selection",
+    buildFilteredQuery,
+    startExport: startServerContactsCsvExport,
     logExportAudit,
-    handleError,
-  ]);
-
-  const handleBulkExport = useCallback(async () => {
-    if (!canExport || showDeletedArchives) return;
-    if (selected.length === 0) return;
-
-    const filename = t("contacts.exportFilename");
-    const label = t("contacts.jobs.exportLabelServer");
-
-    try {
-      const job = await startServerContactsCsvExport({
-        query: {},
-        columns: tableColumns,
-        filename,
-        label,
-        ids: selected,
-      });
-      if (job.hasDownload && job.status === "completed") {
-        await downloadBackgroundJobArtifact(job.id, filename);
-      }
-      notify.success(t("contacts.exportSuccess"));
-      safeAudit(
-        logExportAudit.mutateAsync({
-          count: job.progress?.total ?? selected.length,
-          scope: "selection",
-        }),
-        "contacts.export_audit",
-      );
-    } catch (err) {
-      handleError(err, "contacts.server_export_csv_selection", "contacts.exportFailed");
-    }
-  }, [
-    canExport,
-    showDeletedArchives,
-    selected,
-    tableColumns,
-    t,
-    logExportAudit,
-    handleError,
-  ]);
-
-  return {
-    handleExportCSV,
-    handleBulkExport,
-  };
+    onError,
+  });
 }

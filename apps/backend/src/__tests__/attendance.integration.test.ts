@@ -180,7 +180,7 @@ describe('attendance REST routes integration', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreAttendanceRecordById).toHaveBeenCalledWith(attendanceRecord.id);
+    expect(mockRestoreAttendanceRecordById).toHaveBeenCalledWith(attendanceRecord.id, 'u-admin');
     await app.close();
   });
 

@@ -6,14 +6,11 @@ import {
 } from './studentsModuleSettings.js';
 import { STUDENT_TAB_REGISTRY } from './moduleFieldSetupPersons.js';
 import { normalizeStudentsSettings } from './studentSettingsUtils.js';
+import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
 
 /** PUT /api/students/field-config — field registry JSON without formTabs SSOT. */
-export const studentFieldConfigPutBodySchema = z
-  .object({
-    version: z.number().optional(),
-    enabledTabs: z.array(z.string()).optional(),
-    requiredTabs: z.array(z.string()).optional(),
-    fields: z.record(z.string(), z.array(z.record(z.string(), z.unknown()))).optional(),
+export const studentFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+  .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
   })

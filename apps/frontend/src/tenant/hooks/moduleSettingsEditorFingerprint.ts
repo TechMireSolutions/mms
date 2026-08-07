@@ -1,48 +1,5 @@
 import type { FieldDefinition, TabDefinition } from "@mms/shared";
-
-type FieldLike = Pick<
-  FieldDefinition,
-  "key" | "enabled" | "required" | "unique" | "order" | "type" | "label" | "defaultValue" | "permissions"
->;
-
-function canonicalizeField(field: FieldLike): Record<string, unknown> {
-  const canonical: Record<string, unknown> = {
-    key: field.key || "",
-    enabled: Boolean(field.enabled),
-    required: Boolean(field.required),
-    unique: Boolean(field.unique),
-    order: typeof field.order === "number" ? field.order : 999,
-  };
-  if (typeof field.type === "string") canonical.type = field.type;
-  if (typeof field.label === "string") canonical.label = field.label;
-  if (field.defaultValue !== undefined) canonical.defaultValue = field.defaultValue;
-  if (Array.isArray(field.permissions)) canonical.permissions = field.permissions;
-  return canonical;
-}
-
-function canonicalizeFieldsMap(
-  fields: Record<string, FieldLike[]> | undefined,
-): Record<string, Record<string, unknown>[]> {
-  const next: Record<string, Record<string, unknown>[]> = {};
-  const tabIds = Object.keys(fields || {}).sort((a, b) =>
-    a.toLowerCase().localeCompare(b.toLowerCase()),
-  );
-  for (const tabId of tabIds) {
-    const list = Array.isArray(fields?.[tabId]) ? fields![tabId]! : [];
-    next[tabId.toLowerCase()] = [...list]
-      .sort(
-        (a, b) =>
-          (a.order ?? 999) - (b.order ?? 999) ||
-          String(a.key).localeCompare(String(b.key)),
-      )
-      .map((field, index) => {
-        const canonical = canonicalizeField(field);
-        canonical.order = index;
-        return canonical;
-      });
-  }
-  return next;
-}
+import { canonicalizeFieldsMap } from "@/lib/setup/canonicalizeFields";
 
 function canonicalizeFormTabs(
   formTabs: TabDefinition[] | undefined,
@@ -60,9 +17,10 @@ function canonicalizeFormTabs(
 /**
  * Content fingerprint for fields-editor rehydrate.
  * Same content → same string even when `settings` object identity churns.
+ * Field map is formTabs-scoped (Setup snapshot SSOT) via shared canonicalizeFieldsMap.
  */
 export function moduleSettingsEditorFingerprint(input: {
-  fields?: Record<string, FieldLike[]>;
+  fields?: Record<string, FieldDefinition[]>;
   enabledTabs?: string[];
   requiredTabs?: string[];
   formTabs?: TabDefinition[];
@@ -86,7 +44,7 @@ export function moduleSettingsEditorFingerprint(input: {
     .sort();
 
   return JSON.stringify({
-    fields: canonicalizeFieldsMap(input.fields),
+    fields: canonicalizeFieldsMap(input.fields, input.formTabs ?? []),
     enabled,
     required,
     formTabs: canonicalizeFormTabs(input.formTabs),

@@ -14,24 +14,23 @@ import {
   type ContactLookupKind,
   type ContactLookupsMap,
 } from '@mms/shared';
+import { createModuleStringListLookupsService } from '../lib/createModuleStringListLookupsService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { slugifyLookupLabel } from '../lib/slugifyLookupLabel.js';
 import {
   listContactLookupsByKind,
   listContactLookupsByWorkspace,
   replaceContactLookupsForKind,
 } from '../db/repositories/contactLookupsRepository.js';
+import { broadcastCollection } from './websocketService.js';
 
-function slugifyLabel(label: string, index: number): string {
-  const base = label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
-  return `${base || 'item'}-${index}`;
-}
+type ContactStringLookupKind = Exclude<ContactLookupKind, 'countryCodes'>;
 
-function defaultStringItems(kind: Exclude<ContactLookupKind, 'countryCodes'>): string[] {
+const CONTACT_STRING_LOOKUP_KINDS = CONTACT_LOOKUP_KINDS.filter(
+  (kind): kind is ContactStringLookupKind => kind !== 'countryCodes',
+);
+
+function defaultStringItems(kind: ContactStringLookupKind): string[] {
   switch (kind) {
     case 'genders':
       return [...GENDERS];
@@ -56,10 +55,15 @@ function defaultCountryItems(): ContactLookupCountryCode[] {
   return COUNTRY_CODES.map((entry) => ({ ...entry }));
 }
 
-function rowsToStringItems(
-  rows: Array<{ label: string }>,
-): string[] {
-  return rows.map((row) => row.label).filter(Boolean);
+function emptyStringLookupsMap(): Record<ContactStringLookupKind, string[]> {
+  return {
+    genders: defaultStringItems('genders'),
+    socialPlatforms: defaultStringItems('socialPlatforms'),
+    relationships: defaultStringItems('relationships'),
+    phoneLabels: defaultStringItems('phoneLabels'),
+    emailLabels: defaultStringItems('emailLabels'),
+    addressLabels: defaultStringItems('addressLabels'),
+  };
 }
 
 function rowsToCountryItems(
@@ -74,62 +78,47 @@ function rowsToCountryItems(
   return items;
 }
 
+const stringListLookups = createModuleStringListLookupsService<
+  ContactStringLookupKind,
+  Record<ContactStringLookupKind, string[]>
+>({
+  kinds: CONTACT_STRING_LOOKUP_KINDS,
+  emptyMap: emptyStringLookupsMap,
+  defaultItems: defaultStringItems,
+  listByWorkspace: listContactLookupsByWorkspace,
+  listByKind: listContactLookupsByKind,
+  replaceForKind: replaceContactLookupsForKind,
+  broadcastKey: 'contacts',
+});
+
+async function loadCountryCodes(
+  tenant = getRequestTenant(),
+): Promise<ContactLookupCountryCode[]> {
+  if (!tenant) return defaultCountryItems();
+  const rows = await listContactLookupsByKind(tenant, 'countryCodes');
+  if (!rows || rows.length === 0) return defaultCountryItems();
+  const countries = rowsToCountryItems(rows);
+  return needsContactCountryCodesCurate(countries)
+    ? curatedContactCountryCodes()
+    : countries;
+}
+
 export async function loadContactLookupsMap(
   tenant = getRequestTenant(),
 ): Promise<ContactLookupsMap> {
-  const empty: ContactLookupsMap = {
-    genders: defaultStringItems('genders'),
-    socialPlatforms: defaultStringItems('socialPlatforms'),
-    relationships: defaultStringItems('relationships'),
-    phoneLabels: defaultStringItems('phoneLabels'),
-    emailLabels: defaultStringItems('emailLabels'),
-    addressLabels: defaultStringItems('addressLabels'),
-    countryCodes: defaultCountryItems(),
+  const strings = await stringListLookups.loadMap(tenant);
+  return {
+    ...strings,
+    countryCodes: await loadCountryCodes(tenant),
   };
-  if (!tenant) return empty;
-
-  const rows = await listContactLookupsByWorkspace(tenant);
-  const byKind = new Map<string, typeof rows>();
-  for (const row of rows) {
-    const list = byKind.get(row.kind) ?? [];
-    list.push(row);
-    byKind.set(row.kind, list);
-  }
-
-  const result = { ...empty };
-  for (const kind of CONTACT_LOOKUP_KINDS) {
-    const kindRows = byKind.get(kind) ?? [];
-    if (kindRows.length === 0) continue;
-    if (kind === 'countryCodes') {
-      const countries = rowsToCountryItems(kindRows);
-      result.countryCodes = needsContactCountryCodesCurate(countries)
-        ? curatedContactCountryCodes()
-        : countries;
-    } else {
-      result[kind] = rowsToStringItems(kindRows);
-    }
-  }
-  return result;
 }
 
 export async function loadContactLookupKind(
   kind: ContactLookupKind,
   tenant = getRequestTenant(),
 ): Promise<string[] | ContactLookupCountryCode[]> {
-  if (!tenant) {
-    return kind === 'countryCodes' ? defaultCountryItems() : defaultStringItems(kind);
-  }
-  const rows = await listContactLookupsByKind(tenant, kind);
-  if (rows.length === 0) {
-    return kind === 'countryCodes' ? defaultCountryItems() : defaultStringItems(kind);
-  }
-  if (kind === 'countryCodes') {
-    const countries = rowsToCountryItems(rows);
-    return needsContactCountryCodesCurate(countries)
-      ? curatedContactCountryCodes()
-      : countries;
-  }
-  return rowsToStringItems(rows);
+  if (kind === 'countryCodes') return loadCountryCodes(tenant);
+  return stringListLookups.loadKind(kind, tenant);
 }
 
 export async function replaceContactLookupKind(
@@ -151,27 +140,16 @@ export async function replaceContactLookupKind(
       tenant,
       kind,
       curated.map((entry, index) => ({
-        id: `${tenant}:${kind}:${slugifyLabel(entry.country, index)}`,
+        id: `${tenant}:${kind}:${slugifyLookupLabel(entry.country, index)}`,
         kind,
         label: entry.country,
         meta: { code: entry.code },
         sortOrder: index,
       })),
     );
+    await broadcastCollection('contacts');
     return curated;
   }
 
-  const labels = (items as string[]).map((label) => label.trim()).filter(Boolean);
-  await replaceContactLookupsForKind(
-    tenant,
-    kind,
-    labels.map((label, index) => ({
-      id: `${tenant}:${kind}:${slugifyLabel(label, index)}`,
-      kind,
-      label,
-      meta: null,
-      sortOrder: index,
-    })),
-  );
-  return labels;
+  return stringListLookups.replaceKind(kind as ContactStringLookupKind, items as string[], tenant);
 }

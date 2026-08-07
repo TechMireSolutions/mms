@@ -10,7 +10,7 @@ export function useContactsKeyboardShortcuts({
   clearFilters,
   clearSelection,
   canWrite,
-  showDeletedArchives,
+  viewingDeleted,
   onCreate,
 }: {
   selectedCount: number;
@@ -18,7 +18,7 @@ export function useContactsKeyboardShortcuts({
   clearFilters: () => void;
   clearSelection: () => void;
   canWrite: boolean;
-  showDeletedArchives: boolean;
+  viewingDeleted: boolean;
   onCreate: () => void;
 }): void {
   useModuleWorkKeyboardShortcuts({
@@ -28,7 +28,7 @@ export function useContactsKeyboardShortcuts({
     clearFilters,
     clearSelection,
     canWrite,
-    showDeleted: showDeletedArchives,
+    showDeleted: viewingDeleted,
     onCreate,
   });
 }

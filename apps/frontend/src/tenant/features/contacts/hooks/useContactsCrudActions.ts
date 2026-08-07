@@ -3,8 +3,6 @@ import { useContactsCrudNotify } from "@/tenant/features/contacts/hooks/useConta
 import { useContactsCrudWriteActions } from "@/tenant/features/contacts/hooks/useContactsCrudWriteActions";
 import { useContactsCrudDeleteActions } from "@/tenant/features/contacts/hooks/useContactsCrudDeleteActions";
 
-export { safeAudit } from "@/tenant/features/contacts/hooks/useContactsCrudNotify";
-
 export function useContactsCrudActions() {
   const { t, handleError, notifyBulkResult } = useContactsCrudNotify();
   const { logExportAudit } = useContactMutations();

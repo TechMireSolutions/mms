@@ -12,7 +12,7 @@ import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { apiJson } from "@/lib/apiClient";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
-import { startServerContactsVcfExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
+import { startServerContactsVcfExport } from "@/lib/backgroundJobs/startServerContactsBackgroundJobs";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
 import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 import {

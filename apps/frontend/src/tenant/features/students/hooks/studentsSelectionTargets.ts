@@ -1,4 +1,5 @@
 import { getPrimaryPhone, hasWhatsApp, type Student } from "@mms/shared";
+import { computeModuleMessagingSelectionTargets } from "@/lib/messaging/computeModuleMessagingSelectionTargets";
 
 export interface StudentsSelectionTargets {
   waTargets: Student[];
@@ -14,21 +15,11 @@ export function computeStudentsSelectionTargets({
   selectedIds: string[];
   workStudents: Student[];
 }): StudentsSelectionTargets {
-  if (selectedIds.length === 0) {
-    return { waTargets: [], smsReady: [], emailReady: [] };
-  }
-
-  const selectedSet = new Set(selectedIds);
-  const waTargets: Student[] = [];
-  const smsReady: Student[] = [];
-  const emailReady: Student[] = [];
-
-  for (const student of workStudents) {
-    if (!selectedSet.has(String(student.id))) continue;
-    if (hasWhatsApp({ phone: student.phone })) waTargets.push(student);
-    if (getPrimaryPhone({ phone: student.phone })) smsReady.push(student);
-    if (student.email?.trim()) emailReady.push(student);
-  }
-
-  return { waTargets, smsReady, emailReady };
+  return computeModuleMessagingSelectionTargets({
+    selectedIds,
+    rows: workStudents,
+    hasWhatsApp: (student) => hasWhatsApp({ phone: student.phone }),
+    hasSms: (student) => Boolean(getPrimaryPhone({ phone: student.phone })),
+    hasEmail: (student) => Boolean(student.email?.trim()),
+  });
 }

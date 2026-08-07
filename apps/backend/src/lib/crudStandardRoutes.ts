@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
+import type { SoftDeleteRouteErrorMapper } from './crudBulkRoutes.js';
 import { registerColumnPreferencesRoutes } from './columnPreferencesRouter.js';
 import type { ResourceRecord } from './crudRouterTypes.js';
 import {
@@ -150,11 +151,25 @@ export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRec
   createFn?: (data: TRecord) => Promise<unknown>;
   updateFn?: (id: string, data: TRecord) => Promise<unknown | null>;
   deleteFn?: (id: string, userId: string, reason?: string) => Promise<unknown | null>;
-  restoreFn?: (id: string) => Promise<unknown | null>;
+  restoreFn?: (id: string, userId: string) => Promise<unknown | null>;
   namePlural: string;
   customPostRoute?: boolean;
   customPutRoute?: boolean;
   validateDynamicFn?: (tenant: string, data: TRecord, lang: string, user: User) => Promise<void>;
+  canDelete?: (user: User) => boolean;
+  onAfterCreate?: (user: User, item: unknown) => Promise<void>;
+  onAfterUpdate?: (user: User, id: string, updated: unknown) => Promise<void>;
+  onAfterDelete?: (
+    user: User,
+    id: string,
+    deletionReason?: string,
+  ) => Promise<void>;
+  onAfterRestore?: (user: User, id: string) => Promise<void>;
+  buildRestoreResponse?: (
+    restored: unknown,
+    user: User,
+  ) => Promise<Record<string, unknown>> | Record<string, unknown>;
+  mapRestoreError?: SoftDeleteRouteErrorMapper;
 }
 
 /**
@@ -194,6 +209,13 @@ export function registerStandardTenantRoutes<
     customPutRoute,
     validateDynamicFn,
     canWriteDeletedCheck,
+    canDelete,
+    onAfterCreate,
+    onAfterUpdate,
+    onAfterDelete,
+    onAfterRestore,
+    buildRestoreResponse,
+    mapRestoreError,
   } = options;
 
   registerStandardExtendedRoutes(fastify, {
@@ -233,5 +255,12 @@ export function registerStandardTenantRoutes<
     nameSingular,
     namePlural,
     validateDynamicFn,
+    canDelete,
+    onAfterCreate,
+    onAfterUpdate,
+    onAfterDelete,
+    onAfterRestore,
+    buildRestoreResponse,
+    mapRestoreError,
   });
 }

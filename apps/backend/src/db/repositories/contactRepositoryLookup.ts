@@ -3,9 +3,9 @@ import type { Contact } from '@mms/shared';
 import { contacts } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import {
-  contactFieldNonEmptySql,
   jsonbArrayOrEmpty,
 } from './contactRepositorySql.js';
+import { countJsonbFieldUsageByKeys } from './jsonbFieldUsage.js';
 import { contactRepo, hydrateContact } from './contactRepositoryCore.js';
 
 export interface ContactUniqueLookupValues {
@@ -143,34 +143,12 @@ export async function countFieldUsageByKeys(
   tenant: string,
   fieldKeys: string[],
 ): Promise<Record<string, number>> {
-  const uniqueKeys = [...new Set(fieldKeys.map((key) => key.trim()).filter(Boolean))];
-  if (uniqueKeys.length === 0) {
-    return Object.fromEntries(fieldKeys.map((key) => [key, 0]));
-  }
-
-  const subdomain = tenant.trim().toLowerCase();
-  const selection = Object.fromEntries(
-    uniqueKeys.map((fieldKey, index) => [
-      `k${index}`,
-      sql<number>`count(*) FILTER (WHERE ${contactFieldNonEmptySql(fieldKey)})::int`.as(
-        `k${index}`,
-      ),
-    ]),
-  );
-
-  return withTenantTransaction(subdomain, async (tx) => {
-    const rows = await tx
-      .select(selection)
-      .from(contacts)
-      .where(and(eq(contacts.workspaceSubdomain, subdomain), isNull(contacts.deletedAt)));
-
-    const row = (rows[0] ?? {}) as Record<string, number | null | undefined>;
-    const counts: Record<string, number> = {};
-    for (let index = 0; index < uniqueKeys.length; index += 1) {
-      counts[uniqueKeys[index]] = Number(row[`k${index}`] ?? 0);
-    }
-    return Object.fromEntries(
-      fieldKeys.map((key) => [key.trim(), counts[key.trim()] ?? 0]),
-    );
+  return countJsonbFieldUsageByKeys({
+    tenant,
+    fieldKeys,
+    table: contacts,
+    customDataCol: contacts.customData,
+    workspaceSubdomainCol: contacts.workspaceSubdomain,
+    deletedAtCol: contacts.deletedAt,
   });
 }

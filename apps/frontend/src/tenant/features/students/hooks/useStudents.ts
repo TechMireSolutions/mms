@@ -1,4 +1,4 @@
-export type { StudentRecord } from '@/tenant/features/students/hooks/studentsQueryShared';
+export type { StudentRecord } from '@/tenant/features/students/hooks/studentsQueryKeys';
 
 export {
   STUDENTS_QUERY_KEY,
@@ -7,7 +7,7 @@ export {
   type StudentsPaginatedParams,
   type StudentNextGrNumberParams,
   type StudentsWidgetAggregateWidgetInput,
-} from '@/tenant/features/students/hooks/studentsQueryShared';
+} from '@/tenant/features/students/hooks/studentsQueryKeys';
 
 export { useStudentMutations } from '@/tenant/features/students/hooks/useStudentMutations';
 

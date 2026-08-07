@@ -1,15 +1,8 @@
 import { z } from 'zod';
+import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
 
 /** PUT /api/contacts/field-config — FieldConfig JSON without formTabs SSOT. */
-export const contactFieldConfigPutBodySchema = z
-  .object({
-    version: z.number().optional(),
-    enabledTabs: z.array(z.string()).optional(),
-    requiredTabs: z.array(z.string()).optional(),
-    fields: z.record(z.string(), z.array(z.record(z.string(), z.unknown()))).optional(),
-  })
-  .passthrough();
-
+export const contactFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema;
 const relationshipPairSchema = z
   .object({
     id: z.string().optional(),

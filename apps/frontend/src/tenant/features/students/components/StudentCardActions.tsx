@@ -11,7 +11,7 @@ export interface StudentCardActionsProps {
   student: Student;
   studentId: string;
   displayName: string;
-  showDeleted: boolean;
+  viewingDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
   canWriteMessaging: boolean;
@@ -30,7 +30,7 @@ export function StudentCardActions({
   student,
   studentId,
   displayName,
-  showDeleted,
+  viewingDeleted,
   canWrite,
   canDelete,
   canWriteMessaging,
@@ -44,7 +44,7 @@ export function StudentCardActions({
 
   const phone = student.phone?.trim() || null;
   const email = student.email?.trim() || null;
-  const messagingEnabled = canWriteMessaging && !showDeleted && Boolean(onOpenComposer);
+  const messagingEnabled = canWriteMessaging && !viewingDeleted && Boolean(onOpenComposer);
   const hasFaceChannels = messagingEnabled && (Boolean(phone) || Boolean(email));
 
   return (
@@ -54,7 +54,7 @@ export function StudentCardActions({
           <EntityMessagingIconActions
             primaryPhone={phone}
             primaryEmail={email}
-            showArchived={showDeleted}
+            showArchived={viewingDeleted}
             messagingEnabled={messagingEnabled}
             labels={{
               call: t("students.detail.call"),
@@ -96,7 +96,7 @@ export function StudentCardActions({
           <StudentListActionsMenu
             student={student}
             studentId={studentId}
-            showDeleted={showDeleted}
+            viewingDeleted={viewingDeleted}
             canWrite={canWrite}
             canDelete={canDelete}
             includeMessaging={messagingEnabled && !hasFaceChannels}

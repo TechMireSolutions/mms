@@ -4,9 +4,11 @@ export {
   registerBulkRoutes,
   registerIncludableBulkRoutes,
   registerSoftDeletableBulkRoutes,
+  registerSoftDeletableBulkTrashRoutes,
   type BulkRoutesOptions,
   type SoftDeleteRouteErrorMapper,
   type SoftDeletableBulkRoutesOptions,
+  type SoftDeletableBulkTrashRoutesOptions,
 } from './crudBulkRoutes.js';
 export {
   registerResourceRoutes,

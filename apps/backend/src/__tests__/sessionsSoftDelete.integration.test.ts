@@ -84,7 +84,7 @@ describe('sessions soft delete routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreSessionById).toHaveBeenCalledWith('s1');
+    expect(mockRestoreSessionById).toHaveBeenCalledWith('s1', 'u-admin');
     await app.close();
   });
 

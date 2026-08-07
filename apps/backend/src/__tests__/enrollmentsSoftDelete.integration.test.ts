@@ -82,7 +82,7 @@ describe('enrollments soft delete routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreEnrollmentById).toHaveBeenCalledWith('enr1');
+    expect(mockRestoreEnrollmentById).toHaveBeenCalledWith('enr1', 'u-admin');
     await app.close();
   });
 

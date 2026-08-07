@@ -37,6 +37,7 @@ const mockBulkRestoreStudents = vi.fn();
 const mockBulkUpdateStudentStatus = vi.fn();
 const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();
+const mockRecordAudit = vi.fn();
 
 vi.mock('../services/studentService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/studentService.js')>();
@@ -49,6 +50,10 @@ vi.mock('../services/studentService.js', async (importOriginal) => {
   };
 });
 
+vi.mock('../services/auditService.js', () => ({
+  recordAudit: (...args: unknown[]) => mockRecordAudit(...args),
+}));
+
 vi.mock('../services/userColumnPreferencesService.js', () => ({
   getUserColumnPreferencesForModule: (...args: unknown[]) =>
     mockGetUserColumnPreferencesForModule(...args),
@@ -60,6 +65,7 @@ describe('students trash / bulk / column-preferences routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     vi.clearAllMocks();
+    mockRecordAudit.mockResolvedValue(undefined);
   });
 
   it('GET /api/students?includeDeleted=true returns 403 without students.delete', async () => {
@@ -180,6 +186,12 @@ describe('students trash / bulk / column-preferences routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockBulkUpdateStudentStatus).toHaveBeenCalledWith(['s-1'], 'inactive');
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.bulk_status',
+        summary: expect.stringContaining('Updated status to inactive'),
+      }),
+    );
     await app.close();
   });
 

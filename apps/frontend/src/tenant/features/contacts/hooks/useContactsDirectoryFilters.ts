@@ -10,12 +10,12 @@ import { toggleIdInSelection, togglePageIdsInSelection } from "@/lib/directorySe
 
 export function useContactsDirectoryFilters({
   setActiveTab,
-  initialShowDeletedArchives = false,
+  initialViewingDeleted = false,
 }: {
   setActiveTab: (tab: string) => void;
-  initialShowDeletedArchives?: boolean;
+  initialViewingDeleted?: boolean;
 }) {
-  const [showDeletedArchives, setShowDeletedArchives] = useState(initialShowDeletedArchives);
+  const [viewingDeleted, setViewingDeleted] = useState(initialViewingDeleted);
   const [listPage, setListPage] = useState(1);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 250);
@@ -27,7 +27,7 @@ export function useContactsDirectoryFilters({
 
   useEffect(() => {
     setListPage(1);
-  }, [debouncedSearch, filterGender, quickFilter, sortField, sortDir, showDeletedArchives]);
+  }, [debouncedSearch, filterGender, quickFilter, sortField, sortDir, viewingDeleted]);
 
   const applyDrillDown = useCallback(
     (filter: ContactsWorkDrillDown) => {
@@ -80,8 +80,8 @@ export function useContactsDirectoryFilters({
   }, []);
 
   return {
-    showDeletedArchives,
-    setShowDeletedArchives,
+    viewingDeleted,
+    setViewingDeleted,
     listPage,
     setListPage,
     search,

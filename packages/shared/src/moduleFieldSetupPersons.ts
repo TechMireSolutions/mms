@@ -28,6 +28,12 @@ export function isStudentLockedEnabledTab(tabKey: string): boolean {
 export function isStudentSeedFormTab(tabKey: string): boolean {
   return STUDENT_SEED_FORM_TAB_KEYS.has(tabKey.toLowerCase());
 }
+
+/** Seeded Students form tab definition when `tabKey` matches the registry. */
+export function getStudentSeedFormTab(tabKey: string): TabDefinition | undefined {
+  const key = tabKey.toLowerCase();
+  return STUDENT_TAB_REGISTRY.find((tab) => tab.key.toLowerCase() === key);
+}
 export const INITIAL_STUDENT_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
     {

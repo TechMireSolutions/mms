@@ -9,7 +9,7 @@ import type { StudentListSortField } from "@/tenant/features/students/components
 /** Directory filters, sort, trash, and selection SSOT for Students Work (Contacts-shaped). */
 export function useStudentsDirectoryFilters() {
   const [listPage, setListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [viewingDeleted, setViewingDeleted] = useState(false);
   const [sortField, setSortField] = useState<StudentListSortField | null>("grNumber");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [studentSearch, setStudentSearch] = useState("");
@@ -20,11 +20,11 @@ export function useStudentsDirectoryFilters() {
 
   useEffect(() => {
     setListPage(1);
-  }, [debouncedSearch, studentFilterStatus, studentFilterGender, showDeleted, sortField, sortDir]);
+  }, [debouncedSearch, studentFilterStatus, studentFilterGender, viewingDeleted, sortField, sortDir]);
 
   useEffect(() => {
     setSelectedIds([]);
-  }, [showDeleted]);
+  }, [viewingDeleted]);
 
   const clearFilters = useCallback(() => {
     setStudentSearch("");
@@ -74,16 +74,16 @@ export function useStudentsDirectoryFilters() {
     );
   }, []);
 
-  const toggleShowDeleted = useCallback(() => {
-    setShowDeleted((previous) => !previous);
+  const toggleViewingDeleted = useCallback(() => {
+    setViewingDeleted((previous) => !previous);
   }, []);
 
   return {
     listPage,
     setListPage,
-    showDeleted,
-    setShowDeleted,
-    toggleShowDeleted,
+    viewingDeleted,
+    setViewingDeleted,
+    toggleViewingDeleted,
     sortField,
     sortDir,
     handleServerSort,

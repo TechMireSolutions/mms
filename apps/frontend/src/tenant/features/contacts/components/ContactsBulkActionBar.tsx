@@ -1,15 +1,8 @@
 import type { JSX } from "react";
-import { Trash2, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import type { Contact } from "@mms/shared";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import {
-  BulkSelectionClearAction,
-  BulkSelectionDeleteAction,
-  BulkSelectionExportAction,
-  BulkSelectionMessagingActions,
-  BulkSelectionRestoreAction,
-  type BulkSelectionMessageChannel,
-} from "@/components/ui/BulkSelectionActions";
+import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
+import type { BulkSelectionMessageChannel } from "@/components/ui/BulkSelectionActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface ContactsBulkActionBarProps {
@@ -58,62 +51,44 @@ export function ContactsBulkActionBar({
   };
 
   return (
-    <BulkSelectionBar
-      placement="inline"
-      tone="glass"
+    <ModuleWorkBulkActionBar
       selectedCount={selectedCount}
+      viewingDeleted={viewingDeleted}
       countLabel={t("contacts.selectedCount", { count: selectedCount })}
       leading={<Users className="w-4 h-4 text-primary" aria-hidden />}
-      trailing={
-        <BulkSelectionClearAction
-          label={t("common.deselect")}
-          onClick={onClearSelection}
-        />
-      }
-    >
-      {viewingDeleted ? (
-        canDelete && (
-          <BulkSelectionRestoreAction
-            label={t("contacts.bulkRestore")}
-            onClick={onRequestBulkRestore}
-          />
-        )
-      ) : (
-        <>
-          {showMessaging && (
-            <BulkSelectionMessagingActions
-              onChannel={handleChannel}
-              labels={{
+      deselectLabel={t("common.deselect")}
+      canDelete={canDelete}
+      restoreLabel={t("contacts.bulkRestore")}
+      onRequestBulkRestore={onRequestBulkRestore}
+      onClearSelection={onClearSelection}
+      messaging={
+        showMessaging
+          ? {
+              onChannel: handleChannel,
+              labels: {
                 whatsapp: t("contacts.whatsappBulk", {
                   count: selectedTargets.waTargets.length,
                 }),
                 sms: t("contacts.smsBulk", { count: selectedTargets.smsReady.length }),
-              }}
-              channels={{
+              },
+              channels: {
                 whatsapp: showWhatsApp,
                 sms: showSms,
                 email: false,
-              }}
-            />
-          )}
-          {bulkActions.includes("export") && canExport && (
-            <BulkSelectionExportAction
-              label={t("contacts.bulkExport")}
-              onClick={onBulkExport}
-            />
-          )}
-          {bulkActions.includes("delete") && canDelete && (
-            <>
-              <div className="h-4 w-px bg-border" />
-              <BulkSelectionDeleteAction
-                label={t("contacts.bulkDelete")}
-                onClick={onRequestBulkDelete}
-                icon={Trash2}
-              />
-            </>
-          )}
-        </>
-      )}
-    </BulkSelectionBar>
+              },
+            }
+          : undefined
+      }
+      exportAction={
+        bulkActions.includes("export") && canExport
+          ? { label: t("contacts.bulkExport"), onClick: onBulkExport }
+          : undefined
+      }
+      deleteAction={
+        bulkActions.includes("delete") && canDelete
+          ? { label: t("contacts.bulkDelete"), onClick: onRequestBulkDelete }
+          : undefined
+      }
+    />
   );
 }

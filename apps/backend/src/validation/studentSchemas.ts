@@ -1,10 +1,13 @@
 import { z } from 'zod';
-import { baseListQuerySchema, bulkIdsBodySchema } from './commonSchemas.js';
+import { bulkIdsBodySchema } from './commonSchemas.js';
+import { studentsListQuerySchema } from '@mms/shared';
+import {
+  csvExportBodySchema,
+  moduleExportAuditBodySchema,
+  studentSetupAuditBodySchema,
+} from './csvExportBodySchema.js';
 
-export const studentsListQuerySchema = baseListQuerySchema.extend({
-  status: z.string().max(200).optional(),
-  gender: z.string().optional(),
-});
+export { studentsListQuerySchema };
 
 export const studentsNextGrNumberQuerySchema = z.object({
   registeredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -31,3 +34,9 @@ export const studentsBulkStatusSchema = z.object({
   ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
   status: z.string().min(1).max(64),
 });
+
+export const studentExportAuditSchema = moduleExportAuditBodySchema;
+
+export const studentSetupAuditSchema = studentSetupAuditBodySchema;
+
+export const studentsCsvExportBodySchema = csvExportBodySchema(studentsListQuerySchema);

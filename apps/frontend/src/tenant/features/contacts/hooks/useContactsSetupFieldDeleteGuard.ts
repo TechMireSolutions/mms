@@ -1,7 +1,5 @@
-import { useCallback } from "react";
 import { type FieldConfig, type ContactPreferences } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
+import { useModuleSetupFieldDeleteGuard } from "@/lib/setup/useModuleSetupDeleteGuards";
 import {
   preflightContactFieldDelete,
   type FieldsDraftSnapshot,
@@ -19,23 +17,9 @@ export function useContactsSetupFieldDeleteGuard({
   fieldsDraft: FieldsDraftSnapshot;
   onDeleteField: (tabId: string, fieldId: string) => void;
 }) {
-  const { t } = useTranslation();
-
-  return useCallback(
-    async (tabId: string, fieldId: string): Promise<boolean> => {
-      const allowed = await preflightContactFieldDelete(fieldId, {
-        config,
-        contextPrefs,
-        fieldsDraft,
-        onBlocked: (messageKey, params) => {
-          notify.error(t(messageKey as Parameters<typeof t>[0], params));
-        },
-      });
-      if (!allowed) return false;
-
-      onDeleteField(tabId, fieldId);
-      return true;
-    },
-    [config, contextPrefs, fieldsDraft, onDeleteField, t],
-  );
+  return useModuleSetupFieldDeleteGuard({
+    preflightFieldDelete: preflightContactFieldDelete,
+    context: { config, contextPrefs, fieldsDraft },
+    onDeleteField,
+  });
 }

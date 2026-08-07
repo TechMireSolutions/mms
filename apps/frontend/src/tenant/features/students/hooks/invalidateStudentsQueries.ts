@@ -8,7 +8,7 @@ import {
   STUDENTS_METRICS_QUERY_KEY,
   STUDENTS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
-} from '@/tenant/features/students/hooks/studentsQueryShared';
+} from '@/tenant/features/students/hooks/studentsQueryKeys';
 import { STUDENTS_LOOKUPS_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentLookups';
 
 /** Invalidate Students list/metrics/setup/lookups Query keys (mutations + live push). */

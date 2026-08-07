@@ -32,6 +32,7 @@ vi.mock('../db/repositories/studentRepositoryWidgets.js', () => ({
 }));
 
 vi.mock('../services/websocketService.js', () => ({
+  broadcastCollection: (...args: unknown[]) => mockBroadcast(...args),
   broadcastTenantUpdate: (...args: unknown[]) => mockBroadcast(...args),
 }));
 

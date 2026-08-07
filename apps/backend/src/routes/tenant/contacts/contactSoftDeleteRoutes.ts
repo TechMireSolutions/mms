@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { User } from '@mms/shared';
-import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
-import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
+import type { Contact, User } from '@mms/shared';
+import { registerResourceRoutes } from '../../../lib/crudResourceRoutes.js';
+import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoutes.js';
 import {
   bulkRestoreContacts,
   bulkSoftDeleteContacts,
@@ -12,99 +12,76 @@ import {
 import { canDeleteContacts } from '../../../services/rbacService.js';
 import {
   contactBulkDeleteSchema,
-  contactDeleteBodySchema,
+  contactRecordSchema,
 } from '../../../validation/contactSchemas.js';
-import { resourceIdParamsSchema } from '../../../validation/commonSchemas.js';
 import { auditContact, sanitizeOneForUser } from './contactRouteHelpers.js';
 
 /** Contact soft-delete, restore, and bulk trash routes. */
 export const contactSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.delete('/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteContacts(user)) return sendForbidden(reply);
-
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-
-    const body = parseRequest(contactDeleteBodySchema, request.body ?? {});
-    if (!body.ok) return replyValidationError(reply, body.message);
-    const deletionReason = body.data.deletionReason;
-
-    try {
-      const deleted = await softDeleteContactById(params.data.id, user.id, deletionReason);
-      if (!deleted) {
-        return sendNotFound(reply, 'Contact not found');
-      }
+  registerResourceRoutes(fastify, {
+    collection: 'contacts',
+    schema: contactRecordSchema as never,
+    nameSingular: 'contact',
+    namePlural: 'contacts',
+    customGetRoute: true,
+    customGetSingleRoute: true,
+    customPostRoute: true,
+    customPutRoute: true,
+    canDelete: canDeleteContacts,
+    deleteFn: softDeleteContactById,
+    restoreFn: (id, userId) => restoreContactById(id, userId),
+    onAfterDelete: async (user, id, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
-      await auditContact(user, 'contact.soft_delete', `Soft-deleted contact ${params.data.id}${reasonNote}`, params.data.id);
-      return reply.send({ success: true });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to delete contact');
-    }
-  });
-
-  fastify.post('/:id/restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteContacts(user)) return sendForbidden(reply);
-
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-
-    try {
-      const restored = await restoreContactById(params.data.id, user.id);
-      if (!restored) {
-        return sendNotFound(reply, 'Contact not found or not deleted');
-      }
-      await auditContact(user, 'contact.restore', `Restored contact ${params.data.id}`, params.data.id);
-      return reply.send({ success: true, contact: await sanitizeOneForUser(restored, user) });
-    } catch (error: unknown) {
+      await auditContact(
+        user,
+        'contact.soft_delete',
+        `Soft-deleted contact ${id}${reasonNote}`,
+        id,
+      );
+    },
+    onAfterRestore: async (user, id) => {
+      await auditContact(user, 'contact.restore', `Restored contact ${id}`, id);
+    },
+    buildRestoreResponse: async (restored, user) => ({
+      success: true,
+      contact: await sanitizeOneForUser(restored as Contact, user as User),
+    }),
+    mapRestoreError: (error) => {
       if (error instanceof ContactUniqueFieldError) {
-        return replyValidationError(reply, error.message, { errors: error.errors });
+        return {
+          statusCode: 400,
+          body: {
+            type: 'validation_error',
+            message: error.message,
+            errors: error.errors,
+          },
+        };
       }
-      return sendDatabaseError(reply, 'Failed to restore contact');
-    }
+      return null;
+    },
   });
 
-  fastify.post('/bulk-delete', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteContacts(user)) return sendForbidden(reply);
-
-    const parsed = parseRequest(contactBulkDeleteSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-    try {
-      const ids = parsed.data.ids.map(String);
-      const result = await bulkSoftDeleteContacts(ids, user.id, parsed.data.deletionReason);
-      const reasonNote = parsed.data.deletionReason?.trim() ? ` — ${parsed.data.deletionReason.trim()}` : '';
+  registerSoftDeletableBulkTrashRoutes(fastify, {
+    collection: 'contacts',
+    errorMessagePrefix: 'contacts',
+    bulkBodySchema: contactBulkDeleteSchema,
+    canDelete: canDeleteContacts,
+    bulkDeleteFn: bulkSoftDeleteContacts,
+    bulkRestoreFn: bulkRestoreContacts,
+    onAfterBulkDelete: async (user, result, deletionReason) => {
+      const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditContact(
         user,
         'contact.bulk_soft_delete',
         `Soft-deleted ${result.succeeded} contact(s); ${result.failed} failed${reasonNote}`,
       );
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk delete contacts');
-    }
-  });
-
-  fastify.post('/bulk-restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteContacts(user)) return sendForbidden(reply);
-
-    const parsed = parseRequest(contactBulkDeleteSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-    try {
-      const ids = parsed.data.ids.map(String);
-      const result = await bulkRestoreContacts(ids, user.id);
+    },
+    onAfterBulkRestore: async (user, result) => {
       await auditContact(
         user,
         'contact.bulk_restore',
         `Restored ${result.succeeded} contact(s); ${result.failed} failed`,
       );
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk restore contacts');
-    }
+    },
   });
 };

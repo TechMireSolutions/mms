@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { filterStudentsForQuery, paginateStudents, studentMatchesSearch } from './studentsListQuery.js';
+import {
+  filterStudentsForQuery,
+  paginateStudents,
+  studentMatchesSearch,
+  studentsListQuerySchema,
+} from './studentsListQuery.js';
 import type { Student } from './studentTypes.js';
 
 const sample: Student[] = [
@@ -7,6 +12,32 @@ const sample: Student[] = [
   { id: '2', contactId: 'c2', name: 'Sara Ahmed', status: 'inactive', gender: 'female', fatherName: 'Ahmed' },
   { id: '3', contactId: 'c3', name: 'Hassan Ali', status: 'suspended', gender: 'male', guardianName: 'Uncle Bob' },
 ];
+
+describe('studentsListQuerySchema', () => {
+  it('accepts status and gender filters', () => {
+    expect(
+      studentsListQuerySchema.parse({
+        page: '1',
+        limit: '25',
+        status: 'active,inactive',
+        gender: 'male',
+        search: 'ali',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        page: 1,
+        limit: 25,
+        status: 'active,inactive',
+        gender: 'male',
+        search: 'ali',
+      }),
+    );
+  });
+
+  it('rejects oversized status', () => {
+    expect(studentsListQuerySchema.safeParse({ status: 'x'.repeat(201) }).success).toBe(false);
+  });
+});
 
 describe('studentMatchesSearch', () => {
   it('matches name, cnic, grNumber, studentId, father, and guardian', () => {

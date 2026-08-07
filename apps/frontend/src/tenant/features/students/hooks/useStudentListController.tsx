@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { type Student } from "@mms/shared";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
@@ -35,7 +34,6 @@ export function useStudentListController({
 }: UseStudentListControllerOptions) {
   const { t } = useTranslation();
   const { isFieldEnabled } = useStudentConfig();
-  const [viewStudent, setViewStudent] = useState<Student | null>(null);
 
   const resolveColumnVisible = (key: string): boolean => {
     if (isColumnVisible) return isColumnVisible(key);
@@ -72,8 +70,6 @@ export function useStudentListController({
   return {
     t,
     isColumnVisible: resolveColumnVisible,
-    viewStudent,
-    setViewStudent,
     openComposer,
     canWriteMessaging,
     paginatedStudents: students,

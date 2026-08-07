@@ -35,6 +35,7 @@ import {
 } from '../db/repositories/savedReportsRepository.js';
 import { loadContactFieldConfig, saveContactFieldConfig } from './contactConfigService.js';
 import { loadContactLookupKind, replaceContactLookupKind } from './contactLookupsService.js';
+import { broadcastCollection } from './websocketService.js';
 
 function requireTenant(): string {
   const tenant = getRequestTenant();
@@ -185,6 +186,7 @@ export async function saveContactPreferences(
     normalized.relationshipPairs,
     normalized.relationshipOptionOrder,
   );
+  await broadcastCollection('contacts');
   return normalized;
 }
 

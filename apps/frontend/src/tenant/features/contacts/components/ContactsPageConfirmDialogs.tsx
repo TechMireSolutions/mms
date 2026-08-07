@@ -1,4 +1,4 @@
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ModuleSoftDeleteConfirmDialogs } from "@/components/ui/ModuleSoftDeleteConfirmDialogs";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface ContactsPageConfirmDialogsProps {
@@ -30,45 +30,31 @@ export function ContactsPageConfirmDialogs({
   const { t } = useTranslation();
 
   return (
-    <>
-      <ConfirmAlertDialog
-        open={bulkDeleteOpen}
-        onOpenChange={onBulkDeleteOpenChange}
-        title={t("contacts.bulkDelete")}
-        description={t("contacts.bulkDeleteConfirm", { count: selectedCount })}
-        confirmLabel={t("common.delete")}
-        onConfirm={onConfirmBulkDelete}
-        destructive
-        optionalReason={{
-          label: t("contacts.deletionReasonLabel"),
-          placeholder: t("contacts.deletionReasonPlaceholder"),
-        }}
-      />
-      <ConfirmAlertDialog
-        open={deleteTarget !== null}
-        onOpenChange={onDeleteTargetOpenChange}
-        title={t("contacts.deleteConfirmTitle")}
-        description={
-          deleteTarget?.name
-            ? t("contacts.deleteConfirmDescription", { name: deleteTarget.name })
-            : t("contacts.deleteConfirmDescriptionDefault")
-        }
-        confirmLabel={t("common.delete")}
-        onConfirm={onConfirmSingleDelete}
-        destructive
-        optionalReason={{
-          label: t("contacts.deletionReasonLabel"),
-          placeholder: t("contacts.deletionReasonPlaceholder"),
-        }}
-      />
-      <ConfirmAlertDialog
-        open={bulkRestoreOpen}
-        onOpenChange={onBulkRestoreOpenChange}
-        title={t("contacts.bulkRestore")}
-        description={t("contacts.bulkRestoreConfirm", { count: selectedCount })}
-        confirmLabel={t("contacts.restoreContact")}
-        onConfirm={onConfirmBulkRestore}
-      />
-    </>
+    <ModuleSoftDeleteConfirmDialogs
+      pendingDeleteOpen={deleteTarget !== null}
+      onPendingDeleteOpenChange={onDeleteTargetOpenChange}
+      bulkDeleteOpen={bulkDeleteOpen}
+      onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+      bulkRestoreOpen={bulkRestoreOpen}
+      onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+      singleDeleteTitle={t("contacts.deleteConfirmTitle")}
+      singleDeleteDescription={
+        deleteTarget?.name
+          ? t("contacts.deleteConfirmDescription", { name: deleteTarget.name })
+          : t("contacts.deleteConfirmDescriptionDefault")
+      }
+      bulkDeleteTitle={t("contacts.bulkDelete")}
+      bulkDeleteDescription={t("contacts.bulkDeleteConfirm", { count: selectedCount })}
+      bulkRestoreTitle={t("contacts.bulkRestore")}
+      bulkRestoreDescription={t("contacts.bulkRestoreConfirm", { count: selectedCount })}
+      deleteConfirmLabel={t("common.delete")}
+      restoreConfirmLabel={t("contacts.restoreContact")}
+      cancelLabel={t("common.cancel")}
+      deletionReasonLabel={t("contacts.deletionReasonLabel")}
+      deletionReasonPlaceholder={t("contacts.deletionReasonPlaceholder")}
+      onConfirmSingleDelete={onConfirmSingleDelete}
+      onConfirmBulkDelete={onConfirmBulkDelete}
+      onConfirmBulkRestore={onConfirmBulkRestore}
+    />
   );
 }

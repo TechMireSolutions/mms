@@ -9,6 +9,8 @@ import type {
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { notify } from "@/lib/notify";
+import { getApiValidationMessage } from "@/lib/apiValidationMessage";
+import { reportClientError } from "@/lib/clientErrorReporting";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/students/hooks/studentFormValidation";
 import { buildContactSelectPatch, resolveStudentGrForSave } from "@/tenant/features/students/hooks/studentFormHandlers";
 import {
@@ -147,8 +149,13 @@ export function useStudentFormActionHandlers({
         id: String(studentDraft.contactId),
         contact: { ...linkedContact, avatar: avatarUrl },
       });
-    } catch {
-      notify.error(t("contacts.saveFailed"));
+    } catch (err) {
+      const validationMessage = getApiValidationMessage(err);
+      notify.error(
+        t("students.saveFailed"),
+        validationMessage ? { description: validationMessage } : undefined,
+      );
+      reportClientError(err, { scope: "students.avatar_update" });
     }
   };
 

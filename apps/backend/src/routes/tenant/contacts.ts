@@ -30,6 +30,7 @@ import {
   registerPaginatedListRoute,
 } from '../../lib/crudRouter.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+import { registerFieldUsageRoutes } from '../../lib/registerFieldUsageRoutes.js';
 import { contactGoogleSyncRoutes } from './contacts/googleSyncRoutes.js';
 import { contactOperationRoutes } from './contacts/contactOperationRoutes.js';
 import { contactCrudRoutes } from './contacts/contactCrudRoutes.js';
@@ -106,30 +107,12 @@ export async function contactRoutes(
     }
   });
 
-  fastify.get('/field-usage/:fieldKey', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    const params = parseRequest(contactFieldUsageParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    try {
-      const count = await loadContactFieldUsageCount(params.data.fieldKey);
-      return reply.send({ count });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to load field usage');
-    }
-  });
-
-  fastify.post('/field-usage', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    const parsed = parseRequest(contactFieldUsageBatchBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const counts = await loadContactFieldUsageCounts(parsed.data.fieldKeys);
-      return reply.send({ counts });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to load field usage');
-    }
+  registerFieldUsageRoutes(fastify, {
+    canRead: canReadContacts,
+    loadCount: loadContactFieldUsageCount,
+    loadCounts: loadContactFieldUsageCounts,
+    paramsSchema: contactFieldUsageParamsSchema,
+    batchBodySchema: contactFieldUsageBatchBodySchema,
   });
 
   registerWidgetAggregatesRoute(fastify, {

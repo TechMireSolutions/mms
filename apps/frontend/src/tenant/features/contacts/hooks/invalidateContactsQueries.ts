@@ -7,6 +7,11 @@ import {
   contactsListQueryKey,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 import {
+  CONTACTS_FIELD_CONFIG_QUERY_KEY,
+  CONTACTS_PREFERENCES_QUERY_KEY,
+} from '@/tenant/features/contacts/hooks/useContactSetupConfig';
+import { CONTACTS_LOOKUPS_QUERY_KEY } from '@/tenant/features/contacts/hooks/useContactLookups';
+import {
   MESSAGING_CONTACTS_RESOLVE_QUERY_KEY,
   MESSAGING_RECIPIENTS_QUERY_KEY,
 } from '@/tenant/hooks/collections/messaging';
@@ -19,6 +24,9 @@ export function invalidateContactsQueries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: CONTACTS_REPORT_ANALYTICS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
+  void queryClient.invalidateQueries({ queryKey: CONTACTS_FIELD_CONFIG_QUERY_KEY });
+  void queryClient.invalidateQueries({ queryKey: CONTACTS_PREFERENCES_QUERY_KEY });
+  void queryClient.invalidateQueries({ queryKey: CONTACTS_LOOKUPS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: MESSAGING_CONTACTS_RESOLVE_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: MESSAGING_RECIPIENTS_QUERY_KEY });
 }

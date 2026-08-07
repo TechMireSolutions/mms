@@ -10,7 +10,7 @@ export interface UseContactsDirectoryOptions {
   setActiveTab: (tab: string) => void;
   editContact: Contact | null;
   viewContact: Contact | null;
-  initialShowDeletedArchives?: boolean;
+  initialViewingDeleted?: boolean;
 }
 
 export function useContactsDirectory({
@@ -18,11 +18,11 @@ export function useContactsDirectory({
   setActiveTab,
   editContact,
   viewContact,
-  initialShowDeletedArchives = false,
+  initialViewingDeleted = false,
 }: UseContactsDirectoryOptions) {
   const filters = useContactsDirectoryFilters({
     setActiveTab,
-    initialShowDeletedArchives,
+    initialViewingDeleted,
   });
 
   const useServerWork = effectiveTab === "work";
@@ -39,7 +39,7 @@ export function useContactsDirectory({
     limit: workLimit,
     search: filters.debouncedSearch,
     gender: filters.filterGender,
-    includeDeleted: filters.showDeletedArchives,
+    includeDeleted: filters.viewingDeleted,
     sortField: filters.sortField,
     sortDir: filters.sortDir,
     quickFilter: filters.quickFilter,
@@ -61,8 +61,8 @@ export function useContactsDirectory({
   }, [selectAllIds, workContacts]);
 
   return {
-    showDeletedArchives: filters.showDeletedArchives,
-    setShowDeletedArchives: filters.setShowDeletedArchives,
+    viewingDeleted: filters.viewingDeleted,
+    setViewingDeleted: filters.setViewingDeleted,
     listPage: filters.listPage,
     setListPage: filters.setListPage,
     search: filters.search,

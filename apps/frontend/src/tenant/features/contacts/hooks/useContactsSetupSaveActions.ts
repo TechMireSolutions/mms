@@ -15,6 +15,8 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
 import { notify } from "@/lib/notify";
+import { safeAudit } from "@/lib/safeAudit";
+import { runModuleFieldsSetupSave } from "@/lib/setup/runModuleFieldsSetupSave";
 import type { CountryCodeEntry } from "@/lib/contacts/countryCodeOptions";
 import { useContactsSetupFieldDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupFieldDeleteGuard";
 import { useContactsSetupTabDeleteGuard } from "@/tenant/features/contacts/hooks/useContactsSetupTabDeleteGuard";
@@ -116,10 +118,13 @@ export function useContactsSetupSaveActions({
           await updatePrefsAsync(contextPrefs);
           throw countryError;
         }
-        await logSetupAudit.mutateAsync({
-          area: "preferences",
-          summary: t("contacts.setup.auditSummary", { area: "preferences" }),
-        });
+        safeAudit(
+          logSetupAudit.mutateAsync({
+            area: "preferences",
+            summary: t("contacts.setup.auditSummary", { area: "preferences" }),
+          }),
+          "contacts.setup_audit",
+        );
         setPrefs(prepared.prefs);
         setCountryCodesDraft(prepared.countryCodes);
         notify.success(t("contacts.setup.preferencesSaved"));
@@ -144,32 +149,38 @@ export function useContactsSetupSaveActions({
           ? true
           : enabledSet.has(tab.key.toLowerCase()),
       }));
-      // Typed custom_tabs via REST — do not dual-write formTabs into contact_field_config.
-      await syncContactsCustomTabs(formTabs);
-      await saveSettingsAsync(
-        {},
-        {
-          version: CONFIG_VERSION,
-          pageTabs: config.pageTabs || [],
-          detailTabs: (config.detailTabs || []).filter((tab) => tab.key !== "network"),
-          settingsSubTabs: config.settingsSubTabs || [],
-          columnRegistry: syncContactColumnRegistryWithFields(
-            config.columnRegistry,
-            fieldsMap,
-            enabledTabIds,
-          ),
+      await runModuleFieldsSetupSave({
+        formTabs,
+        syncCustomTabs: syncContactsCustomTabs,
+        persistFieldConfig: async () => {
+          await saveSettingsAsync(
+            {},
+            {
+              version: CONFIG_VERSION,
+              pageTabs: config.pageTabs || [],
+              detailTabs: (config.detailTabs || []).filter((tab) => tab.key !== "network"),
+              settingsSubTabs: config.settingsSubTabs || [],
+              columnRegistry: syncContactColumnRegistryWithFields(
+                config.columnRegistry,
+                fieldsMap,
+                enabledTabIds,
+              ),
+            },
+            { markSaved: false },
+          );
         },
-        { markSaved: false },
-      );
-      await logSetupAudit.mutateAsync({
-        area: "fields",
-        summary: t("contacts.setup.auditSummary", { area: "fields" }),
+        auditPromise: logSetupAudit.mutateAsync({
+          area: "fields",
+          summary: t("contacts.setup.auditSummary", { area: "fields" }),
+        }),
+        auditChannel: "contacts.setup_audit",
+        t,
+        successKey: "contacts.setup.fieldsSaved",
+        failureKey: "contacts.saveFailed",
+        setSaved,
       });
-      notify.success(t("contacts.setup.fieldsSaved"));
-      setSaved(true);
     } catch {
-      setSaved(false);
-      notify.error(t("contacts.saveFailed"));
+      // runModuleFieldsSetupSave already toasts + setSaved(false)
     } finally {
       setIsSaving(false);
     }

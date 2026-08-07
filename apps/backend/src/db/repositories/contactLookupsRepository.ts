@@ -1,108 +1,39 @@
-import { and, asc, eq } from 'drizzle-orm';
 import type { ContactLookupKind } from '@mms/shared';
 import { contactLookups } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import {
+  createModuleLookupsRepo,
+  type ModuleLookupRowInput,
+} from './moduleSetupRepoFactories.js';
 
-export interface ContactLookupRowInput {
+
+type LookupDbRow = {
   id: string;
-  kind: ContactLookupKind;
+  workspaceSubdomain: string;
+  kind: string;
   label: string;
-  meta?: Record<string, unknown> | null;
+  meta: Record<string, unknown> | null;
   sortOrder: number;
+  updatedAt: Date;
+};
+
+export interface ContactLookupRowInput extends Omit<ModuleLookupRowInput, 'kind'> {
+  kind: ContactLookupKind;
 }
 
-export async function listContactLookupsByWorkspace(workspaceSubdomain: string) {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
-    return tx
-      .select()
-      .from(contactLookups)
-      .where(eq(contactLookups.workspaceSubdomain, subdomain))
-      .orderBy(asc(contactLookups.kind), asc(contactLookups.sortOrder));
-  });
-}
+const repo = createModuleLookupsRepo({ table: contactLookups });
 
-export async function listContactLookupsByKind(
+export const listContactLookupsByWorkspace = ((ws: string) => repo.listByWorkspace(ws)) as (ws: string) => Promise<LookupDbRow[]>;
+export const listContactLookupsByKind = (
   workspaceSubdomain: string,
   kind: ContactLookupKind,
-) {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
-    return tx
-      .select()
-      .from(contactLookups)
-      .where(
-        and(
-          eq(contactLookups.workspaceSubdomain, subdomain),
-          eq(contactLookups.kind, kind),
-        ),
-      )
-      .orderBy(asc(contactLookups.sortOrder));
-  });
-}
-
-/** Replace one kind's ordered rows inside a single tenant transaction. */
-export async function replaceContactLookupsForKind(
+): Promise<LookupDbRow[]> =>
+  repo.listByKind(workspaceSubdomain, kind) as Promise<LookupDbRow[]>;
+export const replaceContactLookupsForKind = (
   workspaceSubdomain: string,
   kind: ContactLookupKind,
   rows: ContactLookupRowInput[],
-): Promise<void> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const now = new Date();
-
-  await withTenantTransaction(subdomain, async (tx) => {
-    await tx
-      .delete(contactLookups)
-      .where(
-        and(
-          eq(contactLookups.workspaceSubdomain, subdomain),
-          eq(contactLookups.kind, kind),
-        ),
-      );
-
-    if (rows.length === 0) return;
-
-    await tx.insert(contactLookups).values(
-      rows.map((row) => ({
-        id: row.id,
-        workspaceSubdomain: subdomain,
-        kind: row.kind,
-        label: row.label,
-        meta: row.meta ?? null,
-        sortOrder: row.sortOrder,
-        updatedAt: now,
-      })),
-    );
-  });
-}
-
+) => repo.replaceForKind(workspaceSubdomain, kind, rows);
 /** Full-workspace list for admin backup snapshots. */
-export async function listAllContactLookupsByWorkspace(workspaceSubdomain: string) {
-  return listContactLookupsByWorkspace(workspaceSubdomain);
-}
-
+export const listAllContactLookupsByWorkspace = repo.listAllByWorkspace;
 /** Admin restore wipe+replace for the whole workspace. */
-export async function replaceContactLookupsForWorkspace(
-  workspaceSubdomain: string,
-  records: Array<Record<string, unknown>>,
-): Promise<void> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const now = new Date();
-
-  await withTenantTransaction(subdomain, async (tx) => {
-    await tx.delete(contactLookups).where(eq(contactLookups.workspaceSubdomain, subdomain));
-    if (records.length === 0) return;
-
-    await tx.insert(contactLookups).values(
-      records.map((record, index) => ({
-        id: String(record.id ?? `${subdomain}:lookup:${index}`),
-        workspaceSubdomain: subdomain,
-        kind: String(record.kind ?? ''),
-        label: String(record.label ?? ''),
-        meta: (record.meta as Record<string, unknown> | null | undefined) ?? null,
-        sortOrder: typeof record.sortOrder === 'number' ? record.sortOrder : index,
-        updatedAt: now,
-      })),
-    );
-  });
-}
+export const replaceContactLookupsForWorkspace = repo.replaceForWorkspace;

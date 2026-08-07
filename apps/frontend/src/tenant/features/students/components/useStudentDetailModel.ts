@@ -17,14 +17,12 @@ import {
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useContactsByIds, useContactById } from '@/tenant/hooks/collections/contacts';
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
-import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 
 export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
-  const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
   const sessions = useSessionsCollection();
   const { data: primaryContact } = useContactById(
     student.contactId != null ? String(student.contactId) : undefined,
@@ -167,10 +165,6 @@ export function useStudentDetailModel(student: Student) {
   return {
     t,
     statusBadgeConfig,
-    messagingTarget,
-    openComposer,
-    closeComposer,
-    canWriteMessaging,
     sortedEnabledFields,
     studentContact,
     relationshipLinks: hydratedLinks,

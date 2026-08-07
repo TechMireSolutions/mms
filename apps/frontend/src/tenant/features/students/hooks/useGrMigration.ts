@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiJson } from '@/lib/apiClient';
 import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
-import { STUDENTS_API } from '@/tenant/features/students/hooks/studentsQueryShared';
+import { STUDENTS_API } from '@/tenant/features/students/hooks/studentsQueryKeys';
 
 const STUDENTS_GR_MIGRATION_KEY = 'mms_students_gr_migration_v1';
 

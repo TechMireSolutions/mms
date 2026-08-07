@@ -20,7 +20,7 @@ export type StudentListMessagingRecipient = ReturnType<typeof toMessagingRecipie
 
 interface StudentListSelectionProps {
   selectedIds: string[];
-  showDeleted: boolean;
+  viewingDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
   canWriteMessaging?: boolean;
@@ -67,7 +67,4 @@ export interface StudentListTableProps extends StudentListSelectionProps {
 export interface StudentListContentProps extends StudentListTableProps {
   students: Student[];
   viewMode: WorkDirectoryViewMode;
-  hasActiveFilters?: boolean;
-  onClearFilters?: () => void;
-  onShowActive?: () => void;
 }

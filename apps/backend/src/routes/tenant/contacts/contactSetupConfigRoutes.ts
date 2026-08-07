@@ -4,12 +4,9 @@ import {
   contactFieldConfigPutBodySchema,
   contactPreferencesPutBodySchema,
   normalizeContactPreferences,
-  roleHasPermission,
   type FieldConfig,
-  type User,
 } from '@mms/shared';
-import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
-import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
+import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadContacts } from '../../../services/rbacService.js';
 import {
   loadContactFieldConfig,
@@ -21,63 +18,29 @@ import {
 } from '../../../services/contactPreferencesService.js';
 import { auditContact } from './contactRouteHelpers.js';
 
-function canWriteSetup(user: User): boolean {
-  return roleHasPermission(user.role, CONTACTS_MODULE_MANIFEST.permissions.setupWrite);
-}
-
 /** Contacts Setup field-config + preferences (typed FORCE-RLS tables). */
 export const contactSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/field-config', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    try {
-      const config = await loadContactFieldConfig();
-      return reply.send({ config });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to load contact field config', error);
-    }
-  });
-
-  fastify.put('/field-config', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteSetup(user)) return sendForbidden(reply);
-    const body = parseRequest(contactFieldConfigPutBodySchema, request.body);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const saved = await saveContactFieldConfig(body.data as unknown as FieldConfig);
-      await auditContact(user, 'contact.field-config', 'Updated contact field configuration', 'field-config');
-      return reply.send({ success: true, config: saved });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to save contact field config', error);
-    }
-  });
-
-  fastify.get('/preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
-    try {
-      const preferences = await loadContactPreferences();
-      return reply.send({
-        preferences: preferences ?? normalizeContactPreferences(null),
-      });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to load contact preferences', error);
-    }
-  });
-
-  fastify.put('/preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteSetup(user)) return sendForbidden(reply);
-    const body = parseRequest(contactPreferencesPutBodySchema, request.body);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const saved = await saveContactPreferences(
-        normalizeContactPreferences(body.data),
-      );
-      await auditContact(user, 'contact.preferences', 'Updated contact preferences', 'preferences');
-      return reply.send({ success: true, preferences: saved });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to save contact preferences', error);
-    }
+  registerModuleSetupConfigRoutes(fastify, {
+    canRead: canReadContacts,
+    setupWritePermission: CONTACTS_MODULE_MANIFEST.permissions.setupWrite,
+    fieldConfigSchema: contactFieldConfigPutBodySchema,
+    preferencesSchema: contactPreferencesPutBodySchema,
+    loadFieldConfig: loadContactFieldConfig,
+    saveFieldConfig: (body) => saveContactFieldConfig(body as unknown as FieldConfig),
+    loadPreferences: loadContactPreferences,
+    normalizePreferences: (partial) =>
+      normalizeContactPreferences(partial as never),
+    savePreferences: (normalized) =>
+      saveContactPreferences(normalized as never),
+    audit: (user, action, summary, entityId) =>
+      auditContact(user, action, summary, entityId),
+    fieldConfigAuditAction: 'contact.field-config',
+    fieldConfigAuditSummary: 'Updated contact field configuration',
+    preferencesAuditAction: 'contact.preferences',
+    preferencesAuditSummary: 'Updated contact preferences',
+    loadFieldConfigError: 'Failed to load contact field config',
+    saveFieldConfigError: 'Failed to save contact field config',
+    loadPreferencesError: 'Failed to load contact preferences',
+    savePreferencesError: 'Failed to save contact preferences',
   });
 };
