@@ -15,7 +15,7 @@
     "db:reset": "tsx src/scripts/resetDb.ts",
     "db:migrate": "tsx src/scripts/migrateDb.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --quiet",
+    "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint src --quiet",
     "test": "vitest run"
   },
   "dependencies": {
