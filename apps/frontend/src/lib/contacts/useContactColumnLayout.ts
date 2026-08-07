@@ -7,32 +7,46 @@ import {
   DEFAULT_COLUMN_REGISTRY,
   COLUMN_FIELD_MAPPING,
   canViewContactColumn,
-  applyModuleColumnOverlay,
-  type ContactColumnPreference,
+  CONTACTS_MODULE_MANIFEST,
+  migrateContactColumnPreferenceKeys,
+  type ModuleColumnRegistryEntry,
 } from "@mms/shared";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import { useModuleColumnLayout } from "@/hooks/useModuleColumnLayout";
+import {
+  useContactColumnPrefs,
+  useContactColumnPrefsMutation,
+} from "@/tenant/hooks/collections/contacts";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
-export function useContactColumnRegistry({
+/**
+ * Contacts Work column layout: tenant registry (Setup sync + RBAC) + shared
+ * {@link useModuleColumnLayout} overlay/persist path.
+ */
+export function useContactColumnLayout({
   fieldConfig,
   fields,
   enabledTabIds,
   isTabFieldEnabled,
-  rawUserColumnOverlay,
   viewerRole,
-  updateUserColumnLayout,
 }: {
   fieldConfig: FieldConfig;
   fields: Record<string, FieldDefinition[]>;
   enabledTabIds: Set<string>;
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
-  rawUserColumnOverlay: ContactColumnPreference[] | null;
   viewerRole: string;
-  updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
 }) {
   const settings = useGlobalSettings();
+  const { user } = useAuth();
+  const userId = user?.id ? String(user.id) : "";
 
-  const tenantColumnRegistry = useMemo(() => {
+  const { data: serverColumnPrefs, isSuccess: columnPrefsLoaded } = useContactColumnPrefs({
+    enabled: Boolean(userId),
+  });
+  const { mutate: saveColumnPrefs } = useContactColumnPrefsMutation();
+
+  const tenantRegistry = useMemo((): ColumnRegistryEntry[] => {
     const baseRegistryMap = new Map<string, ColumnRegistryEntry>();
     DEFAULT_COLUMN_REGISTRY.forEach((defaultCol) => {
       const stored = (fieldConfig.columnRegistry || []).find((c) => c.key === defaultCol.key);
@@ -74,30 +88,34 @@ export function useContactColumnRegistry({
     });
 
     const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
-    return filteredRegistry.filter((column) => canViewContactColumn(viewerRole, column.key, columnCtx));
+    return filteredRegistry.filter((column) =>
+      canViewContactColumn(viewerRole, column.key, columnCtx),
+    );
   }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, viewerRole]);
 
-  const columnRegistry = useMemo(
-    () => applyModuleColumnOverlay(tenantColumnRegistry, rawUserColumnOverlay) as ColumnRegistryEntry[],
-    [tenantColumnRegistry, rawUserColumnOverlay],
-  );
+  const {
+    columnRegistry: layoutRegistry,
+    getColumnWidth,
+    setColumnWidth,
+    updateUserColumnLayout: updateLayout,
+    isColumnVisible,
+  } = useModuleColumnLayout({
+    moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
+    tenantRegistry: tenantRegistry as ModuleColumnRegistryEntry[],
+    serverColumnPrefs: serverColumnPrefs ?? null,
+    columnPrefsLoaded,
+    saveColumnPrefs,
+    normalizePreferences: migrateContactColumnPreferenceKeys,
+    translationPrefix: "contacts.columns",
+  });
 
-  const getColumnWidth = useCallback(
-    (key: string) => {
-      const column = columnRegistry.find((entry) => entry.key === key);
-      return typeof column?.width === "number" ? column.width : undefined;
-    },
-    [columnRegistry],
-  );
+  const columnRegistry = layoutRegistry as ColumnRegistryEntry[];
 
-  const setColumnWidth = useCallback(
-    (key: string, width: number) => {
-      const nextRegistry = columnRegistry.map((column) =>
-        column.key === key ? { ...column, width } : column,
-      );
-      updateUserColumnLayout(nextRegistry);
+  const updateUserColumnLayout = useCallback(
+    (nextRegistry: ColumnRegistryEntry[]) => {
+      updateLayout(nextRegistry as ModuleColumnRegistryEntry[]);
     },
-    [columnRegistry, updateUserColumnLayout],
+    [updateLayout],
   );
 
   const availableColumns = useMemo(() => {
@@ -125,10 +143,13 @@ export function useContactColumnRegistry({
       }));
   }, [columnRegistry, settings.language]);
 
-  const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(() => [
-    { field: "createdAt", label: translateApp("contacts.table.dateAdded", settings.language) },
-    { field: "updatedAt", label: translateApp("contacts.table.lastUpdated", settings.language) },
-  ], [settings.language]);
+  const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(
+    () => [
+      { field: "createdAt", label: translateApp("contacts.table.dateAdded", settings.language) },
+      { field: "updatedAt", label: translateApp("contacts.table.lastUpdated", settings.language) },
+    ],
+    [settings.language],
+  );
 
   return {
     columnRegistry,
@@ -136,6 +157,8 @@ export function useContactColumnRegistry({
     visibleColumns,
     getColumnWidth,
     setColumnWidth,
+    updateUserColumnLayout,
+    isColumnVisible,
     systemSortOptions,
   };
 }

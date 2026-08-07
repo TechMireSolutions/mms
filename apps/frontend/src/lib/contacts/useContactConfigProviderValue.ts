@@ -49,6 +49,7 @@ export function useContactConfigProviderValue({
   updateCountryCodes,
   updateColumnRegistry,
   updateUserColumnLayout,
+  isColumnVisible,
   getColumnWidth,
   setColumnWidth,
   systemSortOptions,
@@ -84,6 +85,7 @@ export function useContactConfigProviderValue({
   updateCountryCodes: (countryCodeOptions: Array<{ country: string; code: string }>) => void;
   updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
   updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
+  isColumnVisible: (key: string) => boolean;
   getColumnWidth: (key: string) => number | undefined;
   setColumnWidth: (key: string, width: number) => void;
   systemSortOptions: Array<{ field: string; label: string }>;
@@ -136,6 +138,7 @@ export function useContactConfigProviderValue({
       updateCountryCodes,
       updateColumnRegistry,
       updateUserColumnLayout,
+      isColumnVisible,
       getColumnWidth,
       setColumnWidth,
       systemSortOptions,
@@ -174,6 +177,7 @@ export function useContactConfigProviderValue({
       updateCountryCodes,
       updateColumnRegistry,
       updateUserColumnLayout,
+      isColumnVisible,
       getColumnWidth,
       setColumnWidth,
       systemSortOptions,

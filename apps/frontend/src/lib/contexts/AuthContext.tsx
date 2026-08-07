@@ -12,6 +12,7 @@ import {
   buildConnectionAuthError,
   clearPersistedAuthUser,
   clearUserScopedCachesOnLogout,
+  getPersistedAuthUser,
   persistAuthUser,
   type AuthContextType,
   type LoginApiResponse,
@@ -25,8 +26,9 @@ export type { AuthContextType, OnboardResult, OnboardPayload } from '@/lib/conte
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const initialUser = typeof window !== 'undefined' ? getPersistedAuthUser() : null;
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(Boolean(initialUser));
   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState<boolean>(false);
   const [authError, setAuthError] = useState<AuthError | null>(null);
@@ -57,6 +59,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkUserAuth = useCallback(async (): Promise<void> => {
     if (isCurrentHostApex()) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      setIsLoadingAuth(false);
+      return;
+    }
+
+    const persistedUser = getPersistedAuthUser();
+    if (!persistedUser) {
       setUser(null);
       setIsAuthenticated(false);
       setAuthChecked(true);

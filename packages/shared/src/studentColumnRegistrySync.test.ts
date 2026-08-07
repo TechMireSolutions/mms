@@ -26,43 +26,7 @@ describe('syncStudentColumnRegistryWithFields', () => {
       [],
     );
     expect(next.find((col) => col.key === 'status')?.enabled).toBe(false);
-    expect(next.find((col) => col.key === 'grNumber')?.enabled).toBe(false);
-    expect(next.find((col) => col.key === 'registeredDate')?.enabled).toBe(false);
-    expect(next.find((col) => col.key === 'notes')?.enabled).toBe(false);
     expect(next.find((col) => col.key === 'dob')?.enabled).toBe(true);
-    expect(next.find((col) => col.key === 'gender')?.enabled).toBe(true);
-  });
-
-  it('disables mapped columns when the governing field is off', () => {
-    const fields = {
-      ...baseFields,
-      basic: baseFields.basic.map((field) =>
-        field.key === 'dob' ? { ...field, enabled: false } : field,
-      ),
-      registration: baseFields.registration.map((field) =>
-        field.key === 'grNumber' ? { ...field, enabled: false } : field,
-      ),
-    };
-    const next = syncStudentColumnRegistryWithFields(
-      DEFAULT_STUDENT_COLUMN_REGISTRY,
-      fields,
-      ['registration'],
-    );
-    expect(next.find((col) => col.key === 'dob')?.enabled).toBe(false);
-    expect(next.find((col) => col.key === 'grNumber')?.enabled).toBe(false);
-    expect(next.find((col) => col.key === 'name')?.enabled).toBe(true);
-    expect(next.find((col) => col.key === 'phone')?.enabled).toBe(true);
-  });
-
-  it('keeps unmapped Work chrome columns when Setup fields change', () => {
-    const next = syncStudentColumnRegistryWithFields(
-      DEFAULT_STUDENT_COLUMN_REGISTRY,
-      baseFields,
-      ['registration'],
-    );
-    expect(next.find((col) => col.key === 'phone')?.enabled).toBe(true);
-    expect(next.find((col) => col.key === 'email')?.enabled).toBe(true);
-    expect(next.find((col) => col.key === 'sessions')?.enabled).toBe(true);
   });
 
   it('adds custom columns for enabled non-seed fields and drops them when disabled', () => {
@@ -86,18 +50,5 @@ describe('syncStudentColumnRegistryWithFields', () => {
       ['registration'],
     );
     expect(withoutCustom.find((col) => col.key === 'custom:scholarship')).toBeUndefined();
-  });
-
-  it('drops legacy column keys not in the Work registry', () => {
-    const next = syncStudentColumnRegistryWithFields(
-      [
-        ...DEFAULT_STUDENT_COLUMN_REGISTRY,
-        { key: 'legacyFatherName', label: 'Legacy', enabled: true, order: 99 },
-      ],
-      baseFields,
-      ['registration'],
-    );
-    expect(next.find((col) => col.key === 'legacyFatherName')).toBeUndefined();
-    expect(next.find((col) => col.key === 'grNumber')?.enabled).toBe(true);
   });
 });

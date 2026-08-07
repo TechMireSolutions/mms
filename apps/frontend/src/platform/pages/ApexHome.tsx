@@ -1,14 +1,13 @@
-import React, { Suspense, lazy } from "react";
+import React from "react";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { usePlatformSetupStatus } from "@/platform/hooks/usePlatformSetupStatus";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { AuthPageFrame } from "@/components/entry/AuthPageShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ErrorState } from "@/components/ui/ErrorState";
-
-const PlatformSignIn = lazy(() => import("@/platform/pages/auth/PlatformSignIn"));
-const PlatformSetup = lazy(() => import("@/platform/pages/auth/PlatformSetup"));
-const PlatformConsole = lazy(() => import("@/platform/pages/PlatformConsole"));
+import PlatformSignIn from "@/platform/pages/auth/PlatformSignIn";
+import PlatformSetup from "@/platform/pages/auth/PlatformSetup";
+import PlatformConsole from "@/platform/pages/PlatformConsole";
 
 /**
  * Apex home decision tree:
@@ -28,11 +27,7 @@ export default function ApexHome(): React.JSX.Element {
 
   // Prefer session over stale needsSetup after OTP verify (invalidate is async).
   if (isPlatformAuthenticated) {
-    return (
-      <Suspense fallback={<RouteStatusFallback fullScreen />}>
-        <PlatformConsole />
-      </Suspense>
-    );
+    return <PlatformConsole />;
   }
 
   if (isLoadingSetup) {
@@ -54,16 +49,8 @@ export default function ApexHome(): React.JSX.Element {
   }
 
   if (setupStatus?.needsSetup) {
-    return (
-      <Suspense fallback={<RouteStatusFallback fullScreen />}>
-        <PlatformSetup smtpConfigured={setupStatus.smtpConfigured} />
-      </Suspense>
-    );
+    return <PlatformSetup smtpConfigured={setupStatus.smtpConfigured} />;
   }
 
-  return (
-    <Suspense fallback={<RouteStatusFallback fullScreen />}>
-      <PlatformSignIn />
-    </Suspense>
-  );
+  return <PlatformSignIn />;
 }

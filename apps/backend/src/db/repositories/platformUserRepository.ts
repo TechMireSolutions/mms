@@ -83,6 +83,7 @@ export async function updatePlatformUserRow(
   patch: Partial<
     Pick<
       StoredPlatformUser,
+      | 'email'
       | 'name'
       | 'passwordHash'
       | 'emailVerifiedAt'
@@ -100,6 +101,7 @@ export async function updatePlatformUserRow(
   const next: StoredPlatformUser = {
     ...existing,
     ...processedPatch,
+    email: processedPatch.email ? processedPatch.email.toLowerCase() : existing.email,
     permissions:
       processedPatch.permissions !== undefined
         ? normalizePlatformAdminPermissions(processedPatch.permissions)
@@ -116,6 +118,7 @@ export async function updatePlatformUserRow(
   await getDb()
     .update(platformUsers)
     .set({
+      email: next.email,
       name: next.name,
       passwordHash: next.passwordHash,
       role: next.role,

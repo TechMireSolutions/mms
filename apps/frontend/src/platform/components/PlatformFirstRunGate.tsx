@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformSetupStatus } from '@/platform/hooks/usePlatformSetupStatus';
 import { ROUTES } from '@/lib/config/routes';
@@ -13,6 +13,7 @@ import { useTranslation } from '@/hooks/useTranslation';
  */
 export function PlatformFirstRunGate(): React.JSX.Element {
   const { t } = useTranslation();
+  const location = useLocation();
   const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
   const { setupStatus, isLoadingSetup, isError, refetch } = usePlatformSetupStatus();
 
@@ -32,7 +33,7 @@ export function PlatformFirstRunGate(): React.JSX.Element {
     );
   }
 
-  if (!isPlatformAuthenticated && setupStatus?.needsSetup) {
+  if (!isPlatformAuthenticated && setupStatus?.needsSetup && location.pathname !== ROUTES.home) {
     return <Navigate to={ROUTES.home} replace />;
   }
 

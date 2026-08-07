@@ -174,6 +174,15 @@ export const STUDENT_CARD_FACE_COLUMN_IDS = new Set([
   "email",
 ]);
 
+/** Face chrome on Contacts Work cards — excluded from the metadata tile grid. */
+export const CONTACT_CARD_FACE_COLUMN_IDS = new Set([
+  "name",
+  "phone",
+  "email",
+  "gender",
+  "isSyed",
+]);
+
 // ─── Default Teachers Field Setup Constants ────────────────────────────────────
 
 export const TEACHERS_TAB_REGISTRY: TabDefinition[] = [

@@ -75,7 +75,7 @@ Return a flat object the shell destructures; keep public page/component export p
 |------------------|-----|
 | `useWorkDirectoryViewMode` + `WorkViewModeToggle` | Single resolved `viewMode` (`table` \| `cards`) — `mms-module-architecture.md` §3 |
 | `useModuleColumnLayout` | Column visibility **and** width — merge rules **`mms-module-architecture.md` §3** |
-| Contacts column prefs | `useContactConfigColumnPrefs` / `useContactColumnRegistry` via `ContactConfigContext` |
+| Contacts column prefs | `useContactColumnLayout` via `ContactConfigContext` |
 | Command / dashboard metrics | `use*Metrics` from `@/tenant/hooks/collections/*` — ban client-reduce of full lists for KPI values |
 
 ## New hooks checklist

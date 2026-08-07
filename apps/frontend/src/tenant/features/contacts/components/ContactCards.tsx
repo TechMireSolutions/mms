@@ -1,5 +1,9 @@
 import { useMemo, type JSX } from "react";
-import { type Contact } from "@mms/shared";
+import {
+  CONTACT_CARD_FACE_COLUMN_IDS,
+  getVisibleWorkColumns,
+  type Contact,
+} from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -7,15 +11,6 @@ import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
-
-/** Columns shown in the card header/pills — excluded from the metadata grid. */
-const CONTACT_CARD_FACE_COLUMN_IDS = new Set([
-  "name",
-  "phone",
-  "email",
-  "gender",
-  "isSyed",
-]);
 
 interface ContactCardsProps {
   contacts: Contact[];
@@ -60,18 +55,40 @@ export default function ContactCards({
   someSelected = false,
 }: ContactCardsProps): JSX.Element {
   const { t } = useTranslation();
-  const { prefs, countryCodesMap, countryCodes } = useContactConfig();
-
-  const isColumnVisible = (id: string): boolean =>
-    columns.length === 0 || columns.some((col) => col.id === id);
+  const {
+    prefs,
+    countryCodesMap,
+    countryCodes,
+    columnRegistry,
+    isColumnVisible: isRegistryColumnVisible,
+  } = useContactConfig();
 
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
 
-  const otherColumns = useMemo(
-    () => columns.filter((col) => !CONTACT_CARD_FACE_COLUMN_IDS.has(col.id)),
-    [columns],
-  );
+  const isColumnVisible = useMemo(() => {
+    if (columns.length > 0) {
+      const visibleIds = new Set(columns.map((col) => col.id));
+      return (id: string) => visibleIds.has(id);
+    }
+    return isRegistryColumnVisible;
+  }, [columns, isRegistryColumnVisible]);
+
+  const otherColumns = useMemo(() => {
+    const metaColumns = getVisibleWorkColumns(columnRegistry, isColumnVisible, {
+      excludeFace: CONTACT_CARD_FACE_COLUMN_IDS,
+    });
+    if (columns.length > 0) {
+      const metaKeys = new Set(metaColumns.map((col) => col.key));
+      return columns.filter((col) => metaKeys.has(col.id));
+    }
+    return metaColumns.map(
+      (col): ContactsColumnConfig => ({
+        id: col.key,
+        label: col.label,
+      }),
+    );
+  }, [columnRegistry, columns, isColumnVisible]);
 
   const pageCountLabel = `${contacts.length} ${
     contacts.length === 1 ? t("contacts.form.contact") : t("contacts.table.contacts")

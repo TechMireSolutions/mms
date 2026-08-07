@@ -42,7 +42,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { isApex } = useTenant();
   const [platformUser, setPlatformUser] = useState<PlatformUserProfile | null>(null);
   const [isPlatformAuthenticated, setIsPlatformAuthenticated] = useState(false);
-  const [isCheckingPlatformAuth, setIsCheckingPlatformAuth] = useState(false);
+  const [isCheckingPlatformAuth, setIsCheckingPlatformAuth] = useState(isApex);
   const [isPlatformLoginSubmitting, setIsPlatformLoginSubmitting] = useState(false);
   const [platformAuthChecked, setPlatformAuthChecked] = useState(false);
 
@@ -51,12 +51,12 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
       setPlatformAuthChecked(true);
+      setIsCheckingPlatformAuth(false);
       return;
     }
 
     // Always probe cookie session on apex so new tabs, deep links, and
     // post-setup / password-reset flows restore auth without a sessionStorage gate.
-    setIsCheckingPlatformAuth(true);
     try {
       const platformSession = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me');
       setPlatformUser(normalizeSessionUser(platformSession.user));
@@ -130,13 +130,15 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     ],
   );
 
+  const handleTimeoutLogout = useCallback(() => {
+    void platformLogout();
+  }, [platformLogout]);
+
   return (
     <PlatformAuthContext.Provider value={value}>
       <PlatformSessionTimeoutWatcher
         enabled={isApex && isPlatformAuthenticated}
-        onTimeout={() => {
-          void platformLogout();
-        }}
+        onTimeout={handleTimeoutLogout}
       />
       {children}
     </PlatformAuthContext.Provider>

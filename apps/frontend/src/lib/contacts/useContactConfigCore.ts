@@ -28,7 +28,6 @@ import {
   setPreferencesMemory,
 } from "@/lib/contacts/preferencesStorage";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { useContactConfigColumnPrefs } from "@/lib/contacts/useContactConfigColumnPrefs";
 import { useContactConfigTabFields } from "@/lib/contacts/useContactConfigTabFields";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -63,7 +62,6 @@ export function useContactConfigCore({
   const [prefs, setPrefsState] = useState<ContactPreferences>(() => loadPreferences());
   /** False until first authenticated tabs hydrate settles (avoids DEFAULT flash for customs). */
   const [formTabsReady, setFormTabsReady] = useState(false);
-  const { rawUserColumnOverlay, updateUserColumnLayout } = useContactConfigColumnPrefs(userId);
 
   const rememberFormTabs = useCallback((tabs: TabDefinition[] | undefined) => {
     if (tabs && tabs.length > 0) {
@@ -86,14 +84,23 @@ export function useContactConfigCore({
     setPrefsState(preferencesQuery.data);
   }, [preferencesQuery.data]);
 
+  const fieldConfigQueryDataRef = useRef(fieldConfigQuery.data);
+  fieldConfigQueryDataRef.current = fieldConfigQuery.data;
+
+  const preferencesQueryDataRef = useRef(preferencesQuery.data);
+  preferencesQueryDataRef.current = preferencesQuery.data;
+
+  const reloadCollectionsRef = useRef(reloadCollections);
+  reloadCollectionsRef.current = reloadCollections;
+
   const reloadContactConfigFromDatabaseCache = useCallback(() => {
     tabsAbortRef.current?.abort();
     const controller = new AbortController();
     tabsAbortRef.current = controller;
 
-    const documentConfig = fieldConfigQuery.data ?? loadFieldConfig();
-    if (preferencesQuery.data) {
-      setPrefsState(preferencesQuery.data);
+    const documentConfig = fieldConfigQueryDataRef.current ?? loadFieldConfig();
+    if (preferencesQueryDataRef.current) {
+      setPrefsState(preferencesQueryDataRef.current);
     } else {
       setPrefsState(loadPreferences());
     }
@@ -107,7 +114,7 @@ export function useContactConfigCore({
       return;
     }
 
-    reloadCollections();
+    reloadCollectionsRef.current();
 
     if (!hasHydratedTabsOnceRef.current) {
       setFormTabsReady(false);
@@ -147,14 +154,7 @@ export function useContactConfigCore({
         notify.warning(t("contacts.setup.formTabsLoadFailed"));
       }
     })();
-  }, [
-    fieldConfigQuery.data,
-    isAuthenticated,
-    preferencesQuery.data,
-    reloadCollections,
-    rememberFormTabs,
-    t,
-  ]);
+  }, [isAuthenticated, rememberFormTabs, t]);
 
   useEffect(() => {
     reloadContactConfigFromDatabaseCache();
@@ -206,13 +206,11 @@ export function useContactConfigCore({
     setFieldConfigState: setFieldConfigState as Dispatch<SetStateAction<FieldConfig>>,
     formTabsReady,
     prefs,
-    rawUserColumnOverlay,
     updateConfig,
     updateConfigAsync,
     updatePrefs,
     updatePrefsAsync,
     updateColumnRegistry,
-    updateUserColumnLayout,
     ...tabFields,
   };
 }

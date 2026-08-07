@@ -1,4 +1,5 @@
 import {
+  getVisibleWorkColumns,
   STUDENT_CARD_FACE_COLUMN_IDS,
   type ModuleColumnRegistryEntry,
 } from "@mms/shared";
@@ -20,13 +21,9 @@ export function getStudentVisibleWorkColumns(
   isColumnVisible: (key: string) => boolean,
   options?: { excludeFace?: boolean },
 ): ModuleColumnRegistryEntry[] {
-  return [...columnRegistry]
-    .filter((col) => {
-      if (!isColumnVisible(col.key)) return false;
-      if (options?.excludeFace && STUDENT_CARD_FACE_COLUMN_IDS.has(col.key)) return false;
-      return true;
-    })
-    .sort((a, b) => a.order - b.order);
+  return getVisibleWorkColumns(columnRegistry, isColumnVisible, {
+    excludeFace: options?.excludeFace ? STUDENT_CARD_FACE_COLUMN_IDS : undefined,
+  });
 }
 
 export function toStudentListSortField(columnKey: string): StudentListSortField | null {

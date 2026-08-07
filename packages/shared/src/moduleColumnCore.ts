@@ -185,6 +185,24 @@ export function isModuleColumnVisible(
   return column?.enabled ?? false;
 }
 
+/**
+ * Visible Work columns in registry order.
+ * Pass `excludeFace` to omit card face chrome columns from metadata grids.
+ */
+export function getVisibleWorkColumns(
+  registry: ModuleColumnRegistryEntry[],
+  isColumnVisible: (key: string) => boolean,
+  options?: { excludeFace?: ReadonlySet<string> },
+): ModuleColumnRegistryEntry[] {
+  return [...registry]
+    .filter((col) => {
+      if (!isColumnVisible(col.key)) return false;
+      if (options?.excludeFace?.has(col.key)) return false;
+      return true;
+    })
+    .sort((a, b) => a.order - b.order);
+}
+
 export interface TeacherWorkColumnLabels {
   name: string;
   specialization: string;

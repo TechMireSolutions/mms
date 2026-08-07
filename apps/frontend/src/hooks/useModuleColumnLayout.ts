@@ -31,6 +31,8 @@ export interface UseModuleColumnLayoutOptions {
   serverColumnPrefs?: ModuleColumnPref[] | null;
   columnPrefsLoaded?: boolean;
   saveColumnPrefs?: (prefs: ModuleColumnPref[]) => void;
+  /** Optional normalize (e.g. Contacts emergency key migration) applied on load. */
+  normalizePreferences?: (prefs: ModuleColumnPref[]) => ModuleColumnPref[];
   translationPrefix: string;
 }
 
@@ -44,6 +46,28 @@ function toStoredPreferences(registry: ModuleColumnRegistryEntry[]): ModuleColum
   });
 }
 
+function arePreferencesEqual(
+  a: ModuleColumnPref[] | null | undefined,
+  b: ModuleColumnPref[] | null | undefined,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const pa = a[i];
+    const pb = b[i];
+    if (
+      pa.key !== pb.key ||
+      pa.enabled !== pb.enabled ||
+      pa.order !== pb.order ||
+      pa.width !== pb.width
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function useModuleColumnLayout({
   moduleId,
   tenantRegistry,
@@ -51,6 +75,7 @@ export function useModuleColumnLayout({
   serverColumnPrefs,
   columnPrefsLoaded = false,
   saveColumnPrefs,
+  normalizePreferences,
   translationPrefix,
 }: UseModuleColumnLayoutOptions) {
   const { user, isAuthenticated } = useAuth();
@@ -61,13 +86,20 @@ export function useModuleColumnLayout({
   const [userOverlay, setUserOverlay] = useState<ModuleColumnPref[] | null>(null);
   const saveServerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const normalizePreferencesRef = useRef(normalizePreferences);
+  useEffect(() => {
+    normalizePreferencesRef.current = normalizePreferences;
+  }, [normalizePreferences]);
+
   const queryKey = useMemo(() => [moduleId, 'column-preferences'] as const, [moduleId]);
 
   const { data: queryPrefs, isSuccess: queryLoaded } = useQuery({
     queryKey,
     queryFn: async () => {
       const response = await apiJson<ModuleColumnPreferencesResponse>(`${apiPath}/column-preferences`);
-      return readModuleColumnPreferences(response);
+      const prefs = readModuleColumnPreferences(response);
+      const normFn = normalizePreferencesRef.current;
+      return normFn ? normFn(prefs) : prefs;
     },
     enabled: isAuthenticated && !!apiPath,
     staleTime: 60_000,
@@ -80,24 +112,41 @@ export function useModuleColumnLayout({
         body: writeModuleColumnPreferences(preferences),
       }),
     onSuccess: (response) => {
-      queryClient.setQueryData(queryKey, readModuleColumnPreferences(response));
+      const prefs = readModuleColumnPreferences(response);
+      const normFn = normalizePreferencesRef.current;
+      queryClient.setQueryData(
+        queryKey,
+        normFn ? normFn(prefs) : prefs,
+      );
     },
   });
 
-  const activeServerPrefs = apiPath ? queryPrefs : serverColumnPrefs;
+  const activeServerPrefs = useMemo(() => {
+    const prefs = apiPath ? queryPrefs : serverColumnPrefs;
+    if (!prefs?.length) return prefs ?? null;
+    const normFn = normalizePreferencesRef.current;
+    return normFn ? normFn(prefs) : prefs;
+  }, [apiPath, queryPrefs, serverColumnPrefs]);
+
   const activePrefsLoaded = apiPath ? queryLoaded : columnPrefsLoaded;
   const persistToServer = apiPath ? mutatePrefs : saveColumnPrefs;
 
+  const persistToServerRef = useRef(persistToServer);
+  useEffect(() => {
+    persistToServerRef.current = persistToServer;
+  }, [persistToServer]);
+
   const queueServerSave = useCallback(
     (preferences: ModuleColumnPref[]) => {
-      if (!persistToServer) return;
+      const fn = persistToServerRef.current;
+      if (!fn) return;
       if (saveServerTimerRef.current) clearTimeout(saveServerTimerRef.current);
       saveServerTimerRef.current = setTimeout(() => {
-        persistToServer(preferences);
+        fn(preferences);
         saveServerTimerRef.current = null;
       }, 300);
     },
-    [persistToServer],
+    [],
   );
 
   useEffect(() => {
@@ -108,31 +157,44 @@ export function useModuleColumnLayout({
 
   useEffect(() => {
     if (!userId) {
-      setUserOverlay(null);
+      setUserOverlay((prev) => (prev === null ? prev : null));
       migratedLocalColumnPrefs.current = false;
       return;
     }
 
-    const local = loadModuleColumnPreferences(moduleId, userId);
+    const rawLocal = loadModuleColumnPreferences(moduleId, userId);
+    const normFn = normalizePreferencesRef.current;
+    const local = rawLocal && normFn
+      ? normFn(rawLocal)
+      : rawLocal;
 
     if (!activePrefsLoaded) {
-      setUserOverlay(local);
+      if (local) {
+        setUserOverlay((prev) => (arePreferencesEqual(prev, local) ? prev : local));
+      }
       return;
     }
 
     if (activeServerPrefs && activeServerPrefs.length > 0) {
       const merged = mergeModuleColumnPreferences(activeServerPrefs, local) ?? activeServerPrefs;
-      setUserOverlay(merged);
+      setUserOverlay((prev) => (arePreferencesEqual(prev, merged) ? prev : merged));
       saveModuleColumnPreferenceList(moduleId, userId, merged);
       return;
     }
 
-    setUserOverlay(local);
+    if (local) {
+      setUserOverlay((prev) => (arePreferencesEqual(prev, local) ? prev : local));
+    }
     if (local?.length && !migratedLocalColumnPrefs.current) {
       migratedLocalColumnPrefs.current = true;
-      persistToServer?.(local);
+      persistToServerRef.current?.(local);
     }
-  }, [userId, activePrefsLoaded, activeServerPrefs, persistToServer, moduleId]);
+  }, [
+    userId,
+    activePrefsLoaded,
+    activeServerPrefs,
+    moduleId,
+  ]);
 
   const columnRegistry = useMemo(
     () => applyModuleColumnOverlay(tenantRegistry, userOverlay),

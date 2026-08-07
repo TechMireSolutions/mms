@@ -68,6 +68,15 @@ export function buildConnectionAuthError(error: unknown): AuthError {
   return { type: 'connection_error', message };
 }
 
+export function getPersistedAuthUser(): User | null {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('mms_user') : null;
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function persistAuthUser(authUser: User): void {
   localStorage.setItem('mms_user', JSON.stringify(authUser));
 }

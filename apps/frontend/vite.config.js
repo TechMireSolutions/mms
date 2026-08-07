@@ -29,6 +29,12 @@ export default defineConfig({
               proxyReq.setHeader('x-forwarded-host', host);
             }
           });
+          proxy.on('proxyReqWs', (proxyReq, req) => {
+            const host = req.headers.host;
+            if (host) {
+              proxyReq.setHeader('x-forwarded-host', host);
+            }
+          });
         },
       },
       '/health': {

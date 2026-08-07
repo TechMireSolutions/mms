@@ -10,6 +10,7 @@
  *   const schema  = useContactValidation();     // dynamic Zod-like validation
  */
 import React, {
+  useCallback,
   useContext,
   useMemo,
   useRef,
@@ -22,7 +23,7 @@ import {
   type ContactConfigContextType,
 } from "@/lib/contacts/contactConfigContextTypes";
 import { useContactConfigCollections } from "@/lib/contacts/useContactConfigCollections";
-import { useContactColumnRegistry } from "@/lib/contacts/useContactColumnRegistry";
+import { useContactColumnLayout } from "@/lib/contacts/useContactColumnLayout";
 import { useContactConfigCore } from "@/lib/contacts/useContactConfigCore";
 import { useContactConfigProviderValue } from "@/lib/contacts/useContactConfigProviderValue";
 
@@ -40,18 +41,20 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const viewerRole = user?.role ?? "";
   const reloadCollectionsRef = useRef<() => void>(() => undefined);
 
+  const reloadCollectionsCallback = useCallback(() => {
+    reloadCollectionsRef.current();
+  }, []);
+
   const {
     fieldConfig,
     setFieldConfigState,
     formTabsReady,
     prefs,
-    rawUserColumnOverlay,
     updateConfig,
     updateConfigAsync,
     updatePrefs,
     updatePrefsAsync,
     updateColumnRegistry,
-    updateUserColumnLayout,
     enabledTabIds,
     requiredTabIds,
     fields,
@@ -60,9 +63,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   } = useContactConfigCore({
     userId: user?.id,
     userRole: viewerRole,
-    reloadCollections: () => {
-      reloadCollectionsRef.current();
-    },
+    reloadCollections: reloadCollectionsCallback,
   });
 
   const {
@@ -94,15 +95,15 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     visibleColumns,
     getColumnWidth,
     setColumnWidth,
+    updateUserColumnLayout,
+    isColumnVisible,
     systemSortOptions,
-  } = useContactColumnRegistry({
+  } = useContactColumnLayout({
     fieldConfig,
     fields,
     enabledTabIds,
     isTabFieldEnabled,
-    rawUserColumnOverlay,
     viewerRole,
-    updateUserColumnLayout,
   });
 
   const providerValue = useContactConfigProviderValue({
@@ -137,9 +138,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     updateCountryCodes,
     updateColumnRegistry,
     updateUserColumnLayout,
+    isColumnVisible,
     getColumnWidth,
     setColumnWidth,
-
     systemSortOptions,
   });
 

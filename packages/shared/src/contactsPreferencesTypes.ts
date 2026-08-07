@@ -1,3 +1,5 @@
+import type { ModuleColumnPreference } from './moduleColumnCore.js';
+
 /** Report segment → Work directory drill-down (globle1 §4.3). */
 export interface ContactsWorkDrillDown {
   gender?: string;
@@ -6,13 +8,8 @@ export interface ContactsWorkDrillDown {
   quickFilter?: string;
 }
 
-export interface ContactColumnPreference {
-  key: string;
-  enabled: boolean;
-  order: number;
-  /** Optional pixel width when the user has resized the column. */
-  width?: number;
-}
+/** Alias of ModuleColumnPreference — Contacts Work column prefs share the module SSOT. */
+export type ContactColumnPreference = ModuleColumnPreference;
 
 export type ContactColumnPref = ContactColumnPreference;
 

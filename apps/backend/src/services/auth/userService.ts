@@ -8,7 +8,6 @@ import {
   type User,
 } from '@mms/shared';
 import type { Contact } from '@mms/shared';
-import { getCollection } from '../../db/database.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import {
   findTenantUserRowById,
@@ -41,8 +40,6 @@ export type PublicUser = User;
 type PersistedUser = StoredTenantUser & Record<string, unknown>;
 type IncomingUser = PersistedUser & { temporaryPassword?: string };
 
-const COLLECTION = 'users';
-
 function requireTenantSubdomain(): string {
   const tenant = getRequestTenant();
   if (!tenant) {
@@ -70,13 +67,7 @@ async function getRawUsers(options?: { includeDeleted?: boolean }): Promise<Pers
   const fromTable = await listTenantUsersByWorkspace(subdomain, {
     includeDeleted: options?.includeDeleted === true,
   });
-  if (fromTable.length > 0 || options?.includeDeleted === true) {
-    return fromTable as PersistedUser[];
-  }
-
-  const raw = await getCollection(COLLECTION);
-  if (!Array.isArray(raw)) return [];
-  return raw as PersistedUser[];
+  return fromTable as PersistedUser[];
 }
 
 export async function getHydratedUsers(options?: {

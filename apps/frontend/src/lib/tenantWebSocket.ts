@@ -89,9 +89,12 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
       handlers.onError?.(event);
     });
 
-    socket.addEventListener('close', () => {
+    socket.addEventListener('close', (event) => {
       socket = null;
-      if (!closedByCaller) scheduleReconnect();
+      // Do not auto-reconnect if closed due to auth, missing token, or subdomain mismatch (4000-4009)
+      if (!closedByCaller && (event.code < 4000 || event.code > 4009)) {
+        scheduleReconnect();
+      }
     });
   };
 
@@ -101,8 +104,15 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
     closedByCaller = true;
     clearReconnect();
     if (socket) {
-      socket.close();
+      const s = socket;
       socket = null;
+      if (s.readyState === WebSocket.CONNECTING) {
+        s.addEventListener('open', () => {
+          s.close(1000, 'Client unmounted');
+        });
+      } else if (s.readyState === WebSocket.OPEN) {
+        s.close(1000, 'Client unmounted');
+      }
     }
   };
 }

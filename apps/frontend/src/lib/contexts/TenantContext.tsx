@@ -57,7 +57,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     isFetched,
     refetch,
   } = useWorkspaceBySubdomain(subdomain, tenantLookupEnabled);
-  const workspaceLoading = tenantLookupEnabled && (isPending || isFetching);
+  const workspaceLoading = tenantLookupEnabled && isPending && !isFetched;
   const workspace = workspaceLookup?.workspace ?? null;
   const notFound = isWorkspaceNotFoundError(workspaceError);
   const workspaceMissing =

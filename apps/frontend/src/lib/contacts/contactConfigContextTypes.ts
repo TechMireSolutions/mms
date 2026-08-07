@@ -47,6 +47,7 @@ export interface ContactConfigContextType {
   updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
 
   updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
+  isColumnVisible: (key: string) => boolean;
   getColumnWidth: (key: string) => number | undefined;
   setColumnWidth: (key: string, width: number) => void;
   systemSortOptions: Array<{ field: string; label: string }>;

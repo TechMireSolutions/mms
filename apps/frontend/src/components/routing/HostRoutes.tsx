@@ -1,11 +1,7 @@
 import React from "react";
 import { useIsTenantHost } from "@/lib/host/useIsTenantHost";
+import { ApexRoutesWithSuspense } from "@/platform/routes/ApexRoutes";
 
-const ApexRoutesWithSuspense = React.lazy(() =>
-  import("@/platform/routes/ApexRoutes").then((module) => ({
-    default: module.ApexRoutesWithSuspense,
-  })),
-);
 const TenantRoutes = React.lazy(() => import("@/tenant/routes/TenantRoutes"));
 
 /**
