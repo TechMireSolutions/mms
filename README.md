@@ -36,7 +36,7 @@ MMS is built with a zero-trust multi-tenant architecture designed to ensure abso
 
 *   **Strict Tenant Isolation**: Every request is intercepted by the Fastify backend to resolve the active tenant subdomain from the `Host` or `X-Forwarded-Host` header. The resolved subdomain is bound to an asynchronous execution context (`AsyncLocalStorage`).
 *   **Composite Key Constraints**: All core PostgreSQL tables (such as students, contacts, sessions, and attendance records) utilize composite primary keys consisting of `(workspace_subdomain, id)`. This ensures that tenant boundaries are hard-enforced directly at the database engine level.
-*   **Server-Authoritative REST & TanStack Query**: All 11 feature modules are fully migrated to a server-authoritative REST API architecture. Local storage caching is deprecated for primary records, and client-side data is dynamically cached and mutated using TanStack Query.
+*   **Server-Authoritative REST & TanStack Query**: All feature modules are fully migrated to a server-authoritative REST API architecture. Local storage caching is deprecated for primary records, and client-side data is dynamically cached and mutated using TanStack Query.
 *   **MFA & Security Challenges**: OTP codes, 2FA tokens, and opaque refresh tokens are managed out-of-memory via a dedicated database-backed `auth_artifacts` table.
 
 ---
@@ -48,21 +48,38 @@ MMS targets stable, modern runtime and framework versions. Run `pnpm outdated -r
 | Component | Technology | Version | Purpose |
 | :--- | :--- | :--- | :--- |
 | **Runtime** | Node.js | `>=24.14.0` (LTS) | Server JavaScript execution environment |
-| **Package Manager**| pnpm | `11.9.0` | High-performance monorepo package workspace manager |
-| **Build Pipeline** | Turbo | `^2.10.3` | Monorepo build orchestrator with remote caching |
-| **Language** | TypeScript | `^6.0.3` | Strict type safety, validation, and compile target |
-| **Frontend SPA** | React | `^19.2.7` | UI component engine with React 19 inputs |
-| **Frontend Tooling** | Vite | `^8.1.3` | Bundler and development server tool |
-| **Styling** | Tailwind CSS | `^4.3.2` | Utility-first CSS engine with native CSS variables |
-| **Animations** | Framer Motion | `^12.42.2` | Smooth interactive animations and transitions |
-| **Query Cache** | TanStack Query | `^5.101.2` | Client data synchronizer, optimistic updates, and cache |
-| **Error Reporting**| Sentry | `^10.63.0` | Client-side error tracking and logging boundaries |
-| **Backend API** | Fastify | `^5.9.0` | High-throughput, low-overhead HTTP API framework |
+| **Package Manager**| pnpm | `11.15.1` | High-performance monorepo package workspace manager |
+| **Build Pipeline** | Turbo | `^2.10.8` | Monorepo build orchestrator with remote caching |
+| **Language** | TypeScript | `^7.0.2` | Strict type safety, validation, and compile target |
+| **Frontend SPA** | React | `^19.2.8` | UI component engine with React 19 inputs |
+| **Frontend Tooling** | Vite | `^8.2.0` | Bundler and development server tool |
+| **Styling** | Tailwind CSS | `^4.3.3` | Utility-first CSS engine with native CSS variables |
+| **Animations** | Framer Motion | `^12.43.0` | Smooth interactive animations and transitions |
+| **Query Cache** | TanStack Query | `^5.101.4` | Client data synchronizer, optimistic updates, and cache |
+| **Error Reporting**| Sentry | `^10.69.0` | Client-side error tracking and logging boundaries |
+| **Backend API** | Fastify | `^5.11.2` | High-throughput, low-overhead HTTP API framework |
 | **Database ORM** | Drizzle ORM | `^0.45.2` | Type-safe SQL query generation and schema migrations |
 | **Database** | PostgreSQL | `>=15.0` (17 in CI) | Relational multi-tenant persistent storage |
-| **Test Runner** | Vitest | `^4.1.9` | ESM-first unit & integration test framework |
-| **E2E Testing** | Playwright | `^1.49.0` | Cross-browser onboarding & integration end-to-end testing |
+| **Test Runner** | Vitest | `^4.1.10` | ESM-first unit & integration test framework |
+| **E2E Testing** | Playwright | `^1.62.1` | Cross-browser onboarding & integration end-to-end testing |
 | **Validation** | Zod | `^4.4.3` | Schema validation for forms, APIs, and workspace state |
+
+---
+
+## 🧩 Core Feature Modules
+
+MMS features a modular, tier-structured architecture (Work, Reports, Setup) across all core tenant operational areas:
+
+- **🎓 Students**: Student lifecycle management, guardian links, enrollment status, medical & custom attributes, and contact hydration.
+- **👨‍🏫 Teachers**: Instructor directory, subject assignments, schedule allocation, and qualifications tracking.
+- **📇 Contacts**: Centralized person/contact registry powering student, teacher, and user identity across the workspace.
+- **📅 Sessions & Attendance**: Daily roll calls, session scheduling, class rosters, attendance analytics, and bulk entry.
+- **💰 Finance & Accounting**: Tuition fee invoicing, payments ledger, expenses tracking, chart of accounts, and financial statements.
+- **✉️ Messaging**: Bulk SMS & WhatsApp campaign composer, delivery logs, template variable tokens, and recipient filters.
+- **📝 Examinations & Question Bank**: Exam scheduling, grading, report cards, and reusable question item banking.
+- **✨ Hasanat**: Academic merit/demerit tracking, student conduct points, and behavior reporting.
+- **📊 Reports & Dashboards**: Visualizer dashboards, Recharts analytics, drill-down metrics, and PDF/Excel export tools.
+- **⚙️ Settings & System Control**: Custom fields builder, tab ordering, RBAC permissions, localization (EN/AR/UR/FA), and encrypted backup/restore.
 
 ---
 
