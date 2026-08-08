@@ -19,6 +19,7 @@ interface TeachersWorkTierProps {
   canWrite: boolean;
   canDelete: boolean;
   canExport?: boolean;
+  hasActiveFilters: boolean;
   columnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   customizerLabels: ModuleColumnCustomizerLabels;
@@ -119,6 +120,7 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
         <TeacherList
           teachers={props.teachers}
           viewMode={props.viewMode}
+          hasActiveFilters={props.hasActiveFilters}
           onEdit={props.onEdit}
           onDelete={props.onDelete}
           onRestore={props.onRestore}
@@ -144,6 +146,8 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           sortDir={props.sortDir}
           onSortChange={props.onSortChange}
           onBulkExport={props.onBulkExport}
+          onClearFilters={props.onClearFilters}
+          onShowActive={props.onToggleDeleted}
         />
       </ModuleWorkListStateShell>
     </motion.div>

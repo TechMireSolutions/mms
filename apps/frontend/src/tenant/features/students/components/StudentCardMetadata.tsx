@@ -50,9 +50,10 @@ export function StudentCardMetadata({
     if (col.key.startsWith("custom:")) {
       const fieldKey = studentCustomFieldKeyFromColumn(col.key);
       const raw = fieldKey ? (student as Record<string, unknown>)[fieldKey] : undefined;
+      const display = formatStudentListCustomValue(raw, t) ?? emptyDash;
       tiles.push(
         <DirectoryCardMetaTile key={col.key} label={col.label}>
-          {formatStudentListCustomValue(raw, t)}
+          {display}
         </DirectoryCardMetaTile>,
       );
       continue;

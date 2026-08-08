@@ -22,6 +22,17 @@ export function teacherStatusLabel(t: Translate, status: string): string {
   return translated === key ? toTitleCase(status) : translated;
 }
 
+/** Status slug → localized `{ value, label }` option list (configured or default). */
+export function teacherStatusOptions(
+  t: Translate,
+  statuses?: readonly string[],
+): Array<{ value: string; label: string }> {
+  return resolveTeacherStatuses(statuses).map((status) => ({
+    value: status,
+    label: teacherStatusLabel(t, status),
+  }));
+}
+
 /** Badge / chip tone classes for a teacher status. */
 export function teacherStatusTone(status: string): string {
   const accent = teacherStatusSemanticAccent(status);

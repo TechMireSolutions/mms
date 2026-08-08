@@ -1,7 +1,7 @@
 import { getPrimaryPhone, hasWhatsApp, type Contact } from "@mms/shared";
 import { computeModuleMessagingSelectionTargets } from "@/lib/messaging/computeModuleMessagingSelectionTargets";
 
-export interface ContactsSelectionTargets {
+interface ContactsSelectionTargets {
   waTargets: Contact[];
   smsReady: Contact[];
 }

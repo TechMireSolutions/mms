@@ -73,6 +73,38 @@ export function EntityArchivedBanner({
   );
 }
 
+export interface DrawerSyncStatusFooterProps {
+  isArchived: boolean;
+  /** Localized "archived" status label shown when the entity is soft-deleted. */
+  archivedLabel: string;
+  /** Localized "synced" status label shown when the entity is active. */
+  syncedLabel: string;
+}
+
+/**
+ * Synced/archived status footer shared by entity detail drawers
+ * (Students / Teachers / Sessions). Communicates state by text + color together (WCAG).
+ */
+export function DrawerSyncStatusFooter({
+  isArchived,
+  archivedLabel,
+  syncedLabel,
+}: DrawerSyncStatusFooterProps): React.JSX.Element {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div
+        className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`}
+        aria-hidden
+      />
+      <span
+        className={`text-xs font-bold uppercase ${isArchived ? "text-warning" : "text-success"}`}
+      >
+        {isArchived ? archivedLabel : syncedLabel}
+      </span>
+    </div>
+  );
+}
+
 export interface DetailDrawerRestoreOrEditActionProps {
   isArchived: boolean;
   canRestore: boolean;

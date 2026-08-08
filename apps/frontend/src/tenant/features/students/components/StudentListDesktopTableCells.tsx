@@ -47,7 +47,9 @@ export function renderStudentListDesktopTableCell({
     const fieldKey = studentCustomFieldKeyFromColumn(col.key);
     const raw = fieldKey ? (studentRow as Record<string, unknown>)[fieldKey] : undefined;
     return (
-      <p className="text-sm text-foreground truncate">{formatStudentListCustomValue(raw, t)}</p>
+      <p className="text-sm text-foreground truncate">
+        {formatStudentListCustomValue(raw, t) ?? emptyDash}
+      </p>
     );
   }
 

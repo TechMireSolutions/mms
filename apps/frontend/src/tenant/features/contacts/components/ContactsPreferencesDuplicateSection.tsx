@@ -5,12 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { getDuplicateFieldLabel } from "@/lib/contacts/contactI18n";
 
-const DUPLICATE_DETECTION_FIELD_OPTIONS = [
-  { id: "name", labelKey: "contacts.setup.duplicateFieldName" as const },
-  { id: "phone", labelKey: "contacts.setup.duplicateFieldPhone" as const },
-  { id: "email", labelKey: "contacts.setup.duplicateFieldEmail" as const },
-] as const;
+/** Toggleable duplicate-detection fields (subset of the canonical field-id set). */
+const DUPLICATE_DETECTION_FIELD_IDS = ["name", "phone", "email"] as const;
 
 export function ContactsPreferencesDuplicateSection({
   prefs,
@@ -39,21 +37,21 @@ export function ContactsPreferencesDuplicateSection({
         <fieldset className="space-y-2">
           <legend className={FORM_LABEL}>{t("contacts.setup.duplicateFields")}</legend>
           <div className="flex flex-wrap gap-3">
-            {DUPLICATE_DETECTION_FIELD_OPTIONS.map((option) => {
-              const checked = detectionFields.includes(option.id);
-              const checkboxId = `dup-field-${option.id}`;
+            {DUPLICATE_DETECTION_FIELD_IDS.map((option) => {
+              const checked = detectionFields.includes(option);
+              const checkboxId = `dup-field-${option}`;
               return (
                 <label
-                  key={option.id}
+                  key={option}
                   htmlFor={checkboxId}
                   className="flex min-h-11 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm"
                 >
                   <Checkbox
                     id={checkboxId}
                     checked={checked}
-                    onCheckedChange={(value) => toggleDetectionField(option.id, value === true)}
+                    onCheckedChange={(value) => toggleDetectionField(option, value === true)}
                   />
-                  <span>{t(option.labelKey)}</span>
+                  <span>{getDuplicateFieldLabel(option, t)}</span>
                 </label>
               );
             })}

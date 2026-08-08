@@ -5,13 +5,14 @@ import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import type { Teacher } from '@mms/shared';
-import { TEACHERS_MODULE_MANIFEST, resolveTeacherSpecializations, resolveTeacherStatuses } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { useTeacherMutations, useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTeachersDirectoryFilters } from '@/tenant/features/teachers/hooks/useTeachersDirectoryFilters';
 import { useTeachersKeyboardShortcuts } from '@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts';
 import { useTeachersPageActions } from '@/tenant/features/teachers/hooks/useTeachersPageActions';
 import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
+import { useTeacherLookupOptions } from '@/tenant/features/teachers/hooks/useTeacherStatusConfig';
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import {
   defaultTeachersExportColumns,
@@ -61,10 +62,8 @@ export function useTeachersPageController() {
   const [showForm, setShowForm] = useState(false);
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
-  const { settings, statuses, specializations } = useTeacherConfig();
-
-  const statusOptions = [...resolveTeacherStatuses(statuses)];
-  const specializationOptions = [...resolveTeacherSpecializations(specializations)];
+  const { settings } = useTeacherConfig();
+  const { statusOptions, specializationOptions } = useTeacherLookupOptions();
 
   const columnLayout = useTeacherColumnLayout(settings);
 
@@ -183,5 +182,6 @@ export function useTeachersPageController() {
     handleExportCSV,
     handleBulkExport,
     clearFilters,
+    hasActiveFilters,
   };
 }

@@ -10,6 +10,7 @@ import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
 import { isEmptyValue } from "./contactDetailStyles";
+import { readContactCustomCollectionRows } from "../contactCustomCollectionRows";
 
 function formatCellValue(value: unknown): string | null {
   if (isEmptyValue(value)) return null;
@@ -31,11 +32,6 @@ function formatRowSummary(
     })
     .filter((part): part is string => Boolean(part))
     .join(" · ");
-}
-
-function readRows(contact: Contact, tabId: string): Record<string, unknown>[] {
-  const value = (contact as Record<string, unknown>)[tabId];
-  return Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
 }
 
 function resolveCustomCollectionTabs(
@@ -104,7 +100,7 @@ export function ContactDetailCustomCollections({
         const rowFields = listEnabledCustomContactFormFields(fields, tab.key);
         if (rowFields.length === 0) return null;
 
-        const rows = readRows(contact, tab.key);
+        const rows = readContactCustomCollectionRows(contact, tab.key);
         const title = tab.labelKey ? t(tab.labelKey) : tab.label || tab.key;
 
         return (

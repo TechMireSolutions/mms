@@ -1,5 +1,11 @@
 import React, { useMemo } from 'react';
 import { toTitleCase, AppTranslationKey } from '@mms/shared';
+import {
+  FormFooterBadge,
+  FormFooterEntityChip,
+  FormFooterErrorChip,
+  type FormFooterBadgeTone,
+} from '@/components/ui/FormFooterChip';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface SessionFormFooterProps {
@@ -25,30 +31,23 @@ export function SessionFormFooter({
 
   if (!sessionName) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
-        {nameRequiredLabel}
-      </span>
+      <FormFooterErrorChip>{nameRequiredLabel}</FormFooterErrorChip>
     );
   }
 
+  const statusTone: FormFooterBadgeTone =
+    sessionStatus === 'active'
+      ? 'success'
+      : sessionStatus === 'completed'
+        ? 'info'
+        : 'muted';
+
   return (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
-      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
-        {sessionName}
-      </span>
+      <FormFooterEntityChip>{sessionName}</FormFooterEntityChip>
       <div className="flex items-center gap-1.5">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-xs">
-          {sessionType}
-        </span>
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold text-xs border capitalize ${
-          sessionStatus === 'active'
-            ? 'bg-success/10 text-success border-success/20'
-            : sessionStatus === 'completed'
-            ? 'bg-info/10 text-info border-info/20'
-            : 'bg-muted text-muted-foreground border-border'
-        }`}>
-          {statusLabel}
-        </span>
+        <FormFooterBadge>{sessionType}</FormFooterBadge>
+        <FormFooterBadge tone={statusTone}>{statusLabel}</FormFooterBadge>
       </div>
     </div>
   );

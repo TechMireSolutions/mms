@@ -7,10 +7,10 @@ import {
   TEACHER_LOCKED_ENABLED_TABS,
   isTeacherLockedEnabledTab,
   isTeacherSystemFormField,
-  resolveTeacherSpecializations,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
+import { useTeacherLookupOptions } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -40,7 +40,7 @@ export function TeachersSettings(): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
   const config = useTeacherConfig();
-  const { specializations } = config;
+  const { specializationOptions } = useTeacherLookupOptions();
   const {
     settings,
     settingsDraft,
@@ -117,8 +117,6 @@ export function TeachersSettings(): React.JSX.Element {
       }),
     [fieldsEditor, handleDeleteFieldWithGuard],
   );
-
-  const specializationOptions = [...resolveTeacherSpecializations(specializations)];
 
   const unsavedWarning = showFields
     ? t("teachers.setup.unsavedFieldsWarning")

@@ -1,16 +1,10 @@
-import { RotateCcw, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ModuleFiltersMenuTrigger } from "@/components/ui/ModuleFiltersMenuButton";
+  ModuleFilterCheckboxGroup,
+  ModuleFilterDivider,
+  ModuleFilterDropdown,
+  ModuleFilterRadioGroup,
+} from "@/components/ui/ModuleFiltersMenuButton";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -39,52 +33,35 @@ export function StudentsFilterMenuButton({
   const { t } = useTranslation();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <ModuleFiltersMenuTrigger
-          label={t("students.filters")}
-          activeCount={activeFilterCount}
-          icon={SlidersHorizontal}
-        />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
-        <DropdownMenuLabel className="text-xs text-foreground">
-          {t("students.filterByStatus")}
-        </DropdownMenuLabel>
-        {activeFilterCount > 0 && (
-          <>
-            <DropdownMenuItem
-              onClick={onClearFilters}
-              className="text-xs text-muted-foreground hover:text-foreground cursor-pointer flex items-center justify-between"
-            >
-              <span>{t("students.clearAllFilters")}</span>
-              <RotateCcw className="w-3 h-3 ms-1" />
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-border" />
-          </>
-        )}
-        {studentStatusOptions.map((status) => (
-          <DropdownMenuCheckboxItem
-            key={status}
-            checked={studentFilterStatus.includes(status)}
-            onCheckedChange={() => onToggleStatus(status)}
-          >
-            {studentStatusLabel(t, status)}
-          </DropdownMenuCheckboxItem>
-        ))}
+    <ModuleFilterDropdown
+      label={t("students.filters")}
+      activeCount={activeFilterCount}
+      icon={SlidersHorizontal}
+      clearLabel={t("students.clearAllFilters")}
+      onClear={onClearFilters}
+    >
+      <ModuleFilterCheckboxGroup
+        label={t("students.filterByStatus")}
+        options={studentStatusOptions.map((status) => ({
+          value: status,
+          label: studentStatusLabel(t, status),
+        }))}
+        selected={studentFilterStatus}
+        onToggle={onToggleStatus}
+      />
 
-        <DropdownMenuSeparator className="bg-border" />
-        <DropdownMenuLabel className="text-xs text-foreground">
-          {t("students.gender")}
-        </DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={studentFilterGender} onValueChange={onGenderChange}>
-          {["", ...genderFilters].map((genderFilter) => (
-            <DropdownMenuRadioItem key={genderFilter || "all"} value={genderFilter} className="text-sm">
-              {genderFilter ? formatContactGenderLabel(genderFilter, t) : t("students.allGenders")}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      <ModuleFilterDivider />
+      <ModuleFilterRadioGroup
+        label={t("students.gender")}
+        value={studentFilterGender}
+        onValueChange={onGenderChange}
+        options={["", ...genderFilters].map((genderFilter) => ({
+          value: genderFilter,
+          label: genderFilter
+            ? formatContactGenderLabel(genderFilter, t)
+            : t("students.allGenders"),
+        }))}
+      />
+    </ModuleFilterDropdown>
   );
 }

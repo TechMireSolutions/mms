@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
@@ -122,21 +123,16 @@ export function ContactAddressesTab({
               <div className="space-y-3">
                 {showLine1 ? (
                   <div>
-                    <div className="group/input relative flex items-center">
-                      <MapPin className="pointer-events-none absolute start-3.5 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within/input:text-primary" />
-                      <Input
-                        id={`address-line1-${idx}`}
-                        name={`address-line1-${idx}`}
-                        value={addr.line1 || ""}
-                        required={isFieldRequired("addresses", "line1")}
-                        onChange={(e) => updateAddress(idx, { line1: e.target.value })}
-                        placeholder={t("contacts.fields.streetAddress")}
-                        className={cn(
-                          "ps-10",
-                          line1Error && "border-destructive focus-visible:ring-destructive",
-                        )}
-                      />
-                    </div>
+                    <LeadingIconInput
+                      icon={MapPin}
+                      id={`address-line1-${idx}`}
+                      name={`address-line1-${idx}`}
+                      value={addr.line1 || ""}
+                      required={isFieldRequired("addresses", "line1")}
+                      onChange={(e) => updateAddress(idx, { line1: e.target.value })}
+                      placeholder={t("contacts.fields.streetAddress")}
+                      className={cn(line1Error && "border-destructive focus-visible:ring-destructive")}
+                    />
                     <FieldErrorMessage message={line1Error} />
                   </div>
                 ) : null}

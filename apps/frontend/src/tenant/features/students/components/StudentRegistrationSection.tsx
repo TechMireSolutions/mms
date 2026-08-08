@@ -3,7 +3,7 @@ import { Clock, GraduationCap, Hash } from "lucide-react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_INPUT } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
+import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -82,18 +82,19 @@ export function StudentRegistrationSection({
               error={getFieldError("grNumber")}
               id="grNumber"
             >
-              <div className="relative flex items-center group/input">
-                <Hash className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
+              <div className="relative">
+                <LeadingIconInput
+                  icon={Hash}
                   required={isFieldRequired("grNumber")}
                   value={studentDraft.grNumber || ""}
                   onChange={(event) => onGrNumberChange(event.target.value)}
                   placeholder={t("students.form.grNumberPlaceholder")}
                   disabled={grInputDisabled}
-                  className={`${FORM_INPUT} ps-10 ${isGrAutoAssigned ? "pe-24" : ""}`}
+                  iconPaddingClass={FORM_INPUT}
+                  className={`ps-10 ${isGrAutoAssigned ? "pe-24" : ""}`}
                 />
                 {isGrAutoAssigned ? (
-                  <span className="pointer-events-none absolute end-2.5 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md">
+                  <span className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md">
                     {t("students.form.grAutoAssigned")}
                   </span>
                 ) : null}

@@ -1,9 +1,9 @@
 import React from "react";
 import { FileText } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
+import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Contact, formatCnic } from "@mms/shared";
@@ -52,20 +52,17 @@ export function ContactBasicMetaFields({
           id={`cf-${formInstanceId}-cnic`}
           error={getFieldError("cnic")}
         >
-          <div className="relative flex items-center group/input">
-            <FileText className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-            <Input
-              id={`cf-${formInstanceId}-cnic`}
-              name="cnic"
-              value={contactDraft.cnic || ""}
-              onChange={(e) => {
-                const formatted = formatCnic(e.target.value);
-                updateDraft({ cnic: formatted });
-              }}
-              placeholder={t("contacts.form.cnicPlaceholder")}
-              className="ps-10"
-            />
-          </div>
+          <LeadingIconInput
+            icon={FileText}
+            id={`cf-${formInstanceId}-cnic`}
+            name="cnic"
+            value={contactDraft.cnic || ""}
+            onChange={(e) => {
+              const formatted = formatCnic(e.target.value);
+              updateDraft({ cnic: formatted });
+            }}
+            placeholder={t("contacts.form.cnicPlaceholder")}
+          />
         </Field>
       )}
 

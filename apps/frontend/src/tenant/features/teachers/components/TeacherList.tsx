@@ -24,6 +24,9 @@ export function TeacherList({
   canDelete = true,
   canExport = false,
   showDeleted = false,
+  hasActiveFilters = false,
+  onClearFilters,
+  onShowActive,
   selectedIds,
   onSelectOne,
   onSelectAll,
@@ -85,6 +88,9 @@ export function TeacherList({
       <TeacherListContent
         teachers={sorted}
         viewMode={viewMode}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={onClearFilters}
+        onShowActive={onShowActive}
         selectedIds={selectedIds}
         allSelected={allSelected}
         someSelected={someSelected}

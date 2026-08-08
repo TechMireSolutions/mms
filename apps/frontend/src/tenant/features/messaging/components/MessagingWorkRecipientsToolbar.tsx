@@ -5,15 +5,10 @@ import {
 import type { MessagingGenderFilter, MessagingRoleFilter } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ModuleFiltersMenuTrigger } from '@/components/ui/ModuleFiltersMenuButton';
+  ModuleFilterDivider,
+  ModuleFilterDropdown,
+  ModuleFilterRadioGroup,
+} from '@/components/ui/ModuleFiltersMenuButton';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -65,57 +60,36 @@ export function MessagingWorkRecipientsToolbar({
           <h4 className="text-sm font-bold text-foreground">{t('messaging.stepSelectRecipients')}</h4>
           <p className="text-xs text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <ModuleFiltersMenuTrigger
-              label={t('common.filters')}
-              activeCount={activeFilterCount}
-            />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 border border-border bg-card">
-            <DropdownMenuLabel className="text-xs">{t('messaging.filterByRole')}</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={roleFilter}
-              onValueChange={(value) => onRoleFilterChange(value as MessagingRoleFilter)}
-            >
-              {roleOptions.map((option) => (
-                <DropdownMenuRadioItem key={option.value} value={option.value} className="text-sm">
-                  {option.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
+        <ModuleFilterDropdown
+          label={t('common.filters')}
+          activeCount={activeFilterCount}
+          clearLabel={t('common.clearFilters')}
+          onClear={() => {
+            onRoleFilterChange(defaultRole as MessagingRoleFilter);
+            onGenderFilterChange(defaultGender as MessagingGenderFilter);
+          }}
+        >
+          <ModuleFilterRadioGroup
+            label={t('messaging.filterByRole')}
+            value={roleFilter}
+            onValueChange={(value) => onRoleFilterChange(value as MessagingRoleFilter)}
+            options={roleOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
 
-            <DropdownMenuSeparator className="bg-border" />
-            <DropdownMenuLabel className="text-xs">{t('contacts.reportFields.gender')}</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={genderFilter}
-              onValueChange={(value) => onGenderFilterChange(value as MessagingGenderFilter)}
-            >
-              {genderOptions.map((option) => (
-                <DropdownMenuRadioItem key={option.value} value={option.value} className="text-sm">
-                  {option.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-
-            {activeFilterCount > 0 && (
-              <>
-                <DropdownMenuSeparator className="bg-border" />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="min-h-11 w-full justify-start px-2 text-sm text-muted-foreground"
-                  onClick={() => {
-                    onRoleFilterChange(defaultRole as MessagingRoleFilter);
-                    onGenderFilterChange(defaultGender as MessagingGenderFilter);
-                  }}
-                >
-                  {t('common.clearFilters')}
-                </Button>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t('contacts.reportFields.gender')}
+            value={genderFilter}
+            onValueChange={(value) => onGenderFilterChange(value as MessagingGenderFilter)}
+            options={genderOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+        </ModuleFilterDropdown>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">

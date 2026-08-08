@@ -5,7 +5,7 @@ import { useContactsPaginated } from "@/tenant/features/contacts/hooks/useContac
 import { useContactsDirectoryFilters } from "@/tenant/features/contacts/hooks/useContactsDirectoryFilters";
 import { useContactsDirectoryLinks } from "@/tenant/features/contacts/hooks/useContactsDirectoryLinks";
 
-export interface UseContactsDirectoryOptions {
+interface UseContactsDirectoryOptions {
   effectiveTab: string;
   setActiveTab: (tab: string) => void;
   editContact: Contact | null;

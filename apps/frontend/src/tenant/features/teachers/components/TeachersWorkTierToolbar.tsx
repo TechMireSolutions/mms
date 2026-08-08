@@ -1,20 +1,19 @@
-import { ChevronDown, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-  DropdownMenuRadioGroup, DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
+  ModuleFilterCheckboxGroup,
+  ModuleFilterDropdown,
+  ModuleFilterRadioGroup,
+} from "@/components/ui/ModuleFiltersMenuButton";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import { ModuleFiltersMenuTrigger } from "@/components/ui/ModuleFiltersMenuButton";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { teacherStatusLabel } from "@/lib/teachers/teacherStatusUi";
+import { teacherStatusOptions } from "@/lib/teachers/teacherStatusUi";
 import { TEACHERS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts";
 
 interface TeachersWorkTierToolbarProps {
@@ -66,56 +65,38 @@ export function TeachersWorkTierToolbar({
         className="flex-1"
       />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ModuleFiltersMenuTrigger
-            label={t("teachers.filter.status")}
-            activeCount={filterStatus.length}
-            icon={Filter}
-          >
-            <ChevronDown className="w-3 h-3" />
-          </ModuleFiltersMenuTrigger>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuLabel className="text-xs">{t("teachers.filter.status")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {statusOptions.map((status) => (
-            <DropdownMenuCheckboxItem
-              key={status}
-              checked={filterStatus.includes(status)}
-              onCheckedChange={() => onToggleStatus(status)}
-            >
-              {teacherStatusLabel(t, status)}
-            </DropdownMenuCheckboxItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ModuleFilterDropdown
+        label={t("teachers.filter.status")}
+        activeCount={filterStatus.length}
+        icon={Filter}
+        contentClassName="w-44"
+      >
+        <ModuleFilterCheckboxGroup
+          label={t("teachers.filter.status")}
+          options={teacherStatusOptions(t, statusOptions)}
+          selected={filterStatus}
+          onToggle={onToggleStatus}
+        />
+      </ModuleFilterDropdown>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ModuleFiltersMenuTrigger
-            label={filterSpecialization || t("teachers.filter.specialization")}
-            activeCount={filterSpecialization ? 1 : 0}
-          >
-            <ChevronDown className="w-3 h-3" />
-          </ModuleFiltersMenuTrigger>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuRadioGroup
-            value={filterSpecialization}
-            onValueChange={onSpecializationChange}
-          >
-            <DropdownMenuRadioItem value="">
-              {t("teachers.filter.allSpecializations")}
-            </DropdownMenuRadioItem>
-            {specializationOptions.map((specialization) => (
-              <DropdownMenuRadioItem key={specialization} value={specialization}>
-                {specialization}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ModuleFilterDropdown
+        label={filterSpecialization || t("teachers.filter.specialization")}
+        activeCount={filterSpecialization ? 1 : 0}
+        contentClassName="w-48"
+      >
+        <ModuleFilterRadioGroup
+          label={t("teachers.filter.specialization")}
+          value={filterSpecialization}
+          onValueChange={onSpecializationChange}
+          options={[
+            { value: "", label: t("teachers.filter.allSpecializations") },
+            ...specializationOptions.map((specialization) => ({
+              value: specialization,
+              label: specialization,
+            })),
+          ]}
+        />
+      </ModuleFilterDropdown>
 
       <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
 

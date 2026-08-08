@@ -1,13 +1,15 @@
 import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { DirectoryCardInfoPills } from "@/components/ui/DirectoryCardInfoPills";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/TeacherArchivedBanner";
 import { TeacherCardActions } from "@/tenant/features/teachers/components/TeacherCardActions";
 import { TeacherCardHeader } from "@/tenant/features/teachers/components/TeacherCardHeader";
 import { TeacherCardMetadata } from "@/tenant/features/teachers/components/TeacherCardMetadata";
-import { resolveTeacherDisplayName } from "@/tenant/features/teachers/components/teacherFieldDisplay";
+import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 
 type TeacherListCardsProps = Omit<
@@ -62,9 +64,8 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
 
       <DirectoryCardsGrid>
         {teachers.map((teacher) => {
-          const teacherIdStr = String(teacher.id);
-          const displayName = resolveTeacherDisplayName(teacher, t);
-          const isSelected = selectedIds.includes(teacherIdStr);
+          const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
+          const { phone, email } = resolveTeacherPrimaryChannels(teacher);
 
           return (
             <DirectoryEntityCard
@@ -83,6 +84,13 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 reducedMotion={reducedMotion}
               />
               <TeacherArchivedBanner teacher={teacher} />
+              <DirectoryCardInfoPills
+                phone={phone}
+                phoneDisplay={phone}
+                email={email}
+                showPhone={isColumnVisible("phone")}
+                showEmail={isColumnVisible("email")}
+              />
               <TeacherCardMetadata
                 teacher={teacher}
                 isColumnVisible={isColumnVisible}

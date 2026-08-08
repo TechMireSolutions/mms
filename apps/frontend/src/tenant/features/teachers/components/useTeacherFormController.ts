@@ -4,14 +4,13 @@ import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/teachers/hooks/useTeachers";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { teacherStatusBadgeConfig, teacherStatusLabel } from "@/lib/teachers/teacherStatusUi";
+import { teacherStatusOptions } from "@/lib/teachers/teacherStatusUi";
+import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
 import {
   Teacher,
   DEFAULT_TEACHERS_SETTINGS,
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
-  resolveTeacherSpecializations,
-  resolveTeacherStatuses,
 } from "@mms/shared";
 import type { TeacherStatusOption } from "@/tenant/features/teachers/components/TeacherFormSections";
 import {
@@ -29,10 +28,9 @@ export interface UseTeacherFormControllerOptions {
 
 export function useTeacherFormController({ teacher, onClose, onSave }: UseTeacherFormControllerOptions) {
   const { t, language } = useTranslation();
-  const { settings, specializations, statuses, isFieldEnabled, isFieldRequired } = useTeacherConfig();
+  const { settings, isFieldEnabled, isFieldRequired } = useTeacherConfig();
 
-  const specializationOptions = [...resolveTeacherSpecializations(specializations)];
-  const statusValues = [...resolveTeacherStatuses(statuses)];
+  const { statusOptions: statusValues, specializationOptions } = useTeacherLookupOptions();
   const defaultSpecialization =
     settings.defaultSpecialization
     || specializationOptions[0]
@@ -47,18 +45,11 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   );
 
   const statusOptions = useMemo<TeacherStatusOption[]>(
-    () =>
-      statusValues.map((status) => ({
-        value: status,
-        label: teacherStatusLabel(t, status),
-      })),
+    () => teacherStatusOptions(t, statusValues),
     [statusValues, t],
   );
 
-  const statusConfig = useMemo(
-    () => teacherStatusBadgeConfig(t, statusValues),
-    [statusValues, t],
-  );
+  const statusConfig = useTeacherStatusConfig();
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});

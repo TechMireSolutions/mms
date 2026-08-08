@@ -17,6 +17,20 @@ export function resolveTeacherDisplayName(
   return teacher.name || linkedContact?.name || t("teachers.contactMissing");
 }
 
+/** Per-row identity + selection projection shared by the cards and table Work renderers. */
+export function teacherRowIdentity(
+  teacher: Teacher,
+  selectedIds: string[],
+  t: TranslationFunction,
+): { teacherIdStr: string; displayName: string; isSelected: boolean } {
+  const teacherIdStr = String(teacher.id);
+  return {
+    teacherIdStr,
+    displayName: resolveTeacherDisplayName(teacher, t),
+    isSelected: selectedIds.includes(teacherIdStr),
+  };
+}
+
 type TeacherCustomFieldDisplay = Pick<TeacherCustomField, "id"> & { type?: string };
 
 /**

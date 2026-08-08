@@ -2,7 +2,7 @@ import type { JSX, ReactNode } from "react";
 import { Tag } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
-import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
+import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import { COLLECTION_CONTAINER_CLASS, ICON_MAP } from "./contactDetailStyles";
 
@@ -14,7 +14,7 @@ export interface DetailSectionProps {
 export function DetailSection({ title, children }: DetailSectionProps): JSX.Element {
   return (
     <div className="space-y-2">
-      <h4 className={`${DETAIL_SECTION_TITLE} ps-1`}>{title}</h4>
+      <DetailSectionTitle>{title}</DetailSectionTitle>
       <Card className={COLLECTION_CONTAINER_CLASS}>{children}</Card>
     </div>
   );

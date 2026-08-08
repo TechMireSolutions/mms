@@ -7,6 +7,7 @@ import {
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import {
   DetailDrawerRestoreOrEditAction,
+  DrawerSyncStatusFooter,
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import { SessionArchivedBanner } from "@/tenant/features/sessions/components/SessionArchivedBanner";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -145,12 +146,11 @@ export function SessionDetail({
         </>
       }
       footer={
-        <div className="flex items-center gap-1.5">
-          <div className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`} />
-          <span className={`text-xs font-bold uppercase ${isArchived ? "text-warning" : "text-success"}`}>
-            {isArchived ? t("sessions.detail.archivedSubtitle") : t("sessions.detail.synced")}
-          </span>
-        </div>
+        <DrawerSyncStatusFooter
+          isArchived={isArchived}
+          archivedLabel={t("sessions.detail.archivedSubtitle")}
+          syncedLabel={t("sessions.detail.synced")}
+        />
       }
     >
       {!isArchived ? (

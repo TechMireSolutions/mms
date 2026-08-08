@@ -1,5 +1,10 @@
 import { getDisplayName, type AppTranslationKey, type Contact } from "@mms/shared";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
+import {
+  FormFooterBadge,
+  FormFooterEntityChip,
+  FormFooterErrorChip,
+} from "@/components/ui/FormFooterChip";
 
 type FormDraft = ReturnType<typeof useContactFormDraft>;
 
@@ -14,34 +19,33 @@ export function ContactFormFooterStart({
 }): JSX.Element {
   if (!contactDraft.firstName) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
+      <FormFooterErrorChip>
         {t("contacts.form.firstNameRequired")}
-      </span>
+      </FormFooterErrorChip>
     );
   }
 
   return (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
-      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
-        {getDisplayName(contactDraft)}
-      </span>
+      <FormFooterEntityChip>{getDisplayName(contactDraft)}</FormFooterEntityChip>
       <div className="flex items-center gap-1.5">
         {collectionCounts.filledPhones > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-xs">
+          <FormFooterBadge tone="primary">
             {collectionCounts.filledPhones} {t("contacts.form.phonesLabel")}
-          </span>
+          </FormFooterBadge>
         )}
         {collectionCounts.filledEmails > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-warning/10 text-warning font-semibold border border-warning/20 text-xs">
+          <FormFooterBadge tone="warning">
             {collectionCounts.filledEmails} {t("contacts.form.emailsLabel")}
-          </span>
+          </FormFooterBadge>
         )}
         {collectionCounts.filledRelationships > 0 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-semibold border border-destructive/20 text-xs">
+          <FormFooterBadge tone="destructive">
             {collectionCounts.filledRelationships} {t("contacts.detail.relationships")}
-          </span>
+          </FormFooterBadge>
         )}
       </div>
     </div>
   );
 }
+

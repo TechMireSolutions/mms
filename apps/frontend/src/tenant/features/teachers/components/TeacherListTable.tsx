@@ -22,7 +22,7 @@ import {
   teacherWorkColumnHeadClass,
   toTeacherListSortField,
 } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
-import { resolveTeacherDisplayName } from "@/tenant/features/teachers/components/teacherFieldDisplay";
+import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
 
 type TeacherListTableProps = Omit<TeacherListContentProps, never>;
@@ -123,9 +123,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
       </TableHeader>
       <TableBody>
         {teachers.map((teacher) => {
-          const teacherIdStr = String(teacher.id);
-          const displayName = resolveTeacherDisplayName(teacher, t);
-          const isSelected = selectedIds.includes(teacherIdStr);
+          const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
           return (
             <TableRow key={teacher.id} className={`hover:bg-muted/20 transition-colors ${isSelected ? "bg-primary/[0.015]" : ""}`}>
               {showSelectColumn && (

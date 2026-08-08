@@ -4,9 +4,8 @@ import ContactPicker from "@/components/contactLink/ContactPicker";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Card } from "@/components/ui/card";
-import { FORM_INPUT } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
+import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FieldDefinition, Teacher } from "@mms/shared";
@@ -74,11 +73,7 @@ export function TeacherBasicSection({
   return (
     <div className="space-y-4 text-start">
       {showContact ? (
-        <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm z-20">
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <User className="w-4 h-4 text-primary/70 transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{contactLabel}</h3>
-          </div>
+        <SectionCard title={contactLabel} icon={User} accentColor="primary" className="z-20">
           <ContactPicker
             label={contactLabel}
             value={teacherDraft.contactId ? String(teacherDraft.contactId) : null}
@@ -90,15 +85,11 @@ export function TeacherBasicSection({
             error={!!errors.contactId}
           />
           <FieldErrorMessage message={errors.contactId} />
-        </Card>
+        </SectionCard>
       ) : null}
 
       {showDetailsCard ? (
-        <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4.5 shadow-sm z-10">
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <School className="w-4 h-4 text-primary/70 transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.form.sectionDetails")}</h3>
-          </div>
+        <SectionCard title={t("teachers.form.sectionDetails")} icon={School} accentColor="primary" className="z-10">
           {showSpecialization ? (
             <Field label={specializationLabel} required={isFieldRequired("specialization")}>
               <FormSelect
@@ -111,18 +102,15 @@ export function TeacherBasicSection({
 
           {showQualification ? (
             <Field label={qualificationLabel} required={isFieldRequired("qualification")} error={errors.qualification}>
-              <div className="relative flex items-center group/input">
-                <GraduationCap className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  value={teacherDraft.qualification || ""}
-                  onChange={(event) => onDraftChange({ qualification: event.target.value })}
-                  placeholder={t("teachers.form.qualificationPlaceholder")}
-                  className={`${FORM_INPUT} ps-10`}
-                />
-              </div>
+              <LeadingIconInput
+                icon={GraduationCap}
+                value={teacherDraft.qualification || ""}
+                onChange={(event) => onDraftChange({ qualification: event.target.value })}
+                placeholder={t("teachers.form.qualificationPlaceholder")}
+              />
             </Field>
           ) : null}
-        </Card>
+        </SectionCard>
       ) : null}
     </div>
   );
@@ -187,23 +175,16 @@ export function TeacherEmploymentSection({
   return (
     <div className="space-y-4 text-start">
       {showEmploymentCard ? (
-        <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <Briefcase className="w-4 h-4 text-primary/70 transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("teachers.form.sectionEmployment")}</h3>
-          </div>
+        <SectionCard title={t("teachers.form.sectionEmployment")} icon={Briefcase} accentColor="primary">
           {showEmployeeId ? (
             <Field label={employeeIdLabel} required error={errors.employeeId}>
-              <div className="relative flex items-center group/input">
-                <Hash className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-                <Input
-                  value={teacherDraft.employeeId || ""}
-                  onChange={(event) => onDraftChange({ employeeId: event.target.value })}
-                  placeholder={t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })}
-                  className={`${FORM_INPUT} ps-10`}
-                  disabled={autoGenerateId && !teacher?.id && Boolean(nextEmployeeId)}
-                />
-              </div>
+              <LeadingIconInput
+                icon={Hash}
+                value={teacherDraft.employeeId || ""}
+                onChange={(event) => onDraftChange({ employeeId: event.target.value })}
+                placeholder={t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })}
+                disabled={autoGenerateId && !teacher?.id && Boolean(nextEmployeeId)}
+              />
             </Field>
           ) : null}
 
@@ -243,7 +224,7 @@ export function TeacherEmploymentSection({
               />
             </Field>
           ) : null}
-        </Card>
+        </SectionCard>
       ) : null}
     </div>
   );

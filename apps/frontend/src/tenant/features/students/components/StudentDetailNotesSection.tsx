@@ -1,4 +1,5 @@
-import { DETAIL_SECTION_TITLE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FileText } from "lucide-react";
 
@@ -11,7 +12,7 @@ export function StudentDetailNotesSection({ notes }: StudentDetailNotesSectionPr
 
   return (
     <div className="space-y-2">
-      <h4 className={`${DETAIL_SECTION_TITLE} ps-1`}>{t("students.form.notesSection")}</h4>
+      <DetailSectionTitle>{t("students.form.notesSection")}</DetailSectionTitle>
       <div className={`p-3.5 ${WORK_SURFACE_INNER} border-border/60 text-xs text-foreground space-y-1`}>
         <div className="flex items-center gap-2 text-muted-foreground mb-1">
           <FileText className="w-3.5 h-3.5 text-primary" />

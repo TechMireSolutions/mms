@@ -4,6 +4,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { RequiredBanner } from "@/components/ui/RequiredBanner";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { FormFooterEntityChip } from "@/components/ui/FormFooterChip";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 import { StudentFormTabContent } from "@/tenant/features/students/components/StudentFormTabContent";
 import { useStudentFormState } from "@/tenant/features/students/hooks/useStudentFormState";
@@ -24,9 +25,7 @@ export default function StudentForm({
 
   const footerStart = form.linkedContact?.name ? (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
-      <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
-        {form.linkedContact.name}
-      </span>
+      <FormFooterEntityChip>{form.linkedContact.name}</FormFooterEntityChip>
       <div className="flex items-center gap-1.5">
         {form.isFieldEnabled("grNumber") ? <GrBadge grNumber={form.studentDraft.grNumber} /> : null}
         {form.isFieldEnabled("status") ? (

@@ -14,13 +14,10 @@ import {
   resolveSubListAllowAdd,
 } from "./ContactSubListCards";
 import { ContactCustomFieldControls } from "./ContactCustomFieldControls";
-
-type CustomCollectionRow = Record<string, unknown>;
-
-function readRows(contactDraft: Partial<Contact>, tabId: string): CustomCollectionRow[] {
-  const value = contactDraft[tabId];
-  return Array.isArray(value) ? (value as CustomCollectionRow[]) : [];
-}
+import {
+  readContactCustomCollectionRows,
+  type CustomCollectionRow,
+} from "../contactCustomCollectionRows";
 
 function emptyRow(fields: FieldDefinition[]): CustomCollectionRow {
   const row: CustomCollectionRow = {};
@@ -50,7 +47,7 @@ export function ContactCustomCollectionTab({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const rowFields = listEnabledCustomContactFormFields(fields, tabId);
-  const rows = readRows(contactDraft, tabId);
+  const rows = readContactCustomCollectionRows(contactDraft, tabId);
   const allowAdd = resolveSubListAllowAdd([], rowFields.length);
 
   const setRows = (next: CustomCollectionRow[]) => {

@@ -60,6 +60,7 @@ export default function Teachers(): React.JSX.Element {
     handleExportCSV,
     handleBulkExport,
     clearFilters,
+    hasActiveFilters,
   } = useTeachersPageController();
 
   const {
@@ -136,6 +137,7 @@ export default function Teachers(): React.JSX.Element {
               canWrite={canWrite}
               canDelete={canDelete}
               canExport={canExport}
+              hasActiveFilters={hasActiveFilters}
               columnRegistry={columnRegistry}
               updateUserColumnLayout={updateUserColumnLayout}
               customizerLabels={customizerLabels}

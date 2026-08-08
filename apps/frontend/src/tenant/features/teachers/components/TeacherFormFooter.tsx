@@ -2,6 +2,11 @@ import React from "react";
 import type { Contact, Teacher } from "@mms/shared";
 import { DEFAULT_TEACHER_STATUS } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import {
+  FormFooterBadge,
+  FormFooterEntityChip,
+  FormFooterErrorChip,
+} from "@/components/ui/FormFooterChip";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface TeacherFormFooterProps {
@@ -23,13 +28,11 @@ export function TeacherFormFooter({
     const status = teacherDraft.status || DEFAULT_TEACHER_STATUS;
     return (
       <div className="flex flex-wrap items-center gap-2.5 text-xs">
-        <span className="font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60">
-          {linkedContact.name}
-        </span>
+        <FormFooterEntityChip>{linkedContact.name}</FormFooterEntityChip>
         <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold border border-primary/20 text-xs">
+          <FormFooterBadge>
             {t("teachers.form.employeeIdBadge", { id: teacherDraft.employeeId || t("common.notSpecified") })}
-          </span>
+          </FormFooterBadge>
           <StatusBadge status={status} config={statusConfig} size="sm" />
         </div>
       </div>
@@ -38,9 +41,9 @@ export function TeacherFormFooter({
 
   if (requireContactLink) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20">
+      <FormFooterErrorChip>
         {t("teachers.form.contactRequired")}
-      </span>
+      </FormFooterErrorChip>
     );
   }
 

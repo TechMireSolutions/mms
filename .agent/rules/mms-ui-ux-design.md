@@ -32,6 +32,11 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `QuickActionButton` (`@/components/ui/QuickActionButton`) — directory/detail quick actions (Call / WA / SMS / Email pattern)
   - `ExportToolbar` (`@/components/ui/ExportToolbar`)
   - `SafeResponsiveContainer` (`@/components/ui/SafeResponsiveContainer`)
+  - `LeadingIconInput` (`@/components/ui/LeadingIconInput`) — Input with a leading focus-tinted icon (`group/input` + absolute icon + `ps-*`); do not hand-roll the icon-in-input wrapper in features (used in Contacts/Students/Teachers forms)
+  - `DetailSectionTitle` (`@/components/ui/DetailSectionTitle`) — SSOT for the `DETAIL_SECTION_TITLE` detail-section heading markup (Contacts / Students / Teachers detail drawers)
+  - `FormFooterChip` (`@/components/ui/FormFooterChip`) — `FormFooterEntityChip` / `FormFooterBadge` / `FormFooterErrorChip` for form-footer entity + tone badges (Contacts / Students / Teachers / Sessions / QB); do not fork the `bg-muted/65` / `bg-{tone}/10 border-{tone}/20` / destructive chip spans
+  - `DrawerSyncStatusFooter` (`@/components/ui/DetailDrawerArchiveChrome`) — synced/archived status footer for entity detail drawers (Students / Teachers / Sessions); do not hand-roll the success/warning dot + uppercase label
+  - `ModuleFiltersMenuButton` (`@/components/ui/ModuleFiltersMenuButton`) — `ModuleFilterDropdown` + `ModuleFilterCheckboxGroup` / `ModuleFilterRadioGroup` / `ModuleFilterDivider` filter-popover shell (Contacts / Students / Teachers / Messaging); do not inline raw `DropdownMenu` filter chrome in Work toolbars
 - Extend central primitives safely when custom variations are needed. Do not implement ad-hoc primitives in feature folders.
 
 ### Detail drawers

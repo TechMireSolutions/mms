@@ -12,7 +12,7 @@ export function contactDraftSnapshot(draft: Partial<Contact>): string {
 }
 
 /** Ensure Social / Relationship tabs open with one editable row (zero-click). */
-export function withEmptyCollectionRows(
+function withEmptyCollectionRows(
   draft: Partial<Contact>,
   socialPlatforms: string[],
   relationshipOptions: string[],

@@ -16,7 +16,7 @@ import {
 
 export type FieldsDraftSnapshot = ModuleFieldsDraftSnapshot<FieldDefinition>;
 
-export type SetupDeleteNotify = ModuleSetupDeleteNotify;
+type SetupDeleteNotify = ModuleSetupDeleteNotify;
 
 type ContactPreflightContext = {
   config: FieldConfig;

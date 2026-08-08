@@ -15,7 +15,7 @@ import {
 
 export type StudentsFieldsDraftSnapshot = ModuleFieldsDraftSnapshot<FieldDefinition>;
 
-export type StudentsSetupDeleteNotify = ModuleSetupDeleteNotify;
+type StudentsSetupDeleteNotify = ModuleSetupDeleteNotify;
 
 type StudentPreflightContext = {
   settings: StudentsSettings;

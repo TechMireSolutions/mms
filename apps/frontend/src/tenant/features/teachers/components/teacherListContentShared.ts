@@ -14,6 +14,12 @@ export interface TeacherListContentProps {
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
+  /** Active filter state for the directory empty state (Contacts/Students parity). */
+  hasActiveFilters: boolean;
+  /** Clear-filter CTA shown when filters are active and the directory is empty. */
+  onClearFilters?: () => void;
+  /** "Show active" CTA shown when viewing the trash and the directory is empty. */
+  onShowActive?: () => void;
   /** Column visibility gate — prefer over parallel show* booleans. */
   isColumnVisible: (key: string) => boolean;
   /** Live Work column layout (tenant registry + user overlay). */

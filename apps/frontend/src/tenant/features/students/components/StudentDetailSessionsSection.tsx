@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
+import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookOpen } from "lucide-react";
 import { formatMoney, type AppTranslationKey, type Session } from "@mms/shared";
@@ -25,7 +25,7 @@ export function StudentDetailSessionsSection({ sessions }: StudentDetailSessions
 
   return (
     <div className="space-y-3">
-      <h4 className={`${DETAIL_SECTION_TITLE} ps-1`}>{t("students.detail.enrolledSessions", { count: sessions.length })}</h4>
+      <DetailSectionTitle>{t("students.detail.enrolledSessions", { count: sessions.length })}</DetailSectionTitle>
       {sessions.length === 0 ? (
         <EmptyState
           compact

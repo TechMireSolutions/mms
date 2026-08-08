@@ -4,6 +4,7 @@ import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import {
   DetailDrawerRestoreOrEditAction,
+  DrawerSyncStatusFooter,
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
@@ -75,12 +76,11 @@ export default function StudentDetail({
       headerActions={headerActions}
       headerExtra={<StudentArchivedBanner student={student} />}
       footer={
-        <div className="flex items-center gap-1.5">
-          <div className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`} />
-          <span className={`text-xs font-bold uppercase ${isArchived ? "text-warning" : "text-success"}`}>
-            {isArchived ? t("students.detail.archivedSubtitle") : t("students.detail.synced")}
-          </span>
-        </div>
+        <DrawerSyncStatusFooter
+          isArchived={isArchived}
+          archivedLabel={t("students.detail.archivedSubtitle")}
+          syncedLabel={t("students.detail.synced")}
+        />
       }
     >
       <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />

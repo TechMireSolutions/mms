@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { School } from "lucide-react";
+import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmpty";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { School } from "lucide-react";
 import { TeacherListCards } from "@/tenant/features/teachers/components/TeacherListCards";
 import { TeacherListTable } from "@/tenant/features/teachers/components/TeacherListTable";
 import { buildTeacherCustomFieldsById } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
@@ -15,7 +15,7 @@ type TeacherListContentInput = Omit<TeacherListContentProps, "customFieldsById">
 
 export function TeacherListContent(props: TeacherListContentInput): React.JSX.Element {
   const { t } = useTranslation();
-  const { teachers, showDeleted, viewMode, columnRegistry } = props;
+  const { teachers, showDeleted, viewMode, columnRegistry, hasActiveFilters, onClearFilters, onShowActive, canWrite } = props;
   const customFieldsById = useMemo(
     () => buildTeacherCustomFieldsById(columnRegistry),
     [columnRegistry],
@@ -23,11 +23,31 @@ export function TeacherListContent(props: TeacherListContentInput): React.JSX.El
   const contentProps: TeacherListContentProps = { ...props, customFieldsById };
 
   if (teachers.length === 0) {
+    const emptyDescription = hasActiveFilters
+      ? t("teachers.tryAdjustingFilters")
+      : showDeleted
+        ? t("teachers.empty.trashSubtitle")
+        : canWrite
+          ? t("teachers.clickAddTeacher")
+          : t("teachers.emptyDirectoryReadOnly");
+
     return (
-      <EmptyState
+      <ModuleWorkDirectoryEmpty
         icon={School}
-        title={showDeleted ? t("teachers.empty.trashTitle") : t("teachers.empty.title")}
-        description={showDeleted ? t("teachers.empty.trashSubtitle") : t("teachers.empty.subtitle")}
+        title={
+          hasActiveFilters
+            ? t("teachers.noTeachersMatchFilters")
+            : showDeleted
+              ? t("teachers.noDeletedTeachers")
+              : t("teachers.empty.title")
+        }
+        description={emptyDescription}
+        hasActiveFilters={hasActiveFilters}
+        viewingDeleted={showDeleted}
+        onClearFilters={onClearFilters ?? (() => undefined)}
+        onShowActive={onShowActive}
+        clearFiltersLabel={t("teachers.clearFilters")}
+        showActiveLabel={t("teachers.showActive")}
       />
     );
   }

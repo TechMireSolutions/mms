@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
 import { listEnabledCustomContactFormFields, type Contact } from "@mms/shared";
-import { Input } from "@/components/ui/input";
 import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import {
   ContactSubListCustomFields,
@@ -127,30 +127,26 @@ export function ContactLabeledValueSubListTab({
             updateItem,
           };
           const valueInput = (
-            <div className="group/input relative flex min-w-0 flex-1 items-center">
-              <Icon className="pointer-events-none absolute start-3.5 h-4 w-4 text-muted-foreground/60 transition-colors group-focus-within/input:text-primary" />
-              <Input
-                type={valueInputType}
-                id={`${valueInputIdPrefix}-${idx}`}
-                name={`${valueInputIdPrefix}-${idx}`}
-                value={stringValue}
-                required={isFieldRequired(listKey, valueFieldKey)}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (onValueChange) {
-                    onValueChange({ ...fieldCtx, value });
-                    return;
-                  }
-                  updateItem(idx, { [valueFieldKey]: value });
-                }}
-                onBlur={onValueBlur ? () => onValueBlur(idx) : undefined}
-                placeholder={valuePlaceholder}
-                className={cn(
-                  "ps-10",
-                  valueError && "border-destructive focus-visible:ring-destructive",
-                )}
-              />
-            </div>
+            <LeadingIconInput
+              icon={Icon}
+              type={valueInputType}
+              id={`${valueInputIdPrefix}-${idx}`}
+              name={`${valueInputIdPrefix}-${idx}`}
+              value={stringValue}
+              required={isFieldRequired(listKey, valueFieldKey)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (onValueChange) {
+                  onValueChange({ ...fieldCtx, value });
+                  return;
+                }
+                updateItem(idx, { [valueFieldKey]: value });
+              }}
+              onBlur={onValueBlur ? () => onValueBlur(idx) : undefined}
+              placeholder={valuePlaceholder}
+              wrapperClassName="flex-1 min-w-0"
+              className={cn(valueError && "border-destructive focus-visible:ring-destructive")}
+            />
           );
           return (
             <ListFieldCard

@@ -9,7 +9,7 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 
-export interface UseContactsExportActionsOptions {
+interface UseContactsExportActionsOptions {
   tableColumns: ContactExportColumn[];
   canExport: boolean;
   search: string;

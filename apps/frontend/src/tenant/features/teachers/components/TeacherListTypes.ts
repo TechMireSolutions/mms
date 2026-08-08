@@ -22,6 +22,12 @@ export interface TeacherListProps {
   canDelete?: boolean;
   canExport?: boolean;
   showDeleted?: boolean;
+  /** Active filter state for the directory empty state (Contacts/Students parity). */
+  hasActiveFilters?: boolean;
+  /** Clear-filter CTA shown when filters are active and the directory is empty. */
+  onClearFilters?: () => void;
+  /** "Show active" CTA shown when viewing the trash and the directory is empty. */
+  onShowActive?: () => void;
   selectedIds: string[];
   onSelectOne: (id: string) => void;
   onSelectAll: (pageIds: string[]) => void;

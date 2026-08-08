@@ -1,7 +1,7 @@
 import React from "react";
 import { User } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
+import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import type { Contact } from "@mms/shared";
@@ -41,17 +41,14 @@ export function ContactBasicIdentityFields({
             error={getFieldError("firstName")}
             id={`cf-${formInstanceId}-firstName`}
           >
-            <div className="relative flex items-center group/input">
-              <User className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                id={`cf-${formInstanceId}-firstName`}
-                name="firstName"
-                value={contactDraft.firstName || ""}
-                onChange={(e) => updateDraft({ firstName: e.target.value })}
-                placeholder={t("contacts.fields.firstName")}
-                className="ps-10"
-              />
-            </div>
+            <LeadingIconInput
+              icon={User}
+              id={`cf-${formInstanceId}-firstName`}
+              name="firstName"
+              value={contactDraft.firstName || ""}
+              onChange={(e) => updateDraft({ firstName: e.target.value })}
+              placeholder={t("contacts.fields.firstName")}
+            />
           </Field>
         )}
 
@@ -62,17 +59,14 @@ export function ContactBasicIdentityFields({
             error={getFieldError("lastName")}
             id={`cf-${formInstanceId}-lastName`}
           >
-            <div className="relative flex items-center group/input">
-              <User className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
-              <Input
-                id={`cf-${formInstanceId}-lastName`}
-                name="lastName"
-                value={contactDraft.lastName || ""}
-                onChange={(e) => updateDraft({ lastName: e.target.value })}
-                placeholder={t("contacts.fields.lastName")}
-                className="ps-10"
-              />
-            </div>
+            <LeadingIconInput
+              icon={User}
+              id={`cf-${formInstanceId}-lastName`}
+              name="lastName"
+              value={contactDraft.lastName || ""}
+              onChange={(e) => updateDraft({ lastName: e.target.value })}
+              placeholder={t("contacts.fields.lastName")}
+            />
           </Field>
         )}
 

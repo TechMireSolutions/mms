@@ -1,9 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { Teacher, TeacherSortField } from '@mms/shared';
-import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import { getDirectoryPageSelection } from '@/lib/directorySelection';
-import { teacherStatusBadgeConfig } from '@/lib/teachers/teacherStatusUi';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useTeacherStatusConfig } from '@/tenant/features/teachers/hooks/useTeacherStatusConfig';
 
 interface UseTeacherListStateOptions {
   teachers: Teacher[];
@@ -29,15 +27,9 @@ export function useTeacherListState({
   onSortChange,
   isColumnVisible,
 }: UseTeacherListStateOptions) {
-  const { t } = useTranslation();
-  const { statuses } = useTeacherConfig();
-
   const columnVisible = isColumnVisible ?? (() => true);
 
-  const statusConfig = useMemo(
-    () => teacherStatusBadgeConfig(t, statuses),
-    [statuses, t],
-  );
+  const statusConfig = useTeacherStatusConfig();
 
   const sortField = controlledSortField;
   const sortDir = controlledSortDir;
