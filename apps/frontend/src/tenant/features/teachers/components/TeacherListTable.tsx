@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +25,9 @@ import {
 } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
 import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
+
+const TEACHERS_ROW_ACTIONS_TRIGGER_CLASS =
+  "rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100";
 
 type TeacherListTableProps = Omit<TeacherListContentProps, never>;
 
@@ -125,12 +129,22 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
         {teachers.map((teacher) => {
           const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
           return (
-            <TableRow key={teacher.id} className={`hover:bg-muted/20 transition-colors ${isSelected ? "bg-primary/[0.015]" : ""}`}>
+            <motion.tr
+              key={teacher.id}
+              layout="position"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
+              className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
+            >
               {showSelectColumn && (
                 <TableCell className="px-4 py-3">
                   <Checkbox
                     checked={isSelected}
                     onCheckedChange={() => onSelectOne(teacherIdStr)}
+                    aria-label={t("teachers.table.selectTeacher", { name: displayName })}
+                    className="cursor-pointer"
                   />
                 </TableCell>
               )}
@@ -167,6 +181,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
                     showDeleted={showDeleted}
                     canWrite={canWrite}
                     canDelete={canDelete}
+                    triggerClassName={TEACHERS_ROW_ACTIONS_TRIGGER_CLASS}
                     onEdit={onEdit}
                     onRequestDelete={onRequestDelete}
                     onView={onView}
@@ -177,7 +192,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
                   />
                 </TableCell>
               )}
-            </TableRow>
+            </motion.tr>
           );
         })}
       </TableBody>

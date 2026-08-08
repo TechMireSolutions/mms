@@ -6,6 +6,7 @@ import { TeacherListDetailDrawer } from '@/tenant/features/teachers/components/T
 import { TeachersBulkActionBar } from '@/tenant/features/teachers/components/TeachersBulkActionBar';
 import type { TeacherListProps } from '@/tenant/features/teachers/components/TeacherListTypes';
 import { useTeacherListState } from '@/tenant/features/teachers/components/useTeacherListState';
+import { computeTeachersSelectionTargets } from '@/tenant/features/teachers/hooks/teachersSelectionTargets';
 
 export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 
@@ -57,7 +58,6 @@ export function TeacherList({
     setViewTeacher,
     allSelected,
     someSelected,
-    selectedTeachers,
     handleSort,
     handleSelectAll,
     handleSelectOne,
@@ -76,6 +76,11 @@ export function TeacherList({
   const showSelectColumn = true;
   const showActionsColumn = true;
   const resolveColumnVisible = columnVisible;
+
+  const selectionTargets = computeTeachersSelectionTargets({
+    selectedIds,
+    workTeachers: teachers,
+  });
 
   const showBulkExport =
     canExport &&
@@ -121,7 +126,7 @@ export function TeacherList({
       {showSelectColumn && (
         <TeachersBulkActionBar
           selectedIds={selectedIds}
-          selectedTeachers={selectedTeachers}
+          selectionTargets={selectionTargets}
           showDeleted={showDeleted}
           canWrite={canWrite}
           canDelete={canDelete}

@@ -46,7 +46,6 @@ export function useTeacherListState({
 
   const pageIds = teachers.map((teacher) => String(teacher.id));
   const { allSelected, someSelected } = getDirectoryPageSelection(pageIds, selectedIds);
-  const selectedTeachers = teachers.filter((teacher) => selectedIds.includes(String(teacher.id)));
 
   const handleSelectAll = () => {
     onSelectAll(pageIds);
@@ -73,7 +72,6 @@ export function useTeacherListState({
     setViewTeacher,
     allSelected,
     someSelected,
-    selectedTeachers,
     handleSort,
     handleSelectAll,
     handleSelectOne,

@@ -9,10 +9,11 @@ import {
 import { type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Teacher } from '@mms/shared';
+import type { TeachersSelectionTargets } from '@/tenant/features/teachers/hooks/teachersSelectionTargets';
 
 export interface TeachersBulkActionBarProps {
   selectedIds: string[];
-  selectedTeachers: Teacher[];
+  selectionTargets: TeachersSelectionTargets;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
@@ -32,7 +33,7 @@ export interface TeachersBulkActionBarProps {
 /** Teachers Work bulk bar — Students-shaped composition over shared ModuleWorkBulkActionBar. */
 export function TeachersBulkActionBar({
   selectedIds,
-  selectedTeachers,
+  selectionTargets,
   showDeleted,
   canWrite,
   canDelete,
@@ -56,9 +57,9 @@ export function TeachersBulkActionBar({
   const showMessaging = !showDeleted && (showWhatsApp || showSms || showEmail);
 
   const handleChannel = (channel: BulkSelectionMessageChannel): void => {
-    if (channel === 'whatsapp') onWhatsApp?.(selectedTeachers);
-    else if (channel === 'sms') onSms?.(selectedTeachers);
-    else onEmail?.(selectedTeachers);
+    if (channel === 'whatsapp') onWhatsApp?.(selectionTargets.waTargets);
+    else if (channel === 'sms') onSms?.(selectionTargets.smsReady);
+    else onEmail?.(selectionTargets.emailReady);
   };
 
   return (
@@ -77,9 +78,11 @@ export function TeachersBulkActionBar({
           ? {
               onChannel: handleChannel,
               labels: {
-                whatsapp: t('teachers.list.actionWhatsApp'),
-                sms: t('teachers.list.actionSms'),
-                email: t('teachers.list.actionEmail'),
+                whatsapp: t('teachers.whatsappBulk', {
+                  count: selectionTargets.waTargets.length,
+                }),
+                sms: t('teachers.smsBulk', { count: selectionTargets.smsReady.length }),
+                email: t('teachers.emailBulk', { count: selectionTargets.emailReady.length }),
               },
               channels: {
                 whatsapp: showWhatsApp,
