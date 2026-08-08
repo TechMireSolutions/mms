@@ -36,6 +36,11 @@ export function canReadCollection(user: User, collectionName: string): boolean {
     const mapped = COLLECTION_READ_PERMISSION.students;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
+  // Typed teachers table is REST-only (not document-store allowlisted).
+  if (collectionName === 'teachers') {
+    const mapped = COLLECTION_READ_PERMISSION.teachers;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
   // Typed messaging tables are REST-only (not document-store allowlisted).
   if (collectionName === 'message_logs' || collectionName === 'message_templates') {
     return canReadMessaging(user);
@@ -72,6 +77,11 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
     const mapped = COLLECTION_WRITE_PERMISSION.students;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
+  // Typed teachers table is REST-only (not document-store allowlisted).
+  if (collectionName === 'teachers') {
+    const mapped = COLLECTION_WRITE_PERMISSION.teachers;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
   // Typed messaging tables are REST-only (not document-store allowlisted).
   if (collectionName === 'message_logs' || collectionName === 'message_templates') {
     return canWriteMessaging(user);
@@ -103,6 +113,11 @@ export function canDeleteCollection(user: User, collectionName: string): boolean
   // Typed students table is REST-only (not document-store allowlisted).
   if (collectionName === 'students') {
     const mapped = COLLECTION_DELETE_PERMISSION.students;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed teachers table is REST-only (not document-store allowlisted).
+  if (collectionName === 'teachers') {
+    const mapped = COLLECTION_DELETE_PERMISSION.teachers;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
   if (!isAllowedCollectionName(collectionName)) {

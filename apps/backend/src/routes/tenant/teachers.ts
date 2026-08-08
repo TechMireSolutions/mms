@@ -8,17 +8,18 @@ import {
   bulkSoftDeleteTeachers,
   bulkRestoreTeachers,
   bulkUpdateTeacherStatus,
-  loadTeachers,
   loadTeachersPage,
   loadTeachersByIds,
   loadTeacherById,
   loadTeacherLinkedContactIds,
   computeNextTeacherEmployeeIdForSettings,
   loadTeachersWidgetAggregates,
+  loadTeachersCommandMetrics,
+  countTeachers,
   updateTeacherById,
 } from '../../services/teacherService.js';
 import type { User } from '@mms/shared';
-import { TEACHERS_MODULE_MANIFEST, computeTeachersCommandMetrics } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import {
   teacherRecordSchema,
@@ -28,8 +29,15 @@ import {
   teachersBulkStatusSchema,
 } from '../../validation/teacherSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
+import { registerFieldUsageRoutes } from '../../lib/registerFieldUsageRoutes.js';
+import { teacherSetupConfigRoutes } from './teachers/teacherSetupConfigRoutes.js';
+import { teacherLookupRoutes } from './teachers/teacherLookupRoutes.js';
+import { teacherExportRoutes } from './teachers/teacherExportRoutes.js';
+import {
+  loadTeacherFieldUsageCount,
+  loadTeacherFieldUsageCounts,
+} from '../../services/teacherService.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -40,7 +48,16 @@ export default async function teachersRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  // --- Register Standard Tenant Routes ---
+  await fastify.register(teacherSetupConfigRoutes);
+  await fastify.register(teacherLookupRoutes);
+  await fastify.register(teacherExportRoutes);
+
+  registerFieldUsageRoutes(fastify, {
+    canRead: (user) => canReadCollection(user, 'teachers'),
+    loadCount: loadTeacherFieldUsageCount,
+    loadCounts: loadTeacherFieldUsageCounts,
+  });
+
   registerStandardTenantRoutes(fastify, {
     collection: 'teachers',
     schema: teacherRecordSchema,
@@ -50,13 +67,13 @@ export default async function teachersRoutes(
     nameSingular: 'teacher',
     namePlural: 'teachers',
     loadPageFn: (query) => loadTeachersPage(query),
-    loadAllFn: loadTeachers,
+    loadCountFn: countTeachers,
     loadByIdFn: loadTeacherById,
     createFn: createTeacher,
     updateFn: updateTeacherById,
     deleteFn: deleteTeacherById,
     restoreFn: restoreTeacherById,
-    computeMetricsFn: (teachers) => computeTeachersCommandMetrics(teachers),
+    loadMetricsFn: loadTeachersCommandMetrics,
     loadWidgetAggregatesFn: loadTeachersWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
     loadByIdsFn: loadTeachersByIds,
     loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
@@ -106,7 +123,6 @@ export default async function teachersRoutes(
     }
   });
 
-  // --- Custom GET Next Employee ID ---
   fastify.get('/next-employee-id', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);

@@ -44,12 +44,9 @@ export function useTeacherListState({
     });
   }, [customFields, settings.fieldOrder]);
 
-  const showSpecialization = isColumnVisible ? isColumnVisible('specialization') : true;
-  const showQualification = isColumnVisible ? isColumnVisible('qualification') : true;
-  const showJoinDate = isColumnVisible ? isColumnVisible('joinDate') : true;
-  const showStatus = isColumnVisible ? isColumnVisible('status') : true;
+  const columnVisible = isColumnVisible ?? (() => true);
   const visibleCustomFields = sortedCustomFields.filter((field) =>
-    isColumnVisible ? isColumnVisible(`custom:${field.id}`) : true,
+    columnVisible(`custom:${field.id}`),
   );
 
   const statusConfig = useMemo(() => {
@@ -133,10 +130,7 @@ export function useTeacherListState({
     sortField,
     sortDir,
     statusConfig,
-    showSpecialization,
-    showQualification,
-    showJoinDate,
-    showStatus,
+    isColumnVisible: columnVisible,
     visibleCustomFields,
     selectedIds,
     setSelectedIds,

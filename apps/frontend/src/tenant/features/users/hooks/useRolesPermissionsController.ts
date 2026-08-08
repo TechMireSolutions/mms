@@ -12,6 +12,10 @@ import { useUsersConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
 import { useRolesPermissionDraft } from '@/tenant/features/users/hooks/useRolesPermissionDraft';
 
+type PendingMatrixLeave =
+  | { type: 'select'; role: WorkspaceRole }
+  | { type: 'edit'; target: WorkspaceRole | 'new' };
+
 export function useRolesPermissionsController() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useUsersConfig();
@@ -25,6 +29,7 @@ export function useRolesPermissionsController() {
   const [roles, setRoles] = useState<WorkspaceRole[]>(loadedRoles);
   const [editing, setEdit] = useState<WorkspaceRole | 'new' | null>(null);
   const [selected, setSel] = useState<WorkspaceRole | null>(null);
+  const [pendingMatrixLeave, setPendingMatrixLeave] = useState<PendingMatrixLeave | null>(null);
 
   useEffect(() => {
     if (!editing) {
@@ -74,6 +79,42 @@ export function useRolesPermissionsController() {
     commitRole({ ...displayRole, permissions: structuredClone(permDraft) }, 'permissions');
   };
 
+  const requestSelectRole = (next: WorkspaceRole): void => {
+    if (displayRole?.id === next.id) return;
+    if (!permDirty) {
+      setSel(next);
+      return;
+    }
+    setPendingMatrixLeave({ type: 'select', role: next });
+  };
+
+  const requestEditRole = (target: WorkspaceRole | 'new'): void => {
+    if (!permDirty) {
+      setEdit(target);
+      return;
+    }
+    setPendingMatrixLeave({ type: 'edit', target });
+  };
+
+  const clearPendingMatrixLeave = (): void => {
+    setPendingMatrixLeave(null);
+  };
+
+  const confirmPendingMatrixLeave = (): void => {
+    if (!pendingMatrixLeave) return;
+    resetPermDraft();
+    if (pendingMatrixLeave.type === 'select') {
+      setSel(pendingMatrixLeave.role);
+    } else {
+      setEdit(pendingMatrixLeave.target);
+    }
+    setPendingMatrixLeave(null);
+  };
+
+  const closeRoleForm = (): void => {
+    setEdit(null);
+  };
+
   const editTitle = editing
     ? editing === 'new'
       ? t('users.permissions.createTitle')
@@ -86,8 +127,12 @@ export function useRolesPermissionsController() {
     visibleModules,
     roles,
     editing,
-    setEdit,
-    setSel,
+    requestSelectRole,
+    requestEditRole,
+    closeRoleForm,
+    pendingMatrixLeave,
+    clearPendingMatrixLeave,
+    confirmPendingMatrixLeave,
     displayRole,
     permDraft,
     permDirty,

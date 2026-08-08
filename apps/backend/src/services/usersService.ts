@@ -1,6 +1,8 @@
 import {
   type WorkspaceUser,
   type ActivityLog,
+  type UsersListQuery,
+  type UsersListPageResult,
   normalizeWorkspaceUser,
   workspaceUserListSchema,
   activityLogListSchema,
@@ -15,11 +17,88 @@ import {
   softDeleteTenantUserRow,
   restoreTenantUserRow,
   findTenantUserRowById,
+  listTenantUsersByIds,
 } from '../db/repositories/tenantUserRepository.js';
+import {
+  aggregateUsersCommandMetrics,
+  countTenantUsersActive,
+  listTenantUsersPage,
+} from '../db/repositories/tenantUserRepositoryList.js';
 import { deleteRefreshTokensForUser } from './auth/authArtifactService.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { broadcastCollection } from './websocketService.js';
+import type { ContactLike } from '@mms/shared';
+import { hydrateWorkspaceUserProfile } from '@mms/shared';
+import { loadContactsByIds } from './contactService.js';
+
+async function hydrateUserRows(rows: Awaited<ReturnType<typeof listTenantUsersByIds>>): Promise<WorkspaceUser[]> {
+  const contactIds = [
+    ...new Set(
+      rows
+        .map((row) => row.contactId)
+        .filter((id): id is string | number => id != null && id !== '')
+        .map(String),
+    ),
+  ];
+  const contacts =
+    contactIds.length > 0 ? (await loadContactsByIds(contactIds)) as ContactLike[] : [];
+  return rows.map((row) =>
+    normalizeWorkspaceUser(
+      hydrateWorkspaceUserProfile(row, contacts) as Partial<WorkspaceUser>,
+    ),
+  );
+}
+
+export async function loadUsersPage(
+  query: UsersListQuery & { includeDeleted?: boolean },
+): Promise<UsersListPageResult> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { users: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 50, hasMore: false };
+  }
+  const page = await listTenantUsersPage(tenant, query);
+  const ids = page.rows.map((row) => String(row.id));
+  const rows = ids.length > 0 ? await listTenantUsersByIds(ids) : [];
+  const byId = new Map(rows.map((row) => [String(row.id), row]));
+  const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as typeof rows;
+  const users = await hydrateUserRows(ordered);
+  return {
+    users,
+    total: page.total,
+    page: page.page,
+    limit: page.limit,
+    hasMore: page.hasMore,
+  };
+}
+
+export async function loadUsersByIds(ids: string[]): Promise<WorkspaceUser[]> {
+  const uniqueIds = [...new Set(ids.map(String).filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+  const rows = await listTenantUsersByIds(uniqueIds);
+  return hydrateUserRows(rows);
+}
+
+export async function countUsers(): Promise<number> {
+  const tenant = getRequestTenant();
+  if (!tenant) return 0;
+  return countTenantUsersActive(tenant);
+}
+
+export async function loadUsersCommandMetrics() {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      total: 0,
+      active: 0,
+      suspended: 0,
+      admins: 0,
+      twoFaEnabled: 0,
+      activeSessions: 0,
+    };
+  }
+  return aggregateUsersCommandMetrics(tenant);
+}
 
 // --- Users ---
 export async function loadWorkspaceUsers(options?: {

@@ -1,13 +1,46 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Enrollment, EnrollmentsCommandMetricsSnapshot, EnrollmentsListPageResult } from '@mms/shared';
-import { ENROLLMENTS_MODULE_MANIFEST } from '@mms/shared';
+import type {
+  Enrollment,
+  EnrollmentsCommandMetricsSnapshot,
+  EnrollmentsListPageResult,
+  EnrollmentsReportAggregates,
+  EnrollmentsReportComparisonQuery,
+  EnrollmentsWidgetAggregateResult,
+  EnrollmentsWidgetOperation,
+  EnrollmentsWidgetFilterOperator,
+} from '@mms/shared';
+import {
+  ENROLLMENTS_MODULE_MANIFEST,
+  enrollmentsWidgetQueryFromWidget,
+  normalizeEnrollmentsReportComparisonQuery,
+} from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
 export const ENROLLMENTS_METRICS_QUERY_KEY = ['enrollments', 'metrics'] as const;
+export const ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY = [
+  ENROLLMENTS_MODULE_MANIFEST.collectionKey,
+  'report-aggregates',
+] as const;
+export const ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY = [
+  ENROLLMENTS_MODULE_MANIFEST.collectionKey,
+  'widget-aggregates',
+] as const;
+
+export interface EnrollmentsWidgetAggregateWidgetInput {
+  id: string;
+  collection: string;
+  operation: EnrollmentsWidgetOperation;
+  targetField?: string;
+  filterField?: string;
+  filterOperator?: EnrollmentsWidgetFilterOperator;
+  filterValue?: string;
+  xAxisField?: string;
+}
 
 const ENROLLMENTS_API = ENROLLMENTS_MODULE_MANIFEST.restBasePath;
 
@@ -68,12 +101,65 @@ export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {
   });
 }
 
+export function useEnrollmentsReportAggregates(
+  options?: { enabled?: boolean; comparison?: EnrollmentsReportComparisonQuery },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  const comparison = normalizeEnrollmentsReportComparisonQuery(options?.comparison);
+  const queryParams = new URLSearchParams();
+  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
+  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
+  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
+  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
+  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
+    queryFn: async ({ signal }): Promise<EnrollmentsReportAggregates> =>
+      apiJson<EnrollmentsReportAggregates>(
+        `${ENROLLMENTS_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled: isAuthenticated && enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useEnrollmentsWidgetAggregates(
+  widgets: EnrollmentsWidgetAggregateWidgetInput[],
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  const enrollmentQueries = widgets
+    .filter((widget) => widget.collection === 'enrollments')
+    .map((widget) => enrollmentsWidgetQueryFromWidget(widget));
+  const querySignature = enrollmentQueries.map((query) => query.id).sort().join(',');
+
+  return useQuery({
+    queryKey: [...ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
+    queryFn: async ({ signal }) => {
+      const aggregateResponse = await apiJson<{
+        results: Record<string, EnrollmentsWidgetAggregateResult>;
+      }>(`${ENROLLMENTS_API}/widget-aggregates`, {
+        method: 'POST',
+        body: JSON.stringify({ widgets: enrollmentQueries }),
+        signal,
+      });
+      return aggregateResponse?.results ?? {};
+    },
+    enabled: isAuthenticated && enabled && enrollmentQueries.length > 0,
+    staleTime: 30_000,
+  });
+}
+
 export function useEnrollmentMutations() {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_METRICS_QUERY_KEY });
+    invalidateEnrollmentsQueries(queryClient);
   };
 
   const createEnrollment = useMutation({
@@ -95,8 +181,11 @@ export function useEnrollmentMutations() {
   });
 
   const deleteEnrollment = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/${id}`, { method: 'DELETE' }),
+    mutationFn: async ({ id, deletionReason }: { id: string; deletionReason?: string }) =>
+      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/${id}`, {
+        method: 'DELETE',
+        body: JSON.stringify(deletionReason ? { deletionReason } : {}),
+      }),
     onSuccess: invalidate,
   });
 
@@ -109,10 +198,13 @@ export function useEnrollmentMutations() {
   });
 
   const bulkDeleteEnrollments = useMutation({
-    mutationFn: async (ids: string[]) =>
+    mutationFn: async ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) =>
       apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ENROLLMENTS_API}/bulk-delete`, {
         method: 'POST',
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({
+          ids,
+          ...(deletionReason ? { deletionReason } : {}),
+        }),
       }),
     onSuccess: invalidate,
   });
@@ -126,6 +218,17 @@ export function useEnrollmentMutations() {
     onSuccess: invalidate,
   });
 
+  const logExportAudit = useMutation({
+    mutationFn: async (payload: {
+      count: number;
+      scope: 'all' | 'filtered' | 'selection';
+    }) =>
+      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/export-audit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  });
+
   return {
     createEnrollment,
     updateEnrollment,
@@ -133,5 +236,6 @@ export function useEnrollmentMutations() {
     restoreEnrollment,
     bulkDeleteEnrollments,
     bulkRestoreEnrollments,
+    logExportAudit,
   };
 }

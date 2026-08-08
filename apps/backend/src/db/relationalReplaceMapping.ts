@@ -29,6 +29,10 @@ export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   student_field_configs: 29,
   student_module_preferences: 30,
   student_user_column_prefs: 31,
+  teacher_lookups: 32,
+  teacher_field_configs: 33,
+  teacher_module_preferences: 34,
+  teacher_user_column_prefs: 35,
   users: 900,
 };
 
@@ -266,6 +270,71 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/studentUserColumnPrefsRepository.js',
     fnName: 'replaceStudentUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllStudentUserColumnPrefsByWorkspace',
+  },
+  teacher_lookups: {
+    importPath: './repositories/teacherLookupsRepository.js',
+    fnName: 'replaceTeacherLookupsForWorkspace',
+    snapshotFnName: 'listAllTeacherLookupsByWorkspace',
+  },
+  teacher_field_configs: {
+    importPath: './repositories/teacherFieldConfigRepository.js',
+    fnName: 'replaceTeacherFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllTeacherFieldConfigsByWorkspace',
+  },
+  teacher_module_preferences: {
+    importPath: './repositories/teacherModulePreferencesRepository.js',
+    fnName: 'replaceTeacherModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllTeacherModulePreferencesByWorkspace',
+  },
+  teacher_user_column_prefs: {
+    importPath: './repositories/teacherUserColumnPrefsRepository.js',
+    fnName: 'replaceTeacherUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllTeacherUserColumnPrefsByWorkspace',
+  },
+  session_field_configs: {
+    importPath: './repositories/sessionFieldConfigRepository.js',
+    fnName: 'replaceSessionFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllSessionFieldConfigsByWorkspace',
+  },
+  session_module_preferences: {
+    importPath: './repositories/sessionModulePreferencesRepository.js',
+    fnName: 'replaceSessionModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllSessionModulePreferencesByWorkspace',
+  },
+  session_user_column_prefs: {
+    importPath: './repositories/sessionUserColumnPrefsRepository.js',
+    fnName: 'replaceSessionUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllSessionUserColumnPrefsByWorkspace',
+  },
+  enrollment_field_configs: {
+    importPath: './repositories/enrollmentFieldConfigRepository.js',
+    fnName: 'replaceEnrollmentFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllEnrollmentFieldConfigsByWorkspace',
+  },
+  enrollment_module_preferences: {
+    importPath: './repositories/enrollmentModulePreferencesRepository.js',
+    fnName: 'replaceEnrollmentModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllEnrollmentModulePreferencesByWorkspace',
+  },
+  enrollment_user_column_prefs: {
+    importPath: './repositories/enrollmentUserColumnPrefsRepository.js',
+    fnName: 'replaceEnrollmentUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllEnrollmentUserColumnPrefsByWorkspace',
+  },
+  user_field_configs: {
+    importPath: './repositories/userFieldConfigRepository.js',
+    fnName: 'replaceUserFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllUserFieldConfigsByWorkspace',
+  },
+  user_module_preferences: {
+    importPath: './repositories/userModulePreferencesRepository.js',
+    fnName: 'replaceUserModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllUserModulePreferencesByWorkspace',
+  },
+  user_user_column_prefs: {
+    importPath: './repositories/userUserColumnPrefsRepository.js',
+    fnName: 'replaceUserUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllUserUserColumnPrefsByWorkspace',
   },
   saved_reports: {
     importPath: './repositories/savedReportsRepository.js',

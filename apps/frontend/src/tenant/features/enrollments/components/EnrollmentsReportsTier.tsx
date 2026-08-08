@@ -1,19 +1,29 @@
 import type React from "react";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
 import { EnrollmentReports } from "@/tenant/features/enrollments/components/EnrollmentReports";
-import type { Enrollment } from "@/lib/data/enrollmentData";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useEnrollmentsReportAggregates } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { EMPTY_ENROLLMENTS_REPORT_AGGREGATES } from "@mms/shared";
 
-interface EnrollmentsReportsTierProps {
-  enrollments: Enrollment[];
-}
+export function EnrollmentsReportsTier(): React.JSX.Element {
+  const { t } = useTranslation();
+  const { data, isError, refetch } = useEnrollmentsReportAggregates();
 
-export function EnrollmentsReportsTier({
-  enrollments,
-}: EnrollmentsReportsTierProps): React.JSX.Element {
+  if (isError) {
+    return (
+      <ErrorState
+        title={t("enrollments.loadFailed")}
+        description={t("enrollments.loadFailedHint")}
+        onRetry={() => void refetch()}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <KPISummary category="enrollments" />
-      <EnrollmentReports enrollments={enrollments} />
+      <EnrollmentReports aggregates={data ?? EMPTY_ENROLLMENTS_REPORT_AGGREGATES} />
     </div>
   );
 }

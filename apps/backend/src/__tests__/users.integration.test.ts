@@ -40,16 +40,24 @@ const mockRestoreUserById = vi.fn();
 const mockBulkSoftDeleteUsers = vi.fn();
 const mockBulkRestoreUsers = vi.fn();
 
-vi.mock('../services/usersService.js', () => ({
-  loadWorkspaceUsers: (...args: unknown[]) => mockLoadWorkspaceUsers(...args),
-  upsertWorkspaceUsers: (...args: unknown[]) => mockUpsertWorkspaceUsers(...args),
-  loadLogs: (...args: unknown[]) => mockLoadLogs(...args),
-  upsertLogs: (...args: unknown[]) => mockUpsertLogs(...args),
-  deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
-  restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
-  bulkSoftDeleteUsers: (...args: unknown[]) => mockBulkSoftDeleteUsers(...args),
-  bulkRestoreUsers: (...args: unknown[]) => mockBulkRestoreUsers(...args),
-}));
+vi.mock('../services/usersService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/usersService.js')>();
+  return {
+    ...actual,
+    loadUsersPage: vi.fn().mockImplementation(async (query: { includeDeleted?: boolean }) => {
+      const users = await mockLoadWorkspaceUsers(query);
+      return { users, total: users.length, page: 1, limit: 50, hasMore: false };
+    }),
+    loadWorkspaceUsers: (...args: unknown[]) => mockLoadWorkspaceUsers(...args),
+    upsertWorkspaceUsers: (...args: unknown[]) => mockUpsertWorkspaceUsers(...args),
+    loadLogs: (...args: unknown[]) => mockLoadLogs(...args),
+    upsertLogs: (...args: unknown[]) => mockUpsertLogs(...args),
+    deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
+    restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
+    bulkSoftDeleteUsers: (...args: unknown[]) => mockBulkSoftDeleteUsers(...args),
+    bulkRestoreUsers: (...args: unknown[]) => mockBulkRestoreUsers(...args),
+  };
+});
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();
@@ -142,8 +150,8 @@ describe('users REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ users: [sampleUser] });
-    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: false });
+    expect(res.json()).toEqual({ users: [sampleUser], total: 1, page: 1, limit: 50, hasMore: false });
+    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: false, page: 1, limit: 50 });
     await app.close();
   });
 
@@ -164,8 +172,8 @@ describe('users REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ users: [deletedUser] });
-    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: true });
+    expect(res.json()).toEqual({ users: [deletedUser], total: 1, page: 1, limit: 50, hasMore: false });
+    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: true, page: 1, limit: 50 });
     await app.close();
   });
 
@@ -233,7 +241,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 1, failed: 0 });
-    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1']);
+    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1'], 'u-admin');
     await app.close();
   });
 

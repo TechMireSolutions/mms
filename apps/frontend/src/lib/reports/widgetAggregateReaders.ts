@@ -11,11 +11,16 @@ import {
   TEACHERS_METRICS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/hooks/collections/teachers";
+import {
+  SESSIONS_METRICS_QUERY_KEY,
+  SESSIONS_WIDGET_AGGREGATES_QUERY_KEY,
+} from "@/tenant/hooks/collections/sessions";
 import type { CustomWidget } from "./pinnedWidgetTypes";
 import {
   type ContactsWidgetAggregateResult,
   type StudentsWidgetAggregateResult,
   type TeachersWidgetAggregateResult,
+  type SessionsWidgetAggregateResult,
   formatMoney,
   formatNumber,
 } from "@mms/shared";
@@ -62,6 +67,21 @@ export function readTeachersWidgetAggregate(widgetId: string): TeachersWidgetAgg
 
 export function readTeachersTotalFromMetrics(): number {
   const metrics = queryClientInstance.getQueryData<{ total: number }>(TEACHERS_METRICS_QUERY_KEY);
+  return metrics?.total ?? 0;
+}
+
+export function readSessionsWidgetAggregate(widgetId: string): SessionsWidgetAggregateResult | undefined {
+  const queries = queryClientInstance.getQueriesData<Record<string, SessionsWidgetAggregateResult>>({
+    queryKey: SESSIONS_WIDGET_AGGREGATES_QUERY_KEY,
+  });
+  for (const [, aggregateByWidgetId] of queries) {
+    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
+  }
+  return undefined;
+}
+
+export function readSessionsTotalFromMetrics(): number {
+  const metrics = queryClientInstance.getQueryData<{ total: number }>(SESSIONS_METRICS_QUERY_KEY);
   return metrics?.total ?? 0;
 }
 

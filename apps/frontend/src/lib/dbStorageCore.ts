@@ -34,7 +34,10 @@ export function getSyncStatus(): SyncStatus {
 export function setSyncStatus(status: SyncStatus): void {
   _syncStatus = status;
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('sync-status-change', { detail: status }));
+    // Defer so saveObject during render (e.g. widget seed load) cannot update SyncStatusBadge mid-render.
+    queueMicrotask(() => {
+      window.dispatchEvent(new CustomEvent('sync-status-change', { detail: status }));
+    });
   }
 }
 

@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { type StoredTenantUser, resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import { activeDb } from '../dbConnection.js';
@@ -73,7 +73,7 @@ function splitProfileFields(user: TenantUserRow): {
   };
 }
 
-function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
+export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
   const base: TenantUserRow = {
     id: row.id,
     workspaceSubdomain: row.workspaceSubdomain,
@@ -99,6 +99,16 @@ function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
   }
 
   return base;
+}
+
+export async function listTenantUsersByIds(ids: string[]): Promise<TenantUserRow[]> {
+  const uniqueIds = [...new Set(ids.map(String).filter(Boolean))];
+  if (uniqueIds.length === 0) return [];
+  const rows = await getDb()
+    .select()
+    .from(tenantUsers)
+    .where(inArray(tenantUsers.id, uniqueIds));
+  return rows.map(rowToTenantUser);
 }
 
 export async function countTenantUsersByWorkspace(workspaceSubdomain: string): Promise<number> {

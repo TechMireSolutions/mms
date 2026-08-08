@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 const drizzleDir = join(process.cwd(), 'src/db/migrations_drizzle');
 
 describe('students deferred DB migrations (source)', () => {
-  it('0016 adds gender expression index', () => {
+  it('0016 adds gender expression index (historical; dropped by 0020)', () => {
     const sql = readFileSync(join(drizzleDir, '0016_students_gender_active_idx.sql'), 'utf8');
     expect(sql).toContain('students_workspace_gender_active_idx');
     expect(sql).toContain("custom_data->>'gender'");
@@ -51,5 +51,10 @@ describe('students sync integrity (source)', () => {
     expect(src).toContain("COALESCE(${students.grNumber}, '')");
     expect(src).not.toContain("customData}->>'status'");
     expect(src).not.toMatch(/grNumberExpr[\s\S]*customData}->>'grNumber'/);
+  });
+
+  it('0020 drops obsolete student JSONB gender expression index', () => {
+    const sql = readFileSync(join(drizzleDir, '0020_drop_students_gender_active_idx.sql'), 'utf8');
+    expect(sql).toContain('DROP INDEX IF EXISTS "students_workspace_gender_active_idx"');
   });
 });

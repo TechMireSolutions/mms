@@ -2,9 +2,13 @@ import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Clock, Tag, DollarSign,
-  Calendar, Gift, Edit2,
+  Calendar, Gift,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import {
+  DetailDrawerRestoreOrEditAction,
+} from "@/components/ui/DetailDrawerArchiveChrome";
+import { SessionArchivedBanner } from "@/tenant/features/sessions/components/SessionArchivedBanner";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatMoney, SESSIONS_MODULE_MANIFEST, formatDate, toTitleCase, type AppTranslationKey } from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -22,7 +26,6 @@ import { EventsTab } from "@/tenant/features/sessions/components/tabs/EventsTab"
 import { TabarrukTab } from "@/tenant/features/sessions/components/tabs/TabarrukTab";
 
 import { Session } from "@/lib/data/sessionsData";
-import { Button } from "@/components/ui/button";
 
 const TAB_KEYS = ["classes", "timetable", "discounts", "budget", "events", "tabarruk"] as const;
 
@@ -49,14 +52,25 @@ interface SessionDetailProps {
   onClose: () => void;
   onUpdate: (session: Session) => void | Promise<void>;
   onEdit: (session: Session) => void;
+  canDelete?: boolean;
+  onRestore?: (sessionId: string) => void | Promise<void>;
 }
 
-export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDetailProps) {
+export function SessionDetail({
+  session,
+  onClose,
+  onUpdate,
+  onEdit,
+  canDelete = false,
+  onRestore,
+}: SessionDetailProps) {
   const { t } = useTranslation();
   const { canWrite } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const { statuses: statusOptions } = useSessionConfig();
   const [tab, setTab] = useState<string>("classes");
   const TabContent = TAB_COMPONENTS[tab];
+  const isArchived = Boolean(session.deletedAt);
+  const canMutate = canWrite && !isArchived;
 
   const statusLabels = useMemo(() => {
     const labels: Record<string, string> = {};
@@ -87,64 +101,90 @@ export function SessionDetail({ session, onClose, onUpdate, onEdit }: SessionDet
 
   const formatSessionDate = (date?: string | null) => formatDate(date, true);
 
+  const headerActions = (
+    <DetailDrawerRestoreOrEditAction
+      isArchived={isArchived}
+      canRestore={canDelete}
+      canEdit={canWrite}
+      restoreLabel={t("sessions.restore")}
+      editLabel={t("sessions.detail.editTitle")}
+      onRestore={onRestore ? () => onRestore(String(session.id)) : undefined}
+      onEdit={() => onEdit(session)}
+    />
+  );
+
   return (
     <DetailDrawerShell
       onClose={onClose}
       title={session.name}
       subtitle={
-        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-          <span>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</span>
-          <span className="font-semibold text-foreground">
-            {t("sessions.form.perMonth", { amount: formatMoney(session.baseFee, session.currency) })}
-          </span>
-        </div>
+        isArchived ? (
+          t("sessions.detail.archivedSubtitle")
+        ) : (
+          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+            <span>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</span>
+            <span className="font-semibold text-foreground">
+              {t("sessions.form.perMonth", { amount: formatMoney(session.baseFee, session.currency) })}
+            </span>
+          </div>
+        )
       }
       icon={GraduationCap}
       ariaLabel={t("sessions.detail.ariaLabel")}
       className="max-w-2xl"
+      headerActions={headerActions}
       headerExtra={
-        <div className="flex items-center gap-2 flex-wrap">
-          <StatusBadge status={session.status} config={statusConfig} />
-          <span className="text-xs text-muted-foreground">{session.type}</span>
+        <>
+          <SessionArchivedBanner session={session} />
+          {!isArchived ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <StatusBadge status={session.status} config={statusConfig} />
+              <span className="text-xs text-muted-foreground">{session.type}</span>
+            </div>
+          ) : null}
+        </>
+      }
+      footer={
+        <div className="flex items-center gap-1.5">
+          <div className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`} />
+          <span className={`text-xs font-bold uppercase ${isArchived ? "text-warning" : "text-success"}`}>
+            {isArchived ? t("sessions.detail.archivedSubtitle") : t("sessions.detail.synced")}
+          </span>
         </div>
       }
-      headerActions={
-        canWrite ? (
-          <Button
-            type="button"
-            onClick={() => onEdit(session)}
-            variant="ghost"
-            size="icon"
-            aria-label={t("sessions.detail.editTitle")}
-            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Edit2 className="w-4 h-4" aria-hidden="true" />
-          </Button>
-        ) : undefined
-      }
     >
-      <div className="flex border-b border-border bg-card/40 flex-shrink-0 -mx-1 px-1 py-1.5 overflow-x-auto">
-        <SubTabBar
-          tabs={tabs}
-          value={tab}
-          onChange={setTab}
-          panelIdPrefix="session-detail-subtab"
-        />
-      </div>
+      {!isArchived ? (
+        <div className="flex border-b border-border bg-card/40 flex-shrink-0 -mx-1 px-1 py-1.5 overflow-x-auto">
+          <SubTabBar
+            tabs={tabs}
+            value={tab}
+            onChange={setTab}
+            panelIdPrefix="session-detail-subtab"
+          />
+        </div>
+      ) : null}
 
       <div className="flex-1">
-        <AnimatePresence mode="wait">
-          <motion.section
-            key={tab}
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            transition={{ duration: 0.18 }}
-            aria-label={tabs.find((tabDefinition) => tabDefinition.key === tab)?.label}
-          >
-            <TabContent session={session} onUpdate={onUpdate} canWrite={canWrite} />
-          </motion.section>
-        </AnimatePresence>
+        {isArchived ? (
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</p>
+            <p>{session.type}</p>
+            <StatusBadge status={session.status} config={statusConfig} />
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.section
+              key={tab}
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.18 }}
+              aria-label={tabs.find((tabDefinition) => tabDefinition.key === tab)?.label}
+            >
+              <TabContent session={session} onUpdate={onUpdate} canWrite={canMutate} />
+            </motion.section>
+          </AnimatePresence>
+        )}
       </div>
     </DetailDrawerShell>
   );

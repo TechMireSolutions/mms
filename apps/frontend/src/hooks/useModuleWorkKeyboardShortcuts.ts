@@ -11,6 +11,8 @@ export interface UseModuleWorkKeyboardShortcutsOptions {
   canWrite: boolean;
   showDeleted: boolean;
   onCreate: () => void;
+  /** When false, search/Escape/create shortcuts are inactive (e.g. other Work sub-tab). */
+  enabled?: boolean;
 }
 
 /**
@@ -26,13 +28,16 @@ export function useModuleWorkKeyboardShortcuts({
   canWrite,
   showDeleted,
   onCreate,
+  enabled = true,
 }: UseModuleWorkKeyboardShortcutsOptions): void {
   useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
+    enabled: enabled && canWrite && !showDeleted,
     onCreate,
   });
 
   useEffect(() => {
+    if (!enabled) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       const activeTag = (document.activeElement?.tagName || "").toLowerCase();
       const isInputActive =
@@ -60,5 +65,5 @@ export function useModuleWorkKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [searchInputId, selectedCount, hasActiveFilters, clearFilters, clearSelection]);
+  }, [enabled, searchInputId, selectedCount, hasActiveFilters, clearFilters, clearSelection]);
 }

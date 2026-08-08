@@ -18,7 +18,7 @@ interface UseModuleSettingsEditorOptions<T extends ModuleSettingsShape> {
   defaultEnabledTabs?: string[];
   defaultRequiredTabs?: string[];
   /** Tab keys that stay enabled on sync/save (default: `basic`). */
-  lockedEnabledTabs?: string[];
+  lockedEnabledTabs?: readonly string[];
 }
 
 /**
@@ -137,7 +137,10 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   };
 
   // Rehydrate fields editor on content change; skip while draft dirty.
+  const prevFieldsFingerprintRef = useRef<string | null>(null);
   useEffect(() => {
+    if (prevFieldsFingerprintRef.current === settingsRehydrateFingerprint) return;
+    prevFieldsFingerprintRef.current = settingsRehydrateFingerprint;
     if (isDraftDirtyRef.current()) return;
     const {
       settings: currentSettings,

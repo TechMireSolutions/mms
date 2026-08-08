@@ -94,6 +94,7 @@ export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
 export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
   contacts: CONTACTS_MODULE_MANIFEST.permissions.delete,
   students: STUDENTS_MODULE_MANIFEST.permissions.delete,
+  teachers: TEACHERS_MODULE_MANIFEST.permissions.delete,
   attendance_records: ATTENDANCE_MODULE_MANIFEST.permissions.delete,
 };
 
@@ -102,16 +103,8 @@ export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   branding: 'configuration.view',
   workspace: 'configuration.view',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [TEACHERS_MODULE_MANIFEST.settingsObjectKey]: TEACHERS_MODULE_MANIFEST.permissions.setupView,
-  [TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey]: TEACHERS_MODULE_MANIFEST.permissions.read,
-  [USERS_MODULE_MANIFEST.settingsObjectKey]: USERS_MODULE_MANIFEST.permissions.setupView,
-  [USERS_MODULE_MANIFEST.columnPreferencesObjectKey]: USERS_MODULE_MANIFEST.permissions.read,
   [ATTENDANCE_MODULE_MANIFEST.settingsObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.setupView,
   [ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.read,
-  [SESSIONS_MODULE_MANIFEST.settingsObjectKey]: SESSIONS_MODULE_MANIFEST.permissions.setupView,
-  [SESSIONS_MODULE_MANIFEST.columnPreferencesObjectKey]: SESSIONS_MODULE_MANIFEST.permissions.read,
-  [ENROLLMENTS_MODULE_MANIFEST.settingsObjectKey]: ENROLLMENTS_MODULE_MANIFEST.permissions.setupView,
-  [ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey]: ENROLLMENTS_MODULE_MANIFEST.permissions.read,
   [FINANCE_MODULE_MANIFEST.settingsObjectKey]: FINANCE_MODULE_MANIFEST.permissions.setupView,
   [FINANCE_MODULE_MANIFEST.invoiceColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
   [FINANCE_MODULE_MANIFEST.paymentColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
@@ -138,16 +131,8 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
   branding: 'settings.branding.write',
   workspace: 'settings.global.write',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [TEACHERS_MODULE_MANIFEST.settingsObjectKey]: TEACHERS_MODULE_MANIFEST.permissions.setupWrite,
-  [TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey]: TEACHERS_MODULE_MANIFEST.permissions.read,
-  [USERS_MODULE_MANIFEST.settingsObjectKey]: USERS_MODULE_MANIFEST.permissions.setupWrite,
-  [USERS_MODULE_MANIFEST.columnPreferencesObjectKey]: USERS_MODULE_MANIFEST.permissions.read,
   [ATTENDANCE_MODULE_MANIFEST.settingsObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.setupWrite,
   [ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.read,
-  [SESSIONS_MODULE_MANIFEST.settingsObjectKey]: SESSIONS_MODULE_MANIFEST.permissions.setupWrite,
-  [SESSIONS_MODULE_MANIFEST.columnPreferencesObjectKey]: SESSIONS_MODULE_MANIFEST.permissions.read,
-  [ENROLLMENTS_MODULE_MANIFEST.settingsObjectKey]: ENROLLMENTS_MODULE_MANIFEST.permissions.setupWrite,
-  [ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey]: ENROLLMENTS_MODULE_MANIFEST.permissions.read,
   [FINANCE_MODULE_MANIFEST.settingsObjectKey]: FINANCE_MODULE_MANIFEST.permissions.setupWrite,
   [FINANCE_MODULE_MANIFEST.invoiceColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
   [FINANCE_MODULE_MANIFEST.paymentColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
@@ -170,8 +155,7 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
 };
 
 export const ALLOWED_COLLECTIONS = new Set([
-  // contacts + students entity rows are REST-only (typed tables) — not document-store
-  TEACHERS_MODULE_MANIFEST.collectionKey,
+  // contacts + students + teachers entity rows are REST-only (typed tables) — not document-store
   USERS_MODULE_MANIFEST.collectionKey,
   'user_activity_logs',
   ATTENDANCE_MODULE_MANIFEST.collectionKey,
@@ -198,8 +182,6 @@ export const ALLOWED_COLLECTIONS = new Set([
   QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey,
   QUESTION_BANK_MODULE_MANIFEST.resultsCollectionKey,
   'currencies',
-  'teacherStatuses',
-  'teacherSpecializations',
   'sessionStatuses',
   'sessionTypes',
   'attendanceStatuses',
@@ -214,16 +196,8 @@ export const ALLOWED_OBJECTS = new Set([
   'workspace',
   EMAIL_INTEGRATION_OBJECT_KEY,
   'socialPlaceholders',
-  TEACHERS_MODULE_MANIFEST.settingsObjectKey,
-  TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey,
-  USERS_MODULE_MANIFEST.settingsObjectKey,
-  USERS_MODULE_MANIFEST.columnPreferencesObjectKey,
   ATTENDANCE_MODULE_MANIFEST.settingsObjectKey,
   ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey,
-  SESSIONS_MODULE_MANIFEST.settingsObjectKey,
-  SESSIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
-  ENROLLMENTS_MODULE_MANIFEST.settingsObjectKey,
-  ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
   FINANCE_MODULE_MANIFEST.settingsObjectKey,
   FINANCE_MODULE_MANIFEST.invoiceColumnPreferencesObjectKey,
   FINANCE_MODULE_MANIFEST.paymentColumnPreferencesObjectKey,
@@ -259,5 +233,6 @@ export function isAllowedObjectKey(key: string): boolean {
   return ALLOWED_OBJECTS.has(key)
     || key.startsWith('kpi_config_')
     || key.startsWith('prev_kpi_titles_')
+    || key.startsWith('prev_kpi_ids_')
     || key.startsWith('kpi_custom_cards_');
 }

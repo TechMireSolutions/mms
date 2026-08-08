@@ -1,5 +1,5 @@
 import React from "react";
-import { formatMonthName, type SessionsSettings } from "@mms/shared";
+import { formatMonthName, normalizeSessionsViewLayout, type SessionsSettings } from "@mms/shared";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -107,10 +107,10 @@ export function SessionsSettingsPreferences({
           </div>
           <SegmentedPillFilter
             size="sm"
-            value={(settingsDraft.defaultViewLayout || "cards") as "list" | "cards"}
+            value={normalizeSessionsViewLayout(settingsDraft.defaultViewLayout)}
             onChange={(value) => upd("defaultViewLayout", value)}
             options={[
-              { value: "list", label: t("sessions.settings.listView") },
+              { value: "table", label: t("sessions.settings.tableView") },
               { value: "cards", label: t("sessions.settings.cardGrid") },
             ]}
           />

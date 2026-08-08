@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { TeacherListConfirmDialogs } from '@/tenant/features/teachers/components/TeacherListConfirmDialogs';
 import { TeacherListContent } from '@/tenant/features/teachers/components/TeacherListContent';
 import { TeacherListDetailDrawer } from '@/tenant/features/teachers/components/TeacherListDetailDrawer';
-import { TeacherListSelectionBar } from '@/tenant/features/teachers/components/TeacherListSelectionBar';
+import { TeachersBulkActionBar } from '@/tenant/features/teachers/components/TeachersBulkActionBar';
 import type { TeacherListProps } from '@/tenant/features/teachers/components/TeacherListTypes';
 import { useTeacherListState } from '@/tenant/features/teachers/components/useTeacherListState';
+import { useTeachersExportActions } from '@/tenant/features/teachers/hooks/useTeachersExportActions';
 
 export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 
@@ -21,6 +23,7 @@ export function TeacherList({
   onBulkStatusChange,
   canWrite = true,
   canDelete = true,
+  canExport = false,
   showDeleted = false,
   selectionResetKey,
   isColumnVisible,
@@ -30,16 +33,21 @@ export function TeacherList({
   sortDir: controlledSortDir,
   onSortChange,
   viewMode,
+  exportColumns = [],
+  exportSearch = '',
+  exportFilterStatus = [],
+  exportFilterSpecialization = '',
+  exportSortField = null,
+  exportSortDir = 'asc',
+  logExportAudit,
+  onSelectedCountChange,
 }: TeacherListProps): React.JSX.Element {
   const {
     sorted,
     sortField,
     sortDir,
     statusConfig,
-    showSpecialization,
-    showQualification,
-    showJoinDate,
-    showStatus,
+    isColumnVisible: columnVisible,
     visibleCustomFields,
     selectedIds,
     setSelectedIds,
@@ -67,8 +75,32 @@ export function TeacherList({
     isColumnVisible,
   });
 
+  useEffect(() => {
+    onSelectedCountChange?.(selectedIds.length);
+  }, [selectedIds.length, onSelectedCountChange]);
+
   const showSelectColumn = canWrite || canDelete;
   const showActionsColumn = canWrite || canDelete || !showDeleted;
+  const resolveColumnVisible = columnVisible;
+
+  const { handleBulkExport } = useTeachersExportActions({
+    tableColumns: exportColumns,
+    canExport,
+    search: exportSearch,
+    filterStatus: exportFilterStatus,
+    filterSpecialization: exportFilterSpecialization,
+    sortField: exportSortField,
+    sortDir: exportSortDir,
+    viewingDeleted: showDeleted,
+    selectedIds,
+    logExportAudit: logExportAudit ?? { mutateAsync: async () => undefined },
+  });
+
+  const showBulkExport =
+    canExport &&
+    !showDeleted &&
+    TEACHERS_MODULE_MANIFEST.work.bulkActions.includes('export') &&
+    Boolean(logExportAudit);
 
   return (
     <div className="space-y-4">
@@ -80,14 +112,10 @@ export function TeacherList({
         someSelected={someSelected}
         showSelectColumn={showSelectColumn}
         showActionsColumn={showActionsColumn}
-        showSpecialization={showSpecialization}
-        showQualification={showQualification}
-        showJoinDate={showJoinDate}
-        showStatus={showStatus}
         showDeleted={showDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
-        isColumnVisible={isColumnVisible}
+        isColumnVisible={resolveColumnVisible}
         visibleCustomFields={visibleCustomFields}
         statusConfig={statusConfig}
         sortField={sortField}
@@ -107,7 +135,7 @@ export function TeacherList({
       />
 
       {showSelectColumn && (
-        <TeacherListSelectionBar
+        <TeachersBulkActionBar
           selectedIds={selectedIds}
           selectedTeachers={selectedTeachers}
           showDeleted={showDeleted}
@@ -125,6 +153,8 @@ export function TeacherList({
             if (onBulkRestore) setConfirmBulkRestoreOpen(true);
           }}
           onClearSelection={() => setSelectedIds([])}
+          canExport={showBulkExport}
+          onBulkExport={showBulkExport ? () => void handleBulkExport() : undefined}
         />
       )}
 
@@ -136,8 +166,8 @@ export function TeacherList({
         onBulkDeleteOpenChange={setConfirmBulkDeleteOpen}
         onBulkRestoreOpenChange={setConfirmBulkRestoreOpen}
         onPendingDeleteChange={setPendingDeleteId}
-        onConfirmBulkDelete={() => {
-          onBulkDelete?.(selectedIds);
+        onConfirmBulkDelete={(reason) => {
+          onBulkDelete?.(selectedIds, reason);
           setSelectedIds([]);
           setConfirmBulkDeleteOpen(false);
         }}
@@ -146,8 +176,8 @@ export function TeacherList({
           setSelectedIds([]);
           setConfirmBulkRestoreOpen(false);
         }}
-        onConfirmDelete={() => {
-          if (pendingDeleteId) onDelete(pendingDeleteId);
+        onConfirmDelete={(reason) => {
+          if (pendingDeleteId) onDelete(pendingDeleteId, reason);
           setPendingDeleteId(null);
         }}
       />

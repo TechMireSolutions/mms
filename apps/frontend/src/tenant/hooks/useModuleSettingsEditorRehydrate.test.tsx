@@ -127,4 +127,36 @@ describe("useModuleSettingsEditor rehydrate", () => {
       root.unmount();
     });
   });
+
+  it("does not loop when lockedEnabledTabs is a new array identity each render", async () => {
+    let renders = 0;
+    function UnstableLockedHarness(): React.JSX.Element {
+      renders += 1;
+      const config = React.useMemo(
+        () => ({ settings: persisted, updateSettings: noop, updateSettingsAsync: asyncNoop }),
+        [],
+      );
+      useModuleSettingsEditor({
+        config,
+        tabRegistry: (persisted.formTabs ?? []) as TabDefinition[],
+        // Intentionally unstable — must not force infinite rehydrate.
+        lockedEnabledTabs: ["basic"],
+      });
+      return <div />;
+    }
+
+    const root = createRoot(document.createElement("div"));
+    await act(async () => {
+      root.render(<UnstableLockedHarness />);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(renders).toBeLessThan(5);
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
 });

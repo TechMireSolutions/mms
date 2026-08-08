@@ -4,6 +4,7 @@ import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelect
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { UserArchivedBanner } from "@/tenant/features/users/components/UserArchivedBanner";
 import { UserCardActions } from "@/tenant/features/users/components/UserCardActions";
 import { UserCardHeader } from "@/tenant/features/users/components/UserCardHeader";
 import { UserCardMetadata } from "@/tenant/features/users/components/UserCardMetadata";
@@ -24,6 +25,7 @@ interface UsersListCardsProps {
   onDelete: (id: string) => void;
   onRestore: (id: string) => void;
   onResetPassword: (user: SystemUser) => void;
+  isColumnVisible?: (key: string) => boolean;
 }
 
 /** Work directory cards for Users — shared directory card chrome. */
@@ -43,6 +45,7 @@ export function UsersListCards({
   onDelete,
   onRestore,
   onResetPassword,
+  isColumnVisible,
 }: UsersListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -81,7 +84,12 @@ export function UsersListCards({
                 onView={onView}
                 reducedMotion={reducedMotion}
               />
-              <UserCardMetadata user={user} formatLoginDate={formatLoginDate} />
+              <UserArchivedBanner user={user} />
+              <UserCardMetadata
+                user={user}
+                formatLoginDate={formatLoginDate}
+                isColumnVisible={isColumnVisible}
+              />
               <UserCardActions
                 user={user}
                 canWrite={canWrite}

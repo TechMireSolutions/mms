@@ -1,56 +1,48 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
-import { Shield, Save, Loader2 } from "lucide-react";
-import {
-  USERS_TAB_REGISTRY,
-  INITIAL_USERS_FIELD_SEED,
-} from "@mms/shared";
-import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
+import { Shield } from "lucide-react";
+import { INITIAL_USERS_FIELD_SEED, type UsersSettings } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
-import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { ToggleRow } from "@/components/ui/ToggleRow";
-import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-import { cn } from "@/lib/utils";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
+import type { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 
-interface UsersSettingsPanelProps {
-  mode?: "fields" | "preferences";
+type UsersFieldsEditor = ReturnType<typeof useModuleSettingsEditor<UsersSettings>>["fieldsEditor"];
+
+export interface UsersSettingsPanelProps {
+  mode: "fields" | "preferences";
+  settingsDraft: UsersSettings;
+  fieldsEditor: UsersFieldsEditor;
+  saved: boolean;
+  saving: boolean;
+  isDirty: boolean;
+  upd: <K extends keyof UsersSettings>(field: K, value: UsersSettings[K]) => void;
+  setSaved: (value: boolean | ((curr: boolean) => boolean)) => void;
+  onSave: () => void | Promise<void>;
 }
 
-export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX.Element {
+/** Presentational Users Fields/Preferences panel — editor owned by Setup tier. */
+export function UsersSettingsPanel({
+  mode,
+  settingsDraft,
+  fieldsEditor,
+  saved,
+  saving,
+  isDirty,
+  upd,
+  setSaved,
+  onSave,
+}: UsersSettingsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const config = useUsersConfig();
-  const {
-    settingsDraft,
-    fieldsEditor,
-    saved,
-    setSaved,
-    upd,
-    saveSettingsAsync,
-  } = useModuleSettingsEditor({
-    config,
-    tabRegistry: USERS_TAB_REGISTRY,
-  });
-
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async (): Promise<void> => {
-    setSaving(true);
-    try {
-      await saveSettingsAsync();
-      notify.success(t("users.settingsSaved"), { description: t("users.settingsSavedDesc") });
-    } catch (error: unknown) {
-      notify.error(t("errors.module.title"), {
-        description: error instanceof Error ? error.message : t("errors.module.description"),
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const showPrefs = mode === "preferences";
   const showFields = mode === "fields";
+
+  const unsavedWarning = showFields
+    ? t("users.setup.unsavedFieldsWarning")
+    : showPrefs
+      ? t("users.setup.unsavedPreferencesWarning")
+      : undefined;
 
   return (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
@@ -67,13 +59,13 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
             label={t("users.selfRegistration")}
             description={t("users.selfRegistrationDesc")}
             value={settingsDraft.allowSelfRegistration || false}
-            onChange={(v) => upd("allowSelfRegistration", v)}
+            onChange={(value) => upd("allowSelfRegistration", value)}
           />
           <ToggleRow
             label={t("users.emailVerification")}
             description={t("users.emailVerificationDesc")}
             value={settingsDraft.requireEmailVerification || false}
-            onChange={(v) => upd("requireEmailVerification", v)}
+            onChange={(value) => upd("requireEmailVerification", value)}
           />
         </div>
       )}
@@ -86,17 +78,15 @@ export function UsersSettingsPanel({ mode }: UsersSettingsPanelProps): React.JSX
         />
       )}
 
-      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-        <Button
-          type="button"
-          onClick={() => { void handleSave(); }}
-          disabled={saving}
-          className={cn("ms-auto", saved && "bg-success hover:bg-success/90 text-success-foreground")}
-        >
-          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          <span>{saved ? t("users.settingsSavedShort") : t("users.settingsSaveBtn")}</span>
-        </Button>
-      </footer>
+      <ModuleSetupSaveFooter
+        dirty={isDirty}
+        saving={saving}
+        saved={saved}
+        unsavedWarning={unsavedWarning}
+        saveLabel={t("users.settingsSaveBtn")}
+        savedLabel={t("users.settingsSavedShort")}
+        onSave={onSave}
+      />
     </Card>
   );
 }

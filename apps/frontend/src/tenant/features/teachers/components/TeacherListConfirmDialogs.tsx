@@ -1,4 +1,4 @@
-import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
+import { ModuleSoftDeleteConfirmDialogs } from '@/components/ui/ModuleSoftDeleteConfirmDialogs';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface TeacherListConfirmDialogsProps {
@@ -9,9 +9,9 @@ interface TeacherListConfirmDialogsProps {
   onBulkDeleteOpenChange: (open: boolean) => void;
   onBulkRestoreOpenChange: (open: boolean) => void;
   onPendingDeleteChange: (id: string | null) => void;
-  onConfirmBulkDelete: () => void;
+  onConfirmBulkDelete: (reason?: string) => void;
   onConfirmBulkRestore: () => void;
-  onConfirmDelete: () => void;
+  onConfirmDelete: (reason?: string) => void;
 }
 
 export function TeacherListConfirmDialogs({
@@ -29,36 +29,29 @@ export function TeacherListConfirmDialogs({
   const { t } = useTranslation();
 
   return (
-    <>
-      <ConfirmAlertDialog
-        open={confirmBulkDeleteOpen}
-        onOpenChange={onBulkDeleteOpenChange}
-        title={t('common.delete')}
-        description={t('teachers.bulkDeleteConfirm', { count: selectedCount })}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={onConfirmBulkDelete}
-      />
-
-      <ConfirmAlertDialog
-        open={confirmBulkRestoreOpen}
-        onOpenChange={onBulkRestoreOpenChange}
-        title={t('teachers.bulkRestore')}
-        description={t('teachers.bulkRestoreConfirm', { count: selectedCount })}
-        confirmLabel={t('teachers.restore')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={onConfirmBulkRestore}
-      />
-
-      <ConfirmAlertDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => { if (!open) onPendingDeleteChange(null); }}
-        title={t('teachers.confirmDeleteTitle')}
-        description={t('teachers.confirmDeleteDescription')}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={onConfirmDelete}
-      />
-    </>
+    <ModuleSoftDeleteConfirmDialogs
+      pendingDeleteOpen={pendingDeleteId != null}
+      onPendingDeleteOpenChange={(open) => {
+        if (!open) onPendingDeleteChange(null);
+      }}
+      bulkDeleteOpen={confirmBulkDeleteOpen}
+      onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+      bulkRestoreOpen={confirmBulkRestoreOpen}
+      onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+      singleDeleteTitle={t('teachers.confirmDeleteTitle')}
+      singleDeleteDescription={t('teachers.confirmDeleteDescription')}
+      bulkDeleteTitle={t('common.delete')}
+      bulkDeleteDescription={t('teachers.bulkDeleteConfirm', { count: selectedCount })}
+      bulkRestoreTitle={t('teachers.bulkRestore')}
+      bulkRestoreDescription={t('teachers.bulkRestoreConfirm', { count: selectedCount })}
+      deleteConfirmLabel={t('common.delete')}
+      restoreConfirmLabel={t('teachers.restore')}
+      cancelLabel={t('common.cancel')}
+      deletionReasonLabel={t('teachers.deletionReasonLabel')}
+      deletionReasonPlaceholder={t('teachers.deletionReasonPlaceholder')}
+      onConfirmSingleDelete={onConfirmDelete}
+      onConfirmBulkDelete={onConfirmBulkDelete}
+      onConfirmBulkRestore={onConfirmBulkRestore}
+    />
   );
 }

@@ -12,12 +12,19 @@ import {
 } from '@mms/shared';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import {
-  useUsers,
   useActivityLogs,
+  useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
+import { useUsersPaginated } from '@/tenant/features/users/hooks/useUsersListQueries';
+import { useUsersDirectoryFilters } from '@/tenant/features/users/hooks/useUsersDirectoryFilters';
+import { useUsersKeyboardShortcuts } from '@/tenant/features/users/hooks/useUsersKeyboardShortcuts';
 import { useUsersPageActions } from '@/tenant/features/users/hooks/useUsersPageActions';
 import { useUserColumnLayout } from '@/tenant/features/users/hooks/useUserColumnLayout';
 import { useUserActivityColumnLayout } from '@/tenant/features/users/hooks/useUserActivityColumnLayout';
+import {
+  defaultUsersExportColumns,
+  useUsersExportActions,
+} from '@/tenant/features/users/hooks/useUsersExportActions';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 
@@ -33,6 +40,7 @@ export function useUsersPageController() {
   const {
     canWrite,
     canDelete,
+    canExport,
     canEditSetup,
     canReports: canViewReports,
     canViewSetup,
@@ -57,21 +65,73 @@ export function useUsersPageController() {
     'users_config_subtab',
     'permissions',
   );
-  const [showDeleted, setShowDeleted] = useState(false);
-  const usersResult = useUsers({ includeDeleted: showDeleted });
-  const logsResult = useActivityLogs();
-  const users = useMemo(
-    () => usersResult.syncedData.map((u) => normalizeWorkspaceUser(u as Partial<SystemUser> & { roles?: string[]; role?: string })),
-    [usersResult.syncedData],
-  );
-  const logs = logsResult.syncedData;
-  const listLoadFailed = usersResult.queryResult.isError;
-  const logsLoadFailed = logsResult.queryResult.isError;
+  const {
+    listPage,
+    setListPage,
+    showDeleted,
+    setShowDeleted,
+    search,
+    setSearch,
+    debouncedSearch,
+    roleFilter,
+    setRoleFilter,
+    statusFilter,
+    setStatusFilter,
+    selectedIds,
+    setSelectedIds,
+    clearFilters,
+    clearSelection,
+    hasActiveFilters,
+  } = useUsersDirectoryFilters();
 
-  const { getColumnWidth: getUserColumnWidth, setColumnWidth: setUserColumnWidth } =
-    useUserColumnLayout();
+  const logsResult = useActivityLogs({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
+  const logs = logsResult.data ?? [];
+  const logsLoadFailed = logsResult.isError;
+
+  const useServerWork = activeTab === 'work' && activeSubTab === 'users';
+  const workPageQuery = useUsersPaginated({
+    page: listPage,
+    limit: USERS_MODULE_MANIFEST.defaultPageSize,
+    search: debouncedSearch,
+    role: roleFilter,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    includeDeleted: showDeleted,
+    enabled: useServerWork,
+  });
+
+  const users = useMemo(
+    () =>
+      (workPageQuery.data?.users ?? []).map((user) =>
+        normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
+      ),
+    [workPageQuery.data],
+  );
+  const shownCount = workPageQuery.data?.total ?? users.length;
+  const listLoadFailed = workPageQuery.isError;
+
+  const {
+    getColumnWidth: getUserColumnWidth,
+    setColumnWidth: setUserColumnWidth,
+    isColumnVisible: isUserColumnVisible,
+    columnRegistry: userColumnRegistry,
+    updateUserColumnLayout: updateUserColumnLayout,
+    customizerLabels: userColumnCustomizerLabels,
+  } = useUserColumnLayout();
   const { getColumnWidth: getActivityColumnWidth, setColumnWidth: setActivityColumnWidth } =
     useUserActivityColumnLayout();
+
+  const { logExportAudit } = useUsersMutations();
+  const exportColumns = useMemo(() => defaultUsersExportColumns(t), [t]);
+  const { handleExportCSV } = useUsersExportActions({
+    tableColumns: exportColumns,
+    canExport,
+    search,
+    roleFilter,
+    statusFilter,
+    viewingDeleted: showDeleted,
+    selectedIds,
+    logExportAudit,
+  });
 
   useEffect(() => {
     if ((!canViewSetup && activeTab === 'setup') || (!canViewReports && activeTab === 'reports')) {
@@ -110,19 +170,19 @@ export function useUsersPageController() {
     ? configSubTab
     : 'permissions';
 
-  useEffect(() => {
-    if (!canWrite || showDeleted) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
-        if (effectiveTab !== 'work' || effectiveSubTab !== 'users') return;
-        e.preventDefault();
-        setShowInvite(false);
-        setShowAddUser(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canWrite, showDeleted, effectiveTab, effectiveSubTab]);
+  useUsersKeyboardShortcuts({
+    enabled: effectiveTab === 'work' && effectiveSubTab === 'users',
+    selectedCount: selectedIds.length,
+    hasActiveFilters,
+    clearFilters,
+    clearSelection,
+    canWrite,
+    showDeleted,
+    onCreate: () => {
+      setShowInvite(false);
+      setShowAddUser(true);
+    },
+  });
 
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
@@ -134,7 +194,7 @@ export function useUsersPageController() {
         name: u.name,
         phone: u.phone || '',
         email: u.email || '',
-      }))
+      })),
     );
   };
 
@@ -142,6 +202,7 @@ export function useUsersPageController() {
     t,
     canWrite,
     canDelete,
+    canExport,
     canEditSetup,
     USERS_CONFIG_TABS,
     SUB_TABS,
@@ -154,12 +215,31 @@ export function useUsersPageController() {
     setConfigSubTab,
     showDeleted,
     setShowDeleted,
+    search,
+    setSearch,
+    roleFilter,
+    setRoleFilter,
+    statusFilter,
+    setStatusFilter,
+    listPage,
+    setListPage,
+    selectedIds,
+    setSelectedIds,
+    clearFilters,
     users,
+    shownCount,
+    workPageData: workPageQuery.data,
+    isWorkPageLoading: workPageQuery.isLoading,
+    isWorkPageFetching: workPageQuery.isFetching,
     logs,
     listLoadFailed,
     logsLoadFailed,
     getUserColumnWidth,
     setUserColumnWidth,
+    isUserColumnVisible,
+    userColumnRegistry,
+    updateUserColumnLayout,
+    userColumnCustomizerLabels,
     getActivityColumnWidth,
     setActivityColumnWidth,
     viewing,
@@ -180,9 +260,10 @@ export function useUsersPageController() {
     handleInvite,
     handleAddUser,
     handleMessageUsers,
+    handleExportCSV,
     messagingTarget,
     closeComposer,
-    refetchUsers: () => { void usersResult.queryResult.refetch(); },
-    refetchLogs: () => { void logsResult.queryResult.refetch(); },
+    refetchUsers: () => { void workPageQuery.refetch(); },
+    refetchLogs: () => { void logsResult.refetch(); },
   };
 }

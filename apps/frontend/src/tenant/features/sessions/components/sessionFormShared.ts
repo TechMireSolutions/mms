@@ -58,3 +58,17 @@ export function buildSessionDraftFromRecord(
     tabarruk: session?.tabarruk ?? [],
   };
 }
+
+/** Stable snapshot for FormModal dirty detection (editable fields only). */
+export function sessionFormDraftSnapshot(draft: SessionFormDraft): string {
+  return JSON.stringify({
+    name: draft.name ?? '',
+    type: draft.type ?? '',
+    status: draft.status ?? '',
+    startDate: draft.startDate ?? '',
+    endDate: draft.endDate ?? '',
+    baseFee: draft.baseFee ?? '',
+    currency: draft.currency ?? '',
+    description: draft.description ?? '',
+  });
+}

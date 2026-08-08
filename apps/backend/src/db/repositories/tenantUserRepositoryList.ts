@@ -1,0 +1,189 @@
+import { and, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import {
+  MODULE_METRICS_DEFAULT_PERIOD_DAYS,
+  type UsersCommandMetricsSnapshot,
+  type UsersListQuery,
+} from '@mms/shared';
+import { tenantUsers } from '../schema.js';
+import { withTenantTransaction } from '../withTenantTransaction.js';
+import { rowToTenantUser, type TenantUserRow } from './tenantUserRepository.js';
+
+const USER_SORT_FIELDS = new Set([
+  'name',
+  'email',
+  'role',
+  'status',
+  'createdDate',
+  'lastLogin',
+  'createdAt',
+]);
+
+function statusExpr(): SQL {
+  return sql`lower(trim(COALESCE(${tenantUsers.profileJson}->>'status', 'active')))`;
+}
+
+function buildSearchSql(search: string): SQL | null {
+  const normalized = search.trim().toLowerCase();
+  if (!normalized) return null;
+  const pattern = `%${normalized}%`;
+  return sql`(
+    lower(${tenantUsers.name}) LIKE ${pattern}
+    OR lower(${tenantUsers.loginEmail}) LIKE ${pattern}
+  )`;
+}
+
+function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
+  const dir = sortDir === 'desc' ? 'desc' : 'asc';
+  const field = sortField?.trim();
+  if (!field || !USER_SORT_FIELDS.has(field)) {
+    return sql`${tenantUsers.name} asc`;
+  }
+  if (field === 'name') {
+    return dir === 'desc'
+      ? sql`lower(${tenantUsers.name}) desc nulls last`
+      : sql`lower(${tenantUsers.name}) asc nulls last`;
+  }
+  if (field === 'email') {
+    return dir === 'desc'
+      ? sql`lower(${tenantUsers.loginEmail}) desc nulls last`
+      : sql`lower(${tenantUsers.loginEmail}) asc nulls last`;
+  }
+  if (field === 'role') {
+    return dir === 'desc'
+      ? sql`lower(${tenantUsers.role}) desc nulls last`
+      : sql`lower(${tenantUsers.role}) asc nulls last`;
+  }
+  if (field === 'status') {
+    const statusSort = statusExpr();
+    return dir === 'desc' ? sql`${statusSort} desc nulls last` : sql`${statusSort} asc nulls last`;
+  }
+  if (field === 'createdDate' || field === 'createdAt') {
+    return dir === 'desc'
+      ? sql`${tenantUsers.createdAt} desc nulls last`
+      : sql`${tenantUsers.createdAt} asc nulls last`;
+  }
+  if (field === 'lastLogin') {
+    const lastLoginSort = sql`NULLIF(trim(COALESCE(${tenantUsers.profileJson}->>'lastLogin', '')), '')`;
+    return dir === 'desc' ? sql`${lastLoginSort} desc nulls last` : sql`${lastLoginSort} asc nulls last`;
+  }
+  return sql`${tenantUsers.name} asc`;
+}
+
+function buildListConditions(subdomain: string, query: UsersListQuery & { includeDeleted?: boolean }): SQL[] {
+  const conditions: SQL[] = [eq(tenantUsers.workspaceSubdomain, subdomain)];
+
+  if (query.includeDeleted) {
+    conditions.push(isNotNull(tenantUsers.deletedAt));
+  } else {
+    conditions.push(isNull(tenantUsers.deletedAt));
+  }
+
+  if (query.role?.trim() && query.role !== 'all') {
+    conditions.push(eq(tenantUsers.role, query.role.trim()));
+  }
+
+  if (query.status?.trim()) {
+    const statuses = query.status
+      .split(',')
+      .map((status) => status.trim().toLowerCase())
+      .filter(Boolean);
+    if (statuses.length > 0) {
+      conditions.push(sql`${statusExpr()} IN (${sql.join(
+        statuses.map((status) => sql`${status}`),
+        sql`, `,
+      )})`);
+    }
+  }
+
+  const search = query.search?.trim();
+  if (search) {
+    const searchSql = buildSearchSql(search);
+    if (searchSql) conditions.push(searchSql);
+  }
+
+  return conditions;
+}
+
+/**
+ * SQL-filtered workspace users Work list page (typed columns + profile_json status).
+ * Search/filter does not join contacts.
+ */
+export async function listTenantUsersPage(
+  tenant: string,
+  query: UsersListQuery & { includeDeleted?: boolean },
+): Promise<{ rows: TenantUserRow[]; total: number; page: number; limit: number; hasMore: boolean }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const page = Math.max(1, query.page ?? 1);
+  const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
+  const offset = (page - 1) * limit;
+
+  return withTenantTransaction(subdomain, async (tx) => {
+    const conditions = buildListConditions(subdomain, query);
+    const whereClause = and(...conditions);
+    const orderBy = buildOrderBy(query.sortField, query.sortDir);
+
+    const countRows = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tenantUsers)
+      .where(whereClause);
+    const total = Number(countRows[0]?.count ?? 0);
+
+    const rows = await tx
+      .select()
+      .from(tenantUsers)
+      .where(whereClause)
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      rows: rows.map((row) => rowToTenantUser(row)),
+      total,
+      page,
+      limit,
+      hasMore: page * limit < total,
+    };
+  });
+}
+
+export async function countTenantUsersActive(tenant: string): Promise<number> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tenantUsers)
+      .where(and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)));
+    return Number(rows[0]?.count ?? 0);
+  });
+}
+
+/** SQL aggregates for Users command-centre metrics (active rows only). */
+export async function aggregateUsersCommandMetrics(
+  tenant: string,
+  _periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
+): Promise<UsersCommandMetricsSnapshot> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        total: sql<number>`count(*)::int`,
+        active: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'active')::int`,
+        suspended: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'suspended')::int`,
+        admins: sql<number>`count(*) FILTER (WHERE lower(${tenantUsers.role}) = 'admin')::int`,
+        twoFaEnabled: sql<number>`count(*) FILTER (WHERE COALESCE((${tenantUsers.profileJson}->>'twoFactorEnabled')::boolean, false))::int`,
+        activeSessions: sql<number>`COALESCE(sum(COALESCE((${tenantUsers.profileJson}->>'activeSessions')::int, 0)), 0)::int`,
+      })
+      .from(tenantUsers)
+      .where(and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)));
+
+    const row = rows[0];
+    return {
+      total: Number(row?.total ?? 0),
+      active: Number(row?.active ?? 0),
+      suspended: Number(row?.suspended ?? 0),
+      admins: Number(row?.admins ?? 0),
+      twoFaEnabled: Number(row?.twoFaEnabled ?? 0),
+      activeSessions: Number(row?.activeSessions ?? 0),
+    };
+  });
+}

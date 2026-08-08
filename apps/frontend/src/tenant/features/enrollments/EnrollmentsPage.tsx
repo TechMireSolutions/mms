@@ -4,7 +4,7 @@ import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, Plus, UserCheck } from "lucide-react";
+import { ClipboardList, Download, Plus, UserCheck } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -17,11 +17,16 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import {
-  useEnrollments,
+  useEnrollmentMutations,
   useEnrollmentsPaginated,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { useEnrollmentsDirectoryFilters } from "@/tenant/features/enrollments/hooks/useEnrollmentsDirectoryFilters";
 import { ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
 import { useEnrollmentsPageActions } from "@/tenant/features/enrollments/hooks/useEnrollmentsPageActions";
+import {
+  defaultEnrollmentsExportColumns,
+  useEnrollmentsExportActions,
+} from "@/tenant/features/enrollments/hooks/useEnrollmentsExportActions";
 import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/useEnrollmentColumnLayout";
 
 /**
@@ -39,38 +44,64 @@ export default function EnrollmentsPage() {
   const {
     canWrite: canWriteEnrollments,
     canDelete,
+    canExport,
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(ENROLLMENTS_MODULE_MANIFEST);
   const TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const [tab, setTab]                 = usePersistedTabState<string>("enrollments_active_tab", "work");
+  const [tab, setTab] = usePersistedTabState<string>("enrollments_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("list");
-  const [showDeleted, setShowDeleted] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const activeEnrollmentsResult = useEnrollments();
-  const activeEnrollments = activeEnrollmentsResult.syncedData;
   const {
-    data: deletedPage,
-    isError: isDeletedPageError,
-    refetch: refetchDeletedPage,
+    listPage,
+    setListPage,
+    showDeleted,
+    setShowDeleted,
+    search,
+    setSearch,
+    debouncedSearch,
+    statusFilter,
+    setStatusFilter,
+    sessionFilter,
+    setSessionFilter,
+  } = useEnrollmentsDirectoryFilters();
+
+  const useServerWork = tab === "work" && activeSubTab === "list";
+  const {
+    data: workPageData,
+    isError: isWorkPageError,
+    refetch: refetchWorkPage,
   } = useEnrollmentsPaginated({
-    page: 1,
-    limit: ENROLLMENTS_MODULE_MANIFEST.maxPageSize,
-    includeDeleted: true,
-    enabled: showDeleted,
+    page: listPage,
+    limit: ENROLLMENTS_MODULE_MANIFEST.defaultPageSize,
+    search: debouncedSearch,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    sessionId: sessionFilter !== "all" ? sessionFilter : undefined,
+    includeDeleted: showDeleted,
+    enabled: useServerWork,
   });
-  const isWorkListError = showDeleted
-    ? isDeletedPageError
-    : activeEnrollmentsResult.queryResult.isError;
-  const retryWorkList = () =>
-    showDeleted ? refetchDeletedPage() : activeEnrollmentsResult.queryResult.refetch();
-  const enrollments = showDeleted
-    ? ((deletedPage?.enrollments ?? []) as Enrollment[])
-    : activeEnrollments;
-  const [viewing, setViewing]         = useState<Enrollment | null>(null);
-  const [showWizard, setShowWizard]   = useState(false);
-  const [filteredCount, setFilteredCount] = useState(0);
+
+  const enrollments = useMemo(
+    () => (workPageData?.enrollments ?? []) as Enrollment[],
+    [workPageData],
+  );
+  const filteredCount = workPageData?.total ?? enrollments.length;
+
+  const [viewing, setViewing] = useState<Enrollment | null>(null);
+  const [showWizard, setShowWizard] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const columnLayout = useEnrollmentColumnLayout();
+  const { logExportAudit } = useEnrollmentMutations();
+  const exportColumns = useMemo(() => defaultEnrollmentsExportColumns(t), [t]);
+  const { handleExportCSV } = useEnrollmentsExportActions({
+    tableColumns: exportColumns,
+    canExport,
+    search,
+    statusFilter,
+    sessionFilter,
+    viewingDeleted: showDeleted,
+    selectedIds: [],
+    logExportAudit,
+  });
 
   useEffect(() => {
     if (!canWriteEnrollments && activeSubTab === "eligibility") {
@@ -99,10 +130,6 @@ export default function EnrollmentsPage() {
     onActiveSubTabChange: setActiveSubTab,
   });
 
-  useEffect(() => {
-    setFilteredCount(enrollments.length);
-  }, [enrollments.length]);
-
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t("nav.enrollments")}`}
@@ -112,6 +139,11 @@ export default function EnrollmentsPage() {
       headerSubtitle={t("page.enrollments.subtitle")}
       headerActions={
         <div className="flex items-center gap-2">
+          {canExport && !showDeleted ? (
+            <ActionButton variant="ghost" icon={Download} onClick={() => void handleExportCSV()}>
+              {t("common.export")}
+            </ActionButton>
+          ) : null}
           {canWriteEnrollments && !showDeleted && (
             <ActionButton
               variant="primary"
@@ -124,7 +156,7 @@ export default function EnrollmentsPage() {
         </div>
       }
       metricsStrip={
-        <EnrollmentsCommandMetrics total={enrollments.length} shown={filteredCount} />
+        <EnrollmentsCommandMetrics total={filteredCount} shown={filteredCount} />
       }
     >
       <ResponsiveAccordionTabs
@@ -141,7 +173,7 @@ export default function EnrollmentsPage() {
         >
           {tab === "reports" && (
             <ErrorBoundary>
-              <EnrollmentsReportsTier enrollments={activeEnrollments} />
+              <EnrollmentsReportsTier />
             </ErrorBoundary>
           )}
 
@@ -150,19 +182,28 @@ export default function EnrollmentsPage() {
               activeSubTab={activeSubTab}
               subTabs={SUB_TABS}
               enrollments={enrollments}
+              total={filteredCount}
+              page={listPage}
+              pageSize={ENROLLMENTS_MODULE_MANIFEST.defaultPageSize}
+              search={search}
+              statusFilter={statusFilter}
+              sessionFilter={sessionFilter}
               canWrite={canWriteEnrollments}
               canDelete={canDelete}
               showDeleted={showDeleted}
-              isWorkListError={isWorkListError}
+              isWorkListError={isWorkPageError}
               loadFailedTitle={t("enrollments.loadFailed")}
               onSubTabChange={setActiveSubTab}
-              onRetry={() => void retryWorkList()}
+              onRetry={() => void refetchWorkPage()}
               onShowDeletedChange={setShowDeleted}
+              onSearchChange={setSearch}
+              onStatusFilterChange={setStatusFilter}
+              onSessionFilterChange={setSessionFilter}
+              onPageChange={setListPage}
               onView={setViewing}
               onCancel={handleCancel}
               onDeleteRequest={setPendingDeleteId}
               onRestore={handleRestore}
-              onFilteredCountChange={setFilteredCount}
               columnProps={{
                 isColumnVisible: columnLayout.isColumnVisible,
                 getColumnWidth: columnLayout.getColumnWidth,
@@ -192,16 +233,15 @@ export default function EnrollmentsPage() {
         showWizard={showWizard}
         pendingDeleteId={pendingDeleteId}
         wizardTitle={t("enrollments.new")}
-        confirmDeleteTitle={t("enrollments.confirmDeleteTitle")}
-        confirmDeleteDescription={t("enrollments.confirmDeleteDescription")}
-        confirmLabel={t("common.delete")}
-        cancelLabel={t("common.cancel")}
         onCloseViewing={() => setViewing(null)}
         onStatusChange={handleStatusChange}
         onCloseWizard={() => setShowWizard(false)}
         onCompleteWizard={handleComplete}
         onPendingDeleteChange={setPendingDeleteId}
-        onConfirmDelete={handleDelete}
+        onConfirmDelete={(deletionReason) => {
+          if (pendingDeleteId) handleDelete(pendingDeleteId, deletionReason);
+          setPendingDeleteId(null);
+        }}
       />
     </ModulePageShell>
   );

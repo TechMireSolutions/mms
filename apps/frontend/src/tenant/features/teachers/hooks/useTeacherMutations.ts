@@ -1,23 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { normalizeStoredTeacher, type TeacherRecord } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
-import { TEACHER_COUNT_QUERY_KEY } from '@/tenant/features/teachers/hooks/useTeacherCount';
-import {
-  TEACHERS_API,
-  TEACHERS_METRICS_QUERY_KEY,
-  TEACHERS_QUERY_KEY,
-  TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-} from '@/tenant/features/teachers/hooks/teachersQueryShared';
+import { invalidateTeachersQueries } from '@/tenant/features/teachers/hooks/invalidateTeachersQueries';
+import { TEACHERS_API } from '@/tenant/features/teachers/hooks/teachersQueryShared';
 
 export function useTeacherMutations() {
   const queryClient = useQueryClient();
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: TEACHERS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: TEACHER_COUNT_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: TEACHERS_METRICS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: TEACHERS_WIDGET_AGGREGATES_QUERY_KEY });
-  };
+  const invalidate = () => invalidateTeachersQueries(queryClient);
 
   const createTeacher = useMutation({
     mutationFn: async (teacher: TeacherRecord) => {
@@ -42,16 +32,22 @@ export function useTeacherMutations() {
   });
 
   const deleteTeacher = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${TEACHERS_API}/${id}`, { method: 'DELETE' }),
+    mutationFn: async ({ id, deletionReason }: { id: string; deletionReason?: string }) =>
+      apiJson<{ success: boolean }>(`${TEACHERS_API}/${id}`, {
+        method: 'DELETE',
+        body: JSON.stringify(deletionReason ? { deletionReason } : {}),
+      }),
     onSuccess: invalidate,
   });
 
   const bulkDeleteTeachers = useMutation({
-    mutationFn: async (ids: string[]) =>
+    mutationFn: async ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) =>
       apiJson<{ success: boolean; succeeded: number; failed: number }>(`${TEACHERS_API}/bulk-delete`, {
         method: 'POST',
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({
+          ids,
+          ...(deletionReason ? { deletionReason } : {}),
+        }),
       }),
     onSuccess: invalidate,
   });
@@ -82,6 +78,25 @@ export function useTeacherMutations() {
     onSuccess: invalidate,
   });
 
+  const logExportAudit = useMutation({
+    mutationFn: async (payload: {
+      count: number;
+      scope: 'all' | 'filtered' | 'selection';
+    }) =>
+      apiJson<{ success: boolean }>(`${TEACHERS_API}/export-audit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  });
+
+  const logSetupAudit = useMutation({
+    mutationFn: async (payload: { area: 'fields' | 'preferences'; summary: string }) =>
+      apiJson<{ success: boolean }>(`${TEACHERS_API}/setup-audit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  });
+
   return {
     createTeacher,
     updateTeacher,
@@ -90,5 +105,7 @@ export function useTeacherMutations() {
     restoreTeacher,
     bulkRestoreTeachers,
     bulkUpdateTeacherStatus,
+    logExportAudit,
+    logSetupAudit,
   };
 }

@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, Calendar, Download } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
@@ -21,11 +21,18 @@ export default function Sessions() {
       headerTitle={c.t('nav.sessions')}
       headerSubtitle={c.t('page.sessions.subtitle')}
       headerActions={
-        c.canWrite && !c.showDeleted ? (
-          <ActionButton variant="primary" icon={Plus} onClick={c.openCreateForm}>
-            {c.t('sessions.action.new')}
-          </ActionButton>
-        ) : undefined
+        <>
+          {c.canExport && !c.showDeleted ? (
+            <ActionButton variant="ghost" icon={Download} onClick={() => void c.handleExportCSV()}>
+              {c.t('common.export')}
+            </ActionButton>
+          ) : null}
+          {c.canWrite && !c.showDeleted ? (
+            <ActionButton variant="primary" icon={Plus} onClick={c.openCreateForm}>
+              {c.t('sessions.action.new')}
+            </ActionButton>
+          ) : null}
+        </>
       }
       metricsStrip={
         <SessionsCommandMetrics total={c.shownCount} shown={c.sessions.length} />
@@ -70,7 +77,7 @@ export default function Sessions() {
               onSearchChange={c.setSearch}
               onStatusFilterToggle={(statusOption) => c.toggleFilter(c.filterStatus, c.setFilterStatus, statusOption)}
               onTypeFilterToggle={(typeOption) => c.toggleFilter(c.filterType, c.setFilterType, typeOption)}
-              onClearFilters={() => { c.setFilterStatus([]); c.setFilterType([]); }}
+              onClearFilters={c.clearFilters}
               onToggleDeleted={() => c.setShowDeleted((previous) => !previous)}
               onRetry={() => void c.refetch()}
               onCreateSession={c.openCreateForm}
@@ -84,6 +91,8 @@ export default function Sessions() {
               onRequestBulkRestore={() => c.setConfirmBulkRestoreOpen(true)}
               onClearSelection={c.clearSelection}
               onPageChange={c.setListPage}
+              canExport={c.canExport}
+              onBulkExport={() => void c.handleBulkExport()}
             />
           ) : c.activeTab === 'reports' ? (
             <SessionsReportsTier />
@@ -97,18 +106,18 @@ export default function Sessions() {
         showForm={c.showForm}
         editSession={c.editSession}
         detailSession={c.detailSession}
-        showDeleted={c.showDeleted}
+        canDelete={c.canDelete}
         pendingDeleteId={c.pendingDeleteId}
         confirmBulkDeleteOpen={c.confirmBulkDeleteOpen}
         confirmBulkRestoreOpen={c.confirmBulkRestoreOpen}
         selectedCount={c.selectedIds.length}
-        t={c.t}
         onCloseForm={c.closeForm}
         onSave={c.handleSave}
         onCloseDetail={() => c.setDetailSession(null)}
         onUpdate={c.handleUpdate}
         onEdit={c.openEditForm}
-        onPendingDeleteOpenChange={(open) => { if (!open) c.setPendingDeleteId(null); }}
+        onRestore={c.handleRestore}
+        onPendingDeleteChange={c.setPendingDeleteId}
         onConfirmDelete={c.confirmDelete}
         onBulkDeleteOpenChange={c.setConfirmBulkDeleteOpen}
         onConfirmBulkDelete={c.handleBulkDelete}

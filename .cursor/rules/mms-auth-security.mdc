@@ -33,7 +33,8 @@ Governs user authentication, sessions, tenant isolation, role-based authorizatio
 
 ### Platform FE session probe
 - On apex boot, `PlatformAuthProvider` **always** calls `GET /api/platform/auth/me` (no sessionStorage gate).
-- **401 / failure is expected when logged out** — treat as unauthenticated; do not toast or trigger tenant `/api/auth/refresh`.
+- Logged-out / invalid / revoked / disabled probe → **`200 { user: null, isAuthenticated: false }`** (soft probe via `optionalAuthenticatePlatform`) — treat as unauthenticated; do not toast or trigger tenant `/api/auth/refresh`.
+- Hard `authenticatePlatform` on other `/api/platform/*` routes still returns typed `401` (`auth_required` / `session_revoked` / `account_disabled`).
 - Never reintroduce a sessionStorage (or similar) gate that skips the `/me` probe on new tabs / deep links / post-setup / password-reset.
 
 ### Platform session revoke & soft-disable

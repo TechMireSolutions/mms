@@ -1,4 +1,6 @@
+import { z } from 'zod';
 import type { Teacher } from './teacherTypes.js';
+import { baseListQuerySchema } from './apiSchemas.js';
 import { compareByField, paginateArray } from './utils.js';
 
 export interface TeachersListQuery {
@@ -10,7 +12,17 @@ export interface TeachersListQuery {
   specialization?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
+  /** When true, SQL list returns deleted-only rows (Work trash). */
+  includeDeleted?: boolean;
 }
+
+/** Validates Teachers Work list query received over HTTP (Students-shaped SSOT). */
+export const teachersListQuerySchema = baseListQuerySchema.extend({
+  status: z.string().max(200).optional(),
+  specialization: z.string().optional(),
+});
+
+export type TeachersListQueryParsed = z.infer<typeof teachersListQuerySchema>;
 
 export interface TeachersListPageResult {
   teachers: Teacher[];

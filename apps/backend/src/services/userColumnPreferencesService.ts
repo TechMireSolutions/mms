@@ -1,5 +1,12 @@
 import type { ModuleColumnPreference, UserModuleColumnPreferencesMap } from '@mms/shared';
-import { CONTACTS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST } from '@mms/shared';
+import {
+  CONTACTS_MODULE_MANIFEST,
+  ENROLLMENTS_MODULE_MANIFEST,
+  SESSIONS_MODULE_MANIFEST,
+  STUDENTS_MODULE_MANIFEST,
+  TEACHERS_MODULE_MANIFEST,
+  USERS_MODULE_MANIFEST,
+} from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   getContactUserColumnPrefs,
@@ -9,6 +16,22 @@ import {
   getStudentUserColumnPrefs,
   setStudentUserColumnPrefs,
 } from '../db/repositories/studentUserColumnPrefsRepository.js';
+import {
+  getTeacherUserColumnPrefs,
+  setTeacherUserColumnPrefs,
+} from '../db/repositories/teacherUserColumnPrefsRepository.js';
+import {
+  getSessionUserColumnPrefs,
+  setSessionUserColumnPrefs,
+} from '../db/repositories/sessionUserColumnPrefsRepository.js';
+import {
+  getEnrollmentUserColumnPrefs,
+  setEnrollmentUserColumnPrefs,
+} from '../db/repositories/enrollmentUserColumnPrefsRepository.js';
+import {
+  getUserUserColumnPrefs,
+  setUserUserColumnPrefs,
+} from '../db/repositories/userUserColumnPrefsRepository.js';
 import { fetchObject, persistObject } from './dbSyncService.js';
 
 async function loadUserColumnPreferencesMap(objectKey: string): Promise<UserModuleColumnPreferencesMap> {
@@ -46,6 +69,22 @@ function isStudentsColumnKey(objectKey: string): boolean {
   return objectKey === STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey;
 }
 
+function isTeachersColumnKey(objectKey: string): boolean {
+  return objectKey === TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey;
+}
+
+function isSessionsColumnKey(objectKey: string): boolean {
+  return objectKey === SESSIONS_MODULE_MANIFEST.columnPreferencesObjectKey;
+}
+
+function isEnrollmentsColumnKey(objectKey: string): boolean {
+  return objectKey === ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey;
+}
+
+function isUsersColumnKey(objectKey: string): boolean {
+  return objectKey === USERS_MODULE_MANIFEST.columnPreferencesObjectKey;
+}
+
 function requireTenant(): string {
   const tenant = getRequestTenant();
   if (!tenant) throw new Error('Tenant context required');
@@ -62,6 +101,22 @@ export async function getUserColumnPreferencesForModule(
   }
   if (isStudentsColumnKey(objectKey)) {
     const prefs = await getStudentUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isTeachersColumnKey(objectKey)) {
+    const prefs = await getTeacherUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isSessionsColumnKey(objectKey)) {
+    const prefs = await getSessionUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isEnrollmentsColumnKey(objectKey)) {
+    const prefs = await getEnrollmentUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isUsersColumnKey(objectKey)) {
+    const prefs = await getUserUserColumnPrefs(requireTenant(), userId);
     return filterPreferences(prefs);
   }
   const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);
@@ -81,6 +136,22 @@ export async function setUserColumnPreferencesForModule(
   }
   if (isStudentsColumnKey(objectKey)) {
     await setStudentUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isTeachersColumnKey(objectKey)) {
+    await setTeacherUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isSessionsColumnKey(objectKey)) {
+    await setSessionUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isEnrollmentsColumnKey(objectKey)) {
+    await setEnrollmentUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isUsersColumnKey(objectKey)) {
+    await setUserUserColumnPrefs(requireTenant(), userId, preferences);
     return;
   }
   const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);

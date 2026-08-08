@@ -5,7 +5,7 @@ import type { SystemUser } from '@mms/shared';
 import { AddUserModal } from '@/tenant/features/users/components/AddUserModal';
 import { EditUserModal } from '@/tenant/features/users/components/EditUserModal';
 import { InviteUserModal } from '@/tenant/features/users/components/InviteUserModal';
-import { UserDetailModal } from '@/tenant/features/users/components/UserDetailModal';
+import { UserDetail } from '@/tenant/features/users/components/UserDetail';
 
 const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
@@ -15,6 +15,7 @@ interface UsersModalLayerProps {
   showAddUser: boolean;
   showInvite: boolean;
   canWrite: boolean;
+  canDelete: boolean;
   users: SystemUser[];
   messagingTarget: MessagingTarget | null;
   onCloseViewing: () => void;
@@ -24,6 +25,8 @@ interface UsersModalLayerProps {
   onSaveEdit: (user: SystemUser) => Promise<void>;
   onAddUser: (user: SystemUser) => Promise<void>;
   onInvite: (user: SystemUser) => Promise<void>;
+  onRestoreUser: (id: string) => void | Promise<void>;
+  onEditFromDetail: (user: SystemUser) => void;
   onCloseComposer: () => void;
 }
 
@@ -33,6 +36,7 @@ export function UsersModalLayer({
   showAddUser,
   showInvite,
   canWrite,
+  canDelete,
   users,
   messagingTarget,
   onCloseViewing,
@@ -42,13 +46,21 @@ export function UsersModalLayer({
   onSaveEdit,
   onAddUser,
   onInvite,
+  onRestoreUser,
+  onEditFromDetail,
   onCloseComposer,
 }: UsersModalLayerProps): React.JSX.Element {
   return (
     <>
       <AnimatePresence>
         {viewing ? (
-          <UserDetailModal user={viewing} onClose={onCloseViewing} />
+          <UserDetail
+            user={viewing}
+            onClose={onCloseViewing}
+            onEdit={canWrite && !viewing.deletedAt ? onEditFromDetail : undefined}
+            canDelete={canDelete}
+            onRestore={onRestoreUser}
+          />
         ) : null}
         {editing && canWrite ? (
           <EditUserModal user={editing} onClose={onCloseEditing} onSave={onSaveEdit} />

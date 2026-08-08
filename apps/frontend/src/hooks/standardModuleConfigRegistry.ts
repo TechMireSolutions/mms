@@ -50,7 +50,6 @@ import {
   ATTENDANCE_CONFIG_COLLECTION_KEYS,
   DEFAULT_ATTENDANCE_STATUSES,
   SESSION_CONFIG_COLLECTION_KEYS,
-  TEACHER_CONFIG_COLLECTION_KEYS,
 } from '@/hooks/standardModuleConfigRegistryKeys';
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
 
@@ -116,16 +115,6 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     settingsObjectKey: TEACHERS_MODULE_MANIFEST.settingsObjectKey,
     defaultSettings: DEFAULT_TEACHERS_SETTINGS,
     defaultFieldDefs: DEFAULT_TEACHER_FIELD_DEFS,
-    collections: {
-      statuses: {
-        dbKey: TEACHER_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => [],
-      },
-      specializations: {
-        dbKey: TEACHER_CONFIG_COLLECTION_KEYS.specializations,
-        default: () => [],
-      },
-    },
   },
   users: {
     settingsObjectKey: USERS_MODULE_MANIFEST.settingsObjectKey,

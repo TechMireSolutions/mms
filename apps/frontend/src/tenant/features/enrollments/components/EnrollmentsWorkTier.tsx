@@ -21,6 +21,12 @@ interface EnrollmentsWorkTierProps {
   activeSubTab: string;
   subTabs: EnrollmentSubTab[];
   enrollments: Enrollment[];
+  total: number;
+  page: number;
+  pageSize: number;
+  search: string;
+  statusFilter: string;
+  sessionFilter: string;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
@@ -29,11 +35,14 @@ interface EnrollmentsWorkTierProps {
   onSubTabChange: (next: string) => void;
   onRetry: () => void;
   onShowDeletedChange: (showDeleted: boolean) => void;
+  onSearchChange: (search: string) => void;
+  onStatusFilterChange: (status: string) => void;
+  onSessionFilterChange: (sessionId: string) => void;
+  onPageChange: (page: number) => void;
   onView: (enrollment: Enrollment) => void;
   onCancel: (id: string) => void;
   onDeleteRequest: (id: string) => void;
   onRestore: (id: string) => void;
-  onFilteredCountChange: (count: number) => void;
   columnProps: EnrollmentColumnProps;
 }
 
@@ -41,6 +50,12 @@ export function EnrollmentsWorkTier({
   activeSubTab,
   subTabs,
   enrollments,
+  total,
+  page,
+  pageSize,
+  search,
+  statusFilter,
+  sessionFilter,
   canWrite,
   canDelete,
   showDeleted,
@@ -49,11 +64,14 @@ export function EnrollmentsWorkTier({
   onSubTabChange,
   onRetry,
   onShowDeletedChange,
+  onSearchChange,
+  onStatusFilterChange,
+  onSessionFilterChange,
+  onPageChange,
   onView,
   onCancel,
   onDeleteRequest,
   onRestore,
-  onFilteredCountChange,
   columnProps,
 }: EnrollmentsWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -79,15 +97,24 @@ export function EnrollmentsWorkTier({
           ) : (
             <EnrollmentList
               enrollments={enrollments}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              search={search}
+              statusFilter={statusFilter}
+              sessionFilter={sessionFilter}
               canWrite={canWrite}
               canDelete={canDelete}
               showDeleted={showDeleted}
               onShowDeletedChange={onShowDeletedChange}
+              onSearchChange={onSearchChange}
+              onStatusFilterChange={onStatusFilterChange}
+              onSessionFilterChange={onSessionFilterChange}
+              onPageChange={onPageChange}
               onView={onView}
               onCancel={onCancel}
               onDelete={onDeleteRequest}
               onRestore={onRestore}
-              onFilteredCountChange={onFilteredCountChange}
               {...columnProps}
             />
           )}

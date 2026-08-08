@@ -58,13 +58,11 @@ export function useContactsSetupPanelState({
     [config.formTabs, config.fields],
   );
 
-  const lockedEnabledTabs = useMemo(() => [...CONTACT_LOCKED_ENABLED_TABS], []);
-
   const { fieldsEditor, saved, setSaved, saveSettingsAsync } = useModuleSettingsEditor({
     config: editorConfig,
     tabRegistry: initialTabs,
     defaultEnabledTabs,
-    lockedEnabledTabs,
+    lockedEnabledTabs: CONTACT_LOCKED_ENABLED_TABS,
   });
 
   const [prefs, setPrefs] = useState<ContactPreferences>(() => contextPrefs);

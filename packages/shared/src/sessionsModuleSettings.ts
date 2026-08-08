@@ -46,7 +46,7 @@ export const DEFAULT_SESSIONS_SETTINGS: SessionsSettings = {
   notifyOnSessionStart: true,
   academicYear: "2025-2026",
   sessionStart: "april",
-  defaultViewLayout: "cards",
+  defaultViewLayout: "table",
   fields: {
     type: { enabled: true, required: true },
     status: { enabled: true, required: true },

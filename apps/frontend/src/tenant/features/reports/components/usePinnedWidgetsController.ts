@@ -10,6 +10,7 @@ import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { useContactsWidgetAggregates } from "@/tenant/hooks/collections/contacts";
 import { useStudentsWidgetAggregates } from "@/tenant/hooks/collections/students";
 import { useTeachersWidgetAggregates } from "@/tenant/hooks/collections/teachers";
+import { useSessionsWidgetAggregates } from "@/tenant/hooks/collections/sessions";
 import { notify } from "@/lib/notify";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 
@@ -66,6 +67,7 @@ export function usePinnedWidgetsController(category: string) {
   useContactsWidgetAggregates(filteredWidgets);
   useStudentsWidgetAggregates(filteredWidgets);
   useTeachersWidgetAggregates(filteredWidgets);
+  useSessionsWidgetAggregates(filteredWidgets);
 
   const toggleSectionSetting = (key: string) => {
     const nextSectionSettings = { ...sectionSettings, [key]: !sectionSettings[key] };

@@ -1,4 +1,5 @@
 import type { SystemUser } from "@mms/shared";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { SettingsMetaBadge } from "@/components/ui/SettingsShell";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -7,34 +8,57 @@ import { UserRoleBadge, UserStatusBadge } from "@/tenant/features/users/componen
 export interface UserCardMetadataProps {
   user: SystemUser;
   formatLoginDate: (timestamp: string) => string;
+  isColumnVisible?: (key: string) => boolean;
 }
 
 /** Users domain metadata tiles — Contacts card metadata chrome. */
 export function UserCardMetadata({
   user,
   formatLoginDate,
-}: UserCardMetadataProps): React.JSX.Element {
+  isColumnVisible,
+}: UserCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const visible = isColumnVisible ?? (() => true);
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
-      <DirectoryCardMetaTile label={t("users.colRole")}>
+  const tiles: React.ReactNode[] = [];
+  if (visible("role")) {
+    tiles.push(
+      <DirectoryCardMetaTile key="role" label={t("users.colRole")}>
         <UserRoleBadge roleId={user.role} />
-      </DirectoryCardMetaTile>
-      <DirectoryCardMetaTile label={t("users.colStatus")}>
+      </DirectoryCardMetaTile>,
+    );
+  }
+  if (visible("status")) {
+    tiles.push(
+      <DirectoryCardMetaTile key="status" label={t("users.colStatus")}>
         <UserStatusBadge status={user.status} />
-      </DirectoryCardMetaTile>
-      <DirectoryCardMetaTile label={t("users.colLastLogin")}>
+      </DirectoryCardMetaTile>,
+    );
+  }
+  if (visible("lastLogin")) {
+    tiles.push(
+      <DirectoryCardMetaTile key="lastLogin" label={t("users.colLastLogin")}>
         {formatLoginDate(user.lastLogin)}
-      </DirectoryCardMetaTile>
-      <DirectoryCardMetaTile label={t("users.colCreated")}>
+      </DirectoryCardMetaTile>,
+    );
+  }
+  if (visible("created")) {
+    tiles.push(
+      <DirectoryCardMetaTile key="created" label={t("users.colCreated")}>
         <span className="font-mono">{user.createdDate}</span>
-      </DirectoryCardMetaTile>
-      <DirectoryCardMetaTile label={t("users.col2fa")}>
+      </DirectoryCardMetaTile>,
+    );
+  }
+  if (visible("twoFactor")) {
+    tiles.push(
+      <DirectoryCardMetaTile key="twoFactor" label={t("users.col2fa")}>
         <SettingsMetaBadge variant={user.twoFactorEnabled ? "success" : "muted"}>
           {user.twoFactorEnabled ? t("users.twoFactorOn") : t("users.twoFactorOff")}
         </SettingsMetaBadge>
-      </DirectoryCardMetaTile>
-    </div>
-  );
+      </DirectoryCardMetaTile>,
+    );
+  }
+
+  if (tiles.length === 0) return null;
+  return <DirectoryCardMetaGrid>{tiles}</DirectoryCardMetaGrid>;
 }

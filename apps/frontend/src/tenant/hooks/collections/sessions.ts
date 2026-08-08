@@ -5,9 +5,13 @@
 export {
   SESSIONS_QUERY_KEY,
   SESSIONS_METRICS_QUERY_KEY,
+  SESSIONS_WIDGET_AGGREGATES_QUERY_KEY,
+  SESSIONS_REPORT_AGGREGATES_QUERY_KEY,
   useSessions,
   useSessionsPaginated,
   useSessionsCollection,
+  useSessionsWidgetAggregates,
+  useSessionsReportAggregates,
   useSessionMutations,
   useSessionsMetrics,
 } from '@/tenant/features/sessions/hooks/useSessions';

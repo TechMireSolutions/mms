@@ -26,7 +26,7 @@ Authoritative standards for backend databases, migrations, caching architectures
 ## 1. Database & ORM Stack (PostgreSQL + Drizzle)
 - **Database Engine**: PostgreSQL is the unified relational database. Ensure connection secrets are configured via `DATABASE_URL`.
 - **Pool sizing**: Size the PG pool via `PG_POOL_MAX` / `serverConfig.pgPoolMax` (default 20) — do not hardcode `Pool({ max })` in call sites. Keep RLS SET LOCAL inside transactions so pooled clients never leak tenant context.
-- **Timeout budgets**: On tenant write transactions prefer `SET LOCAL statement_timeout` and `SET LOCAL idle_in_transaction_session_timeout` (or equivalent pool/session budgets) so a stuck query cannot hold a pooled client indefinitely — align with Fastify `requestTimeout` / `bodyLimit` in `mms-api-interface.md`. Open until wired everywhere → `mms-migration-status.md`.
+- **Timeout budgets**: Tenant-bound `SET LOCAL statement_timeout` / `idle_in_transaction_session_timeout` ship on `withTenantTransaction` + `runInTransaction` (`PG_STATEMENT_TIMEOUT_MS` / `PG_IDLE_IN_TX_TIMEOUT_MS`, defaults 30s / 15s; skip when subdomain null). Prefer tighter per-route budgets when touching hot paths — align with Fastify `requestTimeout` / `bodyLimit` in `mms-api-interface.md`. Residual → `mms-migration-status.md`.
 - **Drizzle ORM**: Defines schemas in `apps/backend/src/db/schema.ts`. Circular imports are avoided via `dbClient.ts` dependencies.
 - **`sql` fragment safety**: Approved Drizzle `sql` fragments for RLS `SET LOCAL` and JSONB merge must use **parameterized** values only. **Ban** piping user/tenant input into `sql.raw`, string-built identifiers, or concatenated SQL.
 - **Module layout**: Connection / init / purge / document-store helpers may live in focused siblings (`dbConnection.ts`, `dbInit.ts`, `documentStore*.ts`, …) re-exported from the stable public surface callers already import — `mms-structure-naming.md`.
@@ -64,6 +64,11 @@ Authoritative standards for backend databases, migrations, caching architectures
 - Paginated list routes: clients should send `page` (+ `limit`); omit may default to page 1 / default page size with a server max cap — **ban** unpaged full-tenant dumps via `loadAllFn` or optional-page paths that return everything (Contacts closed this; do not re-open on Students/Teachers/…). Do not claim Zod already requires `page`/`limit` until `baseListQuerySchema` is tightened.
 - Work **cards** and **table** must use the same server page/limit APIs — ban `maxPageSize` one-shot loads for cards with a truncation banner that says “switch to list”.
 - Prefer **keyset/cursor** pagination for large or hot directories when touching those APIs; SQL `LIMIT`/`OFFSET` is OK for small Work pages. In-memory `paginateX(loadAll())` is migration debt — do not expand it.
+
+### Contact-linked person modules (Students reference)
+- Module rows store **`contactId`** (typed column + JSONB mirror OK). Person profile fields (`CONTACT_PROFILE_FIELDS`: name, phone, email, gender, dob, city, firstName, lastName) and guardian triad dual-write keys live on **contacts** only — strip via `normalizeStoredStudent` / `normalizeContactLinkedRecord` on write; hydrate on read (`hydrateStudentFromContacts` / batch `loadContactsByIds`).
+- **Work list SQL** for identity columns must join/subquery `contacts` (Students: gender filter/sort, dob sort, name sort + name search). **Ban** filtering/sorting those keys from `students.custom_data` after strip-on-write (breaks Work once JSONB is clean).
+- Setup Identity registry fields (gender/dob/relationships) are validation/display config — not a license to persist duplicates on the module row — `mms-fields.md` / `mms-form-architecture.md`.
 
 ### Secrets & credential stores
 - Long-lived OAuth / API secrets belong in **tenant-scoped FORCE-RLS tables** (e.g. `contact_google_sync_credentials`), never in the unscoped `objects` KV.
@@ -112,7 +117,7 @@ Authoritative standards for backend databases, migrations, caching architectures
 Settings singletons (`branding`, `global_settings`) must survive authentication syncs:
 - **Save Actions**: Await backend resolution (`POST /api/db/objects/:key`) before UI success feedback. Raw `saveObject` is prohibited; utilize typed helpers.
 - **Secrets Protection**: Server-only configuration properties (e.g. `email_integration_secrets`, legacy Google sync object keys) must be filtered out of sync reads and client objects. Prefer dedicated FORCE-RLS tables for new secrets (see §1).
-- **Allowed objects**: Do not leave obsolete logical keys in `ALLOWED_OBJECTS` / object RBAC maps after migrating to typed tables (e.g. Contacts saved reports → `saved_reports`; Contacts field-config / preferences / column prefs → typed tables + REST — removed from `ALLOWED_OBJECTS`).
+- **Allowed objects**: Do not leave obsolete logical keys in `ALLOWED_OBJECTS` / object RBAC maps after migrating to typed tables (e.g. Contacts saved reports → `saved_reports`; Contacts field-config / preferences / column prefs → typed tables + REST — removed from `ALLOWED_OBJECTS`). Keep intentional per-user prefixes (e.g. `prev_kpi_ids_*` reports chrome) in `isAllowedObjectKey` / RBAC maps when the UI still uses `/api/db/objects` — do not 403 those as “unknown keys”.
 - **Allowed collections**: After REST migration, remove the entity key from `ALLOWED_COLLECTIONS` and FE `BUSINESS_COLLECTIONS` so `POST /api/db/collections/:name` cannot ghost-write a parallel JSON array (Contacts entity already closed). Contacts Setup lookup kinds (`genders`, `phoneLabels`, `countryCodes`, …) use typed `contact_lookups` + `/api/contacts/lookups` — also removed from FE `BUSINESS_COLLECTIONS`.
 
 ---

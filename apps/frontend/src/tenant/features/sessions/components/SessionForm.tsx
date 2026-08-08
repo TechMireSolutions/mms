@@ -18,6 +18,7 @@ import {
   SESSION_STATUSES,
   SESSION_TYPE_LABEL_KEYS,
   buildSessionDraftFromRecord,
+  sessionFormDraftSnapshot,
   type SessionFormDraft,
 } from '@/tenant/features/sessions/components/sessionFormShared';
 import { SessionFormFooter } from '@/tenant/features/sessions/components/SessionFormFooter';
@@ -49,16 +50,25 @@ export function SessionForm({
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sessionDraft, setSessionDraft] = useState<SessionFormDraft>(() => buildSessionDraftFromRecord(session, defaultType, defaultCurrency));
+  const [sessionDraft, setSessionDraft] = useState<SessionFormDraft>(() =>
+    buildSessionDraftFromRecord(session, defaultType, defaultCurrency),
+  );
+  const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
+    sessionFormDraftSnapshot(buildSessionDraftFromRecord(session, defaultType, defaultCurrency)),
+  );
 
   useEffect(() => {
-    setSessionDraft(buildSessionDraftFromRecord(session, defaultType, defaultCurrency));
+    const nextDraft = buildSessionDraftFromRecord(session, defaultType, defaultCurrency);
+    setSessionDraft(nextDraft);
+    setBaselineSnapshot(sessionFormDraftSnapshot(nextDraft));
     setErrors({});
   }, [session, defaultCurrency, defaultType]);
 
   const updateDraft = (patch: Partial<SessionFormDraft>) => {
     setSessionDraft((prev) => ({ ...prev, ...patch }));
   };
+
+  const isDirty = sessionFormDraftSnapshot(sessionDraft) !== baselineSnapshot;
 
   const handleSave = async () => {
     setErrors({});
@@ -143,7 +153,12 @@ export function SessionForm({
       saveLabel={session ? t('sessions.action.update') : t('sessions.action.create')}
       onSave={() => { void handleSave(); }}
       saving={saving}
-      saveDisabled={!sessionDraft.name?.trim() || !sessionDraft.startDate || !sessionDraft.endDate}
+      saveDisabled={
+        !sessionDraft.name?.trim()
+        || !sessionDraft.startDate
+        || !sessionDraft.endDate
+        || (Boolean(session?.id) && !isDirty)
+      }
       footerStart={
         <SessionFormFooter
           sessionName={sessionDraft.name}

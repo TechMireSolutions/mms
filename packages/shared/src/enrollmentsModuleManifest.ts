@@ -60,13 +60,15 @@ export const ENROLLMENTS_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['list', 'eligibility'] as const,
-    bulkActions: ['cancel', 'delete'] as const,
+    bulkActions: ['cancel', 'delete', 'export'] as const,
   },
+  defaultExportFilename: 'enrollments.csv',
+  exportChunkSize: 100,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
-    captureDeletionReason: false,
+    captureDeletionReason: true,
   },
   defaultPageSize: 12,
   maxPageSize: 500,

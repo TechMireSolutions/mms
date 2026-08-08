@@ -26,6 +26,10 @@ import {
   hydrateStudentsSetupCollectionsFromLegacyObjects,
   STUDENTS_LEGACY_SETUP_OBJECT_KEYS,
 } from '../db/hydrateStudentsSetupFromLegacyBackup.js';
+import {
+  hydrateTeachersSetupCollectionsFromLegacyObjects,
+  TEACHERS_LEGACY_SETUP_OBJECT_KEYS,
+} from '../db/hydrateTeachersSetupFromLegacyBackup.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { throwIfSyncAborted } from '../lib/syncLimits.js';
 import { clearTenantBackgroundJobs } from './backgroundJobService.js';
@@ -84,15 +88,20 @@ export async function synchronizeData(
   const isFullRestore = Array.isArray(payload.collections?.users);
   const collections = withCompleteRelationalRestoreCollections(
     isFullRestore
-      ? hydrateStudentsSetupCollectionsFromLegacyObjects(
-          { ...(payload.collections ?? {}) },
+      ? hydrateTeachersSetupCollectionsFromLegacyObjects(
+          hydrateStudentsSetupCollectionsFromLegacyObjects(
+            { ...(payload.collections ?? {}) },
+            payload.objects,
+          ),
           payload.objects,
         )
       : payload.collections,
   );
   const { objects } = payload;
-  const skipLegacyStudentsSetupObjects = new Set<string>(
-    isFullRestore ? STUDENTS_LEGACY_SETUP_OBJECT_KEYS : [],
+  const skipLegacySetupObjects = new Set<string>(
+    isFullRestore
+      ? [...STUDENTS_LEGACY_SETUP_OBJECT_KEYS, ...TEACHERS_LEGACY_SETUP_OBJECT_KEYS]
+      : [],
   );
 
   const restoredCollectionKeys = new Set<string>();
@@ -127,7 +136,7 @@ export async function synchronizeData(
       for (const [key, objectValue] of Object.entries(objects)) {
         throwIfSyncAborted(signal);
         if (isServerOnlyObjectKey(key)) continue;
-        if (skipLegacyStudentsSetupObjects.has(key)) continue;
+        if (skipLegacySetupObjects.has(key)) continue;
         await dbSaveObject(key, objectValue);
         restoredKeys.add(key);
       }

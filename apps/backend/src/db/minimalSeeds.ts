@@ -16,8 +16,6 @@ const MINIMAL_SEEDED_COLLECTIONS = new Set([
   'emailLabels',
   'addressLabels',
   'countryCodes',
-  'teacherStatuses',
-  'teacherSpecializations',
   'sessionStatuses',
   'sessionTypes',
   'attendanceStatuses',

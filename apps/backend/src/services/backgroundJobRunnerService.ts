@@ -1,10 +1,18 @@
-import { CONTACTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST } from '@mms/shared';
-import type { ContactExportColumn, MessagingCsvExportQueryDto, StudentExportColumn } from '@mms/shared';
+import { CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
+import type { ContactExportColumn, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, TeacherExportColumn } from '@mms/shared';
 import type { ContactsExportQueryInput } from './contactsExportService.js';
 import { buildContactsCsvExport } from './contactsExportService.js';
 import { buildContactsVcfExport } from './contactsVcfExportService.js';
 import type { StudentsExportQueryInput } from './studentsExportService.js';
 import { buildStudentsCsvExport } from './studentsExportService.js';
+import type { TeachersExportQueryInput } from './teachersExportService.js';
+import { buildTeachersCsvExport } from './teachersExportService.js';
+import type { SessionsExportQueryInput } from './sessionsExportService.js';
+import { buildSessionsCsvExport } from './sessionsExportService.js';
+import type { EnrollmentsExportQueryInput } from './enrollmentsExportService.js';
+import { buildEnrollmentsCsvExport } from './enrollmentsExportService.js';
+import type { UsersExportQueryInput } from './usersExportService.js';
+import { buildUsersCsvExport } from './usersExportService.js';
 import { buildMessagingCsvExport } from './messagingExportService.js';
 import { saveExportArtifact } from './exportArtifactService.js';
 import { runContactsDuplicateScan } from './contactDuplicateScanService.js';
@@ -35,6 +43,33 @@ export interface StudentsExportJobPayload {
   allowDeleted?: boolean;
 }
 
+export interface SessionsExportJobPayload {
+  query?: SessionsExportQueryInput;
+  columns?: SessionExportColumn[];
+  filename?: string;
+  label?: string;
+  viewerRole: string;
+  allowDeleted?: boolean;
+}
+
+export interface TeachersExportJobPayload {
+  query?: TeachersExportQueryInput;
+  columns?: TeacherExportColumn[];
+  filename?: string;
+  label?: string;
+  viewerRole: string;
+  allowDeleted?: boolean;
+}
+
+export interface EnrollmentsExportJobPayload {
+  query?: EnrollmentsExportQueryInput;
+  columns?: EnrollmentExportColumn[];
+  filename?: string;
+  label?: string;
+  viewerRole: string;
+  allowDeleted?: boolean;
+}
+
 export interface MessagingExportJobPayload {
   query?: MessagingCsvExportQueryDto;
   filename?: string;
@@ -45,6 +80,8 @@ export function registerDefaultBackgroundJobRunners(): void {
   const contactsModuleId = CONTACTS_MODULE_MANIFEST.moduleId;
   const messagingModuleId = MESSAGING_MODULE_MANIFEST.moduleId;
   const studentsModuleId = STUDENTS_MODULE_MANIFEST.moduleId;
+  const teachersModuleId = TEACHERS_MODULE_MANIFEST.moduleId;
+  const sessionsModuleId = SESSIONS_MODULE_MANIFEST.moduleId;
 
   registerModuleCsvExportJobRunner({
     moduleId: contactsModuleId,
@@ -89,6 +126,54 @@ export function registerDefaultBackgroundJobRunners(): void {
     buildExport: (query, options) =>
       buildStudentsCsvExport(query as StudentsExportQueryInput, {
         columns: options.columns as StudentExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted,
+      }),
+  });
+
+  registerModuleCsvExportJobRunner({
+    moduleId: sessionsModuleId,
+    entityNounPlural: 'sessions',
+    buildExport: (query, options) =>
+      buildSessionsCsvExport(query as SessionsExportQueryInput, {
+        columns: options.columns as SessionExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted,
+      }),
+  });
+
+  registerModuleCsvExportJobRunner({
+    moduleId: teachersModuleId,
+    entityNounPlural: 'teachers',
+    buildExport: (query, options) =>
+      buildTeachersCsvExport(query as TeachersExportQueryInput, {
+        columns: options.columns as TeacherExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted,
+      }),
+  });
+
+  registerModuleCsvExportJobRunner({
+    moduleId: ENROLLMENTS_MODULE_MANIFEST.moduleId,
+    entityNounPlural: 'enrollments',
+    buildExport: (query, options) =>
+      buildEnrollmentsCsvExport(query as EnrollmentsExportQueryInput, {
+        columns: options.columns as EnrollmentExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted,
+      }),
+  });
+
+  registerModuleCsvExportJobRunner({
+    moduleId: USERS_MODULE_MANIFEST.moduleId,
+    entityNounPlural: 'users',
+    buildExport: (query, options) =>
+      buildUsersCsvExport(query as UsersExportQueryInput, {
+        columns: options.columns as import('@mms/shared').UserExportColumn[] | undefined,
         filename: options.filename,
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted,

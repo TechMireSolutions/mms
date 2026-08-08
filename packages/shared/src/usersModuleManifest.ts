@@ -81,7 +81,10 @@ export const USERS_MODULE_MANIFEST = {
   moduleId: 'users',
   entityType: 'User',
   collectionKey: 'users',
+  /** Legacy remap / backup key — typed field-config lives on `user_field_configs`. */
   settingsObjectKey: 'users_settings',
+  configObjectKey: 'user_field_config',
+  preferencesObjectKey: 'user_module_preferences',
   columnPreferencesObjectKey: 'users_user_column_preferences',
   restBasePath: '/api/users',
   analyticsCategory: 'users',
@@ -105,10 +108,12 @@ export const USERS_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['table', 'cards'] as const,
-    bulkActions: ['delete'] as const,
+    bulkActions: ['whatsapp', 'sms', 'email', 'delete'] as const,
   },
   defaultPageSize: 50,
   maxPageSize: 500,
+  defaultExportFilename: 'users.csv',
+  exportChunkSize: 100,
 } as const;
 
 export type UsersModuleTier = (typeof USERS_MODULE_MANIFEST.tiers)[number];

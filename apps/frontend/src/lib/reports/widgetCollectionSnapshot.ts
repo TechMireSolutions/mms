@@ -1,7 +1,4 @@
 import { readQueryCollection } from "@/lib/queryCacheCollections";
-import { CONTACTS_QUERY_KEY } from "@/tenant/hooks/collections/contacts";
-import { STUDENTS_QUERY_KEY } from "@/tenant/hooks/collections/students";
-import { TEACHERS_QUERY_KEY } from "@/tenant/hooks/collections/teachers";
 import { ATTENDANCE_QUERY_KEY } from "@/tenant/hooks/collections/attendance";
 import { FINANCE_INVOICES_QUERY_KEY } from "@/tenant/hooks/collections/finance";
 import {
@@ -13,7 +10,6 @@ import {
   QUESTION_BANK_RESULTS_QUERY_KEY,
   QUESTION_BANK_TESTS_QUERY_KEY,
 } from "@/tenant/hooks/collections/questionBank";
-import { SESSIONS_QUERY_KEY } from "@/tenant/hooks/collections/sessions";
 import type { CustomWidget } from "./pinnedWidgetTypes";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
@@ -31,14 +27,15 @@ import type {
 import { matchesWidgetFilter } from "@mms/shared";
 
 export function getWidgetCollections(): ReportCollectionsSnapshot {
-  const contacts = readQueryCollection<Contact>(CONTACTS_QUERY_KEY) ?? [];
-  const students = readQueryCollection<Student>(STUDENTS_QUERY_KEY) ?? [];
-  const teachers = readQueryCollection<Teacher>(TEACHERS_QUERY_KEY) ?? [];
+  // Contacts + students + teachers + sessions: SQL aggregates / empty dump — do not invent localStorage rows.
+  const contacts: Contact[] = [];
+  const students: Student[] = [];
+  const teachers: Teacher[] = [];
+  const sessions: Session[] = [];
   const invoices = readQueryCollection<Invoice>(FINANCE_INVOICES_QUERY_KEY) ?? [];
   const attendance = readQueryCollection<AttendanceRecord>(ATTENDANCE_QUERY_KEY) ?? [];
   const distributions = readQueryCollection<Distribution>(HASANAT_DISTRIBUTIONS_QUERY_KEY) ?? [];
   const denominations = readQueryCollection<Denomination>(HASANAT_DENOMS_QUERY_KEY) ?? [];
-  const sessions = readQueryCollection<Session>(SESSIONS_QUERY_KEY) ?? [];
   const questions = readQueryCollection<QuestionBankQuestion>(QUESTION_BANK_QUESTIONS_QUERY_KEY) ?? [];
   const tests = readQueryCollection<QuestionBankTest>(QUESTION_BANK_TESTS_QUERY_KEY) ?? [];
   const assessmentResults =

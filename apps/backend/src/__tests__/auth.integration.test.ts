@@ -623,14 +623,15 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('GET /api/platform/auth/me requires platform session on apex', async () => {
+  it('GET /api/platform/auth/me soft-probes session on apex', async () => {
     const app = await buildApp();
     const unauth = await app.inject({
       method: 'GET',
       url: '/api/platform/auth/me',
       headers: { host: 'localhost' },
     });
-    expect(unauth.statusCode).toBe(401);
+    expect(unauth.statusCode).toBe(200);
+    expect(unauth.json()).toMatchObject({ user: null, isAuthenticated: false });
 
     const token = app.jwt.sign({
       id: 'p1',
@@ -646,7 +647,10 @@ describe('platform auth routes', () => {
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
     });
     expect(authed.statusCode).toBe(200);
-    expect(authed.json()).toMatchObject({ user: { email: 'platform@test.com' } });
+    expect(authed.json()).toMatchObject({
+      user: { email: 'platform@test.com' },
+      isAuthenticated: true,
+    });
     await app.close();
   });
 
@@ -836,7 +840,7 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('GET /api/platform/auth/me rejects tenant access token on apex', async () => {
+  it('GET /api/platform/auth/me ignores tenant access token on apex', async () => {
     const app = await buildApp();
     const token = signTenantToken(app, {
       id: 'u1',
@@ -850,7 +854,8 @@ describe('platform auth routes', () => {
       headers: { host: 'localhost' },
       cookies: { mms_access: token },
     });
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ user: null, isAuthenticated: false });
     await app.close();
   });
 
@@ -891,7 +896,7 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
-  it('GET /api/platform/auth/me rejects stale sessionVersion', async () => {
+  it('GET /api/platform/auth/me soft-clears stale sessionVersion', async () => {
     mockGetStoredPlatformUserById.mockResolvedValue({
       id: 'p1',
       email: 'platform@test.com',
@@ -914,12 +919,12 @@ describe('platform auth routes', () => {
       headers: { host: 'localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
     });
-    expect(res.statusCode).toBe(401);
-    expect(res.json()).toMatchObject({ type: 'session_revoked', message: 'Platform session has been revoked' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ user: null, isAuthenticated: false });
     await app.close();
   });
 
-  it('GET /api/platform/auth/me rejects disabled platform admin', async () => {
+  it('GET /api/platform/auth/me soft-clears disabled platform admin', async () => {
     mockGetStoredPlatformUserById.mockResolvedValue({
       id: 'p-admin',
       email: 'operator@test.com',
@@ -940,6 +945,66 @@ describe('platform auth routes', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/platform/auth/me',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ user: null, isAuthenticated: false });
+    await app.close();
+  });
+
+  it('GET /api/platform/workspaces rejects stale sessionVersion with 401', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p1',
+      email: 'platform@test.com',
+      name: 'Platform Admin',
+      passwordHash: 'hash',
+      role: 'super_user',
+      permissions: { workspaces: true, onboard: true },
+      sessionVersion: 2,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p1',
+      tokenType: 'platform_access',
+      sessionVersion: 0,
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces',
+      headers: { host: 'localhost' },
+      cookies: { [PLATFORM_ACCESS_COOKIE]: token },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({
+      type: 'session_revoked',
+      message: 'Platform session has been revoked',
+    });
+    await app.close();
+  });
+
+  it('GET /api/platform/workspaces rejects disabled platform admin with 401', async () => {
+    mockGetStoredPlatformUserById.mockResolvedValue({
+      id: 'p-admin',
+      email: 'operator@test.com',
+      name: 'Platform Operator',
+      passwordHash: 'hash',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: true },
+      sessionVersion: 0,
+      disabledAt: '2026-07-01T00:00:00.000Z',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+    const app = await buildApp();
+    const token = app.jwt.sign({
+      id: 'p-admin',
+      tokenType: 'platform_access',
+      sessionVersion: 0,
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces',
       headers: { host: 'localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
     });

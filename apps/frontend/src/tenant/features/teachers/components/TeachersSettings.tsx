@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Save, School } from "lucide-react";
+import React, { lazy, Suspense, useEffect, useMemo, useRef } from "react";
+import { School } from "lucide-react";
 import {
   TEACHERS_TAB_REGISTRY,
   INITIAL_TEACHERS_FIELD_SEED,
@@ -9,20 +9,31 @@ import {
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { FORM_LABEL } from "@/components/ui/formStyles";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
+import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
+import { useTeachersSetupSaveActions } from "@/tenant/features/teachers/hooks/useTeachersSetupSaveActions";
+
+const TeachersSettingsLookupsPanel = lazy(() =>
+  import("@/tenant/features/teachers/components/TeachersSettingsLookupsPanel").then((mod) => ({
+    default: mod.TeachersSettingsLookupsPanel,
+  })),
+);
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   fields: "teachers.setup.fields",
   preferences: "teachers.setup.preferences",
+  lookups: "teachers.setup.lookups",
 };
 
 export function TeachersSettings(): React.JSX.Element {
@@ -31,20 +42,18 @@ export function TeachersSettings(): React.JSX.Element {
   const config = useTeacherConfig();
   const { specializations } = config;
   const {
+    settings,
     settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
     upd,
-    saveSettings,
+    saveSettingsAsync,
+    discardDrafts,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: TEACHERS_TAB_REGISTRY,
   });
-
-  const specializationOptions = specializations.length > 0
-    ? specializations
-    : [...TEACHER_SPECIALIZATION_VALUES];
 
   const settingsSubTabs = useMemo(
     () =>
@@ -56,21 +65,76 @@ export function TeachersSettings(): React.JSX.Element {
     [t],
   );
 
-  const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key || "fields");
-  const showFields = sub === "fields";
-  const showPrefs = sub === "preferences";
+  const dirtyRef = useRef({ fields: false, prefs: false });
 
-  const handleSave = (): void => {
-    saveSettings();
-    notify.success(t("teachers.settings.saved"));
-  };
+  const subTabs = useModuleSetupSubTabs({
+    initialKey: settingsSubTabs[0]?.key || "fields",
+    isDirty: (currentKey) => {
+      if (currentKey === "fields") return dirtyRef.current.fields;
+      if (currentKey === "preferences") return dirtyRef.current.prefs;
+      return false;
+    },
+    onDiscard: () => {
+      discardDrafts();
+      dirtyRef.current = { fields: false, prefs: false };
+      setSaved(true);
+    },
+  });
+
+  const showFields = subTabs.showFields;
+  const showPrefs = subTabs.showPrefs;
+  const showLookups = subTabs.showLookups;
+
+  const {
+    saving,
+    isDirty,
+    isFieldsDirty,
+    isPrefsDirty,
+    handleSave,
+    handleDeleteFieldWithGuard,
+  } = useTeachersSetupSaveActions({
+    settings,
+    settingsDraft,
+    fieldsEditor,
+    mode: showPrefs ? "preferences" : "fields",
+    setSaved,
+    saveSettingsAsync,
+  });
+
+  useEffect(() => {
+    dirtyRef.current.fields = isFieldsDirty;
+    dirtyRef.current.prefs = isPrefsDirty;
+  }, [isFieldsDirty, isPrefsDirty]);
+
+  const wrappedFieldsEditor = useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: handleDeleteFieldWithGuard,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => TEACHERS_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_TEACHERS_FIELD_SEED,
+        isLockedTab: (tabKey) => tabKey.toLowerCase() === "basic",
+      }),
+    [fieldsEditor, handleDeleteFieldWithGuard],
+  );
+
+  const specializationOptions = specializations.length > 0
+    ? specializations
+    : [...TEACHER_SPECIALIZATION_VALUES];
+
+  const unsavedWarning = showFields
+    ? t("teachers.setup.unsavedFieldsWarning")
+    : showPrefs
+      ? t("teachers.setup.unsavedPreferencesWarning")
+      : undefined;
 
   return (
     <div className="space-y-4">
       <SubTabBar
         tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
-        value={sub}
-        onChange={setSub}
+        value={subTabs.sub}
+        onChange={subTabs.handleSubTabChange}
       />
 
       {!canEditSetup ? (
@@ -92,6 +156,7 @@ export function TeachersSettings(): React.JSX.Element {
                 <label className={FORM_LABEL} htmlFor="teacher-idPrefix">{t("teachers.settings.idPrefix")}</label>
                 <Input
                   id="teacher-idPrefix"
+                  name="teacher-idPrefix"
                   value={settingsDraft.idPrefix || ""}
                   onChange={(event) => upd("idPrefix", event.target.value)}
                 />
@@ -123,24 +188,49 @@ export function TeachersSettings(): React.JSX.Element {
 
           {showFields && (
             <ModuleFieldsSetup
-              editor={fieldsEditor}
+              editor={wrappedFieldsEditor}
               isCoreField={(tabId, key) => INITIAL_TEACHERS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+              isLockedTab={(tabKey) => tabKey.toLowerCase() === "basic"}
               onStateChange={() => setSaved(false)}
             />
           )}
 
-          <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-            <Button
-              type="button"
-              onClick={handleSave}
-              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
-            >
-              <Save className="w-4 h-4" />
-              {saved ? t("settings.savedBadge") : t("common.save")}
-            </Button>
-          </footer>
+          {showLookups ? (
+            <Suspense fallback={<ModulePanelSuspenseFallback />}>
+              <TeachersSettingsLookupsPanel />
+            </Suspense>
+          ) : null}
+
+          {!showLookups ? (
+            <ModuleSetupSaveFooter
+              dirty={isDirty}
+              saving={saving}
+              saved={saved}
+              unsavedWarning={unsavedWarning}
+              saveLabel={t("common.save")}
+              savedLabel={t("settings.savedBadge")}
+              onSave={handleSave}
+            />
+          ) : null}
         </section>
       )}
+
+      <ConfirmAlertDialog
+        open={subTabs.discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) subTabs.clearPendingSubTab();
+        }}
+        title={t("settings.unsavedChanges")}
+        description={
+          subTabs.discardConfirmIsFields
+            ? t("teachers.setup.discardUnsavedFieldsConfirm")
+            : t("teachers.setup.discardUnsavedPreferencesConfirm")
+        }
+        confirmLabel={t("common.yes")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={subTabs.handleConfirmDiscard}
+      />
     </div>
   );
 }

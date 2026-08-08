@@ -3,6 +3,7 @@ import {
   readContactsWidgetAggregate,
   readStudentsWidgetAggregate,
   readTeachersWidgetAggregate,
+  readSessionsWidgetAggregate,
 } from './widgetAggregateReaders.js';
 
 function computeGenericCustomCardValue(
@@ -65,4 +66,18 @@ export function computeTeachersCustomCardValue(
   },
 ) {
   return computeGenericCustomCardValue(card, readTeachersWidgetAggregate(card.id));
+}
+
+/** Resolve dashboard card values for sessions via server widget aggregates. */
+export function computeSessionsCustomCardValue(
+  card: {
+    id: string;
+    operation: CustomWidget['operation'];
+    targetField?: string;
+    filterField?: string;
+    filterOperator?: CustomWidget['filterOperator'];
+    filterValue?: string;
+  },
+) {
+  return computeGenericCustomCardValue(card, readSessionsWidgetAggregate(card.id));
 }

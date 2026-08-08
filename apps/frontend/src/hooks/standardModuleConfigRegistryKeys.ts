@@ -1,10 +1,5 @@
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
 
-export const TEACHER_CONFIG_COLLECTION_KEYS = {
-  statuses: 'teacherStatuses',
-  specializations: 'teacherSpecializations',
-} as const;
-
 export const SESSION_CONFIG_COLLECTION_KEYS = {
   statuses: 'sessionStatuses',
   types: 'sessionTypes',

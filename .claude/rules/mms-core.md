@@ -96,7 +96,7 @@ Hardcoding ban (copy, colours, formats, statuses): follow the owner row above �
 
 ## Domain invariants (one-liners)
 
-- **Contacts canonical** for persons; module rows link by id; hydrate on read, strip on save — `mms-fields.md` / `mms-form-architecture.md` / `mms-data-layer.md`.
+- **Contacts canonical** for persons; module rows link by `contactId`; hydrate on read, strip profile/guardian dual-write keys on save; Work list identity filter/sort joins `contacts` (Students closed) — `mms-fields.md` / `mms-form-architecture.md` / `mms-data-layer.md`.
 - **`persona` purged** — residual = migration defect.
 - **Phones E.164** on save via `parsePhoneNumber` — `mms-form-architecture.md`.
 - **WhatsApp number id** only via `PuppeteerWhatsAppProvider.getNumberId` — `mms-messaging.md`.

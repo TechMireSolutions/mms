@@ -283,29 +283,163 @@ export const studentLookups = pgTable('student_lookups', {
   index('student_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
 ]);
 
+/** Teachers Setup field registry (was document-store `teachers_settings` fields slice). */
+export const teacherFieldConfigs = pgTable('teacher_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Teachers Setup preferences — ID prefix / contact link (was document-store prefs slice). */
+export const teacherModulePreferences = pgTable('teacher_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Per-user Teachers Work column layout (was document-store `teacher_user_column_preferences`). */
+export const teacherUserColumnPrefs = pgTable('teacher_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('teacher_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/**
+ * Teachers entity rows.
+ * Composite FK `contact_id` → contacts (0024) ON DELETE SET NULL.
+ * Soft-delete audit columns (`deleted_by` / `deletion_reason`) — Drizzle `0026`.
+ */
 export const teachers = pgTable('teachers', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  contactId: text('contact_id'),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('teachers_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('teachers_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('teachers_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+  index('teachers_workspace_contact_active_idx')
+    .on(table.workspaceSubdomain, table.contactId)
+    .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
   index('teachers_custom_data_gin_idx').using('gin', table.customData),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('set null'),
 ]);
 
+/**
+ * Teachers Setup option lists (statuses, specializations).
+ * Replaces document-store collections teacherStatuses / teacherSpecializations.
+ */
+export const teacherLookups = pgTable('teacher_lookups', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(),
+  label: text('label').notNull(),
+  meta: jsonb('meta').$type<Record<string, unknown> | null>(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  uniqueIndex('teacher_lookups_workspace_kind_sort_idx').on(
+    table.workspaceSubdomain,
+    table.kind,
+    table.sortOrder,
+  ),
+  index('teacher_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
+]);
+
+/** Sessions Setup field registry (was document-store `sessions_settings` fields slice). */
+export const sessionFieldConfigs = pgTable('session_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Sessions Setup preferences (was document-store `sessions_settings` prefs slice). */
+export const sessionModulePreferences = pgTable('session_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Per-user Sessions Work column layout (was document-store `session_user_column_preferences`). */
+export const sessionUserColumnPrefs = pgTable('session_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('session_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Users Setup field registry (was document-store `users_settings` fields slice). */
+export const userFieldConfigs = pgTable('user_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Users Setup preferences — registration + workspaceRoles (was document-store prefs slice). */
+export const userModulePreferences = pgTable('user_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Per-user Users Work column layout (was document-store `users_user_column_preferences`). */
+export const userUserColumnPrefs = pgTable('user_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('user_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/**
+ * Sessions entity rows.
+ * Soft-delete audit columns (`deleted_by` / `deletion_reason`) — Drizzle `0027`.
+ */
 export const sessions = pgTable('sessions', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
   deletedAt: timestamp('deleted_at', { mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('sessions_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('sessions_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('sessions_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
   index('sessions_custom_data_gin_idx').using('gin', table.customData),
 ]);
 
@@ -324,11 +458,46 @@ export const enrollments = pgTable('enrollments', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull(),
+  deletedAt: timestamp('deleted_at', { mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('enrollments_workspace_subdomain_idx').on(table.workspaceSubdomain),
+  index('enrollments_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('enrollments_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
   index('enrollments_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+/** Enrollments Setup field registry (was document-store `enrollments_settings` fields slice). */
+export const enrollmentFieldConfigs = pgTable('enrollment_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Enrollments Setup preferences (was document-store `enrollments_settings` prefs slice). */
+export const enrollmentModulePreferences = pgTable('enrollment_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Per-user Enrollments Work column layout (was document-store `enrollment_user_column_preferences`). */
+export const enrollmentUserColumnPrefs = pgTable('enrollment_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('enrollment_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
 export const obligationTypes = pgTable('obligation_types', {

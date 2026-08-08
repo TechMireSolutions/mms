@@ -55,13 +55,16 @@ export function useTeachersPageActions({
     }
   };
 
-  const handleDelete = (id: string) => {
-    deleteTeacher.mutate(id, {
-      onSuccess: () => notify.info(t("teachers.toast.deleted")),
-      onError: (err) => notify.error(t("settings.serverSaveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
+  const handleDelete = (id: string, deletionReason?: string) => {
+    deleteTeacher.mutate(
+      { id, deletionReason },
+      {
+        onSuccess: () => notify.info(t("teachers.toast.deleted")),
+        onError: (err) => notify.error(t("settings.serverSaveFailed"), {
+          description: err instanceof Error ? err.message : String(err),
+        }),
+      },
+    );
   };
 
   const handleRestore = (id: string) => {
@@ -73,22 +76,25 @@ export function useTeachersPageActions({
     });
   };
 
-  const handleBulkDelete = (ids: string[]) => {
-    bulkDeleteTeachers.mutate(ids, {
-      onSuccess: (result) => {
-        if (result.failed > 0) {
-          notify.error(t("teachers.toast.bulkPartial", {
-            succeeded: result.succeeded,
-            failed: result.failed,
-          }));
-        } else {
-          notify.info(t("teachers.toast.deleted"));
-        }
+  const handleBulkDelete = (ids: string[], deletionReason?: string) => {
+    bulkDeleteTeachers.mutate(
+      { ids, deletionReason },
+      {
+        onSuccess: (result) => {
+          if (result.failed > 0) {
+            notify.error(t("teachers.toast.bulkPartial", {
+              succeeded: result.succeeded,
+              failed: result.failed,
+            }));
+          } else {
+            notify.info(t("teachers.toast.deleted"));
+          }
+        },
+        onError: (err) => notify.error(t("settings.serverSaveFailed"), {
+          description: err instanceof Error ? err.message : String(err),
+        }),
       },
-      onError: (err) => notify.error(t("settings.serverSaveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
+    );
   };
 
   const handleBulkRestore = (ids: string[]) => {

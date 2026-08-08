@@ -2,8 +2,10 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import {
   authenticatePlatform,
+  optionalAuthenticatePlatform,
   requireMainDomain,
   type PlatformAuthenticatedRequest,
+  type PlatformOptionalAuthRequest,
 } from '../../middleware/authenticatePlatform.js';
 import {
   issuePlatformSession,
@@ -130,11 +132,14 @@ export default async function platformAuthRoutes(
     return reply.send({ success: true });
   });
 
-  fastify.get('/me', { preHandler: authenticatePlatform }, async (request, reply) => {
-    const { platformUser } = request as PlatformAuthenticatedRequest;
+  fastify.get('/me', { preHandler: optionalAuthenticatePlatform }, async (request, reply) => {
+    const { platformUser } = request as PlatformOptionalAuthRequest;
+    if (!platformUser) {
+      return reply.send({ user: null, isAuthenticated: false });
+    }
     const profile = await getPlatformUserProfile(platformUser.id);
     if (!profile) {
-      return reply.status(404).send({ type: 'user_not_found', message: 'Platform user not found' });
+      return reply.send({ user: null, isAuthenticated: false });
     }
     return reply.send({ user: profile, isAuthenticated: true });
   });

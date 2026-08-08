@@ -1,11 +1,16 @@
 import type { JSX } from 'react';
-import { workspaceRoleLabel, type WorkspaceRole } from '@mms/shared';
+import { workspaceRoleLabel, type ModuleColumnRegistryEntry, type WorkspaceRole } from '@mms/shared';
 import { FormSelect } from '@/components/ui/FormSelect';
+import {
+  ModuleColumnCustomizer,
+  type ModuleColumnCustomizerLabels,
+} from '@/components/ui/ModuleColumnCustomizer';
 import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import { USERS_WORK_SEARCH_INPUT_ID } from '@/tenant/features/users/hooks/useUsersKeyboardShortcuts';
 
 interface UsersListFiltersProps {
   viewMode: WorkDirectoryViewMode;
@@ -21,6 +26,9 @@ interface UsersListFiltersProps {
   onStatusFilterChange: (value: string) => void;
   onToggleDeleted?: (next: boolean) => void;
   onClearSelection: () => void;
+  columnRegistry?: ModuleColumnRegistryEntry[];
+  updateUserColumnLayout?: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
+  customizerLabels?: ModuleColumnCustomizerLabels;
 }
 
 export function UsersListFilters({
@@ -37,12 +45,16 @@ export function UsersListFilters({
   onClearSelection,
   viewMode,
   onViewModeChange,
+  columnRegistry,
+  updateUserColumnLayout,
+  customizerLabels,
 }: UsersListFiltersProps): JSX.Element {
   const { t } = useTranslation();
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <SearchBar
+        id={USERS_WORK_SEARCH_INPUT_ID}
         value={search}
         onChange={onSearchChange}
         placeholder={t('users.searchPlaceholder')}
@@ -81,6 +93,15 @@ export function UsersListFilters({
       ) : null}
 
       <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+
+      {columnRegistry && updateUserColumnLayout && customizerLabels ? (
+        <ModuleColumnCustomizer
+          columnRegistry={columnRegistry}
+          updateUserColumnLayout={updateUserColumnLayout}
+          labels={customizerLabels}
+        />
+      ) : null}
+
       {canDelete ? (
         <ModuleTrashToggle
           showDeleted={showDeleted}

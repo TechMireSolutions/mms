@@ -39,13 +39,17 @@ const mockRestoreInvoiceById = vi.fn();
 const mockDeletePaymentById = vi.fn();
 const mockRestorePaymentById = vi.fn();
 
-vi.mock('../services/enrollmentService.js', () => ({
-  loadEnrollments: vi.fn().mockResolvedValue([]),
-  createEnrollment: vi.fn(),
-  updateEnrollmentById: vi.fn(),
-  deleteEnrollmentById: (...args: unknown[]) => mockDeleteEnrollmentById(...args),
-  restoreEnrollmentById: (...args: unknown[]) => mockRestoreEnrollmentById(...args),
-}));
+vi.mock('../services/enrollmentService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/enrollmentService.js')>();
+  return {
+    ...actual,
+    loadEnrollments: vi.fn().mockResolvedValue([]),
+    createEnrollment: vi.fn(),
+    updateEnrollmentById: vi.fn(),
+    deleteEnrollmentById: (...args: unknown[]) => mockDeleteEnrollmentById(...args),
+    restoreEnrollmentById: (...args: unknown[]) => mockRestoreEnrollmentById(...args),
+  };
+});
 
 vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: vi.fn().mockResolvedValue([]),
@@ -135,16 +139,20 @@ vi.mock('../services/examinationService.js', () => ({
 const mockDeleteUserById = vi.fn();
 const mockRestoreUserById = vi.fn();
 
-vi.mock('../services/usersService.js', () => ({
-  loadWorkspaceUsers: vi.fn().mockResolvedValue([]),
-  upsertWorkspaceUsers: vi.fn(),
-  loadLogs: vi.fn().mockResolvedValue([]),
-  upsertLogs: vi.fn(),
-  deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
-  restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
-  bulkSoftDeleteUsers: vi.fn(),
-  bulkRestoreUsers: vi.fn(),
-}));
+vi.mock('../services/usersService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/usersService.js')>();
+  return {
+    ...actual,
+    loadWorkspaceUsers: vi.fn().mockResolvedValue([]),
+    upsertWorkspaceUsers: vi.fn(),
+    loadLogs: vi.fn().mockResolvedValue([]),
+    upsertLogs: vi.fn(),
+    deleteUserById: (...args: unknown[]) => mockDeleteUserById(...args),
+    restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
+    bulkSoftDeleteUsers: vi.fn(),
+    bulkRestoreUsers: vi.fn(),
+  };
+});
 
 describe('soft deletion and restore integrations', () => {
   beforeEach(() => {

@@ -61,6 +61,8 @@ interface SessionsWorkTierProps {
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
   onPageChange: (page: number) => void;
+  canExport?: boolean;
+  onBulkExport?: () => void;
 }
 
 export function SessionsWorkTier({
@@ -108,6 +110,8 @@ export function SessionsWorkTier({
   onRequestBulkRestore,
   onClearSelection,
   onPageChange,
+  canExport,
+  onBulkExport,
 }: SessionsWorkTierProps): React.JSX.Element {
   return (
     <motion.div
@@ -116,6 +120,7 @@ export function SessionsWorkTier({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       className="space-y-5"
+      aria-busy={useServerWork && isWorkFetching ? true : undefined}
     >
       <SessionsWorkFilters
         search={search}
@@ -143,6 +148,7 @@ export function SessionsWorkTier({
         isError={isError}
         isWorkLoading={isWorkLoading}
         isWorkFetching={useServerWork && isWorkFetching}
+        useServerWork={useServerWork}
         viewMode={viewMode}
         showDeleted={showDeleted}
         canWrite={canWrite}
@@ -169,6 +175,8 @@ export function SessionsWorkTier({
         onRequestBulkRestore={onRequestBulkRestore}
         onClearSelection={onClearSelection}
         onPageChange={onPageChange}
+        canExport={canExport}
+        onBulkExport={onBulkExport}
       />
     </motion.div>
   );

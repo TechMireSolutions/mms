@@ -1,11 +1,9 @@
 import { motion } from "framer-motion";
-import type { ModuleColumnRegistryEntry, TeachersListPageResult } from "@mms/shared";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ErrorState } from "@/components/ui/ErrorState";
+import type { ModuleColumnRegistryEntry, TeachersListPageResult, TeacherExportColumn } from "@mms/shared";
+import type { TeacherListProps } from "@/tenant/features/teachers/components/TeacherListTypes";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { ListPagination } from "@/components/ui/ListPagination";
 import { type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
-import { TableSkeleton } from "@/components/ui/LoadingState";
+import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { Teacher } from "@/lib/data/teachersData";
@@ -22,6 +20,9 @@ interface TeachersWorkTierProps {
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
+  canExport?: boolean;
+  exportColumns?: TeacherExportColumn[];
+  logExportAudit?: TeacherListProps['logExportAudit'];
   columnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   customizerLabels: ModuleColumnCustomizerLabels;
@@ -44,9 +45,9 @@ interface TeachersWorkTierProps {
   onClearFilters: () => void;
   onRetry: () => unknown;
   onEdit: (teacher: Teacher) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, deletionReason?: string) => void;
   onRestore: (id: string) => void;
-  onBulkDelete: (ids: string[]) => void;
+  onBulkDelete: (ids: string[], deletionReason?: string) => void;
   onBulkRestore: (ids: string[]) => void;
   onBulkStatusChange?: (ids: string[], status: string) => void;
   onWhatsApp?: (teachers: Teacher[]) => void;
@@ -56,6 +57,7 @@ interface TeachersWorkTierProps {
   onPageChange: (page: number) => void;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
+  onSelectedCountChange?: (count: number) => void;
 }
 
 export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Element {
@@ -83,6 +85,7 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
       exit={{ opacity: 0 }}
       transition={{ duration: 0.18 }}
       className="space-y-5"
+      aria-busy={props.useServerWork && props.isWorkPageFetching ? true : undefined}
     >
       <TeachersWorkTierToolbar
         search={props.search}
@@ -105,57 +108,55 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
 
       <FilterChips chips={filterChips} onClearAll={props.onClearFilters} />
 
-      <ErrorBoundary>
-        {props.isWorkPageLoading ? (
-          <TableSkeleton rows={6} cols={props.columnRegistry.length} />
-        ) : props.isWorkPageError ? (
-          <ErrorState
-            title={t("teachers.loadFailed")}
-            description={t("teachers.loadFailedHint")}
-            onRetry={() => void props.onRetry()}
-          />
-        ) : (
-          <>
-            <TeacherList
-              teachers={props.teachers}
-              viewMode={props.viewMode}
-              onEdit={props.onEdit}
-              onDelete={props.onDelete}
-              onRestore={props.onRestore}
-              onBulkDelete={props.onBulkDelete}
-              onBulkRestore={props.onBulkRestore}
-              onBulkStatusChange={props.onBulkStatusChange}
-              onWhatsApp={props.onWhatsApp}
-              onSms={props.onSms}
-              onEmail={props.onEmail}
-              canWrite={props.canWrite}
-              canDelete={props.canDelete}
-              showDeleted={props.showDeleted}
-              selectionResetKey={props.selectionResetKey}
-              isColumnVisible={props.isColumnVisible}
-              getColumnWidth={props.getColumnWidth}
-              onColumnResize={props.onColumnResize}
-              sortField={props.sortField}
-              sortDir={props.sortDir}
-              onSortChange={props.onSortChange}
-            />
-            {props.useServerWork && props.workPageData && (
-              <ListPagination
-                page={props.workPageData.page}
-                total={props.workPageData.total}
-                limit={props.workPageData.limit}
-                hasMore={props.workPageData.hasMore}
-                onPageChange={props.onPageChange}
-                i18nNamespace="teachers"
-                variant="range"
-              />
-            )}
-            {props.useServerWork && props.isWorkPageFetching && (
-              <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
-            )}
-          </>
-        )}
-      </ErrorBoundary>
+      <ModuleWorkListStateShell
+        isError={props.isWorkPageError}
+        isLoading={props.isWorkPageLoading}
+        isFetching={props.isWorkPageFetching}
+        onRetry={() => void props.onRetry()}
+        errorTitle={t("teachers.loadFailed")}
+        errorHint={t("teachers.loadFailedHint")}
+        viewMode={props.viewMode}
+        skeletonColumnCount={props.columnRegistry.length}
+        useServerWork={props.useServerWork}
+        pageData={props.workPageData}
+        onPageChange={props.onPageChange}
+        i18nNamespace="teachers"
+        showPagination={props.teachers.length > 0}
+        loadingLabel={t("common.loading")}
+      >
+        <TeacherList
+          teachers={props.teachers}
+          viewMode={props.viewMode}
+          onEdit={props.onEdit}
+          onDelete={props.onDelete}
+          onRestore={props.onRestore}
+          onBulkDelete={props.onBulkDelete}
+          onBulkRestore={props.onBulkRestore}
+          onBulkStatusChange={props.onBulkStatusChange}
+          onWhatsApp={props.onWhatsApp}
+          onSms={props.onSms}
+          onEmail={props.onEmail}
+          canWrite={props.canWrite}
+          canDelete={props.canDelete}
+          canExport={props.canExport}
+          showDeleted={props.showDeleted}
+          selectionResetKey={props.selectionResetKey}
+          isColumnVisible={props.isColumnVisible}
+          getColumnWidth={props.getColumnWidth}
+          onColumnResize={props.onColumnResize}
+          sortField={props.sortField}
+          sortDir={props.sortDir}
+          onSortChange={props.onSortChange}
+          exportColumns={props.exportColumns}
+          exportSearch={props.search}
+          exportFilterStatus={props.filterStatus}
+          exportFilterSpecialization={props.filterSpecialization}
+          exportSortField={props.sortField}
+          exportSortDir={props.sortDir}
+          logExportAudit={props.logExportAudit}
+          onSelectedCountChange={props.onSelectedCountChange}
+        />
+      </ModuleWorkListStateShell>
     </motion.div>
   );
 }

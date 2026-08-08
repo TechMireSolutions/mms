@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/ModuleColumnCustomizer";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { SessionStatus, SessionType } from "@/tenant/features/sessions/components/sessionPageTypes";
+import { SESSIONS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/sessions/hooks/useSessionsKeyboardShortcuts";
 
 interface SessionsWorkColumnLayout {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -71,7 +72,13 @@ export function SessionsWorkFilters({
   return (
     <>
       <div className="flex flex-col sm:flex-row gap-3">
-        <SearchBar value={search} onChange={onSearchChange} placeholder={t("sessions.searchPlaceholder")} className="flex-1" />
+        <SearchBar
+          id={SESSIONS_WORK_SEARCH_INPUT_ID}
+          value={search}
+          onChange={onSearchChange}
+          placeholder={t("sessions.searchPlaceholder")}
+          className="flex-1"
+        />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

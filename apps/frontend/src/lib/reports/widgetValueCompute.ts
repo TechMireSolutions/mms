@@ -10,6 +10,8 @@ import {
   readStudentsWidgetAggregate,
   readTeachersTotalFromMetrics,
   readTeachersWidgetAggregate,
+  readSessionsTotalFromMetrics,
+  readSessionsWidgetAggregate,
 } from "./widgetAggregateReaders.js";
 import { getFilteredRecords } from "./widgetCollectionSnapshot.js";
 
@@ -17,6 +19,7 @@ export {
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
   computeTeachersCustomCardValue,
+  computeSessionsCustomCardValue,
 } from "./widgetCustomCardValues";
 
 function resolveHasanatPoints(
@@ -76,6 +79,20 @@ export function computeWidgetSingleValue(
     };
   }
 
+  if (widget.collection === "sessions") {
+    const aggregate = readSessionsWidgetAggregate(widget.id);
+    if (aggregate) {
+      return formatGenericWidgetValue(widget, aggregate);
+    }
+    const totalCount = readSessionsTotalFromMetrics();
+    return {
+      value: 0,
+      formattedValue: widget.operation === "percentage" ? "0%" : "0",
+      isAlert: false,
+      totalCount,
+    };
+  }
+
   const filteredRecords = getFilteredRecords(widget, collections);
   const totalInCollection = (collections[widget.collection] || []).length;
   let computedValue = 0;
@@ -123,6 +140,10 @@ export function computeWidgetChartData(
   }
   if (widget.collection === "teachers") {
     const aggregate = readTeachersWidgetAggregate(widget.id);
+    return aggregate?.chartData ?? [];
+  }
+  if (widget.collection === "sessions") {
+    const aggregate = readSessionsWidgetAggregate(widget.id);
     return aggregate?.chartData ?? [];
   }
 

@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import {
   type Contact,
   type QuestionBankQuestion,
@@ -23,14 +22,9 @@ import {
   useQuestionBankResultsCollection,
   useQuestionBankTestsCollection,
 } from '@/tenant/hooks/collections/questionBank';
-import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import {
   type StudentRecord,
 } from '@/tenant/hooks/collections/students';
-import {
-  fetchAllTeachersForQuery,
-  TEACHERS_QUERY_KEY,
-} from '@/tenant/hooks/collections/teachers';
 import type { ReportCollection } from '@/lib/reports/reportMetadata';
 
 export type ReportCollectionsSnapshot = {
@@ -65,10 +59,11 @@ export function useWidgetCollections(options?: {
   const needs = (collection: ReportCollection): boolean =>
     queryEnabled && (required === null || required.has(collection));
 
-  // Contacts + students widgets/charts read SQL aggregates — do not page-walk directories here.
+  // Contacts + students + teachers + sessions widgets/charts read SQL aggregates — do not page-walk entities here.
   const contacts: Contact[] = [];
   const students: Student[] = [];
-  const sessions = useSessionsCollection({ enabled: needs('sessions') });
+  const teachers: Teacher[] = [];
+  const sessions: Session[] = [];
   const financeInvoices = useFinanceInvoicesCollection({ enabled: needs('finance_invoices') });
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
   const hasanatDistributions = useHasanatDistributionsCollection({
@@ -83,16 +78,9 @@ export function useWidgetCollections(options?: {
     enabled: needs('assessment_results'),
   });
 
-  const teachersQuery = useQuery({
-    queryKey: [...TEACHERS_QUERY_KEY, 'report-all'] as const,
-    queryFn: () => fetchAllTeachersForQuery({}),
-    enabled: needs('teachers'),
-    staleTime: 30_000,
-  });
-
   return {
     students,
-    teachers: (teachersQuery.data ?? []) as Teacher[],
+    teachers,
     sessions,
     finance_invoices: financeInvoices,
     attendance_records: attendanceRecords,
@@ -118,10 +106,11 @@ export function useReportCollectionRows(
   const { isAuthenticated } = useAuth();
   const key = collectionKey;
 
-  // Contacts + students chart visualizers use POST /widget-aggregates — no row dump.
+  // Contacts + students + teachers + sessions chart visualizers use POST /widget-aggregates — no row dump.
   const contacts: Contact[] = [];
   const students: Student[] = [];
-  const sessions = useSessionsCollection({ enabled: isAuthenticated && key === 'sessions' });
+  const teachers: Teacher[] = [];
+  const sessions: Session[] = [];
   const financeInvoices = useFinanceInvoicesCollection({
     enabled: isAuthenticated && key === 'finance_invoices',
   });
@@ -142,13 +131,6 @@ export function useReportCollectionRows(
     enabled: isAuthenticated && key === 'assessment_results',
   });
 
-  const teachersQuery = useQuery({
-    queryKey: [...TEACHERS_QUERY_KEY, 'report-all'] as const,
-    queryFn: () => fetchAllTeachersForQuery({}),
-    enabled: isAuthenticated && key === 'teachers',
-    staleTime: 30_000,
-  });
-
   let rows: Record<string, unknown>[] = [];
   switch (key) {
     case 'contacts':
@@ -158,7 +140,7 @@ export function useReportCollectionRows(
       rows = students as unknown as Record<string, unknown>[];
       break;
     case 'teachers':
-      rows = (teachersQuery.data ?? []) as unknown as Record<string, unknown>[];
+      rows = teachers as unknown as Record<string, unknown>[];
       break;
     case 'sessions':
       rows = sessions as unknown as Record<string, unknown>[];

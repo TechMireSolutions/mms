@@ -62,7 +62,7 @@ Operations that exceed direct interaction limits or process massive records must
 - **RLS**: Transaction-scoped SET LOCAL — **`mms-data-layer.mdc`** (do not restate recipes here).
 - **RBAC**: Apply `can('module.action')` checks globally. Omit forbidden actions from the DOM (never disabled placeholders).
 - **Soft Deletion (Work UX)**: Prefer soft-delete over hard `DELETE`. API/FE camelCase `deletedAt` / `deletedBy`; SQL `deleted_at` / `deleted_by` (typed columns preferred). Schema strip / indexes → data-layer.
-  - **Reference FE**: Contacts / Students / Teachers pattern — Work trash toggle (`includeDeleted`), row restore, bulk restore, omit Add/messaging/destructive create in trash mode. Same pattern shipped on Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`; `status` remains invite/suspend).
+  - **Reference FE**: Contacts / Students / Teachers pattern — page-level `viewingDeleted` + list `includeDeleted`, row restore, bulk restore, omit Add/messaging/destructive create in trash mode. Map `ModuleTrashToggle` / keyboard-hook `showDeleted` only at the control boundary. Same pattern shipped on Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`; `status` remains invite/suspend).
   - **Documented variants**: Messaging admin clear soft-archives logs (not a row trash browser); Question Bank tests/papers and assessment_results remain upsert-only by design.
   - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional hard-delete / variant in manifest `softDelete`).
 
@@ -70,12 +70,12 @@ Operations that exceed direct interaction limits or process massive records must
 
 ## 7. Gold-standard module parity (required for REST modules)
 
-Align new or refactored modules with **Contacts** as the gold-standard bar (Students is a parity target — `mms-migration-status.mdc`). Checklist:
+Align new or refactored modules with **Contacts, Students, and Teachers** as the gold-standard bar for person-directory Work/Setup (shared `Module*` / `createModule*` / `registerModule*` factories). **Users / Sessions** Work REST and typed Setup REST are closed; residual document-store Setup is other modules per `mms-migration-status.mdc` P3. Checklist:
 
 | Requirement | Standard |
 |-------------|----------|
 | **Bulk PUT** | Upsert only — HTTP norms → **`mms-api-interface.mdc` §5** (never wipe-missing-rows on API write paths). |
-| **Soft-delete** | `DELETE` + `POST :id/restore` (+ bulk when applicable); Work `showDeleted` / `includeDeleted` trash UI; detail-drawer archive chrome via `WarningCallout` + Restore (not ad-hoc markup); hide messaging actions when deleted; manifest `softDelete` metadata. Schema strip → `mms-data-layer.mdc`. |
+| **Soft-delete** | `DELETE` + `POST :id/restore` (+ bulk when applicable); Work page-level `viewingDeleted` + list `includeDeleted` trash UI (map `ModuleTrashToggle` / shortcuts `showDeleted` at the control boundary only); detail-drawer archive chrome via `WarningCallout` + Restore (not ad-hoc markup); hide messaging actions when deleted; manifest `softDelete` metadata. Schema strip → `mms-data-layer.mdc`. |
 | **Mutations** | `mutateAsync` + await form `onSave` / setup save; close modals only after success. |
 | **Setup** | Manifest `setupSubTabs`; `canEditSetup` gates edits (`saveSettingsAsync`); SubTabBar always visible; read-only message when view-only; Fields/Preferences Save dirty-gated. |
 | **Work UX** | `ErrorState` + retry **and** hint description (`loadFailedHint` or module/platform equivalent — tenant Work **and** apex lists); directory empties via `EmptyState` (`title` required; dashed when bordered; `compact` when dense); Cmd/Ctrl+N opens create when `canWrite` and not in trash; Filters menu SSOT (no duplicate preset chip bar); selection UI via `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging) on list/parent (not toolbar-inline trash); column gates via `isColumnVisible` through content (not typed boolean maps); single resolved directory `viewMode` (`table` \| `cards`; cards `< md`, table `md+`); same server pagination for both views; column visibility **and** width via `useModuleColumnLayout` (local + `/column-preferences`, merge preserves device widths). |

@@ -13,14 +13,11 @@ export interface TeacherListContentProps {
   someSelected: boolean;
   showSelectColumn: boolean;
   showActionsColumn: boolean;
-  showSpecialization: boolean;
-  showQualification: boolean;
-  showJoinDate: boolean;
-  showStatus: boolean;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
-  isColumnVisible?: (key: string) => boolean;
+  /** Column visibility gate — prefer over parallel show* booleans. */
+  isColumnVisible: (key: string) => boolean;
   visibleCustomFields: TeacherCustomField[];
   statusConfig: Record<string, StatusBadgeConfigItem>;
   sortField: TeacherSortField;

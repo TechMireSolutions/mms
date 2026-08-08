@@ -28,6 +28,7 @@ export function TeacherForm({
     errors,
     customValues,
     teacherDraft,
+    isDirty,
     defaultSpecialization,
     specializationOptions,
     statusOptions,
@@ -55,7 +56,10 @@ export function TeacherForm({
       saveLabel={t("common.save")}
       onSave={() => { void handleSave(); }}
       saving={saving}
-      saveDisabled={requireContactLink && !teacherDraft.contactId}
+      saveDisabled={
+        (requireContactLink && !teacherDraft.contactId)
+        || (Boolean(teacher?.id) && !isDirty)
+      }
       footerStart={
         <TeacherFormFooter
           linkedContact={linkedContact}

@@ -6,11 +6,11 @@ import {
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { WidgetCard } from "@/components/ui/WidgetCard";
-import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
+import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
-import { getRecentMonthsList } from "@/lib/utils";
+import { formatMonthName, getRecentMonthsList } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -27,7 +27,6 @@ interface EnrollmentPoint {
 
 /**
  * CustomTooltip for Enrollment Chart.
- * @param {TooltipProps<number, string>} props
  */
 const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   const { t } = useTranslation();
@@ -43,14 +42,12 @@ const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<Too
 };
 
 /**
- * Enrollment Chart component.
- * Displays student growth over time with customisable layout settings.
- * @returns {React.ReactElement}
+ * Enrollment Chart — cumulative student growth from report-aggregates.
  */
 export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { t } = useTranslation();
   const { enrollment: COLOR_MAP } = useBrandedDashboardChartColors();
-  const enrollments = useEnrollmentsCollection();
+  const { data: reportAggregates } = useEnrollmentsReportAggregates();
 
   const {
     enrollmentChartType: chartType,
@@ -60,21 +57,18 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   } = useDashboardConfig();
 
   const months = useMemo(() => getRecentMonthsList(12), []);
-
   const activeMonths = months.slice(-monthsCount);
 
-  const enrollmentData: EnrollmentPoint[] = activeMonths.map((month) => {
-    const count = enrollments.filter((enrollment) => {
-      if (!enrollment?.enrolledDate) return false;
-      return enrollment.enrolledDate <= `${month.key}-31`;
-    }).length;
+  const enrollmentData: EnrollmentPoint[] = useMemo(() => {
+    const byKey = new Map(
+      (reportAggregates?.cumulativeTrends ?? []).map((trend) => [trend.monthKey, trend.students]),
+    );
+    return activeMonths.map((month) => ({
+      month: month.label || formatMonthName(`${month.key}-01`),
+      students: byKey.get(month.key) ?? 0,
+    }));
+  }, [activeMonths, reportAggregates?.cumulativeTrends]);
 
-    return {
-      month: month.label,
-      students: count
-    };
-  });
-  
   const start = enrollmentData[0]?.students || 0;
   const end = enrollmentData[enrollmentData.length - 1]?.students || 0;
   const growth = start > 0 ? (((end - start) / start) * 100).toFixed(1) : "0";
@@ -92,9 +86,8 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
             {t("dashboard.charts.enrollment.subtitle")}
           </p>
         </div>
-        
-        <div className="flex items-center gap-3 ms-auto">
 
+        <div className="flex items-center gap-3 ms-auto">
           {isEditMode && (
             <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
               <Select
@@ -154,13 +147,13 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
           </div>
         </div>
       </header>
-      
+
       <SafeResponsiveContainer height={200}>
         <ComposedChart data={enrollmentData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
           <defs>
             {Object.entries(COLOR_MAP).map(([key, config]) => (
               <linearGradient key={key} id={`enrollGrad-${key}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor={config.stop} stopOpacity={0.18} />
+                <stop offset="5%" stopColor={config.stop} stopOpacity={0.18} />
                 <stop offset="95%" stopColor={config.stop} stopOpacity={0} />
               </linearGradient>
             ))}
@@ -169,7 +162,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
           <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} domain={["dataMin - 20", "dataMax + 10"]} />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: activeColor.stroke, strokeWidth: 1, strokeDasharray: "4 4" }} />
-          
+
           {chartType === "area" && (
             <Area
               type="monotone"

@@ -1,9 +1,9 @@
 import type React from "react";
 import { AnimatePresence } from "framer-motion";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FormModal } from "@/components/ui/FormModal";
 import { EnrollmentDetail } from "@/tenant/features/enrollments/components/EnrollmentDetail";
+import { EnrollmentsListConfirmDialogs } from "@/tenant/features/enrollments/components/EnrollmentsListConfirmDialogs";
 import { EnrollmentWizard } from "@/tenant/features/enrollments/components/EnrollmentWizard";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 
@@ -14,16 +14,12 @@ interface EnrollmentsModalLayerProps {
   showWizard: boolean;
   pendingDeleteId: string | null;
   wizardTitle: string;
-  confirmDeleteTitle: string;
-  confirmDeleteDescription: string;
-  confirmLabel: string;
-  cancelLabel: string;
   onCloseViewing: () => void;
   onStatusChange: (id: string, newStatus: Enrollment["status"]) => void;
   onCloseWizard: () => void;
   onCompleteWizard: (enrollment: Enrollment) => Promise<void>;
   onPendingDeleteChange: (id: string | null) => void;
-  onConfirmDelete: (id: string) => void;
+  onConfirmDelete: (reason?: string) => void;
 }
 
 export function EnrollmentsModalLayer({
@@ -33,10 +29,6 @@ export function EnrollmentsModalLayer({
   showWizard,
   pendingDeleteId,
   wizardTitle,
-  confirmDeleteTitle,
-  confirmDeleteDescription,
-  confirmLabel,
-  cancelLabel,
   onCloseViewing,
   onStatusChange,
   onCloseWizard,
@@ -47,11 +39,11 @@ export function EnrollmentsModalLayer({
   return (
     <>
       <AnimatePresence>
-        {viewing && !showDeleted && (
+        {viewing && (
           <ErrorBoundary>
             <EnrollmentDetail
               enrollment={viewing}
-              canWrite={canWrite}
+              canWrite={canWrite && !showDeleted}
               onClose={onCloseViewing}
               onStatusChange={onStatusChange}
             />
@@ -75,19 +67,10 @@ export function EnrollmentsModalLayer({
         </ErrorBoundary>
       </FormModal>
 
-      <ConfirmAlertDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => {
-          if (!open) onPendingDeleteChange(null);
-        }}
-        title={confirmDeleteTitle}
-        description={confirmDeleteDescription}
-        confirmLabel={confirmLabel}
-        cancelLabel={cancelLabel}
-        onConfirm={() => {
-          if (pendingDeleteId) onConfirmDelete(pendingDeleteId);
-          onPendingDeleteChange(null);
-        }}
+      <EnrollmentsListConfirmDialogs
+        pendingDeleteId={pendingDeleteId}
+        onPendingDeleteChange={onPendingDeleteChange}
+        onConfirmDelete={onConfirmDelete}
       />
     </>
   );

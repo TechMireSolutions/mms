@@ -25,8 +25,41 @@ function statusExpr(): SQL {
   return sql`lower(trim(COALESCE(${students.status}, 'active')))`;
 }
 
-function genderExpr(): SQL {
-  return sql`lower(trim(COALESCE(${students.customData}->>'gender', '')))`;
+/** Gender from linked contact (Contacts SSOT — not students.custom_data). */
+function linkedContactGenderExpr(): SQL {
+  return sql`lower(trim(COALESCE((
+    SELECT c.custom_data->>'gender'
+    FROM contacts c
+    WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
+      AND c.id = ${students.contactId}
+    LIMIT 1
+  ), '')))`;
+}
+
+/** DOB from linked contact (Contacts SSOT). */
+function linkedContactDobExpr(): SQL {
+  return sql`NULLIF(trim(COALESCE((
+    SELECT c.custom_data->>'dob'
+    FROM contacts c
+    WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
+      AND c.id = ${students.contactId}
+    LIMIT 1
+  ), '')), '')`;
+}
+
+/** Display name from linked contact for Work sort (Contacts SSOT). */
+function linkedContactNameSortExpr(): SQL {
+  return sql`lower(trim(COALESCE((
+    SELECT COALESCE(
+      NULLIF(trim(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')), ''),
+      NULLIF(trim(COALESCE(c.custom_data->>'name', '')), ''),
+      ''
+    )
+    FROM contacts c
+    WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
+      AND c.id = ${students.contactId}
+    LIMIT 1
+  ), '')))`;
 }
 
 function grNumberExpr(): SQL {
@@ -38,18 +71,16 @@ function buildSearchSql(search: string): SQL | null {
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
   return sql`(
-    lower(COALESCE(${students.customData}->>'name', '')) LIKE ${pattern}
-    OR lower(COALESCE(${students.grNumber}, '')) LIKE ${pattern}
+    lower(COALESCE(${students.grNumber}, '')) LIKE ${pattern}
     OR lower(COALESCE(${students.customData}->>'studentId', '')) LIKE ${pattern}
     OR COALESCE(${students.customData}->>'cnic', '') LIKE ${pattern}
-    OR lower(COALESCE(${students.customData}->>'fatherName', '')) LIKE ${pattern}
-    OR lower(COALESCE(${students.customData}->>'guardianName', '')) LIKE ${pattern}
     OR EXISTS (
       SELECT 1 FROM contacts c
       WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
         AND c.id = ${students.contactId}
         AND (
-          lower(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')) LIKE ${pattern}
+          lower(COALESCE(c.custom_data->>'name', '')) LIKE ${pattern}
+          OR lower(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')) LIKE ${pattern}
           OR lower(COALESCE(c.custom_data->>'firstName', '')) LIKE ${pattern}
           OR lower(COALESCE(c.custom_data->>'lastName', '')) LIKE ${pattern}
         )
@@ -77,12 +108,16 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
     return dir === 'desc' ? sql`${statusSort} desc nulls last` : sql`${statusSort} asc nulls last`;
   }
   if (field === 'gender') {
-    const genderSort = genderExpr();
+    const genderSort = linkedContactGenderExpr();
     return dir === 'desc' ? sql`${genderSort} desc nulls last` : sql`${genderSort} asc nulls last`;
   }
   if (field === 'dob') {
-    const dobSort = sql`NULLIF(trim(COALESCE(${students.customData}->>'dob', '')), '')`;
+    const dobSort = linkedContactDobExpr();
     return dir === 'desc' ? sql`${dobSort} desc nulls last` : sql`${dobSort} asc nulls last`;
+  }
+  if (field === 'name') {
+    const nameSort = linkedContactNameSortExpr();
+    return dir === 'desc' ? sql`${nameSort} desc nulls last` : sql`${nameSort} asc nulls last`;
   }
   return dir === 'desc'
     ? sql`${students.customData}->>${field} desc nulls last`
@@ -116,7 +151,7 @@ function buildListConditions(
 
   if (query.gender?.trim()) {
     const genderFilter = query.gender.trim().toLowerCase();
-    conditions.push(sql`${genderExpr()} = ${genderFilter}`);
+    conditions.push(sql`${linkedContactGenderExpr()} = ${genderFilter}`);
   }
 
   const search = query.search?.trim();

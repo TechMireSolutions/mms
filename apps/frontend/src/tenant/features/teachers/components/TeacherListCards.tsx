@@ -3,6 +3,7 @@ import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelect
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/TeacherArchivedBanner";
 import { TeacherCardActions } from "@/tenant/features/teachers/components/TeacherCardActions";
 import { TeacherCardHeader } from "@/tenant/features/teachers/components/TeacherCardHeader";
 import { TeacherCardMetadata } from "@/tenant/features/teachers/components/TeacherCardMetadata";
@@ -21,10 +22,6 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
     someSelected,
     showSelectColumn,
     showActionsColumn,
-    showSpecialization,
-    showQualification,
-    showJoinDate,
-    showStatus,
     showDeleted,
     canWrite,
     canDelete,
@@ -44,16 +41,6 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const pageCountLabel = `${teachers.length} ${t("nav.teachers").toLowerCase()}`;
-
-  const resolveColumnVisible =
-    isColumnVisible ??
-    ((key: string) => {
-      if (key === "specialization") return showSpecialization;
-      if (key === "qualification") return showQualification;
-      if (key === "joinDate") return showJoinDate;
-      if (key === "status") return showStatus;
-      return true;
-    });
 
   return (
     <>
@@ -93,14 +80,13 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 onView={onView}
                 reducedMotion={reducedMotion}
               />
-
+              <TeacherArchivedBanner teacher={teacher} />
               <TeacherCardMetadata
                 teacher={teacher}
-                isColumnVisible={resolveColumnVisible}
+                isColumnVisible={isColumnVisible}
                 visibleCustomFields={visibleCustomFields}
                 statusConfig={statusConfig}
               />
-
               <TeacherCardActions
                 teacher={teacher}
                 teacherId={teacherIdStr}

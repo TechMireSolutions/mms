@@ -51,8 +51,13 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 
 - When `formTabs` exist, their `enabled` flags are authoritative for the form, drawer, export, and BE dynamic validation.
 - Use `resolveContactEnabledTabIds` from `@mms/shared` — do **not** blind-union `DEFAULT_ENABLED_TABS` onto active `formTabs` (that made Setup toggles cosmetic).
-- Locked always-on tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic` only). UI locks + `useModuleSettingsEditor({ lockedEnabledTabs })` must force the same keys on sync/save/`enabledTabs`. Retired seed `custom` is not locked — omit from Setup/form unless field-config still has fields under `tabId: "custom"` (`omitContactLegacyCustomFormTabUnlessUsed`). New extras use `+ Add custom tab` (`custom_*`).
+- Locked always-on tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic` only). UI locks + `useModuleSettingsEditor({ lockedEnabledTabs })` must force the same keys on sync/save/`enabledTabs`. Pass a **stable** `readonly` array/const for `lockedEnabledTabs` (module-level or memoized) — never inline `[...CONST]` / new array literals each render (unstable identity → infinite rehydrate). Retired seed `custom` is not locked — omit from Setup/form unless field-config still has fields under `tabId: "custom"` (`omitContactLegacyCustomFormTabUnlessUsed`). New extras use `+ Add custom tab` (`custom_*`).
 - `DEFAULT_ENABLED_TABS` is the **fallback seed** when `formTabs` are absent — not a permanent override.
+
+## 4b. Contact-linked module Identity (Students)
+
+- Setup Identity fields (student contact link, gender, DOB, relationships) are **validation/display** registry config — person data SSOT remains Contacts.
+- Do not treat enabling those fields as permission to dual-write profile keys onto `students.custom_data` when `contactId` is set — strip/hydrate rules → `mms-data-layer.md` / `mms-form-architecture.md`.
 
 ## 5. Setup Fields save & column sync
 

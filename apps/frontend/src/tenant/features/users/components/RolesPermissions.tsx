@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Plus, Pencil, Shield, Lock } from 'lucide-react';
 import {
   workspaceRoleDescription,
@@ -6,21 +6,34 @@ import {
 } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { UserRoleBadge } from '@/tenant/features/users/components/UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { PermissionMatrix } from '@/tenant/features/users/components/PermissionMatrix';
 import { RoleFormModal } from '@/tenant/features/users/components/RoleFormModal';
 import { useRolesPermissionsController } from '@/tenant/features/users/hooks/useRolesPermissionsController';
 
-export function RolesPermissions(): React.JSX.Element {
+export interface RolesPermissionsProps {
+  onDirtyChange?: (dirty: boolean) => void;
+  onRegisterDiscard?: (discard: () => void) => void;
+}
+
+export function RolesPermissions({
+  onDirtyChange,
+  onRegisterDiscard,
+}: RolesPermissionsProps = {}): React.JSX.Element {
   const {
     t,
     isAdmin,
     visibleModules,
     roles,
     editing,
-    setEdit,
-    setSel,
+    requestSelectRole,
+    requestEditRole,
+    closeRoleForm,
+    pendingMatrixLeave,
+    clearPendingMatrixLeave,
+    confirmPendingMatrixLeave,
     displayRole,
     permDraft,
     permDirty,
@@ -33,6 +46,17 @@ export function RolesPermissions(): React.JSX.Element {
     editTitle,
   } = useRolesPermissionsController();
 
+  useEffect(() => {
+    onDirtyChange?.(permDirty);
+  }, [permDirty, onDirtyChange]);
+
+  useEffect(() => {
+    onRegisterDiscard?.(resetPermDraft);
+    return () => {
+      onDirtyChange?.(false);
+    };
+  }, [onRegisterDiscard, resetPermDraft, onDirtyChange]);
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -40,7 +64,13 @@ export function RolesPermissions(): React.JSX.Element {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-bold text-foreground">{t('users.permissions.rolesTitle')}</p>
             {isAdmin ? (
-              <Button type="button" variant="ghost" size="sm" className="min-h-11 px-2 text-xs" onClick={() => setEdit('new')}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="min-h-11 px-2 text-xs"
+                onClick={() => requestEditRole('new')}
+              >
                 <Plus className="me-1 h-3 w-3" />
                 {t('users.permissions.addRole')}
               </Button>
@@ -54,11 +84,11 @@ export function RolesPermissions(): React.JSX.Element {
               key={workspaceRole.id}
               role="button"
               tabIndex={0}
-              onClick={() => setSel(workspaceRole)}
+              onClick={() => requestSelectRole(workspaceRole)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
-                  setSel(workspaceRole);
+                  requestSelectRole(workspaceRole);
                 }
               }}
               className={`w-full cursor-pointer rounded-xl border-2 p-3 text-start transition-all ${
@@ -90,7 +120,7 @@ export function RolesPermissions(): React.JSX.Element {
                     size="icon"
                     onClick={(event) => {
                       event.stopPropagation();
-                      setEdit(workspaceRole);
+                      requestEditRole(workspaceRole);
                     }}
                     className="shrink-0 rounded text-muted-foreground transition-colors hover:text-primary shadow-none hover:bg-transparent"
                     aria-label={t('users.permissions.editRoleDetails', { name: workspaceRoleLabel(workspaceRole, t) })}
@@ -152,11 +182,24 @@ export function RolesPermissions(): React.JSX.Element {
 
       <RoleFormModal
         open={!!editing}
-        onClose={() => setEdit(null)}
+        onClose={closeRoleForm}
         title={editTitle}
         role={editing === 'new' ? null : editing}
         visibleModules={visibleModules}
         onSave={handleSave}
+      />
+
+      <ConfirmAlertDialog
+        open={pendingMatrixLeave !== null}
+        onOpenChange={(open) => {
+          if (!open) clearPendingMatrixLeave();
+        }}
+        title={t('settings.unsavedChanges')}
+        description={t('users.permissions.discardUnsavedMatrixConfirm')}
+        confirmLabel={t('common.yes')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        onConfirm={confirmPendingMatrixLeave}
       />
     </div>
   );

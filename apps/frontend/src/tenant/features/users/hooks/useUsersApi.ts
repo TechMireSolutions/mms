@@ -1,25 +1,35 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { WorkspaceUser, ActivityLog, UsersCommandMetricsSnapshot } from '@mms/shared';
-import { USERS_MODULE_MANIFEST } from '@mms/shared';
+import { USERS_MODULE_MANIFEST, normalizeWorkspaceUser, type SystemUser } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
+import {
+  ACTIVITY_LOGS_QUERY_KEY,
+  USERS_LIST_QUERY_KEY,
+  USERS_METRICS_QUERY_KEY,
+} from '@/tenant/features/users/hooks/usersQueryKeys';
+import { fetchAllUsersForQuery } from '@/tenant/features/users/hooks/useUsersListQueries';
 
 const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
 
-export const USERS_LIST_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'users', 'list'] as const;
-export const USERS_METRICS_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'metrics'] as const;
-export const ACTIVITY_LOGS_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'logs', 'list'] as const;
+export { USERS_LIST_QUERY_KEY, USERS_METRICS_QUERY_KEY, ACTIVITY_LOGS_QUERY_KEY };
 
 export function useUsers(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<WorkspaceUser>({
-    queryKey: [...USERS_LIST_QUERY_KEY, { includeDeleted }],
-    apiPath: `${USERS_API}?includeDeleted=${includeDeleted}`,
-    responseKey: 'users',
-    collectionName: 'users',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+  const enabled = options?.enabled ?? true;
+  return useQuery({
+    queryKey: [...USERS_LIST_QUERY_KEY, 'all', { includeDeleted }] as const,
+    queryFn: async ({ signal }) => {
+      const users = await fetchAllUsersForQuery({ includeDeleted }, undefined);
+      void signal;
+      return users.map((user) =>
+        normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
+      );
+    },
+    enabled: isAuthenticated && enabled,
+    staleTime: 30_000,
   });
 }
 
@@ -27,7 +37,8 @@ export function useUsersCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): WorkspaceUser[] {
-  return useUsers(options).syncedData;
+  const query = useUsers(options);
+  return query.data ?? [];
 }
 
 export function useUsersMetrics(options?: { enabled?: boolean }) {
@@ -39,19 +50,21 @@ export function useUsersMetrics(options?: { enabled?: boolean }) {
 }
 
 export function useActivityLogs(options?: { enabled?: boolean }) {
-  return useCollectionSync<ActivityLog>({
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  return useQuery({
     queryKey: ACTIVITY_LOGS_QUERY_KEY,
-    apiPath: `${USERS_API}/activity`,
-    responseKey: 'logs',
-    collectionName: 'user_activity_logs',
+    queryFn: async ({ signal }) => {
+      const response = await apiJson<{ logs: ActivityLog[] }>(`${USERS_API}/activity`, { signal });
+      return response.logs ?? [];
+    },
+    enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
   });
 }
 
 export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
-  return useActivityLogs(options).syncedData;
+  return useActivityLogs(options).data ?? [];
 }
 
 export function useUsersMutations() {
@@ -120,6 +133,14 @@ export function useUsersMutations() {
     onSuccess: () => invalidate(),
   });
 
+  const logExportAudit = useMutation({
+    mutationFn: async (payload: { count: number; scope: string }) =>
+      apiJson(`${USERS_API}/export-audit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  });
+
   return {
     replaceUsers,
     replaceLogs,
@@ -127,5 +148,6 @@ export function useUsersMutations() {
     restoreUser,
     bulkDeleteUsers,
     bulkRestoreUsers,
+    logExportAudit,
   };
 }

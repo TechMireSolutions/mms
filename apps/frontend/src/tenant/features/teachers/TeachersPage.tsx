@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { AnimatePresence } from 'framer-motion';
-import { UserPlus, School } from 'lucide-react';
+import { Download, UserPlus, School } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
@@ -20,6 +20,7 @@ export default function Teachers(): React.JSX.Element {
   const {
     canWrite,
     canDelete,
+    canExport,
     visibleTabs,
     serverCount,
     showForm,
@@ -53,6 +54,12 @@ export default function Teachers(): React.JSX.Element {
     setListPage,
     viewMode,
     setViewMode,
+    exportColumns,
+    logExportAudit,
+    handleExportCSV,
+    clearFilters,
+    selectionClearToken,
+    setSelectedCount,
   } = useTeachersPageController();
 
   const {
@@ -90,15 +97,22 @@ export default function Teachers(): React.JSX.Element {
           : t('page.teachers.subtitle')
       }
       headerActions={
-        canWrite && !showDeleted ? (
-          <ActionButton
-            variant="primary"
-            icon={UserPlus}
-            onClick={() => { setEditTeacher(null); setShowForm(true); }}
-          >
-            {t('action.addTeacher')}
-          </ActionButton>
-        ) : undefined
+        <>
+          {canExport && !showDeleted ? (
+            <ActionButton variant="ghost" icon={Download} onClick={() => void handleExportCSV()}>
+              {t('common.export')}
+            </ActionButton>
+          ) : null}
+          {canWrite && !showDeleted ? (
+            <ActionButton
+              variant="primary"
+              icon={UserPlus}
+              onClick={() => { setEditTeacher(null); setShowForm(true); }}
+            >
+              {t('action.addTeacher')}
+            </ActionButton>
+          ) : null}
+        </>
       }
       metricsStrip={
         <TeachersCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
@@ -121,6 +135,9 @@ export default function Teachers(): React.JSX.Element {
               showDeleted={showDeleted}
               canWrite={canWrite}
               canDelete={canDelete}
+              canExport={canExport}
+              exportColumns={exportColumns}
+              logExportAudit={logExportAudit}
               columnRegistry={columnRegistry}
               updateUserColumnLayout={updateUserColumnLayout}
               customizerLabels={customizerLabels}
@@ -132,7 +149,7 @@ export default function Teachers(): React.JSX.Element {
               useServerWork={useServerWork}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
-              selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}`}
+              selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}:${selectionClearToken}`}
               sortField={sortField}
               sortDir={sortDir}
               isColumnVisible={isColumnVisible}
@@ -142,10 +159,7 @@ export default function Teachers(): React.JSX.Element {
               onToggleStatus={toggleStatus}
               onSpecializationChange={setFilterSpecialization}
               onToggleDeleted={() => setShowDeleted((previous) => !previous)}
-              onClearFilters={() => {
-                setFilterStatus([]);
-                setFilterSpecialization('');
-              }}
+              onClearFilters={clearFilters}
               onRetry={workPageQuery.refetch}
               onEdit={(teacher) => { setEditTeacher(teacher); setShowForm(true); }}
               onDelete={handleDelete}
@@ -161,6 +175,7 @@ export default function Teachers(): React.JSX.Element {
                 setSortDir(dir);
               }}
               onPageChange={setListPage}
+              onSelectedCountChange={setSelectedCount}
             />
           ) : activeTab === 'reports' ? (
             <TeachersReportsTier />

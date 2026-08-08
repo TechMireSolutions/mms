@@ -59,8 +59,18 @@ When the user asks to fix migration debt, work from the open priorities here and
 | Contacts Setup lookups typed | `contact_lookups` + `/api/contacts/lookups`; removed from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` |
 | Contacts Setup field-config / prefs / column prefs typed | `contact_field_configs`, `contact_module_preferences`, `contact_user_column_prefs` + REST; removed from `ALLOWED_OBJECTS` |
 | Query-first report widgets | `useWidgetCollections({ requiredCollections })` + `useReportCollectionRows`; REST toggles via `widgetRecordToggle` |
+| Students Work REST parity | SQL page/filter, table\|cards, trash/`viewingDeleted`, drawer archive chrome, metrics, server CSV (`POST /api/students/export/csv` + audit + `students:export`) |
+| Students Identity → Contacts SSOT | Typed student row = `contactId` + module fields; strip `CONTACT_PROFILE_FIELDS` + guardian dual-write on write; hydrate on read; Work list gender/dob/name filter+sort+search joins `contacts` (`studentRepositoryList`); data migrate `046_strip_student_contact_profile_fields`; Drizzle `0020_drop_students_gender_active_idx` |
+| Contacts↔Students Module*/createModule* DRY | Shared Work/Setup chrome (`Module*`), `createModule*` / `registerModule*` (field-config, lookups, CSV, setup audit, field usage), `startServerBackgroundJob`, soft-delete via `registerResourceRoutes` hooks; thin domain adapters only |
+| Teachers Work/Setup REST parity | SQL page/filter + contact-name join (`teacherRepositoryList`), table\|cards, trash/drawer archive, SQL metrics, server CSV, typed Setup (`teacher_field_configs` / `teacher_module_preferences` / `teacher_user_column_prefs` + `registerModule*`); Drizzle `0021_teacher_setup_config` |
+| Sessions Work REST parity | SQL page/filter (`sessionRepositoryList`), table\|cards, trash drawer archive chrome, SQL metrics, server CSV |
+| Users Work REST parity | SQL page/filter (`tenantUserRepositoryList`), FE `useUsersPaginated` + ListPagination, DetailDrawer archive chrome, SQL metrics, server CSV |
+| Sessions typed Setup REST | `session_field_configs` / `session_module_preferences` / `session_user_column_prefs` + `registerModuleSetupConfigRoutes`; Drizzle `0022_session_setup_config`; data migrate `049`/`050`; Query-first `useSessionConfig` |
+| Users typed Setup REST | `user_field_configs` / `user_module_preferences` / `user_user_column_prefs` + REST; prefs include `workspaceRoles` + auth `requireEmailVerification`; Drizzle `0023_user_setup_config`; data migrate `051`/`052`; Query-first `useUsersConfig` |
 
 ## Open priorities
+
+Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) lives under “SQL pagination / oversized shells” in `mms-migration-status.md`.
 
 ### P1 — Soft-delete / schema remaining gaps
 
@@ -78,9 +88,9 @@ When the user asks to fix migration debt, work from the open priorities here and
 
 ### P3 — Remaining document-store debt (other modules’ prefs / field config)
 
-**Problem:** Other modules’ prefs, field config, and column prefs may still live in `objects`. Contacts Setup (tabs, lookups, field-config, preferences, column prefs) is typed REST.
+**Problem:** Other modules’ prefs, field config, and column prefs may still live in `objects`. Contacts + Students + Teachers + Users + Sessions Setup (tabs/lookups where applicable, field-config, preferences, column prefs) is typed REST. Residual: Finance / Attendance / Enrollments / other modules still on document-store.
 
-**Fix:** Prefer typed tables + FORCE RLS when migrating shareable module config; do not reintroduce Contacts Setup keys into `ALLOWED_OBJECTS` / `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` (`mms-fields.md`, `mms-data-layer.md`).
+**Fix:** Prefer typed tables + FORCE RLS when migrating shareable module config; do not reintroduce Contacts/Students/Teachers/Users/Sessions Setup keys into `ALLOWED_OBJECTS` / `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` (`mms-fields.md`, `mms-data-layer.md`).
 
 ### P3b — Nested contact item Zod `.passthrough()`
 
@@ -100,17 +110,17 @@ When the user asks to fix migration debt, work from the open priorities here and
 
 **Fix:** Extend those specs when touching those surfaces — `mms-ui-ux-design.md` §7, `mms-testing-observability.md`. Do not treat missing depth as license to regress shell overflow/touch floors.
 
-### P6 — FE live push
+### P6 — FE live push (residual modules)
 
-**Problem:** BE broadcasts on `/api/ws` + `broadcastTenantUpdate`; FE has no subscriber.
+**Problem:** Contacts: BE `broadcastCollection('contacts')` + FE `/api/ws` → Query invalidate is closed. Other modules may still lack emit and/or FE subscribe.
 
-**Fix:** Subscribe per `mms-data-layer.md` contract (cookie auth, reconnect/backoff, invalidate tuple keys only) — ban new polling loops / parallel WS (`mms-core.md`).
+**Fix:** Extend the same channel per `mms-data-layer.md` (cookie auth, reconnect/backoff, invalidate tuple keys only) — ban new polling loops / parallel WS (`mms-core.md`).
 
-### P7 — PG statement timeout budgets
+### P7 — PG statement timeout budgets (residual)
 
-**Problem:** Pool sizing exists; tenant transactions lack systematic `SET LOCAL statement_timeout` / `idle_in_transaction_session_timeout`.
+**Problem:** Tenant-bound budgets ship on `withTenantTransaction` + `runInTransaction` (`PG_STATEMENT_TIMEOUT_MS` / `PG_IDLE_IN_TX_TIMEOUT_MS`). Residual: optional tighter per-route budgets on hot paths.
 
-**Fix:** Wire budgets on tenant write paths — `mms-data-layer.md` (align with Fastify `requestTimeout`).
+**Fix:** When touching hot routes, prefer tighter `SET LOCAL` budgets — `mms-data-layer.md` (align with Fastify `requestTimeout`).
 
 ## After each fix
 

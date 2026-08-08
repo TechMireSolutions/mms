@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { baseListQuerySchema } from './commonSchemas.js';
+import { csvExportBodySchema } from './csvExportBodySchema.js';
 import { SessionSchema } from '@mms/shared';
 
 export const sessionRecordSchema = SessionSchema.passthrough();
@@ -18,5 +19,7 @@ export const sessionsBulkIdsSchema = z.object({
   ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
   deletionReason: z.string().max(500).optional(),
 });
+
+export const sessionsCsvExportBodySchema = csvExportBodySchema(sessionsListQuerySchema);
 
 export type SessionRecord = z.infer<typeof sessionRecordSchema>;

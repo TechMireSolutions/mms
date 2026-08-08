@@ -1,5 +1,4 @@
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
-import type { Enrollment } from "@/lib/data/enrollmentData";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
@@ -8,13 +7,14 @@ import {
   getCollectedAmountForInvoice,
   getDenominationPoints,
   type AppTranslationKey,
+  type EnrollmentsReportComparisonSession,
 } from "@mms/shared";
 
 import type { ComparisonDataItem } from "./comparisonModeTypes";
 
 export function computeDynamicSessionComparison(
   sessions: Session[],
-  enrollments: Enrollment[],
+  enrollmentSessions: EnrollmentsReportComparisonSession[],
   attendanceRecords: AttendanceRecord[],
   financeInvoices: Invoice[],
   hasanatDistributions: Distribution[],
@@ -27,6 +27,9 @@ export function computeDynamicSessionComparison(
 ): ComparisonDataItem[] {
   const sessionA = sessions.find((session) => session.id === targetA);
   const sessionB = sessions.find((session) => session.id === targetB);
+  const enrollmentBySessionId = new Map(
+    enrollmentSessions.map((row) => [row.sessionId, row] as const),
+  );
 
   const getMetrics = (session: Session | undefined) => {
     if (!session) {
@@ -35,9 +38,8 @@ export function computeDynamicSessionComparison(
 
     const sessionId = session.id;
     const sessionName = session.name;
-
-    const sessionEnrollments = enrollments.filter((enrollment) => enrollment.sessionId === sessionId && enrollment.status !== "cancelled");
-    const enrollment = sessionEnrollments.length;
+    const enrollmentRow = enrollmentBySessionId.get(sessionId);
+    const enrollment = enrollmentRow?.enrollmentCount ?? 0;
 
     const classIds = new Set(session.classes?.map((sessionClass) => sessionClass.id) || []);
     const sessionAttendance = attendanceRecords.filter((attendanceRecord) => classIds.has(attendanceRecord.classId));
@@ -66,7 +68,7 @@ export function computeDynamicSessionComparison(
       ? Math.round((passCount / sessionResults.length) * 100)
       : 0;
 
-    const studentIds = new Set(sessionEnrollments.map((enrollment) => enrollment.studentId));
+    const studentIds = new Set(enrollmentRow?.studentIds ?? []);
     let hasanat = 0;
     hasanatDistributions.forEach((distribution) => {
       if (distribution.recipientStudentId && studentIds.has(distribution.recipientStudentId)) {

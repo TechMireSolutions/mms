@@ -70,6 +70,23 @@ describe('enrollments soft delete routes', () => {
     await app.close();
   });
 
+  it('DELETE /api/enrollments/:id forwards deletionReason', async () => {
+    mockDeleteEnrollmentById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/enrollments/enr1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { deletionReason: 'Duplicate enrollment' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockDeleteEnrollmentById).toHaveBeenCalledWith('enr1', 'u-admin', 'Duplicate enrollment');
+    await app.close();
+  });
+
   it('POST /api/enrollments/:id/restore restores an enrollment', async () => {
     mockRestoreEnrollmentById.mockResolvedValue(true);
     const app = await buildApp();
@@ -125,6 +142,23 @@ describe('enrollments soft delete routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
     expect(mockBulkSoftDeleteEnrollments).toHaveBeenCalledWith(['enr1', 'enr2'], 'u-admin', undefined);
+    await app.close();
+  });
+
+  it('POST /api/enrollments/bulk-delete forwards deletionReason', async () => {
+    mockBulkSoftDeleteEnrollments.mockResolvedValue({ succeeded: 1, failed: 0 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/enrollments/bulk-delete',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { ids: ['enr1'], deletionReason: 'Cleanup' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockBulkSoftDeleteEnrollments).toHaveBeenCalledWith(['enr1'], 'u-admin', 'Cleanup');
     await app.close();
   });
 

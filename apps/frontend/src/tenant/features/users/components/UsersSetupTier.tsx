@@ -1,8 +1,13 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import type { AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { SubTabBar } from '@/components/ui/SubTabBar';
+import { useModuleSetupSubTabs } from '@/lib/setup/useModuleSetupSubTabs';
 import { RolesPermissions } from '@/tenant/features/users/components/RolesPermissions';
 import { UsersSettingsPanel } from '@/tenant/features/users/components/UsersSettingsPanel';
+import { useUsersSetupPanelState } from '@/tenant/features/users/hooks/useUsersSetupPanelState';
 
 interface UsersSetupTab {
   id: string;
@@ -16,6 +21,12 @@ interface UsersSetupTierProps {
   onTabChange: (tab: string) => void;
 }
 
+function discardConfirmKey(leavingTab: string): AppTranslationKey {
+  if (leavingTab === 'fields') return 'users.setup.discardUnsavedFieldsConfirm';
+  if (leavingTab === 'permissions') return 'users.setup.discardUnsavedPermissionsConfirm';
+  return 'users.setup.discardUnsavedPreferencesConfirm';
+}
+
 export function UsersSetupTier({
   tabs,
   activeTab,
@@ -23,10 +34,48 @@ export function UsersSetupTier({
   onTabChange,
 }: UsersSetupTierProps): React.JSX.Element {
   const { t } = useTranslation();
+  const panelState = useUsersSetupPanelState();
+  const permissionsDirtyRef = useRef(false);
+  const discardPermissionsRef = useRef<() => void>(() => {});
+
+  const handlePermissionsDirtyChange = useCallback((dirty: boolean) => {
+    permissionsDirtyRef.current = dirty;
+  }, []);
+
+  const handleRegisterPermissionsDiscard = useCallback((discard: () => void) => {
+    discardPermissionsRef.current = discard;
+  }, []);
+
+  const subTabs = useModuleSetupSubTabs({
+    initialKey: activeTab || 'permissions',
+    isDirty: (currentKey) => {
+      if (currentKey === 'fields') return panelState.dirtyRef.current.fields;
+      if (currentKey === 'preferences') return panelState.dirtyRef.current.prefs;
+      if (currentKey === 'permissions') return permissionsDirtyRef.current;
+      return false;
+    },
+    onDiscard: (leavingKey) => {
+      if (leavingKey === 'permissions') {
+        discardPermissionsRef.current();
+        permissionsDirtyRef.current = false;
+        return;
+      }
+      panelState.discardSetupDrafts();
+    },
+  });
+
+  useEffect(() => {
+    if (subTabs.sub !== activeTab) {
+      onTabChange(subTabs.sub);
+    }
+  }, [subTabs.sub, activeTab, onTabChange]);
+
+  const settingsMode = subTabs.showPrefs ? 'preferences' : 'fields';
+  const settingsDirty = subTabs.showPrefs ? panelState.isPrefsDirty : panelState.isFieldsDirty;
+  const showSettingsPanel = subTabs.showFields || subTabs.showPrefs;
 
   return (
     <motion.div
-      key={`setup-${activeTab}`}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
@@ -35,8 +84,8 @@ export function UsersSetupTier({
     >
       <SubTabBar
         tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-        value={activeTab}
-        onChange={onTabChange}
+        value={subTabs.sub}
+        onChange={subTabs.handleSubTabChange}
       />
       {!canEditSetup ? (
         <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
@@ -44,11 +93,40 @@ export function UsersSetupTier({
         </p>
       ) : (
         <>
-          {activeTab === 'permissions' && <RolesPermissions />}
-          {activeTab === 'fields' && <UsersSettingsPanel mode="fields" />}
-          {activeTab === 'preferences' && <UsersSettingsPanel mode="preferences" />}
+          {subTabs.sub === 'permissions' ? (
+            <RolesPermissions
+              onDirtyChange={handlePermissionsDirtyChange}
+              onRegisterDiscard={handleRegisterPermissionsDiscard}
+            />
+          ) : null}
+          {showSettingsPanel ? (
+            <UsersSettingsPanel
+              mode={settingsMode}
+              settingsDraft={panelState.settingsDraft}
+              fieldsEditor={panelState.fieldsEditor}
+              saved={panelState.saved}
+              saving={panelState.saving}
+              isDirty={settingsDirty}
+              upd={panelState.upd}
+              setSaved={panelState.setSaved}
+              onSave={() => panelState.handleSave(settingsMode)}
+            />
+          ) : null}
         </>
       )}
+
+      <ConfirmAlertDialog
+        open={subTabs.discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) subTabs.clearPendingSubTab();
+        }}
+        title={t('settings.unsavedChanges')}
+        description={t(discardConfirmKey(subTabs.sub))}
+        confirmLabel={t('common.yes')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        onConfirm={subTabs.handleConfirmDiscard}
+      />
     </motion.div>
   );
 }

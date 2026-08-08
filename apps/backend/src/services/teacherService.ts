@@ -1,7 +1,5 @@
 import {
   normalizeStoredTeacher,
-  paginateTeachers,
-  computeTeachersWidgetAggregates,
   computeNextTeacherEmployeeId,
   collectTeacherLinkedContactIds,
   hydrateTeacherFromContact,
@@ -26,7 +24,16 @@ import {
   findTeachersByIds,
   saveTeacher,
 } from '../db/repositories/teacherRepository.js';
+import {
+  listTeachersPage,
+  countTeachersActive,
+  aggregateTeachersCommandMetrics,
+  bulkUpdateTeachersStatusSql,
+} from '../db/repositories/teacherRepositoryList.js';
+import { aggregateTeachersWidgetQueries } from '../db/repositories/teacherRepositoryWidgets.js';
+import { countTeacherFieldUsageByKeys } from '../db/repositories/teacherRepositoryFieldUsage.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { broadcastCollection } from './websocketService.js';
 
 type TeacherRepo = GenericServiceOptions<TeacherRecord>['repo'];
 const crud = createGenericRelationalService<TeacherRecord>({
@@ -55,21 +62,14 @@ export async function bulkUpdateTeacherStatus(
   const tenant = getRequestTenant();
   if (!tenant) return { succeeded: 0, failed: ids.length };
 
-  const outcomes = await Promise.all(
-    ids.map(async (id) => {
-      const existing = await findTeacherById(tenant, id);
-      if (!existing || existing.deletedAt) return false;
-      const updated = await updateTeacherById(id, {
-        ...(existing as TeacherRecord),
-        status,
-        id,
-      });
-      return Boolean(updated);
-    }),
-  );
+  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
 
-  const succeeded = outcomes.filter(Boolean).length;
-  return { succeeded, failed: ids.length - succeeded };
+  const succeeded = await bulkUpdateTeachersStatusSql(tenant, uniqueIds, status);
+  if (succeeded > 0) {
+    await broadcastCollection('teachers');
+  }
+  return { succeeded, failed: uniqueIds.length - succeeded };
 }
 
 const hydrated = createContactHydratedService<Teacher, TeacherRecord>({
@@ -88,17 +88,44 @@ export const loadTeachersByIds = hydrated.loadByIds;
 export async function loadTeachersWidgetAggregates(
   queries: TeachersWidgetQuery[],
 ): Promise<Record<string, import('@mms/shared').TeachersWidgetAggregateResult>> {
-  const rows = await loadTeachers();
-  return computeTeachersWidgetAggregates(rows as Record<string, unknown>[], queries);
+  const tenant = getRequestTenant();
+  if (!tenant) return {};
+  return aggregateTeachersWidgetQueries(tenant, queries);
 }
 
 export async function loadTeachersPage(query: TeachersListQuery & { includeDeleted?: boolean }) {
-  const rows = await loadTeachers({ includeDeleted: query.includeDeleted });
-  // Trash directory (`includeDeleted`) lists archived rows only — matches FE showDeleted.
-  const scoped = query.includeDeleted
-    ? (rows as import('@mms/shared').Teacher[]).filter((row) => Boolean(row.deletedAt))
-    : (rows as import('@mms/shared').Teacher[]);
-  return paginateTeachers(scoped, query);
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { teachers: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 50, hasMore: false };
+  }
+  const page = await listTeachersPage(tenant, query);
+  const ids = page.teachers.map((row) => String(row.id));
+  const hydrated = ids.length > 0 ? await loadTeachersByIds(ids) : [];
+  const byId = new Map(hydrated.map((row) => [String(row.id), row]));
+  return {
+    ...page,
+    teachers: ids.map((id) => byId.get(id)).filter(Boolean) as Teacher[],
+  };
+}
+
+export async function countTeachers(): Promise<number> {
+  const tenant = getRequestTenant();
+  if (!tenant) return 0;
+  return countTeachersActive(tenant);
+}
+
+export async function loadTeachersCommandMetrics() {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      onLeave: 0,
+      newThisPeriod: 0,
+    };
+  }
+  return aggregateTeachersCommandMetrics(tenant);
 }
 
 
@@ -111,4 +138,19 @@ export async function loadTeacherLinkedContactIds(excludeTeacherId?: string) {
 export async function computeNextTeacherEmployeeIdForSettings(settings: TeacherEmployeeIdSettings) {
   const all = await loadTeachers();
   return computeNextTeacherEmployeeId(all, settings);
+}
+
+export async function loadTeacherFieldUsageCounts(
+  fieldKeys: string[],
+): Promise<Record<string, number>> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return Object.fromEntries(fieldKeys.map((key) => [key, 0]));
+  }
+  return countTeacherFieldUsageByKeys(tenant, fieldKeys);
+}
+
+export async function loadTeacherFieldUsageCount(fieldKey: string): Promise<number> {
+  const counts = await loadTeacherFieldUsageCounts([fieldKey]);
+  return counts[fieldKey] ?? 0;
 }

@@ -2,9 +2,11 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Users, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
-import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
+import type { SessionsReportTodaySession } from "@mms/shared";
+import { useSessionsReportAggregates } from "@/tenant/hooks/collections/sessions";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SimplePagination } from "@/components/ui/SimplePagination";
@@ -12,7 +14,7 @@ import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { ROUTES } from "@/lib/config/routes";
 
 export interface UpcomingSessionItem {
-  id: number;
+  id: string;
   name: string;
   teacher: string;
   time: string;
@@ -21,57 +23,37 @@ export interface UpcomingSessionItem {
   status: "live" | "upcoming";
 }
 
-/** Timetable day keys are stored in English abbreviations — match only, do not localize. */
-const WEEKDAY_KEYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+interface SessionsTableProps {
+  title?: string;
+  /** When provided (Reports path), skip self-fetch and render these rows. */
+  items?: SessionsReportTodaySession[];
+}
 
-function hashStringToId(value: string): number {
-  let hash = 0;
-  for (let index = 0; index < value.length; index++) {
-    hash = value.charCodeAt(index) + ((hash << 5) - hash);
-  }
-  return Math.abs(hash);
+function mapTodayRows(
+  rows: SessionsReportTodaySession[],
+  t: TranslationFunction,
+): UpcomingSessionItem[] {
+  return rows.map((item) => ({
+    ...item,
+    teacher: item.teacher || t("sessions.classes.unassigned"),
+    time: item.time || t("dashboard.widgets.defaultSessionTime"),
+    room: item.room || t("common.notAvailable"),
+  }));
 }
 
 /**
- * Today's scheduled sessions widget.
+ * Today's scheduled sessions widget — rows from report-aggregates (or parent `items`).
  */
-export default function SessionsTable({ title }: { title?: string }) {
+export default function SessionsTable({ title, items }: SessionsTableProps) {
   const { t } = useTranslation();
-  const dbSessions = useSessionsCollection();
+  const { data: reportAggregates } = useSessionsReportAggregates({
+    enabled: items == null,
+  });
 
-  const sessions = useMemo(() => {
-    const list: UpcomingSessionItem[] = [];
-    const todayName = WEEKDAY_KEYS[new Date().getDay()];
-
-    dbSessions.forEach((session) => {
-      if (session.status !== "active") return;
-
-      const classesList = session.classes || [];
-      classesList.forEach((sessionClass, classIndex) => {
-        const timetable = session.timetable || [];
-
-        const classTimetable = timetable.filter(
-          (timetableEntry) => timetableEntry.location === sessionClass.room && timetableEntry.day === todayName,
-        );
-
-        const timeStr = classTimetable[0]
-          ? `${classTimetable[0].startTime} - ${classTimetable[0].endTime}`
-          : t("dashboard.widgets.defaultSessionTime");
-        const isLive = classTimetable.length > 0;
-
-        list.push({
-          id: hashStringToId(`${session.id}-${sessionClass.id}-${classIndex}`),
-          name: `${session.name} – ${sessionClass.name}`,
-          teacher: sessionClass.teacherName || t("sessions.classes.unassigned"),
-          time: timeStr,
-          room: sessionClass.room || t("common.notAvailable"),
-          students: sessionClass.enrolled || 0,
-          status: isLive ? "live" : "upcoming",
-        });
-      });
-    });
-    return list;
-  }, [dbSessions, t]);
+  const sessions = useMemo((): UpcomingSessionItem[] => {
+    const rows = items ?? reportAggregates?.todaysSessions ?? [];
+    return mapTodayRows(rows, t);
+  }, [items, reportAggregates?.todaysSessions, t]);
 
   const {
     searchQuery,
@@ -91,14 +73,20 @@ export default function SessionsTable({ title }: { title?: string }) {
     <WidgetCard ariaLabelledby="sessions-table-heading" accentColor="primary">
       <header className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 ps-6.5 border-b border-border/45 select-none">
         <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-          <h3 id="sessions-table-heading" className="min-w-0 truncate text-sm font-bold text-foreground m-0">
+          <h3
+            id="sessions-table-heading"
+            className="min-w-0 truncate text-sm font-bold text-foreground m-0"
+          >
             {title || t("dashboard.widgets.todaysSessions")}
           </h3>
           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
             {t("dashboard.widgets.sessionsScheduled", { count: filteredSessions.length })}
           </span>
         </div>
-        <Link to={ROUTES.sessions} className="inline-flex min-h-11 shrink-0 items-center text-xs font-bold text-primary hover:underline">
+        <Link
+          to={ROUTES.sessions}
+          className="inline-flex min-h-11 shrink-0 items-center text-xs font-bold text-primary hover:underline"
+        >
           {t("dashboard.widgets.viewAll")}
         </Link>
       </header>

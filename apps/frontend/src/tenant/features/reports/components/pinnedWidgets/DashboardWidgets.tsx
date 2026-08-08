@@ -13,6 +13,7 @@ import { WidgetDrilldownModal } from '@/tenant/features/reports/components/pinne
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
+import { useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
 import { applyContactsWidgetWorkDrillDown } from '@/lib/contacts/contactsWidgetWorkDrillDown';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -82,6 +83,7 @@ export function DashboardWidgets({
   useContactsWidgetAggregates(activeWidgets);
   useStudentsWidgetAggregates(activeWidgets);
   useTeachersWidgetAggregates(activeWidgets);
+  useSessionsWidgetAggregates(activeWidgets);
 
   const handleMetricClick = useCallback((widget: CustomWidget) => {
     if (applyContactsWidgetWorkDrillDown(widget)) return;

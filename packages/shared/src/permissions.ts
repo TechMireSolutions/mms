@@ -8,6 +8,7 @@ export type Permission =
   | "students.delete"
   | "teachers.read"
   | "teachers.write"
+  | "teachers.delete"
   | "users.manage"
   | "settings.global.write"
   | "settings.branding.write"
@@ -33,6 +34,7 @@ const ADMIN: Permission[] = [
   "students.delete",
   "teachers.read",
   "teachers.write",
+  "teachers.delete",
   "users.manage",
   "settings.global.write",
   "settings.branding.write",

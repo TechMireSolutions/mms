@@ -1,9 +1,12 @@
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
-import type { Enrollment } from "@/lib/data/enrollmentData";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
-import { getCollectedAmountForInvoice, getDenominationPoints } from "@mms/shared";
+import {
+  getCollectedAmountForInvoice,
+  getDenominationPoints,
+  type EnrollmentsReportComparison,
+} from "@mms/shared";
 
 import {
   COMPARISON_MONTH_NAMES,
@@ -14,7 +17,7 @@ import type { DateRange, DateRangeDataItem } from "./comparisonModeTypes";
 
 export function computeDynamicDateRangeComparison(
   category: string,
-  enrollments: Enrollment[],
+  enrollmentMonthly: EnrollmentsReportComparison["monthly"] | undefined,
   attendanceRecords: AttendanceRecord[],
   financeInvoices: Invoice[],
   hasanatDistributions: Distribution[],
@@ -76,17 +79,14 @@ export function computeDynamicDateRangeComparison(
       }
     });
   } else if (lowerCat === "students" || lowerCat === "enrollments") {
-    enrollments.forEach((enrollment) => {
-      const date = enrollment.enrolledDate || rangeA.from;
-      if (isInComparisonDateRange(date, rangeA.from, rangeA.to)) {
-        const monthIndex = getComparisonMonthIndex(date);
-        if (monthIndex >= 0) bucketA[monthIndex] += 1;
-      }
-      if (isInComparisonDateRange(date, rangeB.from, rangeB.to)) {
-        const monthIndex = getComparisonMonthIndex(date);
-        if (monthIndex >= 0) bucketB[monthIndex] += 1;
-      }
-    });
+    for (const monthBucket of enrollmentMonthly?.a ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) bucketA[monthIndex] += monthBucket.count;
+    }
+    for (const monthBucket of enrollmentMonthly?.b ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) bucketB[monthIndex] += monthBucket.count;
+    }
   } else if (lowerCat === "examinations" || lowerCat === "academic") {
     const examMap = new Map<string, Exam>();
     exams.forEach((exam) => examMap.set(exam.id, exam));

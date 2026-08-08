@@ -27,6 +27,7 @@ interface UsersListDesktopTableProps {
   onResetPassword: (user: SystemUser) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
+  isColumnVisible?: (key: string) => boolean;
 }
 
 export function UsersListDesktopTable({
@@ -47,8 +48,10 @@ export function UsersListDesktopTable({
   onResetPassword,
   getColumnWidth,
   onColumnResize,
+  isColumnVisible,
 }: UsersListDesktopTableProps): JSX.Element {
   const { t } = useTranslation();
+  const visible = isColumnVisible ?? (() => true);
 
   return (
     <div className="overflow-x-auto">
@@ -67,21 +70,31 @@ export function UsersListDesktopTable({
             <ResizableTableHead columnKey="user" width={getColumnWidth?.('user')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
               {t('users.colUser')}
             </ResizableTableHead>
-            <ResizableTableHead columnKey="role" width={getColumnWidth?.('role')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-              {t('users.colRole')}
-            </ResizableTableHead>
-            <ResizableTableHead columnKey="status" width={getColumnWidth?.('status')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-              {t('users.colStatus')}
-            </ResizableTableHead>
-            <ResizableTableHead columnKey="lastLogin" width={getColumnWidth?.('lastLogin')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-              {t('users.colLastLogin')}
-            </ResizableTableHead>
-            <ResizableTableHead columnKey="created" width={getColumnWidth?.('created')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-              {t('users.colCreated')}
-            </ResizableTableHead>
-            <ResizableTableHead columnKey="twoFactor" width={getColumnWidth?.('twoFactor')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-              {t('users.col2fa')}
-            </ResizableTableHead>
+            {visible('role') && (
+              <ResizableTableHead columnKey="role" width={getColumnWidth?.('role')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                {t('users.colRole')}
+              </ResizableTableHead>
+            )}
+            {visible('status') && (
+              <ResizableTableHead columnKey="status" width={getColumnWidth?.('status')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                {t('users.colStatus')}
+              </ResizableTableHead>
+            )}
+            {visible('lastLogin') && (
+              <ResizableTableHead columnKey="lastLogin" width={getColumnWidth?.('lastLogin')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                {t('users.colLastLogin')}
+              </ResizableTableHead>
+            )}
+            {visible('created') && (
+              <ResizableTableHead columnKey="created" width={getColumnWidth?.('created')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                {t('users.colCreated')}
+              </ResizableTableHead>
+            )}
+            {visible('twoFactor') && (
+              <ResizableTableHead columnKey="twoFactor" width={getColumnWidth?.('twoFactor')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                {t('users.col2fa')}
+              </ResizableTableHead>
+            )}
             <th className="px-3 py-2.5 text-end text-xs font-semibold uppercase text-muted-foreground">
               {t('users.colActions')}
             </th>
@@ -108,23 +121,33 @@ export function UsersListDesktopTable({
                   </div>
                 </div>
               </td>
-              <td className="px-3 py-2.5">
-                <UserRoleBadge roleId={user.role} />
-              </td>
-              <td className="px-3 py-2.5">
-                <UserStatusBadge status={user.status} />
-              </td>
-              <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">
-                {formatLoginDate(user.lastLogin)}
-              </td>
-              <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground">
-                {user.createdDate}
-              </td>
-              <td className="px-3 py-2.5">
-                <SettingsMetaBadge variant={user.twoFactorEnabled ? 'success' : 'muted'}>
-                  {user.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
-                </SettingsMetaBadge>
-              </td>
+              {visible('role') && (
+                <td className="px-3 py-2.5">
+                  <UserRoleBadge roleId={user.role} />
+                </td>
+              )}
+              {visible('status') && (
+                <td className="px-3 py-2.5">
+                  <UserStatusBadge status={user.status} />
+                </td>
+              )}
+              {visible('lastLogin') && (
+                <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">
+                  {formatLoginDate(user.lastLogin)}
+                </td>
+              )}
+              {visible('created') && (
+                <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground">
+                  {user.createdDate}
+                </td>
+              )}
+              {visible('twoFactor') && (
+                <td className="px-3 py-2.5">
+                  <SettingsMetaBadge variant={user.twoFactorEnabled ? 'success' : 'muted'}>
+                    {user.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
+                  </SettingsMetaBadge>
+                </td>
+              )}
               <td className="px-3 py-2.5 text-end">
                 <UsersListRowActions
                   user={user}

@@ -82,7 +82,7 @@ To prevent monolithic components and maintain clean boundaries:
 | Band | Policy |
 |------|--------|
 | **Hard ceiling ~300 lines** | Application `.ts` / `.tsx` above this **must** be split by concern before / when touching (hooks, presentational sections, pure utils, route submodules). |
-| **Soft target ~220 lines** | Prefer this for FE feature shells, page controllers, settings panels, and UI composers when editing — Phase 5 residual DRY work. Leave well-factored files alone if already cohesive. |
+| **Soft target ~220 lines** | Prefer this for FE feature shells, page controllers, settings panels, and UI composers when editing. Leave well-factored files alone if already cohesive. |
 | **Exceptions** | Translation packs (`appTranslations*.ts`), `schema.ts`, large `*.integration.test.ts` / suite files, and generated artifacts — do not split for line-count alone. |
 
 ### Preferred split shapes (behavior-preserving)

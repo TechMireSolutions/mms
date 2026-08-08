@@ -50,8 +50,10 @@ export function syncNewCustomCardSelections(
 ): void {
   const currentIds = customCards.map((card) => card.id);
   const newlyAdded = currentIds.filter((id) => !previousCustomIdsRef.current.includes(id));
+  if (!areStringListsEqual(previousCustomIdsRef.current, currentIds)) {
+    saveObject(`prev_kpi_ids_${category}`, currentIds);
+  }
   previousCustomIdsRef.current = currentIds;
-  saveObject(`prev_kpi_ids_${category}`, currentIds);
   if (newlyAdded.length === 0) return;
   const nextSelectedCardIds = [...new Set([...selectedCardIds, ...newlyAdded])];
   if (areStringListsEqual(selectedCardIds, nextSelectedCardIds)) return;

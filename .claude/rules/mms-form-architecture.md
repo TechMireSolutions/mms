@@ -66,6 +66,12 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Offline sync field picks (`mergeContactForSync`): apply `Array.isArray(source.phones|emails|addresses)` including empty arrays; clear matching scalars.
 - Backend prepare must call `syncContactScalarFields` after phone normalize — `mms-data-layer.md`.
 
+## 3b. Contact-linked module writes (Students)
+
+- When the row has `contactId`, prepare/normalize must strip `CONTACT_PROFILE_FIELDS` and guardian triad dual-write keys (`normalizeStoredStudent` → `normalizeContactLinkedRecord`) — do not persist person profile on the module JSONB.
+- Edit forms may show hydrated contact fields for UX; the save payload still links by id — Contacts owns mutations to person data.
+- Soft-delete / module-only fields (status, GR, custom Setup fields) stay on the student row.
+
 ## 4. Write vs read Zod schemas
 
 - Prefer a **write** schema for POST/PUT that omits/strips server-owned fields such as soft-delete metadata.

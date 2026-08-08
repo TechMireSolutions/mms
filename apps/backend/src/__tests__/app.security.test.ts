@@ -405,7 +405,7 @@ describe('tenant JWT binding', () => {
             users: [{ id: 'u-admin', role: 'admin', email: 'admin@demo.local' }],
             audit_log: [{ id: 'a-1' }],
             hasanat_payouts: [{ id: 'legacy-1' }],
-            teacherStatuses: [{ id: 'active', name: 'Active' }],
+            sessionTypes: [{ id: 'regular', name: 'Regular' }],
           },
           objects: {
             branding: { madrasaName: 'Demo' },
@@ -418,7 +418,7 @@ describe('tenant JWT binding', () => {
         expect.objectContaining({
           collections: expect.objectContaining({
             users: [{ id: 'u-admin', role: 'admin', email: 'admin@demo.local' }],
-            teacherStatuses: [{ id: 'active', name: 'Active' }],
+            sessionTypes: [{ id: 'regular', name: 'Regular' }],
           }),
         }),
         expect.any(AbortSignal),
@@ -428,12 +428,14 @@ describe('tenant JWT binding', () => {
       };
       expect(synced.collections).not.toHaveProperty('audit_log');
       expect(synced.collections).not.toHaveProperty('hasanat_payouts');
+      expect(synced.collections).not.toHaveProperty('teacherStatuses');
       await app.close();
     });
 
-    it('allows admin sync of module lookup collections and strips legacy messages_u', async () => {
+    it('allows admin sync of module lookup collections and strips legacy messages_u / teacherStatuses', async () => {
       const app = await buildApp();
       const token = adminToken(app);
+      const { synchronizeData } = await import('../services/dbSyncService.js');
       const res = await app.inject({
         method: 'POST',
         url: '/api/db/sync',
@@ -446,6 +448,7 @@ describe('tenant JWT binding', () => {
             users: [{ id: 'u-admin', role: 'admin', email: 'admin@demo.local' }],
             'messages_u:peer': [{ id: 'm1', text: 'hello' }],
             teacherStatuses: [{ id: 'active', name: 'Active' }],
+            sessionTypes: [{ id: 'regular', name: 'Regular' }],
             currencies: [{ id: 'pkr', code: 'PKR' }],
           },
           objects: {
@@ -455,6 +458,13 @@ describe('tenant JWT binding', () => {
       });
       expect(res.statusCode).toBe(200);
       expect(res.json()).toMatchObject({ success: true });
+      const synced = vi.mocked(synchronizeData).mock.calls.at(-1)?.[0] as {
+        collections: Record<string, unknown[]>;
+      };
+      expect(synced.collections).toHaveProperty('sessionTypes');
+      expect(synced.collections).toHaveProperty('currencies');
+      expect(synced.collections).not.toHaveProperty('messages_u:peer');
+      expect(synced.collections).not.toHaveProperty('teacherStatuses');
       await app.close();
     });
   });

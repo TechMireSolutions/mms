@@ -1,20 +1,13 @@
-import { Archive, BookOpen, Plus } from "lucide-react";
+import { BookOpen, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import {
-  BulkSelectionClearAction,
-  BulkSelectionDeleteAction,
-  BulkSelectionRestoreAction,
-} from "@/components/ui/BulkSelectionActions";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ErrorState } from "@/components/ui/ErrorState";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { TableSkeleton } from "@/components/ui/LoadingState";
+import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { SessionSortField } from "@/tenant/features/sessions/components/sessionPageTypes";
 import type { Session } from "@/lib/data/sessionsData";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import { SessionsBulkActionBar } from "@/tenant/features/sessions/components/SessionsBulkActionBar";
 import { SessionsWorkCardGrid, SessionsWorkTable } from "@/tenant/features/sessions/components/SessionsWorkListViews";
 
 interface SessionsWorkPageData {
@@ -35,6 +28,7 @@ interface SessionsWorkListProps {
   isError: boolean;
   isWorkLoading: boolean;
   isWorkFetching: boolean;
+  useServerWork: boolean;
   viewMode: WorkDirectoryViewMode;
   showDeleted: boolean;
   canWrite: boolean;
@@ -61,6 +55,8 @@ interface SessionsWorkListProps {
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
   onPageChange: (page: number) => void;
+  canExport?: boolean;
+  onBulkExport?: () => void;
 }
 
 export function SessionsWorkList({
@@ -69,6 +65,7 @@ export function SessionsWorkList({
   isError,
   isWorkLoading,
   isWorkFetching,
+  useServerWork,
   viewMode,
   showDeleted,
   canWrite,
@@ -95,105 +92,86 @@ export function SessionsWorkList({
   onRequestBulkRestore,
   onClearSelection,
   onPageChange,
+  canExport = false,
+  onBulkExport,
 }: SessionsWorkListProps) {
   const { t } = useTranslation();
 
   return (
     <>
-      <BulkSelectionBar
-        placement="inline"
-        tone="glass"
+      <SessionsBulkActionBar
         selectedCount={selectedIds.length}
-        countLabel={t("sessions.selectedCount", { count: selectedIds.length })}
-        trailing={
-          <BulkSelectionClearAction
-            label={t("common.deselect")}
-            onClick={onClearSelection}
-          />
-        }
+        showDeleted={showDeleted}
+        canDelete={canDelete}
+        canExport={canExport}
+        onRequestBulkDelete={onRequestBulkDelete}
+        onRequestBulkRestore={onRequestBulkRestore}
+        onClearSelection={onClearSelection}
+        onBulkExport={onBulkExport}
+      />
+
+      <ModuleWorkListStateShell
+        isError={isError}
+        isLoading={isWorkLoading}
+        isFetching={isWorkFetching}
+        onRetry={onRetry}
+        errorTitle={t("sessions.loadFailed")}
+        errorHint={t("sessions.loadFailedHint")}
+        viewMode={viewMode}
+        skeletonColumnCount={viewMode === "table" ? 6 : 3}
+        useServerWork={useServerWork}
+        pageData={workPageData}
+        onPageChange={onPageChange}
+        i18nNamespace="sessions"
+        showPagination={sessions.length > 0}
+        loadingLabel={t("common.loading")}
       >
-        {showDeleted ? (
-          <BulkSelectionRestoreAction
-            label={t("sessions.restore")}
-            onClick={onRequestBulkRestore}
+        {sessions.length === 0 ? (
+          <EmptyState
+            icon={BookOpen}
+            title={showDeleted ? t("sessions.empty.trashTitle") : t("sessions.empty.title")}
+            description={showDeleted ? t("sessions.empty.trashSubtitle") : t("sessions.empty.subtitle")}
+            action={!showDeleted && canWrite ? (
+              <ActionButton variant="primary" icon={Plus} onClick={onCreateSession}>
+                {t("sessions.action.new")}
+              </ActionButton>
+            ) : undefined}
+          />
+        ) : viewMode === "table" ? (
+          <SessionsWorkTable
+            sessions={sessions}
+            showDeleted={showDeleted}
+            canDelete={canDelete}
+            canSelectSessions={canSelectSessions}
+            selectedIds={selectedIds}
+            allVisibleSelected={allVisibleSelected}
+            someVisibleSelected={someVisibleSelected}
+            isColumnVisible={isColumnVisible}
+            sortField={sortField}
+            sortDir={sortDir}
+            columnLayout={columnLayout}
+            statusConfig={statusConfig}
+            typeConfig={typeConfig}
+            onOpenDetail={onOpenDetail}
+            onSort={onSort}
+            onToggleSelectAll={onToggleSelectAll}
+            onToggleSelectedSession={onToggleSelectedSession}
+            onRequestDelete={onRequestDelete}
+            onRestore={onRestore}
           />
         ) : (
-          <BulkSelectionDeleteAction
-            label={t("sessions.archive")}
-            onClick={onRequestBulkDelete}
-            icon={Archive}
+          <SessionsWorkCardGrid
+            sessions={sessions}
+            showDeleted={showDeleted}
+            canDelete={canDelete}
+            statusConfig={statusConfig}
+            typeConfig={typeConfig}
+            onOpenDetail={onOpenDetail}
+            onRequestDelete={onRequestDelete}
+            onRestore={onRestore}
           />
         )}
-      </BulkSelectionBar>
-
-      {isError ? (
-        <ErrorState
-          title={t("sessions.loadFailed")}
-          description={t("sessions.loadFailedHint")}
-          onRetry={onRetry}
-        />
-      ) : isWorkLoading ? (
-        <TableSkeleton rows={6} cols={viewMode === 'table' ? 6 : 3} />
-      ) : sessions.length === 0 ? (
-        <EmptyState
-          icon={BookOpen}
-          title={showDeleted ? t("sessions.empty.trashTitle") : t("sessions.empty.title")}
-          description={showDeleted ? t("sessions.empty.trashSubtitle") : t("sessions.empty.subtitle")}
-          action={!showDeleted && canWrite ? (
-            <ActionButton variant="primary" icon={Plus} onClick={onCreateSession}>
-              {t("sessions.action.new")}
-            </ActionButton>
-          ) : undefined}
-        />
-      ) : viewMode === 'table' ? (
-        <SessionsWorkTable
-          sessions={sessions}
-          showDeleted={showDeleted}
-          canDelete={canDelete}
-          canSelectSessions={canSelectSessions}
-          selectedIds={selectedIds}
-          allVisibleSelected={allVisibleSelected}
-          someVisibleSelected={someVisibleSelected}
-          isColumnVisible={isColumnVisible}
-          sortField={sortField}
-          sortDir={sortDir}
-          columnLayout={columnLayout}
-          statusConfig={statusConfig}
-          typeConfig={typeConfig}
-          onOpenDetail={onOpenDetail}
-          onSort={onSort}
-          onToggleSelectAll={onToggleSelectAll}
-          onToggleSelectedSession={onToggleSelectedSession}
-          onRequestDelete={onRequestDelete}
-          onRestore={onRestore}
-        />
-      ) : (
-        <SessionsWorkCardGrid
-          sessions={sessions}
-          showDeleted={showDeleted}
-          canDelete={canDelete}
-          statusConfig={statusConfig}
-          typeConfig={typeConfig}
-          onOpenDetail={onOpenDetail}
-          onRequestDelete={onRequestDelete}
-          onRestore={onRestore}
-        />
-      )}
-
-      {workPageData && (
-        <ListPagination
-          page={workPageData.page}
-          total={workPageData.total}
-          limit={workPageData.limit}
-          hasMore={workPageData.hasMore}
-          onPageChange={onPageChange}
-          i18nNamespace="sessions"
-          variant="range"
-        />
-      )}
-      {isWorkFetching && (
-        <p className="text-xs text-muted-foreground px-1">{t("common.loading")}</p>
-      )}
+      </ModuleWorkListStateShell>
     </>
   );
 }

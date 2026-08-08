@@ -87,8 +87,8 @@ export function useEnrollmentsPageActions({
     });
   };
 
-  const handleDelete = (id: string) => {
-    deleteEnrollment.mutate(id, {
+  const handleDelete = (id: string, deletionReason?: string) => {
+    deleteEnrollment.mutate({ id, deletionReason }, {
       onSuccess: () => {
         notify.info(t("enrollments.toast.deleted"));
         if (viewing?.id === id) onViewingChange(null);

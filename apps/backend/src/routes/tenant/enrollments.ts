@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canDeleteCollection } from '../../services/rbacService.js';
-import { ENROLLMENTS_MODULE_MANIFEST, computeEnrollmentsCommandMetrics, type User } from '@mms/shared';
+import { ENROLLMENTS_MODULE_MANIFEST, type User } from '@mms/shared';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 import {
   enrollmentRecordSchema,
@@ -12,8 +12,10 @@ import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 import {
-  loadEnrollments,
   loadEnrollmentsPage,
+  countEnrollments,
+  loadEnrollmentsCommandMetrics,
+  loadEnrollmentsWidgetAggregates,
   createEnrollment,
   updateEnrollmentById,
   deleteEnrollmentById,
@@ -21,6 +23,9 @@ import {
   bulkSoftDeleteEnrollments,
   bulkRestoreEnrollments,
 } from '../../services/enrollmentService.js';
+import { enrollmentExportRoutes } from './enrollments/enrollmentExportRoutes.js';
+import { enrollmentReportRoutes } from './enrollments/enrollmentReportRoutes.js';
+import { enrollmentSetupConfigRoutes } from './enrollments/enrollmentSetupConfigRoutes.js';
 
 const ENROLLMENTS_COLLECTION = ENROLLMENTS_MODULE_MANIFEST.collectionKey;
 
@@ -33,6 +38,10 @@ export default async function enrollmentsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
+  await fastify.register(enrollmentSetupConfigRoutes);
+  await fastify.register(enrollmentExportRoutes);
+  await fastify.register(enrollmentReportRoutes);
+
   registerStandardTenantRoutes(fastify, {
     collection: ENROLLMENTS_COLLECTION,
     schema: enrollmentRecordSchema,
@@ -42,12 +51,15 @@ export default async function enrollmentsRoutes(
     nameSingular: 'enrollment',
     namePlural: 'enrollments',
     loadPageFn: (query) => loadEnrollmentsPage(query),
-    loadAllFn: loadEnrollments,
+    loadCountFn: countEnrollments,
+    loadMetricsFn: loadEnrollmentsCommandMetrics,
+    loadWidgetAggregatesFn: loadEnrollmentsWidgetAggregates as unknown as (
+      queries: unknown[],
+    ) => Promise<unknown>,
     createFn: createEnrollment,
     updateFn: updateEnrollmentById,
     deleteFn: deleteEnrollmentById,
     restoreFn: restoreEnrollmentById,
-    computeMetricsFn: (records) => computeEnrollmentsCommandMetrics(records),
     columnPreferencesObjectKey: ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
   });
 

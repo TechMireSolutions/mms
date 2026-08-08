@@ -21,6 +21,49 @@ export interface UseTeacherFormControllerOptions {
   onSave: (teacher: Teacher) => void | Promise<void>;
 }
 
+function teacherFormSnapshot(
+  draft: Partial<Teacher>,
+  customValues: Record<string, string>,
+): string {
+  return JSON.stringify({
+    contactId: draft.contactId ?? "",
+    employeeId: draft.employeeId ?? "",
+    specialization: draft.specialization ?? "",
+    status: draft.status ?? "",
+    joinDate: draft.joinDate ?? "",
+    qualification: draft.qualification ?? "",
+    notes: draft.notes ?? "",
+    customValues,
+  });
+}
+
+function buildInitialTeacherDraft(
+  teacher: Teacher | undefined,
+  defaultSpecialization: string,
+): Partial<Teacher> {
+  return {
+    contactId: teacher?.contactId ?? "",
+    employeeId: teacher?.employeeId ?? "",
+    specialization: teacher?.specialization ?? defaultSpecialization,
+    status: teacher?.status ?? "active",
+    joinDate: teacher?.joinDate ?? todayISO(),
+    qualification: teacher?.qualification ?? "",
+    notes: teacher?.notes ?? "",
+  };
+}
+
+function buildInitialCustomValues(
+  teacher: Teacher | undefined,
+  customFields: { id: string }[],
+): Record<string, string> {
+  const initial: Record<string, string> = {};
+  for (const field of customFields) {
+    const raw = teacher ? (teacher as unknown as Record<string, unknown>)[field.id] : undefined;
+    initial[field.id] = raw == null ? "" : String(raw);
+  }
+  return initial;
+}
+
 export function useTeacherFormController({ teacher, onClose, onSave }: UseTeacherFormControllerOptions) {
   const { t } = useTranslation();
   const { settings, specializations, statuses } = useTeacherConfig();
@@ -47,41 +90,26 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [customValues, setCustomValues] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
-    for (const field of customFields) {
-      const raw = teacher ? (teacher as unknown as Record<string, unknown>)[field.id] : undefined;
-      initial[field.id] = raw == null ? "" : String(raw);
-    }
-    return initial;
-  });
+  const [customValues, setCustomValues] = useState<Record<string, string>>(() =>
+    buildInitialCustomValues(teacher, customFields),
+  );
 
-  const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() => ({
-    contactId: teacher?.contactId ?? "",
-    employeeId: teacher?.employeeId ?? "",
-    specialization: teacher?.specialization ?? defaultSpecialization,
-    status: teacher?.status ?? "active",
-    joinDate: teacher?.joinDate ?? todayISO(),
-    qualification: teacher?.qualification ?? "",
-    notes: teacher?.notes ?? "",
-  }));
+  const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() =>
+    buildInitialTeacherDraft(teacher, defaultSpecialization),
+  );
+  const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
+    teacherFormSnapshot(
+      buildInitialTeacherDraft(teacher, defaultSpecialization),
+      buildInitialCustomValues(teacher, customFields),
+    ),
+  );
 
   useEffect(() => {
-    setTeacherDraft({
-      contactId: teacher?.contactId ?? "",
-      employeeId: teacher?.employeeId ?? "",
-      specialization: teacher?.specialization ?? defaultSpecialization,
-      status: teacher?.status ?? "active",
-      joinDate: teacher?.joinDate ?? todayISO(),
-      qualification: teacher?.qualification ?? "",
-      notes: teacher?.notes ?? "",
-    });
-    const nextCustom: Record<string, string> = {};
-    for (const field of customFields) {
-      const raw = teacher ? (teacher as unknown as Record<string, unknown>)[field.id] : undefined;
-      nextCustom[field.id] = raw == null ? "" : String(raw);
-    }
+    const nextDraft = buildInitialTeacherDraft(teacher, defaultSpecialization);
+    const nextCustom = buildInitialCustomValues(teacher, customFields);
+    setTeacherDraft(nextDraft);
     setCustomValues(nextCustom);
+    setBaselineSnapshot(teacherFormSnapshot(nextDraft, nextCustom));
     setErrors({});
   }, [teacher, defaultSpecialization, customFields]);
 
@@ -92,6 +120,8 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   const updateCustomValue = (fieldId: string, value: string) => {
     setCustomValues((prev) => ({ ...prev, [fieldId]: value }));
   };
+
+  const isDirty = teacherFormSnapshot(teacherDraft, customValues) !== baselineSnapshot;
 
   const { data: linkedContact } = useContactById(
     teacherDraft.contactId ? String(teacherDraft.contactId) : undefined,
@@ -170,6 +200,7 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     errors,
     customValues,
     teacherDraft,
+    isDirty,
     defaultSpecialization,
     specializationOptions,
     statusOptions,

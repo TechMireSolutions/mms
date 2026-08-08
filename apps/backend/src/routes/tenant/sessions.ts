@@ -7,12 +7,14 @@ import {
   restoreSessionById,
   bulkSoftDeleteSessions,
   bulkRestoreSessions,
-  loadSessions,
   loadSessionsPage,
+  countSessions,
+  loadSessionsCommandMetrics,
+  loadSessionsWidgetAggregates,
   updateSessionById,
 } from '../../services/sessionService.js';
 import type { User } from '@mms/shared';
-import { computeSessionsCommandMetrics, SESSIONS_MODULE_MANIFEST } from '@mms/shared';
+import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 import {
@@ -22,6 +24,9 @@ import {
   sessionsBulkIdsSchema,
 } from '../../validation/sessionSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { sessionExportRoutes } from './sessions/sessionExportRoutes.js';
+import { sessionSetupConfigRoutes } from './sessions/sessionSetupConfigRoutes.js';
+import { sessionReportRoutes } from './sessions/sessionReportRoutes.js';
 
 const COLLECTION = SESSIONS_MODULE_MANIFEST.collectionKey;
 
@@ -34,6 +39,10 @@ export default async function sessionsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
+  await fastify.register(sessionSetupConfigRoutes);
+  await fastify.register(sessionExportRoutes);
+  await fastify.register(sessionReportRoutes);
+
   registerStandardTenantRoutes(fastify, {
     collection: COLLECTION,
     schema: sessionRecordSchema,
@@ -43,12 +52,13 @@ export default async function sessionsRoutes(
     nameSingular: 'session',
     namePlural: 'sessions',
     loadPageFn: (query) => loadSessionsPage(query),
-    loadAllFn: loadSessions,
+    loadCountFn: countSessions,
+    loadMetricsFn: loadSessionsCommandMetrics,
+    loadWidgetAggregatesFn: loadSessionsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
     createFn: createSession,
     updateFn: updateSessionById,
     deleteFn: deleteSessionById,
     restoreFn: restoreSessionById,
-    computeMetricsFn: (sessions) => computeSessionsCommandMetrics(sessions),
     columnPreferencesObjectKey: SESSIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
     customPostRoute: true,
   });

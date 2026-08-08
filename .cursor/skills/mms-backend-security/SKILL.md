@@ -36,7 +36,7 @@ Do **not** use raw `request.jwtVerify()` in route handlers.
 
 **Public exceptions:** `/api/auth/login|onboard|handoff|2fa/*`, `/api/workspace/*`, `/health`, `/ready`, and unauthenticated platform auth/setup/reset routes under `/api/platform/auth/*`.
 
-**FE note:** `apiClient` never calls `/api/auth/refresh` for `/api/platform/*` (`isTenantSessionRequest` excludes platform paths). Logged-out `GET /api/platform/auth/me` → expected `401`.
+**FE note:** `apiClient` never calls `/api/auth/refresh` for `/api/platform/*` (`isTenantSessionRequest` excludes platform paths). Logged-out `GET /api/platform/auth/me` → expected `200 { user: null, isAuthenticated: false }` (soft probe); other platform routes keep hard `401`.
 
 ## RBAC on writes
 

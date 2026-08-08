@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { filterTeachersForQuery, paginateTeachers, teacherMatchesSearch } from './teachersListQuery.js';
+import {
+  filterTeachersForQuery,
+  paginateTeachers,
+  teacherMatchesSearch,
+  teachersListQuerySchema,
+} from './teachersListQuery.js';
 import type { Teacher } from './teacherTypes.js';
 
 const sample: Teacher[] = [
@@ -31,5 +36,18 @@ describe('paginateTeachers', () => {
     expect(page.teachers).toHaveLength(2);
     expect(page.total).toBe(3);
     expect(page.hasMore).toBe(true);
+  });
+});
+
+describe('teachersListQuerySchema', () => {
+  it('accepts status and specialization filters', () => {
+    const parsed = teachersListQuerySchema.parse({
+      page: 1,
+      limit: 50,
+      status: 'active,inactive',
+      specialization: 'Hifz',
+    });
+    expect(parsed.status).toBe('active,inactive');
+    expect(parsed.specialization).toBe('Hifz');
   });
 });

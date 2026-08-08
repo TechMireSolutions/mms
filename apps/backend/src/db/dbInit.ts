@@ -67,6 +67,18 @@ const dataMigrationsToRun = [
   { id: '043', load: async () => (await import('./migrations/043_clear_legacy_student_setup_objects.js')).runMigration043 },
   { id: '044', load: async () => (await import('./migrations/044_migrate_student_lookups.js')).runMigration044 },
   { id: '045', load: async () => (await import('./migrations/045_clear_legacy_student_lookup_collections.js')).runMigration045 },
+  { id: '046', load: async () => (await import('./migrations/046_strip_student_contact_profile_fields.js')).runMigration046 },
+  { id: '047', load: async () => (await import('./migrations/047_migrate_teacher_setup_config.js')).runMigration047 },
+  { id: '048', load: async () => (await import('./migrations/048_clear_legacy_teacher_setup_objects.js')).runMigration048 },
+  { id: '049', load: async () => (await import('./migrations/049_migrate_session_setup_config.js')).runMigration049 },
+  { id: '050', load: async () => (await import('./migrations/050_clear_legacy_session_setup_objects.js')).runMigration050 },
+  { id: '051', load: async () => (await import('./migrations/051_migrate_user_setup_config.js')).runMigration051 },
+  { id: '052', load: async () => (await import('./migrations/052_clear_legacy_user_setup_objects.js')).runMigration052 },
+  { id: '053', load: async () => (await import('./migrations/053_strip_teacher_contact_profile_fields.js')).runMigration053 },
+  { id: '054', load: async () => (await import('./migrations/054_migrate_teacher_lookups.js')).runMigration054 },
+  { id: '055', load: async () => (await import('./migrations/055_clear_legacy_teacher_lookup_collections.js')).runMigration055 },
+  { id: '056', load: async () => (await import('./migrations/056_migrate_enrollment_setup_config.js')).runMigration056 },
+  { id: '057', load: async () => (await import('./migrations/057_clear_legacy_enrollment_setup_objects.js')).runMigration057 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in tsx, dist in production). */

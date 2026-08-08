@@ -1,8 +1,9 @@
 import React from 'react';
-import { UserCog, UserPlus } from 'lucide-react';
+import { UserCog, UserPlus, Download } from 'lucide-react';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { UsersModalLayer } from '@/tenant/features/users/components/UsersModalLayer';
 import { UsersReportsTier } from '@/tenant/features/users/components/UsersReportsTier';
 import { UsersSetupTier } from '@/tenant/features/users/components/UsersSetupTier';
@@ -25,21 +26,34 @@ export default function Users(): React.JSX.Element {
       headerTitle={controller.t('page.users.title')}
       headerSubtitle={controller.t('page.users.subtitle')}
       headerActions={
-        controller.canWrite && !controller.showDeleted ? (
+        controller.effectiveTab === 'work' && controller.effectiveSubTab === 'users' ? (
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => controller.setShowInvite(true)}>
-              <UserPlus className="h-3.5 w-3.5" />
-              {controller.t('users.invite')}
-            </Button>
-            <Button type="button" size="sm" onClick={() => controller.setShowAddUser(true)}>
-              <UserPlus className="h-3.5 w-3.5" />
-              {controller.t('users.add')}
-            </Button>
+            {controller.canExport ? (
+              <ActionButton
+                variant="ghost"
+                icon={Download}
+                onClick={() => { void controller.handleExportCSV(); }}
+              >
+                {controller.t('users.exportCsv')}
+              </ActionButton>
+            ) : null}
+            {controller.canWrite && !controller.showDeleted ? (
+              <>
+                <Button type="button" variant="outline" size="sm" onClick={() => controller.setShowInvite(true)}>
+                  <UserPlus className="h-3.5 w-3.5" />
+                  {controller.t('users.invite')}
+                </Button>
+                <Button type="button" size="sm" onClick={() => controller.setShowAddUser(true)}>
+                  <UserPlus className="h-3.5 w-3.5" />
+                  {controller.t('users.add')}
+                </Button>
+              </>
+            ) : null}
           </div>
         ) : undefined
       }
       metricsStrip={
-        <UsersCommandMetrics shown={controller.users.length} />
+        <UsersCommandMetrics shown={controller.shownCount} />
       }
     >
       <ResponsiveAccordionTabs
@@ -64,14 +78,31 @@ export default function Users(): React.JSX.Element {
               tabs={controller.SUB_TABS}
               activeSubTab={controller.effectiveSubTab}
               users={controller.users}
+              workPageData={controller.workPageData}
+              listPage={controller.listPage}
+              onPageChange={controller.setListPage}
+              search={controller.search}
+              roleFilter={controller.roleFilter}
+              statusFilter={controller.statusFilter}
+              selectedIds={controller.selectedIds}
+              onSelectedIdsChange={controller.setSelectedIds}
+              onSearchChange={controller.setSearch}
+              onRoleFilterChange={controller.setRoleFilter}
+              onStatusFilterChange={controller.setStatusFilter}
               logs={controller.logs}
               listLoadFailed={controller.listLoadFailed}
               logsLoadFailed={controller.logsLoadFailed}
+              isWorkPageLoading={controller.isWorkPageLoading}
+              isWorkPageFetching={controller.isWorkPageFetching}
               canWrite={controller.canWrite}
               canDelete={controller.canDelete}
               showDeleted={controller.showDeleted}
               getUserColumnWidth={controller.getUserColumnWidth}
               setUserColumnWidth={controller.setUserColumnWidth}
+              isUserColumnVisible={controller.isUserColumnVisible}
+              userColumnRegistry={controller.userColumnRegistry}
+              updateUserColumnLayout={controller.updateUserColumnLayout}
+              userColumnCustomizerLabels={controller.userColumnCustomizerLabels}
               getActivityColumnWidth={controller.getActivityColumnWidth}
               setActivityColumnWidth={controller.setActivityColumnWidth}
               onSubTabChange={controller.setActiveSubTab}
@@ -98,6 +129,7 @@ export default function Users(): React.JSX.Element {
         showAddUser={controller.showAddUser}
         showInvite={controller.showInvite}
         canWrite={controller.canWrite}
+        canDelete={controller.canDelete}
         users={controller.users}
         messagingTarget={controller.messagingTarget}
         onCloseViewing={() => controller.setViewing(null)}
@@ -107,6 +139,11 @@ export default function Users(): React.JSX.Element {
         onSaveEdit={controller.handleSaveEdit}
         onAddUser={controller.handleAddUser}
         onInvite={controller.handleInvite}
+        onRestoreUser={(id) => { void controller.handleRestoreUser(id); }}
+        onEditFromDetail={(user) => {
+          controller.setViewing(null);
+          controller.setEditing(user);
+        }}
         onCloseComposer={controller.closeComposer}
       />
     </ModulePageShell>

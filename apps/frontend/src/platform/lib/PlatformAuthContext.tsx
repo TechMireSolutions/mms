@@ -57,10 +57,18 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Always probe cookie session on apex so new tabs, deep links, and
     // post-setup / password-reset flows restore auth without a sessionStorage gate.
+    // Logged-out probe returns 200 { user: null } (not 401) to avoid DevTools noise.
     try {
-      const platformSession = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me');
-      setPlatformUser(normalizeSessionUser(platformSession.user));
-      setIsPlatformAuthenticated(true);
+      const platformSession = await apiJson<{ user: PlatformUserProfile | null }>(
+        '/api/platform/auth/me',
+      );
+      if (platformSession.user) {
+        setPlatformUser(normalizeSessionUser(platformSession.user));
+        setIsPlatformAuthenticated(true);
+      } else {
+        setPlatformUser(null);
+        setIsPlatformAuthenticated(false);
+      }
     } catch {
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);

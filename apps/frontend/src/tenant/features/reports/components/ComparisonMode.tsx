@@ -6,7 +6,7 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
-import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
+import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
@@ -60,13 +60,46 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   });
   // Contacts Compare uses /report-analytics years only — skip unrelated collections.
   const nonContactsEnabled = !isContacts;
+  const categoryKey = category.toLowerCase();
+  const needsEnrollmentDateRange =
+    nonContactsEnabled && mode === "daterange" && (categoryKey === "students" || categoryKey === "enrollments");
+  const needsEnrollmentSessionCompare = nonContactsEnabled && mode === "sessions";
+
+  const enrollmentComparison = useMemo(() => {
+    if (needsEnrollmentSessionCompare) {
+      return { sessionIds: [valA, valB].filter(Boolean) };
+    }
+    if (needsEnrollmentDateRange) {
+      return {
+        rangeAFrom: rangeA.from,
+        rangeATo: rangeA.to,
+        rangeBFrom: rangeB.from,
+        rangeBTo: rangeB.to,
+      };
+    }
+    return undefined;
+  }, [
+    needsEnrollmentSessionCompare,
+    needsEnrollmentDateRange,
+    valA,
+    valB,
+    rangeA.from,
+    rangeA.to,
+    rangeB.from,
+    rangeB.to,
+  ]);
+
+  const { data: enrollmentsReport } = useEnrollmentsReportAggregates({
+    enabled: Boolean(enrollmentComparison),
+    comparison: enrollmentComparison,
+  });
+
   const sessions = useSessionsCollection({ enabled: nonContactsEnabled });
   const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(
     () => sessions.filter((session) => session.id !== "all").map((session) => ({ id: session.id, name: session.name })),
     [sessions],
   );
 
-  const enrollments = useEnrollmentsCollection({ enabled: nonContactsEnabled });
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: nonContactsEnabled });
   const financeInvoices = useFinanceInvoicesCollection({ enabled: nonContactsEnabled });
   const hasanatDistributions = useHasanatDistributionsCollection({ enabled: nonContactsEnabled });
@@ -95,7 +128,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       }
       return computeDynamicSessionComparison(
         sessions,
-        enrollments,
+        enrollmentsReport?.comparison?.sessions ?? [],
         attendanceRecords,
         financeInvoices,
         hasanatDistributions,
@@ -112,7 +145,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     }
     return computeDynamicDateRangeComparison(
       category,
-      enrollments,
+      enrollmentsReport?.comparison?.monthly,
       attendanceRecords,
       financeInvoices,
       hasanatDistributions,
@@ -131,7 +164,7 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     rangeA,
     rangeB,
     sessions,
-    enrollments,
+    enrollmentsReport,
     attendanceRecords,
     financeInvoices,
     hasanatDistributions,

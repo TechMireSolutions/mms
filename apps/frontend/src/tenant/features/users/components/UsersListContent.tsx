@@ -32,6 +32,7 @@ interface UsersListContentProps {
   onResetPassword: (user: SystemUser) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
+  isColumnVisible?: (key: string) => boolean;
 }
 
 export function UsersListContent({
@@ -56,6 +57,7 @@ export function UsersListContent({
   onResetPassword,
   getColumnWidth,
   onColumnResize,
+  isColumnVisible,
   viewMode,
 }: UsersListContentProps): JSX.Element {
   const { t } = useTranslation();
@@ -98,6 +100,7 @@ export function UsersListContent({
     onDelete,
     onRestore,
     onResetPassword,
+    isColumnVisible,
   };
 
   if (viewMode === "cards") {
@@ -110,6 +113,7 @@ export function UsersListContent({
         {...listProps}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
+        isColumnVisible={isColumnVisible}
       />
     </Card>
   );

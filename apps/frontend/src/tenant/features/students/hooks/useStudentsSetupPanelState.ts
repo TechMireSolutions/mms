@@ -32,7 +32,7 @@ export function useStudentsSetupPanelState({
     tabRegistry: STUDENT_TAB_REGISTRY,
     defaultEnabledTabs: DEFAULT_STUDENT_ENABLED_TABS,
     defaultRequiredTabs: DEFAULT_STUDENT_REQUIRED_TABS,
-    lockedEnabledTabs: [...STUDENT_LOCKED_ENABLED_TABS],
+    lockedEnabledTabs: STUDENT_LOCKED_ENABLED_TABS,
   });
 
   const {

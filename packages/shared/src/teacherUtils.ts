@@ -1,11 +1,19 @@
 import type { Teacher } from './teacherTypes.js';
 import type { ContactLike } from './contactLinkPolicy.js';
 import { hydrateContactProfile, normalizeContactLinkedRecord } from './contactLinkPolicy.js';
+import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
 import { DEMO_TEACHERS } from './demoTeachers.js';
 
-/** Strips contact-owned fields before persisting a teacher linked to a contact. */
+/** Strip client soft-delete metadata from teacher create/update payloads. */
+export function stripTeacherClientSoftDeleteFields<T extends Record<string, unknown>>(record: T): T {
+  const next = stripContactClientSoftDeleteFields(record) as Record<string, unknown>;
+  delete next.deleted;
+  return next as T;
+}
+
+/** Strips contact-owned fields and client soft-delete metadata before persisting a teacher row. */
 export function normalizeStoredTeacher<T extends Record<string, unknown>>(record: T): T {
-  return normalizeContactLinkedRecord(record);
+  return normalizeContactLinkedRecord(stripTeacherClientSoftDeleteFields(record));
 }
 
 /** Demo teacher ids → contact ids in minimal seeds. */

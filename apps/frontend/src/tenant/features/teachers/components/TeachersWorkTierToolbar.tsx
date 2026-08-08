@@ -15,6 +15,7 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { teacherStatusLabel } from "@/tenant/features/teachers/teacherPageUtils";
+import { TEACHERS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts";
 
 interface TeachersWorkTierToolbarProps {
   search: string;
@@ -58,6 +59,7 @@ export function TeachersWorkTierToolbar({
   return (
     <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
       <SearchBar
+        id={TEACHERS_WORK_SEARCH_INPUT_ID}
         value={search}
         onChange={onSearchChange}
         placeholder={t("teachers.searchPlaceholder")}

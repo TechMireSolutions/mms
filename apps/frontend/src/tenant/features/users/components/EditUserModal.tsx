@@ -104,6 +104,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       saveLabel={t('users.saveChanges')}
       onSave={handleSave}
       saving={submitting}
+      saveDisabled={!watchedContactId || !form.formState.isDirty}
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>

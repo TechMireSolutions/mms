@@ -27,6 +27,7 @@ Related: `mms-ui-ux-design.md` §7 (dialog `@container`), `mms-fields.md`, `mms-
 - [ ] Focus-return to opener on close
 - [ ] No Server Actions / useActionState for tenant writes
 - [ ] Shared Zod write/read DTOs; soft-delete stripped on write
+- [ ] Contact-linked modules (`contactId`): strip `CONTACT_PROFILE_FIELDS` / guardian dual-write on prepare; hydrate on read (Students closed)
 - [ ] formStyles + DatePicker / TimePicker / DateTimePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`
 - [ ] Empty collection arrays persist; no scalar resurrection
 - [ ] canWrite gates; no fire-and-forget mutate close
@@ -39,6 +40,7 @@ Related: `mms-ui-ux-design.md` §7 (dialog `@container`), `mms-fields.md`, `mms-
 
 - Reintroduce blueprint/`compileZodFromBlueprint` engines
 - Dual-write Query + `saveCollection` on save
+- Persist person profile keys on student/teacher JSONB when `contactId` is set
 - Accept client soft-delete fields on create/update
 - Rebuild list rows from legacy scalars when arrays are `[]`
 - Invent React Server Actions posts against the Fastify cookie API

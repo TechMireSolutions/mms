@@ -66,9 +66,10 @@ describe('sessions soft delete routes', () => {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
       },
+      payload: { deletionReason: 'Ended early' },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockDeleteSessionById).toHaveBeenCalledWith('s1', 'u-admin', undefined);
+    expect(mockDeleteSessionById).toHaveBeenCalledWith('s1', 'u-admin', 'Ended early');
     await app.close();
   });
 
@@ -161,11 +162,11 @@ describe('sessions soft delete routes', () => {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
       },
-      payload: { ids: ['s1', 's2'] },
+      payload: { ids: ['s1', 's2'], deletionReason: 'Bulk archive' },
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkSoftDeleteSessions).toHaveBeenCalledWith(['s1', 's2'], 'u-admin', undefined);
+    expect(mockBulkSoftDeleteSessions).toHaveBeenCalledWith(['s1', 's2'], 'u-admin', 'Bulk archive');
     await app.close();
   });
 

@@ -1,5 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useLocalPagination } from "@/hooks/useLocalPagination";
+import React, { useMemo } from "react";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -15,20 +14,28 @@ import { EnrollmentListToolbar } from "@/tenant/features/enrollments/components/
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
-const PAGE_SIZE = 12;
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 interface EnrollmentListProps {
   enrollments: Enrollment[];
+  total: number;
+  page: number;
+  pageSize: number;
+  search: string;
+  statusFilter: string;
+  sessionFilter: string;
   canWrite: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;
   onShowDeletedChange?: (showDeleted: boolean) => void;
+  onSearchChange: (search: string) => void;
+  onStatusFilterChange: (status: string) => void;
+  onSessionFilterChange: (sessionId: string) => void;
+  onPageChange: (page: number) => void;
   onView: (enrollment: Enrollment) => void;
   onCancel: (id: string) => void;
   onDelete?: (id: string) => void;
   onRestore?: (id: string) => void;
-  onFilteredCountChange?: (count: number) => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -36,19 +43,28 @@ interface EnrollmentListProps {
 }
 
 /**
- * Renders a paginated, filterable table list of enrollment records.
+ * Renders a server-paginated, filterable table list of enrollment records.
  */
 export function EnrollmentList({
   enrollments,
+  total,
+  page,
+  pageSize,
+  search,
+  statusFilter,
+  sessionFilter,
   canWrite,
   canDelete = false,
   showDeleted = false,
   onShowDeletedChange,
+  onSearchChange,
+  onStatusFilterChange,
+  onSessionFilterChange,
+  onPageChange,
   onView,
   onCancel,
   onDelete,
   onRestore,
-  onFilteredCountChange,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -58,42 +74,8 @@ export function EnrollmentList({
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { formatCurrency } = useFinanceCurrency();
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
-  const [statusFilter, setStatus]   = useState<string>("all");
-  const [sessionFilter, setSession] = useState<string>("all");
-
   const sessions = useSessionsCollection();
-
-  const baseFiltered = useMemo<Enrollment[]>(() => {
-    return enrollments.filter((enrollment) => {
-      if (statusFilter !== "all" && enrollment.status !== statusFilter) return false;
-      if (sessionFilter !== "all" && enrollment.sessionId !== sessionFilter) return false;
-      return true;
-    });
-  }, [enrollments, statusFilter, sessionFilter]);
-
-  const {
-    searchQuery: search,
-    currentPage: page,
-    setCurrentPage: setPage,
-    handleSearchChange,
-    paginatedItems: paginatedEnrollments,
-    filteredItems: filtered,
-  } = useLocalPagination({
-    items: baseFiltered,
-    pageSize: PAGE_SIZE,
-    searchFields: (enrollment) => [enrollment.studentName, enrollment.sessionName],
-  });
-
-  useEffect(() => {
-    onFilteredCountChange?.(filtered.length);
-  }, [filtered.length, onFilteredCountChange]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [showDeleted, setPage]);
-
-  const { data: students = [] } = useStudentsByIds(paginatedEnrollments.map((enrollment) => enrollment.studentId));
-
+  const { data: students = [] } = useStudentsByIds(enrollments.map((enrollment) => enrollment.studentId));
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
@@ -122,18 +104,18 @@ export function EnrollmentList({
         canDelete={canDelete}
         statusConfig={statusConfig}
         columnCustomizer={columnCustomizer}
-        onSearchChange={handleSearchChange}
-        onStatusChange={(value) => { setStatus(value); setPage(1); }}
-        onSessionChange={(value) => { setSession(value); setPage(1); }}
+        onSearchChange={onSearchChange}
+        onStatusChange={onStatusFilterChange}
+        onSessionChange={onSessionFilterChange}
         onShowDeletedChange={onShowDeletedChange}
       />
 
       <EnrollmentListContent
-          viewMode={viewMode}
-        enrollments={paginatedEnrollments}
-        filteredCount={filtered.length}
+        viewMode={viewMode}
+        enrollments={enrollments}
+        filteredCount={total}
         page={page}
-        pageSize={PAGE_SIZE}
+        pageSize={pageSize}
         students={students}
         isColumnVisible={columnVisible}
         canWrite={canWrite}
@@ -144,7 +126,7 @@ export function EnrollmentList({
         formatCurrency={formatCurrency}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
-        onPageChange={setPage}
+        onPageChange={onPageChange}
         onView={onView}
         onCancel={onCancel}
         onDelete={onDelete}

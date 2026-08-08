@@ -1,13 +1,15 @@
-import React, { useMemo, useState } from 'react';
-import type { SystemUser } from '@mms/shared';
+import React, { useMemo } from 'react';
+import type { ModuleColumnRegistryEntry, SystemUser, UsersListPageResult } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
+import type { ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
+import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
 import { UsersListContent } from '@/tenant/features/users/components/UsersListContent';
 import { UsersListFilters } from '@/tenant/features/users/components/UsersListFilters';
-import { UsersListSelectionBar } from '@/tenant/features/users/components/UsersListSelectionBar';
+import { UsersBulkActionBar } from '@/tenant/features/users/components/UsersBulkActionBar';
 import {
   getDirectoryPageSelection,
   toggleIdInSelection,
@@ -16,6 +18,17 @@ import {
 
 export interface UsersListProps {
   users: SystemUser[];
+  workPageData?: UsersListPageResult;
+  listPage: number;
+  onPageChange: (page: number) => void;
+  search: string;
+  roleFilter: string;
+  statusFilter: string;
+  selectedIds: string[];
+  onSelectedIdsChange: (ids: string[]) => void;
+  onSearchChange: (value: string) => void;
+  onRoleFilterChange: (value: string) => void;
+  onStatusFilterChange: (value: string) => void;
   onView: (user: SystemUser) => void;
   onEdit: (user: SystemUser) => void;
   onDelete: (id: string) => void;
@@ -29,12 +42,31 @@ export interface UsersListProps {
   canDelete?: boolean;
   showDeleted?: boolean;
   onToggleDeleted?: (next: boolean) => void;
+  isLoading?: boolean;
+  isError?: boolean;
+  isFetching?: boolean;
+  onRetry?: () => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
+  isColumnVisible?: (key: string) => boolean;
+  columnRegistry?: ModuleColumnRegistryEntry[];
+  updateUserColumnLayout?: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
+  customizerLabels?: ModuleColumnCustomizerLabels;
 }
 
 export function UsersList({
   users,
+  workPageData,
+  listPage,
+  onPageChange,
+  search,
+  roleFilter,
+  statusFilter,
+  selectedIds,
+  onSelectedIdsChange,
+  onSearchChange,
+  onRoleFilterChange,
+  onStatusFilterChange,
   onView,
   onEdit,
   onDelete,
@@ -48,46 +80,48 @@ export function UsersList({
   canDelete = true,
   showDeleted = false,
   onToggleDeleted,
+  isLoading = false,
+  isError = false,
+  isFetching = false,
+  onRetry,
   getColumnWidth,
   onColumnResize,
+  isColumnVisible,
+  columnRegistry,
+  updateUserColumnLayout,
+  customizerLabels,
 }: UsersListProps): React.JSX.Element {
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
   const workspaceRoles = useWorkspaceRoles();
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatus] = useState('all');
-  const [selected, setSelected] = useState<string[]>([]);
 
-  const filtered = useMemo(
-    () =>
-      users.filter((user) => {
-        if (roleFilter !== 'all' && user.role !== roleFilter) return false;
-        if (!showDeleted && statusFilter !== 'all' && user.status !== statusFilter) return false;
-        if (search) {
-          const searchQuery = search.toLowerCase();
-          if (!user.name.toLowerCase().includes(searchQuery) && !user.email.toLowerCase().includes(searchQuery)) return false;
-        }
-        return true;
-      }),
-    [users, search, roleFilter, statusFilter, showDeleted],
-  );
-
-  const pageIds = filtered.map((user) => user.id);
-  const { allSelected, someSelected } = getDirectoryPageSelection(pageIds, selected);
+  const pageIds = users.map((user) => user.id);
+  const { allSelected, someSelected } = getDirectoryPageSelection(pageIds, selectedIds);
 
   const toggleSelect = (id: string): void =>
-    setSelected((selectedIds) => toggleIdInSelection(selectedIds, id));
+    onSelectedIdsChange(toggleIdInSelection(selectedIds, id));
   const toggleAll = (): void =>
-    setSelected((current) => togglePageIdsInSelection(current, pageIds));
+    onSelectedIdsChange(togglePageIdsInSelection(selectedIds, pageIds));
 
   const fmtDate = (ts: string): string => {
     if (!ts) return t('users.never');
     return formatDate(ts, globalSettings.dateFormat, false);
   };
 
-  const selectedUsers = users.filter((user) => selected.includes(user.id));
+  const selectedUsers = useMemo(
+    () => users.filter((user) => selectedIds.includes(user.id)),
+    [users, selectedIds],
+  );
+
+  const pageData = workPageData
+    ? {
+        page: workPageData.page ?? listPage,
+        total: workPageData.total,
+        limit: workPageData.limit,
+        hasMore: workPageData.hasMore,
+      }
+    : undefined;
 
   return (
     <div className="space-y-4">
@@ -100,52 +134,69 @@ export function UsersList({
         workspaceRoles={workspaceRoles}
         canDelete={canDelete}
         showDeleted={showDeleted}
-        onSearchChange={setSearch}
-        onRoleFilterChange={setRoleFilter}
-        onStatusFilterChange={setStatus}
+        onSearchChange={onSearchChange}
+        onRoleFilterChange={onRoleFilterChange}
+        onStatusFilterChange={onStatusFilterChange}
         onToggleDeleted={onToggleDeleted}
-        onClearSelection={() => setSelected([])}
+        onClearSelection={() => onSelectedIdsChange([])}
+        columnRegistry={columnRegistry}
+        updateUserColumnLayout={updateUserColumnLayout}
+        customizerLabels={customizerLabels}
       />
 
-      <UsersListSelectionBar
-        selectedIds={selected}
+      <UsersBulkActionBar
+        selectedIds={selectedIds}
         selectedUsers={selectedUsers}
         showDeleted={showDeleted}
         canDelete={canDelete}
         onMessage={onMessage}
         onBulkDelete={onBulkDelete}
         onBulkRestore={onBulkRestore}
-        onClearSelection={() => setSelected([])}
+        onClearSelection={() => onSelectedIdsChange([])}
       />
 
-      <UsersListContent
+      <ModuleWorkListStateShell
+        isError={isError}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        onRetry={() => onRetry?.()}
+        errorTitle={t('users.loadFailed')}
+        errorHint={t('users.loadFailedHint')}
         viewMode={viewMode}
-        users={filtered}
-        selectedIds={selected}
-        allSelected={allSelected}
-        someSelected={someSelected}
-        canWrite={canWrite}
-        canDelete={canDelete}
-        showDeleted={showDeleted}
-        search={search}
-        roleFilter={roleFilter}
-        statusFilter={statusFilter}
-        onAddUser={onAddUser}
-        onToggleSelect={toggleSelect}
-        onToggleAll={toggleAll}
-        formatLoginDate={fmtDate}
-        onView={onView}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onRestore={onRestore}
-        onResetPassword={onResetPassword}
-        getColumnWidth={getColumnWidth}
-        onColumnResize={onColumnResize}
-      />
-
-      <p className="text-xs text-muted-foreground">
-        {t('users.shownCount', { count: filtered.length })}
-      </p>
+        skeletonColumnCount={columnRegistry?.length ?? 6}
+        useServerWork
+        pageData={pageData}
+        onPageChange={onPageChange}
+        i18nNamespace="users"
+        showPagination={users.length > 0}
+        loadingLabel={t('common.loading')}
+      >
+        <UsersListContent
+          viewMode={viewMode}
+          users={users}
+          selectedIds={selectedIds}
+          allSelected={allSelected}
+          someSelected={someSelected}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          search={search}
+          roleFilter={roleFilter}
+          statusFilter={statusFilter}
+          onAddUser={onAddUser}
+          onToggleSelect={toggleSelect}
+          onToggleAll={toggleAll}
+          formatLoginDate={fmtDate}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onResetPassword={onResetPassword}
+          getColumnWidth={getColumnWidth}
+          onColumnResize={onColumnResize}
+          isColumnVisible={isColumnVisible}
+        />
+      </ModuleWorkListStateShell>
     </div>
   );
 }

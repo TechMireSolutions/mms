@@ -10,9 +10,19 @@ interface SessionMutationHandlersDeps {
   setDetailSession: (session: Session | null) => void;
   createSession: { mutateAsync: (session: Session) => Promise<{ session?: Session }> };
   updateSession: { mutateAsync: (payload: { id: string; session: Session }) => Promise<{ session?: Session }> };
-  deleteSession: { mutate: (id: string, options: { onSuccess?: () => void; onError?: (err: unknown) => void }) => void };
+  deleteSession: {
+    mutate: (
+      payload: { id: string; deletionReason?: string },
+      options: { onSuccess?: () => void; onError?: (err: unknown) => void },
+    ) => void;
+  };
   restoreSession: { mutate: (id: string, options: { onSuccess?: () => void; onError?: (err: unknown) => void }) => void };
-  bulkDeleteSessions: { mutate: (ids: string[], options: { onSuccess?: (result: { succeeded: number; failed: number }) => void; onError?: (error: unknown) => void }) => void };
+  bulkDeleteSessions: {
+    mutate: (
+      payload: { ids: string[]; deletionReason?: string },
+      options: { onSuccess?: (result: { succeeded: number; failed: number }) => void; onError?: (error: unknown) => void },
+    ) => void;
+  };
   bulkRestoreSessions: { mutate: (ids: string[], options: { onSuccess?: (result: { succeeded: number; failed: number }) => void; onError?: (error: unknown) => void }) => void };
   selectedIds: string[];
   setSelectedIds: Dispatch<SetStateAction<string[]>>;
@@ -50,8 +60,8 @@ export function createSessionUpdateHandler(deps: Pick<SessionMutationHandlersDep
 }
 
 export function createSessionDeleteHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'detailSession' | 'setDetailSession' | 'deleteSession'>) {
-  return (id: string) => {
-    deps.deleteSession.mutate(id, {
+  return (id: string, deletionReason?: string) => {
+    deps.deleteSession.mutate({ id, deletionReason }, {
       onSuccess: () => {
         notify.info(deps.t('sessions.toast.deleted'));
         if (deps.detailSession?.id === id) deps.setDetailSession(null);
@@ -75,8 +85,8 @@ export function createSessionRestoreHandler(deps: Pick<SessionMutationHandlersDe
 }
 
 export function createSessionBulkDeleteHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'bulkDeleteSessions' | 'selectedIds' | 'setSelectedIds'>) {
-  return () => {
-    deps.bulkDeleteSessions.mutate(deps.selectedIds, {
+  return (deletionReason?: string) => {
+    deps.bulkDeleteSessions.mutate({ ids: deps.selectedIds, deletionReason }, {
       onSuccess: (result) => {
         if (result.failed > 0) {
           notify.error(deps.t('sessions.toast.bulkPartial', {

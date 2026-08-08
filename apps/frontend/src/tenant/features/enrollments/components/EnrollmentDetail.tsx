@@ -11,6 +11,7 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
+import { EnrollmentArchivedBanner } from "@/tenant/features/enrollments/components/EnrollmentArchivedBanner";
 
 interface SectionProps {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
@@ -72,13 +73,15 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
 
   if (!enrollment) return null;
 
+  const isArchived = Boolean(enrollment.deletedAt);
+
   const TRANSITIONS: Record<Enrollment["status"], Enrollment["status"][]> = {
     pending:   ["confirmed", "cancelled"],
     confirmed: ["completed", "cancelled"],
     cancelled: [],
     completed: [],
   };
-  const nextStatuses = TRANSITIONS[enrollment.status] || [];
+  const nextStatuses = isArchived ? [] : (TRANSITIONS[enrollment.status] || []);
 
   return (
     <DetailDrawerShell
@@ -89,13 +92,16 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
       ariaLabel={t("enrollments.detail.ariaLabel")}
       className="max-w-2xl"
       headerExtra={
-        <div className="flex items-center gap-2 flex-wrap mt-1">
-          {student?.grNumber && (
-            <span className="bg-primary/5 text-primary text-xs px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
-              {t("enrollments.detail.grNumber")}: {student.grNumber}
-            </span>
-          )}
-          <StatusBadge status={enrollment.status} config={statusConfig} size="sm" />
+        <div className="flex flex-col gap-2 mt-1">
+          <EnrollmentArchivedBanner enrollment={enrollment} />
+          <div className="flex items-center gap-2 flex-wrap">
+            {student?.grNumber && (
+              <span className="bg-primary/5 text-primary text-xs px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
+                {t("enrollments.detail.grNumber")}: {student.grNumber}
+              </span>
+            )}
+            <StatusBadge status={enrollment.status} config={statusConfig} size="sm" />
+          </div>
         </div>
       }
     >

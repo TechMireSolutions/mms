@@ -110,10 +110,14 @@ describe("rbacService", () => {
     expect(isAllowedCollectionName("whatsappTemplates_u:other-user")).toBe(false);
     expect(isAllowedCollectionName("students")).toBe(false);
     expect(isAllowedCollectionName("contacts")).toBe(false);
+    expect(isAllowedCollectionName("teachers")).toBe(false);
+    expect(isAllowedCollectionName("teacherStatuses")).toBe(false);
+    expect(isAllowedCollectionName("teacherSpecializations")).toBe(false);
     expect(canWriteCollection(admin, "whatsappTemplates")).toBe(false);
     expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(false);
     expect(canWriteCollection(admin, "currencies")).toBe(true);
-    expect(canWriteCollection(admin, "teacherStatuses")).toBe(true);
+    expect(canWriteCollection(admin, "teachers")).toBe(true);
+    expect(canWriteCollection(admin, "teacherStatuses")).toBe(false);
     expect(canWriteCollection(admin, "sessionTypes")).toBe(true);
     expect(canWriteCollection(admin, "attendanceStatuses")).toBe(true);
   });
@@ -136,6 +140,12 @@ describe("rbacService", () => {
     expect(canDeleteContacts(accountant)).toBe(false);
     expect(canDeleteCollection(admin, "contacts")).toBe(true);
     expect(canDeleteCollection(teacher, "contacts")).toBe(false);
+  });
+
+  it("aligns teachers delete with teachers.delete permission", () => {
+    expect(canDeleteCollection(admin, "teachers")).toBe(true);
+    expect(canDeleteCollection(teacher, "teachers")).toBe(false);
+    expect(canDeleteCollection(accountant, "teachers")).toBe(false);
   });
 
   it("aligns contacts read with contacts.read permission", () => {

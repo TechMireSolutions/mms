@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Save, Calendar } from "lucide-react";
+import React, { useEffect, useMemo, useRef } from "react";
+import { Calendar } from "lucide-react";
 import {
   SESSIONS_TAB_REGISTRY,
   INITIAL_SESSIONS_FIELD_SEED,
@@ -9,13 +9,15 @@ import {
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SESSION_TYPES } from "@/lib/data/sessionsData";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
-import { Button } from "@/components/ui/button";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { notify } from "@/lib/notify";
+import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 import { SessionsSettingsPreferences } from "@/tenant/features/sessions/components/SessionsSettingsPreferences";
+import { useSessionsSetupSaveActions } from "@/tenant/features/sessions/hooks/useSessionsSetupSaveActions";
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   fields: "sessions.setup.fields",
@@ -28,12 +30,14 @@ export function SessionsSettings(): React.JSX.Element {
   const config = useSessionConfig();
   const { types } = config;
   const {
+    settings,
     settingsDraft,
     fieldsEditor,
     saved,
     setSaved,
     upd,
     saveSettingsAsync,
+    discardDrafts,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: SESSIONS_TAB_REGISTRY,
@@ -50,27 +54,57 @@ export function SessionsSettings(): React.JSX.Element {
     [t],
   );
 
-  const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key || "fields");
-  const showFields = sub === "fields";
-  const showPrefs = sub === "preferences";
+  const dirtyRef = useRef({ fields: false, prefs: false });
 
-  const handleSave = async (): Promise<void> => {
-    try {
-      await saveSettingsAsync();
-      notify.success(t("sessions.settings.saved"));
-    } catch (error) {
-      notify.error(t("settings.serverSaveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-    }
-  };
+  const subTabs = useModuleSetupSubTabs({
+    initialKey: settingsSubTabs[0]?.key || "fields",
+    isDirty: (currentKey) => {
+      if (currentKey === "fields") return dirtyRef.current.fields;
+      if (currentKey === "preferences") return dirtyRef.current.prefs;
+      return false;
+    },
+    onDiscard: () => {
+      discardDrafts();
+      dirtyRef.current = { fields: false, prefs: false };
+      setSaved(true);
+    },
+  });
+
+  const showFields = subTabs.showFields;
+  const showPrefs = subTabs.showPrefs;
+
+  const {
+    saving,
+    isDirty,
+    isFieldsDirty,
+    isPrefsDirty,
+    handleSave,
+  } = useSessionsSetupSaveActions({
+    settings,
+    settingsDraft,
+    fieldsEditor,
+    mode: showPrefs ? "preferences" : "fields",
+    setSaved,
+    saveSettingsAsync,
+  });
+
+  useEffect(() => {
+    dirtyRef.current.fields = isFieldsDirty;
+    dirtyRef.current.prefs = isPrefsDirty;
+  }, [isFieldsDirty, isPrefsDirty]);
+
+  const unsavedWarning = showFields
+    ? t("sessions.setup.unsavedFieldsWarning")
+    : showPrefs
+      ? t("sessions.setup.unsavedPreferencesWarning")
+      : undefined;
 
   return (
     <div className="space-y-4">
       <SubTabBar
         tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
-        value={sub}
-        onChange={setSub}
+        value={subTabs.sub}
+        onChange={subTabs.handleSubTabChange}
       />
 
       {!canEditSetup ? (
@@ -102,18 +136,34 @@ export function SessionsSettings(): React.JSX.Element {
             />
           )}
 
-          <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-            <Button
-              type="button"
-              onClick={() => { void handleSave(); }}
-              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>{saved ? t("settings.savedBadge") : t("common.save")}</span>
-            </Button>
-          </footer>
+          <ModuleSetupSaveFooter
+            dirty={isDirty}
+            saving={saving}
+            saved={saved}
+            unsavedWarning={unsavedWarning}
+            saveLabel={t("common.save")}
+            savedLabel={t("settings.savedBadge")}
+            onSave={handleSave}
+          />
         </section>
       )}
+
+      <ConfirmAlertDialog
+        open={subTabs.discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) subTabs.clearPendingSubTab();
+        }}
+        title={t("settings.unsavedChanges")}
+        description={
+          subTabs.discardConfirmIsFields
+            ? t("sessions.setup.discardUnsavedFieldsConfirm")
+            : t("sessions.setup.discardUnsavedPreferencesConfirm")
+        }
+        confirmLabel={t("common.yes")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={subTabs.handleConfirmDiscard}
+      />
     </div>
   );
 }

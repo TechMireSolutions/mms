@@ -10,10 +10,7 @@ import {
   User,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import {
-  DetailDrawerArchivedBanner,
-  DetailDrawerRestoreOrEditAction,
-} from "@/components/ui/DetailDrawerArchiveChrome";
+import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -30,6 +27,7 @@ import {
   type Teacher,
 } from "@mms/shared";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
+import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/TeacherArchivedBanner";
 import { TeacherDetailAttributeRow } from "@/tenant/features/teachers/components/TeacherDetailAttributeRow";
 import { TeacherDetailQuickActions } from "@/tenant/features/teachers/components/TeacherDetailQuickActions";
 
@@ -108,12 +106,7 @@ export default function TeacherDetail({
         icon={School}
         ariaLabel={t("teachers.detail.ariaLabel")}
         headerActions={headerActions}
-        headerExtra={
-          <DetailDrawerArchivedBanner
-            deletedAt={teacher.deletedAt}
-            describe={(date) => t("teachers.detail.archivedBanner", { date })}
-          />
-        }
+        headerExtra={<TeacherArchivedBanner teacher={teacher} />}
         footer={
           <div className="flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${isArchived ? "bg-warning" : "bg-success"}`} />

@@ -1,0 +1,248 @@
+import { sql } from 'drizzle-orm';
+import {
+  enrollmentsReportComparisonQueryActive,
+  type EnrollmentsReportAggregates,
+  type EnrollmentsReportBySessionItem,
+  type EnrollmentsReportComparison,
+  type EnrollmentsReportComparisonMonth,
+  type EnrollmentsReportComparisonQuery,
+  type EnrollmentsReportComparisonSession,
+  type EnrollmentsReportFees,
+  type EnrollmentsReportStatusCounts,
+} from '@mms/shared';
+import { getQueryRows } from '../documentStoreKeys.js';
+import { withTenantTransaction } from '../withTenantTransaction.js';
+
+/**
+ * SQL report aggregates for EnrollmentChart + EnrollmentReports
+ * (+ optional ComparisonMode session/date slices).
+ */
+export async function loadEnrollmentsReportAggregatesSql(
+  tenant: string,
+  comparisonQuery?: EnrollmentsReportComparisonQuery,
+): Promise<EnrollmentsReportAggregates> {
+  const subdomain = tenant.trim().toLowerCase();
+
+  return withTenantTransaction(subdomain, async (tx) => {
+    const trendsResult = await tx.execute(sql`
+      WITH months AS (
+        SELECT
+          to_char(d, 'YYYY-MM') AS "monthKey",
+          to_char(
+            (date_trunc('month', d) + interval '1 month' - interval '1 day')::date,
+            'YYYY-MM-DD'
+          ) AS month_end
+        FROM generate_series(
+          date_trunc('month', CURRENT_DATE) - interval '11 months',
+          date_trunc('month', CURRENT_DATE),
+          interval '1 month'
+        ) AS d
+      ),
+      active AS (
+        SELECT NULLIF(trim(e.custom_data->>'enrolledDate'), '') AS enrolled_date
+        FROM enrollments e
+        WHERE e.workspace_subdomain = ${subdomain}
+          AND e.deleted_at IS NULL
+          AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') IS NOT NULL
+          AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') ~ '^[0-9]{4}'
+      )
+      SELECT
+        m."monthKey",
+        (
+          SELECT count(*)::int
+          FROM active a
+          WHERE left(a.enrolled_date, 10) <= m.month_end
+        ) AS students
+      FROM months m
+      ORDER BY m."monthKey" ASC
+    `);
+
+    const cumulativeTrends = getQueryRows<Record<string, unknown>>(trendsResult)
+      .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
+      .map((row) => ({
+        monthKey: String(row.monthKey),
+        students: Number(row.students ?? 0),
+      }));
+
+    const statusResult = await tx.execute(sql`
+      SELECT
+        lower(trim(COALESCE(e.custom_data->>'status', ''))) AS status,
+        count(*)::int AS count
+      FROM enrollments e
+      WHERE e.workspace_subdomain = ${subdomain}
+        AND e.deleted_at IS NULL
+      GROUP BY 1
+    `);
+
+    const statusCounts: EnrollmentsReportStatusCounts = {
+      pending: 0,
+      confirmed: 0,
+      cancelled: 0,
+      completed: 0,
+      total: 0,
+    };
+    for (const row of getQueryRows<Record<string, unknown>>(statusResult)) {
+      const count = Number(row.count ?? 0);
+      statusCounts.total += count;
+      const status = String(row.status ?? '');
+      if (status === 'pending') statusCounts.pending += count;
+      else if (status === 'confirmed') statusCounts.confirmed += count;
+      else if (status === 'cancelled') statusCounts.cancelled += count;
+      else if (status === 'completed') statusCounts.completed += count;
+    }
+
+    const feesResult = await tx.execute(sql`
+      SELECT
+        COALESCE(
+          sum(
+            CASE
+              WHEN lower(trim(COALESCE(e.custom_data->>'status', ''))) <> 'cancelled'
+              THEN COALESCE((e.custom_data->>'finalFee')::numeric, 0)
+              ELSE 0
+            END
+          ),
+          0
+        ) AS due,
+        COALESCE(
+          sum(
+            CASE
+              WHEN lower(trim(COALESCE(e.custom_data->>'paymentStatus', ''))) = 'paid'
+              THEN COALESCE((e.custom_data->>'finalFee')::numeric, 0)
+              ELSE 0
+            END
+          ),
+          0
+        ) AS paid
+      FROM enrollments e
+      WHERE e.workspace_subdomain = ${subdomain}
+        AND e.deleted_at IS NULL
+    `);
+
+    const feeRow = getQueryRows<Record<string, unknown>>(feesResult)[0];
+    const fees: EnrollmentsReportFees = {
+      due: Number(feeRow?.due ?? 0),
+      paid: Number(feeRow?.paid ?? 0),
+    };
+
+    const sessionResult = await tx.execute(sql`
+      SELECT
+        trim(COALESCE(e.custom_data->>'sessionId', '')) AS "sessionId",
+        trim(COALESCE(e.custom_data->>'sessionName', '')) AS name,
+        count(*)::int AS count,
+        COALESCE(
+          sum(
+            CASE
+              WHEN lower(trim(COALESCE(e.custom_data->>'status', ''))) <> 'cancelled'
+              THEN COALESCE((e.custom_data->>'finalFee')::numeric, 0)
+              ELSE 0
+            END
+          ),
+          0
+        ) AS revenue
+      FROM enrollments e
+      WHERE e.workspace_subdomain = ${subdomain}
+        AND e.deleted_at IS NULL
+      GROUP BY 1, 2
+      ORDER BY count DESC, name ASC
+    `);
+
+    const bySession: EnrollmentsReportBySessionItem[] = getQueryRows<Record<string, unknown>>(
+      sessionResult,
+    ).map((row) => ({
+      sessionId: String(row.sessionId ?? ''),
+      name: String(row.name ?? ''),
+      count: Number(row.count ?? 0),
+      revenue: Number(row.revenue ?? 0),
+    }));
+
+    const aggregates: EnrollmentsReportAggregates = {
+      cumulativeTrends,
+      statusCounts,
+      fees,
+      bySession,
+    };
+
+    if (enrollmentsReportComparisonQueryActive(comparisonQuery) && comparisonQuery) {
+      const comparison: EnrollmentsReportComparison = {
+        sessions: [],
+        monthly: { a: [], b: [] },
+      };
+
+      const sessionIds = comparisonQuery.sessionIds ?? [];
+      if (sessionIds.length > 0) {
+        const compareSessionResult = await tx.execute(sql`
+          SELECT
+            trim(COALESCE(e.custom_data->>'sessionId', '')) AS "sessionId",
+            count(*)::int AS "enrollmentCount",
+            coalesce(
+              array_agg(DISTINCT NULLIF(trim(e.custom_data->>'studentId'), ''))
+                FILTER (WHERE NULLIF(trim(e.custom_data->>'studentId'), '') IS NOT NULL),
+              '{}'::text[]
+            ) AS "studentIds"
+          FROM enrollments e
+          WHERE e.workspace_subdomain = ${subdomain}
+            AND e.deleted_at IS NULL
+            AND trim(COALESCE(e.custom_data->>'sessionId', '')) IN (${sql.join(
+              sessionIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})
+            AND lower(trim(COALESCE(e.custom_data->>'status', ''))) <> 'cancelled'
+          GROUP BY 1
+        `);
+
+        comparison.sessions = getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => {
+          const rawIds = row.studentIds;
+          const studentIds = Array.isArray(rawIds)
+            ? rawIds.map(String).filter(Boolean)
+            : typeof rawIds === 'string'
+              ? rawIds.replace(/[{}]/g, '').split(',').map((id) => id.trim()).filter(Boolean)
+              : [];
+          return {
+            sessionId: String(row.sessionId ?? ''),
+            enrollmentCount: Number(row.enrollmentCount ?? 0),
+            studentIds,
+          } satisfies EnrollmentsReportComparisonSession;
+        });
+
+        for (const sessionId of sessionIds) {
+          if (!comparison.sessions.some((row) => row.sessionId === sessionId)) {
+            comparison.sessions.push({ sessionId, enrollmentCount: 0, studentIds: [] });
+          }
+        }
+      }
+
+      const loadMonthlyRange = async (
+        from: string | undefined,
+        to: string | undefined,
+      ): Promise<EnrollmentsReportComparisonMonth[]> => {
+        if (!from || !to) return [];
+        const monthResult = await tx.execute(sql`
+          SELECT
+            to_char(left(NULLIF(trim(e.custom_data->>'enrolledDate'), ''), 10)::date, 'YYYY-MM') AS "monthKey",
+            count(*)::int AS count
+          FROM enrollments e
+          WHERE e.workspace_subdomain = ${subdomain}
+            AND e.deleted_at IS NULL
+            AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') IS NOT NULL
+            AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+            AND left(NULLIF(trim(e.custom_data->>'enrolledDate'), ''), 10) >= ${from}
+            AND left(NULLIF(trim(e.custom_data->>'enrolledDate'), ''), 10) <= ${to}
+          GROUP BY 1
+          ORDER BY 1 ASC
+        `);
+        return getQueryRows<Record<string, unknown>>(monthResult)
+          .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
+          .map((row) => ({
+            monthKey: String(row.monthKey),
+            count: Number(row.count ?? 0),
+          }));
+      };
+
+      comparison.monthly.a = await loadMonthlyRange(comparisonQuery.rangeAFrom, comparisonQuery.rangeATo);
+      comparison.monthly.b = await loadMonthlyRange(comparisonQuery.rangeBFrom, comparisonQuery.rangeBTo);
+      aggregates.comparison = comparison;
+    }
+
+    return aggregates;
+  });
+}

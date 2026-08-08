@@ -4,26 +4,24 @@ import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
-import { ENROLLMENT_STATUSES, Enrollment } from '@/lib/data/enrollmentData';
+import { ENROLLMENT_STATUSES } from '@/lib/data/enrollmentData';
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { EnrollmentsReportAggregates } from "@mms/shared";
+import { EMPTY_ENROLLMENTS_REPORT_AGGREGATES } from "@mms/shared";
 
 interface EnrollmentReportsProps {
-  enrollments: Enrollment[];
-}
-
-interface SessionDataPoint {
-  name: string;
-  count: number;
-  revenue: number;
+  aggregates?: EnrollmentsReportAggregates;
 }
 
 /**
- * Aggregates and displays reports & charts representing enrollment distributions.
+ * Displays EnrollmentReports KPIs and charts from server report-aggregates.
  */
-export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): React.ReactElement {
+export function EnrollmentReports({
+  aggregates = EMPTY_ENROLLMENTS_REPORT_AGGREGATES,
+}: EnrollmentReportsProps): React.ReactElement {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();
@@ -31,14 +29,12 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
     () => [palette.primary, palette.secondary, palette.charts[0], palette.charts[3]],
     [palette],
   );
-  const total = enrollments.length;
-  const confirmed = enrollments.filter((enrollment) => enrollment.status === "confirmed").length;
-  const pending = enrollments.filter((enrollment) => enrollment.status === "pending").length;
-  const cancelled = enrollments.filter((enrollment) => enrollment.status === "cancelled").length;
-  const totalFees = enrollments.filter((enrollment) => enrollment.status !== "cancelled")
-    .reduce((totalFee, enrollment) => totalFee + (enrollment.finalFee || 0), 0);
-  const paidFees = enrollments.filter((enrollment) => enrollment.paymentStatus === "paid")
-    .reduce((paidTotal, enrollment) => paidTotal + (enrollment.finalFee || 0), 0);
+
+  const { statusCounts, fees, bySession } = aggregates;
+  const total = statusCounts.total;
+  const confirmed = statusCounts.confirmed;
+  const pending = statusCounts.pending;
+  const cancelled = statusCounts.cancelled;
 
   const statusLabels = useMemo(() => ({
     pending: t("enrollments.status.pending"),
@@ -49,22 +45,13 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
 
   const statusData = ENROLLMENT_STATUSES.map((status) => ({
     name: statusLabels[status.id as keyof typeof statusLabels] ?? status.id,
-    value: enrollments.filter((enrollment) => enrollment.status === status.id).length,
+    value:
+      status.id === "pending" ? statusCounts.pending
+        : status.id === "confirmed" ? statusCounts.confirmed
+          : status.id === "cancelled" ? statusCounts.cancelled
+            : status.id === "completed" ? statusCounts.completed
+              : 0,
   }));
-
-  const sessionData = useMemo<SessionDataPoint[]>(() => {
-    const sessionStatsById: Record<string, SessionDataPoint> = {};
-    enrollments.forEach((enrollment) => {
-      if (!sessionStatsById[enrollment.sessionId]) {
-        sessionStatsById[enrollment.sessionId] = { name: enrollment.sessionName, count: 0, revenue: 0 };
-      }
-      sessionStatsById[enrollment.sessionId].count++;
-      if (enrollment.status !== "cancelled") {
-        sessionStatsById[enrollment.sessionId].revenue += enrollment.finalFee || 0;
-      }
-    });
-    return Object.values(sessionStatsById);
-  }, [enrollments]);
 
   return (
     <section className="space-y-6" aria-label={t("enrollments.reports.aria")}>
@@ -94,8 +81,8 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
           {
             icon: DollarSign,
             label: t("enrollments.reports.revenueDue"),
-            value: formatCurrency(totalFees),
-            sub: t("enrollments.reports.paidSub", { amount: formatCurrency(paidFees) }),
+            value: formatCurrency(fees.due),
+            sub: t("enrollments.reports.paidSub", { amount: formatCurrency(fees.paid) }),
             accent: "warning",
           },
         ]}
@@ -119,12 +106,12 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
 
         <Card accentColor="info" className="p-4">
           <h3 className="text-sm font-bold text-foreground mb-3">{t("enrollments.reports.bySession")}</h3>
-          {sessionData.length === 0 ? (
+          {bySession.length === 0 ? (
             <EmptyState title={t("enrollments.reports.noData")} compact icon={null} className="h-chart-md" />
           ) : (
             <div className="h-chart-md" aria-hidden="true">
               <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
-                <BarChart data={sessionData} barSize={20}>
+                <BarChart data={bySession} barSize={20}>
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} />
                   <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                   <Tooltip formatter={(value) => [`${value}`]} />
@@ -141,11 +128,15 @@ export function EnrollmentReports({ enrollments }: EnrollmentReportsProps): Reac
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">{t("enrollments.reports.revenueBySession")}</h3>
         </div>
         <div className="divide-y divide-border/50 ps-6.5" role="list">
-          {sessionData.length === 0 ? (
+          {bySession.length === 0 ? (
             <EmptyState title={t("enrollments.reports.noData")} compact icon={null} />
           ) : (
-            sessionData.map((sessionStats) => (
-              <div key={sessionStats.name} className="flex min-w-0 items-center justify-between gap-3 px-4 py-3" role="listitem">
+            bySession.map((sessionStats) => (
+              <div
+                key={`${sessionStats.sessionId}:${sessionStats.name}`}
+                className="flex min-w-0 items-center justify-between gap-3 px-4 py-3"
+                role="listitem"
+              >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{sessionStats.name}</p>
                   <p className="text-xs text-muted-foreground">

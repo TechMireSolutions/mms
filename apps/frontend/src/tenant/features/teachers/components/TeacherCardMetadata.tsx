@@ -1,5 +1,6 @@
 import type { TeacherCustomField } from "@mms/shared";
 import { formatDate } from "@mms/shared";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -60,10 +61,5 @@ export function TeacherCardMetadata({
   }
 
   if (tiles.length === 0) return null;
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-border/40 dark:border-border/20 ms-1">
-      {tiles}
-    </div>
-  );
+  return <DirectoryCardMetaGrid>{tiles}</DirectoryCardMetaGrid>;
 }

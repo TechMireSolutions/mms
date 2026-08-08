@@ -4,8 +4,10 @@ import { createGenericRepository } from './genericRepository.js';
 
 const repo = createGenericRepository<Enrollment, typeof enrollments>(enrollments, {
   conflictTarget: [enrollments.workspaceSubdomain, enrollments.id],
+  syncDeletedAtColumn: true,
 });
 
+export const enrollmentRowToRecord = repo.rowToRecord;
 export const listEnrollmentsByWorkspace = repo.listByWorkspace;
 export const findEnrollmentById = repo.findById;
 export const findEnrollmentsByIds = repo.findByIds;

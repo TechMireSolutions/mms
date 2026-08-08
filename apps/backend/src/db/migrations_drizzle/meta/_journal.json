@@ -141,6 +141,76 @@
       "when": 1786047000000,
       "tag": "0019_students_contact_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1786048000000,
+      "tag": "0020_drop_students_gender_active_idx",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1786049000000,
+      "tag": "0021_teacher_setup_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1786050000000,
+      "tag": "0022_session_setup_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1786051000000,
+      "tag": "0023_user_setup_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786052000000,
+      "tag": "0024_teachers_contact_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786053000000,
+      "tag": "0025_teacher_lookups",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786054000000,
+      "tag": "0026_teachers_soft_delete_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1786055000000,
+      "tag": "0027_sessions_soft_delete_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1786056000000,
+      "tag": "0028_enrollments_soft_delete_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1786057000000,
+      "tag": "0029_enrollment_setup_config",
+      "breakpoints": true
     }
   ]
 }

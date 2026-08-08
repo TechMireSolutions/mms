@@ -1,3 +1,5 @@
+import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
+import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -46,9 +48,9 @@ export function TeacherCardActions({
   const hasFaceChannels = messagingEnabled && (Boolean(phone) || Boolean(email));
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/40 pt-3 dark:border-border/20">
-      {messagingEnabled ? (
-        <div className="me-auto">
+    <DirectoryCardFooter
+      leading={
+        hasFaceChannels ? (
           <EntityMessagingIconActions
             primaryPhone={phone}
             primaryEmail={email}
@@ -70,35 +72,36 @@ export function TeacherCardActions({
             onSms={onSms && phone ? () => onSms([teacher]) : undefined}
             onEmail={onEmail && email ? () => onEmail([teacher]) : undefined}
           />
-        </div>
-      ) : null}
-
-      <div className="flex shrink-0 items-center gap-1.5">
-        <DirectoryCardViewButton
-          label={t("teachers.actionViewShort")}
-          ariaLabel={`${t("teachers.list.viewDetails")} - ${displayName}`}
-          onClick={() => onView(teacher)}
-        />
-        {showActionsColumn ? (
-          <TeacherListRowActions
-            teacher={teacher}
-            teacherId={teacherId}
-            showDeleted={showDeleted}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            hideViewItem
-            hideMessagingItems={hasFaceChannels}
-            triggerClassName="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted hover:text-foreground text-muted-foreground transition-colors cursor-pointer shadow-none"
-            onEdit={onEdit}
-            onRequestDelete={onRequestDelete}
-            onView={onView}
-            onRestore={onRestore}
-            onSms={onSms}
-            onWhatsApp={onWhatsApp}
-            onEmail={onEmail}
+        ) : undefined
+      }
+      trailing={
+        <>
+          <DirectoryCardViewButton
+            label={t("teachers.actionViewShort")}
+            ariaLabel={`${t("teachers.list.viewDetails")} - ${displayName}`}
+            onClick={() => onView(teacher)}
           />
-        ) : null}
-      </div>
-    </div>
+          {showActionsColumn ? (
+            <TeacherListRowActions
+              teacher={teacher}
+              teacherId={teacherId}
+              showDeleted={showDeleted}
+              canWrite={canWrite}
+              canDelete={canDelete}
+              hideViewItem
+              hideMessagingItems={hasFaceChannels}
+              triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+              onEdit={onEdit}
+              onRequestDelete={onRequestDelete}
+              onView={onView}
+              onRestore={onRestore}
+              onSms={onSms}
+              onWhatsApp={onWhatsApp}
+              onEmail={onEmail}
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }

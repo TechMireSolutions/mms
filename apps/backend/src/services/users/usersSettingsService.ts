@@ -1,13 +1,24 @@
-import { getObject } from '../../db/database.js';
-import { DEFAULT_USERS_SETTINGS, type UsersSettings } from '@mms/shared';
+import {
+  DEFAULT_USERS_SETTINGS,
+  normalizeUserModulePreferences,
+  type UsersSettings,
+} from '@mms/shared';
+import { getRequestTenant } from '../../lib/tenantContext.js';
+import { getUserModulePreferencesByWorkspace } from '../../db/repositories/userModulePreferencesRepository.js';
 
-const USERS_SETTINGS_KEY = 'users_settings';
-
-/** Loads tenant users module settings (registration / verification policy). */
+/**
+ * Loads tenant users module settings used by auth (registration / verification policy).
+ * Reads typed `user_module_preferences` (not document-store `users_settings`).
+ */
 export async function getTenantUsersSettings(): Promise<UsersSettings> {
-  const raw = await getObject(USERS_SETTINGS_KEY);
-  if (!raw || typeof raw !== 'object') {
-    return DEFAULT_USERS_SETTINGS;
+  const tenant = getRequestTenant()?.trim().toLowerCase();
+  if (!tenant) {
+    return { ...DEFAULT_USERS_SETTINGS };
   }
-  return { ...DEFAULT_USERS_SETTINGS, ...(raw as UsersSettings) };
+  const raw = await getUserModulePreferencesByWorkspace(tenant);
+  const prefs = normalizeUserModulePreferences(raw);
+  return {
+    ...DEFAULT_USERS_SETTINGS,
+    ...prefs,
+  };
 }
