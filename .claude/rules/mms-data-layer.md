@@ -141,8 +141,8 @@ Align with `queryClient.ts`: `staleTime` 30s, `gcTime` 5m, `refetchOnWindowFocus
 - **Errors / loading**: `notify.error()`; expose `isPending` / `isFetching`.
 - Hook recipes (controllers, facades) → **`mms-hooks.md`**.
 
-### Live push (`/api/ws`) — subscribe contract (when FE ships)
-BE already broadcasts via `/api/ws` + `broadcastTenantUpdate`. Until FE subscribes → open gap `mms-migration-status.md`. When shipping the subscriber:
+### Live push (`/api/ws`) — subscribe contract
+BE broadcasts via `/api/ws` + `broadcastTenantUpdate`; the FE subscribes (TenantLivePushSubscriber → `useTenantDatabaseUpdates` → `connectTenantDatabaseSocket`) and invalidates Query tuple keys. Closed for Contacts / Students / Teachers / Sessions / Enrollments — see `mms-migration-status.md`. Norms:
 - Cookie session auth on the existing tenant WS channel only — **ban** parallel/ad-hoc WS protocols.
 - Reconnect with backoff; honor heartbeat/ping.
 - On events: **invalidate** the relevant Query tuple keys only — do not invent a second cache or full-collection dump.

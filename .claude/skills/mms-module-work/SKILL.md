@@ -20,12 +20,12 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 1. Read/update `{module}ModuleManifest.ts` before wiring UI constants.
 2. `PageHeader` stays visible — metrics, add, export, integrity tools live there.
 3. Work = directory/CRUD/drawer/filters/bulk only — no charts.
-4. **Filters SSOT**: one Filters menu owns presets/dimensions; no always-visible chip bar that repeats the same options. Preset ids + `labelKey`s live in `@mms/shared` next to the list-query schema (Contacts: `CONTACTS_QUICK_FILTER_OPTIONS`). Active state = badge + Clear; `FilterChips` only for removable active multi-selects.
+4. **Filters SSOT**: one Filters menu owns presets/dimensions; no always-visible chip bar that repeats the same options. Build the filter menu with the shared `ModuleFilterDropdown` + `ModuleFilterCheckboxGroup` / `ModuleFilterRadioGroup` (`ModuleFiltersMenuButton`) — do not inline raw `DropdownMenu` filter chrome in Work toolbars. Preset ids + `labelKey`s live in `@mms/shared` next to the list-query schema (Contacts: `CONTACTS_QUICK_FILTER_OPTIONS`). Active state = badge + Clear; `FilterChips` only for removable active multi-selects.
 5. **View mode**: person-directory Work → `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes (finance/attendance/…). Resolve one `viewMode`; defaults/cards paging — rule §3.
 6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET. Prefer **keyset/cursor** for hot/large directories when touching list APIs — `mms-data-layer.md`.
 7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
-8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** `WarningCallout` archive chrome + Restore; hide Call/WA/SMS/Email when `deletedAt`.
-9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `EmptyState` (`compact` when dense); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
+8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** `WarningCallout` archive chrome + Restore + `DrawerSyncStatusFooter` (shared synced/archived footer); hide Call/WA/SMS/Email when `deletedAt`.
+9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `ModuleWorkDirectoryEmpty` (`title` via `t()`; `compact` when dense; Clear Filters / Show Active CTAs — Teachers uses `teachers.noTeachersMatchFilters` / `teachers.noDeletedTeachers` / `teachers.tryAdjustingFilters` / `teachers.clickAddTeacher` / `teachers.emptyDirectoryReadOnly` / `teachers.clearFilters`); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate). Pass `isColumnVisible` through content — ban `visibleColumns` boolean object fans.
 11. Dense Work tables: prefer `@tanstack/react-virtual` (or named shared wrapper) — ban one-off virtualization libs — `mms-ui-ux-design.md`.
 12. Command/report KPI **StatCard strips** → `ModuleCommandMetricsGrid` when adding metrics — `mms-ui-ux-design.md`.
@@ -42,7 +42,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] Person-directory: `directoryViews: ['table','cards']`; cards + table same page API
 - [ ] Soft-delete trash + restore (+ drawer `WarningCallout` archive chrome) or documented variant
 - [ ] Bulk selection bar uses shared `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging) on list/parent (no forked floating/inline chrome; no toolbar-inline trash)
-- [ ] Directory empties use `EmptyState` (`title` required; dashed when bordered; `compact` when dense)
+- [ ] Directory empties use `ModuleWorkDirectoryEmpty` / `EmptyState` (`title` required; dashed when bordered; `compact` when dense)
 - [ ] Column gates via `isColumnVisible` into leaves (no `visibleColumns`/`show*` boolean fans)
 - [ ] ErrorState + retry + hint on list isError (not empty success)
 - [ ] New KPI StatCard strips use `ModuleCommandMetricsGrid`

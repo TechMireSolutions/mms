@@ -26,7 +26,7 @@ Contacts (and other typed person entities): **Query + REST only** — never `sav
 
 1. Read the rule row for the surface (table below).
 2. Large shells: hard ~300 / soft ~220 splits behind stable barrels — do not break public import paths.
-3. Work chrome: prefer shared `EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` + `BulkSelectionActions` (incl. `BulkSelectionDeleteAction`) / `QuickActionButton` / `ModuleCommandMetricsGrid` (KPI strips) / `formStyles` tokens (`WORK_SURFACE`, `FORM_CARD`, `FORM_INPUT_BUILDER`, `FORM_ERROR`, …) / `@theme` layout sizes (`h-chart-*`, `z-modal*`, `max-w-toast`) — `mms-ui-ux-design.md` · `mms-dry.md`. Column gates: `isColumnVisible` into leaves (no `show*` fans).
+3. Work chrome: prefer shared `EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` + `BulkSelectionActions` (incl. `BulkSelectionDeleteAction`) / `QuickActionButton` / `ModuleCommandMetricsGrid` (KPI strips) / person-module chrome (`LeadingIconInput` leading-icon inputs, `DetailSectionTitle` detail headings, `FormFooterChip` form footers, `ModuleFilterDropdown` filter menus, `DrawerSyncStatusFooter` drawer synced/archived footer) / `formStyles` tokens (`WORK_SURFACE`, `FORM_CARD`, `FORM_INPUT_BUILDER`, `FORM_ERROR`, …) / `@theme` layout sizes (`h-chart-*`, `z-modal*`, `max-w-toast`) — `mms-ui-ux-design.md` · `mms-dry.md`. Column gates: `isColumnVisible` into leaves (no `show*` fans).
 4. Quality gate: `cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test` · E2E: `pnpm exec playwright test`
 
 ## API calls
@@ -48,7 +48,7 @@ Always `apiJson` / `apiFetch` from `@/lib/apiClient` — cookie session (`creden
 - [ ] §7 gold-standard — mms-module-page
 ```
 
-Full module pattern → skill **`mms-module-page`**. When shipping FE `/api/ws` subscribe: cookie auth, reconnect/backoff, invalidate tuple keys only — `mms-data-layer.md` (gap until then → `mms-migration-status.md`).
+Full module pattern → skill **`mms-module-page`**. FE `/api/ws` subscribe is shipped (`TenantLivePushSubscriber` → `useTenantDatabaseUpdates` → `connectTenantDatabaseSocket`): cookie auth, reconnect/backoff, invalidate tuple keys only — `mms-data-layer.md`.
 
 ## Host / provider (do not break)
 

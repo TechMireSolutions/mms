@@ -73,8 +73,8 @@ export function TeacherList({
     isColumnVisible,
   });
 
-  const showSelectColumn = canWrite || canDelete;
-  const showActionsColumn = canWrite || canDelete || !showDeleted;
+  const showSelectColumn = true;
+  const showActionsColumn = true;
   const resolveColumnVisible = columnVisible;
 
   const showBulkExport =

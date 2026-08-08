@@ -52,8 +52,8 @@ Prefer the existing tenant WS channel when wiring live push (`mms-migration-stat
 
 | Phase | Pattern | Owner |
 |-------|---------|--------|
-| **Current** | Per-entity REST + TanStack Query; report widgets/visualizer Query-first; BE broadcasts on `/api/ws` (FE not yet subscribed) | `mms-data-layer.md`, `mms-reports.md` |
-| **Target** | localStorage as offline cache only; FE WS → Query invalidation; remaining niche chart/statement panels on server aggregates | `mms-data-layer.md`, `mms-reports.md` (gap register → `mms-migration-status.md`) |
+| **Current** | Per-entity REST + TanStack Query; report widgets/visualizer Query-first; BE broadcasts on `/api/ws` and FE subscribes → Query invalidation | `mms-data-layer.md`, `mms-reports.md` |
+| **Target** | localStorage as offline cache only; FE WS → Query invalidation (shipped); remaining niche chart/statement panels on server aggregates | `mms-data-layer.md`, `mms-reports.md` (gap register → `mms-migration-status.md`) |
 
 ## Tenant write invariant
 

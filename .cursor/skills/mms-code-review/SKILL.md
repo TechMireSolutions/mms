@@ -107,7 +107,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Setup gated by `canEditSetup`; Work shows `ErrorState` on list failure **with hint** (`loadFailedHint` — tenant and platform apex)
 - [ ] Directory empties use `EmptyState` (`title` required; `compact` when dense); column gates use `isColumnVisible` (not `show*` fans)
 - [ ] Cmd/Ctrl+N create when `canWrite` and not in trash
-- [ ] Prefer shared Work chrome (`EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` / `WORK_SURFACE` / `FORM_CARD` / `ModuleCommandMetricsGrid` for KPI strips; `h-chart-*` / `z-modal*` / `max-w-toast` over ad-hoc sizes) — `mms-ui-ux-design.mdc`
+- [ ] Prefer shared Work chrome (`EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` / `WORK_SURFACE` / `FORM_CARD` / `ModuleCommandMetricsGrid` for KPI strips; person-module chrome: `LeadingIconInput`, `DetailSectionTitle`, `FormFooterChip`, `ModuleFilterDropdown`, `DrawerSyncStatusFooter`; `h-chart-*` / `z-modal*` / `max-w-toast` over ad-hoc sizes) — `mms-ui-ux-design.mdc`
 
 ### Messaging (when touched)
 - [ ] Composer uses `MessagingRecipient` — not contacts schemas

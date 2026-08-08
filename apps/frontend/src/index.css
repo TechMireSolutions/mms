@@ -70,6 +70,9 @@
   --height-chart-sm: 11.25rem;
   --height-chart-md: 12.5rem;
   --height-chart-lg: 15rem;
+  --min-height-chart-sm: 11.25rem;
+  --min-height-chart-md: 12.5rem;
+  --min-height-chart-lg: 15rem;
   --max-width-toast: 26.25rem;
   --max-width-filter-sm: 9.375rem;
   --z-index-modal: 50;

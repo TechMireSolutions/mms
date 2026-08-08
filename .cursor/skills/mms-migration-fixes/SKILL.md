@@ -112,7 +112,7 @@ Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) 
 
 ### P6 — FE live push (residual modules)
 
-**Problem:** Contacts: BE `broadcastCollection('contacts')` + FE `/api/ws` → Query invalidate is closed. Other modules may still lack emit and/or FE subscribe.
+**Problem:** Contacts / Students / Teachers / Sessions / Enrollments: BE `broadcastCollection` + FE `/api/ws` → Query invalidate is closed. Residual: other modules may still lack emit and/or FE subscribe.
 
 **Fix:** Extend the same channel per `mms-data-layer.mdc` (cookie auth, reconnect/backoff, invalidate tuple keys only) — ban new polling loops / parallel WS (`mms-core.mdc`).
 

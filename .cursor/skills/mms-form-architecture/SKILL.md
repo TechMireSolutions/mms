@@ -12,7 +12,7 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 ## Workflow
 
 1. `FormModal` for create/edit/builders; raw `Modal` for confirm/preview only.
-2. Primitives + `formStyles` (`FORM_INPUT`, `FORM_ERROR`, `FORM_CARD`, `FORM_INPUT_BUILDER`); inline errors via `FieldErrorMessage`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred).
+2. Primitives + `formStyles` (`FORM_INPUT`, `FORM_ERROR`, `FORM_CARD`, `FORM_INPUT_BUILDER`); inline errors via `FieldErrorMessage`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred). Form inputs/footers: `LeadingIconInput` for leading-icon inputs and `FormFooterChip` (`FormFooterEntityChip` / `FormFooterBadge` / `FormFooterErrorChip`) for form-footer badges — do not hand-roll in features.
 3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164. **Ban** Server Actions / `useActionState` / form `action=` for tenant writes.
 4. Collection tabs: `cleanContactDraft` / `mergeContactEditSavePayload` — empty arrays clear scalars (rule §3).
 5. Persist with `mutateAsync`; soft-delete only via DELETE/restore routes.
