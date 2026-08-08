@@ -1,4 +1,5 @@
 import type { Teacher } from '@mms/shared';
+import { DEFAULT_TEACHER_STATUS } from '@mms/shared';
 
 /** Resolves a teacher display name from the faculty registry. */
 export function teacherNameById(teachers: Teacher[], id: string): string {
@@ -13,7 +14,7 @@ export function assignClassTeacher(teacherId: string): { teacherId: string } {
 
 /** Active faculty eligible for new class assignments. */
 export function activeTeachersForAssignment(teachers: Teacher[]): Teacher[] {
-  return teachers.filter((teacher) => teacher.status === 'active');
+  return teachers.filter((teacher) => teacher.status === DEFAULT_TEACHER_STATUS);
 }
 
 /** Options for class teacher select — active teachers plus the current assignee if inactive. */

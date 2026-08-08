@@ -177,6 +177,10 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
   await expect(johnTeacherOption).toBeVisible({ timeout: 15_000 });
   await johnTeacherOption.click();
 
+  const employmentTab = teacherDialog.getByRole('tab', { name: /Employment/i });
+  await expect(employmentTab).toBeVisible({ timeout: 15_000 });
+  await employmentTab.click();
+
   await expect(teacherDialog.getByLabel('Employee ID')).not.toHaveValue('', { timeout: 15_000 });
 
   const teacherCreate = page.waitForResponse(

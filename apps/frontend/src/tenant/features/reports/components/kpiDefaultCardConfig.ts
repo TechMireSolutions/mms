@@ -86,6 +86,7 @@ export function getDefaultKPICollection(category: string): CustomCard['collectio
   if (category === 'financial' || category === 'accounting') return 'finance_invoices';
   if (category === 'hasanat') return 'hasanat_distributions';
   if (category === 'sessions') return 'sessions';
+  if (category === 'enrollments') return 'enrollments';
   if (category === 'questionBank') return 'questions';
   if (category === 'teachers' || category === 'faculty') return 'teachers';
   return 'students';

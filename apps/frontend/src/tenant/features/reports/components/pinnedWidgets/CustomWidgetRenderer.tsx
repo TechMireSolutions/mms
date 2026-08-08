@@ -22,6 +22,7 @@ import {
   computeStudentsCustomCardValue,
   computeTeachersCustomCardValue,
   computeSessionsCustomCardValue,
+  computeEnrollmentsCustomCardValue,
 } from "@/tenant/features/reports/components/pinnedWidgets/widgetDataUtils";
 import { CustomWidgetCompactLayout } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetCompactLayout";
 import { CustomWidgetComfortableLayout } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetComfortableLayout";
@@ -192,6 +193,7 @@ function getServerCardAggregate(card: CustomCard): ServerCardAggregate {
   if (card.collection === "students") return computeStudentsCustomCardValue(aggregateInput);
   if (card.collection === "teachers") return computeTeachersCustomCardValue(aggregateInput);
   if (card.collection === "sessions") return computeSessionsCustomCardValue(aggregateInput);
+  if (card.collection === "enrollments") return computeEnrollmentsCustomCardValue(aggregateInput);
   return null;
 }
 

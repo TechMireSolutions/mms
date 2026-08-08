@@ -1,7 +1,9 @@
 import {
   paginateFinanceInvoices,
   paginateFinancePayments,
+  normalizeFinanceReportComparisonQuery,
   type FinanceListQuery,
+  type FinanceReportComparisonQuery,
   type Invoice,
   type InvoiceCreateInput,
   type Payment,
@@ -17,6 +19,7 @@ import {
   findPaymentById,
   savePayment,
 } from '../db/repositories/financeRepository.js';
+import { loadFinanceReportAggregatesSql } from '../db/repositories/financeRepositoryReport.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
 import { runInTransaction } from '../db/database.js';
 
@@ -111,4 +114,16 @@ export async function createPayment(record: PaymentCreateInput): Promise<Payment
   broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
   broadcastTenantUpdate(tenant, 'collection', 'finance_payments');
   return savedPayment;
+}
+
+/** ComparisonMode finance SQL aggregates (session feeCollected + dual monthly ranges). */
+export async function loadFinanceReportAggregates(
+  comparisonQuery?: FinanceReportComparisonQuery,
+) {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { comparison: { sessions: [], monthly: { a: [], b: [] } } };
+  }
+  const normalized = normalizeFinanceReportComparisonQuery(comparisonQuery);
+  return loadFinanceReportAggregatesSql(tenant, normalized);
 }

@@ -1,31 +1,56 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
-import { normalizeStoredTeacher, stripTeacherClientSoftDeleteFields } from './teacherUtils.js';
+import { normalizeStoredTeacher, stripTeacherWriteNoise } from './teacherUtils.js';
 
+/** Teacher status write bound — matches lookup item max length. */
+export const TEACHER_STATUS_WRITE_MAX = 200;
+
+/**
+ * Wire core keys aligned with {@link TEACHER_WRITE_SYSTEM_KEYS} seed + audit surface.
+ * Customs pass via `.catchall`; dynamic {@link buildDynamicTeacherSchema} is `.strict()`.
+ */
 export const teacherCoreSchema = z.object({
   /** Optional on create — server assigns `{idPrefix}-{timestamp}` when omitted. */
   id: z.union([z.string(), z.number()]).optional(),
-  contactId: z.union([z.string(), z.number()]),
+  /**
+   * Nullish on the wire so `requireContactLink: false` can omit a link.
+   * Empty strings are rejected; dynamic {@link buildDynamicTeacherSchema} enforces required when prefs demand it.
+   */
+  contactId: z.union([z.string().min(1), z.number()]).nullish().transform((value) =>
+    value === null ? undefined : value,
+  ),
   employeeId: z.string().optional(),
   specialization: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'on_leave']).optional(),
+  status: z.string().min(1).max(TEACHER_STATUS_WRITE_MAX).optional(),
   joinDate: z.string().optional(),
   qualification: z.string().optional(),
   notes: z.string().optional(),
   userId: z.string().nullable().optional(),
-  name: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
-  gender: z.enum(['male', 'female']).optional(),
-}).passthrough();
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  createdBy: z.string().optional(),
+  updatedBy: z.string().optional(),
+}).catchall(z.unknown());
 
+/** Wire create/update parse — shared write-noise strip + normalize (Contacts SSOT). */
 export const teacherRecordSchema = z.preprocess(
   (raw) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-    return stripTeacherClientSoftDeleteFields({ ...(raw as Record<string, unknown>) });
+    return stripTeacherWriteNoise({ ...(raw as Record<string, unknown>) });
   },
   teacherCoreSchema.transform((record) => normalizeStoredTeacher(record)),
 );
+
+/** POST /api/teachers/bulk-status body. */
+export const teachersBulkStatusSchema = z.object({
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+  status: z.string().min(1).max(TEACHER_STATUS_WRITE_MAX),
+});
+
+/** GET /api/teachers/next-employee-id query. */
+export const teachersNextEmployeeIdQuerySchema = z.object({
+  prefix: z.string().max(16).optional(),
+});
 
 export const teacherListSchema = z.array(teacherCoreSchema).transform((list) =>
   list.map((record) => normalizeStoredTeacher(record)),

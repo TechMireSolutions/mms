@@ -3,7 +3,11 @@ import {
   type TeachersSettings,
   type ColumnRegistryEntry,
   TEACHERS_MODULE_MANIFEST,
+  buildTeacherWorkColumnRegistry,
   getTeacherFieldRemovalIssues,
+  syncTeacherColumnRegistryWithFields,
+  defaultTeacherWorkColumnRegistry,
+  TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS,
 } from "@mms/shared";
 import {
   createModuleFieldDeletePreflight,
@@ -21,8 +25,6 @@ type TeacherPreflightContext = {
   onBlocked: TeachersSetupDeleteNotify;
 };
 
-const EMPTY_COLUMN_REGISTRY: ColumnRegistryEntry[] = [];
-
 const { preflightFieldDelete, preflightFieldsDelete } =
   createModuleFieldDeletePreflight<
     FieldDefinition,
@@ -32,9 +34,10 @@ const { preflightFieldDelete, preflightFieldsDelete } =
     restBasePath: TEACHERS_MODULE_MANIFEST.restBasePath,
     usageMessageKey: "teachers.setup.fieldHasTeacherData",
     saveFailedKey: "teachers.setup.saveFailed",
-    defaultColumnRegistry: EMPTY_COLUMN_REGISTRY,
-    syncColumnRegistryWithFields: (registry) => registry,
-    getColumnRegistry: (context) => context.settings.columnRegistry,
+    defaultColumnRegistry: defaultTeacherWorkColumnRegistry(),
+    syncColumnRegistryWithFields: syncTeacherColumnRegistryWithFields,
+    getColumnRegistry: (context) =>
+      buildTeacherWorkColumnRegistry(context.settings, TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS),
     getRemovalIssues: (fieldKey, columnRegistry) =>
       getTeacherFieldRemovalIssues({
         fieldKey,

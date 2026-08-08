@@ -1,16 +1,16 @@
-import type { TeacherCustomField } from "@mms/shared";
-import { formatDate } from "@mms/shared";
+import type { ModuleColumnRegistryEntry, Teacher, TeacherCustomField } from "@mms/shared";
 import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Teacher } from "@/lib/data/teachersData";
-import { getTeacherCustomFieldValue } from "@/tenant/features/teachers/components/teacherListContentShared";
+import { getTeacherVisibleWorkColumns } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
+import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
 
 export interface TeacherCardMetadataProps {
   teacher: Teacher;
   isColumnVisible: (key: string) => boolean;
-  visibleCustomFields: TeacherCustomField[];
+  columnRegistry: ModuleColumnRegistryEntry[];
+  customFieldsById: Map<string, TeacherCustomField>;
   statusConfig: Record<string, StatusBadgeConfigItem>;
 }
 
@@ -18,48 +18,29 @@ export interface TeacherCardMetadataProps {
 export function TeacherCardMetadata({
   teacher,
   isColumnVisible,
-  visibleCustomFields,
+  columnRegistry,
+  customFieldsById,
   statusConfig,
 }: TeacherCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const tiles: React.ReactNode[] = [];
+  const metaColumns = getTeacherVisibleWorkColumns(columnRegistry, isColumnVisible, {
+    excludeFace: true,
+  });
 
-  if (isColumnVisible("specialization")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="specialization" label={t("teachers.field.specialization")}>
-        {teacher.specialization ?? t("common.notSpecified")}
-      </DirectoryCardMetaTile>,
-    );
-  }
-  if (isColumnVisible("qualification")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="qualification" label={t("teachers.field.qualification")}>
-        {teacher.qualification ?? t("common.notSpecified")}
-      </DirectoryCardMetaTile>,
-    );
-  }
-  if (isColumnVisible("joinDate")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="joinDate" label={t("teachers.field.joinDate")}>
-        {teacher.joinDate ? formatDate(teacher.joinDate) : t("common.notSpecified")}
-      </DirectoryCardMetaTile>,
-    );
-  }
-  if (isColumnVisible("status")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="status" label={t("teachers.field.status")}>
-        <StatusBadge status={teacher.status} config={statusConfig} size="sm" />
-      </DirectoryCardMetaTile>,
-    );
-  }
-  for (const field of visibleCustomFields) {
-    tiles.push(
-      <DirectoryCardMetaTile key={field.id} label={field.label ?? field.id}>
-        {getTeacherCustomFieldValue(teacher, field, t)}
-      </DirectoryCardMetaTile>,
-    );
-  }
+  if (metaColumns.length === 0) return null;
 
-  if (tiles.length === 0) return null;
-  return <DirectoryCardMetaGrid>{tiles}</DirectoryCardMetaGrid>;
+  return (
+    <DirectoryCardMetaGrid>
+      {metaColumns.map((col) => (
+        <DirectoryCardMetaTile key={col.key} label={col.label}>
+          {renderTeacherWorkColumnValue(teacher, col.key, {
+            t,
+            statusConfig,
+            customFieldsById,
+            statusBadgeSize: "sm",
+          })}
+        </DirectoryCardMetaTile>
+      ))}
+    </DirectoryCardMetaGrid>
+  );
 }

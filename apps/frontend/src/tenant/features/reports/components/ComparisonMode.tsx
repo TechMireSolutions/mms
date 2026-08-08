@@ -7,9 +7,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
 import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
-import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
-import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
-import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
+import { useAttendanceReportAggregates } from "@/tenant/hooks/collections/attendance";
+import { useFinanceReportAggregates } from "@/tenant/hooks/collections/finance";
+import { useHasanatReportAggregates } from "@/tenant/hooks/collections/hasanat";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
 import { formatDate } from "@mms/shared";
 import { ComparisonModeCharts } from "./ComparisonModeCharts";
@@ -64,6 +64,15 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const needsEnrollmentDateRange =
     nonContactsEnabled && mode === "daterange" && (categoryKey === "students" || categoryKey === "enrollments");
   const needsEnrollmentSessionCompare = nonContactsEnabled && mode === "sessions";
+  const needsFinanceSessionCompare = nonContactsEnabled && mode === "sessions";
+  const needsFinanceDateRange =
+    nonContactsEnabled && mode === "daterange" && categoryKey === "financial";
+  const needsAttendanceSessionCompare = nonContactsEnabled && mode === "sessions";
+  const needsAttendanceDateRange =
+    nonContactsEnabled && mode === "daterange" && categoryKey === "attendance";
+  const needsHasanatSessionCompare = nonContactsEnabled && mode === "sessions";
+  const needsHasanatDateRange =
+    nonContactsEnabled && mode === "daterange" && categoryKey === "hasanat";
 
   const enrollmentComparison = useMemo(() => {
     if (needsEnrollmentSessionCompare) {
@@ -89,9 +98,96 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     rangeB.to,
   ]);
 
+  const financeComparison = useMemo(() => {
+    if (needsFinanceSessionCompare) {
+      return { sessionIds: [valA, valB].filter(Boolean) };
+    }
+    if (needsFinanceDateRange) {
+      return {
+        rangeAFrom: rangeA.from,
+        rangeATo: rangeA.to,
+        rangeBFrom: rangeB.from,
+        rangeBTo: rangeB.to,
+      };
+    }
+    return undefined;
+  }, [
+    needsFinanceSessionCompare,
+    needsFinanceDateRange,
+    valA,
+    valB,
+    rangeA.from,
+    rangeA.to,
+    rangeB.from,
+    rangeB.to,
+  ]);
+
+  const attendanceComparison = useMemo(() => {
+    if (needsAttendanceSessionCompare) {
+      return { sessionIds: [valA, valB].filter(Boolean) };
+    }
+    if (needsAttendanceDateRange) {
+      return {
+        rangeAFrom: rangeA.from,
+        rangeATo: rangeA.to,
+        rangeBFrom: rangeB.from,
+        rangeBTo: rangeB.to,
+      };
+    }
+    return undefined;
+  }, [
+    needsAttendanceSessionCompare,
+    needsAttendanceDateRange,
+    valA,
+    valB,
+    rangeA.from,
+    rangeA.to,
+    rangeB.from,
+    rangeB.to,
+  ]);
+
+  const hasanatComparison = useMemo(() => {
+    if (needsHasanatSessionCompare) {
+      return { sessionIds: [valA, valB].filter(Boolean) };
+    }
+    if (needsHasanatDateRange) {
+      return {
+        rangeAFrom: rangeA.from,
+        rangeATo: rangeA.to,
+        rangeBFrom: rangeB.from,
+        rangeBTo: rangeB.to,
+      };
+    }
+    return undefined;
+  }, [
+    needsHasanatSessionCompare,
+    needsHasanatDateRange,
+    valA,
+    valB,
+    rangeA.from,
+    rangeA.to,
+    rangeB.from,
+    rangeB.to,
+  ]);
+
   const { data: enrollmentsReport } = useEnrollmentsReportAggregates({
     enabled: Boolean(enrollmentComparison),
     comparison: enrollmentComparison,
+  });
+
+  const { data: financeReport } = useFinanceReportAggregates({
+    enabled: Boolean(financeComparison),
+    comparison: financeComparison,
+  });
+
+  const { data: attendanceReport } = useAttendanceReportAggregates({
+    enabled: Boolean(attendanceComparison),
+    comparison: attendanceComparison,
+  });
+
+  const { data: hasanatReport } = useHasanatReportAggregates({
+    enabled: Boolean(hasanatComparison),
+    comparison: hasanatComparison,
   });
 
   const sessions = useSessionsCollection({ enabled: nonContactsEnabled });
@@ -100,12 +196,8 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     [sessions],
   );
 
-  const attendanceRecords = useAttendanceRecordsCollection({ enabled: nonContactsEnabled });
-  const financeInvoices = useFinanceInvoicesCollection({ enabled: nonContactsEnabled });
-  const hasanatDistributions = useHasanatDistributionsCollection({ enabled: nonContactsEnabled });
   const examResults = useExaminationsResultsCollection({ enabled: nonContactsEnabled });
   const exams = useExaminationsExamsCollection({ enabled: nonContactsEnabled });
-  const denoms = useHasanatDenomsCollection({ enabled: nonContactsEnabled });
 
   useEffect(() => {
     if (isContacts) {
@@ -129,12 +221,11 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       return computeDynamicSessionComparison(
         sessions,
         enrollmentsReport?.comparison?.sessions ?? [],
-        attendanceRecords,
-        financeInvoices,
-        hasanatDistributions,
+        attendanceReport?.comparison?.sessions ?? [],
+        financeReport?.comparison?.sessions ?? [],
+        hasanatReport?.comparison?.sessions ?? [],
         examResults,
         exams,
-        denoms,
         valA,
         valB,
         t,
@@ -146,12 +237,11 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     return computeDynamicDateRangeComparison(
       category,
       enrollmentsReport?.comparison?.monthly,
-      attendanceRecords,
-      financeInvoices,
-      hasanatDistributions,
+      attendanceReport?.comparison?.monthly,
+      financeReport?.comparison?.monthly,
+      hasanatReport?.comparison?.monthly,
       examResults,
       exams,
-      denoms,
       rangeA,
       rangeB,
     );
@@ -165,12 +255,11 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     rangeB,
     sessions,
     enrollmentsReport,
-    attendanceRecords,
-    financeInvoices,
-    hasanatDistributions,
+    attendanceReport,
+    financeReport,
+    hasanatReport,
     examResults,
     exams,
-    denoms,
     category,
     t,
   ]);

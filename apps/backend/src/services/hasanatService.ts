@@ -3,11 +3,13 @@ import {
   type StockBatch,
   type Distribution,
   type Redemption,
+  type HasanatReportComparisonQuery,
   denomListSchema,
   batchListSchema,
   distributionListSchema,
   redemptionListSchema,
   distributionRecordSchema,
+  normalizeHasanatReportComparisonQuery,
 } from '@mms/shared';
 import {
   listDenomsByWorkspace,
@@ -25,12 +27,14 @@ import {
   bulkSaveRedemptions,
   replaceRedemptionsForWorkspace,
 } from '../db/repositories/hasanatRepository.js';
+import { loadHasanatReportAggregatesSql } from '../db/repositories/hasanatRepositoryReport.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
   upsertWithBroadcast,
 } from './tenantBulkService.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 const denomService = defineTenantBulkCollectionService<Denomination>(
   { listByWorkspace: listDenomsByWorkspace, replaceForWorkspace: replaceDenomsForWorkspace },
@@ -102,3 +106,15 @@ export const deleteDistributionById = distributionCrud.deleteById;
 export const restoreDistributionById = distributionCrud.restoreById;
 export const bulkSoftDeleteDistributions = distributionCrud.bulkDeleteByIds;
 export const bulkRestoreDistributions = distributionCrud.bulkRestoreByIds;
+
+/** ComparisonMode hasanat SQL aggregates (session points + dual monthly ranges). */
+export async function loadHasanatReportAggregates(
+  comparisonQuery?: HasanatReportComparisonQuery,
+) {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { comparison: { sessions: [], monthly: { a: [], b: [] } } };
+  }
+  const normalized = normalizeHasanatReportComparisonQuery(comparisonQuery);
+  return loadHasanatReportAggregatesSql(tenant, normalized);
+}

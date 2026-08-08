@@ -4,7 +4,13 @@ import type { Session } from "@/lib/data/sessionsData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { Distribution } from "@/lib/data/hasanatData";
-import type { Contact, QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from "@mms/shared";
+import type {
+  Contact,
+  Enrollment,
+  QuestionBankQuestion,
+  QuestionBankTest,
+  QuestionBankResult,
+} from "@mms/shared";
 
 export const METADATA_FIELDS = {
   students: {
@@ -59,6 +65,29 @@ export const METADATA_FIELDS = {
       { value: "enrolled", label: "Enrolled Count" },
       { value: "capacity", label: "Capacity Limit" }
     ]
+  },
+  enrollments: {
+    name: "Enrollments",
+    dbKey: "enrollments",
+    defaultData: [] as Enrollment[],
+    fields: [
+      { value: "status", label: "Status (pending/confirmed/cancelled/completed)" },
+      { value: "paymentStatus", label: "Payment Status (paid/pending/none)" },
+      { value: "sessionName", label: "Session Title" },
+      { value: "className", label: "Class Name" },
+      { value: "discountType", label: "Discount Type" },
+      { value: "enrolledDate", label: "Enrolled Date" },
+      { value: "finalFee", label: "Final Fee", isNumeric: true },
+      { value: "baseFee", label: "Base Fee", isNumeric: true },
+      { value: "discountPct", label: "Discount Percentage", isNumeric: true },
+      { value: "discountAmt", label: "Discount Amount", isNumeric: true },
+    ],
+    numericFields: [
+      { value: "finalFee", label: "Final Fee" },
+      { value: "baseFee", label: "Base Fee" },
+      { value: "discountPct", label: "Discount Percentage" },
+      { value: "discountAmt", label: "Discount Amount" },
+    ],
   },
   finance_invoices: {
     name: "Financial Invoices",

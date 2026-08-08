@@ -8,27 +8,32 @@ import {
   Phone,
   School,
   User,
+  type LucideIcon,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import { teacherStatusBadgeConfig } from "@/lib/teachers/teacherStatusUi";
 import {
-  formatDate,
-  getPrimaryEmail,
-  getPrimaryPhone,
-  toTitleCase,
-  type AppTranslationKey,
+  DEFAULT_TEACHER_STATUS,
   type Teacher,
 } from "@mms/shared";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
+import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/TeacherArchivedBanner";
 import { TeacherDetailAttributeRow } from "@/tenant/features/teachers/components/TeacherDetailAttributeRow";
+import {
+  resolveTeacherDisplayName,
+  resolveTeacherFieldDisplayText,
+} from "@/tenant/features/teachers/components/teacherFieldDisplay";
+import { listTeacherDetailAttributeFields } from "@/tenant/features/teachers/components/teacherDetailFields";
 import { TeacherDetailQuickActions } from "@/tenant/features/teachers/components/TeacherDetailQuickActions";
 
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
@@ -41,6 +46,16 @@ interface TeacherDetailProps {
   onRestore?: (teacherId: string) => void | Promise<void>;
 }
 
+const SYSTEM_FIELD_ICONS: Record<string, LucideIcon> = {
+  contactId: User,
+  employeeId: Hash,
+  specialization: Briefcase,
+  qualification: GraduationCap,
+  joinDate: Calendar,
+  notes: School,
+  status: Briefcase,
+};
+
 export default function TeacherDetail({
   teacher,
   onClose,
@@ -49,7 +64,7 @@ export default function TeacherDetail({
   onRestore,
 }: TeacherDetailProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { statuses, settings } = useTeacherConfig();
+  const { statuses, settings, isFieldEnabled } = useTeacherConfig();
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
   const { data: linkedContact } = useContactById(
     teacher.contactId ? String(teacher.contactId) : undefined,
@@ -58,26 +73,21 @@ export default function TeacherDetail({
 
   const isArchived = Boolean(teacher.deletedAt);
 
-  const displayName = teacher.name || linkedContact?.name || t("teachers.contactMissing");
-  const primaryPhone = (linkedContact ? getPrimaryPhone(linkedContact) : null) || teacher.phone;
-  const primaryEmail = (linkedContact ? getPrimaryEmail(linkedContact) : null) || teacher.email;
+  const displayName = resolveTeacherDisplayName(teacher, t, linkedContact);
+  const { phone: primaryPhone, email: primaryEmail } = resolveTeacherPrimaryChannels(
+    teacher,
+    linkedContact,
+  );
 
-  const statusConfig = useMemo(() => {
-    const configByStatus: Record<string, { label: string; cls: string }> = {};
-    const statusValues = statuses.length > 0 ? statuses : ["active", "inactive", "on_leave"];
-    for (const statusValue of statusValues) {
-      const translationKey = `teachers.status.${statusValue}` as AppTranslationKey;
-      const translated = t(translationKey);
-      const label = translated === translationKey ? toTitleCase(statusValue) : translated;
-      let cls: string = SEMANTIC_BADGE.muted;
-      if (statusValue === "active") cls = SEMANTIC_BADGE.success;
-      else if (statusValue === "on_leave") cls = SEMANTIC_BADGE.warning;
-      configByStatus[statusValue] = { label, cls };
-    }
-    return configByStatus;
-  }, [statuses, t]);
+  const statusConfig = useMemo(
+    () => teacherStatusBadgeConfig(t, statuses),
+    [statuses, t],
+  );
 
-  const customFields = settings.customFields ?? [];
+  const detailFields = useMemo(
+    () => listTeacherDetailAttributeFields(settings),
+    [settings],
+  );
 
   const headerActions = (
     <DetailDrawerRestoreOrEditAction
@@ -121,7 +131,9 @@ export default function TeacherDetail({
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-foreground truncate leading-tight">{displayName}</h3>
             <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-              <StatusBadge status={teacher.status || "active"} config={statusConfig} />
+              {isFieldEnabled("status") ? (
+                <StatusBadge status={teacher.status || DEFAULT_TEACHER_STATUS} config={statusConfig} />
+              ) : null}
             </div>
           </div>
         </div>
@@ -138,44 +150,40 @@ export default function TeacherDetail({
         )}
 
         <Card accentColor="primary" className="p-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          <h4 className={`${DETAIL_SECTION_TITLE} mb-2`}>
             {t("teachers.detail.sectionDetails")}
           </h4>
-          <TeacherDetailAttributeRow icon={User} label={t("teachers.field.contact")} value={displayName} />
-          <TeacherDetailAttributeRow icon={Hash} label={t("teachers.field.employeeId")} value={teacher.employeeId} />
-          <TeacherDetailAttributeRow icon={Briefcase} label={t("teachers.field.specialization")} value={teacher.specialization} />
-          <TeacherDetailAttributeRow icon={GraduationCap} label={t("teachers.field.qualification")} value={teacher.qualification} />
-          <TeacherDetailAttributeRow
-            icon={Calendar}
-            label={t("teachers.field.joinDate")}
-            value={teacher.joinDate ? formatDate(teacher.joinDate) : undefined}
-          />
+          {detailFields.map((field) => {
+            if (field.key === "status") return null;
+
+            const label = resolveRegistryLabel(field, t);
+            const icon = field.isCustom
+              ? School
+              : (SYSTEM_FIELD_ICONS[field.key] ?? School);
+            const displayValue = resolveTeacherFieldDisplayText(teacher, field.key, {
+              t,
+              displayName,
+              customFieldLabel: field.label,
+              customFieldType: field.type,
+              isCustom: field.isCustom,
+            });
+            if (field.key === "notes" && !displayValue) return null;
+
+            return (
+              <TeacherDetailAttributeRow
+                key={field.key}
+                icon={icon}
+                label={label}
+                value={displayValue}
+              />
+            );
+          })}
           {primaryPhone && (
             <TeacherDetailAttributeRow icon={Phone} label={t("teachers.field.phone")} value={primaryPhone} />
           )}
           {primaryEmail && (
             <TeacherDetailAttributeRow icon={Mail} label={t("teachers.field.email")} value={primaryEmail} />
           )}
-          {teacher.notes && (
-            <TeacherDetailAttributeRow icon={School} label={t("teachers.field.notes")} value={teacher.notes} />
-          )}
-          {customFields.map((field) => {
-            const raw = (teacher as unknown as Record<string, unknown>)[field.id];
-            let displayValue: string | undefined;
-            if (raw !== undefined && raw !== null && raw !== "") {
-              displayValue = typeof raw === "boolean"
-                ? (raw ? t("common.yes") : t("common.no"))
-                : String(raw);
-            }
-            return (
-              <TeacherDetailAttributeRow
-                key={field.id}
-                icon={School}
-                label={field.label || field.id}
-                value={displayValue}
-              />
-            );
-          })}
         </Card>
       </DetailDrawerShell>
 

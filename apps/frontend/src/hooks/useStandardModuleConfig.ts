@@ -5,6 +5,8 @@ import {
   mergeTabbedFields,
   getFlatFieldsConfig,
   getSortedTeacherFields,
+  listEnabledCustomTeacherFormFields,
+  resolveTeacherFieldsMapForColumnSync,
   type ModuleCustomField,
   composeSessionsSettings,
   composeStudentsSettings,
@@ -265,7 +267,7 @@ export function useTeacherConfig() {
         enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
         requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
         fields: mergeTabbedFields(defaultSettings.fields || {}, settingsDraft?.fields),
-        customFields: settingsDraft?.customFields ?? defaultSettings.customFields ?? [],
+        customFields: [],
         fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
       });
     },
@@ -294,18 +296,30 @@ export function useTeacherConfig() {
   );
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(
-    () => (settings.customFields || []) as ModuleCustomField[],
-    [settings.customFields],
-  );
+  const customFields = useMemo(() => {
+    const tabbed = resolveTeacherFieldsMapForColumnSync(
+      settings.fields as Record<string, unknown> | undefined,
+    );
+    return listEnabledCustomTeacherFormFields(tabbed).map((field) => ({
+      id: field.key,
+      label: field.label,
+      type: field.type,
+      required: field.required,
+      options: field.options,
+    })) as ModuleCustomField[];
+  }, [settings.fields]);
   const fieldOrder = useMemo(
     () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
     [settings.fieldOrder, defaultSettings.fieldOrder],
   );
 
   const orderedFields = useMemo(
-    () => getSortedTeacherFields(fieldOrder, fields, customFields),
-    [fieldOrder, fields, customFields],
+    () =>
+      getSortedTeacherFields(
+        fieldOrder,
+        settings.fields as Record<string, unknown> | undefined,
+      ),
+    [fieldOrder, settings.fields],
   );
 
   const isFieldEnabled = useCallback(

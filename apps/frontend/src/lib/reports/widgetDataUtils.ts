@@ -10,4 +10,5 @@ export {
   computeStudentsCustomCardValue,
   computeTeachersCustomCardValue,
   computeSessionsCustomCardValue,
+  computeEnrollmentsCustomCardValue,
 } from "./widgetValueCompute.js";

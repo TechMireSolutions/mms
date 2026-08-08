@@ -1,7 +1,9 @@
 import {
   attendanceRecordSchema,
   attendanceListSchema,
+  normalizeAttendanceReportComparisonQuery,
   type AttendanceRecord,
+  type AttendanceReportComparisonQuery,
 } from '@mms/shared';
 import {
   listAttendanceRecordsByWorkspace,
@@ -10,6 +12,7 @@ import {
   bulkSaveAttendanceRecords,
   replaceAttendanceRecordsForWorkspace,
 } from '../db/repositories/attendanceRepository.js';
+import { loadAttendanceReportAggregatesSql } from '../db/repositories/attendanceRepositoryReport.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
@@ -68,4 +71,16 @@ export async function loadAttendancePage(
     ? rows.filter((row) => Boolean(row.deletedAt))
     : rows;
   return paginateAttendance(scoped, query);
+}
+
+/** ComparisonMode attendance SQL aggregates (session attendancePct + dual monthly ranges). */
+export async function loadAttendanceReportAggregates(
+  comparisonQuery?: AttendanceReportComparisonQuery,
+) {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { comparison: { sessions: [], monthly: { a: [], b: [] } } };
+  }
+  const normalized = normalizeAttendanceReportComparisonQuery(comparisonQuery);
+  return loadAttendanceReportAggregatesSql(tenant, normalized);
 }

@@ -1,30 +1,15 @@
 import type { TeachersSettings } from './settingsTypes.js';
+import { DEFAULT_TEACHERS_SETTINGS } from './teachersModuleSettings.js';
 
 export type TeacherEmployeeIdSettings = Pick<TeachersSettings, 'idPrefix'>;
 
-type TeacherRow = {
-  id?: string | number;
-  contactId?: string | number;
-  employeeId?: string;
-};
-
-/** Next employee id from roster + tenant settings (shared FE/BE). */
-export function computeNextTeacherEmployeeId(
-  teachers: TeacherRow[],
+/** Next employee id from active roster count + tenant settings (shared FE/BE). */
+export function computeNextTeacherEmployeeIdFromCount(
+  count: number,
   settings: TeacherEmployeeIdSettings,
 ): string {
-  const prefix = settings.idPrefix || 'TCH';
-  const nextSeq = teachers.length + 1;
+  const prefix = settings.idPrefix || DEFAULT_TEACHERS_SETTINGS.idPrefix;
+  const safeCount = Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+  const nextSeq = safeCount + 1;
   return `${prefix}-${String(nextSeq).padStart(4, '0')}`;
-}
-
-export function collectTeacherLinkedContactIds(
-  teachers: TeacherRow[],
-  excludeTeacherId?: string,
-): Array<string | number> {
-  const exclude = excludeTeacherId ? String(excludeTeacherId) : undefined;
-  return teachers
-    .filter((row) => !exclude || String(row.id) !== exclude)
-    .map((row) => row.contactId)
-    .filter((id): id is string | number => id != null && id !== '');
 }

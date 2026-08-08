@@ -1,4 +1,4 @@
-import type { Teacher } from "@/lib/data/teachersData";
+import type { Teacher } from '@mms/shared';
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 

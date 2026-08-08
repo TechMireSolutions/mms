@@ -3,7 +3,8 @@ import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Teacher } from "@/lib/data/teachersData";
+import type { Teacher } from '@mms/shared';
+import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
 
 export interface TeacherCardActionsProps {
@@ -42,8 +43,7 @@ export function TeacherCardActions({
 }: TeacherCardActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const phone = teacher.phone?.trim() || null;
-  const email = teacher.email?.trim() || null;
+  const { phone, email } = resolveTeacherPrimaryChannels(teacher);
   const messagingEnabled = !showDeleted && Boolean(onWhatsApp || onSms || onEmail);
   const hasFaceChannels = messagingEnabled && (Boolean(phone) || Boolean(email));
 

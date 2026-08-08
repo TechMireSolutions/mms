@@ -3,6 +3,7 @@ import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
 import { useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
+import { useEnrollmentsWidgetAggregates } from '@/tenant/hooks/collections/enrollments';
 import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
 import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
 import {
@@ -28,6 +29,7 @@ function buildServerAggregateMap(
   studentWidgetAggregates: Record<string, unknown> | undefined,
   teacherWidgetAggregates: Record<string, unknown> | undefined,
   sessionWidgetAggregates: Record<string, unknown> | undefined,
+  enrollmentWidgetAggregates: Record<string, unknown> | undefined,
 ): Record<string, AggregateCardValue | undefined> {
   return Object.fromEntries(
     customCards.map((card) => {
@@ -36,7 +38,8 @@ function buildServerAggregateMap(
           : card.collection === 'students' ? studentWidgetAggregates?.[card.id]
             : card.collection === 'teachers' ? teacherWidgetAggregates?.[card.id]
               : card.collection === 'sessions' ? sessionWidgetAggregates?.[card.id]
-                : undefined
+                : card.collection === 'enrollments' ? enrollmentWidgetAggregates?.[card.id]
+                  : undefined
       ) as AggregateCardValue | undefined;
       return [card.id, serverAggregate];
     }),
@@ -49,7 +52,7 @@ export function useKpiSummaryCustomCards(
   dataSources: KpiSummaryDataSources,
   t: TranslationFunction,
 ) {
-  const { isContactsCategory, isStudentsCategory, isTeachersCategory, isSessionsCategory } = flags;
+  const { isContactsCategory, isStudentsCategory, isTeachersCategory, isSessionsCategory, isEnrollmentsCategory } = flags;
   const {
     questionBankQuestions: qbFromMetricsPath,
     questionBankTests: qbTestsFromMetricsPath,
@@ -75,6 +78,7 @@ export function useKpiSummaryCustomCards(
   const hasStudentCustomCards = customCards.some((card) => card.collection === 'students');
   const hasTeacherCustomCards = customCards.some((card) => card.collection === 'teachers');
   const hasSessionCustomCards = customCards.some((card) => card.collection === 'sessions');
+  const hasEnrollmentCustomCards = customCards.some((card) => card.collection === 'enrollments');
   const needsFinance = customCards.some((card) => card.collection === 'finance_invoices');
   const needsAttendance = customCards.some((card) => card.collection === 'attendance_records');
   const needsHasanat = customCards.some((card) => card.collection === 'hasanat_distributions');
@@ -96,6 +100,9 @@ export function useKpiSummaryCustomCards(
   });
   const { data: sessionWidgetAggregates } = useSessionsWidgetAggregates(customCardWidgetInputs, {
     enabled: isSessionsCategory && hasSessionCustomCards,
+  });
+  const { data: enrollmentWidgetAggregates } = useEnrollmentsWidgetAggregates(customCardWidgetInputs, {
+    enabled: isEnrollmentsCategory && hasEnrollmentCustomCards,
   });
 
   const invoices = useFinanceInvoicesCollection({ enabled: needsFinance });
@@ -125,9 +132,11 @@ export function useKpiSummaryCustomCards(
         studentWidgetAggregates,
         teacherWidgetAggregates,
         sessionWidgetAggregates,
+        enrollmentWidgetAggregates,
       ),
       {
         sessions: [],
+        enrollments: [],
         finance_invoices: invoices,
         attendance_records: attendanceRecords,
         hasanat_distributions: distributions,
@@ -143,6 +152,7 @@ export function useKpiSummaryCustomCards(
       studentWidgetAggregates,
       teacherWidgetAggregates,
       sessionWidgetAggregates,
+      enrollmentWidgetAggregates,
       category,
       invoices,
       attendanceRecords,

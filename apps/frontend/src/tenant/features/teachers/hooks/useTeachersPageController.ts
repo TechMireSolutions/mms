@@ -4,8 +4,8 @@ import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import type { Teacher } from '@/lib/data/teachersData';
-import { TEACHER_SPECIALIZATION_VALUES, TEACHER_STATUS_VALUES, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import type { Teacher } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST, resolveTeacherSpecializations, resolveTeacherStatuses } from '@mms/shared';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { useTeacherMutations, useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTeachersDirectoryFilters } from '@/tenant/features/teachers/hooks/useTeachersDirectoryFilters';
@@ -50,20 +50,21 @@ export function useTeachersPageController() {
     setFilterStatus,
     filterSpecialization,
     setFilterSpecialization,
+    selectedIds,
+    clearSelection,
+    handleSelectOne,
+    handleSelectAll,
     toggleStatus,
     clearFilters,
-    clearSelection,
     hasActiveFilters,
-    selectionClearToken,
   } = useTeachersDirectoryFilters();
   const [showForm, setShowForm] = useState(false);
-  const [selectedCount, setSelectedCount] = useState(0);
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
   const { settings, statuses, specializations } = useTeacherConfig();
 
-  const statusOptions = statuses.length > 0 ? statuses : [...TEACHER_STATUS_VALUES];
-  const specializationOptions = specializations.length > 0 ? specializations : [...TEACHER_SPECIALIZATION_VALUES];
+  const statusOptions = [...resolveTeacherStatuses(statuses)];
+  const specializationOptions = [...resolveTeacherSpecializations(specializations)];
 
   const columnLayout = useTeacherColumnLayout(settings);
 
@@ -71,7 +72,7 @@ export function useTeachersPageController() {
   const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
 
   useTeachersKeyboardShortcuts({
-    selectedCount,
+    selectedCount: selectedIds.length,
     hasActiveFilters,
     clearFilters,
     clearSelection,
@@ -91,13 +92,22 @@ export function useTeachersPageController() {
       columnLayout.isColumnVisible(col.key),
     );
     if (visible.length === 0) return defaultTeachersExportColumns(t);
-    return visible.map((col) => ({
+    const columns = visible.map((col) => ({
       id: col.key,
       label: col.label || col.key,
     }));
+    // CSV identity — not a Work directory column (shown under name).
+    if (!columns.some((col) => col.id === 'employeeId')) {
+      const nameIndex = columns.findIndex((col) => col.id === 'name');
+      columns.splice(nameIndex >= 0 ? nameIndex + 1 : 0, 0, {
+        id: 'employeeId',
+        label: t('teachers.field.employeeId'),
+      });
+    }
+    return columns;
   }, [columnLayout, t]);
 
-  const { handleExportCSV } = useTeachersExportActions({
+  const { handleExportCSV, handleBulkExport } = useTeachersExportActions({
     tableColumns: exportColumns,
     canExport,
     search,
@@ -106,7 +116,7 @@ export function useTeachersPageController() {
     sortField,
     sortDir,
     viewingDeleted: showDeleted,
-    selectedIds: [],
+    selectedIds,
     logExportAudit,
   });
 
@@ -148,6 +158,10 @@ export function useTeachersPageController() {
     search,
     filterStatus,
     filterSpecialization,
+    selectedIds,
+    clearSelection,
+    handleSelectOne,
+    handleSelectAll,
     editTeacher,
     setEditTeacher,
     pageActions,
@@ -166,11 +180,8 @@ export function useTeachersPageController() {
     setListPage,
     viewMode,
     setViewMode,
-    exportColumns,
-    logExportAudit,
     handleExportCSV,
+    handleBulkExport,
     clearFilters,
-    selectionClearToken,
-    setSelectedCount,
   };
 }

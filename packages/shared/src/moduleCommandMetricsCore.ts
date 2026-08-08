@@ -1,4 +1,5 @@
 import { isOpenInvoiceStatus } from './financeModuleManifest.js';
+import { TEACHER_STATUS_VALUES } from './teacherTypes.js';
 
 /** Default rolling window for "new records" command-centre metrics (globle1 §2.1). */
 export const MODULE_METRICS_DEFAULT_PERIOD_DAYS = 30;
@@ -16,6 +17,8 @@ export interface TeachersCommandMetricsSnapshot {
   active: number;
   inactive: number;
   onLeave: number;
+  /** Active rows whose status is outside {@link TEACHER_STATUS_VALUES}. */
+  other: number;
   newThisPeriod: number;
 }
 
@@ -103,15 +106,25 @@ export function computeStudentsCommandMetrics(
   };
 }
 
+/**
+ * @deprecated Prefer SQL `aggregateTeachersCommandMetrics` / `loadTeachersCommandMetrics`.
+ * Kept for pure unit tests of status / joinDate period predicates.
+ */
 export function computeTeachersCommandMetrics(
   teachers: JoinDateRecord[],
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): TeachersCommandMetricsSnapshot {
+  const [activeStatus, inactiveStatus, onLeaveStatus] = TEACHER_STATUS_VALUES;
+  const knownStatuses = new Set<string>(TEACHER_STATUS_VALUES);
   return {
     total: teachers.length,
-    active: countRecordsWithStatus(teachers, 'active'),
-    inactive: countRecordsWithStatus(teachers, 'inactive'),
-    onLeave: countRecordsWithStatus(teachers, 'on_leave'),
+    active: countRecordsWithStatus(teachers, activeStatus),
+    inactive: countRecordsWithStatus(teachers, inactiveStatus),
+    onLeave: countRecordsWithStatus(teachers, onLeaveStatus),
+    other: teachers.filter((teacher) => {
+      const status = String(teacher.status ?? '').trim();
+      return status.length > 0 && !knownStatuses.has(status);
+    }).length,
     newThisPeriod: countRecordsSinceDate(
       teachers,
       (t) => t.joinDate ?? t.createdAt,

@@ -1,16 +1,29 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Denomination, StockBatch, Distribution, Redemption, HasanatCommandMetricsSnapshot } from '@mms/shared';
-import { HASANAT_MODULE_MANIFEST } from '@mms/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  Denomination,
+  StockBatch,
+  Distribution,
+  Redemption,
+  HasanatCommandMetricsSnapshot,
+  HasanatReportAggregates,
+  HasanatReportComparisonQuery,
+} from '@mms/shared';
+import { HASANAT_MODULE_MANIFEST, normalizeHasanatReportComparisonQuery } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
 export const HASANAT_BATCHES_QUERY_KEY = ['hasanat', 'batches', 'list'] as const;
 export const HASANAT_DISTRIBUTIONS_QUERY_KEY = ['hasanat', 'distributions', 'list'] as const;
 export const HASANAT_REDEMPTIONS_QUERY_KEY = ['hasanat', 'redemptions', 'list'] as const;
 export const HASANAT_METRICS_QUERY_KEY = ['hasanat', 'metrics', 'snapshot'] as const;
+export const HASANAT_REPORT_AGGREGATES_QUERY_KEY = [
+  HASANAT_MODULE_MANIFEST.collectionKey,
+  'report-aggregates',
+] as const;
 
 const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
 
@@ -64,6 +77,32 @@ export function useHasanatDistributionsCollection(options?: {
   includeDeleted?: boolean;
 }): Distribution[] {
   return useHasanatDistributions(options).syncedData;
+}
+
+export function useHasanatReportAggregates(
+  options?: { enabled?: boolean; comparison?: HasanatReportComparisonQuery },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  const comparison = normalizeHasanatReportComparisonQuery(options?.comparison);
+  const queryParams = new URLSearchParams();
+  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
+  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
+  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
+  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
+  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...HASANAT_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
+    queryFn: async ({ signal }): Promise<HasanatReportAggregates> =>
+      apiJson<HasanatReportAggregates>(
+        `${HASANAT_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled: isAuthenticated && enabled,
+    staleTime: 30_000,
+  });
 }
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {

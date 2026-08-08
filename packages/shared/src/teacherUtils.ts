@@ -1,6 +1,10 @@
 import type { Teacher } from './teacherTypes.js';
 import type { ContactLike } from './contactLinkPolicy.js';
-import { hydrateContactProfile, normalizeContactLinkedRecord } from './contactLinkPolicy.js';
+import {
+  CONTACT_PROFILE_FIELDS,
+  hydrateContactProfile,
+  stripRecordFields,
+} from './contactLinkPolicy.js';
 import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
 import { DEMO_TEACHERS } from './demoTeachers.js';
 
@@ -11,9 +15,28 @@ export function stripTeacherClientSoftDeleteFields<T extends Record<string, unkn
   return next as T;
 }
 
-/** Strips contact-owned fields and client soft-delete metadata before persisting a teacher row. */
+/**
+ * Soft-delete + Contacts profile dual-write strip shared by wire preprocess and dynamic Zod.
+ * Does not mutate empty `contactId` (see {@link normalizeStoredTeacher}).
+ */
+export function stripTeacherWriteNoise(
+  record: Record<string, unknown>,
+): Record<string, unknown> {
+  const next = stripTeacherClientSoftDeleteFields({ ...record }) as Record<string, unknown>;
+  return stripRecordFields(next, CONTACT_PROFILE_FIELDS);
+}
+
+/**
+ * Strips contact-owned profile fields and client soft-delete metadata before persisting a teacher row.
+ * Profile keys are always removed (contacts are SSOT) — including when `contactId` is empty/absent.
+ */
 export function normalizeStoredTeacher<T extends Record<string, unknown>>(record: T): T {
-  return normalizeContactLinkedRecord(stripTeacherClientSoftDeleteFields(record));
+  const next = stripTeacherWriteNoise(record as Record<string, unknown>);
+  const contactId = next.contactId;
+  if (contactId === '' || contactId == null) {
+    delete next.contactId;
+  }
+  return next as T;
 }
 
 /** Demo teacher ids → contact ids in minimal seeds. */

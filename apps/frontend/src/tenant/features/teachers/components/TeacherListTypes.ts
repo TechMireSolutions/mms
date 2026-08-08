@@ -1,8 +1,11 @@
-import type { Teacher } from '@/lib/data/teachersData';
+import type {
+  Teacher,
+  TeacherSortField,
+  ModuleColumnRegistryEntry,
+} from '@mms/shared';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import type { TeacherExportColumn } from '@mms/shared';
 
-export type TeacherSortField = 'name' | 'specialization' | 'qualification' | 'status' | 'joinDate';
+export type { TeacherSortField };
 
 export interface TeacherListProps {
   teachers: Teacher[];
@@ -19,25 +22,17 @@ export interface TeacherListProps {
   canDelete?: boolean;
   canExport?: boolean;
   showDeleted?: boolean;
-  selectionResetKey?: string | number;
+  selectedIds: string[];
+  onSelectOne: (id: string) => void;
+  onSelectAll: (pageIds: string[]) => void;
+  onClearSelection: () => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   sortField?: TeacherSortField;
   sortDir?: 'asc' | 'desc';
-  onSortChange?: (field: TeacherSortField, dir: 'asc' | 'desc') => void;
+  onSortChange: (field: TeacherSortField, dir: 'asc' | 'desc') => void;
   viewMode: WorkDirectoryViewMode;
-  exportColumns?: TeacherExportColumn[];
-  exportSearch?: string;
-  exportFilterStatus?: string[];
-  exportFilterSpecialization?: string;
-  exportSortField?: TeacherSortField | null;
-  exportSortDir?: 'asc' | 'desc';
-  logExportAudit?: {
-    mutateAsync: (payload: {
-      count: number;
-      scope: 'all' | 'filtered' | 'selection';
-    }) => Promise<unknown>;
-  };
-  onSelectedCountChange?: (count: number) => void;
+  columnRegistry?: ModuleColumnRegistryEntry[];
+  onBulkExport?: () => void | Promise<void>;
 }

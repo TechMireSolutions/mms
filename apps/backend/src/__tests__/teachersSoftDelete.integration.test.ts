@@ -166,4 +166,21 @@ describe('teachers soft delete routes', () => {
     expect(mockBulkUpdateTeacherStatus).toHaveBeenCalledWith(['t1'], 'on_leave');
     await app.close();
   });
+
+  it('POST /api/teachers/bulk-status accepts custom lookup statuses', async () => {
+    mockBulkUpdateTeacherStatus.mockResolvedValue({ succeeded: 1, failed: 0 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/teachers/bulk-status',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { ids: ['t1'], status: 'sabbatical' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockBulkUpdateTeacherStatus).toHaveBeenCalledWith(['t1'], 'sabbatical');
+    await app.close();
+  });
 });

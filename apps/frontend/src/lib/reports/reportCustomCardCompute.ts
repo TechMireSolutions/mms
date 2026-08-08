@@ -1,5 +1,6 @@
 import {
   type Contact,
+  type Enrollment,
   formatMoney,
   formatNumber,
   getDenominationPoints,
@@ -24,6 +25,7 @@ export function computeCustomCard(
     students: Student[];
     teachers: Teacher[];
     sessions: Session[];
+    enrollments?: Enrollment[];
     finance_invoices: Invoice[];
     attendance_records: AttendanceRecord[];
     hasanat_distributions: Distribution[];

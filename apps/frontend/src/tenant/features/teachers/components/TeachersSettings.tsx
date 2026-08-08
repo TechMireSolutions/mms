@@ -3,17 +3,16 @@ import { School } from "lucide-react";
 import {
   TEACHERS_TAB_REGISTRY,
   INITIAL_TEACHERS_FIELD_SEED,
-  TEACHER_SPECIALIZATION_VALUES,
   TEACHERS_MODULE_MANIFEST,
+  TEACHER_LOCKED_ENABLED_TABS,
+  isTeacherLockedEnabledTab,
+  isTeacherSystemFormField,
+  resolveTeacherSpecializations,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { FORM_LABEL } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { ToggleRow } from "@/components/ui/ToggleRow";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
@@ -23,6 +22,7 @@ import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { useTeachersSetupSaveActions } from "@/tenant/features/teachers/hooks/useTeachersSetupSaveActions";
+import { TeachersPreferencesSection } from "@/tenant/features/teachers/components/TeachersPreferencesSection";
 
 const TeachersSettingsLookupsPanel = lazy(() =>
   import("@/tenant/features/teachers/components/TeachersSettingsLookupsPanel").then((mod) => ({
@@ -48,11 +48,11 @@ export function TeachersSettings(): React.JSX.Element {
     saved,
     setSaved,
     upd,
-    saveSettingsAsync,
     discardDrafts,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: TEACHERS_TAB_REGISTRY,
+    lockedEnabledTabs: TEACHER_LOCKED_ENABLED_TABS,
   });
 
   const settingsSubTabs = useMemo(
@@ -98,7 +98,6 @@ export function TeachersSettings(): React.JSX.Element {
     fieldsEditor,
     mode: showPrefs ? "preferences" : "fields",
     setSaved,
-    saveSettingsAsync,
   });
 
   useEffect(() => {
@@ -114,14 +113,12 @@ export function TeachersSettings(): React.JSX.Element {
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => TEACHERS_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_TEACHERS_FIELD_SEED,
-        isLockedTab: (tabKey) => tabKey.toLowerCase() === "basic",
+        isLockedTab: isTeacherLockedEnabledTab,
       }),
     [fieldsEditor, handleDeleteFieldWithGuard],
   );
 
-  const specializationOptions = specializations.length > 0
-    ? specializations
-    : [...TEACHER_SPECIALIZATION_VALUES];
+  const specializationOptions = [...resolveTeacherSpecializations(specializations)];
 
   const unsavedWarning = showFields
     ? t("teachers.setup.unsavedFieldsWarning")
@@ -150,47 +147,19 @@ export function TeachersSettings(): React.JSX.Element {
             <h3 className="text-sm font-bold text-foreground">{t("teachers.settings.title")}</h3>
           </div>
 
-          {showPrefs && (
-            <div className="space-y-4 text-start">
-              <div>
-                <label className={FORM_LABEL} htmlFor="teacher-idPrefix">{t("teachers.settings.idPrefix")}</label>
-                <Input
-                  id="teacher-idPrefix"
-                  name="teacher-idPrefix"
-                  value={settingsDraft.idPrefix || ""}
-                  onChange={(event) => upd("idPrefix", event.target.value)}
-                />
-              </div>
-
-              <ToggleRow
-                label={t("teachers.settings.autoGenerateId")}
-                value={settingsDraft.autoGenerateId}
-                onChange={(v) => upd("autoGenerateId", v)}
-              />
-
-              <ToggleRow
-                label={t("teachers.settings.requireContactLink")}
-                value={settingsDraft.requireContactLink}
-                onChange={(v) => upd("requireContactLink", v)}
-              />
-
-              <div>
-                <label className={FORM_LABEL} htmlFor="teacher-defaultSpecialization">{t("teachers.settings.defaultSpecialization")}</label>
-                <FormSelect
-                  id="teacher-defaultSpecialization"
-                  value={settingsDraft.defaultSpecialization}
-                  onChange={(specialization) => upd("defaultSpecialization", specialization)}
-                  options={specializationOptions}
-                />
-              </div>
-            </div>
-          )}
+          {showPrefs ? (
+            <TeachersPreferencesSection
+              settingsDraft={settingsDraft}
+              upd={upd}
+              specializationOptions={specializationOptions}
+            />
+          ) : null}
 
           {showFields && (
             <ModuleFieldsSetup
               editor={wrappedFieldsEditor}
-              isCoreField={(tabId, key) => INITIAL_TEACHERS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
-              isLockedTab={(tabKey) => tabKey.toLowerCase() === "basic"}
+              isCoreField={isTeacherSystemFormField}
+              isLockedTab={isTeacherLockedEnabledTab}
               onStateChange={() => setSaved(false)}
             />
           )}

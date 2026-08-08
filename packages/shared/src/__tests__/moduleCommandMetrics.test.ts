@@ -36,13 +36,15 @@ describe('moduleCommandMetrics', () => {
       { status: 'active', joinDate: new Date().toISOString() },
       { status: 'on_leave', joinDate: '2021-05-10' },
       { status: 'inactive' },
+      { status: 'sabbatical' },
     ];
 
     const metrics = computeTeachersCommandMetrics(teachers);
-    expect(metrics.total).toBe(3);
+    expect(metrics.total).toBe(4);
     expect(metrics.active).toBe(1);
     expect(metrics.onLeave).toBe(1);
     expect(metrics.inactive).toBe(1);
+    expect(metrics.other).toBe(1);
     expect(metrics.newThisPeriod).toBe(1);
   });
 

@@ -25,6 +25,7 @@ import {
 } from '../../validation/attendanceSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
+import { attendanceReportRoutes } from './attendance/attendanceReportRoutes.js';
 
 const COLLECTION = 'attendance_records';
 
@@ -36,6 +37,8 @@ export default async function attendanceRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  await fastify.register(attendanceReportRoutes);
 
   registerStandardTenantRoutes(fastify, {
     collection: COLLECTION,

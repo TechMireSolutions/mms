@@ -11,6 +11,7 @@ import { useContactsWidgetAggregates } from "@/tenant/hooks/collections/contacts
 import { useStudentsWidgetAggregates } from "@/tenant/hooks/collections/students";
 import { useTeachersWidgetAggregates } from "@/tenant/hooks/collections/teachers";
 import { useSessionsWidgetAggregates } from "@/tenant/hooks/collections/sessions";
+import { useEnrollmentsWidgetAggregates } from "@/tenant/hooks/collections/enrollments";
 import { notify } from "@/lib/notify";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 
@@ -48,6 +49,7 @@ export function usePinnedWidgetsController(category: string) {
     if (category === "financial" || category === "accounting") return "finance_invoices";
     if (category === "hasanat") return "hasanat_distributions";
     if (category === "sessions") return "sessions";
+    if (category === "enrollments") return "enrollments";
     return "students";
   }, [category]);
 
@@ -68,6 +70,7 @@ export function usePinnedWidgetsController(category: string) {
   useStudentsWidgetAggregates(filteredWidgets);
   useTeachersWidgetAggregates(filteredWidgets);
   useSessionsWidgetAggregates(filteredWidgets);
+  useEnrollmentsWidgetAggregates(filteredWidgets);
 
   const toggleSectionSetting = (key: string) => {
     const nextSectionSettings = { ...sectionSettings, [key]: !sectionSettings[key] };

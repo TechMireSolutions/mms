@@ -3,17 +3,23 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/teachers/hooks/useTeachers";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { notify } from "@/lib/notify";
+import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import { teacherStatusBadgeConfig, teacherStatusLabel } from "@/lib/teachers/teacherStatusUi";
 import {
   Teacher,
-  TEACHER_STATUS_VALUES,
-  TEACHER_SPECIALIZATION_VALUES,
-  AppTranslationKey,
-  teacherCoreSchema,
-  todayISO,
-  toTitleCase,
+  DEFAULT_TEACHERS_SETTINGS,
+  resolveTeacherEnabledTabIds,
+  resolveTeacherFieldsMapForColumnSync,
+  resolveTeacherSpecializations,
+  resolveTeacherStatuses,
 } from "@mms/shared";
 import type { TeacherStatusOption } from "@/tenant/features/teachers/components/TeacherFormSections";
+import {
+  getInitialTeacherDraft,
+  teacherDraftSnapshot,
+} from "@/tenant/features/teachers/components/teacherFormDraft";
+import { runTeacherSaveFlow } from "@/tenant/features/teachers/components/teacherFormSaveFlow";
+import { resolveTeacherFormModalTabs } from "@/tenant/features/teachers/components/teacherFormTabs";
 
 export interface UseTeacherFormControllerOptions {
   teacher?: Teacher;
@@ -21,107 +27,88 @@ export interface UseTeacherFormControllerOptions {
   onSave: (teacher: Teacher) => void | Promise<void>;
 }
 
-function teacherFormSnapshot(
-  draft: Partial<Teacher>,
-  customValues: Record<string, string>,
-): string {
-  return JSON.stringify({
-    contactId: draft.contactId ?? "",
-    employeeId: draft.employeeId ?? "",
-    specialization: draft.specialization ?? "",
-    status: draft.status ?? "",
-    joinDate: draft.joinDate ?? "",
-    qualification: draft.qualification ?? "",
-    notes: draft.notes ?? "",
-    customValues,
-  });
-}
-
-function buildInitialTeacherDraft(
-  teacher: Teacher | undefined,
-  defaultSpecialization: string,
-): Partial<Teacher> {
-  return {
-    contactId: teacher?.contactId ?? "",
-    employeeId: teacher?.employeeId ?? "",
-    specialization: teacher?.specialization ?? defaultSpecialization,
-    status: teacher?.status ?? "active",
-    joinDate: teacher?.joinDate ?? todayISO(),
-    qualification: teacher?.qualification ?? "",
-    notes: teacher?.notes ?? "",
-  };
-}
-
-function buildInitialCustomValues(
-  teacher: Teacher | undefined,
-  customFields: { id: string }[],
-): Record<string, string> {
-  const initial: Record<string, string> = {};
-  for (const field of customFields) {
-    const raw = teacher ? (teacher as unknown as Record<string, unknown>)[field.id] : undefined;
-    initial[field.id] = raw == null ? "" : String(raw);
-  }
-  return initial;
-}
-
 export function useTeacherFormController({ teacher, onClose, onSave }: UseTeacherFormControllerOptions) {
-  const { t } = useTranslation();
-  const { settings, specializations, statuses } = useTeacherConfig();
+  const { t, language } = useTranslation();
+  const { settings, specializations, statuses, isFieldEnabled, isFieldRequired } = useTeacherConfig();
 
-  const specializationOptions = specializations.length > 0
-    ? specializations
-    : [...TEACHER_SPECIALIZATION_VALUES];
-  const statusValues = statuses.length > 0 ? statuses : [...TEACHER_STATUS_VALUES];
-  const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || "General";
-  const idPrefix = settings.idPrefix || "TCH";
+  const specializationOptions = [...resolveTeacherSpecializations(specializations)];
+  const statusValues = [...resolveTeacherStatuses(statuses)];
+  const defaultSpecialization =
+    settings.defaultSpecialization
+    || specializationOptions[0]
+    || DEFAULT_TEACHERS_SETTINGS.defaultSpecialization;
+  const idPrefix = settings.idPrefix || DEFAULT_TEACHERS_SETTINGS.idPrefix;
   const autoGenerateId = settings.autoGenerateId !== false;
   const requireContactLink = settings.requireContactLink !== false;
-  const customFields = useMemo(() => settings.customFields ?? [], [settings.customFields]);
+
+  const fieldsMap = useMemo(
+    () => resolveTeacherFieldsMapForColumnSync(settings.fields as Record<string, unknown> | undefined),
+    [settings.fields],
+  );
+
   const statusOptions = useMemo<TeacherStatusOption[]>(
     () =>
-      statusValues.map((status) => {
-        const translationKey = `teachers.status.${status}` as AppTranslationKey;
-        const translated = t(translationKey);
-        const label = translated === translationKey ? toTitleCase(status) : translated;
-        return { value: status, label };
-      }),
+      statusValues.map((status) => ({
+        value: status,
+        label: teacherStatusLabel(t, status),
+      })),
+    [statusValues, t],
+  );
+
+  const statusConfig = useMemo(
+    () => teacherStatusBadgeConfig(t, statusValues),
     [statusValues, t],
   );
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [customValues, setCustomValues] = useState<Record<string, string>>(() =>
-    buildInitialCustomValues(teacher, customFields),
-  );
+  const [activeTab, setActiveTab] = useState("basic");
+  const formInstanceId = String(teacher?.id ?? "new");
 
   const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() =>
-    buildInitialTeacherDraft(teacher, defaultSpecialization),
+    getInitialTeacherDraft(teacher, defaultSpecialization),
   );
   const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
-    teacherFormSnapshot(
-      buildInitialTeacherDraft(teacher, defaultSpecialization),
-      buildInitialCustomValues(teacher, customFields),
-    ),
+    teacherDraftSnapshot(getInitialTeacherDraft(teacher, defaultSpecialization)),
   );
 
   useEffect(() => {
-    const nextDraft = buildInitialTeacherDraft(teacher, defaultSpecialization);
-    const nextCustom = buildInitialCustomValues(teacher, customFields);
+    const nextDraft = getInitialTeacherDraft(teacher, defaultSpecialization);
     setTeacherDraft(nextDraft);
-    setCustomValues(nextCustom);
-    setBaselineSnapshot(teacherFormSnapshot(nextDraft, nextCustom));
+    setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
     setErrors({});
-  }, [teacher, defaultSpecialization, customFields]);
+    setActiveTab("basic");
+  }, [teacher, defaultSpecialization]);
 
   const updateDraft = (patch: Partial<Teacher>) => {
     setTeacherDraft((prev) => ({ ...prev, ...patch }));
   };
 
-  const updateCustomValue = (fieldId: string, value: string) => {
-    setCustomValues((prev) => ({ ...prev, [fieldId]: value }));
-  };
+  const isDirty = teacherDraftSnapshot(teacherDraft) !== baselineSnapshot;
 
-  const isDirty = teacherFormSnapshot(teacherDraft, customValues) !== baselineSnapshot;
+  const enabledTabs = useMemo(
+    () => new Set(resolveTeacherEnabledTabIds(settings)),
+    [settings],
+  );
+
+  const visibleTabs = useMemo(
+    () =>
+      resolveTeacherFormModalTabs(settings.formTabs, enabledTabs).map((tabItem) => ({
+        key: tabItem.key,
+        icon: tabItem.icon,
+        label: resolveRegistryLabel(tabItem, t),
+      })),
+    [settings.formTabs, enabledTabs, t],
+  );
+
+  useEffect(() => {
+    if (!visibleTabs.some((tabItem) => tabItem.key === activeTab)) {
+      setActiveTab(visibleTabs[0]?.key ?? "basic");
+    }
+  }, [activeTab, visibleTabs]);
+
+  const getFieldError = (fieldId: string): string | undefined =>
+    errors[fieldId] || errors[`custom:${fieldId}`];
 
   const { data: linkedContact } = useContactById(
     teacherDraft.contactId ? String(teacherDraft.contactId) : undefined,
@@ -140,79 +127,60 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   useEffect(() => {
     if (teacher?.id || !autoGenerateId || !nextEmployeeId) return;
     if (!teacherDraft.employeeId) {
-      updateDraft({ employeeId: nextEmployeeId });
+      setTeacherDraft((prev) => {
+        if (prev.employeeId) return prev;
+        const nextDraft = { ...prev, employeeId: nextEmployeeId };
+        setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
+        return nextDraft;
+      });
     }
   }, [nextEmployeeId, teacher?.id, teacherDraft.employeeId, autoGenerateId]);
 
   const handleSave = async () => {
-    setErrors({});
-    const newErrors: Record<string, string> = {};
-
-    if (requireContactLink && !teacherDraft.contactId) {
-      newErrors.contactId = t("teachers.errorContactRequired");
-    }
-    const resolvedEmployeeId = teacherDraft.employeeId?.trim()
-      || (autoGenerateId && !teacher?.id ? nextEmployeeId?.trim() : undefined);
-    if (!resolvedEmployeeId) {
-      newErrors.employeeId = t("teachers.errorEmployeeIdRequired");
-    }
-    for (const field of customFields) {
-      if (field.required && !customValues[field.id]?.trim()) {
-        newErrors[`custom:${field.id}`] = t("common.formPleaseFixErrors");
-      }
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      notify.error(t("common.formPleaseFixErrors"));
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const payload = {
-        ...teacherDraft,
-        ...customValues,
-        employeeId: resolvedEmployeeId,
-        contactId: String(teacherDraft.contactId || ""),
-        ...(teacher?.id != null ? { id: teacher.id } : {}),
-      } as Teacher;
-      const parsed = teacherCoreSchema.safeParse(payload);
-      if (!parsed.success) {
-        setErrors({ schema: t("common.formPleaseFixErrors") });
-        notify.error(t("common.formPleaseFixErrors"));
-        return;
-      }
-      await onSave(parsed.data as Teacher);
-      onClose();
-    } catch (err: unknown) {
-      notify.error(t("teachers.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      });
-    } finally {
-      setSaving(false);
-    }
+    await runTeacherSaveFlow({
+      teacherDraft,
+      teacher,
+      autoGenerateId,
+      nextEmployeeId,
+      settings,
+      enabledTabs,
+      fields: fieldsMap,
+      language,
+      visibleTabKeys: visibleTabs.map((tab) => tab.key),
+      t,
+      onSave,
+      onClose,
+      setErrors,
+      setActiveTab,
+      setSaving,
+    });
   };
 
   return {
     t,
     saving,
     errors,
-    customValues,
     teacherDraft,
     isDirty,
     defaultSpecialization,
     specializationOptions,
     statusOptions,
+    statusConfig,
     autoGenerateId,
     requireContactLink,
-    customFields,
+    fieldsMap,
     linkedContact,
     linkedTeacherContactIds,
     idPrefix,
     nextEmployeeId,
+    formInstanceId,
+    activeTab,
+    setActiveTab,
+    visibleTabs,
+    isFieldEnabled,
+    isFieldRequired,
+    getFieldError,
     updateDraft,
-    updateCustomValue,
     handleSave,
   };
 }

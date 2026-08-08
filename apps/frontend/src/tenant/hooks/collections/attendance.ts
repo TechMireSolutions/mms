@@ -5,9 +5,11 @@
 export {
   ATTENDANCE_QUERY_KEY,
   ATTENDANCE_METRICS_QUERY_KEY,
+  ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY,
   useAttendancePaginated,
   useAttendanceRecords,
   useAttendanceRecordsCollection,
+  useAttendanceReportAggregates,
   useAttendanceMutations,
   useAttendanceMetrics,
 } from '@/tenant/features/attendance/hooks/useAttendance';

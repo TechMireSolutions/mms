@@ -1,11 +1,9 @@
-import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
-import type { Invoice } from "@/lib/data/financeData";
-import type { Denomination, Distribution } from "@/lib/data/hasanatData";
-import {
-  getCollectedAmountForInvoice,
-  getDenominationPoints,
-  type EnrollmentsReportComparison,
+import type {
+  AttendanceReportComparison,
+  EnrollmentsReportComparison,
+  FinanceReportComparison,
+  HasanatReportComparison,
 } from "@mms/shared";
 
 import {
@@ -18,12 +16,11 @@ import type { DateRange, DateRangeDataItem } from "./comparisonModeTypes";
 export function computeDynamicDateRangeComparison(
   category: string,
   enrollmentMonthly: EnrollmentsReportComparison["monthly"] | undefined,
-  attendanceRecords: AttendanceRecord[],
-  financeInvoices: Invoice[],
-  hasanatDistributions: Distribution[],
+  attendanceMonthly: AttendanceReportComparison["monthly"] | undefined,
+  financeMonthly: FinanceReportComparison["monthly"] | undefined,
+  hasanatMonthly: HasanatReportComparison["monthly"] | undefined,
   examResults: ExamResult[],
   exams: Exam[],
-  denoms: Denomination[],
   rangeA: DateRange,
   rangeB: DateRange,
 ): DateRangeDataItem[] {
@@ -35,49 +32,38 @@ export function computeDynamicDateRangeComparison(
   const lowerCat = category.toLowerCase();
 
   if (lowerCat === "financial") {
-    financeInvoices.forEach((invoice) => {
-      const paid = getCollectedAmountForInvoice(invoice);
-
-      if (isInComparisonDateRange(invoice.dueDate, rangeA.from, rangeA.to)) {
-        const monthIndex = getComparisonMonthIndex(invoice.dueDate);
-        if (monthIndex >= 0) bucketA[monthIndex] += paid;
-      }
-      if (isInComparisonDateRange(invoice.dueDate, rangeB.from, rangeB.to)) {
-        const monthIndex = getComparisonMonthIndex(invoice.dueDate);
-        if (monthIndex >= 0) bucketB[monthIndex] += paid;
-      }
-    });
+    for (const monthBucket of financeMonthly?.a ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) bucketA[monthIndex] += monthBucket.collected;
+    }
+    for (const monthBucket of financeMonthly?.b ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) bucketB[monthIndex] += monthBucket.collected;
+    }
   } else if (lowerCat === "attendance") {
-    attendanceRecords.forEach((attendanceRecord) => {
-      const isPresent = attendanceRecord.status === "present" || attendanceRecord.status === "late";
-      const attendanceValue = isPresent ? 1 : 0;
-      if (isInComparisonDateRange(attendanceRecord.date, rangeA.from, rangeA.to)) {
-        const monthIndex = getComparisonMonthIndex(attendanceRecord.date);
-        if (monthIndex >= 0) {
-          bucketA[monthIndex] += attendanceValue;
-          countA[monthIndex] += 1;
-        }
+    for (const monthBucket of attendanceMonthly?.a ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) {
+        bucketA[monthIndex] += monthBucket.presentCount;
+        countA[monthIndex] += monthBucket.total;
       }
-      if (isInComparisonDateRange(attendanceRecord.date, rangeB.from, rangeB.to)) {
-        const monthIndex = getComparisonMonthIndex(attendanceRecord.date);
-        if (monthIndex >= 0) {
-          bucketB[monthIndex] += attendanceValue;
-          countB[monthIndex] += 1;
-        }
+    }
+    for (const monthBucket of attendanceMonthly?.b ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) {
+        bucketB[monthIndex] += monthBucket.presentCount;
+        countB[monthIndex] += monthBucket.total;
       }
-    });
+    }
   } else if (lowerCat === "hasanat") {
-    hasanatDistributions.forEach((distribution) => {
-      const points = (distribution.quantity || 1) * getDenominationPoints(distribution.denominationId, distribution.denominationName, denoms);
-      if (isInComparisonDateRange(distribution.issuedDate, rangeA.from, rangeA.to)) {
-        const monthIndex = getComparisonMonthIndex(distribution.issuedDate);
-        if (monthIndex >= 0) bucketA[monthIndex] += points;
-      }
-      if (isInComparisonDateRange(distribution.issuedDate, rangeB.from, rangeB.to)) {
-        const monthIndex = getComparisonMonthIndex(distribution.issuedDate);
-        if (monthIndex >= 0) bucketB[monthIndex] += points;
-      }
-    });
+    for (const monthBucket of hasanatMonthly?.a ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) bucketA[monthIndex] += monthBucket.points;
+    }
+    for (const monthBucket of hasanatMonthly?.b ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) bucketB[monthIndex] += monthBucket.points;
+    }
   } else if (lowerCat === "students" || lowerCat === "enrollments") {
     for (const monthBucket of enrollmentMonthly?.a ?? []) {
       const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);

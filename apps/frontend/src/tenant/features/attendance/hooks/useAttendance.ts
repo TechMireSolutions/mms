@@ -1,6 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AttendanceCommandMetricsSnapshot, AttendanceListPageResult } from '@mms/shared';
-import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
+import type {
+  AttendanceCommandMetricsSnapshot,
+  AttendanceListPageResult,
+  AttendanceReportAggregates,
+  AttendanceReportComparisonQuery,
+} from '@mms/shared';
+import {
+  ATTENDANCE_MODULE_MANIFEST,
+  normalizeAttendanceReportComparisonQuery,
+} from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
@@ -10,6 +18,10 @@ import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
 export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
 export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
+export const ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY = [
+  ATTENDANCE_MODULE_MANIFEST.collectionKey,
+  'report-aggregates',
+] as const;
 
 const ATTENDANCE_API = ATTENDANCE_MODULE_MANIFEST.restBasePath;
 
@@ -146,6 +158,32 @@ export function useAttendanceMutations() {
 /** Query-first attendance; falls back to localStorage cache (hydrated). */
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
   return useAttendanceRecords(options).syncedData;
+}
+
+export function useAttendanceReportAggregates(
+  options?: { enabled?: boolean; comparison?: AttendanceReportComparisonQuery },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  const comparison = normalizeAttendanceReportComparisonQuery(options?.comparison);
+  const queryParams = new URLSearchParams();
+  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
+  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
+  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
+  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
+  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
+    queryFn: async ({ signal }): Promise<AttendanceReportAggregates> =>
+      apiJson<AttendanceReportAggregates>(
+        `${ATTENDANCE_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled: isAuthenticated && enabled,
+    staleTime: 30_000,
+  });
 }
 
 export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {

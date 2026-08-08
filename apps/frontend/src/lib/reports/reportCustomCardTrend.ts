@@ -16,6 +16,7 @@ export function calculateCustomCardDynamicTrend(
     students: 'registeredDate',
     teachers: 'joinDate',
     sessions: 'startDate',
+    enrollments: 'enrolledDate',
     finance_invoices: 'dueDate',
     attendance_records: 'date',
     hasanat_distributions: 'issuedDate',

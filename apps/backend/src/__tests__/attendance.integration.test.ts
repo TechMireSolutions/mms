@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
-import { adminToken, teacherToken } from './helpers/tokens.js';
+import { adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -30,6 +30,7 @@ const mockDeleteAttendanceRecordById = vi.fn();
 const mockRestoreAttendanceRecordById = vi.fn();
 const mockBulkSoftDeleteAttendance = vi.fn();
 const mockBulkRestoreAttendance = vi.fn();
+const mockLoadAttendanceReportAggregates = vi.fn();
 
 vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: (...args: unknown[]) => mockLoadAttendanceRecords(...args),
@@ -42,6 +43,7 @@ vi.mock('../services/attendanceService.js', () => ({
   bulkRestoreAttendance: (...args: unknown[]) => mockBulkRestoreAttendance(...args),
   upsertAttendanceRecords: (...args: unknown[]) => mockUpsertAttendanceRecords(...args),
   replaceAttendanceRecords: vi.fn(),
+  loadAttendanceReportAggregates: (...args: unknown[]) => mockLoadAttendanceReportAggregates(...args),
 }));
 
 const attendanceRecord = {
@@ -73,6 +75,9 @@ describe('attendance REST routes integration', () => {
     mockRestoreAttendanceRecordById.mockReset();
     mockBulkSoftDeleteAttendance.mockReset();
     mockBulkRestoreAttendance.mockReset();
+    mockLoadAttendanceReportAggregates.mockReset().mockResolvedValue({
+      comparison: { sessions: [], monthly: { a: [], b: [] } },
+    });
   });
 
   afterEach(() => {
@@ -204,6 +209,52 @@ describe('attendance REST routes integration', () => {
     expect(res.statusCode).toBe(200);
     expect(mockLoadAttendancePage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
     expect(res.json().records[0].deletedAt).toBeTruthy();
+    await app.close();
+  });
+
+  it('GET /api/attendance/report-aggregates loads comparison for authorized roles', async () => {
+    mockLoadAttendanceReportAggregates.mockResolvedValueOnce({
+      comparison: {
+        sessions: [{ sessionId: 's1', attendancePct: 80 }],
+        monthly: {
+          a: [{ monthKey: '2026-01', presentCount: 8, total: 10 }],
+          b: [{ monthKey: '2026-04', presentCount: 9, total: 12 }],
+        },
+      },
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance/report-aggregates?sessionIds=s1,s2&rangeAFrom=2026-01-01&rangeATo=2026-03-31&rangeBFrom=2026-04-01&rangeBTo=2026-06-30',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadAttendanceReportAggregates).toHaveBeenCalledWith({
+      sessionIds: ['s1', 's2'],
+      rangeAFrom: '2026-01-01',
+      rangeATo: '2026-03-31',
+      rangeBFrom: '2026-04-01',
+      rangeBTo: '2026-06-30',
+    });
+    expect(res.json().comparison?.sessions?.[0]?.attendancePct).toBe(80);
+    await app.close();
+  });
+
+  it('GET /api/attendance/report-aggregates returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance/report-aggregates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadAttendanceReportAggregates).not.toHaveBeenCalled();
     await app.close();
   });
 });

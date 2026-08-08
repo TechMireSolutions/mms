@@ -2,7 +2,7 @@ import React from "react";
 import { AnimatePresence } from "framer-motion";
 import { TeacherForm } from "@/tenant/features/teachers/components/TeacherForm";
 import type { MessagingTarget } from "@/hooks/useMessageComposerState";
-import type { Teacher } from "@/lib/data/teachersData";
+import type { Teacher } from '@mms/shared';
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 

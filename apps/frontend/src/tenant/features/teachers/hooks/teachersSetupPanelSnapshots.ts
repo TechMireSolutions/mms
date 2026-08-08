@@ -1,6 +1,8 @@
 import { createFieldsSetupSnapshot } from "@/lib/setup/createFieldsSetupSnapshot";
-
-const TEACHER_LOCKED_ENABLED_TABS = ["basic"] as const;
+import {
+  isTeacherLockedEnabledTab,
+  TEACHER_LOCKED_ENABLED_TABS,
+} from "@mms/shared";
 
 function withTeacherLockedEnabledTabs(tabIds: Iterable<string>): string[] {
   const next = new Set(
@@ -10,12 +12,6 @@ function withTeacherLockedEnabledTabs(tabIds: Iterable<string>): string[] {
     next.add(locked);
   }
   return [...next].sort();
-}
-
-function isTeacherLockedEnabledTab(tabKey: string): boolean {
-  return TEACHER_LOCKED_ENABLED_TABS.includes(
-    tabKey.toLowerCase() as (typeof TEACHER_LOCKED_ENABLED_TABS)[number],
-  );
 }
 
 /** Canonical Setup Fields dirty snapshot for Teachers. */

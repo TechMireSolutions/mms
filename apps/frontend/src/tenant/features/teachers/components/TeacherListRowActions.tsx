@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Teacher } from "@/lib/data/teachersData";
+import type { Teacher } from '@mms/shared';
 
 interface TeacherListRowActionsProps {
   teacher: Teacher;

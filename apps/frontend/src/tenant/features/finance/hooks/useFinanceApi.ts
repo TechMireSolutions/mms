@@ -1,13 +1,25 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Invoice, InvoiceCreateInput, Payment, PaymentCreateInput } from '@mms/shared';
-import { FINANCE_MODULE_MANIFEST } from '@mms/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  FinanceReportAggregates,
+  FinanceReportComparisonQuery,
+  Invoice,
+  InvoiceCreateInput,
+  Payment,
+  PaymentCreateInput,
+} from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST, normalizeFinanceReportComparisonQuery } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export const FINANCE_INVOICES_QUERY_KEY = ['finance', 'invoices', 'list'] as const;
 export const FINANCE_PAYMENTS_QUERY_KEY = ['finance', 'payments', 'list'] as const;
 export const FINANCE_METRICS_QUERY_KEY = ['finance', 'metrics'] as const;
+export const FINANCE_REPORT_AGGREGATES_QUERY_KEY = [
+  FINANCE_MODULE_MANIFEST.collectionKey,
+  'report-aggregates',
+] as const;
 
 const FINANCE_API = FINANCE_MODULE_MANIFEST.restBasePath;
 
@@ -44,6 +56,32 @@ export function useFinanceInvoicesCollection(options?: { enabled?: boolean; incl
 
 export function useFinancePaymentsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Payment[] {
   return useFinancePayments(options).syncedData;
+}
+
+export function useFinanceReportAggregates(
+  options?: { enabled?: boolean; comparison?: FinanceReportComparisonQuery },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  const comparison = normalizeFinanceReportComparisonQuery(options?.comparison);
+  const queryParams = new URLSearchParams();
+  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
+  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
+  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
+  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
+  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...FINANCE_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
+    queryFn: async ({ signal }): Promise<FinanceReportAggregates> =>
+      apiJson<FinanceReportAggregates>(
+        `${FINANCE_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled: isAuthenticated && enabled,
+    staleTime: 30_000,
+  });
 }
 
 export function useFinanceMutations() {

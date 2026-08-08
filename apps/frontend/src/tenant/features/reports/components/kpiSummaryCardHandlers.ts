@@ -17,11 +17,12 @@ import type { AggregateCardValue, CategorizedKPIItem, KPIItem } from './kpiSumma
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import type { Invoice } from '@/lib/data/financeData';
 import type { Denomination, Distribution } from '@/lib/data/hasanatData';
-import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from '@mms/shared';
+import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest, Enrollment } from '@mms/shared';
 import type { Session } from '@/lib/data/sessionsData';
 
 export interface CustomCardLocalCollections {
   sessions: Session[];
+  enrollments: Enrollment[];
   finance_invoices: Invoice[];
   attendance_records: AttendanceRecord[];
   hasanat_distributions: Distribution[];
@@ -73,6 +74,7 @@ export function computeCustomCardItems(
       students: [],
       teachers: [],
       sessions: localCollections.sessions,
+      enrollments: localCollections.enrollments,
       finance_invoices: localCollections.finance_invoices,
       attendance_records: localCollections.attendance_records,
       hasanat_distributions: localCollections.hasanat_distributions,

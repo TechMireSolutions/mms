@@ -1,7 +1,5 @@
 import {
-  normalizeStoredTeacher,
-  computeNextTeacherEmployeeId,
-  collectTeacherLinkedContactIds,
+  computeNextTeacherEmployeeIdFromCount,
   hydrateTeacherFromContact,
   type TeacherEmployeeIdSettings,
   type TeachersListQuery,
@@ -27,6 +25,8 @@ import {
 import {
   listTeachersPage,
   countTeachersActive,
+  countTeachersForNextEmployeeId,
+  listTeacherLinkedContactIdsSql,
   aggregateTeachersCommandMetrics,
   bulkUpdateTeachersStatusSql,
 } from '../db/repositories/teacherRepositoryList.js';
@@ -36,6 +36,7 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import { broadcastCollection } from './websocketService.js';
 
 type TeacherRepo = GenericServiceOptions<TeacherRecord>['repo'];
+/** Profile strip SSOT is `teacherRecordSchema` transform (`normalizeStoredTeacher`) — no second normalizeFn. */
 const crud = createGenericRelationalService<TeacherRecord>({
   repo: {
     listByWorkspace: listTeachersByWorkspace,
@@ -45,7 +46,6 @@ const crud = createGenericRelationalService<TeacherRecord>({
   schema: teacherRecordSchema,
   websocketCollection: 'teachers',
   idPrefix: 'tch',
-  normalizeFn: normalizeStoredTeacher as (record: TeacherRecord) => TeacherRecord,
 });
 
 export const createTeacher = crud.create;
@@ -57,7 +57,7 @@ export const bulkRestoreTeachers = crud.bulkRestoreByIds;
 
 export async function bulkUpdateTeacherStatus(
   ids: string[],
-  status: 'active' | 'inactive' | 'on_leave',
+  status: string,
 ): Promise<{ succeeded: number; failed: number }> {
   const tenant = getRequestTenant();
   if (!tenant) return { succeeded: 0, failed: ids.length };
@@ -81,7 +81,6 @@ const hydrated = createContactHydratedService<Teacher, TeacherRecord>({
   hydrateFn: (row, contacts) => hydrateTeacherFromContact(row as never, contacts as never) as unknown as TeacherRecord,
 });
 
-export const loadTeachers = hydrated.loadAll;
 export const loadTeacherById = hydrated.loadById;
 export const loadTeachersByIds = hydrated.loadByIds;
 
@@ -122,6 +121,7 @@ export async function loadTeachersCommandMetrics() {
       active: 0,
       inactive: 0,
       onLeave: 0,
+      other: 0,
       newThisPeriod: 0,
     };
   }
@@ -131,13 +131,15 @@ export async function loadTeachersCommandMetrics() {
 
 
 export async function loadTeacherLinkedContactIds(excludeTeacherId?: string) {
-  const all = await loadTeachers();
-  return collectTeacherLinkedContactIds(all, excludeTeacherId);
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return listTeacherLinkedContactIdsSql(tenant, excludeTeacherId);
 }
 
 export async function computeNextTeacherEmployeeIdForSettings(settings: TeacherEmployeeIdSettings) {
-  const all = await loadTeachers();
-  return computeNextTeacherEmployeeId(all, settings);
+  const tenant = getRequestTenant();
+  const count = tenant ? await countTeachersForNextEmployeeId(tenant) : 0;
+  return computeNextTeacherEmployeeIdFromCount(count, settings);
 }
 
 export async function loadTeacherFieldUsageCounts(

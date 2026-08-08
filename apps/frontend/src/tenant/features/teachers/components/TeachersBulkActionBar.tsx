@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/BulkSelectionActions';
 import { type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { Teacher } from '@/lib/data/teachersData';
+import type { Teacher } from '@mms/shared';
 
 export interface TeachersBulkActionBarProps {
   selectedIds: string[];

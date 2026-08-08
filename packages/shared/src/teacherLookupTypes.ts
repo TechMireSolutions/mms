@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
-  TEACHER_SPECIALIZATION_VALUES,
-  TEACHER_STATUS_VALUES,
+  resolveTeacherSpecializations,
+  resolveTeacherStatuses,
 } from './teacherTypes.js';
 
 /** Teachers Setup option-list kinds migrated off document-store collections. */
@@ -49,9 +49,9 @@ export function isTeacherLookupLegacyCollectionKey(
 export function defaultTeacherLookupItems(kind: TeacherLookupKind): string[] {
   switch (kind) {
     case 'statuses':
-      return [...TEACHER_STATUS_VALUES];
+      return [...resolveTeacherStatuses()];
     case 'specializations':
-      return [...TEACHER_SPECIALIZATION_VALUES];
+      return [...resolveTeacherSpecializations()];
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;

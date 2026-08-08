@@ -1,11 +1,13 @@
-import { z } from 'zod';
 import {
   teacherCoreSchema,
   teacherRecordSchema,
   teacherListSchema,
   teachersListQuerySchema,
+  teachersBulkStatusSchema,
+  teachersNextEmployeeIdQuerySchema,
   type TeacherRecord,
 } from '@mms/shared';
+import { bulkIdsBodySchema } from './commonSchemas.js';
 import {
   csvExportBodySchema,
   moduleExportAuditBodySchema,
@@ -17,25 +19,16 @@ export {
   teacherRecordSchema,
   teacherListSchema,
   teachersListQuerySchema,
+  teachersBulkStatusSchema,
+  teachersNextEmployeeIdQuerySchema,
   type TeacherRecord,
 };
 
-export const teachersNextEmployeeIdQuerySchema = z.object({
-  prefix: z.string().max(16).optional(),
-});
-
-export const teachersBulkIdsSchema = z.object({
-  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
-  deletionReason: z.string().max(500).optional(),
-});
-
-export const teachersBulkStatusSchema = z.object({
-  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
-  status: z.enum(['active', 'inactive', 'on_leave']),
-});
+export const teachersBulkIdsSchema = bulkIdsBodySchema;
 
 export const teachersCsvExportBodySchema = csvExportBodySchema(teachersListQuerySchema);
 
 export const teacherExportAuditSchema = moduleExportAuditBodySchema;
 
+/** Teachers Setup audit — fields/preferences only (Students parity). */
 export const teacherSetupAuditSchema = studentSetupAuditBodySchema;

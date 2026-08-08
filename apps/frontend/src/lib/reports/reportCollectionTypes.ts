@@ -4,6 +4,7 @@ export type ReportCollection =
   | "students"
   | "teachers"
   | "sessions"
+  | "enrollments"
   | "finance_invoices"
   | "attendance_records"
   | "hasanat_distributions"
@@ -38,6 +39,7 @@ export const COLLECTION_OPTIONS = [
   { value: "students", label: "Students" },
   { value: "teachers", label: "Teachers" },
   { value: "sessions", label: "Sessions" },
+  { value: "enrollments", label: "Enrollments" },
   { value: "finance_invoices", label: "Invoices (Finance)" },
   { value: "attendance_records", label: "Attendance Records" },
   { value: "hasanat_distributions", label: "Hasanat Distributions" },

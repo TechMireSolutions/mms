@@ -7,6 +7,7 @@ import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/Tea
 import { TeacherCardActions } from "@/tenant/features/teachers/components/TeacherCardActions";
 import { TeacherCardHeader } from "@/tenant/features/teachers/components/TeacherCardHeader";
 import { TeacherCardMetadata } from "@/tenant/features/teachers/components/TeacherCardMetadata";
+import { resolveTeacherDisplayName } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 
 type TeacherListCardsProps = Omit<
@@ -26,7 +27,8 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
     canWrite,
     canDelete,
     isColumnVisible,
-    visibleCustomFields,
+    columnRegistry,
+    customFieldsById,
     statusConfig,
     onSelectAll,
     onSelectOne,
@@ -61,7 +63,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
       <DirectoryCardsGrid>
         {teachers.map((teacher) => {
           const teacherIdStr = String(teacher.id);
-          const displayName = teacher.name || t("teachers.contactMissing");
+          const displayName = resolveTeacherDisplayName(teacher, t);
           const isSelected = selectedIds.includes(teacherIdStr);
 
           return (
@@ -84,7 +86,8 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
               <TeacherCardMetadata
                 teacher={teacher}
                 isColumnVisible={isColumnVisible}
-                visibleCustomFields={visibleCustomFields}
+                columnRegistry={columnRegistry}
+                customFieldsById={customFieldsById}
                 statusConfig={statusConfig}
               />
               <TeacherCardActions

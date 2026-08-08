@@ -120,6 +120,9 @@ vi.mock('../services/hasanatService.js', () => ({
   restoreDistributionById: (...args: unknown[]) => mockRestoreHasanatDistributionById(...args),
   bulkSoftDeleteDistributions: vi.fn(),
   bulkRestoreDistributions: vi.fn(),
+  loadHasanatReportAggregates: vi.fn().mockResolvedValue({
+    comparison: { sessions: [], monthly: { a: [], b: [] } },
+  }),
 }));
 
 const mockDeleteExamById = vi.fn();

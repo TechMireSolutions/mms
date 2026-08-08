@@ -31,7 +31,7 @@ function existsActiveTeacherLinkSql(subdomain: string): SQL {
     SELECT 1 FROM ${teachers}
     WHERE ${teachers.workspaceSubdomain} = ${subdomain}
       AND ${teachers.deletedAt} IS NULL
-      AND NULLIF(trim(${teachers.customData}->>'contactId'), '') = ${contacts.id}
+      AND NULLIF(trim(${teachers.contactId}), '') = ${contacts.id}
   )`;
 }
 

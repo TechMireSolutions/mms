@@ -14,6 +14,7 @@ import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
 import { useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
+import { useEnrollmentsWidgetAggregates } from '@/tenant/hooks/collections/enrollments';
 import { applyContactsWidgetWorkDrillDown } from '@/lib/contacts/contactsWidgetWorkDrillDown';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -84,6 +85,7 @@ export function DashboardWidgets({
   useStudentsWidgetAggregates(activeWidgets);
   useTeachersWidgetAggregates(activeWidgets);
   useSessionsWidgetAggregates(activeWidgets);
+  useEnrollmentsWidgetAggregates(activeWidgets);
 
   const handleMetricClick = useCallback((widget: CustomWidget) => {
     if (applyContactsWidgetWorkDrillDown(widget)) return;

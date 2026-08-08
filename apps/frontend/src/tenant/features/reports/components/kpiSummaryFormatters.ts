@@ -1,5 +1,5 @@
 import { BarChart2, Users, type LucideIcon } from 'lucide-react';
-import type { Contact, QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from '@mms/shared';
+import type { Contact, Enrollment, QuestionBankQuestion, QuestionBankResult, QuestionBankTest } from '@mms/shared';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import type { Invoice } from '@/lib/data/financeData';
@@ -54,6 +54,7 @@ export function computeLocalCustomCard(
     students: Student[];
     teachers: Teacher[];
     sessions: Session[];
+    enrollments?: Enrollment[];
     finance_invoices: Invoice[];
     attendance_records: AttendanceRecord[];
     hasanat_distributions: Distribution[];

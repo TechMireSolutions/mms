@@ -22,7 +22,6 @@ export const teacherPreferencesPutBodySchema = z
     autoGenerateId: z.boolean().optional(),
     requireContactLink: z.boolean().optional(),
     defaultSpecialization: z.string().optional(),
-    defaultViewLayout: z.string().optional(),
   })
   .passthrough();
 
@@ -32,7 +31,6 @@ export type TeacherModulePreferences = Pick<
   | 'autoGenerateId'
   | 'requireContactLink'
   | 'defaultSpecialization'
-  | 'defaultViewLayout'
 >;
 
 const PREF_KEYS = [
@@ -40,7 +38,6 @@ const PREF_KEYS = [
   'autoGenerateId',
   'requireContactLink',
   'defaultSpecialization',
-  'defaultViewLayout',
 ] as const;
 
 /** Normalize Teachers module preferences (typed `teacher_module_preferences`). */
@@ -52,7 +49,6 @@ export function normalizeTeacherModulePreferences(
     autoGenerateId: DEFAULT_TEACHERS_SETTINGS.autoGenerateId,
     requireContactLink: DEFAULT_TEACHERS_SETTINGS.requireContactLink,
     defaultSpecialization: DEFAULT_TEACHERS_SETTINGS.defaultSpecialization,
-    defaultViewLayout: DEFAULT_TEACHERS_SETTINGS.defaultViewLayout,
   };
   if (!partial || typeof partial !== 'object') return { ...defaults };
 
@@ -73,10 +69,6 @@ export function normalizeTeacherModulePreferences(
       typeof partial.defaultSpecialization === 'string' && partial.defaultSpecialization.trim()
         ? partial.defaultSpecialization
         : defaults.defaultSpecialization,
-    defaultViewLayout:
-      typeof partial.defaultViewLayout === 'string' && partial.defaultViewLayout.trim()
-        ? partial.defaultViewLayout
-        : defaults.defaultViewLayout,
   };
 }
 
@@ -108,9 +100,7 @@ export function normalizeTeachersSettings(config: unknown): TeachersSettings {
     ...defaults,
     ...(raw as Partial<TeachersSettings>),
     ...prefs,
-    customFields: Array.isArray(raw.customFields)
-      ? (raw.customFields as TeachersSettings['customFields'])
-      : defaults.customFields,
+    customFields: [],
     fieldOrder: Array.isArray(raw.fieldOrder)
       ? (raw.fieldOrder as string[])
       : defaults.fieldOrder,
@@ -127,6 +117,8 @@ export function normalizeTeachersSettings(config: unknown): TeachersSettings {
       ? (raw.columnRegistry as TeachersSettings['columnRegistry'])
       : raw.columnRegistry as TeachersSettings['columnRegistry'],
   };
+  // Retired Setup preference — Work uses useWorkDirectoryViewMode (Students parity).
+  delete (merged as TeachersSettings & { defaultViewLayout?: unknown }).defaultViewLayout;
   return merged;
 }
 

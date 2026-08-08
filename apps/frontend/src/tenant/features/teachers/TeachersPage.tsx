@@ -36,6 +36,10 @@ export default function Teachers(): React.JSX.Element {
     search,
     filterStatus,
     filterSpecialization,
+    selectedIds,
+    clearSelection,
+    handleSelectOne,
+    handleSelectAll,
     editTeacher,
     setEditTeacher,
     pageActions,
@@ -43,7 +47,6 @@ export default function Teachers(): React.JSX.Element {
     workPageQuery,
     workTeachers,
     shownCount,
-    listPage,
     toggleStatus,
     setSearch,
     setFilterStatus,
@@ -54,12 +57,9 @@ export default function Teachers(): React.JSX.Element {
     setListPage,
     viewMode,
     setViewMode,
-    exportColumns,
-    logExportAudit,
     handleExportCSV,
+    handleBulkExport,
     clearFilters,
-    selectionClearToken,
-    setSelectedCount,
   } = useTeachersPageController();
 
   const {
@@ -136,8 +136,6 @@ export default function Teachers(): React.JSX.Element {
               canWrite={canWrite}
               canDelete={canDelete}
               canExport={canExport}
-              exportColumns={exportColumns}
-              logExportAudit={logExportAudit}
               columnRegistry={columnRegistry}
               updateUserColumnLayout={updateUserColumnLayout}
               customizerLabels={customizerLabels}
@@ -149,7 +147,11 @@ export default function Teachers(): React.JSX.Element {
               useServerWork={useServerWork}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
-              selectionResetKey={`${listPage}:${search}:${filterStatus.join(',')}:${filterSpecialization}:${sortField}:${sortDir}:${selectionClearToken}`}
+              selectedIds={selectedIds}
+              onSelectOne={handleSelectOne}
+              onSelectAll={handleSelectAll}
+              onClearSelection={clearSelection}
+              onBulkExport={handleBulkExport}
               sortField={sortField}
               sortDir={sortDir}
               isColumnVisible={isColumnVisible}
@@ -175,7 +177,6 @@ export default function Teachers(): React.JSX.Element {
                 setSortDir(dir);
               }}
               onPageChange={setListPage}
-              onSelectedCountChange={setSelectedCount}
             />
           ) : activeTab === 'reports' ? (
             <TeachersReportsTier />

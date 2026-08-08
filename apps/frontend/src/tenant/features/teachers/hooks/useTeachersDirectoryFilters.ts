@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import {
+  toggleIdInSelection,
+  togglePageIdsInSelection,
+} from '@/lib/directorySelection';
 import type { TeacherSortField } from '@/tenant/features/teachers/components/TeacherList';
 
-/** Directory filters, sort, and trash SSOT for Teachers Work (Students-shaped). */
+/** Directory filters, sort, trash, and selection SSOT for Teachers Work (Students-shaped). */
 export function useTeachersDirectoryFilters() {
   const [listPage, setListPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
@@ -12,11 +16,15 @@ export function useTeachersDirectoryFilters() {
   const debouncedSearch = useDebounce(search, 250);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterSpecialization, setFilterSpecialization] = useState('');
-  const [selectionClearToken, setSelectionClearToken] = useState(0);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setListPage(1);
   }, [debouncedSearch, filterStatus, filterSpecialization, showDeleted, sortField, sortDir]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [listPage, debouncedSearch, filterStatus, filterSpecialization, showDeleted, sortField, sortDir]);
 
   const toggleStatus = (status: string) =>
     setFilterStatus((selectedStatuses) =>
@@ -32,7 +40,15 @@ export function useTeachersDirectoryFilters() {
   }, []);
 
   const clearSelection = useCallback(() => {
-    setSelectionClearToken((token) => token + 1);
+    setSelectedIds([]);
+  }, []);
+
+  const handleSelectOne = useCallback((id: string) => {
+    setSelectedIds((current) => toggleIdInSelection(current, id));
+  }, []);
+
+  const handleSelectAll = useCallback((pageIds: string[]) => {
+    setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
   }, []);
 
   const hasActiveFilters =
@@ -56,10 +72,12 @@ export function useTeachersDirectoryFilters() {
     setFilterStatus,
     filterSpecialization,
     setFilterSpecialization,
+    selectedIds,
+    clearSelection,
+    handleSelectOne,
+    handleSelectAll,
     toggleStatus,
     clearFilters,
-    clearSelection,
     hasActiveFilters,
-    selectionClearToken,
   };
 }

@@ -1,13 +1,11 @@
-import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
-import type { Invoice } from "@/lib/data/financeData";
-import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 import type { Session } from "@/lib/data/sessionsData";
-import {
-  getCollectedAmountForInvoice,
-  getDenominationPoints,
-  type AppTranslationKey,
-  type EnrollmentsReportComparisonSession,
+import type {
+  AppTranslationKey,
+  AttendanceReportComparisonSession,
+  EnrollmentsReportComparisonSession,
+  FinanceReportComparisonSession,
+  HasanatReportComparisonSession,
 } from "@mms/shared";
 
 import type { ComparisonDataItem } from "./comparisonModeTypes";
@@ -15,12 +13,11 @@ import type { ComparisonDataItem } from "./comparisonModeTypes";
 export function computeDynamicSessionComparison(
   sessions: Session[],
   enrollmentSessions: EnrollmentsReportComparisonSession[],
-  attendanceRecords: AttendanceRecord[],
-  financeInvoices: Invoice[],
-  hasanatDistributions: Distribution[],
+  attendanceSessions: AttendanceReportComparisonSession[],
+  financeSessions: FinanceReportComparisonSession[],
+  hasanatSessions: HasanatReportComparisonSession[],
   examResults: ExamResult[],
   exams: Exam[],
-  denoms: Denomination[],
   targetA: string,
   targetB: string,
   t: (key: AppTranslationKey) => string,
@@ -30,6 +27,15 @@ export function computeDynamicSessionComparison(
   const enrollmentBySessionId = new Map(
     enrollmentSessions.map((row) => [row.sessionId, row] as const),
   );
+  const attendanceBySessionId = new Map(
+    attendanceSessions.map((row) => [row.sessionId, row] as const),
+  );
+  const financeBySessionId = new Map(
+    financeSessions.map((row) => [row.sessionId, row] as const),
+  );
+  const hasanatBySessionId = new Map(
+    hasanatSessions.map((row) => [row.sessionId, row] as const),
+  );
 
   const getMetrics = (session: Session | undefined) => {
     if (!session) {
@@ -37,22 +43,13 @@ export function computeDynamicSessionComparison(
     }
 
     const sessionId = session.id;
-    const sessionName = session.name;
     const enrollmentRow = enrollmentBySessionId.get(sessionId);
     const enrollment = enrollmentRow?.enrollmentCount ?? 0;
 
     const classIds = new Set(session.classes?.map((sessionClass) => sessionClass.id) || []);
-    const sessionAttendance = attendanceRecords.filter((attendanceRecord) => classIds.has(attendanceRecord.classId));
-    const presentCount = sessionAttendance.filter((attendanceRecord) => attendanceRecord.status === "present" || attendanceRecord.status === "late").length;
-    const attendancePct = sessionAttendance.length > 0
-      ? Math.round((presentCount / sessionAttendance.length) * 100)
-      : 0;
+    const attendancePct = attendanceBySessionId.get(sessionId)?.attendancePct ?? 0;
 
-    const sessionInvoices = financeInvoices.filter((invoice) => invoice.session === sessionId || invoice.session === sessionName);
-    let feeCollected = 0;
-    sessionInvoices.forEach((invoice) => {
-      feeCollected += getCollectedAmountForInvoice(invoice);
-    });
+    const feeCollected = financeBySessionId.get(sessionId)?.feeCollected ?? 0;
 
     const sessionExams = exams.filter((exam) => exam.classIds && exam.classIds.some((classId: string) => classIds.has(classId)));
     const sessionExamIds = new Set(sessionExams.map((exam) => exam.id));
@@ -68,13 +65,7 @@ export function computeDynamicSessionComparison(
       ? Math.round((passCount / sessionResults.length) * 100)
       : 0;
 
-    const studentIds = new Set(enrollmentRow?.studentIds ?? []);
-    let hasanat = 0;
-    hasanatDistributions.forEach((distribution) => {
-      if (distribution.recipientStudentId && studentIds.has(distribution.recipientStudentId)) {
-        hasanat += (distribution.quantity || 1) * getDenominationPoints(distribution.denominationId, distribution.denominationName, denoms);
-      }
-    });
+    const hasanat = hasanatBySessionId.get(sessionId)?.hasanat ?? 0;
 
     return { enrollment, attendancePct, feeCollected, passRatePct, hasanat };
   };

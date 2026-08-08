@@ -20,9 +20,22 @@ describe('teacherUtils', () => {
       expect(normalized.id).toBe('t-1');
       expect(normalized.contactId).toBe('c-300');
       expect(normalized.specialization).toBe('Hifz');
-      expect((normalized as any).name).toBeUndefined();
-      expect((normalized as any).email).toBeUndefined();
-      expect((normalized as any).phone).toBeUndefined();
+      expect((normalized as Record<string, unknown>).name).toBeUndefined();
+      expect((normalized as Record<string, unknown>).email).toBeUndefined();
+      expect((normalized as Record<string, unknown>).phone).toBeUndefined();
+    });
+
+    it('strips profile fields and clears empty contactId', () => {
+      const normalized = normalizeStoredTeacher({
+        contactId: '',
+        name: 'Orphan Name',
+        firstName: 'Orphan',
+        specialization: 'Tajweed',
+      });
+      expect((normalized as Record<string, unknown>).contactId).toBeUndefined();
+      expect((normalized as Record<string, unknown>).name).toBeUndefined();
+      expect((normalized as Record<string, unknown>).firstName).toBeUndefined();
+      expect(normalized.specialization).toBe('Tajweed');
     });
   });
 

@@ -1,24 +1,18 @@
 import {
   TEACHERS_MODULE_MANIFEST,
+  DEFAULT_TEACHER_EXPORT_COLUMNS,
   buildCsvContent,
   buildTeachersExportRows,
   filterTeacherExportColumnsForViewer,
   type Teacher,
   type TeacherExportColumn,
   type TeachersListQuery,
+  type TeachersSettings,
 } from '@mms/shared';
 import { createModuleCsvExportService } from '../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
+import { loadTeacherFieldConfig } from './teacherConfigService.js';
 import { loadTeachersByIds, loadTeachersPage } from './teacherService.js';
-
-const DEFAULT_EXPORT_COLUMNS: TeacherExportColumn[] = [
-  { id: 'name', label: 'Name' },
-  { id: 'employeeId', label: 'Employee ID' },
-  { id: 'specialization', label: 'Specialization' },
-  { id: 'status', label: 'Status' },
-  { id: 'qualification', label: 'Qualification' },
-  { id: 'joinDate', label: 'Join date' },
-];
 
 type TeachersExportQueryInput = Omit<TeachersListQuery, 'includeDeleted'> & {
   includeDeleted?: boolean | 'true' | 'false';
@@ -45,8 +39,15 @@ async function prepareTeachersExport(
   options: TeachersCsvExportOptions,
 ): Promise<{ columns: TeacherExportColumn[]; context: undefined }> {
   const requestedColumns =
-    options.columns && options.columns.length > 0 ? options.columns : DEFAULT_EXPORT_COLUMNS;
-  const columns = filterTeacherExportColumnsForViewer(requestedColumns);
+    options.columns && options.columns.length > 0
+      ? options.columns
+      : DEFAULT_TEACHER_EXPORT_COLUMNS;
+  const settings = (await loadTeacherFieldConfig()) as TeachersSettings | null;
+  const columns = filterTeacherExportColumnsForViewer(
+    requestedColumns,
+    settings,
+    options.viewerRole,
+  );
   return { columns, context: undefined };
 }
 

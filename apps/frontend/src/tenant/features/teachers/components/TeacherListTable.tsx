@@ -1,10 +1,8 @@
 import React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   Table,
   TableBody,
@@ -17,10 +15,15 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherListTypes";
+import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 import {
-  getTeacherCustomFieldValue,
-  type TeacherListContentProps,
-} from "@/tenant/features/teachers/components/teacherListContentShared";
+  getTeacherVisibleWorkColumns,
+  teacherWorkColumnCellClass,
+  teacherWorkColumnHeadClass,
+  toTeacherListSortField,
+} from "@/tenant/features/teachers/components/teacherListVisibleColumns";
+import { resolveTeacherDisplayName } from "@/tenant/features/teachers/components/teacherFieldDisplay";
+import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
 
 type TeacherListTableProps = Omit<TeacherListContentProps, never>;
 
@@ -36,7 +39,8 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
     canWrite,
     canDelete,
     isColumnVisible,
-    visibleCustomFields,
+    columnRegistry,
+    customFieldsById,
     statusConfig,
     sortField,
     sortDir,
@@ -54,6 +58,10 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
     onEmail,
   } = props;
   const { t } = useTranslation();
+
+  const visibleColumns = getTeacherVisibleWorkColumns(columnRegistry, isColumnVisible, {
+    excludeFace: true,
+  });
 
   const renderSortIcon = (field: TeacherSortField) => {
     if (sortField !== field) return <ChevronUp className="w-3 h-3 opacity-25" />;
@@ -79,41 +87,33 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
               {t("teachers.field.name")} {renderSortIcon("name")}
             </Button>
           </ResizableTableHead>
-          {isColumnVisible("specialization") && (
-            <ResizableTableHead columnKey="specialization" width={getColumnWidth?.("specialization")} onResize={onColumnResize} className="px-4 py-3 text-start hidden sm:table-cell">
-              <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => onSort("specialization")}>
-                {t("teachers.field.specialization")} {renderSortIcon("specialization")}
-              </Button>
-            </ResizableTableHead>
-          )}
-          {isColumnVisible("qualification") && (
-            <ResizableTableHead columnKey="qualification" width={getColumnWidth?.("qualification")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
-              <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => onSort("qualification")}>
-                {t("teachers.field.qualification")} {renderSortIcon("qualification")}
-              </Button>
-            </ResizableTableHead>
-          )}
-          {isColumnVisible("joinDate") && (
-            <ResizableTableHead columnKey="joinDate" width={getColumnWidth?.("joinDate")} onResize={onColumnResize} className="px-4 py-3 text-start hidden md:table-cell">
-              <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => onSort("joinDate")}>
-                {t("teachers.field.joinDate")} {renderSortIcon("joinDate")}
-              </Button>
-            </ResizableTableHead>
-          )}
-          {isColumnVisible("status") && (
-            <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-3 text-start">
-              <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => onSort("status")}>
-                {t("teachers.field.status")} {renderSortIcon("status")}
-              </Button>
-            </ResizableTableHead>
-          )}
-          {visibleCustomFields.map((field) => (
-            <ResizableTableHead key={field.id} columnKey={`custom:${field.id}`} width={getColumnWidth?.(`custom:${field.id}`)} onResize={onColumnResize} className="px-4 py-3 text-start hidden lg:table-cell">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {field.label ?? field.id}
-              </span>
-            </ResizableTableHead>
-          ))}
+          {visibleColumns.map((col) => {
+            const sortKey = toTeacherListSortField(col.key);
+            return (
+              <ResizableTableHead
+                key={col.key}
+                columnKey={col.key}
+                width={getColumnWidth?.(col.key)}
+                onResize={onColumnResize}
+                className={teacherWorkColumnHeadClass(col.key)}
+              >
+                {sortKey ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+                    onClick={() => onSort(sortKey)}
+                  >
+                    {col.label} {renderSortIcon(sortKey)}
+                  </Button>
+                ) : (
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {col.label}
+                  </span>
+                )}
+              </ResizableTableHead>
+            );
+          })}
           {showActionsColumn && (
             <TableHead className="px-4 py-3 w-10">
               <span className="sr-only">{t("common.actions")}</span>
@@ -124,7 +124,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
       <TableBody>
         {teachers.map((teacher) => {
           const teacherIdStr = String(teacher.id);
-          const displayName = teacher.name || t("teachers.contactMissing");
+          const displayName = resolveTeacherDisplayName(teacher, t);
           const isSelected = selectedIds.includes(teacherIdStr);
           return (
             <TableRow key={teacher.id} className={`hover:bg-muted/20 transition-colors ${isSelected ? "bg-primary/[0.015]" : ""}`}>
@@ -152,25 +152,13 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
                   </div>
                 </Button>
               </TableCell>
-              {isColumnVisible("specialization") && (
-                <TableCell className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{teacher.specialization ?? t("common.notSpecified")}</TableCell>
-              )}
-              {isColumnVisible("qualification") && (
-                <TableCell className="px-4 py-3 text-muted-foreground hidden md:table-cell">{teacher.qualification ?? t("common.notSpecified")}</TableCell>
-              )}
-              {isColumnVisible("joinDate") && (
-                <TableCell className="px-4 py-3 text-muted-foreground hidden md:table-cell">
-                  {teacher.joinDate ? formatDate(teacher.joinDate) : t("common.notSpecified")}
-                </TableCell>
-              )}
-              {isColumnVisible("status") && (
-                <TableCell className="px-4 py-3">
-                  <StatusBadge status={teacher.status} config={statusConfig} />
-                </TableCell>
-              )}
-              {visibleCustomFields.map((field) => (
-                <TableCell key={field.id} className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                  {getTeacherCustomFieldValue(teacher, field, t)}
+              {visibleColumns.map((col) => (
+                <TableCell key={col.key} className={teacherWorkColumnCellClass(col.key)}>
+                  {renderTeacherWorkColumnValue(teacher, col.key, {
+                    t,
+                    statusConfig,
+                    customFieldsById,
+                  })}
                 </TableCell>
               ))}
               {showActionsColumn && (

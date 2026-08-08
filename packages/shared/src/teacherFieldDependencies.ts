@@ -1,5 +1,6 @@
-import { INITIAL_TEACHERS_FIELD_SEED } from './moduleFieldSetupPersons.js';
+import { TEACHER_COLUMN_FIELD_MAPPING } from './moduleFieldSetupPersons.js';
 import type { ColumnRegistryEntry } from './contactTypes.js';
+import { listTeacherSystemFormFieldKeys } from './teacherFormCustomFields.js';
 
 export type TeacherFieldDependencyArea = 'systemField' | 'column';
 
@@ -10,17 +11,19 @@ export interface TeacherFieldDependencyIssue {
   count?: number;
 }
 
-const SEED_FIELD_KEYS = new Set(
-  Object.values(INITIAL_TEACHERS_FIELD_SEED).flatMap((fields) => fields.map((field) => field.key)),
-);
-
-/** Work column keys that mirror a Setup field id. */
+/** Work column keys that mirror a Setup field id (including mapped columns). */
 function columnKeysForField(fieldKey: string): string[] {
-  return [fieldKey, `custom:${fieldKey}`];
+  const keys = new Set<string>([fieldKey, `custom:${fieldKey}`]);
+  for (const [columnKey, mapping] of Object.entries(TEACHER_COLUMN_FIELD_MAPPING)) {
+    if (mapping.fieldId === fieldKey) {
+      keys.add(columnKey);
+    }
+  }
+  return [...keys];
 }
 
 export function isTeacherSeedFieldKey(fieldKey: string): boolean {
-  return SEED_FIELD_KEYS.has(fieldKey);
+  return listTeacherSystemFormFieldKeys().has(fieldKey);
 }
 
 export interface TeacherFieldDependencyInput {

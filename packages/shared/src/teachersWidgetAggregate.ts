@@ -74,7 +74,10 @@ function buildChartData(items: TeacherRow[], query: TeachersWidgetQuery): { name
   return chartData.sort((leftPoint, rightPoint) => rightPoint.value - leftPoint.value).slice(0, 8);
 }
 
-/** Server/client widget aggregate for teachers collection (globle2 §10). */
+/**
+ * @deprecated Prefer SQL `aggregateTeachersWidgetQueries` / `loadTeachersWidgetAggregates`.
+ * Kept for pure unit tests of in-memory widget ops.
+ */
 export function computeTeachersWidgetAggregate(
   teachers: TeacherRow[],
   query: TeachersWidgetQuery,
@@ -98,6 +101,7 @@ export function computeTeachersWidgetAggregate(
   };
 }
 
+/** @deprecated Prefer SQL `aggregateTeachersWidgetQueries` / `loadTeachersWidgetAggregates`. */
 export function computeTeachersWidgetAggregates(
   teachers: TeacherRow[],
   queries: TeachersWidgetQuery[],

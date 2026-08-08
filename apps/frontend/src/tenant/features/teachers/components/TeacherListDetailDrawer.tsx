@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import type { Teacher } from '@/lib/data/teachersData';
+import type { Teacher } from '@mms/shared';
 import TeacherDetail from '@/tenant/features/teachers/components/TeacherDetail';
 
 interface TeacherListDetailDrawerProps {

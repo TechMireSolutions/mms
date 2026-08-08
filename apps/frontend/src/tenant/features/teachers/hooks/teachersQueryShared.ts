@@ -3,9 +3,11 @@ import {
   type Teacher,
   type TeacherRecord,
   type TeachersListPageResult,
+  type TeachersListQuery,
+  type TeachersWidgetQuery,
 } from '@mms/shared';
 
-export type { TeacherRecord, Teacher, TeachersListPageResult };
+export type { TeacherRecord, Teacher, TeachersListPageResult, TeachersListQuery };
 
 export const TEACHERS_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKey, 'list'] as const;
 export const TEACHERS_METRICS_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKey, 'metrics'] as const;
@@ -13,17 +15,11 @@ export const TEACHERS_WIDGET_AGGREGATES_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.co
 
 export const TEACHERS_API = TEACHERS_MODULE_MANIFEST.restBasePath;
 
-export interface TeachersPaginatedParams {
+/** Work list Query params — shared {@link TeachersListQuery} + FE-only `enabled`. */
+export type TeachersPaginatedParams = TeachersListQuery & {
   page: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-  specialization?: string;
-  sortField?: string;
-  sortDir?: 'asc' | 'desc';
-  includeDeleted?: boolean;
   enabled?: boolean;
-}
+};
 
 export function buildTeachersPageUrl(params: TeachersPaginatedParams): string {
   const queryParams = new URLSearchParams();
@@ -51,13 +47,7 @@ export interface TeacherNextEmployeeIdParams {
   enabled?: boolean;
 }
 
-export interface TeachersWidgetAggregateWidgetInput {
-  id: string;
+/** Widget aggregate request — shared query + FE collection filter. */
+export type TeachersWidgetAggregateWidgetInput = TeachersWidgetQuery & {
   collection: string;
-  operation: 'count' | 'sum' | 'avg' | 'percentage';
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: 'equals' | 'contains' | 'gt' | 'lt';
-  filterValue?: string;
-  xAxisField?: string;
-}
+};

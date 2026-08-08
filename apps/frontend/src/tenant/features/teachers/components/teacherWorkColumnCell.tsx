@@ -1,0 +1,37 @@
+import type { ReactNode } from "react";
+import type { Teacher, TeacherCustomField } from "@mms/shared";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { resolveTeacherFieldDisplayText } from "@/tenant/features/teachers/components/teacherFieldDisplay";
+
+/** Render a Teachers Work column cell (system or custom:`id`). */
+export function renderTeacherWorkColumnValue(
+  teacher: Teacher,
+  columnKey: string,
+  options: {
+    t: TranslationFunction;
+    statusConfig: Record<string, StatusBadgeConfigItem>;
+    customFieldsById?: Map<string, TeacherCustomField>;
+    statusBadgeSize?: "sm" | "md";
+  },
+): ReactNode {
+  const { t, statusConfig, customFieldsById, statusBadgeSize } = options;
+  if (columnKey === "status") {
+    return (
+      <StatusBadge
+        status={teacher.status}
+        config={statusConfig}
+        size={statusBadgeSize}
+      />
+    );
+  }
+  const customFieldLabel = columnKey.startsWith("custom:")
+    ? customFieldsById?.get(columnKey.slice("custom:".length))?.label
+    : undefined;
+  return resolveTeacherFieldDisplayText(teacher, columnKey, {
+    t,
+    customFieldLabel,
+    notSpecifiedFallback: true,
+  });
+}

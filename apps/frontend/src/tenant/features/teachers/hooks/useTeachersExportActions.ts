@@ -1,5 +1,9 @@
 import { useCallback } from "react";
-import type { TeacherExportColumn, TeachersListQuery } from "@mms/shared";
+import {
+  DEFAULT_TEACHER_EXPORT_COLUMNS,
+  type TeacherExportColumn,
+  type TeachersListQuery,
+} from "@mms/shared";
 import { startServerTeachersCsvExport } from "@/lib/backgroundJobs/startServerTeachersCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
@@ -91,12 +95,8 @@ export function defaultTeachersExportColumns(
       | "teachers.field.joinDate",
   ) => string,
 ): TeacherExportColumn[] {
-  return [
-    { id: "name", label: t("teachers.field.name") },
-    { id: "employeeId", label: t("teachers.field.employeeId") },
-    { id: "specialization", label: t("teachers.field.specialization") },
-    { id: "status", label: t("teachers.field.status") },
-    { id: "qualification", label: t("teachers.field.qualification") },
-    { id: "joinDate", label: t("teachers.field.joinDate") },
-  ];
+  return DEFAULT_TEACHER_EXPORT_COLUMNS.map((column) => ({
+    id: column.id,
+    label: t(`teachers.field.${column.id}` as Parameters<typeof t>[0]),
+  }));
 }

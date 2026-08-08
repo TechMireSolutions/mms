@@ -19,7 +19,7 @@ import {
   updateTeacherById,
 } from '../../services/teacherService.js';
 import type { User } from '@mms/shared';
-import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import { DEFAULT_TEACHERS_SETTINGS, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import {
   teacherRecordSchema,
@@ -38,6 +38,7 @@ import {
   loadTeacherFieldUsageCount,
   loadTeacherFieldUsageCounts,
 } from '../../services/teacherService.js';
+import { validateTeacherDynamic } from '../../services/teacherValidationService.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -78,6 +79,7 @@ export default async function teachersRoutes(
     loadByIdsFn: loadTeachersByIds,
     loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
     columnPreferencesObjectKey: TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey,
+    validateDynamicFn: validateTeacherDynamic as never,
   });
 
   fastify.post('/bulk-delete', async (request, reply) => {
@@ -129,7 +131,7 @@ export default async function teachersRoutes(
     const parsed = parseRequest(teachersNextEmployeeIdQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const employeeId = await computeNextTeacherEmployeeIdForSettings({
-      idPrefix: parsed.data.prefix ?? 'TCH',
+      idPrefix: parsed.data.prefix ?? DEFAULT_TEACHERS_SETTINGS.idPrefix,
     });
     return reply.send({ employeeId });
   });

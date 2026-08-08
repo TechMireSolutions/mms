@@ -1,14 +1,12 @@
 import { motion } from "framer-motion";
-import type { ModuleColumnRegistryEntry, TeachersListPageResult, TeacherExportColumn } from "@mms/shared";
-import type { TeacherListProps } from "@/tenant/features/teachers/components/TeacherListTypes";
+import type { ModuleColumnRegistryEntry, Teacher, TeachersListPageResult } from "@mms/shared";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import type { Teacher } from "@/lib/data/teachersData";
 import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
-import { teacherStatusLabel } from "@/tenant/features/teachers/teacherPageUtils";
+import { buildTeachersWorkFilterChips } from "@/tenant/features/teachers/components/buildTeachersWorkFilterChips";
 import { TeachersWorkTierToolbar } from "@/tenant/features/teachers/components/TeachersWorkTierToolbar";
 
 interface TeachersWorkTierProps {
@@ -21,8 +19,6 @@ interface TeachersWorkTierProps {
   canWrite: boolean;
   canDelete: boolean;
   canExport?: boolean;
-  exportColumns?: TeacherExportColumn[];
-  logExportAudit?: TeacherListProps['logExportAudit'];
   columnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   customizerLabels: ModuleColumnCustomizerLabels;
@@ -32,7 +28,11 @@ interface TeachersWorkTierProps {
   isWorkPageError: boolean;
   isWorkPageFetching: boolean;
   useServerWork: boolean;
-  selectionResetKey: string;
+  selectedIds: string[];
+  onSelectOne: (id: string) => void;
+  onSelectAll: (pageIds: string[]) => void;
+  onClearSelection: () => void;
+  onBulkExport?: () => void | Promise<void>;
   sortField: TeacherSortField;
   sortDir: "asc" | "desc";
   isColumnVisible: (key: string) => boolean;
@@ -57,25 +57,17 @@ interface TeachersWorkTierProps {
   onPageChange: (page: number) => void;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
-  onSelectedCountChange?: (count: number) => void;
 }
 
 export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
-  const filterChips = [
-    ...props.filterStatus.map((status) => ({
-      key: status,
-      label: teacherStatusLabel(t, status),
-      onRemove: () => props.onToggleStatus(status),
-    })),
-    ...(props.filterSpecialization
-      ? [{
-          key: "specialization",
-          label: props.filterSpecialization,
-          onRemove: () => props.onSpecializationChange(""),
-        }]
-      : []),
-  ];
+  const filterChips = buildTeachersWorkFilterChips({
+    filterStatus: props.filterStatus,
+    filterSpecialization: props.filterSpecialization,
+    onToggleStatus: props.onToggleStatus,
+    onSpecializationChange: props.onSpecializationChange,
+    t,
+  });
 
   return (
     <motion.div
@@ -140,21 +132,18 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           canDelete={props.canDelete}
           canExport={props.canExport}
           showDeleted={props.showDeleted}
-          selectionResetKey={props.selectionResetKey}
+          selectedIds={props.selectedIds}
+          onSelectOne={props.onSelectOne}
+          onSelectAll={props.onSelectAll}
+          onClearSelection={props.onClearSelection}
           isColumnVisible={props.isColumnVisible}
+          columnRegistry={props.columnRegistry}
           getColumnWidth={props.getColumnWidth}
           onColumnResize={props.onColumnResize}
           sortField={props.sortField}
           sortDir={props.sortDir}
           onSortChange={props.onSortChange}
-          exportColumns={props.exportColumns}
-          exportSearch={props.search}
-          exportFilterStatus={props.filterStatus}
-          exportFilterSpecialization={props.filterSpecialization}
-          exportSortField={props.sortField}
-          exportSortDir={props.sortDir}
-          logExportAudit={props.logExportAudit}
-          onSelectedCountChange={props.onSelectedCountChange}
+          onBulkExport={props.onBulkExport}
         />
       </ModuleWorkListStateShell>
     </motion.div>

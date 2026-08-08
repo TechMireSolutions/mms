@@ -1,7 +1,7 @@
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { notify } from "@/lib/notify";
-import type { Teacher } from "@/lib/data/teachersData";
+import type { Teacher } from '@mms/shared';
 import { useTeacherMutations } from "@/tenant/features/teachers/hooks/useTeachers";
 import { type TeacherRecord, toMessagingRecipient } from "@mms/shared";
 

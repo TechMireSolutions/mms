@@ -20,6 +20,7 @@ import type { Invoice } from "@/lib/data/financeData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type {
   Contact,
+  Enrollment,
   QuestionBankQuestion,
   QuestionBankTest,
   QuestionBankResult,
@@ -27,11 +28,12 @@ import type {
 import { matchesWidgetFilter } from "@mms/shared";
 
 export function getWidgetCollections(): ReportCollectionsSnapshot {
-  // Contacts + students + teachers + sessions: SQL aggregates / empty dump — do not invent localStorage rows.
+  // Contacts + students + teachers + sessions + enrollments: SQL aggregates / empty dump — do not invent localStorage rows.
   const contacts: Contact[] = [];
   const students: Student[] = [];
   const teachers: Teacher[] = [];
   const sessions: Session[] = [];
+  const enrollments: Enrollment[] = [];
   const invoices = readQueryCollection<Invoice>(FINANCE_INVOICES_QUERY_KEY) ?? [];
   const attendance = readQueryCollection<AttendanceRecord>(ATTENDANCE_QUERY_KEY) ?? [];
   const distributions = readQueryCollection<Distribution>(HASANAT_DISTRIBUTIONS_QUERY_KEY) ?? [];
@@ -45,6 +47,7 @@ export function getWidgetCollections(): ReportCollectionsSnapshot {
     students,
     teachers,
     sessions,
+    enrollments,
     finance_invoices: invoices,
     attendance_records: attendance,
     hasanat_distributions: distributions,

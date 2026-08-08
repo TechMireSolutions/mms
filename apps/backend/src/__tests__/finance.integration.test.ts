@@ -30,6 +30,7 @@ const mockBulkDeleteInvoices = vi.fn();
 const mockBulkRestoreInvoices = vi.fn();
 const mockBulkDeletePayments = vi.fn();
 const mockBulkRestorePayments = vi.fn();
+const mockLoadFinanceReportAggregates = vi.fn();
 
 vi.mock('../services/financeService.js', () => ({
   loadInvoices: (...args: unknown[]) => mockLoadInvoices(...args),
@@ -48,6 +49,7 @@ vi.mock('../services/financeService.js', () => ({
   restorePaymentById: vi.fn(),
   bulkSoftDeletePayments: (...args: unknown[]) => mockBulkDeletePayments(...args),
   bulkRestorePayments: (...args: unknown[]) => mockBulkRestorePayments(...args),
+  loadFinanceReportAggregates: (...args: unknown[]) => mockLoadFinanceReportAggregates(...args),
 }));
 
 describe('finance REST routes integration', () => {
@@ -72,6 +74,9 @@ describe('finance REST routes integration', () => {
     mockBulkRestoreInvoices.mockReset().mockResolvedValue({ succeeded: 2, failed: 0 });
     mockBulkDeletePayments.mockReset().mockResolvedValue({ succeeded: 2, failed: 0 });
     mockBulkRestorePayments.mockReset().mockResolvedValue({ succeeded: 2, failed: 0 });
+    mockLoadFinanceReportAggregates.mockReset().mockResolvedValue({
+      comparison: { sessions: [], monthly: { a: [], b: [] } },
+    });
   });
 
   afterEach(() => {
@@ -200,6 +205,51 @@ describe('finance REST routes integration', () => {
       payload: { ids: ['pay-1', 'pay-2'] },
     });
     expect(restored.statusCode).toBe(200);
+    await app.close();
+  });
+
+  it('GET /api/finance/report-aggregates loads comparison for authorized roles', async () => {
+    mockLoadFinanceReportAggregates.mockResolvedValueOnce({
+      comparison: {
+        sessions: [{ sessionId: 's1', feeCollected: 150 }],
+        monthly: {
+          a: [{ monthKey: '2026-01', collected: 50 }],
+          b: [{ monthKey: '2026-04', collected: 100 }],
+        },
+      },
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/finance/report-aggregates?sessionIds=s1,s2&rangeAFrom=2026-01-01&rangeATo=2026-03-31&rangeBFrom=2026-04-01&rangeBTo=2026-06-30',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app, { email: 'finance@test.com', name: 'Finance User' })}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadFinanceReportAggregates).toHaveBeenCalledWith({
+      sessionIds: ['s1', 's2'],
+      rangeAFrom: '2026-01-01',
+      rangeATo: '2026-03-31',
+      rangeBFrom: '2026-04-01',
+      rangeBTo: '2026-06-30',
+    });
+    expect(res.json().comparison?.sessions?.[0]?.feeCollected).toBe(150);
+    await app.close();
+  });
+
+  it('GET /api/finance/report-aggregates returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/finance/report-aggregates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
     await app.close();
   });
 });

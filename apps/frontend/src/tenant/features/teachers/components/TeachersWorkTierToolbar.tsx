@@ -14,7 +14,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { teacherStatusLabel } from "@/tenant/features/teachers/teacherPageUtils";
+import { teacherStatusLabel } from "@/lib/teachers/teacherStatusUi";
 import { TEACHERS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts";
 
 interface TeachersWorkTierToolbarProps {

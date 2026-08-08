@@ -1,8 +1,6 @@
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import type { TeacherCustomField } from "@mms/shared";
+import type { ModuleColumnRegistryEntry, Teacher, TeacherCustomField } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import type { Teacher } from "@/lib/data/teachersData";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherListTypes";
 
 export interface TeacherListContentProps {
@@ -18,7 +16,10 @@ export interface TeacherListContentProps {
   canDelete: boolean;
   /** Column visibility gate — prefer over parallel show* booleans. */
   isColumnVisible: (key: string) => boolean;
-  visibleCustomFields: TeacherCustomField[];
+  /** Live Work column layout (tenant registry + user overlay). */
+  columnRegistry: ModuleColumnRegistryEntry[];
+  /** Custom column id → label map (lifted once for table + cards). */
+  customFieldsById: Map<string, TeacherCustomField>;
   statusConfig: Record<string, StatusBadgeConfigItem>;
   sortField: TeacherSortField;
   sortDir: "asc" | "desc";
@@ -34,19 +35,4 @@ export interface TeacherListContentProps {
   onSms?: (teachers: Teacher[]) => void;
   onWhatsApp?: (teachers: Teacher[]) => void;
   onEmail?: (teachers: Teacher[]) => void;
-}
-
-export function getTeacherCustomFieldValue(
-  teacher: Teacher,
-  field: TeacherCustomField,
-  t: TranslationFunction,
-): string {
-  const fieldValue = (teacher as unknown as Record<string, unknown>)[field.id];
-  if (fieldValue === undefined || fieldValue === null || fieldValue === "") {
-    return t("common.notSpecified");
-  }
-  if (typeof fieldValue === "boolean") {
-    return fieldValue ? t("common.yes") : t("common.no");
-  }
-  return String(fieldValue);
 }

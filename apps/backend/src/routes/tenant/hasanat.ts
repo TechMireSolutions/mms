@@ -27,6 +27,7 @@ import {
   bulkSoftDeleteDistributions,
   bulkRestoreDistributions,
 } from '../../services/hasanatService.js';
+import { hasanatReportRoutes } from './hasanat/hasanatReportRoutes.js';
 
 const HASANAT_DISTRIBUTIONS_COLLECTION = HASANAT_MODULE_MANIFEST.collectionKey;
 const HASANAT_DENOMS_COLLECTION = HASANAT_MODULE_MANIFEST.denomCollectionKey;
@@ -41,6 +42,8 @@ export default async function hasanatRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  await fastify.register(hasanatReportRoutes);
 
   registerMetricsRoute(fastify, {
     collection: HASANAT_DISTRIBUTIONS_COLLECTION,

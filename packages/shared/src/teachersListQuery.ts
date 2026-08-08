@@ -1,82 +1,38 @@
 import { z } from 'zod';
-import type { Teacher } from './teacherTypes.js';
 import { baseListQuerySchema } from './apiSchemas.js';
-import { compareByField, paginateArray } from './utils.js';
+import { TEACHER_STATUS_WRITE_MAX } from './teachersModuleManifest.js';
+import {
+  TEACHER_SORT_FIELDS,
+  TEACHER_SORT_FIELD_SET,
+  type TeacherSortField,
+} from './teacherDirectoryColumns.js';
+import type { Teacher } from './teacherTypes.js';
 
-export interface TeachersListQuery {
-  page?: number;
-  limit?: number;
-  search?: string;
-  /** Comma-separated status values (e.g. `active,inactive`). */
-  status?: string;
-  specialization?: string;
-  sortField?: string;
-  sortDir?: 'asc' | 'desc';
-  /** When true, SQL list returns deleted-only rows (Work trash). */
-  includeDeleted?: boolean;
-}
+export { TEACHER_SORT_FIELDS, TEACHER_SORT_FIELD_SET, type TeacherSortField };
 
-/** Validates Teachers Work list query received over HTTP (Students-shaped SSOT). */
+/** Validates Teachers Work list query received over HTTP (SQL page is authoritative). */
 export const teachersListQuerySchema = baseListQuerySchema.extend({
-  status: z.string().max(200).optional(),
+  status: z.string().max(TEACHER_STATUS_WRITE_MAX).optional(),
   specialization: z.string().optional(),
+  sortField: z.enum(TEACHER_SORT_FIELDS).optional(),
 });
 
+/** Zod-inferred HTTP list query (includeDeleted is `'true' | 'false'` from base). */
 export type TeachersListQueryParsed = z.infer<typeof teachersListQuerySchema>;
 
+/**
+ * Service / FE Query / SQL list query — Zod wire fields with boolean `includeDeleted`
+ * after HTTP normalize (same authority as {@link teachersListQuerySchema}).
+ */
+export type TeachersListQuery = Omit<TeachersListQueryParsed, 'includeDeleted'> & {
+  includeDeleted?: boolean;
+};
+
+/** Server SQL page result shape (FE Query + BE repository). */
 export interface TeachersListPageResult {
   teachers: Teacher[];
   total: number;
   page: number;
   limit: number;
   hasMore: boolean;
-}
-
-export function teacherMatchesSearch(teacher: Teacher, search: string): boolean {
-  const normalizedSearch = search.trim().toLowerCase();
-  if (!normalizedSearch) return true;
-  return (
-    (teacher.name ?? '').toLowerCase().includes(normalizedSearch) ||
-    (teacher.employeeId ?? '').toLowerCase().includes(normalizedSearch) ||
-    (teacher.specialization ?? '').toLowerCase().includes(normalizedSearch)
-  );
-}
-
-export function filterTeachersForQuery(teachers: Teacher[], query: TeachersListQuery): Teacher[] {
-  let teacherRows = teachers;
-  if (query.status?.trim()) {
-    const statuses = query.status.split(',').map((status) => status.trim()).filter(Boolean);
-    if (statuses.length > 0) {
-      teacherRows = teacherRows.filter((teacher) => statuses.includes(String(teacher.status ?? 'active')));
-    }
-  }
-  if (query.specialization) {
-    teacherRows = teacherRows.filter((teacher) => teacher.specialization === query.specialization);
-  }
-  if (query.search?.trim()) {
-    teacherRows = teacherRows.filter((teacher) => teacherMatchesSearch(teacher, query.search!));
-  }
-  return teacherRows;
-}
-
-/** Paginates an in-memory teacher list (server-side data source). */
-export function paginateTeachers(teachers: Teacher[], query: TeachersListQuery): TeachersListPageResult {
-  let teacherRows = filterTeachersForQuery(teachers, query);
-
-  const sortField = query.sortField?.trim();
-  if (sortField) {
-    const sortDirection = query.sortDir === 'desc' ? 'desc' : 'asc';
-    teacherRows = [...teacherRows].sort((leftTeacher, rightTeacher) =>
-      compareByField(leftTeacher, rightTeacher, sortField, sortDirection),
-    );
-  }
-
-  const result = paginateArray(teacherRows, query.page ?? 1, query.limit ?? 50, 500);
-  return {
-    teachers: result.items,
-    total: result.total,
-    page: result.page,
-    limit: result.limit,
-    hasMore: result.hasMore,
-  };
 }

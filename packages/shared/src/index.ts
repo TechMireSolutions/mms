@@ -71,6 +71,8 @@ export * from './contactSetupConfigTypes.js';
 export * from './studentSetupConfigTypes.js';
 export * from './teacherSetupConfigTypes.js';
 export * from './teacherFieldDependencies.js';
+export * from './teacherEnabledTabs.js';
+export * from './teacherDirectoryColumns.js';
 export * from './sessionSetupConfigTypes.js';
 export * from './enrollmentSetupConfigTypes.js';
 
@@ -163,6 +165,9 @@ export * from './enrollmentsModuleManifest.js';
 export * from './enrollmentsListQuery.js';
 export * from './enrollmentsExportUtils.js';
 export * from './enrollmentsReportAggregates.js';
+export * from './financeReportAggregates.js';
+export * from './attendanceReportAggregates.js';
+export * from './hasanatReportAggregates.js';
 export * from './enrollmentsWidgetAggregate.js';
 export * from './obligationsModuleManifest.js';
 export * from './accountingModuleManifest.js';
@@ -187,6 +192,15 @@ export * from './tenantAuthTypes.js';
 export * from './contactValidation.js';
 export { buildDynamicStudentSchema, formatStudentZodIssues, collectStudentWriteExtraFieldKeys, STUDENT_WRITE_SYSTEM_KEYS } from './studentValidation.js';
 export * from './studentColumnRegistrySync.js';
+export * from './teacherColumnRegistrySync.js';
+export * from './teacherFormCustomFields.js';
+export * from './teacherFieldCellFormat.js';
+export {
+  TEACHER_WRITE_SYSTEM_KEYS,
+  buildDynamicTeacherSchema,
+  collectTeacherWriteExtraFieldKeys,
+  formatTeacherZodIssues,
+} from './teacherValidation.js';
 export * from './studentFieldDependencies.js';
 export * from './sessionTypes.js';
 export * from './sessionUtils.js';

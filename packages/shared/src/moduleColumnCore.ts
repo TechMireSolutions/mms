@@ -1,12 +1,20 @@
 import {
-  DEFAULT_TEACHERS_SETTINGS,
   type StudentsSettings,
   type TeachersSettings,
 } from './settingsTypes.js';
 import type { FieldDefinition } from './contactTypes.js';
 import { listEnabledCustomStudentFormFields } from './studentFormCustomFields.js';
 import { syncStudentColumnRegistryWithFields } from './studentColumnRegistrySync.js';
-import { DEFAULT_STUDENT_COLUMN_REGISTRY } from './moduleFieldSetupPersons.js';
+import { syncTeacherColumnRegistryWithFields } from './teacherColumnRegistrySync.js';
+import {
+  listEnabledCustomTeacherFormFields,
+  resolveTeacherFieldsMapForColumnSync,
+} from './teacherFormCustomFields.js';
+import { resolveTeacherEnabledTabIds } from './teacherEnabledTabs.js';
+import {
+  DEFAULT_STUDENT_COLUMN_REGISTRY,
+  DEFAULT_TEACHER_COLUMN_REGISTRY,
+} from './moduleFieldSetupPersons.js';
 
 /** Per-user Work directory column layout (globle1 §3.4). */
 export interface ModuleColumnPreference {
@@ -216,34 +224,50 @@ export function buildTeacherWorkColumnRegistry(
   settings: TeachersSettings,
   labels: TeacherWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  const fields = (settings.fields ?? DEFAULT_TEACHERS_SETTINGS.fields ?? {}) as Record<string, { enabled?: boolean }>;
-  const customFields = settings.customFields ?? [];
-  const registryColumns: ModuleColumnRegistryEntry[] = [
-    { key: 'name', label: labels.name, enabled: true, order: 0, fixed: true },
-  ];
-  let order = 1;
+  const fields = resolveTeacherFieldsMapForColumnSync(
+    settings.fields as Record<string, unknown> | undefined,
+  );
+  const enabledTabs = resolveTeacherEnabledTabIds(settings);
+  const synced = syncTeacherColumnRegistryWithFields(
+    settings.columnRegistry ?? DEFAULT_TEACHER_COLUMN_REGISTRY,
+    fields,
+    enabledTabs,
+  );
 
-  if (fields.specialization?.enabled !== false) {
-    registryColumns.push({ key: 'specialization', label: labels.specialization, enabled: true, order: order++ });
-  }
-  if (fields.qualification?.enabled !== false) {
-    registryColumns.push({ key: 'qualification', label: labels.qualification, enabled: true, order: order++ });
-  }
-  if (fields.joinDate?.enabled !== false) {
-    registryColumns.push({ key: 'joinDate', label: labels.joinDate, enabled: true, order: order++ });
-  }
-  registryColumns.push({ key: 'status', label: labels.status, enabled: true, order: order++ });
+  const labelByKey: Record<string, string> = {
+    name: labels.name,
+    specialization: labels.specialization,
+    qualification: labels.qualification,
+    joinDate: labels.joinDate,
+    status: labels.status,
+  };
 
-  for (const field of customFields) {
-    registryColumns.push({
-      key: `custom:${field.id}`,
-      label: field.label ?? field.id,
-      enabled: true,
-      order: order++,
-    });
-  }
+  const customByKey = new Map(
+    listEnabledCustomTeacherFormFields(fields).map((field) => [field.key, field]),
+  );
 
-  return registryColumns;
+  return synced.map((col) => {
+    if (col.key.startsWith('custom:')) {
+      const fieldKey = col.key.slice('custom:'.length);
+      const field = customByKey.get(fieldKey);
+      return {
+        key: col.key,
+        label: field?.label || col.label,
+        enabled: col.enabled !== false,
+        order: col.order,
+        width: col.width,
+        fixed: col.fixed,
+      };
+    }
+    return {
+      key: col.key,
+      label: labelByKey[col.key] || col.label,
+      enabled: col.enabled !== false,
+      order: col.order,
+      width: col.width,
+      fixed: col.fixed || col.key === 'name',
+    };
+  });
 }
 
 /** Helper to build a standard module column registry array from an ordered list of keys and labels. */

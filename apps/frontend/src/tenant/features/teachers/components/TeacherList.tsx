@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { TeacherListConfirmDialogs } from '@/tenant/features/teachers/components/TeacherListConfirmDialogs';
 import { TeacherListContent } from '@/tenant/features/teachers/components/TeacherListContent';
@@ -6,7 +6,6 @@ import { TeacherListDetailDrawer } from '@/tenant/features/teachers/components/T
 import { TeachersBulkActionBar } from '@/tenant/features/teachers/components/TeachersBulkActionBar';
 import type { TeacherListProps } from '@/tenant/features/teachers/components/TeacherListTypes';
 import { useTeacherListState } from '@/tenant/features/teachers/components/useTeacherListState';
-import { useTeachersExportActions } from '@/tenant/features/teachers/hooks/useTeachersExportActions';
 
 export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 
@@ -25,7 +24,10 @@ export function TeacherList({
   canDelete = true,
   canExport = false,
   showDeleted = false,
-  selectionResetKey,
+  selectedIds,
+  onSelectOne,
+  onSelectAll,
+  onClearSelection,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -33,14 +35,8 @@ export function TeacherList({
   sortDir: controlledSortDir,
   onSortChange,
   viewMode,
-  exportColumns = [],
-  exportSearch = '',
-  exportFilterStatus = [],
-  exportFilterSpecialization = '',
-  exportSortField = null,
-  exportSortDir = 'asc',
-  logExportAudit,
-  onSelectedCountChange,
+  columnRegistry = [],
+  onBulkExport,
 }: TeacherListProps): React.JSX.Element {
   const {
     sorted,
@@ -48,9 +44,6 @@ export function TeacherList({
     sortDir,
     statusConfig,
     isColumnVisible: columnVisible,
-    visibleCustomFields,
-    selectedIds,
-    setSelectedIds,
     confirmBulkDeleteOpen,
     setConfirmBulkDeleteOpen,
     confirmBulkRestoreOpen,
@@ -68,39 +61,24 @@ export function TeacherList({
   } = useTeacherListState({
     teachers,
     showDeleted,
-    selectionResetKey,
+    selectedIds,
+    onSelectOne,
+    onSelectAll,
     controlledSortField,
     controlledSortDir,
     onSortChange,
     isColumnVisible,
   });
 
-  useEffect(() => {
-    onSelectedCountChange?.(selectedIds.length);
-  }, [selectedIds.length, onSelectedCountChange]);
-
   const showSelectColumn = canWrite || canDelete;
   const showActionsColumn = canWrite || canDelete || !showDeleted;
   const resolveColumnVisible = columnVisible;
-
-  const { handleBulkExport } = useTeachersExportActions({
-    tableColumns: exportColumns,
-    canExport,
-    search: exportSearch,
-    filterStatus: exportFilterStatus,
-    filterSpecialization: exportFilterSpecialization,
-    sortField: exportSortField,
-    sortDir: exportSortDir,
-    viewingDeleted: showDeleted,
-    selectedIds,
-    logExportAudit: logExportAudit ?? { mutateAsync: async () => undefined },
-  });
 
   const showBulkExport =
     canExport &&
     !showDeleted &&
     TEACHERS_MODULE_MANIFEST.work.bulkActions.includes('export') &&
-    Boolean(logExportAudit);
+    Boolean(onBulkExport);
 
   return (
     <div className="space-y-4">
@@ -116,7 +94,7 @@ export function TeacherList({
         canWrite={canWrite}
         canDelete={canDelete}
         isColumnVisible={resolveColumnVisible}
-        visibleCustomFields={visibleCustomFields}
+        columnRegistry={columnRegistry}
         statusConfig={statusConfig}
         sortField={sortField}
         sortDir={sortDir}
@@ -152,9 +130,9 @@ export function TeacherList({
           onRequestBulkRestore={() => {
             if (onBulkRestore) setConfirmBulkRestoreOpen(true);
           }}
-          onClearSelection={() => setSelectedIds([])}
+          onClearSelection={onClearSelection}
           canExport={showBulkExport}
-          onBulkExport={showBulkExport ? () => void handleBulkExport() : undefined}
+          onBulkExport={showBulkExport ? () => void onBulkExport?.() : undefined}
         />
       )}
 
@@ -168,12 +146,12 @@ export function TeacherList({
         onPendingDeleteChange={setPendingDeleteId}
         onConfirmBulkDelete={(reason) => {
           onBulkDelete?.(selectedIds, reason);
-          setSelectedIds([]);
+          onClearSelection();
           setConfirmBulkDeleteOpen(false);
         }}
         onConfirmBulkRestore={() => {
           onBulkRestore?.(selectedIds);
-          setSelectedIds([]);
+          onClearSelection();
           setConfirmBulkRestoreOpen(false);
         }}
         onConfirmDelete={(reason) => {

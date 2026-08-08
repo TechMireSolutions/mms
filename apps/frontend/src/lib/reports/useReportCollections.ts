@@ -1,5 +1,6 @@
 import {
   type Contact,
+  type Enrollment,
   type QuestionBankQuestion,
   type QuestionBankResult,
   type QuestionBankTest,
@@ -31,6 +32,7 @@ export type ReportCollectionsSnapshot = {
   students: Student[];
   teachers: Teacher[];
   sessions: Session[];
+  enrollments: Enrollment[];
   finance_invoices: Invoice[];
   attendance_records: AttendanceRecord[];
   hasanat_distributions: Distribution[];
@@ -59,11 +61,12 @@ export function useWidgetCollections(options?: {
   const needs = (collection: ReportCollection): boolean =>
     queryEnabled && (required === null || required.has(collection));
 
-  // Contacts + students + teachers + sessions widgets/charts read SQL aggregates — do not page-walk entities here.
+  // Contacts + students + teachers + sessions + enrollments widgets/charts read SQL aggregates — do not page-walk entities here.
   const contacts: Contact[] = [];
   const students: Student[] = [];
   const teachers: Teacher[] = [];
   const sessions: Session[] = [];
+  const enrollments: Enrollment[] = [];
   const financeInvoices = useFinanceInvoicesCollection({ enabled: needs('finance_invoices') });
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
   const hasanatDistributions = useHasanatDistributionsCollection({
@@ -82,6 +85,7 @@ export function useWidgetCollections(options?: {
     students,
     teachers,
     sessions,
+    enrollments,
     finance_invoices: financeInvoices,
     attendance_records: attendanceRecords,
     hasanat_distributions: hasanatDistributions,
@@ -106,11 +110,12 @@ export function useReportCollectionRows(
   const { isAuthenticated } = useAuth();
   const key = collectionKey;
 
-  // Contacts + students + teachers + sessions chart visualizers use POST /widget-aggregates — no row dump.
+  // Contacts + students + teachers + sessions + enrollments chart visualizers use POST /widget-aggregates — no row dump.
   const contacts: Contact[] = [];
   const students: Student[] = [];
   const teachers: Teacher[] = [];
   const sessions: Session[] = [];
+  const enrollments: Enrollment[] = [];
   const financeInvoices = useFinanceInvoicesCollection({
     enabled: isAuthenticated && key === 'finance_invoices',
   });
@@ -144,6 +149,9 @@ export function useReportCollectionRows(
       break;
     case 'sessions':
       rows = sessions as unknown as Record<string, unknown>[];
+      break;
+    case 'enrollments':
+      rows = enrollments as unknown as Record<string, unknown>[];
       break;
     case 'finance_invoices':
       rows = financeInvoices as unknown as Record<string, unknown>[];
