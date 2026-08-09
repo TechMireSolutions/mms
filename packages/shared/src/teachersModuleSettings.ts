@@ -36,8 +36,6 @@ export interface TeachersSettings {
   requireContactLink: boolean;
   defaultSpecialization: string;
   fields?: Record<string, unknown>;
-  /** @deprecated Legacy read bridge — prefer customs in tabbed `fields`. */
-  customFields?: TeacherCustomField[];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
   enabledTabs?: string[];
@@ -73,7 +71,6 @@ export const DEFAULT_TEACHERS_SETTINGS: TeachersSettings = {
   requireContactLink: true,
   defaultSpecialization: DEFAULT_TEACHER_SPECIALIZATION,
   fields: cloneTeacherFieldSeed(),
-  customFields: [],
   fieldOrder: defaultTeacherFieldOrderFromSeed(),
 };
 
@@ -102,12 +99,10 @@ export const DEFAULT_TEACHER_FIELD_DEFS: TeacherFieldDef[] = defaultTeacherField
 );
 /**
  * Returns sorted teacher field definitions (system + custom) from tabbed `fields` only.
- * `@deprecated` third arg kept for call-site signature; legacy `customFields[]` is ignored.
  */
 export function getSortedTeacherFields(
   fieldOrder: string[] | undefined,
   fieldsRaw: Record<string, unknown> | TeacherFieldConfig[] | Record<string, TeacherFieldConfig> | undefined,
-  _legacyCustomFields?: TeacherCustomField[],
 ): TeacherFieldDef[] {
   const tabbed = resolveTeacherFieldsMapForColumnSync(
     fieldsRaw && typeof fieldsRaw === "object" && !Array.isArray(fieldsRaw)

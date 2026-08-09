@@ -1,7 +1,7 @@
-import type React from "react";
+import React, { useMemo, useState } from "react";
 import { Lock, User } from "lucide-react";
 import type { TenantUserProfile } from "@mms/shared";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AccountProfileContactTab } from "./AccountProfileContactTab";
 import { AccountProfileSecurityTab } from "./AccountProfileSecurityTab";
@@ -87,79 +87,75 @@ export function AccountProfileSettingsTabs({
   onChangePassword,
 }: AccountProfileSettingsTabsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
+
+  const tabs = useMemo(
+    () => [
+      { key: "profile" as const, label: t("account.contactSection"), icon: User },
+      { key: "security" as const, label: t("account.loginSection"), icon: Lock },
+    ],
+    [t],
+  );
 
   return (
-    <Tabs defaultValue="profile" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8 bg-muted/60 p-1 border border-border/40 backdrop-blur-sm rounded-xl">
-        <TabsTrigger
-          value="profile"
-          className="flex items-center justify-center gap-2 rounded-lg py-2 data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-300 font-semibold"
-        >
-          <User className="h-4 w-4 shrink-0" />
-          {t("account.contactSection")}
-        </TabsTrigger>
-        <TabsTrigger
-          value="security"
-          className="flex items-center justify-center gap-2 rounded-lg py-2 data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all duration-300 font-semibold"
-        >
-          <Lock className="h-4 w-4 shrink-0" />
-          {t("account.loginSection")}
-        </TabsTrigger>
-      </TabsList>
+    <div className="w-full">
+      <SubTabBar
+        tabs={tabs}
+        value={activeTab}
+        onChange={setActiveTab}
+        panelIdPrefix="account-profile"
+        className="mb-8 justify-center"
+      />
 
-      <TabsContent
-        value="profile"
-        className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300 focus-visible:outline-none"
-      >
-        <AccountProfileContactTab
-          profile={profile}
-          name={name}
-          phone={phone}
-          contactEmail={contactEmail}
-          savingContact={savingContact}
-          onNameChange={onNameChange}
-          onPhoneChange={onPhoneChange}
-          onContactEmailChange={onContactEmailChange}
-          onSaveContact={onSaveContact}
-        />
-      </TabsContent>
-
-      <TabsContent
-        value="security"
-        className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300 focus-visible:outline-none"
-      >
-        <AccountProfileSecurityTab
-          profile={profile}
-          loginVerified={loginVerified}
-          newLoginEmail={newLoginEmail}
-          loginPassword={loginPassword}
-          challengeId={challengeId}
-          verifyCode={verifyCode}
-          devCode={devCode}
-          loginEmailBusy={loginEmailBusy}
-          currentPassword={currentPassword}
-          newPassword={newPassword}
-          confirmPassword={confirmPassword}
-          passwordBusy={passwordBusy}
-          showEmailForm={showEmailForm}
-          showPasswordForm={showPasswordForm}
-          passwordStrength={passwordStrength}
-          onNewLoginEmailChange={onNewLoginEmailChange}
-          onLoginPasswordChange={onLoginPasswordChange}
-          onVerifyCodeChange={onVerifyCodeChange}
-          onShowEmailForm={onShowEmailForm}
-          onCancelLoginEmailRequest={onCancelLoginEmailRequest}
-          onCancelLoginEmailConfirm={onCancelLoginEmailConfirm}
-          onRequestLoginEmail={onRequestLoginEmail}
-          onConfirmLoginEmail={onConfirmLoginEmail}
-          onCurrentPasswordChange={onCurrentPasswordChange}
-          onNewPasswordChange={onNewPasswordChange}
-          onConfirmPasswordChange={onConfirmPasswordChange}
-          onShowPasswordForm={onShowPasswordForm}
-          onCancelPasswordChange={onCancelPasswordChange}
-          onChangePassword={onChangePassword}
-        />
-      </TabsContent>
-    </Tabs>
+      {activeTab === "profile" ? (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300 focus-visible:outline-none">
+          <AccountProfileContactTab
+            profile={profile}
+            name={name}
+            phone={phone}
+            contactEmail={contactEmail}
+            savingContact={savingContact}
+            onNameChange={onNameChange}
+            onPhoneChange={onPhoneChange}
+            onContactEmailChange={onContactEmailChange}
+            onSaveContact={onSaveContact}
+          />
+        </div>
+      ) : (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-3 duration-300 focus-visible:outline-none">
+          <AccountProfileSecurityTab
+            profile={profile}
+            loginVerified={loginVerified}
+            newLoginEmail={newLoginEmail}
+            loginPassword={loginPassword}
+            challengeId={challengeId}
+            verifyCode={verifyCode}
+            devCode={devCode}
+            loginEmailBusy={loginEmailBusy}
+            currentPassword={currentPassword}
+            newPassword={newPassword}
+            confirmPassword={confirmPassword}
+            passwordBusy={passwordBusy}
+            showEmailForm={showEmailForm}
+            showPasswordForm={showPasswordForm}
+            passwordStrength={passwordStrength}
+            onNewLoginEmailChange={onNewLoginEmailChange}
+            onLoginPasswordChange={onLoginPasswordChange}
+            onVerifyCodeChange={onVerifyCodeChange}
+            onShowEmailForm={onShowEmailForm}
+            onCancelLoginEmailRequest={onCancelLoginEmailRequest}
+            onCancelLoginEmailConfirm={onCancelLoginEmailConfirm}
+            onRequestLoginEmail={onRequestLoginEmail}
+            onConfirmLoginEmail={onConfirmLoginEmail}
+            onCurrentPasswordChange={onCurrentPasswordChange}
+            onNewPasswordChange={onNewPasswordChange}
+            onConfirmPasswordChange={onConfirmPasswordChange}
+            onShowPasswordForm={onShowPasswordForm}
+            onCancelPasswordChange={onCancelPasswordChange}
+            onChangePassword={onChangePassword}
+          />
+        </div>
+      )}
+    </div>
   );
 }

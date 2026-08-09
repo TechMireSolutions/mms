@@ -97,7 +97,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
     try {
       await onSave({
         ...form,
-        id: `oc${Date.now()}`,
+        id: `oc${crypto.randomUUID()}`,
         amount: parseFloat(form.amount),
         reference_id: form.reference_id || null,
         created_at: new Date().toISOString(),

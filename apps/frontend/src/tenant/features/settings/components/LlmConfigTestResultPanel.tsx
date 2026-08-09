@@ -49,11 +49,11 @@ export function LlmConfigTestResultPanel({
                 </div>
                 <div>
                   <span className="block font-normal text-muted-foreground/85">{t('settings.llmWordCount')}</span>
-                  <span>{testResult.metrics.wordCount} words</span>
+                  <span>{testResult.metrics.wordCount} {t('settings.llmUnitWords')}</span>
                 </div>
                 <div>
                   <span className="block font-normal text-muted-foreground/85">{t('settings.llmCharCount')}</span>
-                  <span>{testResult.metrics.characterCount} chars</span>
+                  <span>{testResult.metrics.characterCount} {t('settings.llmUnitChars')}</span>
                 </div>
                 <div>
                   <span className="block font-normal text-muted-foreground/85">{t('settings.llmSpeed')}</span>

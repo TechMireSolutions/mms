@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Library } from 'lucide-react';
 import {
@@ -52,6 +52,10 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
     syncOnDatabaseUpdate: true,
   });
 
+  // Fields draft lives in `fieldsEditor` (not `upd`), so track its dirtiness locally
+  // and OR it into the Save gate. Save is the sole persist trigger (no per-toggle save).
+  const [fieldsDirty, setFieldsDirty] = useState(false);
+
   const showPrefs = mode === 'preferences';
   const showFields = mode === 'fields';
 
@@ -73,6 +77,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
     try {
       if (showFields) {
         await saveSettingsAsync();
+        setFieldsDirty(false);
         notify.success(t('questionBank.settingsSaved'), {
           description: t('questionBank.settingsSavedDesc'),
         });
@@ -106,12 +111,12 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
     <SettingsPanel
       width="medium"
       introKey="questionBank.settingsIntro"
-      isDirty={dirty}
+      isDirty={dirty || fieldsDirty}
       footer={
         <SettingsFormActions
           saveLabel={t('questionBank.settingsSave')}
           onSave={executeSave}
-          dirty={dirty}
+          dirty={dirty || fieldsDirty}
           saving={saving}
         />
       }
@@ -200,7 +205,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
         <ModuleFieldsSetup
           editor={fieldsEditor}
           isCoreField={(tabId, key) => INITIAL_QUESTION_BANK_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
-          onStateChange={() => executeSave()}
+          onStateChange={() => setFieldsDirty(true)}
         />
       )}
     </SettingsPanel>

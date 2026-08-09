@@ -130,7 +130,6 @@ describe('buildTeacherWorkColumnRegistry', () => {
             { key: 'extraNote', label: 'Extra', type: 'text', enabled: true, order: 0 },
           ],
         },
-        customFields: [],
         enabledTabs: ['basic', 'employment'],
       },
       TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS,

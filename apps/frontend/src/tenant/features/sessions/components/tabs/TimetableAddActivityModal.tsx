@@ -37,7 +37,7 @@ export function TimetableAddActivityModal({ open, onClose, onSave, saving }: Tim
       icon={Clock}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.add")}
-      onSave={() => onSave({ ...activityDraft, id: `tt${Date.now()}` } as TimetableItem)}
+      onSave={() => onSave({ ...activityDraft, id: `tt${crypto.randomUUID()}` } as TimetableItem)}
       saving={saving}
       saveDisabled={!activityDraft.activity}
     >

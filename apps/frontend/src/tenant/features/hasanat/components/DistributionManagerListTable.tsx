@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { DistributionRowActions } from "@/tenant/features/hasanat/components/DistributionRowActions";
 import {
   DISTRIBUTION_COLUMN_KEYS,
@@ -39,6 +40,7 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
     onColumnResize,
   } = props;
   const { t } = useTranslation();
+  const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const statuses = getDistributionStatuses(statusConfig);
   const visibleColCount =
     DISTRIBUTION_COLUMN_KEYS.filter(isColumnVisible).length +
@@ -112,7 +114,7 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
             distributions.map((distribution, index) => {
               const denomination = getDistributionDenomination(denoms, distribution.denominationId);
               return (
-                <motion.tr key={distribution.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className="hover:bg-muted/20 transition-colors group">
+                <motion.tr key={distribution.id} {...rowMotion(index * 0.03)} className="hover:bg-muted/20 transition-colors group">
                   {canDelete && (
                     <td className="px-3 py-3">
                       <Checkbox

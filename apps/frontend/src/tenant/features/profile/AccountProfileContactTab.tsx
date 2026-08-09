@@ -1,6 +1,6 @@
 import type React from "react";
 import { Loader2, ShieldCheck, User } from "lucide-react";
-import { normalizePhoneInput, type TenantUserProfile } from "@mms/shared";
+import { getPrimaryEmail, getPrimaryPhone, normalizePhoneInput, type TenantUserProfile } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,12 @@ export function AccountProfileContactTab({
   onSaveContact,
 }: AccountProfileContactTabProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const originalName = profile.contact?.name ?? '';
+  const originalPhone = profile.contact ? (getPrimaryPhone(profile.contact) ?? '') : '';
+  const originalEmail = profile.contact ? (getPrimaryEmail(profile.contact) ?? '') : '';
+  const contactDirty =
+    name !== originalName || phone !== originalPhone || contactEmail !== originalEmail;
 
   return (
     <Card className="relative overflow-hidden group/profile-card shadow-md">
@@ -102,7 +108,7 @@ export function AccountProfileContactTab({
               <p className="text-xs text-muted-foreground mt-1">{t("account.contactEmailHint")}</p>
             </div>
             <div className="pt-2">
-              <Button type="submit" disabled={savingContact} className="w-full sm:w-auto min-h-11 px-6">
+              <Button type="submit" disabled={savingContact || !contactDirty} className="w-full sm:w-auto min-h-11 px-6">
                 {savingContact ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.saveContact")}
               </Button>
             </div>

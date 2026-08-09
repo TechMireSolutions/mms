@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Gift, Plus, Star } from "lucide-react";
 import { Redemption, Distribution } from "@/lib/data/hasanatData";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { formatDate, formatNumber } from "@mms/shared";
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
@@ -36,6 +37,7 @@ export function RedemptionTracker({
   columnCustomizer,
 }: RedemptionTrackerProps) {
   const { t } = useTranslation();
+  const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const redemptions = useHasanatRedemptionsCollection();
   const { replaceRedemptions } = useHasanatMutations();
   const [showModal, setShowModal] = useState(false);
@@ -96,9 +98,7 @@ export function RedemptionTracker({
             {redemptions.map((redemption, index) => (
               <motion.article
                 key={redemption.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.04 }}
+                {...rowMotion(index * 0.04)}
                 className="space-y-3 rounded-xl border border-border bg-card p-3"
               >
                 <div className="flex min-w-0 items-start justify-between gap-3">
@@ -169,7 +169,7 @@ export function RedemptionTracker({
               </thead>
               <tbody className="divide-y divide-border/50">
                 {redemptions.map((redemption, index) => (
-                  <motion.tr key={redemption.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.04 }} className="hover:bg-muted/20 transition-colors">
+                  <motion.tr key={redemption.id} {...rowMotion(index * 0.04)} className="hover:bg-muted/20 transition-colors">
                     {columnVisible("student") && (
                       <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{redemption.studentName || "—"}</td>
                     )}

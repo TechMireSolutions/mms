@@ -9,6 +9,7 @@ import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
 import { TimePicker } from '@/components/ui/TimePicker';
 import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
+import { useListRowMotion } from '@/hooks/useListRowMotion';
 
 interface AttendanceRecordsTableProps {
   viewMode: WorkDirectoryViewMode;
@@ -39,6 +40,7 @@ export function AttendanceRecordsTable({
   onColumnResize,
   t,
 }: AttendanceRecordsTableProps): React.JSX.Element {
+  const rowMotion = useListRowMotion({ layout: true });
   if (viewMode === 'cards') {
     return (
       <article className="rounded-xl border border-border overflow-hidden">
@@ -108,7 +110,7 @@ export function AttendanceRecordsTable({
             {paginatedRecords.length === 0 ? (
               <tr><td colSpan={visibleColCount} className="py-4"><EmptyState title={t('attendance.empty.records')} compact /></td></tr>
             ) : paginatedRecords.map((attendanceRecord) => (
-              <motion.tr key={attendanceRecord.id} layout className="hover:bg-muted/20 transition-colors">
+              <motion.tr key={attendanceRecord.id} {...rowMotion()} className="hover:bg-muted/20 transition-colors">
                 {isColumnVisible("date") && (
                   <td className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{formatDate(attendanceRecord.date, true)}</td>
                 )}

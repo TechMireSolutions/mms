@@ -46,7 +46,7 @@ export function useUsersPageActions({
     async (entry: Partial<ActivityLog> & { action: ActivityLog['action']; module: string; detail: string }) => {
       await saveLogs((prev) => [
         {
-          id: `log${Date.now()}`,
+          id: `log${crypto.randomUUID()}`,
           userId: entry.userId ?? actorId,
           action: entry.action,
           module: entry.module,

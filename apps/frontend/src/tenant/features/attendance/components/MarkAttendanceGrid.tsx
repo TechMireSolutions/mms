@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { getAttendanceStatusInfo, type AttendanceStatus } from "@/lib/data/attendanceData";
 import { MarkAttendanceFieldControl } from "@/tenant/features/attendance/components/MarkAttendanceFieldControl";
 import type { ModuleFieldDef } from "@mms/shared";
@@ -23,6 +24,7 @@ export function MarkAttendanceGrid({
   onFieldChange,
 }: MarkAttendanceGridProps) {
   const { t } = useTranslation();
+  const rowMotion = useListRowMotion({ layout: true });
   const enabledFields = orderedFields.filter((field) => isFieldEnabled(field.id));
 
   return (
@@ -35,7 +37,7 @@ export function MarkAttendanceGrid({
           return (
             <motion.article
               key={row.studentId}
-              layout
+              {...rowMotion()}
               className={`space-y-3 rounded-xl border border-border p-3 ${statusInfo?.bg || ""}`}
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
@@ -82,7 +84,7 @@ export function MarkAttendanceGrid({
             ) : rows.map((row) => {
               const statusInfo = getAttendanceStatusInfo(row.status, statuses);
               return (
-                <motion.tr key={row.studentId} layout className={`transition-colors hover:bg-muted/20 ${statusInfo?.bg || ""}`}>
+                <motion.tr key={row.studentId} {...rowMotion()} className={`transition-colors hover:bg-muted/20 ${statusInfo?.bg || ""}`}>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground font-mono">{row.rollNo}</td>
                   <td className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{row.name}</td>
                   {enabledFields.map((field) => (

@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { Loader2, User } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { AvatarCropper } from '@/components/ui/AvatarCropper';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { AccountProfileHeaderCard } from '@/tenant/features/profile/AccountProfileHeaderCard';
 import { AccountProfileSettingsTabs } from '@/tenant/features/profile/AccountProfileSettingsTabs';
 import { useAccountProfilePageController } from '@/tenant/features/profile/hooks/useAccountProfilePageController';
@@ -21,6 +22,12 @@ export default function AccountProfile(): JSX.Element {
         <div className="flex justify-center py-16" role="status" aria-live="polite">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
+      ) : c.isError ? (
+        <ErrorState
+          title={c.t('account.loadFailed')}
+          description={c.t('account.loadFailedHint')}
+          onRetry={() => { void c.refetch(); }}
+        />
       ) : c.profile ? (
         <div className="space-y-6 animate-in fade-in-50 duration-200">
           <AccountProfileHeaderCard

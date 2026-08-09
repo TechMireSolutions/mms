@@ -96,7 +96,7 @@ export function buildWidgetSavePayload(
   builderRole: string,
 ): CustomWidget {
   return {
-    id: editWidgetConfig?.id || "widget-" + Date.now(),
+    id: editWidgetConfig?.id || "widget-" + crypto.randomUUID(),
     title: builderTitle,
     category: editWidgetConfig?.category || category,
     collection: builderCollection,

@@ -1,18 +1,15 @@
 import React from "react";
-import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHintKey, PLATFORM_MIN_PASSWORD_LENGTH } from "@mms/shared";
+import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHintKey, estimatePasswordStrength } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AuthPasswordField } from "@/components/entry";
 import { cn } from "@/lib/utils";
 
 const strengthColors = ["", "bg-destructive", "bg-warning", "bg-warning", "bg-primary"];
 
-export function getPasswordStrength(passwordValue: string): number {
-  let score = 0;
-  if (passwordValue.length >= PLATFORM_MIN_PASSWORD_LENGTH) score++;
-  if (/[A-Z]/.test(passwordValue)) score++;
-  if (/[0-9]/.test(passwordValue)) score++;
-  if (/[^A-Za-z0-9]/.test(passwordValue)) score++;
-  return score;
+/** Maps the shared entropy estimate (0–5) to the platform meter's 0–4 scale. */
+function getPasswordStrength(passwordValue: string): number {
+  const { score } = estimatePasswordStrength(passwordValue);
+  return score === 0 ? 0 : Math.min(4, score);
 }
 
 export interface AdminSetupPasswordFieldsProps {

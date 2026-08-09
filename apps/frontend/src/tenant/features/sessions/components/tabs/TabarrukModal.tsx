@@ -38,7 +38,7 @@ export function TabarrukModal({ open, entry, onClose, onSave, saving }: Tabarruk
       icon={Gift}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
-      onSave={() => onSave({ ...tabarrukDraft, id: entry?.id || `tb${Date.now()}` } as TabarrukItem)}
+      onSave={() => onSave({ ...tabarrukDraft, id: entry?.id || `tb${crypto.randomUUID()}` } as TabarrukItem)}
       saveDisabled={!tabarrukDraft.item}
       saving={saving}
     >

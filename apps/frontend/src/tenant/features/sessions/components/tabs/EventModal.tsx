@@ -49,7 +49,7 @@ export function EventModal({ open, event, onClose, onSave, saving }: EventModalP
       icon={Calendar}
       cancelLabel={t('common.cancel')}
       saveLabel={t('common.save')}
-      onSave={() => onSave({ ...eventDraft, id: event?.id || `ev${Date.now()}` } as SessionEvent)}
+      onSave={() => onSave({ ...eventDraft, id: event?.id || `ev${crypto.randomUUID()}` } as SessionEvent)}
       saveDisabled={!eventDraft.title || !eventDraft.date}
       saving={saving}
     >

@@ -4,23 +4,10 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
-import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
-import { useAttendanceReportAggregates } from "@/tenant/hooks/collections/attendance";
-import { useFinanceReportAggregates } from "@/tenant/hooks/collections/finance";
-import { useHasanatReportAggregates } from "@/tenant/hooks/collections/hasanat";
-import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
-import { formatDate } from "@mms/shared";
 import { ComparisonModeCharts } from "./ComparisonModeCharts";
-import {
-  buildContactsDateRangeComparison,
-  computeDynamicDateRangeComparison,
-  computeDynamicSessionComparison,
-} from "./comparisonModeCompute";
-import { translateComparisonMetricName } from "./comparisonModeMetricLabels";
 import { ComparisonModeSelectors } from "./ComparisonModeSelectors";
-import type { ComparisonDataItem, ComparisonModeProps, DateRange } from "./comparisonModeTypes";
+import { useComparisonModeData } from "./useComparisonModeData";
+import type { ComparisonModeProps, DateRange } from "./comparisonModeTypes";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 /**
@@ -46,158 +33,17 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
     [t],
   );
 
-  const compareYears = useMemo(() => {
-    if (!isContacts || mode !== "daterange") return undefined;
-    const yearA = Number.parseInt(rangeA.from.slice(0, 4), 10);
-    const yearB = Number.parseInt(rangeB.from.slice(0, 4), 10);
-    return [yearA, yearB].filter((year) => Number.isFinite(year));
-  }, [isContacts, mode, rangeA.from, rangeB.from]);
-
-  const { data: reportData } = useContactsReportAnalytics({
-    enabled: isContacts,
-    compareYears,
+  const { sessionsOptions, comparisonData, labelA, labelB } = useComparisonModeData({
+    category,
+    isContacts,
+    mode,
+    valA,
+    valB,
+    rangeA,
+    rangeB,
     language,
+    t,
   });
-  // Contacts Compare uses /report-analytics years only — skip unrelated collections.
-  const nonContactsEnabled = !isContacts;
-  const categoryKey = category.toLowerCase();
-  const needsEnrollmentDateRange =
-    nonContactsEnabled && mode === "daterange" && (categoryKey === "students" || categoryKey === "enrollments");
-  const needsEnrollmentSessionCompare = nonContactsEnabled && mode === "sessions";
-  const needsFinanceSessionCompare = nonContactsEnabled && mode === "sessions";
-  const needsFinanceDateRange =
-    nonContactsEnabled && mode === "daterange" && categoryKey === "financial";
-  const needsAttendanceSessionCompare = nonContactsEnabled && mode === "sessions";
-  const needsAttendanceDateRange =
-    nonContactsEnabled && mode === "daterange" && categoryKey === "attendance";
-  const needsHasanatSessionCompare = nonContactsEnabled && mode === "sessions";
-  const needsHasanatDateRange =
-    nonContactsEnabled && mode === "daterange" && categoryKey === "hasanat";
-
-  const enrollmentComparison = useMemo(() => {
-    if (needsEnrollmentSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (needsEnrollmentDateRange) {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [
-    needsEnrollmentSessionCompare,
-    needsEnrollmentDateRange,
-    valA,
-    valB,
-    rangeA.from,
-    rangeA.to,
-    rangeB.from,
-    rangeB.to,
-  ]);
-
-  const financeComparison = useMemo(() => {
-    if (needsFinanceSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (needsFinanceDateRange) {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [
-    needsFinanceSessionCompare,
-    needsFinanceDateRange,
-    valA,
-    valB,
-    rangeA.from,
-    rangeA.to,
-    rangeB.from,
-    rangeB.to,
-  ]);
-
-  const attendanceComparison = useMemo(() => {
-    if (needsAttendanceSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (needsAttendanceDateRange) {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [
-    needsAttendanceSessionCompare,
-    needsAttendanceDateRange,
-    valA,
-    valB,
-    rangeA.from,
-    rangeA.to,
-    rangeB.from,
-    rangeB.to,
-  ]);
-
-  const hasanatComparison = useMemo(() => {
-    if (needsHasanatSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (needsHasanatDateRange) {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [
-    needsHasanatSessionCompare,
-    needsHasanatDateRange,
-    valA,
-    valB,
-    rangeA.from,
-    rangeA.to,
-    rangeB.from,
-    rangeB.to,
-  ]);
-
-  const { data: enrollmentsReport } = useEnrollmentsReportAggregates({
-    enabled: Boolean(enrollmentComparison),
-    comparison: enrollmentComparison,
-  });
-
-  const { data: financeReport } = useFinanceReportAggregates({
-    enabled: Boolean(financeComparison),
-    comparison: financeComparison,
-  });
-
-  const { data: attendanceReport } = useAttendanceReportAggregates({
-    enabled: Boolean(attendanceComparison),
-    comparison: attendanceComparison,
-  });
-
-  const { data: hasanatReport } = useHasanatReportAggregates({
-    enabled: Boolean(hasanatComparison),
-    comparison: hasanatComparison,
-  });
-
-  const sessions = useSessionsCollection({ enabled: nonContactsEnabled });
-  const SESSIONS_OPTIONS = useMemo<{id: string, name: string}[]>(
-    () => sessions.filter((session) => session.id !== "all").map((session) => ({ id: session.id, name: session.name })),
-    [sessions],
-  );
-
-  const examResults = useExaminationsResultsCollection({ enabled: nonContactsEnabled });
-  const exams = useExaminationsExamsCollection({ enabled: nonContactsEnabled });
 
   useEffect(() => {
     if (isContacts) {
@@ -208,69 +54,6 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
       setValB("s2");
     }
   }, [category, isContacts]);
-
-  const options = SESSIONS_OPTIONS;
-  const labelA = mode === "sessions" ? options.find((option) => option.id === valA)?.name : `${formatDate(rangeA.from)} → ${formatDate(rangeA.to)}`;
-  const labelB = mode === "sessions" ? options.find((option) => option.id === valB)?.name : `${formatDate(rangeB.from)} → ${formatDate(rangeB.to)}`;
-
-  const comparisonData = useMemo(() => {
-    if (mode === "sessions") {
-      if (isContacts) {
-        return [];
-      }
-      return computeDynamicSessionComparison(
-        sessions,
-        enrollmentsReport?.comparison?.sessions ?? [],
-        attendanceReport?.comparison?.sessions ?? [],
-        financeReport?.comparison?.sessions ?? [],
-        hasanatReport?.comparison?.sessions ?? [],
-        examResults,
-        exams,
-        valA,
-        valB,
-        t,
-      );
-    }
-    if (isContacts) {
-      return buildContactsDateRangeComparison(reportData?.monthlyByYear, rangeA, rangeB);
-    }
-    return computeDynamicDateRangeComparison(
-      category,
-      enrollmentsReport?.comparison?.monthly,
-      attendanceReport?.comparison?.monthly,
-      financeReport?.comparison?.monthly,
-      hasanatReport?.comparison?.monthly,
-      examResults,
-      exams,
-      rangeA,
-      rangeB,
-    );
-  }, [
-    mode,
-    isContacts,
-    reportData,
-    valA,
-    valB,
-    rangeA,
-    rangeB,
-    sessions,
-    enrollmentsReport,
-    attendanceReport,
-    financeReport,
-    hasanatReport,
-    examResults,
-    exams,
-    category,
-    t,
-  ]);
-
-  const translatedData = useMemo(() => {
-    if (mode !== "sessions") return comparisonData;
-    return (comparisonData as ComparisonDataItem[]).map((row) => ({
-      ...row,
-      metric: translateComparisonMetricName(row.metric, t),
-    }));
-  }, [comparisonData, mode, t]);
 
   return (
     <motion.div
@@ -313,12 +96,12 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
           rangeB={rangeB}
           setRangeA={setRangeA}
           setRangeB={setRangeB}
-          options={options}
+          options={sessionsOptions}
         />
 
         <ComparisonModeCharts
           mode={mode}
-          translatedData={translatedData}
+          translatedData={comparisonData}
           labelA={labelA}
           labelB={labelB}
           isContacts={isContacts}

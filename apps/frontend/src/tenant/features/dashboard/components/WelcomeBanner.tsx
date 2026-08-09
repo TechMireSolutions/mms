@@ -28,7 +28,7 @@ const BADGE_BY_ROLE: Record<DashboardRole, AppTranslationKey> = {
 };
 
 const DATE_CHIP_CLASS =
-  'bg-primary-foreground/10 hover:bg-primary-foreground/15 backdrop-blur-md border border-primary-foreground/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm';
+  'surface-glass bg-primary-foreground/10 hover:bg-primary-foreground/15 border-primary-foreground/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm';
 
 /** Dashboard welcome header with dashboardRole-specific messaging and localized date. */
 export default function WelcomeBanner({
@@ -75,29 +75,29 @@ export default function WelcomeBanner({
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-warning animate-pulse" aria-hidden="true" />
-            <span className="text-xs font-black text-white/70 uppercase tracking-widest">
+            <span className="text-xs font-black text-primary-foreground/70 uppercase tracking-widest">
               {t(BADGE_BY_ROLE[dashboardRole])}
             </span>
           </div>
-          <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight m-0 text-white">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight m-0 text-primary-foreground">
             {userName ? t('dashboard.greeting.personal', { name: userName }) : t(GREETING_BY_ROLE[dashboardRole])}
           </h1>
-          <p className="text-xs md:text-sm text-white/75 mt-2 max-w-lg mb-0 font-medium leading-relaxed">{subtitle}</p>
+          <p className="text-xs md:text-sm text-primary-foreground/75 mt-2 max-w-lg mb-0 font-medium leading-relaxed">{subtitle}</p>
         </div>
 
         <div className="flex-shrink-0 flex items-center gap-3 self-start lg:self-auto flex-wrap">
           <div className={DATE_CHIP_CLASS}>
             <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
-            <span className="text-sm font-bold text-white whitespace-nowrap tracking-wide">{dayName}</span>
+            <span className="text-sm font-bold text-primary-foreground whitespace-nowrap tracking-wide">{dayName}</span>
           </div>
           <div className={DATE_CHIP_CLASS}>
             <span className="w-1.5 h-1.5 rounded-full bg-info" aria-hidden="true" />
-            <span className="text-sm font-bold text-white whitespace-nowrap tracking-wide">{gregDate}</span>
+            <span className="text-sm font-bold text-primary-foreground whitespace-nowrap tracking-wide">{gregDate}</span>
           </div>
           {hijriDate ? (
             <div className={DATE_CHIP_CLASS}>
               <span className="w-1.5 h-1.5 rounded-full bg-success" aria-hidden="true" />
-              <span className="text-sm font-bold text-white whitespace-nowrap tracking-wide">{hijriDate}</span>
+              <span className="text-sm font-bold text-primary-foreground whitespace-nowrap tracking-wide">{hijriDate}</span>
             </div>
           ) : null}
         </div>

@@ -62,6 +62,44 @@ export const questionBankQuestionRecordSchema = z.object({
 
 export const questionBankQuestionListSchema = z.array(questionBankQuestionRecordSchema);
 
+/**
+ * Strict single-question write schema (FE form + BE write boundary).
+ * Omits server-owned soft-delete and deprecated legacy fields; `message` values
+ * are translation keys resolved via `mapZodFormErrors`.
+ */
+export const questionBankQuestionWriteSchema = z
+  .object({
+    id: z.string(),
+    categoryIds: z.array(z.string()).min(1, { message: 'questionBank.validation.categoryRequired' }),
+    type: questionTypeSchema,
+    difficulty: questionDifficultySchema,
+    questionLanguage: z.enum(['en', 'ar', 'ur', 'fa']),
+    text: z.string().min(1, { message: 'questionBank.validation.textRequired' }),
+    options: z.array(z.string()),
+    answer: z.string(),
+    sourceCitations: z.array(questionBookCitationSchema).optional(),
+  })
+  .strict()
+  .superRefine((question, ctx) => {
+    if (question.type === 'mcq') {
+      if (!question.answer || !question.options.includes(question.answer)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['answer'],
+          message: 'questionBank.validation.answerFromChoices',
+        });
+      }
+    } else if (question.type === 'true_false') {
+      if (!question.answer) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['answer'],
+          message: 'questionBank.validation.trueFalseRequired',
+        });
+      }
+    }
+  });
+
 export const questionBankTestRecordSchema = z.object({
   id: z.string(),
   name: z.string(),

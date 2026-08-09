@@ -71,7 +71,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     const generatedReference = generateJERef(entries);
     const description = form.description || t(selectedType!.labelKey);
     await onSave({
-      id: `je${Date.now()}`,
+      id: `je${crypto.randomUUID()}`,
       ref: form.ref ? `${form.ref}` : generatedReference,
       date: form.date,
       description,
@@ -83,8 +83,8 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       simple_mode: true,
       transaction_type: selectedType!.id,
       lines: [
-        { id: `l${Date.now()}a`, account_id: form.debitAcc, debit: amount, credit: 0, description },
-        { id: `l${Date.now()}b`, account_id: form.creditAcc, debit: 0, credit: amount, description },
+        { id: `l-${crypto.randomUUID()}`, account_id: form.debitAcc, debit: amount, credit: 0, description },
+        { id: `l-${crypto.randomUUID()}`, account_id: form.creditAcc, debit: 0, credit: amount, description },
       ],
     });
   };

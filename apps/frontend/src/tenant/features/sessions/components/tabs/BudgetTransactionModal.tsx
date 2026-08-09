@@ -49,7 +49,7 @@ export function BudgetTransactionModal({ open, type, currency, onClose, onSave, 
       icon={type === "income" ? TrendingUp : TrendingDown}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.add")}
-      onSave={() => onSave({ ...transactionDraft, amount: +transactionDraft.amount, id: `tx${Date.now()}` })}
+      onSave={() => onSave({ ...transactionDraft, amount: +transactionDraft.amount, id: `tx${crypto.randomUUID()}` })}
       saveDisabled={!transactionDraft.amount}
       saving={saving}
     >

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStandardModuleConfig } from '@/hooks/useStandardModuleConfig';
 import {
@@ -6,6 +6,7 @@ import {
   type ModuleFieldDef,
   type QuestionBankSettings,
   type QuestionCategory,
+  type QuestionCategoryRef,
   type QuestionSourceBook,
   type QuestionDifficulty,
   type QuestionType,
@@ -26,17 +27,16 @@ export interface QuestionBankConfig {
   typeLabel: (typeId: string) => string;
   difficultyLabel: (difficultyId: string) => string;
   questionLanguageLabel: (languageCode: string) => string;
-  refresh: () => void;
   updateSettings: (settingsDraft: QuestionBankSettings) => void;
   updateSettingsAsync: (settingsDraft: QuestionBankSettings) => Promise<void>;
 }
 
 export function useQuestionBankConfig(
-  questions?: readonly import('@mms/shared').QuestionCategoryRef[],
+  questions?: readonly QuestionCategoryRef[],
 ): QuestionBankConfig {
   const { t } = useTranslation();
   const { fieldLabel, typeLabel, difficultyLabel, questionLanguageLabel } = useQuestionBankLabels(t);
-  
+
   const {
     settings,
     orderedFields,
@@ -44,9 +44,6 @@ export function useQuestionBankConfig(
     updateSettingsAsync,
     isFieldEnabled,
   } = useStandardModuleConfig('question-bank');
-
-
-  const refresh = useCallback(() => {}, []);
 
   const enabledDifficulties = useMemo(
     () =>
@@ -88,7 +85,6 @@ export function useQuestionBankConfig(
     typeLabel,
     difficultyLabel,
     questionLanguageLabel,
-    refresh,
     updateSettings,
     updateSettingsAsync,
   };

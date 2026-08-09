@@ -32,7 +32,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
   const saveAccount = async () => {
     const candidate = {
       ...form,
-      id: isEdit ? form.id : `a${Date.now()}`,
+      id: isEdit ? form.id : `a${crypto.randomUUID()}`,
       code: form.code?.trim() ?? '',
       name: form.name?.trim() ?? '',
       type: form.type ?? 'Asset',

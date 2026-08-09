@@ -5,6 +5,11 @@ import { apiJson, ApiError } from '@/lib/apiClient';
 import { notify } from '@/lib/notify';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  changePasswordBodySchema,
+  requestLoginEmailChangeBodySchema,
+  confirmLoginEmailChangeBodySchema,
+} from '@mms/shared';
 
 export function useAccountProfileSecurityActions() {
   const { t } = useTranslation();
@@ -31,15 +36,21 @@ export function useAccountProfileSecurityActions() {
     setLoginEmailBusy(true);
     setDevCode(null);
     try {
+      const payload = {
+        newLoginEmail: newLoginEmail.trim(),
+        currentPassword: loginPassword,
+      };
+      const checked = requestLoginEmailChangeBodySchema.safeParse(payload);
+      if (!checked.success) {
+        notify.error(t('common.formPleaseFixErrors'));
+        return;
+      }
       const result = await apiJson<{
         challengeId: string;
         devCode?: string;
       }>('/api/auth/login-email/request', {
         method: 'POST',
-        body: JSON.stringify({
-          newLoginEmail: newLoginEmail.trim(),
-          currentPassword: loginPassword,
-        }),
+        body: JSON.stringify(checked.data),
       });
       setChallengeId(result.challengeId);
       if (result.devCode) setDevCode(result.devCode);
@@ -61,9 +72,17 @@ export function useAccountProfileSecurityActions() {
     if (!challengeId) return;
     setLoginEmailBusy(true);
     try {
+      const checked = confirmLoginEmailChangeBodySchema.safeParse({
+        challengeId,
+        code: verifyCode,
+      });
+      if (!checked.success) {
+        notify.error(t('common.formPleaseFixErrors'));
+        return;
+      }
       await apiJson('/api/auth/login-email/confirm', {
         method: 'POST',
-        body: JSON.stringify({ challengeId, code: verifyCode }),
+        body: JSON.stringify(checked.data),
       });
       setChallengeId(null);
       setVerifyCode('');
@@ -89,9 +108,17 @@ export function useAccountProfileSecurityActions() {
     }
     setPasswordBusy(true);
     try {
+      const checked = changePasswordBodySchema.safeParse({
+        currentPassword,
+        newPassword,
+      });
+      if (!checked.success) {
+        notify.error(t('common.formPleaseFixErrors'));
+        return;
+      }
       await apiJson('/api/auth/change-password', {
         method: 'POST',
-        body: JSON.stringify({ currentPassword, newPassword }),
+        body: JSON.stringify(checked.data),
       });
       setCurrentPassword('');
       setNewPassword('');

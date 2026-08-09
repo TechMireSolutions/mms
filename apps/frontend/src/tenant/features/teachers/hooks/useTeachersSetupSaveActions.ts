@@ -145,7 +145,6 @@ export function useTeachersSetupSaveActions({
             requiredTabs: Array.from(fieldsEditor.requiredTabs).map((tab) => tab.toLowerCase()),
             fields: fieldsMap,
             columnRegistry: syncedRegistry,
-            customFields: [],
           });
         },
         markDraftPristine: fieldsEditor.markDraftPristine,

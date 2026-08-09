@@ -11,7 +11,6 @@ import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema
 export const teacherFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
-    customFields: z.array(z.record(z.string(), z.unknown())).optional(),
   })
   .passthrough();
 
@@ -100,7 +99,6 @@ export function normalizeTeachersSettings(config: unknown): TeachersSettings {
     ...defaults,
     ...(raw as Partial<TeachersSettings>),
     ...prefs,
-    customFields: [],
     fieldOrder: Array.isArray(raw.fieldOrder)
       ? (raw.fieldOrder as string[])
       : defaults.fieldOrder,
@@ -117,8 +115,10 @@ export function normalizeTeachersSettings(config: unknown): TeachersSettings {
       ? (raw.columnRegistry as TeachersSettings['columnRegistry'])
       : raw.columnRegistry as TeachersSettings['columnRegistry'],
   };
-  // Retired Setup preference — Work uses useWorkDirectoryViewMode (Students parity).
+  // Retired Setup preferences — Work uses useWorkDirectoryViewMode (Students parity),
+  // and legacy `customFields[]` is superseded by tabbed `fields`.
   delete (merged as TeachersSettings & { defaultViewLayout?: unknown }).defaultViewLayout;
+  delete (merged as TeachersSettings & { customFields?: unknown }).customFields;
   return merged;
 }
 

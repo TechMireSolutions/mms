@@ -9,7 +9,14 @@ import {
   type User,
 } from '../../services/auth/authService.js';
 import { exchangeAuthHandoff } from '../../services/auth/authHandoffService.js';
-import type { Contact } from '@mms/shared';
+import {
+  type Contact,
+  changePasswordBodySchema,
+  confirmLoginEmailChangeBodySchema,
+  ownContactPatchBodySchema,
+  requestLoginEmailChangeBodySchema,
+  verifyPasswordBodySchema,
+} from '@mms/shared';
 import { resendTwoFactorChallenge } from '../../services/auth/twoFactorService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
@@ -31,13 +38,6 @@ import {
   handoffBodySchema,
   loginBodySchema,
 } from '../../validation/commonSchemas.js';
-import {
-  changePasswordBodySchema,
-  confirmLoginEmailChangeBodySchema,
-  ownContactPatchBodySchema,
-  requestLoginEmailChangeBodySchema,
-  verifyPasswordBodySchema,
-} from '../../validation/profileSchemas.js';
 import {
   confirmLoginEmailChange,
   requestLoginEmailChange,

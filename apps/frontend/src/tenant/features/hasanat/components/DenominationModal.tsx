@@ -46,7 +46,7 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
         void (async () => {
           setSubmitting(true);
           try {
-            await onSave({ ...data, id: denom?.id || `den${Date.now()}` });
+            await onSave({ ...data, id: denom?.id || `den${crypto.randomUUID()}` });
           } finally {
             setSubmitting(false);
           }

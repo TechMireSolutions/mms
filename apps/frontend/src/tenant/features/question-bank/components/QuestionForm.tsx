@@ -6,10 +6,13 @@ import { notify } from '@/lib/notify';
 import {
   getLanguageDirection,
   normalizeAppLanguage,
+  questionBankQuestionWriteSchema,
   type AppLanguageCode,
+  type AppTranslationKey,
   type QuestionDifficulty,
   type QuestionBankQuestion as Question,
 } from '@mms/shared';
+import { mapZodFormErrors } from '@/lib/forms/mapZodFormErrors';
 import { QuestionFormClassificationSection } from "@/tenant/features/question-bank/components/QuestionFormClassificationSection";
 import { QuestionFormContentSection } from "@/tenant/features/question-bank/components/QuestionFormContentSection";
 import { QuestionFormFooterSummary } from "@/tenant/features/question-bank/components/QuestionFormFooterSummary";
@@ -64,39 +67,20 @@ export function QuestionForm({
 
   const handleSave = async () => {
     setErrors({});
-    const newErrors: Record<string, string> = {};
-
-    if (!questionDraft.text?.trim()) {
-      newErrors.text = t('questionBank.validation.textRequired');
-    }
-    if (!questionDraft.categoryIds || questionDraft.categoryIds.length === 0) {
-      newErrors.categoryIds = t('questionBank.validation.categoryRequired');
-    }
-
-    if (questionDraft.type === 'mcq') {
-      const options = questionDraft.options || [];
-      if (!questionDraft.answer || !options.includes(questionDraft.answer)) {
-        newErrors.answer = t('questionBank.validation.answerFromChoices');
-      }
-    } else if (questionDraft.type === 'true_false') {
-      if (!questionDraft.answer) {
-        newErrors.answer = t('questionBank.validation.trueFalseRequired');
-      }
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    const candidate = {
+      ...questionDraft,
+      id: question?.id || `q${crypto.randomUUID()}`,
+    };
+    const parsed = questionBankQuestionWriteSchema.safeParse(candidate);
+    if (!parsed.success) {
+      setErrors(mapZodFormErrors(parsed.error, (message) => t(message as AppTranslationKey)));
       notify.error(t('questionBank.validationFailed'));
       return;
     }
 
     setSaving(true);
     try {
-      await onSave({
-        ...questionDraft,
-        id: question?.id || `q${Date.now()}`,
-        sourceCitations: questionDraft.sourceCitations,
-      } as unknown as Question);
+      await onSave(parsed.data as Question);
       notify.success(question ? t('questionBank.updated') : t('questionBank.saved'));
       onClose();
     } catch (err: unknown) {

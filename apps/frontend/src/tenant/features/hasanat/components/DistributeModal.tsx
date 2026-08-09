@@ -97,7 +97,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
         const batch = batches.find((candidate) => candidate.denominationId === data.denominationId && candidate.remaining > 0);
         const payload: Distribution = {
           ...data,
-          id: `dist${Date.now()}`,
+          id: `dist${crypto.randomUUID()}`,
           denominationName: denomination?.name || "",
           batchId: batch?.id || "",
           status: "active",

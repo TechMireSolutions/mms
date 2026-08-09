@@ -1,15 +1,4 @@
 import { formatDateToIso } from '@mms/shared';
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
-
-/** Present/late rate for a calendar day, or null when no records. */
-export function getAttendanceRateForDate(records: AttendanceRecord[], dateStr: string): number | null {
-  const dayRecords = records.filter((record) => record.date === dateStr);
-  if (dayRecords.length === 0) return null;
-  const present = dayRecords.filter(
-    (record) => record.status === 'present' || record.status === 'late',
-  ).length;
-  return (present / dayRecords.length) * 100;
-}
 
 export function getPeriodBoundaries(daysStart: number, daysEnd: number): {
   startTime: string;

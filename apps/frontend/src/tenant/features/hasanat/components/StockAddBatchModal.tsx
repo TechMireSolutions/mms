@@ -61,7 +61,7 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
           try {
             await onSave({
               ...data,
-              id: `bat${Date.now()}`,
+              id: `bat${crypto.randomUUID()}`,
               quantity: Number(data.quantity),
               remaining: Number(data.quantity),
               denominationName: denomination?.name || '',

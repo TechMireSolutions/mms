@@ -103,7 +103,7 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
     if (!validate()) return;
     setSubmitting(true);
     const newUser: SystemUser = {
-      id: `u${Date.now()}`,
+      id: `u${crypto.randomUUID()}`,
       contactId: form.contactId!,
       name: toTitleCase(form.name.trim()) as string,
       email: form.email.trim().toLowerCase(),

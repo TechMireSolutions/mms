@@ -65,7 +65,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
           try {
             await onSave({
               ...data,
-              id: `red${Date.now()}`,
+              id: `red${crypto.randomUUID()}`,
               pointsUsed: Number(data.pointsUsed),
               studentName: selectedDistribution?.recipientName || "",
               approvedBy,

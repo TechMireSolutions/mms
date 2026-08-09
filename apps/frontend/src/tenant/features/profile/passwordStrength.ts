@@ -1,3 +1,5 @@
+import { estimatePasswordStrength } from '@mms/shared';
+
 export interface PasswordStrengthResult {
   score: number;
   colorClass: string;
@@ -10,16 +12,10 @@ export interface PasswordStrengthResult {
     | null;
 }
 
+/** Maps the shared entropy estimate to display chrome (colors + i18n keys stay FE-only). */
 export function getPasswordStrength(password: string): PasswordStrengthResult {
-  if (!password) return { score: 0, colorClass: "bg-muted", key: null };
-
-  let score = 0;
-  if (password.length >= 8) score += 1;
-  if (/[A-Z]/.test(password)) score += 1;
-  if (/[a-z]/.test(password)) score += 1;
-  if (/[0-9]/.test(password)) score += 1;
-  if (/[^A-Za-z0-9]/.test(password)) score += 1;
-
+  const { score } = estimatePasswordStrength(password);
+  if (score === 0) return { score: 0, colorClass: "bg-muted", key: null };
   if (score <= 1) {
     return { score, colorClass: "bg-destructive", key: "account.passwordStrengthVeryWeak" };
   }

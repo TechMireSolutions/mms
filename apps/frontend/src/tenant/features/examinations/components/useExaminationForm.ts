@@ -71,7 +71,7 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
       await onSave({
         ...examDraft,
         name: toTitleCase(examDraft.name || ""),
-        id: exam?.id || `ex${Date.now()}`
+        id: exam?.id || `ex${crypto.randomUUID()}`
       } as unknown as Exam);
       notify.success(exam ? t("examinations.form.toast.updated") : t("examinations.form.toast.created"));
       onClose();

@@ -30,7 +30,7 @@ describe('getSortedTeacherFields', () => {
     expect(sorted.find((field) => field.id === 'status')?.enabled).toBe(true);
   });
 
-  it('reads customs from the tabbed map and ignores legacy customFields[]', () => {
+  it('reads customs from the tabbed map (legacy customFields[] is retired)', () => {
     const withTabbedCustoms = {
       ...INITIAL_TEACHERS_FIELD_SEED,
       employment: [
@@ -45,16 +45,11 @@ describe('getSortedTeacherFields', () => {
         },
       ],
     };
-    const sorted = getSortedTeacherFields(undefined, withTabbedCustoms, [
-      { id: 'house', label: 'House', type: 'text' },
-    ]);
+    const sorted = getSortedTeacherFields(undefined, withTabbedCustoms);
     expect(sorted.some((field) => field.id === 'badgeColor' && field.isCustom)).toBe(true);
-    expect(sorted.some((field) => field.id === 'house')).toBe(false);
 
-    const seedOnly = getSortedTeacherFields(undefined, INITIAL_TEACHERS_FIELD_SEED, [
-      { id: 'house', label: 'House', type: 'text' },
-    ]);
-    expect(seedOnly.some((field) => field.id === 'house')).toBe(false);
+    const seedOnly = getSortedTeacherFields(undefined, INITIAL_TEACHERS_FIELD_SEED);
+    expect(seedOnly.some((field) => field.id === 'badgeColor')).toBe(false);
   });
 
   it('keeps DEFAULT_TEACHER_FIELD_DEFS aligned with seed system keys', () => {

@@ -34,4 +34,13 @@ describe('teacherSetupConfigTypes prefs SSOT', () => {
     ).toBeUndefined();
     expect(settings.defaultSpecialization).toBe(DEFAULT_TEACHER_SPECIALIZATION);
   });
+
+  it('strips legacy customFields[] from normalizeTeachersSettings', () => {
+    const settings = normalizeTeachersSettings({
+      idPrefix: 'TCH',
+      customFields: [{ id: 'house', label: 'House' }],
+    });
+    expect('customFields' in settings).toBe(false);
+    expect(settings.fields).toBeDefined();
+  });
 });

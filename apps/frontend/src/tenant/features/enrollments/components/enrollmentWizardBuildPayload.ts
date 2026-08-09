@@ -17,7 +17,7 @@ export function buildEnrollmentPayload(params: {
   const nowISO = new Date().toISOString();
 
   return {
-    id: `enr-${Date.now()}`,
+    id: `enr-${crypto.randomUUID()}`,
     studentId: student.id,
     studentName: student.name || "",
     sessionId: session.id,

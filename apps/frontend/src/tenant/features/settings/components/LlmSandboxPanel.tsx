@@ -60,7 +60,7 @@ export function LlmSandboxPanel({
               onChange={(configId) => setSandboxConfigId(configId)}
               options={configs.map((config) => ({
                 value: config.id,
-                label: `${config.name} (${config.provider} - ${config.model})` + (config.isDefaultText ? ' (Default)' : ''),
+                label: `${config.name} (${config.provider} - ${config.model})` + (config.isDefaultText ? ` (${t('settings.llmDefaultBadge')})` : ''),
               }))}
             />
           </div>

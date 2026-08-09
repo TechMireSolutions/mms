@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useListRowMotion } from '@/hooks/useListRowMotion';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
 import { UsersListAvatar } from '@/tenant/features/users/components/UsersListAvatar';
 import { UsersListRowActions } from '@/tenant/features/users/components/UsersListRowActions';
@@ -51,6 +52,7 @@ export function UsersListDesktopTable({
   isColumnVisible,
 }: UsersListDesktopTableProps): JSX.Element {
   const { t } = useTranslation();
+  const rowMotion = useListRowMotion({ layout: true });
   const visible = isColumnVisible ?? (() => true);
 
   return (
@@ -102,7 +104,7 @@ export function UsersListDesktopTable({
         </thead>
         <tbody className="divide-y divide-border">
           {users.map((user) => (
-            <motion.tr key={user.id} layout className="transition-colors hover:bg-muted/20">
+            <motion.tr key={user.id} {...rowMotion()} className="transition-colors hover:bg-muted/20">
               {canDelete && (
                 <td className="px-3 py-2.5">
                   <Checkbox

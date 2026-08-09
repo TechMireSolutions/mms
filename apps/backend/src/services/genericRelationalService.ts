@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import type { ZodType } from 'zod';
 import type { ListByWorkspaceOptions } from '../db/repositories/genericRepository.js';
@@ -42,7 +43,7 @@ export function createGenericRelationalService<
   async function create(record: T): Promise<T> {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
-    const resolvedId = String(record.id ?? `${idPrefix}-${Date.now()}`);
+    const resolvedId = String(record.id ?? `${idPrefix}-${randomUUID()}`);
     const parsed = schema.parse({ ...record, id: resolvedId }) as T;
     const normalized = normalizeFn ? normalizeFn(parsed) : parsed;
     await repo.save(tenant, normalized);

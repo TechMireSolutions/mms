@@ -66,7 +66,7 @@ export function toggleVisualizerWidgetPin(input: {
     nextWidgets[matchingIndex].isPinnedToDashboard = !nextWidgets[matchingIndex].isPinnedToDashboard;
   } else {
     const newWidget: CustomWidget = {
-      id: 'widget-' + Date.now(),
+      id: 'widget-' + crypto.randomUUID(),
       title: input.title,
       category: resolveWidgetCategory(input.collectionKey),
       collection: input.collectionKey as CustomWidget['collection'],

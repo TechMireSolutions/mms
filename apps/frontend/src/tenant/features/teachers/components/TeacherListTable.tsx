@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherListTypes";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
@@ -62,6 +63,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
     onEmail,
   } = props;
   const { t } = useTranslation();
+  const rowMotion = useListRowMotion({ layout: "position", fade: true, duration: 0.1 });
 
   const visibleColumns = getTeacherVisibleWorkColumns(columnRegistry, isColumnVisible, {
     excludeFace: true,
@@ -131,11 +133,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
           return (
             <motion.tr
               key={teacher.id}
-              layout="position"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
+              {...rowMotion()}
               className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
             >
               {showSelectColumn && (

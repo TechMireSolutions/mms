@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell } from "@/components/ui/table";
 import { getDisplayName, type Contact, type ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
 import {
@@ -65,14 +66,11 @@ export const ContactTableRow = memo(function ContactTableRow({
   onEmail,
 }: ContactTableRowProps): React.JSX.Element {
   const displayName = getDisplayName(contact);
+  const rowMotion = useListRowMotion({ layout: "position", fade: true, duration: 0.1 });
 
   return (
     <motion.tr
-      layout="position"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.1 }}
+      {...rowMotion()}
       className={cn(
         "hover:bg-muted/20 transition-colors group",
         isSelected && "bg-primary/5",

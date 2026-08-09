@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { renderStudentListDesktopTableCell } from "@/tenant/features/students/components/StudentListDesktopTableCells";
 import { StudentListActionsMenu } from "@/tenant/features/students/components/StudentListActionsMenu";
 import type { StudentListTableProps } from "@/tenant/features/students/components/StudentListContentTypes";
@@ -49,6 +50,7 @@ export function StudentListDesktopTableRow({
   onOpenComposer,
 }: StudentListDesktopTableRowProps) {
   const { t } = useTranslation();
+  const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const emptyDash = t("students.table.emptyDash");
   const studentIdStr = String(studentRow.id);
   const isSelected = selectedIds.includes(studentIdStr);
@@ -60,9 +62,7 @@ export function StudentListDesktopTableRow({
   return (
     <motion.tr
       key={studentIdStr}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: Math.min(rowIndex * 0.03, 0.2) }}
+      {...rowMotion(Math.min(rowIndex * 0.03, 0.2))}
       className={`hover:bg-muted/20 transition-colors group ${
         isSelected ? "bg-primary/5" : ""
       }`}

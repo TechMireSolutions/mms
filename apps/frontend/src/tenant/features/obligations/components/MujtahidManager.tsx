@@ -27,7 +27,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
   const handleSaveMujtahid = async (form: Partial<Mujtahid>) => {
     if (modal?.mode === "add") {
-      await onChangeMujtahids([...mujtahids, { ...form, id: `m${Date.now()}` } as Mujtahid]);
+      await onChangeMujtahids([...mujtahids, { ...form, id: `m${crypto.randomUUID()}` } as Mujtahid]);
     } else if (modal?.mode === "edit") {
       await onChangeMujtahids(mujtahids.map((mujtahid) => mujtahid.id === form.id ? (form as Mujtahid) : mujtahid));
     }
@@ -42,7 +42,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
   const handleSaveRep = async (form: Partial<MujtahidRep>) => {
     if (modal?.mode === "add-rep") {
-      await onChangeReps([...reps, { ...form, id: `mr${Date.now()}` } as MujtahidRep]);
+      await onChangeReps([...reps, { ...form, id: `mr${crypto.randomUUID()}` } as MujtahidRep]);
     } else if (modal?.mode === "edit-rep") {
       await onChangeReps(reps.map((representative) => representative.id === form.id ? (form as MujtahidRep) : representative));
     }

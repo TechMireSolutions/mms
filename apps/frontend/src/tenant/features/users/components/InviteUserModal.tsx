@@ -75,7 +75,7 @@ export function InviteUserModal({
     const email = (getPrimaryEmail(contact) || '').toLowerCase();
     const phone = getPrimaryPhone(contact) || '';
     const user: SystemUser = {
-      id: `u${Date.now()}`,
+      id: `u${crypto.randomUUID()}`,
       contactId: contact.id,
       name,
       email,

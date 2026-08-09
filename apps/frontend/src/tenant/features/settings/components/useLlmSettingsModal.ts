@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiJson } from '@/lib/apiClient';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   LLM_PROVIDERS_META,
   getLlmProviderDefaultModel,
@@ -16,6 +17,7 @@ interface UseLlmSettingsModalOptions {
 }
 
 export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions) {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<LlmConfig | null>(null);
 
@@ -90,7 +92,7 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
 
     const customConfig = {
       id: editingConfig?.id ?? 'temp-config',
-      name: formName.trim() || 'Temporary Config',
+      name: formName.trim() || t('settings.llmTemporaryConfig'),
       provider: formProvider,
       model: targetModel,
       baseUrl: formBaseUrl.trim() || undefined,
@@ -113,7 +115,7 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
     } catch (err: unknown) {
       setModalTestResult({
         success: false,
-        message: err instanceof Error ? err.message : 'Test connection request failed',
+        message: err instanceof Error ? err.message : t('settings.llmTestConnectionFailed'),
       });
     } finally {
       setModalTesting(false);

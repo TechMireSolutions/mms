@@ -39,7 +39,7 @@ export function DiscountModal({ open, discount, onClose, onSave, saving }: Disco
       icon={Tag}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
-      onSave={() => onSave({ ...discountDraft, id: discount?.id || `d${Date.now()}` } as Discount)}
+      onSave={() => onSave({ ...discountDraft, id: discount?.id || `d${crypto.randomUUID()}` } as Discount)}
       saveDisabled={!discountDraft.name}
       saving={saving}
     >

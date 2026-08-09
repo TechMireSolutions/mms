@@ -60,7 +60,7 @@ export function AccountingFiscalYearModal({
     try {
       await onSave({
         ...form,
-        id: isEdit ? form.id : `fy${Date.now()}`,
+        id: isEdit ? form.id : `fy${crypto.randomUUID()}`,
       } as FiscalYear);
     } finally {
       setSubmitting(false);

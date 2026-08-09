@@ -4,6 +4,7 @@ import { formatDate } from "@mms/shared";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { EnrollmentRowActions } from "@/tenant/features/enrollments/components/EnrollmentRowActions";
 import {
   findEnrollmentStudent,
@@ -36,6 +37,7 @@ export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.
     openComposer,
   } = props;
   const { t } = useTranslation();
+  const rowMotion = useListRowMotion({ layout: true });
 
   return (
     <div className="overflow-x-auto">
@@ -88,7 +90,7 @@ export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.
             const studentDisplayName = getEnrollmentStudentDisplayName(enrollment, students);
 
             return (
-              <motion.tr key={enrollment.id} layout className="hover:bg-muted/20 transition-colors">
+              <motion.tr key={enrollment.id} {...rowMotion()} className="hover:bg-muted/20 transition-colors">
                 {isColumnVisible("student") && (
                   <td className="px-3 py-2.5 whitespace-nowrap">
                     <div className="flex flex-col">

@@ -4,6 +4,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { TabarrukItem } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@mms/shared";
+import { useListRowMotion } from "@/hooks/useListRowMotion";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface TabarrukListProps {
@@ -15,15 +16,14 @@ interface TabarrukListProps {
 }
 
 export function TabarrukList({ items, canWrite, t, onEdit, onDelete }: TabarrukListProps): React.JSX.Element {
+  const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   return (
     <div className="rounded-xl border border-border overflow-hidden bg-card">
       <div className="space-y-3 p-3 md:hidden">
         {items.map((tabarrukItem, index) => (
           <motion.article
             key={tabarrukItem.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: index * 0.04 }}
+            {...rowMotion(index * 0.04)}
             className="space-y-3 rounded-xl border border-border bg-card p-3"
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
@@ -75,9 +75,7 @@ export function TabarrukList({ items, canWrite, t, onEdit, onDelete }: TabarrukL
             {items.map((tabarrukItem, index) => (
               <motion.tr
                 key={tabarrukItem.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.04 }}
+                {...rowMotion(index * 0.04)}
                 className="hover:bg-muted/20 transition-colors group"
               >
                 <td className="px-4 py-3">

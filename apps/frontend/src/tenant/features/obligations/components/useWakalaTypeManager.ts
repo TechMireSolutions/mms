@@ -37,7 +37,7 @@ export function useWakalaTypeManager({
 
   const handleSaveWakala = async (form: Partial<import('@/lib/data/obligationsData').WakalaType>) => {
     if (modal?.mode === "add") {
-      await onChangeWakala([...wakalaTypes, { ...form, id: `wt${Date.now()}` } as import('@/lib/data/obligationsData').WakalaType]);
+      await onChangeWakala([...wakalaTypes, { ...form, id: `wt${crypto.randomUUID()}` } as import('@/lib/data/obligationsData').WakalaType]);
     } else if (modal?.mode === "edit") {
       await onChangeWakala(wakalaTypes.map((wakalaType) => wakalaType.id === form.id ? (form as import('@/lib/data/obligationsData').WakalaType) : wakalaType));
     }
@@ -59,7 +59,7 @@ export function useWakalaTypeManager({
       return;
     }
     if (modal?.distMode === "add") {
-      await onChangeDistributions([...distributions, { ...form, id: `od${Date.now()}` } as import('@/lib/data/obligationsData').ObligationDistribution]);
+      await onChangeDistributions([...distributions, { ...form, id: `od${crypto.randomUUID()}` } as import('@/lib/data/obligationsData').ObligationDistribution]);
     } else if (modal?.distMode === "edit") {
       await onChangeDistributions(distributions.map((distribution) => distribution.id === form.id ? (form as import('@/lib/data/obligationsData').ObligationDistribution) : distribution));
     }

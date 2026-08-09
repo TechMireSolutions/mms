@@ -87,7 +87,7 @@ export function usePaperBuilderHandlers({
     const instructions = config.instructions.trim();
     const paperName = config.name.trim() || t("questionBank.previewDefaultName");
     const savedPaper = {
-      id: activePaperId ?? `paper-${Date.now()}`,
+      id: activePaperId ?? `paper-${crypto.randomUUID()}`,
       name: paperName,
       categoryId: null,
       difficulty: "mixed",

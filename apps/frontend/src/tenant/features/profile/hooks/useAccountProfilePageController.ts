@@ -10,7 +10,7 @@ import { useAccountProfileSecurityActions } from '@/tenant/features/profile/hook
 
 export function useAccountProfilePageController() {
   const { t } = useTranslation();
-  const { data: profile, isLoading } = useTenantProfile();
+  const { data: profile, isLoading, isError, refetch } = useTenantProfile();
   const { fieldConfig } = useContactConfig();
   const contact = useAccountProfileContactActions();
   const security = useAccountProfileSecurityActions();
@@ -55,6 +55,8 @@ export function useAccountProfilePageController() {
     t,
     profile,
     isLoading,
+    isError,
+    refetch,
     ...contact,
     ...security,
     showCropper,

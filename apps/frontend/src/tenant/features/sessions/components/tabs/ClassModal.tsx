@@ -75,7 +75,7 @@ export function ClassModal({ open, sessionClass, onClose, onSave, saving }: Clas
     await onSave({
       ...classDraft,
       ...teacherFields,
-      id: sessionClass?.id || `c${Date.now()}`,
+      id: sessionClass?.id || `c${crypto.randomUUID()}`,
     } as Class);
   };
 

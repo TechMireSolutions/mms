@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import type React from 'react';
 import { apiJson } from '@/lib/apiClient';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { LlmConfig, LlmTestResult } from '@mms/shared';
 import type { SandboxMessage } from './llmSettingsTypes';
 
 export function useLlmSettingsSandbox(configs: LlmConfig[]) {
+  const { t } = useTranslation();
   const [sandboxMessages, setSandboxMessages] = useState<SandboxMessage[]>([]);
   const [sandboxInput, setSandboxInput] = useState('');
   const [sandboxConfigId, setSandboxConfigId] = useState<string>('');
@@ -61,7 +63,7 @@ export function useLlmSettingsSandbox(configs: LlmConfig[]) {
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: res.message || 'Error occurred while testing connection.',
+            content: res.message || t('settings.llmTestConnectionError'),
             error: true,
           },
         ]);
@@ -72,7 +74,7 @@ export function useLlmSettingsSandbox(configs: LlmConfig[]) {
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: err instanceof Error ? err.message : 'Failed to send message.',
+          content: err instanceof Error ? err.message : t('settings.llmSendFailed'),
           error: true,
         },
       ]);

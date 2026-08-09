@@ -6,8 +6,7 @@ import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/us
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
-import { BulkSelectionClearAction, BulkSelectionRestoreAction } from '@/components/ui/BulkSelectionActions';
-import { Button } from '@/components/ui/button';
+import { BulkSelectionClearAction, BulkSelectionDeleteAction, BulkSelectionRestoreAction } from '@/components/ui/BulkSelectionActions';
 import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
 import { QuestionBankList } from '@/tenant/features/question-bank/components/QuestionBankList';
 import { QuestionBankToolbar } from '@/tenant/features/question-bank/components/QuestionBankToolbar';
@@ -148,14 +147,11 @@ export function QuestionBank({
               onClick={() => { void handleBulkTrashAction(); }}
             />
           ) : (
-            <Button
-              type="button"
-              variant="destructive"
+            <BulkSelectionDeleteAction
+              label={t('common.delete')}
+              icon={Trash2}
               onClick={() => { void handleBulkTrashAction(); }}
-              className="flex min-h-11 items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
-            >
-              <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t('common.delete')}
-            </Button>
+            />
           )}
         </BulkSelectionBar>
       )}

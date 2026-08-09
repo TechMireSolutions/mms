@@ -189,6 +189,8 @@ export * from './platformApiErrors.js';
 export * from './platformSetupValidation.js';
 export * from './serverPorts.js';
 export * from './tenantAuthTypes.js';
+export * from './profileSchemas.js';
+export * from './passwordStrengthUtils.js';
 export * from './contactValidation.js';
 export { buildDynamicStudentSchema, formatStudentZodIssues, collectStudentWriteExtraFieldKeys, STUDENT_WRITE_SYSTEM_KEYS } from './studentValidation.js';
 export * from './studentColumnRegistrySync.js';

@@ -20,7 +20,7 @@ export function useLlmSettingsController() {
 
   const configs = useMemo(() => data.llmConfigs ?? [], [data.llmConfigs]);
 
-  const { healthStatuses, setHealthStatuses } = useLlmHealthChecks(configs);
+  const { healthStatuses, setHealthStatuses } = useLlmHealthChecks();
   const modal = useLlmSettingsModal({ configs, upd });
   const sandbox = useLlmSettingsSandbox(configs);
   const configList = useLlmConfigListActions({ configs, upd, setHealthStatuses });

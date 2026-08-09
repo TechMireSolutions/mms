@@ -95,7 +95,7 @@ export function SessionForm({
       const name = toTitleCase(sessionDraft.name?.trim() || '');
       const candidate = {
         ...sessionDraft,
-        id: session?.id ?? `sess-${Date.now()}`,
+        id: session?.id ?? `sess-${crypto.randomUUID()}`,
         name,
         baseFee: Number(sessionDraft.baseFee) || 0,
         _blueprintId: '1.0',

@@ -267,7 +267,6 @@ export function useTeacherConfig() {
         enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
         requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
         fields: mergeTabbedFields(defaultSettings.fields || {}, settingsDraft?.fields),
-        customFields: [],
         fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
       });
     },

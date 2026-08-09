@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { journalEntryRecordSchema, todayISO } from "@mms/shared";
 import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
 
-const EMPTY_LINE = (): DraftLine => ({ id: `l${Date.now()}_${Math.random()}`, account_id: "", debit: "", credit: "", description: "" });
+const EMPTY_LINE = (): DraftLine => ({ id: `l-${crypto.randomUUID()}`, account_id: "", debit: "", credit: "", description: "" });
 
 interface UseJournalEntryFormOptions {
   accounts: Account[];
@@ -114,7 +114,7 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     const journalReference = isEdit ? form.ref : generateJERef(entries);
     const candidate = {
       ...form,
-      id: isEdit ? form.id : `je${Date.now()}`,
+      id: isEdit ? form.id : `je${crypto.randomUUID()}`,
       ref: journalReference,
       status: saveAs || form.status,
       created_by: form.created_by || user?.name || "system",

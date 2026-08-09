@@ -1,5 +1,6 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { apiJson } from '@/lib/apiClient';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { LlmConfig, LlmTestResult } from '@mms/shared';
 import type { LlmHealthStatus } from './llmSettingsControllerTypes';
 
@@ -14,6 +15,7 @@ export function useLlmConfigListActions({
   upd,
   setHealthStatuses,
 }: UseLlmConfigListActionsOptions) {
+  const { t } = useTranslation();
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<LlmTestResult | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,7 +56,7 @@ export function useLlmConfigListActions({
       setTestResult({
         configId,
         success: false,
-        message: err instanceof Error ? err.message : 'Test request failed',
+        message: err instanceof Error ? err.message : t('settings.llmTestRequestFailed'),
       });
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'failed' }));
     } finally {

@@ -97,7 +97,7 @@ export function RoleFormModal({
       return;
     }
     onSave({
-      id: role?.id ?? `role_${Date.now()}`,
+      id: role?.id ?? `role_${crypto.randomUUID()}`,
       labelKey: 'users.role.custom',
       descriptionKey: 'users.role.customDesc',
       customLabel: name.trim(),
