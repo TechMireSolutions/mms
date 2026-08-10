@@ -1,4 +1,4 @@
-import { type Teacher, DEFAULT_TEACHER_STATUS, todayISO } from "@mms/shared";
+import { resolveTeacherStatus, type Teacher, todayISO } from "@mms/shared";
 
 /** Hydrated / archive chrome — not edited on the Teachers form. */
 export const TEACHER_FORM_VOLATILE_KEYS = new Set([
@@ -23,7 +23,7 @@ export function getInitialTeacherDraft(
     contactId: teacher?.contactId ?? "",
     employeeId: teacher?.employeeId ?? "",
     specialization: teacher?.specialization ?? defaultSpecialization,
-    status: teacher?.status ?? DEFAULT_TEACHER_STATUS,
+    status: resolveTeacherStatus(teacher?.status),
     joinDate: teacher?.joinDate ?? todayISO(),
     qualification: teacher?.qualification ?? "",
     notes: teacher?.notes ?? "",

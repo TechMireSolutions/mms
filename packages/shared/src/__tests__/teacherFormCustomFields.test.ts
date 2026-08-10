@@ -4,6 +4,7 @@ import {
   listEnabledCustomTeacherFormFields,
   listTeacherSystemFormFieldKeys,
 } from '../teacherFormCustomFields.js';
+import { findTeacherSeedField } from '../moduleFieldSetupPersons.js';
 import type { FieldDefinition } from '../contactFieldSchemaTypes.js';
 
 function field(partial: Partial<FieldDefinition> & { key: string }): FieldDefinition {
@@ -60,5 +61,17 @@ describe('listEnabledCustomTeacherFormFields', () => {
       'onEmployment',
       'onBasic',
     ]);
+  });
+});
+
+describe('findTeacherSeedField', () => {
+  it('finds a seeded teacher field across any tab', () => {
+    expect(findTeacherSeedField('contactId')?.key).toBe('contactId');
+    expect(findTeacherSeedField('employeeId')?.key).toBe('employeeId');
+    expect(findTeacherSeedField('status')?.labelKey).toBe('teachers.field.status');
+  });
+
+  it('returns undefined for unknown fields', () => {
+    expect(findTeacherSeedField('house')).toBeUndefined();
   });
 });

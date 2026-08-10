@@ -15,6 +15,7 @@ import {
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
+import { teacherColumnLabelKey } from "@mms/shared";
 import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherListTypes";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
@@ -69,6 +70,9 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
     excludeFace: true,
   });
 
+  const nameColumn = columnRegistry.find((col) => col.key === "name");
+  const nameLabel = nameColumn?.label ?? t(teacherColumnLabelKey("name"));
+
   const renderSortIcon = (field: TeacherSortField) => {
     if (sortField !== field) return <ChevronUp className="w-3 h-3 opacity-25" />;
     return sortDir === "asc"
@@ -90,7 +94,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
           )}
           <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-3 text-start">
             <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => onSort("name")}>
-              {t("teachers.field.name")} {renderSortIcon("name")}
+              {nameLabel} {renderSortIcon("name")}
             </Button>
           </ResizableTableHead>
           {visibleColumns.map((col) => {

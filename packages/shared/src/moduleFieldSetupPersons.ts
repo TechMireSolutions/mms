@@ -289,6 +289,15 @@ export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
   ],
 };
 
+/** Seeded teacher form field by key (across all seed tabs), or `undefined`. */
+export function findTeacherSeedField(fieldKey: string): FieldDefinition | undefined {
+  for (const tabFields of Object.values(INITIAL_TEACHERS_FIELD_SEED)) {
+    const field = tabFields.find((candidate) => candidate.key === fieldKey);
+    if (field) return field;
+  }
+  return undefined;
+}
+
 export {
   DEFAULT_TEACHER_COLUMN_REGISTRY,
   TEACHER_CARD_FACE_COLUMN_IDS,

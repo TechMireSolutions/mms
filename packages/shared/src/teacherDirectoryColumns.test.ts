@@ -7,7 +7,11 @@ import {
   TEACHER_SORT_FIELDS,
   TEACHER_SORT_FIELD_SET,
   TEACHER_WORK_COLUMN_KEYS,
+  teacherColumnLabelKey,
+  teacherFieldLabelKey,
+  teacherWorkColumnLabelsFrom,
 } from './teacherDirectoryColumns.js';
+import { customFieldKeyFromColumnKey } from './moduleColumnCore.js';
 
 describe('TEACHER_DIRECTORY_COLUMN_SURFACES', () => {
   it('derives work keys that are a subset of sort keys', () => {
@@ -46,5 +50,47 @@ describe('TEACHER_DIRECTORY_COLUMN_SURFACES', () => {
     expect(
       TEACHER_DIRECTORY_COLUMN_SURFACES.filter((surface) => surface.export).map((s) => s.key).sort(),
     ).toEqual([...DEFAULT_TEACHER_EXPORT_COLUMNS.map((col) => col.id)].sort());
+  });
+
+  it('resolves a column label key from the surface table', () => {
+    expect(teacherColumnLabelKey('name')).toBe('teachers.field.name');
+    expect(teacherColumnLabelKey('employeeId')).toBe('teachers.field.employeeId');
+    expect(teacherColumnLabelKey('status')).toBe('teachers.field.status');
+  });
+
+  it('falls back to teachers.field.<key> for keys without a surface labelKey', () => {
+    expect(teacherColumnLabelKey('updatedAt')).toBe('teachers.field.updatedAt');
+    expect(teacherColumnLabelKey('unknownColumn')).toBe('teachers.field.unknownColumn');
+  });
+});
+
+describe('teacherFieldLabelKey / teacherWorkColumnLabelsFrom', () => {
+  it('builds teachers.field.<key> for any field key', () => {
+    expect(teacherFieldLabelKey('qualification')).toBe('teachers.field.qualification');
+    expect(teacherFieldLabelKey('notes')).toBe('teachers.field.notes');
+  });
+
+  it('builds the 5-key Work labels map via the resolver', () => {
+    const labels = teacherWorkColumnLabelsFrom((key) => `LABEL:${key}`);
+    expect(labels).toEqual({
+      name: 'LABEL:name',
+      specialization: 'LABEL:specialization',
+      qualification: 'LABEL:qualification',
+      joinDate: 'LABEL:joinDate',
+      status: 'LABEL:status',
+    });
+  });
+});
+
+describe('customFieldKeyFromColumnKey', () => {
+  it('extracts the custom field key from a custom: column key', () => {
+    expect(customFieldKeyFromColumnKey('custom:house')).toBe('house');
+    expect(customFieldKeyFromColumnKey('custom:')).toBe('');
+  });
+
+  it('returns null for non-custom column keys', () => {
+    expect(customFieldKeyFromColumnKey('name')).toBeNull();
+    expect(customFieldKeyFromColumnKey('status')).toBeNull();
+    expect(customFieldKeyFromColumnKey('')).toBeNull();
   });
 });

@@ -29,9 +29,7 @@ export async function validateTeacherDynamic(
   language = 'en',
 ): Promise<void> {
   const settings = await loadTeachersSettingsCombined();
-  const fields = resolveTeacherFieldsMapForColumnSync(
-    settings.fields as Record<string, unknown> | undefined,
-  );
+  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
   const enabledTabIds = new Set(resolveTeacherEnabledTabIds(settings));
   const cacheKey = teachersValidationCacheKey(tenant, [...enabledTabIds], fields);
 

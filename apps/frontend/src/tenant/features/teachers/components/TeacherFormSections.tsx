@@ -9,7 +9,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FieldDefinition, Teacher } from "@mms/shared";
-import { DEFAULT_TEACHER_STATUS } from "@mms/shared";
+import { resolveTeacherStatus } from "@mms/shared";
 import { resolveTeacherFieldLabel } from "@/tenant/features/teachers/components/TeacherFormSectionShared";
 
 interface TeacherSectionBaseProps {
@@ -48,27 +48,9 @@ export function TeacherBasicSection({
   const showSpecialization = isFieldEnabled("specialization");
   const showQualification = isFieldEnabled("qualification");
   const showDetailsCard = showSpecialization || showQualification;
-  const contactLabel = resolveTeacherFieldLabel(
-    fields,
-    "basic",
-    "contactId",
-    "teachers.field.contact",
-    t,
-  );
-  const specializationLabel = resolveTeacherFieldLabel(
-    fields,
-    "basic",
-    "specialization",
-    "teachers.field.specialization",
-    t,
-  );
-  const qualificationLabel = resolveTeacherFieldLabel(
-    fields,
-    "basic",
-    "qualification",
-    "teachers.field.qualification",
-    t,
-  );
+  const contactLabel = resolveTeacherFieldLabel(fields, "basic", "contactId", t);
+  const specializationLabel = resolveTeacherFieldLabel(fields, "basic", "specialization", t);
+  const qualificationLabel = resolveTeacherFieldLabel(fields, "basic", "qualification", t);
 
   return (
     <div className="space-y-4 text-start">
@@ -143,34 +125,10 @@ export function TeacherEmploymentSection({
   const showJoinDate = isFieldEnabled("joinDate");
   const showNotes = isFieldEnabled("notes");
   const showEmploymentCard = showEmployeeId || showStatus || showJoinDate || showNotes;
-  const employeeIdLabel = resolveTeacherFieldLabel(
-    fields,
-    "employment",
-    "employeeId",
-    "teachers.field.employeeId",
-    t,
-  );
-  const statusLabel = resolveTeacherFieldLabel(
-    fields,
-    "employment",
-    "status",
-    "teachers.field.status",
-    t,
-  );
-  const joinDateLabel = resolveTeacherFieldLabel(
-    fields,
-    "employment",
-    "joinDate",
-    "teachers.field.joinDate",
-    t,
-  );
-  const notesLabel = resolveTeacherFieldLabel(
-    fields,
-    "employment",
-    "notes",
-    "teachers.field.notes",
-    t,
-  );
+  const employeeIdLabel = resolveTeacherFieldLabel(fields, "employment", "employeeId", t);
+  const statusLabel = resolveTeacherFieldLabel(fields, "employment", "status", t);
+  const joinDateLabel = resolveTeacherFieldLabel(fields, "employment", "joinDate", t);
+  const notesLabel = resolveTeacherFieldLabel(fields, "employment", "notes", t);
 
   return (
     <div className="space-y-4 text-start">
@@ -191,7 +149,7 @@ export function TeacherEmploymentSection({
           {showStatus ? (
             <Field label={statusLabel} required={isFieldRequired("status")}>
               <FormSelect
-                value={teacherDraft.status || DEFAULT_TEACHER_STATUS}
+                value={resolveTeacherStatus(teacherDraft.status)}
                 onChange={(val) => onDraftChange({ status: val as Teacher["status"] })}
                 options={statusOptions}
               />

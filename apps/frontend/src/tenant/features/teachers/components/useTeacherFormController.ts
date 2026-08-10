@@ -40,7 +40,7 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   const requireContactLink = settings.requireContactLink !== false;
 
   const fieldsMap = useMemo(
-    () => resolveTeacherFieldsMapForColumnSync(settings.fields as Record<string, unknown> | undefined),
+    () => resolveTeacherFieldsMapForColumnSync(settings.fields),
     [settings.fields],
   );
 

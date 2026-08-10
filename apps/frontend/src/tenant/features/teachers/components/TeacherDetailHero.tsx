@@ -1,6 +1,6 @@
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { DEFAULT_TEACHER_STATUS, type Teacher } from "@mms/shared";
+import { resolveTeacherStatus, type Teacher } from "@mms/shared";
 
 interface TeacherDetailHeroProps {
   teacher: Teacher;
@@ -26,7 +26,7 @@ export function TeacherDetailHero({
         <h3 className="text-base font-bold text-foreground truncate leading-tight">{displayName}</h3>
         {showStatus && (
           <div className="flex flex-wrap gap-1.5 mt-2 items-center">
-            <StatusBadge status={teacher.status || DEFAULT_TEACHER_STATUS} config={statusConfig} />
+            <StatusBadge status={resolveTeacherStatus(teacher.status)} config={statusConfig} />
           </div>
         )}
       </div>

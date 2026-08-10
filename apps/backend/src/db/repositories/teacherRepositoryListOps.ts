@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import {
   DEFAULT_TEACHER_STATUS,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
-  TEACHER_STATUS_VALUES,
+  resolveTeacherStatusRoles,
   type TeachersCommandMetricsSnapshot,
 } from '@mms/shared';
 import { teachers } from '../schema.js';
@@ -60,7 +60,8 @@ export async function aggregateTeachersCommandMetrics(
       ''
     )), '')`;
     const status = teacherStatusExpr();
-    const [activeStatus, inactiveStatus, onLeaveStatus] = TEACHER_STATUS_VALUES;
+    const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
+      resolveTeacherStatusRoles();
 
     const rows = await tx
       .select({

@@ -1,9 +1,9 @@
 import React from "react";
 import { School, Filter, UserCheck, UserX, CalendarClock, CalendarPlus, Users } from "lucide-react";
-import { TEACHER_STATUS_VALUES } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTeachersMetrics } from "@/tenant/features/teachers/hooks/useTeachers";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
+import { resolveTeacherStatusRoles } from "@mms/shared";
 import { teacherStatusMetricAccent } from "@/lib/teachers/teacherStatusUi";
 
 interface TeachersCommandMetricsProps {
@@ -17,7 +17,8 @@ export function TeachersCommandMetrics({
 }: TeachersCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useTeachersMetrics();
-  const [activeStatus, inactiveStatus, onLeaveStatus] = TEACHER_STATUS_VALUES;
+  const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
+    resolveTeacherStatusRoles();
 
   const metrics = {
     total: serverMetrics?.total ?? total,

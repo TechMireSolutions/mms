@@ -1,4 +1,5 @@
 import {
+  customFieldKeyFromColumnKey,
   formatTeacherFieldCellValue,
   type Teacher,
   type TeacherCustomField,
@@ -88,9 +89,7 @@ export function resolveTeacherFieldDisplayText(
   const missing = () => (notSpecifiedFallback ? t("common.notSpecified") : undefined);
 
   if (isCustom || fieldKey.startsWith("custom:")) {
-    const fieldId = fieldKey.startsWith("custom:")
-      ? fieldKey.slice("custom:".length)
-      : fieldKey;
+    const fieldId = customFieldKeyFromColumnKey(fieldKey) ?? fieldKey;
     const field = {
       id: fieldId,
       label: customFieldLabel ?? fieldId,

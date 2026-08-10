@@ -296,9 +296,7 @@ export function useTeacherConfig() {
 
   const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
   const customFields = useMemo(() => {
-    const tabbed = resolveTeacherFieldsMapForColumnSync(
-      settings.fields as Record<string, unknown> | undefined,
-    );
+    const tabbed = resolveTeacherFieldsMapForColumnSync(settings.fields);
     return listEnabledCustomTeacherFormFields(tabbed).map((field) => ({
       id: field.key,
       label: field.label,
@@ -313,11 +311,7 @@ export function useTeacherConfig() {
   );
 
   const orderedFields = useMemo(
-    () =>
-      getSortedTeacherFields(
-        fieldOrder,
-        settings.fields as Record<string, unknown> | undefined,
-      ),
+    () => getSortedTeacherFields(fieldOrder, settings.fields),
     [fieldOrder, settings.fields],
   );
 

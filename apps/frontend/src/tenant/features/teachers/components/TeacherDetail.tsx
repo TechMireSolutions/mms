@@ -18,7 +18,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { type Teacher } from "@mms/shared";
+import { teacherFieldLabelKey, type Teacher } from "@mms/shared";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { useTeacherStatusConfig } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
@@ -166,10 +166,10 @@ export default function TeacherDetail({
             );
           })}
           {primaryPhone && (
-            <TeacherDetailAttributeRow icon={Phone} label={t("teachers.field.phone")} value={primaryPhone} />
+            <TeacherDetailAttributeRow icon={Phone} label={t(teacherFieldLabelKey("phone"))} value={primaryPhone} />
           )}
           {primaryEmail && (
-            <TeacherDetailAttributeRow icon={Mail} label={t("teachers.field.email")} value={primaryEmail} />
+            <TeacherDetailAttributeRow icon={Mail} label={t(teacherFieldLabelKey("email"))} value={primaryEmail} />
           )}
         </Card>
       </DetailDrawerShell>

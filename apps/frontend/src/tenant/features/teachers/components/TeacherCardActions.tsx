@@ -3,6 +3,7 @@ import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { teacherMessagingLabels } from "@/lib/teachers/teacherMessagingLabels";
 import type { Teacher } from '@mms/shared';
 import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
@@ -42,6 +43,7 @@ export function TeacherCardActions({
   onEmail,
 }: TeacherCardActionsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const labels = teacherMessagingLabels(t);
 
   const { phone, email } = resolveTeacherPrimaryChannels(teacher);
   const messagingEnabled = !showDeleted && Boolean(onWhatsApp || onSms || onEmail);
@@ -56,18 +58,13 @@ export function TeacherCardActions({
             primaryEmail={email}
             showArchived={showDeleted}
             messagingEnabled={messagingEnabled}
-            labels={{
-              call: t("teachers.detail.call"),
-              whatsapp: t("teachers.list.actionWhatsApp"),
-              sms: t("teachers.list.actionSms"),
-              email: t("teachers.list.actionEmail"),
-            }}
+            labels={labels}
             callAriaLabel={
-              phone ? t("teachers.detail.callPhone", { phone }) : t("teachers.detail.call")
+              phone ? t("teachers.detail.callPhone", { phone }) : labels.call
             }
-            whatsappAriaLabel={t("teachers.list.actionWhatsApp")}
-            smsAriaLabel={t("teachers.list.actionSms")}
-            emailAriaLabel={t("teachers.list.actionEmail")}
+            whatsappAriaLabel={labels.whatsapp}
+            smsAriaLabel={labels.sms}
+            emailAriaLabel={labels.email}
             onWhatsApp={onWhatsApp && phone ? () => onWhatsApp([teacher]) : undefined}
             onSms={onSms && phone ? () => onSms([teacher]) : undefined}
             onEmail={onEmail && email ? () => onEmail([teacher]) : undefined}

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Teacher, TeacherCustomField } from "@mms/shared";
+import { customFieldKeyFromColumnKey, type Teacher, type TeacherCustomField } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -26,9 +26,9 @@ export function renderTeacherWorkColumnValue(
       />
     );
   }
-  const customFieldLabel = columnKey.startsWith("custom:")
-    ? customFieldsById?.get(columnKey.slice("custom:".length))?.label
-    : undefined;
+  const customFieldId = customFieldKeyFromColumnKey(columnKey);
+  const customFieldLabel =
+    customFieldId !== null ? customFieldsById?.get(customFieldId)?.label : undefined;
   return resolveTeacherFieldDisplayText(teacher, columnKey, {
     t,
     customFieldLabel,

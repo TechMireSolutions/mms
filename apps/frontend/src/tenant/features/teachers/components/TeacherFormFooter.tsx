@@ -1,6 +1,6 @@
 import React from "react";
 import type { Contact, Teacher } from "@mms/shared";
-import { DEFAULT_TEACHER_STATUS } from "@mms/shared";
+import { resolveTeacherStatus } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import {
   FormFooterBadge,
@@ -25,7 +25,7 @@ export function TeacherFormFooter({
   t,
 }: TeacherFormFooterProps): React.JSX.Element | null {
   if (linkedContact?.name) {
-    const status = teacherDraft.status || DEFAULT_TEACHER_STATUS;
+    const status = resolveTeacherStatus(teacherDraft.status);
     return (
       <div className="flex flex-wrap items-center gap-2.5 text-xs">
         <FormFooterEntityChip>{linkedContact.name}</FormFooterEntityChip>

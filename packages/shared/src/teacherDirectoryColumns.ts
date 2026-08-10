@@ -1,5 +1,6 @@
 import type { AppTranslationKey } from './appTranslations.js';
 import type { ColumnRegistryEntry } from './contactFieldSchemaTypes.js';
+import type { TeacherWorkColumnLabels } from './moduleColumnCore.js';
 
 /**
  * Single Teachers directory column-surface SSOT.
@@ -134,6 +135,21 @@ export const TEACHER_WORK_COLUMN_KEYS = TEACHER_DIRECTORY_COLUMN_SURFACES
 
 export type TeacherWorkColumnKey = (typeof TEACHER_WORK_COLUMN_KEYS)[number];
 
+/**
+ * Builds the 5-key Work column labels map (`name` + {@link TEACHER_WORK_COLUMN_KEYS}).
+ * SSOT for the label keys shared by the translated FE labels and placeholder labels.
+ */
+export function teacherWorkColumnLabelsFrom(
+  resolveLabel: (key: string) => string,
+): TeacherWorkColumnLabels {
+  const keys = ['name', ...TEACHER_WORK_COLUMN_KEYS] as const;
+  const labels = {} as TeacherWorkColumnLabels;
+  for (const key of keys) {
+    labels[key as keyof TeacherWorkColumnLabels] = resolveLabel(key);
+  }
+  return labels;
+}
+
 /** Default Work column registry (before tenant Fields sync / user overlay). */
 export const DEFAULT_TEACHER_COLUMN_REGISTRY: ColumnRegistryEntry[] =
   TEACHER_DIRECTORY_COLUMN_SURFACES
@@ -202,3 +218,14 @@ export const DEFAULT_TEACHER_EXPORT_COLUMNS = TEACHER_DIRECTORY_COLUMN_SURFACES
     id: surface.key,
     label: surface.exportLabel,
   }));
+
+/** Translation key for a Teachers field label (`teachers.field.${fieldKey}` fallback). */
+export function teacherFieldLabelKey(fieldKey: string): AppTranslationKey {
+  return `teachers.field.${fieldKey}` as AppTranslationKey;
+}
+
+/** Translation key for a Teachers column label (surface `labelKey`, else {@link teacherFieldLabelKey}). */
+export function teacherColumnLabelKey(columnKey: string): AppTranslationKey {
+  const surface = TEACHER_DIRECTORY_COLUMN_SURFACES.find((item) => item.key === columnKey);
+  return surface?.labelKey ?? teacherFieldLabelKey(columnKey);
+}

@@ -25,9 +25,7 @@ export type TeacherDetailFieldRow = {
 export function listTeacherDetailAttributeFields(
   settings: TeachersSettings,
 ): TeacherDetailFieldRow[] {
-  const fields = resolveTeacherFieldsMapForColumnSync(
-    settings.fields as Record<string, unknown> | undefined,
-  );
+  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
   const formTabs =
     settings.formTabs && settings.formTabs.length > 0
       ? settings.formTabs

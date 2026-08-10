@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import {
   TEACHERS_MODULE_MANIFEST,
   buildTeacherWorkColumnRegistry,
+  teacherColumnLabelKey,
+  teacherWorkColumnLabelsFrom,
   type TeachersSettings,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -12,13 +14,10 @@ export function useTeacherColumnLayout(settings: TeachersSettings) {
 
   const tenantRegistry = useMemo(
     () =>
-      buildTeacherWorkColumnRegistry(settings, {
-        name: t('teachers.field.name'),
-        specialization: t('teachers.field.specialization'),
-        qualification: t('teachers.field.qualification'),
-        joinDate: t('teachers.field.joinDate'),
-        status: t('teachers.field.status'),
-      }),
+      buildTeacherWorkColumnRegistry(
+        settings,
+        teacherWorkColumnLabelsFrom((key) => t(teacherColumnLabelKey(key))),
+      ),
     [settings, t],
   );
 

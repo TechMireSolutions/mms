@@ -1,12 +1,13 @@
 import type { AppTranslationKey } from '@mms/shared';
-import { TEACHER_STATUS_VALUES, resolveTeacherStatuses, toTitleCase } from '@mms/shared';
+import { resolveTeacherStatusRoles, resolveTeacherStatuses, toTitleCase } from '@mms/shared';
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import type { AccentColor } from '@/components/ui/statCardAccent';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 
 type Translate = (key: AppTranslationKey) => string;
 
-const [TEACHER_STATUS_ACTIVE, , TEACHER_STATUS_ON_LEAVE] = TEACHER_STATUS_VALUES;
+const { active: TEACHER_STATUS_ACTIVE, onLeave: TEACHER_STATUS_ON_LEAVE } =
+  resolveTeacherStatusRoles();
 
 /** Status → semantic accent (badge classes + metrics StatCard share this map). */
 function teacherStatusSemanticAccent(status: string): AccentColor {

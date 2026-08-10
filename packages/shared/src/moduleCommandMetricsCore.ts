@@ -1,5 +1,5 @@
 import { isOpenInvoiceStatus } from './financeModuleManifest.js';
-import { TEACHER_STATUS_VALUES } from './teacherTypes.js';
+import { resolveTeacherStatusRoles, TEACHER_STATUS_VALUES } from './teacherTypes.js';
 
 /** Default rolling window for "new records" command-centre metrics (globle1 §2.1). */
 export const MODULE_METRICS_DEFAULT_PERIOD_DAYS = 30;
@@ -114,7 +114,8 @@ export function computeTeachersCommandMetrics(
   teachers: JoinDateRecord[],
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): TeachersCommandMetricsSnapshot {
-  const [activeStatus, inactiveStatus, onLeaveStatus] = TEACHER_STATUS_VALUES;
+  const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
+    resolveTeacherStatusRoles();
   const knownStatuses = new Set<string>(TEACHER_STATUS_VALUES);
   return {
     total: teachers.length,

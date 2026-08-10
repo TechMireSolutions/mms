@@ -1,6 +1,7 @@
 import type { TabDefinition, ColumnRegistryEntry, FieldDefinition } from "./contactTypes.js";
 import { INITIAL_TEACHERS_FIELD_SEED } from "./moduleFieldSetupPersons.js";
 import { DEFAULT_TEACHER_SPECIALIZATION } from "./teacherTypes.js";
+import { teacherFieldLabelKey } from "./teacherDirectoryColumns.js";
 import {
   cloneTeacherFieldSeed,
   listEnabledCustomTeacherFormFields,
@@ -54,7 +55,7 @@ function defaultTeacherFieldOrderFromSeed(): string[] {
 function teacherFieldDefFromDefinition(field: FieldDefinition, isCustom: boolean): TeacherFieldDef {
   return {
     id: field.key,
-    labelKey: field.labelKey ?? `teachers.field.${field.key}`,
+    labelKey: field.labelKey ?? teacherFieldLabelKey(field.key),
     label: field.label,
     type: field.type,
     required: Boolean(field.required),

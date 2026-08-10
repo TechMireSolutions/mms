@@ -1,4 +1,5 @@
 import {
+  customFieldKeyFromColumnKey,
   getVisibleWorkColumns,
   TEACHER_CARD_FACE_COLUMN_IDS,
   TEACHER_SORT_FIELD_SET,
@@ -32,8 +33,8 @@ export function buildTeacherCustomFieldsById(
 ): Map<string, TeacherCustomField> {
   const map = new Map<string, TeacherCustomField>();
   for (const col of columnRegistry) {
-    if (!col.key.startsWith("custom:")) continue;
-    const fieldId = col.key.slice("custom:".length);
+    const fieldId = customFieldKeyFromColumnKey(col.key);
+    if (fieldId === null) continue;
     map.set(fieldId, { id: fieldId, label: col.label });
   }
   return map;
@@ -45,7 +46,7 @@ function teacherWorkColumnBreakpointClass(columnKey: string): string {
   if (columnKey === "qualification" || columnKey === "joinDate") {
     return "hidden md:table-cell";
   }
-  if (columnKey.startsWith("custom:")) {
+  if (customFieldKeyFromColumnKey(columnKey) !== null) {
     return "hidden lg:table-cell";
   }
   return "";

@@ -8,6 +8,7 @@ import {
 } from './moduleFieldSetupPersons.js';
 import { DEFAULT_TEACHER_EXPORT_COLUMNS } from './teacherDirectoryColumns.js';
 import { resolveTeacherEnabledTabIds } from './teacherEnabledTabs.js';
+import { customFieldKeyFromColumnKey } from './moduleColumnCore.js';
 import {
   findTeacherFieldLocation,
   resolveTeacherFieldsMapForColumnSync,
@@ -25,9 +26,8 @@ export { DEFAULT_TEACHER_EXPORT_COLUMNS };
 const TEACHER_EXPORT_ALWAYS_VISIBLE = new Set(['name', 'employeeId']);
 
 function resolveExportFieldKey(columnId: string): string {
-  if (columnId.startsWith('custom:')) {
-    return columnId.slice('custom:'.length);
-  }
+  const customFieldId = customFieldKeyFromColumnKey(columnId);
+  if (customFieldId !== null) return customFieldId;
   const mapping = TEACHER_COLUMN_FIELD_MAPPING[columnId as TeacherWorkColumnKey];
   return mapping?.fieldId ?? columnId;
 }
@@ -57,9 +57,7 @@ export function filterTeacherExportColumnsForViewer(
   const source = columns.length > 0 ? columns : [...DEFAULT_TEACHER_EXPORT_COLUMNS];
   if (!settings) return source;
 
-  const fields = resolveTeacherFieldsMapForColumnSync(
-    settings.fields as Record<string, unknown> | undefined,
-  );
+  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
   const enabledTabs = new Set(resolveTeacherEnabledTabIds(settings));
 
   return source.filter((column) => {
@@ -102,9 +100,7 @@ export function buildTeachersExportRows(
   settings?: TeachersSettings | null,
 ): unknown[][] {
   const fields = settings
-    ? resolveTeacherFieldsMapForColumnSync(
-        settings.fields as Record<string, unknown> | undefined,
-      )
+    ? resolveTeacherFieldsMapForColumnSync(settings.fields)
     : undefined;
   const header = columns.map((column) => column.label);
   const rows = teachers.map((teacher) =>

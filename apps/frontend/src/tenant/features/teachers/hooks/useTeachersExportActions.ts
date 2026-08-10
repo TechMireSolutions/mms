@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import {
   DEFAULT_TEACHER_EXPORT_COLUMNS,
+  teacherColumnLabelKey,
+  type AppTranslationKey,
   type TeacherExportColumn,
   type TeachersListQuery,
 } from "@mms/shared";
@@ -85,18 +87,10 @@ export function useTeachersExportActions({
 
 /** Default Work export columns when registry is unavailable. */
 export function defaultTeachersExportColumns(
-  t: (
-    key:
-      | "teachers.field.name"
-      | "teachers.field.employeeId"
-      | "teachers.field.specialization"
-      | "teachers.field.status"
-      | "teachers.field.qualification"
-      | "teachers.field.joinDate",
-  ) => string,
+  t: (key: AppTranslationKey) => string,
 ): TeacherExportColumn[] {
   return DEFAULT_TEACHER_EXPORT_COLUMNS.map((column) => ({
     id: column.id,
-    label: t(`teachers.field.${column.id}` as Parameters<typeof t>[0]),
+    label: t(teacherColumnLabelKey(column.id)),
   }));
 }

@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/useTranslation";
+import { teacherMessagingLabels } from "@/lib/teachers/teacherMessagingLabels";
 import type { Teacher } from '@mms/shared';
 
 interface TeacherListRowActionsProps {
@@ -58,6 +59,7 @@ export function TeacherListRowActions({
   onEmail,
 }: TeacherListRowActionsProps): ReactElement {
   const { t } = useTranslation();
+  const labels = teacherMessagingLabels(t);
   const showMessaging = !hideMessagingItems && Boolean(onWhatsApp || onSms || onEmail);
 
   return (
@@ -97,17 +99,17 @@ export function TeacherListRowActions({
             {!hideMessagingItems && onWhatsApp && (
               <DropdownMenuItem onClick={() => onWhatsApp([teacher])}>
                 <MessageCircle className="w-3.5 h-3.5 me-2 text-success" />{" "}
-                {t("teachers.list.actionWhatsApp")}
+                {labels.whatsapp}
               </DropdownMenuItem>
             )}
             {!hideMessagingItems && onSms && (
               <DropdownMenuItem onClick={() => onSms([teacher])}>
-                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {t("teachers.list.actionSms")}
+                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {labels.sms}
               </DropdownMenuItem>
             )}
             {!hideMessagingItems && onEmail && (
               <DropdownMenuItem onClick={() => onEmail([teacher])}>
-                <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {t("teachers.list.actionEmail")}
+                <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {labels.email}
               </DropdownMenuItem>
             )}
             {canDelete && (

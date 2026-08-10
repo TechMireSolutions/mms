@@ -37,6 +37,12 @@ export type UserModuleColumnPreferencesMap = Record<string, ModuleColumnPreferen
 export const MODULE_COLUMN_WIDTH_MIN = 80;
 export const MODULE_COLUMN_WIDTH_MAX = 640;
 
+/** Custom-field key when a Work column key is prefixed with `custom:`, else `null`. */
+export function customFieldKeyFromColumnKey(columnKey: string): string | null {
+  if (!columnKey.startsWith('custom:')) return null;
+  return columnKey.slice('custom:'.length);
+}
+
 /** Clamp a user-resized column width to the supported range. */
 export function clampModuleColumnWidth(width: number): number {
   if (!Number.isFinite(width)) return MODULE_COLUMN_WIDTH_MIN;
@@ -162,9 +168,9 @@ export function buildStudentWorkColumnRegistry(
   );
 
   return synced.map((col) => {
-    if (col.key.startsWith('custom:')) {
-      const fieldKey = col.key.slice('custom:'.length);
-      const field = customByKey.get(fieldKey);
+    const customFieldKey = customFieldKeyFromColumnKey(col.key);
+    if (customFieldKey !== null) {
+      const field = customByKey.get(customFieldKey);
       return {
         key: col.key,
         label: field?.label || col.label,
@@ -224,9 +230,7 @@ export function buildTeacherWorkColumnRegistry(
   settings: TeachersSettings,
   labels: TeacherWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  const fields = resolveTeacherFieldsMapForColumnSync(
-    settings.fields as Record<string, unknown> | undefined,
-  );
+  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
   const enabledTabs = resolveTeacherEnabledTabIds(settings);
   const synced = syncTeacherColumnRegistryWithFields(
     settings.columnRegistry ?? DEFAULT_TEACHER_COLUMN_REGISTRY,
@@ -247,9 +251,9 @@ export function buildTeacherWorkColumnRegistry(
   );
 
   return synced.map((col) => {
-    if (col.key.startsWith('custom:')) {
-      const fieldKey = col.key.slice('custom:'.length);
-      const field = customByKey.get(fieldKey);
+    const customFieldKey = customFieldKeyFromColumnKey(col.key);
+    if (customFieldKey !== null) {
+      const field = customByKey.get(customFieldKey);
       return {
         key: col.key,
         label: field?.label || col.label,

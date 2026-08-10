@@ -1,5 +1,6 @@
 import { useTranslation } from "@/hooks/useTranslation";
 import { EntityMessagingQuickActions } from "@/components/ui/EntityMessagingQuickActions";
+import { teacherMessagingLabels } from "@/lib/teachers/teacherMessagingLabels";
 import { toMessagingRecipient, type Teacher } from "@mms/shared";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
@@ -22,18 +23,14 @@ export function TeacherDetailQuickActions({
   onOpenComposer,
 }: TeacherDetailQuickActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const labels = teacherMessagingLabels(t);
 
   return (
     <EntityMessagingQuickActions
       primaryPhone={primaryPhone}
       primaryEmail={primaryEmail}
-      labels={{
-        call: t("teachers.detail.call"),
-        whatsapp: t("teachers.list.actionWhatsApp"),
-        sms: t("teachers.list.actionSms"),
-        email: t("teachers.list.actionEmail"),
-      }}
-      callAriaLabel={t("teachers.detail.call")}
+      labels={labels}
+      callAriaLabel={labels.call}
       messagingEnabled={canWriteMessaging}
       onWhatsApp={
         primaryPhone && canWriteMessaging

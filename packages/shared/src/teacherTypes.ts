@@ -2,12 +2,25 @@
 export const TEACHER_STATUS_VALUES = ['active', 'inactive', 'on_leave'] as const;
 export type TeacherStatus = (typeof TEACHER_STATUS_VALUES)[number];
 
+export type TeacherStatusRoles = { active: string; inactive: string; onLeave: string };
+
+/** Named roles for the default teacher status values (SSOT for active/inactive/on-leave). */
+export function resolveTeacherStatusRoles(): TeacherStatusRoles {
+  const [active, inactive, onLeave] = TEACHER_STATUS_VALUES;
+  return { active, inactive, onLeave };
+}
+
 /** Default status when unset (first of {@link TEACHER_STATUS_VALUES}). */
 export const DEFAULT_TEACHER_STATUS: TeacherStatus = TEACHER_STATUS_VALUES[0];
 
 /** Prefer configured status options; fall back to the shared default list. */
 export function resolveTeacherStatuses(statuses?: readonly string[] | null): readonly string[] {
   return statuses && statuses.length > 0 ? statuses : TEACHER_STATUS_VALUES;
+}
+
+/** Resolve the effective status for a teacher, falling back to {@link DEFAULT_TEACHER_STATUS}. */
+export function resolveTeacherStatus(status?: string | null): string {
+  return status || DEFAULT_TEACHER_STATUS;
 }
 
 /** Teaching specialization options for madrasa faculty. */

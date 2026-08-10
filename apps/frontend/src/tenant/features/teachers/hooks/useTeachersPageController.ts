@@ -5,7 +5,7 @@ import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import type { Teacher } from '@mms/shared';
-import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import { teacherColumnLabelKey, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
 import { useTeacherMutations, useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTeachersDirectoryFilters } from '@/tenant/features/teachers/hooks/useTeachersDirectoryFilters';
@@ -100,7 +100,7 @@ export function useTeachersPageController() {
       const nameIndex = columns.findIndex((col) => col.id === 'name');
       columns.splice(nameIndex >= 0 ? nameIndex + 1 : 0, 0, {
         id: 'employeeId',
-        label: t('teachers.field.employeeId'),
+        label: t(teacherColumnLabelKey('employeeId')),
       });
     }
     return columns;

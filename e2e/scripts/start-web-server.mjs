@@ -58,5 +58,21 @@ process.on('uncaughtException', (error) => {
   shutdown(1);
 });
 
+async function waitForBackend(url, timeoutMs = 60000) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return true;
+    } catch {
+      // ignore network errors during backend startup
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`Backend at ${url} failed to become ready within ${timeoutMs}ms`);
+}
+
 start('backend', 'apps/backend', process.execPath, ['--import', 'tsx', 'src/index.ts']);
+await waitForBackend('http://127.0.0.1:3000/ready');
 start('frontend', 'apps/frontend', bin('apps/frontend', 'vite'), ['--host', '127.0.0.1']);
+

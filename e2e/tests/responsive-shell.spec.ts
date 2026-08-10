@@ -29,7 +29,7 @@ async function openPublicRoute(page: Page, url: string, ready?: string): Promise
 test.describe('Unknown tenant host redirect', { tag: '@smoke' }, () => {
   test('hard-redirects unregistered subdomain to apex tenant-not-found', async ({ page }) => {
     const missingSubdomain = `missing${Date.now()}`;
-    await page.goto(`http://${missingSubdomain}.localhost:5173/settings`).catch(() => {});
+    await page.goto(`http://${missingSubdomain}.localhost:5173/settings`, { waitUntil: 'commit' }).catch(() => {});
     await page.waitForURL(
       (url) => {
         const parsed = new URL(url);
