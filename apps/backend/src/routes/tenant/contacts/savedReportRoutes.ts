@@ -6,18 +6,17 @@ import {
   deleteContactsSavedReport,
   listContactsSavedReports,
   touchContactsSavedReportRun,
-} from '../../../services/contactPreferencesService.js';
-import { canReadContacts } from '../../../services/rbacService.js';
+} from '../../../services/contactSavedReportsService.js';
 import { contactsSavedReportCreateSchema } from '../../../validation/contactSchemas.js';
 import { resourceIdParamsSchema } from '../../../validation/commonSchemas.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { auditContact, savedReportViewer } from './contactRouteHelpers.js';
+import { auditContact, requireContactPermission, savedReportViewer } from './contactRouteHelpers.js';
 
 export const contactSavedReportRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/saved-reports', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
     try {
       const reports = await listContactsSavedReports(savedReportViewer(user));
       return reply.send({ reports });
@@ -28,7 +27,7 @@ export const contactSavedReportRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/saved-reports', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
     const parsed = parseRequest(contactsSavedReportCreateSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const scope = parsed.data.shareScope ?? 'private';
@@ -60,7 +59,7 @@ export const contactSavedReportRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete('/saved-reports/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     try {
@@ -77,7 +76,7 @@ export const contactSavedReportRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/saved-reports/:id/run', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     try {

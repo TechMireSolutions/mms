@@ -1,17 +1,16 @@
 /** Helpers for contact form custom (non-seed) fields. */
 import { INITIAL_FIELD_SEED } from './contactFieldSeed.js';
 import { REMOVED_FORM_FIELD_KEYS } from './contactTabRegistry.js';
+import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
 import type { Contact } from './contactEntityTypes.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 
+const helpers = createFormCustomFieldHelpers(INITIAL_FIELD_SEED);
+const removedKeySet = new Set(REMOVED_FORM_FIELD_KEYS);
+
 /** Keys owned by static form chrome / list-tab structure (INITIAL_FIELD_SEED). */
 export function listContactSystemFormFieldKeys(): ReadonlySet<string> {
-  const keys = new Set<string>();
-  for (const tabFields of Object.values(INITIAL_FIELD_SEED)) {
-    for (const field of tabFields) {
-      keys.add(field.key);
-    }
-  }
+  const keys = new Set(helpers.listSystemFormFieldKeys());
   for (const key of REMOVED_FORM_FIELD_KEYS) {
     keys.add(key);
   }
@@ -28,31 +27,13 @@ export function listEnabledCustomContactFormFields(
   fields: Record<string, FieldDefinition[]>,
   tabId?: string,
 ): FieldDefinition[] {
-  const systemKeys = listContactSystemFormFieldKeys();
-  const byKey = new Map<string, FieldDefinition>();
-  const sourceTabs: FieldDefinition[][] =
-    tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
-
-  for (const tabFields of sourceTabs) {
-    for (const field of tabFields) {
-      if (!field.enabled || systemKeys.has(field.key)) continue;
-      if (!byKey.has(field.key)) {
-        byKey.set(field.key, field);
-      }
-    }
-  }
-
-  return [...byKey.values()].sort((left, right) => {
-    const orderDelta = (left.order ?? 0) - (right.order ?? 0);
-    if (orderDelta !== 0) return orderDelta;
-    return left.key.localeCompare(right.key);
-  });
+  return helpers
+    .listEnabledCustomFormFields(fields, tabId)
+    .filter((field) => !removedKeySet.has(field.key));
 }
 
 /** True when `fieldId` is part of the static form seed for `tabId`. */
-export function isContactSystemFormField(tabId: string, fieldId: string): boolean {
-  return (INITIAL_FIELD_SEED[tabId] ?? []).some((field) => field.key === fieldId);
-}
+export const isContactSystemFormField = helpers.isSystemFormField;
 
 /**
  * Seeds Setup `defaultValue` for enabled scalar custom fields on new contacts only.

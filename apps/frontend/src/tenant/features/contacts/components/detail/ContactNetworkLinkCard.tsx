@@ -8,7 +8,7 @@ import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconA
 import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
 import { DETAIL_STYLES } from "./contactDetailStyles";
 
-export interface ContactNetworkLinkCardProps {
+interface ContactNetworkLinkCardProps {
   displayName: string;
   relationshipLabel: string;
   avatarId: string | number;

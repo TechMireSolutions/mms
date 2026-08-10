@@ -1,4 +1,4 @@
-import { WifiOff, AlertCircle, CloudUpload, AlertTriangle } from "lucide-react";
+import { WifiOff, CloudUpload, AlertTriangle } from "lucide-react";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { Button } from "@/components/ui/button";
 import { WarningCallout } from "@/components/ui/WarningCallout";
@@ -89,18 +89,6 @@ export function ContactsConflictBanner({
           </Button>
         </div>
       }
-    />
-  );
-}
-
-export function ContactsFetchErrorBanner({ t }: { t: TranslationFunction }): React.JSX.Element {
-  return (
-    <WarningCallout
-      icon={AlertCircle}
-      tone="destructive"
-      role="alert"
-      density="banner"
-      description={t("contacts.sync.failed")}
     />
   );
 }

@@ -4214,7 +4214,6 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.mergeSuccessTitle": "رابطے ضم ہو گئے",
   "contacts.mergeSuccessDesc": "ڈپلیکیٹ رابطہ کامیابی سے ضم ہو گیا۔",
   "contacts.sync.offline": "آپ آف لائن ہیں۔ دوبارہ کنیکٹ ہونے تک رابطوں کی تبدیلیاں مطابقت پذیر نہیں ہو سکتیں۔",
-  "contacts.sync.failed": "سرور سے رابطے لوڈ نہیں ہو سکے۔ دستیاب ہونے پر کیشڈ ڈیٹا دکھایا جائے گا۔",
   "contacts.sync.pending": "آن لائن ہونے پر {count} تبدیلی(وں) کی مطابقت کا انتظار ہے۔",
   "contacts.sync.syncingPending": "زیر التوا رابطہ تبدیلیاں مطابقت پذیر ہو رہی ہیں…",
   "contacts.sync.retryNow": "ابھی مطابقت کریں",

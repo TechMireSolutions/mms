@@ -32,6 +32,7 @@ import {
   type EnrollmentsSettings,
 } from '@mms/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { createStandardModuleConfigHook } from './createStandardModuleConfigHook';
 import { useModuleConfig } from './useModuleConfig';
 import { useLiveCollectionsAndObjects } from './useLiveCollectionsAndObjects';
 import {
@@ -243,107 +244,49 @@ export function useUsersConfig() {
  * Teachers settings authority is typed REST + TanStack Query (not document-store getObject).
  * Lookups (statuses / specializations) load from `/api/teachers/lookups`.
  */
+const useTeacherConfigImpl = createStandardModuleConfigHook<
+  TeachersSettings,
+  { statuses: string[]; specializations: string[] }
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultSettings as TeachersSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedTeachersSettings,
+  useFieldConfigMutation: useTeacherFieldConfigMutation,
+  usePreferencesMutation: useTeacherPreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setTeacherFieldConfigMemory,
+  setPreferencesMemory: setTeacherPreferencesMemory as (prefs: unknown) => void,
+  fieldConfigQueryKey: TEACHERS_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: TEACHERS_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeTeachersSettings,
+  normalizePrefs: normalizeTeacherModulePreferences,
+  composeSettings: composeTeachersSettings as (
+    settings: unknown,
+    prefs: unknown,
+    formTabs?: unknown[],
+  ) => TeachersSettings,
+  customFieldsFrom: (settings) =>
+    listEnabledCustomTeacherFormFields(resolveTeacherFieldsMapForColumnSync(settings.fields)).map(
+      (field) => ({
+        id: field.key,
+        label: field.label,
+        type: field.type,
+        required: field.required,
+        options: field.options,
+      }),
+    ) as ModuleCustomField[],
+  orderedFieldsFrom: ({ fieldOrder, settings }) =>
+    getSortedTeacherFields(fieldOrder, settings.fields) as ModuleFieldDef[],
+  lookupsFrom: function useTeacherConfigLookups() {
+    const lookupsQuery = useTeacherLookupsQuery();
+    const lookups = lookupsQuery.data ?? emptyTeacherLookupsMap();
+    return { statuses: lookups.statuses, specializations: lookups.specializations };
+  },
+});
+
 export function useTeacherConfig() {
-  const registry = STANDARD_MODULES_CONFIG_REGISTRY.teachers;
-  const queryClient = useQueryClient();
-  const settings = useComposedTeachersSettings();
-  const fieldMutation = useTeacherFieldConfigMutation();
-  const prefsMutation = useTeacherPreferencesMutation();
-  const lookupsQuery = useTeacherLookupsQuery();
-
-  const lookups = lookupsQuery.data ?? emptyTeacherLookupsMap();
-  const statuses = lookups.statuses;
-  const specializations = lookups.specializations;
-
-  const defaultSettings = registry.defaultSettings as TeachersSettings;
-  const defaultFieldDefs = registry.defaultFieldDefs as unknown as ModuleFieldDef[];
-
-  const mergeSettings = useCallback(
-    (settingsDraft: Partial<TeachersSettings> | null | undefined): TeachersSettings => {
-      return normalizeTeachersSettings({
-        ...defaultSettings,
-        ...(settingsDraft ?? {}),
-        formTabs: settingsDraft?.formTabs ?? defaultSettings.formTabs ?? [],
-        enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
-        requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
-        fields: mergeTabbedFields(defaultSettings.fields || {}, settingsDraft?.fields),
-        fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-      });
-    },
-    [defaultSettings],
-  );
-
-  const updateSettings = useCallback(
-    (settingsDraft: TeachersSettings) => {
-      const merged = normalizeTeachersSettings(settingsDraft);
-      const prefs = normalizeTeacherModulePreferences(settingsDraft);
-      const composed = composeTeachersSettings(merged, prefs, merged.formTabs);
-      setTeacherFieldConfigMemory(composed);
-      setTeacherPreferencesMemory(prefs);
-      queryClient.setQueryData(TEACHERS_FIELD_CONFIG_QUERY_KEY, composed);
-      queryClient.setQueryData(TEACHERS_PREFERENCES_QUERY_KEY, prefs);
-    },
-    [queryClient],
-  );
-
-  const updateSettingsAsync = useCallback(
-    async (settingsDraft: TeachersSettings) => {
-      await fieldMutation.mutateAsync(normalizeTeachersSettings(settingsDraft));
-      await prefsMutation.mutateAsync(normalizeTeacherModulePreferences(settingsDraft));
-    },
-    [fieldMutation, prefsMutation],
-  );
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => {
-    const tabbed = resolveTeacherFieldsMapForColumnSync(settings.fields);
-    return listEnabledCustomTeacherFormFields(tabbed).map((field) => ({
-      id: field.key,
-      label: field.label,
-      type: field.type,
-      required: field.required,
-      options: field.options,
-    })) as ModuleCustomField[];
-  }, [settings.fields]);
-  const fieldOrder = useMemo(
-    () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-    [settings.fieldOrder, defaultSettings.fieldOrder],
-  );
-
-  const orderedFields = useMemo(
-    () => getSortedTeacherFields(fieldOrder, settings.fields),
-    [fieldOrder, settings.fields],
-  );
-
-  const isFieldEnabled = useCallback(
-    (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
-    [fields],
-  );
-
-  const isFieldRequired = useCallback(
-    (fieldId: string): boolean => !!fields[fieldId]?.required,
-    [fields],
-  );
-
-  const reloadConfig = useCallback(() => {}, []);
-
-  const loadSettings = useCallback(() => settings, [settings]);
-
-  return {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-    updateSettingsAsync,
-    reloadConfig,
-    mergeSettings,
-    loadSettings,
-    isFieldEnabled,
-    isFieldRequired,
-    statuses,
-    specializations,
-  } as ReturnType<typeof useModuleConfig<TeachersSettings>> &
+  return useTeacherConfigImpl() as ReturnType<typeof useModuleConfig<TeachersSettings>> &
     StandardModuleConfigExtraMap['teachers'];
 }
 
@@ -351,107 +294,41 @@ export function useTeacherConfig() {
  * Students settings authority is typed REST + TanStack Query (not document-store getObject).
  * Lookups (statuses / genderFilters / discountTypes) load from `/api/students/lookups`.
  */
+const useStudentConfigImpl = createStandardModuleConfigHook<
+  StudentsSettings,
+  { statuses: string[]; genderFilters: string[]; discountTypes: string[] }
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.students.defaultSettings as StudentsSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.students.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedStudentsSettings,
+  useFieldConfigMutation: useStudentFieldConfigMutation,
+  usePreferencesMutation: useStudentPreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setStudentFieldConfigMemory,
+  setPreferencesMemory: setStudentPreferencesMemory as (prefs: unknown) => void,
+  fieldConfigQueryKey: STUDENTS_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: STUDENTS_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeStudentsSettings,
+  normalizePrefs: normalizeStudentModulePreferences,
+  composeSettings: composeStudentsSettings as (
+    settings: unknown,
+    prefs: unknown,
+    formTabs?: unknown[],
+  ) => StudentsSettings,
+  lookupsFrom: function useStudentConfigLookups() {
+    const lookupsQuery = useStudentLookupsQuery();
+    const lookups = lookupsQuery.data ?? emptyStudentLookupsMap();
+    return {
+      statuses: lookups.statuses,
+      genderFilters: lookups.genderFilters,
+      discountTypes: lookups.discountTypes,
+    };
+  },
+});
+
 export function useStudentConfig() {
-  const registry = STANDARD_MODULES_CONFIG_REGISTRY.students;
-  const queryClient = useQueryClient();
-  const settings = useComposedStudentsSettings();
-  const fieldMutation = useStudentFieldConfigMutation();
-  const prefsMutation = useStudentPreferencesMutation();
-  const lookupsQuery = useStudentLookupsQuery();
-
-  const lookups = lookupsQuery.data ?? emptyStudentLookupsMap();
-  const statuses = lookups.statuses;
-  const genderFilters = lookups.genderFilters;
-  const discountTypes = lookups.discountTypes;
-
-  const defaultSettings = registry.defaultSettings;
-  const defaultFieldDefs = registry.defaultFieldDefs as unknown as ModuleFieldDef[];
-
-  const mergeSettings = useCallback(
-    (settingsDraft: Partial<StudentsSettings> | null | undefined): StudentsSettings => {
-      return normalizeStudentsSettings({
-        ...defaultSettings,
-        ...(settingsDraft ?? {}),
-        formTabs: settingsDraft?.formTabs ?? defaultSettings.formTabs ?? [],
-        enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
-        requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
-        fields: mergeTabbedFields(defaultSettings.fields || {}, settingsDraft?.fields),
-        customFields: settingsDraft?.customFields ?? defaultSettings.customFields ?? [],
-        fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-      });
-    },
-    [defaultSettings],
-  );
-
-  /** Local/cache-only — never fires network. Persist via updateSettingsAsync or Setup mutations. */
-  const updateSettings = useCallback(
-    (settingsDraft: StudentsSettings) => {
-      const merged = normalizeStudentsSettings(settingsDraft);
-      const prefs = normalizeStudentModulePreferences(settingsDraft);
-      const composed = composeStudentsSettings(merged, prefs, merged.formTabs);
-      setStudentFieldConfigMemory(composed);
-      setStudentPreferencesMemory(prefs);
-      queryClient.setQueryData(STUDENTS_FIELD_CONFIG_QUERY_KEY, composed);
-      queryClient.setQueryData(STUDENTS_PREFERENCES_QUERY_KEY, prefs);
-    },
-    [queryClient],
-  );
-
-  const updateSettingsAsync = useCallback(
-    async (settingsDraft: StudentsSettings) => {
-      await fieldMutation.mutateAsync(normalizeStudentsSettings(settingsDraft));
-      await prefsMutation.mutateAsync(normalizeStudentModulePreferences(settingsDraft));
-    },
-    [fieldMutation, prefsMutation],
-  );
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(
-    () => (settings.customFields || []) as ModuleCustomField[],
-    [settings.customFields],
-  );
-  const fieldOrder = useMemo(
-    () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-    [settings.fieldOrder, defaultSettings.fieldOrder],
-  );
-
-  const orderedFields = useMemo(
-    () => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields),
-    [defaultFieldDefs, fieldOrder, fields, customFields],
-  );
-
-  const isFieldEnabled = useCallback(
-    (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
-    [fields],
-  );
-
-  const isFieldRequired = useCallback(
-    (fieldId: string): boolean => !!fields[fieldId]?.required,
-    [fields],
-  );
-
-  const reloadConfig = useCallback(() => {
-    // Query invalidation is handled by mutations; consumers can remount.
-  }, []);
-
-  const loadSettings = useCallback(() => settings, [settings]);
-
-  return {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-    updateSettingsAsync,
-    reloadConfig,
-    mergeSettings,
-    loadSettings,
-    isFieldEnabled,
-    isFieldRequired,
-    statuses,
-    genderFilters,
-    discountTypes,
-  } as ReturnType<typeof useModuleConfig<StudentsSettings>> &
+  return useStudentConfigImpl() as ReturnType<typeof useModuleConfig<StudentsSettings>> &
     StandardModuleConfigExtraMap['students'];
 }
 

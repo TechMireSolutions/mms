@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 
-export interface ContactDetailExternalLinkRow {
+interface ContactDetailExternalLinkRow {
   key: string;
   label: string;
   value: string;

@@ -82,36 +82,3 @@ export function calculateProfileCompleteness(contact: Partial<Contact>, fieldCon
 
   return Math.round(progress * 100);
 }
-
-/**
- * True when any **required** field or required list-tab is empty.
- * Used by command-centre “incomplete” metrics (optional fields do not count).
- */
-export function isContactProfileIncomplete(
-  contact: Partial<Contact>,
-  fieldConfig: FieldConfig,
-): boolean {
-  const fields = fieldConfig.fields || {};
-  const formTabs = (fieldConfig.formTabs || []).filter(isCompletenessTabActive);
-  const record = contact as Record<string, unknown>;
-  const requiredTabs = new Set(fieldConfig.requiredTabs || []);
-
-  for (const tab of formTabs) {
-    const listKey = LIST_TAB_DATA_KEYS[tab.key];
-    if (listKey) {
-      if (!requiredTabs.has(tab.key)) continue;
-      const list = record[listKey];
-      if (!(Array.isArray(list) && list.length > 0)) return true;
-      continue;
-    }
-
-    const tabFields = (fields[tab.key] || []).filter(
-      (field) => field.enabled && !COMPLETENESS_SKIP_TYPES.has(field.type) && field.required,
-    );
-    for (const field of tabFields) {
-      if (!hasFieldValue(record[field.key])) return true;
-    }
-  }
-
-  return false;
-}

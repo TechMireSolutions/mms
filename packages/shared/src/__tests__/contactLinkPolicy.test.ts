@@ -7,6 +7,7 @@ import {
   hydrateParentContactNames,
   resolveEntityName,
   contactDisplayName,
+  composeContactName,
 } from '../contactLinkPolicy.js';
 
 describe('contactLinkPolicy', () => {
@@ -87,6 +88,30 @@ describe('contactLinkPolicy', () => {
       const record: Record<string, unknown> = { id: 'st1', fatherContactId: 'c_father' };
       const hydrated = hydrateParentContactNames(record, contacts);
       expect(hydrated.fatherName).toBe('John Doe Sr.');
+    });
+  });
+
+  describe('composeContactName', () => {
+    it('joins first and last name', () => {
+      expect(composeContactName('John', 'Doe')).toBe('John Doe');
+    });
+
+    it('handles a missing last name', () => {
+      expect(composeContactName('Jane')).toBe('Jane');
+    });
+
+    it('handles a missing first name', () => {
+      expect(composeContactName(undefined, 'Doe')).toBe('Doe');
+    });
+
+    it('returns empty when both parts are missing', () => {
+      expect(composeContactName()).toBe('');
+      expect(composeContactName('', '')).toBe('');
+    });
+
+    it('trims whitespace and drops empty parts', () => {
+      expect(composeContactName('  John  ', '  Doe ')).toBe('John Doe');
+      expect(composeContactName('  John  ', '')).toBe('John');
     });
   });
 

@@ -10,16 +10,14 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
-import { apiJson } from "@/lib/apiClient";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { startServerContactsVcfExport } from "@/lib/backgroundJobs/startServerContactsBackgroundJobs";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
-import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
+import { useContactMutations } from "@/tenant/features/contacts/hooks/useContactMutations";
 import {
   buildAppleImportIdentityCandidates,
   filterAppleImportFreshContacts,
 } from "@/tenant/features/contacts/hooks/appleContactsIdentity";
-import type { ContactIdentityMatchResult } from "@mms/shared";
 
 export function useAppleContactsPanel({
   onImport,
@@ -30,12 +28,13 @@ export function useAppleContactsPanel({
 }) {
   const { t } = useTranslation();
   const { phoneLabels, emailLabels, defaultPhoneCountryCode } = useContactConfig();
+  const { matchContactIdentity } = useContactMutations();
   const mobileLabel = resolvePhoneLabel(undefined, phoneLabels, t);
   const personalLabel = resolveEmailLabel(undefined, emailLabels, t);
   const { data: metrics } = useContactsMetrics({ enabled: true });
   const exportCount = metrics?.total ?? 0;
   const [previewList, setPreviewList] = useState<Contact[]>([]);
-  const [importing, setImporting] = useState(false);
+  const importing = matchContactIdentity.isPending;
   const [exporting, setExporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -76,25 +75,15 @@ export function useAppleContactsPanel({
 
   const handleImport = async (): Promise<void> => {
     if (!canWrite) return;
-    setImporting(true);
-    const controller = new AbortController();
     try {
       const candidates = buildAppleImportIdentityCandidates(previewList, defaultPhoneCountryCode);
-      const existing = await apiJson<ContactIdentityMatchResult>(`${CONTACTS_API}/identity-match`, {
-        method: "POST",
-        body: JSON.stringify(candidates),
-        signal: controller.signal,
-      });
+      const existing = await matchContactIdentity.mutateAsync(candidates);
       const fresh = filterAppleImportFreshContacts(previewList, existing);
       await onImport(fresh);
       setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
       setPreviewList([]);
-    } catch (error) {
-      if ((error as { name?: string })?.name === "AbortError") return;
+    } catch {
       notify.error(t("contacts.saveFailed"));
-    } finally {
-      controller.abort();
-      setImporting(false);
     }
   };
 

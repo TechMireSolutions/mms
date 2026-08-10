@@ -4,7 +4,7 @@ import { canViewContactField, canViewContactTab } from './contactFieldAccess.js'
 import { normalizeContactReportFieldId } from './contactEmergencyTabMigration.js';
 import { getPrimaryEmail, getPrimaryPhone } from './utils.js';
 
-export const CONTACTS_REPORT_FIELD_IDS = [
+const CONTACTS_REPORT_FIELD_IDS = [
   'fullName',
   'firstName',
   'lastName',
@@ -22,14 +22,14 @@ export const CONTACTS_REPORT_FIELD_IDS = [
   'notesCount',
 ] as const;
 
-export type ContactsReportFieldId = (typeof CONTACTS_REPORT_FIELD_IDS)[number] | string;
+type ContactsReportFieldId = (typeof CONTACTS_REPORT_FIELD_IDS)[number] | string;
 
-export interface ContactsReportFieldDef {
+interface ContactsReportFieldDef {
   id: ContactsReportFieldId;
   labelKey: string;
 }
 
-export const CONTACTS_REPORT_FIELDS: ContactsReportFieldDef[] = [
+const CONTACTS_REPORT_FIELDS: ContactsReportFieldDef[] = [
   { id: 'fullName', labelKey: 'contacts.reportFields.fullName' },
   { id: 'firstName', labelKey: 'contacts.reportFields.firstName' },
   { id: 'lastName', labelKey: 'contacts.reportFields.lastName' },
@@ -49,7 +49,7 @@ export const CONTACTS_REPORT_FIELDS: ContactsReportFieldDef[] = [
 
 const REPORT_FIELD_ID_SET = new Set<string>(CONTACTS_REPORT_FIELD_IDS);
 
-export const CUSTOM_CONTACT_REPORT_FIELD_PREFIX = 'custom:';
+const CUSTOM_CONTACT_REPORT_FIELD_PREFIX = 'custom:';
 
 const PREDEFINED_FIELD_KEYS = new Set(
   Object.values(INITIAL_FIELD_SEED).flatMap((fields) => fields.map((f) => f.key)),
@@ -59,11 +59,11 @@ export function isContactsReportFieldId(value: string): value is ContactsReportF
   return REPORT_FIELD_ID_SET.has(value) || isCustomContactReportFieldId(value);
 }
 
-export function isCustomContactReportFieldId(value: string): boolean {
+function isCustomContactReportFieldId(value: string): boolean {
   return value.startsWith(CUSTOM_CONTACT_REPORT_FIELD_PREFIX);
 }
 
-export function customContactReportFieldKey(fieldId: string): string {
+function customContactReportFieldKey(fieldId: string): string {
   return fieldId.slice(CUSTOM_CONTACT_REPORT_FIELD_PREFIX.length);
 }
 
@@ -112,7 +112,7 @@ export function resolveContactReportFieldLabel(
   return fieldId;
 }
 
-export interface ContactReportCellLabels {
+interface ContactReportCellLabels {
   yes: string;
   no: string;
 }

@@ -1,7 +1,10 @@
 /** Contact domain entity types (person model + related value objects). */
 
 /** Status of WhatsApp registration checks for phone numbers. */
-export type WhatsAppStatus = 'PENDING' | 'REGISTERED' | 'NOT_REGISTERED' | 'FAILED';
+export const WHATSAPP_STATUS_VALUES = ['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED'] as const;
+
+/** Status of WhatsApp registration checks for phone numbers. */
+export type WhatsAppStatus = (typeof WHATSAPP_STATUS_VALUES)[number];
 
 /** Preferences governing automated WhatsApp verification triggers and UI presentation. */
 export interface WhatsAppPreferences {

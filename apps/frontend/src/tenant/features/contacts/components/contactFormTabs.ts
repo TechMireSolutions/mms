@@ -2,10 +2,10 @@ import { User, Phone, Mail, MapPin, Share2, Heart, SlidersHorizontal } from "luc
 import {
   DEFAULT_FORM_TABS,
   omitContactLegacyCustomFormTabUnlessUsed,
-  type AppTranslationKey,
   type FieldConfig,
   type TabDefinition,
 } from "@mms/shared";
+import { createFormModalTabs, type FormModalTabItem } from "@/lib/forms/createFormModalTabs";
 
 const CONTACT_TAB_ICONS: Record<string, typeof User> = {
   basic: User,
@@ -17,29 +17,30 @@ const CONTACT_TAB_ICONS: Record<string, typeof User> = {
   custom: SlidersHorizontal,
 };
 
-export type ContactFormTabItem = {
-  key: string;
-  labelKey?: AppTranslationKey;
-  icon: typeof User;
-  label: string;
-};
+type ContactFormTabItem = FormModalTabItem;
+
+/** Base fallback + legacy-custom-tab prune shared by form and Setup tab resolution. */
+export function resolveContactsFormTabsRaw(
+  formTabs?: TabDefinition[],
+  fields?: FieldConfig["fields"],
+): TabDefinition[] {
+  return omitContactLegacyCustomFormTabUnlessUsed(
+    formTabs && formTabs.length > 0 ? formTabs : DEFAULT_FORM_TABS,
+    fields,
+  );
+}
 
 /** Build form modal tabs from persisted Setup `formTabs` (includes user-created tabs). */
+const resolveContactFormTabsImpl = createFormModalTabs({
+  icons: CONTACT_TAB_ICONS,
+  isTabEnabled: () => true,
+  resolveSource: (formTabs, fields) =>
+    resolveContactsFormTabsRaw(formTabs, fields as FieldConfig["fields"] | undefined),
+});
+
 export function resolveContactFormTabs(
   formTabs?: TabDefinition[],
   fields?: FieldConfig["fields"],
 ): ContactFormTabItem[] {
-  const source = omitContactLegacyCustomFormTabUnlessUsed(
-    formTabs && formTabs.length > 0 ? formTabs : DEFAULT_FORM_TABS,
-    fields,
-  )
-    .slice()
-    .sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
-
-  return source.map((tab) => ({
-    key: tab.key,
-    labelKey: tab.labelKey,
-    icon: CONTACT_TAB_ICONS[tab.key] ?? SlidersHorizontal,
-    label: tab.label,
-  }));
+  return resolveContactFormTabsImpl(formTabs, undefined, fields);
 }

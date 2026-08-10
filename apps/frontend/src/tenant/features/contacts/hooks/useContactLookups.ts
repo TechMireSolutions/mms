@@ -33,7 +33,7 @@ export async function fetchContactLookups(signal?: AbortSignal): Promise<Contact
   return response.lookups ?? defaults();
 }
 
-export async function putContactLookupKind(
+async function putContactLookupKind(
   kind: ContactLookupKind,
   items: ContactLookupItems,
 ): Promise<ContactLookupItems> {

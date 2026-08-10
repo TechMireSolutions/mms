@@ -13,6 +13,7 @@ import {
 } from "@mms/shared";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 import { useModuleColumnLayout } from "@/hooks/useModuleColumnLayout";
 import {
   useContactColumnPrefs,
@@ -118,7 +119,7 @@ export function useContactColumnLayout({
     [updateLayout],
   );
 
-  const availableColumns = useMemo(() => {
+  const availableColumns = useMemo((): ContactsColumnConfig[] => {
     const translate = (key: Parameters<typeof translateApp>[0]) =>
       translateApp(key, settings.language);
     return columnRegistry.map((column) => ({
@@ -129,7 +130,7 @@ export function useContactColumnLayout({
     }));
   }, [columnRegistry, settings.language]);
 
-  const visibleColumns = useMemo(() => {
+  const visibleColumns = useMemo((): ContactsColumnConfig[] => {
     const translate = (key: Parameters<typeof translateApp>[0]) =>
       translateApp(key, settings.language);
     return columnRegistry

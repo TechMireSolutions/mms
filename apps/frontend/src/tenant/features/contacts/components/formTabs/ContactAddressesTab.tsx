@@ -15,7 +15,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
 import { Address, listEnabledCustomContactFormFields } from "@mms/shared";
 
-export interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
+interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
   addressLabels: string[];
   onUpdateAddressLabels: (labels: string[]) => void;
   countryOptions: string[];

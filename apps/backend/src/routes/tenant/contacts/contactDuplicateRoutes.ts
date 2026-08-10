@@ -1,19 +1,11 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { BackgroundJobRecord, Contact, User } from '@mms/shared';
+import type { Contact, User } from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
-import { getRequestTenant } from '../../../lib/tenantContext.js';
-import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
+import { sendDatabaseError } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { countContactDuplicateMatches } from '../../../services/contactDuplicateScanService.js';
-import {
-  enqueueBackgroundJob,
-  getUserBackgroundJob,
-} from '../../../services/backgroundJobWorkerService.js';
-import {
-  loadContactDuplicatePairsPage,
-  prepareContactRecord,
-} from '../../../services/contactService.js';
-import { canReadContacts, canWriteContacts } from '../../../services/rbacService.js';
+import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
+import { prepareContactRecord } from '../../../contacts/use-cases/contactNormalizeUseCases.js';
 import {
   buildContactDuplicateCheckBodySchema,
   contactsDuplicatesQuerySchema,
@@ -21,13 +13,17 @@ import {
 } from '../../../validation/contactSchemas.js';
 import { loadContactFieldConfig } from '../../../services/contactConfigService.js';
 import { collectContactWriteExtraFieldKeys } from '@mms/shared';
-import { sanitizeForUser } from './contactRouteHelpers.js';
+import {
+  enqueueContactBackgroundJob,
+  requireContactPermission,
+  sanitizeForUser,
+} from './contactRouteHelpers.js';
 
 /** Contact duplicate check, pairs list, and background scan routes. */
 export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/duplicate-check', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
     const fieldConfig = await loadContactFieldConfig();
     const checkSchema = buildContactDuplicateCheckBodySchema(
       collectContactWriteExtraFieldKeys(fieldConfig),
@@ -45,11 +41,11 @@ export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/duplicates', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
     const parsed = parseRequest(contactsDuplicatesQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const page = await loadContactDuplicatePairsPage(parsed.data);
+      const page = await contactUseCases.loadContactDuplicatePairsPage(parsed.data);
       const pairs = await Promise.all(
         page.pairs.map(async (pair) => ({
           ...pair,
@@ -64,30 +60,18 @@ export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/duplicates/scan', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
 
     const parsed = parseRequest(contactsDuplicateScanBodySchema, request.body ?? {});
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const tenant = getRequestTenant()!;
-    const userId = String(user.id);
-    const jobId = parsed.data.idempotencyKey?.trim() || crypto.randomUUID();
-    const existing = await getUserBackgroundJob(userId, jobId);
-    if (existing) {
-      return reply.status(202).send({ job: existing });
-    }
-
-    const label = parsed.data.label?.trim() || 'duplicate-scan';
-    const runningJob: BackgroundJobRecord = {
-      id: jobId,
+    const job = await enqueueContactBackgroundJob({
       moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
       kind: 'duplicate-scan',
-      status: 'running',
-      label,
-      createdAt: new Date().toISOString(),
-    };
-
-    const job = await enqueueBackgroundJob(tenant, userId, runningJob, {});
+      label: parsed.data.label?.trim() || 'duplicate-scan',
+      idempotencyKey: parsed.data.idempotencyKey,
+      user,
+    });
     return reply.status(202).send({ job });
   });
 };

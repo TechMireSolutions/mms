@@ -1,9 +1,9 @@
 import { toVCard, type Contact } from '@mms/shared';
-import { loadContactsPage } from './contactServiceLoad.js';
+import { loadContactsPage } from './contactService.js';
 
 const VCF_PAGE_SIZE = 500;
 
-export interface ContactsVcfExportResult {
+interface ContactsVcfExportResult {
   vcf: string;
   filename: string;
   count: number;

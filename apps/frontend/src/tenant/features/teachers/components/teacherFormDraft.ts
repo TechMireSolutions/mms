@@ -1,7 +1,8 @@
 import { resolveTeacherStatus, type Teacher, todayISO } from "@mms/shared";
+import { createModuleFormDraft } from "@/lib/forms/createModuleFormDraft";
 
 /** Hydrated / archive chrome — not edited on the Teachers form. */
-export const TEACHER_FORM_VOLATILE_KEYS = new Set([
+const TEACHER_FORM_VOLATILE_KEYS = [
   "id",
   "name",
   "phone",
@@ -12,38 +13,29 @@ export const TEACHER_FORM_VOLATILE_KEYS = new Set([
   "deletionReason",
   "createdAt",
   "updatedAt",
-]);
+];
+
+const { getInitialDraft, draftSnapshot } = createModuleFormDraft<Teacher>({
+  volatileKeys: TEACHER_FORM_VOLATILE_KEYS,
+  getDefaults: (teacher, defaultSpecialization) => ({
+    contactId: teacher?.contactId ?? "",
+    employeeId: teacher?.employeeId ?? "",
+    specialization: teacher?.specialization ?? (defaultSpecialization as string),
+    status: resolveTeacherStatus(teacher?.status),
+    joinDate: teacher?.joinDate ?? todayISO(),
+    qualification: teacher?.qualification ?? "",
+    notes: teacher?.notes ?? "",
+  }),
+});
 
 /** Draft for FormModal — form-owned fields + Setup custom values; strip hydrated chrome. */
 export function getInitialTeacherDraft(
   teacher: Teacher | undefined,
   defaultSpecialization: string,
 ): Partial<Teacher> {
-  const draft: Partial<Teacher> = {
-    contactId: teacher?.contactId ?? "",
-    employeeId: teacher?.employeeId ?? "",
-    specialization: teacher?.specialization ?? defaultSpecialization,
-    status: resolveTeacherStatus(teacher?.status),
-    joinDate: teacher?.joinDate ?? todayISO(),
-    qualification: teacher?.qualification ?? "",
-    notes: teacher?.notes ?? "",
-  };
-
-  if (!teacher) return draft;
-
-  for (const [key, value] of Object.entries(teacher)) {
-    if (TEACHER_FORM_VOLATILE_KEYS.has(key)) continue;
-    if (key in draft) continue;
-    (draft as Record<string, unknown>)[key] = value;
-  }
-  return draft;
+  return getInitialDraft(teacher, defaultSpecialization);
 }
 
 export function teacherDraftSnapshot(draft: Partial<Teacher>): string {
-  const payload: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(draft)) {
-    if (TEACHER_FORM_VOLATILE_KEYS.has(key)) continue;
-    payload[key] = value ?? "";
-  }
-  return JSON.stringify(payload);
+  return draftSnapshot(draft);
 }

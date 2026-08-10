@@ -11,17 +11,8 @@ import {
 } from '../../validation/contactSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { registerDefaultBackgroundJobRunners } from '../../services/backgroundJobRunnerService.js';
-import {
-  loadContactsPage,
-  loadContactsCommandMetrics,
-  loadContactsReportAnalytics,
-  loadContactsWidgetAggregates,
-  loadContactsByIds,
-  loadContactFieldUsageCount,
-  loadContactFieldUsageCounts,
-  countContacts,
-} from '../../services/contactService.js';
-import { sendForbidden, sendDatabaseError } from '../../lib/httpErrors.js';
+import { contactUseCases } from '../../contacts/use-cases/contactUseCases.js';
+import { sendDatabaseError } from '../../lib/httpErrors.js';
 import {
   registerMetricsRoute,
   registerCountRoute,
@@ -37,7 +28,7 @@ import { contactCrudRoutes } from './contacts/contactCrudRoutes.js';
 import { contactSavedReportRoutes } from './contacts/savedReportRoutes.js';
 import { contactLookupRoutes } from './contacts/contactLookupRoutes.js';
 import { contactSetupConfigRoutes } from './contacts/contactSetupConfigRoutes.js';
-import { sanitizeForUser } from './contacts/contactRouteHelpers.js';
+import { requireContactPermission, sanitizeForUser } from './contacts/contactRouteHelpers.js';
 
 let backgroundJobRunnersReady = false;
 
@@ -67,7 +58,7 @@ export async function contactRoutes(
     defaultPageSize: CONTACTS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'contacts',
     canWriteDeletedCheck: canDeleteContacts,
-    loadPageFn: (query) => loadContactsPage(query),
+    loadPageFn: (query) => contactUseCases.loadContactsPage(query),
     responseTransform: async (result: Contact[] | ContactsListPageResult, user) => {
       if (isContactsPageResult(result)) {
         return {
@@ -81,23 +72,23 @@ export async function contactRoutes(
 
   registerCountRoute(fastify, {
     collection: 'contacts',
-    loadCountFn: () => countContacts(),
+    loadCountFn: () => contactUseCases.countContacts(),
     errorMessagePrefix: 'contacts',
   });
 
   registerMetricsRoute(fastify, {
     collection: 'contacts',
-    loadMetricsFn: loadContactsCommandMetrics,
+    loadMetricsFn: () => contactUseCases.loadContactsCommandMetrics(),
     errorMessagePrefix: 'contact',
   });
 
   fastify.get('/report-analytics', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
     const parsed = parseRequest(contactsReportAnalyticsQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const result = await loadContactsReportAnalytics({
+      const result = await contactUseCases.loadContactsReportAnalytics({
         compareYears: parsed.data.years,
         language: parsed.data.lang,
       });
@@ -109,15 +100,15 @@ export async function contactRoutes(
 
   registerFieldUsageRoutes(fastify, {
     canRead: canReadContacts,
-    loadCount: loadContactFieldUsageCount,
-    loadCounts: loadContactFieldUsageCounts,
+    loadCount: (fieldKey) => contactUseCases.loadContactFieldUsageCount(fieldKey),
+    loadCounts: (fieldKeys) => contactUseCases.loadContactFieldUsageCounts(fieldKeys),
     paramsSchema: contactFieldUsageParamsSchema,
     batchBodySchema: contactFieldUsageBatchBodySchema,
   });
 
   registerWidgetAggregatesRoute(fastify, {
     collection: 'contacts',
-    loadAggregatesFn: loadContactsWidgetAggregates,
+    loadAggregatesFn: (queries) => contactUseCases.loadContactsWidgetAggregates(queries),
     errorMessagePrefix: 'contact',
   });
 
@@ -125,7 +116,7 @@ export async function contactRoutes(
     collection: 'contacts',
     loadByIdsFn: async (ids, request) => {
       const user = request.user as User;
-      const contacts = await loadContactsByIds(ids);
+      const contacts = await contactUseCases.loadContactsByIds(ids);
       return sanitizeForUser(contacts, user);
     },
     responseKey: 'contacts',

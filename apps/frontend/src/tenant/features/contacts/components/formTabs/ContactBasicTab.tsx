@@ -5,7 +5,7 @@ import { ContactBasicAvatarSection } from "@/tenant/features/contacts/components
 import { ContactBasicIdentityFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicIdentityFields";
 import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
 
-export interface ContactBasicTabProps {
+interface ContactBasicTabProps {
   contactDraft: Partial<Contact>;
   formInstanceId: string;
   fields: Record<string, FieldDefinition[]>;

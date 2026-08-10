@@ -13,7 +13,7 @@ function messagingActionClass(tone: MessagingTone): string {
   return cn(MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES[tone]);
 }
 
-export interface DetailMessagingRowActionInput {
+interface DetailMessagingRowActionInput {
   key: string;
   tone: MessagingTone;
   icon: LucideIcon;
@@ -23,7 +23,7 @@ export interface DetailMessagingRowActionInput {
 }
 
 /** Build a CollectionRowAction with shared messaging icon button tones. */
-export function detailMessagingRowAction(
+function detailMessagingRowAction(
   input: DetailMessagingRowActionInput,
 ): CollectionRowAction {
   return {
@@ -36,7 +36,7 @@ export function detailMessagingRowAction(
   };
 }
 
-export interface BuildDetailPhoneMessagingActionsArgs {
+interface BuildDetailPhoneMessagingActionsArgs {
   phone: string;
   callTitle: string;
   whatsappTitle?: string;
@@ -91,7 +91,7 @@ export function buildDetailPhoneMessagingActions({
   return actions;
 }
 
-export interface BuildDetailEmailMessagingActionsArgs {
+interface BuildDetailEmailMessagingActionsArgs {
   emailTitle: string;
   onEmail: () => void;
 }

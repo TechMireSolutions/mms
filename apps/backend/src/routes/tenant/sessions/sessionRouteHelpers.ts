@@ -1,19 +1,4 @@
-import type { User } from '@mms/shared';
-import { recordAudit } from '../../../services/auditService.js';
+import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 
-/** Thin Sessions audit helper — same shape as Teachers `auditTeacher`. */
-export async function auditSession(
-  user: User,
-  action: string,
-  summary: string,
-  entityId = 'sessions',
-): Promise<void> {
-  await recordAudit({
-    userId: user.id,
-    userEmail: user.email,
-    action,
-    entityType: 'collection',
-    entityId,
-    summary,
-  });
-}
+/** Thin Sessions audit helper — shared factory, same shape as Contacts/Teachers. */
+export const auditSession = createCollectionAuditHelper('sessions');

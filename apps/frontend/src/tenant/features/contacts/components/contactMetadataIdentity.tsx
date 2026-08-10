@@ -2,13 +2,13 @@ import { CheckCircle2, MapPin } from "lucide-react";
 import {
   Contact,
   hasWhatsApp,
-  COLOR_PALETTES,
   getPrimaryAddress,
   type AppTranslationKey,
 } from "@mms/shared";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { GenderIcon } from "@/components/ui/GenderIcon";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type Translate = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
@@ -73,18 +73,9 @@ export function renderAddressFieldMetadata({
 
 export function renderWhatsAppMetadata({
   contact,
-  t,
 }: {
   contact: Contact;
   t: Translate;
 }): React.ReactNode {
-  return (
-    <span
-      className={`text-xs font-extrabold uppercase px-1.5 py-0.5 rounded border ${
-        hasWhatsApp(contact) ? COLOR_PALETTES.success.bg : COLOR_PALETTES.slate.bg
-      }`}
-    >
-      {hasWhatsApp(contact) ? t("common.yes") : t("common.no")}
-    </span>
-  );
+  return <StatusBadge status={hasWhatsApp(contact) ? "success" : "none"} size="sm" />;
 }

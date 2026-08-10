@@ -1,8 +1,8 @@
 export const GOOGLE_CONTACTS_OAUTH_MESSAGE = 'mms-google-contacts-oauth' as const;
-export const GOOGLE_CONTACTS_OAUTH_PENDING_KEY = 'mms_pending_google_oauth_code';
-export const GOOGLE_CONTACTS_OPEN_SYNC_SETUP_KEY = 'mms_open_contacts_sync_setup';
+const GOOGLE_CONTACTS_OAUTH_PENDING_KEY = 'mms_pending_google_oauth_code';
+const GOOGLE_CONTACTS_OPEN_SYNC_SETUP_KEY = 'mms_open_contacts_sync_setup';
 
-export function parseGoogleContactsOAuthState(stateRaw: string | null): boolean {
+function parseGoogleContactsOAuthState(stateRaw: string | null): boolean {
   if (!stateRaw) return false;
   try {
     const state = JSON.parse(decodeURIComponent(stateRaw)) as { source?: string };

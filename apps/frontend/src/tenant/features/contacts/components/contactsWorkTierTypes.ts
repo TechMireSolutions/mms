@@ -3,13 +3,9 @@ import type { Contact, ContactsQuickFilter } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import type ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 
-export type ContactsWorkTierColumn = {
-  id: string;
-  label: string;
-  sortField?: string;
-  width?: number;
-};
+type ContactsWorkTierColumn = ContactsColumnConfig;
 
 export type ContactsWorkViewMode = WorkDirectoryViewMode;
 

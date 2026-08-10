@@ -2,18 +2,13 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { Contact, User } from '@mms/shared';
 import { registerResourceRoutes } from '../../../lib/crudResourceRoutes.js';
 import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoutes.js';
-import {
-  bulkRestoreContacts,
-  bulkSoftDeleteContacts,
-  ContactUniqueFieldError,
-  restoreContactById,
-  softDeleteContactById,
-} from '../../../services/contactService.js';
+import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
+import { ContactUniqueFieldError } from '../../../contacts/use-cases/contactUniqueFieldUseCases.js';
 import { canDeleteContacts } from '../../../services/rbacService.js';
 import {
-  contactBulkDeleteSchema,
   contactRecordSchema,
 } from '../../../validation/contactSchemas.js';
+import { bulkIdsBodySchema } from '../../../validation/commonSchemas.js';
 import { auditContact, sanitizeOneForUser } from './contactRouteHelpers.js';
 
 /** Contact soft-delete, restore, and bulk trash routes. */
@@ -28,8 +23,8 @@ export const contactSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     customPostRoute: true,
     customPutRoute: true,
     canDelete: canDeleteContacts,
-    deleteFn: softDeleteContactById,
-    restoreFn: (id, userId) => restoreContactById(id, userId),
+    deleteFn: (id, userId, reason) => contactUseCases.softDeleteContactById(id, userId, reason),
+    restoreFn: (id, userId) => contactUseCases.restoreContactById(id, userId),
     onAfterDelete: async (user, id, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditContact(
@@ -64,10 +59,10 @@ export const contactSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
   registerSoftDeletableBulkTrashRoutes(fastify, {
     collection: 'contacts',
     errorMessagePrefix: 'contacts',
-    bulkBodySchema: contactBulkDeleteSchema,
+    bulkBodySchema: bulkIdsBodySchema,
     canDelete: canDeleteContacts,
-    bulkDeleteFn: bulkSoftDeleteContacts,
-    bulkRestoreFn: bulkRestoreContacts,
+    bulkDeleteFn: (ids, user, reason) => contactUseCases.bulkSoftDeleteContacts(ids, user, reason),
+    bulkRestoreFn: (ids, user) => contactUseCases.bulkRestoreContacts(ids, user),
     onAfterBulkDelete: async (user, result, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditContact(

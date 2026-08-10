@@ -2,6 +2,8 @@ import {
   STUDENTS_MODULE_MANIFEST,
   type StudentRecord,
   type StudentsListPageResult,
+  type StudentsListQuery,
+  type StudentsWidgetQuery,
 } from '@mms/shared';
 
 export type { StudentRecord };
@@ -12,17 +14,11 @@ export const STUDENTS_WIDGET_AGGREGATES_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.co
 
 export const STUDENTS_API = STUDENTS_MODULE_MANIFEST.restBasePath;
 
-export interface StudentsPaginatedParams {
+/** Work list Query params — shared {@link StudentsListQuery} + FE-only `enabled`. */
+export type StudentsPaginatedParams = StudentsListQuery & {
   page: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-  gender?: string;
-  sortField?: string;
-  sortDir?: 'asc' | 'desc';
-  includeDeleted?: boolean;
   enabled?: boolean;
-}
+};
 
 export function buildStudentsPageUrl(params: StudentsPaginatedParams): string {
   const queryParams = new URLSearchParams();
@@ -83,17 +79,9 @@ export interface StudentNextGrNumberParams {
   enabled?: boolean;
 }
 
-export interface StudentsWidgetAggregateWidgetInput {
-  id: string;
+/** Widget aggregate request — shared query + FE collection filter. */
+export type StudentsWidgetAggregateWidgetInput = StudentsWidgetQuery & {
   collection: string;
-  operation: 'count' | 'sum' | 'avg' | 'percentage';
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: 'equals' | 'contains' | 'gt' | 'lt';
-  filterValue?: string;
-  xAxisField?: string;
-  filters?: Array<{ field: string; operator?: 'equals' | 'contains' | 'gt' | 'lt'; value?: string }>;
-  chartLimit?: number;
-}
+};
 
 export type { StudentsListPageResult };

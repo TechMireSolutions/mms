@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { softDeleteBodySchema, bulkIdsBodySchema } from './commonSchemas.js';
+import { softDeleteBodySchema } from './commonSchemas.js';
 import { csvExportBodySchema, moduleExportAuditBodySchema, moduleSetupAuditBodySchema } from './csvExportBodySchema.js';
 import {
   phoneNumberSchema,
@@ -38,9 +38,6 @@ export {
   contactFieldUsageParamsSchema,
   contactFieldUsageBatchBodySchema,
 };
-
-/** Bulk soft-delete — shared max(500) with other module bulk id bodies. */
-export const contactBulkDeleteSchema = bulkIdsBodySchema;
 
 export const contactDeleteBodySchema = softDeleteBodySchema;
 

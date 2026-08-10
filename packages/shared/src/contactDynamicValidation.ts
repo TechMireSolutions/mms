@@ -3,6 +3,11 @@ import { translateApp, type AppTranslationKey } from "./appTranslations.js";
 import { canViewContactField, canViewContactTab } from "./contactFieldAccess.js";
 import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import { buildCustomFieldSchema } from "./contactFieldValidation.js";
+import {
+  relationshipSchema,
+  activitySchema,
+  attachmentSchema,
+} from "./contactNestedSchemas.js";
 import type { FieldConfig, FieldDefinition } from "./contactTypes.js";
 
 const REQUIRED_TAB_I18N: Partial<Record<string, AppTranslationKey>> = {
@@ -32,25 +37,9 @@ export function buildDynamicContactSchema(
 ): z.ZodTypeAny {
   const schemaObject: Record<string, z.ZodTypeAny> = {
     id: z.union([z.string(), z.number()]).optional(),
-    relationships: z.array(z.object({
-      contactId: z.union([z.string(), z.number()]),
-      relationship: z.string(),
-    })).optional().nullable(),
-    activities: z.array(z.object({
-      id: z.string(),
-      type: z.enum(["note", "stage_change", "whatsapp", "email", "system", "task", "call"]),
-      content: z.string(),
-      date: z.string(),
-      by: z.string().optional(),
-    })).optional().nullable(),
-    attachments: z.array(z.object({
-      id: z.string(),
-      name: z.string(),
-      type: z.string(),
-      size: z.number(),
-      url: z.string(),
-      date: z.string(),
-    })).optional().nullable(),
+    relationships: z.array(relationshipSchema).optional().nullable(),
+    activities: z.array(activitySchema).optional().nullable(),
+    attachments: z.array(attachmentSchema).optional().nullable(),
   };
 
   for (const [tabId, configuredFields] of Object.entries(fields)) {

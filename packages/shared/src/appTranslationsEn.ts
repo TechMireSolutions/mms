@@ -4359,7 +4359,6 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.mergeSuccessTitle": "Contacts merged",
   "contacts.mergeSuccessDesc": "The duplicate contact was merged successfully.",
   "contacts.sync.offline": "You are offline. Contact changes may not sync until you reconnect.",
-  "contacts.sync.failed": "Could not load contacts from the server. Showing cached data when available.",
   "contacts.sync.pending": "{count} change(s) waiting to sync when you are back online.",
   "contacts.sync.syncingPending": "Syncing pending contact changes…",
   "contacts.sync.retryNow": "Sync now",

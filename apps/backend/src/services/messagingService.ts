@@ -31,7 +31,8 @@ import {
   type MessageLogsFilterQuery,
   type MessageLogsPageResult,
 } from '../db/repositories/messagingRepository.js';
-import { listContactsPage, findContactsByIds } from '../db/repositories/contactRepository.js';
+import { contactsRepository } from '../contacts/repository/contactsRepositoryAdapter.js';
+import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { broadcastCollection } from './websocketService.js';
 import { z } from 'zod';
@@ -139,10 +140,11 @@ export async function computeMessagingMetrics(
 export async function resolveMessagingRecipients(
   workspaceSubdomain: string,
   ids: string[],
+  repo: ContactsRepository = contactsRepository,
 ): Promise<StandardMessagingRecipient[]> {
   if (ids.length === 0) return [];
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const found = await findContactsByIds(subdomain, ids);
+  const found = await repo.findByIds(subdomain, ids);
   return filterActiveContacts(found).map((contact) =>
     toMessagingRecipient(contact, { getDisplayName, getPrimaryPhone, getPrimaryEmail }),
   );
@@ -155,6 +157,7 @@ export async function resolveMessagingRecipients(
 export async function loadMessagingRecipients(
   workspaceSubdomain: string,
   query: MessagingRecipientsQueryDto,
+  repo: ContactsRepository = contactsRepository,
 ): Promise<ContactsListPageResult> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const role = query.role ?? 'all';
@@ -179,19 +182,19 @@ export async function loadMessagingRecipients(
   };
 
   if (role === 'students') {
-    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'students' });
+    return repo.listPage(subdomain, { ...baseQuery, moduleLinkFilter: 'students' });
   }
   if (role === 'teachers') {
-    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'teachers' });
+    return repo.listPage(subdomain, { ...baseQuery, moduleLinkFilter: 'teachers' });
   }
   if (role === 'staff') {
-    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'staff' });
+    return repo.listPage(subdomain, { ...baseQuery, moduleLinkFilter: 'staff' });
   }
   if (role === 'contacts') {
-    return listContactsPage(subdomain, { ...baseQuery, moduleLinkFilter: 'unlinked' });
+    return repo.listPage(subdomain, { ...baseQuery, moduleLinkFilter: 'unlinked' });
   }
 
-  return listContactsPage(subdomain, baseQuery);
+  return repo.listPage(subdomain, baseQuery);
 }
 
 const MATCH_PAGE_SIZE = 500;
@@ -202,6 +205,7 @@ const MATCH_PAGE_SIZE = 500;
 export async function matchMessagingRecipients(
   workspaceSubdomain: string,
   query: MessagingRecipientsMatchQueryDto,
+  repo: ContactsRepository = contactsRepository,
 ): Promise<MessagingRecipientsMatchResponseDto> {
   const limit = MESSAGING_RECIPIENTS_MATCH_LIMIT;
   const listQuery: MessagingRecipientsQueryDto = {
@@ -224,7 +228,7 @@ export async function matchMessagingRecipients(
       ...listQuery,
       page,
       pageSize: MATCH_PAGE_SIZE,
-    });
+    }, repo);
     total = result.total;
     for (const contact of result.contacts) {
       if (recipients.length >= limit) break;

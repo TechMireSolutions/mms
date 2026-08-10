@@ -1,10 +1,9 @@
 import {
   Contact,
   PuppeteerWhatsAppProvider,
-  formatPhoneWithCountryCode,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { resolvePhoneLabel } from "@/lib/contacts/contactI18n";
+import { formatContactPhoneFull, resolvePhoneLabel } from "@/lib/contacts/contactI18n";
 import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
 import {
   DetailCollectionEmpty,
@@ -36,9 +35,10 @@ export function ContactDetailPhonesSection({
         <DetailCollectionEmpty title={t("contacts.detail.emptyPhones")} />
       ) : (
         phones.map((phone, phoneIndex) => {
-          const formattedPhone =
-            formatPhoneWithCountryCode(phone.number, phone.countryCode || defaultPhoneCountryCode) ||
-            String(phone.number || "");
+          const formattedPhone = formatContactPhoneFull(
+            phone.number,
+            phone.countryCode || defaultPhoneCountryCode,
+          );
           const hasWa = Boolean(PuppeteerWhatsAppProvider.getNumberId(formattedPhone));
           const actions =
             allowOutbound && formattedPhone

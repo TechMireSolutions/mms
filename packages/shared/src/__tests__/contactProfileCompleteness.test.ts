@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasFieldValue, calculateProfileCompleteness, isContactProfileIncomplete } from '../contactProfileCompleteness.js';
+import { hasFieldValue, calculateProfileCompleteness } from '../contactProfileCompleteness.js';
 import type { Contact, FieldConfig } from '../contactTypes.js';
 
 describe('contactProfileCompleteness', () => {
@@ -51,49 +51,6 @@ describe('contactProfileCompleteness', () => {
       };
       const score = calculateProfileCompleteness(contact, mockFieldConfig);
       expect(score).toBe(70);
-    });
-  });
-
-  describe('isContactProfileIncomplete', () => {
-    const fieldConfig: FieldConfig = {
-      version: 1,
-      enabledTabs: ['basic', 'phones'],
-      requiredTabs: ['phones'],
-      formTabs: [
-        { key: 'basic', label: 'Basic Info', enabled: true, order: 1 },
-        { key: 'phones', label: 'Phones', enabled: true, order: 2 },
-      ],
-      fields: {
-        basic: [
-          { key: 'firstName', type: 'text', label: 'First Name', required: true, enabled: true, order: 1 },
-          { key: 'notes', type: 'text', label: 'Notes', required: false, enabled: true, order: 2 },
-        ],
-      },
-    };
-
-    it('is incomplete when a required field is missing', () => {
-      expect(
-        isContactProfileIncomplete(
-          { phones: [{ label: 'Mobile', number: '+123456789' }] },
-          fieldConfig,
-        ),
-      ).toBe(true);
-    });
-
-    it('is incomplete when a required list tab is empty', () => {
-      expect(isContactProfileIncomplete({ firstName: 'Jane' }, fieldConfig)).toBe(true);
-    });
-
-    it('is complete when required fields and tabs are filled even if optionals are empty', () => {
-      expect(
-        isContactProfileIncomplete(
-          {
-            firstName: 'Jane',
-            phones: [{ label: 'Mobile', number: '+123456789' }],
-          },
-          fieldConfig,
-        ),
-      ).toBe(false);
     });
   });
 });

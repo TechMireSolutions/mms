@@ -7,6 +7,7 @@ import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useC
 import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
 import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
 import type { useContactsPageOverlayState } from "@/tenant/features/contacts/hooks/useContactsPageOverlayState";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 
 type Directory = ReturnType<typeof useContactsDirectory>;
 type Overlay = ReturnType<typeof useContactsPageOverlayState>;
@@ -31,7 +32,7 @@ export function useContactsPageDirectoryProps({
   viewingDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
-  tableColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
+  tableColumns: ContactsColumnConfig[];
 }) {
   const {
     workContacts,

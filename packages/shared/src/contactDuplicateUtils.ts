@@ -22,7 +22,7 @@ export interface ContactDuplicatePair {
   contacts: [Contact, Contact];
 }
 
-export const DEFAULT_DUPLICATE_SCORES = {
+const DEFAULT_DUPLICATE_SCORES = {
   default: 70,
   phoneEmail: 99,
   namePhone: 95,
@@ -57,6 +57,23 @@ function pairKey(contactA: Contact, contactB: Contact): string {
 
 function getContactCleanName(contact: Contact, namePrefixesToIgnore?: string[]): string {
   return cleanName(contact.name || contact.firstName, namePrefixesToIgnore);
+}
+
+/**
+ * Normalized duplicate keys (phones / emails / name) for a contact.
+ *
+ * Single source shared by JS pair-finding (`findContactDuplicatePairs`) and the
+ * backend's SQL blocking queries, so the key space can never drift.
+ */
+export function getContactDuplicateCandidateKeys(
+  contact: Contact,
+  preferences: DuplicatePreferences = {},
+): { phones: string[]; emails: string[]; name: string } {
+  return {
+    phones: getPhoneNumbers(contact),
+    emails: getEmails(contact),
+    name: getContactCleanName(contact, preferences.namePrefixesToIgnore),
+  };
 }
 
 function hasOverlap(listA: string[], listB: string[]): boolean {
@@ -149,22 +166,22 @@ export function findContactDuplicatePairs(
   const nameIndex = new Map<string, Contact[]>();
 
   for (const contact of pool) {
-    for (const phone of getPhoneNumbers(contact)) addToIndex(phoneIndex, phone, contact);
-    for (const email of getEmails(contact)) addToIndex(emailIndex, email, contact);
-    const name = getContactCleanName(contact, preferences.namePrefixesToIgnore);
-    if (name) addToIndex(nameIndex, name, contact);
+    const keys = getContactDuplicateCandidateKeys(contact, preferences);
+    for (const phone of keys.phones) addToIndex(phoneIndex, phone, contact);
+    for (const email of keys.emails) addToIndex(emailIndex, email, contact);
+    if (keys.name) addToIndex(nameIndex, keys.name, contact);
   }
 
   const matchedPairs = new Set<string>();
   const list: ContactDuplicatePair[] = [];
 
   for (const contact1 of pool) {
+    const keys = getContactDuplicateCandidateKeys(contact1, preferences);
     const candidates = new Map<string, Contact>();
-    collectCandidatesFromKeys(phoneIndex, getPhoneNumbers(contact1), candidates);
-    collectCandidatesFromKeys(emailIndex, getEmails(contact1), candidates);
-    const name = getContactCleanName(contact1, preferences.namePrefixesToIgnore);
-    if (name) {
-      collectCandidatesFromKeys(nameIndex, [name], candidates);
+    collectCandidatesFromKeys(phoneIndex, keys.phones, candidates);
+    collectCandidatesFromKeys(emailIndex, keys.emails, candidates);
+    if (keys.name) {
+      collectCandidatesFromKeys(nameIndex, [keys.name], candidates);
     }
 
     for (const contact2 of candidates.values()) {

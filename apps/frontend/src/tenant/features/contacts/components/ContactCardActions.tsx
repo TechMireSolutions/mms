@@ -9,7 +9,7 @@ import {
 } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface ContactCardActionsProps {
+interface ContactCardActionsProps {
   contact: Contact;
   displayName: string;
   phone: string | null;

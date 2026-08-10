@@ -1,5 +1,11 @@
 import { useCallback } from "react";
-import type { StudentExportColumn, StudentsListQuery } from "@mms/shared";
+import {
+  DEFAULT_STUDENT_EXPORT_COLUMNS,
+  studentColumnLabelKey,
+  type AppTranslationKey,
+  type StudentExportColumn,
+  type StudentsListQuery,
+} from "@mms/shared";
 import { startServerStudentsCsvExport } from "@/lib/backgroundJobs/startServerStudentsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
@@ -78,20 +84,10 @@ export function useStudentsExportActions({
 
 /** Default Work export columns when registry is unavailable. */
 export function defaultStudentsExportColumns(
-  t: (
-    key:
-      | "students.columns.name"
-      | "students.columns.grNumber"
-      | "students.columns.gender"
-      | "students.columns.status"
-      | "students.columns.parents",
-  ) => string,
+  t: (key: AppTranslationKey) => string,
 ): StudentExportColumn[] {
-  return [
-    { id: "name", label: t("students.columns.name") },
-    { id: "grNumber", label: t("students.columns.grNumber") },
-    { id: "gender", label: t("students.columns.gender") },
-    { id: "status", label: t("students.columns.status") },
-    { id: "parents", label: t("students.columns.parents") },
-  ];
+  return DEFAULT_STUDENT_EXPORT_COLUMNS.map((column) => ({
+    id: column.id,
+    label: t(studentColumnLabelKey(column.id)),
+  }));
 }

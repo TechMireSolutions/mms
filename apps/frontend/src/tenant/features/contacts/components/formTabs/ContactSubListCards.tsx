@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 
-export interface ListFieldCardProps {
+interface ListFieldCardProps {
   id: string;
   index: number;
   icon: ElementType;
@@ -66,7 +66,7 @@ export function resolveSubListAllowAdd(
   return enabledFieldFlags.some(Boolean) || customFieldsLength > 0;
 }
 
-export interface ContactSubListShellProps {
+interface ContactSubListShellProps {
   isEmpty: boolean;
   emptyIcon: React.ComponentType<{ className?: string }>;
   emptyMessage: string;

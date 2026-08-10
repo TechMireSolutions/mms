@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   DEFAULT_TEACHER_COLUMN_REGISTRY,
   TEACHERS_TAB_REGISTRY,
@@ -11,10 +11,7 @@ import {
   type TeachersSettings,
   type TabDefinition,
 } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
-import { safeAudit } from "@/lib/safeAudit";
-import { runModuleFieldsSetupSave } from "@/lib/setup/runModuleFieldsSetupSave";
+import { useModuleSetupSaveActions } from "@/lib/setup/useModuleSetupSaveActions";
 import {
   useTeacherFieldConfigMutation,
   useTeacherPreferencesMutation,
@@ -48,12 +45,9 @@ export function useTeachersSetupSaveActions({
   mode?: "fields" | "preferences";
   setSaved: (value: boolean | ((curr: boolean) => boolean)) => void;
 }) {
-  const { t } = useTranslation();
   const fieldConfigMutation = useTeacherFieldConfigMutation();
   const preferencesMutation = useTeacherPreferencesMutation();
   const { logSetupAudit } = useTeacherMutations();
-  const [saving, setSaving] = useState(false);
-  const showPrefs = mode === "preferences";
 
   const fieldsDraft = useMemo(
     () => ({
@@ -70,122 +64,49 @@ export function useTeachersSetupSaveActions({
     onDeleteField: fieldsEditor.handleDeleteField,
   });
 
-  const isFieldsDirty = useMemo(() => {
-    const persistedEnabled = resolveTeacherEnabledTabIds(settings);
-    return (
-      teachersFieldsSetupSnapshot({
-        fields: fieldsEditor.buildFieldsMap(),
-        enabledTabs: fieldsEditor.enabledTabs,
-        requiredTabs: fieldsEditor.requiredTabs,
-        formTabs: fieldsEditor.formTabs,
-      }) !==
-      teachersFieldsSetupSnapshot({
-        fields: settings.fields as Record<string, FieldDefinition[]> | undefined,
-        enabledTabs: persistedEnabled,
-        requiredTabs: settings.requiredTabs || [],
-        formTabs: settings.formTabs || TEACHERS_TAB_REGISTRY,
-      })
-    );
-  }, [fieldsEditor, settings]);
-
-  const isPrefsDirty = useMemo(() => {
-    const draft = settingsDraft as unknown as Record<string, unknown>;
-    const savedSettings = settings as unknown as Record<string, unknown>;
-    return TEACHER_MODULE_PREFERENCE_KEYS.some(
-      (key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]),
-    );
-  }, [settings, settingsDraft]);
-
-  const isDirty = showPrefs ? isPrefsDirty : isFieldsDirty;
-
-  const handleSave = useCallback(async (): Promise<void> => {
-    if (!isDirty || saving) return;
-    setSaving(true);
-    try {
-      if (showPrefs) {
-        await preferencesMutation.mutateAsync(
-          normalizeTeacherModulePreferences(settingsDraft),
-        );
-        safeAudit(
-          logSetupAudit.mutateAsync({
-            area: "preferences",
-            summary: t("teachers.setup.auditSummary", { area: "preferences" }),
-          }),
-          "teachers.setup_audit",
-        );
-        notify.success(t("teachers.setup.preferencesSaved"));
-        setSaved(true);
-        return;
-      }
-
-      const fieldsMap = fieldsEditor.buildFieldsMap();
-      const enabledSet = new Set(
-        [...fieldsEditor.enabledTabs].map((tab) => tab.toLowerCase()),
-      );
-      const updatedFormTabs = fieldsEditor.formTabs.map((tab) => ({
-        ...tab,
-        enabled: isTeacherLockedEnabledTab(tab.key)
-          ? true
-          : enabledSet.has(tab.key.toLowerCase()),
-      }));
-      const syncedRegistry = syncTeacherColumnRegistryWithFields(
-        settings.columnRegistry || DEFAULT_TEACHER_COLUMN_REGISTRY,
-        fieldsMap,
-        fieldsEditor.enabledTabs,
-      );
-
-      const { formTabs: _formTabs, ...settingsWithoutFormTabs } = settings;
-      await runModuleFieldsSetupSave({
-        formTabs: updatedFormTabs,
-        syncCustomTabs: syncTeachersCustomTabs,
-        persistFieldConfig: async () => {
-          await fieldConfigMutation.mutateAsync({
-            ...settingsWithoutFormTabs,
-            enabledTabs: Array.from(fieldsEditor.enabledTabs),
-            requiredTabs: Array.from(fieldsEditor.requiredTabs).map((tab) => tab.toLowerCase()),
-            fields: fieldsMap,
-            columnRegistry: syncedRegistry,
-          });
-        },
-        markDraftPristine: fieldsEditor.markDraftPristine,
-        auditPromise: logSetupAudit.mutateAsync({
-          area: "fields",
-          summary: t("teachers.setup.auditSummary", { area: "fields" }),
-        }),
-        auditChannel: "teachers.setup_audit",
-        t,
-        successKey: "teachers.setup.fieldsSaved",
-        failureKey: "teachers.setup.saveFailed",
-        setSaved,
-      });
-    } catch {
-      if (showPrefs) {
-        setSaved(false);
-        notify.error(t("teachers.setup.saveFailed"));
-      }
-    } finally {
-      setSaving(false);
-    }
-  }, [
-    isDirty,
-    saving,
-    showPrefs,
-    preferencesMutation,
+  return useModuleSetupSaveActions<TeachersSettings>({
+    settings,
     settingsDraft,
     fieldsEditor,
-    settings,
-    fieldConfigMutation,
-    logSetupAudit,
+    mode,
     setSaved,
-    t,
-  ]);
-
-  return {
-    saving,
-    isDirty,
-    isFieldsDirty,
-    isPrefsDirty,
-    handleSave,
+    fieldsSnapshot: teachersFieldsSetupSnapshot,
+    resolvePersistedEnabledTabs: resolveTeacherEnabledTabIds,
+    defaultRequiredTabs: [],
+    defaultTabRegistry: TEACHERS_TAB_REGISTRY,
+    lockedTabPredicate: isTeacherLockedEnabledTab,
+    defaultColumnRegistry: DEFAULT_TEACHER_COLUMN_REGISTRY,
+    registrySyncFn: syncTeacherColumnRegistryWithFields,
+    syncCustomTabs: syncTeachersCustomTabs,
+    prefsKeys: TEACHER_MODULE_PREFERENCE_KEYS,
+    normalizePrefs: normalizeTeacherModulePreferences,
+    buildFieldConfigPayload: ({
+      settingsWithoutFormTabs,
+      enabledTabs,
+      requiredTabs,
+      fieldsMap,
+      syncedRegistry,
+    }) => ({
+      ...settingsWithoutFormTabs,
+      enabledTabs,
+      requiredTabs,
+      fields: fieldsMap,
+      columnRegistry: syncedRegistry,
+    }),
+    fieldConfigMutation: fieldConfigMutation as unknown as {
+      mutateAsync: (payload: unknown) => Promise<unknown>;
+    },
+    preferencesMutation: preferencesMutation as unknown as {
+      mutateAsync: (prefs: unknown) => Promise<unknown>;
+    },
+    logSetupAudit,
     handleDeleteFieldWithGuard,
-  };
+    keys: {
+      auditSummary: "teachers.setup.auditSummary",
+      preferencesSaved: "teachers.setup.preferencesSaved",
+      fieldsSaved: "teachers.setup.fieldsSaved",
+      saveFailed: "teachers.setup.saveFailed",
+      auditChannel: "teachers.setup_audit",
+    },
+  });
 }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   CONTACT_LOOKUP_FIELD_TARGETS,
@@ -8,6 +8,9 @@ import {
 import { saveFieldConfigAsync } from "@/lib/contactFieldsStore";
 import { syncOptionsInConfig } from "@/lib/contacts/preferencesStorage";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import {
+  CONTACTS_FIELD_CONFIG_QUERY_KEY,
+} from "@/tenant/features/contacts/hooks/useContactSetupConfig";
 import {
   CONTACTS_LOOKUPS_QUERY_KEY,
   useContactLookupMutation,
@@ -21,10 +24,11 @@ type CountryCodeEntry = { country: string; code: string };
  * Keeps field-config option sync on string-list updates.
  */
 export function useContactConfigCollections({
-  setFieldConfigState,
+  settings,
+  updateSettings,
 }: {
-  contactConfigDefaults?: unknown;
-  setFieldConfigState: Dispatch<SetStateAction<FieldConfig>>;
+  settings: FieldConfig;
+  updateSettings: (config: FieldConfig) => void;
 }) {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
@@ -48,16 +52,13 @@ export function useContactConfigCollections({
 
   const syncFieldOptions = useCallback(
     async (tabId: string, fieldId: string, options: string[]) => {
-      let updatedConfig: FieldConfig | null = null;
-      setFieldConfigState((currentConfig) => {
-        updatedConfig = syncOptionsInConfig(currentConfig, tabId, fieldId, options);
-        return updatedConfig;
-      });
-      if (updatedConfig) {
-        await saveFieldConfigAsync(updatedConfig);
-      }
+      const current =
+        queryClient.getQueryData<FieldConfig>(CONTACTS_FIELD_CONFIG_QUERY_KEY) ?? settings;
+      const updated = syncOptionsInConfig(current, tabId, fieldId, options);
+      updateSettings(updated);
+      await saveFieldConfigAsync(updated);
     },
-    [setFieldConfigState],
+    [queryClient, settings, updateSettings],
   );
 
   const persistStringKind = useCallback(

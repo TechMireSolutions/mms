@@ -8,7 +8,7 @@ import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ContactsSyncConflictDiffBody } from "@/tenant/features/contacts/components/ContactsSyncConflictDiffBody";
 import { useContactsSyncConflictRow } from "@/tenant/features/contacts/hooks/useContactsSyncConflictRow";
 
-export interface ContactsSyncConflictRowProps {
+interface ContactsSyncConflictRowProps {
   entry: ContactsSyncConflict;
   title: string;
   onRequestDismiss: (id: string) => void;

@@ -1849,7 +1849,6 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.sync.exportAppleHint": "خروجی گرفتن از مخاطبین جهت درون‌ریزی در مخاطبین اپل",
   "contacts.sync.exportVcf": "خروجی گرفتن به صورت .vcf ({count})",
   "contacts.sync.vcfFileName": "madrasa-contacts.vcf",
-  "contacts.sync.failed": "داده‌های مخاطبین از سرور بارگذاری نشدند. در حال نمایش اطلاعات حافظه موقت محلی.",
   "contacts.sync.flushPartial": "برخی از تغییرات همگام نشدند",
   "contacts.sync.flushPartialDesc": "{synced} همگام شده · {failed} ناموفق — پیام بالای صفحه را بررسی کنید.",
   "contacts.sync.flushSuccess": "تغییرات مخاطبین همگام شد",

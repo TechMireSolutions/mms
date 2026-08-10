@@ -26,5 +26,4 @@ const stringListLookups = createModuleStringListLookupsService<
 });
 
 export const loadTeacherLookupsMap = stringListLookups.loadMap;
-export const loadTeacherLookupKind = stringListLookups.loadKind;
 export const replaceTeacherLookupKind = stringListLookups.replaceKind;

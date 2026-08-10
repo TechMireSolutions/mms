@@ -1,4 +1,4 @@
-import type { QueryClient } from '@tanstack/react-query';
+import { createModuleQueryInvalidator } from '@/lib/query/createModuleQueryInvalidator';
 import { STUDENT_COUNT_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentCount';
 import {
   STUDENTS_FIELD_CONFIG_QUERY_KEY,
@@ -12,12 +12,12 @@ import {
 import { STUDENTS_LOOKUPS_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentLookups';
 
 /** Invalidate Students list/metrics/setup/lookups Query keys (mutations + live push). */
-export function invalidateStudentsQueries(queryClient: QueryClient): void {
-  void queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: STUDENT_COUNT_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: STUDENTS_METRICS_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: STUDENTS_FIELD_CONFIG_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: STUDENTS_PREFERENCES_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: STUDENTS_LOOKUPS_QUERY_KEY });
-}
+export const invalidateStudentsQueries = createModuleQueryInvalidator({
+  list: STUDENTS_QUERY_KEY,
+  count: STUDENT_COUNT_QUERY_KEY,
+  metrics: STUDENTS_METRICS_QUERY_KEY,
+  widgetAggregates: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
+  fieldConfig: STUDENTS_FIELD_CONFIG_QUERY_KEY,
+  preferences: STUDENTS_PREFERENCES_QUERY_KEY,
+  lookups: STUDENTS_LOOKUPS_QUERY_KEY,
+});

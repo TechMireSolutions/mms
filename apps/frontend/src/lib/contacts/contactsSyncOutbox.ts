@@ -20,9 +20,6 @@ export {
 export {
   enqueueContactsOutbox,
   flushContactsOutbox,
-  type ContactsOutboxInput,
-  type ContactsOutboxFlushHandlers,
-  type ContactsOutboxFlushResult,
 } from "@/lib/contacts/contactsSyncOutboxFlush";
 
 export function describeContactsOutboxEntry(entry: ContactsOutboxEntry): {

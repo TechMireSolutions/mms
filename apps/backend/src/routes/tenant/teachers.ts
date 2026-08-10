@@ -1,44 +1,37 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
+import { canDeleteCollection, canReadCollection } from '../../services/rbacService.js';
 import {
   createTeacher,
   deleteTeacherById,
   restoreTeacherById,
-  bulkSoftDeleteTeachers,
-  bulkRestoreTeachers,
-  bulkUpdateTeacherStatus,
   loadTeachersPage,
   loadTeachersByIds,
   loadTeacherById,
   loadTeacherLinkedContactIds,
-  computeNextTeacherEmployeeIdForSettings,
   loadTeachersWidgetAggregates,
   loadTeachersCommandMetrics,
   countTeachers,
   updateTeacherById,
 } from '../../services/teacherService.js';
-import type { User } from '@mms/shared';
-import { DEFAULT_TEACHERS_SETTINGS, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
-import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import {
   teacherRecordSchema,
   teachersListQuerySchema,
-  teachersNextEmployeeIdQuerySchema,
-  teachersBulkIdsSchema,
-  teachersBulkStatusSchema,
 } from '../../validation/teacherSchemas.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 import { registerFieldUsageRoutes } from '../../lib/registerFieldUsageRoutes.js';
 import { teacherSetupConfigRoutes } from './teachers/teacherSetupConfigRoutes.js';
 import { teacherLookupRoutes } from './teachers/teacherLookupRoutes.js';
 import { teacherExportRoutes } from './teachers/teacherExportRoutes.js';
+import { teacherOperationRoutes } from './teachers/teacherOperationRoutes.js';
+import { teacherSoftDeleteRoutes } from './teachers/teacherSoftDeleteRoutes.js';
 import {
   loadTeacherFieldUsageCount,
   loadTeacherFieldUsageCounts,
 } from '../../services/teacherService.js';
 import { validateTeacherDynamic } from '../../services/teacherValidationService.js';
+import { auditTeacher } from './teachers/teacherRouteHelpers.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -52,6 +45,8 @@ export default async function teachersRoutes(
   await fastify.register(teacherSetupConfigRoutes);
   await fastify.register(teacherLookupRoutes);
   await fastify.register(teacherExportRoutes);
+  await fastify.register(teacherOperationRoutes);
+  await fastify.register(teacherSoftDeleteRoutes);
 
   registerFieldUsageRoutes(fastify, {
     canRead: (user) => canReadCollection(user, 'teachers'),
@@ -80,59 +75,28 @@ export default async function teachersRoutes(
     loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
     columnPreferencesObjectKey: TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey,
     validateDynamicFn: validateTeacherDynamic as never,
-  });
-
-  fastify.post('/bulk-delete', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teachersBulkIdsSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const result = await bulkSoftDeleteTeachers(
-        parsed.data.ids.map(String),
-        String(user.id),
-        parsed.data.deletionReason,
+    canWriteDeletedCheck: (user) => canDeleteCollection(user, 'teachers'),
+    onAfterCreate: async (user, item) => {
+      const id =
+        item && typeof item === 'object' && 'id' in item
+          ? String((item as { id: unknown }).id)
+          : 'teachers';
+      await auditTeacher(user, 'teacher.create', `Created teacher ${id}`, id);
+    },
+    onAfterUpdate: async (user, id) => {
+      await auditTeacher(user, 'teacher.update', `Updated teacher ${id}`, id);
+    },
+    onAfterDelete: async (user, id, deletionReason) => {
+      const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
+      await auditTeacher(
+        user,
+        'teacher.soft_delete',
+        `Soft-deleted teacher ${id}${reasonNote}`,
+        id,
       );
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk delete teachers');
-    }
-  });
-
-  fastify.post('/bulk-restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teachersBulkIdsSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const result = await bulkRestoreTeachers(parsed.data.ids.map(String));
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk restore teachers');
-    }
-  });
-
-  fastify.post('/bulk-status', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teachersBulkStatusSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const result = await bulkUpdateTeacherStatus(parsed.data.ids.map(String), parsed.data.status);
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk update teacher status');
-    }
-  });
-
-  fastify.get('/next-employee-id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
-    const parsed = parseRequest(teachersNextEmployeeIdQuerySchema, request.query);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    const employeeId = await computeNextTeacherEmployeeIdForSettings({
-      idPrefix: parsed.data.prefix ?? DEFAULT_TEACHERS_SETTINGS.idPrefix,
-    });
-    return reply.send({ employeeId });
+    },
+    onAfterRestore: async (user, id) => {
+      await auditTeacher(user, 'teacher.restore', `Restored teacher ${id}`, id);
+    },
   });
 }

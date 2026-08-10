@@ -6,9 +6,9 @@ import type { ContactRelationship, RelationshipContact } from './contactEntityTy
 import { normalizeRelationshipTerm } from './contactRelationshipRules.js';
 import { collectContactRelationshipLinks } from './studentGuardianFromContacts.js';
 
-export const DERIVED_SIBLING_RELATIONSHIP_LABEL = 'Sibling';
+const DERIVED_SIBLING_RELATIONSHIP_LABEL = 'Sibling';
 
-export type DerivedSiblingLink = {
+type DerivedSiblingLink = {
   contactId: string;
   relationship: typeof DERIVED_SIBLING_RELATIONSHIP_LABEL;
   /** True for drawer/metadata merge only — never written to storage. */
@@ -18,7 +18,7 @@ export type DerivedSiblingLink = {
 };
 
 /** Stored relationship edge plus optional derived Sibling rows for drawer/metadata. */
-export type MergedRelationshipLink = {
+type MergedRelationshipLink = {
   contactId: string;
   name?: string;
   phone?: string;
@@ -50,7 +50,7 @@ function isChildLabel(relationship?: string): boolean {
 }
 
 /** Parent contact ids of `subject` via Parent links on subject or Child links on peers. */
-export function collectParentIdsOf(
+function collectParentIdsOf(
   subject: ContactLike,
   contactsById: ReadonlyMap<string, ContactLike>,
 ): Set<string> {
@@ -77,7 +77,7 @@ export function collectParentIdsOf(
 }
 
 /** Child contact ids of `parentId` via Child links on parent or Parent links on peers. */
-export function collectChildIdsOf(
+function collectChildIdsOf(
   parentId: string,
   contactsById: ReadonlyMap<string, ContactLike>,
 ): Set<string> {

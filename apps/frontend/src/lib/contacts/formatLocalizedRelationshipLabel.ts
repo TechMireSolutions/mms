@@ -1,7 +1,7 @@
 import { formatRelationshipDisplayLabel, type AppTranslationKey } from "@mms/shared";
 import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
 
-export interface LocalizedRelationshipParts {
+interface LocalizedRelationshipParts {
   /** English gendered display (badge codes). */
   display: string;
   /** Localized label for UI. */

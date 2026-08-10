@@ -7,10 +7,7 @@ import {
 } from './contactService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { runInTransaction } from '../db/database.js';
-import {
-  bulkSaveContacts,
-  findExistingNormalizedContactNames,
-} from '../db/repositories/contactRepository.js';
+import { contactsRepository } from '../contacts/repository/contactsRepositoryAdapter.js';
 import { fetchWithTimeout } from '../lib/outboundUrl.js';
 import { getContactGoogleSyncConfig } from './contactGoogleSyncConfig.js';
 import { GoogleSyncError, refreshGoogleAccessToken } from './contactGoogleSyncOAuth.js';
@@ -158,7 +155,7 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
   const tenant = getRequestTenant();
   const candidateNames = mapped.map((contact) => contact.name?.toLowerCase().trim() || '');
   const existingNames = tenant
-    ? await findExistingNormalizedContactNames(tenant, candidateNames)
+    ? await contactsRepository.findExistingNormalizedContactNames(tenant, candidateNames)
     : new Set<string>();
   const fresh = mapped.filter(
     (contact) => !existingNames.has(contact.name?.toLowerCase().trim() || ''),
@@ -191,7 +188,7 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
         }
       }
       if (accepted.length > 0) {
-        await bulkSaveContacts(tenant, accepted);
+        await contactsRepository.bulkSave(tenant, accepted);
         await invalidateDuplicateScanCache();
       }
       imported = accepted.length;

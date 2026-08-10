@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
 import type { ModuleColumnRegistryEntry, Teacher, TeachersListPageResult } from "@mms/shared";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -71,12 +71,8 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
   });
 
   return (
-    <motion.div
-      key="work"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
+    <ModuleTierMotion
+      tier="work"
       className="space-y-5"
       aria-busy={props.useServerWork && props.isWorkPageFetching ? true : undefined}
     >
@@ -150,6 +146,6 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           onShowActive={props.onToggleDeleted}
         />
       </ModuleWorkListStateShell>
-    </motion.div>
+    </ModuleTierMotion>
   );
 }

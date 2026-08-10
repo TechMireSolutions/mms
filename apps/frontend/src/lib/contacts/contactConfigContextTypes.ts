@@ -5,6 +5,7 @@ import type {
   FieldDefinition,
   ColumnRegistryEntry,
 } from "@mms/shared";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 
 export interface ContactConfigContextType {
   fieldConfig: FieldConfig;
@@ -34,8 +35,8 @@ export interface ContactConfigContextType {
   defaultPhoneCountryCode: string;
 
   columnRegistry: ColumnRegistryEntry[];
-  availableColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
-  visibleColumns: Array<{ id: string; label: string; sortField?: string; width?: number }>;
+  availableColumns: ContactsColumnConfig[];
+  visibleColumns: ContactsColumnConfig[];
 
   updateGenders: (genderOptions: string[]) => void | Promise<void>;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void | Promise<void>;

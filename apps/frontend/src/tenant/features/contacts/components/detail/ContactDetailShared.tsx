@@ -6,6 +6,4 @@ export {
 export {
   DetailSection,
   FieldGroupCard,
-  type DetailSectionProps,
-  type FieldGroupCardProps,
 } from "./DetailSection";

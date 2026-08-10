@@ -85,7 +85,7 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 
 ## Contacts + WhatsApp
 
-E.164 + title-case via repository (FORCE RLS). Runtime dial/label defaults from prefs + collections. `handleContactSaveOrUpdate` enqueues WA. List/filter SSOT: `@mms/shared` `contactsListQuerySchema` / `paginateContacts`. WA: `whatsAppService` → queue → `PuppeteerWhatsAppProvider` (dev only).
+E.164 + title-case via repository (FORCE RLS). Runtime dial/label defaults from prefs + collections. `handleContactSaveOrUpdate` enqueues WA. List/filter SSOT: `@mms/shared` `contactsListQuerySchema`. WA: `whatsAppService` → queue → `PuppeteerWhatsAppProvider` (dev only).
 
 ## Custom-field / JSONB writes
 

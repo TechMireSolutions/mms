@@ -1,4 +1,6 @@
 import { INITIAL_FIELD_SEED, type ColumnRegistryEntry, type Contact, type ContactPreferences } from './contactTypes.js';
+import { COLUMN_FIELD_MAPPING } from './contactTabRegistry.js';
+import { createFieldRemovalIssuesChecker } from './createFieldRemovalIssuesChecker.js';
 
 export type ContactFieldDependencyArea = 'systemField' | 'column' | 'duplicateDetection' | 'contactData';
 
@@ -13,10 +15,6 @@ const SEED_FIELD_KEYS = new Set(
   Object.values(INITIAL_FIELD_SEED).flatMap((fields) => fields.map((field) => field.key)),
 );
 
-export function isContactSeedFieldKey(fieldKey: string): boolean {
-  return SEED_FIELD_KEYS.has(fieldKey);
-}
-
 export interface ContactFieldDependencyInput {
   fieldKey: string;
   columnRegistry: ColumnRegistryEntry[];
@@ -24,30 +22,30 @@ export interface ContactFieldDependencyInput {
   contacts?: Contact[];
 }
 
+const checker = createFieldRemovalIssuesChecker({
+  systemFieldKeys: SEED_FIELD_KEYS,
+  columnFieldMapping: COLUMN_FIELD_MAPPING,
+  messageKeys: {
+    systemField: 'contacts.setup.cannotDeleteSystemField',
+    fieldUsedInColumn: 'contacts.setup.fieldUsedInColumn',
+  },
+});
+
+export const isContactSeedFieldKey = checker.isSeedFieldKey;
+
 /**
  * Returns blocking issues before removing a field from Contacts Setup (globle1 §6.6).
+ * Shared checker covers system seed + Work column usage; contacts layers the
+ * duplicate-detection and live contact-data areas on top.
  */
 export function getContactFieldRemovalIssues(
   input: ContactFieldDependencyInput,
 ): ContactFieldDependencyIssue[] {
   const { fieldKey, columnRegistry, preferences, contacts = [] } = input;
-  const issues: ContactFieldDependencyIssue[] = [];
-
-  if (isContactSeedFieldKey(fieldKey)) {
-    issues.push({
-      area: 'systemField',
-      messageKey: 'contacts.setup.cannotDeleteSystemField',
-    });
-    return issues;
-  }
-
-  const column = columnRegistry.find((col) => col.key === fieldKey && col.enabled);
-  if (column) {
-    issues.push({
-      area: 'column',
-      messageKey: 'contacts.setup.fieldUsedInColumn',
-    });
-  }
+  const issues: ContactFieldDependencyIssue[] = checker.getFieldRemovalIssues({
+    fieldKey,
+    columnRegistry,
+  });
 
   if (preferences.duplicateDetectionFields?.includes(fieldKey)) {
     issues.push({
@@ -56,14 +54,7 @@ export function getContactFieldRemovalIssues(
     });
   }
 
-  const dataCount = contacts.filter((contact) => {
-    const value = contact[fieldKey as keyof Contact];
-    if (value === undefined || value === null) return false;
-    if (typeof value === 'string') return value.trim().length > 0;
-    if (Array.isArray(value)) return value.length > 0;
-    return true;
-  }).length;
-
+  const dataCount = countContactsWithFieldValue(contacts, fieldKey);
   if (dataCount > 0) {
     issues.push({
       area: 'contactData',

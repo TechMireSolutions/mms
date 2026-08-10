@@ -2,7 +2,7 @@ import type { ContactsWorkDrillDown } from '@mms/shared';
 import { applyContactsWorkDrillDown } from '@/lib/contacts/contactsWorkDrillDown';
 
 /** Minimal widget shape needed to map Reports/dashboard clicks → Work filters. */
-export interface ContactsWidgetDrillDownSource {
+interface ContactsWidgetDrillDownSource {
   collection: string;
   filterField?: string;
   filterValue?: string;

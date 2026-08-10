@@ -21,8 +21,8 @@ vi.mock('../db/repositories/contactRepository.js', () => ({
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
 }));
 
-vi.mock('../services/contactUniqueValidationService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/contactUniqueValidationService.js')>();
+vi.mock('../contacts/use-cases/contactUniqueFieldUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../contacts/use-cases/contactUniqueFieldUseCases.js')>();
   return {
     ...actual,
     assertContactUniqueFields: (...args: unknown[]) => mockAssertContactUniqueFields(...args),
@@ -68,7 +68,8 @@ import {
   bulkRestoreContacts,
   ContactUniqueFieldError,
 } from '../services/contactService.js';
-import { applyContactRelationshipInference } from '../services/contactRelationshipInferenceService.js';
+import { applyContactRelationshipInference } from '../services/contactService.js';
+import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
 
 
 function contact(overrides: Partial<Contact>): Contact {
@@ -184,6 +185,8 @@ describe('contactService relationship reciprocal mapping', () => {
       'demo',
       expect.objectContaining({ id: 'c1', deletedAt: undefined }),
       'en',
+      [],
+      expect.anything(),
     );
     expect(mockSaveContact).toHaveBeenCalled();
     expect(restored?.deletedAt).toBeUndefined();
@@ -566,5 +569,14 @@ describe('contactService relationship reciprocal mapping', () => {
         }),
       ],
     );
+  });
+});
+
+describe('contactService composition-root shim', () => {
+  it('exposes the wrapped composition-root methods, not raw barrel functions', () => {
+    expect(loadContactsPage).toBe(contactUseCases.loadContactsPage);
+    expect(upsertContact).toBe(contactUseCases.upsertContact);
+    expect(bulkSoftDeleteContacts).toBe(contactUseCases.bulkSoftDeleteContacts);
+    expect(restoreContactById).toBe(contactUseCases.restoreContactById);
   });
 });

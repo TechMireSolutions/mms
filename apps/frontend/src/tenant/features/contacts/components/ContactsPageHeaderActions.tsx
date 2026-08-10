@@ -2,7 +2,7 @@ import { UserPlus, AlertTriangle, Download, Loader2 } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface ContactsPageHeaderActionsProps {
+interface ContactsPageHeaderActionsProps {
   canExport: boolean;
   canRead: boolean;
   canWrite: boolean;

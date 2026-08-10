@@ -18,6 +18,14 @@ export function formatContactPhoneDisplay(
   return { countryCode: parsed.countryCode || countryCodeFallback, formattedNumber: parsed.number || rawNumber };
 }
 
+/** Formats a full number with country code (kept whole for WhatsApp/messaging). */
+export function formatContactPhoneFull(
+  rawNumber: string | undefined | null,
+  countryCodeFallback = "",
+): string {
+  return formatPhoneWithCountryCode(rawNumber, countryCodeFallback) || String(rawNumber || "");
+}
+
 /** Formats tel: link href for telephone actions. */
 export function formatTelHref(phoneStr: string | undefined | null): string {
   if (!phoneStr) return "#";

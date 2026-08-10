@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { FieldDefinition } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-export interface ContactCustomFieldControlItem {
+interface ContactCustomFieldControlItem {
   field: FieldDefinition;
   fieldId: string;
   value: unknown;

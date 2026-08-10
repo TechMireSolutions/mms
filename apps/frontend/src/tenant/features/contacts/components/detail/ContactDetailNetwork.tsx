@@ -13,7 +13,7 @@ import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import { ContactNetworkLinkCard } from "./ContactNetworkLinkCard";
 import { DETAIL_STYLES } from "./contactDetailStyles";
 
-export interface ContactDetailNetworkProps {
+interface ContactDetailNetworkProps {
   contact: Contact;
   allContacts: Contact[];
   onNavigateToContact: (targetId: string | number) => void;

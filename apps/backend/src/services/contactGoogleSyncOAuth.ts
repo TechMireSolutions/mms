@@ -36,7 +36,7 @@ export class GoogleSyncError extends Error {
 }
 
 /** Path must be Contacts Work; host must match apex/tenant allowlist (not path-only). */
-export function isAllowedOAuthRedirectUri(redirectUri: string): boolean {
+function isAllowedOAuthRedirectUri(redirectUri: string): boolean {
   try {
     const url = new URL(redirectUri);
     const pathOk = url.pathname === '/contacts' || url.pathname.endsWith('/contacts');

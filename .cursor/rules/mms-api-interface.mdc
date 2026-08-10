@@ -57,7 +57,7 @@ API errors must resolve to a uniform JSON payload format:
 Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload) must **upsert** rows by composite tenant key (`bulkSave` + `conflictTarget`, merge-by-id helpers, or `bulkUpsertCustomTabsForModule`).
 - **Allowed**: Insert new ids; update existing ids; leave rows absent from the payload untouched.
 - **Bulk id lists**: Prefer shared `bulkIdsBodySchema` / `bulkStringIdsBodySchema` (`.max(500)`) for bulk-delete / bulk-restore — do not fork unbounded id arrays per module.
-- **Contacts list/filter query**: Shared `contactsListQuerySchema` / `paginateContacts` — do not fork Messaging “select all with email” flags per route.
+- **Contacts list/filter query**: Shared `contactsListQuerySchema` (SQL `listPage` pagination) — do not fork Messaging “select all with email” flags per route.
 - **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Prefer `bulkSave` / `bulkUpsertCustomTabsForModule`. Keep replace helpers only for migrations, intentional admin clears, backup restore, or documented one-shot archives.
 - Frontend mutations: await success before closing forms — **`mms-module-architecture.mdc` §7**.
 

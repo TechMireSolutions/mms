@@ -2,21 +2,18 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { Contact, User } from '@mms/shared';
 import { summarizeContactFieldChanges } from '@mms/shared';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
-import {
-  getContactById,
-  updateContactById,
-  upsertContact,
-  ContactPermissionError,
-  ContactUniqueFieldError,
-} from '../../../services/contactService.js';
+import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
+import { ContactPermissionError } from '../../../contacts/use-cases/contactNormalizeUseCases.js';
+import { ContactUniqueFieldError } from '../../../contacts/use-cases/contactUniqueFieldUseCases.js';
 import { validateContactDynamic } from '../../../services/contactValidationService.js';
-import { canReadContacts, canWriteContacts } from '../../../services/rbacService.js';
+import { canWriteContacts } from '../../../services/rbacService.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { executeDynamicValidation, parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { resourceIdParamsSchema } from '../../../validation/commonSchemas.js';
 import {
   auditContact,
   parseContactWriteBody,
+  requireContactPermission,
   sanitizeOneForUser,
 } from './contactRouteHelpers.js';
 
@@ -53,7 +50,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     schema: { body: { type: 'object', additionalProperties: true } },
   }, async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
 
     const parsed = await parseContactWriteBody(request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
@@ -66,7 +63,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     const lang = (request.headers['accept-language'] as string) || 'en';
 
     try {
-      const { contact, created, restoredFromDelete } = await upsertContact(parsed.data as Contact, {
+      const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(parsed.data as Contact, {
         user,
         language: lang,
       });
@@ -96,11 +93,11 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
     try {
-      const contact = await getContactById(params.data.id);
+      const contact = await contactUseCases.getContactById(params.data.id);
       if (!contact) {
         return sendNotFound(reply, 'Contact not found');
       }
@@ -124,7 +121,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     if (!isOwnContact && !canWriteContacts(user)) {
       return sendForbidden(reply);
     }
-    const before = await getContactById(params.data.id);
+    const before = await contactUseCases.getContactById(params.data.id);
     if (!before) {
       return sendNotFound(reply, 'Contact not found');
     }
@@ -153,7 +150,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       const isSelfService = isOwnContact && !canWriteContacts(user);
-      const updated = await updateContactById(
+      const updated = await contactUseCases.updateContactById(
         params.data.id,
         {
           ...body.data,

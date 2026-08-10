@@ -4,7 +4,7 @@ import { studentsListQuerySchema } from '@mms/shared';
 import {
   csvExportBodySchema,
   moduleExportAuditBodySchema,
-  studentSetupAuditBodySchema,
+  moduleFieldsPrefsAuditBodySchema,
 } from './csvExportBodySchema.js';
 
 export { studentsListQuerySchema };
@@ -37,6 +37,6 @@ export const studentsBulkStatusSchema = z.object({
 
 export const studentExportAuditSchema = moduleExportAuditBodySchema;
 
-export const studentSetupAuditSchema = studentSetupAuditBodySchema;
+export const studentSetupAuditSchema = moduleFieldsPrefsAuditBodySchema;
 
 export const studentsCsvExportBodySchema = csvExportBodySchema(studentsListQuerySchema);

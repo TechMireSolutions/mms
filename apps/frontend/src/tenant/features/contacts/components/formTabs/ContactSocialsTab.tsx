@@ -4,7 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { resolveSocialPlatformLabel } from "@/lib/contacts/contactI18n";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
-export interface ContactSocialsTabProps extends ContactSubListTabBaseProps {
+interface ContactSocialsTabProps extends ContactSubListTabBaseProps {
   socialPlatforms: string[];
   onUpdateSocialPlatforms: (platforms: string[]) => void;
 }

@@ -8,7 +8,7 @@ import {
 } from "./ContactDetailChannelSections";
 import { ContactDetailCustomCollections } from "./ContactDetailCustomCollections";
 
-export interface ContactDetailCollectionsProps {
+interface ContactDetailCollectionsProps {
   contact: Contact;
   visibleCollectionFields: {
     phones: { enabled?: boolean }[];

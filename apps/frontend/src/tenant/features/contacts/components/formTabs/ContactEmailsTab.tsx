@@ -4,7 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
-export interface ContactEmailsTabProps extends ContactSubListTabBaseProps {
+interface ContactEmailsTabProps extends ContactSubListTabBaseProps {
   emailLabels: string[];
   onUpdateEmailLabels: (labels: string[]) => void;
 }

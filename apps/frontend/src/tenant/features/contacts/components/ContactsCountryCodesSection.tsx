@@ -6,7 +6,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { normalizeDialCode } from "@/lib/contacts/countryCodeOptions";
 
-export interface ContactsCountryCodesSectionProps {
+interface ContactsCountryCodesSectionProps {
   countryCodes: Array<{ country: string; code: string }>;
   onUpdateCountryCodes: (countryCodes: Array<{ country: string; code: string }>) => void;
 }

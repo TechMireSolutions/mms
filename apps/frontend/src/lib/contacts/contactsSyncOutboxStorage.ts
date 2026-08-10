@@ -10,7 +10,7 @@ export type ContactsOutboxEntry =
 
 export type ContactsSyncConflict = ContactsOutboxEntry & { failedAt: string };
 
-export function readJson<T>(key: string, fallback: T): T {
+function readJson<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;

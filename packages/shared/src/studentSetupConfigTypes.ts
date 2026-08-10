@@ -4,7 +4,7 @@ import {
   DEFAULT_STUDENTS_SETTINGS,
   type StudentsSettings,
 } from './studentsModuleSettings.js';
-import { STUDENT_TAB_REGISTRY } from './moduleFieldSetupPersons.js';
+import { STUDENT_TAB_REGISTRY, STUDENT_LOCKED_ENABLED_TABS } from './moduleFieldSetupPersons.js';
 import { normalizeStudentsSettings } from './studentSettingsUtils.js';
 import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
 
@@ -146,6 +146,49 @@ export function mergeStudentsFormTabsFromApi(
     seenKeys.add(tab.key);
     return true;
   });
+}
+
+/** Default enabled tab ids from the Students tab registry seed. */
+export function defaultStudentEnabledTabIds(): string[] {
+  return STUDENT_TAB_REGISTRY.filter((tab) => tab.enabled !== false).map((tab) => tab.key);
+}
+
+export type StudentEnabledTabsInput = {
+  enabledTabs?: readonly string[] | null;
+  formTabs?: readonly TabDefinition[] | null;
+};
+
+function withStudentLockedEnabledTabs(tabIds: Iterable<string>): string[] {
+  const set = new Set([...tabIds].map((tabId) => tabId.trim()).filter(Boolean));
+  for (const locked of STUDENT_LOCKED_ENABLED_TABS) {
+    set.add(locked);
+  }
+  return [...set];
+}
+
+/**
+ * Resolves Students form / Setup / detail / export enabled tab ids.
+ * When `formTabs` is non-empty, each tab's `enabled` flag is authoritative (Contacts-shaped).
+ * Otherwise falls back to non-empty `enabledTabs`, then registry defaults.
+ * Locked tabs ({@link STUDENT_LOCKED_ENABLED_TABS}) are always included.
+ */
+export function resolveStudentEnabledTabIds(
+  settings?: StudentEnabledTabsInput | null,
+): string[] {
+  const formTabs = settings?.formTabs;
+  if (formTabs && formTabs.length > 0) {
+    const fromFormTabs = formTabs
+      .filter((tab) => tab.enabled !== false)
+      .map((tab) => tab.key);
+    return withStudentLockedEnabledTabs(fromFormTabs);
+  }
+
+  const enabledTabs = settings?.enabledTabs;
+  const source =
+    enabledTabs && enabledTabs.length > 0
+      ? enabledTabs.filter((tabId) => Boolean(tabId?.trim()))
+      : defaultStudentEnabledTabIds();
+  return withStudentLockedEnabledTabs(source);
 }
 
 export { PREF_KEYS as STUDENT_MODULE_PREFERENCE_KEYS };

@@ -13,7 +13,7 @@ import {
 } from "./ContactSubListCustomFields";
 import type { ContactSubListTabBaseProps } from "./types";
 
-export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
+interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
 }
 

@@ -5,18 +5,17 @@ import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmp
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 import { useTranslation } from "@/hooks/useTranslation";
 
-type DirectoryColumn = { id: string; label: string; sortField?: string; width?: number };
-
-export interface ContactsWorkListBodyProps {
+interface ContactsWorkListBodyProps {
   isWorkError: boolean;
   isWorkLoading: boolean;
   isWorkFetching: boolean;
   onRetryWork: () => void;
   workContacts: Contact[];
-  tableColumns: DirectoryColumn[];
+  tableColumns: ContactsColumnConfig[];
   hasActiveFilters: boolean;
   viewingDeleted: boolean;
   canWrite: boolean;

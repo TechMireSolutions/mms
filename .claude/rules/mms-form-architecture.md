@@ -15,7 +15,6 @@ paths:
   - "packages/shared/src/contactItemNormalize.ts"
   - "packages/shared/src/contactSyncDiff.ts"
   - "apps/backend/src/db/schema.ts"
-  - "apps/backend/src/services/contactServiceMutate.ts"
 ---
 
 # MMS Form Architecture

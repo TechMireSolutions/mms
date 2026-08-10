@@ -11,20 +11,19 @@ import {
   runGoogleContactsSync,
   setContactGoogleSyncConfig,
 } from '../../../services/contactGoogleSyncService.js';
-import { canWriteContacts } from '../../../services/rbacService.js';
 import {
   contactGoogleSyncAuditSchema,
   contactGoogleSyncConfigSchema,
   contactGoogleSyncExchangeSchema,
 } from '../../../validation/contactSchemas.js';
-import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
+import { sendDatabaseError } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { auditContact } from './contactRouteHelpers.js';
+import { auditContact, requireContactPermission } from './contactRouteHelpers.js';
 
 export const contactGoogleSyncRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/google-sync', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
     try {
       const config = await getContactGoogleSyncConfig(String(user.id));
       return reply.send({ config: redactGoogleSyncConfigForClient(config) });
@@ -35,7 +34,7 @@ export const contactGoogleSyncRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.put('/google-sync', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
     const parsed = parseRequest(contactGoogleSyncConfigSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
@@ -61,7 +60,7 @@ export const contactGoogleSyncRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete('/google-sync', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
     try {
       await clearContactGoogleSyncConfig(String(user.id));
       await auditContact(user, 'contact.google_sync.clear', 'Disconnected Google Contacts sync', 'google-sync');
@@ -73,7 +72,7 @@ export const contactGoogleSyncRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/google-sync/exchange', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
     const parsed = parseRequest(contactGoogleSyncExchangeSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
@@ -94,7 +93,7 @@ export const contactGoogleSyncRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/google-sync/run', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
     try {
       const result = await runGoogleContactsSync(String(user.id));
       await auditContact(
@@ -117,7 +116,7 @@ export const contactGoogleSyncRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/google-sync/audit', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'write')) return;
     const parsed = parseRequest(contactGoogleSyncAuditSchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const { action } = parsed.data;

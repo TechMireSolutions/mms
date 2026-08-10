@@ -1,24 +1,28 @@
-import type { AppTranslationKey } from '@mms/shared';
-import { toTitleCase } from '@mms/shared';
-import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import { resolveStudentStatuses } from '@mms/shared';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
+import { createModuleStatusUi } from '@/lib/moduleStatusUi';
 
-type Translate = (key: AppTranslationKey) => string;
-
-/** Localized label for a student status slug (configured or default). */
-export function studentStatusLabel(t: Translate, status: string): string {
-  const key = `students.form.status.${status}` as AppTranslationKey;
-  const translated = t(key);
-  return translated === key ? toTitleCase(status) : translated;
+/** Badge / chip tone classes for a student status (tenant-added statuses fall back to muted). */
+function studentStatusTone(status: string): string {
+  switch (status) {
+    case 'active':
+      return SEMANTIC_BADGE.success;
+    case 'suspended':
+      return SEMANTIC_BADGE.warning;
+    case 'graduated':
+      return SEMANTIC_BADGE.info;
+    case 'transferred':
+      return SEMANTIC_BADGE.infoStrong;
+    default:
+      return SEMANTIC_BADGE.muted;
+  }
 }
 
-/** StatusBadge config for student statuses — tones + translated labels. */
-export function studentStatusBadgeConfig(t: Translate): Record<string, StatusBadgeConfigItem> {
-  return {
-    active: { label: studentStatusLabel(t, 'active'), cls: SEMANTIC_BADGE.success },
-    inactive: { label: studentStatusLabel(t, 'inactive'), cls: SEMANTIC_BADGE.muted },
-    suspended: { label: studentStatusLabel(t, 'suspended'), cls: SEMANTIC_BADGE.warning },
-    graduated: { label: studentStatusLabel(t, 'graduated'), cls: SEMANTIC_BADGE.info },
-    transferred: { label: studentStatusLabel(t, 'transferred'), cls: SEMANTIC_BADGE.infoStrong },
-  };
-}
+const studentStatusUi = createModuleStatusUi({
+  translationPrefix: 'students.form.status',
+  resolveStatuses: resolveStudentStatuses,
+  toneForStatus: studentStatusTone,
+});
+
+export const studentStatusLabel = studentStatusUi.statusLabel;
+export const studentStatusBadgeConfig = studentStatusUi.statusBadgeConfig;

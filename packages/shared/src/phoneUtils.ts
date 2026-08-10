@@ -140,7 +140,7 @@ export function getPrimaryPhone(contact: Partial<Contact>, defaultCountryCode: s
 /**
  * Digits-only phone comparison key (last 10 digits when long enough).
  */
-export const normalizePhoneForComparison = (phoneNumber: unknown): string => {
+const normalizePhoneForComparison = (phoneNumber: unknown): string => {
   if (!phoneNumber) return "";
   const digits = String(phoneNumber).replace(/[^\d]/g, "");
   return digits.length >= 10 ? digits.slice(-10) : digits;

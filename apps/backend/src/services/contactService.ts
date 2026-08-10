@@ -1,38 +1,35 @@
-/** Contact load, prepare, upsert, and soft-delete service API. */
-export type { ContactRuntimeDefaults } from './contactServiceLoad.js';
-export {
-  loadContacts,
+/**
+ * Contacts use-case seam (Clean Architecture).
+ *
+ * The feature module lives under `src/contacts/`: repository interface +
+ * Drizzle adapter in `src/contacts/repository/`, orchestration use cases in
+ * `src/contacts/use-cases/`. This file keeps the historical public import path
+ * stable for routes and cross-module services while binding every export to
+ * the composition-root instance (`contactUseCases`) — the single production
+ * entry to the use-case layer.
+ */
+import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
+
+export const {
   loadContactsPage,
-  loadContactsCommandMetrics,
   loadContactRuntimeDefaults,
-  loadContactsReportAnalytics,
-  loadContactFieldUsageCount,
-  loadContactFieldUsageCounts,
-  loadContactsWidgetAggregates,
   loadContactsByIds,
-  loadContactDuplicatePairsPage,
   getContactById,
-  countContacts,
-} from './contactServiceLoad.js';
-export type {
-  UpsertContactOptions,
-  UpdateContactByIdOptions,
-  ContactBulkRestoreResult,
-  ContactBulkRestoreConflict,
-} from './contactServiceMutate.js';
-export {
-  ContactPermissionError,
-  normalizeContactPhones,
-  prepareContactRecord,
   upsertContact,
   updateContactById,
-  mergeContactsById,
   restoreContactById,
   bulkRestoreContacts,
-  softDeleteContactById,
   bulkSoftDeleteContacts,
-} from './contactServiceMutate.js';
+  applyContactRelationshipInference,
+} = contactUseCases;
+
+// Non-instance exports kept on the stable path (routes + cross-module services).
 export {
   ContactUniqueFieldError,
-  assertContactUniqueFields,
-} from './contactUniqueValidationService.js';
+} from '../contacts/use-cases/contactUniqueFieldUseCases.js';
+export {
+  prepareContactRecord,
+} from '../contacts/use-cases/contactNormalizeUseCases.js';
+export type {
+  ContactRuntimeDefaults,
+} from '../contacts/use-cases/contactUseCases.js';

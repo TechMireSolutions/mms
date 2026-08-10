@@ -28,7 +28,6 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
-const mockLoadContacts = vi.fn();
 const mockLoadContactsPage = vi.fn();
 const mockCountContacts = vi.fn();
 const mockGetContactById = vi.fn();
@@ -66,33 +65,31 @@ const mockMatchContactIdentityIndex = vi.fn().mockResolvedValue({
   names: [],
 });
 
-vi.mock('../services/contactIdentityMatchService.js', () => ({
-  matchContactIdentityIndex: (...args: unknown[]) => mockMatchContactIdentityIndex(...args),
-}));
-
-vi.mock('../services/contactService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/contactService.js')>();
+vi.mock('../contacts/use-cases/contactUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../contacts/use-cases/contactUseCases.js')>();
   return {
     ...actual,
-    loadContacts: (...args: unknown[]) => mockLoadContacts(...args),
-    loadContactsPage: (...args: unknown[]) => mockLoadContactsPage(...args),
-    countContacts: (...args: unknown[]) => mockCountContacts(...args),
-    getContactById: (...args: unknown[]) => mockGetContactById(...args),
-    upsertContact: (...args: unknown[]) => mockUpsertContact(...args),
-    updateContactById: (...args: unknown[]) => mockUpdateContactById(...args),
-    softDeleteContactById: (...args: unknown[]) => mockSoftDeleteContactById(...args),
-    restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
-    bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
-    bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
-    mergeContactsById: (...args: unknown[]) => mockMergeContactsById(...args),
-    loadContactsCommandMetrics: (...args: unknown[]) => mockLoadContactsCommandMetrics(...args),
-    loadContactsReportAnalytics: (...args: unknown[]) => mockLoadContactsReportAnalytics(...args),
-    loadContactsWidgetAggregates: (...args: unknown[]) => mockLoadContactsWidgetAggregates(...args),
-    loadContactsByIds: (...args: unknown[]) => mockLoadContactsByIds(...args),
-    loadContactFieldUsageCount: (...args: unknown[]) => mockLoadContactFieldUsageCount(...args),
-    loadContactFieldUsageCounts: (...args: unknown[]) => mockLoadContactFieldUsageCounts(...args),
-    loadContactDuplicatePairsPage: vi.fn(),
-    prepareContactRecord: vi.fn(),
+    contactUseCases: {
+      ...actual.contactUseCases,
+      loadContactsPage: (...args: unknown[]) => mockLoadContactsPage(...args),
+      countContacts: (...args: unknown[]) => mockCountContacts(...args),
+      getContactById: (...args: unknown[]) => mockGetContactById(...args),
+      upsertContact: (...args: unknown[]) => mockUpsertContact(...args),
+      updateContactById: (...args: unknown[]) => mockUpdateContactById(...args),
+      softDeleteContactById: (...args: unknown[]) => mockSoftDeleteContactById(...args),
+      restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
+      bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
+      bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
+      mergeContactsById: (...args: unknown[]) => mockMergeContactsById(...args),
+      loadContactsCommandMetrics: (...args: unknown[]) => mockLoadContactsCommandMetrics(...args),
+      loadContactsReportAnalytics: (...args: unknown[]) => mockLoadContactsReportAnalytics(...args),
+      loadContactsWidgetAggregates: (...args: unknown[]) => mockLoadContactsWidgetAggregates(...args),
+      loadContactsByIds: (...args: unknown[]) => mockLoadContactsByIds(...args),
+      loadContactFieldUsageCount: (...args: unknown[]) => mockLoadContactFieldUsageCount(...args),
+      loadContactFieldUsageCounts: (...args: unknown[]) => mockLoadContactFieldUsageCounts(...args),
+      loadContactDuplicatePairsPage: vi.fn(),
+      matchContactIdentityIndex: (...args: unknown[]) => mockMatchContactIdentityIndex(...args),
+    },
   };
 });
 
@@ -106,6 +103,9 @@ vi.mock('../services/contactPreferencesService.js', () => ({
   setUserColumnPreferences: (...args: unknown[]) => mockSetUserColumnPreferences(...args),
   loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
   saveContactPreferences: (...args: unknown[]) => mockSaveContactPreferences(...args),
+}));
+
+vi.mock('../services/contactSavedReportsService.js', () => ({
   listContactsSavedReports: (...args: unknown[]) => mockListContactsSavedReports(...args),
   createContactsSavedReport: (...args: unknown[]) => mockCreateContactsSavedReport(...args),
   deleteContactsSavedReport: (...args: unknown[]) => mockDeleteContactsSavedReport(...args),
@@ -187,7 +187,6 @@ describe('contacts REST routes', () => {
       isConnected: false,
     });
     mockRedactGoogleSyncConfigForClient.mockReset().mockImplementation((config: unknown) => config);
-    mockLoadContacts.mockReset().mockResolvedValue([sampleContact]);
     mockCountContacts.mockReset().mockResolvedValue(1);
     mockGetContactById.mockReset().mockResolvedValue(sampleContact);
     mockLoadContactsPage.mockReset().mockResolvedValue({
@@ -437,10 +436,9 @@ describe('contacts REST routes', () => {
         w1: { value: 10, totalCount: 10, chartData: [{ name: 'Male', value: 6 }] },
       },
     });
-    expect(mockLoadContactsWidgetAggregates).toHaveBeenCalledWith(
-      [expect.objectContaining({ id: 'w1', operation: 'count', xAxisField: 'gender' })],
-      expect.anything(),
-    );
+    expect(mockLoadContactsWidgetAggregates).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'w1', operation: 'count', xAxisField: 'gender' }),
+    ]);
     await app.close();
   });
 

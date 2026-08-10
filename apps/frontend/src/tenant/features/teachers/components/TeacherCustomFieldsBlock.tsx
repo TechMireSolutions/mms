@@ -1,16 +1,10 @@
 import React from "react";
-import { Field } from "@/components/ui/FormPrimitives";
-import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { useTranslation } from "@/hooks/useTranslation";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { cn } from "@/lib/utils";
 import {
   listEnabledCustomTeacherFormFields,
   type FieldDefinition,
   type Teacher,
 } from "@mms/shared";
-import { LayoutGrid } from "lucide-react";
+import { ModuleCustomFieldsBlock } from "@/components/ui/ModuleCustomFieldsBlock";
 
 interface TeacherCustomFieldsBlockProps {
   teacherDraft: Partial<Teacher>;
@@ -23,6 +17,7 @@ interface TeacherCustomFieldsBlockProps {
   className?: string;
 }
 
+/** Teachers custom-fields block — thin adapter over the shared module block. */
 export function TeacherCustomFieldsBlock({
   teacherDraft,
   formInstanceId,
@@ -33,48 +28,19 @@ export function TeacherCustomFieldsBlock({
   hideWhenEmpty = true,
   className,
 }: TeacherCustomFieldsBlockProps): React.JSX.Element | null {
-  const { t } = useTranslation();
-  const customFields = listEnabledCustomTeacherFormFields(fields, tabId);
-
-  if (customFields.length === 0) {
-    if (hideWhenEmpty) return null;
-    return (
-      <EmptyState
-        compact
-        icon={LayoutGrid}
-        title={t("teachers.form.customFieldsEmpty")}
-      />
-    );
-  }
-
   return (
-    <div className={cn("grid grid-cols-1 gap-4 @md:grid-cols-2", className)}>
-      {customFields.map((field) => {
-        const fieldId = `tf-${formInstanceId}-${field.key}`;
-        const error = getFieldError(field.key);
-        const rawValue = (teacherDraft as Record<string, unknown>)[field.key];
-        const inputField: FieldDefinition = { ...field, key: fieldId };
-        return (
-          <div
-            key={field.key}
-            className={field.type === "textarea" || field.type === "tags" || field.type === "datetime" ? "@md:col-span-2" : undefined}
-          >
-            <Field
-              label={resolveRegistryLabel(field, t)}
-              required={field.required}
-              error={error}
-              id={fieldId}
-            >
-              <CustomFieldInput
-                field={inputField}
-                value={rawValue}
-                onChange={(nextValue) => updateDraft({ [field.key]: nextValue } as Partial<Teacher>)}
-                error={Boolean(error)}
-              />
-            </Field>
-          </div>
-        );
-      })}
-    </div>
+    <ModuleCustomFieldsBlock<Teacher>
+      draft={teacherDraft}
+      formInstanceId={formInstanceId}
+      fields={fields}
+      tabId={tabId}
+      getFieldError={getFieldError}
+      updateDraft={updateDraft}
+      hideWhenEmpty={hideWhenEmpty}
+      className={className}
+      listCustomFields={listEnabledCustomTeacherFormFields}
+      idPrefix="tf"
+      emptyKey="teachers.form.customFieldsEmpty"
+    />
   );
 }

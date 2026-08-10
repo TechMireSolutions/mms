@@ -1,5 +1,6 @@
 import type { Permission } from './permissions.js';
 import { DEFAULT_SETTINGS_SUB_TABS } from './contactTypes.js';
+import { WHATSAPP_STATUS_VALUES } from './contactEntityTypes.js';
 import { z } from 'zod';
 import {
   activitySchema,
@@ -46,7 +47,7 @@ export const contactRecordSchema = z
     deletedAt: z.string().optional(),
     deletedBy: z.string().optional(),
     deletionReason: z.string().optional(),
-    whatsappStatus: z.enum(['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED']).optional(),
+    whatsappStatus: z.enum(WHATSAPP_STATUS_VALUES).optional(),
     lastCheckedAt: z.string().nullable().optional(),
     phones: z.array(phoneNumberSchema).optional(),
     emails: z.array(emailAddressSchema).optional(),

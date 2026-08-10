@@ -4,11 +4,11 @@
  */
 import { normalizeSearchString } from "./contactsSearchUtils.js";
 import { normalizeToE164 } from "./phoneUtils.js";
-import type { Contact, EmailAddress, PhoneNumber } from "./contactEntityTypes.js";
+import type { Contact } from "./contactEntityTypes.js";
 import type { FieldDefinition } from "./contactFieldSchemaTypes.js";
 import { isContactCustomCollectionTab, isContactSeedFormTab } from "./contactEnabledTabs.js";
 
-export type UniqueContactFieldRef = {
+type UniqueContactFieldRef = {
   tabId: string;
   fieldKey: string;
   field: FieldDefinition;
@@ -172,20 +172,4 @@ export function collectUniqueContactFieldValues(
     }
   }
   return out;
-}
-
-/** Digits-only E.164 helpers retained for tests / callers working with phone rows. */
-export function comparableContactPhone(
-  phone: Pick<PhoneNumber, "number" | "countryCode">,
-  defaultPhoneCountryCode = "",
-): string {
-  return normalizeUniqueContactFieldValue("phones", "number", phone.number, {
-    defaultPhoneCountryCode,
-    row: { countryCode: phone.countryCode },
-  });
-}
-
-/** Lowercased email for unique comparison. */
-export function comparableContactEmail(email: Pick<EmailAddress, "address">): string {
-  return normalizeUniqueContactFieldValue("emails", "address", email.address);
 }

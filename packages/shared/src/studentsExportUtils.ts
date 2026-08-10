@@ -3,10 +3,25 @@ import { canViewContactField, canViewContactTab } from './contactFieldAccess.js'
 import type { Student } from './studentTypes.js';
 import type { StudentsSettings } from './studentsModuleSettings.js';
 import { primaryResponsibleAdultDisplayName } from './studentGuardianFromContacts.js';
+import type { AppTranslationKey } from './appTranslations.js';
 
 export interface StudentExportColumn {
   id: string;
   label: string;
+}
+
+/** Default CSV export columns (English labels; FE may re-label via `t()`). */
+export const DEFAULT_STUDENT_EXPORT_COLUMNS: StudentExportColumn[] = [
+  { id: 'name', label: 'Student' },
+  { id: 'grNumber', label: 'GR Number' },
+  { id: 'gender', label: 'Gender' },
+  { id: 'status', label: 'Status' },
+  { id: 'parents', label: 'Parent / Guardian' },
+];
+
+/** Translation key for a Students column label (`students.columns.${columnKey}` fallback). */
+export function studentColumnLabelKey(columnKey: string): AppTranslationKey {
+  return `students.columns.${columnKey}` as AppTranslationKey;
 }
 
 /** Work/CSV column ids that alias a Setup field key. */

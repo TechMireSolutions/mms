@@ -48,6 +48,4 @@ export async function bulkSaveContacts(tenant: string, records: Contact[]): Prom
   await contactRepo.bulkSave(tenant, records.map(hydrateContact));
 }
 
-export const deleteContact = contactRepo.deleteById;
 export const replaceContactsForWorkspace = contactRepo.replaceForWorkspace;
-export const deleteContactsByWorkspace = contactRepo.deleteByWorkspace;

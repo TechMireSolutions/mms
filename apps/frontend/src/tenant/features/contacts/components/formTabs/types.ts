@@ -21,7 +21,7 @@ export type UpdateSubListItem = <K extends ContactSubListKey>(
 
 export type RemoveSubListItem = (fieldKey: ContactSubListKey, idx: number) => void;
 
-export interface ContactSubListMutationProps {
+interface ContactSubListMutationProps {
   addSubListItem: AddSubListItem;
   ensureSubListItem: EnsureSubListItem;
   updateSubListItem: UpdateSubListItem;

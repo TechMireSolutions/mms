@@ -5,7 +5,7 @@ import { ContactsCountryCodesSection } from "@/tenant/features/contacts/componen
 import { ContactsPreferencesGeneralSection } from "@/tenant/features/contacts/components/ContactsPreferencesGeneralSection";
 import { ContactsPreferencesDuplicateSection } from "@/tenant/features/contacts/components/ContactsPreferencesDuplicateSection";
 
-export interface ContactsPreferencesSectionProps {
+interface ContactsPreferencesSectionProps {
   prefs: ContactPreferences;
   isPrefsDirty: boolean;
   countryOptions: Array<{ value: string; label: string }>;

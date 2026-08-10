@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { apiJson } from "@/lib/apiClient";
-import { uniqueRegistryIds } from "@/lib/registryResolve";
+import { createPersonModuleResolveQueries } from "@/lib/query/createPersonModuleResolveQueries";
 import {
   STUDENTS_API,
   STUDENTS_QUERY_KEY,
@@ -76,42 +75,14 @@ export function useStudentById(studentId: string | undefined, enabled = true) {
   });
 }
 
-export function useStudentLinkedContactIds(excludeStudentId?: string, enabled = true) {
-  const { isAuthenticated } = useAuth();
-  const queryString = excludeStudentId ? `?excludeId=${encodeURIComponent(excludeStudentId)}` : "";
-  return useQuery({
-    queryKey: [...STUDENTS_QUERY_KEY, "linked-contact-ids", excludeStudentId ?? ""] as const,
-    queryFn: async ({ signal }) => {
-      const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(
-        `${STUDENTS_API}/linked-contact-ids${queryString}`,
-        { signal },
-      );
-      return linkedContactsResponse.contactIds;
-    },
-    enabled: isAuthenticated && enabled,
-    staleTime: 30_000,
-  });
-}
+const studentResolveQueries = createPersonModuleResolveQueries<StudentRecord, Student>({
+  moduleQueryKey: STUDENTS_QUERY_KEY,
+  apiBase: STUDENTS_API,
+  responseKey: "students",
+  toHydrated: (rows) => rows as unknown as Student[],
+});
 
-/** Batch-resolve student rows by id (globle2 §10 — cross-module labels). */
-export function useStudentsByIds(ids: (string | number | null | undefined)[]) {
-  const { isAuthenticated } = useAuth();
-  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
-  const signature = normalized.join(",");
-
-  return useQuery({
-    queryKey: [...STUDENTS_QUERY_KEY, "resolve", signature] as const,
-    queryFn: async ({ signal }) => {
-      const studentsResponse = await apiJson<{ students: StudentRecord[] }>(`${STUDENTS_API}/resolve`, {
-        method: "POST",
-        body: JSON.stringify({ ids: normalized }),
-        signal,
-      });
-      return studentsResponse.students as unknown as Student[];
-    },
-    enabled: isAuthenticated && normalized.length > 0,
-    staleTime: 30_000,
-  });
-}
+export const useStudentLinkedContactIds = studentResolveQueries.useLinkedContactIds;
+export const useStudentsByIds = studentResolveQueries.useByIds;
 
 export type { StudentsPaginatedParams };

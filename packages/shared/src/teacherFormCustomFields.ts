@@ -1,17 +1,12 @@
 import { INITIAL_TEACHERS_FIELD_SEED } from './moduleFieldSetupPersons.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
+import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
+
+const helpers = createFormCustomFieldHelpers(INITIAL_TEACHERS_FIELD_SEED);
 
 /** Keys owned by static teacher form chrome ({@link INITIAL_TEACHERS_FIELD_SEED}). */
-export function listTeacherSystemFormFieldKeys(): ReadonlySet<string> {
-  const keys = new Set<string>();
-  for (const tabFields of Object.values(INITIAL_TEACHERS_FIELD_SEED)) {
-    for (const field of tabFields) {
-      keys.add(field.key);
-    }
-  }
-  return keys;
-}
+export const listTeacherSystemFormFieldKeys = helpers.listSystemFormFieldKeys;
 
 /** Deep-clone {@link INITIAL_TEACHERS_FIELD_SEED} for defaults and Setup overlays. */
 export function cloneTeacherFieldSeed(): Record<string, FieldDefinition[]> {
@@ -59,34 +54,10 @@ export function resolveTeacherFieldsMapForColumnSync(
  * When `tabId` is set, only fields stored under that config tab are returned.
  * When omitted, returns enabled non-seed fields from every tab.
  */
-export function listEnabledCustomTeacherFormFields(
-  fields: Record<string, FieldDefinition[]>,
-  tabId?: string,
-): FieldDefinition[] {
-  const systemKeys = listTeacherSystemFormFieldKeys();
-  const byKey = new Map<string, FieldDefinition>();
-  const sourceTabs: FieldDefinition[][] =
-    tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
-
-  for (const tabFields of sourceTabs) {
-    for (const field of tabFields) {
-      if (!field.enabled || systemKeys.has(field.key)) continue;
-      if (!byKey.has(field.key)) {
-        byKey.set(field.key, field);
-      }
-    }
-  }
-
-  return [...byKey.values()].sort((left, right) => {
-    const orderDelta = (left.order ?? 0) - (right.order ?? 0);
-    return orderDelta !== 0 ? orderDelta : left.key.localeCompare(right.key);
-  });
-}
+export const listEnabledCustomTeacherFormFields = helpers.listEnabledCustomFormFields;
 
 /** True when `fieldId` is part of the static form seed for `tabId`. */
-export function isTeacherSystemFormField(tabId: string, fieldId: string): boolean {
-  return (INITIAL_TEACHERS_FIELD_SEED[tabId] ?? []).some((field) => field.key === fieldId);
-}
+export const isTeacherSystemFormField = helpers.isSystemFormField;
 
 /** Find a field definition by key across a tabbed Teachers fields map. */
 export function findTeacherFieldInMap(

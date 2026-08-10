@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { DashedFileDropZone } from "@/components/ui/DashedFileDropZone";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 
-export interface ContactDetailFilesProps {
+interface ContactDetailFilesProps {
   contact: Contact;
   canPersistContact: boolean;
   isDragging: boolean;

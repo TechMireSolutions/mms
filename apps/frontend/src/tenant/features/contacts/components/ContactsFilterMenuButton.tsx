@@ -13,7 +13,7 @@ import {
   ModuleFilterRadioGroup,
 } from "@/components/ui/ModuleFiltersMenuButton";
 
-export interface ContactsFilterMenuButtonProps {
+interface ContactsFilterMenuButtonProps {
   activeFilterCount: number;
   quickFilter: ContactsQuickFilter;
   onQuickFilterChange: (preset: ContactsQuickFilter) => void;

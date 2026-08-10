@@ -1,10 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { createModuleQueryInvalidator } from '@/lib/query/createModuleQueryInvalidator';
 import {
+  CONTACTS_QUERY_KEY,
   CONTACTS_DUPLICATES_QUERY_KEY,
   CONTACTS_METRICS_QUERY_KEY,
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
-  contactsListQueryKey,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 import {
   CONTACTS_FIELD_CONFIG_QUERY_KEY,
@@ -16,17 +17,21 @@ import {
   MESSAGING_RECIPIENTS_QUERY_KEY,
 } from '@/tenant/hooks/collections/messaging';
 
+const invalidateModuleQueries = createModuleQueryInvalidator({
+  list: CONTACTS_QUERY_KEY,
+  count: CONTACTS_QUERY_KEY,
+  metrics: CONTACTS_METRICS_QUERY_KEY,
+  widgetAggregates: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
+  fieldConfig: CONTACTS_FIELD_CONFIG_QUERY_KEY,
+  preferences: CONTACTS_PREFERENCES_QUERY_KEY,
+  lookups: CONTACTS_LOOKUPS_QUERY_KEY,
+});
+
 /** Invalidate Contacts + messaging hydrate Query keys (mutations + live push). */
 export function invalidateContactsQueries(queryClient: QueryClient): void {
-  void queryClient.invalidateQueries({ queryKey: contactsListQueryKey(false) });
-  void queryClient.invalidateQueries({ queryKey: contactsListQueryKey(true) });
-  void queryClient.invalidateQueries({ queryKey: CONTACTS_METRICS_QUERY_KEY });
+  invalidateModuleQueries(queryClient);
   void queryClient.invalidateQueries({ queryKey: CONTACTS_REPORT_ANALYTICS_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: CONTACTS_FIELD_CONFIG_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: CONTACTS_PREFERENCES_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: CONTACTS_LOOKUPS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: MESSAGING_CONTACTS_RESOLVE_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: MESSAGING_RECIPIENTS_QUERY_KEY });
 }

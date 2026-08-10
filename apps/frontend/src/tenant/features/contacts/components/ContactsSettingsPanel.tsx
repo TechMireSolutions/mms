@@ -25,7 +25,7 @@ function SetupReadOnlyMessage(): JSX.Element {
   );
 }
 
-export interface ContactsSettingsPanelProps {
+interface ContactsSettingsPanelProps {
   onImport: (list: Contact[]) => void | Promise<void>;
   canWrite: boolean;
   canEditSetup: boolean;

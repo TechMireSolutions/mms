@@ -1,20 +1,14 @@
 /**
  * @file contactFieldsStore.ts
  * @description Contacts field configuration via `/api/contacts/field-config`.
+ * Thin adapter over the shared `createModuleSetupConfigApi` factory; the
+ * migrate + sanitize + merge-with-defaults pipeline stays contacts-local.
  */
-import { CONFIG_VERSION, FieldConfig, FieldDefinition } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import { CONFIG_VERSION, type FieldConfig, type FieldDefinition } from "@mms/shared";
+import { createModuleSetupConfigApi } from "@/lib/query/createModuleSetupConfigApi";
+import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 import { getContactFieldSystemDefaults, migrateContactFieldConfig } from "./contactFieldsMigration";
 import { sanitizeContactFieldConfig } from "./contactFieldsSanitize";
-
-const FIELD_CONFIG_API = "/api/contacts/field-config";
-
-let memoryConfig: FieldConfig | null = null;
-
-/** @deprecated Use sanitizeContactFieldConfig — kept for stable public export. */
-export function sanitizeConfig(config: FieldConfig): FieldConfig {
-  return sanitizeContactFieldConfig(config);
-}
 
 function mergeWithDefaults(parsed: FieldConfig): FieldConfig {
   const fallback = getContactFieldSystemDefaults();
@@ -47,47 +41,40 @@ function fieldConfigWithoutFormTabs(config: FieldConfig): Omit<FieldConfig, "for
   return { ...rest, version: CONFIG_VERSION };
 }
 
+const normalizeFieldConfig = (config: unknown): FieldConfig =>
+  mergeWithDefaults((config as FieldConfig | null) ?? getContactFieldSystemDefaults());
+
+/** Default compose: normalized field config (preferences are stored separately). */
+function composeSettings(
+  fieldConfig: unknown,
+  _preferences: unknown,
+  formTabs?: unknown[],
+): FieldConfig {
+  const config = normalizeFieldConfig(fieldConfig);
+  if (formTabs) config.formTabs = formTabs as FieldConfig["formTabs"];
+  return config;
+}
+
+const api = createModuleSetupConfigApi<FieldConfig, unknown>({
+  restBasePath: CONTACTS_API,
+  normalizeFieldConfig,
+  composeSettings,
+  normalizePrefs: (prefs: unknown) => prefs,
+  stripFieldConfig: fieldConfigWithoutFormTabs as (config: FieldConfig) => Record<string, unknown>,
+});
+
 /**
  * Sync read — last hydrated server config or system defaults.
  * Prefer Query (`useContactFieldConfigQuery`) for authenticated loads.
  */
-export function loadFieldConfig(): FieldConfig {
-  if (memoryConfig) return memoryConfig;
-  return getContactFieldSystemDefaults();
-}
+export const loadFieldConfig = api.getSettingsMemoryFallback;
 
-export function setFieldConfigMemory(config: FieldConfig): void {
-  memoryConfig = sanitizeContactFieldConfig(config);
-}
+export const setFieldConfigMemory = api.setFieldConfigMemory;
 
-export async function fetchFieldConfig(signal?: AbortSignal): Promise<FieldConfig> {
-  const response = await apiJson<{ config: FieldConfig | null }>(FIELD_CONFIG_API, { signal });
-  const merged = response.config
-    ? mergeWithDefaults(response.config)
-    : getContactFieldSystemDefaults();
-  memoryConfig = merged;
-  return merged;
-}
+export const fetchFieldConfig = api.fetchFieldConfig;
 
 /** Optimistic local write — does not hit the server. Prefer saveFieldConfigAsync. */
-export function saveFieldConfig(config: FieldConfig): void {
-  memoryConfig = sanitizeContactFieldConfig({
-    ...config,
-    version: CONFIG_VERSION,
-  });
-}
+export const saveFieldConfig = api.setFieldConfigMemory;
 
 /** Persists contact field config via REST and updates memory. */
-export async function saveFieldConfigAsync(config: FieldConfig): Promise<FieldConfig> {
-  const body = fieldConfigWithoutFormTabs(config);
-  const response = await apiJson<{ success: boolean; config: FieldConfig }>(FIELD_CONFIG_API, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const saved = response.config
-    ? mergeWithDefaults({ ...response.config, formTabs: config.formTabs })
-    : mergeWithDefaults({ ...config, version: CONFIG_VERSION });
-  memoryConfig = saved;
-  return saved;
-}
+export const saveFieldConfigAsync = api.saveFieldConfigAsync;

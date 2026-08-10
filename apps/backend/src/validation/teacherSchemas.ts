@@ -10,8 +10,7 @@ import {
 import { bulkIdsBodySchema } from './commonSchemas.js';
 import {
   csvExportBodySchema,
-  moduleExportAuditBodySchema,
-  studentSetupAuditBodySchema,
+  moduleFieldsPrefsAuditBodySchema,
 } from './csvExportBodySchema.js';
 
 export {
@@ -28,7 +27,5 @@ export const teachersBulkIdsSchema = bulkIdsBodySchema;
 
 export const teachersCsvExportBodySchema = csvExportBodySchema(teachersListQuerySchema);
 
-export const teacherExportAuditSchema = moduleExportAuditBodySchema;
-
 /** Teachers Setup audit — fields/preferences only (Students parity). */
-export const teacherSetupAuditSchema = studentSetupAuditBodySchema;
+export const teacherSetupAuditSchema = moduleFieldsPrefsAuditBodySchema;

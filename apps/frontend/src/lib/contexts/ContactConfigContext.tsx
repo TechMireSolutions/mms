@@ -4,28 +4,23 @@
  * (`/api/contacts/field-config`, preferences, lookups, column-prefs, custom-tabs).
  * Mount once under TenantScopedProviders — never nest on child pages.
  *
+ * The provider delegates the shared settings slice to `createStandardModuleConfigHook`
+ * (same skeleton as Teachers/Students/Sessions/Users/Enrollments) and layers the
+ * Contacts-specific lookups / column-layout / tab-fields / prefs on top.
+ *
  * Usage:
  *   const { fieldConfig, prefs, updateConfig, updatePrefs } = useContactConfig();
  *   const columns = useContactColumns();         // dynamic table columns
  *   const schema  = useContactValidation();     // dynamic Zod-like validation
  */
-import React, {
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  ReactNode,
-} from "react";
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { getContactConfigCollectionDefaults } from "@/lib/contacts/contactConfigSeeds";
+import React, { ReactNode, useContext } from "react";
 import {
   ContactConfigContext,
   type ContactConfigContextType,
 } from "@/lib/contacts/contactConfigContextTypes";
-import { useContactConfigCollections } from "@/lib/contacts/useContactConfigCollections";
-import { useContactColumnLayout } from "@/lib/contacts/useContactColumnLayout";
-import { useContactConfigCore } from "@/lib/contacts/useContactConfigCore";
 import { useContactConfigProviderValue } from "@/lib/contacts/useContactConfigProviderValue";
+import { useContactsConfig } from "@/lib/contacts/useContactStandardConfig";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 
 /**
  * Context Provider that loads contact configuration from typed Contacts Setup REST
@@ -36,116 +31,12 @@ import { useContactConfigProviderValue } from "@/lib/contacts/useContactConfigPr
  * @returns {React.JSX.Element}
  */
 export function ContactConfigProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const contactConfigDefaults = useMemo(() => getContactConfigCollectionDefaults(), []);
-  const viewerRole = user?.role ?? "";
-  const reloadCollectionsRef = useRef<() => void>(() => undefined);
+  const config = useContactsConfig();
 
-  const reloadCollectionsCallback = useCallback(() => {
-    reloadCollectionsRef.current();
-  }, []);
-
-  const {
-    fieldConfig,
-    setFieldConfigState,
-    formTabsReady,
-    prefs,
-    updateConfig,
-    updateConfigAsync,
-    updatePrefs,
-    updatePrefsAsync,
-    updateColumnRegistry,
-    enabledTabIds,
-    requiredTabIds,
-    fields,
-    isTabFieldEnabled,
-    isTabFieldRequired,
-  } = useContactConfigCore({
-    userId: user?.id,
-    userRole: viewerRole,
-    reloadCollections: reloadCollectionsCallback,
-  });
-
-  const {
-    genders,
-    socialPlatforms,
-    phoneLabels,
-    emailLabels,
-    addressLabels,
-    countryCodes,
-    countryCodesMap,
-    reloadCollections,
-    updateGenders,
-    updateSocialPlatforms,
-    updateRelationships,
-    updatePhoneLabels,
-    updateEmailLabels,
-    updateAddressLabels,
-    updateCountryCodes,
-  } = useContactConfigCollections({
-    contactConfigDefaults,
-    setFieldConfigState,
-  });
-
-  reloadCollectionsRef.current = reloadCollections;
-
-  const {
-    columnRegistry,
-    availableColumns,
-    visibleColumns,
-    getColumnWidth,
-    setColumnWidth,
-    updateUserColumnLayout,
-    isColumnVisible,
-    systemSortOptions,
-  } = useContactColumnLayout({
-    fieldConfig,
-    fields,
-    enabledTabIds,
-    isTabFieldEnabled,
-    viewerRole,
-  });
-
-  const providerValue = useContactConfigProviderValue({
-    fieldConfig,
-    formTabsReady,
-    prefs,
-    updateConfig,
-    updateConfigAsync,
-    updatePrefs,
-    updatePrefsAsync,
-    enabledTabIds,
-    requiredTabIds,
-    fields,
-    isTabFieldEnabled,
-    isTabFieldRequired,
-    genders,
-    socialPlatforms,
-    phoneLabels,
-    emailLabels,
-    addressLabels,
-    countryCodes,
-    countryCodesMap,
-    columnRegistry,
-    availableColumns,
-    visibleColumns,
-    updateGenders,
-    updateSocialPlatforms,
-    updateRelationships,
-    updatePhoneLabels,
-    updateEmailLabels,
-    updateAddressLabels,
-    updateCountryCodes,
-    updateColumnRegistry,
-    updateUserColumnLayout,
-    isColumnVisible,
-    getColumnWidth,
-    setColumnWidth,
-    systemSortOptions,
-  });
+  const value: ContactConfigContextType = useContactConfigProviderValue(config);
 
   return (
-    <ContactConfigContext.Provider value={providerValue}>
+    <ContactConfigContext.Provider value={value}>
       {children}
     </ContactConfigContext.Provider>
   );
@@ -167,8 +58,8 @@ export function useContactConfig(): ContactConfigContextType {
  * Returns the ordered list of table columns that should be visible,
  * derived entirely from the current fieldConfig.
  *
- * @returns {Array<{ id: string; label: string; sortField?: string }>} The array of active column descriptors.
+ * @returns {ContactsColumnConfig[]} The array of active column descriptors.
  */
-export function useContactColumns(): Array<{ id: string; label: string; sortField?: string; width?: number }> {
+export function useContactColumns(): ContactsColumnConfig[] {
   return useContactConfig().visibleColumns;
 }

@@ -1,23 +1,9 @@
 import type { ModuleFieldDef } from '@mms/shared';
+import { hasFieldValue } from '@mms/shared';
 
 const DEFAULT_SKIP_TYPES = new Set(['boolean', 'ai_summary']);
 
-/**
- * Returns true when a form field value is considered filled.
- */
-export function hasFieldValue(v: unknown): boolean {
-  if (v === null || v === undefined) return false;
-  if (typeof v === 'string') return v.trim().length > 0;
-  if (typeof v === 'number') return !Number.isNaN(v);
-  if (typeof v === 'boolean') return v;
-  if (Array.isArray(v)) return v.length > 0;
-  if (typeof v === 'object') {
-    const o = v as Record<string, unknown>;
-    if ('url' in o) return Boolean(o.url);
-    return Object.keys(o).length > 0;
-  }
-  return false;
-}
+export { hasFieldValue };
 
 function ratio(filled: number, total: number): number {
   if (total === 0) return 0;

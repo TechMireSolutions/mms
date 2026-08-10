@@ -1,27 +1,26 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { BackgroundJobRecord, Contact, User } from '@mms/shared';
+import type { Contact, User } from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST, getDisplayName } from '@mms/shared';
-import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { registerModuleCsvExportRoutes } from '../../../lib/registerModuleCsvExportRoutes.js';
 import { registerModuleSetupAuditRoute } from '../../../lib/registerModuleSetupAuditRoute.js';
-import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
+import { sendDatabaseError, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import {
-  enqueueBackgroundJob,
-  getUserBackgroundJob,
-} from '../../../services/backgroundJobWorkerService.js';
-import { canReadContacts, canWriteContacts, canDeleteContacts } from '../../../services/rbacService.js';
-import { mergeContactsById } from '../../../services/contactService.js';
+import { canReadContacts, canDeleteContacts } from '../../../services/rbacService.js';
+import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
 import {
   buildContactMergeBodySchema,
   contactSetupAuditSchema,
   contactsCsvExportBodySchema,
   contactsVcfExportBodySchema,
 } from '../../../validation/contactSchemas.js';
-import { auditContact, sanitizeOneForUser } from './contactRouteHelpers.js';
+import {
+  auditContact,
+  enqueueContactBackgroundJob,
+  requireContactPermission,
+  sanitizeOneForUser,
+} from './contactRouteHelpers.js';
 import { contactIdentityMatchBodySchema, collectContactWriteExtraFieldKeys } from '@mms/shared';
 import { loadContactFieldConfig } from '../../../services/contactConfigService.js';
-import { matchContactIdentityIndex } from '../../../services/contactIdentityMatchService.js';
 
 /** Contact CSV export queue, merge, and audit logging routes. */
 export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
@@ -38,47 +37,34 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/export/vcf', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
 
     const parsed = parseRequest(contactsVcfExportBodySchema, request.body ?? {});
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const tenant = getRequestTenant()!;
-    const userId = String(user.id);
-    const jobId = parsed.data.idempotencyKey?.trim() || crypto.randomUUID();
-    const existing = await getUserBackgroundJob(userId, jobId);
-    if (existing) {
-      return reply.status(202).send({ job: existing });
-    }
-
     const label = parsed.data.label?.trim() || 'Exporting Apple Contacts…';
     const filename = parsed.data.filename?.trim() || 'contacts.vcf';
-    const runningJob: BackgroundJobRecord = {
-      id: jobId,
+    const job = await enqueueContactBackgroundJob({
       moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
       kind: 'export-vcf',
-      status: 'running',
       label,
-      createdAt: new Date().toISOString(),
-    };
-
-    const job = await enqueueBackgroundJob(tenant, userId, runningJob, {
-      filename,
-      label,
+      payload: { filename, label },
+      idempotencyKey: parsed.data.idempotencyKey,
+      user,
     });
-    await auditContact(user, 'contact.export.queue', `Queued contact VCF export "${label}"`, jobId);
+    await auditContact(user, 'contact.export.queue', `Queued contact VCF export "${label}"`, job.id);
     return reply.status(202).send({ job });
   });
 
   fastify.post('/identity-match', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadContacts(user)) return sendForbidden(reply);
+    if (!requireContactPermission(reply, user, 'read')) return;
 
     const parsed = parseRequest(contactIdentityMatchBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
     try {
-      const match = await matchContactIdentityIndex(parsed.data);
+      const match = await contactUseCases.matchContactIdentityIndex(parsed.data);
       return reply.send(match);
     } catch (error: unknown) {
       return sendDatabaseError(reply, 'Failed to match contact identity index', error);
@@ -90,9 +76,7 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
     schema: { body: { type: 'object', additionalProperties: true } },
   }, async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteContacts(user) || !canDeleteContacts(user)) {
-      return sendForbidden(reply);
-    }
+    if (!requireContactPermission(reply, user, ['write', 'delete'])) return;
 
     const fieldConfig = await loadContactFieldConfig();
     const mergeSchema = buildContactMergeBodySchema(
@@ -104,7 +88,7 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
     const keepId = String(parsed.data.keepId);
     const deleteId = String(parsed.data.deleteId);
     try {
-      const merged = await mergeContactsById(
+      const merged = await contactUseCases.mergeContactsById(
         keepId,
         deleteId,
         parsed.data.merged as Contact | undefined,

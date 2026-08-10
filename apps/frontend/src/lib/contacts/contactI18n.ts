@@ -1,12 +1,12 @@
 export {
   formatContactPhoneDisplay,
+  formatContactPhoneFull,
   formatTelHref,
   getFallbackCountryCode,
   resolveContactPhoneDisplay,
 } from "@/lib/contacts/contactPhoneDisplay";
 
 export {
-  CONTACT_OPTION_LABEL_KEYS,
   formatContactOptionLabel,
   resolvePhoneLabel,
   resolveEmailLabel,

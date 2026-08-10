@@ -1,11 +1,7 @@
-import type { Contact } from './contactTypes.js';
-import { isContactDeleted } from './contactSoftDelete.js';
-import { matchesWidgetFilter } from './utils.js';
-
 export type ContactsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-export type ContactsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt' | 'startsWith';
+type ContactsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt' | 'startsWith';
 
-export interface ContactsWidgetFilter {
+interface ContactsWidgetFilter {
   field: string;
   operator?: ContactsWidgetFilterOperator;
   value: string;
@@ -29,121 +25,6 @@ export interface ContactsWidgetAggregateResult {
   value: number;
   totalCount: number;
   chartData: { name: string; value: number }[];
-}
-
-function contactFieldValue(contact: Contact, field: string): unknown {
-  return contact[field as keyof Contact];
-}
-
-function matchesOneFilter(
-  contact: Contact,
-  field: string | undefined,
-  operator: ContactsWidgetFilterOperator | undefined,
-  value: string | undefined,
-): boolean {
-  if (!field || value == null || value === '') return true;
-  if (operator === 'startsWith') {
-    const fieldValue = contactFieldValue(contact, field);
-    if (fieldValue === undefined || fieldValue === null) return false;
-    return String(fieldValue).toLowerCase().startsWith(String(value).toLowerCase());
-  }
-  return matchesWidgetFilter(contact, field, operator, value);
-}
-
-function filterContactsForWidget(contacts: Contact[], query: ContactsWidgetQuery): Contact[] {
-  const active = contacts.filter((contact) => !isContactDeleted(contact));
-  return active.filter((contact) => {
-    if (!matchesOneFilter(contact, query.filterField, query.filterOperator, query.filterValue)) {
-      return false;
-    }
-    for (const rule of query.filters ?? []) {
-      if (!matchesOneFilter(contact, rule.field, rule.operator, rule.value)) return false;
-    }
-    return true;
-  });
-}
-
-function aggregateNumericField(
-  items: Contact[],
-  operation: 'sum' | 'avg',
-  targetField: string,
-): number {
-  let sum = 0;
-  let count = 0;
-  items.forEach((item) => {
-    const numericFieldValue = Number(contactFieldValue(item, targetField));
-    if (!Number.isNaN(numericFieldValue)) {
-      sum += numericFieldValue;
-      count += 1;
-    }
-  });
-  if (operation === 'sum') return sum;
-  return count > 0 ? Math.round(sum / count) : 0;
-}
-
-function resolveChartLimit(query: ContactsWidgetQuery): number {
-  const requested = query.chartLimit ?? 8;
-  return Math.min(Math.max(requested, 1), 50);
-}
-
-function buildChartData(items: Contact[], query: ContactsWidgetQuery): { name: string; value: number }[] {
-  const xAxis = query.xAxisField || 'gender';
-  const groups: Record<string, Contact[]> = {};
-
-  items.forEach((item) => {
-    const groupValue = contactFieldValue(item, xAxis);
-    const key = groupValue === undefined || groupValue === null || groupValue === '' ? 'Unknown' : String(groupValue);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
-  });
-
-  const chartData = Object.entries(groups).map(([groupName, groupItems]) => {
-    let finalValue = 0;
-    if (query.operation === 'count' || query.operation === 'percentage') {
-      finalValue = groupItems.length;
-    } else if (query.operation === 'sum' || query.operation === 'avg') {
-      finalValue = aggregateNumericField(groupItems, query.operation, query.targetField || '');
-    }
-    return { name: groupName, value: finalValue };
-  });
-
-  return chartData.sort((a, b) => b.value - a.value).slice(0, resolveChartLimit(query));
-}
-
-/** Server/client widget aggregate for contacts collection (globle2 §10). */
-export function computeContactsWidgetAggregate(
-  contacts: Contact[],
-  query: ContactsWidgetQuery,
-): ContactsWidgetAggregateResult {
-  const active = contacts.filter((contact) => !isContactDeleted(contact));
-  const filtered = filterContactsForWidget(contacts, query);
-  const totalCount = active.length;
-
-  let value = 0;
-  if (query.operation === 'count') {
-    value = filtered.length;
-  } else if (query.operation === 'percentage') {
-    value = totalCount > 0 ? Math.round((filtered.length / totalCount) * 100) : 0;
-  } else if (query.operation === 'sum' || query.operation === 'avg') {
-    value = aggregateNumericField(filtered, query.operation, query.targetField || '');
-  }
-
-  return {
-    value,
-    totalCount,
-    chartData: buildChartData(filtered, query),
-  };
-}
-
-export function computeContactsWidgetAggregates(
-  contacts: Contact[],
-  queries: ContactsWidgetQuery[],
-): Record<string, ContactsWidgetAggregateResult> {
-  const results: Record<string, ContactsWidgetAggregateResult> = {};
-  for (const query of queries) {
-    results[query.id] = computeContactsWidgetAggregate(contacts, query);
-  }
-  return results;
 }
 
 export function contactsWidgetQueryFromWidget(widget: {

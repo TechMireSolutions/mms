@@ -1,7 +1,7 @@
 import { PersonIdentityMeta } from "@/components/ui/PersonIdentityMeta";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface ContactIdentityMetaProps {
+interface ContactIdentityMetaProps {
   gender?: string | null;
   isSyed?: boolean | null;
   className?: string;

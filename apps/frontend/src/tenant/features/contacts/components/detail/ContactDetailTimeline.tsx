@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/card";
 import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 import { ICON_MAP } from "./contactDetailStyles";
 
-export interface ContactDetailTimelineProps {
+interface ContactDetailTimelineProps {
   activities: ContactActivity[];
   noteText: string;
   noteInputId: string;

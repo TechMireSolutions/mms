@@ -1,20 +1,30 @@
 import {
-  CONTACTS_MODULE_MANIFEST,
   findContactDuplicatePairs,
+  getContactDuplicateCandidateKeys,
   paginateContactDuplicatePairs,
   CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY,
   type Contact,
   type ContactDuplicatePair,
+  type ContactPreferences,
   type ContactsDuplicatePairsPageResult,
 } from '@mms/shared';
 import { deletePersistedObject, fetchObject, persistObject } from './dbSyncService.js';
 import { loadContactPreferences } from './contactPreferencesService.js';
-import { loadContactsPage } from './contactServiceLoad.js';
+import {
+  countContacts,
+  loadContactsByIds,
+} from '../contacts/use-cases/contactLoadUseCases.js';
+import {
+  loadContactDuplicateBlockedIds,
+  loadContactDuplicateCandidateIds,
+} from '../contacts/use-cases/contactDuplicateScanUseCases.js';
+import type { ContactDuplicateCandidateKeys } from '../db/repositories/contactRepository.js';
+import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
+import { contactsRepository } from '../contacts/repository/contactsRepositoryAdapter.js';
 
 const CACHE_KEY = CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY;
-const PAGE_SIZE = CONTACTS_MODULE_MANIFEST.maxPageSize;
 
-export interface ContactDuplicateScanCache {
+interface ContactDuplicateScanCache {
   computedAt: string;
   contactCount: number;
   pairCount: number;
@@ -22,26 +32,23 @@ export interface ContactDuplicateScanCache {
 }
 
 /**
- * SQL-paginate active contacts for duplicate pairing (no single full-list hydrate).
- * Pair finding still needs the full active set in memory after the walk.
+ * Pair-finding over only the SQL-blocked participant set.
+ *
+ * SQL returns the distinct ids that share a normalized phone/email/name key with
+ * at least one other active contact (`findContactDuplicateBlockedIds`); we
+ * hydrate exactly those and run the shared pair-finder — never the full active set.
  */
-async function loadActiveContactsPaged(
-  onProgress?: (processed: number, total: number) => void | Promise<void>,
-): Promise<Contact[]> {
-  const contacts: Contact[] = [];
-  let page = 1;
-  for (;;) {
-    const pageResult = await loadContactsPage({
-      page,
-      limit: PAGE_SIZE,
-      includeDeleted: false,
-    });
-    contacts.push(...(pageResult.contacts as Contact[]));
-    await onProgress?.(contacts.length, pageResult.total);
-    if (!pageResult.hasMore) break;
-    page += 1;
-  }
-  return contacts;
+async function findBlockedDuplicatePairs(
+  preferences: ContactPreferences | null,
+  repo: ContactsRepository,
+): Promise<ContactDuplicatePair[]> {
+  const blockedIds = await loadContactDuplicateBlockedIds(
+    preferences?.namePrefixesToIgnore ?? [],
+    repo,
+  );
+  if (blockedIds.length === 0) return [];
+  const pool = await loadContactsByIds(blockedIds, repo);
+  return findContactDuplicatePairs(pool, preferences ?? {});
 }
 
 export async function getDuplicateScanCache(): Promise<ContactDuplicateScanCache | null> {
@@ -56,19 +63,19 @@ export async function invalidateDuplicateScanCache(): Promise<void> {
   await deletePersistedObject(CACHE_KEY);
 }
 
-export async function getCachedDuplicatePairs(): Promise<ContactDuplicatePair[] | null> {
+async function getCachedDuplicatePairs(): Promise<ContactDuplicatePair[] | null> {
   const cache = await getDuplicateScanCache();
   return cache?.pairs ?? null;
 }
 
 export async function runContactsDuplicateScan(
   onProgress?: (processed: number, total: number) => void | Promise<void>,
+  repo: ContactsRepository = contactsRepository,
 ): Promise<{ pairCount: number; contactCount: number }> {
-  const contacts = await loadActiveContactsPaged(onProgress);
-  const total = contacts.length;
-
-  const preferences = (await loadContactPreferences()) ?? {};
-  const pairs = findContactDuplicatePairs(contacts, preferences);
+  const preferences = await loadContactPreferences();
+  const total = await countContacts({ includeDeleted: false }, repo);
+  await onProgress?.(0, Math.max(total, 1));
+  const pairs = await findBlockedDuplicatePairs(preferences, repo);
 
   const cache: ContactDuplicateScanCache = {
     computedAt: new Date().toISOString(),
@@ -77,30 +84,41 @@ export async function runContactsDuplicateScan(
     pairs,
   };
   await persistObject(CACHE_KEY, cache);
-  await onProgress?.(total, total);
+  await onProgress?.(total, Math.max(total, 1));
 
   return { pairCount: pairs.length, contactCount: total };
 }
 
-export async function loadDuplicatePairsPage(query: {
-  page?: number;
-  limit?: number;
-}): Promise<ContactsDuplicatePairsPageResult> {
+export async function loadDuplicatePairsPage(
+  query: {
+    page?: number;
+    limit?: number;
+  },
+  repo: ContactsRepository = contactsRepository,
+): Promise<ContactsDuplicatePairsPageResult> {
   let pairs = await getCachedDuplicatePairs();
   if (!pairs) {
-    const contacts = await loadActiveContactsPaged();
-    const preferences = (await loadContactPreferences()) ?? {};
-    pairs = findContactDuplicatePairs(contacts, preferences);
+    pairs = await findBlockedDuplicatePairs(await loadContactPreferences(), repo);
   }
   return paginateContactDuplicatePairs(pairs, query.page ?? 1, query.limit ?? 50);
 }
 
-/** Count duplicate matches for a draft contact (globle2 §10 — server-side, no client full list). */
-export async function countContactDuplicateMatches(contact: Contact): Promise<number> {
-  const contacts = await loadActiveContactsPaged();
-  const preferences = (await loadContactPreferences()) ?? {};
-  const peers = contacts.filter((row) => String(row.id) !== String(contact.id));
-  const pairs = findContactDuplicatePairs([...peers, contact], preferences);
+/** Count duplicate matches for a draft contact — SQL candidate pre-filter, no tenant walk. */
+export async function countContactDuplicateMatches(
+  contact: Contact,
+  repo: ContactsRepository = contactsRepository,
+): Promise<number> {
+  const preferences = await loadContactPreferences();
+  const keys: ContactDuplicateCandidateKeys = {
+    ...getContactDuplicateCandidateKeys(contact, preferences ?? {}),
+    namePrefixes: preferences?.namePrefixesToIgnore ?? [],
+  };
+  const excludeIds = contact.id != null ? [String(contact.id)] : [];
+  const ids = await loadContactDuplicateCandidateIds(keys, excludeIds, repo);
+  if (ids.length === 0) return 0;
+
+  const peers = await loadContactsByIds(ids, repo);
+  const pairs = findContactDuplicatePairs([...peers, contact], preferences ?? {});
   return pairs.filter((pair) =>
     pair.contacts.some((row) => String(row.id) === String(contact.id)),
   ).length;

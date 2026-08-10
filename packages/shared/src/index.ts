@@ -82,7 +82,6 @@ export * from './usersExportUtils.js';
 export * from './teachersExportUtils.js';
 export * from './contactsPreferencesTypes.js';
 export * from './contactsSearchUtils.js';
-export * from './contactsSortUtils.js';
 export * from './contactsMetricsUtils.js';
 export * from './contactsReportAnalytics.js';
 export * from './contactsWidgetAggregate.js';
@@ -179,6 +178,7 @@ export * from './moduleCommandMetrics.js';
 export * from './moduleColumnPreferences.js';
 export * from './studentUtils.js';
 export * from './studentFormCustomFields.js';
+export * from './createFormCustomFieldHelpers.js';
 export * from './studentGuardianFromContacts.js';
 export * from './contactLinkPolicy.js';
 export * from './linkedCollectionUtils.js';
@@ -204,6 +204,7 @@ export {
   formatTeacherZodIssues,
 } from './teacherValidation.js';
 export * from './studentFieldDependencies.js';
+export * from './createFieldRemovalIssuesChecker.js';
 export * from './sessionTypes.js';
 export * from './sessionUtils.js';
 export * from './platformSettingsTypes.js';

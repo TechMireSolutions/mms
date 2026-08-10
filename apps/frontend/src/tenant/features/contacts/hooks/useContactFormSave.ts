@@ -9,6 +9,7 @@ import { getApiValidationErrors, getApiValidationMessage } from "@/lib/apiValida
 import {
   toTitleCase,
   applyTitleCaseToContact,
+  composeContactName,
   Contact,
   todayISO,
   cleanContactDraft,
@@ -128,7 +129,7 @@ export function useContactFormSave({
         id: cleanedDraft.id || contact?.id || crypto.randomUUID(),
         firstName,
         lastName,
-        name: [firstName, lastName].filter(Boolean).join(" "),
+        name: composeContactName(firstName, lastName),
         phones: normalizedPhones,
         updatedAt: todayISO(),
         createdAt: cleanedDraft.createdAt || todayISO(),

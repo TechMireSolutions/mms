@@ -10,78 +10,24 @@ import {
   type TeacherModulePreferences,
   type TeachersSettings,
 } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import { createModuleSetupConfigApi } from "@/lib/query/createModuleSetupConfigApi";
 
-const FIELD_CONFIG_API = `${TEACHERS_MODULE_MANIFEST.restBasePath}/field-config`;
-const PREFERENCES_API = `${TEACHERS_MODULE_MANIFEST.restBasePath}/preferences`;
+const api = createModuleSetupConfigApi<TeachersSettings, TeacherModulePreferences>({
+  restBasePath: TEACHERS_MODULE_MANIFEST.restBasePath,
+  normalizeFieldConfig: normalizeTeachersSettings,
+  composeSettings: composeTeachersSettings as (
+    fieldConfig: unknown,
+    preferences: unknown,
+    formTabs?: unknown[],
+  ) => TeachersSettings,
+  normalizePrefs: normalizeTeacherModulePreferences as (prefs: unknown) => TeacherModulePreferences,
+  stripFieldConfig: stripTeacherFieldConfigForPersist,
+});
 
-let memoryFieldConfig: TeachersSettings | null = null;
-let memoryPreferences: TeacherModulePreferences | null = null;
-
-export function setTeacherFieldConfigMemory(config: TeachersSettings): void {
-  memoryFieldConfig = normalizeTeachersSettings(config);
-}
-
-export function setTeacherPreferencesMemory(preferences: TeacherModulePreferences): void {
-  memoryPreferences = normalizeTeacherModulePreferences(preferences);
-}
-
-export async function fetchTeacherFieldConfig(signal?: AbortSignal): Promise<TeachersSettings> {
-  const response = await apiJson<{ config: TeachersSettings | null }>(FIELD_CONFIG_API, { signal });
-  const merged = normalizeTeachersSettings(response.config);
-  memoryFieldConfig = merged;
-  return merged;
-}
-
-export async function saveTeacherFieldConfigAsync(
-  config: TeachersSettings,
-): Promise<TeachersSettings> {
-  const body = stripTeacherFieldConfigForPersist(config);
-  const response = await apiJson<{ success: boolean; config: TeachersSettings }>(FIELD_CONFIG_API, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const saved = normalizeTeachersSettings({
-    ...(response.config ?? body),
-    formTabs: response.config?.formTabs ?? config.formTabs,
-  });
-  memoryFieldConfig = saved;
-  return saved;
-}
-
-export async function fetchTeacherPreferences(
-  signal?: AbortSignal,
-): Promise<TeacherModulePreferences> {
-  const response = await apiJson<{ preferences: TeacherModulePreferences }>(PREFERENCES_API, {
-    signal,
-  });
-  const normalized = normalizeTeacherModulePreferences(response.preferences ?? null);
-  memoryPreferences = normalized;
-  return normalized;
-}
-
-export async function saveTeacherPreferencesAsync(
-  preferences: TeacherModulePreferences | TeachersSettings,
-): Promise<TeacherModulePreferences> {
-  const normalized = normalizeTeacherModulePreferences(preferences);
-  const response = await apiJson<{ success: boolean; preferences: TeacherModulePreferences }>(
-    PREFERENCES_API,
-    {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(normalized),
-    },
-  );
-  const saved = normalizeTeacherModulePreferences(response.preferences ?? normalized);
-  memoryPreferences = saved;
-  return saved;
-}
-
-export function getTeacherSettingsMemoryFallback(): TeachersSettings {
-  return composeTeachersSettings(
-    memoryFieldConfig,
-    memoryPreferences ?? normalizeTeacherModulePreferences(null),
-    memoryFieldConfig?.formTabs,
-  );
-}
+export const setTeacherFieldConfigMemory = api.setFieldConfigMemory;
+export const setTeacherPreferencesMemory = api.setPreferencesMemory;
+export const fetchTeacherFieldConfig = api.fetchFieldConfig;
+export const saveTeacherFieldConfigAsync = api.saveFieldConfigAsync;
+export const fetchTeacherPreferences = api.fetchPreferences;
+export const saveTeacherPreferencesAsync = api.savePreferencesAsync;
+export const getTeacherSettingsMemoryFallback = api.getSettingsMemoryFallback;

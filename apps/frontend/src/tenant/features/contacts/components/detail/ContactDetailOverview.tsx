@@ -6,7 +6,7 @@ import { ContactDetailNetwork } from "./ContactDetailNetwork";
 import { ContactDetailOverviewHero } from "./ContactDetailOverviewHero";
 import { ContactDetailOverviewQuickActions } from "./ContactDetailOverviewQuickActions";
 
-export interface ContactDetailOverviewField {
+interface ContactDetailOverviewField {
   key: string;
   label: string;
   type: string;
@@ -15,7 +15,7 @@ export interface ContactDetailOverviewField {
   description: string;
 }
 
-export interface ContactDetailOverviewProps {
+interface ContactDetailOverviewProps {
   contact: Contact;
   allContacts: Contact[];
   grouped: Record<string, ContactDetailOverviewField[]>;

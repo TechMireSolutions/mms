@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ContactActionMenuItems } from "@/tenant/features/contacts/components/ContactActionMenuItems";
 
-export interface ContactActionMenuProps {
+interface ContactActionMenuProps {
   contact: Contact;
   onView?: (contact: Contact) => void;
   onEdit: (contact: Contact) => void;

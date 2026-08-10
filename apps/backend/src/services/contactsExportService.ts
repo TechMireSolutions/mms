@@ -30,7 +30,7 @@ type ContactsExportQueryInput = Omit<ContactsListQuery, 'includeDeleted'> & {
 
 export type { ContactsExportQueryInput };
 
-export interface ContactsCsvExportOptions {
+interface ContactsCsvExportOptions {
   columns?: ContactExportColumn[];
   filename?: string;
   viewerRole: string;
@@ -38,7 +38,7 @@ export interface ContactsCsvExportOptions {
   allowDeleted?: boolean;
 }
 
-export interface ContactsCsvExportResult {
+interface ContactsCsvExportResult {
   csv: string;
   filename: string;
   count: number;
@@ -117,8 +117,6 @@ const contactsCsv = createModuleCsvExportService<
   },
 });
 
-export const generateContactsCsvStreamChunks = contactsCsv.generateStreamChunks;
-export const streamContactsCsvExport = contactsCsv.streamExport;
 export const buildContactsCsvExport = contactsCsv.buildExport as (
   query: ContactsExportQueryInput,
   options: ContactsCsvExportOptions,

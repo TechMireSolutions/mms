@@ -6,9 +6,7 @@ export {
   findContactsByIds,
   saveContact,
   bulkSaveContacts,
-  deleteContact,
   replaceContactsForWorkspace,
-  deleteContactsByWorkspace,
 } from './contactRepositoryCore.js';
 export { listContactsPage } from './contactRepositoryList.js';
 export type { ContactUniqueLookupValues } from './contactRepositoryLookup.js';
@@ -17,3 +15,8 @@ export {
   findActiveContactsMatchingUniqueValues,
   countFieldUsageByKeys,
 } from './contactRepositoryLookup.js';
+export type { ContactDuplicateCandidateKeys } from './contactRepositoryDuplicates.js';
+export {
+  findContactDuplicateCandidateIds,
+  findContactDuplicateBlockedIds,
+} from './contactRepositoryDuplicates.js';

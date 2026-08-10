@@ -9,7 +9,7 @@ import { getPrimaryPhone } from "./phoneUtils.js";
 
 // ── Icons & symbols for UI ─────────────────────────────────────────────────────
 
-export const AVATAR_COLORS: readonly string[] = [
+const AVATAR_COLORS: readonly string[] = [
   "bg-emerald-100 text-emerald-700",
   "bg-blue-100 text-blue-700",
   "bg-violet-100 text-violet-700",
@@ -107,7 +107,7 @@ export function hasWhatsApp(contact: Partial<Contact>): boolean {
 
 // ── Normalization Helpers ───────────────────────────────────────────────────
 
-export const normalizeEmail = (email: unknown): string => {
+const normalizeEmail = (email: unknown): string => {
   if (!email) return "";
   return String(email).trim().toLowerCase();
 };
@@ -124,14 +124,32 @@ export const getEmails = (contact: Contact): string[] => {
   return Array.from(new Set(emails.filter(Boolean)));
 };
 
+/**
+ * Builds the anchored prefix-strip regex source used for name comparison.
+ * Prefixes are normalized (lower/trim/dedupe) and regex-escaped so the same
+ * pattern can be bound in both JS (`new RegExp`) and Postgres `regexp_replace`
+ * without the two normalizations drifting apart.
+ */
+export const buildNamePrefixRegex = (prefixesToIgnore?: string[]): string => {
+  if (!prefixesToIgnore || prefixesToIgnore.length === 0) return "";
+  const normalized = Array.from(
+    new Set(
+      prefixesToIgnore
+        .map((prefix) => String(prefix).trim().toLowerCase())
+        .filter(Boolean)
+        .map((prefix) => prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    ),
+  );
+  if (normalized.length === 0) return "";
+  return `^(${normalized.join("|")})\\s+`;
+};
+
 export const cleanName = (name: unknown, prefixesToIgnore?: string[]): string => {
   if (!name) return "";
-  let clean = String(name).trim().toLowerCase();
-
-  if (prefixesToIgnore && prefixesToIgnore.length > 0) {
-    const prefixRegex = new RegExp(`^(${prefixesToIgnore.join('|')})\\s+`, 'i');
-    clean = clean.replace(prefixRegex, "");
+  const clean = String(name).trim().toLowerCase();
+  const prefixRegex = buildNamePrefixRegex(prefixesToIgnore);
+  if (prefixRegex) {
+    return clean.replace(new RegExp(prefixRegex), "").replace(/\s+/g, "");
   }
-
   return clean.replace(/\s+/g, "");
 };

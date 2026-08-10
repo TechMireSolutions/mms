@@ -1,7 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { CONTACTS_MODULE_MANIFEST, type Contact } from '@mms/shared';
+import {
+  CONTACTS_MODULE_MANIFEST,
+  type Contact,
+  type ContactIdentityMatchBody,
+  type ContactIdentityMatchResult,
+} from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { enqueueContactsOutbox } from '@/lib/contacts/contactsSyncOutbox';
+import { createModuleCrudMutations } from '@/lib/query/createModuleCrudMutations';
 import { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
 
 const CONTACTS_API = CONTACTS_MODULE_MANIFEST.restBasePath;
@@ -11,8 +17,24 @@ export function useInvalidateContactsQueries() {
   return () => invalidateContactsQueries(queryClient);
 }
 
+const useSharedCrudMutations = createModuleCrudMutations<Contact>({
+  apiBase: CONTACTS_API,
+  normalizeStored: (contact) => contact,
+  invalidate: (queryClient) => invalidateContactsQueries(queryClient),
+  updateRecordKey: 'contact',
+});
+
+/**
+ * Server mutations for Contact records. Bulk-delete/restore/audit reuse the shared
+ * module CRUD factory; create/update/delete/merge stay local because they need the
+ * `{ contact }` response shape and the offline-outbox `onError` hook the factory
+ * does not expose.
+ */
 export function useContactMutations() {
-  const invalidate = useInvalidateContactsQueries();
+  const queryClient = useQueryClient();
+  const invalidate = () => invalidateContactsQueries(queryClient);
+
+  const { bulkDelete, restore, logExportAudit, logSetupAudit } = useSharedCrudMutations();
 
   const upsertContact = useMutation({
     mutationFn: async (contact: Contact) =>
@@ -56,24 +78,6 @@ export function useContactMutations() {
     },
   });
 
-  const bulkDeleteContacts = useMutation({
-    mutationFn: async ({ ids, deletionReason }: { ids: (string | number)[]; deletionReason?: string }) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${CONTACTS_API}/bulk-delete`, {
-        method: 'POST',
-        body: JSON.stringify({ ids, ...(deletionReason ? { deletionReason } : {}) }),
-      }),
-    onSuccess: invalidate,
-  });
-
-  const restoreContact = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean; contact: Contact }>(
-        `${CONTACTS_API}/${encodeURIComponent(id)}/restore`,
-        { method: 'POST' },
-      ),
-    onSuccess: invalidate,
-  });
-
   const bulkRestoreContacts = useMutation({
     mutationFn: async (ids: (string | number)[]) =>
       apiJson<{
@@ -101,19 +105,11 @@ export function useContactMutations() {
     onSuccess: invalidate,
   });
 
-  const logExportAudit = useMutation({
-    mutationFn: async (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) =>
-      apiJson<{ success: boolean }>(`${CONTACTS_API}/export-audit`, {
+  const matchContactIdentity = useMutation({
+    mutationFn: async (body: ContactIdentityMatchBody) =>
+      apiJson<ContactIdentityMatchResult>(`${CONTACTS_API}/identity-match`, {
         method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-  });
-
-  const logSetupAudit = useMutation({
-    mutationFn: async (payload: { area: 'fields' | 'preferences' | 'sync'; summary: string }) =>
-      apiJson<{ success: boolean }>(`${CONTACTS_API}/setup-audit`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       }),
   });
 
@@ -121,10 +117,11 @@ export function useContactMutations() {
     upsertContact,
     updateContact,
     deleteContact,
-    bulkDeleteContacts,
+    bulkDeleteContacts: bulkDelete,
+    restoreContact: restore,
     bulkRestoreContacts,
-    restoreContact,
     mergeContacts,
+    matchContactIdentity,
     logExportAudit,
     logSetupAudit,
   };

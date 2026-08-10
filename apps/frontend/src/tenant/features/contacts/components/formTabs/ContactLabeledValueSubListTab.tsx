@@ -17,13 +17,13 @@ import { useTranslation } from "@/hooks/useTranslation";
 type ListItem = Record<string, unknown>;
 type TranslateFn = (key: AppTranslationKey) => string;
 
-export interface ContactLabeledValueFieldContext {
+interface ContactLabeledValueFieldContext {
   item: ListItem;
   index: number;
   updateItem: (idx: number, patch: ListItem) => void;
 }
 
-export interface ContactLabeledValueSubListTabProps extends ContactSubListTabBaseProps {
+interface ContactLabeledValueSubListTabProps extends ContactSubListTabBaseProps {
   listKey: Extract<ContactSubListKey, "emails" | "socials" | "phones">;
   labelFieldKey: string;
   valueFieldKey: string;

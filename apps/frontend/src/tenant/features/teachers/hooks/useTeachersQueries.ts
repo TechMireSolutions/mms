@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import {
   TEACHERS_MODULE_MANIFEST,
   type TeacherRecord,
@@ -10,13 +9,12 @@ import {
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { uniqueRegistryIds } from '@/lib/registryResolve';
+import { createPersonModuleResolveQueries } from '@/lib/query/createPersonModuleResolveQueries';
 import {
   TEACHERS_API,
   TEACHERS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
   buildTeachersPageUrl,
-  teacherDetailQueryKey,
   teachersPaginatedQueryKey,
   type Teacher,
   type TeacherNextEmployeeIdParams,
@@ -37,61 +35,15 @@ export function useTeachersPaginated(params: TeachersPaginatedParams) {
   });
 }
 
-export async function fetchAllTeachersForQuery(
-  params: Omit<TeachersPaginatedParams, 'page' | 'enabled'> = {},
-  onProgress?: (fetched: number, total: number) => void,
-): Promise<Teacher[]> {
-  const limit = TEACHERS_MODULE_MANIFEST.maxPageSize;
-  const all: Teacher[] = [];
-  let page = 1;
-  let total = 0;
+const teacherResolveQueries = createPersonModuleResolveQueries<TeacherRecord, Teacher>({
+  moduleQueryKey: TEACHERS_QUERY_KEY,
+  apiBase: TEACHERS_API,
+  responseKey: 'teachers',
+  toHydrated: (rows) => rows as unknown as Teacher[],
+});
 
-  for (;;) {
-    const teachersPage = await apiJson<TeachersListPageResult>(buildTeachersPageUrl({ ...params, page, limit }));
-    all.push(...(teachersPage.teachers as Teacher[]));
-    total = teachersPage.total;
-    onProgress?.(all.length, total);
-    if (!teachersPage.hasMore || page >= 200) break;
-    page += 1;
-  }
-
-  return all;
-}
-
-export function useTeacherById(teacherId: string | undefined, enabled = true) {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: teacherDetailQueryKey(teacherId ?? ''),
-    queryFn: async ({ signal }) => {
-      const teacherResponse = await apiJson<{ teacher: TeacherRecord }>(`${TEACHERS_API}/${teacherId}`, {
-        signal,
-      });
-      return teacherResponse.teacher as unknown as Teacher;
-    },
-    enabled: isAuthenticated && enabled && Boolean(teacherId),
-    staleTime: 30_000,
-  });
-}
-
-export function useTeacherLinkedContactIds(
-  excludeTeacherId?: string,
-  enabled = true,
-) {
-  const { isAuthenticated } = useAuth();
-  const queryString = excludeTeacherId ? `?excludeId=${encodeURIComponent(excludeTeacherId)}` : '';
-  return useQuery({
-    queryKey: [...TEACHERS_QUERY_KEY, 'linked-contact-ids', excludeTeacherId ?? ''] as const,
-    queryFn: async ({ signal }) => {
-      const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(
-        `${TEACHERS_API}/linked-contact-ids${queryString}`,
-        { signal },
-      );
-      return linkedContactsResponse.contactIds;
-    },
-    enabled: isAuthenticated && enabled,
-    staleTime: 30_000,
-  });
-}
+export const useTeacherLinkedContactIds = teacherResolveQueries.useLinkedContactIds;
+export const useTeachersByIds = teacherResolveQueries.useByIds;
 
 export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {}) {
   const { isAuthenticated } = useAuth();
@@ -119,26 +71,6 @@ export function useTeachersMetrics(options?: { enabled?: boolean }) {
     moduleId: TEACHERS_MODULE_MANIFEST.moduleId,
     apiPath: TEACHERS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
-  });
-}
-
-export function useTeachersByIds(ids: (string | number | null | undefined)[]) {
-  const { isAuthenticated } = useAuth();
-  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
-  const signature = normalized.join(',');
-
-  return useQuery({
-    queryKey: [...TEACHERS_QUERY_KEY, 'resolve', signature] as const,
-    queryFn: async ({ signal }) => {
-      const teachersResponse = await apiJson<{ teachers: TeacherRecord[] }>(`${TEACHERS_API}/resolve`, {
-        method: 'POST',
-        body: JSON.stringify({ ids: normalized }),
-        signal,
-      });
-      return teachersResponse.teachers as unknown as Teacher[];
-    },
-    enabled: isAuthenticated && normalized.length > 0,
-    staleTime: 30_000,
   });
 }
 

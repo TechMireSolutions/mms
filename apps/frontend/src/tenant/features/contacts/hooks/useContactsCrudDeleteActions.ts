@@ -51,7 +51,7 @@ export function useContactsCrudDeleteActions({
       if (ids.length === 0) return;
       try {
         const result = await bulkDeleteMutation.mutateAsync({
-          ids,
+          ids: ids.map(String),
           ...(deletionReason ? { deletionReason } : {}),
         });
         notifyBulkResult(

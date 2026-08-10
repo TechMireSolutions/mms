@@ -1,0 +1,58 @@
+import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { apiJson } from '@/lib/apiClient';
+import { uniqueRegistryIds } from '@/lib/registryResolve';
+
+/**
+ * Shared batch-`/resolve` + `/linked-contact-ids` query hooks for contact-linked
+ * person modules. Module adapters (Teachers/Students) supply their module query
+ * key, API base, and response-key/row mapping once.
+ */
+export function createPersonModuleResolveQueries<TRecord, THydrated>(options: {
+  moduleQueryKey: readonly unknown[];
+  apiBase: string;
+  responseKey: string;
+  toHydrated: (rows: TRecord[]) => THydrated[];
+}) {
+  const { moduleQueryKey, apiBase, responseKey, toHydrated } = options;
+
+  function useLinkedContactIds(excludeId?: string, enabled = true) {
+    const { isAuthenticated } = useAuth();
+    const queryString = excludeId ? `?excludeId=${encodeURIComponent(excludeId)}` : '';
+    return useQuery({
+      queryKey: [...moduleQueryKey, 'linked-contact-ids', excludeId ?? ''] as const,
+      queryFn: async ({ signal }) => {
+        const linkedContactsResponse = await apiJson<{ contactIds: Array<string | number> }>(
+          `${apiBase}/linked-contact-ids${queryString}`,
+          { signal },
+        );
+        return linkedContactsResponse.contactIds;
+      },
+      enabled: isAuthenticated && enabled,
+      staleTime: 30_000,
+    });
+  }
+
+  function useByIds(ids: (string | number | null | undefined)[]) {
+    const { isAuthenticated } = useAuth();
+    const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+    const signature = normalized.join(',');
+
+    return useQuery({
+      queryKey: [...moduleQueryKey, 'resolve', signature] as const,
+      queryFn: async ({ signal }) => {
+        const response = await apiJson<Record<string, TRecord[]>>(`${apiBase}/resolve`, {
+          method: 'POST',
+          body: JSON.stringify({ ids: normalized }),
+          signal,
+        });
+        return toHydrated((response[responseKey] ?? []) as TRecord[]);
+      },
+      enabled: isAuthenticated && normalized.length > 0,
+      staleTime: 30_000,
+    });
+  }
+
+  return { useLinkedContactIds, useByIds };
+}

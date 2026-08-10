@@ -22,7 +22,7 @@ import {
   renderWhatsAppMetadata,
 } from "@/tenant/features/contacts/components/contactMetadataIdentity";
 
-export interface ContactMetadataCellProps {
+interface ContactMetadataCellProps {
   colId: string;
   contact: Contact;
   prefs: Pick<ContactPreferences, "showDetailedSolarAge" | "showLunarDob" | "showDetailedLunarAge">;

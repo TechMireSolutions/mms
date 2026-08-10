@@ -2,34 +2,18 @@ import {
   normalizeStudentModulePreferences,
   type StudentModulePreferences,
 } from '@mms/shared';
-import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   getStudentModulePreferencesByWorkspace,
   upsertStudentModulePreferences,
 } from '../db/repositories/studentModulePreferencesRepository.js';
-import { broadcastCollection } from './websocketService.js';
+import { createModulePreferencesService } from '../lib/createModulePreferencesService.js';
 
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant.trim().toLowerCase();
-}
+const service = createModulePreferencesService<StudentModulePreferences>({
+  broadcastKey: 'students',
+  getByWorkspace: getStudentModulePreferencesByWorkspace,
+  upsert: upsertStudentModulePreferences,
+  normalize: normalizeStudentModulePreferences,
+});
 
-export async function loadStudentModulePreferences(): Promise<StudentModulePreferences | null> {
-  const raw = await getStudentModulePreferencesByWorkspace(requireTenant());
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return normalizeStudentModulePreferences(raw);
-}
-
-export async function saveStudentModulePreferences(
-  preferences: StudentModulePreferences | Record<string, unknown>,
-): Promise<StudentModulePreferences> {
-  const tenant = requireTenant();
-  const normalized = normalizeStudentModulePreferences(preferences);
-  await upsertStudentModulePreferences(
-    tenant,
-    normalized as unknown as Record<string, unknown>,
-  );
-  await broadcastCollection('students');
-  return normalized;
-}
+export const loadStudentModulePreferences = service.load;
+export const saveStudentModulePreferences = service.save;

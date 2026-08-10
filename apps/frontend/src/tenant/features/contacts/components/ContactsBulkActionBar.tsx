@@ -5,7 +5,7 @@ import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar
 import type { BulkSelectionMessageChannel } from "@/components/ui/BulkSelectionActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface ContactsBulkActionBarProps {
+interface ContactsBulkActionBarProps {
   selectedCount: number;
   viewingDeleted: boolean;
   bulkActions: readonly string[];

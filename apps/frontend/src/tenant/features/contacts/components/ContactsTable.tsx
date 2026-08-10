@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 
-export interface ContactsTableProps {
+interface ContactsTableProps {
   contacts: Contact[];
   selected: (number | string)[];
   onSelect: (contactId: number | string) => void;

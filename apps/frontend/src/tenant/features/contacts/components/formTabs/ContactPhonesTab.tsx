@@ -6,7 +6,7 @@ import { resolvePhoneLabel } from "@/lib/contacts/contactI18n";
 import { parsePhoneNumber } from "@mms/shared";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
-export interface ContactPhonesTabProps extends ContactSubListTabBaseProps {
+interface ContactPhonesTabProps extends ContactSubListTabBaseProps {
   phoneLabels: string[];
   onUpdatePhoneLabels: (labels: string[]) => void;
   defaultCountryCode: string;

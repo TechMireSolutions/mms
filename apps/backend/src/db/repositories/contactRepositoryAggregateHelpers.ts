@@ -24,7 +24,7 @@ export function createdAtRawSql(): SQL {
   return sql`NULLIF(trim(COALESCE(${contacts.customData}->>'createdAt', '')), '')`;
 }
 
-/** True when required Setup fields/tabs are missing — mirrors `isContactProfileIncomplete`. */
+/** True when required Setup fields/tabs are missing (SQL mirror of JS profile-completeness semantics). */
 export function buildProfileIncompleteSql(fieldConfig: FieldConfig): SQL | null {
   const fields = fieldConfig.fields || {};
   const formTabs = (fieldConfig.formTabs || []).filter(

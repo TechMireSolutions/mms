@@ -8,7 +8,7 @@ import {
 } from "@/lib/contacts/contactsSyncOutboxStorage";
 import { recordContactsSyncConflict } from "@/lib/contacts/contactsSyncOutboxConflicts";
 
-export type ContactsOutboxInput =
+type ContactsOutboxInput =
   | { kind: "upsert"; contact: Contact; id?: string }
   | { kind: "update"; contactId: string; contact: Contact; id?: string }
   | { kind: "delete"; contactId: string; deletionReason?: string; id?: string };
@@ -33,13 +33,13 @@ function removeOutboxEntry(id: string): void {
   notifyContactsSyncOutboxChanged();
 }
 
-export interface ContactsOutboxFlushHandlers {
+interface ContactsOutboxFlushHandlers {
   upsert: (contact: Contact) => Promise<unknown>;
   update: (contactId: string, contact: Contact) => Promise<unknown>;
   delete: (contactId: string, deletionReason?: string) => Promise<unknown>;
 }
 
-export interface ContactsOutboxFlushResult {
+interface ContactsOutboxFlushResult {
   synced: number;
   failed: number;
   conflicts: number;

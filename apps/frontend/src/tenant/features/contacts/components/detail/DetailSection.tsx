@@ -6,7 +6,7 @@ import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import { COLLECTION_CONTAINER_CLASS, ICON_MAP } from "./contactDetailStyles";
 
-export interface DetailSectionProps {
+interface DetailSectionProps {
   title: string;
   children: ReactNode;
 }
@@ -20,7 +20,7 @@ export function DetailSection({ title, children }: DetailSectionProps): JSX.Elem
   );
 }
 
-export interface FieldGroupCardProps {
+interface FieldGroupCardProps {
   group: string;
   fields: { key: string; label: string; type: string }[];
   formatValue: (field: { key: string; type: string }) => string | null;

@@ -7,13 +7,13 @@ import type { useContactsMessagingActions } from "@/tenant/features/contacts/hoo
 import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
 import type { useContactsPageOverlayState } from "@/tenant/features/contacts/hooks/useContactsPageOverlayState";
 import type { useContactsSelectionTargets } from "@/tenant/features/contacts/hooks/useContactsSelectionTargets";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 
 type Directory = ReturnType<typeof useContactsDirectory>;
 type Overlay = ReturnType<typeof useContactsPageOverlayState>;
 type Messaging = ReturnType<typeof useContactsMessagingActions>;
 type Actions = ReturnType<typeof useContactsPageActions>;
 type SelectedTargets = ReturnType<typeof useContactsSelectionTargets>;
-type DirectoryColumn = { id: string; label: string; sortField?: string; width?: number };
 
 /** Maps directory / overlay slices into ContactsPageTabPanelProps. */
 export function useContactsPageTabPanelProps({
@@ -49,7 +49,7 @@ export function useContactsPageTabPanelProps({
   canWrite: boolean;
   canDelete: boolean;
   canEditSetup: boolean;
-  tableColumns: DirectoryColumn[];
+  tableColumns: ContactsColumnConfig[];
   commonDirectoryProps: ComponentProps<typeof ContactCards>;
   tableProps: ComponentProps<typeof ContactsTable>;
   handleBulkExport: () => void | Promise<void>;

@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { WHATSAPP_STATUS_VALUES } from './contactEntityTypes.js';
 
-const whatsappStatusSchema = z.enum(['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED']);
+const whatsappStatusSchema = z.enum(WHATSAPP_STATUS_VALUES);
 
 export const phoneNumberSchema = z
   .object({

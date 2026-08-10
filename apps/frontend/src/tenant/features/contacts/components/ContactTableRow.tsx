@@ -18,7 +18,7 @@ export type { ContactsColumnConfig };
 export { columnWidthStyle };
 export { TableHeaderCell } from "@/tenant/features/contacts/components/ContactTableHeaderCell";
 
-export interface ContactTableRowProps {
+interface ContactTableRowProps {
   contact: Contact;
   isSelected: boolean;
   columns: ContactsColumnConfig[];

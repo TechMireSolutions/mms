@@ -33,10 +33,14 @@ function nonEmpty(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+/** Composes a display name from first/last name parts (trims and drops empties). */
+export function composeContactName(firstName?: string, lastName?: string): string {
+  return [firstName, lastName].map(nonEmpty).filter(Boolean).join(' ');
+}
+
 /** Display name from contact profile fields (composed when `name` is empty). */
 export function contactDisplayName(contact: ContactLike): string {
-  const composed = [contact.firstName, contact.lastName].map(nonEmpty).filter(Boolean).join(' ');
-  return nonEmpty(contact.name) || composed;
+  return nonEmpty(contact.name) || composeContactName(contact.firstName, contact.lastName);
 }
 
 export function stripRecordFields<T extends Record<string, unknown>>(

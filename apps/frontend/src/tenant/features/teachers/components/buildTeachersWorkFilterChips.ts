@@ -1,11 +1,8 @@
 import { teacherStatusLabel } from "@/lib/teachers/teacherStatusUi";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { buildWorkFilterChips, type WorkFilterChip } from "@/lib/query/buildWorkFilterChips";
 
-export type TeachersWorkFilterChip = {
-  key: string;
-  label: string;
-  onRemove: () => void;
-};
+export type TeachersWorkFilterChip = WorkFilterChip;
 
 /** Build removable FilterChips models for active Teachers Work filters. */
 export function buildTeachersWorkFilterChips(input: {
@@ -15,19 +12,17 @@ export function buildTeachersWorkFilterChips(input: {
   onSpecializationChange: (value: string) => void;
   t: TranslationFunction;
 }): TeachersWorkFilterChip[] {
-  const chips: TeachersWorkFilterChip[] = input.filterStatus.map((status) => ({
-    key: status,
-    label: teacherStatusLabel(input.t, status),
-    onRemove: () => input.onToggleStatus(status),
-  }));
-
-  if (input.filterSpecialization) {
-    chips.push({
-      key: "specialization",
-      label: input.filterSpecialization,
-      onRemove: () => input.onSpecializationChange(""),
-    });
-  }
-
-  return chips;
+  return buildWorkFilterChips({
+    statuses: input.filterStatus,
+    statusLabel: teacherStatusLabel,
+    onToggleStatus: input.onToggleStatus,
+    t: input.t,
+    extraChip: input.filterSpecialization
+      ? {
+          key: "specialization",
+          label: input.filterSpecialization,
+          onRemove: () => input.onSpecializationChange(""),
+        }
+      : undefined,
+  });
 }

@@ -4407,7 +4407,6 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "contacts.mergeSuccessTitle": "تم دمج جهات الاتصال",
   "contacts.mergeSuccessDesc": "تم دمج جهة الاتصال المكررة بنجاح.",
   "contacts.sync.offline": "أنت غير متصل. قد لا تتزامن تغييرات جهات الاتصال حتى تعود للاتصال.",
-  "contacts.sync.failed": "تعذر تحميل جهات الاتصال من الخادم. يُعرض المحتوى المخزّن مؤقتاً عند توفره.",
   "contacts.sync.pending": "{count} تغيير(ات) في انتظار المزامنة عند عودة الاتصال.",
   "contacts.sync.syncingPending": "جاري مزامنة التغييرات المعلّقة…",
   "contacts.sync.retryNow": "مزامنة الآن",

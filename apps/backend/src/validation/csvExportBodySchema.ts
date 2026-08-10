@@ -40,8 +40,7 @@ export const moduleSetupAuditBodySchema = z.object({
   summary: z.string().min(1).max(500),
 });
 
-/** Students Setup audit areas — fields/preferences only (no Contacts sync tab). */
-export const studentSetupAuditBodySchema = z.object({
+/** Setup audit areas for person modules — fields/preferences only (no Contacts sync tab). */
+export const moduleFieldsPrefsAuditBodySchema = moduleSetupAuditBodySchema.extend({
   area: z.enum(['fields', 'preferences']),
-  summary: z.string().min(1).max(500),
 });
