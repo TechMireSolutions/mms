@@ -8,6 +8,7 @@ import {
 } from "@mms/shared";
 import { startServerTeachersCsvExport } from "@/lib/backgroundJobs/startServerTeachersCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
+import { buildTeachersDirectoryQuery } from "@/tenant/features/teachers/hooks/teachersQueryShared";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -48,13 +49,14 @@ export function useTeachersExportActions({
   const { t } = useTranslation();
 
   const buildFilteredQuery = useCallback(
-    (): TeachersListQuery => ({
-      search: search.trim() || undefined,
-      status: filterStatus.length > 0 ? filterStatus.join(",") : undefined,
-      specialization: filterSpecialization || undefined,
-      sortField: sortField ?? undefined,
-      sortDir: sortField ? sortDir : undefined,
-    }),
+    (): TeachersListQuery =>
+      buildTeachersDirectoryQuery({
+        search,
+        filterStatus,
+        filterSpecialization,
+        sortField,
+        sortDir,
+      }),
     [search, filterStatus, filterSpecialization, sortField, sortDir],
   );
 

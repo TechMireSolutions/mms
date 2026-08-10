@@ -2,6 +2,7 @@ import {
   TEACHERS_MODULE_MANIFEST,
   type Teacher,
   type TeacherRecord,
+  type TeacherSortField,
   type TeachersListPageResult,
   type TeachersListQuery,
   type TeachersWidgetQuery,
@@ -32,6 +33,31 @@ export function buildTeachersPageUrl(params: TeachersPaginatedParams): string {
   if (params.sortDir) queryParams.set('sortDir', params.sortDir);
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   return `${TEACHERS_API}?${queryParams.toString()}`;
+}
+
+export interface TeachersDirectoryQueryInput {
+  search?: string;
+  filterStatus: string[];
+  filterSpecialization: string;
+  sortField: TeacherSortField | null | undefined;
+  sortDir: 'asc' | 'desc';
+}
+
+/** Directory filter state → {@link TeachersListQuery} (Work page + server CSV share this). */
+export function buildTeachersDirectoryQuery({
+  search,
+  filterStatus,
+  filterSpecialization,
+  sortField,
+  sortDir,
+}: TeachersDirectoryQueryInput): TeachersListQuery {
+  return {
+    search: search?.trim() || undefined,
+    status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
+    specialization: filterSpecialization || undefined,
+    sortField: sortField ?? undefined,
+    sortDir: sortField ? sortDir : undefined,
+  };
 }
 
 export function teachersPaginatedQueryKey(params: TeachersPaginatedParams) {

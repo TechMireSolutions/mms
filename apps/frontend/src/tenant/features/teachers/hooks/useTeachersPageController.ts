@@ -12,6 +12,9 @@ import { useTeachersDirectoryFilters } from '@/tenant/features/teachers/hooks/us
 import { useTeachersKeyboardShortcuts } from '@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts';
 import { useTeachersPageActions } from '@/tenant/features/teachers/hooks/useTeachersPageActions';
 import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
+import {
+  buildTeachersDirectoryQuery,
+} from '@/tenant/features/teachers/hooks/teachersQueryShared';
 import { useTeacherLookupOptions } from '@/tenant/features/teachers/hooks/useTeacherStatusConfig';
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import {
@@ -123,11 +126,13 @@ export function useTeachersPageController() {
   const workPageQuery = useTeachersPaginated({
     page: listPage,
     limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
-    search: debouncedSearch,
-    status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
-    specialization: filterSpecialization || undefined,
-    sortField,
-    sortDir,
+    ...buildTeachersDirectoryQuery({
+      search: debouncedSearch,
+      filterStatus,
+      filterSpecialization,
+      sortField,
+      sortDir,
+    }),
     includeDeleted: showDeleted,
     enabled: useServerWork,
   });

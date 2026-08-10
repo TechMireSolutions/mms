@@ -3,6 +3,7 @@ import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { notify } from "@/lib/notify";
 import type { Teacher } from '@mms/shared';
 import { useTeacherMutations } from "@/tenant/features/teachers/hooks/useTeachers";
+import { useTeachersCrudNotify } from "@/tenant/features/teachers/hooks/useTeachersCrudNotify";
 import { type TeacherRecord, toMessagingRecipient } from "@mms/shared";
 
 interface UseTeachersPageActionsParams {
@@ -13,6 +14,7 @@ export function useTeachersPageActions({
   editTeacher,
 }: UseTeachersPageActionsParams) {
   const { t } = useTranslation();
+  const { handleError, notifyBulkResult } = useTeachersCrudNotify();
   const {
     createTeacher,
     updateTeacher,
@@ -59,20 +61,16 @@ export function useTeachersPageActions({
     deleteTeacher.mutate(
       { id, deletionReason },
       {
-        onSuccess: () => notify.info(t("teachers.toast.deleted")),
-        onError: (err) => notify.error(t("settings.serverSaveFailed"), {
-          description: err instanceof Error ? err.message : String(err),
-        }),
+        onSuccess: () => notifyBulkResult(1, 0, "teachers.toast.deleted", "teachers.toast.deleted"),
+        onError: (err) => handleError(err, "teachers.delete", "teachers.deleteFailed"),
       },
     );
   };
 
   const handleRestore = (id: string) => {
     restoreTeacher.mutate(id, {
-      onSuccess: () => notify.success(t("teachers.restoreSuccess")),
-      onError: (err) => notify.error(t("settings.serverSaveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
+      onSuccess: () => notifyBulkResult(1, 0, "teachers.restoreSuccess", "teachers.restoreSuccess"),
+      onError: (err) => handleError(err, "teachers.restore", "teachers.restoreFailed"),
     });
   };
 
@@ -80,57 +78,45 @@ export function useTeachersPageActions({
     bulkDeleteTeachers.mutate(
       { ids, deletionReason },
       {
-        onSuccess: (result) => {
-          if (result.failed > 0) {
-            notify.error(t("teachers.toast.bulkPartial", {
-              succeeded: result.succeeded,
-              failed: result.failed,
-            }));
-          } else {
-            notify.info(t("teachers.toast.deleted"));
-          }
-        },
-        onError: (err) => notify.error(t("settings.serverSaveFailed"), {
-          description: err instanceof Error ? err.message : String(err),
-        }),
+        onSuccess: (result) =>
+          notifyBulkResult(
+            result.succeeded,
+            result.failed,
+            "teachers.toast.deleted",
+            "teachers.toast.deleted",
+          ),
+        onError: (err) => handleError(err, "teachers.bulk_delete", "teachers.deleteFailed"),
       },
     );
   };
 
   const handleBulkRestore = (ids: string[]) => {
     bulkRestoreTeachers.mutate(ids, {
-      onSuccess: (result) => {
-        if (result.failed > 0) {
-          notify.error(t("teachers.toast.bulkPartial", {
-            succeeded: result.succeeded,
-            failed: result.failed,
-          }));
-        } else {
-          notify.success(t("teachers.restoreSuccess"));
-        }
-      },
-      onError: (err) => notify.error(t("settings.serverSaveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
+      onSuccess: (result) =>
+        notifyBulkResult(
+          result.succeeded,
+          result.failed,
+          "teachers.restoreSuccess",
+          "teachers.restoreSuccess",
+        ),
+      onError: (err) => handleError(err, "teachers.bulk_restore", "teachers.restoreFailed"),
     });
   };
 
   const handleBulkStatusChange = (ids: string[], status: string) => {
-    bulkUpdateTeacherStatus.mutate({ ids, status }, {
-      onSuccess: (result) => {
-        if (result.failed > 0) {
-          notify.error(t("teachers.toast.bulkPartial", {
-            succeeded: result.succeeded,
-            failed: result.failed,
-          }));
-        } else {
-          notify.success(t("teachers.toast.statusUpdated"));
-        }
+    bulkUpdateTeacherStatus.mutate(
+      { ids, status },
+      {
+        onSuccess: (result) =>
+          notifyBulkResult(
+            result.succeeded,
+            result.failed,
+            "teachers.toast.statusUpdated",
+            "teachers.toast.statusUpdated",
+          ),
+        onError: (err) => handleError(err, "teachers.bulk_status", "teachers.bulkStatusFailed"),
       },
-      onError: (err) => notify.error(t("settings.serverSaveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
+    );
   };
 
   return {
