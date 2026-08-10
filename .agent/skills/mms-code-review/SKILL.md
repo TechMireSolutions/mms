@@ -48,8 +48,10 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 ### Architecture
 - [ ] Shared types/utils in `@mms/shared` (not duplicated)
 - [ ] No frontend → backend direct imports
-- [ ] Backend: routes → services → database (no `pg` in routes)
+- [ ] Backend: routes → use-cases (repo DI) → repository interface → adapter (no `pg`/Drizzle in routes); refactored modules use composition root (`contactUseCases` pattern) — `mms-api-interface.md` §2
+- [ ] Repository interface is the sole storage gateway; use-case functions take it via DI (testable with fakes) — `mms-data-layer.md`
 - [ ] Correct data layer: Query for REST resources, `useLiveCollection` for legacy modules
+- [ ] Module config via `createStandardModuleConfigHook` (extend the hook, no forked providers) — `mms-hooks.md`
 - [ ] Touched app files under hard ~300 lines (prefer ~220 FE shells); splits keep public barrels — `mms-structure-naming.md`
 
 ### Backend API

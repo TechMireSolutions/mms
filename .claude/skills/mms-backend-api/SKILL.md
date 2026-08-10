@@ -21,6 +21,17 @@ DDL / `schema.ts` / journal → skill **`mms-schema-migrate`**. CSRF / Origin / 
 app.ts → plugins/ → routes/ (thin) → middleware/ → services/ → db/
 ```
 
+Refactored/growing modules (Contacts is the reference) use Clean Architecture layering:
+
+```
+routes/ (thin) → {module}/use-cases/ → {module}/repository/ (interface) → adapter (db/)
+```
+
+- Route handlers call the module **composition root** (`contactUseCases`) — never reach past it into Drizzle.
+- Use-case functions take the repository **interface** via DI (testable with fakes).
+- A single repository interface (`ContactsRepository`) is the sole storage gateway; the Drizzle adapter (`{module}RepositoryAdapter`) is the only concrete implementation.
+- Legacy `services/*.ts` module paths stay as **stable re-export shims** of the composition root.
+
 Never query `pg` from handlers. Prefer repositories / `withTenantTransaction`. Use **`dbSyncService`** only for legacy JSON documents (`/api/db/...`).
 
 ## Document store vs REST
@@ -50,12 +61,13 @@ Upsert only (`bulkSave` + `conflictTarget`). **Never** wire `replaceForWorkspace
 ## Add a REST resource
 
 1. Zod schemas — `validation/` or `@mms/shared` (`.strict()` on write bodies)
-2. `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection`
-3. Register under `/api/{resource}` in `routes/index.ts`
-4. `inject()` tests with `host: 'tenant.localhost'`
-5. FE Query hooks — **`mms-query-factories`** / **`mms-frontend`**
+2. Domain layer — `{module}/use-cases/**` (orchestration, repo DI) + `{module}/repository/` interface + Drizzle adapter + composition root (`{module}UseCases`) — `mms-api-interface.md` §2
+3. `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection`; call the composition root
+4. Register under `/api/{resource}` in `routes/index.ts`
+5. `inject()` tests with `host: 'tenant.localhost'`
+6. FE Query hooks — **`mms-query-factories`** / **`mms-frontend`**
 
-Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.ts`, `hasanat.ts`.
+Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.ts`, `hasanat.ts`; Contacts Clean Architecture refactor (`contacts/use-cases/` + `contacts/repository/` + `contactUseCases`).
 
 ## New route checklist
 

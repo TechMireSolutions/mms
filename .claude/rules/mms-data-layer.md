@@ -7,6 +7,8 @@ paths:
   - "apps/backend/src/routes/common/db.ts"
   - "apps/backend/src/routes/tenant/**"
   - "apps/backend/src/services/dbSyncService.ts"
+  - "apps/backend/src/contacts/**"
+  - "apps/backend/src/lib/**"
   - "apps/frontend/src/lib/db.ts"
   - "apps/frontend/src/lib/queryClient.ts"
   - "apps/frontend/src/hooks/**"
@@ -31,6 +33,13 @@ Authoritative standards for backend databases, migrations, caching architectures
 - **`sql` fragment safety**: Approved Drizzle `sql` fragments for RLS `SET LOCAL` and JSONB merge must use **parameterized** values only. **Ban** piping user/tenant input into `sql.raw`, string-built identifiers, or concatenated SQL.
 - **Module layout**: Connection / init / purge / document-store helpers may live in focused siblings (`dbConnection.ts`, `dbInit.ts`, `documentStore*.ts`, …) re-exported from the stable public surface callers already import — `mms-structure-naming.md`.
 - **Access Pattern**: Controllers must not import raw `pg` drivers. Prefer **REST repositories**; use `dbSyncService` only for settings/legacy sync paths.
+
+### Module repository gateway (Clean Architecture)
+Refactored/growing modules (Contacts is the reference) gate all storage behind a repository interface:
+- **Single interface** (`{module}/repository/{module}Repository.ts` → e.g. `ContactsRepository`) declares every storage operation; a Drizzle adapter (`{module}/repository/*Adapter.ts`) is the only concrete implementation.
+- **Use cases orchestrate**: `{module}/use-cases/**` holds domain orchestration (load/write/soft-delete/normalize/duplicate-scan) as functions that take the repository interface via **DI** — testable with fakes (`contactUseCases.test.ts`, `contactRepositoryDuplicates.test.ts`).
+- **Composition root**: `contactUseCases` factory wires the default adapter once; route handlers and services import the composition root, never the raw `db` / adapter. Stable re-export shims keep legacy `services/*.ts` paths working.
+- Do **not** reach past the repository interface into Drizzle from use cases/services; parameterized `sql` fragments are allowed only inside adapters/repositories (RLS `SET LOCAL`, JSONB merge) — `mms-api-interface.md` §2.
 - **Hydrate graphs**: Prefer Drizzle relational `db.query.*` or explicit joins in services — ban N+1 per-id loops (pair with FE batch `/resolve`).
 
 ### Transaction-Scoped Tenant RLS (Pool Poisoning Prevention)
@@ -62,6 +71,7 @@ Authoritative standards for backend databases, migrations, caching architectures
 
 ### Entity list pagination (REST)
 - Paginated list routes: clients should send `page` (+ `limit`); omit may default to page 1 / default page size with a server max cap — **ban** unpaged full-tenant dumps via `loadAllFn` or optional-page paths that return everything (Contacts closed this; do not re-open on Students/Teachers/…). Do not claim Zod already requires `page`/`limit` until `baseListQuerySchema` is tightened.
+- List/filter **wire-shape SSOT** for contacts is `contactsListQuerySchema` in `@mms/shared` (SQL `listPage` pagination) — do not fork per-route contact list/filter flags (`mms-api-interface.md` §5).
 - Work **cards** and **table** must use the same server page/limit APIs — ban `maxPageSize` one-shot loads for cards with a truncation banner that says “switch to list”.
 - Prefer **keyset/cursor** pagination for large or hot directories when touching those APIs; SQL `LIMIT`/`OFFSET` is OK for small Work pages. In-memory `paginateX(loadAll())` is migration debt — do not expand it.
 

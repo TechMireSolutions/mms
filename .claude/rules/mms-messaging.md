@@ -49,6 +49,7 @@ Governs campaign composition, templates, and sent-history for the Messaging modu
 - Placeholders evaluate on the client; allowlist known tokens (e.g. `{name}`) — reject unknown tokens.
 - Template/body content is plain text — no executable HTML.
 - Batch WhatsApp opens: sequential with configurable delay; SMS: `openDeviceSmsComposer`.
+- WhatsApp number resolution: only via `PuppeteerWhatsAppProvider.getNumberId` (`@mms/shared` `whatsappProvider`) — no ad-hoc phone → number-id derivation.
 - Do not log full message bodies at info level; keep recipient identifiers minimal.
 
 ## 4. Module page parity (§7)

@@ -36,6 +36,7 @@ Rules governing the strictly typed, component-driven, accessible UI/UX architect
   - `DetailSectionTitle` (`@/components/ui/DetailSectionTitle`) — SSOT for the `DETAIL_SECTION_TITLE` detail-section heading markup (Contacts / Students / Teachers detail drawers)
   - `FormFooterChip` (`@/components/ui/FormFooterChip`) — `FormFooterEntityChip` / `FormFooterBadge` / `FormFooterErrorChip` for form-footer entity + tone badges (Contacts / Students / Teachers / Sessions / QB); do not fork the `bg-muted/65` / `bg-{tone}/10 border-{tone}/20` / destructive chip spans
   - `DrawerSyncStatusFooter` (`@/components/ui/DetailDrawerArchiveChrome`) — synced/archived status footer for entity detail drawers (Students / Teachers / Sessions); do not hand-roll the success/warning dot + uppercase label
+  - `StatusBadge` (`@/components/ui/StatusBadge`) — status indicators (status/archive/WaStatus etc.); **never** convey status by color alone — always pair color with a text label (`StatusBadge` + `t()`)
   - `ModuleFiltersMenuButton` (`@/components/ui/ModuleFiltersMenuButton`) — `ModuleFilterDropdown` + `ModuleFilterCheckboxGroup` / `ModuleFilterRadioGroup` / `ModuleFilterDivider` filter-popover shell (Contacts / Students / Teachers / Messaging); do not inline raw `DropdownMenu` filter chrome in Work toolbars
 - Extend central primitives safely when custom variations are needed. Do not implement ad-hoc primitives in feature folders.
 

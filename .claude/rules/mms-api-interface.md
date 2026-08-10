@@ -4,6 +4,8 @@ paths:
   - "apps/frontend/src/lib/apiClient.ts"
   - "apps/frontend/src/lib/apiClientHelpers.ts"
   - "apps/backend/src/routes/**/*.ts"
+  - "apps/backend/src/contacts/**/*.ts"
+  - "apps/backend/src/lib/**/*.ts"
   - "apps/backend/src/middleware/**/*.ts"
   - "apps/backend/src/app.ts"
   - "packages/shared/src/apiSchemas.ts"
@@ -35,7 +37,13 @@ Backend route handlers must remain lean, delegating operations to the service la
 ```
 request → route barrel / sub-routes (routes/**) → service handler (services/*.ts) → database model (db/*)
 ```
+For refactored/growing modules (Contacts is the reference) the delegation path is:
+```
+request → route barrel / sub-routes (routes/**) → use cases ({module}/use-cases/**) → repository interface ({module}/repository/**) → Drizzle adapter (db/**)
+```
 - **Controller Rules**: Route files must never import raw Drizzle pg pool drivers. Validate bodies with Zod via `parseRequest`.
+- **Use-case layer**: Domain orchestration lives in `{module}/use-cases/**` — pure functions/factories that receive the module repository interface as a DI parameter. Import the module **composition root** (e.g. `contactUseCases`) at call sites; route handlers must not reach past it into the DB.
+- **Repository interface = sole storage gateway**: A single repository interface (Contacts: `ContactsRepository`) declares every storage operation; a Drizzle adapter (`{module}/repository/*Adapter.ts`) is the only concrete implementation. Use-case functions take the interface (testable with fakes), never raw `db` / `pg`. Keep stable re-export shims at legacy `services/*.ts` paths for backward compatibility.
 - **Plugin encapsulation**: Register domain routes as Fastify plugins with stable public registration paths; prefer thin barrels + colocated `*Routes.ts` — `mms-structure-naming.md`.
 - **Boot Guards**: Fail fast if `DATABASE_URL` or `JWT_SECRET` is missing.
 - **Request budgets**: Wire Fastify from `serverConfig` — `bodyLimit` (`REQUEST_BODY_LIMIT_BYTES`) and `requestTimeout` (`REQUEST_TIMEOUT_MS`). Oversized sync/upload routes may raise `bodyLimit` explicitly; do not leave unbounded bodies. PG statement budgets → `mms-data-layer.md`.

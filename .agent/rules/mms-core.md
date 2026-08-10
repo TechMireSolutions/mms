@@ -75,6 +75,7 @@ Single prose owner per topic — other rules/skills use short pointers only. **W
 | Sessions, cookies, CSRF, RBAC, rate limits | `mms-auth-security.md` | `mms-backend-security` |
 | apiClient, error `type`, HTTP pagination, bulk PUT upsert, idempotency↔body | `mms-api-interface.md` | `mms-frontend` · `mms-backend-api` |
 | Query policy, Drizzle/RLS, soft-delete **schema/strip/SQL**, PG timeouts, WS invalidate | `mms-data-layer.md` | `mms-query-factories` · `mms-schema-migrate` · `mms-data-sync` (legacy) |
+| Backend module layering (use-cases + repository interface + composition root, DI) | `mms-api-interface.md` §2 · `mms-structure-naming.md` | `mms-backend-api` |
 | Soft-delete **Work trash / drawer / §7** | `mms-module-architecture.md` | `mms-module-work` · `mms-module-page` |
 | Await `mutateAsync` before form close | `mms-module-architecture.md` §7 | `mms-module-page` |
 | Background jobs (SKIP LOCKED / durable queue) | `mms-module-architecture.md` §5 | `mms-background-jobs` |
@@ -84,6 +85,7 @@ Single prose owner per topic — other rules/skills use short pointers only. **W
 | UI tokens, tabs, a11y, responsive §7 | `mms-ui-ux-design.md` | `mms-frontend` · `mms-a11y-smoke` |
 | Module Work/Reports/Setup, §7 gold-standard | `mms-module-architecture.md` | `mms-module-page` · `mms-module-work` · `mms-module-setup` · `mms-background-jobs` |
 | Field/tab registry | `mms-fields.md` | `mms-fields-registry` · `mms-module-setup` |
+| Module config hook (`createStandardModuleConfigHook`) | `mms-hooks.md` | `mms-frontend` · `mms-module-setup` |
 | Settings, i18n, formatters, backup UI | `mms-settings-i18n.md` | `mms-settings-i18n` · `mms-backup-restore` |
 | Health, ports, purge/reset, env, CI (match root engines) | `mms-ops-infrastructure.md` | `mms-dev-setup` · `mms-ops-deploy` · `mms-linux-compatibility` |
 | Tests, logging, ErrorBoundary, Sentry | `mms-testing-observability.md` | `mms-code-review` · `mms-a11y-smoke` |

@@ -11,6 +11,8 @@ paths:
   - "apps/frontend/src/hooks/**"
   - "apps/backend/src/routes/**"
   - "apps/backend/src/services/**"
+  - "apps/backend/src/contacts/**"
+  - "apps/backend/src/lib/**"
   - "packages/shared/src/**"
   - "scripts/**/*.sh"
   - "e2e/**"
@@ -43,6 +45,11 @@ MMS uses a strict `pnpm` workspace monorepo layout:
   - `platform/` (e.g. `platformWorkspaces.ts`, `platformAuth.ts`, `platformUsers.ts`, `platformSettings.ts`)
   - `tenant/` — prefer a thin barrel (`contacts.ts`, `messaging.ts`) that registers sub-route modules under `tenant/{module}/` when a domain grows
   - `common/` (e.g. `auth.ts`, `db.ts`, `public.ts`, `backgroundJobs.ts`)
+- Backend domain modules (Clean Architecture; Contacts is the reference) split by concern:
+  - `{module}/use-cases/**` — domain orchestration functions with repository DI
+  - `{module}/repository/**` — storage **interface** (`{module}Repository.ts`) + Drizzle adapter (`{module}RepositoryAdapter.ts`)
+  - `{module}/use-cases/{module}UseCases.ts` — composition root factory wiring the default adapter
+  - Legacy `services/*.ts` paths for the module become **stable re-export shims** re-exporting the composition root — do not delete public import paths callers use (`mms-dry.md` §2).
 - Backend DB helpers may split by concern (`dbConnection.ts`, `documentStore*.ts`, …) behind the stable `database.ts` / document-store public surface — do not break import paths callers already use.
 
 ---

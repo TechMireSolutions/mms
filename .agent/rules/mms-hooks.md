@@ -13,6 +13,7 @@ Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), o
 **Policy owner:** `mms-data-layer.md` §3 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
 
 - Wrap colocated `queryOptions` / `mutationOptions`; toast via `notify.*` + `t()` at call site after `mutateAsync` — no global `MutationCache` toast bus.
+- Prefer the shared query factories in `apps/frontend/src/lib/query/` before hand-rolling CRUD factories per module: `createModuleCrudMutations` (mutation factories + invalidator), `createModuleQueryInvalidator`, `createModuleSetupConfigApi` (setup REST query/mutation factory), `createPersonModuleResolveQueries` (batch `/resolve`). Thin module facades wrap these (`@/tenant/hooks/collections/*`).
 - Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`.
 - Form close after success → **`mms-module-architecture.md` §7**.
 
@@ -20,7 +21,7 @@ Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), o
 
 Hook **implementations** stay in `tenant/features/{module}/hooks/`. Cross-feature and shared UI **must** import from:
 
-`@/tenant/hooks/collections/{contacts|students|teachers|sessions|enrollments|users|finance|accounting|hasanat|examinations|questionBank|attendance}`
+`@/tenant/hooks/collections/{contacts|students|teachers|sessions|enrollments|users|finance|accounting|hasanat|examinations|questionBank|attendance|messaging}`
 
 Same-feature files may keep direct feature-hook imports. Shared person UI: `ContactPicker` / `ContactCreateModal` under `@/components/contactLink/`.
 
@@ -44,9 +45,9 @@ Prefer feature hooks (`useObligationLookups`, `useQuestionBankConfig`, `useWorks
 
 Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / branding / theme), and public branding queries as documented in `mms-settings-i18n.md`. One-shot outside React: `getGlobalSettings()`, `getBrandingSettings()`.
 
-## Contact config
+## Module config (standard hook)
 
-`useContactConfig` / columns / validation from `ContactConfigContext` (`lib/contexts/ContactConfigContext.tsx` + `lib/contacts/*`). Mount once via `TenantScopedProviders` (tenant host only) — never nest on child pages.
+Module configuration should build on the shared `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) — used by Teachers / Students / Sessions / Users / Enrollments via `useStandardModuleConfig` (`hooks/useStandardModuleConfig.ts`). Contacts is the richer reference: `useContactStandardConfig` (`lib/contacts/useContactStandardConfig.ts`) calls the same hook with optional params for lookups, column-layout, relationship mirrors, and custom-tab sync, surfaced through `ContactConfigContext` (`lib/contexts/ContactConfigContext.tsx` + `lib/contacts/*` slices: `useContactConfigPrefs`, `useContactsConfigEnhance`). Mount the provider once via `TenantScopedProviders` (tenant host only) — never nest on child pages. Extend the hook (optional params) instead of forking a bespoke provider per module.
 
 ## RBAC & viewer
 

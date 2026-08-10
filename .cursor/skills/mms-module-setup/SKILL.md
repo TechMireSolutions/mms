@@ -41,11 +41,11 @@ Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-o
 | Field delete guard | `getContactFieldRemovalIssues()` in `@mms/shared` |
 | Preferences UI | `ContactsSettingsPanel.tsx` (mode `preferences`) |
 | Countries & dial codes | `ContactsCountryCodesSection.tsx` → `updateCountryCodes` / `PUT /api/contacts/lookups/countryCodes` |
-| Option lists (gender/labels/…) | ContactConfig + `EditableSelect` `onUpdateOptions` → `/api/contacts/lookups/:kind` |
+| Option lists (gender/labels/…) | `useContactStandardConfig` (via `createStandardModuleConfigHook`) + `EditableSelect` `onUpdateOptions` → `/api/contacts/lookups/:kind` |
 | Default Preferences | `preferencesStorage.ts` + `PUT /api/contacts/preferences` |
 | Sync settings extra tab | `ContactSyncPanel.tsx` |
 | Config DB store | typed `contact_field_configs` / `contact_module_preferences` / `contact_user_column_prefs` REST; lookups via `/api/contacts/lookups` |
-| Context Provider | `ContactConfigProvider` via `TenantScopedProviders` (tenant host only) |
+| Config hook | `createStandardModuleConfigHook` → `useContactStandardConfig` (`lib/contacts/useContactStandardConfig.ts`), surfaced via `ContactConfigProvider` in `TenantScopedProviders` (tenant host only) |
 
 ## Workflow: add Setup Fields capability
 
