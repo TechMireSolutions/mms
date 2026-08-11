@@ -17,6 +17,8 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   prefix?: string;
   collection: string;
   schema: ZodType<T>;
+  /** Tenant-aware strict write schema (system keys ∪ Setup custom keys). POST/PUT use it when set. */
+  buildWriteSchema?: () => Promise<ZodType<T>>;
   loadAllFn?: () => Promise<unknown[]>;
   loadByIdFn?: (id: string, includeDeleted?: boolean) => Promise<unknown | null>;
   createFn?: (data: T) => Promise<unknown>;
@@ -51,6 +53,8 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
     restored: unknown,
     user: User,
   ) => Promise<Record<string, unknown>> | Record<string, unknown>;
+  /** Transform single-entity responses (GET /:id, POST, PUT) — used for viewer-role sanitization. */
+  buildSingleResponse?: (item: unknown, user: User) => Promise<unknown> | unknown;
   /** Map domain restore failures (e.g. unique field conflicts) to HTTP replies. */
   mapRestoreError?: SoftDeleteRouteErrorMapper;
 }
@@ -66,6 +70,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     prefix = '',
     collection,
     schema,
+    buildWriteSchema,
     loadAllFn,
     loadByIdFn,
     createFn,
@@ -86,6 +91,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     onAfterDelete,
     onAfterRestore,
     buildRestoreResponse,
+    buildSingleResponse,
     mapRestoreError,
   } = options;
 
@@ -115,7 +121,8 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         if (!item) {
           return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
-        return reply.send({ [nameSingular]: item });
+        const response = buildSingleResponse ? await buildSingleResponse(item, user) : item;
+        return reply.send({ [nameSingular]: response });
       } catch {
         return sendDatabaseError(reply, `Failed to load ${nameSingular}`);
       }
@@ -135,7 +142,8 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     fastify.post(prefix || '/', routeOptions, async (request, reply) => {
       const user = request.user as User;
       if (!canWriteCollection(user, collection)) return sendForbidden(reply);
-      const parsed = parseRequest(schema, request.body);
+      const writeSchema = buildWriteSchema ? await buildWriteSchema() : schema;
+      const parsed = parseRequest(writeSchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
       if (validateDynamicFn) {
@@ -148,7 +156,8 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       try {
         const item = await createFn(parsed.data);
         await onAfterCreate?.(user, item);
-        return reply.status(201).send({ [nameSingular]: item });
+        const response = buildSingleResponse ? await buildSingleResponse(item, user) : item;
+        return reply.status(201).send({ [nameSingular]: response });
       } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : `Failed to create ${nameSingular}`;
         const statusCode =
@@ -177,7 +186,8 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       const user = request.user as User;
       if (!canWriteCollection(user, collection)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
-      const body = parseRequest(schema, request.body);
+      const writeSchema = buildWriteSchema ? await buildWriteSchema() : schema;
+      const body = parseRequest(writeSchema, request.body);
       if (!params.ok) return replyValidationError(reply, params.message);
       if (!body.ok) return replyValidationError(reply, body.message);
 
@@ -197,7 +207,8 @@ export function registerResourceRoutes<T extends ResourceRecord>(
           return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
         await onAfterUpdate?.(user, params.data.id, updated);
-        return reply.send({ [nameSingular]: updated });
+        const response = buildSingleResponse ? await buildSingleResponse(updated, user) : updated;
+        return reply.send({ [nameSingular]: response });
       } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : `Failed to update ${nameSingular}`;
         const statusCode =

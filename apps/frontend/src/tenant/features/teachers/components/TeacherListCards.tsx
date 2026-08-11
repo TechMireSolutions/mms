@@ -2,6 +2,8 @@ import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DirectoryCardInfoPills } from "@/components/ui/DirectoryCardInfoPills";
+import { getGenderAccentBarClass } from "@/lib/directoryCardAccent";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
@@ -44,7 +46,10 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
   } = props;
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const pageCountLabel = `${teachers.length} ${t("nav.teachers").toLowerCase()}`;
+  const pageCountLabel = formatDirectoryPageCountLabel(teachers.length, t, {
+    singular: "teachers.form.teacher",
+    plural: "teachers.table.teachers",
+  });
 
   return (
     <>
@@ -72,6 +77,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
               key={teacherIdStr}
               isSelected={isSelected}
               reducedMotion={reducedMotion}
+              accentClassName={getGenderAccentBarClass(isSelected, teacher.gender)}
             >
               <TeacherCardHeader
                 teacher={teacher}
@@ -83,7 +89,6 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 onView={onView}
                 reducedMotion={reducedMotion}
               />
-              <TeacherArchivedBanner teacher={teacher} />
               <DirectoryCardInfoPills
                 phone={phone}
                 phoneDisplay={phone}
@@ -98,6 +103,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 customFieldsById={customFieldsById}
                 statusConfig={statusConfig}
               />
+              <TeacherArchivedBanner teacher={teacher} />
               <TeacherCardActions
                 teacher={teacher}
                 teacherId={teacherIdStr}

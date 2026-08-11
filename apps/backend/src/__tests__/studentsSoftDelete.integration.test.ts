@@ -30,19 +30,22 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
-const mockLoadStudents = vi.fn();
 const mockLoadStudentsPage = vi.fn();
 const mockDeleteStudentById = vi.fn();
 const mockRestoreStudentById = vi.fn();
 
-vi.mock('../services/studentService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/studentService.js')>();
+vi.mock('../students/use-cases/studentUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../students/use-cases/studentUseCases.js')>();
   return {
     ...actual,
-    loadStudents: (...args: unknown[]) => mockLoadStudents(...args),
-    loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
-    deleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
-    restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
+    studentUseCases: {
+      ...actual.studentUseCases,
+      loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
+      softDeleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
+      restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
+      sanitizeStudentForViewer: async (student: unknown) => student,
+      sanitizeStudentsForViewer: async (students: unknown) => students,
+    },
   };
 });
 
@@ -81,7 +84,7 @@ describe('students soft delete routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1');
+    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1', 'u-admin');
     await app.close();
   });
 

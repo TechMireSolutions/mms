@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { ReportFilterFieldsPanel } from './ReportFilterFieldsPanel';
 
 export interface ReportFilterFields {
@@ -77,7 +77,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   };
 
   return (
-    <Card className="overflow-hidden">
+    <div className={WORK_SURFACE}>
       <div className="w-full flex min-h-11 items-center justify-between gap-2 px-4 py-3 hover:bg-muted/50 transition-colors">
         <Button
           onClick={() => setOpen((isOpen) => !isOpen)}
@@ -137,6 +137,6 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
           </motion.div>
         )}
       </AnimatePresence>
-    </Card>
+    </div>
   );
 }

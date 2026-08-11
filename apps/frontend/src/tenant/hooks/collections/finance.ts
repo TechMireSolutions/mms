@@ -14,3 +14,4 @@ export {
   useFinanceReportAggregates,
   useFinanceMutations,
 } from "@/tenant/features/finance/hooks/useFinanceApi";
+export { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";

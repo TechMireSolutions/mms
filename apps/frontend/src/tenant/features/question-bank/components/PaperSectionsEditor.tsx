@@ -1,7 +1,7 @@
 import React from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, WORK_SURFACE } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ export function PaperSectionsEditor({
   const { t } = useTranslation();
 
   return (
-    <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
+    <section className={`${WORK_SURFACE} p-3 sm:p-4`}>
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.paperSections")}</h3>

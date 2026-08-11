@@ -148,6 +148,8 @@ export interface BulkSelectionStatusActionProps {
   statuses: readonly string[];
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   onSelectStatus: (status: string) => void;
+  /** Disables the trigger while a bulk status mutation is pending. */
+  disabled?: boolean;
 }
 
 /** Status dropdown action for Work bulk bars (Students / Teachers). */
@@ -156,11 +158,17 @@ export function BulkSelectionStatusAction({
   statuses,
   statusBadgeConfig,
   onSelectStatus,
+  disabled = false,
 }: BulkSelectionStatusActionProps): ReactElement {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className={bulkSelectionActionClassName}>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          className={bulkSelectionActionClassName}
+        >
           <Tag className="w-3.5 h-3.5 text-primary" /> {label}{" "}
           <ChevronDown className="w-3 h-3 ms-0.5" />
         </Button>

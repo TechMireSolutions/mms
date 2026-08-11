@@ -6,7 +6,7 @@ import {
   type StudentsListPageResult,
   type StudentsListQuery,
 } from '@mms/shared';
-import { students } from '../schema.js';
+import { students, sessions } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { studentRowToRecord } from './studentRepository.js';
 
@@ -154,10 +154,45 @@ function buildListConditions(
     conditions.push(sql`${linkedContactGenderExpr()} = ${genderFilter}`);
   }
 
+  const quickFilter = query.quickFilter;
+  if (quickFilter && quickFilter !== 'all') {
+    if (quickFilter === 'new') {
+      const since = sql`now() - (${MODULE_METRICS_DEFAULT_PERIOD_DAYS} * interval '1 day')`;
+      conditions.push(sql`COALESCE(
+        NULLIF(trim(COALESCE(${students.customData}->>'registeredDate', '')), '')::timestamptz,
+        NULLIF(trim(COALESCE(${students.customData}->>'createdAt', '')), '')::timestamptz
+      ) >= ${since}`);
+    } else if (quickFilter === 'missingGr') {
+      conditions.push(sql`(${students.grNumber} is null or trim(${students.grNumber}) = '')`);
+    } else {
+      conditions.push(sql`${statusExpr()} = ${quickFilter}`);
+    }
+  }
+
   const search = query.search?.trim();
   if (search) {
     const searchSql = buildSearchSql(search);
     if (searchSql) conditions.push(searchSql);
+  }
+
+  if (query.sessionId?.trim()) {
+    conditions.push(
+      sql`${students.customData}->'enrolledSessions' ? ${query.sessionId.trim()}`,
+    );
+  }
+
+  const className = query.className?.trim();
+  if (className) {
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${sessions} s
+      WHERE s.workspace_subdomain = ${students.workspaceSubdomain}
+        AND s.deleted_at IS NULL
+        AND ${students.customData}->'enrolledSessions' ? s.id
+        AND EXISTS (
+          SELECT 1 FROM jsonb_array_elements(s.custom_data->'classes') cls
+          WHERE cls->>'name' = ${className}
+        )
+    )`);
   }
 
   return conditions;

@@ -46,6 +46,8 @@ export function useQuestionBankTrashActions(mutations: QuestionBankTrashMutation
           succeeded: result.succeeded,
           failed: result.failed,
         }));
+      } else if (result.succeeded > 1) {
+        notify.success(t('questionBank.trash.bulkDeleted', { count: result.succeeded }));
       } else {
         notify.success(t('questionBank.trash.deleted'));
       }
@@ -63,6 +65,8 @@ export function useQuestionBankTrashActions(mutations: QuestionBankTrashMutation
           succeeded: result.succeeded,
           failed: result.failed,
         }));
+      } else if (result.succeeded > 1) {
+        notify.success(t('questionBank.trash.bulkRestored', { count: result.succeeded }));
       } else {
         notify.success(t('questionBank.trash.restored'));
       }

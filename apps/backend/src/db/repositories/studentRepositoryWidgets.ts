@@ -5,6 +5,7 @@ import type {
 } from '@mms/shared';
 import { students } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { studentRowToRecord } from './studentRepository.js';
 
 const customDataSql = sql.raw('"students"."custom_data"');
 
@@ -300,5 +301,34 @@ export async function findStudentRegistrationConflictSql(
     }
 
     return null;
+  });
+}
+
+/**
+ * Finds a soft-deleted student whose `contact_id` matches (re-registration
+ * restore-on-create probe). Only deleted rows are candidates so an active
+ * duplicate is never accidentally restored.
+ */
+export async function findSoftDeletedStudentByContactIdSql(
+  tenant: string,
+  contactId: string,
+): Promise<ReturnType<typeof studentRowToRecord> | null> {
+  const subdomain = tenant.trim().toLowerCase();
+  const trimmedContactId = contactId.trim();
+  if (!trimmedContactId) return null;
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(students)
+      .where(
+        and(
+          eq(students.workspaceSubdomain, subdomain),
+          eq(students.contactId, trimmedContactId),
+          sql`${students.deletedAt} is not null`,
+        ),
+      )
+      .limit(1);
+    const row = rows[0];
+    return row ? studentRowToRecord(row) : null;
   });
 }

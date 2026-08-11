@@ -52,10 +52,10 @@ function teacherWorkColumnBreakpointClass(columnKey: string): string {
   return "";
 }
 
-/** Responsive table-cell visibility classes for Work columns. */
+/** Responsive table-cell visibility classes for Work columns (value text renders in foreground). */
 export function teacherWorkColumnCellClass(columnKey: string): string {
   const breakpoint = teacherWorkColumnBreakpointClass(columnKey);
-  return ["px-4 py-3 text-muted-foreground", breakpoint].filter(Boolean).join(" ");
+  return ["px-4 py-3", breakpoint].filter(Boolean).join(" ");
 }
 
 export function teacherWorkColumnHeadClass(columnKey: string): string {

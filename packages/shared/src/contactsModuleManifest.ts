@@ -89,7 +89,7 @@ export const CONTACTS_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['table', 'cards'] as const,
-    bulkActions: ['whatsapp', 'sms', 'export', 'delete'] as const,
+    bulkActions: ['whatsapp', 'sms', 'email', 'export', 'delete'] as const,
     integrityTools: ['duplicates'] as const,
   },
   setupSubTabs: DEFAULT_SETTINGS_SUB_TABS

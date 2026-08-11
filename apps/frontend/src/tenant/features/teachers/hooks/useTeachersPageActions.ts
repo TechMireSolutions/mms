@@ -57,70 +57,74 @@ export function useTeachersPageActions({
     }
   };
 
-  const handleDelete = (id: string, deletionReason?: string) => {
-    deleteTeacher.mutate(
-      { id, deletionReason },
-      {
-        onSuccess: () => notifyBulkResult(1, 0, "teachers.toast.deleted", "teachers.toast.deleted"),
-        onError: (err) => handleError(err, "teachers.delete", "teachers.deleteFailed"),
-      },
-    );
+  const handleDelete = async (id: string, deletionReason?: string): Promise<void> => {
+    try {
+      await deleteTeacher.mutateAsync({ id, deletionReason });
+      notifyBulkResult(1, 0, "teachers.toast.deleted", "teachers.toast.deleted");
+    } catch (error) {
+      handleError(error, "teachers.delete", "teachers.deleteFailed");
+      throw error;
+    }
   };
 
-  const handleRestore = (id: string) => {
-    restoreTeacher.mutate(id, {
-      onSuccess: () => notifyBulkResult(1, 0, "teachers.restoreSuccess", "teachers.restoreSuccess"),
-      onError: (err) => handleError(err, "teachers.restore", "teachers.restoreFailed"),
-    });
+  const handleRestore = async (id: string): Promise<void> => {
+    try {
+      await restoreTeacher.mutateAsync(id);
+      notifyBulkResult(1, 0, "teachers.restoreSuccess", "teachers.restoreSuccess");
+    } catch (error) {
+      handleError(error, "teachers.restore", "teachers.restoreFailed");
+      throw error;
+    }
   };
 
-  const handleBulkDelete = (ids: string[], deletionReason?: string) => {
-    bulkDeleteTeachers.mutate(
-      { ids, deletionReason },
-      {
-        onSuccess: (result) =>
-          notifyBulkResult(
-            result.succeeded,
-            result.failed,
-            "teachers.toast.deleted",
-            "teachers.toast.deleted",
-          ),
-        onError: (err) => handleError(err, "teachers.bulk_delete", "teachers.deleteFailed"),
-      },
-    );
+  const handleBulkDelete = async (ids: string[], deletionReason?: string): Promise<void> => {
+    try {
+      const result = await bulkDeleteTeachers.mutateAsync({ ids, deletionReason });
+      notifyBulkResult(
+        result.succeeded,
+        result.failed,
+        "teachers.toast.deleted",
+        "teachers.toast.deleted",
+      );
+    } catch (error) {
+      handleError(error, "teachers.bulk_delete", "teachers.deleteFailed");
+      throw error;
+    }
   };
 
-  const handleBulkRestore = (ids: string[]) => {
-    bulkRestoreTeachers.mutate(ids, {
-      onSuccess: (result) =>
-        notifyBulkResult(
-          result.succeeded,
-          result.failed,
-          "teachers.restoreSuccess",
-          "teachers.restoreSuccess",
-        ),
-      onError: (err) => handleError(err, "teachers.bulk_restore", "teachers.restoreFailed"),
-    });
+  const handleBulkRestore = async (ids: string[]): Promise<void> => {
+    try {
+      const result = await bulkRestoreTeachers.mutateAsync(ids);
+      notifyBulkResult(
+        result.succeeded,
+        result.failed,
+        "teachers.restoreSuccess",
+        "teachers.restoreSuccess",
+      );
+    } catch (error) {
+      handleError(error, "teachers.bulk_restore", "teachers.restoreFailed");
+      throw error;
+    }
   };
 
-  const handleBulkStatusChange = (ids: string[], status: string) => {
-    bulkUpdateTeacherStatus.mutate(
-      { ids, status },
-      {
-        onSuccess: (result) =>
-          notifyBulkResult(
-            result.succeeded,
-            result.failed,
-            "teachers.toast.statusUpdated",
-            "teachers.toast.statusUpdated",
-          ),
-        onError: (err) => handleError(err, "teachers.bulk_status", "teachers.bulkStatusFailed"),
-      },
-    );
+  const handleBulkStatusChange = async (ids: string[], status: string): Promise<void> => {
+    try {
+      const result = await bulkUpdateTeacherStatus.mutateAsync({ ids, status });
+      notifyBulkResult(
+        result.succeeded,
+        result.failed,
+        "teachers.toast.statusUpdated",
+        "teachers.toast.statusUpdated",
+      );
+    } catch (error) {
+      handleError(error, "teachers.bulk_status", "teachers.bulkStatusFailed");
+    }
   };
 
   return {
     messagingTarget,
+    openComposer,
+    canWriteMessaging,
     closeComposer,
     handleWhatsApp,
     handleSms,

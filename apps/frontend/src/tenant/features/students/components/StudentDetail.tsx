@@ -1,11 +1,9 @@
 import React from "react";
-import { GraduationCap } from "lucide-react";
-import type { Student } from "@mms/shared";
+import { Clock, GraduationCap } from "lucide-react";
+import { formatDate, type Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import {
-  DetailDrawerRestoreOrEditAction,
-  DrawerSyncStatusFooter,
-} from "@/components/ui/DetailDrawerArchiveChrome";
+import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
+import { formatEntityStamp } from "@/lib/formatEntityStamp";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
@@ -42,13 +40,17 @@ export default function StudentDetail({
     relationshipLinks,
     age,
     enrolledSessionDetails,
+    sessionsLoading,
+    sessionsError,
     primaryPhone,
     primaryEmail,
+    hasWhatsAppContact,
     hasVisibleDetailFields,
     showNotesSection,
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
+  const stamp = formatEntityStamp(student.updatedAt) || formatEntityStamp(student.createdAt);
 
   const headerActions = (
     <DetailDrawerRestoreOrEditAction
@@ -72,15 +74,20 @@ export default function StudentDetail({
           : t("students.detail.grSubtitle", { gr: student.grNumber || t("common.notSpecified") })
       }
       icon={GraduationCap}
-      ariaLabel={t("students.detail.ariaLabel")}
+      ariaLabel={t("students.detail.ariaLabel", {
+        name: student.name?.trim() || t("students.form.student"),
+      })}
       headerActions={headerActions}
       headerExtra={<StudentArchivedBanner student={student} />}
       footer={
-        <DrawerSyncStatusFooter
-          isArchived={isArchived}
-          archivedLabel={t("students.detail.archivedSubtitle")}
-          syncedLabel={t("students.detail.synced")}
-        />
+        stamp ? (
+          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+            <Clock className="w-3 h-3" aria-hidden />
+            <span>
+              {t("students.detail.updatedLabel")} {formatDate(stamp)}
+            </span>
+          </div>
+        ) : null
       }
     >
       <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
@@ -90,6 +97,7 @@ export default function StudentDetail({
           student={student}
           primaryPhone={primaryPhone}
           primaryEmail={primaryEmail}
+          hasWhatsAppContact={hasWhatsAppContact}
           openComposer={openComposer}
         />
       )}
@@ -107,7 +115,11 @@ export default function StudentDetail({
 
       {showNotesSection && student.notes ? <StudentDetailNotesSection notes={student.notes} /> : null}
 
-      <StudentDetailSessionsSection sessions={enrolledSessionDetails} />
+      <StudentDetailSessionsSection
+        sessions={enrolledSessionDetails}
+        loading={sessionsLoading}
+        error={sessionsError}
+      />
     </DetailDrawerShell>
   );
 }

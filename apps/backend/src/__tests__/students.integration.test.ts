@@ -45,26 +45,39 @@ const mockDeleteStudentById = vi.fn();
 const mockRestoreStudentById = vi.fn();
 const mockUpdateStudentById = vi.fn();
 
-vi.mock('../services/studentService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/studentService.js')>();
+vi.mock('../students/use-cases/studentUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../students/use-cases/studentUseCases.js')>();
   return {
     ...actual,
-    loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
-    createStudent: (...args: unknown[]) => mockCreateStudent(...args),
-    updateStudentById: (...args: unknown[]) => mockUpdateStudentById(...args),
-    loadStudentsCommandMetrics: (...args: unknown[]) => mockLoadStudentsCommandMetrics(...args),
-    migrateStudentsMissingGrNumbers: (...args: unknown[]) => mockMigrateStudentsMissingGrNumbers(...args),
-    loadStudentFieldUsageCount: (...args: unknown[]) => mockLoadStudentFieldUsageCount(...args),
-    loadStudentFieldUsageCounts: (...args: unknown[]) => mockLoadStudentFieldUsageCounts(...args),
-    bulkSoftDeleteStudents: (...args: unknown[]) => mockBulkSoftDeleteStudents(...args),
-    bulkRestoreStudents: (...args: unknown[]) => mockBulkRestoreStudents(...args),
-    deleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
-    restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
+    studentUseCases: {
+      ...actual.studentUseCases,
+      loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
+      createStudent: (...args: unknown[]) => mockCreateStudent(...args),
+      updateStudentById: (...args: unknown[]) => mockUpdateStudentById(...args),
+      loadStudentsCommandMetrics: (...args: unknown[]) => mockLoadStudentsCommandMetrics(...args),
+      migrateStudentsMissingGrNumbers: (...args: unknown[]) => mockMigrateStudentsMissingGrNumbers(...args),
+      loadStudentFieldUsageCount: (...args: unknown[]) => mockLoadStudentFieldUsageCount(...args),
+      loadStudentFieldUsageCounts: (...args: unknown[]) => mockLoadStudentFieldUsageCounts(...args),
+      bulkSoftDeleteStudents: (...args: unknown[]) => mockBulkSoftDeleteStudents(...args),
+      bulkRestoreStudents: (...args: unknown[]) => mockBulkRestoreStudents(...args),
+      softDeleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
+      restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
+      sanitizeStudentForViewer: async (student: unknown) => student,
+      sanitizeStudentsForViewer: async (students: unknown) => students,
+    },
   };
 });
 
 vi.mock('../services/studentValidationService.js', () => ({
   validateStudentDynamic: vi.fn().mockResolvedValue(undefined),
+}));
+
+const mockLoadStudentFieldConfig = vi.fn().mockResolvedValue(null);
+
+vi.mock('../services/studentConfigService.js', () => ({
+  loadStudentFieldConfig: (...args: unknown[]) => mockLoadStudentFieldConfig(...args),
+  saveStudentFieldConfig: vi.fn(),
+  loadStudentsSettingsCombined: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('../services/auditService.js', () => ({
@@ -127,8 +140,41 @@ describe('students routes', () => {
     await app.close();
   });
 
+  it('GET /api/students forwards sessionId/className report filters', async () => {
+    mockLoadStudentsPage.mockResolvedValue({
+      students: [{ id: 's1', name: 'Ali' }],
+      total: 1,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/students?page=1&limit=50&sessionId=ses-1&className=Grade%20A',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadStudentsPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        page: 1,
+        limit: 50,
+        sessionId: 'ses-1',
+        className: 'Grade A',
+      }),
+    );
+    expect(res.json()).toMatchObject({ total: 1 });
+    await app.close();
+  });
+
   it('POST /api/students strips client soft-delete fields before create', async () => {
-    mockCreateStudent.mockImplementation(async (student: Record<string, unknown>) => student);
+    mockCreateStudent.mockImplementation(async (student: Record<string, unknown>) => ({
+      record: student,
+      restored: false,
+    }));
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -157,6 +203,56 @@ describe('students routes', () => {
       expect.objectContaining({
         action: 'student.create',
         summary: expect.stringContaining('Created student'),
+      }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/students maps StudentPermissionError to 403 (write-only re-register)', async () => {
+    const { StudentPermissionError } = await import('../students/use-cases/studentNormalizeUseCases.js');
+    mockCreateStudent.mockRejectedValue(
+      new StudentPermissionError('Restoring soft-deleted students requires delete permissions'),
+    );
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { contactId: 'c-1', status: 'active', grNumber: 'GR-1' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toEqual({
+      type: 'forbidden',
+      message: 'Restoring soft-deleted students requires delete permissions',
+    });
+    await app.close();
+  });
+
+  it('POST /api/students returns 200 when createStudent restores an archived row', async () => {
+    mockCreateStudent.mockResolvedValue({
+      record: { id: 's-archived', contactId: 'c-1', status: 'active', grNumber: 'GR-1' },
+      restored: true,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { contactId: 'c-1', status: 'active', grNumber: 'GR-1' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.restore',
+        summary: expect.stringContaining('Restored student s-archived via re-registration'),
       }),
     );
     await app.close();
@@ -601,7 +697,7 @@ describe('students routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1');
+    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1', 'u-admin');
     expect(mockRecordAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'student.restore',

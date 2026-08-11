@@ -3,8 +3,8 @@
  *
  * Entity reads (`countContacts`, paging, by-ids, by-id) live in
  * `contactLoadEntityUseCases.ts`; SQL aggregate/report loads live in
- * `contactLoadAggregateUseCases.ts`. The composition root and
- * `contactDuplicateScanService` import this path, so it stays a re-export.
+ * `contactLoadAggregateUseCases.ts`. The composition root imports this path,
+ * so it stays a re-export barrel.
  */
 export * from './contactLoadEntityUseCases.js';
 export * from './contactLoadAggregateUseCases.js';

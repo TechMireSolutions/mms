@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { Teacher } from '@mms/shared';
+import type { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import TeacherDetail from '@/tenant/features/teachers/components/TeacherDetail';
 
 interface TeacherListDetailDrawerProps {
@@ -11,6 +12,8 @@ interface TeacherListDetailDrawerProps {
   onClose: () => void;
   onEdit: (teacher: Teacher) => void;
   onRestore?: (teacherId: string) => void | Promise<void>;
+  openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
+  canWriteMessaging: boolean;
 }
 
 export function TeacherListDetailDrawer({
@@ -21,6 +24,8 @@ export function TeacherListDetailDrawer({
   onClose,
   onEdit,
   onRestore,
+  openComposer,
+  canWriteMessaging,
 }: TeacherListDetailDrawerProps): ReactElement {
   return (
     <AnimatePresence>
@@ -38,6 +43,8 @@ export function TeacherListDetailDrawer({
                 }
               : undefined
           }
+          openComposer={openComposer}
+          canWriteMessaging={canWriteMessaging}
         />
       )}
     </AnimatePresence>

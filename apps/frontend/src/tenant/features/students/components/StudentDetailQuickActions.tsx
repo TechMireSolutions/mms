@@ -8,6 +8,7 @@ interface StudentDetailQuickActionsProps {
   student: Student;
   primaryPhone?: string | null;
   primaryEmail?: string | null;
+  hasWhatsAppContact?: boolean;
   openComposer: (channel: MessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 
@@ -15,6 +16,7 @@ export function StudentDetailQuickActions({
   student,
   primaryPhone,
   primaryEmail,
+  hasWhatsAppContact,
   openComposer,
 }: StudentDetailQuickActionsProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -35,7 +37,7 @@ export function StudentDetailQuickActions({
           : undefined
       }
       onWhatsApp={
-        primaryPhone
+        primaryPhone && hasWhatsAppContact
           ? () => openComposer("whatsapp", [toMessagingRecipient({ ...student, phone: primaryPhone })])
           : undefined
       }

@@ -3,6 +3,15 @@ import { Pencil, Trash2 } from "lucide-react";
 import { ObligationDistribution } from '@/lib/data/obligationsData';
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface WakalaDistributionListProps {
@@ -21,12 +30,12 @@ export function WakalaDistributionList({
   onDelete,
 }: WakalaDistributionListProps): React.JSX.Element {
   return (
-    <>
+    <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">
         {distributions.map((distribution) => (
           <article
             key={distribution.id}
-            className="space-y-3 rounded-xl border border-border bg-card p-3"
+            className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
               <p className="text-sm font-medium text-foreground">{distribution.name}</p>
@@ -60,26 +69,26 @@ export function WakalaDistributionList({
           </article>
         ))}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-xs">
+      <div className="hidden md:block">
+        <Table>
           <caption className="sr-only">{t("obligations.wakala.distTableCaption")}</caption>
-          <thead className="border-b border-border">
-            <tr>
-              <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colName")}</th>
-              <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colType")}</th>
-              <th scope="col" className="px-4 py-2 text-start font-semibold text-muted-foreground">{t("obligations.wakala.colPct")}</th>
-              <th scope="col" className="px-4 py-2 text-end font-semibold text-muted-foreground"><span className="sr-only">{t("obligations.wakala.colActions")}</span></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("obligations.wakala.colName")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="type" className="px-3 py-2.5">{t("obligations.wakala.colType")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="percentage" className="px-3 py-2.5">{t("obligations.wakala.colPct")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="actions" className="px-3 py-2.5 text-end"><span className="sr-only">{t("obligations.wakala.colActions")}</span></ModuleTableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
             {distributions.map((distribution) => (
-              <tr key={distribution.id} className="hover:bg-muted/20">
-                <td className="px-4 py-2 font-medium text-foreground">{distribution.name}</td>
-                <td className="px-4 py-2">
+              <TableRow key={distribution.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="px-3 py-2.5 font-medium text-foreground">{distribution.name}</TableCell>
+                <TableCell className="px-3 py-2.5">
                   <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
-                </td>
-                <td className="px-4 py-2 font-mono font-semibold text-foreground">{distribution.percentage}%</td>
-                <td className="px-4 py-2 text-end">
+                </TableCell>
+                <TableCell className="px-3 py-2.5 font-mono font-semibold text-foreground">{distribution.percentage}%</TableCell>
+                <TableCell className="px-3 py-2.5 text-end">
                   <div className="flex items-center justify-end gap-1">
                     <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => onEdit(distribution)}
                       variant="ghost"
@@ -94,12 +103,12 @@ export function WakalaDistributionList({
                       <Trash2 className="w-3 h-3" aria-hidden="true" />
                     </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-    </>
+    </div>
   );
 }

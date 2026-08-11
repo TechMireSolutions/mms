@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -98,22 +99,23 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
   return (
     <WidgetCard ariaLabelledby="todays-attendance-heading" accentColor="primary">
-      {/* Header */}
-      <header className="flex min-w-0 flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
-
-        <div className="flex min-w-0 items-center gap-2">
-          <UserCheck className="w-4 h-4 shrink-0 text-primary" />
-          <h2 id="todays-attendance-heading" className="min-w-0 truncate text-sm font-bold text-foreground m-0">
-            {title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
-          </h2>
-          {!isToday && (
+      <WidgetCardHeader
+        variant="tinted"
+        headingLevel={2}
+        headingId="todays-attendance-heading"
+        icon={<UserCheck className="w-4 h-4 shrink-0 text-primary" aria-hidden="true" />}
+        title={title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
+        badge={
+          !isToday && (
             <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-muted font-bold border border-border/40">{formatDate(displayDate)}</span>
-          )}
-        </div>
-        <Link to={ROUTES.attendance} className="inline-flex min-h-11 items-center gap-1 text-xs text-primary font-bold hover:underline">
-          {t("dashboard.widgets.viewAll")} <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
-      </header>
+          )
+        }
+        actions={
+          <Link to={ROUTES.attendance} className="inline-flex min-h-11 items-center gap-1 text-xs text-primary font-bold hover:underline">
+            {t("dashboard.widgets.viewAll")} <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        }
+      />
 
       <section className="p-5 space-y-4">
         {displayRecords.length === 0 ? (

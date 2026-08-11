@@ -3,6 +3,7 @@ import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { getGenderAccentBarClass } from "@/lib/directoryCardAccent";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
@@ -34,7 +35,10 @@ export function StudentListCards({
 }: StudentListCardsProps) {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const pageCountLabel = `${paginatedStudents.length} ${t("nav.students").toLowerCase()}`;
+  const pageCountLabel = formatDirectoryPageCountLabel(paginatedStudents.length, t, {
+    singular: "students.form.student",
+    plural: "students.table.students",
+  });
 
   return (
     <>

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   applyContactScalarCustomFieldDefaults,
   listEnabledCustomContactFormFields,
-  listContactSystemFormFieldKeys,
 } from "./contactFormCustomFields.js";
 import type { FieldDefinition } from "./contactFieldSchemaTypes.js";
 
@@ -49,7 +48,6 @@ describe("listEnabledCustomContactFormFields", () => {
     expect(listEnabledCustomContactFormFields(fields, "basic").map((f) => f.key)).toEqual([
       "visibleCustom",
     ]);
-    expect(listContactSystemFormFieldKeys().has("firstName")).toBe(true);
   });
 
   it("aggregates all tabs when tabId is omitted", () => {

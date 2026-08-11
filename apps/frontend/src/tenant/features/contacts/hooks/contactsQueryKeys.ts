@@ -11,12 +11,6 @@ export const CONTACTS_REPORT_ANALYTICS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.col
 export const CONTACTS_WIDGET_AGGREGATES_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'widget-aggregates'] as const;
 export const CONTACTS_DUPLICATES_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, 'duplicates'] as const;
 
-export function contactsListQueryKey(includeDeleted = false) {
-  return includeDeleted
-    ? ([...CONTACTS_QUERY_KEY, 'with-deleted'] as const)
-    : CONTACTS_QUERY_KEY;
-}
-
 export function contactDetailQueryKey(contactId: string) {
   return [...CONTACTS_QUERY_KEY, 'detail', contactId] as const;
 }

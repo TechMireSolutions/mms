@@ -1,7 +1,10 @@
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { FilterChips } from "@/components/ui/FilterChips";
+import { useTranslation } from "@/hooks/useTranslation";
 import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolbar";
 import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
 import { ContactsWorkListBody } from "@/tenant/features/contacts/components/ContactsWorkListBody";
+import { buildContactsWorkFilterChips } from "@/tenant/features/contacts/components/buildContactsWorkFilterChips";
 import type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 
 export type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
@@ -34,6 +37,7 @@ export function ContactsWorkTier({
   canWrite,
   onWhatsApp,
   onSms,
+  onEmail,
   onBulkExport,
   onRequestBulkDelete,
   onRequestBulkRestore,
@@ -49,8 +53,17 @@ export function ContactsWorkTier({
   workPageData,
   onPageChange,
 }: ContactsWorkTierProps) {
+  const { t } = useTranslation();
+  const filterChips = buildContactsWorkFilterChips({
+    filterGender,
+    quickFilter,
+    onGenderChange,
+    onQuickFilterChange,
+    t,
+  });
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <ErrorBoundary>
         <ContactsToolbar
           search={search}
@@ -73,6 +86,8 @@ export function ContactsWorkTier({
         />
       </ErrorBoundary>
 
+      <FilterChips chips={filterChips} onClearAll={onClearFilters} />
+
       <ContactsBulkActionBar
         selectedCount={selected.length}
         viewingDeleted={viewingDeleted}
@@ -83,6 +98,7 @@ export function ContactsWorkTier({
         selectedTargets={selectedTargets}
         onWhatsApp={onWhatsApp}
         onSms={onSms}
+        onEmail={onEmail}
         onBulkExport={onBulkExport}
         onRequestBulkDelete={onRequestBulkDelete}
         onRequestBulkRestore={onRequestBulkRestore}

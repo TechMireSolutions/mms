@@ -2,10 +2,18 @@ import React from "react";
 import { DollarSign } from "lucide-react";
 import { formatDate } from "@mms/shared";
 import type { Invoice } from "@/lib/data/financeData";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -29,26 +37,27 @@ export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps):
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
   };
   const headers = [
-    t("finance.columns.invoice"),
-    t("finance.columns.student"),
-    t("finance.report.classColumn"),
-    t("finance.columns.baseFee"),
-    t("finance.columns.discount"),
-    t("finance.columns.final"),
-    t("finance.columns.dueDate"),
-    t("finance.columns.status"),
+    { key: "invoice", label: t("finance.columns.invoice") },
+    { key: "student", label: t("finance.columns.student") },
+    { key: "class", label: t("finance.report.classColumn") },
+    { key: "baseFee", label: t("finance.columns.baseFee") },
+    { key: "discount", label: t("finance.columns.discount") },
+    { key: "final", label: t("finance.columns.final") },
+    { key: "dueDate", label: t("finance.columns.dueDate") },
+    { key: "status", label: t("finance.columns.status") },
   ];
+  const exportHeaders = headers.map((header) => header.label);
 
   return (
     <>
-      <ExportToolbar title={t("finance.report.invoiceReportTitle")} data={invoices} headers={headers} />
+      <ExportToolbar title={t("finance.report.invoiceReportTitle")} data={invoices} headers={exportHeaders} />
       {invoices.length === 0 ? (
         <EmptyState icon={DollarSign} title={t("finance.report.noInvoicesMatch")} compact />
       ) : (
-        <Card className="overflow-hidden">
+        <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {invoices.map((invoice) => (
-              <article key={invoice.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+              <article key={invoice.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h4 className="truncate text-sm font-semibold text-foreground">{invoice.studentName}</h4>
@@ -81,36 +90,37 @@ export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps):
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  {headers.map((headerLabel) => (
-                    <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {headerLabel}
-                    </th>
+          <div className="hidden md:block">
+            <Table>
+              <caption className="sr-only">{t("finance.report.invoiceReportTitle")}</caption>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  {headers.map((header) => (
+                    <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">
+                      {header.label}
+                    </ModuleTableHeaderCell>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/50">
                 {invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-muted/30">
-                    <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{invoice.id}</td>
-                    <td className="px-3 py-2.5 font-medium">{invoice.studentName}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{invoice.class}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{formatCurrency(invoice.baseFee)}</td>
-                    <td className="px-3 py-2.5 text-warning">{invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}</td>
-                    <td className="px-3 py-2.5 font-semibold text-foreground">{formatCurrency(invoice.finalAmt)}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{formatDate(invoice.dueDate)}</td>
-                    <td className="px-3 py-2.5">
+                  <TableRow key={invoice.id} className="hover:bg-muted/20 transition-colors">
+                    <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{invoice.id}</TableCell>
+                    <TableCell className="px-3 py-2.5 font-medium">{invoice.studentName}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">{invoice.class}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">{formatCurrency(invoice.baseFee)}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-warning">{invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}</TableCell>
+                    <TableCell className="px-3 py-2.5 font-semibold text-foreground">{formatCurrency(invoice.finalAmt)}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">{formatDate(invoice.dueDate)}</TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <StatusBadge status={invoice.status} config={statusConfig} />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </Card>
+        </div>
       )}
     </>
   );

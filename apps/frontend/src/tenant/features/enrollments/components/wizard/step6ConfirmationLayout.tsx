@@ -1,4 +1,5 @@
 import React from 'react';
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 interface RowProps {
   label: string;
@@ -22,7 +23,7 @@ interface SectionProps {
 
 export function Step6ConfirmationSection({ icon: Icon, title, children }: SectionProps): React.ReactElement {
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden" aria-label={title}>
+    <section className={`${WORK_SURFACE} overflow-hidden`} aria-label={title}>
       <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">
         <Icon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">{title}</h4>

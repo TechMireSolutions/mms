@@ -3,11 +3,6 @@ import type { Distribution } from '@/lib/data/hasanatData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import {
-  getDirectoryPageSelection,
-  toggleIdInSelection,
-  togglePageIdsInSelection,
-} from "@/lib/directorySelection";
 
 type DistributionStatus = Distribution["status"];
 
@@ -18,10 +13,6 @@ export interface UseDistributionManagerStateOptions {
   canWrite?: boolean;
   showDeleted?: boolean;
   createRequestKey?: number;
-  onDelete?: (id: string) => void | Promise<void>;
-  onRestore?: (id: string) => void | Promise<void>;
-  onBulkDelete?: (ids: string[]) => void | Promise<void>;
-  onBulkRestore?: (ids: string[]) => void | Promise<void>;
 }
 
 export function useDistributionManagerState({
@@ -31,10 +22,6 @@ export function useDistributionManagerState({
   canWrite = true,
   showDeleted = false,
   createRequestKey = 0,
-  onDelete,
-  onRestore,
-  onBulkDelete,
-  onBulkRestore,
 }: UseDistributionManagerStateOptions) {
   const { t } = useTranslation();
   const statusLabels = useMemo(
@@ -53,7 +40,6 @@ export function useDistributionManagerState({
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<DistributionStatus[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(() => {
     return distributions.filter((distribution) => {
@@ -77,10 +63,6 @@ export function useDistributionManagerState({
     }
   }, [createRequestKey, canWrite, showDeleted]);
 
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [showDeleted]);
-
   const toggleStatus = (status: DistributionStatus) => setFilterStatus((selectedStatuses) => selectedStatuses.includes(status) ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status) : [...selectedStatuses, status]);
 
   const handleDistribute = async (dist: Distribution) => {
@@ -92,39 +74,6 @@ export function useDistributionManagerState({
     void onUpdate(distributions.map((distribution) => distribution.id === id ? { ...distribution, status } : distribution));
   };
 
-  const handleRowTrashAction = async (id: string) => {
-    if (showDeleted) {
-      if (!confirm(t("hasanat.trash.bulkRestoreConfirm", { count: 1 }))) return;
-      await onRestore?.(id);
-      return;
-    }
-    if (!confirm(t("hasanat.trash.deleteConfirm"))) return;
-    await onDelete?.(id);
-  };
-
-  const toggleSelected = (id: string) => {
-    setSelectedIds((prev) => toggleIdInSelection(prev, id));
-  };
-
-  const pageIds = filtered.map((distribution) => distribution.id);
-  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
-
-  const toggleSelectAll = () => {
-    setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
-  };
-
-  const handleBulkAction = async () => {
-    if (selectedIds.length === 0) return;
-    if (showDeleted) {
-      if (!confirm(t("hasanat.trash.bulkRestoreConfirm", { count: selectedIds.length }))) return;
-      await onBulkRestore?.(selectedIds);
-    } else {
-      if (!confirm(t("hasanat.trash.bulkDeleteConfirm", { count: selectedIds.length }))) return;
-      await onBulkDelete?.(selectedIds);
-    }
-    setSelectedIds([]);
-  };
-
   return {
     t,
     statusLabels,
@@ -134,16 +83,10 @@ export function useDistributionManagerState({
     search,
     setSearch,
     filterStatus,
-    selectedIds,
-    setSelectedIds,
+    setFilterStatus,
     filtered,
     toggleStatus,
     handleDistribute,
     changeStatus,
-    handleRowTrashAction,
-    toggleSelected,
-    toggleSelectAll,
-    allFilteredSelected,
-    handleBulkAction,
   };
 }

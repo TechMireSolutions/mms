@@ -2,13 +2,20 @@ import type { JSX } from 'react';
 import { motion } from 'framer-motion';
 import type { SystemUser } from '@mms/shared';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
-import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useListRowMotion } from '@/hooks/useListRowMotion';
-import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
 import { UsersListAvatar } from '@/tenant/features/users/components/UsersListAvatar';
 import { UsersListRowActions } from '@/tenant/features/users/components/UsersListRowActions';
+import { renderUserWorkColumnValue } from '@/tenant/features/users/components/userWorkColumnCell';
 
 interface UsersListDesktopTableProps {
   users: SystemUser[];
@@ -56,117 +63,113 @@ export function UsersListDesktopTable({
   const visible = isColumnVisible ?? (() => true);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full table-fixed text-sm">
-        <thead className="border-b border-border bg-muted/60">
-          <tr>
+    <Table className="table-fixed">
+      <TableHeader>
+        <TableRow className="border-b border-border bg-muted/60 hover:bg-muted/60">
+          {canDelete && (
+            <TableHead className="w-8 px-3 py-2.5 h-auto">
+              <Checkbox
+                checked={someSelected ? 'indeterminate' : allSelected}
+                onCheckedChange={onToggleAll}
+                aria-label={allSelected ? t('common.deselect') : t('users.selectAll')}
+              />
+            </TableHead>
+          )}
+          <ModuleTableHeaderCell columnKey="user" width={getColumnWidth?.('user')} onResize={onColumnResize} className="px-3 py-2.5">
+            {t('users.colUser')}
+          </ModuleTableHeaderCell>
+          {visible('role') && (
+            <ModuleTableHeaderCell columnKey="role" width={getColumnWidth?.('role')} onResize={onColumnResize} className="px-3 py-2.5">
+              {t('users.colRole')}
+            </ModuleTableHeaderCell>
+          )}
+          {visible('status') && (
+            <ModuleTableHeaderCell columnKey="status" width={getColumnWidth?.('status')} onResize={onColumnResize} className="px-3 py-2.5">
+              {t('users.colStatus')}
+            </ModuleTableHeaderCell>
+          )}
+          {visible('lastLogin') && (
+            <ModuleTableHeaderCell columnKey="lastLogin" width={getColumnWidth?.('lastLogin')} onResize={onColumnResize} className="px-3 py-2.5">
+              {t('users.colLastLogin')}
+            </ModuleTableHeaderCell>
+          )}
+          {visible('created') && (
+            <ModuleTableHeaderCell columnKey="created" width={getColumnWidth?.('created')} onResize={onColumnResize} className="px-3 py-2.5">
+              {t('users.colCreated')}
+            </ModuleTableHeaderCell>
+          )}
+          {visible('twoFactor') && (
+            <ModuleTableHeaderCell columnKey="twoFactor" width={getColumnWidth?.('twoFactor')} onResize={onColumnResize} className="px-3 py-2.5">
+              {t('users.col2fa')}
+            </ModuleTableHeaderCell>
+          )}
+          <TableHead className="px-3 py-2.5 text-end text-xs font-semibold uppercase text-muted-foreground h-auto">
+            {t('users.colActions')}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody className="divide-y divide-border">
+        {users.map((user) => (
+          <motion.tr key={user.id} {...rowMotion()} className="transition-colors hover:bg-muted/20">
             {canDelete && (
-              <th className="w-8 px-3 py-2.5">
+              <TableCell className="px-3 py-2.5">
                 <Checkbox
-                  checked={someSelected ? 'indeterminate' : allSelected}
-                  onCheckedChange={onToggleAll}
-                  aria-label={allSelected ? t('common.deselect') : t('users.selectAll')}
+                  checked={selectedIds.includes(user.id)}
+                  onCheckedChange={() => onToggleSelect(user.id)}
+                  aria-label={t('users.selectRow', { name: user.name })}
                 />
-              </th>
+              </TableCell>
             )}
-            <ResizableTableHead columnKey="user" width={getColumnWidth?.('user')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-              {t('users.colUser')}
-            </ResizableTableHead>
+            <TableCell className="px-3 py-2.5">
+              <div className="flex items-center gap-2.5">
+                <UsersListAvatar user={user} />
+                <div>
+                  <p className="whitespace-nowrap text-sm font-semibold text-foreground">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                </div>
+              </div>
+            </TableCell>
             {visible('role') && (
-              <ResizableTableHead columnKey="role" width={getColumnWidth?.('role')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-                {t('users.colRole')}
-              </ResizableTableHead>
+              <TableCell className="px-3 py-2.5">
+                {renderUserWorkColumnValue(user, 'role', { t, formatLoginDate })}
+              </TableCell>
             )}
             {visible('status') && (
-              <ResizableTableHead columnKey="status" width={getColumnWidth?.('status')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-                {t('users.colStatus')}
-              </ResizableTableHead>
+              <TableCell className="px-3 py-2.5">
+                {renderUserWorkColumnValue(user, 'status', { t, formatLoginDate })}
+              </TableCell>
             )}
             {visible('lastLogin') && (
-              <ResizableTableHead columnKey="lastLogin" width={getColumnWidth?.('lastLogin')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-                {t('users.colLastLogin')}
-              </ResizableTableHead>
+              <TableCell className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">
+                {renderUserWorkColumnValue(user, 'lastLogin', { t, formatLoginDate })}
+              </TableCell>
             )}
             {visible('created') && (
-              <ResizableTableHead columnKey="created" width={getColumnWidth?.('created')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-                {t('users.colCreated')}
-              </ResizableTableHead>
+              <TableCell className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground">
+                {renderUserWorkColumnValue(user, 'created', { t, formatLoginDate })}
+              </TableCell>
             )}
             {visible('twoFactor') && (
-              <ResizableTableHead columnKey="twoFactor" width={getColumnWidth?.('twoFactor')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
-                {t('users.col2fa')}
-              </ResizableTableHead>
+              <TableCell className="px-3 py-2.5">
+                {renderUserWorkColumnValue(user, 'twoFactor', { t, formatLoginDate })}
+              </TableCell>
             )}
-            <th className="px-3 py-2.5 text-end text-xs font-semibold uppercase text-muted-foreground">
-              {t('users.colActions')}
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {users.map((user) => (
-            <motion.tr key={user.id} {...rowMotion()} className="transition-colors hover:bg-muted/20">
-              {canDelete && (
-                <td className="px-3 py-2.5">
-                  <Checkbox
-                    checked={selectedIds.includes(user.id)}
-                    onCheckedChange={() => onToggleSelect(user.id)}
-                    aria-label={t('users.selectRow', { name: user.name })}
-                  />
-                </td>
-              )}
-              <td className="px-3 py-2.5">
-                <div className="flex items-center gap-2.5">
-                  <UsersListAvatar user={user} />
-                  <div>
-                    <p className="whitespace-nowrap text-sm font-semibold text-foreground">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                  </div>
-                </div>
-              </td>
-              {visible('role') && (
-                <td className="px-3 py-2.5">
-                  <UserRoleBadge roleId={user.role} />
-                </td>
-              )}
-              {visible('status') && (
-                <td className="px-3 py-2.5">
-                  <UserStatusBadge status={user.status} />
-                </td>
-              )}
-              {visible('lastLogin') && (
-                <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">
-                  {formatLoginDate(user.lastLogin)}
-                </td>
-              )}
-              {visible('created') && (
-                <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground">
-                  {user.createdDate}
-                </td>
-              )}
-              {visible('twoFactor') && (
-                <td className="px-3 py-2.5">
-                  <SettingsMetaBadge variant={user.twoFactorEnabled ? 'success' : 'muted'}>
-                    {user.twoFactorEnabled ? t('users.twoFactorOn') : t('users.twoFactorOff')}
-                  </SettingsMetaBadge>
-                </td>
-              )}
-              <td className="px-3 py-2.5 text-end">
-                <UsersListRowActions
-                  user={user}
-                  canWrite={canWrite}
-                  canDelete={canDelete}
-                  showDeleted={showDeleted}
-                  onView={onView}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onRestore={onRestore}
-                  onResetPassword={onResetPassword}
-                />
-              </td>
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+            <TableCell className="px-3 py-2.5 text-end">
+              <UsersListRowActions
+                user={user}
+                canWrite={canWrite}
+                canDelete={canDelete}
+                showDeleted={showDeleted}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onRestore={onRestore}
+                onResetPassword={onResetPassword}
+              />
+            </TableCell>
+          </motion.tr>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

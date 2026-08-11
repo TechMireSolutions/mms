@@ -57,7 +57,11 @@ export function useObligationsTrashActions({
           failed: result.failed,
         }));
       } else {
-        notify.success(t('obligations.trash.deleted'));
+        notify.success(
+          result.succeeded > 1
+            ? t('obligations.trash.bulkDeleted', { count: result.succeeded })
+            : t('obligations.trash.deleted'),
+        );
       }
     });
   }, [bulkDeleteCollections, runTrashAction, t]);
@@ -71,7 +75,11 @@ export function useObligationsTrashActions({
           failed: result.failed,
         }));
       } else {
-        notify.success(t('obligations.trash.restored'));
+        notify.success(
+          result.succeeded > 1
+            ? t('obligations.trash.bulkRestored', { count: result.succeeded })
+            : t('obligations.trash.restored'),
+        );
       }
     });
   }, [bulkRestoreCollections, runTrashAction, t]);

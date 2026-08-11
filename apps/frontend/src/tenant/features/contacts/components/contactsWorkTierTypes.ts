@@ -33,6 +33,7 @@ export interface ContactsWorkTierProps {
   selectedTargets: {
     waTargets: Contact[];
     smsReady: Contact[];
+    emailReady: Contact[];
   };
   bulkActions: readonly string[];
   canWriteMessaging: boolean;
@@ -41,6 +42,7 @@ export interface ContactsWorkTierProps {
   canWrite: boolean;
   onWhatsApp: (targets: Contact[]) => void;
   onSms: (targets: Contact[]) => void;
+  onEmail: (targets: Contact[]) => void;
   onBulkExport: () => void | Promise<void>;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;

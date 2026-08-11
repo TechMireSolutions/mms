@@ -6,7 +6,6 @@ import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FieldDefinition, Teacher } from "@mms/shared";
 import { resolveTeacherStatus } from "@mms/shared";
@@ -123,12 +122,10 @@ export function TeacherEmploymentSection({
   const showEmployeeId = isFieldEnabled("employeeId");
   const showStatus = isFieldEnabled("status");
   const showJoinDate = isFieldEnabled("joinDate");
-  const showNotes = isFieldEnabled("notes");
-  const showEmploymentCard = showEmployeeId || showStatus || showJoinDate || showNotes;
+  const showEmploymentCard = showEmployeeId || showStatus || showJoinDate;
   const employeeIdLabel = resolveTeacherFieldLabel(fields, "employment", "employeeId", t);
   const statusLabel = resolveTeacherFieldLabel(fields, "employment", "status", t);
   const joinDateLabel = resolveTeacherFieldLabel(fields, "employment", "joinDate", t);
-  const notesLabel = resolveTeacherFieldLabel(fields, "employment", "notes", t);
 
   return (
     <div className="space-y-4 text-start">
@@ -168,17 +165,6 @@ export function TeacherEmploymentSection({
                 name="joinDate"
                 value={teacherDraft.joinDate || undefined}
                 onChange={(dateStr) => onDraftChange({ joinDate: dateStr })}
-              />
-            </Field>
-          ) : null}
-
-          {showNotes ? (
-            <Field label={notesLabel} required={isFieldRequired("notes")} error={errors.notes}>
-              <Textarea
-                value={teacherDraft.notes || ""}
-                onChange={(event) => onDraftChange({ notes: event.target.value })}
-                placeholder={t("teachers.form.notesPlaceholder")}
-                className="min-h-[5rem]"
               />
             </Field>
           ) : null}

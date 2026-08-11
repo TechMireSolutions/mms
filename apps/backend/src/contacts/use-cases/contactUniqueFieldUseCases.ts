@@ -1,4 +1,3 @@
-import { sql } from 'drizzle-orm';
 import {
   collectUniqueContactFieldValues,
   findContactUniqueFieldConflicts,
@@ -6,7 +5,6 @@ import {
   type Contact,
   type ValidationError,
 } from '@mms/shared';
-import { withTenantTransaction } from '../../db/withTenantTransaction.js';
 import { loadContactFieldConfig } from '../../services/contactConfigService.js';
 import { loadContactRuntimeDefaults } from './contactLoadUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
@@ -41,19 +39,16 @@ interface AssertContactUniqueFieldsOptions {
 /**
  * Transaction-scoped advisory locks for Setup-unique values (closes check-then-write races).
  * Keys are sorted for stable lock order across concurrent writers.
+ * The lock SQL lives in the repository adapter — a storage concern, not domain orchestration.
  */
 async function acquireContactUniqueValueLocks(
   tenant: string,
   lockKeys: string[],
+  repo: ContactsRepository,
 ): Promise<void> {
-  if (lockKeys.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   const sorted = [...new Set(lockKeys.map((key) => key.trim()).filter(Boolean))].sort();
-  await withTenantTransaction(subdomain, async (tx) => {
-    for (const key of sorted) {
-      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${subdomain}), hashtext(${key}))`);
-    }
-  });
+  await repo.acquireUniqueValueLocks(subdomain, sorted);
 }
 
 /**
@@ -107,7 +102,7 @@ export async function assertContactUniqueFields(
     const lockKeys = candidateValues.map(
       (value) => `${value.tabId}:${value.fieldKey}:${value.normalized}`,
     );
-    await acquireContactUniqueValueLocks(tenant, lockKeys);
+    await acquireContactUniqueValueLocks(tenant, lockKeys, repo);
   }
 
   const phoneDigits = candidateValues

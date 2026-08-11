@@ -1,17 +1,16 @@
 import { useMemo, useRef, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
 import {
   STUDENTS_MODULE_MANIFEST,
   type AppTranslationKey,
 } from "@mms/shared";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { useStudentFieldConfigQuery } from "@/tenant/features/students/hooks/useStudentSetupConfig";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 
@@ -34,6 +33,7 @@ const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
 export default function StudentsSettingsPanel(): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(STUDENTS_MODULE_MANIFEST);
+  const { isPending: configPending } = useStudentFieldConfigQuery();
   const dirtyRef = useRef({ fields: false, prefs: false });
 
   const settingsSubTabs = useMemo(
@@ -83,13 +83,15 @@ export default function StudentsSettingsPanel(): React.JSX.Element {
           />
 
           {!canEditSetup ? (
-            <div className={`${WORK_SURFACE} border-border/40 p-6`}>
-              <EmptyState variant="dashed" icon={Lock} title={t("students.setupReadOnly")} />
-            </div>
+            <SetupReadOnlyMessage title={t("students.setupReadOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
               {subTabs.showFields ? (
-                <StudentsSetupPanel mode="fields" onFieldsDirtyChange={setFieldsDirty} />
+                !configPending ? (
+                  <StudentsSetupPanel mode="fields" onFieldsDirtyChange={setFieldsDirty} />
+                ) : (
+                  <ModulePanelSuspenseFallback />
+                )
               ) : null}
               {subTabs.showPrefs ? (
                 <StudentsSetupPanel mode="preferences" onPrefsDirtyChange={setPrefsDirty} />

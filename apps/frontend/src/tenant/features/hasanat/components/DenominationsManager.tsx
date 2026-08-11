@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Denomination } from '@/lib/data/hasanatData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DenominationModal } from '@/tenant/features/hasanat/components/DenominationModal';
 
@@ -42,18 +43,21 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
 
   return (
     <section aria-label={t('hasanat.denominations.aria')} className="space-y-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t('hasanat.denominations.count', { count: denoms.length })}</p>
-        {canWrite && (
-          <Button
-            type="button"
-            onClick={() => { setEditDenom(null); setShowModal(true); }}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t('hasanat.denominations.new')}
-          </Button>
-        )}
-      </header>
+      <SectionHeader
+        noMargin
+        title={t('hasanat.denominations.count', { count: denoms.length })}
+        actions={
+          canWrite && (
+            <Button
+              type="button"
+              onClick={() => { setEditDenom(null); setShowModal(true); }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t('hasanat.denominations.new')}
+            </Button>
+          )
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {denoms.map((denomination, index) => (

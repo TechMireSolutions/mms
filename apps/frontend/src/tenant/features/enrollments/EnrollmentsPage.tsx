@@ -28,6 +28,7 @@ import {
   useEnrollmentsExportActions,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsExportActions";
 import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/useEnrollmentColumnLayout";
+import { useEnrollmentsSelection } from "@/tenant/features/enrollments/hooks/useEnrollmentsSelection";
 
 /**
  * Enrollments management — Work | Reports | Setup.
@@ -89,17 +90,33 @@ export default function EnrollmentsPage() {
   const [viewing, setViewing] = useState<Enrollment | null>(null);
   const [showWizard, setShowWizard] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
+  const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
   const columnLayout = useEnrollmentColumnLayout();
+  const {
+    selectedIds,
+    setSelectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
+    toggleSelectAll,
+    toggleSelectedEnrollment,
+    clearSelection,
+  } = useEnrollmentsSelection(enrollments);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [debouncedSearch, statusFilter, sessionFilter, showDeleted, setSelectedIds]);
+
   const { logExportAudit } = useEnrollmentMutations();
   const exportColumns = useMemo(() => defaultEnrollmentsExportColumns(t), [t]);
-  const { handleExportCSV } = useEnrollmentsExportActions({
+  const { handleExportCSV, handleBulkExport } = useEnrollmentsExportActions({
     tableColumns: exportColumns,
     canExport,
     search,
     statusFilter,
     sessionFilter,
     viewingDeleted: showDeleted,
-    selectedIds: [],
+    selectedIds,
     logExportAudit,
   });
 
@@ -123,12 +140,17 @@ export default function EnrollmentsPage() {
     handleDelete,
     handleRestore,
     handleStatusChange,
+    handleBulkDelete,
+    handleBulkRestore,
+    handleBulkCancel,
   } = useEnrollmentsPageActions({
     enrollments,
     viewing,
     onViewingChange: setViewing,
     onActiveSubTabChange: setActiveSubTab,
   });
+
+  const canSelectEnrollments = canWriteEnrollments || canDelete;
 
   return (
     <ModulePageShell
@@ -190,7 +212,12 @@ export default function EnrollmentsPage() {
               sessionFilter={sessionFilter}
               canWrite={canWriteEnrollments}
               canDelete={canDelete}
+              canExport={canExport}
+              canSelectEnrollments={canSelectEnrollments}
               showDeleted={showDeleted}
+              selectedIds={selectedIds}
+              allVisibleSelected={allVisibleSelected}
+              someVisibleSelected={someVisibleSelected}
               isWorkListError={isWorkPageError}
               loadFailedTitle={t("enrollments.loadFailed")}
               onSubTabChange={setActiveSubTab}
@@ -199,11 +226,23 @@ export default function EnrollmentsPage() {
               onSearchChange={setSearch}
               onStatusFilterChange={setStatusFilter}
               onSessionFilterChange={setSessionFilter}
+              onClearFilters={() => {
+                setStatusFilter("all");
+                setSessionFilter("all");
+                setSearch("");
+              }}
               onPageChange={setListPage}
               onView={setViewing}
               onCancel={handleCancel}
               onDeleteRequest={setPendingDeleteId}
               onRestore={handleRestore}
+              onToggleSelectAll={toggleSelectAll}
+              onToggleSelectedEnrollment={toggleSelectedEnrollment}
+              onClearSelection={clearSelection}
+              onRequestBulkDelete={() => setConfirmBulkDeleteOpen(true)}
+              onRequestBulkRestore={() => setConfirmBulkRestoreOpen(true)}
+              onRequestBulkCancel={() => handleBulkCancel(selectedIds)}
+              onBulkExport={() => void handleBulkExport()}
               columnProps={{
                 isColumnVisible: columnLayout.isColumnVisible,
                 getColumnWidth: columnLayout.getColumnWidth,
@@ -241,6 +280,21 @@ export default function EnrollmentsPage() {
         onConfirmDelete={(deletionReason) => {
           if (pendingDeleteId) handleDelete(pendingDeleteId, deletionReason);
           setPendingDeleteId(null);
+        }}
+        bulkDeleteCount={selectedIds.length}
+        bulkDeleteOpen={confirmBulkDeleteOpen}
+        onBulkDeleteOpenChange={setConfirmBulkDeleteOpen}
+        bulkRestoreOpen={confirmBulkRestoreOpen}
+        onBulkRestoreOpenChange={setConfirmBulkRestoreOpen}
+        onConfirmBulkDelete={(deletionReason) => {
+          handleBulkDelete(selectedIds, deletionReason);
+          setConfirmBulkDeleteOpen(false);
+          clearSelection();
+        }}
+        onConfirmBulkRestore={() => {
+          handleBulkRestore(selectedIds);
+          setConfirmBulkRestoreOpen(false);
+          clearSelection();
         }}
       />
     </ModulePageShell>

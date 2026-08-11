@@ -1,10 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoutes.js';
 import { teachersBulkIdsSchema } from '../../../validation/teacherSchemas.js';
-import {
-  bulkSoftDeleteTeachers,
-  bulkRestoreTeachers,
-} from '../../../services/teacherService.js';
+import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
 import { auditTeacher } from './teacherRouteHelpers.js';
 
 /** Teachers bulk soft-delete / restore (single delete/restore via standard CRUD routes). */
@@ -13,8 +10,8 @@ export const teacherSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     collection: 'teachers',
     errorMessagePrefix: 'teachers',
     bulkBodySchema: teachersBulkIdsSchema,
-    bulkDeleteFn: bulkSoftDeleteTeachers,
-    bulkRestoreFn: (ids) => bulkRestoreTeachers(ids),
+    bulkDeleteFn: (ids, user, reason) => teacherUseCases.bulkSoftDeleteTeachers(ids, user, reason),
+    bulkRestoreFn: (ids, user) => teacherUseCases.bulkRestoreTeachers(ids, user),
     onAfterBulkDelete: async (user, result, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditTeacher(

@@ -1,37 +1,62 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   TEACHERS_MODULE_MANIFEST,
+  type Teacher,
   type TeacherRecord,
   type TeachersCommandMetricsSnapshot,
   type TeachersWidgetAggregateResult,
+  type TeachersWidgetQuery,
   teachersWidgetQueryFromWidget,
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
+import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
+import { createModuleWidgetAggregatesQuery } from '@/lib/query/createModuleWidgetAggregatesQuery';
 import { createPersonModuleResolveQueries } from '@/lib/query/createPersonModuleResolveQueries';
 import {
   TEACHERS_API,
   TEACHERS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  buildTeachersPageUrl,
-  teachersPaginatedQueryKey,
-  type Teacher,
+  teacherDetailQueryKey,
   type TeacherNextEmployeeIdParams,
+  type TeachersWidgetAggregateWidgetInput,
+} from '@/tenant/features/teachers/hooks/teachersQueryKeys';
+import {
+  buildTeachersPageUrl,
+  fetchTeacherById,
+  sameTeachersListFilters,
+  teachersListQueryKeyParams,
+  teachersPaginatedQueryKey,
   type TeachersListPageResult,
   type TeachersPaginatedParams,
-  type TeachersWidgetAggregateWidgetInput,
-} from '@/tenant/features/teachers/hooks/teachersQueryShared';
+} from '@/tenant/features/teachers/hooks/teachersListQueryBuilders';
+
+export type { TeachersListPageResult };
+
+const useTeachersPaginatedList = createModulePaginatedListQuery<
+  TeachersListPageResult,
+  TeachersPaginatedParams,
+  ReturnType<typeof teachersListQueryKeyParams>
+>({
+  queryKey: teachersPaginatedQueryKey,
+  keyParams: teachersListQueryKeyParams,
+  sameFilters: sameTeachersListFilters,
+  buildUrl: buildTeachersPageUrl,
+  staleTime: 15_000,
+});
 
 export function useTeachersPaginated(params: TeachersPaginatedParams) {
+  return useTeachersPaginatedList(params);
+}
+
+export function useTeacherById(teacherId: string | undefined, enabled = true) {
   const { isAuthenticated } = useAuth();
-  const enabled = params.enabled ?? true;
   return useQuery({
-    queryKey: teachersPaginatedQueryKey(params),
-    queryFn: async ({ signal }) => apiJson<TeachersListPageResult>(buildTeachersPageUrl(params), { signal }),
-    enabled: isAuthenticated && enabled,
-    staleTime: 15_000,
-    placeholderData: (previousData) => previousData,
+    queryKey: teacherDetailQueryKey(teacherId ?? ''),
+    queryFn: ({ signal }) => fetchTeacherById(teacherId!, signal),
+    enabled: isAuthenticated && enabled && Boolean(teacherId),
+    staleTime: 10_000,
   });
 }
 
@@ -74,33 +99,23 @@ export function useTeachersMetrics(options?: { enabled?: boolean }) {
   });
 }
 
+const buildTeachersWidgetAggregatesQuery = createModuleWidgetAggregatesQuery<
+  TeachersWidgetQuery,
+  TeachersWidgetAggregateResult
+>({
+  apiBase: TEACHERS_API,
+  queryKey: TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
+  collection: 'teachers',
+  toWidgetQuery: teachersWidgetQueryFromWidget,
+});
+
 export function useTeachersWidgetAggregates(
   widgets: TeachersWidgetAggregateWidgetInput[],
   options?: { enabled?: boolean },
 ) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  const teacherQueries = widgets
-    .filter((widget) => widget.collection === 'teachers')
-    .map((widget) => teachersWidgetQueryFromWidget(widget));
-  const querySignature = teacherQueries.map((query) => query.id).sort().join(',');
-
-  return useQuery({
-    queryKey: [...TEACHERS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async ({ signal }) => {
-      const aggregateResponse = await apiJson<{ results: Record<string, TeachersWidgetAggregateResult> }>(
-        `${TEACHERS_API}/widget-aggregates`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ widgets: teacherQueries }),
-          signal,
-        },
-      );
-      return aggregateResponse?.results ?? {};
-    },
-    enabled: isAuthenticated && enabled && teacherQueries.length > 0,
-    staleTime: 30_000,
-  });
+  return useQuery(buildTeachersWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
 }
 
-export type { TeachersWidgetAggregateWidgetInput, TeacherNextEmployeeIdParams, TeachersPaginatedParams };
+export type { TeachersPaginatedParams, TeacherNextEmployeeIdParams, TeachersWidgetAggregateWidgetInput };

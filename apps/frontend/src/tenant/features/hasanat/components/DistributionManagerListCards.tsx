@@ -1,27 +1,33 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { User, Users2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { useTranslation } from "@/hooks/useTranslation";
-import { DistributionRowActions } from "@/tenant/features/hasanat/components/DistributionRowActions";
+import type { JSX } from 'react';
+import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
+import { DirectoryCardFooter } from '@/components/ui/DirectoryCardFooter';
+import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
+import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
+import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
+import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useTranslation } from '@/hooks/useTranslation';
+import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
+import { DistributionRowActions } from '@/tenant/features/hasanat/components/DistributionRowActions';
 import {
   getDistributionDenomination,
   getDistributionStatuses,
   type DistributionManagerListProps,
-} from "@/tenant/features/hasanat/components/distributionManagerListShared";
+} from '@/tenant/features/hasanat/components/distributionManagerListShared';
 
 type DistributionManagerListCardsProps = Omit<
   DistributionManagerListProps,
-  "allFilteredSelected" | "getColumnWidth" | "onColumnResize" | "onToggleAll"
+  'getColumnWidth' | 'onColumnResize'
 >;
 
-export function DistributionManagerListCards(props: DistributionManagerListCardsProps): React.JSX.Element {
+export function DistributionManagerListCards(props: DistributionManagerListCardsProps): JSX.Element {
   const {
     distributions,
     denoms,
     selectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
     isColumnVisible,
     statusLabels,
     statusConfig,
@@ -32,103 +38,105 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
     canDeleteRows,
     onMessage,
     onChangeStatus,
-    onToggleSelected,
-    onRowTrashAction,
+    onToggleSelectedDistribution,
+    onToggleSelectAll,
+    onTrashAction,
   } = props;
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const statuses = getDistributionStatuses(statusConfig);
+  const pageCountLabel = formatDirectoryPageCountLabel(distributions.length, t, {
+    singular: 'hasanat.item.distribution',
+    plural: 'hasanat.item.distributions',
+  });
 
   return (
-    <div className="space-y-3 p-3">
-      {distributions.length === 0 ? (
-        <EmptyState title={t("hasanat.empty.distributions")} compact />
-      ) : (
-        distributions.map((distribution, index) => {
+    <>
+      {canDelete && distributions.length > 0 ? (
+        <DirectoryCardsSelectAllBar
+          checkboxId="hasanat-select-all-cards"
+          allSelected={allVisibleSelected}
+          someSelected={someVisibleSelected}
+          onSelectAll={() => onToggleSelectAll(!allVisibleSelected)}
+          selectLabel={t('hasanat.trash.selectAll')}
+          deselectLabel={t('common.deselect')}
+          selectedCount={selectedIds.length}
+          selectedCountLabel={t('hasanat.trash.selected', { count: selectedIds.length })}
+          pageCountLabel={pageCountLabel}
+        />
+      ) : null}
+
+      <DirectoryCardsGrid>
+        {distributions.map((distribution) => {
           const denomination = getDistributionDenomination(denoms, distribution.denominationId);
+          const isSelected = selectedIds.includes(distribution.id);
+
           return (
-            <motion.article
-              key={distribution.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.03 }}
-              className="space-y-3 rounded-xl border border-border bg-card p-3"
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0">
-                  {isColumnVisible("recipient") && (
-                    <div className="flex items-center gap-1.5">
-                      {distribution.recipientType === "faculty"
-                        ? <Users2 className="w-3 h-3 shrink-0 text-muted-foreground" aria-hidden="true" />
-                        : <User className="w-3 h-3 shrink-0 text-muted-foreground" aria-hidden="true" />}
-                      <h4 className="min-w-0 truncate text-sm font-semibold text-foreground">{distribution.recipientName}</h4>
-                    </div>
-                  )}
-                  {isColumnVisible("card") && (
-                    <div className={`flex items-center gap-2 ${isColumnVisible("recipient") ? "mt-1" : ""}`}>
-                      <span className="text-base" aria-hidden="true">{denomination?.icon || "⭐"}</span>
-                      <div className="min-w-0">
-                        {!isColumnVisible("recipient") && (
-                          <h4 className="truncate text-sm font-semibold text-foreground">{distribution.denominationName}</h4>
-                        )}
-                        {isColumnVisible("recipient") && (
-                          <p className="truncate text-xs text-muted-foreground">{distribution.denominationName}</p>
-                        )}
-                        {denomination && (
-                          <p className="text-xs font-bold m-0" style={{ color: denomination.color }}>
-                            {t("hasanat.form.pointsShort", { points: denomination.points })}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {isColumnVisible("status") && (
-                  <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
-                )}
-              </div>
-              <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                {isColumnVisible("recipientClass") && (
+            <DirectoryEntityCard key={distribution.id} isSelected={isSelected} reducedMotion={reducedMotion}>
+              <DirectoryCardHeader
+                id={distribution.id}
+                displayName={distribution.recipientName || distribution.id}
+                isSelected={isSelected}
+                showSelect={canDelete}
+                onSelect={() => onToggleSelectedDistribution(distribution.id, !isSelected)}
+                selectAriaLabel={t('hasanat.trash.selectDistribution', { name: distribution.recipientName || distribution.id })}
+                reducedMotion={reducedMotion}
+                subtitle={
+                  isColumnVisible('card') && denomination ? (
+                    <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                      <span aria-hidden="true">{denomination.icon || '⭐'}</span>
+                      <span className="truncate">{distribution.denominationName}</span>
+                      <span className="font-bold" style={{ color: denomination.color }}>
+                        {t('hasanat.form.pointsShort', { points: denomination.points })}
+                      </span>
+                    </p>
+                  ) : undefined
+                }
+              />
+
+              <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                {isColumnVisible('recipientClass') && (
                   <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.recipientClass")}</dt>
-                    <dd className="text-foreground">{distribution.recipientClass || "—"}</dd>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.recipientClass')}</dt>
+                    <dd className="text-foreground">{distribution.recipientClass || '—'}</dd>
                   </div>
                 )}
-                {isColumnVisible("quantity") && (
+                {isColumnVisible('quantity') && (
                   <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.quantity")}</dt>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.quantity')}</dt>
                     <dd className="font-bold text-foreground">{distribution.quantity}</dd>
                   </div>
                 )}
-                {isColumnVisible("reason") && (
-                  <div className={isColumnVisible("recipientClass") || isColumnVisible("quantity") ? "" : "sm:col-span-2"}>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.reason")}</dt>
-                    <dd className="break-words text-foreground">{distribution.reason || "—"}</dd>
+                {isColumnVisible('reason') && (
+                  <div className={isColumnVisible('recipientClass') || isColumnVisible('quantity') ? '' : 'sm:col-span-2'}>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.reason')}</dt>
+                    <dd className="break-words text-foreground">{distribution.reason || '—'}</dd>
                   </div>
                 )}
-                {isColumnVisible("issuedDate") && (
+                {isColumnVisible('issuedDate') && (
                   <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.issuedDate")}</dt>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.issuedDate')}</dt>
                     <dd className="text-foreground">{distribution.issuedDate}</dd>
                   </div>
                 )}
-                {isColumnVisible("issuedBy") && (
+                {isColumnVisible('issuedBy') && (
                   <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.distribution.issuedBy")}</dt>
-                    <dd className="break-words text-foreground">{distribution.issuedBy || "—"}</dd>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.issuedBy')}</dt>
+                    <dd className="break-words text-foreground">{distribution.issuedBy || '—'}</dd>
+                  </div>
+                )}
+                {isColumnVisible('status') && (
+                  <div>
+                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.status')}</dt>
+                    <dd className="pt-1">
+                      <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
+                    </dd>
                   </div>
                 )}
               </dl>
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
-                {canDelete ? (
-                  <Checkbox
-                    checked={selectedIds.includes(distribution.id)}
-                    onCheckedChange={() => onToggleSelected(distribution.id)}
-                    aria-label={t("hasanat.trash.selectDistribution", { name: distribution.recipientName || distribution.id })}
-                  />
-                ) : (
-                  <span />
-                )}
-                <div className="flex flex-wrap items-center gap-1">
+
+              <DirectoryCardFooter
+                trailing={
                   <DistributionRowActions
                     distribution={distribution}
                     statuses={statuses}
@@ -138,16 +146,21 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
                     showDeleted={showDeleted}
                     canRestoreRows={canRestoreRows}
                     canDeleteRows={canDeleteRows}
-                    onMessage={onMessage}
+                    triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+                    onMessage={
+                      onMessage
+                        ? (channel, dist) => onMessage(channel, [dist])
+                        : undefined
+                    }
                     onChangeStatus={onChangeStatus}
-                    onRowTrashAction={onRowTrashAction}
+                    onTrashAction={onTrashAction}
                   />
-                </div>
-              </div>
-            </motion.article>
+                }
+              />
+            </DirectoryEntityCard>
           );
-        })
-      )}
-    </div>
+        })}
+      </DirectoryCardsGrid>
+    </>
   );
 }

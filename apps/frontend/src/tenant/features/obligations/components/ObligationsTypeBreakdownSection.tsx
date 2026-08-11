@@ -3,7 +3,7 @@ import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BarChart2 } from "lucide-react";
 
-import { SectionTitle } from "./ObligationsSectionTitle";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { TypeBreakdownEntry } from "./ObligationsSummaryChartsSection";
 
 interface ObligationsTypeBreakdownSectionProps {
@@ -27,26 +27,31 @@ export function ObligationsTypeBreakdownSection({
 
   return (
     <section aria-label={t("obligations.summary.types.aria")}>
-      <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <SectionTitle icon={BarChart2} title={t("obligations.summary.types.title")} subtitle={t("obligations.summary.types.subtitle")} noMargin />
-        <ExportToolbar
-          title={t("obligations.summary.types.title")}
-          filename="obligation_type_breakdown"
-          moduleId="obligations"
-          exportLabel={t("obligations.summary.types.exportLabel")}
-          columns={[
-            { header: t("obligations.summary.types.colType"), key: "name" },
-            { header: t("obligations.summary.types.colCollections"), key: "count" },
-            { header: t("obligations.summary.types.colTotalAmount", { currency: activeCurrencyCode }), key: "totalFmt" },
-            { header: t("obligations.summary.types.colShare"), key: "shareFmt" },
-          ]}
-          rows={typeBreakdown.map((typeBreakdownItem) => ({
-            ...typeBreakdownItem,
-            totalFmt: formatCurrency(typeBreakdownItem.total),
-            shareFmt: totalAmount ? ((typeBreakdownItem.total / totalAmount) * 100).toFixed(1) + "%" : "0%",
-          }))}
-        />
-      </header>
+      <SectionHeader
+        align="start"
+        icon={<BarChart2 className="w-3.5 h-3.5 text-primary" aria-hidden="true" />}
+        title={t("obligations.summary.types.title")}
+        subtitle={t("obligations.summary.types.subtitle")}
+        actions={
+          <ExportToolbar
+            title={t("obligations.summary.types.title")}
+            filename="obligation_type_breakdown"
+            moduleId="obligations"
+            exportLabel={t("obligations.summary.types.exportLabel")}
+            columns={[
+              { header: t("obligations.summary.types.colType"), key: "name" },
+              { header: t("obligations.summary.types.colCollections"), key: "count" },
+              { header: t("obligations.summary.types.colTotalAmount", { currency: activeCurrencyCode }), key: "totalFmt" },
+              { header: t("obligations.summary.types.colShare"), key: "shareFmt" },
+            ]}
+            rows={typeBreakdown.map((typeBreakdownItem) => ({
+              ...typeBreakdownItem,
+              totalFmt: formatCurrency(typeBreakdownItem.total),
+              shareFmt: totalAmount ? ((typeBreakdownItem.total / totalAmount) * 100).toFixed(1) + "%" : "0%",
+            }))}
+          />
+        }
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {typeBreakdown.map((typeBreakdownItem, index) => {
           const sharePercent = totalAmount ? (typeBreakdownItem.total / totalAmount) * 100 : 0;

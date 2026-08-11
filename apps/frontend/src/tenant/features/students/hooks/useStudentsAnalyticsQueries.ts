@@ -5,11 +5,13 @@ import {
   type StudentDuplicateReason,
   type StudentsCommandMetricsSnapshot,
   type StudentsWidgetAggregateResult,
+  type StudentsWidgetQuery,
   studentsWidgetQueryFromWidget,
 } from "@mms/shared";
 import { useServerMetrics } from "@/hooks/useServerMetrics";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { apiJson } from "@/lib/apiClient";
+import { createModuleWidgetAggregatesQuery } from "@/lib/query/createModuleWidgetAggregatesQuery";
 import {
   STUDENTS_API,
   STUDENTS_QUERY_KEY,
@@ -65,6 +67,16 @@ export function useStudentsMetrics(options?: { enabled?: boolean }) {
   });
 }
 
+const buildStudentsWidgetAggregatesQuery = createModuleWidgetAggregatesQuery<
+  StudentsWidgetQuery,
+  StudentsWidgetAggregateResult
+>({
+  apiBase: STUDENTS_API,
+  queryKey: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
+  collection: 'students',
+  toWidgetQuery: studentsWidgetQueryFromWidget,
+});
+
 /** Computes server-authoritative widget aggregates for Students module analytics. */
 export function useStudentsWidgetAggregates(
   widgets: StudentsWidgetAggregateWidgetInput[],
@@ -72,31 +84,7 @@ export function useStudentsWidgetAggregates(
 ) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  const studentQueries = widgets
-    .filter((widget) => widget.collection === "students")
-    .map((widget) => studentsWidgetQueryFromWidget(widget));
-  const querySignature = JSON.stringify(
-    studentQueries
-      .map((query) => ({ id: query.id, target: query.targetField, filter: query.filterValue }))
-      .sort((a, b) => a.id.localeCompare(b.id)),
-  );
-
-  return useQuery({
-    queryKey: [...STUDENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async ({ signal }) => {
-      const aggregateResponse = await apiJson<{ results: Record<string, StudentsWidgetAggregateResult> }>(
-        `${STUDENTS_API}/widget-aggregates`,
-        {
-          method: "POST",
-          body: JSON.stringify({ widgets: studentQueries }),
-          signal,
-        },
-      );
-      return aggregateResponse?.results ?? {};
-    },
-    enabled: isAuthenticated && enabled && studentQueries.length > 0,
-    staleTime: 30_000,
-  });
+  return useQuery(buildStudentsWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
 }
 
 export type { StudentsWidgetAggregateWidgetInput, StudentNextGrNumberParams };

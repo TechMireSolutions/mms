@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
-import { Trash2 } from "lucide-react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
@@ -8,17 +7,13 @@ import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionClearAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
-import { Button } from "@/components/ui/button";
-import {
-  getDirectoryPageSelection,
-  togglePageIdsInSelection,
-} from "@/lib/directorySelection";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ObligationCollectionListContent } from "@/tenant/features/obligations/components/ObligationCollectionListContent";
 import { ObligationCollectionListToolbar } from "@/tenant/features/obligations/components/ObligationCollectionListToolbar";
+import { ObligationsBulkActionBar } from "@/tenant/features/obligations/components/ObligationsBulkActionBar";
+import { useObligationSelection } from "@/tenant/features/obligations/hooks/useObligationSelection";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
@@ -35,7 +30,6 @@ export interface ObligationCollectionListProps {
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;
-  onToggleShowDeleted?: () => void;
   onDelete?: (id: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
@@ -58,7 +52,6 @@ export function ObligationCollectionList({
   canWrite = true,
   canDelete = true,
   showDeleted = false,
-  onToggleShowDeleted,
   onDelete,
   onRestore,
   onBulkDelete,
@@ -74,15 +67,12 @@ export function ObligationCollectionList({
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
   const senderIds = useMemo(() => collections.map((collection) => collection.sender_id), [collections]);
   const contacts = useMergedObligationContacts(senderIds);
-
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [showDeleted]);
 
   const getContact = useCallback((contactId?: string | number | null) => contacts.find((contact) => String(contact.id) === String(contactId)), [contacts]);
   const getRep = (repId: string) => reps.find((rep) => rep.id === repId);
@@ -114,67 +104,58 @@ export function ObligationCollectionList({
     Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
   }), [t]);
 
-  const pageIds = filtered.map((collection) => collection.id);
-  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
+  const {
+    selectedIds,
+    setSelectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
+    toggleSelectAll,
+    toggleSelectedCollection,
+    clearSelection,
+  } = useObligationSelection(filtered);
 
-  const handleBulkAction = async () => {
-    if (selectedIds.length === 0) return;
-    if (showDeleted) {
-      if (!confirm(t("obligations.trash.bulkRestoreConfirm", { count: selectedIds.length }))) return;
-      await onBulkRestore?.(selectedIds);
-    } else {
-      if (!confirm(t("obligations.trash.bulkDeleteConfirm", { count: selectedIds.length }))) return;
-      await onBulkDelete?.(selectedIds);
-    }
-    setSelectedIds([]);
+  useEffect(() => {
+    clearSelection();
+  }, [showDeleted, clearSelection]);
+
+  const confirmRowTrash = (): void => {
+    if (!pendingTrashId) return;
+    void onDelete?.(pendingTrashId);
+    setPendingTrashId(null);
   };
+
+  const confirmBulkTrash = (): void => {
+    if (showDeleted) void onBulkRestore?.(selectedIds);
+    else void onBulkDelete?.(selectedIds);
+    setSelectedIds([]);
+    setConfirmBulkOpen(false);
+  };
+
+  const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
 
   return (
     <div className="space-y-4">
-      {canDelete && (
-        <BulkSelectionBar
-          placement="inline"
-          tone="glass"
-          selectedCount={selectedIds.length}
-          countLabel={t("obligations.trash.selected", { count: selectedIds.length })}
-          trailing={
-            <BulkSelectionClearAction
-              label={t("common.deselect")}
-              onClick={() => setSelectedIds([])}
-            />
-          }
-        >
-          {showDeleted ? (
-            <BulkSelectionRestoreAction
-              label={t("obligations.trash.restore")}
-              onClick={() => { void handleBulkAction(); }}
-            />
-          ) : (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => { void handleBulkAction(); }}
-              className="flex min-h-11 items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
-            >
-              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.delete")}
-            </Button>
-          )}
-        </BulkSelectionBar>
-      )}
-
       <ObligationCollectionListToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}
         typeFilter={typeFilter}
         obligationTypes={obligationTypes}
-        canDelete={canDelete}
-        showDeleted={showDeleted}
         columnCustomizer={columnCustomizer}
         onSearchChange={setSearch}
         onTypeFilterChange={setTypeFilter}
-        onToggleShowDeleted={onToggleShowDeleted}
       />
+
+      {canBulkTrash && (
+        <ObligationsBulkActionBar
+          selectedCount={selectedIds.length}
+          showDeleted={showDeleted}
+          canDelete={canDelete}
+          onRequestBulkDelete={() => setConfirmBulkOpen(true)}
+          onRequestBulkRestore={() => setConfirmBulkOpen(true)}
+          onClearSelection={() => setSelectedIds([])}
+        />
+      )}
 
       <ObligationCollectionListContent
         viewMode={viewMode}
@@ -183,7 +164,8 @@ export function ObligationCollectionList({
         typeFilter={typeFilter}
         selectedIds={selectedIds}
         isColumnVisible={columnVisible}
-        allFilteredSelected={allFilteredSelected}
+        allVisibleSelected={allVisibleSelected}
+        someVisibleSelected={someVisibleSelected}
         canWrite={canWrite}
         canDelete={canDelete}
         showDeleted={showDeleted}
@@ -197,18 +179,12 @@ export function ObligationCollectionList({
         onAddNew={onAddNew}
         onView={onView}
         onPrint={setPrintCollection}
-        onSelectAll={(_checked) => setSelectedIds((current) => togglePageIdsInSelection(current, pageIds))}
-        onToggleSelected={(id, checked) => {
-          setSelectedIds((currentSelectedIds) =>
-            checked
-              ? currentSelectedIds.includes(id)
-                ? currentSelectedIds
-                : [...currentSelectedIds, id]
-              : currentSelectedIds.filter((selectedId) => selectedId !== id),
-          );
+        onToggleSelectAll={toggleSelectAll}
+        onToggleSelectedCollection={toggleSelectedCollection}
+        onTrashAction={(id) => {
+          if (showDeleted) void onRestore?.(id);
+          else setPendingTrashId(id);
         }}
-        onDelete={onDelete}
-        onRestore={onRestore}
         onMessage={onMessage}
       />
 
@@ -223,6 +199,25 @@ export function ObligationCollectionList({
           />
         </Suspense>
       )}
+
+      <ConfirmAlertDialog
+        open={pendingTrashId !== null}
+        onOpenChange={(open) => { if (!open) setPendingTrashId(null); }}
+        title={t('obligations.trash.deleteTitle')}
+        description={t('obligations.trash.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmRowTrash}
+      />
+      <ConfirmAlertDialog
+        open={confirmBulkOpen}
+        onOpenChange={setConfirmBulkOpen}
+        title={showDeleted ? t('obligations.trash.restore') : t('obligations.trash.deleteTitle')}
+        description={t(showDeleted ? 'obligations.trash.bulkRestoreConfirm' : 'obligations.trash.bulkDeleteConfirm', { count: selectedIds.length })}
+        confirmLabel={showDeleted ? t('obligations.trash.restore') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmBulkTrash}
+      />
     </div>
   );
 }

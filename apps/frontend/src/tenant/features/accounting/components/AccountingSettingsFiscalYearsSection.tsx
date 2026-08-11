@@ -4,7 +4,17 @@ import { formatDate } from "@mms/shared";
 import { Calendar, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FiscalYear } from "@/lib/data/accountingData";
 import { AccountingSettingsField } from "./AccountingSettingsField";
@@ -46,24 +56,26 @@ export function AccountingSettingsFiscalYearsSection({
       </AccountingSettingsField>
 
       <div className="mt-4">
-        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="min-w-0 text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.settings.configuredFiscalYears")}</h4>
-          {canEditSetup && (
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              onClick={() => onEditFiscalYear({ label: "", startDate: "", endDate: "", status: "upcoming" })}
-              className="flex shrink-0 items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors self-start sm:self-auto"
-            >
-              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.addYear")}
-            </Button>
-          )}
-        </header>
-        <div className="rounded-xl border border-border overflow-hidden">
+        <SectionHeader
+          title={<span className="min-w-0 text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.settings.configuredFiscalYears")}</span>}
+          actions={
+            canEditSetup && (
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                onClick={() => onEditFiscalYear({ label: "", startDate: "", endDate: "", status: "upcoming" })}
+                className="flex shrink-0 items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors self-start sm:self-auto"
+              >
+                <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.addYear")}
+              </Button>
+            )
+          }
+        />
+        <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {sortedYears.map((fiscalYear) => (
-              <article key={fiscalYear.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
+              <article key={fiscalYear.id} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h4 className="text-sm font-semibold text-foreground m-0">{fiscalYear.label}</h4>
@@ -102,28 +114,28 @@ export function AccountingSettingsFiscalYearsSection({
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto max-w-full md:block">
-            <table className="w-full text-sm">
+          <div className="hidden md:block">
+            <Table>
               <caption className="sr-only">{t("accounting.settings.fy.tableCaption")}</caption>
-              <thead className="bg-muted/50 border-b border-border">
-                <tr>
-                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.label")}</th>
-                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.period")}</th>
-                  <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.status")}</th>
-                  <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.settings.fy.actions")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  <ModuleTableHeaderCell columnKey="label" className="px-4 py-2">{t("accounting.settings.fy.label")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="period" className="px-4 py-2">{t("accounting.settings.fy.period")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="status" className="px-4 py-2">{t("accounting.settings.fy.status")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="actions" className="px-4 py-2 text-end">{t("accounting.settings.fy.actions")}</ModuleTableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {sortedYears.map((fiscalYear) => (
-                  <tr key={fiscalYear.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-2.5 font-semibold text-foreground">{fiscalYear.label}</td>
-                    <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                  <TableRow key={fiscalYear.id} className="hover:bg-muted/20 transition-colors">
+                    <TableCell className="px-4 py-2.5 font-semibold text-foreground">{fiscalYear.label}</TableCell>
+                    <TableCell className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                       {formatDate(fiscalYear.startDate)} → {formatDate(fiscalYear.endDate)}
-                    </td>
-                    <td className="px-4 py-2.5">
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5">
                       <StatusBadge status={fiscalYear.status} config={fyStatusConfig} size="sm" />
-                    </td>
-                    <td className="px-4 py-2.5 text-end">
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5 text-end">
                       <div className="flex items-center justify-end gap-1">
                         {canEditSetup && (
                           <Button
@@ -150,11 +162,11 @@ export function AccountingSettingsFiscalYearsSection({
                           </Button>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
       </div>

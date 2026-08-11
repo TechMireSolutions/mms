@@ -8,15 +8,6 @@ import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 const helpers = createFormCustomFieldHelpers(INITIAL_FIELD_SEED);
 const removedKeySet = new Set(REMOVED_FORM_FIELD_KEYS);
 
-/** Keys owned by static form chrome / list-tab structure (INITIAL_FIELD_SEED). */
-export function listContactSystemFormFieldKeys(): ReadonlySet<string> {
-  const keys = new Set(helpers.listSystemFormFieldKeys());
-  for (const key of REMOVED_FORM_FIELD_KEYS) {
-    keys.add(key);
-  }
-  return keys;
-}
-
 /**
  * Enabled non-seed fields for the contact form.
  * When `tabId` is set, only fields stored under that config tab are returned
@@ -31,9 +22,6 @@ export function listEnabledCustomContactFormFields(
     .listEnabledCustomFormFields(fields, tabId)
     .filter((field) => !removedKeySet.has(field.key));
 }
-
-/** True when `fieldId` is part of the static form seed for `tabId`. */
-export const isContactSystemFormField = helpers.isSystemFormField;
 
 /**
  * Seeds Setup `defaultValue` for enabled scalar custom fields on new contacts only.

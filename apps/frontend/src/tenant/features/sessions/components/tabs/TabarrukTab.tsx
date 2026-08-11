@@ -3,6 +3,7 @@ import { Plus, Gift } from "lucide-react";
 import { Session } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -41,17 +42,20 @@ export function TabarrukTab({ session, onUpdate, canWrite }: TabarrukTabProps) {
         className="items-start"
       />
 
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.tabarruk.count", { count: tabarrukItems.length })}</p>
-        {canWrite && (
-          <Button
-            onClick={openCreateModal}
-            className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.tabarruk.add")}
-          </Button>
-        )}
-      </header>
+      <SectionHeader
+        noMargin
+        title={t("sessions.tabarruk.count", { count: tabarrukItems.length })}
+        actions={
+          canWrite && (
+            <Button
+              onClick={openCreateModal}
+              className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.tabarruk.add")}
+            </Button>
+          )
+        }
+      />
 
       {tabarrukItems.length === 0 ? (
         <EmptyState

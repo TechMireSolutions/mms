@@ -1,20 +1,16 @@
-import { Eye, RotateCcw, Trash2 } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import type { JSX } from 'react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useTranslation } from "@/hooks/useTranslation";
-import type { Distribution } from "@/lib/data/hasanatData";
+} from '@/components/ui/dropdown-menu';
+import { EntityMessagingDropdownItems } from '@/components/ui/EntityMessagingDropdownItems';
+import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { Distribution } from '@/lib/data/hasanatData';
 
-type DistributionStatus = Distribution["status"];
+type DistributionStatus = Distribution['status'];
 
 interface DistributionRowActionsProps {
   distribution: Distribution;
@@ -25,11 +21,18 @@ interface DistributionRowActionsProps {
   showDeleted: boolean;
   canRestoreRows: boolean;
   canDeleteRows: boolean;
-  onMessage?: (channel: "sms" | "whatsapp" | "email", distributions: Distribution[]) => void;
+  triggerClassName?: string;
+  onMessage?: (channel: 'whatsapp' | 'sms', distribution: Distribution) => void;
   onChangeStatus: (id: string, status: DistributionStatus) => void;
-  onRowTrashAction: (id: string) => void;
+  onTrashAction: (id: string) => void;
 }
 
+/**
+ * Hasanat distribution row/card actions — thin adapter over the shared
+ * {@link ModuleRowActionsMenu}; distributions have no edit/detail surface, so the
+ * menu carries the module-specific Change Status radio group + WhatsApp/SMS
+ * messaging extras, with Archive / Restore routing to the trash action.
+ */
 export function DistributionRowActions({
   distribution,
   statuses,
@@ -39,27 +42,41 @@ export function DistributionRowActions({
   showDeleted,
   canRestoreRows,
   canDeleteRows,
+  triggerClassName,
   onMessage,
   onChangeStatus,
-  onRowTrashAction,
-}: DistributionRowActionsProps) {
+  onTrashAction,
+}: DistributionRowActionsProps): JSX.Element {
   const { t } = useTranslation();
 
+  const showStatus = canWrite && !showDeleted && statuses.length > 0;
+  const showMessaging = Boolean(onMessage) && !showDeleted;
+  const showExtras = showStatus || showMessaging;
+
   return (
-    <>
-      {(canWrite || onMessage) && !showDeleted && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" type="button" size="icon" aria-label={t("hasanat.changeStatus")} className="rounded-lg hover:bg-muted text-muted-foreground">
-              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            {canWrite && (
+    <ModuleRowActionsMenu
+      triggerLabel={t('hasanat.table.actions')}
+      deleteLabel={t('common.delete')}
+      restoreLabel={t('hasanat.trash.restore')}
+      archived={showDeleted}
+      canWrite={canWrite}
+      canDelete={canDelete && (showDeleted ? canRestoreRows : canDeleteRows)}
+      onView={undefined}
+      onEdit={undefined}
+      onDelete={() => onTrashAction(distribution.id)}
+      onRestore={showDeleted ? () => onTrashAction(distribution.id) : undefined}
+      hideViewItem
+      triggerClassName={triggerClassName}
+      extras={
+        showExtras ? (
+          <>
+            {showStatus ? (
               <>
-                <DropdownMenuLabel className="text-xs">{t("hasanat.changeStatus")}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup value={distribution.status} onValueChange={(status) => onChangeStatus(distribution.id, status as DistributionStatus)}>
+                <DropdownMenuLabel className="text-xs">{t('hasanat.changeStatus')}</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={distribution.status}
+                  onValueChange={(status) => onChangeStatus(distribution.id, status as DistributionStatus)}
+                >
                   {statuses.map((status) => (
                     <DropdownMenuRadioItem key={status} value={status}>
                       {statusLabels[status]}
@@ -67,34 +84,29 @@ export function DistributionRowActions({
                   ))}
                 </DropdownMenuRadioGroup>
               </>
-            )}
-            {onMessage && (
+            ) : null}
+            {showMessaging && onMessage ? (
               <>
-                {canWrite && <DropdownMenuSeparator />}
-                <DropdownMenuLabel className="text-xs">{t("messaging.channel")}</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => onMessage("whatsapp", [distribution])}>
-                  {t("messaging.channel.whatsapp")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onMessage("sms", [distribution])}>
-                  {t("messaging.channel.sms")}
-                </DropdownMenuItem>
+                {showStatus ? <DropdownMenuSeparator /> : null}
+                <DropdownMenuLabel className="text-xs">{t('messaging.channel')}</DropdownMenuLabel>
+                <EntityMessagingDropdownItems
+                  showWhatsApp
+                  showSms
+                  showEmail={false}
+                  onWhatsAppClick={() => onMessage('whatsapp', distribution)}
+                  onSmsClick={() => onMessage('sms', distribution)}
+                  onEmailClick={() => undefined}
+                  labels={{
+                    whatsapp: t('messaging.channel.whatsapp'),
+                    sms: t('messaging.channel.sms'),
+                    email: t('messaging.channel.email'),
+                  }}
+                />
               </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-      {canDelete && (showDeleted ? canRestoreRows : canDeleteRows) && (
-        <Button
-          variant="ghost"
-          type="button"
-          size="icon"
-          className="rounded-lg hover:bg-muted text-muted-foreground"
-          onClick={() => onRowTrashAction(distribution.id)}
-          aria-label={showDeleted ? t("hasanat.trash.restore") : t("common.delete")}
-        >
-          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-        </Button>
-      )}
-    </>
+            ) : null}
+          </>
+        ) : undefined
+      }
+    />
   );
 }

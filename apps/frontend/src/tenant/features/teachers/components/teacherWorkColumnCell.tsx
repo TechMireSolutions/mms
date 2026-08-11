@@ -14,9 +14,11 @@ export function renderTeacherWorkColumnValue(
     statusConfig: Record<string, StatusBadgeConfigItem>;
     customFieldsById?: Map<string, TeacherCustomField>;
     statusBadgeSize?: "sm" | "md";
+    /** Replacement shown for empty values (Contacts/Students `emptyDash` parity). */
+    emptyFallback?: ReactNode;
   },
 ): ReactNode {
-  const { t, statusConfig, customFieldsById, statusBadgeSize } = options;
+  const { t, statusConfig, customFieldsById, statusBadgeSize, emptyFallback } = options;
   if (columnKey === "status") {
     return (
       <StatusBadge
@@ -29,9 +31,11 @@ export function renderTeacherWorkColumnValue(
   const customFieldId = customFieldKeyFromColumnKey(columnKey);
   const customFieldLabel =
     customFieldId !== null ? customFieldsById?.get(customFieldId)?.label : undefined;
-  return resolveTeacherFieldDisplayText(teacher, columnKey, {
+  const value = resolveTeacherFieldDisplayText(teacher, columnKey, {
     t,
     customFieldLabel,
-    notSpecifiedFallback: true,
+    notSpecifiedFallback: false,
   });
+  if (value === undefined || value === "") return emptyFallback;
+  return value;
 }

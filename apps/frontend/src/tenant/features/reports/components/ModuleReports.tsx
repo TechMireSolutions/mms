@@ -155,7 +155,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
         ) : null}
       </div>
 
-      <Card className="overflow-hidden shadow-xl ring-1 ring-border/40">
+      <Card className="ring-1 ring-border/40">
         {renderReport()}
       </Card>
     </div>

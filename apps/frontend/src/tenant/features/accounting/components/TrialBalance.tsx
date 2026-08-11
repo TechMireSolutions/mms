@@ -1,6 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  Table,
+  TableCell,
+  TableFooter,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
@@ -68,7 +75,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
 
           <div className="rounded-xl border-2 border-foreground/20 overflow-hidden bg-muted/30">
             <div className="space-y-3 p-3 md:hidden">
-              <article className="rounded-xl border border-border bg-card p-3">
+              <article className={WORK_SURFACE_INNER}>
                 <p className="text-sm font-bold uppercase tracking-wide text-foreground m-0 mb-2">{t("accounting.tb.grandTotal")}</p>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
                   <div>
@@ -82,21 +89,21 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
                 </dl>
               </article>
             </div>
-            <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
+            <div className="hidden md:block">
+            <Table>
               <caption className="sr-only">{t("accounting.tb.grandTotalCaption")}</caption>
-              <tfoot>
-                <tr>
-                  <td colSpan={3} className="px-4 py-3 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</td>
-                  <td className="px-4 py-3 text-end font-mono font-bold text-info text-base">
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={3} className="px-3 py-2.5 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info text-base">
                     {formatCurrency(grandDebit)}
-                  </td>
-                  <td className="px-4 py-3 text-end font-mono font-bold text-success text-base">
+                  </TableCell>
+                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-base">
                     {formatCurrency(grandCredit)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
             </div>
           </div>
         </>

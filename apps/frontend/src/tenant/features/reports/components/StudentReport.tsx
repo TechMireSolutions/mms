@@ -2,6 +2,7 @@ import {
   ENROLLMENTS_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
 } from '@mms/shared';
+import { Loader2 } from 'lucide-react';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { ExportToolbar } from '@/components/ui/ExportToolbar';
@@ -35,7 +36,14 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
 
   return (
     <div className="space-y-4">
-      <ModuleCommandMetricsGrid items={report.metricItems} />
+      {report.metricsLoading && !report.metrics ? (
+        <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
+          <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+          <span className="text-sm">{report.t("common.loading")}</span>
+        </div>
+      ) : (
+        <ModuleCommandMetricsGrid items={report.metricItems} />
+      )}
 
       <StudentReportFilterBanner
         hasBaseStatusFilter={Boolean(report.filters.status && report.filters.status !== 'all')}
@@ -66,6 +74,8 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
           enrollments={report.enrollments}
           statusBadgeConfig={report.statusBadgeConfig}
           enrollmentStatusConfig={report.enrollmentStatusConfig}
+          listLoading={report.listLoading}
+          historyLoading={report.historyLoading}
         />
         {report.activeSubTab === 'list' && (
           <ListPagination

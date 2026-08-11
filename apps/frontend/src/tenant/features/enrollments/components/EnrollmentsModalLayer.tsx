@@ -20,6 +20,13 @@ interface EnrollmentsModalLayerProps {
   onCompleteWizard: (enrollment: Enrollment) => Promise<void>;
   onPendingDeleteChange: (id: string | null) => void;
   onConfirmDelete: (reason?: string) => void;
+  bulkDeleteCount: number;
+  bulkDeleteOpen: boolean;
+  onBulkDeleteOpenChange: (open: boolean) => void;
+  bulkRestoreOpen: boolean;
+  onBulkRestoreOpenChange: (open: boolean) => void;
+  onConfirmBulkDelete: (reason?: string) => void;
+  onConfirmBulkRestore: () => void;
 }
 
 export function EnrollmentsModalLayer({
@@ -35,6 +42,13 @@ export function EnrollmentsModalLayer({
   onCompleteWizard,
   onPendingDeleteChange,
   onConfirmDelete,
+  bulkDeleteCount,
+  bulkDeleteOpen,
+  onBulkDeleteOpenChange,
+  bulkRestoreOpen,
+  onBulkRestoreOpenChange,
+  onConfirmBulkDelete,
+  onConfirmBulkRestore,
 }: EnrollmentsModalLayerProps): React.JSX.Element {
   return (
     <>
@@ -71,6 +85,13 @@ export function EnrollmentsModalLayer({
         pendingDeleteId={pendingDeleteId}
         onPendingDeleteChange={onPendingDeleteChange}
         onConfirmDelete={onConfirmDelete}
+        bulkDeleteCount={bulkDeleteCount}
+        bulkDeleteOpen={bulkDeleteOpen}
+        onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+        bulkRestoreOpen={bulkRestoreOpen}
+        onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+        onConfirmBulkDelete={onConfirmBulkDelete}
+        onConfirmBulkRestore={onConfirmBulkRestore}
       />
     </>
   );

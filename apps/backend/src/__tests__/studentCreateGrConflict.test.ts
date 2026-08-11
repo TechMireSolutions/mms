@@ -10,10 +10,17 @@ vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
 }));
 
+vi.mock('../db/database.js', () => ({
+  runInTransaction: (cb: () => unknown) => cb(),
+}));
+
 vi.mock('../db/repositories/studentRepository.js', () => ({
   listStudentsByWorkspace: (...args: unknown[]) => mockListByWorkspace(...args),
   findStudentById: (...args: unknown[]) => mockFindById(...args),
+  findStudentsByIds: vi.fn().mockResolvedValue([]),
+  countStudentsByWorkspace: vi.fn().mockResolvedValue(0),
   saveStudent: (...args: unknown[]) => mockSave(...args),
+  bulkSaveStudents: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../db/repositories/studentRepositoryList.js', () => ({
@@ -29,6 +36,7 @@ vi.mock('../db/repositories/studentRepositoryWidgets.js', () => ({
   listStudentLinkedContactIdsSql: vi.fn(),
   countStudentsForNextGrNumber: vi.fn(),
   findStudentRegistrationConflictSql: vi.fn(),
+  findSoftDeletedStudentByContactIdSql: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('../services/websocketService.js', () => ({
@@ -52,7 +60,7 @@ describe('createStudent GR unique violation', () => {
 
   it('maps Postgres unique_violation to statusCode 409', async () => {
     mockSave.mockRejectedValue(Object.assign(new Error('duplicate key'), { code: '23505' }));
-    const { createStudent } = await import('../services/studentService.js');
+    const { createStudent } = await import('../students/use-cases/studentUseCases.js');
     await expect(
       createStudent({
         contactId: 'c-1',

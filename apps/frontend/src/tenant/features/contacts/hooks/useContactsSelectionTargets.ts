@@ -8,7 +8,7 @@ export function useContactsSelectionTargets({
 }: {
   selected: Array<string | number>;
   workContacts: Contact[];
-}): { waTargets: Contact[]; smsReady: Contact[] } {
+}): { waTargets: Contact[]; smsReady: Contact[]; emailReady: Contact[] } {
   return useMemo(
     () =>
       computeContactsSelectionTargets({

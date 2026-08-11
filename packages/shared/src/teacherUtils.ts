@@ -23,6 +23,8 @@ export function stripTeacherWriteNoise(
   record: Record<string, unknown>,
 ): Record<string, unknown> {
   const next = stripTeacherClientSoftDeleteFields({ ...record }) as Record<string, unknown>;
+  // Avatar lives on the canonical Contact — never dual-write it onto a teacher row.
+  delete next.avatar;
   return stripRecordFields(next, CONTACT_PROFILE_FIELDS);
 }
 
@@ -44,10 +46,18 @@ export const DEMO_TEACHER_CONTACT_BY_ID: Record<string, number> = Object.fromEnt
   DEMO_TEACHERS.map((teacher) => [teacher.id, Number(teacher.contactId)]),
 );
 
-/** Resolves display fields from the linked contact record. */
+/** Resolves display fields (including the canonical avatar) from the linked contact record. */
 export function hydrateTeacherFromContact<T extends Teacher>(
   teacher: T,
   contacts: ContactLike[],
 ): T {
-  return hydrateContactProfile(teacher as Record<string, unknown>, contacts, 'contactId') as T;
+  const hydrated = hydrateContactProfile(teacher as Record<string, unknown>, contacts, 'contactId') as T;
+  const contactId = String(hydrated.contactId ?? '');
+  if (contactId) {
+    const contact = contacts.find((candidate) => String(candidate.id) === contactId);
+    if (contact?.avatar) {
+      return { ...hydrated, avatar: contact.avatar };
+    }
+  }
+  return hydrated;
 }

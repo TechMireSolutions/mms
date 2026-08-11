@@ -27,7 +27,7 @@ graph TD
 | Layer | Location | Responsibility |
 |---|---|---|
 | Domain | `packages/shared/src/contactTypes.ts`, `contactDuplicateUtils.ts`, `contactsDuplicatesQuery.ts`, `contactPreferenceDefaults.ts`, `contactDisplayUtils.ts` | Types, pair-finder semantics, key normalization, preferences defaults — no I/O |
-| Use cases | `apps/backend/src/contacts/use-cases/contact{Load,Write,SoftDelete,Normalize,UniqueField,RelationshipInference,IdentityMatch,DuplicateScan}UseCases.ts` | Orchestrate domain logic via the repository interface; resolve tenant via `getRequestTenant()` |
+| Use cases | `apps/backend/src/contacts/use-cases/contact{Load,LoadEntity,LoadAggregate,Write,SoftDelete,Normalize,UniqueField,RelationshipInference,IdentityMatch,DuplicateScan}UseCases.ts` | Orchestrate domain logic via the repository interface; resolve tenant via `getRequestTenant()` |
 | Composition root | `apps/backend/src/contacts/use-cases/contactUseCases.ts` | `createContactsUseCases(repo)` binds a `ContactsRepository` to every use case; production default `contactUseCases` |
 | Repository interface | `apps/backend/src/contacts/repository/contactsRepository.ts` | The single storage gateway |
 | Adapter | `apps/backend/src/contacts/repository/contactsRepositoryAdapter.ts` | Delegates interface methods to the Drizzle repos |
@@ -48,8 +48,8 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
 
 Dependency-inversion highlights:
 
-- `countContactDuplicateMatches`, `runContactsDuplicateScan`, and `loadDuplicatePairsPage` accept trailing `repo: ContactsRepository = contactsRepository` parameters, so tests inject a fake and callers stay unchanged.
-- `contactGoogleSyncRun.ts` no longer touches Drizzle directly — it routes through `contactsRepository` (`findExistingNormalizedContactNames`, `bulkSave`).
+- `countContactDuplicateMatches`, `runContactsDuplicateScan`, and `loadDuplicatePairsPage` accept trailing `repo: ContactsRepository = contactsRepository` parameters, so tests inject a fake and callers stay unchanged. This is deliberate: `contactDuplicateScanService` (a service with real logic, not a thin shim) takes the repository interface directly so its load use-case dependents (`contactLoadEntityUseCases`, `contactLoadAggregateUseCases`, write/soft-delete) do not re-import the service through the composition root — that would re-create the load↔scan module cycle. The interface itself type-re-exports `ContactDuplicateCandidateKeys` / `ContactUniqueLookupValues` from the db layer so use cases never see the Drizzle layer; that direction is the intended SSOT flow.
+- `contactGoogleSyncRun.ts` no longer touches Drizzle or the repository adapter directly — it routes through the `contactService.ts` shim (`loadExistingNormalizedContactNames`, `bulkSaveContacts`).
 - The stable `contactService.ts` shim keeps routes and cross-module services (e.g. `usersService`, `teacherService`, `studentValidationService`) importing `loadContactsByIds`/`loadContactsPage` without a full migration, while new code imports `contactUseCases` directly.
 
 ## 3. SSOT — Single Source of Truth
@@ -106,7 +106,7 @@ Key points:
 ## 6. Async States, Testability, Accessibility
 
 - **Async states** — a single state source (Query results + `ContactConfigContext`) drives loading / empty / error. Error surfaces use `ErrorState` with a hint description (`loadFailedHint` pattern); mutations await `mutateAsync` before closing forms.
-- **Testability** — DI seams make use cases and the duplicate-scan service testable with fakes: `contactUseCases.test.ts` (composition root against an in-memory repo), `contactDuplicateScanService.test.ts` (SQL-scoped counting/blocking with a fake repo), `contactRepositoryDuplicates.test.ts` (mocked transaction), and shared pure-helper tests (`contactDuplicateUtils.test.ts`, `contactPhoneDisplay.test.ts`). Pure-helper coverage now also spans the field/column role gates (`contactFieldAccess.test.ts`, `contactColumnAccess.test.ts`), the identity-match Zod schemas (`contactIdentityMatch.test.ts`), field defaulting (`contactFieldDefaults.test.ts`), the sync outbox flush loop (`contactsSyncOutboxFlush.test.ts` in the frontend), and the Setup option seeds (`contactConfigSeeds.test.ts`).
+- **Testability** — DI seams make use cases and the duplicate-scan service testable with fakes: `contactUseCases.test.ts` (composition root against an in-memory repo), `contactDuplicateScanService.test.ts` (SQL-scoped counting/blocking with a fake repo), `contactRepositoryDuplicates.test.ts` (mocked transaction), and shared pure-helper tests (`contactDuplicateUtils.test.ts`, `contactPhoneDisplay.test.ts`). Pure-helper coverage now also spans the field/column role gates (`contactFieldAccess.test.ts`, `contactColumnAccess.test.ts`), the identity-match Zod schemas (`contactIdentityMatch.test.ts`), saved-report permission/drill-down validation (`contactsSavedReportUtils.test.ts`), the nested item normalizers (`contactItemNormalizeRows.test.ts`), the sync outbox flush loop (`contactsSyncOutboxFlush.test.ts` in the frontend), and the Setup option seeds (`contactConfigSeeds.test.ts`).
 - **Accessibility** — keyboard shortcuts (`useContactsKeyboardShortcuts`, Cmd+N), labeled inputs, focus management on overlays, and responsive/axe smoke checks per `mms-ui-ux-design.mdc`.
 
 ## 7. Trade-offs
@@ -140,5 +140,5 @@ Remaining (out of scope): niche chart dumps elsewhere in the app; `loadAllFn`/`m
 
 ## 10. Certification
 
-Monorepo final certification: `pnpm typecheck`, all three Vitest suites, and `pnpm lint` (frontend + backend) pass. Suite totals at certification: shared **759** tests (127 files), backend **641** tests (93 files), frontend **300** tests (64 files). The dead-reference re-scan found no orphaned references to the newly-tested or previously-privatized shared symbols (only `canEditContactField` in `@mms/shared` is a public export with no current production consumer — candidate for privatization in a future cleanup).
+Monorepo final certification: `pnpm typecheck`, all three Vitest suites, and `pnpm lint` (frontend + backend) pass. Suite totals at certification: shared **788** tests (130 files), backend **686** tests (95 files), frontend **314** tests (67 files). The dead-reference re-scan found no orphaned references to the newly-tested or previously-privatized shared symbols; the previously-public `canEditContactField` was removed, along with the facade re-exports `fetchContactLookups`, `useContactsSavedReports`, and `useContactsSavedReportMutations`. The final gap wave also removed the dead shared helpers `isContactSystemFormField` / `listContactSystemFormFieldKeys` and `getDefaultFieldValue` / `getDefaultModuleFieldValue`, the unused frontend `contactsListQueryKey`, and the unexercised facade re-exports (`useContactsDuplicatePairs`, `fetchContactsPageForQuery`, `fetchContactById`, `contactDetailQueryKey`, `CONTACTS_REPORT_ANALYTICS_QUERY_KEY`). Messaging recipient reads now route through the Contacts composition root via `loadContactsPageForTenant` / `loadContactsByIdsForTenant` instead of the repository adapter.
 

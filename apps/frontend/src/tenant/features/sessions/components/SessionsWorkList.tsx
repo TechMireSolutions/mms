@@ -1,4 +1,5 @@
 import { BookOpen, Plus } from "lucide-react";
+import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
@@ -20,6 +21,7 @@ interface SessionsWorkPageData {
 interface SessionsWorkColumnLayout {
   getColumnWidth: (key: string) => number | undefined;
   setColumnWidth: (key: string, width: number) => void;
+  columnRegistry: ModuleColumnRegistryEntry[];
 }
 
 interface SessionsWorkListProps {
@@ -147,6 +149,7 @@ export function SessionsWorkList({
             allVisibleSelected={allVisibleSelected}
             someVisibleSelected={someVisibleSelected}
             isColumnVisible={isColumnVisible}
+            columnRegistry={columnLayout.columnRegistry}
             sortField={sortField}
             sortDir={sortDir}
             columnLayout={columnLayout}
@@ -164,11 +167,19 @@ export function SessionsWorkList({
             sessions={sessions}
             showDeleted={showDeleted}
             canDelete={canDelete}
+            canSelectSessions={canSelectSessions}
+            selectedIds={selectedIds}
+            allVisibleSelected={allVisibleSelected}
+            someVisibleSelected={someVisibleSelected}
+            isColumnVisible={isColumnVisible}
+            columnRegistry={columnLayout.columnRegistry}
             statusConfig={statusConfig}
             typeConfig={typeConfig}
             onOpenDetail={onOpenDetail}
             onRequestDelete={onRequestDelete}
             onRestore={onRestore}
+            onToggleSelectAll={onToggleSelectAll}
+            onToggleSelectedSession={onToggleSelectedSession}
           />
         )}
       </ModuleWorkListStateShell>

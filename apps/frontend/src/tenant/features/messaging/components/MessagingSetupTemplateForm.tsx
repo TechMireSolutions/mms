@@ -3,7 +3,7 @@ import { Check, Edit3, Plus } from 'lucide-react';
 import type { MessageCategory } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL, WORK_SURFACE } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -44,7 +44,7 @@ export function MessagingSetupTemplateForm({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs">
+    <div className={`${WORK_SURFACE} space-y-4 p-4`}>
       {canEditSetup ? (
         <>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

@@ -1,17 +1,31 @@
 import type React from "react";
-import { Card } from "@/components/ui/card";
+import { Send } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { useTranslation } from "@/hooks/useTranslation";
 import { DistributionManagerListCards } from "@/tenant/features/hasanat/components/DistributionManagerListCards";
 import { DistributionManagerListTable } from "@/tenant/features/hasanat/components/DistributionManagerListTable";
 import type { DistributionManagerListProps } from "@/tenant/features/hasanat/components/distributionManagerListShared";
 
 export function DistributionManagerList(props: DistributionManagerListProps): React.JSX.Element {
-  return (
-    <Card accentColor="primary" className="p-0 overflow-hidden">
-      {props.viewMode === "cards" ? (
-        <DistributionManagerListCards {...props} />
-      ) : (
-        <DistributionManagerListTable {...props} />
-      )}
-    </Card>
+  const { t } = useTranslation();
+
+  if (props.distributions.length === 0) {
+    return (
+      <EmptyState
+        variant="dashed"
+        icon={Send}
+        title={t("hasanat.empty.distributions")}
+        compact
+      />
+    );
+  }
+
+  return props.viewMode === "cards" ? (
+    <DistributionManagerListCards {...props} />
+  ) : (
+    <div className={WORK_SURFACE}>
+      <DistributionManagerListTable {...props} />
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Contact, ContactsListPageResult, ContactsListQuery } from '@mms/shared';
-import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
+import type { Contact, ContactsListPageResult } from '@mms/shared';
 
 vi.mock('../db/repositories/messagingRepository.js', () => ({
   listMessageTemplatesByWorkspace: vi.fn(),
@@ -16,8 +15,12 @@ vi.mock('../db/repositories/messagingRepository.js', () => ({
   softDeleteActiveMessageLogs: vi.fn(),
 }));
 
-vi.mock('../contacts/repository/contactsRepositoryAdapter.js', () => ({
-  contactsRepository: {},
+const mockLoadContactsByIdsForTenant = vi.fn();
+const mockLoadContactsPageForTenant = vi.fn();
+
+vi.mock('../services/contactService.js', () => ({
+  loadContactsByIdsForTenant: (...args: unknown[]) => mockLoadContactsByIdsForTenant(...args),
+  loadContactsPageForTenant: (...args: unknown[]) => mockLoadContactsPageForTenant(...args),
 }));
 
 import {
@@ -38,74 +41,50 @@ function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   };
 }
 
-/** In-memory fake repo — the DI seam the recipient resolvers are designed against. */
-function createFakeRepo() {
-  const store = new Map<string, Contact>();
-  return {
-    repo: {
-      findByIds: vi.fn(async (_tenant: string, ids: string[]) =>
-        ids.map((id) => store.get(id)).filter((c): c is Contact => Boolean(c)),
-      ),
-      listPage: vi.fn(async (_tenant: string, query: ContactsListQuery) => {
-        const rows = [...store.values()].filter((c) => c.deletedAt === undefined);
-        const page = query.page ?? 1;
-        const limit = query.limit ?? 50;
-        const start = (page - 1) * limit;
-        return {
-          contacts: rows.slice(start, start + limit),
-          total: rows.length,
-          page,
-          limit,
-          hasMore: start + limit < rows.length,
-        };
-      }),
-    } as unknown as ContactsRepository,
-    store,
-  };
-}
-
-describe('messaging recipient resolvers (DI composition)', () => {
+describe('messaging recipient resolvers (contacts use-case seam)', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockLoadContactsByIdsForTenant.mockReset();
+    mockLoadContactsPageForTenant.mockReset();
   });
 
-  it('resolveMessagingRecipients filters deleted rows and converts survivors', async () => {
-    const { repo, store } = createFakeRepo();
-    store.set('a', fakeContact('a', { phones: [{ label: 'Mobile', number: '3001234567', isPrimary: true }] }));
-    store.set('gone', fakeContact('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    store.set('b', fakeContact('b', { emails: [{ label: 'Primary', address: 'b@example.com' }] }));
+  it('resolveMessagingRecipients converts survivors via the tenant read use case', async () => {
+    mockLoadContactsByIdsForTenant.mockResolvedValue([
+      fakeContact('a', { phones: [{ label: 'Mobile', number: '3001234567', isPrimary: true }] }),
+      fakeContact('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }),
+      fakeContact('b', { emails: [{ label: 'Primary', address: 'b@example.com' }] }),
+    ]);
 
-    const recipients = await resolveMessagingRecipients('demo', ['a', 'gone', 'b'], repo);
-    expect(repo.findByIds).toHaveBeenCalledWith('demo', ['a', 'gone', 'b']);
+    const recipients = await resolveMessagingRecipients('Demo', ['a', 'gone', 'b']);
+    expect(mockLoadContactsByIdsForTenant).toHaveBeenCalledWith('demo', ['a', 'gone', 'b']);
     expect(recipients.map((r) => r.id)).toEqual(['a', 'b']);
     expect(recipients[0]).toMatchObject({ name: 'Contact a', phone: '+92 3001234567' });
     expect(recipients[1]).toMatchObject({ name: 'Contact b', email: 'b@example.com' });
   });
 
-  it('resolveMessagingRecipients returns [] for empty input without touching the repo', async () => {
-    const { repo } = createFakeRepo();
-    expect(await resolveMessagingRecipients('demo', [], repo)).toEqual([]);
-    expect(repo.findByIds).not.toHaveBeenCalled();
+  it('resolveMessagingRecipients returns [] for empty input without touching the use case', async () => {
+    expect(await resolveMessagingRecipients('demo', [])).toEqual([]);
+    expect(mockLoadContactsByIdsForTenant).not.toHaveBeenCalled();
   });
 
-  it('loadMessagingRecipients maps role and reachability onto the listPage query', async () => {
-    const { repo, store } = createFakeRepo();
-    store.set('a', fakeContact('a'));
+  it('loadMessagingRecipients maps role and reachability onto the list query', async () => {
+    mockLoadContactsPageForTenant.mockResolvedValue({
+      contacts: [fakeContact('a')],
+      total: 1,
+      page: 2,
+      limit: 25,
+      hasMore: false,
+    });
 
-    await loadMessagingRecipients(
-      'demo',
-      {
-        role: 'students',
-        gender: 'male',
-        search: 'ali',
-        page: 2,
-        pageSize: 25,
-        hasPhone: true,
-        hasEmail: undefined,
-      },
-      repo,
-    );
-    expect(repo.listPage).toHaveBeenCalledWith('demo', {
+    await loadMessagingRecipients('demo', {
+      role: 'students',
+      gender: 'male',
+      search: 'ali',
+      page: 2,
+      pageSize: 25,
+      hasPhone: true,
+      hasEmail: undefined,
+    });
+    expect(mockLoadContactsPageForTenant).toHaveBeenCalledWith('demo', {
       page: 2,
       limit: 25,
       search: 'ali',
@@ -116,37 +95,56 @@ describe('messaging recipient resolvers (DI composition)', () => {
   });
 
   it('loadMessagingRecipients uses unlinked filter for the contacts role', async () => {
-    const { repo } = createFakeRepo();
-    await loadMessagingRecipients(
-      'demo',
-      { role: 'contacts', gender: 'all', page: 1, pageSize: 50, hasPhone: undefined, hasEmail: undefined },
-      repo,
-    );
-    expect(repo.listPage).toHaveBeenCalledWith(
+    mockLoadContactsPageForTenant.mockResolvedValue({
+      contacts: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+
+    await loadMessagingRecipients('demo', {
+      role: 'contacts',
+      gender: 'all',
+      page: 1,
+      pageSize: 50,
+      hasPhone: undefined,
+      hasEmail: undefined,
+    });
+    expect(mockLoadContactsPageForTenant).toHaveBeenCalledWith(
       'demo',
       expect.objectContaining({ moduleLinkFilter: 'unlinked' }),
     );
   });
 
   it('loadMessagingRecipients falls back to hasReachable and no role filter', async () => {
-    const { repo } = createFakeRepo();
-    await loadMessagingRecipients(
-      'demo',
-      { role: 'all', gender: 'all', page: 1, pageSize: 50, hasPhone: undefined, hasEmail: undefined },
-      repo,
-    );
-    expect(repo.listPage).toHaveBeenCalledWith(
+    mockLoadContactsPageForTenant.mockResolvedValue({
+      contacts: [],
+      total: 0,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+
+    await loadMessagingRecipients('demo', {
+      role: 'all',
+      gender: 'all',
+      page: 1,
+      pageSize: 50,
+      hasPhone: undefined,
+      hasEmail: undefined,
+    });
+    expect(mockLoadContactsPageForTenant).toHaveBeenCalledWith(
       'demo',
       expect.objectContaining({ hasReachable: true }),
     );
-    expect(repo.listPage).toHaveBeenCalledWith(
+    expect(mockLoadContactsPageForTenant).toHaveBeenCalledWith(
       'demo',
       expect.not.objectContaining({ moduleLinkFilter: expect.anything() }),
     );
   });
 
   it('matchMessagingRecipients stops on the final page and reports truncation', async () => {
-    const { repo } = createFakeRepo();
     const pageResult: ContactsListPageResult = {
       contacts: [
         fakeContact('a', { phones: [{ label: 'Mobile', number: '3001111' }] }),
@@ -157,14 +155,14 @@ describe('messaging recipient resolvers (DI composition)', () => {
       limit: 500,
       hasMore: false,
     };
-    vi.mocked(repo.listPage).mockResolvedValue(pageResult);
+    mockLoadContactsPageForTenant.mockResolvedValue(pageResult);
 
-    const result = await matchMessagingRecipients(
-      'demo',
-      { role: 'all', gender: 'all', kind: 'phone' },
-      repo,
-    );
-    expect(repo.listPage).toHaveBeenCalledWith(
+    const result = await matchMessagingRecipients('demo', {
+      role: 'all',
+      gender: 'all',
+      kind: 'phone',
+    });
+    expect(mockLoadContactsPageForTenant).toHaveBeenCalledWith(
       'demo',
       expect.objectContaining({ page: 1, limit: 500, hasPhone: true }),
     );
@@ -174,7 +172,6 @@ describe('messaging recipient resolvers (DI composition)', () => {
   });
 
   it('matchMessagingRecipients pages until hasMore is false', async () => {
-    const { repo } = createFakeRepo();
     const makePage = (page: number, ids: string[]): ContactsListPageResult => ({
       contacts: ids.map((id) => fakeContact(id, { phones: [{ label: 'Mobile', number: id }] })),
       total: 4,
@@ -182,16 +179,16 @@ describe('messaging recipient resolvers (DI composition)', () => {
       limit: 2,
       hasMore: page === 1,
     });
-    vi.mocked(repo.listPage)
+    mockLoadContactsPageForTenant
       .mockResolvedValueOnce(makePage(1, ['a', 'b']))
       .mockResolvedValueOnce(makePage(2, ['c', 'd']));
 
-    const result = await matchMessagingRecipients(
-      'demo',
-      { role: 'all', gender: 'all', kind: 'email' },
-      repo,
-    );
-    expect(repo.listPage).toHaveBeenCalledTimes(2);
+    const result = await matchMessagingRecipients('demo', {
+      role: 'all',
+      gender: 'all',
+      kind: 'email',
+    });
+    expect(mockLoadContactsPageForTenant).toHaveBeenCalledTimes(2);
     expect(result.recipients.map((r) => r.id)).toEqual(['a', 'b', 'c', 'd']);
     expect(result.truncated).toBe(false);
   });

@@ -8,14 +8,11 @@ import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import type { Invoice } from "@/lib/data/financeData";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { useInvoiceSelection } from "@/tenant/features/finance/hooks/useInvoiceSelection";
+import { FinanceBulkActionBar } from "@/tenant/features/finance/components/FinanceBulkActionBar";
 import { InvoiceListContent } from "@/tenant/features/finance/components/InvoiceListContent";
-import { InvoiceListSelectionBar } from "@/tenant/features/finance/components/InvoiceListSelectionBar";
 import { InvoiceListToolbar } from "@/tenant/features/finance/components/InvoiceListToolbar";
-import { INVOICE_LIST_COLUMN_KEYS } from "@/tenant/features/finance/components/invoiceListContentShared";
-import {
-  getDirectoryPageSelection,
-  togglePageIdsInSelection,
-} from "@/lib/directorySelection";
+import { getInvoiceVisibleWorkColumns } from "@/tenant/features/finance/components/invoiceListVisibleColumns";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -64,25 +61,11 @@ export function InvoiceList({
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
-  useEffect(() => setSelectedIds([]), [selectionResetKey, showDeleted]);
-
-  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
-    paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
-    pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
-    overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
-    partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
-    cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
-
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
-  const visibleColCount =
-    INVOICE_LIST_COLUMN_KEYS.filter(columnVisible).length +
-    (canDelete ? 1 : 0) +
-    1;
+  const columnRegistry = columnCustomizer?.columnRegistry ?? [];
 
   const filtered = useMemo(() => {
     return invoices.filter((invoice) => {
@@ -96,8 +79,30 @@ export function InvoiceList({
     });
   }, [invoices, search, filterStatus]);
 
-  const pageIds = filtered.map((invoice) => invoice.id);
-  const { allSelected } = getDirectoryPageSelection(pageIds, selectedIds);
+  const {
+    selectedIds,
+    setSelectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
+    toggleSelectAll,
+    toggleSelectedInvoice,
+    clearSelection,
+  } = useInvoiceSelection(filtered);
+
+  useEffect(() => setSelectedIds([]), [selectionResetKey, showDeleted, setSelectedIds]);
+
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+    paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
+    pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
+    overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
+    partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
+    cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
+  }), [t]);
+
+  const visibleColCount =
+    getInvoiceVisibleWorkColumns(columnRegistry, columnVisible).length
+    + (canDelete ? 1 : 0)
+    + 1;
 
   const toggleStatus = (status: string) => setFilterStatus((currentStatuses) => currentStatuses.includes(status)
     ? currentStatuses.filter((selectedStatus) => selectedStatus !== status)
@@ -123,11 +128,13 @@ export function InvoiceList({
       />
 
       {canDelete && (
-        <InvoiceListSelectionBar
+        <FinanceBulkActionBar
           selectedCount={selectedIds.length}
           showDeleted={showDeleted}
-          onRequestBulkAction={() => setConfirmBulkOpen(true)}
-          onClearSelection={() => setSelectedIds([])}
+          canDelete={canDelete}
+          onRequestBulkDelete={() => setConfirmBulkOpen(true)}
+          onRequestBulkRestore={() => setConfirmBulkOpen(true)}
+          onClearSelection={clearSelection}
         />
       )}
 
@@ -137,17 +144,20 @@ export function InvoiceList({
         selectedIds={selectedIds}
         isColumnVisible={columnVisible}
         visibleColCount={visibleColCount}
+        columnRegistry={columnRegistry}
+        canSelectInvoices={canDelete}
+        allVisibleSelected={allVisibleSelected}
+        someVisibleSelected={someVisibleSelected}
         canWrite={canWrite}
         canDelete={canDelete}
         canWriteMessaging={canWriteMessaging}
         showDeleted={showDeleted}
-        allSelected={allSelected}
         statusConfig={statusConfig}
         formatCurrency={formatCurrency}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
-        onSelectAll={(_checked) => setSelectedIds((current) => togglePageIdsInSelection(current, pageIds))}
-        onToggleSelected={toggleSelected}
+        onToggleSelectAll={toggleSelectAll}
+        onToggleSelectedInvoice={toggleSelected}
         onView={onView}
         onRecord={onRecord}
         onRequestDelete={onDelete ? setPendingDeleteId : undefined}
@@ -186,7 +196,7 @@ export function InvoiceList({
         onConfirm={() => {
           if (showDeleted) onBulkRestore?.(selectedIds);
           else onBulkDelete?.(selectedIds);
-          setSelectedIds([]);
+          clearSelection();
           setConfirmBulkOpen(false);
         }}
       />

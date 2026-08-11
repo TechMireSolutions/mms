@@ -8,6 +8,7 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { PermCell } from '@/tenant/features/users/components/RolesPermCell';
 
 export interface PermissionMatrixActions {
@@ -38,16 +39,16 @@ export function PermissionMatrixRow({
   const hasAny = currentActions.length > 0;
 
   return (
-    <tr
+    <TableRow
       className={`transition-colors ${hasAny || !readOnly ? 'hover:bg-muted/10' : 'opacity-40'}`}
     >
-      <td
+      <TableCell
         className={`px-3 py-2.5 text-xs font-semibold text-foreground ${inGroup ? 'ps-8' : ''}`}
       >
         {t(mod.labelKey)}
-      </td>
+      </TableCell>
       {PERMISSION_ACTIONS.map((permissionAction) => (
-        <td key={permissionAction} className="px-2 py-2.5">
+        <TableCell key={permissionAction} className="px-2 py-2.5">
           {readOnly ? (
             <div
               className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border-2 ${
@@ -65,10 +66,10 @@ export function PermissionMatrixRow({
               ariaLabel={`${t(mod.labelKey)}: ${t(`users.permission.${permissionAction}`)}`}
             />
           )}
-        </td>
+        </TableCell>
       ))}
       {!readOnly ? (
-        <td className="px-2 py-2.5">
+        <TableCell className="px-2 py-2.5">
           <Button
             type="button"
             variant="ghost"
@@ -83,8 +84,8 @@ export function PermissionMatrixRow({
           >
             {allChecked ? <X className="h-3 w-3" /> : <Check className="h-3 w-3" />}
           </Button>
-        </td>
+        </TableCell>
       ) : null}
-    </tr>
+    </TableRow>
   );
 }

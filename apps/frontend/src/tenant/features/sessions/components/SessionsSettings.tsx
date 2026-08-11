@@ -13,6 +13,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
@@ -112,7 +113,7 @@ export function SessionsSettings(): React.JSX.Element {
           {t("sessions.setupReadOnly")}
         </p>
       ) : (
-        <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <section className={`${WORK_SURFACE} p-5 space-y-4`}>
           <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <Calendar className="w-3.5 h-3.5 text-primary" />

@@ -45,7 +45,11 @@ export function useHasanatDistributionTrashActions(mutations: HasanatTrashMutati
           failed: result.failed,
         }));
       } else {
-        notify.success(t('hasanat.trash.deleted'));
+        notify.success(
+          result.succeeded > 1
+            ? t('hasanat.trash.bulkDeleted', { count: result.succeeded })
+            : t('hasanat.trash.deleted'),
+        );
       }
     } catch (error: unknown) {
       notify.error(t('hasanat.trash.actionFailed'), {
@@ -64,7 +68,11 @@ export function useHasanatDistributionTrashActions(mutations: HasanatTrashMutati
           failed: result.failed,
         }));
       } else {
-        notify.success(t('hasanat.trash.restored'));
+        notify.success(
+          result.succeeded > 1
+            ? t('hasanat.trash.bulkRestored', { count: result.succeeded })
+            : t('hasanat.trash.restored'),
+        );
       }
     } catch (error: unknown) {
       notify.error(t('hasanat.trash.actionFailed'), {

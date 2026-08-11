@@ -14,7 +14,7 @@ import { TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { useTranslation } from "@/hooks/useTranslation";
 import type { CSSProperties } from "react";
-import { contactStickyCellBg } from "@/tenant/features/contacts/components/contactTableTypes";
+import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -40,7 +40,7 @@ export function renderContactNameCell({
       key="name"
       className={cn(
         "px-4 py-3 sticky start-12 z-10 transition-colors border-e border-border/30",
-        contactStickyCellBg(isSelected),
+        workTableStickyCellBg(isSelected),
       )}
       style={widthStyle}
     >

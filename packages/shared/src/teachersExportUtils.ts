@@ -1,4 +1,5 @@
 import type { FieldDefinition } from './contactTypes.js';
+import { canViewContactField, canViewContactTab } from './contactFieldAccess.js';
 import type { Teacher } from './teacherTypes.js';
 import type { TeachersSettings } from './teachersModuleSettings.js';
 import {
@@ -46,19 +47,21 @@ function isTeacherExportTabEnabled(
 }
 
 /**
- * Filters export columns by Setup field/tab enablement (Students-shaped).
- * Always-visible: `name`, `employeeId`. Role gating reserved for a later pass.
+ * Filters export columns by Setup field/tab enablement + viewer role.
+ * Always-visible: `name`, `employeeId`. Disabled or role-hidden Setup fields are
+ * dropped; unregistered custom keys and always-visible identity columns survive.
  */
 export function filterTeacherExportColumnsForViewer(
   columns: TeacherExportColumn[],
   settings?: TeachersSettings | null,
-  _viewerRole?: string,
+  viewerRole?: string,
 ): TeacherExportColumn[] {
   const source = columns.length > 0 ? columns : [...DEFAULT_TEACHER_EXPORT_COLUMNS];
   if (!settings) return source;
 
   const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
   const enabledTabs = new Set(resolveTeacherEnabledTabIds(settings));
+  const formTabs = settings.formTabs ?? [];
 
   return source.filter((column) => {
     if (TEACHER_EXPORT_ALWAYS_VISIBLE.has(column.id)) return true;
@@ -70,7 +73,15 @@ export function filterTeacherExportColumnsForViewer(
       return true;
     }
     if (found.field.enabled === false) return false;
-    return isTeacherExportTabEnabled(found.tabId, enabledTabs);
+    if (!isTeacherExportTabEnabled(found.tabId, enabledTabs)) return false;
+    if (viewerRole) {
+      if (!canViewContactField(viewerRole, found.field)) return false;
+      const tab = formTabs.find(
+        (candidate) => (candidate.key || '').toLowerCase() === found.tabId.toLowerCase(),
+      );
+      if (tab && !canViewContactTab(viewerRole, tab)) return false;
+    }
+    return true;
   });
 }
 

@@ -40,7 +40,7 @@ export function AccountProfileContactTab({
     name !== originalName || phone !== originalPhone || contactEmail !== originalEmail;
 
   return (
-    <Card className="relative overflow-hidden group/profile-card shadow-md">
+    <Card className="group/profile-card">
       <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/profile-card:bg-primary" />
       <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 ps-6.5">
         <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">

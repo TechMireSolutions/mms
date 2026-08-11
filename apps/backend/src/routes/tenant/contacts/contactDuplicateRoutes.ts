@@ -5,7 +5,7 @@ import { sendDatabaseError } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { countContactDuplicateMatches } from '../../../services/contactDuplicateScanService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
-import { prepareContactRecord } from '../../../contacts/use-cases/contactNormalizeUseCases.js';
+import { prepareContactRecord } from '../../../services/contactService.js';
 import {
   buildContactDuplicateCheckBodySchema,
   contactsDuplicatesQuerySchema,

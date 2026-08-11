@@ -1,10 +1,20 @@
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ObligationDistribution } from "@/lib/data/obligationsData";
 import { AlertCircle, Layers } from "lucide-react";
 
-import { SectionTitle } from "./ObligationsSectionTitle";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 export interface WakalaSummaryEntry {
   key: string;
@@ -35,35 +45,40 @@ export function ObligationsWakalaSummarySection({
 
   return (
     <section aria-label={t("obligations.summary.wakala.aria")}>
-      <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <SectionTitle icon={Layers} title={t("obligations.summary.wakala.title")} subtitle={t("obligations.summary.wakala.subtitle")} noMargin />
-        <ExportToolbar
-          title={t("obligations.summary.wakala.title")}
-          filename="wakala_summary"
-          moduleId="obligations"
-          exportLabel={t("obligations.summary.wakala.exportLabel")}
-          columns={[
-            { header: t("obligations.summary.wakala.colRepWakala"), key: "repName" },
-            { header: t("obligations.summary.wakala.colMujtahid"), key: "mujtahidName" },
-            { header: t("obligations.summary.wakala.colObligationType"), key: "obligationType" },
-            { header: t("obligations.summary.wakala.colCollections"), key: "count" },
-            { header: t("obligations.summary.wakala.colTotalAmount", { currency: activeCurrencyCode }), key: "totalFmt" },
-            { header: t("obligations.summary.wakala.colDistributions"), key: "distFmt" },
-          ]}
-          rows={wakalaSummary.map((wakalaSummaryItem) => ({
-            ...wakalaSummaryItem,
-            totalFmt: formatCurrency(wakalaSummaryItem.total),
-            distFmt: wakalaSummaryItem.distributions.map((distribution) => `${distribution.name} ${distribution.percentage}%`).join("; ") || "—",
-          }))}
-        />
-      </header>
+      <SectionHeader
+        align="start"
+        icon={<Layers className="w-3.5 h-3.5 text-primary" aria-hidden="true" />}
+        title={t("obligations.summary.wakala.title")}
+        subtitle={t("obligations.summary.wakala.subtitle")}
+        actions={
+          <ExportToolbar
+            title={t("obligations.summary.wakala.title")}
+            filename="wakala_summary"
+            moduleId="obligations"
+            exportLabel={t("obligations.summary.wakala.exportLabel")}
+            columns={[
+              { header: t("obligations.summary.wakala.colRepWakala"), key: "repName" },
+              { header: t("obligations.summary.wakala.colMujtahid"), key: "mujtahidName" },
+              { header: t("obligations.summary.wakala.colObligationType"), key: "obligationType" },
+              { header: t("obligations.summary.wakala.colCollections"), key: "count" },
+              { header: t("obligations.summary.wakala.colTotalAmount", { currency: activeCurrencyCode }), key: "totalFmt" },
+              { header: t("obligations.summary.wakala.colDistributions"), key: "distFmt" },
+            ]}
+            rows={wakalaSummary.map((wakalaSummaryItem) => ({
+              ...wakalaSummaryItem,
+              totalFmt: formatCurrency(wakalaSummaryItem.total),
+              distFmt: wakalaSummaryItem.distributions.map((distribution) => `${distribution.name} ${distribution.percentage}%`).join("; ") || "—",
+            }))}
+          />
+        }
+      />
       {wakalaSummary.length === 0 ? (
         <EmptyState variant="dashed" title={t("obligations.summary.emptyFiltered")} compact role="alert" />
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {wakalaSummary.map((wakalaSummaryItem) => (
-              <article key={wakalaSummaryItem.key} className="space-y-3 rounded-xl border border-border bg-card p-3">
+              <article key={wakalaSummaryItem.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <div>
                   <h4 className="text-sm font-semibold text-foreground m-0">{wakalaSummaryItem.repName}</h4>
                   {!wakalaSummaryItem.hasWakala && (
@@ -109,37 +124,37 @@ export function ObligationsWakalaSummarySection({
               <p className="font-mono font-bold text-success text-sm m-0">{formatCurrency(totalAmount)}</p>
             </article>
           </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
+          <div className="hidden md:block">
+            <Table>
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
-              <thead className="bg-muted/60 border-b border-border">
-                <tr>
-                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colRepWakala")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colMujtahid")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colObligation")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colCollections")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colTotalAmountShort")}</th>
-                  <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.summary.wakala.colDistributions")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  <ModuleTableHeaderCell columnKey="repWakala" className="px-3 py-2.5">{t("obligations.summary.wakala.colRepWakala")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="mujtahid" className="px-3 py-2.5">{t("obligations.summary.wakala.colMujtahid")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="obligation" className="px-3 py-2.5">{t("obligations.summary.wakala.colObligation")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="collections" className="px-3 py-2.5 text-end">{t("obligations.summary.wakala.colCollections")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="totalAmount" className="px-3 py-2.5 text-end">{t("obligations.summary.wakala.colTotalAmountShort")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="distributions" className="px-3 py-2.5">{t("obligations.summary.wakala.colDistributions")}</ModuleTableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/50">
                 {wakalaSummary.map((wakalaSummaryItem) => (
-                  <tr key={wakalaSummaryItem.key} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-3 py-3">
+                  <TableRow key={wakalaSummaryItem.key} className="hover:bg-muted/20 transition-colors">
+                    <TableCell className="px-3 py-2.5">
                       <p className="font-semibold text-foreground text-sm m-0">{wakalaSummaryItem.repName}</p>
                       {!wakalaSummaryItem.hasWakala && (
                         <span className="inline-flex items-center gap-1 text-xs text-warning font-bold mt-0.5" aria-label={t("obligations.summary.wakala.noConfigAria")}>
                           <AlertCircle className="w-3 h-3" aria-hidden="true" /> {t("obligations.summary.wakala.noConfig")}
                         </span>
                       )}
-                    </td>
-                    <td className="px-3 py-3 text-xs text-muted-foreground">{wakalaSummaryItem.mujtahidName}</td>
-                    <td className="px-3 py-3">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">{wakalaSummaryItem.mujtahidName}</TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{wakalaSummaryItem.obligationType}</span>
-                    </td>
-                    <td className="px-3 py-3 text-end text-sm font-semibold text-foreground">{wakalaSummaryItem.count}</td>
-                    <td className="px-3 py-3 text-end font-mono font-bold text-success text-sm">{formatCurrency(wakalaSummaryItem.total)}</td>
-                    <td className="px-3 py-3">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5 text-end text-sm font-semibold text-foreground">{wakalaSummaryItem.count}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-sm">{formatCurrency(wakalaSummaryItem.total)}</TableCell>
+                    <TableCell className="px-3 py-2.5">
                       {wakalaSummaryItem.distributions.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {wakalaSummaryItem.distributions.map((distribution) => (
@@ -149,18 +164,18 @@ export function ObligationsWakalaSummarySection({
                           ))}
                         </div>
                       ) : <span className="text-xs text-muted-foreground">—</span>}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-              <tfoot className="border-t-2 border-border bg-muted/30">
-                <tr>
-                  <td colSpan={4} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</td>
-                  <td className="px-3 py-2 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalAmount)}</td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={4} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalAmount)}</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
           </div>
         </div>
       )}

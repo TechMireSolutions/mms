@@ -9,7 +9,13 @@ import type {
   ContactsWidgetQuery,
   FieldConfig,
 } from '@mms/shared';
-import type { ContactDuplicateCandidateKeys, ContactUniqueLookupValues } from '../../db/repositories/contactRepository.js';
+import type {
+  ContactDuplicateCandidateKeys,
+  ContactUniqueLookupValues,
+} from '../../db/repositories/contactRepository.js';
+
+/** Duplicate-scan key shape — re-exported from the module interface so use cases never import the db layer. */
+export type { ContactDuplicateCandidateKeys };
 
 /** Soft-delete visibility filter shared by list/count repository reads. */
 type ContactDeletedFilter = 'active' | 'deleted' | 'all';
@@ -47,6 +53,9 @@ export interface ContactsRepository {
   ): Promise<string[]>;
   findContactDuplicateBlockedIds(tenant: string, namePrefixes: string[]): Promise<string[]>;
   countFieldUsageByKeys(tenant: string, fieldKeys: string[]): Promise<Record<string, number>>;
+
+  /** Take transaction-scoped advisory locks on normalized unique values (TOCTOU guard). */
+  acquireUniqueValueLocks(tenant: string, lockKeys: string[]): Promise<void>;
 
   aggregateCommandMetrics(
     tenant: string,

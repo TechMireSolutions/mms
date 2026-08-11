@@ -110,6 +110,15 @@ export function useFinancePageController() {
   ): void => {
     if (result.failed > 0) {
       notify.error(t("finance.trash.bulkPartial", { succeeded: result.succeeded, failed: result.failed }));
+    } else if (result.succeeded > 1) {
+      notify.success(
+        t(
+          successKey === "finance.trash.deleted"
+            ? "finance.trash.bulkDeleted"
+            : "finance.trash.bulkRestored",
+          { count: result.succeeded },
+        ),
+      );
     } else {
       notify.success(t(successKey));
     }

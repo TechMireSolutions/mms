@@ -9,7 +9,7 @@ import {
   resolveStudentStatuses,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useStudentCount } from "@/tenant/features/students/hooks/useStudentCount";
+import { useStudentsMetrics } from "@/tenant/features/students/hooks/useStudentsAnalyticsQueries";
 import { useStudentMutations } from "@/tenant/features/students/hooks/useStudents";
 import { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
@@ -44,7 +44,7 @@ export function useStudentsPageController() {
     canViewSetup,
     canViewReports,
   });
-  const { data: serverCount } = useStudentCount();
+  const { data: metrics } = useStudentsMetrics();
   const mutations = useStudentMutations();
   const { settings, statuses: configuredStatuses, genderFilters } = useStudentConfig();
   const studentStatusOptions = resolveStudentStatuses(configuredStatuses);
@@ -59,7 +59,7 @@ export function useStudentsPageController() {
   useGrMigration(effectiveTab, canEditSetup);
 
   const columnLayout = useStudentColumnLayout(settings);
-  const directory = useStudentsDirectoryFilters();
+  const directory = useStudentsDirectoryFilters({ setActiveTab });
   const { setListPage } = directory;
 
   useEffect(() => {
@@ -83,6 +83,7 @@ export function useStudentsPageController() {
     debouncedSearch: directory.debouncedSearch,
     studentFilterStatus: directory.studentFilterStatus,
     studentFilterGender: directory.studentFilterGender,
+    quickFilter: directory.quickFilter,
     sortField: directory.sortField,
     sortDir: directory.sortDir,
     viewingDeleted: directory.viewingDeleted,
@@ -122,6 +123,7 @@ export function useStudentsPageController() {
     search: directory.studentSearch,
     filterStatus: directory.studentFilterStatus,
     filterGender: directory.studentFilterGender,
+    quickFilter: directory.quickFilter,
     sortField: directory.sortField,
     sortDir: directory.sortDir,
     viewingDeleted: directory.viewingDeleted,
@@ -133,6 +135,8 @@ export function useStudentsPageController() {
     studentSearch: directory.studentSearch,
     studentFilterStatus: directory.studentFilterStatus,
     studentFilterGender: directory.studentFilterGender,
+    quickFilter: directory.quickFilter,
+    changeQuickFilter: directory.changeQuickFilter,
     studentStatusOptions,
     genderFilters,
     viewingDeleted: directory.viewingDeleted,
@@ -165,6 +169,7 @@ export function useStudentsPageController() {
     handleRestore: workActions.handleRestore,
     handleBulkStatusChange: workActions.handleBulkStatusChange,
     handleBulkExport,
+    bulkStatusPending: mutations.bulkUpdateStudentStatus.isPending,
     sortField: directory.sortField,
     sortDir: directory.sortDir,
     handleServerSort: directory.handleServerSort,
@@ -194,7 +199,7 @@ export function useStudentsPageController() {
     canWrite,
     canExport,
     visibleTabs,
-    serverCount,
+    metricsTotal: metrics?.total,
     activeTab: effectiveTab,
     setActiveTab,
     viewingDeleted: directory.viewingDeleted,

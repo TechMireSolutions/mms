@@ -1,6 +1,6 @@
 import { todayISO } from '@mms/shared';
 import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';
-import { useFinanceMetrics } from '@/tenant/features/finance/hooks/useFinanceMetrics';
+import { useFinanceMetrics } from '@/tenant/hooks/collections/finance';
 import { useExaminationsMetrics } from '@/tenant/hooks/collections/examinations';
 import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
 import {

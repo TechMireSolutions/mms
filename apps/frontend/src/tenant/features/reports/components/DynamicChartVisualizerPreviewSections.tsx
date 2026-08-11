@@ -1,8 +1,17 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, Table } from "lucide-react";
+import { ChevronDown, ChevronUp, Table as TableIcon } from "lucide-react";
 import { formatNumber } from "@mms/shared";
 import { Button } from "@/components/ui/button";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type {
   AggregatedItem,
@@ -65,7 +74,7 @@ export function VisualizerDataMatrix({
         className="min-h-11 w-full flex items-center justify-between text-xs font-bold text-muted-foreground hover:text-foreground select-none shadow-none px-0"
       >
         <span className="flex items-center gap-1.5">
-          <Table className="w-4 h-4 text-primary" />
+          <TableIcon className="w-4 h-4 text-primary" />
           {t("reports.visualizer.dataMatrix")}
         </span>
         {showDataTable ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -82,7 +91,7 @@ export function VisualizerDataMatrix({
             <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[13.75rem] overflow-y-auto">
               <div className="space-y-3 p-3 md:hidden">
                 {processedData.map((processedRow, index) => (
-                  <article key={index} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                  <article key={index} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
                     <p className="text-sm font-semibold text-foreground">{processedRow.name}</p>
                     <dl className="grid grid-cols-2 gap-2 text-sm">
                       <div>
@@ -99,25 +108,32 @@ export function VisualizerDataMatrix({
                   </article>
                 ))}
               </div>
-              <div className="hidden overflow-x-auto md:block">
-                <table className="w-full text-xs text-start">
-                  <thead className="bg-muted/50 border-b border-border/50 text-xs font-black uppercase text-muted-foreground tracking-wider">
-                    <tr>
-                      <th className="px-4 py-2.5">{t("reports.visualizer.xAxisCategory")}</th>
-                      <th className="px-4 py-2.5">{t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}</th>
-                      <th className="px-4 py-2.5">{t("reports.visualizer.recordCount")}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40 font-medium">
+              <div className="hidden md:block">
+                <Table>
+                  <caption className="sr-only">{t("reports.visualizer.dataMatrix")}</caption>
+                  <TableHeader>
+                    <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                      <ModuleTableHeaderCell columnKey="category" className="px-4 py-2.5">
+                        {t("reports.visualizer.xAxisCategory")}
+                      </ModuleTableHeaderCell>
+                      <ModuleTableHeaderCell columnKey="value" className="px-4 py-2.5">
+                        {t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}
+                      </ModuleTableHeaderCell>
+                      <ModuleTableHeaderCell columnKey="count" className="px-4 py-2.5">
+                        {t("reports.visualizer.recordCount")}
+                      </ModuleTableHeaderCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border/50 font-medium">
                     {processedData.map((processedRow, index) => (
-                      <tr key={index} className="hover:bg-muted/20">
-                        <td className="px-4 py-2.5 text-foreground font-semibold">{processedRow.name}</td>
-                        <td className="px-4 py-2.5 text-primary font-bold">{formatNumber(processedRow.value)}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{processedRow.count}</td>
-                      </tr>
+                      <TableRow key={index} className="hover:bg-muted/20 transition-colors">
+                        <TableCell className="px-4 py-2.5 text-foreground font-semibold">{processedRow.name}</TableCell>
+                        <TableCell className="px-4 py-2.5 text-primary font-bold">{formatNumber(processedRow.value)}</TableCell>
+                        <TableCell className="px-4 py-2.5 text-muted-foreground">{processedRow.count}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </motion.div>

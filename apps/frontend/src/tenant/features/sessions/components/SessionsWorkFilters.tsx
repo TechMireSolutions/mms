@@ -1,26 +1,20 @@
-import { BookOpen, ChevronDown, Filter } from "lucide-react";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { Button } from "@/components/ui/button";
+import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   ModuleColumnCustomizer,
   type ModuleColumnCustomizerLabels,
 } from "@/components/ui/ModuleColumnCustomizer";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { SessionStatus, SessionType } from "@/tenant/features/sessions/components/sessionPageTypes";
 import { SESSIONS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/sessions/hooks/useSessionsKeyboardShortcuts";
+import { SessionsFilterMenuButton } from "@/tenant/features/sessions/components/SessionsFilterMenuButton";
 
 interface SessionsWorkColumnLayout {
   columnRegistry: ModuleColumnRegistryEntry[];
@@ -37,6 +31,7 @@ interface SessionsWorkFiltersProps {
   typeOptions: string[];
   statusLabels: Record<string, string>;
   typeLabels: Record<string, string>;
+  activeFilterCount: number;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   columnLayout: SessionsWorkColumnLayout;
@@ -57,6 +52,7 @@ export function SessionsWorkFilters({
   typeOptions,
   statusLabels,
   typeLabels,
+  activeFilterCount,
   viewMode,
   onViewModeChange,
   columnLayout,
@@ -71,82 +67,66 @@ export function SessionsWorkFilters({
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <SearchBar
-          id={SESSIONS_WORK_SEARCH_INPUT_ID}
-          value={search}
-          onChange={onSearchChange}
-          placeholder={t("sessions.searchPlaceholder")}
-          className="flex-1"
-        />
+      <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
+        <div className="relative min-w-0 flex-1">
+          <SearchBar
+            id={SESSIONS_WORK_SEARCH_INPUT_ID}
+            value={search}
+            onChange={onSearchChange}
+            placeholder={t("sessions.searchPlaceholder")}
+            className="w-full min-w-0"
+          />
+          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
+            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
+              /
+            </kbd>
+          </div>
+        </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${filterStatus.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
-            >
-              <Filter className="w-3.5 h-3.5" /> {t("sessions.filter.status")} {filterStatus.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{filterStatus.length}</span>}
-              <ChevronDown className="w-3 h-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuLabel className="text-xs">{t("sessions.filter.status")}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {statusOptions.map((statusOption) => (
-              <DropdownMenuCheckboxItem key={statusOption} checked={filterStatus.includes(statusOption)} onCheckedChange={() => onStatusFilterToggle(statusOption)}>
-                {statusLabels[statusOption]}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+          <SessionsFilterMenuButton
+            filterStatus={filterStatus}
+            filterType={filterType}
+            statusOptions={statusOptions}
+            typeOptions={typeOptions}
+            statusLabels={statusLabels}
+            typeLabels={typeLabels}
+            activeFilterCount={activeFilterCount}
+            onStatusFilterToggle={onStatusFilterToggle}
+            onTypeFilterToggle={onTypeFilterToggle}
+            onClearFilters={onClearFilters}
+          />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className={`flex items-center gap-2 px-3.5 min-h-11 rounded-xl border text-sm font-medium transition-colors ${filterType.length > 0 ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card text-foreground hover:bg-muted"}`}
-            >
-              <BookOpen className="w-3.5 h-3.5" /> {t("sessions.filter.type")} {filterType.length > 0 && <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{filterType.length}</span>}
-              <ChevronDown className="w-3 h-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuLabel className="text-xs">{t("sessions.filter.type")}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {typeOptions.map((typeOption) => (
-              <DropdownMenuCheckboxItem key={typeOption} checked={filterType.includes(typeOption)} onCheckedChange={() => onTypeFilterToggle(typeOption)}>
-                {typeLabels[typeOption]}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {activeFilterCount > 0 ? (
+            <ModuleClearFiltersButton
+              onClearFilters={onClearFilters}
+              label={t("sessions.clearFilters")}
+            />
+          ) : null}
 
-        <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-        {viewMode === 'table' && (
+          {canDelete && (
+            <ModuleTrashToggle
+              showDeleted={showDeleted}
+              onToggle={onToggleDeleted}
+              showActiveLabel={t("sessions.showActive")}
+              showDeletedLabel={t("sessions.showDeleted")}
+            />
+          )}
+
+          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+
           <ModuleColumnCustomizer
             columnRegistry={columnLayout.columnRegistry}
             updateUserColumnLayout={columnLayout.updateUserColumnLayout}
             labels={columnLayout.customizerLabels}
           />
-        )}
-
-        {canDelete && (
-          <ModuleTrashToggle
-            showDeleted={showDeleted}
-            onToggle={onToggleDeleted}
-            showActiveLabel={t("sessions.showActive")}
-            showDeletedLabel={t("sessions.showDeleted")}
-          />
-        )}
+        </div>
       </div>
 
       <FilterChips
         chips={[
-          ...filterStatus.map((statusOption) => ({ key: statusOption, label: statusLabels[statusOption], onRemove: () => onStatusFilterToggle(statusOption) })),
-          ...filterType.map((typeOption) => ({ key: typeOption, label: typeLabels[typeOption], onRemove: () => onTypeFilterToggle(typeOption) })),
+          ...filterStatus.map((statusOption) => ({ key: statusOption, label: statusLabels[statusOption] ?? statusOption, onRemove: () => onStatusFilterToggle(statusOption) })),
+          ...filterType.map((typeOption) => ({ key: typeOption, label: typeLabels[typeOption] ?? typeOption, onRemove: () => onTypeFilterToggle(typeOption) })),
         ]}
         onClearAll={onClearFilters}
       />

@@ -1,22 +1,23 @@
 import type React from "react";
-import { SlidersHorizontal } from "lucide-react";
-import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  DateRangeFilterBar,
+} from "@/components/ui/DateRangeFilterBar";
+import {
+  ModuleColumnCustomizer,
+  type ModuleColumnCustomizerProps,
+} from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
+import { FilterChips } from "@/components/ui/FilterChips";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 import type { AttendanceStatus } from "@/lib/data/attendanceData";
+import { AttendanceFiltersMenuButton } from "@/tenant/features/attendance/components/AttendanceFiltersMenuButton";
+
+export const ATTENDANCE_WORK_SEARCH_INPUT_ID = "attendance-work-search";
 
 interface AttendanceRecordsToolbarProps {
   viewMode: WorkDirectoryViewMode;
@@ -33,7 +34,6 @@ interface AttendanceRecordsToolbarProps {
   setDateTo: React.Dispatch<React.SetStateAction<string>>;
   setPage: (page: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
-  t: TranslationFunction;
 }
 
 export function AttendanceRecordsToolbar({
@@ -51,101 +51,117 @@ export function AttendanceRecordsToolbar({
   setDateTo,
   setPage,
   columnCustomizer,
-  t,
 }: AttendanceRecordsToolbarProps): React.JSX.Element {
-  const activeFilterCount = statusFilter !== "all" ? 1 : 0;
+  const { t } = useTranslation();
+  const activeFilterCount =
+    (statusFilter !== "all" ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
+
+  const clearFilters = (): void => {
+    setStatusFilter("all");
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  };
+
+  const chips = [
+    ...(statusFilter !== "all"
+      ? [{
+          key: `status:${statusFilter}`,
+          label: statusLabel(statusFilter),
+          onRemove: () => {
+            setStatusFilter("all");
+            setPage(1);
+          },
+        }]
+      : []),
+    ...(dateFrom
+      ? [{
+          key: "dateFrom",
+          label: t("attendance.filters.dateFromChip", { date: dateFrom }),
+          onRemove: () => {
+            setDateFrom("");
+            setPage(1);
+          },
+        }]
+      : []),
+    ...(dateTo
+      ? [{
+          key: "dateTo",
+          label: t("attendance.filters.dateToChip", { date: dateTo }),
+          onRemove: () => {
+            setDateTo("");
+            setPage(1);
+          },
+        }]
+      : []),
+  ];
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <SearchBar
-        value={search}
-        onChange={handleSearchChange}
-        placeholder={t("attendance.searchStudent")}
-        className="flex-1 min-w-[11.25rem]"
-      />
+    <>
+      <div className={cn(WORK_SURFACE, "flex flex-col gap-3 p-3 sm:flex-row")}>
+        <div className="relative min-w-0 flex-1">
+          <SearchBar
+            id={ATTENDANCE_WORK_SEARCH_INPUT_ID}
+            value={search}
+            onChange={handleSearchChange}
+            placeholder={t("attendance.searchStudent")}
+            className="w-full min-w-0"
+          />
+          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
+            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
+              /
+            </kbd>
+          </div>
+        </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            className={`flex items-center gap-1.5 px-3 min-h-11 rounded-xl border text-sm font-medium transition-colors hover:bg-muted ${
-              activeFilterCount > 0
-                ? "border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/5"
-                : "border-border bg-card text-foreground"
-            }`}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>{t("common.filters")}</span>
-            {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
-          <DropdownMenuLabel className="text-xs">{t("attendance.filter.status")}</DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={statusFilter}
-            onValueChange={(value) => {
+        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+          <AttendanceFiltersMenuButton
+            statusFilter={statusFilter}
+            activeFilterCount={activeFilterCount}
+            statuses={statuses}
+            statusLabel={statusLabel}
+            onChangeStatus={(value) => {
               setStatusFilter(value);
               setPage(1);
             }}
-          >
-            <DropdownMenuRadioItem value="all" className="text-sm">
-              {t("attendance.filter.all")}
-            </DropdownMenuRadioItem>
-            {statuses.map((status) => (
-              <DropdownMenuRadioItem key={status.id} value={status.id} className="text-sm">
-                {statusLabel(status.id)}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
+            onClearFilters={clearFilters}
+          />
 
-          {activeFilterCount > 0 && (
-            <>
-              <DropdownMenuSeparator className="bg-border" />
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full justify-start px-2 min-h-11 text-sm text-muted-foreground"
-                onClick={() => {
-                  setStatusFilter("all");
-                  setPage(1);
-                }}
-              >
-                {t("common.clearFilters")}
-              </Button>
-            </>
+          {activeFilterCount > 0 ? (
+            <ModuleClearFiltersButton
+              onClearFilters={clearFilters}
+              label={t("attendance.clearFilters")}
+            />
+          ) : null}
+
+          <DateRangeFilterBar
+            idPrefix="attendance-records"
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={(value) => {
+              setDateFrom(value);
+              setPage(1);
+            }}
+            onDateToChange={(value) => {
+              setDateTo(value);
+              setPage(1);
+            }}
+            pickerClassName="w-full min-w-0 max-w-full text-sm sm:max-w-filter-sm"
+          />
+
+          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+
+          {columnCustomizer && (
+            <ModuleColumnCustomizer
+              columnRegistry={columnCustomizer.columnRegistry}
+              updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
+              labels={columnCustomizer.labels}
+            />
           )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </div>
+      </div>
 
-      <DateRangeFilterBar
-        idPrefix="attendance-records"
-        dateFrom={dateFrom}
-        dateTo={dateTo}
-        onDateFromChange={(value) => {
-          setDateFrom(value);
-          setPage(1);
-        }}
-        onDateToChange={(value) => {
-          setDateTo(value);
-          setPage(1);
-        }}
-        pickerClassName="w-full min-w-0 max-w-full text-sm sm:max-w-filter-sm"
-      />
-
-      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-
-      {columnCustomizer && (
-        <ModuleColumnCustomizer
-          columnRegistry={columnCustomizer.columnRegistry}
-          updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-          labels={columnCustomizer.labels}
-        />
-      )}
-    </div>
+      <FilterChips chips={chips} onClearAll={clearFilters} />
+    </>
   );
 }

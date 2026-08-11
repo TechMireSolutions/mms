@@ -63,6 +63,8 @@ export interface Teacher {
   phone?: string;
   email?: string;
   gender?: 'male' | 'female';
+  /** Hydrated from the linked Contact — never persisted when `contactId` is set. */
+  avatar?: string | null;
   specialization?: string;
   status: string;
   joinDate?: string;
@@ -72,4 +74,7 @@ export interface Teacher {
   deletedAt?: string;
   deletedBy?: string;
   deletionReason?: string;
+  updatedAt?: string;
+  /** Custom Setup fields and other extension keys. */
+  [key: string]: unknown;
 }

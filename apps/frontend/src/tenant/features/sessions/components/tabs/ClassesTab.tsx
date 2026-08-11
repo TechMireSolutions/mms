@@ -7,6 +7,7 @@ import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';
 import { assignClassTeacher } from '@/lib/teachers/teacherAssignment';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ClassCard } from "@/tenant/features/sessions/components/tabs/ClassCard";
@@ -84,15 +85,20 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
 
   return (
     <section aria-label={t("sessions.classes.ariaLabel")} className="space-y-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.classes.count", { count: session.classes?.length || 0 })}</p>
-        {canWrite && <Button
-          onClick={() => { setClassBeingEdited(null); setShowModal(true); }}
-          className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.classes.add")}
-        </Button>}
-      </header>
+      <SectionHeader
+        noMargin
+        title={t("sessions.classes.count", { count: session.classes?.length || 0 })}
+        actions={
+          canWrite && (
+            <Button
+              onClick={() => { setClassBeingEdited(null); setShowModal(true); }}
+              className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.classes.add")}
+            </Button>
+          )
+        }
+      />
 
       {(!session.classes || session.classes.length === 0) ? (
         <EmptyState

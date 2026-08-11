@@ -1,20 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canDeleteCollection, canReadCollection } from '../../services/rbacService.js';
-import {
-  createTeacher,
-  deleteTeacherById,
-  restoreTeacherById,
-  loadTeachersPage,
-  loadTeachersByIds,
-  loadTeacherById,
-  loadTeacherLinkedContactIds,
-  loadTeachersWidgetAggregates,
-  loadTeachersCommandMetrics,
-  countTeachers,
-  updateTeacherById,
-} from '../../services/teacherService.js';
-import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import { teacherUseCases } from '../../teachers/use-cases/teacherUseCases.js';
+import { TEACHERS_MODULE_MANIFEST, type Teacher, type User } from '@mms/shared';
 import {
   teacherRecordSchema,
   teachersListQuerySchema,
@@ -26,12 +14,12 @@ import { teacherLookupRoutes } from './teachers/teacherLookupRoutes.js';
 import { teacherExportRoutes } from './teachers/teacherExportRoutes.js';
 import { teacherOperationRoutes } from './teachers/teacherOperationRoutes.js';
 import { teacherSoftDeleteRoutes } from './teachers/teacherSoftDeleteRoutes.js';
-import {
-  loadTeacherFieldUsageCount,
-  loadTeacherFieldUsageCounts,
-} from '../../services/teacherService.js';
 import { validateTeacherDynamic } from '../../services/teacherValidationService.js';
-import { auditTeacher } from './teachers/teacherRouteHelpers.js';
+import {
+  auditTeacher,
+  sanitizeOneTeacherForUser,
+  sanitizeTeachersForUser,
+} from './teachers/teacherRouteHelpers.js';
 
 /**
  * Server-first teacher resource routes (TanStack Query on FE).
@@ -50,8 +38,8 @@ export default async function teachersRoutes(
 
   registerFieldUsageRoutes(fastify, {
     canRead: (user) => canReadCollection(user, 'teachers'),
-    loadCount: loadTeacherFieldUsageCount,
-    loadCounts: loadTeacherFieldUsageCounts,
+    loadCount: (fieldKey) => teacherUseCases.loadTeacherFieldUsageCount(fieldKey),
+    loadCounts: (fieldKeys) => teacherUseCases.loadTeacherFieldUsageCounts(fieldKeys),
   });
 
   registerStandardTenantRoutes(fastify, {
@@ -62,27 +50,36 @@ export default async function teachersRoutes(
     errorMessagePrefix: 'teachers',
     nameSingular: 'teacher',
     namePlural: 'teachers',
-    loadPageFn: (query) => loadTeachersPage(query),
-    loadCountFn: countTeachers,
-    loadByIdFn: loadTeacherById,
-    createFn: createTeacher,
-    updateFn: updateTeacherById,
-    deleteFn: deleteTeacherById,
-    restoreFn: restoreTeacherById,
-    loadMetricsFn: loadTeachersCommandMetrics,
-    loadWidgetAggregatesFn: loadTeachersWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
-    loadByIdsFn: loadTeachersByIds,
-    loadLinkedContactIdsFn: loadTeacherLinkedContactIds,
+    loadPageFn: (query) => teacherUseCases.loadTeachersPage(query),
+    responseTransform: async (result, user) => {
+      const page = result as { teachers: Teacher[] };
+      return {
+        ...page,
+        teachers: await sanitizeTeachersForUser(page.teachers, user as User),
+      };
+    },
+    loadCountFn: () => teacherUseCases.countTeachers(),
+    loadByIdFn: (id, includeDeleted) => teacherUseCases.loadTeacherById(id, includeDeleted),
+    customPostRoute: true,
+    updateFn: (id, data) => teacherUseCases.updateTeacherById(id, data),
+    deleteFn: (id, userId, reason) => teacherUseCases.deleteTeacherById(id, userId, reason),
+    restoreFn: (id, userId) => teacherUseCases.restoreTeacherById(id, userId),
+    loadMetricsFn: () => teacherUseCases.loadTeachersCommandMetrics(),
+    loadWidgetAggregatesFn: teacherUseCases.loadTeachersWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
+    loadByIdsFn: async (ids, request) => {
+      const teachers = await teacherUseCases.loadTeachersByIds(ids);
+      return sanitizeTeachersForUser(teachers, request.user as User);
+    },
+    loadLinkedContactIdsFn: (excludeId) => teacherUseCases.loadTeacherLinkedContactIds(excludeId),
     columnPreferencesObjectKey: TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey,
     validateDynamicFn: validateTeacherDynamic as never,
     canWriteDeletedCheck: (user) => canDeleteCollection(user, 'teachers'),
-    onAfterCreate: async (user, item) => {
-      const id =
-        item && typeof item === 'object' && 'id' in item
-          ? String((item as { id: unknown }).id)
-          : 'teachers';
-      await auditTeacher(user, 'teacher.create', `Created teacher ${id}`, id);
-    },
+    buildSingleResponse: (item, user) =>
+      sanitizeOneTeacherForUser(item as Teacher, user as User),
+    buildRestoreResponse: async (restored, user) => ({
+      success: true,
+      teacher: await sanitizeOneTeacherForUser(restored as Teacher, user as User),
+    }),
     onAfterUpdate: async (user, id) => {
       await auditTeacher(user, 'teacher.update', `Updated teacher ${id}`, id);
     },

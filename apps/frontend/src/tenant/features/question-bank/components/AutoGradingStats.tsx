@@ -2,6 +2,7 @@ import React from "react";
 import { CheckCircle2, XCircle, Clock, Award } from "lucide-react";
 import type { QuestionBankQuestion as Question, QuestionBankTest } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { testTotalMarks, type StatsSummary } from "@/tenant/features/question-bank/components/autoGradingShared";
 
 interface AutoGradingStatsProps {
@@ -25,7 +26,7 @@ export function AutoGradingStats({ stats, test, questions, submittedCount }: Aut
       ].map((statCard) => {
         const Icon = statCard.icon;
         return (
-          <div key={statCard.label} className="rounded-xl border border-border bg-card p-3.5">
+          <div key={statCard.label} className={`${WORK_SURFACE_INNER} p-3.5`}>
             <Icon className={`mb-1.5 h-4 w-4 ${statCard.cls}`} aria-hidden />
             <p className="text-lg font-bold text-foreground m-0">{statCard.value}</p>
             <p className="text-xs text-muted-foreground m-0">{statCard.label}</p>

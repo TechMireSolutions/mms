@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BrandDerivedTokens, BrandPresetPicker, BrandSemanticPreview } from '@/components/branding/BrandColorPanelSections';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 
 interface ColorFieldProps {
   id: string;
@@ -44,7 +45,7 @@ function ColorField({ id, label, description, value, onChange }: ColorFieldProps
   };
 
   return (
-    <div className="space-y-2 rounded-xl border border-border bg-card/50 p-4">
+    <div className={`${WORK_SURFACE} space-y-2 p-4`}>
       <div>
         <Label htmlFor={id}>{label}</Label>
         <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>

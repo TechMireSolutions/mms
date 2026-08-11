@@ -5,10 +5,19 @@ import {
   type Account,
 } from '@/lib/data/accountingData';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { FORM_CARD } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
+import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
 import { JournalEntryLinesEditorMobile } from './JournalEntryLinesEditorMobile';
@@ -43,7 +52,7 @@ export function JournalEntryLinesEditor({
   const { t } = useTranslation();
 
   return (
-    <Card accentColor="primary" className="p-0">
+    <div className={FORM_CARD}>
       <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
         <div className="flex items-center justify-between pb-1.5 border-b border-border/40 mb-2">
           <div className="flex items-center gap-2.5">
@@ -73,24 +82,24 @@ export function JournalEntryLinesEditor({
             onRemoveLine={onRemoveLine}
             onUpdateLine={onUpdateLine}
           />
-          <div className="hidden overflow-x-auto max-w-full md:block">
-            <table className="w-full text-sm">
+          <div className="hidden md:block">
+            <Table>
               <caption className="sr-only">{t("accounting.journal.form.linesCaption")}</caption>
-              <thead className="bg-muted/60 border-b border-border">
-                <tr>
-                  <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
-                  <th scope="col" className="px-3 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">{t("accounting.ledger.columns.lineNote")}</th>
-                  <th scope="col" className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground uppercase w-28">{t("accounting.ledger.columns.debit")}</th>
-                  <th scope="col" className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground uppercase w-28">{t("accounting.ledger.columns.credit")}</th>
-                  <th scope="col" className="px-3 py-2 w-8"><span className="sr-only">{t("common.actions")}</span></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  <ModuleTableHeaderCell columnKey="account" className="px-3 py-2">{t("accounting.journal.detail.account")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="lineNote" className="px-3 py-2 hidden md:table-cell">{t("accounting.ledger.columns.lineNote")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="debit" className="px-3 py-2 text-end w-28">{t("accounting.ledger.columns.debit")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="credit" className="px-3 py-2 text-end w-28">{t("accounting.ledger.columns.credit")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="actions" className="px-3 py-2 w-8"><span className="sr-only">{t("common.actions")}</span></ModuleTableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border">
                 {lines.map((line, lineIndex) => {
                   const account = accounts.find((accountOption) => accountOption.id === line.account_id);
                   return (
-                    <tr key={line.id} className="hover:bg-muted/10">
-                      <td className="px-3 py-2">
+                    <TableRow key={line.id} className="hover:bg-muted/10">
+                      <TableCell className="px-3 py-2">
                         <FormSelect
                           aria-label={`Account for line ${lineIndex + 1}`}
                           value={line.account_id}
@@ -104,8 +113,8 @@ export function JournalEntryLinesEditor({
                           </span>
                         )}
                         <FieldErrorMessage message={errors[`line${lineIndex}`]} className="m-0" />
-                      </td>
-                      <td className="px-3 py-2 hidden md:table-cell">
+                      </TableCell>
+                      <TableCell className="px-3 py-2 hidden md:table-cell">
                         <Input
                           aria-label={`Description for line ${lineIndex + 1}`}
                           value={line.description || ""}
@@ -113,8 +122,8 @@ export function JournalEntryLinesEditor({
                           placeholder={t("accounting.journal.form.notePlaceholder")}
                           className="text-xs"
                         />
-                      </td>
-                      <td className="px-3 py-2">
+                      </TableCell>
+                      <TableCell className="px-3 py-2">
                         <Input
                           type="number"
                           min="0"
@@ -125,8 +134,8 @@ export function JournalEntryLinesEditor({
                           onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
                           className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
                         />
-                      </td>
-                      <td className="px-3 py-2">
+                      </TableCell>
+                      <TableCell className="px-3 py-2">
                         <Input
                           type="number"
                           min="0"
@@ -137,8 +146,8 @@ export function JournalEntryLinesEditor({
                           onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}
                           className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
                         />
-                      </td>
-                      <td className="px-3 py-2">
+                      </TableCell>
+                      <TableCell className="px-3 py-2">
                         <Button
                           type="button"
                           variant="ghost"
@@ -150,20 +159,20 @@ export function JournalEntryLinesEditor({
                         >
                           <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-              <tfoot className="border-t-2 border-border bg-muted/30">
-                <tr>
-                  <td colSpan={2} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.form.totals")}</td>
-                  <td className="px-3 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</td>
-                  <td className="px-3 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
+              </TableBody>
+              <TableFooter className="border-t-2 border-border bg-muted/30">
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={2} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.form.totals")}</TableCell>
+                  <TableCell className="px-3 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</TableCell>
+                  <TableCell className="px-3 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
           </div>
         </div>
 
@@ -174,6 +183,6 @@ export function JournalEntryLinesEditor({
         <FieldErrorMessage message={errors.lines} />
         <FieldErrorMessage message={errors.balance} />
       </fieldset>
-    </Card>
+    </div>
   );
 }

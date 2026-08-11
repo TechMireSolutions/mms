@@ -14,7 +14,7 @@ import {
   useQuestionBankResultsCollection,
 } from "@/tenant/hooks/collections/questionBank";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
+import { useQuestionBankConfig } from "@/tenant/hooks/collections/questionBank";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 

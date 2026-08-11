@@ -13,6 +13,8 @@ export function useAttendancePageActions() {
     updateRecord,
     deleteRecord,
     restoreRecord,
+    bulkDeleteRecords,
+    bulkRestoreRecords,
   } = useAttendanceMutations();
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
 
@@ -64,6 +66,38 @@ export function useAttendancePageActions() {
     }
   }, [restoreRecord, t]);
 
+  const handleBulkDeleteRecords = useCallback(async (ids: string[]) => {
+    try {
+      const result = await bulkDeleteRecords.mutateAsync(ids);
+      const succeeded = result?.succeeded ?? ids.length;
+      notify.success(
+        t(succeeded > 1 ? "attendance.trash.bulkDeleted" : "attendance.toast.archived", {
+          count: succeeded,
+        }),
+      );
+    } catch (error) {
+      notify.error(t("attendance.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }, [bulkDeleteRecords, t]);
+
+  const handleBulkRestoreRecords = useCallback(async (ids: string[]) => {
+    try {
+      const result = await bulkRestoreRecords.mutateAsync(ids);
+      const succeeded = result?.succeeded ?? ids.length;
+      notify.success(
+        t(succeeded > 1 ? "attendance.trash.bulkRestored" : "attendance.toast.restored", {
+          count: succeeded,
+        }),
+      );
+    } catch (error) {
+      notify.error(t("attendance.toast.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }, [bulkRestoreRecords, t]);
+
   return {
     messagingTarget,
     closeComposer,
@@ -72,5 +106,7 @@ export function useAttendancePageActions() {
     handleUpdateRecord,
     handleDeleteRecord,
     handleRestoreRecord,
+    handleBulkDeleteRecords,
+    handleBulkRestoreRecords,
   };
 }

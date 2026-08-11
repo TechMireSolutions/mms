@@ -6,7 +6,6 @@
 export {
   CONTACTS_QUERY_KEY,
   CONTACTS_METRICS_QUERY_KEY,
-  CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
   useContactsPaginated,
   useContactById,
@@ -15,15 +14,9 @@ export {
   useContactsMetrics,
   useContactsReportAnalytics,
   useContactsWidgetAggregates,
-  useContactsDuplicatePairs,
-  useContactsSavedReports,
-  useContactsSavedReportMutations,
   useContactsSavedReportsSource,
   useContactColumnPrefs,
   useContactColumnPrefsMutation,
-  contactDetailQueryKey,
-  fetchContactById,
-  fetchContactsPageForQuery,
   type ContactsPaginatedParams,
   type ContactsReportAnalyticsParams,
   type ContactsReportAnalyticsResult,
@@ -34,7 +27,6 @@ export {
   CONTACTS_LOOKUPS_QUERY_KEY,
   useContactLookupsQuery,
   useContactLookupMutation,
-  fetchContactLookups,
 } from '@/tenant/features/contacts/hooks/useContactLookups';
 export {
   CONTACTS_FIELD_CONFIG_QUERY_KEY,

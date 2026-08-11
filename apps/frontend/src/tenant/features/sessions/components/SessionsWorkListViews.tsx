@@ -5,35 +5,89 @@ import type {
   SessionsWorkColumnLayout,
   SessionsWorkViewProps,
 } from "@/tenant/features/sessions/components/sessionsWorkListViewsShared";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useTranslation } from "@/hooks/useTranslation";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
+
+interface SessionsWorkCardGridProps extends SessionsWorkViewProps {
+  canSelectSessions: boolean;
+  selectedIds: string[];
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
+  onToggleSelectAll: (checked: boolean) => void;
+  onToggleSelectedSession: (id: string, checked: boolean) => void;
+}
 
 export function SessionsWorkCardGrid({
   sessions,
   showDeleted,
   canDelete,
+  canSelectSessions,
+  selectedIds,
+  allVisibleSelected,
+  someVisibleSelected,
+  isColumnVisible,
+  columnRegistry,
   statusConfig,
   typeConfig,
   onOpenDetail,
   onRequestDelete,
   onRestore,
-}: SessionsWorkViewProps) {
+  onToggleSelectAll,
+  onToggleSelectedSession,
+}: SessionsWorkCardGridProps) {
+  const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+  const pageCountLabel = formatDirectoryPageCountLabel(sessions.length, t, {
+    singular: "sessions.form.session",
+    plural: "sessions.table.sessions",
+  });
+
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {sessions.map((sessionItem) => (
-        <SessionCard
-          key={sessionItem.id}
-          session={sessionItem}
-          onView={() => onOpenDetail(sessionItem)}
-          onDelete={onRequestDelete}
-          onRestore={onRestore}
-          canDelete={canDelete}
-          showDeleted={showDeleted}
-          statusConfig={statusConfig}
-          typeConfig={typeConfig}
+    <>
+      {canSelectSessions && sessions.length > 0 ? (
+        <DirectoryCardsSelectAllBar
+          checkboxId="sessions-select-all-cards"
+          allSelected={allVisibleSelected}
+          someSelected={someVisibleSelected}
+          onSelectAll={() => onToggleSelectAll(!allVisibleSelected)}
+          selectLabel={t("sessions.table.selectAll")}
+          deselectLabel={t("common.deselect")}
+          selectedCount={selectedIds.length}
+          selectedCountLabel={t("sessions.selectedCount", { count: selectedIds.length })}
+          pageCountLabel={pageCountLabel}
         />
-      ))}
-    </div>
+      ) : null}
+
+      <DirectoryCardsGrid>
+        {sessions.map((sessionItem) => {
+          const isSelected = selectedIds.includes(sessionItem.id);
+          return (
+            <SessionCard
+              key={sessionItem.id}
+              session={sessionItem}
+              isSelected={isSelected}
+              canSelectSessions={canSelectSessions}
+              showDeleted={showDeleted}
+              canDelete={canDelete}
+              isColumnVisible={isColumnVisible}
+              columnRegistry={columnRegistry}
+              statusConfig={statusConfig}
+              typeConfig={typeConfig}
+              onView={onOpenDetail}
+              onToggleSelectedSession={onToggleSelectedSession}
+              onRequestDelete={onRequestDelete}
+              onRestore={onRestore}
+              reducedMotion={reducedMotion}
+            />
+          );
+        })}
+      </DirectoryCardsGrid>
+    </>
   );
 }
 
@@ -42,7 +96,6 @@ interface SessionsWorkTableProps extends SessionsWorkViewProps {
   selectedIds: string[];
   allVisibleSelected: boolean;
   someVisibleSelected: boolean;
-  isColumnVisible: (key: string) => boolean;
   sortField: SessionSortField;
   sortDir: "asc" | "desc";
   columnLayout: SessionsWorkColumnLayout;

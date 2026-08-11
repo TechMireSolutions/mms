@@ -1,6 +1,8 @@
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import type { ContactDuplicateCandidateKeys } from '../../db/repositories/contactRepository.js';
-import type { ContactsRepository } from '../repository/contactsRepository.js';
+import type {
+  ContactDuplicateCandidateKeys,
+  ContactsRepository,
+} from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 
 /** Active contact ids sharing any normalized duplicate key with the candidate. */

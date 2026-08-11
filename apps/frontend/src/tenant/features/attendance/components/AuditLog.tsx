@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { formatDateTime, todayISO, type AppTranslationKey } from "@mms/shared";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,18 @@ import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 
 export interface AuditEntry {
   ts?: string | number;
@@ -110,24 +119,24 @@ export function AuditLog({ filters }: AuditLogProps) {
 
   return (
     <section className="space-y-4">
-      {/* Header */}
-      <header className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.audit.title")}</h2>
-          <span className="text-xs text-muted-foreground">{t("attendance.audit.entriesCount", { count: log.length })}</span>
-        </div>
-        <Button 
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={reload} 
-          aria-label={t("attendance.audit.reload")}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-        </Button>
-      </header>
+      <SectionHeader
+        layout="row"
+        icon={<ClipboardList className="w-4 h-4 text-primary" aria-hidden="true" />}
+        title={t("attendance.audit.title")}
+        badge={<span className="text-xs text-muted-foreground">{t("attendance.audit.entriesCount", { count: log.length })}</span>}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={reload}
+            aria-label={t("attendance.audit.reload")}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
@@ -160,10 +169,10 @@ export function AuditLog({ filters }: AuditLogProps) {
           compact
         />
       ) : (
-        <Card accentColor="primary" className="p-0 overflow-hidden">
+        <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {log.map((entry, index) => (
-              <article key={index} className="space-y-2 rounded-xl border border-border bg-card p-3">
+              <article key={index} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
                 <div className="flex items-start justify-between gap-2">
                   <time className="text-xs font-mono text-muted-foreground">{formatDateTime(entry.ts)}</time>
                   <StatusBadge status={entry.action} config={actionConfig} size="sm" />
@@ -175,33 +184,31 @@ export function AuditLog({ filters }: AuditLogProps) {
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/60 border-b border-border">
-              <tr>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colTime")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colAction")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colDetails")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("attendance.audit.colBy")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {log.map((entry, index) => {
-                return (
-                  <tr key={index} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-3 py-2.5 text-xs font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(entry.ts)}</td>
-                    <td className="px-3 py-2.5">
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  <ModuleTableHeaderCell columnKey="time" className="px-3 py-2.5">{t("attendance.audit.colTime")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="action" className="px-3 py-2.5">{t("attendance.audit.colAction")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="details" className="px-3 py-2.5">{t("attendance.audit.colDetails")}</ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="by" className="px-3 py-2.5">{t("attendance.audit.colBy")}</ModuleTableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/50">
+                {log.map((entry, index) => (
+                  <TableRow key={index} className="transition-colors hover:bg-muted/20">
+                    <TableCell className="px-3 py-2.5 text-xs font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(entry.ts)}</TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <StatusBadge status={entry.action} config={actionConfig} size="sm" />
-                    </td>
-                    <td className="px-3 py-2.5 text-xs text-foreground">{describeEntry(entry, studentNameFor, t)}</td>
-                    <td className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{entry.by || "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5 text-xs text-foreground">{describeEntry(entry, studentNameFor, t)}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{entry.by || "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </Card>
+        </div>
       )}
     </section>
   );

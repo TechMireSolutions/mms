@@ -1,6 +1,7 @@
 import type React from "react";
 import { Clock, GraduationCap, Hash } from "lucide-react";
 import { Field } from "@/components/ui/FormPrimitives";
+import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
@@ -94,9 +95,12 @@ export function StudentRegistrationSection({
                   className={`ps-10 ${isGrAutoAssigned ? "pe-24" : ""}`}
                 />
                 {isGrAutoAssigned ? (
-                  <span className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md">
+                  <FormFooterBadge
+                    tone="primary"
+                    className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider"
+                  >
                     {t("students.form.grAutoAssigned")}
-                  </span>
+                  </FormFooterBadge>
                 ) : null}
               </div>
             </Field>
@@ -124,7 +128,7 @@ export function StudentRegistrationSection({
                   role="text"
                   aria-readonly="true"
                   aria-label={`${registeredLabel}: ${registeredDateText}`}
-                  className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/20 px-3 py-2.5 min-h-11 text-sm text-muted-foreground select-none font-medium"
+                  className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5 min-h-11 text-sm text-muted-foreground select-none font-medium"
                 >
                   <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" aria-hidden />
                   <span>{registeredDateText}</span>

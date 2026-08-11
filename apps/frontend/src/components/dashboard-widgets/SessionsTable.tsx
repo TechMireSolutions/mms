@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import type { SessionsReportTodaySession } from "@mms/shared";
 import { useSessionsReportAggregates } from "@/tenant/hooks/collections/sessions";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -71,25 +72,23 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
 
   return (
     <WidgetCard ariaLabelledby="sessions-table-heading" accentColor="primary">
-      <header className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 ps-6.5 border-b border-border/45 select-none">
-        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-          <h3
-            id="sessions-table-heading"
-            className="min-w-0 truncate text-sm font-bold text-foreground m-0"
-          >
-            {title || t("dashboard.widgets.todaysSessions")}
-          </h3>
+      <WidgetCardHeader
+        headingId="sessions-table-heading"
+        title={title || t("dashboard.widgets.todaysSessions")}
+        badge={
           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
             {t("dashboard.widgets.sessionsScheduled", { count: filteredSessions.length })}
           </span>
-        </div>
-        <Link
-          to={ROUTES.sessions}
-          className="inline-flex min-h-11 shrink-0 items-center text-xs font-bold text-primary hover:underline"
-        >
-          {t("dashboard.widgets.viewAll")}
-        </Link>
-      </header>
+        }
+        actions={
+          <Link
+            to={ROUTES.sessions}
+            className="inline-flex min-h-11 shrink-0 items-center text-xs font-bold text-primary hover:underline"
+          >
+            {t("dashboard.widgets.viewAll")}
+          </Link>
+        }
+      />
 
       <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
         <SearchBar

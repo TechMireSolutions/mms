@@ -24,10 +24,23 @@ packages/shared/   @mms/shared
 | Rule | Detail |
 |------|--------|
 | Shared logic | `@mms/shared` only |
-| Cross-module FE imports | Banned between feature modules |
+| Cross-module FE imports | Banned between feature modules — the ban targets **coupling**, not duplication (FE layering + extraction corollary below) |
 | FE ↔ BE | DTOs via `@mms/shared` only |
 | Inter-module data | Prefer batch `/resolve` + Query; `local-database-update` for settings/legacy local writes — no global singletons |
 | `turbo.json` cache | Immutable |
+
+### FE layering — where shared code lives
+
+```
+@mms/shared                          Pure domain logic (types, schemas, helpers)
+apps/frontend/src/lib/*              FE-wide logic: query factories, channel resolvers, i18n helpers
+apps/frontend/src/components/ui/*    Prop-driven chrome, zero domain imports
+apps/frontend/src/tenant/features/*  Thin adapters: config + labels + wiring only
+```
+
+- `lib/*` and `components/ui/*` are the sanctioned FE-wide shared layers — any feature may import them (e.g. `formatContactGenderLabel` from `@/lib/contacts/contactI18n` feeds `components/ui/PersonIdentityMeta` and the Students module).
+- **Extraction corollary:** the cross-module ban forbids *coupling*, not duplication. When 2+ feature components are near-identical, extract the shared 90% — chrome → `components/ui/`, logic → `lib/` or `@mms/shared` — and keep per-module wrappers thin. A per-module adapter must contain only config/labels/wiring, never forked markup; do not fork components to keep them "self-contained" — `mms-dry.md`.
+- **Enforcement:** feature modules reach each other's hooks/data only through `@/tenant/hooks/collections/*` facades; the FE ESLint boundary rule (`apps/frontend/eslint.config.js`) flags direct feature→feature imports (`reports` / `settings` are sanctioned cross-cutting targets) — `mms-dry.md`.
 
 ## Stack (current)
 

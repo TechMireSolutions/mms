@@ -37,6 +37,16 @@ describe('teacherUtils', () => {
       expect((normalized as Record<string, unknown>).firstName).toBeUndefined();
       expect(normalized.specialization).toBe('Tajweed');
     });
+
+    it('strips a hydrated avatar from the write payload', () => {
+      const normalized = normalizeStoredTeacher({
+        id: 't-9',
+        contactId: 'c-300',
+        avatar: 'https://cdn.example.com/avatar.jpg',
+        status: 'active',
+      });
+      expect((normalized as Record<string, unknown>).avatar).toBeUndefined();
+    });
   });
 
   describe('hydrateTeacherFromContact', () => {
@@ -46,6 +56,7 @@ describe('teacherUtils', () => {
         firstName: 'Tariq',
         lastName: 'Mahmood',
         name: 'Tariq Mahmood',
+        avatar: 'https://cdn.example.com/tariq.jpg',
         emails: [{ label: 'Work', address: 'tariq@madrasa.org' }],
         phones: [{ label: 'Mobile', number: '3005554433', countryCode: '+92' }],
       },
@@ -64,6 +75,18 @@ describe('teacherUtils', () => {
       expect(hydrated.email).toBe('tariq@madrasa.org');
       expect(hydrated.phone).toBe('3005554433');
       expect(hydrated.specialization).toBe('Tajweed');
+      expect(hydrated.avatar).toBe('https://cdn.example.com/tariq.jpg');
+    });
+
+    it('leaves avatar unset when the linked contact has no avatar', () => {
+      const rawTeacher: Teacher = {
+        id: 't-2',
+        contactId: 'c-300',
+        status: 'active',
+      };
+
+      const hydrated = hydrateTeacherFromContact(rawTeacher, [{ id: 'c-300', name: 'Tariq Mahmood' }]);
+      expect(hydrated.avatar).toBeUndefined();
     });
   });
 });

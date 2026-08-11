@@ -40,6 +40,7 @@ After **creating or editing code**, run a completion review **before** marking t
 | Work `ErrorState` title-only | Add hint description (`loadFailedHint` pattern) — `mms-module-architecture.md` §7 |
 | Manifest `directoryViews: list` with table\|cards UI | Align to `['table','cards']` — `mms-module-architecture.md` §3 |
 | Touched file still ≫300 lines with a clean seam | Split by concern behind a stable barrel — `mms-structure-naming.md` |
+| Cross-feature import added | Route through `@/tenant/hooks/collections/*` facade or extract to `components/ui` / `lib/` / `@mms/shared` — the FE boundary lint fails otherwise — `mms-dry.md` |
 | Rule violation in touched code | Fix when inside the change boundary |
 
 ## Skip verification only when

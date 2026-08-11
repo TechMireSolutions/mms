@@ -4,6 +4,7 @@ import { DistributionFormModal } from "@/tenant/features/obligations/components/
 import { WakalaFormModal } from "@/tenant/features/obligations/components/WakalaFormModal";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { WakalaTypeCard } from "@/tenant/features/obligations/components/WakalaTypeCard";
 import { useWakalaTypeManager } from "@/tenant/features/obligations/components/useWakalaTypeManager";
 import type { WakalaTypeManagerProps } from "@/tenant/features/obligations/components/wakalaTypeManagerTypes";
@@ -36,13 +37,16 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm text-muted-foreground">{t("obligations.wakala.count", { count: wakalaTypes.length })}</p>
-        <Button type="button" onClick={() => setModal({ mode: "add", data: { mujtahid_representative_id: reps[0]?.id || "", obligation_type_id: obligationTypes[0]?.id || "" } })}
-          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto">
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.wakala.add")}
-        </Button>
-      </header>
+      <SectionHeader
+        noMargin
+        title={<span className="m-0 min-w-0 text-sm text-muted-foreground">{t("obligations.wakala.count", { count: wakalaTypes.length })}</span>}
+        actions={
+          <Button type="button" onClick={() => setModal({ mode: "add", data: { mujtahid_representative_id: reps[0]?.id || "", obligation_type_id: obligationTypes[0]?.id || "" } })}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto">
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.wakala.add")}
+          </Button>
+        }
+      />
 
       <section aria-label={t("obligations.wakala.listAria")} className="space-y-3">
         {wakalaTypes.length === 0 && (

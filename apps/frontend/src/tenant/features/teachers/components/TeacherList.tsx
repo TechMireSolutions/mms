@@ -1,12 +1,9 @@
 import React from 'react';
-import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { TeacherListConfirmDialogs } from '@/tenant/features/teachers/components/TeacherListConfirmDialogs';
 import { TeacherListContent } from '@/tenant/features/teachers/components/TeacherListContent';
 import { TeacherListDetailDrawer } from '@/tenant/features/teachers/components/TeacherListDetailDrawer';
-import { TeachersBulkActionBar } from '@/tenant/features/teachers/components/TeachersBulkActionBar';
 import type { TeacherListProps } from '@/tenant/features/teachers/components/TeacherListTypes';
 import { useTeacherListState } from '@/tenant/features/teachers/components/useTeacherListState';
-import { computeTeachersSelectionTargets } from '@/tenant/features/teachers/hooks/teachersSelectionTargets';
 
 export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 
@@ -23,7 +20,6 @@ export function TeacherList({
   onBulkStatusChange,
   canWrite = true,
   canDelete = true,
-  canExport = false,
   showDeleted = false,
   hasActiveFilters = false,
   onClearFilters,
@@ -40,7 +36,12 @@ export function TeacherList({
   onSortChange,
   viewMode,
   columnRegistry = [],
-  onBulkExport,
+  confirmBulkDeleteOpen,
+  confirmBulkRestoreOpen,
+  onBulkDeleteOpenChange,
+  onBulkRestoreOpenChange,
+  openComposer,
+  canWriteMessaging,
 }: TeacherListProps): React.JSX.Element {
   const {
     sorted,
@@ -48,10 +49,6 @@ export function TeacherList({
     sortDir,
     statusConfig,
     isColumnVisible: columnVisible,
-    confirmBulkDeleteOpen,
-    setConfirmBulkDeleteOpen,
-    confirmBulkRestoreOpen,
-    setConfirmBulkRestoreOpen,
     pendingDeleteId,
     setPendingDeleteId,
     viewTeacher,
@@ -76,17 +73,6 @@ export function TeacherList({
   const showSelectColumn = true;
   const showActionsColumn = true;
   const resolveColumnVisible = columnVisible;
-
-  const selectionTargets = computeTeachersSelectionTargets({
-    selectedIds,
-    workTeachers: teachers,
-  });
-
-  const showBulkExport =
-    canExport &&
-    !showDeleted &&
-    TEACHERS_MODULE_MANIFEST.work.bulkActions.includes('export') &&
-    Boolean(onBulkExport);
 
   return (
     <div className="space-y-4">
@@ -123,50 +109,26 @@ export function TeacherList({
         onEmail={onEmail}
       />
 
-      {showSelectColumn && (
-        <TeachersBulkActionBar
-          selectedIds={selectedIds}
-          selectionTargets={selectionTargets}
-          showDeleted={showDeleted}
-          canWrite={canWrite}
-          canDelete={canDelete}
-          statusConfig={statusConfig}
-          onSms={onSms}
-          onWhatsApp={onWhatsApp}
-          onEmail={onEmail}
-          onBulkStatusChange={onBulkStatusChange}
-          onRequestBulkDelete={() => {
-            if (onBulkDelete) setConfirmBulkDeleteOpen(true);
-          }}
-          onRequestBulkRestore={() => {
-            if (onBulkRestore) setConfirmBulkRestoreOpen(true);
-          }}
-          onClearSelection={onClearSelection}
-          canExport={showBulkExport}
-          onBulkExport={showBulkExport ? () => void onBulkExport?.() : undefined}
-        />
-      )}
-
       <TeacherListConfirmDialogs
         selectedCount={selectedIds.length}
         confirmBulkDeleteOpen={confirmBulkDeleteOpen}
         confirmBulkRestoreOpen={confirmBulkRestoreOpen}
         pendingDeleteId={pendingDeleteId}
-        onBulkDeleteOpenChange={setConfirmBulkDeleteOpen}
-        onBulkRestoreOpenChange={setConfirmBulkRestoreOpen}
+        onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+        onBulkRestoreOpenChange={onBulkRestoreOpenChange}
         onPendingDeleteChange={setPendingDeleteId}
-        onConfirmBulkDelete={(reason) => {
-          onBulkDelete?.(selectedIds, reason);
+        onConfirmBulkDelete={async (reason) => {
+          if (onBulkDelete) await onBulkDelete(selectedIds, reason);
           onClearSelection();
-          setConfirmBulkDeleteOpen(false);
+          onBulkDeleteOpenChange(false);
         }}
-        onConfirmBulkRestore={() => {
-          onBulkRestore?.(selectedIds);
+        onConfirmBulkRestore={async () => {
+          if (onBulkRestore) await onBulkRestore(selectedIds);
           onClearSelection();
-          setConfirmBulkRestoreOpen(false);
+          onBulkRestoreOpenChange(false);
         }}
-        onConfirmDelete={(reason) => {
-          if (pendingDeleteId) onDelete(pendingDeleteId, reason);
+        onConfirmDelete={async (reason) => {
+          if (pendingDeleteId) await onDelete(pendingDeleteId, reason);
           setPendingDeleteId(null);
         }}
       />
@@ -182,6 +144,8 @@ export function TeacherList({
           onEdit(teacherToEdit);
         }}
         onRestore={onRestore}
+        openComposer={openComposer}
+        canWriteMessaging={canWriteMessaging}
       />
     </div>
   );

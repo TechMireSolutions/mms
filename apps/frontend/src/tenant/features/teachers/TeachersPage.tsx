@@ -43,6 +43,8 @@ export default function Teachers(): React.JSX.Element {
     editTeacher,
     setEditTeacher,
     pageActions,
+    openComposer,
+    canWriteMessaging,
     useServerWork,
     workPageQuery,
     workTeachers,
@@ -70,6 +72,7 @@ export default function Teachers(): React.JSX.Element {
     setColumnWidth,
     updateUserColumnLayout,
     customizerLabels,
+    resetColumnLayout,
   } = columnLayout;
 
   const {
@@ -140,6 +143,7 @@ export default function Teachers(): React.JSX.Element {
               hasActiveFilters={hasActiveFilters}
               columnRegistry={columnRegistry}
               updateUserColumnLayout={updateUserColumnLayout}
+              onResetLayout={resetColumnLayout}
               customizerLabels={customizerLabels}
               teachers={workTeachers}
               workPageData={workPageQuery.data}
@@ -179,6 +183,8 @@ export default function Teachers(): React.JSX.Element {
                 setSortDir(dir);
               }}
               onPageChange={setListPage}
+              openComposer={openComposer}
+              canWriteMessaging={canWriteMessaging}
             />
           ) : activeTab === 'reports' ? (
             <TeachersReportsTier />

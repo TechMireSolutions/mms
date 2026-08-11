@@ -1,4 +1,6 @@
 import React from "react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 
 interface GrBadgeProps {
   grNumber: string | null | undefined;
@@ -7,12 +9,14 @@ interface GrBadgeProps {
 
 /** GR number pill badge — shared across StudentDetail, StudentList, and StudentForm. */
 export function GrBadge({ grNumber, className }: GrBadgeProps): React.JSX.Element | null {
+  const { t } = useTranslation();
   if (!grNumber) return null;
   return (
-    <span
-      className={`bg-primary/5 text-primary text-xs px-1.5 py-0.5 rounded border border-primary/10 font-bold uppercase tracking-wider ${className ?? ""}`}
+    <FormFooterBadge
+      tone="primary"
+      className={`px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${className ?? ""}`}
     >
-      GR: {grNumber}
-    </span>
+      {t("students.grPrefix")}: {grNumber}
+    </FormFooterBadge>
   );
 }

@@ -26,24 +26,31 @@ interface EnrollmentListProps {
   sessionFilter: string;
   canWrite: boolean;
   canDelete?: boolean;
+  canSelectEnrollments: boolean;
   showDeleted?: boolean;
+  selectedIds: string[];
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   onShowDeletedChange?: (showDeleted: boolean) => void;
   onSearchChange: (search: string) => void;
   onStatusFilterChange: (status: string) => void;
   onSessionFilterChange: (sessionId: string) => void;
+  onClearFilters: () => void;
   onPageChange: (page: number) => void;
   onView: (enrollment: Enrollment) => void;
   onCancel: (id: string) => void;
   onDelete?: (id: string) => void;
   onRestore?: (id: string) => void;
+  onToggleSelectAll: (checked: boolean) => void;
+  onToggleSelectedEnrollment: (id: string, checked: boolean) => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
-  columnCustomizer?: ModuleColumnCustomizerProps;
+  columnCustomizer: ModuleColumnCustomizerProps;
 }
 
 /**
- * Renders a server-paginated, filterable table list of enrollment records.
+ * Renders a server-paginated, filterable table/list of enrollment records.
  */
 export function EnrollmentList({
   enrollments,
@@ -55,16 +62,23 @@ export function EnrollmentList({
   sessionFilter,
   canWrite,
   canDelete = false,
+  canSelectEnrollments,
   showDeleted = false,
+  selectedIds,
+  allVisibleSelected,
+  someVisibleSelected,
   onShowDeletedChange,
   onSearchChange,
   onStatusFilterChange,
   onSessionFilterChange,
+  onClearFilters,
   onPageChange,
   onView,
   onCancel,
   onDelete,
   onRestore,
+  onToggleSelectAll,
+  onToggleSelectedEnrollment,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -107,6 +121,7 @@ export function EnrollmentList({
         onSearchChange={onSearchChange}
         onStatusChange={onStatusFilterChange}
         onSessionChange={onSessionFilterChange}
+        onClearFilters={onClearFilters}
         onShowDeletedChange={onShowDeletedChange}
       />
 
@@ -118,6 +133,11 @@ export function EnrollmentList({
         pageSize={pageSize}
         students={students}
         isColumnVisible={columnVisible}
+        columnRegistry={columnCustomizer.columnRegistry}
+        canSelectEnrollments={canSelectEnrollments}
+        selectedIds={selectedIds}
+        allVisibleSelected={allVisibleSelected}
+        someVisibleSelected={someVisibleSelected}
         canWrite={canWrite}
         canDelete={canDelete}
         showDeleted={showDeleted}
@@ -131,6 +151,8 @@ export function EnrollmentList({
         onCancel={onCancel}
         onDelete={onDelete}
         onRestore={onRestore}
+        onToggleSelectAll={onToggleSelectAll}
+        onToggleSelectedEnrollment={onToggleSelectedEnrollment}
         openComposer={openComposer}
       />
 

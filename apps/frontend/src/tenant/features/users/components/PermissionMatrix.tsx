@@ -7,6 +7,15 @@ import {
   type PermissionMap,
   type RbacModuleDef,
 } from '@mms/shared';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
+import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PermissionMatrixRow } from '@/tenant/features/users/components/PermissionMatrixRow';
 import { PermissionMatrixMobileRow } from '@/tenant/features/users/components/PermissionMatrixMobileRow';
@@ -34,7 +43,7 @@ export function PermissionMatrix({
   const matrixActions = { perms, readOnly, onToggle, onSelectAll, onClearAll };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border">
+    <div className={WORK_SURFACE}>
       <div className="space-y-4 p-3 md:hidden">
         {groups.map((group, groupIndex) => (
           <section key={group.labelKey ?? `standalone-${group.modules[0]?.id ?? groupIndex}`} className="space-y-2">
@@ -56,42 +65,44 @@ export function PermissionMatrix({
           </section>
         ))}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
-          <thead className="border-b border-border bg-muted/60">
-            <tr>
-              <th className="min-w-[8.75rem] px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+      <div className="hidden md:block">
+        <Table>
+          <caption className="sr-only">{t('users.permissions.matrixCaption')}</caption>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              <ModuleTableHeaderCell columnKey="module" className="min-w-[8.75rem] px-3 py-2.5">
                 {t('users.permissions.colModule')}
-              </th>
+              </ModuleTableHeaderCell>
               {PERMISSION_ACTIONS.map((permissionAction) => (
-                <th
+                <ModuleTableHeaderCell
                   key={permissionAction}
-                  className="w-16 px-2 py-2.5 text-center text-xs font-semibold uppercase text-muted-foreground"
+                  columnKey={permissionAction}
+                  className="w-16 px-2 py-2.5 text-center"
                 >
                   {t(`users.permission.${permissionAction}`)}
-                </th>
+                </ModuleTableHeaderCell>
               ))}
               {!readOnly ? (
-                <th className="px-2 py-2.5 text-center text-xs font-semibold uppercase text-muted-foreground">
+                <ModuleTableHeaderCell columnKey="all" className="px-2 py-2.5 text-center">
                   {t('users.permissions.colAll')}
-                </th>
+                </ModuleTableHeaderCell>
               ) : null}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border">
             {groups.map((group, groupIndex) => (
               <React.Fragment key={group.labelKey ?? `standalone-${group.modules[0]?.id ?? groupIndex}`}>
                 {group.labelKey ? (
-                  <tr className="bg-muted/25">
-                    <td colSpan={colSpan} className="px-3 py-2">
+                  <TableRow className="bg-muted/25">
+                    <TableCell colSpan={colSpan} className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
                           <BookOpen className="h-3 w-3 text-primary" aria-hidden />
                         </div>
                         <span className="text-xs font-bold text-foreground">{t(group.labelKey)}</span>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : null}
                 {group.modules.map((moduleItem) => (
                   <PermissionMatrixRow
@@ -103,8 +114,8 @@ export function PermissionMatrix({
                 ))}
               </React.Fragment>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

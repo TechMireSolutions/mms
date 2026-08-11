@@ -4,23 +4,23 @@ import type {
   ModuleColumnRegistryEntry,
 } from '@mms/shared';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import type { useMessageComposerState } from '@/hooks/useMessageComposerState';
 
 export type { TeacherSortField };
 
 export interface TeacherListProps {
   teachers: Teacher[];
   onEdit: (teacher: Teacher) => void;
-  onDelete: (id: string, deletionReason?: string) => void;
-  onRestore?: (id: string) => void;
-  onBulkDelete?: (ids: string[], deletionReason?: string) => void;
-  onBulkRestore?: (ids: string[]) => void;
+  onDelete: (id: string, deletionReason?: string) => void | Promise<void>;
+  onRestore?: (id: string) => void | Promise<void>;
+  onBulkDelete?: (ids: string[], deletionReason?: string) => void | Promise<void>;
+  onBulkRestore?: (ids: string[]) => void | Promise<void>;
   onSms?: (teachers: Teacher[]) => void;
   onWhatsApp?: (teachers: Teacher[]) => void;
   onEmail?: (teachers: Teacher[]) => void;
-  onBulkStatusChange?: (ids: string[], status: string) => void;
+  onBulkStatusChange?: (ids: string[], status: string) => void | Promise<void>;
   canWrite?: boolean;
   canDelete?: boolean;
-  canExport?: boolean;
   showDeleted?: boolean;
   /** Active filter state for the directory empty state (Contacts/Students parity). */
   hasActiveFilters?: boolean;
@@ -40,5 +40,12 @@ export interface TeacherListProps {
   onSortChange: (field: TeacherSortField, dir: 'asc' | 'desc') => void;
   viewMode: WorkDirectoryViewMode;
   columnRegistry?: ModuleColumnRegistryEntry[];
-  onBulkExport?: () => void | Promise<void>;
+  /** Page-owned bulk confirm dialog state (bulk bar lives in the Work tier). */
+  confirmBulkDeleteOpen: boolean;
+  confirmBulkRestoreOpen: boolean;
+  onBulkDeleteOpenChange: (open: boolean) => void;
+  onBulkRestoreOpenChange: (open: boolean) => void;
+  /** Page-owned composer passed through to the detail drawer (Students parity). */
+  openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
+  canWriteMessaging: boolean;
 }

@@ -3,6 +3,7 @@ import { FileText } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { type QuestionBankTest, formatDate } from "@mms/shared";
 
 interface SavedPapersPanelProps {
@@ -24,7 +25,7 @@ export function SavedPapersPanel({
   const sortedPapers = [...papers].sort((first, second) => second.createdAt.localeCompare(first.createdAt));
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4" aria-label={t("questionBank.savedPapers")}>
+    <section className={`${WORK_SURFACE} p-4`} aria-label={t("questionBank.savedPapers")}>
       <div className="mb-3">
         <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.savedPapers")}</h3>
         <p className="m-0 text-xs text-muted-foreground">{t("questionBank.savedPapersDesc")}</p>

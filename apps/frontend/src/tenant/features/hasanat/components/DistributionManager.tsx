@@ -1,13 +1,14 @@
-import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionClearAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
-import { Button } from "@/components/ui/button";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { useTranslation } from "@/hooks/useTranslation";
 import { DistributeModal } from "./DistributeModal";
 import { DistributionManagerList } from "./DistributionManagerList";
 import { DistributionManagerToolbar } from "./DistributionManagerToolbar";
+import { HasanatBulkActionBar } from "./HasanatBulkActionBar";
+import { useDistributionSelection } from "@/tenant/features/hasanat/hooks/useDistributionSelection";
 import { useDistributionManagerState } from "./useDistributionManagerState";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
@@ -63,9 +64,11 @@ export function DistributionManager({
   columnCustomizer,
   onMessage,
 }: DistributionManagerProps) {
+  const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+  const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
   const {
-    t,
     statusLabels,
     statusConfig,
     showModal,
@@ -73,17 +76,11 @@ export function DistributionManager({
     search,
     setSearch,
     filterStatus,
-    selectedIds,
-    setSelectedIds,
+    setFilterStatus,
     filtered,
     toggleStatus,
     handleDistribute,
     changeStatus,
-    handleRowTrashAction,
-    toggleSelected,
-    toggleSelectAll,
-    allFilteredSelected,
-    handleBulkAction,
   } = useDistributionManagerState({
     distributions,
     onUpdate,
@@ -91,68 +88,73 @@ export function DistributionManager({
     canWrite,
     showDeleted,
     createRequestKey,
-    onDelete,
-    onRestore,
-    onBulkDelete,
-    onBulkRestore,
   });
+
+  const {
+    selectedIds,
+    setSelectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
+    toggleSelectAll,
+    toggleSelectedDistribution,
+  } = useDistributionSelection(filtered);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [showDeleted, setSelectedIds]);
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
+  const confirmRowTrash = (): void => {
+    if (!pendingTrashId) return;
+    void onDelete?.(pendingTrashId);
+    setPendingTrashId(null);
+  };
+
+  const confirmBulkTrash = (): void => {
+    if (showDeleted) void onBulkRestore?.(selectedIds);
+    else void onBulkDelete?.(selectedIds);
+    setSelectedIds([]);
+    setConfirmBulkOpen(false);
+  };
+
+  const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
+
   return (
     <section aria-label={t("hasanat.distribution.aria")} className="space-y-4">
-      {canDelete && (
-        <BulkSelectionBar
-          placement="inline"
-          tone="glass"
-          selectedCount={selectedIds.length}
-          countLabel={t("hasanat.trash.selected", { count: selectedIds.length })}
-          trailing={
-            <BulkSelectionClearAction
-              label={t("common.deselect")}
-              onClick={() => setSelectedIds([])}
-            />
-          }
-        >
-          {showDeleted ? (
-            <BulkSelectionRestoreAction
-              label={t("hasanat.trash.restore")}
-              onClick={() => { void handleBulkAction(); }}
-            />
-          ) : (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => { void handleBulkAction(); }}
-              className="flex min-h-11 items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
-            >
-              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.delete")}
-            </Button>
-          )}
-        </BulkSelectionBar>
-      )}
-
       <DistributionManagerToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}
         filterStatus={filterStatus}
         statusLabels={statusLabels}
-        statusConfig={statusConfig}
         canWrite={canWrite}
         showDeleted={showDeleted}
         columnCustomizer={columnCustomizer}
         onSearchChange={setSearch}
         onToggleStatus={toggleStatus}
+        onClearStatuses={() => setFilterStatus([])}
         onOpenModal={() => setShowModal(true)}
       />
+
+      {canBulkTrash && (
+        <HasanatBulkActionBar
+          selectedCount={selectedIds.length}
+          showDeleted={showDeleted}
+          canDelete={canDelete}
+          onRequestBulkDelete={() => setConfirmBulkOpen(true)}
+          onRequestBulkRestore={() => setConfirmBulkOpen(true)}
+          onClearSelection={() => setSelectedIds([])}
+        />
+      )}
 
       <DistributionManagerList
         viewMode={viewMode}
         distributions={filtered}
         denoms={denoms}
         selectedIds={selectedIds}
-        allFilteredSelected={allFilteredSelected}
+        allVisibleSelected={allVisibleSelected}
+        someVisibleSelected={someVisibleSelected}
         isColumnVisible={columnVisible}
         statusLabels={statusLabels}
         statusConfig={statusConfig}
@@ -163,9 +165,12 @@ export function DistributionManager({
         canDeleteRows={!!onDelete}
         onMessage={onMessage}
         onChangeStatus={changeStatus}
-        onToggleSelected={toggleSelected}
-        onToggleAll={() => toggleSelectAll()}
-        onRowTrashAction={(id) => { void handleRowTrashAction(id); }}
+        onToggleSelectedDistribution={toggleSelectedDistribution}
+        onToggleSelectAll={toggleSelectAll}
+        onTrashAction={(id) => {
+          if (showDeleted) void onRestore?.(id);
+          else setPendingTrashId(id);
+        }}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
       />
@@ -179,6 +184,25 @@ export function DistributionManager({
           onSave={handleDistribute}
         />
       )}
+
+      <ConfirmAlertDialog
+        open={pendingTrashId !== null}
+        onOpenChange={(open) => { if (!open) setPendingTrashId(null); }}
+        title={t('hasanat.trash.deleteTitle')}
+        description={t('hasanat.trash.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmRowTrash}
+      />
+      <ConfirmAlertDialog
+        open={confirmBulkOpen}
+        onOpenChange={setConfirmBulkOpen}
+        title={showDeleted ? t('hasanat.trash.restore') : t('hasanat.trash.deleteTitle')}
+        description={t(showDeleted ? 'hasanat.trash.bulkRestoreConfirm' : 'hasanat.trash.bulkDeleteConfirm', { count: selectedIds.length })}
+        confirmLabel={showDeleted ? t('hasanat.trash.restore') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmBulkTrash}
+      />
     </section>
   );
 }

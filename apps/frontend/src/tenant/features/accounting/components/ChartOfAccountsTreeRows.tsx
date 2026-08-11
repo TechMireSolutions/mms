@@ -2,7 +2,9 @@ import React from "react";
 import { Eye, EyeOff, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACCOUNT_TYPE_META, type Account } from "@/lib/data/accountingData";
 
@@ -77,7 +79,7 @@ export function AccountMobileCard({
   const { t } = useTranslation();
 
   return (
-    <article className={`space-y-3 rounded-xl border border-border bg-card p-3 ${account.isActive === false ? "opacity-50" : ""}`}>
+    <article className={`${WORK_SURFACE_INNER} space-y-3 p-3 ${account.isActive === false ? "opacity-50" : ""}`}>
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {isColumnVisible("code") && <p className="m-0 font-mono text-xs font-bold text-muted-foreground">{account.code}</p>}
@@ -131,30 +133,30 @@ export function AccountTableRow({
   const { t } = useTranslation();
 
   return (
-    <tr className={`transition-colors hover:bg-muted/20 ${account.isActive === false ? "opacity-50" : ""}`}>
-      {isColumnVisible("code") && <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{account.code}</td>}
+    <TableRow className={`transition-colors hover:bg-muted/20 ${account.isActive === false ? "opacity-50" : ""}`}>
+      {isColumnVisible("code") && <TableCell className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{account.code}</TableCell>}
       {isColumnVisible("name") && (
-        <td className="px-4 py-2.5">
+        <TableCell className="px-4 py-2.5">
           <span className="font-semibold text-foreground">{account.name}</span>
           {account.isActive === false && <span className="ms-2 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">{t("accounting.coa.inactive")}</span>}
-        </td>
+        </TableCell>
       )}
-      {isColumnVisible("subtype") && <td className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">{account.subtype || "—"}</td>}
-      {isColumnVisible("description") && <td className="hidden max-w-[12.5rem] truncate px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">{account.description || "—"}</td>}
+      {isColumnVisible("subtype") && <TableCell className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">{account.subtype || "—"}</TableCell>}
+      {isColumnVisible("description") && <TableCell className="hidden max-w-[12.5rem] truncate px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">{account.description || "—"}</TableCell>}
       {isColumnVisible("normalBalance") && (
-        <td className="px-4 py-2.5">
+        <TableCell className="px-4 py-2.5">
           <StatusBadge
             status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
             config={balanceConfig}
             size="sm"
           />
-        </td>
+        </TableCell>
       )}
-      <td className="px-4 py-2.5 text-end">
+      <TableCell className="px-4 py-2.5 text-end">
         <div className="flex items-center justify-end gap-1">
           {canWrite && <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} />}
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

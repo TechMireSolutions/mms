@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import type { ModuleColumnRegistryEntry, Student, toMessagingRecipient } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -53,7 +52,8 @@ export interface StudentListTableProps extends StudentListSelectionProps {
   sessions: StudentListSession[];
   allSelected: boolean;
   someSelected: boolean;
-  renderSortIcon: (field: StudentListSortField | null) => ReactNode;
+  sortField: StudentListSortField | null;
+  sortDir: "asc" | "desc";
   onSort: (field: StudentListSortField) => void;
   onSelectAll: () => void;
   onOpenComposer: (

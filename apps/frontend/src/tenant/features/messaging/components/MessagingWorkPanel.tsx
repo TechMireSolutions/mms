@@ -4,6 +4,7 @@ import { CONTACTS_MODULE_MANIFEST, type Contact, type MessagingGenderFilter, typ
 import { ErrorState } from '@/components/ui/ErrorState';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
+import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import { notify } from '@/lib/notify';
 import { useMessagingRecipientsColumnLayout } from '../hooks/useMessagingColumnLayouts';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
@@ -66,6 +67,12 @@ export function MessagingWorkPanel({
   const contacts = recipientsQuery.contacts;
   const { getColumnWidth, setColumnWidth } = useMessagingRecipientsColumnLayout();
   const allVisibleSelected = contacts.length > 0 && contacts.every((contact) => Boolean(selectedById[String(contact.id)]));
+  const someVisibleSelected = contacts.some((contact) => Boolean(selectedById[String(contact.id)]));
+  const selectedCountLabel = t('messaging.selectedCount', { count: selectedList.length });
+  const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
+    singular: 'messaging.item.recipient',
+    plural: 'messaging.item.recipients',
+  });
 
   const toggleRecipient = (contact: Contact): void => {
     const key = String(contact.id);
@@ -143,6 +150,9 @@ export function MessagingWorkPanel({
         genderOptions={genderOptions}
         selectingReachable={selectingReachable}
         allVisibleSelected={allVisibleSelected}
+        someVisibleSelected={someVisibleSelected}
+        selectedCountLabel={selectedCountLabel}
+        pageCountLabel={pageCountLabel}
         isPending={recipientsQuery.isPending}
         isFetching={recipientsQuery.isFetching}
         recipientsPage={recipientsQuery.page}

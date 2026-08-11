@@ -1,25 +1,16 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Trash2 } from "lucide-react";
-import { Exam } from '@/lib/data/examinationData';
+import type { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import {
-  BulkSelectionClearAction,
-  BulkSelectionDeleteAction,
-  BulkSelectionRestoreAction,
-} from "@/components/ui/BulkSelectionActions";
-import {
-  getDirectoryPageSelection,
-  toggleIdInSelection,
-  togglePageIdsInSelection,
-} from "@/lib/directorySelection";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { useExamSelection } from "@/tenant/features/examinations/hooks/useExamSelection";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ExaminationsListContent } from "@/tenant/features/examinations/components/ExaminationsListContent";
 import { ExaminationsListToolbar } from "@/tenant/features/examinations/components/ExaminationsListToolbar";
+import { ExaminationsBulkActionBar } from "@/tenant/features/examinations/components/ExaminationsBulkActionBar";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
@@ -68,7 +59,8 @@ export default function ExamsList({
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
@@ -114,41 +106,21 @@ export default function ExamsList({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- createRequestKey drives open
   }, [createRequestKey, canWrite, showDeleted]);
 
+  const {
+    selectedIds,
+    setSelectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
+    toggleSelectAll,
+    toggleSelectedExam,
+  } = useExamSelection(filtered);
+
   useEffect(() => {
     setSelectedIds([]);
-  }, [showDeleted]);
+  }, [showDeleted, setSelectedIds]);
 
   const toggleStatus = (status: string): void =>
     setFilterStatus((currentStatuses) => (currentStatuses.includes(status) ? currentStatuses.filter((candidate) => candidate !== status) : [...currentStatuses, status]));
-
-  const toggleSelected = (id: string) => {
-    setSelectedIds((prev) => toggleIdInSelection(prev, id));
-  };
-
-  const pageIds = filtered.map((exam) => exam.id);
-  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
-
-  const handleRowTrashAction = async (id: string) => {
-    if (showDeleted) {
-      if (!confirm(t("examinations.trash.bulkRestoreConfirm", { count: 1 }))) return;
-      await onRestore?.(id);
-      return;
-    }
-    if (!confirm(t("examinations.trash.deleteConfirm"))) return;
-    await onDelete?.(id);
-  };
-
-  const handleBulkAction = async () => {
-    if (selectedIds.length === 0) return;
-    if (showDeleted) {
-      if (!confirm(t("examinations.trash.bulkRestoreConfirm", { count: selectedIds.length }))) return;
-      await onBulkRestore?.(selectedIds);
-    } else {
-      if (!confirm(t("examinations.trash.bulkDeleteConfirm", { count: selectedIds.length }))) return;
-      await onBulkDelete?.(selectedIds);
-    }
-    setSelectedIds([]);
-  };
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
@@ -160,36 +132,23 @@ export default function ExamsList({
     cancelled: { label: statusLabels.cancelled, cls: SEMANTIC_BADGE.muted },
   }), [statusLabels]);
 
+  const confirmRowTrash = (): void => {
+    if (!pendingTrashId) return;
+    void onDelete?.(pendingTrashId);
+    setPendingTrashId(null);
+  };
+
+  const confirmBulkTrash = (): void => {
+    if (showDeleted) void onBulkRestore?.(selectedIds);
+    else void onBulkDelete?.(selectedIds);
+    setSelectedIds([]);
+    setConfirmBulkOpen(false);
+  };
+
+  const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
+
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")}>
-      {canDelete && (
-        <BulkSelectionBar
-          placement="inline"
-          tone="glass"
-          selectedCount={selectedIds.length}
-          countLabel={t("examinations.trash.selected", { count: selectedIds.length })}
-          trailing={
-            <BulkSelectionClearAction
-              label={t("common.deselect")}
-              onClick={() => setSelectedIds([])}
-            />
-          }
-        >
-          {showDeleted ? (
-            <BulkSelectionRestoreAction
-              label={t("examinations.trash.restore")}
-              onClick={() => { void handleBulkAction(); }}
-            />
-          ) : (
-            <BulkSelectionDeleteAction
-              label={t("common.delete")}
-              onClick={() => { void handleBulkAction(); }}
-              icon={Trash2}
-            />
-          )}
-        </BulkSelectionBar>
-      )}
-
       <ExaminationsListToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -201,8 +160,20 @@ export default function ExamsList({
         statusLabels={statusLabels}
         onSearchChange={setSearch}
         onToggleStatus={toggleStatus}
+        onClearStatuses={() => setFilterStatus([])}
         onNew={onNew}
       />
+
+      {canBulkTrash && (
+        <ExaminationsBulkActionBar
+          selectedCount={selectedIds.length}
+          showDeleted={showDeleted}
+          canDelete={canDelete}
+          onRequestBulkDelete={() => setConfirmBulkOpen(true)}
+          onRequestBulkRestore={() => setConfirmBulkOpen(true)}
+          onClearSelection={() => setSelectedIds([])}
+        />
+      )}
 
       <ExaminationsListContent
         viewMode={viewMode}
@@ -211,7 +182,8 @@ export default function ExamsList({
         isColumnVisible={columnVisible}
         classes={classes}
         enrollments={enrollments}
-        allFilteredSelected={allFilteredSelected}
+        allVisibleSelected={allVisibleSelected}
+        someVisibleSelected={someVisibleSelected}
         canWrite={canWrite}
         canDelete={canDelete}
         showDeleted={showDeleted}
@@ -220,9 +192,31 @@ export default function ExamsList({
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
         onEdit={onEdit}
-        onSelectAll={(_checked) => setSelectedIds((current) => togglePageIdsInSelection(current, pageIds))}
-        onToggleSelected={toggleSelected}
-        onTrashAction={(id) => { void handleRowTrashAction(id); }}
+        onToggleSelectAll={toggleSelectAll}
+        onToggleSelectedExam={toggleSelectedExam}
+        onTrashAction={(id) => {
+          if (showDeleted) void onRestore?.(id);
+          else setPendingTrashId(id);
+        }}
+      />
+
+      <ConfirmAlertDialog
+        open={pendingTrashId !== null}
+        onOpenChange={(open) => { if (!open) setPendingTrashId(null); }}
+        title={t('examinations.trash.deleteTitle')}
+        description={t('examinations.trash.deleteConfirm')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmRowTrash}
+      />
+      <ConfirmAlertDialog
+        open={confirmBulkOpen}
+        onOpenChange={setConfirmBulkOpen}
+        title={showDeleted ? t('examinations.trash.restore') : t('examinations.trash.deleteTitle')}
+        description={t(showDeleted ? 'examinations.trash.bulkRestoreConfirm' : 'examinations.trash.bulkDeleteConfirm', { count: selectedIds.length })}
+        confirmLabel={showDeleted ? t('examinations.trash.restore') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmBulkTrash}
       />
     </section>
   );

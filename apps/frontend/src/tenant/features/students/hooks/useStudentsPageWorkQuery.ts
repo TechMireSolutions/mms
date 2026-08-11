@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
+import { STUDENTS_MODULE_MANIFEST, type Student, type StudentsQuickFilter } from "@mms/shared";
 import { useStudentsPaginated } from "@/tenant/features/students/hooks/useStudents";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 
@@ -18,6 +18,7 @@ export type StudentsPageWorkQueryInput = {
   debouncedSearch: string;
   studentFilterStatus: string[];
   studentFilterGender: string;
+  quickFilter: StudentsQuickFilter;
   sortField: StudentListSortField | null;
   sortDir: "asc" | "desc";
   viewingDeleted: boolean;
@@ -30,6 +31,7 @@ export function useStudentsPageWorkQuery({
   debouncedSearch,
   studentFilterStatus,
   studentFilterGender,
+  quickFilter,
   sortField,
   sortDir,
   viewingDeleted,
@@ -42,6 +44,7 @@ export function useStudentsPageWorkQuery({
     search: debouncedSearch,
     status: studentFilterStatus.length > 0 ? studentFilterStatus.join(",") : undefined,
     gender: studentFilterGender || undefined,
+    quickFilter: quickFilter === "all" ? undefined : quickFilter,
     sortField: sortField ? SORT_FIELD_TO_API[sortField] : undefined,
     sortDir: sortField ? sortDir : undefined,
     includeDeleted: viewingDeleted,

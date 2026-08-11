@@ -2,6 +2,7 @@ import React from "react";
 import { BarChart2 } from "lucide-react";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -22,7 +23,7 @@ export function MessagingReportsVolumeChart({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 shadow-xs">
+    <div className={`${WORK_SURFACE} flex flex-col justify-between p-4`}>
       <div className="space-y-1">
         <h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
           <BarChart2 className="h-4 w-4 text-primary" />

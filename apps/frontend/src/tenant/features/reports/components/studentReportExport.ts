@@ -1,5 +1,7 @@
-import { ENROLLMENTS_MODULE_MANIFEST, type Enrollment } from '@mms/shared';
+import { ENROLLMENTS_MODULE_MANIFEST, formatDate, type Enrollment, type Session, type Student } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
+import { fetchAllStudentsForQuery } from '@/tenant/hooks/collections/students';
+import { mapStudentRow, type EnrollmentHistoryItem } from './studentReportTypes';
 
 /** Page-walk enrollments for report export (avoids maxPageSize collection dump in the UI). */
 export async function fetchAllEnrollmentsForQuery(params: {
@@ -26,4 +28,43 @@ export async function fetchAllEnrollmentsForQuery(params: {
     page += 1;
   }
   return all;
+}
+
+/** Maps an Enrollment row to the report history table shape. */
+export function mapEnrollmentRow(enrollment: Enrollment): EnrollmentHistoryItem {
+  return {
+    id: enrollment.id,
+    studentName: enrollment.studentName,
+    session: enrollment.sessionName,
+    class: enrollment.className || '—',
+    enrolled: formatDate(enrollment.enrolledDate),
+    status: enrollment.status,
+  };
+}
+
+/** Resolves full student rows for CSV/Excel/PDF export (server-side filters). */
+export async function resolveStudentReportExportRows(input: {
+  search?: string;
+  status?: string;
+  sessionId?: string;
+  className?: string;
+  sessions: Session[];
+}): Promise<Record<string, unknown>[]> {
+  const { search, status, sessionId, className, sessions } = input;
+  const source = (await fetchAllStudentsForQuery({
+    search,
+    status,
+    sessionId,
+    className,
+  })) as unknown as Student[];
+  return source.map((student) => mapStudentRow(student, sessions) as unknown as Record<string, unknown>);
+}
+
+/** Resolves full enrollment rows for report export. */
+export async function resolveEnrollmentReportExportRows(input: {
+  search?: string;
+  sessionId?: string;
+}): Promise<Record<string, unknown>[]> {
+  const all = await fetchAllEnrollmentsForQuery(input);
+  return all.map(mapEnrollmentRow as unknown as (enrollment: Enrollment) => Record<string, unknown>);
 }

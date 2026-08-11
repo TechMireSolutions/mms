@@ -1,4 +1,12 @@
 import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -31,7 +39,7 @@ export function CashFlowStatementPanel({
 
   return (
     <section aria-label={t('accounting.reports.views.cashflow')} className="space-y-4">
-      <div className="rounded-xl border border-border overflow-hidden">
+      <div className={WORK_SURFACE}>
         <header className="px-4 py-2.5 bg-info/10/60 border-b border-border">
           <h3 className="text-xs font-bold uppercase tracking-wide m-0">{t('accounting.reports.cashflow.title')}</h3>
         </header>
@@ -43,7 +51,7 @@ export function CashFlowStatementPanel({
             </div>
           </article>
           {adjustments.map((item) => (
-            <article key={item.label} className="rounded-xl border border-border bg-card p-3">
+            <article key={item.label} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-muted-foreground">{item.label}</span>
                 <span className="font-mono text-muted-foreground">{formatCurrency(item.amount)}</span>
@@ -62,33 +70,33 @@ export function CashFlowStatementPanel({
             </div>
           </article>
         </div>
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
+        <div className="hidden md:block">
+          <Table>
             <caption className="sr-only">{t('accounting.reports.cashflow.breakdownCaption')}</caption>
-            <tbody className="divide-y divide-border">
-              <tr className="bg-muted/10">
-                <td className="px-4 py-3 font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</td>
-                <td className="px-4 py-3 text-end font-mono font-semibold">{formatCurrency(netSurplus)}</td>
-              </tr>
+            <TableBody className="divide-y divide-border/50">
+              <TableRow className="bg-muted/10">
+                <TableCell className="px-3 py-2.5 font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</TableCell>
+                <TableCell className="px-3 py-2.5 text-end font-mono font-semibold">{formatCurrency(netSurplus)}</TableCell>
+              </TableRow>
               {adjustments.map((item) => (
-                <tr key={item.label}>
-                  <td className="px-4 py-3 text-muted-foreground ps-8">{item.label}</td>
-                  <td className="px-4 py-3 text-end font-mono text-muted-foreground">{formatCurrency(item.amount)}</td>
-                </tr>
+                <TableRow key={item.label}>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground ps-8">{item.label}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-end font-mono text-muted-foreground">{formatCurrency(item.amount)}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-            <tfoot className="border-t-2 border-border bg-muted/30">
-              <tr>
-                <td className="px-4 py-2.5 font-bold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</td>
-                <td className="px-4 py-2.5 text-end font-mono font-bold text-foreground text-base">
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="px-3 py-2.5 font-bold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</TableCell>
+                <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-foreground text-base">
                   {formatCurrency(Math.abs(netCashFlow))}
                   <span className={`text-xs ms-1 ${netCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {netCashFlow >= 0 ? t('accounting.reports.cashflow.inflow') : t('accounting.reports.cashflow.outflow')}
                   </span>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
         </div>
       </div>
 

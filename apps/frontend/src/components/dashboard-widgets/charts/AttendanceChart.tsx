@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/config/routes";
 import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
@@ -72,61 +73,57 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
 
   return (
     <WidgetCard ariaLabelledby="attendance-chart-heading" accentColor="primary" className="p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 ps-1.5 select-none">
-        <div>
-          <h3 id="attendance-chart-heading" className="text-sm font-bold text-foreground m-0">
-            {t("widget.title.attendanceRate")}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1 m-0 font-medium">
-            {t("dashboard.charts.attendance.subtitle")}
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3 ms-auto">
-          {isEditMode && (
-            <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
-              <Select
-                value={chartType}
-                onValueChange={(value) => {
-                  updatePref("attendanceChartType", value as "bar" | "line" | "area");
-                }}
-              >
-                <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder={t("reports.visualizer.chartType")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
-                  <SelectItem value="line">{t("dashboard.charts.attendance.lineChart")}</SelectItem>
-                  <SelectItem value="area">{t("dashboard.charts.attendance.areaChart")}</SelectItem>
-                </SelectContent>
-              </Select>
+      <WidgetChartHeader
+        headingId="attendance-chart-heading"
+        title={t("widget.title.attendanceRate")}
+        subtitle={t("dashboard.charts.attendance.subtitle")}
+        actions={
+          <>
+            {isEditMode && (
+              <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
+                <Select
+                  value={chartType}
+                  onValueChange={(value) => {
+                    updatePref("attendanceChartType", value as "bar" | "line" | "area");
+                  }}
+                >
+                  <SelectTrigger className={FORM_SELECT_MINI}>
+                    <SelectValue placeholder={t("reports.visualizer.chartType")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
+                    <SelectItem value="line">{t("dashboard.charts.attendance.lineChart")}</SelectItem>
+                    <SelectItem value="area">{t("dashboard.charts.attendance.areaChart")}</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select
-                value={colorTheme}
-                onValueChange={(value) => {
-                  updatePref("attendanceChartColor", value);
-                }}
-              >
-                <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semantic">{t("dashboard.charts.attendance.semantic")}</SelectItem>
-                  <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
-                  <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
-                  <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
-                  <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
-                  <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select
+                  value={colorTheme}
+                  onValueChange={(value) => {
+                    updatePref("attendanceChartColor", value);
+                  }}
+                >
+                  <SelectTrigger className={FORM_SELECT_MINI}>
+                    <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semantic">{t("dashboard.charts.attendance.semantic")}</SelectItem>
+                    <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
+                    <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
+                    <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
+                    <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
+                    <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="text-end select-none">
+              <p className="text-lg font-black text-foreground m-0 tabular-nums">{avg}%</p>
+              <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{t("dashboard.charts.attendance.weeklyAvg")}</p>
             </div>
-          )}
-          <div className="text-end select-none">
-            <p className="text-lg font-black text-foreground m-0 tabular-nums">{avg}%</p>
-            <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{t("dashboard.charts.attendance.weeklyAvg")}</p>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
       
       <SafeResponsiveContainer height={170}>
         <ComposedChart

@@ -27,7 +27,6 @@ export {
   formatContactDobWithAge,
   formatContactCellValue,
   formatContactGenderLabel,
-  getContactAccentBarClass,
   getDuplicateFieldLabel,
   getDuplicateFieldValue,
   getSyncConflictKindLabel,

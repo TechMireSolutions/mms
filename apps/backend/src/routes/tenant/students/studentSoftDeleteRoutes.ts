@@ -1,22 +1,72 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { Student, User } from '@mms/shared';
+import { studentRecordSchema } from '@mms/shared';
+import { registerResourceRoutes } from '../../../lib/crudResourceRoutes.js';
 import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoutes.js';
-import {
-  studentsBulkIdsSchema,
-} from '../../../validation/studentSchemas.js';
-import {
-  bulkSoftDeleteStudents,
-  bulkRestoreStudents,
-} from '../../../services/studentService.js';
-import { auditStudent } from './studentRouteHelpers.js';
+import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
+import { StudentRestoreConflictError } from '../../../students/use-cases/studentNormalizeUseCases.js';
+import { canDeleteCollection } from '../../../services/rbacService.js';
+import { studentsBulkIdsSchema } from '../../../validation/studentSchemas.js';
+import { auditStudent, sanitizeOneStudentForUser } from './studentRouteHelpers.js';
 
-/** Students bulk soft-delete / restore (single delete/restore via standard CRUD routes). */
+/**
+ * Students soft-delete / restore / bulk trash routes (Contacts parity).
+ *
+ * Single delete/restore use the granular resource registrar with a sanitized
+ * restore payload and a GR-conflict → 400 mapping; bulk ops run in one tx via
+ * the domain use cases and broadcast once.
+ */
 export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
+  registerResourceRoutes(fastify, {
+    collection: 'students',
+    schema: studentRecordSchema as never,
+    nameSingular: 'student',
+    namePlural: 'students',
+    customGetRoute: true,
+    customGetSingleRoute: true,
+    customPostRoute: true,
+    customPutRoute: true,
+    canDelete: (user) => canDeleteCollection(user, 'students'),
+    deleteFn: (id, userId, reason) => studentUseCases.softDeleteStudentById(id, userId, reason),
+    restoreFn: (id, userId) => studentUseCases.restoreStudentById(id, userId),
+    onAfterDelete: async (user, id, deletionReason) => {
+      const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
+      await auditStudent(
+        user,
+        'student.soft_delete',
+        `Soft-deleted student ${id}${reasonNote}`,
+        id,
+      );
+    },
+    onAfterRestore: async (user, id) => {
+      await auditStudent(user, 'student.restore', `Restored student ${id}`, id);
+    },
+    buildRestoreResponse: async (restored, user) => ({
+      success: true,
+      student: await sanitizeOneStudentForUser(restored as Student, user as User),
+    }),
+    mapRestoreError: (error) => {
+      if (error instanceof StudentRestoreConflictError) {
+        return {
+          statusCode: 400,
+          body: {
+            type: error.type,
+            message: error.message,
+            errors: [{ field: error.field, message: error.message }],
+          },
+        };
+      }
+      return null;
+    },
+  });
+
   registerSoftDeletableBulkTrashRoutes(fastify, {
     collection: 'students',
     errorMessagePrefix: 'students',
     bulkBodySchema: studentsBulkIdsSchema,
-    bulkDeleteFn: bulkSoftDeleteStudents,
-    bulkRestoreFn: (ids) => bulkRestoreStudents(ids),
+    canDelete: (user) => canDeleteCollection(user, 'students'),
+    bulkDeleteFn: (ids, user, reason) => studentUseCases.bulkSoftDeleteStudents(ids, user, reason),
+    bulkRestoreFn: (ids, user) => studentUseCases.bulkRestoreStudents(ids, user),
     onAfterBulkDelete: async (user, result, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditStudent(

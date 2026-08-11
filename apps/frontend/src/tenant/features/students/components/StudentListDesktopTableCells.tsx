@@ -1,21 +1,21 @@
 import {
-  calcAge,
-  formatDate,
-  primaryResponsibleAdultDisplayName,
+  hasWhatsApp,
+  toMessagingRecipient,
   type ModuleColumnRegistryEntry,
   type Student,
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { CopyBtn } from "@/components/ui/CopyBtn";
+import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
-import {
-  formatStudentListCustomValue,
-  studentCustomFieldKeyFromColumn,
-} from "@/tenant/features/students/components/studentListCustomColumns";
-import type { StudentListTableProps } from "@/tenant/features/students/components/StudentListContentTypes";
+import { renderStudentWorkColumnValue } from "@/tenant/features/students/components/studentWorkColumnCell";
+import type {
+  StudentListMessagingRecipient,
+  StudentListTableProps,
+} from "@/tenant/features/students/components/StudentListContentTypes";
 
 export type RenderStudentListDesktopTableCellOptions = {
   studentRow: Student;
@@ -27,6 +27,12 @@ export type RenderStudentListDesktopTableCellOptions = {
   statusBadgeConfig: StudentListTableProps["statusBadgeConfig"];
   isColumnVisible: StudentListTableProps["isColumnVisible"];
   onViewStudent: StudentListTableProps["onViewStudent"];
+  viewingDeleted: boolean;
+  canWriteMessaging: boolean;
+  onOpenComposer: (
+    mode: "whatsapp" | "sms" | "email",
+    recipients: StudentListMessagingRecipient[],
+  ) => void;
   t: TranslationFunction;
 };
 
@@ -41,20 +47,11 @@ export function renderStudentListDesktopTableCell({
   statusBadgeConfig,
   isColumnVisible,
   onViewStudent,
+  viewingDeleted,
+  canWriteMessaging,
+  onOpenComposer,
   t,
 }: RenderStudentListDesktopTableCellOptions): React.ReactNode {
-  if (col.key.startsWith("custom:")) {
-    const fieldKey = studentCustomFieldKeyFromColumn(col.key);
-    const raw = fieldKey ? (studentRow as Record<string, unknown>)[fieldKey] : undefined;
-    return (
-      <p className="text-sm text-foreground truncate">
-        {formatStudentListCustomValue(raw, t) ?? emptyDash}
-      </p>
-    );
-  }
-
-  const age = calcAge(studentRow.dob);
-
   switch (col.key) {
     case "name": {
       const genderLabel =
@@ -88,6 +85,11 @@ export function renderStudentListDesktopTableCell({
             {subtitleParts.length > 0 ? (
               <p className="text-xs text-muted-foreground">{subtitleParts.join(" · ")}</p>
             ) : null}
+            {viewingDeleted && studentRow.deletionReason ? (
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                {t("students.deletionReasonLabel")}: {studentRow.deletionReason}
+              </p>
+            ) : null}
           </div>
         </div>
       );
@@ -104,59 +106,67 @@ export function renderStudentListDesktopTableCell({
           {studentRow.gender ? formatContactGenderLabel(studentRow.gender, t) : emptyDash}
         </p>
       );
-    case "phone":
-      return <p className="text-sm text-foreground truncate">{studentRow.phone || emptyDash}</p>;
-    case "email":
-      return <p className="text-sm text-foreground truncate">{studentRow.email || emptyDash}</p>;
-    case "dob":
+    case "phone": {
+      const phone = studentRow.phone?.trim() || null;
+      const hasWa = hasWhatsApp(studentRow);
       return (
-        <>
-          <p className="text-sm font-medium text-foreground">
-            {age ? t("students.list.ageYears", { age }) : emptyDash}
-          </p>
-          <p className="text-xs text-muted-foreground">{formatDate(studentRow.dob, true)}</p>
-        </>
-      );
-    case "parents":
-      return (
-        <p className="text-sm text-foreground">
-          {primaryResponsibleAdultDisplayName(studentRow) || emptyDash}
-        </p>
-      );
-    case "sessions":
-      return (
-        <div className="flex flex-wrap gap-1">
-          {sessionNames.length === 0 ? (
-            <span className="text-xs text-muted-foreground italic">
-              {t("students.list.notEnrolled")}
-            </span>
-          ) : (
-            sessionNames.map((sessionName) => (
-              <span
-                key={sessionName}
-                className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/10"
-              >
-                {sessionName}
+        <div className="flex flex-col items-start gap-1 group/phone">
+          {phone ? (
+            <>
+              <span className="max-w-full truncate text-sm font-mono text-foreground font-medium tracking-wide" title={phone}>
+                {phone}
               </span>
-            ))
+              <div
+                className="flex items-center gap-1"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {canWriteMessaging && hasWa ? (
+                  <EntityMessagingIconActions
+                    primaryPhone={phone}
+                    showCall={false}
+                    labels={{ whatsapp: t("students.list.actionWhatsApp") }}
+                    onWhatsApp={() =>
+                      onOpenComposer("whatsapp", [toMessagingRecipient(studentRow)])
+                    }
+                    className="gap-1"
+                  />
+                ) : null}
+                <CopyBtn text={phone} />
+              </div>
+            </>
+          ) : (
+            <span className="text-sm text-muted-foreground">{emptyDash}</span>
           )}
         </div>
       );
+    }
+    case "email": {
+      const email = studentRow.email?.trim() || null;
+      return (
+        <div className="flex min-w-0 flex-col items-start gap-1 group/email">
+          <span className="max-w-full truncate text-sm text-muted-foreground" title={email || undefined}>
+            {email || emptyDash}
+          </span>
+          {email ? (
+            <div className="flex items-center gap-1">
+              <CopyBtn text={email} />
+            </div>
+          ) : null}
+        </div>
+      );
+    }
+    case "dob":
+    case "parents":
+    case "sessions":
     case "status":
-      return <StatusBadge status={studentRow.status || "active"} config={statusBadgeConfig} />;
     case "registeredDate":
-      return (
-        <p className="text-sm text-foreground">
-          {studentRow.registeredDate ? formatDate(studentRow.registeredDate, true) : emptyDash}
-        </p>
-      );
     case "notes":
-      return (
-        <p className="text-sm text-foreground truncate" title={studentRow.notes || undefined}>
-          {studentRow.notes?.trim() || emptyDash}
-        </p>
-      );
     default:
-      return <span className="text-sm text-muted-foreground">{emptyDash}</span>;
+      return renderStudentWorkColumnValue(studentRow, col.key, {
+        t,
+        statusBadgeConfig,
+        sessionNames,
+        emptyFallback: <span className="text-sm text-muted-foreground">{emptyDash}</span>,
+      });
   }
 }

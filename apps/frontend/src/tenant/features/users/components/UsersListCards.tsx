@@ -4,6 +4,7 @@ import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelect
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { UserArchivedBanner } from "@/tenant/features/users/components/UserArchivedBanner";
 import { UserCardActions } from "@/tenant/features/users/components/UserCardActions";
 import { UserCardHeader } from "@/tenant/features/users/components/UserCardHeader";
@@ -49,7 +50,10 @@ export function UsersListCards({
 }: UsersListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const pageCountLabel = `${users.length} ${t("nav.users").toLowerCase()}`;
+  const pageCountLabel = formatDirectoryPageCountLabel(users.length, t, {
+    singular: "users.form.user",
+    plural: "users.table.users",
+  });
 
   return (
     <>

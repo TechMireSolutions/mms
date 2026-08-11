@@ -13,8 +13,9 @@ import {
   calcAge,
   getPrimaryPhone,
   getPrimaryEmail,
+  hasWhatsApp,
 } from "@mms/shared";
-import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useSessions } from '@/tenant/hooks/collections/sessions';
 import { useContactsByIds, useContactById } from '@/tenant/hooks/collections/contacts';
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -23,7 +24,8 @@ import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
-  const sessions = useSessionsCollection();
+  const sessionsQuery = useSessions();
+  const sessions = sessionsQuery.syncedData;
   const { data: primaryContact } = useContactById(
     student.contactId != null ? String(student.contactId) : undefined,
   );
@@ -66,6 +68,7 @@ export function useStudentDetailModel(student: Student) {
       tab: string;
       enabled: boolean;
       order: number;
+      group: string;
     }> = [];
 
     Object.entries(fields).forEach(([tabId, tabFields]) => {
@@ -80,6 +83,7 @@ export function useStudentDetailModel(student: Student) {
             tab: tabId,
             enabled: fieldDefinition.enabled,
             order: fieldDefinition.order,
+            group: fieldDefinition.group?.trim() || t("students.detail.extendedProfiles"),
           });
         }
       });
@@ -93,7 +97,7 @@ export function useStudentDetailModel(student: Student) {
       }
       return (a.order ?? 999) - (b.order ?? 999);
     });
-  }, [fields, enabledTabIds, tabOrderMap]);
+  }, [fields, enabledTabIds, tabOrderMap, t]);
 
   const studentContact = contactList.find((contact) => String(contact.id) === String(student.contactId))
     ?? primaryContact
@@ -108,6 +112,7 @@ export function useStudentDetailModel(student: Student) {
       ...link,
       name: contact?.name || link.name,
       phone: (contact ? getPrimaryPhone(contact) : null) || link.phone,
+      email: (contact ? getPrimaryEmail(contact) : null) || link.email,
       ...(gender ? { gender } : {}),
     };
   });
@@ -170,8 +175,13 @@ export function useStudentDetailModel(student: Student) {
     relationshipLinks: hydratedLinks,
     age,
     enrolledSessionDetails,
+    sessionsLoading: sessionsQuery.queryResult.isLoading,
+    sessionsError: sessionsQuery.queryResult.isError,
     primaryPhone,
     primaryEmail,
+    // Gate on the number actually used for the WhatsApp recipient (effective
+    // primary phone, legacy scalar fallback included) so gate ≡ recipient.
+    hasWhatsAppContact: hasWhatsApp({ phone: primaryPhone ?? undefined }),
     hasVisibleDetailFields,
     showNotesSection,
   };

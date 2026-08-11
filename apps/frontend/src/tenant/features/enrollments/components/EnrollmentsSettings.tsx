@@ -8,7 +8,7 @@ import {
 } from "@mms/shared";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL, WORK_SURFACE } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
@@ -71,7 +71,7 @@ export function EnrollmentsSettings(): React.JSX.Element {
           {t("enrollments.setupReadOnly")}
         </p>
       ) : (
-        <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <section className={`${WORK_SURFACE} p-5 space-y-4`}>
           <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <ClipboardList className="w-3.5 h-3.5 text-primary" />

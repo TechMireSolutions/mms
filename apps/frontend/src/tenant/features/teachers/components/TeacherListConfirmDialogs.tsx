@@ -9,9 +9,9 @@ interface TeacherListConfirmDialogsProps {
   onBulkDeleteOpenChange: (open: boolean) => void;
   onBulkRestoreOpenChange: (open: boolean) => void;
   onPendingDeleteChange: (id: string | null) => void;
-  onConfirmBulkDelete: (reason?: string) => void;
-  onConfirmBulkRestore: () => void;
-  onConfirmDelete: (reason?: string) => void;
+  onConfirmBulkDelete: (reason?: string) => void | Promise<void>;
+  onConfirmBulkRestore: () => void | Promise<void>;
+  onConfirmDelete: (reason?: string) => void | Promise<void>;
 }
 
 export function TeacherListConfirmDialogs({
@@ -40,7 +40,7 @@ export function TeacherListConfirmDialogs({
       onBulkRestoreOpenChange={onBulkRestoreOpenChange}
       singleDeleteTitle={t('teachers.confirmDeleteTitle')}
       singleDeleteDescription={t('teachers.confirmDeleteDescription')}
-      bulkDeleteTitle={t('common.delete')}
+      bulkDeleteTitle={t('teachers.bulkDelete')}
       bulkDeleteDescription={t('teachers.bulkDeleteConfirm', { count: selectedCount })}
       bulkRestoreTitle={t('teachers.bulkRestore')}
       bulkRestoreDescription={t('teachers.bulkRestoreConfirm', { count: selectedCount })}

@@ -172,13 +172,19 @@ export async function listTeachersPage(
   });
 }
 
-export async function countTeachersActive(tenant: string): Promise<number> {
+export async function countTeachersActive(
+  tenant: string,
+  options?: { includeDeleted?: boolean },
+): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantTransaction(subdomain, async (tx) => {
+    const whereClause = options?.includeDeleted
+      ? eq(teachers.workspaceSubdomain, subdomain)
+      : and(eq(teachers.workspaceSubdomain, subdomain), isNull(teachers.deletedAt));
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(teachers)
-      .where(and(eq(teachers.workspaceSubdomain, subdomain), isNull(teachers.deletedAt)));
+      .where(whereClause);
     return Number(rows[0]?.count ?? 0);
   });
 }
@@ -211,5 +217,34 @@ export async function listTeacherLinkedContactIdsSql(
     return rows
       .map((row) => row.contactId)
       .filter((id): id is string => Boolean(id && id.trim()));
+  });
+}
+
+/**
+ * Finds a soft-deleted teacher whose `contact_id` matches (re-registration
+ * restore-on-create probe). Only deleted rows are candidates so an active
+ * duplicate is never accidentally restored.
+ */
+export async function findSoftDeletedTeacherByContactIdSql(
+  tenant: string,
+  contactId: string,
+): Promise<ReturnType<typeof teacherRowToRecord> | null> {
+  const subdomain = tenant.trim().toLowerCase();
+  const trimmedContactId = contactId.trim();
+  if (!trimmedContactId) return null;
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(teachers)
+      .where(
+        and(
+          eq(teachers.workspaceSubdomain, subdomain),
+          eq(teachers.contactId, trimmedContactId),
+          sql`${teachers.deletedAt} is not null`,
+        ),
+      )
+      .limit(1);
+    const row = rows[0];
+    return row ? teacherRowToRecord(row as never) : null;
   });
 }

@@ -2,7 +2,7 @@ import { BrainCircuit } from "lucide-react";
 import { Contact, getDisplayName } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactIdentityMeta } from "../ContactIdentityMeta";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
 
 export function ContactDetailOverviewHero({
   contact,
@@ -14,20 +14,13 @@ export function ContactDetailOverviewHero({
 
   return (
     <>
-      <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-card via-card to-muted/40 border border-border/80 shadow-xs">
-        <UserAvatar
-          id={contact.id}
-          name={getDisplayName(contact)}
-          avatar={contact.avatar}
-          className="w-16 h-16 rounded-2xl text-2xl shadow-xs"
-        />
-        <div className="flex-1 min-w-0">
-          <p className="text-base font-bold text-foreground truncate leading-tight">
-            {getDisplayName(contact)}
-          </p>
-          <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} size="md" className="mt-1.5" />
-        </div>
-      </div>
+      <PersonDetailHeroCard
+        id={contact.id}
+        displayName={getDisplayName(contact)}
+        avatar={contact.avatar}
+      >
+        <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} size="md" />
+      </PersonDetailHeroCard>
 
       {aiSummary ? (
         <div className="space-y-2">

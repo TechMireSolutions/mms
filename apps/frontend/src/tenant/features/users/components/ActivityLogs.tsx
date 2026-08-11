@@ -47,7 +47,6 @@ export function ActivityLogs({
     setCurrentPage: setPage,
     paginatedItems: paginated,
     filteredItems: filtered,
-    totalPages,
   } = useLocalPagination({
     items: baseFilteredLogs,
     pageSize: PAGE_SIZE,
@@ -74,7 +73,7 @@ export function ActivityLogs({
         paginated={paginated}
         filteredCount={filtered.length}
         page={page}
-        totalPages={totalPages}
+        pageSize={PAGE_SIZE}
         onPageChange={setPage}
         userNameFor={userNameFor}
         getColumnWidth={getColumnWidth}

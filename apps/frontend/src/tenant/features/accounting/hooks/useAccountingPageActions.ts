@@ -99,7 +99,11 @@ export function useAccountingPageActions({
           failed: result.failed,
         }));
       } else {
-        notify.success(t("accounting.trash.deleted"));
+        notify.success(
+          result.succeeded > 1
+            ? t("accounting.trash.bulkDeleted", { count: result.succeeded })
+            : t("accounting.trash.deleted"),
+        );
       }
     } catch (error: unknown) {
       notify.error(t("accounting.trash.actionFailed"), {
@@ -118,7 +122,11 @@ export function useAccountingPageActions({
           failed: result.failed,
         }));
       } else {
-        notify.success(t("accounting.trash.restored"));
+        notify.success(
+          result.succeeded > 1
+            ? t("accounting.trash.bulkRestored", { count: result.succeeded })
+            : t("accounting.trash.restored"),
+        );
       }
     } catch (error: unknown) {
       notify.error(t("accounting.trash.actionFailed"), {

@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -168,7 +168,7 @@ export function MessageComposerFormBody({
               </div>
             </h5>
             {isEmail ? (
-              <div className="space-y-2 rounded-xl border border-border bg-card p-3 text-xs shadow-xs">
+              <div className={`${WORK_SURFACE_INNER} space-y-2 p-3 text-xs`}>
                 <div className="border-b border-border/50 pb-2 text-xs text-muted-foreground">
                   <div>
                     <span className="me-1 font-semibold text-foreground">{t('messaging.to')}:</span>

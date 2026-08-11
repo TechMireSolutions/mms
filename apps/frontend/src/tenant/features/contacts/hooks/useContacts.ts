@@ -14,7 +14,6 @@ export {
   useContactsReportAnalytics,
   useContactsWidgetAggregates,
   useContactsDuplicatePairs,
-  contactsListQueryKey,
   contactDetailQueryKey,
   fetchContactById,
   useContactById,

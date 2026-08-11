@@ -5,6 +5,7 @@ import { Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StockAddBatchModal } from '@/tenant/features/hasanat/components/StockAddBatchModal';
 
@@ -32,18 +33,21 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
 
   return (
     <section aria-label={t('hasanat.tabs.stock')} className="space-y-5">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t('hasanat.stock.batchCount', { count: batches.length })}</p>
-        {canWrite && (
-          <Button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t('hasanat.stock.addBatchAction')}
-          </Button>
-        )}
-      </header>
+      <SectionHeader
+        noMargin
+        title={t('hasanat.stock.batchCount', { count: batches.length })}
+        actions={
+          canWrite && (
+            <Button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t('hasanat.stock.addBatchAction')}
+            </Button>
+          )
+        }
+      />
 
       {(Object.values(grouped) as { den: Denomination; batches: StockBatch[] }[]).map(({ den, batches: denominationBatches }) => {
         const totalStock = denominationBatches.reduce((sum: number, batch: StockBatch) => sum + batch.quantity, 0);

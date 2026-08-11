@@ -10,16 +10,15 @@ import {
 } from '@mms/shared';
 import { deletePersistedObject, fetchObject, persistObject } from './dbSyncService.js';
 import { loadContactPreferences } from './contactPreferencesService.js';
-import {
-  countContacts,
-  loadContactsByIds,
-} from '../contacts/use-cases/contactLoadUseCases.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   loadContactDuplicateBlockedIds,
   loadContactDuplicateCandidateIds,
 } from '../contacts/use-cases/contactDuplicateScanUseCases.js';
-import type { ContactDuplicateCandidateKeys } from '../db/repositories/contactRepository.js';
-import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
+import type {
+  ContactDuplicateCandidateKeys,
+  ContactsRepository,
+} from '../contacts/repository/contactsRepository.js';
 import { contactsRepository } from '../contacts/repository/contactsRepositoryAdapter.js';
 
 const CACHE_KEY = CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY;
@@ -42,13 +41,15 @@ async function findBlockedDuplicatePairs(
   preferences: ContactPreferences | null,
   repo: ContactsRepository,
 ): Promise<ContactDuplicatePair[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
   const blockedIds = await loadContactDuplicateBlockedIds(
     preferences?.namePrefixesToIgnore ?? [],
     repo,
   );
   if (blockedIds.length === 0) return [];
-  const pool = await loadContactsByIds(blockedIds, repo);
-  return findContactDuplicatePairs(pool, preferences ?? {});
+  const pool = await repo.findByIds(tenant, blockedIds);
+  return findContactDuplicatePairs(pool.filter((contact) => !contact.deletedAt), preferences ?? {});
 }
 
 export async function getDuplicateScanCache(): Promise<ContactDuplicateScanCache | null> {
@@ -72,8 +73,9 @@ export async function runContactsDuplicateScan(
   onProgress?: (processed: number, total: number) => void | Promise<void>,
   repo: ContactsRepository = contactsRepository,
 ): Promise<{ pairCount: number; contactCount: number }> {
+  const tenant = getRequestTenant();
   const preferences = await loadContactPreferences();
-  const total = await countContacts({ includeDeleted: false }, repo);
+  const total = tenant ? await repo.countByWorkspace(tenant, { deleted: 'active' }) : 0;
   await onProgress?.(0, Math.max(total, 1));
   const pairs = await findBlockedDuplicatePairs(preferences, repo);
 
@@ -108,6 +110,7 @@ export async function countContactDuplicateMatches(
   contact: Contact,
   repo: ContactsRepository = contactsRepository,
 ): Promise<number> {
+  const tenant = getRequestTenant();
   const preferences = await loadContactPreferences();
   const keys: ContactDuplicateCandidateKeys = {
     ...getContactDuplicateCandidateKeys(contact, preferences ?? {}),
@@ -117,7 +120,7 @@ export async function countContactDuplicateMatches(
   const ids = await loadContactDuplicateCandidateIds(keys, excludeIds, repo);
   if (ids.length === 0) return 0;
 
-  const peers = await loadContactsByIds(ids, repo);
+  const peers = tenant ? (await repo.findByIds(tenant, ids)).filter((c) => !c.deletedAt) : [];
   const pairs = findContactDuplicatePairs([...peers, contact], preferences ?? {});
   return pairs.filter((pair) =>
     pair.contacts.some((row) => String(row.id) === String(contact.id)),

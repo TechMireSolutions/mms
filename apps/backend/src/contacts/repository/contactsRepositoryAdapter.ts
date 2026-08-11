@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   countContactsByWorkspace,
   findContactById,
@@ -17,6 +18,7 @@ import {
   aggregateContactsMonthlyCreatedCounts,
   aggregateContactsWidgetQueries,
 } from '../../db/repositories/contactRepositoryAggregates.js';
+import { withTenantTransaction } from '../../db/withTenantTransaction.js';
 import type { ContactsRepository } from './contactsRepository.js';
 
 /**
@@ -42,6 +44,16 @@ function createContactsRepository(): ContactsRepository {
     findContactDuplicateBlockedIds: (tenant, namePrefixes) =>
       findContactDuplicateBlockedIds(tenant, namePrefixes),
     countFieldUsageByKeys: (tenant, fieldKeys) => countFieldUsageByKeys(tenant, fieldKeys),
+    acquireUniqueValueLocks: async (tenant, lockKeys) => {
+      if (lockKeys.length === 0) return;
+      const subdomain = tenant.trim().toLowerCase();
+      const sorted = [...new Set(lockKeys.map((key) => key.trim()).filter(Boolean))].sort();
+      await withTenantTransaction(subdomain, async (tx) => {
+        for (const key of sorted) {
+          await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${subdomain}), hashtext(${key}))`);
+        }
+      });
+    },
     aggregateCommandMetrics: (tenant, fieldConfig, options) =>
       aggregateContactsCommandMetrics(tenant, fieldConfig, options),
     aggregateReportAnalytics: (tenant, options) =>

@@ -1,20 +1,27 @@
 import React from 'react';
-import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { formatDate, type ActivityLog } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
-import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ListPagination } from '@/components/ui/ListPagination';
 import { ActivityActionBadge } from '@/tenant/features/users/components/UserBadges';
-import { Button } from '@/components/ui/button';
-import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
+import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 
 export interface ActivityLogsListProps {
   paginated: ActivityLog[];
   filteredCount: number;
   page: number;
-  totalPages: number;
-  onPageChange: (updater: (currentPage: number) => number) => void;
+  pageSize?: number;
+  onPageChange: (page: number) => void;
   userNameFor: (log: ActivityLog) => string;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -24,7 +31,7 @@ export function ActivityLogsList({
   paginated,
   filteredCount,
   page,
-  totalPages,
+  pageSize = 15,
   onPageChange,
   userNameFor,
   getColumnWidth,
@@ -42,12 +49,12 @@ export function ActivityLogsList({
 
   return (
     <>
-      <Card accentColor="primary" className="p-0 overflow-hidden">
+      <div className={WORK_SURFACE}>
         <div className="space-y-3 p-3 md:hidden">
           {paginated.map((log) => (
             <article
               key={log.id}
-              className="space-y-3 rounded-xl border border-border bg-card p-3"
+              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -69,71 +76,52 @@ export function ActivityLogsList({
             </article>
           ))}
         </div>
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm table-fixed">
-            <thead className="border-b border-border bg-muted/60">
-              <tr>
-                <ResizableTableHead columnKey="time" width={getColumnWidth?.('time')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+        <div className="hidden md:block">
+          <Table className="table-fixed">
+            <TableHeader>
+              <TableRow className="border-b border-border/60 hover:bg-muted/30">
+                <ModuleTableHeaderCell columnKey="time" width={getColumnWidth?.('time')} onResize={onColumnResize} className="px-3 py-2.5">
                   {t('users.activityColTime')}
-                </ResizableTableHead>
-                <ResizableTableHead columnKey="user" width={getColumnWidth?.('user')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                </ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="user" width={getColumnWidth?.('user')} onResize={onColumnResize} className="px-3 py-2.5">
                   {t('users.activityColUser')}
-                </ResizableTableHead>
-                <ResizableTableHead columnKey="action" width={getColumnWidth?.('action')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                </ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="action" width={getColumnWidth?.('action')} onResize={onColumnResize} className="px-3 py-2.5">
                   {t('users.activityColAction')}
-                </ResizableTableHead>
-                <ResizableTableHead columnKey="detail" width={getColumnWidth?.('detail')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                </ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="detail" width={getColumnWidth?.('detail')} onResize={onColumnResize} className="px-3 py-2.5">
                   {t('users.activityColDetail')}
-                </ResizableTableHead>
-                <ResizableTableHead columnKey="ip" width={getColumnWidth?.('ip')} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold uppercase text-muted-foreground">
+                </ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="ip" width={getColumnWidth?.('ip')} onResize={onColumnResize} className="px-3 py-2.5">
                   {t('users.activityColIp')}
-                </ResizableTableHead>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+                </ModuleTableHeaderCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/50">
               {paginated.map((log) => (
-                <tr key={log.id} className="hover:bg-muted/20">
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">{fmtTs(log.ts)}</td>
-                  <td className="px-3 py-2.5 text-xs font-semibold text-foreground">{userNameFor(log)}</td>
-                  <td className="px-3 py-2.5">
+                <TableRow key={log.id} className="transition-colors hover:bg-muted/20">
+                  <TableCell className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">{fmtTs(log.ts)}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-xs font-semibold text-foreground">{userNameFor(log)}</TableCell>
+                  <TableCell className="px-3 py-2.5">
                     <ActivityActionBadge action={log.action} />
-                  </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{log.detail}</td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{log.ip}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">{log.detail}</TableCell>
+                  <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{log.ip}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span className="min-w-0">{t('users.activityPageInfo', { page, total: totalPages, count: filteredCount })}</span>
-        <div className="flex shrink-0 gap-1">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled={page <= 1}
-            onClick={() => onPageChange((currentPage) => currentPage - 1)}
-            className="rounded-lg border border-border disabled:opacity-40 shadow-none"
-            aria-label={t('users.activityPrev')}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange((currentPage) => currentPage + 1)}
-            className="rounded-lg border border-border disabled:opacity-40 shadow-none"
-            aria-label={t('users.activityNext')}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            </TableBody>
+          </Table>
         </div>
       </div>
+
+      <ListPagination
+        page={page}
+        total={filteredCount}
+        limit={pageSize}
+        onPageChange={onPageChange}
+        i18nNamespace="users"
+        variant="range"
+      />
     </>
   );
 }

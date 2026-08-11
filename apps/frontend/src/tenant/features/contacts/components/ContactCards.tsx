@@ -6,6 +6,7 @@ import {
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
@@ -90,9 +91,10 @@ export default function ContactCards({
     );
   }, [columnRegistry, columns, isColumnVisible]);
 
-  const pageCountLabel = `${contacts.length} ${
-    contacts.length === 1 ? t("contacts.form.contact") : t("contacts.table.contacts")
-  }`;
+  const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
+    singular: "contacts.form.contact",
+    plural: "contacts.table.contacts",
+  });
 
   return (
     <>

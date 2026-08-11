@@ -113,6 +113,7 @@ export function SessionsWorkTier({
   canExport,
   onBulkExport,
 }: SessionsWorkTierProps): React.JSX.Element {
+  const activeFilterCount = filterStatus.length + filterType.length;
   return (
     <motion.div
       key="work"
@@ -131,6 +132,7 @@ export function SessionsWorkTier({
         typeOptions={typeOptions}
         statusLabels={statusLabels}
         typeLabels={typeLabels}
+        activeFilterCount={activeFilterCount}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
         columnLayout={columnLayout}

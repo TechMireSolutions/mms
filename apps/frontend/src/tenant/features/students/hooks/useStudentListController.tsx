@@ -1,6 +1,4 @@
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { type Student } from "@mms/shared";
-import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
@@ -11,9 +9,7 @@ interface UseStudentListControllerOptions {
   onSelectAll: (pageIds: string[]) => void;
   allSelected: boolean;
   someSelected: boolean;
-  isColumnVisible?: (key: string) => boolean;
-  sortField: StudentListSortField | null;
-  sortDir: "asc" | "desc";
+  isColumnVisible: (key: string) => boolean;
   onSort: (field: StudentListSortField) => void;
   openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
   canWriteMessaging: boolean;
@@ -26,39 +22,14 @@ export function useStudentListController({
   allSelected,
   someSelected,
   isColumnVisible,
-  sortField,
-  sortDir,
   onSort,
   openComposer,
   canWriteMessaging,
 }: UseStudentListControllerOptions) {
   const { t } = useTranslation();
-  const { isFieldEnabled } = useStudentConfig();
-
-  const resolveColumnVisible = (key: string): boolean => {
-    if (isColumnVisible) return isColumnVisible(key);
-    if (key === "dob") return isFieldEnabled("dob");
-    if (key === "gender") return isFieldEnabled("gender");
-    if (key === "grNumber") return isFieldEnabled("grNumber");
-    if (key === "parents") return isFieldEnabled("contactRelationships");
-    if (key === "status") return isFieldEnabled("status");
-    if (key === "registeredDate") return isFieldEnabled("registeredDate");
-    if (key === "notes") return isFieldEnabled("notes");
-    if (key === "phone" || key === "email" || key === "sessions" || key === "name") return true;
-    return true;
-  };
 
   const handleSort = (field: StudentListSortField) => {
     onSort(field);
-  };
-
-  const renderSortIcon = (field: StudentListSortField | null) => {
-    if (sortField !== field) return <ChevronUp className="w-3 h-3 opacity-25" />;
-    return sortDir === "asc" ? (
-      <ChevronUp className="w-3 h-3 text-primary transition-transform" />
-    ) : (
-      <ChevronDown className="w-3 h-3 text-primary transition-transform" />
-    );
   };
 
   const pageIds = students.map((student) => String(student.id));
@@ -69,13 +40,12 @@ export function useStudentListController({
 
   return {
     t,
-    isColumnVisible: resolveColumnVisible,
+    isColumnVisible,
     openComposer,
     canWriteMessaging,
     paginatedStudents: students,
     allSelected,
     someSelected,
-    renderSortIcon,
     handleSort,
     handleSelectAll,
     handleSelectOne: onSelectOne,

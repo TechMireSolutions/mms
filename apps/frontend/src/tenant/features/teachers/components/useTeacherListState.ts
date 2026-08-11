@@ -34,8 +34,6 @@ export function useTeacherListState({
   const sortField = controlledSortField;
   const sortDir = controlledSortDir;
 
-  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
-  const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [viewTeacher, setViewTeacher] = useState<Teacher | null>(null);
 
@@ -62,10 +60,6 @@ export function useTeacherListState({
     statusConfig,
     isColumnVisible: columnVisible,
     selectedIds,
-    confirmBulkDeleteOpen,
-    setConfirmBulkDeleteOpen,
-    confirmBulkRestoreOpen,
-    setConfirmBulkRestoreOpen,
     pendingDeleteId,
     setPendingDeleteId,
     viewTeacher,

@@ -1,9 +1,17 @@
 import { CalendarCheck } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { utilisationColour } from "./sessionReportUtils";
 
@@ -48,12 +56,12 @@ export function SessionReportTable({
       {sessionCapacityData.length === 0 ? (
         <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />
       ) : (
-        <Card className="overflow-hidden">
+        <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {sessionCapacityData.map((sessionCapacity) => (
               <article
                 key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`}
-                className="space-y-3 rounded-xl border border-border bg-card p-3"
+                className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
               >
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -95,19 +103,27 @@ export function SessionReportTable({
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  {[t("sessions.report.colSession"), t("sessions.report.colClass"), t("sessions.report.colEnrolled"), t("sessions.report.colCapacity"), t("sessions.report.colUtilisation"), t("sessions.report.colStatus")].map((headerLabel) => (
-                    <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+          <div className="hidden md:block">
+            <Table>
+              <caption className="sr-only">{t("sessions.report.capacityReportTitle")}</caption>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  {[
+                    { key: "session", label: t("sessions.report.colSession") },
+                    { key: "class", label: t("sessions.report.colClass") },
+                    { key: "enrolled", label: t("sessions.report.colEnrolled") },
+                    { key: "capacity", label: t("sessions.report.colCapacity") },
+                    { key: "utilisation", label: t("sessions.report.colUtilisation") },
+                    { key: "status", label: t("sessions.report.colStatus") },
+                  ].map((header) => (
+                    <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/50">
                 {sessionCapacityData.map((sessionCapacity) => (
-                  <tr key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`} className="hover:bg-muted/30">
-                    <td className="px-3 py-2.5 font-medium max-w-[11.25rem] truncate">
+                  <TableRow key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`} className="hover:bg-muted/20 transition-colors">
+                    <TableCell className="px-3 py-2.5 font-medium max-w-[11.25rem] truncate">
                       <Button
                         type="button"
                         variant="ghost"
@@ -116,8 +132,8 @@ export function SessionReportTable({
                       >
                         {sessionCapacity.session}
                       </Button>
-                    </td>
-                    <td className="px-3 py-2.5 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">
                       <Button
                         type="button"
                         variant="ghost"
@@ -126,21 +142,21 @@ export function SessionReportTable({
                       >
                         {sessionCapacity.class}
                       </Button>
-                    </td>
-                    <td className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</td>
-                    <td className="px-3 py-2.5 w-36">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</TableCell>
+                    <TableCell className="px-3 py-2.5 w-36">
                       <UtilisationBar rate={sessionCapacity.rate} />
-                    </td>
-                    <td className="px-3 py-2.5">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </Card>
+        </div>
       )}
     </>
   );

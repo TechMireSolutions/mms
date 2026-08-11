@@ -29,6 +29,8 @@ export function useEnrollmentsPageActions({
     updateEnrollment,
     deleteEnrollment,
     restoreEnrollment,
+    bulkDeleteEnrollments,
+    bulkRestoreEnrollments,
   } = useEnrollmentMutations();
   const { updateStudent } = useStudentMutations();
 
@@ -108,6 +110,40 @@ export function useEnrollmentsPageActions({
     });
   };
 
+  const handleBulkDelete = (ids: string[], deletionReason?: string) => {
+    bulkDeleteEnrollments.mutate({ ids, deletionReason }, {
+      onSuccess: (result) => {
+        notify.success(
+          result.failed > 0
+            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded, failed: result.failed })
+            : t("enrollments.toast.bulkDeleted", { count: result.succeeded }),
+        );
+      },
+      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+
+  const handleBulkRestore = (ids: string[]) => {
+    bulkRestoreEnrollments.mutate(ids, {
+      onSuccess: (result) => {
+        notify.success(
+          result.failed > 0
+            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded, failed: result.failed })
+            : t("enrollments.toast.bulkRestored", { count: result.succeeded }),
+        );
+      },
+      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+
+  const handleBulkCancel = (ids: string[]) => {
+    ids.forEach((id) => handleCancel(id));
+  };
+
   const handleStatusChange = (id: string, newStatus: Enrollment["status"]) => {
     const enrollment = enrollments.find((candidate) => candidate.id === id);
     if (!enrollment) return;
@@ -143,5 +179,8 @@ export function useEnrollmentsPageActions({
     handleDelete,
     handleRestore,
     handleStatusChange,
+    handleBulkDelete,
+    handleBulkRestore,
+    handleBulkCancel,
   };
 }

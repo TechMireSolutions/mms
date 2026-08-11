@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
 
@@ -39,7 +39,7 @@ export function JournalEntryLinesEditorMobile({
       {lines.map((line, lineIndex) => {
         const account = accounts.find((accountOption) => accountOption.id === line.account_id);
         return (
-          <article key={line.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+          <article key={line.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
             <div className="flex items-center justify-end">
               <Button
                 type="button"

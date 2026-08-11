@@ -13,6 +13,7 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { loadContactFieldConfig } from '../../services/contactConfigService.js';
 import { loadContactLookupKind } from '../../services/contactLookupsService.js';
 import { loadContactPreferences } from '../../services/contactPreferencesService.js';
+import { getDuplicateScanCache } from '../../services/contactDuplicateScanService.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 
@@ -46,11 +47,7 @@ export async function loadContactsCommandMetrics(
       duplicatePairCount: 0,
     };
   }
-  // Dynamic import avoids a cycle: duplicateScan service → contactService barrel → load use cases.
-  const [{ getDuplicateScanCache }, fieldConfig] = await Promise.all([
-    import('../../services/contactDuplicateScanService.js'),
-    loadContactFieldConfig(),
-  ]);
+  const fieldConfig = await loadContactFieldConfig();
   const dupeCache = await getDuplicateScanCache();
   // Actionable pairs only (exclude name-only) — cache when warm; 0 when cold (no full-tenant scan).
   const duplicatePairCount = dupeCache

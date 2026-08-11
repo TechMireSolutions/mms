@@ -8,11 +8,11 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { SimplePagination } from "@/components/ui/SimplePagination";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
   TableHeader,
   TableBody,
-  TableHead,
   TableRow,
   TableCell,
 } from "@/components/ui/table";
@@ -82,29 +82,29 @@ export function OverdueObligationsWidgetList({
             <Table className="w-full text-sm">
               <TableHeader>
                 <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
-                  <TableHead scope="col" className="px-5 py-3 text-start text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  <ModuleTableHeaderCell columnKey="student" className="px-5 py-3 select-none">
                     {t("hasanat.columns.redemption.student")}
-                  </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-start text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  </ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="obligation" className="px-3 py-3 select-none">
                     {t("nav.obligations")}
-                  </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-start text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  </ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="dueDate" className="px-3 py-3 select-none">
                     {t("finance.columns.dueDate")}
-                  </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-end text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  </ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="amount" className="px-3 py-3 text-end select-none">
                     {t("finance.columns.amount")}
-                  </TableHead>
-                  <TableHead scope="col" className="px-3 py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                  </ModuleTableHeaderCell>
+                  <ModuleTableHeaderCell columnKey="status" className="px-3 py-3 text-center select-none">
                     {t("hasanat.columns.distribution.status")}
-                  </TableHead>
+                  </ModuleTableHeaderCell>
                   {canWriteMessaging && (
-                    <TableHead scope="col" className="px-3 py-3 text-center text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+                    <ModuleTableHeaderCell columnKey="actions" className="px-3 py-3 text-center select-none">
                       {t("hasanat.columns.actions")}
-                    </TableHead>
+                    </ModuleTableHeaderCell>
                   )}
                 </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-border/40">
+              <TableBody className="divide-y divide-border/50">
                 {paginatedStudents.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={canWriteMessaging ? 6 : 5} className="p-0">

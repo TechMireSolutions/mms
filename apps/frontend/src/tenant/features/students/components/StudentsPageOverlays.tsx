@@ -5,6 +5,7 @@ import {
   ModuleDrawerLoadingSkeleton,
   ModuleOverlayLoadingFallback,
 } from "@/components/ui/ModuleOverlayLoadingChrome";
+import { useStudentFieldConfigQuery } from "@/tenant/features/students/hooks/useStudentSetupConfig";
 import { StudentsPageConfirmDialogs } from "@/tenant/features/students/components/StudentsPageConfirmDialogs";
 import type { StudentsPageOverlaysProps } from "@/tenant/features/students/hooks/studentsPageOverlaysTypes";
 
@@ -43,11 +44,17 @@ export function StudentsPageOverlays({
   onBulkRestoreOpenChange,
   onConfirmBulkRestore,
 }: StudentsPageOverlaysProps): React.JSX.Element {
+  const { isPending: configPending } = useStudentFieldConfigQuery();
+  const formNeedsTabs = showStudentForm || Boolean(viewStudent);
+  const tabsPending = formNeedsTabs && configPending;
+
   return (
     <>
+      {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
+
       <Suspense fallback={<ModuleOverlayLoadingFallback />}>
         <AnimatePresence>
-          {showStudentForm ? (
+          {showStudentForm && !configPending ? (
             <StudentForm
               student={editStudent as unknown as Partial<Student> | null}
               onClose={onCloseForm}
@@ -64,7 +71,7 @@ export function StudentsPageOverlays({
         </AnimatePresence>
       </Suspense>
 
-      {viewStudent ? (
+      {viewStudent && !configPending ? (
         <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
           <StudentDetailDrawer
             student={viewStudent}

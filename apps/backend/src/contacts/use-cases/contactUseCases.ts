@@ -28,6 +28,10 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
     countContacts: (options?: { includeDeleted?: boolean }) => loadUseCases.countContacts(options, repo),
     loadContactsPage: (query: Parameters<typeof loadUseCases.loadContactsPage>[0]) =>
       loadUseCases.loadContactsPage(query, repo),
+    loadContactsPageForTenant: (tenant: string, query: Parameters<typeof loadUseCases.loadContactsPageForTenant>[1]) =>
+      loadUseCases.loadContactsPageForTenant(tenant, query, repo),
+    loadContactsByIdsForTenant: (tenant: string, ids: string[]) =>
+      loadUseCases.loadContactsByIdsForTenant(tenant, ids, repo),
     loadContactsCommandMetrics: () => loadUseCases.loadContactsCommandMetrics(repo),
     loadContactRuntimeDefaults: () => loadUseCases.loadContactRuntimeDefaults(),
     loadContactsReportAnalytics: (options?: Parameters<typeof loadUseCases.loadContactsReportAnalytics>[0]) =>
@@ -39,6 +43,8 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
     loadContactsWidgetAggregates: (queries: Parameters<typeof loadUseCases.loadContactsWidgetAggregates>[0]) =>
       loadUseCases.loadContactsWidgetAggregates(queries, repo),
     loadContactsByIds: (ids: string[]) => loadUseCases.loadContactsByIds(ids, repo),
+    loadExistingNormalizedContactNames: (names: string[]) =>
+      loadUseCases.loadExistingNormalizedContactNames(names, repo),
     loadContactDuplicatePairsPage: (query: { page?: number; limit?: number }) =>
       loadUseCases.loadContactDuplicatePairsPage(query, repo),
     getContactById: (id: string, includeDeleted?: boolean) =>
@@ -49,6 +55,8 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
       writeUseCases.updateContactById(id, contact, languageOrOptions, repo),
     mergeContactsById: (keepId: string, deleteId: string, mergedInput: Parameters<typeof writeUseCases.mergeContactsById>[2], deletedBy: string) =>
       writeUseCases.mergeContactsById(keepId, deleteId, mergedInput, deletedBy, repo),
+    bulkSaveContacts: (contacts: Parameters<typeof writeUseCases.bulkSaveContacts>[0]) =>
+      writeUseCases.bulkSaveContacts(contacts, repo),
     restoreContactById: (id: string, restoredBy: string) =>
       softDeleteUseCases.restoreContactById(id, restoredBy, repo),
     bulkRestoreContacts: (ids: string[], restoredBy: string) =>

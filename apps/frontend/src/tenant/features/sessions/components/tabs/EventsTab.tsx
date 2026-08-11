@@ -9,6 +9,8 @@ import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusB
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { EventModal } from '@/tenant/features/sessions/components/tabs/EventModal';
 
 interface EventsTabProps {
@@ -64,17 +66,20 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps): Reac
 
   return (
     <section aria-label={t('sessions.events.ariaLabel')} className="space-y-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t('sessions.events.count', { count: events.length })}</p>
-        {canWrite && (
-          <Button
-            onClick={() => { setEditEvent(null); setShowModal(true); }}
-            className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t('sessions.events.add')}
-          </Button>
-        )}
-      </header>
+      <SectionHeader
+        noMargin
+        title={t('sessions.events.count', { count: events.length })}
+        actions={
+          canWrite && (
+            <Button
+              onClick={() => { setEditEvent(null); setShowModal(true); }}
+              className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t('sessions.events.add')}
+            </Button>
+          )
+        }
+      />
 
       {events.length === 0 ? (
         <EmptyState
@@ -95,7 +100,7 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps): Reac
                 className="relative"
               >
                 <div className="absolute -start-10 top-4 w-4 h-4 rounded-full bg-card border-2 border-primary" aria-hidden="true" />
-                <div className="rounded-xl border border-border bg-card p-4 hover:shadow-sm transition-all group">
+                <div className={`${WORK_SURFACE_INNER} p-4 hover:shadow-sm transition-all group`}>
                   <header className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <h4 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{sessionEvent.title}</h4>

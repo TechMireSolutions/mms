@@ -2,6 +2,16 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ACCOUNT_TYPE_META, type AccountType } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { type AppTranslationKey } from "@mms/shared";
 
 interface TrialBalanceRow {
@@ -35,7 +45,7 @@ export function TrialBalanceTypeGroup({
   const sortedRows = [...accountTypeRows].sort((firstRow, secondRow) => firstRow.code.localeCompare(secondRow.code));
 
   return (
-    <section key={type} aria-label={t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })} className="rounded-xl border border-border overflow-hidden">
+    <section key={type} aria-label={t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })} className={WORK_SURFACE}>
       <header className={`px-4 py-2 border-b border-border ${typeMeta?.color} flex min-w-0 items-center justify-between gap-2`}>
         <h3 className="min-w-0 truncate text-xs font-bold uppercase tracking-wide m-0">
           {typeMeta?.icon} {t(`accounting.type.${type}` as AppTranslationKey)} — {t(`accounting.reports.views.${typeMeta?.group}` as AppTranslationKey)}
@@ -49,7 +59,7 @@ export function TrialBalanceTypeGroup({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: index * 0.03 }}
-            className="space-y-2 rounded-xl border border-border bg-card p-3"
+            className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0">
@@ -90,37 +100,37 @@ export function TrialBalanceTypeGroup({
           </dl>
         </article>
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
+      <div className="hidden md:block">
+        <Table>
           <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
-          <thead className="bg-muted/40 border-b border-border">
-            <tr>
-              <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase w-20">{t("accounting.columns.account.code")}</th>
-              <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.account.name")}</th>
-              <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">{t("accounting.columns.account.subtype")}</th>
-              <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.debit")}</th>
-              <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.credit")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              <ModuleTableHeaderCell columnKey="code" className="px-3 py-2.5 w-20">{t("accounting.columns.account.code")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("accounting.columns.account.name")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="subtype" className="px-3 py-2.5 hidden md:table-cell">{t("accounting.columns.account.subtype")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="debit" className="px-3 py-2.5 text-end">{t("accounting.columns.journal.debit")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="credit" className="px-3 py-2.5 text-end">{t("accounting.columns.journal.credit")}</ModuleTableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
             {sortedRows.map((trialBalanceRow) => (
-              <tr key={trialBalanceRow.id} className="hover:bg-muted/20 transition-colors">
-                <td className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</td>
-                <td className="px-4 py-2.5 font-medium text-foreground">{trialBalanceRow.name}</td>
-                <td className="px-4 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{trialBalanceRow.subtype || "—"}</td>
-                <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold text-info">{formatPositiveNumber(trialBalanceRow.totalDebit)}</td>
-                <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold text-success">{formatPositiveNumber(trialBalanceRow.totalCredit)}</td>
-              </tr>
+              <TableRow key={trialBalanceRow.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="px-3 py-2.5 font-mono text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</TableCell>
+                <TableCell className="px-3 py-2.5 font-medium text-foreground">{trialBalanceRow.name}</TableCell>
+                <TableCell className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{trialBalanceRow.subtype || "—"}</TableCell>
+                <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-info">{formatPositiveNumber(trialBalanceRow.totalDebit)}</TableCell>
+                <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-success">{formatPositiveNumber(trialBalanceRow.totalCredit)}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-          <tfoot className="border-t border-border bg-muted/20">
-            <tr>
-              <td colSpan={3} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.tb.subTotal")}</td>
-              <td className="px-4 py-2 text-end font-mono font-bold text-info">{formatPositiveNumber(groupDebit)}</td>
-              <td className="px-4 py-2 text-end font-mono font-bold text-success">{formatPositiveNumber(groupCredit)}</td>
-            </tr>
-          </tfoot>
-        </table>
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={3} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("accounting.tb.subTotal")}</TableCell>
+              <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info">{formatPositiveNumber(groupDebit)}</TableCell>
+              <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success">{formatPositiveNumber(groupCredit)}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
       </div>
     </section>
   );

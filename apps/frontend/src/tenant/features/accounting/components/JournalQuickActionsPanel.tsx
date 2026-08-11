@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -103,12 +104,15 @@ export function JournalQuickActionsPanel({
       )}
 
       <section aria-label={t("accounting.journal.dashboard.recentTransactions")}>
-        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="min-w-0 text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("accounting.journal.dashboard.recentTransactions")}</h3>
-          <Button type="button" variant="link" size="sm" onClick={onExportCsv} className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors min-h-11 px-2 self-start sm:self-auto">
-            <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
-          </Button>
-        </header>
+        <SectionHeader
+          headingLevel={3}
+          title={<span className="min-w-0 text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("accounting.journal.dashboard.recentTransactions")}</span>}
+          actions={
+            <Button type="button" variant="link" size="sm" onClick={onExportCsv} className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors min-h-11 px-2 self-start sm:self-auto">
+              <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
+            </Button>
+          }
+        />
 
         {entries.length === 0 ? (
           <EmptyState

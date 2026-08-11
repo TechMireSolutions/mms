@@ -49,6 +49,8 @@ export function useAttendancePageController() {
     handleUpdateRecord,
     handleDeleteRecord,
     handleRestoreRecord,
+    handleBulkDeleteRecords,
+    handleBulkRestoreRecords,
   } = useAttendancePageActions();
 
   const {
@@ -105,6 +107,8 @@ export function useAttendancePageController() {
     handleUpdateRecord,
     handleDeleteRecord,
     handleRestoreRecord,
+    handleBulkDeleteRecords,
+    handleBulkRestoreRecords,
     canWriteAttendance,
     canDeleteAttendance,
     canAnalyticsView,

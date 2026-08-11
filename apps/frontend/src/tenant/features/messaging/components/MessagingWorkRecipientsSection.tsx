@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type {
   Contact,
@@ -6,9 +6,11 @@ import type {
   MessagingRoleFilter,
 } from '@mms/shared';
 import { ListPagination } from '@/components/ui/ListPagination';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
 import { MessagingWorkRecipientsToolbar } from '@/tenant/features/messaging/components/MessagingWorkRecipientsToolbar';
 import { MessagingWorkRecipientsList } from '@/tenant/features/messaging/components/MessagingWorkRecipientsList';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingWorkRecipientsSectionProps {
   contacts: Contact[];
@@ -20,6 +22,9 @@ interface MessagingWorkRecipientsSectionProps {
   genderOptions: Array<{ value: string; label: string }>;
   selectingReachable: boolean;
   allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
+  selectedCountLabel: ReactNode;
+  pageCountLabel: ReactNode;
   isPending: boolean;
   isFetching: boolean;
   recipientsPage: number;
@@ -49,6 +54,9 @@ export function MessagingWorkRecipientsSection({
   genderOptions,
   selectingReachable,
   allVisibleSelected,
+  someVisibleSelected,
+  selectedCountLabel,
+  pageCountLabel,
   isPending,
   isFetching,
   recipientsPage,
@@ -68,8 +76,13 @@ export function MessagingWorkRecipientsSection({
   selectedCount,
 }: MessagingWorkRecipientsSectionProps): JSX.Element {
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+  const { t } = useTranslation();
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs lg:col-span-2">
+    <div className={`${WORK_SURFACE} space-y-4 p-4 lg:col-span-2`}>
+      <div className="space-y-1">
+        <h4 className="text-sm font-bold text-foreground">{t('messaging.stepSelectRecipients')}</h4>
+        <p className="text-xs text-muted-foreground">{t('messaging.selectRecipientsDesc')}</p>
+      </div>
       <MessagingWorkRecipientsToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -91,6 +104,10 @@ export function MessagingWorkRecipientsSection({
         contacts={contacts}
         selectedById={selectedById}
         allVisibleSelected={allVisibleSelected}
+        someVisibleSelected={someVisibleSelected}
+        selectedCount={selectedCount}
+        selectedCountLabel={selectedCountLabel}
+        pageCountLabel={pageCountLabel}
         isPending={isPending}
         isFetching={isFetching}
         getColumnWidth={getColumnWidth}

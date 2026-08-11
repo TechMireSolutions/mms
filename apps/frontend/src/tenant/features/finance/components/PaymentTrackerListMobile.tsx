@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
+import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import type { Payment } from '@/lib/data/financeData';
 
 interface PaymentTrackerListMobileProps {
@@ -59,7 +60,7 @@ export function PaymentTrackerListMobile({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: index * 0.03 }}
-          className="space-y-3 rounded-xl border border-border bg-card p-3"
+          className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
         >
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">

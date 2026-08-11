@@ -1,12 +1,12 @@
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
-import { Card } from '@/components/ui/card';
 import { PaymentLogHeader } from '@/tenant/features/finance/components/PaymentTrackerToolbar';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import type { Payment } from '@/lib/data/financeData';
 import { PaymentTrackerListMobile } from '@/tenant/features/finance/components/PaymentTrackerListMobile';
 import { PaymentTrackerListTable } from '@/tenant/features/finance/components/PaymentTrackerListTable';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 
 export const PAYMENT_TRACKER_COLUMN_KEYS = [
   "date",
@@ -72,7 +72,7 @@ export function PaymentTrackerList({
   };
 
   return (
-    <Card accentColor="primary" className="overflow-hidden p-0">
+    <div className={WORK_SURFACE}>
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3">
         <PaymentLogHeader totalPaid={totalPaid} formatCurrency={formatCurrency} columnCustomizer={columnCustomizer} />
         <WorkViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -82,7 +82,7 @@ export function PaymentTrackerList({
           <PaymentTrackerListMobile {...listProps} />
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div>
           <PaymentTrackerListTable
             {...listProps}
             visibleColCount={visibleColCount}
@@ -93,6 +93,6 @@ export function PaymentTrackerList({
           />
         </div>
       )}
-    </Card>
+    </div>
   );
 }

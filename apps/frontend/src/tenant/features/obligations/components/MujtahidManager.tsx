@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { NameFormModal } from "@/tenant/features/obligations/components/MujtahidNameFormModal";
@@ -56,13 +57,16 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm text-muted-foreground">{t("obligations.mujtahids.count", { count: mujtahids.length })}</p>
-        <Button type="button" onClick={() => setModal({ mode: "add", data: { name: "" } })}
-          className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto">
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.mujtahids.add")}
-        </Button>
-      </header>
+      <SectionHeader
+        noMargin
+        title={<span className="m-0 min-w-0 text-sm text-muted-foreground">{t("obligations.mujtahids.count", { count: mujtahids.length })}</span>}
+        actions={
+          <Button type="button" onClick={() => setModal({ mode: "add", data: { name: "" } })}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto">
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.mujtahids.add")}
+          </Button>
+        }
+      />
 
       <section aria-label={t("obligations.mujtahids.listAria")} className="space-y-2">
         {mujtahids.length === 0 && (

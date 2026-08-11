@@ -41,7 +41,6 @@ export function useStudentsCrudActions({
       notifyBulkResult(1, 0, "students.deleteSuccess", "students.bulkDeleteSuccess");
     } catch (error) {
       handleError(error, "students.delete", "students.deleteFailed");
-      throw error;
     }
   };
 
@@ -72,7 +71,6 @@ export function useStudentsCrudActions({
       );
     } catch (error) {
       handleError(error, "students.bulk_delete", "students.deleteFailed");
-      throw error;
     }
   };
 
@@ -87,7 +85,6 @@ export function useStudentsCrudActions({
       );
     } catch (error) {
       handleError(error, "students.bulk_restore", "students.restoreFailed");
-      throw error;
     }
   };
 
@@ -108,6 +105,7 @@ export function useStudentsCrudActions({
       );
     } catch (error) {
       handleError(error, "students.bulk_status", "students.bulkStatusFailed");
+      throw error;
     }
   };
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   STUDENTS_MODULE_MANIFEST,
   buildStudentWorkColumnRegistry,
@@ -28,10 +28,30 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
     [settings, t],
   );
 
-  return useModuleColumnLayout({
+  const { customizerLabels: baseLabels, updateUserColumnLayout, ...base } = useModuleColumnLayout({
     moduleId: STUDENTS_MODULE_MANIFEST.moduleId,
     tenantRegistry,
     apiPath: STUDENTS_MODULE_MANIFEST.restBasePath,
     translationPrefix: 'students.columns',
   });
+
+  const customizerLabels = useMemo(
+    () => ({
+      ...baseLabels,
+      reset: t('students.resetLayout'),
+      searchPlaceholder: t('students.searchColumnsPlaceholder'),
+    }),
+    [baseLabels, t],
+  );
+
+  const resetColumnLayout = useCallback(() => {
+    updateUserColumnLayout(tenantRegistry);
+  }, [updateUserColumnLayout, tenantRegistry]);
+
+  return {
+    ...base,
+    updateUserColumnLayout,
+    customizerLabels,
+    resetColumnLayout,
+  };
 }

@@ -1,53 +1,49 @@
-import { Button } from "@/components/ui/button";
-import { useTranslation } from "@/hooks/useTranslation";
-import type { Exam } from "@/lib/data/examinationData";
-import { Edit2, RotateCcw, Trash2 } from "lucide-react";
+import type { JSX } from 'react';
+import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { Exam } from '@mms/shared';
 
 interface ExaminationsRowActionsProps {
   exam: Exam;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
+  triggerClassName?: string;
   onEdit: (exam: Exam) => void;
   onTrashAction: (id: string) => void;
 }
 
+/**
+ * Examinations row/card actions — thin adapter over the shared
+ * {@link ModuleRowActionsMenu}; Edit is the module's primary item and Archive /
+ * Restore route to the trash action.
+ */
 export function ExaminationsRowActions({
   exam,
   canWrite,
   canDelete,
   showDeleted,
+  triggerClassName,
   onEdit,
   onTrashAction,
-}: ExaminationsRowActionsProps): React.JSX.Element {
+}: ExaminationsRowActionsProps): JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      {canWrite && !showDeleted && (
-        <Button
-          variant="ghost"
-          size="icon"
-          type="button"
-          onClick={() => onEdit(exam)}
-          aria-label={t("examinations.editExamAria", { name: exam.name })}
-          className="rounded-lg hover:bg-muted text-muted-foreground transition-all"
-        >
-          <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
-        </Button>
-      )}
-      {canDelete && (
-        <Button
-          variant="ghost"
-          size="icon"
-          type="button"
-          onClick={() => onTrashAction(exam.id)}
-          aria-label={showDeleted ? t("examinations.trash.restore") : t("common.delete")}
-          className="rounded-lg hover:bg-muted text-muted-foreground transition-all"
-        >
-          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-        </Button>
-      )}
-    </div>
+    <ModuleRowActionsMenu
+      triggerLabel={t('examinations.table.actions')}
+      editLabel={t('common.edit')}
+      deleteLabel={t('common.delete')}
+      restoreLabel={t('examinations.trash.restore')}
+      archived={showDeleted}
+      canWrite={canWrite}
+      canDelete={canDelete}
+      onView={undefined}
+      onEdit={canWrite && !showDeleted ? () => onEdit(exam) : undefined}
+      onDelete={() => onTrashAction(exam.id)}
+      onRestore={showDeleted && canDelete ? () => onTrashAction(exam.id) : undefined}
+      hideViewItem
+      triggerClassName={triggerClassName}
+    />
   );
 }

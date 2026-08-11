@@ -1,7 +1,15 @@
-import { Users } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Loader2, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { toTitleCase } from "@mms/shared";
 
@@ -13,17 +21,29 @@ export function StudentReportTables({
   enrollments,
   statusBadgeConfig,
   enrollmentStatusConfig,
+  listLoading,
+  historyLoading,
 }: StudentReportTablesProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const loading = activeSubTab === "list" ? listLoading : historyLoading;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
+        <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+        <span className="text-sm">{t("common.loading")}</span>
+      </div>
+    );
+  }
 
   if (activeSubTab === "list") {
     return students.length === 0 ? (
       <EmptyState icon={Users} title={t("students.report.noStudentsFound")} description={t("students.report.adjustFilters")} compact />
     ) : (
-      <div className="rounded-xl border border-border overflow-hidden">
+      <div className={WORK_SURFACE}>
         <div className="space-y-3 p-3 md:hidden">
           {students.map((student) => (
-            <article key={student.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+            <article key={student.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <h4 className="truncate text-sm font-semibold text-foreground">{student.name}</h4>
                 <StatusBadge status={student.status} config={statusBadgeConfig} />
@@ -57,37 +77,38 @@ export function StudentReportTables({
             </article>
           ))}
         </div>
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("students.report.colName")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("students.report.colGender")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">{t("students.report.colClass")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("students.report.colSession")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">{t("students.report.colCity")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">{t("students.report.colAge")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">{t("students.report.colRegistered")}</th>
-                <th className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("students.report.colStatus")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+        <div className="hidden md:block">
+          <Table>
+            <caption className="sr-only">{t("students.report.studentListTab")}</caption>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("students.report.colName")}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="gender" className="px-3 py-2.5 hidden sm:table-cell">{t("students.report.colGender")}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="class" className="px-3 py-2.5 hidden sm:table-cell">{t("students.report.colClass")}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="session" className="px-3 py-2.5 hidden md:table-cell">{t("students.report.colSession")}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="city" className="px-3 py-2.5 hidden lg:table-cell">{t("students.report.colCity")}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="age" className="px-3 py-2.5 hidden md:table-cell">{t("students.report.colAge")}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="registered" className="px-3 py-2.5 hidden lg:table-cell">{t("students.report.colRegistered")}</ModuleTableHeaderCell>
+                <ModuleTableHeaderCell columnKey="status" className="px-3 py-2.5">{t("students.report.colStatus")}</ModuleTableHeaderCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/50">
               {students.map((student) => (
-                <tr key={student.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-3 py-2.5 font-medium text-foreground">{student.name}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{toTitleCase(student.gender)}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{student.class}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground max-w-[10rem] truncate hidden md:table-cell">{student.session}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.city}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground hidden md:table-cell">{student.age}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.registered}</td>
-                  <td className="px-3 py-2.5">
+                <TableRow key={student.id} className="hover:bg-muted/20 transition-colors">
+                  <TableCell className="px-3 py-2.5 font-medium text-foreground">{student.name}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{toTitleCase(student.gender)}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{student.class}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground max-w-[10rem] truncate hidden md:table-cell">{student.session}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.city}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground hidden md:table-cell">{student.age}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.registered}</TableCell>
+                  <TableCell className="px-3 py-2.5">
                     <StatusBadge status={student.status} config={statusBadgeConfig} />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     );
@@ -96,10 +117,10 @@ export function StudentReportTables({
   return enrollments.length === 0 ? (
     <EmptyState icon={Users} title={t("students.report.noEnrollmentsFound")} compact />
   ) : (
-    <Card className="overflow-hidden mt-4">
+    <div className={`${WORK_SURFACE} mt-4`}>
       <div className="space-y-3 p-3 md:hidden">
         {enrollments.map((enrollment) => (
-          <article key={enrollment.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+          <article key={enrollment.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
             <div className="flex min-w-0 items-start justify-between gap-3">
               <h4 className="truncate text-sm font-semibold text-foreground">{enrollment.studentName}</h4>
               <StatusBadge status={enrollment.status} config={enrollmentStatusConfig} />
@@ -121,30 +142,37 @@ export function StudentReportTables({
           </article>
         ))}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b border-border/50">
-            <tr>
-              {[t("students.report.colStudent"), t("students.report.colSession"), t("students.report.colClass"), t("students.report.colEnrolled"), t("students.report.colStatus")].map((headerLabel) => (
-                <th key={headerLabel} className="px-4 py-3 text-start text-xs font-black text-muted-foreground uppercase tracking-widest">{headerLabel}</th>
+      <div className="hidden md:block">
+        <Table>
+          <caption className="sr-only">{t("students.report.enrollmentHistoryTab")}</caption>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              {[
+                { key: "student", label: t("students.report.colStudent") },
+                { key: "session", label: t("students.report.colSession") },
+                { key: "class", label: t("students.report.colClass") },
+                { key: "enrolled", label: t("students.report.colEnrolled") },
+                { key: "status", label: t("students.report.colStatus") },
+              ].map((header) => (
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-4 py-3">{header.label}</ModuleTableHeaderCell>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
             {enrollments.map((enrollment) => (
-              <tr key={enrollment.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-3 py-2.5 font-medium text-foreground">{enrollment.studentName}</td>
-                <td className="px-3 py-2.5 text-muted-foreground">{enrollment.session}</td>
-                <td className="px-3 py-2.5 text-muted-foreground">{enrollment.class}</td>
-                <td className="px-3 py-2.5 text-muted-foreground">{enrollment.enrolled}</td>
-                <td className="px-3 py-2.5">
+              <TableRow key={enrollment.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="px-3 py-2.5 font-medium text-foreground">{enrollment.studentName}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground">{enrollment.session}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground">{enrollment.class}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground">{enrollment.enrolled}</TableCell>
+                <TableCell className="px-3 py-2.5">
                   <StatusBadge status={enrollment.status} config={enrollmentStatusConfig} />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-    </Card>
+    </div>
   );
 }

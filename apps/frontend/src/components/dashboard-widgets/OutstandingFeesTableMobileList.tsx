@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import {
   OutstandingFeeMessagingActions,
@@ -49,7 +50,7 @@ export function OutstandingFeesTableMobileList({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: index * 0.04, duration: 0.25 }}
-          className="space-y-3 rounded-xl border border-border bg-card p-3"
+          className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
         >
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">

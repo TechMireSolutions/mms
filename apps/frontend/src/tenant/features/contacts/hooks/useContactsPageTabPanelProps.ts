@@ -37,7 +37,7 @@ export function useContactsPageTabPanelProps({
   effectiveTab: string;
   directory: Directory;
   overlay: Pick<Overlay, "viewMode" | "setViewMode">;
-  messaging: Pick<Messaging, "canWriteMessaging" | "handleWhatsApp" | "handleSms">;
+  messaging: Pick<Messaging, "canWriteMessaging" | "handleWhatsApp" | "handleSms" | "handleEmail">;
   actions: Pick<
     Actions,
     "requestBulkDelete" | "requestBulkRestore" | "handleImport"
@@ -87,6 +87,7 @@ export function useContactsPageTabPanelProps({
       canDelete,
       onWhatsApp: messaging.handleWhatsApp,
       onSms: messaging.handleSms,
+      onEmail: messaging.handleEmail,
       onBulkExport: handleBulkExport,
       onRequestBulkDelete: actions.requestBulkDelete,
       onRequestBulkRestore: actions.requestBulkRestore,
@@ -141,6 +142,7 @@ export function useContactsPageTabPanelProps({
       messaging.canWriteMessaging,
       messaging.handleWhatsApp,
       messaging.handleSms,
+      messaging.handleEmail,
       canExport,
       canWrite,
       canDelete,

@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   Table,
@@ -41,7 +42,7 @@ export function WidgetDrilldownModalRecords({
           return (
             <article
               key={recordId}
-              className="space-y-3 rounded-xl border border-border bg-card p-3"
+              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <p className="min-w-0 truncate text-sm font-bold text-foreground">{name}</p>
@@ -90,7 +91,7 @@ export function WidgetDrilldownModalRecords({
               <TableHead className="pb-3 text-end text-muted-foreground h-auto">{t("reports.widgets.microAction")}</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="divide-y divide-border/60">
+          <TableBody className="divide-y divide-border/50">
             {paginatedItems.map((recordSource, index) => {
               const { recordId, name, detailText, status, hasAction } = getWidgetRecordDisplay(
                 recordSource, index, widget, studentNameMap, t,

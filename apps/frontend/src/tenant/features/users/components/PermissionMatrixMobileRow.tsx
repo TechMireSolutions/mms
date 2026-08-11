@@ -6,6 +6,7 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
+import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { PermCell } from '@/tenant/features/users/components/RolesPermCell';
 import type { PermissionMatrixActions } from '@/tenant/features/users/components/PermissionMatrixRow';
 
@@ -27,7 +28,7 @@ export function PermissionMatrixMobileRow({
   const hasAny = currentActions.length > 0;
 
   return (
-    <article className={`space-y-3 rounded-xl border border-border bg-card p-3 ${hasAny || !readOnly ? '' : 'opacity-40'}`}>
+    <article className={`${WORK_SURFACE_INNER} space-y-3 p-3 ${hasAny || !readOnly ? '' : 'opacity-40'}`}>
       <div className="flex items-center justify-between gap-3">
         <h4 className="min-w-0 text-sm font-semibold text-foreground">{t(mod.labelKey)}</h4>
         {!readOnly ? (

@@ -2,8 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { AlertCircle, DollarSign, Tag, TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
-import { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
+import { useFinanceInvoicesCollection, useFinanceMetrics } from "@/tenant/hooks/collections/finance";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import {
   FinancialMonthFilterBanner,

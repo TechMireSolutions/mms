@@ -1,72 +1,79 @@
 import type { JSX } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
+import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
+import {
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface QuestionBankTableHeaderProps {
   canDelete: boolean;
   isColumnVisible: (key: string) => boolean;
-  allFilteredSelected: boolean;
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
-  onToggleSelectAllFiltered: (checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean) => void;
 }
 
 export function QuestionBankTableHeader({
   canDelete,
   isColumnVisible,
-  allFilteredSelected,
+  allVisibleSelected,
+  someVisibleSelected,
   getColumnWidth,
   onColumnResize,
-  onToggleSelectAllFiltered,
+  onToggleSelectAll,
 }: QuestionBankTableHeaderProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <thead>
-      <tr className="border-b border-border bg-muted/30">
+    <TableHeader>
+      <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
         {canDelete && (
-          <th className="w-10 px-3 py-2.5">
+          <TableHead className="w-10 px-3 py-2.5 h-auto">
             <Checkbox
-              checked={allFilteredSelected}
-              onCheckedChange={(checked) => onToggleSelectAllFiltered(checked === true)}
-              aria-label={t('questionBank.trash.selectAll')}
+              checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+              onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
+              aria-label={t('questionBank.table.selectAll')}
             />
-          </th>
+          </TableHead>
         )}
         {isColumnVisible('text') && (
-          <ResizableTableHead columnKey="text" width={getColumnWidth?.('text')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <ModuleTableHeaderCell columnKey="text" width={getColumnWidth?.('text')} onResize={onColumnResize} className="px-4 py-2.5">
             {t('questionBank.columns.text')}
-          </ResizableTableHead>
+          </ModuleTableHeaderCell>
         )}
         {isColumnVisible('category') && (
-          <ResizableTableHead columnKey="category" width={getColumnWidth?.('category')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <ModuleTableHeaderCell columnKey="category" width={getColumnWidth?.('category')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5">
             {t('questionBank.columns.category')}
-          </ResizableTableHead>
+          </ModuleTableHeaderCell>
         )}
         {isColumnVisible('language') && (
-          <ResizableTableHead columnKey="language" width={getColumnWidth?.('language')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <ModuleTableHeaderCell columnKey="language" width={getColumnWidth?.('language')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5">
             {t('questionBank.columns.language')}
-          </ResizableTableHead>
+          </ModuleTableHeaderCell>
         )}
         {isColumnVisible('type') && (
-          <ResizableTableHead columnKey="type" width={getColumnWidth?.('type')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <ModuleTableHeaderCell columnKey="type" width={getColumnWidth?.('type')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5">
             {t('questionBank.columns.type')}
-          </ResizableTableHead>
+          </ModuleTableHeaderCell>
         )}
         {isColumnVisible('difficulty') && (
-          <ResizableTableHead columnKey="difficulty" width={getColumnWidth?.('difficulty')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <ModuleTableHeaderCell columnKey="difficulty" width={getColumnWidth?.('difficulty')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5">
             {t('questionBank.columns.difficulty')}
-          </ResizableTableHead>
+          </ModuleTableHeaderCell>
         )}
         {isColumnVisible('source') && (
-          <ResizableTableHead columnKey="source" width={getColumnWidth?.('source')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <ModuleTableHeaderCell columnKey="source" width={getColumnWidth?.('source')} onResize={onColumnResize} className="whitespace-nowrap px-4 py-2.5">
             {t('questionBank.columns.source')}
-          </ResizableTableHead>
+          </ModuleTableHeaderCell>
         )}
-        <th scope="col" className="whitespace-nowrap px-4 py-2.5 text-end text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <TableHead className="whitespace-nowrap px-4 py-2.5 text-end h-auto">
           <span className="sr-only">{t('questionBank.columns.actions')}</span>
-        </th>
-      </tr>
-    </thead>
+        </TableHead>
+      </TableRow>
+    </TableHeader>
   );
 }

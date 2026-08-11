@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -163,7 +164,7 @@ export function MessagingSetupPanel({
             onChannelChange={setChannel}
           />
 
-          <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs md:col-span-2">
+          <div className={`${WORK_SURFACE} space-y-4 p-4 md:col-span-2`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1"><h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground"><Tag className="h-4 w-4 text-muted-foreground" />{t('messaging.configuredPresets')}</h4><p className="text-xs text-muted-foreground">{t('messaging.configuredPresetsDesc')}</p></div>
               <div className="flex flex-wrap items-center gap-2 overflow-x-auto max-w-full"><FormSelect id="filterCategory" value={categoryFilter} onChange={setCategoryFilter} options={categorySelectOptions} /><SearchBar placeholder={t('messaging.search.placeholder')} value={search} onChange={setSearch} className="max-w-xs" /></div>
@@ -171,7 +172,7 @@ export function MessagingSetupPanel({
             <div className="rounded-lg border border-border/50">
               <div className="space-y-3 p-3 md:hidden">
                 {filteredTemplates.map((template) => (
-                  <article key={template.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                  <article key={template.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h4 className="truncate text-sm font-semibold text-foreground">

@@ -15,7 +15,7 @@ export function StudentsPageView({
   canWrite,
   canExport,
   visibleTabs,
-  serverCount,
+  metricsTotal,
   activeTab,
   setActiveTab,
   viewingDeleted,
@@ -29,13 +29,13 @@ export function StudentsPageView({
 
   return (
     <ModulePageShell
-      seoTitle={`MMS - ${t("nav.students")}`}
+      seoTitle={t("page.students.seoTitle")}
       seoDescription={t("page.students.subtitle")}
       headerIcon={GraduationCap}
       headerTitle={t("nav.students")}
       headerSubtitle={
-        serverCount != null
-          ? `${t("page.students.subtitle")} · ${serverCount} ${t("nav.students").toLowerCase()}`
+        metricsTotal != null
+          ? `${t("page.students.subtitle")} · ${metricsTotal} ${t("nav.students").toLowerCase()}`
           : t("page.students.subtitle")
       }
       headerActions={
@@ -50,7 +50,7 @@ export function StudentsPageView({
         />
       }
       metricsStrip={
-        <StudentsCommandMetrics total={serverCount ?? shownCount} shown={shownCount} />
+        <StudentsCommandMetrics total={metricsTotal ?? shownCount} shown={shownCount} />
       }
     >
       <ResponsiveAccordionTabs

@@ -14,7 +14,8 @@ export interface ObligationCollectionListContentProps {
   typeFilter: string;
   selectedIds: string[];
   isColumnVisible: (key: string) => boolean;
-  allFilteredSelected: boolean;
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
@@ -28,10 +29,9 @@ export interface ObligationCollectionListContentProps {
   onAddNew: () => void;
   onView: (collection: ObligationCollection) => void;
   onPrint: (collection: ObligationCollection) => void;
-  onSelectAll: (checked: boolean) => void;
-  onToggleSelected: (id: string, checked: boolean) => void;
-  onDelete?: (id: string) => void | Promise<void>;
-  onRestore?: (id: string) => void | Promise<void>;
+  onToggleSelectAll: (checked: boolean) => void;
+  onToggleSelectedCollection: (id: string, checked: boolean) => void;
+  onTrashAction: (id: string) => void;
   onMessage?: (channel: "sms" | "whatsapp" | "email", collections: ObligationCollection[]) => void;
 }
 

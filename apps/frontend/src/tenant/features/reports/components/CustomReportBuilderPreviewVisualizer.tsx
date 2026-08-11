@@ -1,7 +1,15 @@
 import type { JSX } from "react";
 import { Settings } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type PreviewRow } from "./customReportBuilderFields";
 
@@ -33,7 +41,7 @@ export function CustomReportBuilderPreviewVisualizer({
             {previewData.map((previewRow, rowIndex) => (
               <article
                 key={rowIndex}
-                className="space-y-2 rounded-xl border border-border bg-card p-3"
+                className={`${WORK_SURFACE_INNER} space-y-2 p-3`}
               >
                 <dl className="grid grid-cols-1 gap-2 text-sm">
                   {selectedFields.map((selectedField) => {
@@ -56,35 +64,36 @@ export function CustomReportBuilderPreviewVisualizer({
             ))}
           </div>
           <div className="hidden overflow-auto max-h-72 custom-scrollbar md:block">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/40 border-b border-border/70 sticky top-0 z-10 backdrop-blur-lg">
-                <tr>
+            <Table>
+              <caption className="sr-only">{t("reports.builder.liveVisualizer", { count: previewData.length })}</caption>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
                   {selectedFields.map((selectedField) => (
-                    <th key={selectedField} className="px-4 py-3.5 text-start text-xs font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                    <ModuleTableHeaderCell key={selectedField} columnKey={selectedField} className="px-4 py-3.5 whitespace-nowrap">
                       {resolveFieldLabel(selectedField)}
-                    </th>
+                    </ModuleTableHeaderCell>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/50">
                 {previewData.map((previewRow, rowIndex) => (
-                  <tr key={rowIndex} className="hover:bg-primary/[0.02] transition-colors group">
+                  <TableRow key={rowIndex} className="hover:bg-primary/[0.02] transition-colors group">
                     {selectedFields.map((selectedField) => {
                       const fieldLabel = resolveFieldLabel(selectedField);
                       const cellValue = previewRow[fieldLabel];
                       return (
-                        <td key={selectedField} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
+                        <TableCell key={selectedField} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
                           {cellValue !== undefined && cellValue !== null
                             ? String(cellValue)
                             : <span className="text-muted-foreground/30 text-xs italic">—</span>
                           }
-                        </td>
+                        </TableCell>
                       );
                     })}
-                  </tr>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       )}

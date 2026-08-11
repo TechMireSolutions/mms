@@ -1,12 +1,17 @@
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Input } from "@/components/ui/input";
+import type React from "react";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
+import { FilterChips } from "@/components/ui/FilterChips";
+import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 import type { ObligationType } from "@/lib/data/obligationsData";
-import { Search } from "lucide-react";
+import { ObligationsFiltersMenuButton } from "@/tenant/features/obligations/components/ObligationsFiltersMenuButton";
+
+export const OBLIGATIONS_WORK_SEARCH_INPUT_ID = "obligations-work-search";
 
 interface ObligationCollectionListToolbarProps {
   viewMode: WorkDirectoryViewMode;
@@ -14,71 +19,85 @@ interface ObligationCollectionListToolbarProps {
   search: string;
   typeFilter: string;
   obligationTypes: ObligationType[];
-  canDelete: boolean;
-  showDeleted: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
-  onToggleShowDeleted?: () => void;
 }
 
 export function ObligationCollectionListToolbar({
+  viewMode,
+  onViewModeChange,
   search,
   typeFilter,
   obligationTypes,
-  canDelete,
-  showDeleted,
   columnCustomizer,
   onSearchChange,
   onTypeFilterChange,
-  onToggleShowDeleted,
-  viewMode,
-  onViewModeChange,
 }: ObligationCollectionListToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
-  const selectOptions = [
-    { value: "all", label: t("obligations.filter.allTypes") },
-    ...obligationTypes.map((item) => ({ value: item.id, label: item.name })),
-  ];
+  const activeFilterCount = typeFilter !== "all" ? 1 : 0;
+  const selectedType = obligationTypes.find((item) => item.id === typeFilter);
 
   return (
-    <section aria-label={t("obligations.filter.label")} className="flex flex-wrap gap-2 items-center">
-      <div className="relative flex-1 min-w-[11.25rem]">
-        <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-        <Input
-          type="search"
-          aria-label={t("obligations.searchPlaceholder")}
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={t("obligations.searchPlaceholder")}
-          className="w-full ps-9 pe-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-        />
+    <>
+      <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
+        <div className="relative min-w-0 flex-1">
+          <SearchBar
+            id={OBLIGATIONS_WORK_SEARCH_INPUT_ID}
+            value={search}
+            onChange={onSearchChange}
+            placeholder={t("obligations.searchPlaceholder")}
+            className="w-full min-w-0"
+          />
+          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
+            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
+              /
+            </kbd>
+          </div>
+        </div>
+
+        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+          <ObligationsFiltersMenuButton
+            typeFilter={typeFilter}
+            obligationTypes={obligationTypes}
+            activeFilterCount={activeFilterCount}
+            onChangeType={onTypeFilterChange}
+            onClearFilters={() => onTypeFilterChange("all")}
+          />
+
+          {activeFilterCount > 0 ? (
+            <ModuleClearFiltersButton
+              onClearFilters={() => onTypeFilterChange("all")}
+              label={t("obligations.clearFilters")}
+            />
+          ) : null}
+
+          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+
+          {columnCustomizer && (
+            <ModuleColumnCustomizer
+              columnRegistry={columnCustomizer.columnRegistry}
+              updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
+              labels={columnCustomizer.labels}
+            />
+          )}
+        </div>
       </div>
-      <div className="min-w-[9.375rem]">
-        <FormSelect
-          aria-label={t("obligations.filter.type")}
-          value={typeFilter}
-          onChange={onTypeFilterChange}
-          options={selectOptions}
-          className="text-sm rounded-xl border border-border bg-background"
-        />
-      </div>
-      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      {columnCustomizer && (
-        <ModuleColumnCustomizer
-          columnRegistry={columnCustomizer.columnRegistry}
-          updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-          labels={columnCustomizer.labels}
-        />
-      )}
-      {canDelete && onToggleShowDeleted && (
-        <ModuleTrashToggle
-          showDeleted={showDeleted}
-          onToggle={onToggleShowDeleted}
-          showActiveLabel={t("obligations.trash.showActive")}
-          showDeletedLabel={t("obligations.trash.showDeleted")}
-        />
-      )}
-    </section>
+
+      <FilterChips
+        chips={
+          activeFilterCount > 0
+            ? [
+                {
+                  key: `type:${typeFilter}`,
+                  label: selectedType?.name ?? t("obligations.filter.allTypes"),
+                  onRemove: () => onTypeFilterChange("all"),
+                },
+              ]
+            : []
+        }
+        onClearAll={() => onTypeFilterChange("all")}
+      />
+    </>
   );
 }

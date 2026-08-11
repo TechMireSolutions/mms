@@ -97,6 +97,8 @@ export function createExaminationsBulkDeleteHandler(deps: Pick<ExaminationsMutat
           succeeded: result.succeeded,
           failed: result.failed,
         }));
+      } else if (result.succeeded > 1) {
+        notify.success(deps.t('examinations.trash.bulkDeleted', { count: result.succeeded }));
       } else {
         notify.success(deps.t('examinations.trash.deleted'));
       }
@@ -118,6 +120,8 @@ export function createExaminationsBulkRestoreHandler(deps: Pick<ExaminationsMuta
           succeeded: result.succeeded,
           failed: result.failed,
         }));
+      } else if (result.succeeded > 1) {
+        notify.success(deps.t('examinations.trash.bulkRestored', { count: result.succeeded }));
       } else {
         notify.success(deps.t('examinations.trash.restored'));
       }

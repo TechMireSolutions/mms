@@ -3,7 +3,7 @@ import type { Contact, User } from '@mms/shared';
 import { registerResourceRoutes } from '../../../lib/crudResourceRoutes.js';
 import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoutes.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
-import { ContactUniqueFieldError } from '../../../contacts/use-cases/contactUniqueFieldUseCases.js';
+import { ContactUniqueFieldError } from '../../../services/contactService.js';
 import { canDeleteContacts } from '../../../services/rbacService.js';
 import {
   contactRecordSchema,

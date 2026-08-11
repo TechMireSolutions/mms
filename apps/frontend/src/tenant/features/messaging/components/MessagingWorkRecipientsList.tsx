@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import {
   getDisplayName,
@@ -10,7 +10,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingState';
-import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
+import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
+import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import {
   Table,
   TableBody,
@@ -19,6 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
+import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
+import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
+import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
 
@@ -27,6 +33,10 @@ interface MessagingWorkRecipientsListProps {
   contacts: Contact[];
   selectedById: MessagingSelectedMap;
   allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
+  selectedCount: number;
+  selectedCountLabel: ReactNode;
+  pageCountLabel: ReactNode;
   isPending: boolean;
   isFetching: boolean;
   getColumnWidth: (key: string) => number | undefined;
@@ -35,11 +45,23 @@ interface MessagingWorkRecipientsListProps {
   setColumnWidth: (key: string, width: number) => void;
 }
 
+function MissingFieldBadge({ label }: { label: string }): JSX.Element {
+  return (
+    <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-xs text-warning">
+      {label}
+    </span>
+  );
+}
+
 export function MessagingWorkRecipientsList({
   viewMode,
   contacts,
   selectedById,
   allVisibleSelected,
+  someVisibleSelected,
+  selectedCount,
+  selectedCountLabel,
+  pageCountLabel,
   isPending,
   isFetching,
   getColumnWidth,
@@ -48,6 +70,7 @@ export function MessagingWorkRecipientsList({
   setColumnWidth,
 }: MessagingWorkRecipientsListProps): JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const showLoadingEmpty = isPending && contacts.length === 0;
 
   return (
@@ -61,140 +84,142 @@ export function MessagingWorkRecipientsList({
           <span className="sr-only">{t('common.loading')}</span>
         </div>
       ) : viewMode === 'cards' ? (
-      <div className="space-y-3 p-3">
-        {contacts.length > 0 && (
-          <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-            <Checkbox
-              checked={allVisibleSelected}
-              onCheckedChange={onToggleAllVisible}
-              aria-label={t('contacts.table.selectAll')}
-            />
-            <span className="text-xs font-semibold text-muted-foreground">{t('contacts.table.selectAll')}</span>
-          </div>
-        )}
-        {contacts.map((contact) => {
-          const phone = getPrimaryPhone(contact);
-          const email = getPrimaryEmail(contact);
-          const displayName = getDisplayName(contact);
-          return (
-            <article key={contact.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
-              <div className="flex items-start gap-2">
-                <Checkbox
-                  checked={Boolean(selectedById[String(contact.id)])}
-                  onCheckedChange={() => onToggleRecipient(contact)}
-                  aria-label={t('messaging.selectRecipient', { name: displayName })}
-                />
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
-                    {getInitials(displayName)}
-                  </span>
-                  <span className="min-w-0 truncate text-sm font-medium text-foreground">{displayName}</span>
-                </div>
-              </div>
-              <dl className="grid grid-cols-1 gap-2 ps-8 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t('contacts.form.primaryPhone')}</dt>
-                  <dd className="font-mono text-xs text-foreground">
-                    {phone || (
-                      <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-xs text-warning">
-                        {t('messaging.missingPhone')}
-                      </span>
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t('contacts.form.primaryEmail')}</dt>
-                  <dd className="text-xs text-foreground">
-                    {email || (
-                      <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-xs text-warning">
-                        {t('messaging.missingEmail')}
-                      </span>
-                    )}
-                  </dd>
-                </div>
-              </dl>
-            </article>
-          );
-        })}
-        {contacts.length === 0 && (
-          <EmptyState title={t('messaging.selectRecipientsDesc')} compact icon={null} />
-        )}
-      </div>
-      ) : (
-      <Table className="table-fixed text-xs">
-        <TableHeader className="bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
-          <TableRow className="border-b border-border/60 hover:bg-transparent">
-            <TableHead className="w-10 px-4 py-2">
-              <Checkbox
-                checked={allVisibleSelected}
-                onCheckedChange={onToggleAllVisible}
-                aria-label={t('contacts.table.selectAll')}
+        <div className="space-y-3 p-3">
+          {contacts.length > 0 ? (
+            <>
+              <DirectoryCardsSelectAllBar
+                checkboxId="messaging-recipients-select-all-cards"
+                allSelected={allVisibleSelected}
+                someSelected={someVisibleSelected}
+                onSelectAll={() => onToggleAllVisible(!allVisibleSelected)}
+                selectLabel={t('messaging.selectAllVisible')}
+                deselectLabel={t('common.deselect')}
+                selectedCount={selectedCount}
+                selectedCountLabel={selectedCountLabel}
+                pageCountLabel={pageCountLabel}
               />
-            </TableHead>
-            {(['recipient', 'phone', 'email'] as const).map((column) => (
-              <ResizableTableHead
-                key={column}
-                columnKey={column}
-                width={getColumnWidth(column)}
-                onResize={setColumnWidth}
-                className="px-4 py-2"
-              >
-                {column === 'recipient'
-                  ? t('messaging.recipient')
-                  : column === 'phone'
-                    ? t('contacts.form.primaryPhone')
-                    : t('contacts.form.primaryEmail')}
-              </ResizableTableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody className="divide-y divide-border/60">
-          {contacts.map((contact) => {
-            const phone = getPrimaryPhone(contact);
-            const email = getPrimaryEmail(contact);
-            return (
-              <TableRow key={contact.id} className="hover:bg-muted/10">
-                <TableCell className="px-4 py-2">
+              <DirectoryCardsGrid>
+                {contacts.map((contact) => {
+                  const isSelected = Boolean(selectedById[String(contact.id)]);
+                  const displayName = getDisplayName(contact);
+                  return (
+                    <DirectoryEntityCard key={contact.id} isSelected={isSelected} reducedMotion={reducedMotion}>
+                      <DirectoryCardHeader
+                        id={contact.id}
+                        displayName={displayName}
+                        avatar={contact.avatar}
+                        isSelected={isSelected}
+                        onSelect={() => onToggleRecipient(contact)}
+                        selectAriaLabel={t('messaging.selectRecipient', { name: displayName })}
+                        reducedMotion={reducedMotion}
+                      />
+                      <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t('contacts.form.primaryPhone')}</dt>
+                          <dd className="font-mono text-xs text-foreground">
+                            {getPrimaryPhone(contact) ?? <MissingFieldBadge label={t('messaging.missingPhone')} />}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs font-semibold text-muted-foreground">{t('contacts.form.primaryEmail')}</dt>
+                          <dd className="text-xs text-foreground">
+                            {getPrimaryEmail(contact) ?? <MissingFieldBadge label={t('messaging.missingEmail')} />}
+                          </dd>
+                        </div>
+                      </dl>
+                    </DirectoryEntityCard>
+                  );
+                })}
+              </DirectoryCardsGrid>
+            </>
+          ) : (
+            <EmptyState
+              title={t('messaging.noMatchingRecipients')}
+              description={t('messaging.selectRecipientsDesc')}
+              compact
+              icon={null}
+            />
+          )}
+        </div>
+      ) : (
+        <>
+          <Table className="table-fixed text-xs">
+            <TableHeader>
+              <TableRow className="border-b border-border/60 hover:bg-muted/30">
+                <TableHead className="w-10 px-4 py-2 h-auto">
                   <Checkbox
-                    checked={Boolean(selectedById[String(contact.id)])}
-                    onCheckedChange={() => onToggleRecipient(contact)}
-                    aria-label={t('messaging.selectRecipient', { name: getDisplayName(contact) })}
+                    checked={someVisibleSelected ? 'indeterminate' : allVisibleSelected}
+                    onCheckedChange={onToggleAllVisible}
+                    aria-label={t('messaging.selectAllVisible')}
+                  />
+                </TableHead>
+              {(['recipient', 'phone', 'email'] as const).map((column) => (
+                <ModuleTableHeaderCell
+                  key={column}
+                  columnKey={column}
+                  width={getColumnWidth(column)}
+                  onResize={setColumnWidth}
+                  className="px-4 py-2"
+                >
+                  {column === 'recipient'
+                    ? t('messaging.recipient')
+                    : column === 'phone'
+                      ? t('contacts.form.primaryPhone')
+                      : t('contacts.form.primaryEmail')}
+                </ModuleTableHeaderCell>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
+            {contacts.map((contact) => {
+              const phone = getPrimaryPhone(contact);
+              const email = getPrimaryEmail(contact);
+              return (
+                <TableRow key={contact.id} className="hover:bg-muted/10">
+                  <TableCell className="px-4 py-2">
+                    <Checkbox
+                      checked={Boolean(selectedById[String(contact.id)])}
+                      onCheckedChange={() => onToggleRecipient(contact)}
+                      aria-label={t('messaging.selectRecipient', { name: getDisplayName(contact) })}
+                    />
+                  </TableCell>
+                  <TableCell className="px-4 py-2 font-medium text-foreground">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
+                        {getInitials(getDisplayName(contact))}
+                      </span>
+                      <span>{getDisplayName(contact)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-2 font-mono">
+                    {phone ?? <MissingFieldBadge label={t('messaging.missingPhone')} />}
+                  </TableCell>
+                  <TableCell className="px-4 py-2">
+                    {email ?? <MissingFieldBadge label={t('messaging.missingEmail')} />}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {contacts.length === 0 && (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={4} className="p-0">
+                  <EmptyState
+                    title={t('messaging.noMatchingRecipients')}
+                    description={t('messaging.selectRecipientsDesc')}
+                    compact
+                    icon={null}
                   />
                 </TableCell>
-                <TableCell className="px-4 py-2 font-medium text-foreground">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
-                      {getInitials(getDisplayName(contact))}
-                    </span>
-                    <span>{getDisplayName(contact)}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-2 font-mono">
-                  {phone || (
-                    <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-xs text-warning">
-                      {t('messaging.missingPhone')}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="px-4 py-2">
-                  {email || (
-                    <span className="rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-xs text-warning">
-                      {t('messaging.missingEmail')}
-                    </span>
-                  )}
-                </TableCell>
               </TableRow>
-            );
-          })}
-          {contacts.length === 0 && (
-            <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={4} className="p-0">
-                <EmptyState title={t('messaging.selectRecipientsDesc')} compact icon={null} />
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            )}
+          </TableBody>
+          </Table>
+          <ModuleTableFooterCount
+            selectedCount={selectedCount}
+            selectedCountLabel={String(selectedCountLabel)}
+            pageCountLabel={String(pageCountLabel)}
+          />
+        </>
       )}
     </div>
   );

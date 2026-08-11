@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { AlertTriangle, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -122,43 +123,41 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
   return (
     <WidgetCard ariaLabelledby="overdue-obligations-heading" accentColor="destructive">
-      <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 ps-6.5 bg-destructive/[0.06] border-b border-destructive/25 select-none">
-        <div className="flex min-w-0 items-center gap-2.5">
+      <WidgetCardHeader
+        variant="destructive"
+        headingId="overdue-obligations-heading"
+        icon={
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-destructive/15" aria-hidden="true">
             <AlertTriangle className="w-4 h-4 text-destructive animate-pulse" />
           </div>
-          <div className="min-w-0">
-            <h3 id="overdue-obligations-heading" className="truncate text-sm font-bold text-destructive m-0">
-              {title || t("dashboard.widgets.overdueObligations")}
-            </h3>
-            <p className="text-xs text-destructive/80 font-semibold mt-0.5 m-0 uppercase tracking-wider tabular-nums">
-              {t("dashboard.widgets.studentsCount", { count: filteredStudents.length })} · {formatCurrency(totalOverdue)} {t("finance.report.outstanding")}
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          {canWriteMessaging && (
+        }
+        title={title || t("dashboard.widgets.overdueObligations")}
+        subtitle={`${t("dashboard.widgets.studentsCount", { count: filteredStudents.length })} · ${formatCurrency(totalOverdue)} ${t("finance.report.outstanding")}`}
+        actions={
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {canWriteMessaging && (
+              <Button
+                variant="destructive"
+                onClick={handleRemindAll}
+                className="flex items-center gap-1.5 min-h-11 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors cursor-pointer"
+              >
+                <Bell className="w-3 h-3" aria-hidden="true" />
+                {t("dashboard.widgets.remindAll")}
+              </Button>
+            )}
             <Button
-              variant="destructive"
-              onClick={handleRemindAll}
-              className="flex items-center gap-1.5 min-h-11 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors cursor-pointer"
+              variant="ghost"
+              size="icon"
+              onClick={() => setExpanded((value) => !value)}
+              aria-expanded={expanded}
+              aria-label={t("dashboard.widgets.toggleOverdueList")}
+              className="rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none cursor-pointer"
             >
-              <Bell className="w-3 h-3" aria-hidden="true" />
-              {t("dashboard.widgets.remindAll")}
+              {expanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
             </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setExpanded((value) => !value)}
-            aria-expanded={expanded}
-            aria-label={t("dashboard.widgets.toggleOverdueList")}
-            className="rounded-lg hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors shadow-none cursor-pointer"
-          >
-            {expanded ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
-          </Button>
-        </div>
-      </header>
+          </div>
+        }
+      />
 
       <OverdueObligationsWidgetList
         expanded={expanded}

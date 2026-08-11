@@ -1,6 +1,9 @@
 import { AnimatePresence } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { WORK_STICKY_HEAD } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -9,8 +12,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { StudentListDesktopTableRow } from "@/tenant/features/students/components/StudentListDesktopTableRow";
-import type { StudentListTableProps } from "@/tenant/features/students/components/StudentListContentTypes";
+import type {
+  StudentListSortField,
+  StudentListTableProps,
+} from "@/tenant/features/students/components/StudentListContentTypes";
 import {
   getStudentVisibleWorkColumns,
   toStudentListSortField,
@@ -30,7 +37,8 @@ type StudentListDesktopTableProps = Pick<
   | "statusBadgeConfig"
   | "isColumnVisible"
   | "columnRegistry"
-  | "renderSortIcon"
+  | "sortField"
+  | "sortDir"
   | "onSort"
   | "onSelectAll"
   | "onSelectOne"
@@ -42,10 +50,6 @@ type StudentListDesktopTableProps = Pick<
   | "getColumnWidth"
   | "onColumnResize"
 >;
-
-const HEAD_CLASS =
-  "px-4 py-3 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide";
-const SORTABLE_HEAD_CLASS = `${HEAD_CLASS} cursor-pointer hover:text-foreground select-none`;
 
 export function StudentListDesktopTable({
   paginatedStudents,
@@ -60,7 +64,8 @@ export function StudentListDesktopTable({
   statusBadgeConfig,
   isColumnVisible,
   columnRegistry,
-  renderSortIcon,
+  sortField,
+  sortDir,
   onSort,
   onSelectAll,
   onSelectOne,
@@ -74,40 +79,53 @@ export function StudentListDesktopTable({
 }: StudentListDesktopTableProps) {
   const { t } = useTranslation();
   const visibleColumns = getStudentVisibleWorkColumns(columnRegistry, isColumnVisible);
+  const handleSort = (field: string) => onSort(field as StudentListSortField);
+
+  const pageCountLabel = formatDirectoryPageCountLabel(paginatedStudents.length, t, {
+    singular: "students.form.student",
+    plural: "students.table.students",
+  });
 
   return (
-    <Table className="table-fixed">
+    <>
+      <Table className="table-fixed">
       <TableHeader>
-        <TableRow className="border-b border-border/50 bg-muted/20 hover:bg-muted/20">
-          <TableHead className="w-10 px-4 py-3">
+        <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+          <TableHead
+            className={cn(
+              "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 border-e border-border/30 h-auto",
+              WORK_STICKY_HEAD,
+            )}
+          >
             <Checkbox
               checked={someSelected ? "indeterminate" : allSelected}
               onCheckedChange={onSelectAll}
               aria-label={allSelected ? t("common.deselect") : t("students.table.selectAll")}
+              className="cursor-pointer"
             />
           </TableHead>
-          {visibleColumns.map((col) => {
-            const sortField = toStudentListSortField(col.key);
-            return (
-              <ResizableTableHead
-                key={col.key}
-                columnKey={col.key}
-                width={getColumnWidth?.(col.key) ?? col.width}
-                onResize={onColumnResize}
-                onClick={sortField ? () => onSort(sortField) : undefined}
-                className={sortField ? SORTABLE_HEAD_CLASS : HEAD_CLASS}
-              >
-                {sortField ? (
-                  <div className="flex items-center gap-1">
-                    {col.label} {renderSortIcon(sortField)}
-                  </div>
-                ) : (
-                  col.label
-                )}
-              </ResizableTableHead>
-            );
-          })}
-          <TableHead className="px-4 py-3 w-12" />
+          {visibleColumns.map((col) => (
+            <ModuleTableHeaderCell
+              key={col.key}
+              columnKey={col.key}
+              sortKey={toStudentListSortField(col.key)}
+              activeSortField={sortField}
+              sortDir={sortDir}
+              onSort={handleSort}
+              width={getColumnWidth?.(col.key) ?? col.width}
+              onResize={onColumnResize}
+              className={cn(
+                col.key === "name" &&
+                  "sticky start-12 z-20 border-e border-border/30",
+                col.key === "name" && WORK_STICKY_HEAD,
+              )}
+            >
+              {col.label}
+            </ModuleTableHeaderCell>
+          ))}
+          <TableHead className="px-4 py-3 w-16 h-auto">
+            <span className="sr-only">{t("students.table.actions")}</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody className="divide-y divide-border/50">
@@ -137,5 +155,12 @@ export function StudentListDesktopTable({
         </AnimatePresence>
       </TableBody>
     </Table>
+
+    <ModuleTableFooterCount
+      selectedCount={selectedIds.length}
+      selectedCountLabel={t("students.selectedCount", { count: selectedIds.length })}
+      pageCountLabel={pageCountLabel}
+    />
+    </>
   );
 }

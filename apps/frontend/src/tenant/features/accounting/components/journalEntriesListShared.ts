@@ -12,15 +12,20 @@ export interface JournalEntriesListProps {
   entries: JournalEntry[];
   selectedIds: string[];
   canDelete: boolean;
-  allFilteredSelected: boolean;
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   isColumnVisible: (key: string) => boolean;
   journalStatusConfig: Record<string, StatusBadgeConfigItem>;
   grandDebit: number;
   grandCredit: number;
   formatAmount: (amount: number) => string;
+  /** Table row-actions renderer (shared overflow trigger). */
   renderEntryActions: (entry: JournalEntry) => ReactNode;
-  onToggleSelected: (id: string) => void;
-  onToggleAll: (checked: boolean) => void;
+  /** Cards row-actions renderer (directory-card overflow trigger). */
+  renderEntryActionsCards: (entry: JournalEntry) => ReactNode;
+  onView: (entry: JournalEntry) => void;
+  onToggleSelectedEntry: (id: string, checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
 }
@@ -33,15 +38,6 @@ export function getJournalEntryLineTotals(entry: JournalEntry): { totalDebit: nu
 
 export function getVisibleLeadingColumnCount(isColumnVisible: (key: string) => boolean): number {
   return JOURNAL_LEADING_COLUMN_KEYS.filter(isColumnVisible).length;
-}
-
-export function getJournalEntriesCountLabel(
-  entryCount: number,
-  t: TranslationFunction,
-): string {
-  return entryCount !== 1
-    ? t("accounting.journal.dashboard.entriesCount", { count: entryCount })
-    : t("accounting.journal.dashboard.entryCount", { count: entryCount });
 }
 
 export function isJournalBalanced(grandDebit: number, grandCredit: number): boolean {

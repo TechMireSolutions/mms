@@ -14,6 +14,7 @@ import {
   type Student,
 } from "@mms/shared";
 import { formatLocalizedRelationshipParts } from "@/lib/contacts/formatLocalizedRelationshipLabel";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
 import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
 import { useContactsByIds } from "@/tenant/hooks/collections/contacts";
@@ -105,8 +106,7 @@ export function StudentGuardianSection({
                   key={`${link.relationship}-${link.contactId ?? name}-${index}`}
                   label={label}
                   badgeCode={relationshipBadgeCode(display, emptyDash)}
-                  badgeBg="bg-info/15"
-                  badgeText="text-info"
+                  badgeTone={SEMANTIC_BADGE.infoStrong}
                   name={name}
                   phone={phone || undefined}
                 />

@@ -1,32 +1,8 @@
 import type { Dispatch, FormEvent, ReactNode, SetStateAction } from 'react';
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
 import type { JournalEntry } from '@/lib/data/accountingData';
-import {
-  getDirectoryPageSelection,
-  toggleIdInSelection,
-  togglePageIdsInSelection,
-} from '@/lib/directorySelection';
-import { JournalEntryActions } from '@/tenant/features/accounting/components/JournalEntryActions';
+import { JournalEntryRowActions } from '@/tenant/features/accounting/components/JournalEntryRowActions';
 import { parseNaturalLanguage, type QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
-
-export function createJournalSelectionHandlers(
-  filtered: JournalEntry[],
-  selectedIds: string[],
-  setSelectedIds: Dispatch<SetStateAction<string[]>>,
-) {
-  const pageIds = filtered.map((entry) => entry.id);
-
-  const toggleSelected = (id: string) => {
-    setSelectedIds((prev) => toggleIdInSelection(prev, id));
-  };
-
-  const toggleAllFiltered = (_checked: boolean) => {
-    setSelectedIds((prev) => togglePageIdsInSelection(prev, pageIds));
-  };
-
-  const { allSelected: allFilteredSelected } = getDirectoryPageSelection(pageIds, selectedIds);
-
-  return { toggleSelected, toggleAllFiltered, allFilteredSelected };
-}
 
 export function createJournalNlHandlers(
   nlInput: string,
@@ -61,17 +37,29 @@ interface JournalEntryActionsRendererDeps {
   setSelected: Dispatch<SetStateAction<JournalEntry | null>>;
   setModal: Dispatch<SetStateAction<'new' | 'edit' | 'view' | null>>;
   handlePost: (entry: JournalEntry) => void | Promise<void>;
-  handleDelete: (id: string) => void | Promise<void>;
+  requestRowTrash: (id: string) => void;
   handleReverse: (entry: JournalEntry) => void | Promise<void>;
 }
 
-export function createJournalEntryActionsRenderer(deps: JournalEntryActionsRendererDeps) {
+export interface JournalEntryActionsRendererOptions {
+  /** Shared overflow trigger class (table vs card variants). */
+  triggerClassName?: string;
+  /** Omit View when the card surface already exposes a View control. */
+  hideViewItem?: boolean;
+}
+
+export function createJournalEntryActionsRenderer(
+  deps: JournalEntryActionsRendererDeps,
+  options: JournalEntryActionsRendererOptions = {},
+) {
   return (entry: JournalEntry): ReactNode => (
-    <JournalEntryActions
+    <JournalEntryRowActions
       entry={entry}
       canWrite={deps.canWrite}
       canDelete={deps.canDelete}
       showDeleted={deps.showDeleted}
+      triggerClassName={options.triggerClassName ?? MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+      hideViewItem={options.hideViewItem}
       onView={(journalEntry) => {
         deps.setSelected(journalEntry);
         deps.setModal('view');
@@ -83,11 +71,11 @@ export function createJournalEntryActionsRenderer(deps: JournalEntryActionsRende
       onPost={(journalEntry) => {
         void deps.handlePost(journalEntry);
       }}
-      onDelete={(id) => {
-        void deps.handleDelete(id);
-      }}
       onReverse={(journalEntry) => {
         void deps.handleReverse(journalEntry);
+      }}
+      onTrashAction={(id) => {
+        deps.requestRowTrash(id);
       }}
     />
   );

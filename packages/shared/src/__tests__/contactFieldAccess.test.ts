@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  canEditContactField,
   canViewContactField,
   canViewContactTab,
 } from '../contactFieldAccess.js';
@@ -42,14 +41,6 @@ describe('contactFieldAccess', () => {
 
     it('returns false when the role is not in permissions', () => {
       expect(canViewContactField('viewer', makeField({ permissions: ['admin'] }))).toBe(false);
-    });
-  });
-
-  describe('canEditContactField', () => {
-    it('mirrors canViewContactField for the role', () => {
-      const field = makeField({ permissions: ['admin'] });
-      expect(canEditContactField('admin', field)).toBe(true);
-      expect(canEditContactField('teacher', field)).toBe(false);
     });
   });
 

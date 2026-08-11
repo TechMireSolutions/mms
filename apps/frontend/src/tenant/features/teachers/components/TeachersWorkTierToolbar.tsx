@@ -1,11 +1,6 @@
-import { Filter } from "lucide-react";
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
-import {
-  ModuleFilterCheckboxGroup,
-  ModuleFilterDropdown,
-  ModuleFilterRadioGroup,
-} from "@/components/ui/ModuleFiltersMenuButton";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
@@ -13,8 +8,8 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { teacherStatusOptions } from "@/lib/teachers/teacherStatusUi";
 import { TEACHERS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts";
+import { TeachersFilterMenuButton } from "@/tenant/features/teachers/components/TeachersFilterMenuButton";
 
 interface TeachersWorkTierToolbarProps {
   search: string;
@@ -24,8 +19,12 @@ interface TeachersWorkTierToolbarProps {
   specializationOptions: string[];
   showDeleted: boolean;
   canDelete: boolean;
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
+  shownCount?: number;
   columnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
+  onResetLayout: () => void;
   customizerLabels: ModuleColumnCustomizerLabels;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
@@ -43,8 +42,12 @@ export function TeachersWorkTierToolbar({
   specializationOptions,
   showDeleted,
   canDelete,
+  hasActiveFilters,
+  onClearFilters,
+  shownCount,
   columnRegistry,
   updateUserColumnLayout,
+  onResetLayout,
   customizerLabels,
   viewMode,
   onViewModeChange,
@@ -56,64 +59,65 @@ export function TeachersWorkTierToolbar({
   const { t } = useTranslation();
 
   return (
-    <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
-      <SearchBar
-        id={TEACHERS_WORK_SEARCH_INPUT_ID}
-        value={search}
-        onChange={onSearchChange}
-        placeholder={t("teachers.searchPlaceholder")}
-        className="flex-1"
-      />
+    <>
+      <div className="sr-only" role="status" aria-live="polite">
+        {shownCount != null ? t("teachers.shownCount", { count: shownCount }) : ""}
+      </div>
 
-      <ModuleFilterDropdown
-        label={t("teachers.filter.status")}
-        activeCount={filterStatus.length}
-        icon={Filter}
-        contentClassName="w-44"
-      >
-        <ModuleFilterCheckboxGroup
-          label={t("teachers.filter.status")}
-          options={teacherStatusOptions(t, statusOptions)}
-          selected={filterStatus}
-          onToggle={onToggleStatus}
-        />
-      </ModuleFilterDropdown>
+      <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
+        <div className="relative min-w-0 flex-1">
+          <SearchBar
+            id={TEACHERS_WORK_SEARCH_INPUT_ID}
+            value={search}
+            onChange={onSearchChange}
+            placeholder={t("teachers.searchPlaceholder")}
+            className="w-full min-w-0"
+          />
+          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
+            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
+              /
+            </kbd>
+          </div>
+        </div>
 
-      <ModuleFilterDropdown
-        label={filterSpecialization || t("teachers.filter.specialization")}
-        activeCount={filterSpecialization ? 1 : 0}
-        contentClassName="w-48"
-      >
-        <ModuleFilterRadioGroup
-          label={t("teachers.filter.specialization")}
-          value={filterSpecialization}
-          onValueChange={onSpecializationChange}
-          options={[
-            { value: "", label: t("teachers.filter.allSpecializations") },
-            ...specializationOptions.map((specialization) => ({
-              value: specialization,
-              label: specialization,
-            })),
-          ]}
-        />
-      </ModuleFilterDropdown>
+        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+          <TeachersFilterMenuButton
+            filterStatus={filterStatus}
+            filterSpecialization={filterSpecialization}
+            statusOptions={statusOptions}
+            specializationOptions={specializationOptions}
+            activeFilterCount={filterStatus.length + (filterSpecialization ? 1 : 0)}
+            onToggleStatus={onToggleStatus}
+            onSpecializationChange={onSpecializationChange}
+            onClearFilters={onClearFilters}
+          />
 
-      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+          {hasActiveFilters ? (
+            <ModuleClearFiltersButton
+              onClearFilters={onClearFilters}
+              label={t("teachers.clearFilters")}
+            />
+          ) : null}
 
-      <ModuleColumnCustomizer
-        columnRegistry={columnRegistry}
-        updateUserColumnLayout={updateUserColumnLayout}
-        labels={customizerLabels}
-      />
+          {canDelete && (
+            <ModuleTrashToggle
+              showDeleted={showDeleted}
+              onToggle={onToggleDeleted}
+              showActiveLabel={t("teachers.showActive")}
+              showDeletedLabel={t("teachers.showDeleted")}
+            />
+          )}
 
-      {canDelete && (
-        <ModuleTrashToggle
-          showDeleted={showDeleted}
-          onToggle={onToggleDeleted}
-          showActiveLabel={t("teachers.showActive")}
-          showDeletedLabel={t("teachers.showDeleted")}
-        />
-      )}
-    </div>
+          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+
+          <ModuleColumnCustomizer
+            columnRegistry={columnRegistry}
+            updateUserColumnLayout={updateUserColumnLayout}
+            onResetLayout={onResetLayout}
+            labels={customizerLabels}
+          />
+        </div>
+      </div>
+    </>
   );
 }

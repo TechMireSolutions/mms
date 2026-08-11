@@ -1,12 +1,10 @@
 import { useMemo, useRef, lazy, Suspense } from "react";
-import { Lock } from "lucide-react";
 import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { shouldOpenContactsSyncSetup } from "@/lib/contacts/googleContactsOAuth";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import type { Contact } from "@mms/shared";
@@ -15,15 +13,6 @@ import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspense
 
 const ContactsSetupPanel = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupPanel"));
 const ContactSyncPanel = lazy(() => import("@/tenant/features/contacts/components/ContactSyncPanel"));
-
-function SetupReadOnlyMessage(): JSX.Element {
-  const { t } = useTranslation();
-  return (
-    <div className={`${WORK_SURFACE} border-border/40 p-6`}>
-      <EmptyState variant="dashed" icon={Lock} title={t("contacts.setupReadOnly")} />
-    </div>
-  );
-}
 
 interface ContactsSettingsPanelProps {
   onImport: (list: Contact[]) => void | Promise<void>;
@@ -104,7 +93,7 @@ export default function ContactsSettingsPanel({
               onFieldsDirtyChange={setFieldsDirty}
             />
           ) : (
-            <SetupReadOnlyMessage />
+            <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
           ))}
         {subTabs.showPrefs &&
           (canEditSetup ? (
@@ -116,7 +105,7 @@ export default function ContactsSettingsPanel({
               onPrefsDirtyChange={setPrefsDirty}
             />
           ) : (
-            <SetupReadOnlyMessage />
+            <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
           ))}
         {subTabs.showSync && (
           // Sync mutates contacts + OAuth secrets — gate on contacts.write (canWrite),

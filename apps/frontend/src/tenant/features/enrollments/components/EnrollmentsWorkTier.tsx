@@ -3,6 +3,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { EnrollmentsBulkActionBar } from "@/tenant/features/enrollments/components/EnrollmentsBulkActionBar";
 import { EligibilityCheck } from "@/tenant/features/enrollments/components/EligibilityCheck";
 import { EnrollmentList } from "@/tenant/features/enrollments/components/EnrollmentList";
 import type { Enrollment } from "@/lib/data/enrollmentData";
@@ -29,7 +30,12 @@ interface EnrollmentsWorkTierProps {
   sessionFilter: string;
   canWrite: boolean;
   canDelete: boolean;
+  canExport: boolean;
+  canSelectEnrollments: boolean;
   showDeleted: boolean;
+  selectedIds: string[];
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   isWorkListError: boolean;
   loadFailedTitle: string;
   onSubTabChange: (next: string) => void;
@@ -38,11 +44,19 @@ interface EnrollmentsWorkTierProps {
   onSearchChange: (search: string) => void;
   onStatusFilterChange: (status: string) => void;
   onSessionFilterChange: (sessionId: string) => void;
+  onClearFilters: () => void;
   onPageChange: (page: number) => void;
   onView: (enrollment: Enrollment) => void;
   onCancel: (id: string) => void;
   onDeleteRequest: (id: string) => void;
   onRestore: (id: string) => void;
+  onToggleSelectAll: (checked: boolean) => void;
+  onToggleSelectedEnrollment: (id: string, checked: boolean) => void;
+  onClearSelection: () => void;
+  onRequestBulkDelete: () => void;
+  onRequestBulkRestore: () => void;
+  onRequestBulkCancel: () => void;
+  onBulkExport: () => void;
   columnProps: EnrollmentColumnProps;
 }
 
@@ -58,7 +72,12 @@ export function EnrollmentsWorkTier({
   sessionFilter,
   canWrite,
   canDelete,
+  canExport,
+  canSelectEnrollments,
   showDeleted,
+  selectedIds,
+  allVisibleSelected,
+  someVisibleSelected,
   isWorkListError,
   loadFailedTitle,
   onSubTabChange,
@@ -67,11 +86,19 @@ export function EnrollmentsWorkTier({
   onSearchChange,
   onStatusFilterChange,
   onSessionFilterChange,
+  onClearFilters,
   onPageChange,
   onView,
   onCancel,
   onDeleteRequest,
   onRestore,
+  onToggleSelectAll,
+  onToggleSelectedEnrollment,
+  onClearSelection,
+  onRequestBulkDelete,
+  onRequestBulkRestore,
+  onRequestBulkCancel,
+  onBulkExport,
   columnProps,
 }: EnrollmentsWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -95,28 +122,49 @@ export function EnrollmentsWorkTier({
               onRetry={onRetry}
             />
           ) : (
-            <EnrollmentList
-              enrollments={enrollments}
-              total={total}
-              page={page}
-              pageSize={pageSize}
-              search={search}
-              statusFilter={statusFilter}
-              sessionFilter={sessionFilter}
-              canWrite={canWrite}
-              canDelete={canDelete}
-              showDeleted={showDeleted}
-              onShowDeletedChange={onShowDeletedChange}
-              onSearchChange={onSearchChange}
-              onStatusFilterChange={onStatusFilterChange}
-              onSessionFilterChange={onSessionFilterChange}
-              onPageChange={onPageChange}
-              onView={onView}
-              onCancel={onCancel}
-              onDelete={onDeleteRequest}
-              onRestore={onRestore}
-              {...columnProps}
-            />
+            <>
+              <EnrollmentsBulkActionBar
+                selectedCount={selectedIds.length}
+                showDeleted={showDeleted}
+                canDelete={canDelete}
+                canCancel={canWrite}
+                canExport={canExport}
+                onRequestBulkDelete={onRequestBulkDelete}
+                onRequestBulkRestore={onRequestBulkRestore}
+                onRequestBulkCancel={onRequestBulkCancel}
+                onClearSelection={onClearSelection}
+                onBulkExport={onBulkExport}
+              />
+              <EnrollmentList
+                enrollments={enrollments}
+                total={total}
+                page={page}
+                pageSize={pageSize}
+                search={search}
+                statusFilter={statusFilter}
+                sessionFilter={sessionFilter}
+                canWrite={canWrite}
+                canDelete={canDelete}
+                canSelectEnrollments={canSelectEnrollments}
+                showDeleted={showDeleted}
+                selectedIds={selectedIds}
+                allVisibleSelected={allVisibleSelected}
+                someVisibleSelected={someVisibleSelected}
+                onShowDeletedChange={onShowDeletedChange}
+                onSearchChange={onSearchChange}
+                onStatusFilterChange={onStatusFilterChange}
+                onSessionFilterChange={onSessionFilterChange}
+                onClearFilters={onClearFilters}
+                onPageChange={onPageChange}
+                onView={onView}
+                onCancel={onCancel}
+                onDelete={onDeleteRequest}
+                onRestore={onRestore}
+                onToggleSelectAll={onToggleSelectAll}
+                onToggleSelectedEnrollment={onToggleSelectedEnrollment}
+                {...columnProps}
+              />
+            </>
           )}
         </ErrorBoundary>
       )}

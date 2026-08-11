@@ -36,7 +36,7 @@ describe('students deferred DB migrations (source)', () => {
 describe('students sync integrity (source)', () => {
   it('migrate-GR wraps saveStudent with unique conflict mapping', () => {
     const src = readFileSync(
-      join(process.cwd(), 'src/services/studentServiceGr.ts'),
+      join(process.cwd(), 'src/students/use-cases/studentOperationUseCases.ts'),
       'utf8',
     );
     expect(src).toMatch(/migrateStudentsMissingGrNumbers[\s\S]*throwGrUniqueConflict/);

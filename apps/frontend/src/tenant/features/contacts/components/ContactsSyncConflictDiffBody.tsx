@@ -4,7 +4,9 @@ import type { Contact, SyncFieldPick } from "@mms/shared";
 import { resolveSyncFieldLabel } from "@/lib/contacts/contactI18n";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { Button } from "@/components/ui/button";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import {
+  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -68,7 +70,7 @@ export function ContactsSyncConflictDiffBody({
             {diffs.map((diff) => (
               <article
                 key={diff.field}
-                className="space-y-2 rounded-xl border border-border bg-card p-3"
+                className={`${WORK_SURFACE_INNER} space-y-2 p-3`}
               >
                 <p className="text-xs font-semibold text-foreground">{resolveSyncFieldLabel(diff.field, t)}</p>
                 <div className="space-y-2">
@@ -98,8 +100,8 @@ export function ContactsSyncConflictDiffBody({
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block max-w-full">
-            <table className="w-full text-xs">
+          <div className="hidden md:block max-w-full">
+            <Table className="w-full text-xs">
               <TableHeader>
                 <TableRow className="text-muted-foreground border-0 hover:bg-transparent">
                   <TableHead className="text-start py-1 pe-2 font-medium h-auto">
@@ -142,7 +144,7 @@ export function ContactsSyncConflictDiffBody({
                   </TableRow>
                 ))}
               </TableBody>
-            </table>
+            </Table>
           </div>
         </>
       ) : local ? (

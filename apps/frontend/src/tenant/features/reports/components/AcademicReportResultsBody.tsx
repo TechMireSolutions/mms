@@ -1,8 +1,16 @@
 import React from "react";
 import { Trophy } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import type { AcademicResultItem } from "./academicReportTypes";
@@ -27,21 +35,21 @@ export function AcademicReportResultsBody({
 }: AcademicReportResultsBodyProps): React.JSX.Element {
   const { t } = useTranslation();
   const headers = [
-    t("examinations.report.colRank"),
-    t("examinations.report.colStudent"),
-    t("examinations.report.colClass"),
-    t("examinations.report.colSubject"),
-    t("examinations.report.colMarks"),
-    t("examinations.report.colGrade"),
+    { key: "rank", label: t("examinations.report.colRank") },
+    { key: "student", label: t("examinations.report.colStudent") },
+    { key: "class", label: t("examinations.report.colClass") },
+    { key: "subject", label: t("examinations.report.colSubject") },
+    { key: "marks", label: t("examinations.report.colMarks") },
+    { key: "grade", label: t("examinations.report.colGrade") },
   ];
 
   return (
-    <Card className="overflow-hidden">
+    <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">
         {academicResults.map((academicResult) => (
           <article
             key={`${academicResult.studentName}-${academicResult.class}`}
-            className="space-y-3 rounded-xl border border-border bg-card p-3"
+            className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
@@ -89,34 +97,35 @@ export function AcademicReportResultsBody({
           </article>
         ))}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              {headers.map((headerLabel) => (
-                <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {headerLabel}
-                </th>
+      <div className="hidden md:block">
+        <Table>
+          <caption className="sr-only">{t("examinations.report.examResultsTitle")}</caption>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              {headers.map((header) => (
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">
+                  {header.label}
+                </ModuleTableHeaderCell>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
             {academicResults.map((academicResult) => (
-              <tr key={`${academicResult.studentName}-${academicResult.class}`} className="hover:bg-muted/30">
-                <td className="px-3 py-2.5">
+              <TableRow key={`${academicResult.studentName}-${academicResult.class}`} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="px-3 py-2.5">
                   {academicResult.rank === 1 ? (
                     <Trophy className="w-4 h-4 text-warning" />
                   ) : (
                     <span className="text-muted-foreground">{academicResult.rank}</span>
                   )}
-                </td>
-                <td className="px-3 py-2.5 font-medium">{academicResult.studentName}</td>
-                <td className="px-3 py-2.5 text-muted-foreground">{academicResult.class}</td>
-                <td className="px-3 py-2.5 text-muted-foreground">{academicResult.subject}</td>
-                <td className="px-3 py-2.5 font-semibold">
+                </TableCell>
+                <TableCell className="px-3 py-2.5 font-medium">{academicResult.studentName}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground">{academicResult.class}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground">{academicResult.subject}</TableCell>
+                <TableCell className="px-3 py-2.5 font-semibold">
                   {academicResult.marks}/{academicResult.total}
-                </td>
-                <td className="px-3 py-2.5">
+                </TableCell>
+                <TableCell className="px-3 py-2.5">
                   <StatusBadge
                     status={academicResult.grade}
                     size="sm"
@@ -127,13 +136,13 @@ export function AcademicReportResultsBody({
                       },
                     }}
                   />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-    </Card>
+    </div>
   );
 }
 

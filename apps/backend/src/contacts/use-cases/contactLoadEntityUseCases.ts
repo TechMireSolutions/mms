@@ -5,6 +5,7 @@ import type {
   ContactsListPageResult,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
+import { loadDuplicatePairsPage } from '../../services/contactDuplicateScanService.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 
@@ -39,16 +40,43 @@ export async function loadContactsByIds(
   if (ids.length === 0) return [];
   const tenant = getRequestTenant();
   if (!tenant) return [];
+  return loadContactsByIdsForTenant(tenant, ids, repo);
+}
+
+/** Tenant-parameterized variant for cross-module services (e.g. Messaging recipients). */
+export async function loadContactsByIdsForTenant(
+  tenant: string,
+  ids: string[],
+  repo: ContactsRepository = contactsRepository,
+): Promise<Contact[]> {
+  if (ids.length === 0) return [];
   const matched = await repo.findByIds(tenant, ids);
   return matched.filter((contact) => !contact.deletedAt);
+}
+
+export async function loadContactsPageForTenant(
+  tenant: string,
+  query: ContactsListQuery,
+  repo: ContactsRepository = contactsRepository,
+): Promise<ContactsListPageResult> {
+  return repo.listPage(tenant, query);
 }
 
 export async function loadContactDuplicatePairsPage(
   query: { page?: number; limit?: number },
   repo: ContactsRepository = contactsRepository,
 ): Promise<ContactsDuplicatePairsPageResult> {
-  const { loadDuplicatePairsPage } = await import('../../services/contactDuplicateScanService.js');
   return loadDuplicatePairsPage(query, repo);
+}
+
+/** Existing normalized contact names (Google sync dedupe) via SQL — no full-set hydrate. */
+export async function loadExistingNormalizedContactNames(
+  names: string[],
+  repo: ContactsRepository = contactsRepository,
+): Promise<Set<string>> {
+  const tenant = getRequestTenant();
+  if (!tenant || names.length === 0) return new Set<string>();
+  return repo.findExistingNormalizedContactNames(tenant, names);
 }
 
 export async function getContactById(

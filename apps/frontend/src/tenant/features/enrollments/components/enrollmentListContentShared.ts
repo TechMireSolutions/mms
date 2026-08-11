@@ -1,3 +1,4 @@
+import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Enrollment } from "@/lib/data/enrollmentData";
@@ -13,6 +14,11 @@ export interface EnrollmentListContentProps {
   pageSize: number;
   students: Student[];
   isColumnVisible: (key: string) => boolean;
+  columnRegistry: ModuleColumnRegistryEntry[];
+  canSelectEnrollments: boolean;
+  selectedIds: string[];
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
@@ -26,6 +32,8 @@ export interface EnrollmentListContentProps {
   onCancel: (id: string) => void;
   onDelete?: (id: string) => void;
   onRestore?: (id: string) => void;
+  onToggleSelectAll: (checked: boolean) => void;
+  onToggleSelectedEnrollment: (id: string, checked: boolean) => void;
   openComposer: (channel: EnrollmentMessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 

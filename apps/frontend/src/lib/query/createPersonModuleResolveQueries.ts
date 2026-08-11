@@ -14,8 +14,10 @@ export function createPersonModuleResolveQueries<TRecord, THydrated>(options: {
   apiBase: string;
   responseKey: string;
   toHydrated: (rows: TRecord[]) => THydrated[];
+  /** When set, ids are chunked into sequential POSTs (large picker batches). */
+  chunkSize?: number;
 }) {
-  const { moduleQueryKey, apiBase, responseKey, toHydrated } = options;
+  const { moduleQueryKey, apiBase, responseKey, toHydrated, chunkSize } = options;
 
   function useLinkedContactIds(excludeId?: string, enabled = true) {
     const { isAuthenticated } = useAuth();
@@ -42,12 +44,23 @@ export function createPersonModuleResolveQueries<TRecord, THydrated>(options: {
     return useQuery({
       queryKey: [...moduleQueryKey, 'resolve', signature] as const,
       queryFn: async ({ signal }) => {
-        const response = await apiJson<Record<string, TRecord[]>>(`${apiBase}/resolve`, {
-          method: 'POST',
-          body: JSON.stringify({ ids: normalized }),
-          signal,
-        });
-        return toHydrated((response[responseKey] ?? []) as TRecord[]);
+        const hydrated: THydrated[] = [];
+        const resolveChunk = async (chunk: string[]) => {
+          const response = await apiJson<Record<string, TRecord[]>>(`${apiBase}/resolve`, {
+            method: 'POST',
+            body: JSON.stringify({ ids: chunk }),
+            signal,
+          });
+          hydrated.push(...toHydrated((response[responseKey] ?? []) as TRecord[]));
+        };
+        if (chunkSize) {
+          for (let index = 0; index < normalized.length; index += chunkSize) {
+            await resolveChunk(normalized.slice(index, index + chunkSize));
+          }
+        } else {
+          await resolveChunk(normalized);
+        }
+        return hydrated;
       },
       enabled: isAuthenticated && normalized.length > 0,
       staleTime: 30_000,

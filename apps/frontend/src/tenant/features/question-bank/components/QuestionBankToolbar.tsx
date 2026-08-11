@@ -1,18 +1,21 @@
 import type { Dispatch, JSX, SetStateAction } from 'react';
-import { Filter, Plus, Search, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  ModuleFilterCheckboxGroup,
-  ModuleFilterDropdown,
-} from '@/components/ui/ModuleFiltersMenuButton';
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
+import { ModuleClearFiltersButton } from '@/components/ui/ModuleClearFiltersButton';
+import { FilterChips } from '@/components/ui/FilterChips';
+import { SearchBar } from '@/components/ui/SearchBar';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
+import { QuestionBankFiltersMenuButton } from '@/tenant/features/question-bank/components/QuestionBankFiltersMenuButton';
 import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 
 type QuestionBankConfig = ReturnType<typeof useQuestionBankConfig>;
+
+export const QUESTION_BANK_WORK_SEARCH_INPUT_ID = 'question-bank-work-search';
 
 interface QuestionBankToolbarProps {
   viewMode: WorkDirectoryViewMode;
@@ -61,89 +64,86 @@ export function QuestionBankToolbar({
         ? previous.filter((id) => id !== difficulty)
         : [...previous, difficulty],
     );
+  const clearFilters = () => {
+    onFilterCatsChange([]);
+    onFilterDiffChange([]);
+  };
+  const activeFilterCount = filterCats.length + filterDiff.length;
+
+  const categoryChips = filterCats.map((categoryId) => {
+    const category = config.categories.find((item) => item.id === categoryId);
+    return {
+      key: `category:${categoryId}`,
+      label: category ? `${category.icon} ${category.name}` : categoryId,
+      onRemove: () => toggleCategory(categoryId),
+    };
+  });
+  const difficultyChips = filterDiff.map((difficulty) => ({
+    key: `difficulty:${difficulty}`,
+    label: config.difficultyLabel(difficulty),
+    onRemove: () => toggleDifficulty(difficulty),
+  }));
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
-      <div className="relative min-w-0 flex-1">
-        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <Input
-          type="search"
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={t('questionBank.searchPlaceholder')}
-          aria-label={t('questionBank.searchPlaceholder')}
-          className="w-full rounded-xl border border-border bg-card py-2.5 ps-10 pe-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
-        />
-        {search && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onSearchChange('')}
-            aria-label={t('questionBank.clearSearch')}
-            className="absolute end-3 top-1/2 min-h-11 min-w-11 -translate-y-1/2 text-muted-foreground hover:bg-transparent"
-          >
-            <X className="h-3.5 w-3.5" aria-hidden />
-          </Button>
-        )}
+    <>
+      <div className={cn(WORK_SURFACE, 'flex flex-col gap-3 p-3 sm:flex-row')}>
+        <div className="relative min-w-0 flex-1">
+          <SearchBar
+            id={QUESTION_BANK_WORK_SEARCH_INPUT_ID}
+            value={search}
+            onChange={onSearchChange}
+            placeholder={t('questionBank.searchPlaceholder')}
+            className="w-full min-w-0"
+          />
+          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
+            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
+              /
+            </kbd>
+          </div>
+        </div>
+
+        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+          <QuestionBankFiltersMenuButton
+            config={config}
+            filterCats={filterCats}
+            filterDiff={filterDiff}
+            activeFilterCount={activeFilterCount}
+            onToggleCategory={toggleCategory}
+            onToggleDifficulty={toggleDifficulty}
+            onClearFilters={clearFilters}
+          />
+
+          {activeFilterCount > 0 ? (
+            <ModuleClearFiltersButton
+              onClearFilters={clearFilters}
+              label={t('questionBank.clearFilters')}
+            />
+          ) : null}
+
+          {!hideToolbarAdd && canWrite && !showDeleted && (
+            <Button
+              type="button"
+              onClick={onAddQuestion}
+              className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              {t('questionBank.addQuestion')}
+            </Button>
+          )}
+
+          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+
+          {columnCustomizer && (
+            <ModuleColumnCustomizer
+              columnRegistry={columnCustomizer.columnRegistry}
+              updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
+              labels={columnCustomizer.labels}
+            />
+          )}
+        </div>
       </div>
-      {config.isFieldEnabled('categoryId') && config.categories.length > 0 && (
-        <ModuleFilterDropdown
-          label={t('questionBank.category')}
-          activeCount={filterCats.length}
-          icon={Filter}
-          clearLabel={t('common.clearFilters')}
-          onClear={() => onFilterCatsChange([])}
-          contentClassName="w-48"
-        >
-          <ModuleFilterCheckboxGroup
-            label={t('questionBank.filterByCategory')}
-            options={config.categories.map((category) => ({
-              value: category.id,
-              label: `${category.icon} ${category.name}`,
-            }))}
-            selected={filterCats}
-            onToggle={toggleCategory}
-          />
-        </ModuleFilterDropdown>
-      )}
-      {config.isFieldEnabled('difficulty') && config.enabledDifficulties.length > 0 && (
-        <ModuleFilterDropdown
-          label={t('questionBank.filterDifficulty')}
-          activeCount={filterDiff.length}
-          icon={Filter}
-          clearLabel={t('common.clearFilters')}
-          onClear={() => onFilterDiffChange([])}
-          contentClassName="w-36"
-        >
-          <ModuleFilterCheckboxGroup
-            label={t('questionBank.filterDifficulty')}
-            options={config.enabledDifficulties.map((difficulty) => ({
-              value: difficulty,
-              label: config.difficultyLabel(difficulty),
-            }))}
-            selected={filterDiff}
-            onToggle={toggleDifficulty}
-          />
-        </ModuleFilterDropdown>
-      )}
-      {!hideToolbarAdd && canWrite && !showDeleted && (
-        <Button
-          type="button"
-          onClick={onAddQuestion}
-          className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden />
-          {t('questionBank.addQuestion')}
-        </Button>
-      )}
-      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      {columnCustomizer && (
-        <ModuleColumnCustomizer
-          columnRegistry={columnCustomizer.columnRegistry}
-          updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-          labels={columnCustomizer.labels}
-        />
-      )}
-    </div>
+
+      <FilterChips chips={[...categoryChips, ...difficultyChips]} onClearAll={clearFilters} />
+    </>
   );
 }

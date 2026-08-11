@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_LABEL, WORK_SURFACE } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,7 +17,7 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
   const { t } = useTranslation();
 
   return (
-    <section className="rounded-xl border border-border bg-card p-3 sm:p-4">
+    <section className={`${WORK_SURFACE} p-3 sm:p-4`}>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
         <div className="sm:col-span-2">
           <label htmlFor="paper-name" className={FORM_LABEL}>{t("questionBank.paperName")}</label>

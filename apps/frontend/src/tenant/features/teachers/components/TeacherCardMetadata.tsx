@@ -1,6 +1,5 @@
 import type { ModuleColumnRegistryEntry, Teacher, TeacherCustomField } from "@mms/shared";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getTeacherVisibleWorkColumns } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
@@ -14,7 +13,7 @@ export interface TeacherCardMetadataProps {
   statusConfig: Record<string, StatusBadgeConfigItem>;
 }
 
-/** Teachers domain metadata tiles — Contacts card metadata chrome. */
+/** Teachers domain metadata tiles — Contacts/Students card metadata chrome. */
 export function TeacherCardMetadata({
   teacher,
   isColumnVisible,
@@ -27,20 +26,20 @@ export function TeacherCardMetadata({
     excludeFace: true,
   });
 
-  if (metaColumns.length === 0) return null;
-
   return (
-    <DirectoryCardMetaGrid>
-      {metaColumns.map((col) => (
-        <DirectoryCardMetaTile key={col.key} label={col.label}>
-          {renderTeacherWorkColumnValue(teacher, col.key, {
-            t,
-            statusConfig,
-            customFieldsById,
-            statusBadgeSize: "sm",
-          })}
-        </DirectoryCardMetaTile>
-      ))}
-    </DirectoryCardMetaGrid>
+    <DirectoryCardMetadata
+      columns={metaColumns}
+      keyFor={(col) => col.key}
+      labelFor={(col) => col.label}
+      renderValue={(col) =>
+        renderTeacherWorkColumnValue(teacher, col.key, {
+          t,
+          statusConfig,
+          customFieldsById,
+          statusBadgeSize: "sm",
+          emptyFallback: null,
+        })
+      }
+    />
   );
 }

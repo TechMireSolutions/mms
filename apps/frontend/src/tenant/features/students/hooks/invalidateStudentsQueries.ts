@@ -1,10 +1,10 @@
 import { createModuleQueryInvalidator } from '@/lib/query/createModuleQueryInvalidator';
-import { STUDENT_COUNT_QUERY_KEY } from '@/tenant/features/students/hooks/useStudentCount';
 import {
   STUDENTS_FIELD_CONFIG_QUERY_KEY,
   STUDENTS_PREFERENCES_QUERY_KEY,
 } from '@/tenant/features/students/hooks/useStudentSetupConfig';
 import {
+  STUDENT_COUNT_QUERY_KEY,
   STUDENTS_METRICS_QUERY_KEY,
   STUDENTS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,

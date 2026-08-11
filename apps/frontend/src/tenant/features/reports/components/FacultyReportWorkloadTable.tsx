@@ -1,5 +1,14 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import type { FacultyWorkloadItem } from "@/tenant/features/reports/components/useFacultyReportData";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -19,12 +28,12 @@ export function FacultyReportWorkloadTable({
   const maxClasses = Math.max(...rows.map((row) => row.classes), 1);
 
   return (
-    <>
+    <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">
         {rows.map((faculty) => (
           <article
             key={faculty.faculty}
-            className={`space-y-3 rounded-xl border border-border bg-card p-3 ${selectedFaculty === faculty.faculty ? "ring-1 ring-primary/20" : ""}`}
+            className={`${WORK_SURFACE_INNER} space-y-3 p-3 ${selectedFaculty === faculty.faculty ? "ring-1 ring-primary/20" : ""}`}
           >
             <Button
               type="button"
@@ -63,27 +72,28 @@ export function FacultyReportWorkloadTable({
           </article>
         ))}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
+      <div className="hidden md:block">
+        <Table>
+          <caption className="sr-only">{t("teachers.report.workloadReportTitle")}</caption>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
               {[
-                t("teachers.report.colFaculty"),
-                t("teachers.report.colClasses"),
-                t("teachers.report.colSessions"),
-                t("teachers.report.colStudents"),
-              ].map((heading) => (
-                <th key={heading} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{heading}</th>
+                { key: "faculty", label: t("teachers.report.colFaculty") },
+                { key: "classes", label: t("teachers.report.colClasses") },
+                { key: "sessions", label: t("teachers.report.colSessions") },
+                { key: "students", label: t("teachers.report.colStudents") },
+              ].map((header) => (
+                <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
             {rows.map((faculty) => (
-              <tr
+              <TableRow
                 key={faculty.faculty}
-                className={`hover:bg-muted/30 ${selectedFaculty === faculty.faculty ? "bg-primary/10" : ""}`}
+                className={`hover:bg-muted/20 transition-colors ${selectedFaculty === faculty.faculty ? "bg-primary/10" : ""}`}
               >
-                <td className="px-3 py-3 font-medium">
+                <TableCell className="px-3 py-2.5 font-medium">
                   <Button
                     type="button"
                     variant="ghost"
@@ -94,8 +104,8 @@ export function FacultyReportWorkloadTable({
                   >
                     {faculty.faculty}
                   </Button>
-                </td>
-                <td className="px-3 py-3">
+                </TableCell>
+                <TableCell className="px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 w-16 rounded-full bg-muted">
                       <div
@@ -105,14 +115,14 @@ export function FacultyReportWorkloadTable({
                     </div>
                     <span className="text-xs font-bold text-foreground">{faculty.classes}</span>
                   </div>
-                </td>
-                <td className="px-3 py-3 text-muted-foreground">{faculty.sessions}</td>
-                <td className="px-3 py-3 font-semibold text-foreground">{faculty.totalStudents}</td>
-              </tr>
+                </TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground">{faculty.sessions}</TableCell>
+                <TableCell className="px-3 py-2.5 font-semibold text-foreground">{faculty.totalStudents}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-    </>
+    </div>
   );
 }

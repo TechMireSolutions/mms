@@ -1,5 +1,10 @@
 import type { Teacher } from '@mms/shared';
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
+import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import {
+  DirectoryCardSubtitleStack,
+  PersonIdentityMeta,
+} from "@/components/ui/PersonIdentityMeta";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface TeacherCardHeaderProps {
@@ -30,6 +35,7 @@ export function TeacherCardHeader({
     <DirectoryCardHeader
       id={teacherId}
       displayName={displayName}
+      avatar={teacher.avatar}
       isSelected={isSelected}
       showSelect={showSelectColumn}
       onSelect={() => onSelectOne(teacherId)}
@@ -38,11 +44,17 @@ export function TeacherCardHeader({
       viewAriaLabel={`${t("teachers.list.viewDetails")} - ${displayName}`}
       reducedMotion={reducedMotion}
       subtitle={
-        teacher.employeeId ? (
-          <p className="mt-0.5 text-xs font-semibold text-muted-foreground truncate">
-            {teacher.employeeId}
-          </p>
-        ) : undefined
+        <DirectoryCardSubtitleStack>
+          {teacher.employeeId ? (
+            <FormFooterBadge
+              tone="muted"
+              className="mt-1 max-w-full px-1.5 py-0.5 rounded font-bold tracking-tight truncate self-start"
+            >
+              {teacher.employeeId}
+            </FormFooterBadge>
+          ) : null}
+          <PersonIdentityMeta gender={teacher.gender} className="font-semibold truncate" />
+        </DirectoryCardSubtitleStack>
       }
     />
   );

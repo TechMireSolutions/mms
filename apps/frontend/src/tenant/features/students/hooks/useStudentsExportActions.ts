@@ -9,6 +9,7 @@ import {
 import { startServerStudentsCsvExport } from "@/lib/backgroundJobs/startServerStudentsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsQuickFilter } from "@mms/shared";
 import { useStudentsCrudNotify } from "@/tenant/features/students/hooks/useStudentsCrudNotify";
 
 type ExportAuditScope = "all" | "filtered" | "selection";
@@ -19,6 +20,7 @@ export interface UseStudentsExportActionsOptions {
   search: string;
   filterStatus: string[];
   filterGender: string;
+  quickFilter: StudentsQuickFilter;
   sortField: StudentListSortField | null;
   sortDir: "asc" | "desc";
   viewingDeleted: boolean;
@@ -38,6 +40,7 @@ export function useStudentsExportActions({
   search,
   filterStatus,
   filterGender,
+  quickFilter,
   sortField,
   sortDir,
   viewingDeleted,
@@ -51,10 +54,11 @@ export function useStudentsExportActions({
       search: search.trim() || undefined,
       status: filterStatus.length > 0 ? filterStatus.join(",") : undefined,
       gender: filterGender || undefined,
+      quickFilter: quickFilter === "all" ? undefined : quickFilter,
       sortField: sortField ?? undefined,
       sortDir: sortField ? sortDir : undefined,
     }),
-    [search, filterStatus, filterGender, sortField, sortDir],
+    [search, filterStatus, filterGender, quickFilter, sortField, sortDir],
   );
 
   const onError = useCallback(

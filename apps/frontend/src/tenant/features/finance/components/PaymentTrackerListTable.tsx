@@ -4,9 +4,17 @@ import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ResizableTableHead } from '@/components/ui/ResizableTableHead';
+import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import type { Payment } from '@/lib/data/financeData';
 
 interface PaymentTrackerListTableProps {
@@ -59,60 +67,60 @@ export function PaymentTrackerListTable({
   );
 
   return (
-    <table className="w-full table-fixed text-sm">
+    <Table className="table-fixed">
       <caption className="sr-only">{t('finance.paymentLog')}</caption>
-      <thead>
-        <tr className="border-b border-border/50">
+      <TableHeader>
+        <TableRow className="border-b border-border/60 hover:bg-muted/30">
           {canDelete && (
-            <th scope="col" className="w-10 px-3 py-2.5">
+            <TableHead className="w-10 px-3 py-2.5 h-auto">
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={(checked) => onToggleAll(checked === true)}
                 aria-label={t('finance.trash.selectAll')}
               />
-            </th>
+            </TableHead>
           )}
           {isColumnVisible("date") && (
-            <ResizableTableHead columnKey="date" width={getColumnWidth?.('date')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            <ModuleTableHeaderCell columnKey="date" width={getColumnWidth?.('date')} onResize={onColumnResize} className="px-3 py-2.5">
               {t('finance.columns.paymentDate')}
-            </ResizableTableHead>
+            </ModuleTableHeaderCell>
           )}
           {isColumnVisible("student") && (
-            <ResizableTableHead columnKey="student" width={getColumnWidth?.('student')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.('student')} onResize={onColumnResize} className="px-3 py-2.5">
               {t('finance.columns.student')}
-            </ResizableTableHead>
+            </ModuleTableHeaderCell>
           )}
           {isColumnVisible("invoice") && (
-            <ResizableTableHead columnKey="invoice" width={getColumnWidth?.('invoice')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            <ModuleTableHeaderCell columnKey="invoice" width={getColumnWidth?.('invoice')} onResize={onColumnResize} className="px-3 py-2.5">
               {t('finance.columns.invoice')}
-            </ResizableTableHead>
+            </ModuleTableHeaderCell>
           )}
           {isColumnVisible("amount") && (
-            <ResizableTableHead columnKey="amount" width={getColumnWidth?.('amount')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            <ModuleTableHeaderCell columnKey="amount" width={getColumnWidth?.('amount')} onResize={onColumnResize} className="px-3 py-2.5">
               {t('finance.columns.amount')}
-            </ResizableTableHead>
+            </ModuleTableHeaderCell>
           )}
           {isColumnVisible("method") && (
-            <ResizableTableHead columnKey="method" width={getColumnWidth?.('method')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            <ModuleTableHeaderCell columnKey="method" width={getColumnWidth?.('method')} onResize={onColumnResize} className="px-3 py-2.5">
               {t('finance.columns.method')}
-            </ResizableTableHead>
+            </ModuleTableHeaderCell>
           )}
           {isColumnVisible("receivedBy") && (
-            <ResizableTableHead columnKey="receivedBy" width={getColumnWidth?.('receivedBy')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            <ModuleTableHeaderCell columnKey="receivedBy" width={getColumnWidth?.('receivedBy')} onResize={onColumnResize} className="px-3 py-2.5">
               {t('finance.columns.receivedBy')}
-            </ResizableTableHead>
+            </ModuleTableHeaderCell>
           )}
           {isColumnVisible("note") && (
-            <ResizableTableHead columnKey="note" width={getColumnWidth?.('note')} onResize={onColumnResize} className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap">
+            <ModuleTableHeaderCell columnKey="note" width={getColumnWidth?.('note')} onResize={onColumnResize} className="px-3 py-2.5">
               {t('finance.columns.note')}
-            </ResizableTableHead>
+            </ModuleTableHeaderCell>
           )}
-          {canDelete && <th scope="col" className="w-12 px-3 py-2.5"><span className="sr-only">{t('common.actions')}</span></th>}
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-border/50">
+          {canDelete && <TableHead className="w-12 px-3 py-2.5 h-auto"><span className="sr-only">{t('common.actions')}</span></TableHead>}
+        </TableRow>
+      </TableHeader>
+      <TableBody className="divide-y divide-border/50">
         {payments.length === 0 ? (
-          <tr><td colSpan={visibleColCount || 1} className="py-4"><EmptyState title={t('finance.empty.payments')} compact /></td></tr>
+          <TableRow className="hover:bg-transparent"><TableCell colSpan={visibleColCount || 1} className="py-4"><EmptyState title={t('finance.empty.payments')} compact /></TableCell></TableRow>
         ) : (
           payments.map((payment, index) => (
             <motion.tr
@@ -123,26 +131,26 @@ export function PaymentTrackerListTable({
               className="transition-colors hover:bg-muted/20"
             >
               {canDelete && (
-                <td className="px-3 py-3">
+                <TableCell className="px-3 py-2.5">
                   <Checkbox
                     checked={selectedIds.includes(payment.id)}
                     onCheckedChange={(checked) => onTogglePayment(payment.id, checked === true)}
                     aria-label={t('finance.trash.selectPayment', { id: payment.id })}
                   />
-                </td>
+                </TableCell>
               )}
-              {isColumnVisible("date") && <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</td>}
-              {isColumnVisible("student") && <td className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</td>}
-              {isColumnVisible("invoice") && <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{payment.invoiceId}</td>}
-              {isColumnVisible("amount") && <td className="px-4 py-3 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</td>}
-              {isColumnVisible("method") && <td className="px-4 py-3"><StatusBadge status={payment.method} config={methodConfig} size="sm" /></td>}
-              {isColumnVisible("receivedBy") && <td className="px-4 py-3 text-sm text-muted-foreground">{payment.receivedBy || '—'}</td>}
-              {isColumnVisible("note") && <td className="max-w-[10rem] truncate px-4 py-3 text-sm text-muted-foreground">{payment.note || '—'}</td>}
-              {canDelete && <td className="px-3 py-3">{renderRowAction(payment.id)}</td>}
+              {isColumnVisible("date") && <TableCell className="px-3 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</TableCell>}
+              {isColumnVisible("student") && <TableCell className="px-3 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</TableCell>}
+              {isColumnVisible("invoice") && <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{payment.invoiceId}</TableCell>}
+              {isColumnVisible("amount") && <TableCell className="px-3 py-2.5 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</TableCell>}
+              {isColumnVisible("method") && <TableCell className="px-3 py-2.5"><StatusBadge status={payment.method} config={methodConfig} size="sm" /></TableCell>}
+              {isColumnVisible("receivedBy") && <TableCell className="px-3 py-2.5 text-sm text-muted-foreground">{payment.receivedBy || '—'}</TableCell>}
+              {isColumnVisible("note") && <TableCell className="max-w-[10rem] truncate px-3 py-2.5 text-sm text-muted-foreground">{payment.note || '—'}</TableCell>}
+              {canDelete && <TableCell className="px-3 py-2.5">{renderRowAction(payment.id)}</TableCell>}
             </motion.tr>
           ))
         )}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

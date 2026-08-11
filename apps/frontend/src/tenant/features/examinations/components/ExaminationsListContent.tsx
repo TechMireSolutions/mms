@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ExaminationsListCards } from "@/tenant/features/examinations/components/ExaminationsListCards";
 import { ExaminationsListTable } from "@/tenant/features/examinations/components/ExaminationsListTable";
 import type { ExaminationsListContentProps } from "@/tenant/features/examinations/components/examinationsListContentShared";
@@ -22,13 +23,11 @@ export function ExaminationsListContent(props: ExaminationsListContentProps): Re
     );
   }
 
-  return (
-    <div className="rounded-xl border border-border overflow-hidden bg-card">
-      {props.viewMode === "cards" ? (
-        <ExaminationsListCards {...props} />
-      ) : (
-        <ExaminationsListTable {...props} />
-      )}
+  return props.viewMode === "cards" ? (
+    <ExaminationsListCards {...props} />
+  ) : (
+    <div className={WORK_SURFACE}>
+      <ExaminationsListTable {...props} />
     </div>
   );
 }

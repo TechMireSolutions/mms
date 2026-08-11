@@ -1,14 +1,20 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { formatDate } from "@mms/shared";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { EnrollmentRowActions } from "@/tenant/features/enrollments/components/EnrollmentRowActions";
+import { renderEnrollmentWorkColumnValue } from "@/tenant/features/enrollments/components/enrollmentWorkColumnCell";
 import {
   findEnrollmentStudent,
-  getEnrollmentStudentDisplayName,
   type EnrollmentListContentProps,
 } from "@/tenant/features/enrollments/components/enrollmentListContentShared";
 
@@ -22,6 +28,10 @@ export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.
     enrollments,
     students,
     isColumnVisible,
+    canSelectEnrollments,
+    selectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
     canWrite,
     canDelete,
     showDeleted,
@@ -34,126 +44,139 @@ export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.
     onCancel,
     onDelete,
     onRestore,
+    onToggleSelectAll,
+    onToggleSelectedEnrollment,
     openComposer,
   } = props;
   const { t } = useTranslation();
-  const rowMotion = useListRowMotion({ layout: true });
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm table-fixed">
-        <thead className="bg-muted/20 border-b border-border/50">
-          <tr>
-            {isColumnVisible("student") && (
-              <ResizableTableHead columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                {t("enrollments.columns.student")}
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("session") && (
-              <ResizableTableHead columnKey="session" width={getColumnWidth?.("session")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                {t("enrollments.columns.session")}
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("class") && (
-              <ResizableTableHead columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                {t("enrollments.columns.class")}
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("enrolledDate") && (
-              <ResizableTableHead columnKey="enrolledDate" width={getColumnWidth?.("enrolledDate")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                {t("enrollments.columns.enrolledDate")}
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("finalFee") && (
-              <ResizableTableHead columnKey="finalFee" width={getColumnWidth?.("finalFee")} onResize={onColumnResize} className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
-                {t("enrollments.columns.finalFee")}
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("status") && (
-              <ResizableTableHead columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                {t("enrollments.columns.status")}
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("payment") && (
-              <ResizableTableHead columnKey="payment" width={getColumnWidth?.("payment")} onResize={onColumnResize} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">
-                {t("enrollments.columns.payment")}
-              </ResizableTableHead>
-            )}
-            <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase">
-              {t("enrollments.columns.actions")}
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {enrollments.map((enrollment) => {
-            const student = findEnrollmentStudent(enrollment, students);
-            const studentDisplayName = getEnrollmentStudentDisplayName(enrollment, students);
+    <Table className="table-fixed">
+      <TableHeader>
+        <TableRow className="border-b border-border/50 bg-muted/20 hover:bg-muted/20">
+          {canSelectEnrollments && (
+            <TableHead className="w-12 px-3 py-2.5 h-auto">
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
+                aria-label={t("enrollments.table.selectAll")}
+              />
+            </TableHead>
+          )}
+          {isColumnVisible("student") && (
+            <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5">
+              {t("enrollments.columns.student")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("session") && (
+            <ModuleTableHeaderCell columnKey="session" width={getColumnWidth?.("session")} onResize={onColumnResize} className="px-3 py-2.5">
+              {t("enrollments.columns.session")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("class") && (
+            <ModuleTableHeaderCell columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5">
+              {t("enrollments.columns.class")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("enrolledDate") && (
+            <ModuleTableHeaderCell columnKey="enrolledDate" width={getColumnWidth?.("enrolledDate")} onResize={onColumnResize} className="px-3 py-2.5">
+              {t("enrollments.columns.enrolledDate")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("finalFee") && (
+            <ModuleTableHeaderCell columnKey="finalFee" width={getColumnWidth?.("finalFee")} onResize={onColumnResize} className="px-3 py-2.5 text-end">
+              {t("enrollments.columns.finalFee")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("status") && (
+            <ModuleTableHeaderCell columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5">
+              {t("enrollments.columns.status")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("payment") && (
+            <ModuleTableHeaderCell columnKey="payment" width={getColumnWidth?.("payment")} onResize={onColumnResize} className="px-3 py-2.5">
+              {t("enrollments.columns.payment")}
+            </ModuleTableHeaderCell>
+          )}
+          <TableHead className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase h-auto">
+            {t("enrollments.columns.actions")}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody className="divide-y divide-border">
+        {enrollments.map((enrollment) => {
+          const student = findEnrollmentStudent(enrollment, students);
+          const isSelected = selectedIds.includes(enrollment.id);
+          const columnOptions = { t, students, statusConfig, paymentConfig, formatCurrency };
 
-            return (
-              <motion.tr key={enrollment.id} {...rowMotion()} className="hover:bg-muted/20 transition-colors">
-                {isColumnVisible("student") && (
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">{studentDisplayName}</span>
-                      {student?.grNumber && (
-                        <span className="text-xs text-primary font-bold">GR: {student.grNumber}</span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                {isColumnVisible("session") && (
-                  <td className="px-3 py-2.5 text-xs text-foreground max-w-[10rem] truncate">{enrollment.sessionName}</td>
-                )}
-                {isColumnVisible("class") && (
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{enrollment.className || "—"}</td>
-                )}
-                {isColumnVisible("enrolledDate") && (
-                  <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{formatDate(enrollment.enrolledDate)}</td>
-                )}
-                {isColumnVisible("finalFee") && (
-                  <td className="px-3 py-2.5 text-end font-semibold text-foreground whitespace-nowrap">
-                    {formatCurrency(enrollment.finalFee)}
-                    {enrollment.discountPct > 0 && (
-                      <span
-                        className="ms-1 text-xs text-success font-normal"
-                        aria-label={t("enrollments.discountPctAria", { pct: enrollment.discountPct })}
-                      >
-                        –{enrollment.discountPct}%
-                      </span>
-                    )}
-                  </td>
-                )}
-                {isColumnVisible("status") && (
-                  <td className="px-3 py-2.5">
-                    <StatusBadge status={enrollment.status} config={statusConfig} size="sm" />
-                  </td>
-                )}
-                {isColumnVisible("payment") && (
-                  <td className="px-3 py-2.5">
-                    {enrollment.paymentStatus
-                      ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
-                      : "—"}
-                  </td>
-                )}
-                <td className="px-3 py-2.5 text-end">
-                  <EnrollmentRowActions
-                    enrollment={enrollment}
-                    student={student}
-                    canWrite={canWrite}
-                    canDelete={canDelete}
-                    showDeleted={showDeleted}
-                    onView={onView}
-                    onCancel={onCancel}
-                    onDelete={onDelete}
-                    onRestore={onRestore}
-                    openComposer={openComposer}
+          return (
+            <TableRow
+              key={enrollment.id}
+              className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
+            >
+              {canSelectEnrollments && (
+                <TableCell className="px-3 py-2.5">
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={(checked) => onToggleSelectedEnrollment(enrollment.id, checked === true)}
+                    aria-label={t("enrollments.table.selectEnrollment", { name: enrollment.studentName })}
                   />
-                </td>
-              </motion.tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                </TableCell>
+              )}
+              {isColumnVisible("student") && (
+                <TableCell className="px-3 py-2.5 whitespace-nowrap">
+                  {renderEnrollmentWorkColumnValue(enrollment, "student", columnOptions)}
+                </TableCell>
+              )}
+              {isColumnVisible("session") && (
+                <TableCell className="px-3 py-2.5 text-xs text-foreground max-w-[10rem] truncate">
+                  {renderEnrollmentWorkColumnValue(enrollment, "session", columnOptions)}
+                </TableCell>
+              )}
+              {isColumnVisible("class") && (
+                <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                  {renderEnrollmentWorkColumnValue(enrollment, "class", columnOptions)}
+                </TableCell>
+              )}
+              {isColumnVisible("enrolledDate") && (
+                <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                  {renderEnrollmentWorkColumnValue(enrollment, "enrolledDate", columnOptions)}
+                </TableCell>
+              )}
+              {isColumnVisible("finalFee") && (
+                <TableCell className="px-3 py-2.5 text-end font-semibold text-foreground whitespace-nowrap">
+                  {renderEnrollmentWorkColumnValue(enrollment, "finalFee", columnOptions)}
+                </TableCell>
+              )}
+              {isColumnVisible("status") && (
+                <TableCell className="px-3 py-2.5">
+                  {renderEnrollmentWorkColumnValue(enrollment, "status", columnOptions)}
+                </TableCell>
+              )}
+              {isColumnVisible("payment") && (
+                <TableCell className="px-3 py-2.5">
+                  {renderEnrollmentWorkColumnValue(enrollment, "payment", columnOptions)}
+                </TableCell>
+              )}
+              <TableCell className="px-3 py-2.5 text-end">
+                <EnrollmentRowActions
+                  enrollment={enrollment}
+                  student={student}
+                  canWrite={canWrite}
+                  canDelete={canDelete}
+                  showDeleted={showDeleted}
+                  triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+                  onView={onView}
+                  onCancel={onCancel}
+                  onDelete={onDelete}
+                  onRestore={onRestore}
+                  openComposer={openComposer}
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

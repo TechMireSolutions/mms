@@ -5,6 +5,7 @@ import { Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 
 interface Step5FeeCalculationProps {
   student: Student | null | undefined;
@@ -37,7 +38,7 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
       </div>
 
       {/* Fee Breakdown */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className={`${WORK_SURFACE} overflow-hidden`}>
         <div className="px-4 py-3 bg-muted/40 border-b border-border flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-primary" aria-hidden="true" />
           <h4 className="text-sm font-bold text-foreground">{t("enrollments.wizard.step5BreakdownTitle")}</h4>

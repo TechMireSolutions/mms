@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
 import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -77,76 +78,72 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
 
   return (
     <WidgetCard ariaLabelledby="enrollment-chart-heading" accentColor="primary" className="p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 ps-1.5 select-none">
-        <div>
-          <h3 id="enrollment-chart-heading" className="text-sm font-bold text-foreground m-0">
-            {t("widget.title.enrollmentTrends")}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1 m-0 font-medium">
-            {t("dashboard.charts.enrollment.subtitle")}
-          </p>
-        </div>
+      <WidgetChartHeader
+        headingId="enrollment-chart-heading"
+        title={t("widget.title.enrollmentTrends")}
+        subtitle={t("dashboard.charts.enrollment.subtitle")}
+        actions={
+          <>
+            {isEditMode && (
+              <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
+                <Select
+                  value={chartType}
+                  onValueChange={(value) => {
+                    updatePref("enrollmentChartType", value as "area" | "bar" | "line");
+                  }}
+                >
+                  <SelectTrigger className={FORM_SELECT_MINI}>
+                    <SelectValue placeholder={t("reports.visualizer.chartType")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="area">{t("dashboard.charts.enrollment.area")}</SelectItem>
+                    <SelectItem value="bar">{t("dashboard.charts.enrollment.bar")}</SelectItem>
+                    <SelectItem value="line">{t("dashboard.charts.enrollment.line")}</SelectItem>
+                  </SelectContent>
+                </Select>
 
-        <div className="flex items-center gap-3 ms-auto">
-          {isEditMode && (
-            <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
-              <Select
-                value={chartType}
-                onValueChange={(value) => {
-                  updatePref("enrollmentChartType", value as "area" | "bar" | "line");
-                }}
-              >
-                <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder={t("reports.visualizer.chartType")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="area">{t("dashboard.charts.enrollment.area")}</SelectItem>
-                  <SelectItem value="bar">{t("dashboard.charts.enrollment.bar")}</SelectItem>
-                  <SelectItem value="line">{t("dashboard.charts.enrollment.line")}</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select
+                  value={colorTheme}
+                  onValueChange={(value) => {
+                    updatePref("enrollmentChartColor", value as "emerald" | "blue" | "violet" | "amber" | "red");
+                  }}
+                >
+                  <SelectTrigger className={FORM_SELECT_MINI}>
+                    <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
+                    <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
+                    <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
+                    <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
+                    <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select
-                value={colorTheme}
-                onValueChange={(value) => {
-                  updatePref("enrollmentChartColor", value as "emerald" | "blue" | "violet" | "amber" | "red");
-                }}
-              >
-                <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
-                  <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
-                  <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
-                  <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
-                  <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={String(monthsCount)}
-                onValueChange={(value) => {
-                  updatePref("enrollmentChartPeriod", Number(value));
-                }}
-              >
-                <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder={t("dashboard.widgets.selectPeriod")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">{t("dashboard.charts.monthsRange", { count: 3 })}</SelectItem>
-                  <SelectItem value="6">{t("dashboard.charts.monthsRange", { count: 6 })}</SelectItem>
-                  <SelectItem value="10">{t("dashboard.charts.monthsRange", { count: 10 })}</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select
+                  value={String(monthsCount)}
+                  onValueChange={(value) => {
+                    updatePref("enrollmentChartPeriod", Number(value));
+                  }}
+                >
+                  <SelectTrigger className={FORM_SELECT_MINI}>
+                    <SelectValue placeholder={t("dashboard.widgets.selectPeriod")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">{t("dashboard.charts.monthsRange", { count: 3 })}</SelectItem>
+                    <SelectItem value="6">{t("dashboard.charts.monthsRange", { count: 6 })}</SelectItem>
+                    <SelectItem value="10">{t("dashboard.charts.monthsRange", { count: 10 })}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>
+              <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="text-xs font-bold tabular-nums">+{growth}%</span>
             </div>
-          )}
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>
-            <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
-            <span className="text-xs font-bold tabular-nums">+{growth}%</span>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <SafeResponsiveContainer height={200}>
         <ComposedChart data={enrollmentData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>

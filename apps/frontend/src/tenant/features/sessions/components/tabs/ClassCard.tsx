@@ -4,6 +4,7 @@ import type { Teacher } from "@mms/shared";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Class } from "@/lib/data/sessionsData";
 import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
@@ -29,7 +30,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
     <motion.article
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group rounded-xl border border-border bg-card p-4 transition-all hover:shadow-sm"
+      className={`${WORK_SURFACE_INNER} group p-4 transition-all hover:shadow-sm`}
     >
       <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-center gap-2.5">

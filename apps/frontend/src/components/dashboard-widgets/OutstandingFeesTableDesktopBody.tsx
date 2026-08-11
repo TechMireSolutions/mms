@@ -1,8 +1,8 @@
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
   TableHeader,
   TableBody,
-  TableHead,
   TableRow,
   TableCell,
 } from "@/components/ui/table";
@@ -37,26 +37,26 @@ export function OutstandingFeesTableDesktopBody({
       <Table className="w-full text-sm">
         <TableHeader>
           <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
-            <TableHead scope="col" className="text-start px-5 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+            <ModuleTableHeaderCell columnKey="student" className="px-5 py-3 select-none">
               {t("hasanat.columns.redemption.student")}
-            </TableHead>
-            <TableHead scope="col" className="text-start px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell h-auto select-none">
+            </ModuleTableHeaderCell>
+            <ModuleTableHeaderCell columnKey="class" className="px-3 py-3 hidden sm:table-cell select-none">
               {t("sessions.report.colClass")}
-            </TableHead>
-            <TableHead scope="col" className="text-start px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider h-auto select-none">
+            </ModuleTableHeaderCell>
+            <ModuleTableHeaderCell columnKey="amount" className="px-3 py-3 select-none">
               {t("finance.columns.amount")}
-            </TableHead>
-            <TableHead scope="col" className="text-start px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell h-auto select-none">
+            </ModuleTableHeaderCell>
+            <ModuleTableHeaderCell columnKey="overdue" className="px-3 py-3 hidden md:table-cell select-none">
               {t("finance.metrics.overdue")}
-            </TableHead>
+            </ModuleTableHeaderCell>
             {canWriteMessaging && (
-              <TableHead scope="col" className="px-3 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider text-end h-auto select-none">
+              <ModuleTableHeaderCell columnKey="actions" className="px-3 py-3 text-end select-none">
                 {t("hasanat.columns.actions")}
-              </TableHead>
+              </ModuleTableHeaderCell>
             )}
           </TableRow>
         </TableHeader>
-        <TableBody className="divide-y divide-border/40">
+        <TableBody className="divide-y divide-border/50">
           {rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={canWriteMessaging ? 5 : 4} className="p-0">

@@ -45,6 +45,7 @@ export function TeacherForm({
     getFieldError,
     updateDraft,
     handleSave,
+    validationErrorSummary,
   } = useTeacherFormController({ teacher, onClose, onSave });
 
   return (
@@ -61,9 +62,10 @@ export function TeacherForm({
       tabPanelIdPrefix="teacher-form-tab"
       lang={language}
       cancelLabel={t("common.cancel")}
-      saveLabel={t("common.save")}
+      saveLabel={saving ? t("teachers.form.saving") : teacher ? t("teachers.form.saveUpdate") : t("teachers.form.saveCreate")}
       onSave={() => { void handleSave(); }}
       saving={saving}
+      error={validationErrorSummary}
       saveDisabled={
         (requireContactLink && isFieldEnabled("contactId") && !teacherDraft.contactId)
         || (Boolean(teacher?.id) && !isDirty)

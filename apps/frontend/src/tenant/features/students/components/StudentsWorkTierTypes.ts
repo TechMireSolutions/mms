@@ -1,4 +1,4 @@
-import type { Student, StudentsListPageResult } from "@mms/shared";
+import type { Student, StudentsListPageResult, StudentsQuickFilter } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
@@ -9,6 +9,8 @@ export interface StudentsWorkTierProps {
   studentSearch: string;
   studentFilterStatus: string[];
   studentFilterGender: string;
+  quickFilter: StudentsQuickFilter;
+  onQuickFilterChange: (preset: string) => void;
   studentStatusOptions: readonly string[];
   genderFilters: string[];
   viewingDeleted: boolean;
@@ -45,6 +47,8 @@ export interface StudentsWorkTierProps {
   onRestore: (studentId: string) => void | Promise<void>;
   onBulkStatusChange: (studentIds: string[], status: string) => void | Promise<void>;
   onBulkExport: () => void | Promise<void>;
+  /** Disables the bulk status action while the status mutation is pending. */
+  bulkStatusPending?: boolean;
   sortField: StudentListSortField | null;
   sortDir: "asc" | "desc";
   onServerSort: (field: StudentListSortField) => void;

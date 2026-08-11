@@ -6,6 +6,8 @@ import type { ContactsQuickFilter } from "@mms/shared";
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { ContactsFilterMenuButton } from "@/tenant/features/contacts/components/ContactsToolbarControls";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 import { CONTACTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
@@ -65,7 +67,7 @@ export default function ContactsToolbar({
         {shownCount != null ? t("contacts.shownCount", { count: shownCount }) : ""}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
         <div className="relative min-w-0 flex-1">
           <SearchBar
             id={CONTACTS_WORK_SEARCH_INPUT_ID}

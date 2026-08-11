@@ -4,6 +4,7 @@ export {
   countTeachersActive,
   countTeachersForNextEmployeeId,
   listTeacherLinkedContactIdsSql,
+  findSoftDeletedTeacherByContactIdSql,
 } from './teacherRepositoryListQuery.js';
 
 /** Teachers bulk-status + command metrics SQL. */

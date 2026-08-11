@@ -1,6 +1,14 @@
 import React from "react";
 import { type AppTranslationKey } from "@mms/shared";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, type Account, type AccountType } from "@/lib/data/accountingData";
@@ -90,7 +98,7 @@ function AccountTypeGroup({
   const { t } = useTranslation();
 
   return (
-    <article className="rounded-xl border border-border overflow-hidden">
+    <article className={`${WORK_SURFACE} overflow-hidden`}>
       <header className={`px-4 py-2.5 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex min-w-0 items-center justify-between gap-2`}>
         <h3 className="min-w-0 truncate text-xs font-bold uppercase tracking-wide m-0">
           <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey) })}
@@ -116,42 +124,42 @@ function AccountTypeGroup({
           />
         ))}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm table-fixed">
+      <div className="hidden md:block">
+        <Table className="table-fixed">
           <caption className="sr-only">{t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
-          <thead className="bg-muted/40 border-b border-border">
-            <tr>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
               {isColumnVisible("code") && (
-                <ResizableTableHead columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
+                <ModuleTableHeaderCell columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2">
                   {t("accounting.columns.account.code")}
-                </ResizableTableHead>
+                </ModuleTableHeaderCell>
               )}
               {isColumnVisible("name") && (
-                <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
+                <ModuleTableHeaderCell columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2">
                   {t("accounting.columns.account.name")}
-                </ResizableTableHead>
+                </ModuleTableHeaderCell>
               )}
               {isColumnVisible("subtype") && (
-                <ResizableTableHead columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">
+                <ModuleTableHeaderCell columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 hidden md:table-cell">
                   {t("accounting.columns.account.subtype")}
-                </ResizableTableHead>
+                </ModuleTableHeaderCell>
               )}
               {isColumnVisible("description") && (
-                <ResizableTableHead columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">
+                <ModuleTableHeaderCell columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 hidden lg:table-cell">
                   {t("accounting.columns.account.description")}
-                </ResizableTableHead>
+                </ModuleTableHeaderCell>
               )}
               {isColumnVisible("normalBalance") && (
-                <ResizableTableHead columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">
+                <ModuleTableHeaderCell columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2">
                   {t("accounting.columns.account.normalBalance")}
-                </ResizableTableHead>
+                </ModuleTableHeaderCell>
               )}
-              <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">
+              <TableHead className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase h-auto">
                 {t("accounting.columns.actions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border">
             {accountTypeRows.map((account) => (
               <AccountTableRow
                 key={account.id}
@@ -164,8 +172,8 @@ function AccountTypeGroup({
                 onReactivate={onReactivate}
               />
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </article>
   );

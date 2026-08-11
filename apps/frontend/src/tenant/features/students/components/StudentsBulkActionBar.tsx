@@ -29,6 +29,8 @@ export interface StudentsBulkActionBarProps {
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
+  /** Disables the bulk status action while the status mutation is pending. */
+  statusPending?: boolean;
 }
 
 /** Students Work bulk bar — Contacts-shaped composition over shared ModuleWorkBulkActionBar. */
@@ -51,6 +53,7 @@ export function StudentsBulkActionBar({
   onRequestBulkDelete,
   onRequestBulkRestore,
   onClearSelection,
+  statusPending = false,
 }: StudentsBulkActionBarProps): ReactElement {
   const { t } = useTranslation();
 
@@ -108,6 +111,7 @@ export function StudentsBulkActionBar({
             label={t("students.columns.status")}
             statuses={studentStatusOptions}
             statusBadgeConfig={statusBadgeConfig}
+            disabled={statusPending}
             onSelectStatus={(statusVal) => {
               onBulkStatusChange(statusVal);
             }}
@@ -116,7 +120,7 @@ export function StudentsBulkActionBar({
       }
       deleteAction={
         bulkActions.includes("delete") && canDelete
-          ? { label: t("students.list.remove"), onClick: onRequestBulkDelete }
+          ? { label: t("students.bulkDelete"), onClick: onRequestBulkDelete }
           : undefined
       }
     />

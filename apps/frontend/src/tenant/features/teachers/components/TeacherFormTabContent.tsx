@@ -6,6 +6,7 @@ import {
   type TeacherStatusOption,
 } from "@/tenant/features/teachers/components/TeacherFormSections";
 import { TeacherCustomFieldsBlock } from "@/tenant/features/teachers/components/TeacherCustomFieldsBlock";
+import { TeacherNotesSection } from "@/tenant/features/teachers/components/TeacherNotesSection";
 
 export interface TeacherFormTabContentProps {
   tab: string;
@@ -58,6 +59,13 @@ export function TeacherFormTabContent({
           idPrefix={idPrefix}
           nextEmployeeId={nextEmployeeId}
           statusOptions={statusOptions}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+        />
+        <TeacherNotesSection
+          notes={teacherDraft.notes}
+          fields={fields}
           isFieldEnabled={isFieldEnabled}
           isFieldRequired={isFieldRequired}
           onDraftChange={onDraftChange}

@@ -6,7 +6,16 @@ import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -124,10 +133,10 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
         {dists.length > 0 && (
           <section aria-label={t("obligations.detail.distribution")}>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">{t("obligations.detail.distribution")}</h4>
-            <Card accentColor="emerald" className="p-0 overflow-hidden">
+            <div className={WORK_SURFACE}>
               <div className="space-y-3 p-3 md:hidden">
                 {dists.map((distribution) => (
-                  <article key={distribution.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
+                  <article key={distribution.id} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-sm font-medium text-foreground m-0">{distribution.name}</p>
                       <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
@@ -147,34 +156,34 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                   </article>
                 ))}
               </div>
-              <div className="hidden overflow-x-auto max-w-full md:block">
-              <table className="w-full text-sm">
-                <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: selectedCollection.receipt_no })}</caption>
-                <thead className="bg-muted/60 border-b border-border">
-                  <tr>
-                    <th scope="col" className="px-5 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.detail.colName")}</th>
-                    <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("obligations.detail.colType")}</th>
-                    <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.detail.colPct")}</th>
-                    <th scope="col" className="px-5 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("obligations.columns.amount")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {dists.map((distribution) => (
-                    <tr key={distribution.id} className="hover:bg-muted/20">
-                      <td className="px-5 py-2.5 font-medium text-foreground">{distribution.name}</td>
-                      <td className="px-4 py-2.5">
-                        <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
-                      </td>
-                      <td className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{distribution.percentage}%</td>
-                      <td className="px-5 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
-                        {formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="hidden md:block">
+                <Table>
+                  <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: selectedCollection.receipt_no })}</caption>
+                  <TableHeader>
+                    <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                      <ModuleTableHeaderCell columnKey="name" className="px-5 py-2">{t("obligations.detail.colName")}</ModuleTableHeaderCell>
+                      <ModuleTableHeaderCell columnKey="type" className="px-4 py-2">{t("obligations.detail.colType")}</ModuleTableHeaderCell>
+                      <ModuleTableHeaderCell columnKey="pct" className="px-4 py-2 text-end">{t("obligations.detail.colPct")}</ModuleTableHeaderCell>
+                      <ModuleTableHeaderCell columnKey="amount" className="px-5 py-2 text-end">{t("obligations.columns.amount")}</ModuleTableHeaderCell>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border">
+                    {dists.map((distribution) => (
+                      <TableRow key={distribution.id} className="hover:bg-muted/20">
+                        <TableCell className="px-5 py-2.5 font-medium text-foreground">{distribution.name}</TableCell>
+                        <TableCell className="px-4 py-2.5">
+                          <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
+                        </TableCell>
+                        <TableCell className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{distribution.percentage}%</TableCell>
+                        <TableCell className="px-5 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
+                          {formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </Card>
+            </div>
           </section>
         )}
 

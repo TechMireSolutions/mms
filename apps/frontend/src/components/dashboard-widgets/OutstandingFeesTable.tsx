@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { getOutstandingAmountForInvoice } from "@mms/shared";
 import { AlertCircle } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
@@ -82,44 +83,45 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
   return (
     <WidgetCard ariaLabelledby="outstanding-fees-heading" accentColor="destructive">
-      <header className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 ps-6.5 border-b border-border/45 select-none">
-        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-          <AlertCircle className="w-4 h-4 shrink-0 text-destructive" aria-hidden="true" />
-          <h3 id="outstanding-fees-heading" className="min-w-0 truncate text-sm font-bold text-foreground m-0">
-            {title || t("dashboard.widgets.outstandingPayments")}
-          </h3>
+      <WidgetCardHeader
+        headingId="outstanding-fees-heading"
+        icon={<AlertCircle className="w-4 h-4 shrink-0 text-destructive" aria-hidden="true" />}
+        title={title || t("dashboard.widgets.outstandingPayments")}
+        badge={
           <span
             className="text-xs font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-full uppercase tracking-wider"
             aria-label={t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
           >
             {t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
           </span>
-        </div>
-        {canWriteMessaging && (
-          <Button
-            variant="link"
-            className="min-h-11 h-auto shrink-0 p-0 text-sm font-bold"
-            onClick={() => {
-              if (filteredRows.length === 0) return;
-              const recipients = filteredRows
-                .map((row) => ({
-                  id: row.studentId,
-                  name: row.student,
-                  phone: row.contact,
-                  email: row.email,
-                  amount: row.amount,
-                  dueDate: row.dueDate,
-                }))
-                .filter((recipient) => Boolean(recipient.phone));
-              if (recipients.length > 0) {
-                openComposer("sms", recipients);
-              }
-            }}
-          >
-            {t("dashboard.widgets.sendAllReminders")}
-          </Button>
-        )}
-      </header>
+        }
+        actions={
+          canWriteMessaging && (
+            <Button
+              variant="link"
+              className="min-h-11 h-auto shrink-0 p-0 text-sm font-bold"
+              onClick={() => {
+                if (filteredRows.length === 0) return;
+                const recipients = filteredRows
+                  .map((row) => ({
+                    id: row.studentId,
+                    name: row.student,
+                    phone: row.contact,
+                    email: row.email,
+                    amount: row.amount,
+                    dueDate: row.dueDate,
+                  }))
+                  .filter((recipient) => Boolean(recipient.phone));
+                if (recipients.length > 0) {
+                  openComposer("sms", recipients);
+                }
+              }}
+            >
+              {t("dashboard.widgets.sendAllReminders")}
+            </Button>
+          )
+        }
+      />
 
       <div className="p-3 px-6 border-b border-border/40 flex items-center gap-2 bg-muted/10">
         <SearchBar

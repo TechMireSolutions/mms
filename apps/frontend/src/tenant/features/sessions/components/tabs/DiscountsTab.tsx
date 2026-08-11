@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit2, Tag, ToggleLeft, ToggleRight } from "lucide-react"
 import { Session, Discount } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { formatMoney } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -63,15 +64,20 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
 
   return (
     <section aria-label={t("sessions.discounts.ariaLabel")} className="space-y-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.discounts.count", { count: discounts.length })}</p>
-        {canWrite && <Button
-          onClick={() => { setEditDiscount(null); setShowModal(true); }}
-          className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.discounts.add")}
-        </Button>}
-      </header>
+      <SectionHeader
+        noMargin
+        title={t("sessions.discounts.count", { count: discounts.length })}
+        actions={
+          canWrite && (
+            <Button
+              onClick={() => { setEditDiscount(null); setShowModal(true); }}
+              className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.discounts.add")}
+            </Button>
+          )
+        }
+      />
 
       {discounts.length === 0 ? (
         <EmptyState

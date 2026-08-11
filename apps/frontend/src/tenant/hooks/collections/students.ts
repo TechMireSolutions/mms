@@ -31,3 +31,4 @@ export {
   useStudentPreferencesMutation,
   useComposedStudentsSettings,
 } from '@/tenant/features/students/hooks/useStudentSetupConfig';
+export { applyStudentsWorkDrillDown } from '@/tenant/features/students/hooks/studentsWorkDrillDown';

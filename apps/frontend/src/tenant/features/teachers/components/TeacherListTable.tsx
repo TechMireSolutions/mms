@@ -1,9 +1,12 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
+import { WORK_STICKY_HEAD } from "@/components/ui/formStyles";
+import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import {
   Table,
   TableBody,
@@ -14,8 +17,10 @@ import {
 } from "@/components/ui/table";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { teacherColumnLabelKey } from "@mms/shared";
+import { cn } from "@/lib/utils";
 import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherListTypes";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
@@ -27,9 +32,6 @@ import {
 } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
 import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
-
-const TEACHERS_ROW_ACTIONS_TRIGGER_CLASS =
-  "rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100";
 
 type TeacherListTableProps = Omit<TeacherListContentProps, never>;
 
@@ -65,139 +67,177 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
   } = props;
   const { t } = useTranslation();
   const rowMotion = useListRowMotion({ layout: "position", fade: true, duration: 0.1 });
+  const emptyDash = t("teachers.table.emptyDash");
 
   const visibleColumns = getTeacherVisibleWorkColumns(columnRegistry, isColumnVisible, {
     excludeFace: true,
   });
 
+  const handleSort = (field: string) => onSort(field as TeacherSortField);
+
   const nameColumn = columnRegistry.find((col) => col.key === "name");
   const nameLabel = nameColumn?.label ?? t(teacherColumnLabelKey("name"));
 
-  const renderSortIcon = (field: TeacherSortField) => {
-    if (sortField !== field) return <ChevronUp className="w-3 h-3 opacity-25" />;
-    return sortDir === "asc"
-      ? <ChevronUp className="w-3 h-3 text-primary" />
-      : <ChevronDown className="w-3 h-3 text-primary" />;
-  };
+  const pageCountLabel = formatDirectoryPageCountLabel(teachers.length, t, {
+    singular: "teachers.form.teacher",
+    plural: "teachers.table.teachers",
+  });
 
   return (
-    <Table className="table-fixed">
-      <TableHeader className="bg-muted/40">
-        <TableRow>
-          {showSelectColumn && (
-            <TableHead className="w-10 px-4 py-3">
-              <Checkbox
-                checked={someSelected ? "indeterminate" : allSelected}
-                onCheckedChange={onSelectAll}
-              />
-            </TableHead>
-          )}
-          <ResizableTableHead columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-3 text-start">
-            <Button type="button" variant="ghost" className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground" onClick={() => onSort("name")}>
-              {nameLabel} {renderSortIcon("name")}
-            </Button>
-          </ResizableTableHead>
-          {visibleColumns.map((col) => {
-            const sortKey = toTeacherListSortField(col.key);
-            return (
-              <ResizableTableHead
+    <>
+      <Table className="table-fixed">
+        <TableHeader>
+          <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+            {showSelectColumn && (
+              <TableHead
+                className={cn(
+                  "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 border-e border-border/30 h-auto",
+                  WORK_STICKY_HEAD,
+                )}
+              >
+                <Checkbox
+                  checked={someSelected ? "indeterminate" : allSelected}
+                  onCheckedChange={onSelectAll}
+                  aria-label={allSelected ? t("common.deselect") : t("teachers.table.selectAll")}
+                  className="cursor-pointer"
+                />
+              </TableHead>
+            )}
+            <ModuleTableHeaderCell
+              columnKey="name"
+              sortKey="name"
+              activeSortField={sortField}
+              sortDir={sortDir}
+              onSort={handleSort}
+              width={getColumnWidth?.("name")}
+              onResize={onColumnResize}
+              className={cn("sticky start-12 z-20 border-e border-border/30", WORK_STICKY_HEAD)}
+            >
+              {nameLabel}
+            </ModuleTableHeaderCell>
+            {visibleColumns.map((col) => (
+              <ModuleTableHeaderCell
                 key={col.key}
                 columnKey={col.key}
-                width={getColumnWidth?.(col.key)}
+                sortKey={toTeacherListSortField(col.key)}
+                activeSortField={sortField}
+                sortDir={sortDir}
+                onSort={handleSort}
+                width={getColumnWidth?.(col.key) ?? col.width}
                 onResize={onColumnResize}
                 className={teacherWorkColumnHeadClass(col.key)}
               >
-                {sortKey ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="min-h-11 h-auto px-1 hover:bg-transparent flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
-                    onClick={() => onSort(sortKey)}
-                  >
-                    {col.label} {renderSortIcon(sortKey)}
-                  </Button>
-                ) : (
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {col.label}
-                  </span>
-                )}
-              </ResizableTableHead>
-            );
-          })}
-          {showActionsColumn && (
-            <TableHead className="px-4 py-3 w-10">
-              <span className="sr-only">{t("common.actions")}</span>
-            </TableHead>
-          )}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {teachers.map((teacher) => {
-          const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
-          return (
-            <motion.tr
-              key={teacher.id}
-              {...rowMotion()}
-              className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
-            >
-              {showSelectColumn && (
-                <TableCell className="px-4 py-3">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => onSelectOne(teacherIdStr)}
-                    aria-label={t("teachers.table.selectTeacher", { name: displayName })}
-                    className="cursor-pointer"
-                  />
-                </TableCell>
-              )}
-              <TableCell className="px-4 py-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-auto flex items-center gap-3 min-w-0 text-start w-full p-0 shadow-none hover:bg-transparent"
-                  onClick={() => onView(teacher)}
+                {col.label}
+              </ModuleTableHeaderCell>
+            ))}
+            {showActionsColumn && (
+              <TableHead className="px-4 py-3 w-16 h-auto">
+                <span className="sr-only">{t("teachers.table.actions")}</span>
+              </TableHead>
+            )}
+          </TableRow>
+        </TableHeader>
+        <TableBody className="divide-y divide-border/50">
+          <AnimatePresence>
+            {teachers.map((teacher) => {
+              const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
+              return (
+                <motion.tr
+                  key={teacher.id}
+                  {...rowMotion()}
+                  className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
                 >
-                  <UserAvatar id={teacher.id} name={displayName} className="h-8 w-8 rounded-full text-xs font-semibold" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground truncate hover:text-primary transition-colors">{displayName}</p>
-                    {teacher.employeeId && (
-                      <p className="text-xs text-muted-foreground">{teacher.employeeId}</p>
+                  {showSelectColumn && (
+                    <TableCell
+                      className={cn(
+                        "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 transition-colors border-e border-border/30",
+                        workTableStickyCellBg(isSelected),
+                      )}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => onSelectOne(teacherIdStr)}
+                        aria-label={t("teachers.table.selectTeacher", { name: displayName })}
+                        className="cursor-pointer"
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell
+                    className={cn(
+                      "px-4 py-3 sticky start-12 z-10 transition-colors border-e border-border/30",
+                      workTableStickyCellBg(isSelected),
                     )}
-                  </div>
-                </Button>
-              </TableCell>
-              {visibleColumns.map((col) => (
-                <TableCell key={col.key} className={teacherWorkColumnCellClass(col.key)}>
-                  {renderTeacherWorkColumnValue(teacher, col.key, {
-                    t,
-                    statusConfig,
-                    customFieldsById,
-                  })}
-                </TableCell>
-              ))}
-              {showActionsColumn && (
-                <TableCell className="px-4 py-3">
-                  <TeacherListRowActions
-                    teacher={teacher}
-                    teacherId={teacherIdStr}
-                    showDeleted={showDeleted}
-                    canWrite={canWrite}
-                    canDelete={canDelete}
-                    triggerClassName={TEACHERS_ROW_ACTIONS_TRIGGER_CLASS}
-                    onEdit={onEdit}
-                    onRequestDelete={onRequestDelete}
-                    onView={onView}
-                    onRestore={onRestore}
-                    onSms={onSms}
-                    onWhatsApp={onWhatsApp}
-                    onEmail={onEmail}
-                  />
-                </TableCell>
-              )}
-            </motion.tr>
-          );
-        })}
-      </TableBody>
-    </Table>
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <UserAvatar
+                        id={teacher.id}
+                        name={displayName}
+                        avatar={teacher.avatar}
+                        className="w-8 h-8 shrink-0 rounded-full text-xs"
+                      />
+                      <div className="min-w-0">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => onView(teacher)}
+                          className="min-h-11 h-auto max-w-full p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
+                          title={displayName}
+                        >
+                          <span className="block truncate">{displayName}</span>
+                        </Button>
+                        {teacher.employeeId ? (
+                          <p className="text-xs text-muted-foreground">{teacher.employeeId}</p>
+                        ) : null}
+                        {showDeleted && teacher.deletionReason ? (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {t("teachers.deletionReasonLabel")}: {teacher.deletionReason}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  </TableCell>
+                  {visibleColumns.map((col) => (
+                    <TableCell key={col.key} className={teacherWorkColumnCellClass(col.key)}>
+                      {renderTeacherWorkColumnValue(teacher, col.key, {
+                        t,
+                        statusConfig,
+                        customFieldsById,
+                        emptyFallback: (
+                          <span className="text-muted-foreground/40">{emptyDash}</span>
+                        ),
+                      })}
+                    </TableCell>
+                  ))}
+                  {showActionsColumn && (
+                    <TableCell className="px-4 py-3">
+                      <TeacherListRowActions
+                        teacher={teacher}
+                        teacherId={teacherIdStr}
+                        showDeleted={showDeleted}
+                        canWrite={canWrite}
+                        canDelete={canDelete}
+                        triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+                        onEdit={onEdit}
+                        onRequestDelete={onRequestDelete}
+                        onView={onView}
+                        onRestore={onRestore}
+                        onSms={onSms}
+                        onWhatsApp={onWhatsApp}
+                        onEmail={onEmail}
+                      />
+                    </TableCell>
+                  )}
+                </motion.tr>
+              );
+            })}
+          </AnimatePresence>
+        </TableBody>
+      </Table>
+      <ModuleTableFooterCount
+        selectedCount={selectedIds.length}
+        selectedCountLabel={t("teachers.selectedCount", { count: selectedIds.length })}
+        pageCountLabel={pageCountLabel}
+      />
+    </>
   );
 }

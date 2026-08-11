@@ -1,17 +1,22 @@
-import { type ReactNode } from "react";
-import { ChevronDown, ChevronUp, RotateCcw, Trash2 } from "lucide-react";
-import { formatDate, formatMoney } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { SessionSortField } from "@/tenant/features/sessions/components/sessionPageTypes";
 import type { Session } from "@/lib/data/sessionsData";
-import {
-  getSessionEnrollmentTotals,
-  type SessionsWorkColumnLayout,
-} from "@/tenant/features/sessions/components/sessionsWorkListViewsShared";
+import type { SessionsWorkColumnLayout } from "@/tenant/features/sessions/components/sessionsWorkListViewsShared";
+import { renderSessionWorkColumnValue } from "@/tenant/features/sessions/components/sessionWorkColumnCell";
+import { SessionListRowActions } from "@/tenant/features/sessions/components/SessionListRowActions";
 
 interface SessionsWorkTableDesktopProps {
   sessions: Session[];
@@ -57,115 +62,106 @@ export function SessionsWorkTableDesktop({
   onRestore,
 }: SessionsWorkTableDesktopProps) {
   const { t } = useTranslation();
-
-  const renderSortIcon = (field: SessionSortField): ReactNode => {
-    if (sortField !== field) return null;
-    return sortDir === "asc" ? <ChevronUp className="ms-1 h-3 w-3" /> : <ChevronDown className="ms-1 h-3 w-3" />;
-  };
-
-  const renderSessionListActions = (sessionId: string) => (
-    canDelete ? (
-      showDeleted ? (
-        <Button type="button" variant="ghost" size="icon" aria-label={t("sessions.restore")} onClick={() => onRestore(sessionId)}>
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-      ) : (
-        <Button type="button" variant="ghost" size="icon" aria-label={t("common.delete")} onClick={() => onRequestDelete(sessionId)}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )
-    ) : null
-  );
+  const handleSort = (field: string) => onSort(field as SessionSortField);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full table-fixed text-sm">
-        <thead>
-          <tr className="border-b border-border/50 bg-muted/20">
-            {canSelectSessions && (
-              <th className="w-12 px-4 py-3">
-                <Checkbox
-                  checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
-                  onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-                  aria-label={t("sessions.table.selectAll")}
-                />
-              </th>
-            )}
-            {isColumnVisible("name") && (
-              <ResizableTableHead columnKey="name" width={columnLayout.getColumnWidth("name")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("name")}>
-                  {t("sessions.columns.name")}{renderSortIcon("name")}
-                </Button>
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("type") && (
-              <ResizableTableHead columnKey="type" width={columnLayout.getColumnWidth("type")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("type")}>
-                  {t("sessions.columns.type")}{renderSortIcon("type")}
-                </Button>
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("duration") && <ResizableTableHead columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("sessions.columns.duration")}</ResizableTableHead>}
-            {isColumnVisible("fee") && (
-              <ResizableTableHead columnKey="fee" width={columnLayout.getColumnWidth("fee")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("baseFee")}>
-                  {t("sessions.columns.fee")}{renderSortIcon("baseFee")}
-                </Button>
-              </ResizableTableHead>
-            )}
-            {isColumnVisible("enrolled") && <ResizableTableHead columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("sessions.columns.enrolled")}</ResizableTableHead>}
-            {isColumnVisible("status") && (
-              <ResizableTableHead columnKey="status" width={columnLayout.getColumnWidth("status")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <Button type="button" variant="ghost" className="h-auto min-h-11 px-1 text-xs font-semibold uppercase tracking-wide" onClick={() => onSort("status")}>
-                  {t("sessions.columns.status")}{renderSortIcon("status")}
-                </Button>
-              </ResizableTableHead>
-            )}
-            {canDelete && <th className="w-10 px-4 py-3"><span className="sr-only">{t("common.actions")}</span></th>}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border/50">
-          {sessions.map((sessionItem) => {
-            const { totalEnrolled, totalCapacity } = getSessionEnrollmentTotals(sessionItem);
-            const isSelected = selectedIds.includes(sessionItem.id);
-            return (
-              <tr
-                key={sessionItem.id}
-                className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
-              >
-                {canSelectSessions && (
-                  <td className="px-4 py-3">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={(checked) => onToggleSelectedSession(sessionItem.id, checked === true)}
-                      aria-label={sessionItem.name}
-                    />
-                  </td>
-                )}
-                {isColumnVisible("name") && (
-                  <td className="px-4 py-3">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => onOpenDetail(sessionItem)}
-                      className="min-h-11 h-auto max-w-full p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
-                      title={sessionItem.name}
-                    >
-                      <span className="block truncate">{sessionItem.name}</span>
-                    </Button>
-                  </td>
-                )}
-                {isColumnVisible("type") && <td className="px-4 py-3"><StatusBadge status={sessionItem.type || "other"} config={typeConfig} size="sm" /></td>}
-                {isColumnVisible("duration") && <td className="px-4 py-3 text-xs text-muted-foreground">{formatDate(sessionItem.startDate, true)} — {formatDate(sessionItem.endDate, true)}</td>}
-                {isColumnVisible("fee") && <td className="px-4 py-3 text-xs font-medium">{formatMoney(sessionItem.baseFee, sessionItem.currency)}</td>}
-                {isColumnVisible("enrolled") && <td className="px-4 py-3 text-xs text-muted-foreground">{totalEnrolled}/{totalCapacity || t("common.notSpecified")}</td>}
-                {isColumnVisible("status") && <td className="px-4 py-3"><StatusBadge status={sessionItem.status} config={statusConfig} size="sm" /></td>}
-                {canDelete && <td className="px-4 py-3">{renderSessionListActions(sessionItem.id)}</td>}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <Table className="table-fixed">
+      <TableHeader>
+        <TableRow className="border-b border-border/50 bg-muted/20 hover:bg-muted/20">
+          {canSelectSessions && (
+            <TableHead className="w-12 px-4 py-3 h-auto">
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
+                aria-label={t("sessions.table.selectAll")}
+              />
+            </TableHead>
+          )}
+          {isColumnVisible("name") && (
+            <ModuleTableHeaderCell columnKey="name" sortKey="name" activeSortField={sortField} sortDir={sortDir} onSort={handleSort} width={columnLayout.getColumnWidth("name")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 whitespace-nowrap">
+              {t("sessions.columns.name")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("type") && (
+            <ModuleTableHeaderCell columnKey="type" sortKey="type" activeSortField={sortField} sortDir={sortDir} onSort={handleSort} width={columnLayout.getColumnWidth("type")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 whitespace-nowrap">
+              {t("sessions.columns.type")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("duration") && (
+            <ModuleTableHeaderCell columnKey="duration" width={columnLayout.getColumnWidth("duration")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 whitespace-nowrap">
+              {t("sessions.columns.duration")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("fee") && (
+            <ModuleTableHeaderCell columnKey="fee" sortKey="baseFee" activeSortField={sortField} sortDir={sortDir} onSort={handleSort} width={columnLayout.getColumnWidth("fee")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 whitespace-nowrap">
+              {t("sessions.columns.fee")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("enrolled") && (
+            <ModuleTableHeaderCell columnKey="enrolled" width={columnLayout.getColumnWidth("enrolled")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 whitespace-nowrap">
+              {t("sessions.columns.enrolled")}
+            </ModuleTableHeaderCell>
+          )}
+          {isColumnVisible("status") && (
+            <ModuleTableHeaderCell columnKey="status" sortKey="status" activeSortField={sortField} sortDir={sortDir} onSort={handleSort} width={columnLayout.getColumnWidth("status")} onResize={columnLayout.setColumnWidth} className="px-4 py-3 whitespace-nowrap">
+              {t("sessions.columns.status")}
+            </ModuleTableHeaderCell>
+          )}
+          {canDelete && <TableHead className="w-10 px-4 py-3 h-auto"><span className="sr-only">{t("common.actions")}</span></TableHead>}
+        </TableRow>
+      </TableHeader>
+      <TableBody className="divide-y divide-border/50">
+        {sessions.map((sessionItem) => {
+          const isSelected = selectedIds.includes(sessionItem.id);
+          const columnOptions = { t, statusConfig, typeConfig };
+          return (
+            <TableRow
+              key={sessionItem.id}
+              className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
+            >
+              {canSelectSessions && (
+                <TableCell className="px-4 py-3">
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={(checked) => onToggleSelectedSession(sessionItem.id, checked === true)}
+                    aria-label={sessionItem.name}
+                  />
+                </TableCell>
+              )}
+              {isColumnVisible("name") && (
+                <TableCell className="px-4 py-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onOpenDetail(sessionItem)}
+                    className="min-h-11 h-auto max-w-full p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
+                    title={sessionItem.name}
+                  >
+                    <span className="block truncate">{sessionItem.name}</span>
+                  </Button>
+                </TableCell>
+              )}
+              {isColumnVisible("type") && <TableCell className="px-4 py-3">{renderSessionWorkColumnValue(sessionItem, "type", columnOptions)}</TableCell>}
+              {isColumnVisible("duration") && <TableCell className="px-4 py-3 text-xs text-muted-foreground">{renderSessionWorkColumnValue(sessionItem, "duration", columnOptions)}</TableCell>}
+              {isColumnVisible("fee") && <TableCell className="px-4 py-3 text-xs font-medium">{renderSessionWorkColumnValue(sessionItem, "fee", columnOptions)}</TableCell>}
+              {isColumnVisible("enrolled") && <TableCell className="px-4 py-3 text-xs text-muted-foreground">{renderSessionWorkColumnValue(sessionItem, "enrolled", columnOptions)}</TableCell>}
+              {isColumnVisible("status") && <TableCell className="px-4 py-3">{renderSessionWorkColumnValue(sessionItem, "status", columnOptions)}</TableCell>}
+              {canDelete && (
+                <TableCell className="px-4 py-3">
+                  <SessionListRowActions
+                    session={sessionItem}
+                    showDeleted={showDeleted}
+                    canDelete={canDelete}
+                    triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+                    onRequestDelete={onRequestDelete}
+                    onRestore={onRestore}
+                  />
+                </TableCell>
+              )}
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

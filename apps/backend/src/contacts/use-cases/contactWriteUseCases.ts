@@ -144,7 +144,6 @@ export async function mergeContactsById(
     if (String(keepId) === String(deleteId)) {
       throw new Error('Cannot merge a contact into itself');
     }
-
     const keep = await repo.findById(tenant, keepId);
     const other = await repo.findById(tenant, deleteId);
     if (!keep || keep.deletedAt) throw new Error('Keep contact not found');
@@ -182,4 +181,14 @@ export async function mergeContactsById(
   });
   await broadcastCollection('contacts');
   return saved;
+}
+
+/** Bulk persist pre-validated contacts (Google sync batch import) through the storage gateway. */
+export async function bulkSaveContacts(
+  contacts: Contact[],
+  repo: ContactsRepository = contactsRepository,
+): Promise<void> {
+  const tenant = getRequestTenant();
+  if (!tenant || contacts.length === 0) return;
+  await repo.bulkSave(tenant, contacts);
 }

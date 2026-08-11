@@ -4,10 +4,23 @@ import {
   toggleIdInSelection,
   togglePageIdsInSelection,
 } from "@/lib/directorySelection";
+import {
+  isStudentsQuickFilter,
+  type StudentsQuickFilter,
+} from "@mms/shared";
+import {
+  STUDENTS_WORK_DRILLDOWN_EVENT,
+  consumeStudentsWorkDrillDown,
+  type StudentsWorkDrillDown,
+} from "@/tenant/features/students/hooks/studentsWorkDrillDown";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 
 /** Directory filters, sort, trash, and selection SSOT for Students Work (Contacts-shaped). */
-export function useStudentsDirectoryFilters() {
+export function useStudentsDirectoryFilters({
+  setActiveTab,
+}: {
+  setActiveTab: (tab: string) => void;
+}) {
   const [listPage, setListPage] = useState(1);
   const [viewingDeleted, setViewingDeleted] = useState(false);
   const [sortField, setSortField] = useState<StudentListSortField | null>("grNumber");
@@ -16,20 +29,58 @@ export function useStudentsDirectoryFilters() {
   const debouncedSearch = useDebounce(studentSearch, 250);
   const [studentFilterStatus, setStudentFilterStatus] = useState<string[]>([]);
   const [studentFilterGender, setStudentFilterGender] = useState("");
+  const [quickFilter, setQuickFilter] = useState<StudentsQuickFilter>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setListPage(1);
-  }, [debouncedSearch, studentFilterStatus, studentFilterGender, viewingDeleted, sortField, sortDir]);
+  }, [
+    debouncedSearch,
+    studentFilterStatus,
+    studentFilterGender,
+    quickFilter,
+    viewingDeleted,
+    sortField,
+    sortDir,
+  ]);
 
   useEffect(() => {
     setSelectedIds([]);
   }, [viewingDeleted]);
 
+  const applyDrillDown = useCallback(
+    (filter: StudentsWorkDrillDown) => {
+      setQuickFilter("all");
+      if (filter.status) setStudentFilterStatus([filter.status]);
+      setActiveTab("work");
+    },
+    [setActiveTab],
+  );
+
+  useEffect(() => {
+    const pending = consumeStudentsWorkDrillDown();
+    if (pending) applyDrillDown(pending);
+
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<StudentsWorkDrillDown>).detail;
+      if (detail) applyDrillDown(detail);
+    };
+    window.addEventListener(STUDENTS_WORK_DRILLDOWN_EVENT, handler);
+    return () => window.removeEventListener(STUDENTS_WORK_DRILLDOWN_EVENT, handler);
+  }, [applyDrillDown]);
+
+  const changeQuickFilter = useCallback((preset: string) => {
+    if (!isStudentsQuickFilter(preset)) return;
+    // Status presets express status via the preset; clear the overlapping status filter.
+    setStudentFilterStatus([]);
+    setQuickFilter(preset);
+  }, []);
+
   const clearFilters = useCallback(() => {
     setStudentSearch("");
     setStudentFilterStatus([]);
     setStudentFilterGender("");
+    setQuickFilter("all");
   }, []);
 
   const clearSelection = useCallback(() => {
@@ -39,12 +90,14 @@ export function useStudentsDirectoryFilters() {
   const hasActiveFilters =
     Boolean(studentSearch.trim()) ||
     studentFilterStatus.length > 0 ||
-    Boolean(studentFilterGender);
+    Boolean(studentFilterGender) ||
+    quickFilter !== "all";
 
   const activeFilterCount =
     studentFilterStatus.length +
     (studentFilterGender ? 1 : 0) +
-    (studentSearch.trim() ? 1 : 0);
+    (studentSearch.trim() ? 1 : 0) +
+    (quickFilter !== "all" ? 1 : 0);
 
   const handleServerSort = useCallback(
     (field: StudentListSortField) => {
@@ -67,6 +120,8 @@ export function useStudentsDirectoryFilters() {
   }, []);
 
   const toggleStudentStatus = useCallback((status: string) => {
+    // Manual status selection supersedes any quick-filter preset.
+    setQuickFilter("all");
     setStudentFilterStatus((selectedStatuses) =>
       selectedStatuses.includes(status)
         ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
@@ -94,6 +149,8 @@ export function useStudentsDirectoryFilters() {
     setStudentFilterStatus,
     studentFilterGender,
     setStudentFilterGender,
+    quickFilter,
+    changeQuickFilter,
     selectedIds,
     clearSelection,
     handleSelectOne,

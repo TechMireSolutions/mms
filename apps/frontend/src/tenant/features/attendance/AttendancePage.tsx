@@ -38,6 +38,8 @@ export default function Attendance() {
     handleUpdateRecord,
     handleDeleteRecord,
     handleRestoreRecord,
+    handleBulkDeleteRecords,
+    handleBulkRestoreRecords,
     canWriteAttendance,
     canDeleteAttendance,
     visibleTopTabs,
@@ -91,6 +93,8 @@ export default function Attendance() {
         onUpdateRecord={handleUpdateRecord}
         onDeleteRecord={handleDeleteRecord}
         onRestoreRecord={handleRestoreRecord}
+        onBulkDeleteRecords={handleBulkDeleteRecords}
+        onBulkRestoreRecords={handleBulkRestoreRecords}
         onMessage={handleMessageAttendance}
         columnProps={{
           isColumnVisible: columnLayout.isColumnVisible,

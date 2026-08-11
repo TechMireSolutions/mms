@@ -60,8 +60,6 @@ export function formatContactGenderLabel(
   return translated === key ? toTitleCase(gender) : translated;
 }
 
-export { getGenderAccentBarClass as getContactAccentBarClass } from "@/lib/directoryCardAccent";
-
 /** Resolves localized label for duplicate detection fields. */
 export function getDuplicateFieldLabel(
   field: string,

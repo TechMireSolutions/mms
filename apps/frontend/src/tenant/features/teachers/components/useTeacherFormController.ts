@@ -101,6 +101,12 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   const getFieldError = (fieldId: string): string | undefined =>
     errors[fieldId] || errors[`custom:${fieldId}`];
 
+  /** FormModal error banner — deduped field validation messages (Students parity). */
+  const validationErrorSummary = useMemo(() => {
+    const messages = Object.values(errors).filter((message) => Boolean(message));
+    return messages.length > 0 ? [...new Set(messages)] : undefined;
+  }, [errors]);
+
   const { data: linkedContact } = useContactById(
     teacherDraft.contactId ? String(teacherDraft.contactId) : undefined,
     !!teacherDraft.contactId,
@@ -173,5 +179,6 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     getFieldError,
     updateDraft,
     handleSave,
+    validationErrorSummary,
   };
 }

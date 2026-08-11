@@ -6,8 +6,7 @@ import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import type { Teacher } from '@mms/shared';
 import { teacherColumnLabelKey, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
-import { useTeacherCount } from '@/tenant/features/teachers/hooks/useTeacherCount';
-import { useTeacherMutations, useTeachersPaginated } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useTeacherMutations, useTeachersPaginated, useTeachersMetrics } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTeachersDirectoryFilters } from '@/tenant/features/teachers/hooks/useTeachersDirectoryFilters';
 import { useTeachersKeyboardShortcuts } from '@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts';
 import { useTeachersPageActions } from '@/tenant/features/teachers/hooks/useTeachersPageActions';
@@ -37,7 +36,7 @@ export function useTeachersPageController() {
     canViewReports,
   });
 
-  const { data: serverCount } = useTeacherCount();
+  const { data: metrics } = useTeachersMetrics();
   const {
     listPage,
     setListPage,
@@ -148,7 +147,7 @@ export function useTeachersPageController() {
     canDelete,
     canExport,
     visibleTabs,
-    serverCount,
+    serverCount: metrics?.total,
     showForm,
     setShowForm,
     showDeleted,
@@ -169,6 +168,8 @@ export function useTeachersPageController() {
     editTeacher,
     setEditTeacher,
     pageActions,
+    openComposer: pageActions.openComposer,
+    canWriteMessaging: pageActions.canWriteMessaging,
     useServerWork,
     workPageQuery,
     workTeachers,

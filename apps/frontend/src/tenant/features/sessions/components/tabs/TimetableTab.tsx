@@ -4,6 +4,8 @@ import { Plus, Clock } from "lucide-react";
 import { DAYS, Session, TimetableItem } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -60,15 +62,20 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
 
   return (
     <section aria-label={t("sessions.timetable.ariaLabel")} className="space-y-4">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 min-w-0 text-sm font-semibold text-foreground">{t("sessions.timetable.count", { count: timetable.length })}</p>
-        {canWrite && <Button
-          onClick={() => setShowModal(true)}
-          className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.timetable.add")}
-        </Button>}
-      </header>
+      <SectionHeader
+        noMargin
+        title={t("sessions.timetable.count", { count: timetable.length })}
+        actions={
+          canWrite && (
+            <Button
+              onClick={() => setShowModal(true)}
+              className="flex h-auto w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.timetable.add")}
+            </Button>
+          )
+        }
+      />
 
       <div className="flex flex-wrap gap-2" aria-label={t("sessions.timetable.legend")}>
         {Object.entries(TIMETABLE_TYPE_CONFIG).map(([type, typeConfig]) => (
@@ -92,7 +99,7 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
             const entries = timetableByDay[day];
             if (entries.length === 0) return null;
             return (
-              <section key={day} aria-label={t("sessions.timetable.daySchedule", { day: t(`sessions.timetable.day.${day}` as AppTranslationKey) })} className="rounded-xl border border-border bg-card overflow-hidden">
+              <section key={day} aria-label={t("sessions.timetable.daySchedule", { day: t(`sessions.timetable.day.${day}` as AppTranslationKey) })} className={`${WORK_SURFACE} overflow-hidden`}>
                 <header className="flex min-w-0 items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2.5">
                   <h4 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{t(`sessions.timetable.day.${day}` as AppTranslationKey)}</h4>
                   <span className="shrink-0 text-xs text-muted-foreground">{t("sessions.timetable.activityCount", { count: entries.length })}</span>

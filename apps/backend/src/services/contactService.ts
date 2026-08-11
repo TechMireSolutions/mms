@@ -12,14 +12,18 @@ import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
 
 export const {
   loadContactsPage,
+  loadContactsPageForTenant,
+  loadContactsByIdsForTenant,
   loadContactRuntimeDefaults,
   loadContactsByIds,
+  loadExistingNormalizedContactNames,
   getContactById,
   upsertContact,
   updateContactById,
   restoreContactById,
   bulkRestoreContacts,
   bulkSoftDeleteContacts,
+  bulkSaveContacts,
   applyContactRelationshipInference,
 } = contactUseCases;
 
@@ -28,6 +32,7 @@ export {
   ContactUniqueFieldError,
 } from '../contacts/use-cases/contactUniqueFieldUseCases.js';
 export {
+  ContactPermissionError,
   prepareContactRecord,
 } from '../contacts/use-cases/contactNormalizeUseCases.js';
 export type {

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { FieldHint, FOOTER_MAX } from '@/components/branding/BrandingShared';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 
 export interface ThemeSettingsFooterSectionProps {
@@ -60,7 +61,7 @@ export function ThemeSettingsFooterSection({
 
       <div className="mt-4 space-y-3">
         <p className="text-xs font-medium text-muted-foreground">{t('theme.authPreviewLabel')}</p>
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className={`${WORK_SURFACE} overflow-hidden`}>
           <div className="flex flex-col items-center gap-3 border-b border-border bg-muted/20 px-6 py-8">
             {logoUrl.trim() ? (
               <img

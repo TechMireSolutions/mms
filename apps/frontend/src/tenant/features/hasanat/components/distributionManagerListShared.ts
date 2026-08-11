@@ -20,7 +20,8 @@ export interface DistributionManagerListProps {
   distributions: Distribution[];
   denoms: Denomination[];
   selectedIds: string[];
-  allFilteredSelected: boolean;
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   isColumnVisible: (key: string) => boolean;
   statusLabels: Record<DistributionStatus, string>;
   statusConfig: Record<DistributionStatus, StatusBadgeConfigItem>;
@@ -31,9 +32,9 @@ export interface DistributionManagerListProps {
   canDeleteRows: boolean;
   onMessage?: (channel: "sms" | "whatsapp" | "email", distributions: Distribution[]) => void;
   onChangeStatus: (id: string, status: DistributionStatus) => void;
-  onToggleSelected: (id: string) => void;
-  onToggleAll: (checked: boolean) => void;
-  onRowTrashAction: (id: string) => void;
+  onToggleSelectedDistribution: (id: string, checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean) => void;
+  onTrashAction: (id: string) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
 }

@@ -47,7 +47,8 @@ export function TeacherCardActions({
 
   const { phone, email } = resolveTeacherPrimaryChannels(teacher);
   const messagingEnabled = !showDeleted && Boolean(onWhatsApp || onSms || onEmail);
-  const hasFaceChannels = messagingEnabled && (Boolean(phone) || Boolean(email));
+  const hasFaceChannels =
+    !showDeleted && (Boolean(phone) || (Boolean(onEmail) && Boolean(email)));
 
   return (
     <DirectoryCardFooter

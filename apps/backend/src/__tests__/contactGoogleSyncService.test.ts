@@ -19,6 +19,9 @@ vi.mock('../db/repositories/contactGoogleSyncRepository.js', () => ({
 
 vi.mock('../services/contactService.js', () => ({
   loadContactRuntimeDefaults: (...args: unknown[]) => mockLoadContactRuntimeDefaults(...args),
+  loadExistingNormalizedContactNames: (...args: unknown[]) =>
+    mockFindExistingNormalizedContactNames(...args),
+  bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
   prepareContactRecord: async (contact: unknown) => contact,
 }));
 
@@ -175,7 +178,6 @@ describe('contactGoogleSyncService', () => {
     expect(result.skippedUnique).toBe(0);
     expect(result.skipped).toBe(1);
     expect(mockBulkSaveContacts).toHaveBeenCalledWith(
-      'demo',
       expect.arrayContaining([expect.objectContaining({ name: 'Sara Ahmed' })]),
     );
     expect(mockInvalidateDuplicateScanCache).toHaveBeenCalled();

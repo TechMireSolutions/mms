@@ -1,103 +1,88 @@
-import { Button } from "@/components/ui/button";
-import { useTranslation } from "@/hooks/useTranslation";
-import type { ObligationCollection } from "@/lib/data/obligationsData";
-import { Eye, MessageCircle, MessageSquare, Printer, RotateCcw, Trash2 } from "lucide-react";
+import type { JSX } from 'react';
+import { Printer } from 'lucide-react';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { EntityMessagingDropdownItems } from '@/components/ui/EntityMessagingDropdownItems';
+import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { ObligationCollection } from '@/lib/data/obligationsData';
 
 interface ObligationCollectionRowActionsProps {
   collection: ObligationCollection;
+  canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
+  /** When true, omit View (card already exposes a View control). */
+  hideViewItem?: boolean;
   onView: (collection: ObligationCollection) => void;
   onPrint: (collection: ObligationCollection) => void;
-  onDelete?: (id: string) => void | Promise<void>;
-  onRestore?: (id: string) => void | Promise<void>;
-  onMessage?: (channel: "sms" | "whatsapp" | "email", collections: ObligationCollection[]) => void;
+  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', collections: ObligationCollection[]) => void;
+  onTrashAction: (id: string) => void;
+  triggerClassName?: string;
 }
 
+/**
+ * Obligations collection row/card actions — thin adapter over the shared
+ * {@link ModuleRowActionsMenu}; Print + WhatsApp/SMS are injected as module
+ * extras, and Archive / Restore route to the parent's trash action (confirm
+ * dialog owned by the list, not native confirm()).
+ */
 export function ObligationCollectionRowActions({
   collection,
+  canWrite,
   canDelete,
   showDeleted,
+  hideViewItem = false,
   onView,
   onPrint,
-  onDelete,
-  onRestore,
   onMessage,
-}: ObligationCollectionRowActionsProps): React.JSX.Element {
+  onTrashAction,
+  triggerClassName,
+}: ObligationCollectionRowActionsProps): JSX.Element {
   const { t } = useTranslation();
+  const showMessaging = Boolean(onMessage) && !showDeleted;
+  const showPrint = !showDeleted;
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-1">
-      {onMessage && !showDeleted && (
-        <>
-          <Button
-            type="button"
-            onClick={() => onMessage("whatsapp", [collection])}
-            variant="ghost"
-            size="icon"
-            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-success shadow-none transition-colors"
-            title={t("obligations.list.actionWhatsApp")}
-            aria-label={t("obligations.list.actionWhatsApp")}
-          >
-            <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            type="button"
-            onClick={() => onMessage("sms", [collection])}
-            variant="ghost"
-            size="icon"
-            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-info shadow-none transition-colors"
-            title={t("obligations.list.actionSms")}
-            aria-label={t("obligations.list.actionSms")}
-          >
-            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-        </>
-      )}
-      <Button
-        type="button"
-        onClick={() => onView(collection)}
-        variant="ghost"
-        size="icon"
-        className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
-        aria-label={t("obligations.actions.view", { receipt: collection.receipt_no })}
-        title={t("obligations.actions.viewShort")}
-      >
-        <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-      </Button>
-      {!showDeleted && (
-        <Button
-          type="button"
-          onClick={() => onPrint(collection)}
-          variant="ghost"
-          size="icon"
-          className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary shadow-none transition-colors"
-          aria-label={t("obligations.actions.print", { receipt: collection.receipt_no })}
-          title={t("obligations.actions.printShort")}
-        >
-          <Printer className="w-3.5 h-3.5" aria-hidden="true" />
-        </Button>
-      )}
-      {canDelete && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={`rounded-lg hover:bg-muted shadow-none transition-colors ${showDeleted ? "text-muted-foreground hover:text-primary" : "text-muted-foreground hover:text-destructive"}`}
-          aria-label={showDeleted ? t("obligations.trash.restore") : t("common.delete")}
-          onClick={() => {
-            if (showDeleted) {
-              if (!confirm(t("obligations.trash.bulkRestoreConfirm", { count: 1 }))) return;
-              void onRestore?.(collection.id);
-            } else {
-              if (!confirm(t("obligations.trash.deleteConfirm"))) return;
-              void onDelete?.(collection.id);
-            }
-          }}
-        >
-          {showDeleted ? <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> : <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}
-        </Button>
-      )}
-    </div>
+    <ModuleRowActionsMenu
+      triggerLabel={t('obligations.table.actions')}
+      viewLabel={t('obligations.actions.viewShort')}
+      deleteLabel={t('common.delete')}
+      restoreLabel={t('obligations.trash.restore')}
+      archived={showDeleted}
+      canWrite={canWrite}
+      canDelete={canDelete}
+      onView={() => onView(collection)}
+      onEdit={undefined}
+      onDelete={() => onTrashAction(collection.id)}
+      onRestore={showDeleted ? () => onTrashAction(collection.id) : undefined}
+      hideViewItem={hideViewItem}
+      triggerClassName={triggerClassName}
+      extras={
+        showPrint || showMessaging ? (
+          <>
+            {showPrint ? (
+              <DropdownMenuItem onClick={() => onPrint(collection)}>
+                <Printer className="w-3.5 h-3.5 me-2" /> {t('obligations.actions.printShort')}
+              </DropdownMenuItem>
+            ) : null}
+            {showMessaging && onMessage ? (
+              <EntityMessagingDropdownItems
+                showWhatsApp
+                showSms
+                showEmail={false}
+                onWhatsAppClick={() => onMessage('whatsapp', [collection])}
+                onSmsClick={() => onMessage('sms', [collection])}
+                onEmailClick={() => undefined}
+                labels={{
+                  whatsapp: t('obligations.list.actionWhatsApp'),
+                  sms: t('obligations.list.actionSms'),
+                  email: t('messaging.channel.email'),
+                }}
+              />
+            ) : null}
+          </>
+        ) : undefined
+      }
+    />
   );
 }

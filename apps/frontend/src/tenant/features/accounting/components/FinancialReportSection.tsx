@@ -1,5 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -41,7 +49,7 @@ export function ReportSection({
   );
 
   return (
-    <section aria-label={title} className="rounded-xl border border-border overflow-hidden">
+    <section aria-label={title} className={WORK_SURFACE}>
       <header className={`px-4 py-2.5 border-b border-border ${color || "bg-muted/60"}`}>
         <h3 className="text-xs font-bold uppercase tracking-wide text-foreground m-0">{title}</h3>
       </header>
@@ -55,7 +63,7 @@ export function ReportSection({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: index * 0.03 }}
-              className="space-y-2 rounded-xl border border-border bg-card p-3"
+              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -77,16 +85,16 @@ export function ReportSection({
           <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
         </article>
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
+      <div className="hidden md:block">
+        <Table>
           <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>
-          <tbody className="divide-y divide-border">
+          <TableBody className="divide-y divide-border/50">
             {rows.map((reportRow) => {
               const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
               const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
               return (
-                <tr key={reportRow.id} className="hover:bg-muted/10">
-                  <td className="px-4 py-3">
+                <TableRow key={reportRow.id} className="hover:bg-muted/10">
+                  <TableCell className="px-3 py-2.5">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-medium text-foreground">{reportRow.name}</span>
                       <span className="font-mono font-semibold text-foreground ms-2">{formatCurrency(Math.abs(rowAmount))}</span>
@@ -97,20 +105,20 @@ export function ReportSection({
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono m-0">
                       {reportRow.code} · {reportRow.subtype || reportRow.type}
                     </p>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-          <tfoot className="border-t-2 border-border bg-muted/30">
-            <tr>
-              <td className="px-4 py-2.5 flex items-center justify-between">
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell className="px-3 py-2.5 flex items-center justify-between">
                 <span className="font-bold text-foreground">{totalLabel}</span>
                 <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
       </div>
     </section>
   );

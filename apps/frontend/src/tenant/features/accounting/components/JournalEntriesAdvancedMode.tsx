@@ -1,15 +1,13 @@
 import type { ReactNode } from "react";
-import { Trash2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
-import { BulkSelectionClearAction, BulkSelectionRestoreAction } from "@/components/ui/BulkSelectionActions";
-import { Button } from "@/components/ui/button";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
 import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
 import { JournalEntriesList } from "@/tenant/features/accounting/components/JournalEntriesList";
 import { JournalEntriesAdvancedToolbar, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesAdvancedToolbar";
+import { AccountingBulkActionBar } from "@/tenant/features/accounting/components/AccountingBulkActionBar";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -25,7 +23,8 @@ interface JournalEntriesAdvancedModeProps {
   accounts: Account[];
   fiscalYears: FiscalYear[];
   selectedIds: string[];
-  allFilteredSelected: boolean;
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   isColumnVisible: (key: string) => boolean;
   journalStatusConfig: Record<string, StatusBadgeConfigItem>;
   grandDebit: number;
@@ -43,6 +42,7 @@ interface JournalEntriesAdvancedModeProps {
   showDeleted: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
   renderEntryActions: (entry: JournalEntry) => ReactNode;
+  renderEntryActionsCards: (entry: JournalEntry) => ReactNode;
   formatAmount: (amount: number) => string;
   onModeChange: (mode: JournalMode) => void;
   onSearchChange: (value: string) => void;
@@ -52,15 +52,25 @@ interface JournalEntriesAdvancedModeProps {
   onDateToChange: (value: string) => void;
   onShowFiltersChange: (showFilters: boolean) => void;
   onOpenNew: () => void;
-  onBulkAction: () => void;
+  onRequestBulkTrash: () => void;
+  onConfirmBulkTrash: () => void;
+  onConfirmRowTrash: () => void;
   onExportCsv: () => void;
-  onToggleSelected: (id: string) => void;
-  onToggleAll: (checked: boolean) => void;
+  onToggleSelectedEntry: (id: string, checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean) => void;
   onClearSelection: () => void;
   onSave: (entry: JournalEntry) => void | Promise<void>;
   onCloseModal: () => void;
   onEditSelected: () => void;
-  onReverseSelected: () => void;
+  onViewEntry: (entry: JournalEntry) => void;
+  onRequestReverse: (entry: JournalEntry) => void;
+  onConfirmReverse: () => void;
+  pendingTrashId: string | null;
+  confirmBulkOpen: boolean;
+  pendingReverseEntry: JournalEntry | null;
+  onPendingTrashIdChange: (id: string | null) => void;
+  onConfirmBulkOpenChange: (open: boolean) => void;
+  onPendingReverseEntryChange: (entry: JournalEntry | null) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
 }
@@ -71,37 +81,6 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
 
   return (
     <section aria-label={t("accounting.journal.advancedAria")} className="space-y-4">
-      {props.canDelete && (
-        <BulkSelectionBar
-          placement="inline"
-          tone="glass"
-          selectedCount={props.selectedIds.length}
-          countLabel={t("accounting.trash.selected", { count: props.selectedIds.length })}
-          trailing={
-            <BulkSelectionClearAction
-              label={t("common.deselect")}
-              onClick={props.onClearSelection}
-            />
-          }
-        >
-          {props.showDeleted ? (
-            <BulkSelectionRestoreAction
-              label={t("accounting.trash.restore")}
-              onClick={props.onBulkAction}
-            />
-          ) : (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={props.onBulkAction}
-              className="flex min-h-11 items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90"
-            >
-              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.delete")}
-            </Button>
-          )}
-        </BulkSelectionBar>
-      )}
-
       <JournalEntriesAdvancedToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -109,6 +88,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         modeTabs={props.modeTabs}
         search={props.search}
         statusFilter={props.statusFilter}
+        tagFilter={props.tagFilter}
         showFilters={props.showFilters}
         canWrite={props.canWrite}
         showDeleted={props.showDeleted}
@@ -116,19 +96,33 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         onModeChange={props.onModeChange}
         onSearchChange={props.onSearchChange}
         onStatusFilterChange={props.onStatusFilterChange}
+        onTagFilterChange={props.onTagFilterChange}
         onShowFiltersChange={props.onShowFiltersChange}
         onOpenNew={props.onOpenNew}
         onExportCsv={props.onExportCsv}
       />
 
+      {props.canDelete && (
+        <AccountingBulkActionBar
+          selectedCount={props.selectedIds.length}
+          showDeleted={props.showDeleted}
+          canDelete={props.canDelete}
+          onRequestBulkDelete={() => props.onRequestBulkTrash()}
+          onRequestBulkRestore={() => props.onRequestBulkTrash()}
+          onClearSelection={props.onClearSelection}
+        />
+      )}
+
       {props.showFilters && (
         <JournalEntriesAdvancedFilters
           dateFrom={props.dateFrom}
           dateTo={props.dateTo}
-          tagFilter={props.tagFilter}
           onDateFromChange={props.onDateFromChange}
           onDateToChange={props.onDateToChange}
-          onTagFilterChange={props.onTagFilterChange}
+          onClear={() => {
+            props.onDateFromChange("");
+            props.onDateToChange("");
+          }}
         />
       )}
 
@@ -137,15 +131,18 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         entries={props.filteredEntries}
         selectedIds={props.selectedIds}
         canDelete={props.canDelete}
-        allFilteredSelected={props.allFilteredSelected}
+        allVisibleSelected={props.allVisibleSelected}
+        someVisibleSelected={props.someVisibleSelected}
         isColumnVisible={props.isColumnVisible}
         journalStatusConfig={props.journalStatusConfig}
         grandDebit={props.grandDebit}
         grandCredit={props.grandCredit}
         formatAmount={props.formatAmount}
         renderEntryActions={props.renderEntryActions}
-        onToggleSelected={props.onToggleSelected}
-        onToggleAll={props.onToggleAll}
+        renderEntryActionsCards={props.renderEntryActionsCards}
+        onView={props.onViewEntry}
+        onToggleSelectedEntry={props.onToggleSelectedEntry}
+        onToggleSelectAll={props.onToggleSelectAll}
         getColumnWidth={props.getColumnWidth}
         onColumnResize={props.onColumnResize}
       />
@@ -161,16 +158,57 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
             onClose={props.onCloseModal}
           />
         )}
-        {props.modal === "view" && props.selected && (
-          <JournalEntryDetail
-            entry={props.selected}
-            accounts={props.accounts}
-            onClose={props.onCloseModal}
-            onEdit={props.canWrite ? props.onEditSelected : undefined}
-            onReverse={props.canWrite ? props.onReverseSelected : undefined}
-          />
-        )}
+        {props.modal === "view" && props.selected && (() => {
+          const entry = props.selected;
+          return (
+            <JournalEntryDetail
+              entry={entry}
+              accounts={props.accounts}
+              onClose={props.onCloseModal}
+              onEdit={props.canWrite ? props.onEditSelected : undefined}
+              onReverse={props.canWrite ? () => props.onRequestReverse(entry) : undefined}
+            />
+          );
+        })()}
       </AnimatePresence>
+
+      <ConfirmAlertDialog
+        open={props.pendingTrashId !== null}
+        onOpenChange={(open) => {
+          if (!open) props.onPendingTrashIdChange(null);
+        }}
+        title={t("accounting.trash.deleteTitle")}
+        description={t("accounting.trash.deleteEntryConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={props.onConfirmRowTrash}
+        destructive
+      />
+
+      <ConfirmAlertDialog
+        open={props.confirmBulkOpen}
+        onOpenChange={props.onConfirmBulkOpenChange}
+        title={t("accounting.trash.deleteTitle")}
+        description={t("accounting.trash.bulkDeleteConfirm", { count: props.selectedIds.length })}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={props.onConfirmBulkTrash}
+        destructive
+      />
+
+      {props.pendingReverseEntry && (
+        <ConfirmAlertDialog
+          open={props.pendingReverseEntry !== null}
+          onOpenChange={(open) => {
+            if (!open) props.onPendingReverseEntryChange(null);
+          }}
+          title={t("accounting.journal.actions.reverse")}
+          description={t("accounting.journal.alerts.reverseConfirm", { ref: props.pendingReverseEntry.ref })}
+          confirmLabel={t("accounting.journal.actions.reverse")}
+          cancelLabel={t("common.cancel")}
+          onConfirm={props.onConfirmReverse}
+        />
+      )}
     </section>
   );
 }

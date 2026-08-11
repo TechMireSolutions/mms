@@ -8,8 +8,7 @@ import { ACTIVITY_TYPE_I18N } from "@/lib/contacts/contactI18n";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
+import { DETAIL_SECTION_TITLE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { ICON_MAP } from "./contactDetailStyles";
 
 interface ContactDetailTimelineProps {
@@ -85,7 +84,7 @@ export function ContactDetailTimeline({
                 >
                   <Icon className="w-2.5 h-2.5 text-muted-foreground group-hover:text-primary" />
                 </div>
-                <Card className="p-4 shadow-xs hover:border-primary/20 group-hover:border-primary/20">
+                <div className={`${WORK_SURFACE_INNER} p-4 hover:border-primary/20 group-hover:border-primary/20`}>
                   <div className="flex items-center justify-between mb-2">
                     <span className={DETAIL_SECTION_TITLE}>
                       {ACTIVITY_TYPE_I18N[act.type] ? t(ACTIVITY_TYPE_I18N[act.type]) : act.type}
@@ -94,7 +93,7 @@ export function ContactDetailTimeline({
                   </div>
                   <p className="text-xs text-foreground font-medium leading-relaxed">{act.content}</p>
                   {act.by && <span className="block mt-2 text-xs font-bold text-primary italic">— {act.by}</span>}
-                </Card>
+                </div>
               </motion.div>
             );
           })

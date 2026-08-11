@@ -7,7 +7,6 @@ export {
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
   CONTACTS_DUPLICATES_QUERY_KEY,
-  contactsListQueryKey,
   contactDetailQueryKey,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 

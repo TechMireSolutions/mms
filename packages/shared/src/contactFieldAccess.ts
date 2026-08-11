@@ -6,10 +6,6 @@ export function canViewContactField(viewerRole: string, field: FieldDefinition):
   return field.permissions.includes(viewerRole);
 }
 
-export function canEditContactField(viewerRole: string, field: FieldDefinition): boolean {
-  return canViewContactField(viewerRole, field);
-}
-
 /** Tab visibility by registry `permissions[]` (empty = all roles). */
 export function canViewContactTab(viewerRole: string, tab: TabDefinition): boolean {
   if (!tab.enabled) return false;

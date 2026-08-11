@@ -1,9 +1,18 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { formatDate } from "@mms/shared";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
+import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
+import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
+import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
+import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { EnrollmentRowActions } from "@/tenant/features/enrollments/components/EnrollmentRowActions";
+import { getEnrollmentVisibleWorkColumns } from "@/tenant/features/enrollments/components/enrollmentListVisibleColumns";
+import { renderEnrollmentWorkColumnValue } from "@/tenant/features/enrollments/components/enrollmentWorkColumnCell";
 import {
   findEnrollmentStudent,
   getEnrollmentStudentDisplayName,
@@ -20,6 +29,11 @@ export function EnrollmentListCards(props: EnrollmentListCardsProps): React.JSX.
     enrollments,
     students,
     isColumnVisible,
+    columnRegistry,
+    canSelectEnrollments,
+    selectedIds,
+    allVisibleSelected,
+    someVisibleSelected,
     canWrite,
     canDelete,
     showDeleted,
@@ -30,100 +44,108 @@ export function EnrollmentListCards(props: EnrollmentListCardsProps): React.JSX.
     onCancel,
     onDelete,
     onRestore,
+    onToggleSelectAll,
+    onToggleSelectedEnrollment,
     openComposer,
   } = props;
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+  const pageCountLabel = formatDirectoryPageCountLabel(enrollments.length, t, {
+    singular: "enrollments.item.enrollment",
+    plural: "enrollments.item.enrollments",
+  });
 
   return (
-    <div className="space-y-3 p-3">
-      {enrollments.map((enrollment) => {
-        const student = findEnrollmentStudent(enrollment, students);
-        const studentDisplayName = getEnrollmentStudentDisplayName(enrollment, students);
+    <>
+      {canSelectEnrollments && enrollments.length > 0 ? (
+        <DirectoryCardsSelectAllBar
+          checkboxId="enrollments-select-all-cards"
+          allSelected={allVisibleSelected}
+          someSelected={someVisibleSelected}
+          onSelectAll={() => onToggleSelectAll(!allVisibleSelected)}
+          selectLabel={t("enrollments.table.selectAll")}
+          deselectLabel={t("common.deselect")}
+          selectedCount={selectedIds.length}
+          selectedCountLabel={t("enrollments.selectedCount", { count: selectedIds.length })}
+          pageCountLabel={pageCountLabel}
+        />
+      ) : null}
 
-        return (
-          <motion.article
-            key={enrollment.id}
-            layout
-            className="space-y-3 rounded-xl border border-border bg-card p-3"
-          >
-            <div className="flex min-w-0 items-start justify-between gap-3">
-              {isColumnVisible("student") && (
-                <div className="min-w-0">
-                  <h4 className="truncate text-sm font-semibold text-foreground">{studentDisplayName}</h4>
-                  {student?.grNumber && (
+      <DirectoryCardsGrid>
+        {enrollments.map((enrollment) => {
+          const isSelected = selectedIds.includes(enrollment.id);
+          const student = findEnrollmentStudent(enrollment, students);
+          const studentDisplayName = getEnrollmentStudentDisplayName(enrollment, students);
+          const visibleColumns = getEnrollmentVisibleWorkColumns(columnRegistry, isColumnVisible, {
+            excludeFace: true,
+          });
+
+          return (
+            <DirectoryEntityCard key={enrollment.id} isSelected={isSelected} reducedMotion={reducedMotion}>
+              <DirectoryCardHeader
+                id={enrollment.id}
+                displayName={studentDisplayName || enrollment.studentName}
+                isSelected={isSelected}
+                showSelect={canSelectEnrollments}
+                onSelect={() => onToggleSelectedEnrollment(enrollment.id, !isSelected)}
+                selectAriaLabel={t("enrollments.table.selectEnrollment", { name: studentDisplayName })}
+                onView={() => onView(enrollment)}
+                viewAriaLabel={`${t("enrollments.table.viewProfile")} - ${studentDisplayName}`}
+                reducedMotion={reducedMotion}
+                subtitle={
+                  student?.grNumber ? (
                     <p className="text-xs font-bold text-primary">
                       {t("enrollments.detail.grNumber")}: {student.grNumber}
                     </p>
-                  )}
-                </div>
-              )}
-              {isColumnVisible("finalFee") && (
-                <span className="shrink-0 text-sm font-semibold text-foreground">
-                  {formatCurrency(enrollment.finalFee)}
-                  {enrollment.discountPct > 0 && (
-                    <span
-                      className="ms-1 text-xs text-success font-normal"
-                      aria-label={t("enrollments.discountPctAria", { pct: enrollment.discountPct })}
-                    >
-                      –{enrollment.discountPct}%
-                    </span>
-                  )}
-                </span>
-              )}
-            </div>
-            <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              {isColumnVisible("session") && (
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.session")}</dt>
-                  <dd className="truncate text-foreground">{enrollment.sessionName}</dd>
-                </div>
-              )}
-              {isColumnVisible("class") && (
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.class")}</dt>
-                  <dd className="text-foreground">{enrollment.className || "—"}</dd>
-                </div>
-              )}
-              {isColumnVisible("enrolledDate") && (
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("enrollments.columns.enrolledDate")}</dt>
-                  <dd className="font-mono text-muted-foreground">{formatDate(enrollment.enrolledDate)}</dd>
-                </div>
-              )}
-              {isColumnVisible("status") && (
-                <div>
-                  <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.status")}</dt>
-                  <dd><StatusBadge status={enrollment.status} config={statusConfig} size="sm" /></dd>
-                </div>
-              )}
-              {isColumnVisible("payment") && (
-                <div>
-                  <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("enrollments.columns.payment")}</dt>
-                  <dd>
-                    {enrollment.paymentStatus
-                      ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
-                      : "—"}
-                  </dd>
-                </div>
-              )}
-            </dl>
-            <div className="flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
-              <EnrollmentRowActions
-                enrollment={enrollment}
-                student={student}
-                canWrite={canWrite}
-                canDelete={canDelete}
-                showDeleted={showDeleted}
-                onView={onView}
-                onCancel={onCancel}
-                onDelete={onDelete}
-                onRestore={onRestore}
-                openComposer={openComposer}
+                  ) : undefined
+                }
               />
-            </div>
-          </motion.article>
-        );
-      })}
-    </div>
+
+              <DirectoryCardMetadata
+                columns={visibleColumns}
+                keyFor={(col) => col.key}
+                labelFor={(col) => col.label}
+                renderValue={(col) =>
+                  renderEnrollmentWorkColumnValue(enrollment, col.key, {
+                    t,
+                    students,
+                    statusConfig,
+                    paymentConfig,
+                    formatCurrency,
+                    emptyFallback: null,
+                  })
+                }
+              />
+
+              <DirectoryCardFooter
+                trailing={
+                  <>
+                    <DirectoryCardViewButton
+                      label={t("enrollments.actions.viewShort")}
+                      ariaLabel={`${t("enrollments.table.viewProfile")} - ${studentDisplayName}`}
+                      onClick={() => onView(enrollment)}
+                    />
+                    <EnrollmentRowActions
+                      enrollment={enrollment}
+                      student={student}
+                      canWrite={canWrite}
+                      canDelete={canDelete}
+                      showDeleted={showDeleted}
+                      hideViewItem
+                      triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+                      onView={onView}
+                      onCancel={onCancel}
+                      onDelete={onDelete}
+                      onRestore={onRestore}
+                      openComposer={openComposer}
+                    />
+                  </>
+                }
+              />
+            </DirectoryEntityCard>
+          );
+        })}
+      </DirectoryCardsGrid>
+    </>
   );
 }

@@ -7,6 +7,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { BudgetTransactionModal, type TransactionEntry } from "./BudgetTransactionModal";
 
 interface BudgetTabProps {
@@ -69,7 +71,7 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
           { label: t("sessions.budget.totalExpenses"), value: totalExpenses, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive/10" },
           { label: t("sessions.budget.netBalance"), value: balance, icon: DollarSign, color: balance >= 0 ? "text-success" : "text-destructive", bg: balance >= 0 ? "bg-success/10" : "bg-destructive/10" },
         ].map((stat) => (
-          <article key={stat.label} className="rounded-xl border border-border bg-card p-4">
+          <article key={stat.label} className={`${WORK_SURFACE_INNER} p-4`}>
             <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
               <stat.icon className={`w-4 h-4 ${stat.color}`} style={{ color: stat.color.includes("success") ? "hsl(var(--success))" : "hsl(var(--destructive))" }} />
             </div>
@@ -80,18 +82,23 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
       </section>
 
       <section aria-labelledby="income-heading">
-        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-success" aria-hidden="true" />
-            <h3 id="income-heading" className="m-0 text-sm font-bold text-foreground">{t("sessions.budget.income")}</h3>
-          </div>
-          {canWrite && <Button
-            onClick={() => setAddType("income")}
-            className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-success/20 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success transition-colors hover:bg-success/15 hover:text-success sm:w-auto"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addIncome")}
-          </Button>}
-        </header>
+        <SectionHeader
+          headingLevel={3}
+          headingId="income-heading"
+          icon={<TrendingUp className="w-4 h-4 text-success" aria-hidden="true" />}
+          iconClassName="bg-success/10"
+          title={t("sessions.budget.income")}
+          actions={
+            canWrite && (
+              <Button
+                onClick={() => setAddType("income")}
+                className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-success/20 bg-success/10 px-3 py-1.5 text-xs font-semibold text-success transition-colors hover:bg-success/15 hover:text-success sm:w-auto"
+              >
+                <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addIncome")}
+              </Button>
+            )
+          }
+        />
         <div className="rounded-xl border border-border overflow-hidden">
           {(!budget.incomes || budget.incomes.length === 0) ? (
             <EmptyState title={t("sessions.budget.emptyIncome")} compact icon={null} />
@@ -116,18 +123,23 @@ export function BudgetTab({ session, onUpdate, canWrite }: BudgetTabProps) {
       </section>
 
       <section aria-labelledby="expense-heading">
-        <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            <TrendingDown className="w-4 h-4 text-destructive" aria-hidden="true" />
-            <h3 id="expense-heading" className="m-0 text-sm font-bold text-foreground">{t("sessions.budget.expenses")}</h3>
-          </div>
-          {canWrite && <Button
-            onClick={() => setAddType("expense")}
-            className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/15 hover:text-destructive sm:w-auto"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addExpense")}
-          </Button>}
-        </header>
+        <SectionHeader
+          headingLevel={3}
+          headingId="expense-heading"
+          icon={<TrendingDown className="w-4 h-4 text-destructive" aria-hidden="true" />}
+          iconClassName="bg-destructive/10"
+          title={t("sessions.budget.expenses")}
+          actions={
+            canWrite && (
+              <Button
+                onClick={() => setAddType("expense")}
+                className="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/15 hover:text-destructive sm:w-auto"
+              >
+                <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("sessions.budget.addExpense")}
+              </Button>
+            )
+          }
+        />
         <div className="rounded-xl border border-border overflow-hidden">
           {(!budget.expenses || budget.expenses.length === 0) ? (
             <EmptyState title={t("sessions.budget.emptyExpenses")} compact icon={null} />

@@ -44,22 +44,12 @@ vi.mock('../services/rbacService.js', () => ({
   canDeleteContacts: (...args: unknown[]) => mockCanDeleteContacts(...args),
 }));
 
-const mockTxExecute = vi.fn();
-vi.mock('../db/withTenantTransaction.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../db/withTenantTransaction.js')>();
-  return {
-    ...actual,
-    withTenantTransaction: async <T>(
-      _subdomain: string | null,
-      fn: (tx: { execute: typeof mockTxExecute }) => Promise<T>,
-    ): Promise<T> => fn({ execute: mockTxExecute }),
-  };
-});
-
 import { createContactsUseCases } from '../contacts/use-cases/contactUseCases.js';
 import { ContactUniqueFieldError } from '../contacts/use-cases/contactUniqueFieldUseCases.js';
 import { ContactPermissionError } from '../contacts/use-cases/contactNormalizeUseCases.js';
-import type { ContactDuplicateCandidateKeys } from '../db/repositories/contactRepository.js';
+import type { ContactDuplicateCandidateKeys } from '../contacts/repository/contactsRepository.js';
+import { loadContactLookupKind } from '../services/contactLookupsService.js';
+import { loadContactPreferences } from '../services/contactPreferencesService.js';
 
 function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   return {
@@ -127,6 +117,7 @@ function createFakeRepo() {
       ),
       findContactDuplicateBlockedIds: vi.fn(async () => []),
       countFieldUsageByKeys: vi.fn(async () => ({})),
+      acquireUniqueValueLocks: vi.fn(async () => undefined),
       aggregateCommandMetrics: vi.fn(
         async (
           _tenant: string,
@@ -407,6 +398,62 @@ describe('createContactsUseCases (DI composition root)', () => {
     expect(result.monthlyByYear).toBeUndefined();
   });
 
+  it('loadContactRuntimeDefaults resolves country code from preferences defaultCountry', async () => {
+    const useCases = createContactsUseCases(createFakeRepo().repo);
+    vi.mocked(loadContactLookupKind).mockImplementation(async (kind) => {
+      if (kind === 'countryCodes') {
+        return [
+          { country: 'Pakistan', code: '+92' },
+          { country: 'Saudi Arabia', code: '+966' },
+        ];
+      }
+      if (kind === 'phoneLabels') return ['Work'];
+      if (kind === 'emailLabels') return ['Primary'];
+      return [];
+    });
+    vi.mocked(loadContactPreferences).mockResolvedValue({ defaultCountry: 'Pakistan' } as never);
+
+    const defaults = await useCases.loadContactRuntimeDefaults();
+
+    expect(defaults).toEqual({
+      defaultPhoneCountryCode: '+92',
+      phoneLabel: 'Work',
+      emailLabel: 'Primary',
+    });
+    expect(loadContactLookupKind).toHaveBeenCalledWith('countryCodes');
+    expect(loadContactLookupKind).toHaveBeenCalledWith('phoneLabels');
+    expect(loadContactLookupKind).toHaveBeenCalledWith('emailLabels');
+  });
+
+  it('loadContactRuntimeDefaults falls back to first country code when defaultCountry is unset', async () => {
+    const useCases = createContactsUseCases(createFakeRepo().repo);
+    vi.mocked(loadContactLookupKind).mockResolvedValue([
+      { country: 'Saudi Arabia', code: '+966' },
+      { country: 'Pakistan', code: '+92' },
+    ]);
+    vi.mocked(loadContactPreferences).mockResolvedValue(null);
+
+    const defaults = await useCases.loadContactRuntimeDefaults();
+
+    expect(defaults.defaultPhoneCountryCode).toBe('+966');
+  });
+
+  it('loadContactRuntimeDefaults resolves phone/email labels from their lookup kinds', async () => {
+    const useCases = createContactsUseCases(createFakeRepo().repo);
+    vi.mocked(loadContactLookupKind).mockImplementation(async (kind) => {
+      if (kind === 'phoneLabels') return ['Mobile'];
+      if (kind === 'emailLabels') return ['Home'];
+      return [];
+    });
+    vi.mocked(loadContactPreferences).mockResolvedValue(null);
+
+    const defaults = await useCases.loadContactRuntimeDefaults();
+
+    expect(defaults.phoneLabel).toBe('Mobile');
+    expect(defaults.emailLabel).toBe('Home');
+    expect(defaults.defaultPhoneCountryCode).toBe('');
+  });
+
   it('loadContactsReportAnalytics adds monthly created counts for compareYears', async () => {
     const { repo } = createFakeRepo();
     const useCases = createContactsUseCases(repo);
@@ -510,9 +557,10 @@ describe('createContactsUseCases (DI composition root)', () => {
       fakeContact('new-1', { emails: [{ label: 'Primary', address: 'new@example.com' }] }),
     );
 
-    expect(mockTxExecute).toHaveBeenCalled();
-    const sqlArg = mockTxExecute.mock.calls[0]?.[0] as { queryChunks: Array<{ value: string[] }> };
-    expect(JSON.stringify(sqlArg.queryChunks)).toContain('pg_advisory_xact_lock');
+    expect(repo.acquireUniqueValueLocks).toHaveBeenCalledWith(
+      'demo',
+      expect.arrayContaining([expect.stringContaining('emails:address:')]),
+    );
   });
 
   it('bulkSoftDeleteContacts splits succeeded and failed rows', async () => {

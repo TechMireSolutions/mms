@@ -44,7 +44,7 @@ export function StudentsPageConfirmDialogs({
           ? t("students.deleteConfirmDescriptionNamed", { name: deleteTarget.name })
           : t("students.deleteConfirmDescription")
       }
-      bulkDeleteTitle={t("students.list.remove")}
+      bulkDeleteTitle={t("students.bulkDelete")}
       bulkDeleteDescription={t("students.list.confirmRemoveSelected", { count: selectedCount })}
       bulkRestoreTitle={t("students.bulkRestore")}
       bulkRestoreDescription={t("students.bulkRestoreConfirm", { count: selectedCount })}

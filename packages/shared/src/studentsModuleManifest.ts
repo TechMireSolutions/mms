@@ -9,6 +9,7 @@ export const studentCoreSchema = z.object({
   motherContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
   guardianContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
   studentId: z.string().optional(),
+  grNumber: z.string().optional(),
   status: z.string().optional(),
   enrollmentDate: z.string().optional(),
   notes: z.string().optional(),

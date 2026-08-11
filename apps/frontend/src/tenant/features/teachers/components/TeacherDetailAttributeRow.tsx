@@ -1,23 +1,25 @@
 import type { LucideIcon } from "lucide-react";
 import type { JSX, ReactNode } from "react";
-import { useTranslation } from "@/hooks/useTranslation";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 
+/** Attribute row for TeacherDetail — callers own empty-value rendering (muted dash). */
 export function TeacherDetailAttributeRow({
   icon,
+  iconClassName,
   label,
   value,
 }: {
   icon: LucideIcon;
+  iconClassName?: string;
   label: string;
   value: ReactNode;
 }): JSX.Element {
-  const { t } = useTranslation();
   return (
     <DetailAttributeRow
       icon={icon}
+      iconClassName={iconClassName}
       label={label}
-      value={value || t("common.notSpecified")}
+      value={value}
       variant="list"
     />
   );

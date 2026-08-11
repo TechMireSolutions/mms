@@ -2,39 +2,44 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { canDeleteCollection, canReadCollection } from '../../services/rbacService.js';
 import {
-  createStudent,
-  deleteStudentById,
-  restoreStudentById,
-  loadStudentsPage,
-  loadStudentsByIds,
-  loadStudentById,
-  loadStudentLinkedContactIds,
-  loadStudentsWidgetAggregates,
-  loadStudentsCommandMetrics,
-  countStudents,
-  updateStudentById,
-  loadStudentFieldUsageCount,
-  loadStudentFieldUsageCounts,
-} from '../../services/studentService.js';
-import {
   STUDENTS_MODULE_MANIFEST,
   studentRecordSchema,
+  type Student,
+  type StudentsListPageResult,
+  type StudentsWidgetQuery,
+  type User,
 } from '@mms/shared';
-import {
-  studentsListQuerySchema,
-} from '../../validation/studentSchemas.js';
+import { studentsListQuerySchema } from '../../validation/studentSchemas.js';
 import { validateStudentDynamic } from '../../services/studentValidationService.js';
-import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
+import { studentUseCases } from '../../students/use-cases/studentUseCases.js';
+import {
+  registerMetricsRoute,
+  registerCountRoute,
+  registerResolveRoute,
+  registerWidgetAggregatesRoute,
+  registerPaginatedListRoute,
+  registerLinkedContactIdsRoute,
+} from '../../lib/crudRouter.js';
+import { registerResourceRoutes } from '../../lib/crudResourceRoutes.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerFieldUsageRoutes } from '../../lib/registerFieldUsageRoutes.js';
 import { studentSetupConfigRoutes } from './students/studentSetupConfigRoutes.js';
 import { studentLookupRoutes } from './students/studentLookupRoutes.js';
 import { studentExportRoutes } from './students/studentExportRoutes.js';
 import { studentOperationRoutes } from './students/studentOperationRoutes.js';
 import { studentSoftDeleteRoutes } from './students/studentSoftDeleteRoutes.js';
-import { auditStudent } from './students/studentRouteHelpers.js';
+import {
+  auditStudent,
+  loadStudentWriteSchema,
+  sanitizeOneStudentForUser,
+  sanitizeStudentsForUser,
+} from './students/studentRouteHelpers.js';
 
 /**
  * Server-first student resource routes (TanStack Query on FE).
+ *
+ * Mirrors the Contacts route composition: granular registrars bound to the
+ * `studentUseCases` composition root, sanitized reads, and audit hooks.
  */
 export default async function studentsRoutes(
   fastify: FastifyInstance,
@@ -46,57 +51,83 @@ export default async function studentsRoutes(
   await fastify.register(studentLookupRoutes);
   await fastify.register(studentExportRoutes);
   await fastify.register(studentOperationRoutes);
-  await fastify.register(studentSoftDeleteRoutes);
 
   registerFieldUsageRoutes(fastify, {
     canRead: (user) => canReadCollection(user, 'students'),
-    loadCount: loadStudentFieldUsageCount,
-    loadCounts: loadStudentFieldUsageCounts,
+    loadCount: (fieldKey) => studentUseCases.loadStudentFieldUsageCount(fieldKey),
+    loadCounts: (fieldKeys) => studentUseCases.loadStudentFieldUsageCounts(fieldKeys),
   });
 
-  registerStandardTenantRoutes(fastify, {
+  registerPaginatedListRoute(fastify, {
     collection: 'students',
-    schema: studentRecordSchema as never,
-    listQuerySchema: studentsListQuerySchema,
+    schema: studentsListQuerySchema,
     defaultPageSize: STUDENTS_MODULE_MANIFEST.defaultPageSize,
     errorMessagePrefix: 'students',
+    canWriteDeletedCheck: (user) => canDeleteCollection(user, 'students'),
+    loadPageFn: (query) => studentUseCases.loadStudentsPage(query),
+    responseTransform: async (result: StudentsListPageResult, user) => ({
+      ...result,
+      students: await sanitizeStudentsForUser(result.students, user),
+    }),
+  });
+
+  registerCountRoute(fastify, {
+    collection: 'students',
+    loadCountFn: () => studentUseCases.countStudents(),
+    errorMessagePrefix: 'students',
+  });
+
+  registerMetricsRoute(fastify, {
+    collection: 'students',
+    loadMetricsFn: () => studentUseCases.loadStudentsCommandMetrics(),
+    errorMessagePrefix: 'student',
+  });
+
+  registerWidgetAggregatesRoute(fastify, {
+    collection: 'students',
+    loadAggregatesFn: (queries) =>
+      studentUseCases.loadStudentsWidgetAggregates(queries as unknown as StudentsWidgetQuery[]),
+    errorMessagePrefix: 'student',
+  });
+
+  registerResolveRoute(fastify, {
+    collection: 'students',
+    loadByIdsFn: async (ids, request) => {
+      const students = await studentUseCases.loadStudentsByIds(ids);
+      return sanitizeStudentsForUser(students, request.user as User);
+    },
+    responseKey: 'students',
+    errorMessagePrefix: 'students',
+  });
+
+  registerLinkedContactIdsRoute(fastify, {
+    collection: 'students',
+    loadLinkedContactIdsFn: (excludeId) => studentUseCases.loadStudentLinkedContactIds(excludeId),
+    errorMessagePrefix: 'students',
+  });
+
+  registerColumnPreferencesRoutes(fastify, {
+    collection: 'students',
+    objectKey: STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
+  });
+
+  registerResourceRoutes(fastify, {
+    collection: 'students',
+    schema: studentRecordSchema as never,
+    buildWriteSchema: async () => loadStudentWriteSchema() as never,
     nameSingular: 'student',
     namePlural: 'students',
-    loadPageFn: (query) => loadStudentsPage(query),
-    loadCountFn: countStudents,
-    loadByIdFn: loadStudentById as never,
-    createFn: createStudent as never,
-    updateFn: updateStudentById as never,
-    deleteFn: deleteStudentById,
-    restoreFn: (id, _userId) => restoreStudentById(id),
-    loadMetricsFn: loadStudentsCommandMetrics,
-    loadWidgetAggregatesFn: loadStudentsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
-    loadByIdsFn: loadStudentsByIds as never,
-    loadLinkedContactIdsFn: loadStudentLinkedContactIds,
-    columnPreferencesObjectKey: STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
+    customGetRoute: true,
+    customGetSingleRoute: false,
+    customPostRoute: true,
+    loadByIdFn: (id, includeDeleted) => studentUseCases.loadStudentById(id, includeDeleted),
+    updateFn: studentUseCases.updateStudentById,
     validateDynamicFn: validateStudentDynamic as never,
-    canWriteDeletedCheck: (user) => canDeleteCollection(user, 'students'),
-    onAfterCreate: async (user, item) => {
-      const id =
-        item && typeof item === 'object' && 'id' in item
-          ? String((item as { id: unknown }).id)
-          : 'students';
-      await auditStudent(user, 'student.create', `Created student ${id}`, id);
-    },
+    buildSingleResponse: (item, user) => sanitizeOneStudentForUser(item as Student, user),
     onAfterUpdate: async (user, id) => {
       await auditStudent(user, 'student.update', `Updated student ${id}`, id);
     },
-    onAfterDelete: async (user, id, deletionReason) => {
-      const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
-      await auditStudent(
-        user,
-        'student.soft_delete',
-        `Soft-deleted student ${id}${reasonNote}`,
-        id,
-      );
-    },
-    onAfterRestore: async (user, id) => {
-      await auditStudent(user, 'student.restore', `Restored student ${id}`, id);
-    },
   });
+
+  await fastify.register(studentSoftDeleteRoutes);
 }

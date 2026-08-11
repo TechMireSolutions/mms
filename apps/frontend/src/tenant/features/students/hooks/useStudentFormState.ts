@@ -41,7 +41,10 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const grManuallyEdited = useRef(false);
 
   const formInstanceId = String(student?.id ?? "new");
-  const fields = (settings.fields || {}) as Record<string, FieldDefinition[]>;
+  const fields = useMemo(
+    () => (settings.fields || {}) as Record<string, FieldDefinition[]>,
+    [settings.fields],
+  );
 
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const statusSelectOptions = useMemo((): StudentStatusSelectOption[] => {

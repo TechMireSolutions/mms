@@ -11,7 +11,7 @@ import {
 import { createModuleCsvExportService } from '../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadStudentFieldConfig } from './studentConfigService.js';
-import { loadStudentsByIds, loadStudentsPage } from './studentService.js';
+import { loadStudentsByIds, loadStudentsPage } from '../students/use-cases/studentUseCases.js';
 
 const DEFAULT_EXPORT_COLUMNS: StudentExportColumn[] = [
   { id: 'name', label: 'Name' },

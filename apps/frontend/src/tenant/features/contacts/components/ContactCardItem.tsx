@@ -6,8 +6,8 @@ import {
 } from "@mms/shared";
 import {
   resolveContactPhoneDisplay,
-  getContactAccentBarClass,
 } from "@/lib/contacts/contactI18n";
+import { getGenderAccentBarClass } from "@/lib/directoryCardAccent";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { ContactCardActions } from "@/tenant/features/contacts/components/ContactCardActions";
 import { ContactCardHeader } from "@/tenant/features/contacts/components/ContactCardHeader";
@@ -80,7 +80,7 @@ export function ContactCardItem({
     <DirectoryEntityCard
       isSelected={isSelected}
       reducedMotion={reducedMotion}
-      accentClassName={getContactAccentBarClass(isSelected, contact.gender)}
+      accentClassName={getGenderAccentBarClass(isSelected, contact.gender)}
     >
       <ContactCardHeader
         contact={contact}

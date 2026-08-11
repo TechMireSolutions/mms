@@ -2,6 +2,7 @@ import React from 'react';
 import { Building2, Mail, MapPin, Phone } from 'lucide-react';
 import { formatBrandingAddress, type BrandingSettings } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 
 interface BrandingIdentityPreviewProps {
   data: BrandingSettings;
@@ -16,7 +17,7 @@ export default function BrandingIdentityPreview({ data }: BrandingIdentityPrevie
   const hasContact = Boolean(data.email || data.phone || data.website);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+    <div className={`${WORK_SURFACE} overflow-hidden`}>
       <div className="flex items-start gap-4 border-b border-border bg-muted/30 px-5 py-4">
         {data.logoUrl ? (
           <img

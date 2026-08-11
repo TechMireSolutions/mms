@@ -25,6 +25,7 @@ export interface ContactLike {
   phone?: string;
   email?: string;
   city?: string;
+  avatar?: string | null;
   phones?: { number?: string }[];
   emails?: { address?: string }[];
 }

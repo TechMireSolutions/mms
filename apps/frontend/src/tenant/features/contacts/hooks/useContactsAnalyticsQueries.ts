@@ -12,6 +12,7 @@ import {
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
+import { createModuleWidgetAggregatesQuery } from '@/lib/query/createModuleWidgetAggregatesQuery';
 import {
   CONTACTS_API,
   CONTACTS_DUPLICATES_QUERY_KEY,
@@ -73,33 +74,23 @@ export interface ContactsWidgetAggregateWidgetInput {
   chartLimit?: number;
 }
 
+const buildContactsWidgetAggregatesQuery = createModuleWidgetAggregatesQuery<
+  ContactsWidgetQuery,
+  ContactsWidgetAggregateResult
+>({
+  apiBase: CONTACTS_API,
+  queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
+  collection: 'contacts',
+  toWidgetQuery: contactsWidgetQueryFromWidget,
+});
+
 export function useContactsWidgetAggregates(
   widgets: ContactsWidgetAggregateWidgetInput[],
   options?: { enabled?: boolean },
 ) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  const contactQueries = widgets
-    .filter((widget) => widget.collection === 'contacts')
-    .map((widget) => contactsWidgetQueryFromWidget(widget));
-  const querySignature = JSON.stringify(contactQueries);
-
-  return useQuery({
-    queryKey: [...CONTACTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async ({ signal }) => {
-      const aggregateResponse = await apiJson<{ results: Record<string, ContactsWidgetAggregateResult> }>(
-        `${CONTACTS_API}/widget-aggregates`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ widgets: contactQueries }),
-          signal,
-        },
-      );
-      return aggregateResponse?.results ?? {};
-    },
-    enabled: isAuthenticated && enabled && contactQueries.length > 0,
-    staleTime: 30_000,
-  });
+  return useQuery(buildContactsWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
 }
 
 export interface ContactsDuplicatesParams {

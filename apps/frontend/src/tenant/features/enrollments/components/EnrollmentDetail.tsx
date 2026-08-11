@@ -7,6 +7,7 @@ import { Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -21,7 +22,7 @@ interface SectionProps {
 
 function Section({ icon: Icon, title, children }: SectionProps): React.ReactElement {
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden" aria-label={title}>
+    <section className={`${WORK_SURFACE} overflow-hidden`} aria-label={title}>
       <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">
         <Icon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">{title}</h3>

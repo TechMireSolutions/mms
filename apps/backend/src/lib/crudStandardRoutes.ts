@@ -31,10 +31,12 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   /** Prefer SQL aggregates — avoids hydrate-all for `/metrics`. */
   loadMetricsFn?: (request: FastifyRequest) => Promise<unknown>;
   loadWidgetAggregatesFn?: (queries: unknown[]) => Promise<unknown>;
-  loadByIdsFn?: (ids: string[]) => Promise<TRecord[]>;
+  loadByIdsFn?: (ids: string[], request: FastifyRequest) => Promise<TRecord[]>;
   loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
   columnPreferencesObjectKey?: string;
   canWriteDeletedCheck?: (user: User) => boolean;
+  /** Post-load transform for paginated/`loadAllFn` reads (e.g. viewer-role sanitization). */
+  responseTransform?: (result: unknown, user: User) => Promise<unknown> | unknown;
 }
 
 /**
@@ -64,6 +66,7 @@ export function registerStandardExtendedRoutes<
     columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
     canWriteDeletedCheck,
+    responseTransform,
   } = options;
 
   if (listQuerySchema && loadPageFn) {
@@ -75,6 +78,7 @@ export function registerStandardExtendedRoutes<
       errorMessagePrefix,
       canWriteDeletedCheck,
       loadPageFn,
+      responseTransform,
     });
   }
 
@@ -170,6 +174,8 @@ export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRec
     user: User,
   ) => Promise<Record<string, unknown>> | Record<string, unknown>;
   mapRestoreError?: SoftDeleteRouteErrorMapper;
+  /** Transform for single GET/POST/PUT responses (e.g. viewer-role sanitization). */
+  buildSingleResponse?: (item: unknown, user: User) => Promise<unknown> | unknown;
 }
 
 /**
@@ -199,6 +205,7 @@ export function registerStandardTenantRoutes<
     loadByIdsFn,
     columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
+    responseTransform,
     schema,
     loadByIdFn,
     createFn,
@@ -216,6 +223,7 @@ export function registerStandardTenantRoutes<
     onAfterRestore,
     buildRestoreResponse,
     mapRestoreError,
+    buildSingleResponse,
   } = options;
 
   registerStandardExtendedRoutes(fastify, {
@@ -235,6 +243,7 @@ export function registerStandardTenantRoutes<
     columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
     canWriteDeletedCheck,
+    responseTransform,
   });
 
   const hasPaginatedListRoute = !!(listQuerySchema && loadPageFn);
@@ -262,5 +271,6 @@ export function registerStandardTenantRoutes<
     onAfterRestore,
     buildRestoreResponse,
     mapRestoreError,
+    buildSingleResponse,
   });
 }

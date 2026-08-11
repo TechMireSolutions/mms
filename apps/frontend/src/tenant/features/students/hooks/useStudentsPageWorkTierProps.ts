@@ -9,6 +9,8 @@ export type StudentsWorkTierSource = {
   studentSearch: WorkTierProps["studentSearch"];
   studentFilterStatus: WorkTierProps["studentFilterStatus"];
   studentFilterGender: WorkTierProps["studentFilterGender"];
+  quickFilter: WorkTierProps["quickFilter"];
+  changeQuickFilter: WorkTierProps["onQuickFilterChange"];
   studentStatusOptions: WorkTierProps["studentStatusOptions"];
   genderFilters: WorkTierProps["genderFilters"];
   viewingDeleted: WorkTierProps["viewingDeleted"];
@@ -47,6 +49,7 @@ export type StudentsWorkTierSource = {
   handleRestore: WorkTierProps["onRestore"];
   handleBulkStatusChange: WorkTierProps["onBulkStatusChange"];
   handleBulkExport: WorkTierProps["onBulkExport"];
+  bulkStatusPending: WorkTierProps["bulkStatusPending"];
   sortField: WorkTierProps["sortField"];
   sortDir: WorkTierProps["sortDir"];
   handleServerSort: WorkTierProps["onServerSort"];
@@ -61,6 +64,8 @@ export function buildStudentsWorkTierProps(
     studentSearch: source.studentSearch,
     studentFilterStatus: source.studentFilterStatus,
     studentFilterGender: source.studentFilterGender,
+    quickFilter: source.quickFilter,
+    onQuickFilterChange: source.changeQuickFilter,
     studentStatusOptions: source.studentStatusOptions,
     genderFilters: source.genderFilters,
     viewingDeleted: source.viewingDeleted,
@@ -99,6 +104,7 @@ export function buildStudentsWorkTierProps(
     onRestore: source.handleRestore,
     onBulkStatusChange: source.handleBulkStatusChange,
     onBulkExport: source.handleBulkExport,
+    bulkStatusPending: source.bulkStatusPending,
     sortField: source.sortField,
     sortDir: source.sortDir,
     onServerSort: source.handleServerSort,

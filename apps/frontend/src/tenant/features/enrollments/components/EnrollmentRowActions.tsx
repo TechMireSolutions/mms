@@ -1,17 +1,22 @@
-import { Button } from "@/components/ui/button";
+import { XCircle } from "lucide-react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { ModuleRowActionsMenu } from "@/components/ui/ModuleRowActionsMenu";
+import { PersonMessagingRowActionsExtras } from "@/components/ui/PersonMessagingRowActionsExtras";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import type { Student, toMessagingRecipient } from "@mms/shared";
-import { Eye, MessageCircle, MessageSquare, RotateCcw, Trash2, XCircle } from "lucide-react";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
 
 interface EnrollmentRowActionsProps {
   enrollment: Enrollment;
   student?: Student;
+  showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
-  showDeleted: boolean;
+  /** When true, omit View (card already exposes a View control). */
+  hideViewItem?: boolean;
+  triggerClassName?: string;
   onView: (enrollment: Enrollment) => void;
   onCancel: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -19,12 +24,19 @@ interface EnrollmentRowActionsProps {
   openComposer: (channel: MessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 
+/**
+ * Enrollments row/card actions — thin adapter over the shared
+ * {@link ModuleRowActionsMenu}; Cancel is injected as a module extras item and
+ * messaging items come from {@link PersonMessagingRowActionsExtras}.
+ */
 export function EnrollmentRowActions({
   enrollment,
   student,
+  showDeleted,
   canWrite,
   canDelete,
-  showDeleted,
+  hideViewItem = false,
+  triggerClassName,
   onView,
   onCancel,
   onDelete,
@@ -33,86 +45,51 @@ export function EnrollmentRowActions({
 }: EnrollmentRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
   const studentDisplayName = enrollment.studentName?.trim() || student?.name || "";
+  const phone = student?.phone ?? null;
+  const email = student?.email ?? null;
+
+  const openChannel = (channel: MessageChannel) => {
+    openComposer(channel, [{ id: enrollment.id, name: studentDisplayName, phone: phone ?? "", email: email ?? undefined }]);
+  };
 
   return (
-    <div className="flex items-center justify-end gap-1">
-      {showDeleted ? (
-        canDelete && onRestore && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onRestore(enrollment.id)}
-            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-            aria-label={t("enrollments.restore")}
-            title={t("enrollments.restore")}
-          >
-            <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-        )
-      ) : (
+    <ModuleRowActionsMenu
+      triggerLabel={t("enrollments.table.actions")}
+      viewLabel={t("enrollments.table.viewProfile")}
+      deleteLabel={t("common.delete")}
+      restoreLabel={t("enrollments.restore")}
+      archived={showDeleted}
+      canWrite={canWrite}
+      canDelete={canDelete}
+      onView={() => onView(enrollment)}
+      onEdit={undefined}
+      onDelete={() => onDelete?.(enrollment.id)}
+      onRestore={onRestore ? () => onRestore(enrollment.id) : undefined}
+      hideViewItem={hideViewItem}
+      triggerClassName={triggerClassName}
+      extras={
         <>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              const phone = student?.phone || "";
-              openComposer("whatsapp", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
+          {!showDeleted && canWrite && enrollment.status !== "cancelled" && enrollment.status !== "completed" ? (
+            <DropdownMenuItem onClick={() => onCancel(enrollment.id)}>
+              <XCircle className="w-3.5 h-3.5 me-2" /> {t("enrollments.actions.cancelShort")}
+            </DropdownMenuItem>
+          ) : null}
+          <PersonMessagingRowActionsExtras
+            phone={phone}
+            email={email}
+            hasWhatsApp={Boolean(phone)}
+            hideMessagingItems={showDeleted}
+            onWhatsApp={() => openChannel("whatsapp")}
+            onSms={() => openChannel("sms")}
+            onEmail={() => openChannel("email")}
+            labels={{
+              whatsapp: t("enrollments.list.actionWhatsApp"),
+              sms: t("enrollments.list.actionSms"),
+              email: t("enrollments.list.actionEmail"),
             }}
-            className="rounded-lg hover:bg-muted text-success hover:text-success transition-colors"
-            title={t("enrollments.list.actionWhatsApp")}
-            aria-label={t("enrollments.list.actionWhatsApp")}
-          >
-            <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              const phone = student?.phone || "";
-              openComposer("sms", [{ id: enrollment.id, name: studentDisplayName, phone, email: student?.email }]);
-            }}
-            className="rounded-lg hover:bg-muted text-info hover:text-info transition-colors"
-            title={t("enrollments.list.actionSms")}
-            aria-label={t("enrollments.list.actionSms")}
-          >
-            <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onView(enrollment)}
-            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-            aria-label={t("enrollments.actions.view", { name: studentDisplayName })}
-            title={t("enrollments.actions.viewShort")}
-          >
-            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-          {canWrite && enrollment.status !== "cancelled" && enrollment.status !== "completed" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onCancel(enrollment.id)}
-              className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-              aria-label={t("enrollments.actions.cancel", { name: studentDisplayName })}
-              title={t("enrollments.actions.cancelShort")}
-            >
-              <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-          )}
-          {canDelete && onDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(enrollment.id)}
-              className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-              aria-label={t("common.delete")}
-              title={t("common.delete")}
-            >
-              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-          )}
+          />
         </>
-      )}
-    </div>
+      }
+    />
   );
 }

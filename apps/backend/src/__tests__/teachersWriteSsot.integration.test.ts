@@ -33,12 +33,17 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 const mockCreateTeacher = vi.fn();
 const mockUpdateTeacherById = vi.fn();
 
-vi.mock('../services/teacherService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/teacherService.js')>();
+vi.mock('../teachers/use-cases/teacherUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../teachers/use-cases/teacherUseCases.js')>();
   return {
     ...actual,
-    createTeacher: (...args: unknown[]) => mockCreateTeacher(...args),
-    updateTeacherById: (...args: unknown[]) => mockUpdateTeacherById(...args),
+    teacherUseCases: {
+      ...actual.teacherUseCases,
+      createTeacher: (...args: unknown[]) => mockCreateTeacher(...args),
+      updateTeacherById: (...args: unknown[]) => mockUpdateTeacherById(...args),
+      sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
+      sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
+    },
   };
 });
 
@@ -53,7 +58,10 @@ describe('teachers write contact-profile SSOT', () => {
   });
 
   it('POST /api/teachers strips contact profile dual-write keys before create', async () => {
-    mockCreateTeacher.mockImplementation(async (teacher: Record<string, unknown>) => teacher);
+    mockCreateTeacher.mockImplementation(async (teacher: Record<string, unknown>) => ({
+      record: teacher,
+      restored: false,
+    }));
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -75,6 +83,7 @@ describe('teachers write contact-profile SSOT', () => {
       },
     });
     expect(res.statusCode).toBe(201);
+    expect(res.json()).toMatchObject({ success: true, teacher: { contactId: 'c-300' } });
     expect(mockCreateTeacher).toHaveBeenCalled();
     const created = mockCreateTeacher.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(created.contactId).toBe('c-300');
@@ -84,6 +93,33 @@ describe('teachers write contact-profile SSOT', () => {
     expect(created.email).toBeUndefined();
     expect(created.firstName).toBeUndefined();
     expect(created.lastName).toBeUndefined();
+    await app.close();
+  });
+
+  it('POST /api/teachers returns 200 when the create restored an archived teacher', async () => {
+    mockCreateTeacher.mockImplementation(async (teacher: Record<string, unknown>) => ({
+      record: { ...teacher, id: 't-archived' },
+      restored: true,
+    }));
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/teachers',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        contactId: 'c-archived',
+        specialization: 'Qiraat',
+        status: 'active',
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { success: boolean; teacher?: { id?: string } };
+    expect(body.success).toBe(true);
+    expect(body.teacher?.id).toBe('t-archived');
     await app.close();
   });
 

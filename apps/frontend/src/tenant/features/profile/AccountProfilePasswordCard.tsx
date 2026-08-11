@@ -39,7 +39,7 @@ export function AccountProfilePasswordCard({
   const { t } = useTranslation();
 
   return (
-    <Card className="relative overflow-hidden group/password-card shadow-md">
+    <Card className="group/password-card">
       <div className="absolute start-0 top-0 bottom-0 w-1 bg-success/45 transition-colors group-hover/password-card:bg-success" />
       <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 ps-6.5">
         <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">

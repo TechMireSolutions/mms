@@ -40,10 +40,16 @@ export function useStudentsPageOverlayProps({
       overlays.setViewStudent(null);
       formState.openEditForm(student);
     },
-    onRestoreFromDrawer: async (studentId) => {
-      await workActions.handleRestore(studentId);
-      overlays.setViewStudent(null);
-    },
+    onRestoreFromDrawer: canDelete
+      ? async (studentId) => {
+          try {
+            await workActions.handleRestore(studentId);
+            overlays.setViewStudent(null);
+          } catch {
+            // Keep drawer open so the user can retry after a failed restore.
+          }
+        }
+      : undefined,
     messagingTarget: overlays.messagingTarget,
     onCloseComposer: overlays.closeComposer,
     openComposer: overlays.openComposer,

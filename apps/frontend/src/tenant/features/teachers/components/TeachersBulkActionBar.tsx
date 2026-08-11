@@ -112,7 +112,7 @@ export function TeachersBulkActionBar({
       }
       deleteAction={
         bulkActions.includes('delete') && canDelete
-          ? { label: t('common.delete'), onClick: onRequestBulkDelete }
+          ? { label: t('teachers.bulkDelete'), onClick: onRequestBulkDelete }
           : undefined
       }
     />

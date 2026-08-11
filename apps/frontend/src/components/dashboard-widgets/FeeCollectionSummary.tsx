@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -101,28 +102,27 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
 
   return (
     <WidgetCard ariaLabelledby="fee-collection-heading" accentColor="primary">
-      <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-border/45 bg-muted/10 ps-6.5 select-none">
-
-        <div className="flex-1 min-w-0">
-          <h3 id="fee-collection-heading" className="text-sm font-bold text-foreground m-0 truncate">
-            {title || t("dashboard.widgets.feeCollectionSummary")}
-          </h3>
-          <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{displayDate}</p>
-        </div>
-        <div className="text-end shrink-0">
-          <p className="text-base font-black text-foreground m-0 tabular-nums">{formatCurrency(totalCollected)}</p>
-          <div className={`flex items-center gap-1 justify-end mt-0.5 ${isPositiveTrend ? "text-success" : "text-destructive"}`}>
-            {isPositiveTrend ? (
-              <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
-            ) : (
-              <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
-            )}
-            <span className="text-xs font-bold">
-              {t("dashboard.widgets.comparisonTrend", { value: displayTrendPct, month: comparisonMonthName })}
-            </span>
+      <WidgetCardHeader
+        variant="tinted"
+        headingId="fee-collection-heading"
+        title={title || t("dashboard.widgets.feeCollectionSummary")}
+        subtitle={displayDate}
+        actions={
+          <div className="text-end shrink-0">
+            <p className="text-base font-black text-foreground m-0 tabular-nums">{formatCurrency(totalCollected)}</p>
+            <div className={`flex items-center gap-1 justify-end mt-0.5 ${isPositiveTrend ? "text-success" : "text-destructive"}`}>
+              {isPositiveTrend ? (
+                <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
+              ) : (
+                <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
+              )}
+              <span className="text-xs font-bold">
+                {t("dashboard.widgets.comparisonTrend", { value: displayTrendPct, month: comparisonMonthName })}
+              </span>
+            </div>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <section className="p-5 space-y-4">
         {/* Stacked progress bar */}

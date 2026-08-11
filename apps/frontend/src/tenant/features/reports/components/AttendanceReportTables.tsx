@@ -1,8 +1,16 @@
 import { UserCheck, Users } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
 import type { AttendanceSummaryItem, RateBarRenderer, StudentAttendanceItem } from "./attendanceReportTypes";
@@ -38,10 +46,10 @@ export function AttendanceReportTables({
       {summary.length === 0 ? (
         <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
       ) : (
-        <Card className="overflow-hidden">
+        <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {summary.map((summaryRow) => (
-              <article key={summaryRow.class} className="space-y-3 rounded-xl border border-border bg-card p-3">
+              <article key={summaryRow.class} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <Button
                   type="button"
                   variant="ghost"
@@ -75,19 +83,26 @@ export function AttendanceReportTables({
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  {[t("attendance.report.colClass"), t("attendance.report.colTotalStudents"), t("attendance.report.colAvgRate"), t("attendance.report.colPerfectAttendance"), t("attendance.report.colBelowThreshold")].map((headerLabel) => (
-                    <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+          <div className="hidden md:block">
+            <Table>
+              <caption className="sr-only">{t("attendance.report.summaryTitle")}</caption>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  {[
+                    { key: "class", label: t("attendance.report.colClass") },
+                    { key: "totalStudents", label: t("attendance.report.colTotalStudents") },
+                    { key: "avgRate", label: t("attendance.report.colAvgRate") },
+                    { key: "perfectAttendance", label: t("attendance.report.colPerfectAttendance") },
+                    { key: "belowThreshold", label: t("attendance.report.colBelowThreshold") },
+                  ].map((header) => (
+                    <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/50">
                 {summary.map((summaryRow) => (
-                  <tr key={summaryRow.class} className="hover:bg-muted/30">
-                    <td className="px-3 py-3 font-medium text-foreground">
+                  <TableRow key={summaryRow.class} className="hover:bg-muted/20 transition-colors">
+                    <TableCell className="px-3 py-2.5 font-medium text-foreground">
                       <Button
                         type="button"
                         variant="ghost"
@@ -96,21 +111,21 @@ export function AttendanceReportTables({
                       >
                         {summaryRow.class}
                       </Button>
-                    </td>
-                    <td className="px-3 py-3 text-muted-foreground">{summaryRow.total}</td>
-                    <td className="px-3 py-3 w-44">{rateBar(summaryRow.avgRate)}</td>
-                    <td className="px-3 py-3">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">{summaryRow.total}</TableCell>
+                    <TableCell className="px-3 py-2.5 w-44">{rateBar(summaryRow.avgRate)}</TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-semibold">{summaryRow.perfectAttendance}</span>
-                    </td>
-                    <td className="px-3 py-3">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold">{summaryRow.belowThreshold}</span>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </Card>
+        </div>
       )}
 
       <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
@@ -132,10 +147,10 @@ export function AttendanceReportTables({
       {studentAttendanceRows.length === 0 ? (
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
-        <Card className="overflow-hidden">
+        <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {studentAttendanceRows.map((studentAttendance) => (
-              <article key={studentAttendance.studentName} className="space-y-3 rounded-xl border border-border bg-card p-3">
+              <article key={studentAttendance.studentName} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <h4 className="truncate text-sm font-semibold text-foreground">{studentAttendance.studentName}</h4>
                   <div className="w-24 shrink-0">{rateBar(studentAttendance.rate)}</div>
@@ -165,31 +180,40 @@ export function AttendanceReportTables({
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  {[t("attendance.report.colStudent"), t("attendance.report.colStudentClass"), t("attendance.report.colPresent"), t("attendance.report.colAbsent"), t("attendance.report.colLate"), t("attendance.report.colTotal"), t("attendance.report.colRate")].map((headerLabel) => (
-                    <th key={headerLabel} className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase tracking-wide">{headerLabel}</th>
+          <div className="hidden md:block">
+            <Table>
+              <caption className="sr-only">{t("attendance.report.studentDetailTitle")}</caption>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                  {[
+                    { key: "student", label: t("attendance.report.colStudent") },
+                    { key: "class", label: t("attendance.report.colStudentClass") },
+                    { key: "present", label: t("attendance.report.colPresent") },
+                    { key: "absent", label: t("attendance.report.colAbsent") },
+                    { key: "late", label: t("attendance.report.colLate") },
+                    { key: "total", label: t("attendance.report.colTotal") },
+                    { key: "rate", label: t("attendance.report.colRate") },
+                  ].map((header) => (
+                    <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
                   ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-border/50">
                 {studentAttendanceRows.map((studentAttendance) => (
-                  <tr key={studentAttendance.studentName} className="hover:bg-muted/30">
-                    <td className="px-3 py-2.5 font-medium text-foreground">{studentAttendance.studentName}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.class}</td>
-                    <td className="px-3 py-2.5 text-success font-medium">{studentAttendance.present}</td>
-                    <td className="px-3 py-2.5 text-destructive font-medium">{studentAttendance.absent}</td>
-                    <td className="px-3 py-2.5 text-warning font-medium">{studentAttendance.late}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{studentAttendance.total}</td>
-                    <td className="px-3 py-2.5 w-32">{rateBar(studentAttendance.rate)}</td>
-                  </tr>
+                  <TableRow key={studentAttendance.studentName} className="hover:bg-muted/20 transition-colors">
+                    <TableCell className="px-3 py-2.5 font-medium text-foreground">{studentAttendance.studentName}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">{studentAttendance.class}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-success font-medium">{studentAttendance.present}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-destructive font-medium">{studentAttendance.absent}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-warning font-medium">{studentAttendance.late}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-muted-foreground">{studentAttendance.total}</TableCell>
+                    <TableCell className="px-3 py-2.5 w-32">{rateBar(studentAttendance.rate)}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </Card>
+        </div>
       )}
     </>
   );

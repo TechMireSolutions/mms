@@ -9,14 +9,13 @@ import { ContactActionMenu } from "@/tenant/features/contacts/components/Contact
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
 import {
   columnWidthStyle,
-  contactStickyCellBg,
   type ContactsColumnConfig,
 } from "@/tenant/features/contacts/components/contactTableTypes";
+import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig };
 export { columnWidthStyle };
-export { TableHeaderCell } from "@/tenant/features/contacts/components/ContactTableHeaderCell";
 
 interface ContactTableRowProps {
   contact: Contact;
@@ -79,7 +78,7 @@ export const ContactTableRow = memo(function ContactTableRow({
       <TableCell
         className={cn(
           "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 transition-colors border-e border-border/30",
-          contactStickyCellBg(isSelected),
+          workTableStickyCellBg(isSelected),
         )}
       >
         <Checkbox

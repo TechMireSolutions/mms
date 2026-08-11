@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { QuestionBank as QuestionsPanel } from "@/tenant/features/question-bank/components/QuestionBank";
 import type { useQuestionBankColumnLayout } from "@/tenant/features/question-bank/hooks/useQuestionBankColumnLayout";
@@ -124,7 +125,7 @@ export function QuestionBankWorkTier({
       )}
 
       {activeSubTab === "generate" && canWrite && !showDeleted && (
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <section className={`${WORK_SURFACE} p-4 sm:p-5`}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <h2 className="m-0 text-sm font-bold text-foreground">{t("questionBank.generatorTitle")}</h2>

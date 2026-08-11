@@ -62,7 +62,8 @@ export function JournalEntries(props: JournalEntriesProps) {
       accounts={accounts}
       fiscalYears={fiscalYears}
       selectedIds={controller.selectedIds}
-      allFilteredSelected={controller.allFilteredSelected}
+      allVisibleSelected={controller.allVisibleSelected}
+      someVisibleSelected={controller.someVisibleSelected}
       isColumnVisible={columnVisible}
       journalStatusConfig={controller.journalStatusConfig}
       grandDebit={controller.grandDebit}
@@ -80,6 +81,7 @@ export function JournalEntries(props: JournalEntriesProps) {
       showDeleted={controller.showDeleted}
       columnCustomizer={columnCustomizer}
       renderEntryActions={controller.renderEntryActions}
+      renderEntryActionsCards={controller.renderEntryActionsCards}
       formatAmount={controller.formatAmount}
       onModeChange={controller.setMode}
       onSearchChange={controller.setSearch}
@@ -92,12 +94,12 @@ export function JournalEntries(props: JournalEntriesProps) {
         controller.setSelected(null);
         controller.setModal('new');
       }}
-      onBulkAction={() => {
-        void controller.handleBulkAction();
-      }}
+      onRequestBulkTrash={controller.requestBulkTrash}
+      onConfirmBulkTrash={controller.confirmBulkTrash}
+      onConfirmRowTrash={controller.confirmRowTrash}
       onExportCsv={controller.exportCSV}
-      onToggleSelected={controller.toggleSelected}
-      onToggleAll={controller.toggleAllFiltered}
+      onToggleSelectedEntry={controller.toggleSelectedEntry}
+      onToggleSelectAll={controller.toggleSelectAll}
       onClearSelection={controller.clearSelection}
       onSave={controller.handleSave}
       onCloseModal={() => {
@@ -105,12 +107,18 @@ export function JournalEntries(props: JournalEntriesProps) {
         controller.setSelected(null);
       }}
       onEditSelected={() => controller.setModal('edit')}
-      onReverseSelected={() => {
-        if (!controller.selected) return;
-        void controller.handleReverse(controller.selected);
-        controller.setModal(null);
-        controller.setSelected(null);
+      onViewEntry={(entry) => {
+        controller.setSelected(entry);
+        controller.setModal('view');
       }}
+      onRequestReverse={controller.requestReverse}
+      onConfirmReverse={controller.confirmReverse}
+      pendingTrashId={controller.pendingTrashId}
+      confirmBulkOpen={controller.confirmBulkOpen}
+      pendingReverseEntry={controller.pendingReverseEntry}
+      onPendingTrashIdChange={controller.setPendingTrashId}
+      onConfirmBulkOpenChange={controller.setConfirmBulkOpen}
+      onPendingReverseEntryChange={controller.setPendingReverseEntry}
       getColumnWidth={getColumnWidth}
       onColumnResize={onColumnResize}
     />

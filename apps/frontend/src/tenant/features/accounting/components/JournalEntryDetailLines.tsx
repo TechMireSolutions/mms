@@ -1,6 +1,15 @@
-import { Card } from "@/components/ui/card";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import type { Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface JournalEntryDetailLinesProps {
@@ -23,12 +32,12 @@ export function JournalEntryDetailLines({
   t,
 }: JournalEntryDetailLinesProps) {
   return (
-    <Card accentColor="primary" className="p-0 overflow-hidden">
+    <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">
         {entry.lines.map((line) => {
           const account = getAccount(line.account_id);
           return (
-            <article key={line.id} className="space-y-2 rounded-xl border border-border bg-card p-3">
+            <article key={line.id} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
               <div>
                 <p className="font-semibold text-foreground m-0">{account?.name || t("accounting.journal.detail.unknownAccount")}</p>
                 <div className="flex flex-wrap items-center gap-2 mt-0.5">
@@ -71,23 +80,23 @@ export function JournalEntryDetailLines({
           </dl>
         </article>
       </div>
-      <div className="hidden overflow-x-auto max-w-full md:block">
-        <table className="w-full text-sm">
+      <div className="hidden md:block">
+        <Table>
           <caption className="sr-only">{t("accounting.journal.detail.account")}</caption>
-          <thead className="bg-muted/60 border-b border-border/40">
-            <tr>
-              <th scope="col" className="px-5 py-2 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</th>
-              <th scope="col" className="px-4 py-2 text-start text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">{t("accounting.journal.detail.note")}</th>
-              <th scope="col" className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.debit")}</th>
-              <th scope="col" className="px-5 py-2 text-end text-xs font-semibold text-muted-foreground uppercase">{t("accounting.journal.detail.credit")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              <ModuleTableHeaderCell columnKey="account" className="px-5 py-2">{t("accounting.journal.detail.account")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="note" className="px-4 py-2 hidden sm:table-cell">{t("accounting.journal.detail.note")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="debit" className="px-4 py-2 text-end">{t("accounting.journal.detail.debit")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="credit" className="px-5 py-2 text-end">{t("accounting.journal.detail.credit")}</ModuleTableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border">
             {entry.lines.map((line) => {
               const account = getAccount(line.account_id);
               return (
-                <tr key={line.id} className="hover:bg-muted/10">
-                  <td className="px-4 py-2.5">
+                <TableRow key={line.id} className="hover:bg-muted/10">
+                  <TableCell className="px-4 py-2.5">
                     <p className="font-semibold text-foreground m-0">{account?.name || t("accounting.journal.detail.unknownAccount")}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="font-mono text-xs text-muted-foreground">{account?.code}</span>
@@ -95,27 +104,27 @@ export function JournalEntryDetailLines({
                         <StatusBadge status={account.type} config={accountTypeConfig} size="sm" />
                       )}
                     </div>
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</td>
-                  <td className="px-4 py-2.5 text-end font-mono font-semibold text-info">
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</TableCell>
+                  <TableCell className="px-4 py-2.5 text-end font-mono font-semibold text-info">
                     {line.debit > 0 ? formatCurrency(line.debit) : "—"}
-                  </td>
-                  <td className="px-4 py-2.5 text-end font-mono font-semibold text-success">
+                  </TableCell>
+                  <TableCell className="px-4 py-2.5 text-end font-mono font-semibold text-success">
                     {line.credit > 0 ? formatCurrency(line.credit) : "—"}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-          <tfoot className="border-t-2 border-border bg-muted/30">
-            <tr>
-              <td colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.totals")}</td>
-              <td className="px-4 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</td>
-              <td className="px-4 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</td>
-            </tr>
-          </tfoot>
-        </table>
+          </TableBody>
+          <TableFooter className="border-t-2 border-border bg-muted/30">
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.totals")}</TableCell>
+              <TableCell className="px-4 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</TableCell>
+              <TableCell className="px-4 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
       </div>
-    </Card>
+    </div>
   );
 }

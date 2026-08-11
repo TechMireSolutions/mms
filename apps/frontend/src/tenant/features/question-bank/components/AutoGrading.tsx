@@ -8,6 +8,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { sumScores, testTotalMarks, type StatsSummary } from "@/tenant/features/question-bank/components/autoGradingShared";
 import { AutoGradingResultRow } from "@/tenant/features/question-bank/components/AutoGradingResultRow";
 import { AutoGradingStats } from "@/tenant/features/question-bank/components/AutoGradingStats";
@@ -70,7 +71,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
             <AutoGradingStats stats={stats} test={test} questions={questions} submittedCount={testResults.length} />
           )}
 
-          <section className="overflow-hidden rounded-xl border border-border bg-card" aria-label={t("questionBank.grading.resultsTitle", { name: test.name })}>
+          <section className={`${WORK_SURFACE} overflow-hidden`} aria-label={t("questionBank.grading.resultsTitle", { name: test.name })}>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
               <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">
                 {t("questionBank.grading.resultsTitle", { name: test.name })}

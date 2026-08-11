@@ -1,7 +1,10 @@
 import { type ModuleColumnRegistryEntry, type Student } from "@mms/shared";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import { TableCell } from "@/components/ui/table";
+import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { renderStudentListDesktopTableCell } from "@/tenant/features/students/components/StudentListDesktopTableCells";
@@ -67,15 +70,29 @@ export function StudentListDesktopTableRow({
         isSelected ? "bg-primary/5" : ""
       }`}
     >
-      <TableCell className="px-4 py-3">
+      <TableCell
+        className={cn(
+          "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 transition-colors border-e border-border/30",
+          workTableStickyCellBg(isSelected),
+        )}
+      >
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelectOne(studentIdStr)}
           aria-label={t("students.table.selectStudent", { name: displayName })}
+          className="cursor-pointer"
         />
       </TableCell>
       {visibleColumns.map((col) => (
-        <TableCell key={col.key} className="px-4 py-3">
+        <TableCell
+          key={col.key}
+          className={cn(
+            "px-4 py-3",
+            col.key === "name" &&
+              "sticky start-12 z-10 transition-colors border-e border-border/30",
+            col.key === "name" && workTableStickyCellBg(isSelected),
+          )}
+        >
           {renderStudentListDesktopTableCell({
             studentRow,
             col,
@@ -86,6 +103,9 @@ export function StudentListDesktopTableRow({
             statusBadgeConfig,
             isColumnVisible,
             onViewStudent,
+            viewingDeleted,
+            canWriteMessaging: canWriteMessaging && !viewingDeleted,
+            onOpenComposer,
             t,
           })}
         </TableCell>
@@ -98,7 +118,7 @@ export function StudentListDesktopTableRow({
           canWrite={canWrite}
           canDelete={canDelete}
           includeMessaging={canWriteMessaging && !viewingDeleted}
-          triggerClassName="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100"
+          triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
           contentClassName="w-44"
           iconClassName="w-4 h-4"
           onViewStudent={onViewStudent}

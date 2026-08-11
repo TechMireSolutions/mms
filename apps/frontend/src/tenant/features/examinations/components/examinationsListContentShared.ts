@@ -15,7 +15,8 @@ export interface ExaminationsListContentProps {
   isColumnVisible: (key: string) => boolean;
   classes: ExamClassOption[];
   enrollments: Enrollment[];
-  allFilteredSelected: boolean;
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
@@ -24,8 +25,8 @@ export interface ExaminationsListContentProps {
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   onEdit: (exam: Exam) => void;
-  onSelectAll: (checked: boolean) => void;
-  onToggleSelected: (id: string) => void;
+  onToggleSelectAll: (checked: boolean) => void;
+  onToggleSelectedExam: (id: string, checked: boolean) => void;
   onTrashAction: (id: string) => void;
 }
 

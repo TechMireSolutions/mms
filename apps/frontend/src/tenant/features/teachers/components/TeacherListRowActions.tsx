@@ -1,23 +1,7 @@
-import type { ReactElement } from "react";
-import {
-  Edit2,
-  Eye,
-  Mail,
-  MessageCircle,
-  MessageSquare,
-  MoreHorizontal,
-  RotateCcw,
-  Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleRowActionsMenu } from "@/components/ui/ModuleRowActionsMenu";
+import { PersonMessagingRowActionsExtras } from "@/components/ui/PersonMessagingRowActionsExtras";
+import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { teacherMessagingLabels } from "@/lib/teachers/teacherMessagingLabels";
 import type { Teacher } from '@mms/shared';
 
@@ -41,6 +25,11 @@ interface TeacherListRowActionsProps {
   onEmail?: (teachers: Teacher[]) => void;
 }
 
+/**
+ * Teachers row/card actions — thin adapter over the shared
+ * {@link ModuleRowActionsMenu}; messaging items are injected as module extras
+ * and omitted (not disabled) when handlers are undefined or the channel is unavailable.
+ */
 export function TeacherListRowActions({
   teacher,
   teacherId,
@@ -49,7 +38,7 @@ export function TeacherListRowActions({
   canDelete,
   hideViewItem = false,
   hideMessagingItems = false,
-  triggerClassName = "rounded-lg",
+  triggerClassName,
   onEdit,
   onRequestDelete,
   onView,
@@ -57,75 +46,38 @@ export function TeacherListRowActions({
   onSms,
   onWhatsApp,
   onEmail,
-}: TeacherListRowActionsProps): ReactElement {
+}: TeacherListRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const labels = teacherMessagingLabels(t);
-  const showMessaging = !hideMessagingItems && Boolean(onWhatsApp || onSms || onEmail);
+  const { phone, email } = resolveTeacherPrimaryChannels(teacher);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={triggerClassName}
-          aria-label={t("common.actions")}
-        >
-          <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {showDeleted ? (
-          canDelete &&
-          onRestore && (
-            <DropdownMenuItem onClick={() => onRestore(teacherId)}>
-              <RotateCcw className="w-3.5 h-3.5 me-2" /> {t("teachers.restore")}
-            </DropdownMenuItem>
-          )
-        ) : (
-          <>
-            {!hideViewItem && (
-              <DropdownMenuItem onClick={() => onView(teacher)}>
-                <Eye className="w-3.5 h-3.5 me-2" /> {t("teachers.list.viewDetails")}
-              </DropdownMenuItem>
-            )}
-            {canWrite && (
-              <DropdownMenuItem onClick={() => onEdit(teacher)}>
-                <Edit2 className="w-3.5 h-3.5 me-2" /> {t("common.edit")}
-              </DropdownMenuItem>
-            )}
-            {showMessaging && <DropdownMenuSeparator />}
-            {!hideMessagingItems && onWhatsApp && (
-              <DropdownMenuItem onClick={() => onWhatsApp([teacher])}>
-                <MessageCircle className="w-3.5 h-3.5 me-2 text-success" />{" "}
-                {labels.whatsapp}
-              </DropdownMenuItem>
-            )}
-            {!hideMessagingItems && onSms && (
-              <DropdownMenuItem onClick={() => onSms([teacher])}>
-                <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {labels.sms}
-              </DropdownMenuItem>
-            )}
-            {!hideMessagingItems && onEmail && (
-              <DropdownMenuItem onClick={() => onEmail([teacher])}>
-                <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {labels.email}
-              </DropdownMenuItem>
-            )}
-            {canDelete && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => onRequestDelete(teacherId)}
-                >
-                  <Trash2 className="w-3.5 h-3.5 me-2" /> {t("common.delete")}
-                </DropdownMenuItem>
-              </>
-            )}
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <ModuleRowActionsMenu
+      triggerLabel={t("teachers.table.actions")}
+      viewLabel={t("teachers.list.viewDetails")}
+      editLabel={t("common.edit")}
+      deleteLabel={t("common.delete")}
+      restoreLabel={t("teachers.restore")}
+      archived={showDeleted}
+      canWrite={canWrite}
+      canDelete={canDelete}
+      onView={onView ? () => onView(teacher) : undefined}
+      onEdit={() => onEdit(teacher)}
+      onDelete={() => onRequestDelete(teacherId)}
+      onRestore={onRestore ? () => onRestore(teacherId) : undefined}
+      hideViewItem={hideViewItem}
+      triggerClassName={triggerClassName}
+      extras={
+        <PersonMessagingRowActionsExtras
+          phone={phone}
+          email={email}
+          hasWhatsApp={Boolean(phone)}
+          hideMessagingItems={hideMessagingItems || showDeleted}
+          onWhatsApp={() => onWhatsApp?.([teacher])}
+          onSms={() => onSms?.([teacher])}
+          onEmail={() => onEmail?.([teacher])}
+          labels={teacherMessagingLabels(t)}
+        />
+      }
+    />
   );
 }

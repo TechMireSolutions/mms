@@ -42,6 +42,8 @@ export interface StudentReportTablesProps {
   enrollments: EnrollmentHistoryItem[];
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   enrollmentStatusConfig: Record<string, StatusBadgeConfigItem>;
+  listLoading?: boolean;
+  historyLoading?: boolean;
 }
 
 export function resolveStudentSessionLabels(
@@ -75,25 +77,4 @@ export function mapStudentRow(student: Student, sessions: Session[] = []): Repor
     registered: student.registeredDate ? formatDate(student.registeredDate, true) : "—",
     age,
   };
-}
-
-export function studentMatchesSessionFilter(student: Student, sessionId: string): boolean {
-  if (!sessionId || sessionId === "all") return true;
-  return (student.enrolledSessions ?? []).includes(sessionId);
-}
-
-export function studentMatchesClassFilter(
-  student: Student,
-  className: string,
-  sessions: Session[],
-): boolean {
-  if (!className || className === "all") return true;
-  const enrolledIds = new Set(student.enrolledSessions ?? []);
-  for (const session of sessions) {
-    if (!enrolledIds.has(session.id)) continue;
-    if ((session.classes ?? []).some((sessionClass) => sessionClass.name === className)) {
-      return true;
-    }
-  }
-  return false;
 }

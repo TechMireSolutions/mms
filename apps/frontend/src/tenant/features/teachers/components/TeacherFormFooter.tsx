@@ -2,10 +2,10 @@ import React from "react";
 import type { Contact, Teacher } from "@mms/shared";
 import { resolveTeacherStatus } from "@mms/shared";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { RequiredBanner } from "@/components/ui/RequiredBanner";
 import {
   FormFooterBadge,
   FormFooterEntityChip,
-  FormFooterErrorChip,
 } from "@/components/ui/FormFooterChip";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -41,9 +41,7 @@ export function TeacherFormFooter({
 
   if (requireContactLink) {
     return (
-      <FormFooterErrorChip>
-        {t("teachers.form.contactRequired")}
-      </FormFooterErrorChip>
+      <RequiredBanner message={t("teachers.form.contactRequired")} />
     );
   }
 

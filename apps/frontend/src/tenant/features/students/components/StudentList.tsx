@@ -13,7 +13,7 @@ export interface StudentListProps {
   onEdit: (student: Student) => void;
   onRestore?: (id: string) => void | Promise<void>;
   viewMode: WorkDirectoryViewMode;
-  isColumnVisible?: (key: string) => boolean;
+  isColumnVisible: (key: string) => boolean;
   columnRegistry?: import("@mms/shared").ModuleColumnRegistryEntry[];
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -68,8 +68,6 @@ export default function StudentList({
     allSelected,
     someSelected,
     isColumnVisible,
-    sortField,
-    sortDir,
     onSort: onServerSort,
     openComposer,
     canWriteMessaging,
@@ -99,7 +97,8 @@ export default function StudentList({
         statusBadgeConfig={statusBadgeConfig}
         isColumnVisible={list.isColumnVisible}
         columnRegistry={columnRegistry}
-        renderSortIcon={list.renderSortIcon}
+        sortField={sortField}
+        sortDir={sortDir}
         onSort={list.handleSort}
         onSelectAll={list.handleSelectAll}
         onSelectOne={list.handleSelectOne}

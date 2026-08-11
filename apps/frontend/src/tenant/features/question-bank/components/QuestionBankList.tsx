@@ -17,19 +17,20 @@ interface QuestionBankListProps {
   typeConfig: Record<string, StatusBadgeConfigItem>;
   listMetaFields: QuestionBankField[];
   selectedIds: string[];
+  allVisibleSelected: boolean;
+  someVisibleSelected: boolean;
   canWrite: boolean;
   canDelete: boolean;
   canTrashRows: boolean;
   showDeleted: boolean;
   showSourceCitation: boolean;
-  allFilteredSelected: boolean;
   isColumnVisible: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   onEditQuestion: (question: Question) => void;
   onTrashAction: (id: string) => void;
-  onToggleSelected: (id: string, checked: boolean) => void;
-  onToggleSelectAllFiltered: (checked: boolean) => void;
+  onToggleSelectedQuestion: (id: string, checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean) => void;
 }
 
 export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
@@ -42,15 +43,18 @@ export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
         typeConfig={props.typeConfig}
         listMetaFields={props.listMetaFields}
         selectedIds={props.selectedIds}
+        allVisibleSelected={props.allVisibleSelected}
+        someVisibleSelected={props.someVisibleSelected}
         canWrite={props.canWrite}
         canDelete={props.canDelete}
         canTrashRows={props.canTrashRows}
         showDeleted={props.showDeleted}
         showSourceCitation={props.showSourceCitation}
         isColumnVisible={props.isColumnVisible}
+        onToggleSelectAll={props.onToggleSelectAll}
         onEditQuestion={props.onEditQuestion}
         onTrashAction={props.onTrashAction}
-        onToggleSelected={props.onToggleSelected}
+        onToggleSelected={props.onToggleSelectedQuestion}
       />
     );
   }
@@ -67,13 +71,14 @@ export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
       canTrashRows={props.canTrashRows}
       showDeleted={props.showDeleted}
       isColumnVisible={props.isColumnVisible}
-      allFilteredSelected={props.allFilteredSelected}
+      allVisibleSelected={props.allVisibleSelected}
+      someVisibleSelected={props.someVisibleSelected}
       getColumnWidth={props.getColumnWidth}
       onColumnResize={props.onColumnResize}
       onEditQuestion={props.onEditQuestion}
       onTrashAction={props.onTrashAction}
-      onToggleSelected={props.onToggleSelected}
-      onToggleSelectAllFiltered={props.onToggleSelectAllFiltered}
+      onToggleSelectedQuestion={props.onToggleSelectedQuestion}
+      onToggleSelectAll={props.onToggleSelectAll}
     />
   );
 }

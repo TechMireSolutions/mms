@@ -1,15 +1,14 @@
 import React from "react";
-import { GraduationCap, BookOpen, Users, Layers, Filter, X } from "lucide-react";
+import { GraduationCap, BookOpen, Users, Layers } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from "recharts";
-import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ActiveFilterBanner } from "@/components/ui/ActiveFilterBanner";
 import { FacultyReportWorkloadTable } from "@/tenant/features/reports/components/FacultyReportWorkloadTable";
 import type { FacultyWorkloadItem } from "@/tenant/features/reports/components/useFacultyReportData";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -77,25 +76,10 @@ interface FacultyReportFilterBarProps {
 
 export function FacultyReportFilterBar({ t, selectedFaculty, onClear }: FacultyReportFilterBarProps): React.JSX.Element {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/40 px-3.5 py-2 text-xs text-muted-foreground">
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-3.5 w-3.5 text-primary" />
-        <span className="font-medium text-foreground">{t("teachers.report.facultyFilterLabel")}</span>
-        <span className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-          {selectedFaculty}
-        </span>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={onClear}
-        className="px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-      >
-        <X className="me-1 h-3 w-3" />
-        {t("teachers.report.clearFacultyFilter")}
-      </Button>
-    </div>
+    <ActiveFilterBanner
+      chips={[{ key: "faculty", label: t("teachers.report.facultyFilterLabel"), value: selectedFaculty }]}
+      actions={[{ key: "faculty", label: t("teachers.report.clearFacultyFilter"), onClick: onClear }]}
+    />
   );
 }
 
@@ -127,14 +111,12 @@ export function FacultyReportExportSection({
       {filteredFacultyWorkload.length === 0 ? (
         <EmptyState icon={GraduationCap} title={t("teachers.report.noFacultyData")} compact />
       ) : (
-        <Card className="overflow-hidden">
-          <FacultyReportWorkloadTable
-            t={t}
-            rows={filteredFacultyWorkload}
-            selectedFaculty={selectedFaculty}
-            onToggleFacultyFilter={onToggleFacultyFilter}
-          />
-        </Card>
+        <FacultyReportWorkloadTable
+          t={t}
+          rows={filteredFacultyWorkload}
+          selectedFaculty={selectedFaculty}
+          onToggleFacultyFilter={onToggleFacultyFilter}
+        />
       )}
     </>
   );

@@ -1,15 +1,26 @@
 import type { SystemUser } from "@mms/shared";
-import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
-import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
-import { SettingsMetaBadge } from "@/components/ui/SettingsShell";
+import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
 import { useTranslation } from "@/hooks/useTranslation";
-import { UserRoleBadge, UserStatusBadge } from "@/tenant/features/users/components/UserBadges";
+import { renderUserWorkColumnValue } from "@/tenant/features/users/components/userWorkColumnCell";
 
 export interface UserCardMetadataProps {
   user: SystemUser;
   formatLoginDate: (timestamp: string) => string;
   isColumnVisible?: (key: string) => boolean;
 }
+
+type UserMetaColumn = {
+  key: "role" | "status" | "lastLogin" | "created" | "twoFactor";
+  label: "users.colRole" | "users.colStatus" | "users.colLastLogin" | "users.colCreated" | "users.col2fa";
+};
+
+const USER_META_COLUMNS: UserMetaColumn[] = [
+  { key: "role", label: "users.colRole" },
+  { key: "status", label: "users.colStatus" },
+  { key: "lastLogin", label: "users.colLastLogin" },
+  { key: "created", label: "users.colCreated" },
+  { key: "twoFactor", label: "users.col2fa" },
+];
 
 /** Users domain metadata tiles — Contacts card metadata chrome. */
 export function UserCardMetadata({
@@ -19,46 +30,19 @@ export function UserCardMetadata({
 }: UserCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const visible = isColumnVisible ?? (() => true);
+  const metaColumns = USER_META_COLUMNS.filter((col) => visible(col.key));
 
-  const tiles: React.ReactNode[] = [];
-  if (visible("role")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="role" label={t("users.colRole")}>
-        <UserRoleBadge roleId={user.role} />
-      </DirectoryCardMetaTile>,
-    );
-  }
-  if (visible("status")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="status" label={t("users.colStatus")}>
-        <UserStatusBadge status={user.status} />
-      </DirectoryCardMetaTile>,
-    );
-  }
-  if (visible("lastLogin")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="lastLogin" label={t("users.colLastLogin")}>
-        {formatLoginDate(user.lastLogin)}
-      </DirectoryCardMetaTile>,
-    );
-  }
-  if (visible("created")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="created" label={t("users.colCreated")}>
-        <span className="font-mono">{user.createdDate}</span>
-      </DirectoryCardMetaTile>,
-    );
-  }
-  if (visible("twoFactor")) {
-    tiles.push(
-      <DirectoryCardMetaTile key="twoFactor" label={t("users.col2fa")}>
-        <SettingsMetaBadge variant={user.twoFactorEnabled ? "success" : "muted"}>
-          {user.twoFactorEnabled ? t("users.twoFactorOn") : t("users.twoFactorOff")}
-        </SettingsMetaBadge>
-      </DirectoryCardMetaTile>,
-    );
-  }
-
-  if (tiles.length === 0) return null;
-  return <DirectoryCardMetaGrid>{tiles}</DirectoryCardMetaGrid>;
+  return (
+    <DirectoryCardMetadata
+      columns={metaColumns}
+      keyFor={(col) => col.key}
+      labelFor={(col) => t(col.label)}
+      renderValue={(col) =>
+        renderUserWorkColumnValue(user, col.key, {
+          t,
+          formatLoginDate,
+        })
+      }
+    />
+  );
 }

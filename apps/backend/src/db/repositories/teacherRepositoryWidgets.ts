@@ -37,7 +37,21 @@ function singleFilterSql(
 }
 
 function widgetFilterSql(query: TeachersWidgetQuery): SQL | null {
-  return singleFilterSql(query.filterField, query.filterOperator, query.filterValue);
+  const clauses: SQL[] = [];
+  const legacy = singleFilterSql(query.filterField, query.filterOperator, query.filterValue);
+  if (legacy) clauses.push(legacy);
+  for (const rule of query.filters ?? []) {
+    const clause = singleFilterSql(rule.field, rule.operator, rule.value);
+    if (clause) clauses.push(clause);
+  }
+  if (clauses.length === 0) return null;
+  if (clauses.length === 1) return clauses[0]!;
+  return sql`(${sql.join(clauses, sql` AND `)})`;
+}
+
+function resolveChartLimit(query: TeachersWidgetQuery): number {
+  const requested = query.chartLimit ?? 8;
+  return Math.min(Math.max(requested, 1), 50);
 }
 
 /** SQL widget aggregates for teachers (Students parity — no full-collection dump). */
@@ -61,7 +75,7 @@ export async function aggregateTeachersWidgetQueries(
       const whereClause = filterSql
         ? and(activeWorkspaceWhere(subdomain), filterSql)
         : activeWorkspaceWhere(subdomain);
-      const chartLimit = 8;
+      const chartLimit = resolveChartLimit(query);
 
       let value = 0;
       if (query.operation === 'count' || query.operation === 'percentage') {

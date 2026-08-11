@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { JournalEntry } from '@/lib/data/accountingData';
 import { useTranslation } from '@/hooks/useTranslation';
+import { notify } from '@/lib/notify';
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import type { JournalEntriesProps } from '@/tenant/features/accounting/components/journalEntriesTypes';
 import {
@@ -13,19 +14,19 @@ import {
   filterJournalEntries,
 } from '@/tenant/features/accounting/components/journalEntriesControllerFilters';
 import {
-  createJournalBulkActionHandler,
-  createJournalDeleteHandler,
   createJournalPostHandler,
-  createJournalReverseHandler,
   createJournalSaveHandler,
   exportJournalEntriesCsv,
   formatJournalAmount,
+  reverseJournalEntry,
 } from '@/tenant/features/accounting/components/journalEntriesControllerActions';
 import {
   createJournalEntryActionsRenderer,
   createJournalNlHandlers,
-  createJournalSelectionHandlers,
 } from '@/tenant/features/accounting/components/journalEntriesControllerSelection';
+import { useJournalEntrySelection } from '@/tenant/features/accounting/hooks/useJournalEntrySelection';
+import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
 import type { QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
 
 export function useJournalEntriesController({
@@ -63,7 +64,9 @@ export function useJournalEntriesController({
   const [showFilters, setShowFilters] = useState(false);
   const [modal, setModal] = useState<'new' | 'edit' | 'view' | null>(null);
   const [selected, setSelected] = useState<JournalEntry | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
+  const [pendingReverseEntry, setPendingReverseEntry] = useState<JournalEntry | null>(null);
 
   useEffect(() => {
     if (showDeleted) setMode('advanced');
@@ -76,10 +79,6 @@ export function useJournalEntriesController({
       setSelected(null);
     }
   }, [createRequestKey, canWrite, showDeleted]);
-
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [showDeleted]);
 
   const filtered = useMemo(
     () => filterJournalEntries(entries, { search, statusFilter, tagFilter, dateFrom, dateTo }),
@@ -102,20 +101,24 @@ export function useJournalEntriesController({
     setModal,
     setSelected,
     setSimpleModal,
-    setSelectedIds,
   };
 
   const handleSave = createJournalSaveHandler(actionDeps);
-  const handleDelete = createJournalDeleteHandler(actionDeps);
   const handlePost = createJournalPostHandler(actionDeps);
-  const handleReverse = createJournalReverseHandler(actionDeps);
-  const handleBulkAction = createJournalBulkActionHandler(actionDeps, selectedIds);
 
-  const { toggleSelected, toggleAllFiltered, allFilteredSelected } = createJournalSelectionHandlers(
-    filtered,
+  const {
     selectedIds,
     setSelectedIds,
-  );
+    allVisibleSelected,
+    someVisibleSelected,
+    toggleSelectAll,
+    toggleSelectedEntry,
+    clearSelection,
+  } = useJournalEntrySelection(filtered);
+
+  useEffect(() => {
+    clearSelection();
+  }, [showDeleted, clearSelection]);
 
   const exportCSV = () => exportJournalEntriesCsv(filtered, t);
 
@@ -128,16 +131,78 @@ export function useJournalEntriesController({
 
   const { grandDebit, grandCredit } = useMemo(() => computeJournalGrandTotals(filtered), [filtered]);
 
-  const renderEntryActions = createJournalEntryActionsRenderer({
-    canWrite,
-    canDelete,
-    showDeleted,
-    setSelected,
-    setModal,
-    handlePost,
-    handleDelete,
-    handleReverse,
-  });
+  const requestRowTrash = (id: string) => {
+    if (showDeleted) {
+      void onRestore?.(id);
+      return;
+    }
+    const entry = entries.find((journalEntry) => journalEntry.id === id);
+    if (entry?.status === 'posted') {
+      notify.warning(t('accounting.journal.alerts.cannotDeletePosted'));
+      return;
+    }
+    setPendingTrashId(id);
+  };
+
+  const confirmRowTrash = (): void => {
+    if (!pendingTrashId) return;
+    void onDelete?.(pendingTrashId);
+    setPendingTrashId(null);
+  };
+
+  const requestBulkTrash = () => {
+    if (showDeleted) {
+      void onBulkRestore?.(selectedIds);
+      setSelectedIds([]);
+      return;
+    }
+    setConfirmBulkOpen(true);
+  };
+
+  const confirmBulkTrash = (): void => {
+    if (showDeleted) void onBulkRestore?.(selectedIds);
+    else void onBulkDelete?.(selectedIds);
+    setSelectedIds([]);
+    setConfirmBulkOpen(false);
+  };
+
+  const requestReverse = (entry: JournalEntry) => {
+    setPendingReverseEntry(entry);
+  };
+
+  const confirmReverse = (): void => {
+    if (!pendingReverseEntry) return;
+    void reverseJournalEntry(pendingReverseEntry, entries, onChange);
+    setPendingReverseEntry(null);
+  };
+
+  const renderEntryActions = createJournalEntryActionsRenderer(
+    {
+      canWrite,
+      canDelete,
+      showDeleted,
+      setSelected,
+      setModal,
+      handlePost,
+      requestRowTrash,
+      handleReverse: requestReverse,
+    },
+    { triggerClassName: MODULE_ROW_ACTIONS_TRIGGER_CLASS },
+  );
+
+  const renderEntryActionsCards = createJournalEntryActionsRenderer(
+    {
+      canWrite,
+      canDelete,
+      showDeleted,
+      setSelected,
+      setModal,
+      handlePost,
+      requestRowTrash,
+      handleReverse: requestReverse,
+    },
+    { triggerClassName: DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS, hideViewItem: true },
+  );
 
   return {
     mode,
@@ -153,8 +218,9 @@ export function useJournalEntriesController({
     nlSuggestion,
     filtered,
     selectedIds,
-    clearSelection: () => setSelectedIds([]),
-    allFilteredSelected,
+    clearSelection,
+    allVisibleSelected,
+    someVisibleSelected,
     grandDebit,
     grandCredit,
     search,
@@ -177,14 +243,25 @@ export function useJournalEntriesController({
     canDelete,
     showDeleted,
     handleSave,
-    handleBulkAction,
     exportCSV,
     handleNlSubmit,
     handleNlChange,
-    toggleSelected,
-    toggleAllFiltered,
+    toggleSelectedEntry,
+    toggleSelectAll,
     renderEntryActions,
+    renderEntryActionsCards,
     formatAmount: (amount: number) => formatJournalAmount(amount, formatCurrency),
-    handleReverse,
+    requestRowTrash,
+    confirmRowTrash,
+    requestBulkTrash,
+    confirmBulkTrash,
+    requestReverse,
+    confirmReverse,
+    pendingTrashId,
+    setPendingTrashId,
+    confirmBulkOpen,
+    setConfirmBulkOpen,
+    pendingReverseEntry,
+    setPendingReverseEntry,
   };
 }

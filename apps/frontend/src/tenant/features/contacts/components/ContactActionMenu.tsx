@@ -1,14 +1,7 @@
-import React, { useCallback } from "react";
-import { MoreHorizontal } from "lucide-react";
-import { type Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { ContactActionMenuItems } from "@/tenant/features/contacts/components/ContactActionMenuItems";
+import { type Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from '@mms/shared';
+import { useTranslation } from '@/hooks/useTranslation';
+import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
+import { PersonMessagingRowActionsExtras } from '@/components/ui/PersonMessagingRowActionsExtras';
 
 interface ContactActionMenuProps {
   contact: Contact;
@@ -31,8 +24,9 @@ interface ContactActionMenuProps {
 }
 
 /**
- * Reusable dropdown menu component for contact row and card actions.
- * Messaging items are omitted (not disabled) when handlers are undefined or channel is unavailable.
+ * Contacts row/card actions — thin adapter over the shared
+ * {@link ModuleRowActionsMenu}; messaging items are injected as module extras
+ * and omitted (not disabled) when handlers are undefined or the channel is unavailable.
  */
 export function ContactActionMenu({
   contact,
@@ -53,78 +47,39 @@ export function ContactActionMenu({
   const { t } = useTranslation();
   const primaryEmail = getPrimaryEmail(contact);
   const primaryPhone = getPrimaryPhone(contact);
-  const waAvailable = hasWhatsApp(contact);
-
-  const handleView = useCallback(() => {
-    onView?.(contact);
-  }, [contact, onView]);
-
-  const handleEdit = useCallback(() => {
-    onEdit(contact);
-  }, [contact, onEdit]);
-
-  const handleDelete = useCallback(() => {
-    onDelete(contact.id);
-  }, [contact.id, onDelete]);
-
-  const handleRestore = useCallback(() => {
-    onRestore?.(contact.id);
-  }, [contact.id, onRestore]);
-
-  const handleWhatsAppAction = useCallback(() => {
-    onWhatsApp?.([contact]);
-  }, [contact, onWhatsApp]);
-
-  const handleEmailAction = useCallback(() => {
-    onEmail?.([contact]);
-  }, [contact, onEmail]);
-
-  const handleSmsAction = useCallback(() => {
-    onSms?.([contact]);
-  }, [contact, onSms]);
-
-  const showWhatsApp = Boolean(onWhatsApp) && waAvailable;
-  const showEmail = Boolean(onEmail) && Boolean(primaryEmail);
-  const showSms = Boolean(onSms) && Boolean(primaryPhone);
-  const showMessaging =
-    !hideMessagingItems && !showArchived && (showWhatsApp || showEmail || showSms);
-  const showViewItem = Boolean(onView) && !hideViewItem;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className={
-            triggerClassName ||
-            "min-w-11 min-h-11 p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          }
-          type="button"
-          aria-label={t("contacts.table.actions")}
-        >
-          <MoreHorizontal className="w-4 h-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
-        <ContactActionMenuItems
-          onView={showViewItem ? onView : undefined}
-          canWrite={canWrite}
-          showArchived={showArchived}
-          canDelete={canDelete}
-          showWhatsApp={showWhatsApp}
-          showEmail={showEmail}
-          showSms={showSms}
-          showMessaging={showMessaging}
-          onViewClick={handleView}
-          onEditClick={handleEdit}
-          onWhatsAppClick={handleWhatsAppAction}
-          onEmailClick={handleEmailAction}
-          onSmsClick={handleSmsAction}
-          onDeleteClick={handleDelete}
-          onRestoreClick={handleRestore}
-          t={t}
+    <ModuleRowActionsMenu
+      triggerLabel={t('contacts.table.actions')}
+      viewLabel={t('contacts.table.viewProfile')}
+      editLabel={t('contacts.table.edit')}
+      deleteLabel={t('contacts.table.deleteContact')}
+      restoreLabel={t('contacts.restoreContact')}
+      archived={showArchived}
+      canWrite={canWrite}
+      canDelete={canDelete}
+      onView={onView ? () => onView(contact) : undefined}
+      onEdit={() => onEdit(contact)}
+      onDelete={() => onDelete(contact.id)}
+      onRestore={onRestore ? () => onRestore(contact.id) : undefined}
+      hideViewItem={hideViewItem}
+      triggerClassName={triggerClassName}
+      extras={
+        <PersonMessagingRowActionsExtras
+          phone={primaryPhone}
+          email={primaryEmail}
+          hasWhatsApp={hasWhatsApp(contact)}
+          hideMessagingItems={hideMessagingItems || showArchived}
+          onWhatsApp={() => onWhatsApp?.([contact])}
+          onSms={() => onSms?.([contact])}
+          onEmail={() => onEmail?.([contact])}
+          labels={{
+            whatsapp: t('contacts.whatsapp'),
+            sms: t('contacts.sms'),
+            email: t('contacts.detail.emailAction'),
+          }}
         />
-      </DropdownMenuContent>
-    </DropdownMenu>
+      }
+    />
   );
 }

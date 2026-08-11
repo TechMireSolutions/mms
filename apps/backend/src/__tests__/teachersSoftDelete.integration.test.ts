@@ -37,16 +37,21 @@ const mockBulkSoftDeleteTeachers = vi.fn();
 const mockBulkRestoreTeachers = vi.fn();
 const mockBulkUpdateTeacherStatus = vi.fn();
 
-vi.mock('../services/teacherService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/teacherService.js')>();
+vi.mock('../teachers/use-cases/teacherUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../teachers/use-cases/teacherUseCases.js')>();
   return {
     ...actual,
-    loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
-    deleteTeacherById: (...args: unknown[]) => mockDeleteTeacherById(...args),
-    restoreTeacherById: (...args: unknown[]) => mockRestoreTeacherById(...args),
-    bulkSoftDeleteTeachers: (...args: unknown[]) => mockBulkSoftDeleteTeachers(...args),
-    bulkRestoreTeachers: (...args: unknown[]) => mockBulkRestoreTeachers(...args),
-    bulkUpdateTeacherStatus: (...args: unknown[]) => mockBulkUpdateTeacherStatus(...args),
+    teacherUseCases: {
+      ...actual.teacherUseCases,
+      loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
+      deleteTeacherById: (...args: unknown[]) => mockDeleteTeacherById(...args),
+      restoreTeacherById: (...args: unknown[]) => mockRestoreTeacherById(...args),
+      bulkSoftDeleteTeachers: (...args: unknown[]) => mockBulkSoftDeleteTeachers(...args),
+      bulkRestoreTeachers: (...args: unknown[]) => mockBulkRestoreTeachers(...args),
+      bulkUpdateTeacherStatus: (...args: unknown[]) => mockBulkUpdateTeacherStatus(...args),
+      sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
+      sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
+    },
   };
 });
 
@@ -145,7 +150,7 @@ describe('teachers soft delete routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkRestoreTeachers).toHaveBeenCalledWith(['t1', 't2']);
+    expect(mockBulkRestoreTeachers).toHaveBeenCalledWith(['t1', 't2'], 'u-admin');
     await app.close();
   });
 

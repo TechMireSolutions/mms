@@ -1,5 +1,6 @@
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ObligationCollectionList } from "@/tenant/features/obligations/components/ObligationCollectionList";
 import type { useObligationColumnLayout } from "@/tenant/features/obligations/hooks/useObligationColumnLayout";
@@ -65,6 +66,17 @@ export function ObligationsWorkTier({
   return (
     <ErrorBoundary>
       <div className="space-y-4">
+        {canDelete && (
+          <div className="flex items-center justify-end">
+            <ModuleTrashToggle
+              showDeleted={showDeleted}
+              onToggle={onToggleShowDeleted}
+              showActiveLabel={t("obligations.trash.showActive")}
+              showDeletedLabel={t("obligations.trash.showDeleted")}
+              className="gap-1.5 shrink-0"
+            />
+          </div>
+        )}
         <ObligationCollectionList
           collections={collections}
           obligationTypes={obligationTypes}
@@ -76,7 +88,6 @@ export function ObligationsWorkTier({
           canWrite={canWrite}
           canDelete={canDelete}
           showDeleted={showDeleted}
-          onToggleShowDeleted={onToggleShowDeleted}
           onDelete={onDelete}
           onRestore={onRestore}
           onBulkDelete={onBulkDelete}

@@ -6,19 +6,16 @@ import {
 
 interface UseQuestionBankFiltersOptions {
   questions: Question[];
-  showDeleted: boolean;
   onFilteredCountChange?: (count: number) => void;
 }
 
 export function useQuestionBankFilters({
   questions,
-  showDeleted,
   onFilteredCountChange,
 }: UseQuestionBankFiltersOptions) {
   const [search, setSearch] = useState('');
   const [filterCats, setFilterCats] = useState<string[]>([]);
   const [filterDiff, setFilterDiff] = useState<string[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const filtered = useMemo(
     () =>
@@ -37,25 +34,6 @@ export function useQuestionBankFilters({
     onFilteredCountChange?.(filtered.length);
   }, [filtered.length, onFilteredCountChange]);
 
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [showDeleted]);
-
-  const toggleSelected = (id: string, checked: boolean): void => {
-    setSelectedIds((prev) => (checked ? [...prev, id] : prev.filter((item) => item !== id)));
-  };
-
-  const allFilteredSelected =
-    filtered.length > 0 && filtered.every((question) => selectedIds.includes(question.id));
-
-  const toggleSelectAllFiltered = (checked: boolean): void => {
-    if (!checked) {
-      setSelectedIds((prev) => prev.filter((id) => !filtered.some((question) => question.id === id)));
-      return;
-    }
-    setSelectedIds((prev) => Array.from(new Set([...prev, ...filtered.map((question) => question.id)])));
-  };
-
   return {
     search,
     setSearch,
@@ -63,11 +41,6 @@ export function useQuestionBankFilters({
     setFilterCats,
     filterDiff,
     setFilterDiff,
-    selectedIds,
-    setSelectedIds,
     filtered,
-    toggleSelected,
-    allFilteredSelected,
-    toggleSelectAllFiltered,
   };
 }

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -145,7 +146,7 @@ export function MessagingReportsPanel({
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs lg:col-span-2">
+          <div className={`${WORK_SURFACE} space-y-4 p-4 lg:col-span-2`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-grow flex-wrap items-center gap-2">
             <SearchBar placeholder={t('messaging.search.placeholder')} value={search} onChange={setSearch} className="max-w-xs flex-grow" />

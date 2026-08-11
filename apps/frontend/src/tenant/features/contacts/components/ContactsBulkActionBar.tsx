@@ -15,9 +15,11 @@ interface ContactsBulkActionBarProps {
   selectedTargets: {
     waTargets: Contact[];
     smsReady: Contact[];
+    emailReady: Contact[];
   };
   onWhatsApp: (targets: Contact[]) => void;
   onSms: (targets: Contact[]) => void;
+  onEmail: (targets: Contact[]) => void;
   onBulkExport: () => void | Promise<void>;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
@@ -34,6 +36,7 @@ export function ContactsBulkActionBar({
   selectedTargets,
   onWhatsApp,
   onSms,
+  onEmail,
   onBulkExport,
   onRequestBulkDelete,
   onRequestBulkRestore,
@@ -43,11 +46,13 @@ export function ContactsBulkActionBar({
 
   const showWhatsApp = bulkActions.includes("whatsapp") && canWriteMessaging;
   const showSms = bulkActions.includes("sms") && canWriteMessaging;
-  const showMessaging = !viewingDeleted && (showWhatsApp || showSms);
+  const showEmail = bulkActions.includes("email") && canWriteMessaging;
+  const showMessaging = !viewingDeleted && (showWhatsApp || showSms || showEmail);
 
   const handleChannel = (channel: BulkSelectionMessageChannel): void => {
     if (channel === "whatsapp") onWhatsApp(selectedTargets.waTargets);
     else if (channel === "sms") onSms(selectedTargets.smsReady);
+    else if (channel === "email") onEmail(selectedTargets.emailReady);
   };
 
   return (
@@ -70,11 +75,12 @@ export function ContactsBulkActionBar({
                   count: selectedTargets.waTargets.length,
                 }),
                 sms: t("contacts.smsBulk", { count: selectedTargets.smsReady.length }),
+                email: t("contacts.emailBulk", { count: selectedTargets.emailReady.length }),
               },
               channels: {
                 whatsapp: showWhatsApp,
                 sms: showSms,
-                email: false,
+                email: showEmail,
               },
             }
           : undefined

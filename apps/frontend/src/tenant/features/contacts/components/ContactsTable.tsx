@@ -4,13 +4,15 @@ import type { Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import {
   ContactTableRow,
   type ContactsColumnConfig,
 } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactsTableHeader } from "@/tenant/features/contacts/components/ContactsTableHeader";
-import { TableBody } from "@/components/ui/table";
+import { Table, TableBody } from "@/components/ui/table";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
 import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
@@ -67,13 +69,14 @@ export default function ContactsTable({
 
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
   const selectedSet = useMemo(() => new Set(selected), [selected]);
-  const pageCountLabel = `${contacts.length} ${
-    contacts.length !== 1 ? t("contacts.table.contacts") : t("contacts.form.contact")
-  }`;
+  const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
+    singular: "contacts.form.contact",
+    plural: "contacts.table.contacts",
+  });
 
   return (
-    <div className={cn(WORK_SURFACE, "overflow-x-auto shadow-xs")}>
-      <table className="w-full text-sm table-fixed">
+    <div className={cn(WORK_SURFACE, "shadow-xs")}>
+      <Table className="table-fixed">
         <ContactsTableHeader
           columns={columns}
           sortField={sortField}
@@ -116,23 +119,13 @@ export default function ContactsTable({
             ))}
           </AnimatePresence>
         </TableBody>
-      </table>
+      </Table>
 
-      <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between bg-muted/5">
-        <p className="text-xs text-muted-foreground">
-          {selected.length > 0 ? (
-            <>
-              <span>{t("contacts.selectedCount", { count: selected.length })}</span>
-              <span className="mx-1.5 text-border" aria-hidden="true">
-                ·
-              </span>
-              <span>{pageCountLabel}</span>
-            </>
-          ) : (
-            pageCountLabel
-          )}
-        </p>
-      </div>
+      <ModuleTableFooterCount
+        selectedCount={selected.length}
+        selectedCountLabel={t("contacts.selectedCount", { count: selected.length })}
+        pageCountLabel={pageCountLabel}
+      />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Session } from "@/lib/data/sessionsData";
 
@@ -12,6 +13,8 @@ export interface SessionsWorkViewProps {
   canDelete: boolean;
   statusConfig: Record<string, StatusBadgeConfigItem>;
   typeConfig: Record<string, StatusBadgeConfigItem>;
+  isColumnVisible: (key: string) => boolean;
+  columnRegistry: ModuleColumnRegistryEntry[];
   onOpenDetail: (session: Session) => void;
   onRequestDelete: (id: string) => void;
   onRestore: (id: string) => void;

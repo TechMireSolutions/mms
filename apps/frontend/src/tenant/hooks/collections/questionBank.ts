@@ -16,3 +16,4 @@ export {
   useQuestionBankMutations,
   useQuestionBankMetrics,
 } from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
+export { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";

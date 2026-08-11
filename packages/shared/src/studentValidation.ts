@@ -35,6 +35,10 @@ export const STUDENT_WRITE_SYSTEM_KEYS = [
   "motherName",
   "guardianName",
   "enrolledSessions",
+  "cnic",
+  "discountType",
+  "discountPct",
+  "registrationType",
   "createdAt",
   "updatedAt",
   "createdBy",
@@ -45,9 +49,9 @@ const STUDENT_WRITE_SYSTEM_KEY_SET = new Set<string>(STUDENT_WRITE_SYSTEM_KEYS);
 
 /** Enabled Setup custom field keys beyond the system student model. */
 export function collectStudentWriteExtraFieldKeys(
-  fields: Record<string, FieldDefinition[]> | null | undefined,
+  settings: StudentsSettings | null | undefined,
 ): string[] {
-  if (!fields) return [];
+  const fields = (settings?.fields ?? {}) as Record<string, FieldDefinition[]>;
   return listEnabledCustomStudentFormFields(fields)
     .map((field) => field.key)
     .filter((key) => !STUDENT_WRITE_SYSTEM_KEY_SET.has(key));

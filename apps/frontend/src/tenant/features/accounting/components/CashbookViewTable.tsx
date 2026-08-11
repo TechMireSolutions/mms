@@ -1,7 +1,17 @@
 import { formatDate } from "@mms/shared";
 import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
@@ -41,10 +51,10 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
   };
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
+    <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">
         {rows.map((row) => (
-          <article key={row.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+          <article key={row.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground m-0">{formatDate(row.date)}</p>
@@ -86,53 +96,53 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
           </dl>
         </article>
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-sm">
+      <div className="hidden md:block">
+        <Table>
           <caption className="sr-only">{t("accounting.cashbook.tableCaption")}</caption>
-          <thead className="bg-muted/60 border-b border-border">
-            <tr>
-              <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.date")}</th>
-              <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.type")}</th>
-              <th scope="col" className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase">{t("accounting.columns.journal.description")}</th>
-              <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-success uppercase">{t("accounting.cashbook.moneyIn")}</th>
-              <th scope="col" className="px-3 py-2.5 text-end text-xs font-semibold text-destructive uppercase">{t("accounting.cashbook.moneyOut")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+              <ModuleTableHeaderCell columnKey="date" className="px-3 py-2.5">{t("accounting.columns.journal.date")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="type" className="px-3 py-2.5">{t("accounting.columns.journal.type")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="description" className="px-3 py-2.5">{t("accounting.columns.journal.description")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="moneyIn" className="px-3 py-2.5 text-end text-success">{t("accounting.cashbook.moneyIn")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="moneyOut" className="px-3 py-2.5 text-end text-destructive">{t("accounting.cashbook.moneyOut")}</ModuleTableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
             {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-muted/20 transition-colors">
-                <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">{formatDate(row.date)}</td>
-                <td className="px-3 py-3">
+              <TableRow key={row.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">{formatDate(row.date)}</TableCell>
+                <TableCell className="px-3 py-2.5">
                   <div className="inline-flex items-center gap-1.5">
                     {flowIcon(row.flowType)}
                     {flowBadge(row)}
                   </div>
-                </td>
-                <td className="px-3 py-3 text-foreground max-w-[12.5rem] truncate">
+                </TableCell>
+                <TableCell className="px-3 py-2.5 text-foreground max-w-[12.5rem] truncate">
                   <p className="font-medium m-0">{row.description}</p>
                   <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
-                </td>
-                <td className="px-3 py-3 text-end">
+                </TableCell>
+                <TableCell className="px-3 py-2.5 text-end">
                   {row.flowType === "in" ? (
                     <span className="font-mono font-bold text-success">{formatCurrency(row.flowAmount)}</span>
                   ) : <span className="text-muted-foreground/30">—</span>}
-                </td>
-                <td className="px-3 py-3 text-end">
+                </TableCell>
+                <TableCell className="px-3 py-2.5 text-end">
                   {row.flowType === "out" ? (
                     <span className="font-mono font-bold text-destructive">{formatCurrency(row.flowAmount)}</span>
                   ) : <span className="text-muted-foreground/30">—</span>}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-          <tfoot className="border-t-2 border-border bg-muted/30">
-            <tr>
-              <td colSpan={3} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.cashbook.transactionCount", { count: rows.length })}</td>
-              <td className="px-3 py-2 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</td>
-              <td className="px-3 py-2 text-end font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</td>
-            </tr>
-          </tfoot>
-        </table>
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={3} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("accounting.cashbook.transactionCount", { count: rows.length })}</TableCell>
+              <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</TableCell>
+              <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
       </div>
     </div>
   );

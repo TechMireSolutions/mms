@@ -18,6 +18,8 @@ import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
@@ -133,53 +135,46 @@ export function TeachersSettings(): React.JSX.Element {
       />
 
       {!canEditSetup ? (
-        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-          {t("teachers.setupReadOnly")}
-        </p>
+        <SetupReadOnlyMessage title={t("teachers.setupReadOnly")} />
       ) : (
-        <section className="rounded-xl border border-border bg-card p-5 space-y-4">
-          <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <School className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <h3 className="text-sm font-bold text-foreground">{t("teachers.settings.title")}</h3>
+        <SectionCard title={t("teachers.settings.title")} icon={School} accentColor="primary">
+          <div className="space-y-4">
+            {showPrefs ? (
+              <TeachersPreferencesSection
+                settingsDraft={settingsDraft}
+                upd={upd}
+                specializationOptions={specializationOptions}
+              />
+            ) : null}
+
+            {showFields && (
+              <ModuleFieldsSetup
+                editor={wrappedFieldsEditor}
+                isCoreField={isTeacherSystemFormField}
+                isLockedTab={isTeacherLockedEnabledTab}
+                onStateChange={() => setSaved(false)}
+              />
+            )}
+
+            {showLookups ? (
+              <Suspense fallback={<ModulePanelSuspenseFallback />}>
+                <TeachersSettingsLookupsPanel />
+              </Suspense>
+            ) : null}
+
+            {!showLookups ? (
+              <ModuleSetupSaveFooter
+                dirty={isDirty}
+                saving={saving}
+                saved={saved}
+                unsavedWarning={unsavedWarning}
+                saveLabel={t("common.save")}
+                savedLabel={t("settings.savedBadge")}
+                onSave={handleSave}
+              />
+            ) : null}
           </div>
-
-          {showPrefs ? (
-            <TeachersPreferencesSection
-              settingsDraft={settingsDraft}
-              upd={upd}
-              specializationOptions={specializationOptions}
-            />
-          ) : null}
-
-          {showFields && (
-            <ModuleFieldsSetup
-              editor={wrappedFieldsEditor}
-              isCoreField={isTeacherSystemFormField}
-              isLockedTab={isTeacherLockedEnabledTab}
-              onStateChange={() => setSaved(false)}
-            />
-          )}
-
-          {showLookups ? (
-            <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              <TeachersSettingsLookupsPanel />
-            </Suspense>
-          ) : null}
-
-          {!showLookups ? (
-            <ModuleSetupSaveFooter
-              dirty={isDirty}
-              saving={saving}
-              saved={saved}
-              unsavedWarning={unsavedWarning}
-              saveLabel={t("common.save")}
-              savedLabel={t("settings.savedBadge")}
-              onSave={handleSave}
-            />
-          ) : null}
-        </section>
+        </SectionCard>
       )}
 
       <ConfirmAlertDialog

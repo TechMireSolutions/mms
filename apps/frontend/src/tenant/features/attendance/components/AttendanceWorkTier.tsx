@@ -41,6 +41,8 @@ interface AttendanceWorkTierProps {
   onUpdateRecord: (record: AttendanceRecord) => Promise<void>;
   onDeleteRecord: (id: string) => Promise<void>;
   onRestoreRecord: (id: string) => Promise<void>;
+  onBulkDeleteRecords: (ids: string[]) => Promise<void>;
+  onBulkRestoreRecords: (ids: string[]) => Promise<void>;
   onMessage: React.ComponentProps<typeof AttendanceRecords>["onMessage"];
   columnProps: AttendanceColumnProps;
 }
@@ -67,6 +69,8 @@ export function AttendanceWorkTier({
   onUpdateRecord,
   onDeleteRecord,
   onRestoreRecord,
+  onBulkDeleteRecords,
+  onBulkRestoreRecords,
   onMessage,
   columnProps,
 }: AttendanceWorkTierProps): React.JSX.Element {
@@ -117,6 +121,8 @@ export function AttendanceWorkTier({
           onUpdateRecord={onUpdateRecord}
           onDeleteRecord={onDeleteRecord}
           onRestoreRecord={onRestoreRecord}
+          onBulkDeleteRecords={onBulkDeleteRecords}
+          onBulkRestoreRecords={onBulkRestoreRecords}
           showDeleted={showDeleted}
           onMessage={onMessage}
           {...columnProps}

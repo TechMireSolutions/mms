@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { Mail, MessageCircle, MessageSquare } from 'lucide-react';
 import type { StandardMessagingRecipient as MessagingRecipient } from '@mms/shared';
 import { Button } from '@/components/ui/button';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingWorkComposerSectionProps {
@@ -18,7 +19,7 @@ export function MessagingWorkComposerSection({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col justify-between space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs">
+    <div className={`${WORK_SURFACE} flex flex-col justify-between space-y-4 p-4`}>
       <div className="space-y-4">
         <div className="space-y-1">
           <h4 className="text-sm font-bold text-foreground">{t('messaging.stepConfirmDispatch')}</h4>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
 import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,71 +33,67 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
 
   return (
     <WidgetCard ariaLabelledby="revenue-chart-heading" accentColor="primary" className="p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3 mb-5 ps-1.5 select-none">
-        <div>
-          <h3 id="revenue-chart-heading" className="text-sm font-bold text-foreground m-0">
-            {t("widget.title.revenueExpenses")}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1 m-0 font-medium">
-            {t("dashboard.charts.revenue.subtitle")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 ms-auto">
-          {isEditMode && (
-            <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
-              <Select
-                value={chartType}
-                onValueChange={(chartTypeValue) => {
-                  updatePref("revenueChartType", chartTypeValue as "bar" | "line" | "area");
-                }}
-              >
-                <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder={t("reports.visualizer.chartType")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
-                  <SelectItem value="line">{t("dashboard.charts.attendance.lineChart")}</SelectItem>
-                  <SelectItem value="area">{t("dashboard.charts.attendance.areaChart")}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={colorTheme}
-                onValueChange={(selectedColorTheme) => {
-                  updatePref("revenueChartColor", selectedColorTheme);
-                }}
-              >
-                <SelectTrigger className={FORM_SELECT_MINI}>
-                  <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mixed">{t("dashboard.charts.hasanat.mixed")}</SelectItem>
-                  <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
-                  <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
-                  <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
-                  <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
-                  <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
-                </SelectContent>
-              </Select>
+      <WidgetChartHeader
+        headingId="revenue-chart-heading"
+        title={t("widget.title.revenueExpenses")}
+        subtitle={t("dashboard.charts.revenue.subtitle")}
+        actions={
+          <>
+            {isEditMode && (
+              <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
+                <Select
+                  value={chartType}
+                  onValueChange={(chartTypeValue) => {
+                    updatePref("revenueChartType", chartTypeValue as "bar" | "line" | "area");
+                  }}
+                >
+                  <SelectTrigger className={FORM_SELECT_MINI}>
+                    <SelectValue placeholder={t("reports.visualizer.chartType")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
+                    <SelectItem value="line">{t("dashboard.charts.attendance.lineChart")}</SelectItem>
+                    <SelectItem value="area">{t("dashboard.charts.attendance.areaChart")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={colorTheme}
+                  onValueChange={(selectedColorTheme) => {
+                    updatePref("revenueChartColor", selectedColorTheme);
+                  }}
+                >
+                  <SelectTrigger className={FORM_SELECT_MINI}>
+                    <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mixed">{t("dashboard.charts.hasanat.mixed")}</SelectItem>
+                    <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
+                    <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
+                    <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
+                    <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
+                    <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="flex gap-1 bg-muted/65 rounded-lg p-0.5 border border-border/50">
+              {(["6m", "10m"] as const).map((periodOption) => (
+                <Button
+                  key={periodOption}
+                  variant="ghost"
+                  onClick={() => setPeriod(periodOption)}
+                  aria-pressed={period === periodOption}
+                  className={`min-h-11 text-xs font-bold uppercase tracking-wider px-2.5 rounded-md transition-all shadow-none cursor-pointer ${
+                    period === periodOption ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
+                  }`}
+                >
+                  {periodOption}
+                </Button>
+              ))}
             </div>
-          )}
-          <div className="flex gap-1 bg-muted/65 rounded-lg p-0.5 border border-border/50">
-            {(["6m", "10m"] as const).map((periodOption) => (
-              <Button
-                key={periodOption}
-                variant="ghost"
-                onClick={() => setPeriod(periodOption)}
-                aria-pressed={period === periodOption}
-                className={`min-h-11 text-xs font-bold uppercase tracking-wider px-2.5 rounded-md transition-all shadow-none cursor-pointer ${
-                  period === periodOption ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
-                }`}
-              >
-                {periodOption}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="flex items-center gap-4 mb-4" aria-hidden="true">
         <div className="flex items-center gap-1.5">

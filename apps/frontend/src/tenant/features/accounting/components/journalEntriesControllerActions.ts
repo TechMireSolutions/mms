@@ -33,23 +33,6 @@ export function createJournalSaveHandler(deps: Pick<JournalEntryActionDeps, 'onC
   };
 }
 
-export function createJournalDeleteHandler(deps: JournalEntryActionDeps) {
-  return async (id: string) => {
-    const entry = deps.entries.find((journalEntry) => journalEntry.id === id);
-    if (entry?.status === 'posted' && !deps.showDeleted) {
-      alert(deps.t('accounting.journal.alerts.cannotDeletePosted'));
-      return;
-    }
-    if (deps.showDeleted) {
-      if (!confirm(deps.t('accounting.trash.bulkRestoreConfirm', { count: 1 }))) return;
-      await deps.onRestore?.(id);
-      return;
-    }
-    if (!confirm(deps.t('accounting.trash.deleteEntryConfirm'))) return;
-    await deps.onDelete?.(id);
-  };
-}
-
 export function createJournalPostHandler(deps: Pick<JournalEntryActionDeps, 'onChange'>) {
   return async (entry: JournalEntry) => {
     await deps.onChange((prev) =>
@@ -60,28 +43,13 @@ export function createJournalPostHandler(deps: Pick<JournalEntryActionDeps, 'onC
   };
 }
 
-export function createJournalReverseHandler(deps: Pick<JournalEntryActionDeps, 'onChange' | 't'>) {
-  return async (entry: JournalEntry) => {
-    if (!confirm(deps.t('accounting.journal.alerts.reverseConfirm', { ref: entry.ref }))) return;
-    await deps.onChange((prev) => [...prev, createReversalEntry(entry, prev)]);
-  };
-}
-
-export function createJournalBulkActionHandler(
-  deps: Pick<JournalEntryActionDeps, 'showDeleted' | 't' | 'onBulkDelete' | 'onBulkRestore' | 'setSelectedIds'>,
-  selectedIds: string[],
-) {
-  return async () => {
-    if (selectedIds.length === 0) return;
-    if (deps.showDeleted) {
-      if (!confirm(deps.t('accounting.trash.bulkRestoreConfirm', { count: selectedIds.length }))) return;
-      await deps.onBulkRestore?.(selectedIds);
-    } else {
-      if (!confirm(deps.t('accounting.trash.bulkDeleteConfirm', { count: selectedIds.length }))) return;
-      await deps.onBulkDelete?.(selectedIds);
-    }
-    deps.setSelectedIds([]);
-  };
+/** Mutation-only reversal helper — confirmation moves to the parent dialog. */
+export function reverseJournalEntry(
+  entry: JournalEntry,
+  entries: JournalEntry[],
+  onChange: JournalEntryActionDeps['onChange'],
+): Promise<void> {
+  return Promise.resolve(onChange((prev) => [...prev, createReversalEntry(entry, prev)]));
 }
 
 export function exportJournalEntriesCsv(

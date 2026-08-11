@@ -10,8 +10,17 @@ import { ChannelBadge } from "@/components/ui/ChannelBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { TableSkeleton } from "@/components/ui/LoadingState";
-import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
+import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
 type MessagingLogColumn = "recipient" | "channel" | "body" | "dateSent";
@@ -76,12 +85,12 @@ export function MessagingReportsLogTable({
 
   return (
     <div aria-busy={isFetching ? true : undefined}>
-      <div className="rounded-lg border border-border/50">
+      <div className={WORK_SURFACE}>
         <div className="space-y-3 p-3 md:hidden">
           {logs.map((log) => {
             const name = getRecipientName(log.contactId);
             return (
-              <article key={log.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+              <article key={log.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
@@ -119,44 +128,46 @@ export function MessagingReportsLogTable({
             );
           })}
         </div>
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full table-fixed text-start text-sm">
-            <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <tr>
+        <div className="hidden md:block">
+          <Table className="table-fixed">
+            <TableHeader>
+              <TableRow className="border-b border-border/60 hover:bg-muted/30">
                 {columns.map((column) => (
-                  <ResizableTableHead
+                  <ModuleTableHeaderCell
                     key={column}
                     columnKey={column}
                     width={getColumnWidth(column)}
                     onResize={setColumnWidth}
-                    className="px-4 py-3"
+                    className="px-3 py-2.5"
                   >
                     {getColumnLabel(column)}
-                  </ResizableTableHead>
+                  </ModuleTableHeaderCell>
                 ))}
-                <th className="px-4 py-3 text-center">{t("common.actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60">
+                <TableHead className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase h-auto">
+                  <span className="sr-only">{t("common.actions")}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/50">
               {logs.map((log) => {
                 const name = getRecipientName(log.contactId);
                 return (
-                  <tr key={log.id} className="transition-colors hover:bg-muted/10">
-                    <td className="flex items-center gap-2 px-4 py-3 font-semibold text-foreground">
+                  <TableRow key={log.id} className="transition-colors hover:bg-muted/20">
+                    <TableCell className="flex items-center gap-2 px-3 py-2.5 font-semibold text-foreground">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
                         {getInitials(name)}
                       </span>
                       {name}
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <div className="flex items-center gap-1.5">
                         <ChannelBadge channel={log.channel} />
                         <StatusBadge status={log.status || "sent"} size="sm" config={logStatusConfig} />
                       </div>
-                    </td>
-                    <td className="max-w-xs truncate px-4 py-3 text-muted-foreground" title={log.body}>{log.body}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatDateTime(log.sentAt)}</td>
-                    <td className="px-4 py-3 text-center">
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate px-3 py-2.5 text-muted-foreground" title={log.body}>{log.body}</TableCell>
+                    <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{formatDateTime(log.sentAt)}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-end">
                       {canWrite && (
                         <Button
                           variant="ghost"
@@ -168,12 +179,12 @@ export function MessagingReportsLogTable({
                           {t("messaging.resend")}
                         </Button>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
       <ListPagination

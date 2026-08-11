@@ -39,14 +39,18 @@ const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();
 const mockRecordAudit = vi.fn();
 
-vi.mock('../services/studentService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/studentService.js')>();
+vi.mock('../students/use-cases/studentUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../students/use-cases/studentUseCases.js')>();
   return {
     ...actual,
-    loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
-    bulkSoftDeleteStudents: (...args: unknown[]) => mockBulkSoftDeleteStudents(...args),
-    bulkRestoreStudents: (...args: unknown[]) => mockBulkRestoreStudents(...args),
-    bulkUpdateStudentStatus: (...args: unknown[]) => mockBulkUpdateStudentStatus(...args),
+    studentUseCases: {
+      ...actual.studentUseCases,
+      loadStudentsPage: (...args: unknown[]) => mockLoadStudentsPage(...args),
+      bulkSoftDeleteStudents: (...args: unknown[]) => mockBulkSoftDeleteStudents(...args),
+      bulkRestoreStudents: (...args: unknown[]) => mockBulkRestoreStudents(...args),
+      bulkUpdateStudentStatus: (...args: unknown[]) => mockBulkUpdateStudentStatus(...args),
+      sanitizeStudentsForViewer: async (students: unknown) => students,
+    },
   };
 });
 
@@ -150,7 +154,7 @@ describe('students trash / bulk / column-preferences routes', () => {
       payload: { ids: ['s-1'] },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockBulkRestoreStudents).toHaveBeenCalledWith(['s-1']);
+    expect(mockBulkRestoreStudents).toHaveBeenCalledWith(['s-1'], 'u-admin');
     await app.close();
   });
 

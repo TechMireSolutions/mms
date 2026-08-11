@@ -9,7 +9,7 @@ import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useSessionsMetrics } from '@/tenant/hooks/collections/sessions';
 import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';
-import { useFinanceMetrics } from '@/tenant/features/finance/hooks/useFinanceMetrics';
+import { useFinanceMetrics } from '@/tenant/hooks/collections/finance';
 import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
 import { useQuestionBankMetrics } from '@/tenant/hooks/collections/questionBank';
 import { useAccountingMetrics } from '@/tenant/hooks/collections/accounting';

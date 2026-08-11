@@ -6,7 +6,7 @@ import {
   type Contact,
 } from '@mms/shared';
 import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
-import type { ContactDuplicateCandidateKeys } from '../db/repositories/contactRepository.js';
+import type { ContactDuplicateCandidateKeys } from '../contacts/repository/contactsRepository.js';
 
 const mockFetchObject = vi.fn();
 const mockDeletePersistedObject = vi.fn();

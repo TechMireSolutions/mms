@@ -87,6 +87,7 @@ export const TEACHERS_MODULE_MANIFEST = {
     bulkActions: ['whatsapp', 'sms', 'email', 'export', 'delete', 'status'] as const,
   },
   defaultExportFilename: 'teachers.csv',
+  searchableFieldKeys: ['name', 'employeeId', 'phone', 'email', 'specialization'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

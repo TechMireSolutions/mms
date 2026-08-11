@@ -4,6 +4,7 @@ import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
 import tseslint from "typescript-eslint";
+import boundaryImports from "./eslint-rules/no-cross-feature-imports.cjs";
 
 const appFiles = [
   "src/components/**/*.{ts,tsx}",
@@ -23,6 +24,12 @@ export default tseslint.config(
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["eslint-rules/**/*.cjs"],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
     files: appFiles,
     ...pluginReact.configs.flat.recommended,
     languageOptions: {
@@ -40,12 +47,14 @@ export default tseslint.config(
       react: pluginReact,
       "react-hooks": pluginReactHooks,
       "unused-imports": pluginUnusedImports,
+      "mms-boundary": { rules: { "no-cross-feature-imports": boundaryImports } },
     },
     rules: {
       "no-useless-assignment": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "mms-boundary/no-cross-feature-imports": "error",
       "react/jsx-uses-vars": "error",
       "react/jsx-uses-react": "error",
       "unused-imports/no-unused-imports": "error",

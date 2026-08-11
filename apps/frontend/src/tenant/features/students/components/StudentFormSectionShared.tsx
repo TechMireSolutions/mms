@@ -56,7 +56,7 @@ export function ContactProfileValue({
     <Field label={label} hint={t("students.form.contactFieldHint")} error={error}>
       <div
         className={`flex min-h-11 items-center gap-3 rounded-lg border px-3.5 py-2.5 ${
-          error ? "border-destructive/40 bg-destructive/5" : "border-border/60 bg-muted/25"
+          error ? "border-destructive bg-destructive/10" : "border-border/60 bg-muted/40"
         }`}
       >
         <Icon
