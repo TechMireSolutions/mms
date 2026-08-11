@@ -190,7 +190,7 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
       !response.url().includes('/bulk'),
     { timeout: 30_000 },
   );
-  await teacherDialog.getByRole('button', { name: 'Save' }).click();
+  await teacherDialog.getByRole('button', { name: /Add teacher|Save/i }).click();
   const teacherResponse = await teacherCreate;
   if (!teacherResponse.ok()) {
     throw new Error(`Teacher create failed: HTTP ${teacherResponse.status()} ${await teacherResponse.text()}`);
@@ -348,7 +348,9 @@ export async function createStudentEnrollment(page: Page): Promise<void> {
  * Records payment for invoice
  */
 export async function recordInvoicePayment(page: Page): Promise<void> {
-  await page.getByRole('button', { name: /Record payment for/i }).first().click();
+  const row = page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first();
+  await row.getByRole('button', { name: /Actions/i }).click();
+  await page.getByRole('menuitem', { name: /Record payment/i }).click();
   const paymentDialog = page.getByRole('dialog', { name: 'Record payment' });
   await expect(paymentDialog).toBeVisible();
   await expect(paymentDialog.locator('#payment-amount-input')).not.toHaveValue('', { timeout: 10_000 });
