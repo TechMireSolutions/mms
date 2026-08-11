@@ -7,8 +7,14 @@ import { useTeacherLookupMutation } from "@/tenant/features/teachers/hooks/useTe
 
 type LookupKindEditorProps = {
   kind: TeacherLookupKind;
-  titleKey: "teachers.setup.lookupsStatuses" | "teachers.setup.lookupsSpecializations";
-  hintKey: "teachers.setup.lookupsStatusesHint" | "teachers.setup.lookupsSpecializationsHint";
+  titleKey:
+    | "teachers.setup.lookupsStatuses"
+    | "teachers.setup.lookupsSpecializations"
+    | "teachers.setup.lookupsGenderFilters";
+  hintKey:
+    | "teachers.setup.lookupsStatusesHint"
+    | "teachers.setup.lookupsSpecializationsHint"
+    | "teachers.setup.lookupsGenderFiltersHint";
   items: string[];
 };
 
@@ -36,7 +42,7 @@ function LookupKindEditor({
 }
 
 export function TeachersSettingsLookupsPanel(): React.ReactElement {
-  const { statuses, specializations } = useTeacherConfig();
+  const { statuses, specializations, genderFilters } = useTeacherConfig();
   const { t } = useTranslation();
 
   return (
@@ -52,6 +58,12 @@ export function TeachersSettingsLookupsPanel(): React.ReactElement {
         titleKey="teachers.setup.lookupsSpecializations"
         hintKey="teachers.setup.lookupsSpecializationsHint"
         items={specializations}
+      />
+      <LookupKindEditor
+        kind="genderFilters"
+        titleKey="teachers.setup.lookupsGenderFilters"
+        hintKey="teachers.setup.lookupsGenderFiltersHint"
+        items={genderFilters}
       />
     </div>
   );

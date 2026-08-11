@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import { toTitleCase } from "@mms/shared";
 
@@ -48,32 +49,34 @@ export function StudentReportTables({
                 <h4 className="truncate text-sm font-semibold text-foreground">{student.name}</h4>
                 <StatusBadge status={student.status} config={statusBadgeConfig} />
               </div>
-              <dl className="grid grid-cols-2 gap-2 text-sm">
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colGender")}</dt>
-                  <dd className="text-foreground">{toTitleCase(student.gender)}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colClass")}</dt>
-                  <dd className="truncate text-foreground">{student.class}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colSession")}</dt>
-                  <dd className="truncate text-foreground">{student.session}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colCity")}</dt>
-                  <dd className="truncate text-foreground">{student.city}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colAge")}</dt>
-                  <dd className="text-foreground">{student.age}</dd>
-                </div>
-                <div className="min-w-0">
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colRegistered")}</dt>
-                  <dd className="text-muted-foreground">{student.registered}</dd>
-                </div>
-              </dl>
+              <StatGrid>
+                <StatRow className="min-w-0" label={t("students.report.colGender")} value={toTitleCase(student.gender)} />
+                <StatRow
+                  className="min-w-0"
+                  label={t("students.report.colClass")}
+                  value={student.class}
+                  ddClassName="truncate"
+                />
+                <StatRow
+                  className="min-w-0"
+                  label={t("students.report.colSession")}
+                  value={student.session}
+                  ddClassName="truncate"
+                />
+                <StatRow
+                  className="min-w-0"
+                  label={t("students.report.colCity")}
+                  value={student.city}
+                  ddClassName="truncate"
+                />
+                <StatRow className="min-w-0" label={t("students.report.colAge")} value={student.age} />
+                <StatRow
+                  className="min-w-0"
+                  label={t("students.report.colRegistered")}
+                  value={student.registered}
+                  ddClassName="text-muted-foreground"
+                />
+              </StatGrid>
             </article>
           ))}
         </div>
@@ -125,20 +128,16 @@ export function StudentReportTables({
               <h4 className="truncate text-sm font-semibold text-foreground">{enrollment.studentName}</h4>
               <StatusBadge status={enrollment.status} config={enrollmentStatusConfig} />
             </div>
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div className="min-w-0">
-                <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colSession")}</dt>
-                <dd className="text-foreground">{enrollment.session}</dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colClass")}</dt>
-                <dd className="text-foreground">{enrollment.class}</dd>
-              </div>
-              <div className="col-span-2">
-                <dt className="text-xs font-semibold text-muted-foreground">{t("students.report.colEnrolled")}</dt>
-                <dd className="text-muted-foreground">{enrollment.enrolled}</dd>
-              </div>
-            </dl>
+            <StatGrid>
+              <StatRow className="min-w-0" label={t("students.report.colSession")} value={enrollment.session} />
+              <StatRow className="min-w-0" label={t("students.report.colClass")} value={enrollment.class} />
+              <StatRow
+                fullWidth
+                label={t("students.report.colEnrolled")}
+                value={enrollment.enrolled}
+                ddClassName="text-muted-foreground"
+              />
+            </StatGrid>
           </article>
         ))}
       </div>

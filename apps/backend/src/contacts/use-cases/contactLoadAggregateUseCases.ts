@@ -10,10 +10,10 @@ import {
   type FieldConfig,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { loadContactFieldConfig } from '../../services/contactConfigService.js';
-import { loadContactLookupKind } from '../../services/contactLookupsService.js';
-import { loadContactPreferences } from '../../services/contactPreferencesService.js';
-import { getDuplicateScanCache } from '../../services/contactDuplicateScanService.js';
+import { loadContactFieldConfig } from '../../lib/contactConfigService.js';
+import { loadContactLookupKind } from '../../lib/contactLookupsService.js';
+import { loadContactPreferences } from '../../lib/contactPreferencesService.js';
+import { getDuplicateScanCache } from './contactDuplicateScanUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 

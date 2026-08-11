@@ -2,13 +2,13 @@ import { BookOpen } from "lucide-react";
 import {
   Bar,
   BarChart,
-  CartesianGrid,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { EmptyState } from "@/components/ui/EmptyState";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -51,9 +51,9 @@ export function AcademicReportCharts({
             }}
             style={{ cursor: "pointer" }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="studentName" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" height={40} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+            <ChartGrid />
+            <XAxis dataKey="studentName" tick={chartAxisTick(10)} angle={-25} textAnchor="end" height={40} />
+            <YAxis domain={[0, 100]} tick={chartAxisTick(11)} />
             <Tooltip formatter={(value) => value !== undefined ? `${value} / 100` : ""} />
             <Bar dataKey="marks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("examinations.report.marksLabel")} />
           </BarChart>
@@ -73,9 +73,9 @@ export function AcademicReportCharts({
               }}
               style={{ cursor: "pointer" }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
-              <YAxis dataKey="class" type="category" tick={{ fontSize: 11 }} width={90} />
+              <ChartGrid />
+              <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(11)} />
+              <YAxis dataKey="class" type="category" tick={chartAxisTick(11)} width={90} />
               <Tooltip />
               <Bar dataKey="averageMarks" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name={t("examinations.report.avgMarks")} />
               <Bar dataKey="topMarks" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} name={t("examinations.report.topMarks")} />

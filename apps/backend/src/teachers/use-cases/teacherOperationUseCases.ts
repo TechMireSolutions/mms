@@ -1,11 +1,26 @@
 import {
   computeNextTeacherEmployeeIdFromCount,
+  normalizeTeacherModulePreferences,
+  type TeacherDuplicateCheckInput,
   type TeacherEmployeeIdSettings,
+  type TeacherDuplicateReason,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { broadcastCollection } from '../../services/websocketService.js';
+import { loadTeacherModulePreferences } from '../../lib/teacherPreferencesService.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 import type { TeachersRepository } from '../repository/teachersRepository.js';
 import { teachersRepository } from '../repository/teachersRepositoryAdapter.js';
+
+/** Active duplicate probe (contact / employeeId) before save — server authoritative. */
+export async function checkTeacherRegistrationDuplicate(
+  input: TeacherDuplicateCheckInput,
+  repo: TeachersRepository = teachersRepository,
+): Promise<{ reason: TeacherDuplicateReason | null }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { reason: null };
+  const reason = await repo.findRegistrationConflict(tenant, input);
+  return { reason };
+}
 
 export async function bulkUpdateTeacherStatus(
   ids: string[],
@@ -33,4 +48,30 @@ export async function computeNextTeacherEmployeeIdForSettings(
   const tenant = getRequestTenant();
   const count = tenant ? await repo.countNextEmployeeId(tenant) : 0;
   return computeNextTeacherEmployeeIdFromCount(count, settings);
+}
+
+/** One-shot backfill of missing employee ids for active teachers (Setup writers). */
+export async function migrateTeachersMissingEmployeeIds(
+  repo: TeachersRepository = teachersRepository,
+): Promise<{ updated: number }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { updated: 0 };
+
+  const settings = normalizeTeacherModulePreferences(await loadTeacherModulePreferences());
+  const missing = await repo.listActiveMissingEmployeeId(tenant);
+  if (missing.length === 0) return { updated: 0 };
+
+  let updated = 0;
+  for (const row of missing) {
+    // Persist each row before the next count so SQL next-employee-id stays monotonic.
+    const employeeId = await computeNextTeacherEmployeeIdForSettings(
+      { idPrefix: settings.idPrefix },
+      repo,
+    );
+    await repo.save(tenant, { ...row, employeeId });
+    updated += 1;
+  }
+
+  await broadcastCollection('teachers');
+  return { updated };
 }

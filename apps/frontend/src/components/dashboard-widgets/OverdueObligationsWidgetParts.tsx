@@ -69,18 +69,12 @@ export function OverdueRemindButton({
 }) {
   return (
     <Button
-      variant="ghost"
+      variant={reminded ? "capsSuccess" : "capsAccent"}
+      size="caps"
       onClick={() => onRemind(overdueStudent)}
       disabled={reminded || !hasPhone}
       aria-label={reminded ? t("dashboard.widgets.reminderSentTo", { name: overdueStudent.name }) : t("dashboard.widgets.sendReminderTo", { name: overdueStudent.name })}
-      className={
-        className
-        ?? `flex items-center gap-1 mx-auto px-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors min-h-11 shadow-none cursor-pointer ${
-          reminded
-            ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"
-            : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
-        }`
-      }
+      className={className}
     >
       <Bell className="w-2.5 h-2.5" aria-hidden="true" />
       {reminded ? t("dashboard.widgets.sent") : t("dashboard.widgets.remind")}

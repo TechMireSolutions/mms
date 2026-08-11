@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Clock, Pause, Play, XCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { WarningCallout } from '@/components/ui/WarningCallout';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -71,7 +72,13 @@ export function MessageComposerDispatchControls({
                 <Button type="button" variant="ghost" size="icon" className="min-h-11 min-w-11 text-destructive hover:bg-destructive/10" onClick={onCancel} title={t('messaging.cancelDispatch')} aria-label={t('messaging.cancelDispatch')}><XCircle className="h-3.5 w-3.5" /></Button>
               </div>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted"><motion.div className={`h-full rounded-full ${isPaused ? 'bg-warning' : 'bg-primary'}`} initial={{ width: 0 }} animate={{ width: `${(dispatchProgress.current / dispatchProgress.total) * 100}%` }} transition={{ duration: 0.2 }} /></div>
+            <ProgressBar
+              className="w-full"
+              value={(dispatchProgress.current / dispatchProgress.total) * 100}
+              animated
+              fillClassName={isPaused ? 'bg-warning' : 'bg-primary'}
+              aria-label={t('messaging.dispatchProgress', { current: String(dispatchProgress.current), total: String(dispatchProgress.total) })}
+            />
           </motion.div>
         )}
       </AnimatePresence>

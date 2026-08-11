@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WarningCallout } from "@/components/ui/WarningCallout";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
@@ -141,18 +142,18 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                       <p className="text-sm font-medium text-foreground m-0">{distribution.name}</p>
                       <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
                     </div>
-                    <dl className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.detail.colPct")}</dt>
-                        <dd className="font-mono text-xs font-semibold m-0">{distribution.percentage}%</dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.amount")}</dt>
-                        <dd className="font-mono text-xs font-semibold text-foreground m-0">
-                          {formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
-                        </dd>
-                      </div>
-                    </dl>
+                    <StatGrid>
+                      <StatRow
+                        label={t("obligations.detail.colPct")}
+                        value={`${distribution.percentage}%`}
+                        ddClassName="font-mono text-xs font-semibold"
+                      />
+                      <StatRow
+                        label={t("obligations.columns.amount")}
+                        value={formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
+                        ddClassName="font-mono text-xs font-semibold"
+                      />
+                    </StatGrid>
                   </article>
                 ))}
               </div>

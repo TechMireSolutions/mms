@@ -11,6 +11,8 @@ import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelect
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
@@ -137,7 +139,7 @@ export function QuestionBankListCards({
                 )}
                 {question.type === "matching" && question.options.length > 0 && (
                   <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className={cn(FORM_LABEL, "mb-0")}>
                       {t("questionBank.previewMatching")}
                     </p>
                     {question.options.map((left, index) => (
@@ -155,7 +157,7 @@ export function QuestionBankListCards({
                 )}
                 {question.type === "ordering" && question.options.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className={cn(FORM_LABEL, "mb-0")}>
                       {t("questionBank.previewOrdering")}
                     </p>
                     <ol className="mt-1 list-decimal space-y-0.5 ps-4 text-xs text-foreground">

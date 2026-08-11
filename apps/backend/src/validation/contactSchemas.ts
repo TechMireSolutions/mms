@@ -1,47 +1,19 @@
 import { z } from 'zod';
-import { softDeleteBodySchema } from './commonSchemas.js';
-import { csvExportBodySchema, moduleExportAuditBodySchema, moduleSetupAuditBodySchema } from './csvExportBodySchema.js';
+import { csvExportBodySchema, moduleSetupAuditBodySchema } from './csvExportBodySchema.js';
 import {
-  phoneNumberSchema,
-  emailAddressSchema,
-  addressSchema,
-  socialLinkSchema,
-  relationshipContactSchema,
-  relationshipSchema,
-  activitySchema,
-  attachmentSchema,
   contactRecordSchema,
-  contactWriteSchema,
   buildContactWriteSchema,
-  collectContactWriteExtraFieldKeys,
-  contactListSchema,
   contactsListQuerySchema,
   contactFieldUsageParamsSchema,
   contactFieldUsageBatchBodySchema,
 } from '@mms/shared';
 
 export {
-  phoneNumberSchema,
-  emailAddressSchema,
-  addressSchema,
-  socialLinkSchema,
-  relationshipContactSchema,
-  relationshipSchema,
-  activitySchema,
-  attachmentSchema,
   contactRecordSchema,
-  contactWriteSchema,
-  buildContactWriteSchema,
-  collectContactWriteExtraFieldKeys,
-  contactListSchema,
   contactsListQuerySchema,
   contactFieldUsageParamsSchema,
   contactFieldUsageBatchBodySchema,
 };
-
-export const contactDeleteBodySchema = softDeleteBodySchema;
-
-export const contactExportAuditSchema = moduleExportAuditBodySchema;
 
 export function buildContactMergeBodySchema(extraFieldKeys: string[] = []) {
   return z.object({
@@ -50,9 +22,6 @@ export function buildContactMergeBodySchema(extraFieldKeys: string[] = []) {
     merged: buildContactWriteSchema(extraFieldKeys).optional(),
   });
 }
-
-/** System-keys-only merge body — prefer `buildContactMergeBodySchema` on tenant writes. */
-export const contactMergeBodySchema = buildContactMergeBodySchema();
 
 export const contactsWorkDrillDownSchema = z.object({
   gender: z.string().optional(),
@@ -135,5 +104,3 @@ export function buildContactDuplicateCheckBodySchema(extraFieldKeys: string[] = 
     contact: buildContactWriteSchema(extraFieldKeys),
   });
 }
-
-export const contactDuplicateCheckBodySchema = buildContactDuplicateCheckBodySchema();

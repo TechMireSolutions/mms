@@ -18,6 +18,34 @@ import {
 } from './rbacPermissionMaps.js';
 
 /**
+ * Typed entity tables are REST-only (not document-store allowlisted).
+ * Their permission mappings live in `COLLECTION_*_PERMISSION` maps.
+ */
+const REST_ONLY_TYPED_COLLECTIONS = new Set([
+  'attendance_records',
+  'finance_invoices',
+  'finance_payments',
+  'obligation_collections',
+  'obligation_types',
+  'mujtahids',
+  'mujtahid_reps',
+  'wakala_types',
+  'obligation_distributions',
+  'accounting_entries',
+  'accounting_accounts',
+  'accounting_fiscal_years',
+  'hasanat_distributions',
+  'hasanat_batches',
+  'hasanat_denoms',
+  'hasanat_redemptions',
+  'exams',
+  'exam_results',
+  'questions',
+  'tests',
+  'assessment_results',
+]);
+
+/**
  * Returns true if the user may read the given collection.
  * Mapped collections use `@mms/shared` permissions; legacy collections allow staff write roles.
  */
@@ -41,9 +69,34 @@ export function canReadCollection(user: User, collectionName: string): boolean {
     const mapped = COLLECTION_READ_PERMISSION.teachers;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
+  // Typed sessions table is REST-only (not document-store allowlisted).
+  if (collectionName === 'sessions') {
+    const mapped = COLLECTION_READ_PERMISSION.sessions;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed enrollments table is REST-only (not document-store allowlisted).
+  if (collectionName === 'enrollments') {
+    const mapped = COLLECTION_READ_PERMISSION.enrollments;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed users table is REST-only (not document-store allowlisted).
+  if (collectionName === 'users') {
+    const mapped = COLLECTION_READ_PERMISSION.users;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed user_activity_logs table is REST-only (not document-store allowlisted).
+  if (collectionName === 'user_activity_logs') {
+    const mapped = COLLECTION_READ_PERMISSION.user_activity_logs;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
   // Typed messaging tables are REST-only (not document-store allowlisted).
   if (collectionName === 'message_logs' || collectionName === 'message_templates') {
     return canReadMessaging(user);
+  }
+  // Typed legacy entity tables are REST-only (not document-store allowlisted).
+  if (REST_ONLY_TYPED_COLLECTIONS.has(collectionName)) {
+    const mapped = COLLECTION_READ_PERMISSION[collectionName];
+    return mapped ? roleHasPermission(user.role, mapped) : false;
   }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
@@ -82,9 +135,34 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
     const mapped = COLLECTION_WRITE_PERMISSION.teachers;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
+  // Typed sessions table is REST-only (not document-store allowlisted).
+  if (collectionName === 'sessions') {
+    const mapped = COLLECTION_WRITE_PERMISSION.sessions;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed enrollments table is REST-only (not document-store allowlisted).
+  if (collectionName === 'enrollments') {
+    const mapped = COLLECTION_WRITE_PERMISSION.enrollments;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed users table is REST-only (not document-store allowlisted).
+  if (collectionName === 'users') {
+    const mapped = COLLECTION_WRITE_PERMISSION.users;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed user_activity_logs table is REST-only (not document-store allowlisted).
+  if (collectionName === 'user_activity_logs') {
+    const mapped = COLLECTION_WRITE_PERMISSION.user_activity_logs;
+    return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
   // Typed messaging tables are REST-only (not document-store allowlisted).
   if (collectionName === 'message_logs' || collectionName === 'message_templates') {
     return canWriteMessaging(user);
+  }
+  // Typed legacy entity tables are REST-only (not document-store allowlisted).
+  if (REST_ONLY_TYPED_COLLECTIONS.has(collectionName)) {
+    const mapped = COLLECTION_WRITE_PERMISSION[collectionName];
+    return mapped ? roleHasPermission(user.role, mapped) : false;
   }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
@@ -119,6 +197,27 @@ export function canDeleteCollection(user: User, collectionName: string): boolean
   if (collectionName === 'teachers') {
     const mapped = COLLECTION_DELETE_PERMISSION.teachers;
     return mapped ? roleHasPermission(user.role, mapped) : false;
+  }
+  // Typed sessions table is REST-only (not document-store allowlisted).
+  if (collectionName === 'sessions') {
+    return canWriteCollection(user, collectionName);
+  }
+  // Typed enrollments table is REST-only (not document-store allowlisted).
+  if (collectionName === 'enrollments') {
+    return canWriteCollection(user, collectionName);
+  }
+  // Typed users table is REST-only (not document-store allowlisted).
+  if (collectionName === 'users') {
+    return canWriteCollection(user, collectionName);
+  }
+  // Typed user_activity_logs table is REST-only (not document-store allowlisted).
+  if (collectionName === 'user_activity_logs') {
+    return canWriteCollection(user, collectionName);
+  }
+  // Typed legacy entity tables are REST-only (not document-store allowlisted).
+  if (REST_ONLY_TYPED_COLLECTIONS.has(collectionName)) {
+    const mapped = COLLECTION_DELETE_PERMISSION[collectionName];
+    return mapped ? roleHasPermission(user.role, mapped) : canWriteCollection(user, collectionName);
   }
   if (!isAllowedCollectionName(collectionName)) {
     return false;

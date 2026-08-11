@@ -4,8 +4,8 @@ import {
   type WorkspaceUser,
 } from '@mms/shared';
 
-export const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
-export const USERS_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'users'] as const;
+const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
+const USERS_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'users'] as const;
 export const USERS_LIST_QUERY_KEY = [...USERS_QUERY_KEY, 'list'] as const;
 export const USERS_METRICS_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'metrics'] as const;
 export const ACTIVITY_LOGS_QUERY_KEY = [USERS_MODULE_MANIFEST.moduleId, 'logs', 'list'] as const;

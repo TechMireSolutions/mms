@@ -5,12 +5,14 @@ import { useBrandPalette } from '@/lib/contexts/BrandingPaletteContext';
 import {
   TrendingUp, TrendingDown, Scale, DollarSign, AlertCircle, CheckCircle2, Clock,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { SafeResponsiveContainer } from '@/components/ui/SafeResponsiveContainer';
+import { ChartGrid, chartAxisTick } from '@/components/ui/ChartGrid';
 import type { Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { StatCard } from '@/components/ui/StatCard';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAccountingDashboardModel } from '@/tenant/features/accounting/components/useAccountingDashboardModel';
@@ -94,9 +96,9 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
             <div aria-hidden="true">
               <SafeResponsiveContainer height={200}>
                 <BarChart data={monthlyData} barGap={4}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(tickValue) => tickValue === 0 ? formatCurrency(0) : (tickValue >= 1000 || tickValue <= -1000) ? `${formatCurrency(Math.round(tickValue / 1000))}k` : formatCurrency(tickValue)} />
+                  <ChartGrid />
+                  <XAxis dataKey="month" tick={chartAxisTick(11)} />
+                  <YAxis tick={chartAxisTick(11)} tickFormatter={(tickValue) => tickValue === 0 ? formatCurrency(0) : (tickValue >= 1000 || tickValue <= -1000) ? `${formatCurrency(Math.round(tickValue / 1000))}k` : formatCurrency(tickValue)} />
                   <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ''} />
                   <Bar dataKey="revenue" name={t('accounting.dashboard.revenue')} fill={primary} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" name={t('accounting.dashboard.expenses')} fill={secondary} radius={[4, 4, 0, 0]} />
@@ -158,9 +160,12 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
                     <span className="font-semibold text-foreground">{balanceSheetItem.name}</span>
                     <span className="font-mono font-bold text-foreground">{formatCurrency(balanceSheetItem.value)}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                    <div className={`h-full rounded-full transition-all ${colors[balanceSheetItem.id]}`} style={{ width: `${percentage}%` }} />
-                  </div>
+                  <ProgressBar
+                    value={percentage}
+                    size="md"
+                    fillClassName={colors[balanceSheetItem.id]}
+                    aria-hidden="true"
+                  />
                 </div>
               );
             })}

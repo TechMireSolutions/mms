@@ -84,7 +84,7 @@ describe('students soft delete routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1', 'u-admin');
+    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1');
     await app.close();
   });
 

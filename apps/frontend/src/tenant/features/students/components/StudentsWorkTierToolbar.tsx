@@ -32,7 +32,6 @@ interface StudentsWorkTierToolbarProps {
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
   viewMode: WorkDirectoryViewMode;
   sortField: StudentListSortField | null;
-  sortDir: "asc" | "desc";
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;

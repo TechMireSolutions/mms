@@ -3,7 +3,7 @@
  * Does not persist; not part of the FormSelect relationship catalog.
  */
 import type { ContactRelationship, RelationshipContact } from './contactEntityTypes.js';
-import { normalizeRelationshipTerm } from './contactRelationshipRules.js';
+import { normalizeRelationshipTerm } from './contactRelationshipPairUtils.js';
 import { collectContactRelationshipLinks } from './studentGuardianFromContacts.js';
 
 const DERIVED_SIBLING_RELATIONSHIP_LABEL = 'Sibling';

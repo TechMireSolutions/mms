@@ -1,5 +1,9 @@
 import type { LucideIcon } from "lucide-react";
-import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
+import {
+  CollectionRowItem,
+  type CollectionRowAction,
+  DetailSection,
+} from "./ContactDetailShared";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 
 interface ContactDetailExternalLinkRow {
@@ -30,19 +34,29 @@ export function ContactDetailExternalLinkSection({
       {rows.length === 0 ? (
         <DetailCollectionEmpty title={emptyMessage} />
       ) : (
-        rows.map((row) => (
-          <CollectionRowItem
-            key={row.key}
-            label={row.label}
-            value={row.value || emptyDash}
-            copyable={Boolean(row.value)}
-            actionHref={row.href}
-            actionIcon={actionIcon}
-            actionTitle={actionTitle}
-            actionColorClass="text-primary hover:bg-primary/10"
-            external
-          />
-        ))
+        rows.map((row) => {
+          const actions: CollectionRowAction[] = row.href
+            ? [
+                {
+                  key: "open",
+                  icon: actionIcon,
+                  title: actionTitle,
+                  href: row.href,
+                  external: true,
+                  className: "text-primary hover:bg-primary/10",
+                },
+              ]
+            : [];
+          return (
+            <CollectionRowItem
+              key={row.key}
+              label={row.label}
+              value={row.value || emptyDash}
+              copyable={Boolean(row.value)}
+              actions={actions}
+            />
+          );
+        })
       )}
     </DetailSection>
   );

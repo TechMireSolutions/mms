@@ -18,7 +18,7 @@ import {
   DEFAULT_STUDENT_ENABLED_TABS,
 } from "@mms/shared";
 
-export interface UseStudentFormStateOptions {
+interface UseStudentFormStateOptions {
   student?: Partial<Student> | null;
   onClose: () => void;
   onSave: (student: Student) => void | Promise<void>;
@@ -165,12 +165,10 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   return {
     t,
     language,
-    student,
     saving,
     studentDraft,
     statusBadgeConfig,
     statusSelectOptions,
-    enabledTabs,
     fields,
     formInstanceId,
     activeTab,

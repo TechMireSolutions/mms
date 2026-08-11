@@ -5,6 +5,7 @@ import type {
 } from '@mms/shared';
 import { sessions } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { jsonbFieldKeyLiteral } from './jsonbFieldUsage.js';
 
 const customDataSql = sql.raw('"sessions"."custom_data"');
 
@@ -19,7 +20,7 @@ function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
-  const safeField = sql.raw(`'${trimmedField.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+  const safeField = jsonbFieldKeyLiteral(trimmedField);
   const op = operator ?? 'equals';
   if (op === 'equals') {
     return sql`lower(trim(COALESCE(${customDataSql}->>${safeField}, ''))) = ${value.trim().toLowerCase()}`;
@@ -79,7 +80,7 @@ export async function aggregateSessionsWidgetQueries(
       } else if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = sql.raw(`'${target.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+          const safeTarget = jsonbFieldKeyLiteral(target);
           const aggRows = await tx
             .select({
               sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
@@ -94,7 +95,7 @@ export async function aggregateSessionsWidgetQueries(
       }
 
       const xAxis = query.xAxisField?.trim() || 'status';
-      const safeXAxis = sql.raw(`'${xAxis.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+      const safeXAxis = jsonbFieldKeyLiteral(xAxis);
       const groupExpr = sql<string>`COALESCE(NULLIF(trim(${customDataSql}->>${safeXAxis}), ''), 'Unknown')`;
 
       const chartRows = await tx
@@ -116,7 +117,7 @@ export async function aggregateSessionsWidgetQueries(
       if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = sql.raw(`'${target.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+          const safeTarget = jsonbFieldKeyLiteral(target);
           const numericChart = await tx
             .select({
               name: groupExpr,

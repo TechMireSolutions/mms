@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
+import { chartAxisTick } from "@/components/ui/ChartGrid";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { Users, DollarSign, TrendingUp, BookOpen } from "lucide-react";
 import { ENROLLMENT_STATUSES } from '@/lib/data/enrollmentData';
@@ -112,8 +113,8 @@ export function EnrollmentReports({
             <div className="h-chart-md" aria-hidden="true">
               <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
                 <BarChart data={bySession} barSize={20}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                  <XAxis dataKey="name" tick={chartAxisTick(10)} tickLine={false} />
+                  <YAxis tick={chartAxisTick(10)} tickLine={false} axisLine={false} />
                   <Tooltip formatter={(value) => [`${value}`]} />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>

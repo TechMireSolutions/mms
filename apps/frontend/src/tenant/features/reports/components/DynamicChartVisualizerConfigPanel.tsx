@@ -1,5 +1,6 @@
 import React from "react";
 import { Sparkles } from "lucide-react";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { DynamicChartVisualizerFiltersPanel } from "@/tenant/features/reports/components/DynamicChartVisualizerFiltersPanel";
 import { DynamicChartVisualizerConfigFields } from "@/tenant/features/reports/components/DynamicChartVisualizerConfigFields";
@@ -27,8 +28,8 @@ export function DynamicChartVisualizerConfigPanel(
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.visualizer.configTitle")}</h4>
-            <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">{t("reports.visualizer.configSubtitle")}</p>
+            <SectionLabel as="h4" tone="foreground" className="leading-none">{t("reports.visualizer.configTitle")}</SectionLabel>
+            <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5">{t("reports.visualizer.configSubtitle")}</SectionLabel>
           </div>
         </div>
 

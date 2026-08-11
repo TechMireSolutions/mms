@@ -1,6 +1,14 @@
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { apiJson } from "@/lib/apiClient";
 
+export interface ModuleBulkRestoreResult {
+  success: boolean;
+  succeeded: number;
+  failed: number;
+  /** Optional per-row restore blockers (e.g. unique-field conflicts). */
+  conflicts?: Array<{ id: string; errors: Array<{ message: string }> }>;
+}
+
 export interface CreateModuleCrudMutationsOptions<TRecord> {
   apiBase: string;
   normalizeStored: (record: TRecord) => TRecord;
@@ -79,7 +87,7 @@ export function createModuleCrudMutations<TRecord>({
 
     const bulkRestore = useMutation({
       mutationFn: async (ids: string[]) =>
-        apiJson<{ success: boolean; succeeded: number; failed: number }>(`${apiBase}/bulk-restore`, {
+        apiJson<ModuleBulkRestoreResult>(`${apiBase}/bulk-restore`, {
           method: "POST",
           body: JSON.stringify({ ids }),
         }),

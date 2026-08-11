@@ -13,20 +13,20 @@ export const CONTACT_LOOKUP_KINDS = [
 
 export type ContactLookupKind = (typeof CONTACT_LOOKUP_KINDS)[number];
 
-export const contactLookupKindSchema = z.enum(CONTACT_LOOKUP_KINDS);
+const contactLookupKindSchema = z.enum(CONTACT_LOOKUP_KINDS);
 
-export const contactLookupCountryCodeSchema = z.object({
+const contactLookupCountryCodeSchema = z.object({
   country: z.string().min(1).max(200),
   code: z.string().min(1).max(32),
 });
 
 export type ContactLookupCountryCode = z.infer<typeof contactLookupCountryCodeSchema>;
 
-export const contactLookupStringItemsSchema = z.array(z.string().min(1).max(200)).max(500);
+const contactLookupStringItemsSchema = z.array(z.string().min(1).max(200)).max(500);
 
-export const contactLookupCountryItemsSchema = z.array(contactLookupCountryCodeSchema).max(500);
+const contactLookupCountryItemsSchema = z.array(contactLookupCountryCodeSchema).max(500);
 
-export const contactLookupsMapSchema = z.object({
+const contactLookupsMapSchema = z.object({
   genders: contactLookupStringItemsSchema,
   socialPlatforms: contactLookupStringItemsSchema,
   relationships: contactLookupStringItemsSchema,

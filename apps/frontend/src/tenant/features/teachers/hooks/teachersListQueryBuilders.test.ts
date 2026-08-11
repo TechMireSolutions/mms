@@ -1,18 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   buildTeachersPageUrl,
-  fetchTeacherById,
   sameTeachersListFilters,
   teachersListQueryKeyParams,
   teachersPaginatedQueryKey,
   type TeachersPaginatedParams,
 } from '@/tenant/features/teachers/hooks/teachersListQueryBuilders';
-
-const apiJson = vi.hoisted(() => vi.fn());
-
-vi.mock('@/lib/apiClient', () => ({
-  apiJson,
-}));
 
 const base: TeachersPaginatedParams = { page: 1 };
 
@@ -28,17 +21,19 @@ describe('buildTeachersPageUrl', () => {
       search: '  ali  ',
       status: 'active,on_leave',
       specialization: 'Hifz',
+      gender: 'male',
+      quickFilter: 'missingEmployeeId',
       sortField: 'employeeId',
       sortDir: 'desc',
       includeDeleted: true,
     });
     expect(url).toBe(
-      '/api/teachers?page=2&limit=50&search=ali&status=active%2Con_leave&specialization=Hifz&sortField=employeeId&sortDir=desc&includeDeleted=true',
+      '/api/teachers?page=2&limit=50&search=ali&status=active%2Con_leave&specialization=Hifz&gender=male&quickFilter=missingEmployeeId&sortField=employeeId&sortDir=desc&includeDeleted=true',
     );
   });
 
-  it('omits empty filters', () => {
-    const url = buildTeachersPageUrl({ page: 1, search: '   ' });
+  it('omits the all quickFilter preset and empty filters', () => {
+    const url = buildTeachersPageUrl({ page: 1, search: '   ', quickFilter: 'all' });
     expect(url).toBe('/api/teachers?page=1&limit=50');
   });
 });
@@ -51,6 +46,8 @@ describe('teachersListQueryKeyParams', () => {
       search: '',
       status: '',
       specialization: '',
+      gender: '',
+      quickFilter: 'all',
       sortField: '',
       sortDir: '',
       includeDeleted: false,
@@ -63,6 +60,8 @@ describe('teachersListQueryKeyParams', () => {
       search: '  zain  ',
       status: ' active ',
       specialization: ' Tajweed ',
+      gender: ' female ',
+      quickFilter: 'active',
       sortField: ' name ' as 'name',
       sortDir: 'desc',
       includeDeleted: true,
@@ -70,6 +69,8 @@ describe('teachersListQueryKeyParams', () => {
     expect(params.search).toBe('zain');
     expect(params.status).toBe('active');
     expect(params.specialization).toBe('Tajweed');
+    expect(params.gender).toBe('female');
+    expect(params.quickFilter).toBe('active');
     expect(params.sortField).toBe('name');
     expect(params.sortDir).toBe('desc');
     expect(params.includeDeleted).toBe(true);
@@ -100,18 +101,5 @@ describe('sameTeachersListFilters', () => {
   it('returns false when a filter differs', () => {
     const params = teachersListQueryKeyParams({ page: 1, search: 'a' });
     expect(sameTeachersListFilters(params, teachersListQueryKeyParams({ page: 1, search: 'b' }))).toBe(false);
-  });
-});
-
-describe('fetchTeacherById', () => {
-  beforeEach(() => {
-    apiJson.mockReset();
-  });
-
-  it('unwraps the teacher', async () => {
-    apiJson.mockResolvedValue({ teacher: { id: 't1', status: 'active' } });
-    const teacher = await fetchTeacherById('t1');
-    expect(apiJson).toHaveBeenCalledWith('/api/teachers/t1', { signal: undefined });
-    expect(teacher).toEqual({ id: 't1', status: 'active' });
   });
 });

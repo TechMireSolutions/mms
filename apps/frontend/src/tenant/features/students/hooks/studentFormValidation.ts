@@ -59,7 +59,7 @@ export function validateStudentDraft(
   return null;
 }
 
-export interface StudentDuplicateCheckInput {
+interface StudentDuplicateCheckInput {
   studentId?: string;
   contactId: string;
   linkedContact?: Contact | null;
@@ -80,7 +80,7 @@ export async function checkStudentFormDuplicate(
   });
 }
 
-export interface PrepareStudentSaveInput {
+interface PrepareStudentSaveInput {
   data: Partial<Student>;
   studentId?: string | number;
   enrolledSessions?: Student["enrolledSessions"];

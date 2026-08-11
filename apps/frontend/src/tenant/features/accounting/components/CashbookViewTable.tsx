@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
@@ -66,34 +67,38 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
                 {flowBadge(row)}
               </div>
             </div>
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-xs font-semibold text-success">{t("accounting.cashbook.moneyIn")}</dt>
-                <dd className="font-mono font-bold text-success">
-                  {row.flowType === "in" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-destructive">{t("accounting.cashbook.moneyOut")}</dt>
-                <dd className="font-mono font-bold text-destructive">
-                  {row.flowType === "out" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
-                </dd>
-              </div>
-            </dl>
+            <StatGrid>
+              <StatRow
+                label={t("accounting.cashbook.moneyIn")}
+                value={row.flowType === "in" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
+                dtClassName="text-success"
+                ddClassName="font-mono font-bold text-success"
+              />
+              <StatRow
+                label={t("accounting.cashbook.moneyOut")}
+                value={row.flowType === "out" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
+                dtClassName="text-destructive"
+                ddClassName="font-mono font-bold text-destructive"
+              />
+            </StatGrid>
           </article>
         ))}
         <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
           <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("accounting.cashbook.transactionCount", { count: rows.length })}</p>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <dt className="text-xs font-semibold text-success">{t("accounting.cashbook.moneyIn")}</dt>
-              <dd className="font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-destructive">{t("accounting.cashbook.moneyOut")}</dt>
-              <dd className="font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</dd>
-            </div>
-          </dl>
+          <StatGrid>
+            <StatRow
+              label={t("accounting.cashbook.moneyIn")}
+              value={formatCurrency(totalIn)}
+              dtClassName="text-success"
+              ddClassName="font-mono font-bold text-success text-xs"
+            />
+            <StatRow
+              label={t("accounting.cashbook.moneyOut")}
+              value={formatCurrency(totalOut)}
+              dtClassName="text-destructive"
+              ddClassName="font-mono font-bold text-destructive text-xs"
+            />
+          </StatGrid>
         </article>
       </div>
       <div className="hidden md:block">

@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import type { Payment } from '@/lib/data/financeData';
 
 interface PaymentTrackerListMobileProps {
@@ -69,32 +70,32 @@ export function PaymentTrackerListMobile({
             </div>
             {isColumnVisible("amount") && <span className="shrink-0 text-sm font-bold text-success">{formatCurrency(payment.amount)}</span>}
           </div>
-          <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          <StatGrid columns="sm2">
             {isColumnVisible("date") && (
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t('finance.columns.paymentDate')}</dt>
-                <dd className="text-foreground">{formatDate(payment.date)}</dd>
-              </div>
+              <StatRow label={t('finance.columns.paymentDate')} value={formatDate(payment.date)} />
             )}
             {isColumnVisible("method") && (
-              <div>
-                <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('finance.columns.method')}</dt>
-                <dd><StatusBadge status={payment.method} config={methodConfig} size="sm" /></dd>
-              </div>
+              <StatRow
+                label={t('finance.columns.method')}
+                value={<StatusBadge status={payment.method} config={methodConfig} size="sm" />}
+                dtClassName="mb-1"
+              />
             )}
             {isColumnVisible("receivedBy") && (
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t('finance.columns.receivedBy')}</dt>
-                <dd className="break-words text-foreground">{payment.receivedBy || '—'}</dd>
-              </div>
+              <StatRow
+                label={t('finance.columns.receivedBy')}
+                value={payment.receivedBy || '—'}
+                ddClassName="break-words"
+              />
             )}
             {isColumnVisible("note") && (
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t('finance.columns.note')}</dt>
-                <dd className="break-words text-foreground">{payment.note || '—'}</dd>
-              </div>
+              <StatRow
+                label={t('finance.columns.note')}
+                value={payment.note || '—'}
+                ddClassName="break-words"
+              />
             )}
-          </dl>
+          </StatGrid>
           {canDelete && (
             <div className="flex items-center justify-between border-t border-border pt-2">
               <Checkbox

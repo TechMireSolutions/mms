@@ -1,7 +1,7 @@
 import { Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Button } from "@/components/ui/button";
+import { TableCellLink } from "@/components/ui/TableCellLink";
 import { useTranslation } from "@/hooks/useTranslation";
 
 import type { ClassRankingItem } from "./academicReportTypes";
@@ -27,14 +27,13 @@ export function AcademicReportClassRankings({
           {classRankings.map((classRanking, index) => (
             <Card key={classRanking.class} className="p-5">
               <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
+                <TableCellLink
+                  tap
                   onClick={() => onToggleClassFilter(classRanking.class)}
-                  className="h-auto min-w-0 flex-1 justify-start truncate px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
+                  className="min-w-0 flex-1 justify-start truncate"
                 >
                   {classRanking.class}
-                </Button>
+                </TableCellLink>
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                   #{index + 1}
                 </span>

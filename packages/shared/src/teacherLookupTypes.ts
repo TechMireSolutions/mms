@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { GENDERS } from './contactPreferenceConstants.js';
 import {
   resolveTeacherSpecializations,
   resolveTeacherStatuses,
 } from './teacherTypes.js';
 
 /** Teachers Setup option-list kinds migrated off document-store collections. */
-export const TEACHER_LOOKUP_KINDS = ['statuses', 'specializations'] as const;
+export const TEACHER_LOOKUP_KINDS = ['statuses', 'specializations', 'genderFilters'] as const;
 
 export type TeacherLookupKind = (typeof TEACHER_LOOKUP_KINDS)[number];
 
@@ -24,6 +25,7 @@ export const teacherLookupStringItemsSchema = z.array(z.string().min(1).max(200)
 export const teacherLookupsMapSchema = z.object({
   statuses: teacherLookupStringItemsSchema,
   specializations: teacherLookupStringItemsSchema,
+  genderFilters: teacherLookupStringItemsSchema,
 });
 
 export type TeacherLookupsMap = z.infer<typeof teacherLookupsMapSchema>;
@@ -52,6 +54,8 @@ export function defaultTeacherLookupItems(kind: TeacherLookupKind): string[] {
       return [...resolveTeacherStatuses()];
     case 'specializations':
       return [...resolveTeacherSpecializations()];
+    case 'genderFilters':
+      return [...GENDERS];
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;
@@ -63,5 +67,6 @@ export function emptyTeacherLookupsMap(): TeacherLookupsMap {
   return {
     statuses: defaultTeacherLookupItems('statuses'),
     specializations: defaultTeacherLookupItems('specializations'),
+    genderFilters: defaultTeacherLookupItems('genderFilters'),
   };
 }

@@ -5,7 +5,7 @@ import {
   type Teacher,
   type TeachersSettings,
 } from '@mms/shared';
-import { loadTeacherFieldConfig } from '../../services/teacherConfigService.js';
+import { loadTeacherFieldConfig } from '../../lib/teacherConfigService.js';
 
 function settingsSnapshot(settings: TeachersSettings | null) {
   if (!settings) return null;

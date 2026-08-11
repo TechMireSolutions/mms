@@ -7,9 +7,11 @@ import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/u
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   Tooltip, TooltipContentProps,
-  ComposedChart, Area, Line, Bar, Cell, XAxis, YAxis, CartesianGrid,
+  ComposedChart, Area, Line, Bar, Cell, XAxis, YAxis,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
@@ -27,12 +29,13 @@ import {
 import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
 
 const AttTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
-  if (!active || !payload?.length) return null;
   return (
-    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
-      <p className="text-muted-foreground text-xs m-0">{label}</p>
-      <p className="font-bold text-foreground m-0">{payload[0].value}%</p>
-    </div>
+    <ChartTooltip
+      active={active}
+      payload={payload}
+      label={label}
+      value={`${payload?.[0]?.value}%`}
+    />
   );
 };
 
@@ -142,9 +145,9 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
               <stop offset="95%" stopColor={themeColor} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-          <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-          <YAxis domain={[60, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+          <ChartGrid vertical={false} />
+          <XAxis dataKey="day" tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} />
+          <YAxis domain={[60, 100]} tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
           <Tooltip content={<AttTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }} />
           
           {chartType === "area" && (

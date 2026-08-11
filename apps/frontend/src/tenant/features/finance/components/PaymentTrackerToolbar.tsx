@@ -6,6 +6,7 @@ import {
   BulkSelectionRestoreAction,
 } from "@/components/ui/BulkSelectionActions";
 import { Card } from "@/components/ui/card";
+import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -88,23 +89,24 @@ export function PaymentLogHeader({
   const { t } = useTranslation();
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 bg-muted/20 px-4 py-3 ps-6.5">
-      <div className="flex min-w-0 items-center gap-2">
-        <CreditCard className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <h3 className="m-0 text-sm font-bold text-foreground">{t("finance.paymentLog")}</h3>
-      </div>
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-success">
-          {t("finance.paymentTotal", { amount: formatCurrency(totalPaid) })}
-        </span>
-        {columnCustomizer && (
-          <ModuleColumnCustomizer
-            columnRegistry={columnCustomizer.columnRegistry}
-            updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-            labels={columnCustomizer.labels}
-          />
-        )}
-      </div>
-    </header>
+    <CardTitleBar
+      inset
+      icon={<CreditCard className="h-4 w-4 text-muted-foreground" />}
+      title={t("finance.paymentLog")}
+      actions={
+        <>
+          <span className="text-xs font-semibold text-success">
+            {t("finance.paymentTotal", { amount: formatCurrency(totalPaid) })}
+          </span>
+          {columnCustomizer && (
+            <ModuleColumnCustomizer
+              columnRegistry={columnCustomizer.columnRegistry}
+              updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
+              labels={columnCustomizer.labels}
+            />
+          )}
+        </>
+      }
+    />
   );
 }

@@ -16,6 +16,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { ROUTES } from "@/lib/config/routes";
+import { Badge } from "@/components/ui/badge";
 import { OutstandingFeesTableMobileList } from "@/components/dashboard-widgets/OutstandingFeesTableMobileList";
 import { OutstandingFeesTableDesktopBody } from "@/components/dashboard-widgets/OutstandingFeesTableDesktopBody";
 
@@ -88,12 +89,15 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         icon={<AlertCircle className="w-4 h-4 shrink-0 text-destructive" aria-hidden="true" />}
         title={title || t("dashboard.widgets.outstandingPayments")}
         badge={
-          <span
-            className="text-xs font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-full uppercase tracking-wider"
+          <Badge
+            as="span"
+            pill
+            tone="destructive"
+            className="uppercase tracking-wider font-bold"
             aria-label={t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
           >
             {t("dashboard.widgets.studentsCount", { count: totalUnpaid })}
-          </span>
+          </Badge>
         }
         actions={
           canWriteMessaging && (

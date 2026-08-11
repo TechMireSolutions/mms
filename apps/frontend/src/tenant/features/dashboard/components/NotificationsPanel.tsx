@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Badge } from '@/components/ui/badge';
 import { WidgetCard } from '@/components/ui/WidgetCard';
 import { WidgetCardHeader } from '@/components/ui/WidgetCardHeader';
 
@@ -91,9 +92,9 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
                         {notif.title}
                       </p>
                       {notif.urgent && (
-                        <span className="text-xs font-bold uppercase tracking-wider text-destructive bg-destructive/10 border border-destructive/20 px-1.5 py-0.5 rounded-full flex-shrink-0 select-none">
+                        <Badge pill tone="destructive" className="uppercase tracking-wider flex-shrink-0 select-none">
                           {t('notifications.urgentLabel')}
-                        </span>
+                        </Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground/90 mt-0.5 m-0 leading-normal">{notif.desc}</p>

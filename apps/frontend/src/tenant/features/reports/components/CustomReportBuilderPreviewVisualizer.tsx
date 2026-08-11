@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type PreviewRow } from "./customReportBuilderFields";
 
@@ -43,23 +44,24 @@ export function CustomReportBuilderPreviewVisualizer({
                 key={rowIndex}
                 className={`${WORK_SURFACE_INNER} space-y-2 p-3`}
               >
-                <dl className="grid grid-cols-1 gap-2 text-sm">
+                <StatGrid columns="1">
                   {selectedFields.map((selectedField) => {
                     const fieldLabel = resolveFieldLabel(selectedField);
                     const cellValue = previewRow[fieldLabel];
                     return (
-                      <div key={selectedField}>
-                        <dt className="text-xs font-semibold text-muted-foreground">{fieldLabel}</dt>
-                        <dd className="text-foreground font-semibold">
-                          {cellValue !== undefined && cellValue !== null
+                      <StatRow
+                        key={selectedField}
+                        label={fieldLabel}
+                        value={
+                          cellValue !== undefined && cellValue !== null
                             ? String(cellValue)
                             : <span className="text-muted-foreground/30 text-xs italic">—</span>
-                          }
-                        </dd>
-                      </div>
+                        }
+                        ddClassName="font-semibold"
+                      />
                     );
                   })}
-                </dl>
+                </StatGrid>
               </article>
             ))}
           </div>

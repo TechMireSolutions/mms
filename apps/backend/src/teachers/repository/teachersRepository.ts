@@ -1,5 +1,7 @@
 import type {
   Teacher,
+  TeacherDuplicateCheckInput,
+  TeacherDuplicateReason,
   TeacherRecord,
   TeachersCommandMetricsSnapshot,
   TeachersListPageResult,
@@ -42,5 +44,12 @@ export interface TeachersRepository {
   listLinkedContactIds(tenant: string, excludeTeacherId?: string): Promise<Array<string | number>>;
 
   countNextEmployeeId(tenant: string): Promise<number>;
+  /** Active rows missing an employee id (backfill candidates) — Students GR-migration parity. */
+  listActiveMissingEmployeeId(tenant: string): Promise<Teacher[]>;
+  /** Active duplicate probe (contact / employeeId) before save — server authoritative. */
+  findRegistrationConflict(
+    tenant: string,
+    input: TeacherDuplicateCheckInput,
+  ): Promise<TeacherDuplicateReason | null>;
   bulkUpdateStatusSql(tenant: string, ids: string[], status: string): Promise<number>;
 }

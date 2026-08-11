@@ -33,25 +33,20 @@ vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
 }));
 
-vi.mock('../services/contactDuplicateScanService.js', () => ({
+vi.mock('../contacts/use-cases/contactDuplicateScanUseCases.js', () => ({
   invalidateDuplicateScanCache: (...args: unknown[]) => mockInvalidateDuplicateScanCache(...args),
 }));
 
-vi.mock('../services/dbSyncService.js', () => ({
-  fetchCollection: vi.fn().mockResolvedValue([]),
-  fetchObject: vi.fn().mockResolvedValue(null),
-}));
-
-vi.mock('../services/contactConfigService.js', () => ({
+vi.mock('../lib/contactConfigService.js', () => ({
   loadContactFieldConfig: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('../services/contactLookupsService.js', () => ({
+vi.mock('../lib/contactLookupsService.js', () => ({
   loadContactLookupKind: vi.fn().mockResolvedValue([]),
 }));
 
 const mockLoadContactPreferences = vi.fn();
-vi.mock('../services/contactPreferencesService.js', () => ({
+vi.mock('../lib/contactPreferencesService.js', () => ({
   loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
 }));
 
@@ -62,14 +57,16 @@ vi.mock('../db/database.js', () => ({
 import {
   loadContactsPage,
   updateContactById,
-  upsertContact,
-  bulkSoftDeleteContacts,
-  restoreContactById,
-  bulkRestoreContacts,
   ContactUniqueFieldError,
 } from '../services/contactService.js';
-import { applyContactRelationshipInference } from '../services/contactService.js';
 import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
+import { upsertContact } from '../contacts/use-cases/contactWriteUseCases.js';
+import {
+  restoreContactById,
+  bulkRestoreContacts,
+  bulkSoftDeleteContacts,
+} from '../contacts/use-cases/contactSoftDeleteUseCases.js';
+import { applyContactRelationshipInference } from '../contacts/use-cases/contactRelationshipInferenceUseCases.js';
 
 
 function contact(overrides: Partial<Contact>): Contact {
@@ -179,7 +176,7 @@ describe('contactService relationship reciprocal mapping', () => {
     });
     mockFindContactById.mockResolvedValue(deleted);
 
-    const restored = await restoreContactById('c1', 'u-admin');
+    const restored = await restoreContactById('c1');
 
     expect(mockAssertContactUniqueFields).toHaveBeenCalledWith(
       'demo',
@@ -200,7 +197,7 @@ describe('contactService relationship reciprocal mapping', () => {
       new ContactUniqueFieldError([{ fieldId: 'number', tabId: 'phones', message: 'must be unique' }]),
     );
 
-    await expect(restoreContactById('c1', 'u-admin')).rejects.toBeInstanceOf(ContactUniqueFieldError);
+    await expect(restoreContactById('c1')).rejects.toBeInstanceOf(ContactUniqueFieldError);
     expect(mockSaveContact).not.toHaveBeenCalled();
   });
 
@@ -215,7 +212,7 @@ describe('contactService relationship reciprocal mapping', () => {
         new ContactUniqueFieldError([{ fieldId: 'number', tabId: 'phones', message: 'must be unique' }]),
       );
 
-    const result = await bulkRestoreContacts(['c1', 'c2'], 'u-admin');
+    const result = await bulkRestoreContacts(['c1', 'c2']);
 
     expect(result.succeeded).toBe(1);
     expect(result.failed).toBe(1);
@@ -575,8 +572,6 @@ describe('contactService relationship reciprocal mapping', () => {
 describe('contactService composition-root shim', () => {
   it('exposes the wrapped composition-root methods, not raw barrel functions', () => {
     expect(loadContactsPage).toBe(contactUseCases.loadContactsPage);
-    expect(upsertContact).toBe(contactUseCases.upsertContact);
-    expect(bulkSoftDeleteContacts).toBe(contactUseCases.bulkSoftDeleteContacts);
-    expect(restoreContactById).toBe(contactUseCases.restoreContactById);
+    expect(updateContactById).toBe(contactUseCases.updateContactById);
   });
 });

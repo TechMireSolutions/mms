@@ -11,6 +11,8 @@ import {
   countTeachersActive,
   countTeachersForNextEmployeeId,
   findSoftDeletedTeacherByContactIdSql,
+  findTeacherRegistrationConflictSql,
+  listActiveTeachersMissingEmployeeId,
   listTeacherLinkedContactIdsSql,
   listTeachersPage,
 } from '../../db/repositories/teacherRepositoryList.js';
@@ -41,6 +43,8 @@ function createTeachersRepository(): TeachersRepository {
     listLinkedContactIds: (tenant, excludeTeacherId) =>
       listTeacherLinkedContactIdsSql(tenant, excludeTeacherId),
     countNextEmployeeId: (tenant) => countTeachersForNextEmployeeId(tenant),
+    listActiveMissingEmployeeId: (tenant) => listActiveTeachersMissingEmployeeId(tenant),
+    findRegistrationConflict: (tenant, input) => findTeacherRegistrationConflictSql(tenant, input),
     bulkUpdateStatusSql: (tenant, ids, status) => bulkUpdateTeachersStatusSql(tenant, ids, status),
   };
 }

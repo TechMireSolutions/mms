@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 
 export interface ActivityLogsListProps {
   paginated: ActivityLog[];
@@ -63,16 +64,18 @@ export function ActivityLogsList({
                 </div>
                 <ActivityActionBadge action={log.action} />
               </div>
-              <dl className="grid grid-cols-1 gap-2 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t('users.activityColDetail')}</dt>
-                  <dd className="text-xs text-muted-foreground">{log.detail}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t('users.activityColIp')}</dt>
-                  <dd className="font-mono text-xs text-muted-foreground">{log.ip}</dd>
-                </div>
-              </dl>
+              <StatGrid columns="1">
+                <StatRow
+                  label={t('users.activityColDetail')}
+                  value={log.detail}
+                  ddClassName="text-xs text-muted-foreground"
+                />
+                <StatRow
+                  label={t('users.activityColIp')}
+                  value={log.ip}
+                  ddClassName="font-mono text-xs text-muted-foreground"
+                />
+              </StatGrid>
             </article>
           ))}
         </div>

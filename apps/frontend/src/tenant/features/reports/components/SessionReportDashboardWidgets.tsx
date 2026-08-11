@@ -1,4 +1,5 @@
 import SessionsTable from "@/components/dashboard-widgets/SessionsTable";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { SessionsReportTodaySession } from "@mms/shared";
 
@@ -17,9 +18,9 @@ export function SessionReportDashboardWidgets({
         <h3 className="text-sm font-black text-foreground uppercase tracking-widest">
           {t("sessions.report.dashboardWidgetTitle")}
         </h3>
-        <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">
+        <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5">
           {t("sessions.report.dashboardWidgetSubtitle")}
-        </p>
+        </SectionLabel>
       </div>
       <SessionsTable items={todaysSessions} />
     </div>

@@ -1,5 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { Badge } from "@/components/ui/badge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
@@ -45,14 +47,16 @@ export function DirectoryCardsSelectAllBar({
             id={checkboxId}
           />
         </div>
-        <label
+        <SectionLabel
+          as="label"
           htmlFor={checkboxId}
-          className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors"
+          tracking="wider"
+          className="select-none cursor-pointer hover:text-foreground transition-colors"
         >
           {allSelected ? deselectLabel : selectLabel}
-        </label>
+        </SectionLabel>
       </div>
-      <span className="text-xs font-black uppercase tracking-wider text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full border border-border/10">
+      <Badge pill tone="muted" className="font-black uppercase tracking-wider bg-muted/60 px-2.5 py-1 border-border/10">
         {selectedCount > 0 ? (
           <>
             {selectedCountLabel}
@@ -64,7 +68,7 @@ export function DirectoryCardsSelectAllBar({
         ) : (
           pageCountLabel
         )}
-      </span>
+      </Badge>
     </div>
   );
 }

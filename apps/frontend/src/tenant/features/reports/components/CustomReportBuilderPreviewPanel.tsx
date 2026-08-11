@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import { Database, FileSpreadsheet, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey } from "@mms/shared";
 import { DraggableField } from "./CustomReportBuilderDraggableField";
@@ -45,9 +46,9 @@ export function CustomReportBuilderPreviewPanel({
     <div className="lg:col-span-2 space-y-6 flex flex-col justify-between">
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2 ms-1">
-          <label className="min-w-0 text-xs font-bold text-muted-foreground uppercase tracking-widest block">
+          <SectionLabel as="label" weight="bold" className="min-w-0 block">
             {t("reports.builder.selectedColumns", { count: selectedFields.length })}
-          </label>
+          </SectionLabel>
           {selectedFields.length > 0 && (
             <Button
               onClick={() => setSelectedFields([])}
@@ -90,9 +91,9 @@ export function CustomReportBuilderPreviewPanel({
       <div className="space-y-3 flex-1 flex flex-col justify-end mt-4">
         <div className="flex items-center justify-between ms-1">
           <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
+            <SectionLabel as="label" weight="bold" className="block">
               {t("reports.builder.liveVisualizer", { count: previewData.length })}
-            </label>
+            </SectionLabel>
             {groupBy && (
               <span className="text-xs font-bold uppercase bg-primary/15 text-primary px-1.5 py-0.5 rounded-md">
                 {t("reports.builder.groupedBadge")}
@@ -109,8 +110,9 @@ export function CustomReportBuilderPreviewPanel({
             <div className="flex gap-2">
               <Button
                 onClick={() => void exportCustomReportExcel(previewData, reportName)}
-                variant="outline"
-                className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-success hover:text-success px-3 rounded-xl border border-success/30 bg-success/10 hover:bg-success/15 transition-all shadow-sm cursor-pointer"
+                variant="capsSuccess"
+                size="caps"
+                className="shadow-sm"
                 type="button"
                 title={t("reports.builder.exportExcelTooltip")}
               >
@@ -118,8 +120,9 @@ export function CustomReportBuilderPreviewPanel({
               </Button>
               <Button
                 onClick={() => void exportCustomReportPdf(previewData, selectedFields, reportName, orientation, pageSize)}
-                variant="outline"
-                className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-destructive hover:text-destructive px-3 rounded-xl border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all shadow-sm cursor-pointer"
+                variant="capsDestructive"
+                size="caps"
+                className="shadow-sm"
                 type="button"
                 title={t("reports.builder.exportPdfTooltip")}
               >
@@ -136,10 +139,10 @@ export function CustomReportBuilderPreviewPanel({
         />
 
         {previewData.length > 0 && (
-          <div className="flex items-center justify-between px-1 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          <SectionLabel as="div" weight="bold" tracking="wider" className="flex items-center justify-between px-1">
             <span>{t("reports.builder.autoFetched")}</span>
             <span>{groupBy ? t("reports.builder.groupedBy", { field: resolveFieldLabel(groupBy) }) : t("reports.builder.flatLayout")}</span>
-          </div>
+          </SectionLabel>
         )}
       </div>
     </div>

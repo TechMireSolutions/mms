@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { ROUTES } from '@/lib/config/routes';
 import { Button } from '@/components/ui/button';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { cn } from '@/lib/utils';
 
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
@@ -78,7 +79,7 @@ export function PlatformPageShellHeader(): React.JSX.Element | null {
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex flex-col text-end">
             <span className="text-xs font-black text-foreground">{platformUser?.name}</span>
-            <span className="flex items-center justify-end gap-1 text-xs font-black uppercase tracking-wider text-muted-foreground mt-0.5">
+            <SectionLabel tracking="wider" className="flex items-center justify-end gap-1 mt-0.5">
               {isSuperUser ? (
                 <>
                   <ShieldAlert className="w-2.5 h-2.5 text-primary shrink-0" aria-hidden />
@@ -87,7 +88,7 @@ export function PlatformPageShellHeader(): React.JSX.Element | null {
               ) : (
                 t('platform.roleAdmin')
               )}
-            </span>
+            </SectionLabel>
           </div>
           <div className="h-8 w-px bg-border/60 hidden sm:block" />
           <Button

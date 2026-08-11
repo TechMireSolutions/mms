@@ -1,11 +1,9 @@
-import { Clock } from "lucide-react";
 import type { Contact } from "@mms/shared";
-import { formatDate } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
+import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
-import { formatEntityStamp } from "@/lib/formatEntityStamp";
 
 export function ContactDetailDrawerHeaderActions({
   canWrite,
@@ -71,15 +69,11 @@ export function ContactDetailDrawerFooter({
   contact: Contact;
 }): React.JSX.Element | null {
   const { t } = useTranslation();
-  const stamp = formatEntityStamp(contact.updatedAt) || formatEntityStamp(contact.createdAt);
-  if (!stamp) return null;
-
   return (
-    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-      <Clock className="w-3 h-3" aria-hidden />
-      <span>
-        {t("contacts.detail.updatedLabel")} {formatDate(stamp)}
-      </span>
-    </div>
+    <DrawerUpdatedStamp
+      updatedAt={contact.updatedAt}
+      createdAt={contact.createdAt}
+      label={t("contacts.detail.updatedLabel")}
+    />
   );
 }

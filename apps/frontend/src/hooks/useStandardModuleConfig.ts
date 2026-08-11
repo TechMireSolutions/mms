@@ -44,25 +44,23 @@ import {
 import {
   STUDENTS_FIELD_CONFIG_QUERY_KEY,
   STUDENTS_PREFERENCES_QUERY_KEY,
-  useComposedStudentsSettings,
-  useStudentFieldConfigMutation,
-  useStudentPreferencesMutation,
-} from '@/tenant/features/students/hooks/useStudentSetupConfig';
-import {
   setStudentFieldConfigMemory,
   setStudentPreferencesMemory,
-} from '@/tenant/features/students/hooks/studentSetupConfigApi';
+  useComposedStudentsSettings,
+  useStudentFieldConfigMutation,
+  useStudentLookupsQuery,
+  useStudentPreferencesMutation,
+} from '@/tenant/hooks/collections/students';
 import {
   TEACHERS_FIELD_CONFIG_QUERY_KEY,
   TEACHERS_PREFERENCES_QUERY_KEY,
-  useComposedTeachersSettings,
-  useTeacherFieldConfigMutation,
-  useTeacherPreferencesMutation,
-} from '@/tenant/features/teachers/hooks/useTeacherSetupConfig';
-import {
   setTeacherFieldConfigMemory,
   setTeacherPreferencesMemory,
-} from '@/tenant/features/teachers/hooks/teacherSetupConfigApi';
+  useComposedTeachersSettings,
+  useTeacherFieldConfigMutation,
+  useTeacherLookupsQuery,
+  useTeacherPreferencesMutation,
+} from '@/tenant/hooks/collections/teachers';
 import {
   SESSIONS_FIELD_CONFIG_QUERY_KEY,
   SESSIONS_PREFERENCES_QUERY_KEY,
@@ -80,11 +78,9 @@ import {
   useComposedUsersSettings,
   useUserFieldConfigMutation,
   useUserPreferencesMutation,
-} from '@/tenant/features/users/hooks/useUserSetupConfig';
-import {
   setUserFieldConfigMemory,
   setUserPreferencesMemory,
-} from '@/tenant/features/users/hooks/userSetupConfigApi';
+} from '@/tenant/hooks/collections/users';
 import {
   ENROLLMENTS_FIELD_CONFIG_QUERY_KEY,
   ENROLLMENTS_PREFERENCES_QUERY_KEY,
@@ -96,8 +92,6 @@ import {
   setEnrollmentFieldConfigMemory,
   setEnrollmentPreferencesMemory,
 } from '@/tenant/features/enrollments/hooks/enrollmentSetupConfigApi';
-import { useStudentLookupsQuery } from '@/tenant/features/students/hooks/useStudentLookups';
-import { useTeacherLookupsQuery } from '@/tenant/features/teachers/hooks/useTeacherLookups';
 
 export type {
   StandardModuleId,
@@ -242,11 +236,11 @@ export function useUsersConfig() {
 
 /**
  * Teachers settings authority is typed REST + TanStack Query (not document-store getObject).
- * Lookups (statuses / specializations) load from `/api/teachers/lookups`.
+ * Lookups (statuses / specializations / genderFilters) load from `/api/teachers/lookups`.
  */
 const useTeacherConfigImpl = createStandardModuleConfigHook<
   TeachersSettings,
-  { statuses: string[]; specializations: string[] }
+  { statuses: string[]; specializations: string[]; genderFilters: string[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultSettings as TeachersSettings,
   defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultFieldDefs as unknown as ModuleFieldDef[],
@@ -281,7 +275,11 @@ const useTeacherConfigImpl = createStandardModuleConfigHook<
   lookupsFrom: function useTeacherConfigLookups() {
     const lookupsQuery = useTeacherLookupsQuery();
     const lookups = lookupsQuery.data ?? emptyTeacherLookupsMap();
-    return { statuses: lookups.statuses, specializations: lookups.specializations };
+    return {
+      statuses: lookups.statuses,
+      specializations: lookups.specializations,
+      genderFilters: lookups.genderFilters,
+    };
   },
 });
 

@@ -10,6 +10,7 @@ import { isSeededDashboardWidget, resolveWidgetTitle } from '@/lib/dashboardWidg
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 
 export interface DashboardCustomizeWidgetsSectionProps {
@@ -34,9 +35,9 @@ export function DashboardCustomizeWidgetsSection({
   return (
     <div className={`${WORK_SURFACE} p-6`}>
       <fieldset className="space-y-4 border-0 p-0 m-0">
-        <legend className="text-xs font-black text-primary uppercase tracking-widest leading-none mb-1">
+        <SectionLabel as="legend" tone="primary" className="leading-none mb-1">
           {t('dashboard.chartsWidgetsSettings')}
-        </legend>
+        </SectionLabel>
         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t('dashboard.chartsWidgetsSettingsDesc')}</p>
 
         <div className="text-xs border-b border-border/45 pb-3 space-y-0.5">
@@ -111,9 +112,10 @@ export function DashboardCustomizeWidgetsSection({
         </div>
 
         <Button
-          variant="outline"
+          variant="capsOutline"
+          size="caps"
           onClick={() => onOpenWidgetBuilder('kpi', null)}
-          className="w-full flex items-center justify-center gap-1.5 py-3.5 rounded-xl border border-dashed border-border/80 hover:border-primary/50 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-primary transition-all bg-card/10 hover:bg-primary/5 shadow-none h-auto cursor-pointer"
+          className="w-full border-dashed border-border/80 hover:border-primary/50 py-3.5"
         >
           <Plus className="w-4 h-4" />
           {t('dashboard.createWidget')}

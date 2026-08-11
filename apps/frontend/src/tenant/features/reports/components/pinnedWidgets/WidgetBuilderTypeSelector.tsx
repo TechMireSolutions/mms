@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
 
@@ -52,7 +53,7 @@ export function WidgetBuilderTypeSelector({
 
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-black text-foreground/80 uppercase tracking-wider block">{t("reports.widgets.builder.focusType")}</label>
+      <SectionLabel as="label" toneClassName="text-foreground/80" tracking="wider" className="block">{t("reports.widgets.builder.focusType")}</SectionLabel>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {widgetTypeOptions.map((widgetTypeOption) => {
           const isSelectedType = widgetType === widgetTypeOption.id;

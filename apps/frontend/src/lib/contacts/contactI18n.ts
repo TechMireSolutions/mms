@@ -1,7 +1,6 @@
 export {
   formatContactPhoneDisplay,
   formatContactPhoneFull,
-  formatTelHref,
   getFallbackCountryCode,
   resolveContactPhoneDisplay,
 } from "@/lib/contacts/contactPhoneDisplay";
@@ -19,7 +18,6 @@ export {
 
 export {
   DUPLICATE_REASON_I18N,
-  DUPLICATE_FIELD_I18N,
   ACTIVITY_TYPE_I18N,
 } from "@/lib/contacts/contactI18nKeys";
 

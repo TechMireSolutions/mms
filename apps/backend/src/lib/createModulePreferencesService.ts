@@ -1,5 +1,5 @@
 import { getRequestTenant } from './tenantContext.js';
-import { broadcastCollection } from '../services/websocketService.js';
+import { broadcastCollection } from './livePush.js';
 
 function requireTenant(): string {
   const tenant = getRequestTenant();

@@ -10,7 +10,7 @@ import {
 } from "@/tenant/features/students/components/StudentFormSections";
 import { StudentCustomFieldsBlock } from "@/tenant/features/students/components/StudentCustomFieldsBlock";
 
-export interface StudentFormTabContentProps {
+interface StudentFormTabContentProps {
   tab: string;
   formInstanceId: string;
   studentDraft: Partial<Student>;

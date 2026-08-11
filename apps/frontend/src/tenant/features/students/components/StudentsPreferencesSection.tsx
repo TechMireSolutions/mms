@@ -61,7 +61,7 @@ export function StudentsPreferencesSection({
         </div>
       </SectionCard>
 
-      <div className="space-y-2 pt-1 border-t border-border/40" role="group" aria-label={t("students.settings.title")}>
+      <div className="mt-3 space-y-2 border-t border-border/60 pt-3" role="group" aria-label={t("students.settings.title")}>
         <ToggleRow
           label={t("students.settings.autoGenerateId")}
           description={t("students.settings.autoGenerateIdDesc")}

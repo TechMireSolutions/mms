@@ -3,6 +3,16 @@ import type { PgTable } from 'drizzle-orm/pg-core';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 
 /**
+ * Quoted JSONB key literal for `->`/`->>` access, sanitized to `[a-zA-Z0-9_]`
+ * so Setup-supplied field keys can never inject SQL. Centralizes the pattern
+ * used by every module widget repository for dynamic `custom_data` keys.
+ */
+export function jsonbFieldKeyLiteral(fieldKey: string): SQL {
+  const safe = fieldKey.trim().replace(/[^a-zA-Z0-9_]/g, '');
+  return sql.raw(`'${safe}'`);
+}
+
+/**
  * Non-empty JSONB `custom_data` value for a field key (string trim, array length,
  * other types count). Used by Contacts/Students Setup field-usage counters.
  */

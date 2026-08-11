@@ -49,15 +49,20 @@ export function createTeachersUseCases(repo: TeachersRepository = teachersReposi
       softDelete.softDeleteTeacherById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteTeachers: (ids: string[], deletedBy: string, deletionReason?: string) =>
       softDelete.bulkSoftDeleteTeachers(ids, deletedBy, deletionReason, repo),
-    restoreTeacherById: (id: string, restoredBy: string) =>
-      softDelete.restoreTeacherById(id, restoredBy, repo),
-    bulkRestoreTeachers: (ids: string[], restoredBy: string) =>
-      softDelete.bulkRestoreTeachers(ids, restoredBy, repo),
+    restoreTeacherById: (id: string) =>
+      softDelete.restoreTeacherById(id, repo),
+    bulkRestoreTeachers: (ids: string[]) =>
+      softDelete.bulkRestoreTeachers(ids, repo),
     bulkUpdateTeacherStatus: (ids: string[], status: string) =>
       operation.bulkUpdateTeacherStatus(ids, status, repo),
     computeNextTeacherEmployeeIdForSettings: (
       settings: Parameters<typeof operation.computeNextTeacherEmployeeIdForSettings>[0],
     ) => operation.computeNextTeacherEmployeeIdForSettings(settings, repo),
+    migrateTeachersMissingEmployeeIds: () =>
+      operation.migrateTeachersMissingEmployeeIds(repo),
+    checkTeacherRegistrationDuplicate: (
+      input: Parameters<typeof operation.checkTeacherRegistrationDuplicate>[0],
+    ) => operation.checkTeacherRegistrationDuplicate(input, repo),
     sanitizeTeacherForViewer: (teacher: import('@mms/shared').Teacher, viewerRole: string) =>
       sanitize.sanitizeTeacherForViewer(teacher, viewerRole),
     sanitizeTeachersForViewer: (teachers: import('@mms/shared').Teacher[], viewerRole: string) =>

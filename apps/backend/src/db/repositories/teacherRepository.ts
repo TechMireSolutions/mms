@@ -15,6 +15,4 @@ export const findTeacherById = repo.findById;
 export const findTeachersByIds = repo.findByIds;
 export const saveTeacher = repo.save;
 export const bulkSaveTeachers = repo.bulkSave;
-export const deleteTeacher = repo.deleteById;
 export const replaceTeachersForWorkspace = repo.replaceForWorkspace;
-export const deleteTeachersByWorkspace = repo.deleteByWorkspace;

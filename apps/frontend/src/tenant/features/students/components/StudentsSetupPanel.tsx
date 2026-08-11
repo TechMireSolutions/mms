@@ -10,7 +10,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsPreferencesSection } from "@/tenant/features/students/components/StudentsPreferencesSection";
 import { useStudentsSetupPanelState } from "@/tenant/features/students/hooks/useStudentsSetupPanelState";
 
-export interface StudentsSetupPanelProps {
+interface StudentsSetupPanelProps {
   mode?: "fields" | "preferences";
   onFieldsDirtyChange?: (isDirty: boolean) => void;
   onPrefsDirtyChange?: (isDirty: boolean) => void;

@@ -1,7 +1,7 @@
 import type { Teacher } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
-import { broadcastCollection } from '../../services/websocketService.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 import type { TeachersRepository } from '../repository/teachersRepository.js';
 import { teachersRepository } from '../repository/teachersRepositoryAdapter.js';
 
@@ -22,7 +22,6 @@ function restoredRow(existing: Teacher): Teacher {
 
 export async function restoreTeacherById(
   id: string,
-  _restoredBy: string,
   repo: TeachersRepository = teachersRepository,
 ): Promise<Teacher | null> {
   const restored = await runInTransaction(async () => {
@@ -42,7 +41,6 @@ export async function restoreTeacherById(
 
 export async function bulkRestoreTeachers(
   ids: string[],
-  _restoredBy: string,
   repo: TeachersRepository = teachersRepository,
 ): Promise<{ succeeded: number; failed: number }> {
   const result = await runInTransaction(async () => {

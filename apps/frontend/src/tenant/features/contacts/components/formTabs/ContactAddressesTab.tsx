@@ -1,4 +1,3 @@
-import React from "react";
 import { MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";

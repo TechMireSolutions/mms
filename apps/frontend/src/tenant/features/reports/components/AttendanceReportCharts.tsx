@@ -1,5 +1,6 @@
-import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Tooltip, XAxis, YAxis } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -41,9 +42,9 @@ export function AttendanceReportCharts({
           }}
           style={{ cursor: "pointer" }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="class" tick={{ fontSize: 12 }} />
-          <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+          <ChartGrid />
+          <XAxis dataKey="class" tick={chartAxisTick(12)} />
+          <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
           <Tooltip formatter={(value) => value !== undefined ? `${value}%` : ""} />
           <Bar dataKey="avgRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
         </BarChart>

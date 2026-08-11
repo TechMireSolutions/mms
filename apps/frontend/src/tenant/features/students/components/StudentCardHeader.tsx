@@ -7,7 +7,7 @@ import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 
-export interface StudentCardHeaderProps {
+interface StudentCardHeaderProps {
   student: Student;
   studentId: string;
   isSelected: boolean;

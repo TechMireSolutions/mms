@@ -1,6 +1,7 @@
 import React from "react";
 import { type AppTranslationKey } from "@mms/shared";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import {
   Table,
   TableBody,
@@ -9,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { Badge } from "@/components/ui/badge";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, type Account, type AccountType } from "@/lib/data/accountingData";
@@ -48,9 +50,9 @@ export function ChartOfAccountsTreeTable({
           const count = accounts.filter((account) => account.type === type && account.isActive !== false).length;
           if (count === 0) return null;
           return (
-            <span key={type} className={`px-2.5 py-1 rounded-full text-xs font-bold border ${ACCOUNT_TYPE_META[type]?.color}`}>
+            <Badge key={type} pill variant="outline" className={`px-2.5 py-1 font-bold ${ACCOUNT_TYPE_META[type]?.color}`}>
               <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t(`accounting.type.${type}` as AppTranslationKey)}: {count}
-            </span>
+            </Badge>
           );
         })}
       </div>
@@ -100,9 +102,9 @@ function AccountTypeGroup({
   return (
     <article className={`${WORK_SURFACE} overflow-hidden`}>
       <header className={`px-4 py-2.5 border-b border-border ${ACCOUNT_TYPE_META[type]?.color} flex min-w-0 items-center justify-between gap-2`}>
-        <h3 className="min-w-0 truncate text-xs font-bold uppercase tracking-wide m-0">
+        <SectionLabel as="h3" weight="bold" tracking="wide" tone="inherit" className="min-w-0 truncate m-0">
           <span aria-hidden="true">{ACCOUNT_TYPE_META[type]?.icon}</span> {t("accounting.coa.groupHeader", { type: t(`accounting.type.${type}` as AppTranslationKey), group: t(`accounting.reports.views.${ACCOUNT_TYPE_META[type]?.group}` as AppTranslationKey) })}
-        </h3>
+        </SectionLabel>
         <span className="shrink-0 text-xs font-semibold text-muted-foreground">
           {t("accounting.coa.groupMeta", {
             normal: ACCOUNT_TYPE_META[type]?.normalBalance === "debit" ? t("accounting.ledger.dr") : t("accounting.ledger.cr"),

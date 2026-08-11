@@ -158,7 +158,11 @@ export type StandardModuleConfigExtraMap = {
     genderFilters: string[];
     discountTypes: string[];
   };
-  teachers: { statuses: string[]; specializations: string[] };
+  teachers: {
+    statuses: string[];
+    specializations: string[];
+    genderFilters: string[];
+  };
   users: Record<string, never>;
   'question-bank': Record<string, never>;
 };

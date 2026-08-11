@@ -6,6 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { Contact, getDisplayName } from "@mms/shared";
 import { GenderIcon } from "@/components/ui/GenderIcon";
+import { Badge } from "@/components/ui/badge";
 import { genderBadgeClass } from "@/lib/semanticTone";
 
 export function ContactBasicAvatarSection({
@@ -72,15 +73,15 @@ export function ContactBasicAvatarSection({
         </h3>
         <div className="mt-1 flex flex-wrap items-center justify-center gap-2 @sm:justify-start">
           {contactDraft.gender && contactDraft.gender !== "unspecified" && (
-            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${genderBadgeClass(contactDraft.gender)}`}>
+            <Badge pill variant="outline" className={`gap-1 px-2.5 font-bold ${genderBadgeClass(contactDraft.gender)}`}>
               <GenderIcon gender={contactDraft.gender} className="w-3 h-3" />
               {formatContactGenderLabel(contactDraft.gender, t)}
-            </span>
+            </Badge>
           )}
           {contactDraft.isSyed && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/15 text-primary border border-primary/20">
+            <Badge pill tone="primary" className="px-2.5 font-bold bg-primary/15">
               {t("contacts.fields.isSyed")}
-            </span>
+            </Badge>
           )}
         </div>
       </div>

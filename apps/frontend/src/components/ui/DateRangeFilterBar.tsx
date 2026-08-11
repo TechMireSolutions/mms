@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 export interface DateRangeFilterBarProps {
@@ -51,7 +52,7 @@ export function DateRangeFilterBar({
           {fromLabel ? (
             <label
               htmlFor={fromId}
-              className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              className={cn(FORM_LABEL, "mb-0")}
             >
               {fromLabel}
             </label>
@@ -71,7 +72,7 @@ export function DateRangeFilterBar({
           {toLabel ? (
             <label
               htmlFor={toId}
-              className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              className={cn(FORM_LABEL, "mb-0")}
             >
               {toLabel}
             </label>

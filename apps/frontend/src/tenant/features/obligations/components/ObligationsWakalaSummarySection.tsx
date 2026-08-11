@@ -10,6 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { Badge } from "@/components/ui/badge";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ObligationDistribution } from "@/lib/data/obligationsData";
 import { AlertCircle, Layers } from "lucide-react";
@@ -87,24 +89,27 @@ export function ObligationsWakalaSummarySection({
                     </span>
                   )}
                 </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colMujtahid")}</dt>
-                    <dd className="text-xs text-muted-foreground">{wakalaSummaryItem.mujtahidName}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colObligation")}</dt>
-                    <dd><span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{wakalaSummaryItem.obligationType}</span></dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colCollections")}</dt>
-                    <dd className="text-sm font-semibold text-foreground">{wakalaSummaryItem.count}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.wakala.colTotalAmountShort")}</dt>
-                    <dd className="font-mono font-bold text-success text-sm">{formatCurrency(wakalaSummaryItem.total)}</dd>
-                  </div>
-                </dl>
+                <StatGrid>
+                  <StatRow
+                    label={t("obligations.summary.wakala.colMujtahid")}
+                    value={wakalaSummaryItem.mujtahidName}
+                    ddClassName="text-xs text-muted-foreground"
+                  />
+                  <StatRow
+                    label={t("obligations.summary.wakala.colObligation")}
+                    value={<Badge pill tone="primary" className="px-2 font-bold">{wakalaSummaryItem.obligationType}</Badge>}
+                  />
+                  <StatRow
+                    label={t("obligations.summary.wakala.colCollections")}
+                    value={wakalaSummaryItem.count}
+                    ddClassName="text-sm font-semibold"
+                  />
+                  <StatRow
+                    label={t("obligations.summary.wakala.colTotalAmountShort")}
+                    value={formatCurrency(wakalaSummaryItem.total)}
+                    ddClassName="font-mono font-bold text-success text-sm"
+                  />
+                </StatGrid>
                 {wakalaSummaryItem.distributions.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.wakala.colDistributions")}</p>
@@ -150,7 +155,7 @@ export function ObligationsWakalaSummarySection({
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">{wakalaSummaryItem.mujtahidName}</TableCell>
                     <TableCell className="px-3 py-2.5">
-                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{wakalaSummaryItem.obligationType}</span>
+                      <Badge as="span" pill tone="primary" className="px-2 font-bold">{wakalaSummaryItem.obligationType}</Badge>
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-end text-sm font-semibold text-foreground">{wakalaSummaryItem.count}</TableCell>
                     <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-sm">{formatCurrency(wakalaSummaryItem.total)}</TableCell>

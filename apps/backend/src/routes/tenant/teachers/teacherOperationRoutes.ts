@@ -1,11 +1,16 @@
 import type { FastifyInstance } from 'fastify';
 import type { Teacher, User } from '@mms/shared';
-import { DEFAULT_TEACHERS_SETTINGS } from '@mms/shared';
+import {
+  DEFAULT_TEACHERS_SETTINGS,
+  TEACHERS_MODULE_MANIFEST,
+  roleHasPermission,
+} from '@mms/shared';
 import { canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
 import {
   teacherRecordSchema,
   teachersBulkStatusSchema,
+  teachersDuplicateCheckBodySchema,
   teachersNextEmployeeIdQuerySchema,
 } from '../../../validation/teacherSchemas.js';
 import {
@@ -91,6 +96,19 @@ export async function teacherOperationRoutes(fastify: FastifyInstance): Promise<
     }
   });
 
+  fastify.post('/duplicate-check', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersDuplicateCheckBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await teacherUseCases.checkTeacherRegistrationDuplicate(parsed.data);
+      return reply.send(result);
+    } catch {
+      return sendDatabaseError(reply, 'Failed to check teacher registration duplicate');
+    }
+  });
+
   fastify.get('/next-employee-id', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
@@ -100,5 +118,18 @@ export async function teacherOperationRoutes(fastify: FastifyInstance): Promise<
       idPrefix: parsed.data.prefix ?? DEFAULT_TEACHERS_SETTINGS.idPrefix,
     });
     return reply.send({ employeeId });
+  });
+
+  fastify.post('/migrate-employee-ids', async (request, reply) => {
+    const user = request.user as User;
+    if (!roleHasPermission(user.role, TEACHERS_MODULE_MANIFEST.permissions.setupWrite)) {
+      return sendForbidden(reply);
+    }
+    try {
+      const result = await teacherUseCases.migrateTeachersMissingEmployeeIds();
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to migrate teacher employee ids');
+    }
   });
 }

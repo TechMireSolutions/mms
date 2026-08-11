@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { RegistryDateField } from "@/components/ui/RegistryDateField";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input as UiInput } from "@/components/ui/input";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
@@ -65,7 +66,7 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
 
       {additionalFields.length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest ps-1">{t("users.addAdditionalDetails")}</h4>
+          <SectionLabel as="h4" className="ps-1">{t("users.addAdditionalDetails")}</SectionLabel>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {additionalFields.map((field) => {
               const value = form[field.id] ?? "";

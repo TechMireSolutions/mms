@@ -6,6 +6,7 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -41,7 +42,7 @@ export function CashFlowStatementPanel({
     <section aria-label={t('accounting.reports.views.cashflow')} className="space-y-4">
       <div className={WORK_SURFACE}>
         <header className="px-4 py-2.5 bg-info/10/60 border-b border-border">
-          <h3 className="text-xs font-bold uppercase tracking-wide m-0">{t('accounting.reports.cashflow.title')}</h3>
+          <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{t('accounting.reports.cashflow.title')}</SectionLabel>
         </header>
         <div className="space-y-3 p-3 md:hidden">
           <article className="rounded-xl border border-border bg-muted/10 p-3">

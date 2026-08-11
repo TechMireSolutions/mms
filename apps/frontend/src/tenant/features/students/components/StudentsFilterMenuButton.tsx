@@ -16,7 +16,7 @@ import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 
-export interface StudentsFilterMenuButtonProps {
+interface StudentsFilterMenuButtonProps {
   studentFilterStatus: string[];
   studentFilterGender: string;
   quickFilter: StudentsQuickFilter;

@@ -1,11 +1,9 @@
 import {
   TEACHERS_MODULE_MANIFEST,
-  type Teacher,
   type TeacherRecord,
   type TeachersListPageResult,
   type TeachersListQuery,
 } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
 import {
   TEACHERS_API,
   TEACHERS_QUERY_KEY,
@@ -26,6 +24,8 @@ export function buildTeachersPageUrl(params: TeachersPaginatedParams): string {
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.status?.trim()) queryParams.set('status', params.status.trim());
   if (params.specialization?.trim()) queryParams.set('specialization', params.specialization.trim());
+  if (params.gender?.trim()) queryParams.set('gender', params.gender.trim());
+  if (params.quickFilter && params.quickFilter !== 'all') queryParams.set('quickFilter', params.quickFilter);
   if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
   if (params.sortDir?.trim()) queryParams.set('sortDir', params.sortDir.trim());
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
@@ -39,6 +39,8 @@ export function teachersListQueryKeyParams(params: TeachersPaginatedParams) {
     search: params.search?.trim() || '',
     status: params.status?.trim() || '',
     specialization: params.specialization?.trim() || '',
+    gender: params.gender?.trim() || '',
+    quickFilter: params.quickFilter && params.quickFilter !== 'all' ? params.quickFilter : 'all',
     sortField: params.sortField?.trim() || '',
     sortDir: params.sortDir?.trim() || '',
     includeDeleted: Boolean(params.includeDeleted),
@@ -59,17 +61,11 @@ export function sameTeachersListFilters(
     previous.search === next.search &&
     previous.status === next.status &&
     previous.specialization === next.specialization &&
+    previous.gender === next.gender &&
+    previous.quickFilter === next.quickFilter &&
     previous.includeDeleted === next.includeDeleted &&
     previous.sortField === next.sortField &&
     previous.sortDir === next.sortDir &&
     previous.limit === next.limit
   );
-}
-
-/** Single teacher by id — server hydrate + sanitize (Work detail drawer). */
-export async function fetchTeacherById(teacherId: string, signal?: AbortSignal): Promise<Teacher> {
-  const teacherResponse = await apiJson<{ teacher: Teacher }>(`${TEACHERS_API}/${teacherId}`, {
-    signal,
-  });
-  return teacherResponse.teacher;
 }

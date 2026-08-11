@@ -3,7 +3,7 @@ import { canViewContactField, canViewContactTab } from './contactFieldAccess.js'
 import type { Student } from './studentTypes.js';
 import type { StudentsSettings } from './studentsModuleSettings.js';
 
-export interface StudentsFieldConfigSnapshot {
+interface StudentsFieldConfigSnapshot {
   fields: Record<string, FieldDefinition[]>;
   tabs: TabDefinition[];
 }

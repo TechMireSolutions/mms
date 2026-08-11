@@ -109,10 +109,7 @@ export function renderContactPhoneCell({
                 {formattedNumber}
               </span>
             </div>
-            <div
-              className="flex items-center gap-1"
-              onClick={(event) => event.stopPropagation()}
-            >
+            <div className="flex items-center gap-1">
               {onWhatsApp && hasWa ? (
                 <EntityMessagingIconActions
                   primaryPhone={primaryPhone}

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { formatNumber } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAccent, type AccentColor } from "@/components/ui/statCardAccent";
@@ -134,9 +135,9 @@ export function StatCard({
             </div>
           )}
           <div className="min-w-0">
-            <span className="block text-xs font-black text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
+            <SectionLabel className="block leading-none mb-1.5">
               {label}
-            </span>
+            </SectionLabel>
             <p className="text-lg font-black text-foreground leading-none tracking-tight tabular-nums">
               {formattedValue}
             </p>

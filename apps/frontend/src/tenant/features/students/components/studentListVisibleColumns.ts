@@ -6,7 +6,7 @@ import {
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 
 /** Sortable Work columns that map to the Students list API allowlist. */
-export const STUDENT_LIST_SORTABLE_FIELDS = new Set<StudentListSortField>([
+const STUDENT_LIST_SORTABLE_FIELDS = new Set<StudentListSortField>([
   "name",
   "grNumber",
   "status",

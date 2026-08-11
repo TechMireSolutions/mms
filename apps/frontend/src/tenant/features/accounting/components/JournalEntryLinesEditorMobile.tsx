@@ -2,10 +2,12 @@ import { Trash2 } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ACCOUNT_TYPE_META, type Account } from '@/lib/data/accountingData';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { FORM_LABEL, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
 
@@ -63,9 +65,9 @@ export function JournalEntryLinesEditorMobile({
                 options={accountOptions}
               />
               {account && (
-                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[account.type]?.color}`}>
+                <Badge pill variant="outline" className={`mt-0.5 px-1.5 font-bold ${ACCOUNT_TYPE_META[account.type]?.color}`}>
                   {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
-                </span>
+                </Badge>
               )}
               <FieldErrorMessage message={errors[`line${lineIndex}`]} className="m-0" />
             </div>
@@ -112,16 +114,18 @@ export function JournalEntryLinesEditorMobile({
       })}
       <article className="rounded-xl border border-border bg-muted/30 p-3">
         <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.journal.form.totals")}</p>
-        <dl className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.debit")}</dt>
-            <dd className="font-mono font-bold text-info m-0">{formatCurrency(totalDebit)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.credit")}</dt>
-            <dd className="font-mono font-bold text-success m-0">{formatCurrency(totalCredit)}</dd>
-          </div>
-        </dl>
+        <StatGrid>
+          <StatRow
+            label={t("accounting.ledger.columns.debit")}
+            value={formatCurrency(totalDebit)}
+            ddClassName="font-mono font-bold text-info"
+          />
+          <StatRow
+            label={t("accounting.ledger.columns.credit")}
+            value={formatCurrency(totalCredit)}
+            ddClassName="font-mono font-bold text-success"
+          />
+        </StatGrid>
       </article>
     </div>
   );

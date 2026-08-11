@@ -7,7 +7,7 @@ import {
   syncContactScalarFields,
   type Contact,
 } from '@mms/shared';
-import { loadContactLookupKind } from '../../services/contactLookupsService.js';
+import { loadContactLookupKind } from '../../lib/contactLookupsService.js';
 import { loadContactRuntimeDefaults } from './contactLoadUseCases.js';
 
 export function stripClientSoftDeleteFields(contact: Contact): Contact {

@@ -10,25 +10,24 @@ export {
   useStudentsPaginated,
   fetchAllStudentsForQuery,
   useStudentMutations,
-  useStudentById,
   useStudentsByIds,
-  useStudentLinkedContactIds,
   useStudentsMetrics,
   useStudentsWidgetAggregates,
   type StudentRecord,
 } from '@/tenant/features/students/hooks/useStudents';
 export {
-  STUDENTS_LOOKUPS_QUERY_KEY,
   useStudentLookupsQuery,
-  useStudentLookupMutation,
 } from '@/tenant/features/students/hooks/useStudentLookups';
 export {
   STUDENTS_FIELD_CONFIG_QUERY_KEY,
   STUDENTS_PREFERENCES_QUERY_KEY,
-  useStudentFieldConfigQuery,
   useStudentFieldConfigMutation,
-  useStudentPreferencesQuery,
   useStudentPreferencesMutation,
   useComposedStudentsSettings,
 } from '@/tenant/features/students/hooks/useStudentSetupConfig';
+export {
+  setStudentFieldConfigMemory,
+  setStudentPreferencesMemory,
+} from '@/tenant/features/students/hooks/studentSetupConfigApi';
 export { applyStudentsWorkDrillDown } from '@/tenant/features/students/hooks/studentsWorkDrillDown';
+export { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';

@@ -6,8 +6,6 @@ import {
   collectStudentWriteExtraFieldKeys,
 } from './studentValidation.js';
 
-export { STUDENT_WRITE_SYSTEM_KEYS, collectStudentWriteExtraFieldKeys };
-
 const STUDENT_WRITE_SYSTEM_KEY_SET = new Set<string>(STUDENT_WRITE_SYSTEM_KEYS);
 
 const studentWriteBaseObjectSchema = z

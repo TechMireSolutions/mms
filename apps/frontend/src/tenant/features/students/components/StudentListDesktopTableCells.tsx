@@ -17,7 +17,7 @@ import type {
   StudentListTableProps,
 } from "@/tenant/features/students/components/StudentListContentTypes";
 
-export type RenderStudentListDesktopTableCellOptions = {
+type RenderStudentListDesktopTableCellOptions = {
   studentRow: Student;
   col: ModuleColumnRegistryEntry;
   studentIdStr: string;
@@ -101,10 +101,10 @@ export function renderStudentListDesktopTableCell({
         <span className="text-sm text-muted-foreground">{emptyDash}</span>
       );
     case "gender":
-      return (
-        <p className="text-sm text-foreground">
-          {studentRow.gender ? formatContactGenderLabel(studentRow.gender, t) : emptyDash}
-        </p>
+      return studentRow.gender ? (
+        <p className="text-sm text-foreground">{formatContactGenderLabel(studentRow.gender, t)}</p>
+      ) : (
+        <span className="text-sm text-muted-foreground/40">{emptyDash}</span>
       );
     case "phone": {
       const phone = studentRow.phone?.trim() || null;
@@ -113,9 +113,11 @@ export function renderStudentListDesktopTableCell({
         <div className="flex flex-col items-start gap-1 group/phone">
           {phone ? (
             <>
-              <span className="max-w-full truncate text-sm font-mono text-foreground font-medium tracking-wide" title={phone}>
-                {phone}
-              </span>
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
+                <span className="max-w-full truncate text-sm font-mono text-foreground font-medium tracking-wide" title={phone}>
+                  {phone}
+                </span>
+              </div>
               <div
                 className="flex items-center gap-1"
                 onClick={(event) => event.stopPropagation()}
@@ -166,7 +168,7 @@ export function renderStudentListDesktopTableCell({
         t,
         statusBadgeConfig,
         sessionNames,
-        emptyFallback: <span className="text-sm text-muted-foreground">{emptyDash}</span>,
+        emptyFallback: <span className="text-sm text-muted-foreground/40">{emptyDash}</span>,
       });
   }
 }

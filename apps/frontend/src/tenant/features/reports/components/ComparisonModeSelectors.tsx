@@ -1,6 +1,7 @@
 import React from "react";
 import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { DateRange } from "./comparisonModeTypes";
 
@@ -41,9 +42,9 @@ export function ComparisonModeSelectors({
           { label: "B", value: valB, setValue: setValB, color: "text-warning" },
         ].map(({ label, value, setValue, color }) => (
           <div key={label} className="flex flex-col gap-1">
-            <label className={`text-xs font-bold uppercase tracking-wide ${color}`}>
+            <SectionLabel as="label" weight="bold" tracking="wide" toneClassName={color}>
               {isContacts ? t("reports.comparison.stage") : t("reports.comparison.session")} {label}
-            </label>
+            </SectionLabel>
             <FormSelect
               value={value}
               onChange={(newValue) => setValue(newValue)}
@@ -63,7 +64,7 @@ export function ComparisonModeSelectors({
         { label: t("reports.comparison.rangeB"), range: rangeB, setRange: setRangeB, color: "text-warning", idPrefix: "compare-range-b" },
       ].map(({ label, range, setRange, color, idPrefix }) => (
         <div key={label} className="space-y-2">
-          <p className={`text-xs font-bold uppercase tracking-wide ${color}`}>{label}</p>
+          <SectionLabel as="p" weight="bold" tracking="wide" toneClassName={color}>{label}</SectionLabel>
           <DateRangeFilterBar
             idPrefix={idPrefix}
             dateFrom={range.from}

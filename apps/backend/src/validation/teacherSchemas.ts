@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import {
   teacherCoreSchema,
   teacherRecordSchema,
@@ -22,6 +23,12 @@ export {
   teachersNextEmployeeIdQuerySchema,
   type TeacherRecord,
 };
+
+export const teachersDuplicateCheckBodySchema = z.object({
+  excludeId: z.string().optional(),
+  contactId: z.union([z.string(), z.number()]).optional(),
+  employeeId: z.string().max(64).optional(),
+});
 
 export const teachersBulkIdsSchema = bulkIdsBodySchema;
 

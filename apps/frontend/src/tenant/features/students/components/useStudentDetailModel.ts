@@ -171,7 +171,6 @@ export function useStudentDetailModel(student: Student) {
     t,
     statusBadgeConfig,
     sortedEnabledFields,
-    studentContact,
     relationshipLinks: hydratedLinks,
     age,
     enrolledSessionDetails,

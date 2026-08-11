@@ -16,7 +16,7 @@ vi.mock('../lib/tenantContext.js', () => ({
 
 const mockBroadcastCollection = vi.fn();
 
-vi.mock('../services/websocketService.js', () => ({
+vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
 }));
 
@@ -24,7 +24,7 @@ import {
   loadContactLookupKind,
   loadContactLookupsMap,
   replaceContactLookupKind,
-} from '../services/contactLookupsService.js';
+} from '../lib/contactLookupsService.js';
 
 describe('contactLookupsService', () => {
   beforeEach(() => {

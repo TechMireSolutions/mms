@@ -7,7 +7,7 @@ import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/Con
 import { ContactsPageOverlays } from "@/tenant/features/contacts/components/ContactsPageOverlays";
 import { ContactsPageTabPanel } from "@/tenant/features/contacts/components/ContactsPageTabPanel";
 import { ContactsPageHeaderActions } from "@/tenant/features/contacts/components/ContactsPageHeaderActions";
-import type { useContactsPageView } from "@/tenant/features/contacts/hooks/useContactsPageView";
+import type { useContactsPageView } from "@/tenant/features/contacts/hooks/useContactsPageController";
 
 type ContactsPageViewProps = ReturnType<typeof useContactsPageView>;
 

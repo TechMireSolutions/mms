@@ -4,9 +4,9 @@ import {
 } from './moduleFieldSetupPersons.js';
 import type { ColumnRegistryEntry } from './contactTypes.js';
 
-export type StudentFieldDependencyArea = 'systemField' | 'column';
+type StudentFieldDependencyArea = 'systemField' | 'column';
 
-export interface StudentFieldDependencyIssue {
+interface StudentFieldDependencyIssue {
   area: StudentFieldDependencyArea;
   /** i18n key — FE passes to t() with optional { count }. */
   messageKey: string;
@@ -28,11 +28,11 @@ function columnKeysForField(fieldKey: string): string[] {
   return [...keys];
 }
 
-export function isStudentSeedFieldKey(fieldKey: string): boolean {
+function isStudentSeedFieldKey(fieldKey: string): boolean {
   return SEED_FIELD_KEYS.has(fieldKey);
 }
 
-export interface StudentFieldDependencyInput {
+interface StudentFieldDependencyInput {
   fieldKey: string;
   columnRegistry: ColumnRegistryEntry[];
 }

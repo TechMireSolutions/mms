@@ -16,12 +16,12 @@ interface ListStudentsOptions {
 }
 
 /** GR sequence count + conflict probe inputs mirror the typed Drizzle queries. */
-export interface StudentGrSequenceInput {
+interface StudentGrSequenceInput {
   regDate: string;
   restartAnnually: boolean;
 }
 
-export interface StudentRegistrationConflictInput {
+interface StudentRegistrationConflictInput {
   excludeId?: string;
   contactId?: string | number;
   email?: string;
@@ -30,7 +30,7 @@ export interface StudentRegistrationConflictInput {
   grNumber?: string;
 }
 
-export type StudentRegistrationConflictReason =
+type StudentRegistrationConflictReason =
   | 'contact'
   | 'email'
   | 'nameDob'

@@ -4,6 +4,7 @@ import { formatDate } from "@mms/shared";
 import type { Invoice } from "@/lib/data/financeData";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -65,28 +67,33 @@ export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps):
                   </div>
                   <StatusBadge status={invoice.status} config={statusConfig} />
                 </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.report.classColumn")}</dt>
-                    <dd className="text-foreground">{invoice.class}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.dueDate")}</dt>
-                    <dd className="text-muted-foreground">{formatDate(invoice.dueDate)}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.baseFee")}</dt>
-                    <dd className="text-muted-foreground">{formatCurrency(invoice.baseFee)}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.discount")}</dt>
-                    <dd className="text-warning">{invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}</dd>
-                  </div>
-                  <div className="col-span-2">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.final")}</dt>
-                    <dd className="text-base font-semibold text-foreground">{formatCurrency(invoice.finalAmt)}</dd>
-                  </div>
-                </dl>
+                <StatGrid>
+                  <StatRow className="min-w-0" label={t("finance.report.classColumn")} value={invoice.class} />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("finance.columns.dueDate")}
+                    value={formatDate(invoice.dueDate)}
+                    ddClassName="text-muted-foreground"
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("finance.columns.baseFee")}
+                    value={formatCurrency(invoice.baseFee)}
+                    ddClassName="text-muted-foreground"
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("finance.columns.discount")}
+                    value={invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}
+                    ddClassName="text-warning"
+                  />
+                  <StatRow
+                    fullWidth
+                    label={t("finance.columns.final")}
+                    value={formatCurrency(invoice.finalAmt)}
+                    ddClassName="text-base font-semibold"
+                  />
+                </StatGrid>
               </article>
             ))}
           </div>
@@ -133,9 +140,9 @@ export function FinancialDashboardWidgets(): React.JSX.Element {
     <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-start">
       <div>
         <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("finance.report.dashboardWidgetsTitle")}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">
+        <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5">
           {t("finance.report.dashboardWidgetsSubtitle")}
-        </p>
+        </SectionLabel>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RevenueChart />

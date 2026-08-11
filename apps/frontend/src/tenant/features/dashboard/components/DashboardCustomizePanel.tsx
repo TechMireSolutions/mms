@@ -6,6 +6,7 @@ import {
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 import type { StatItem } from '@/tenant/features/dashboard/components/StatisticsGrid';
 import type { Permission } from '@mms/shared';
@@ -76,9 +77,9 @@ export default function DashboardCustomizePanel({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-start">
         <div className={`${WORK_SURFACE} p-6`}>
           <fieldset className="space-y-4 border-0 p-0 m-0">
-            <legend className="text-xs font-black text-primary uppercase tracking-widest leading-none mb-1">
+            <SectionLabel as="legend" tone="primary" className="leading-none mb-1">
               {t('dashboard.metricCardsSettings')}
-            </legend>
+            </SectionLabel>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{t('dashboard.metricCardsSettingsDesc')}</p>
 
             <div className="text-xs border-b border-border/45 pb-3">

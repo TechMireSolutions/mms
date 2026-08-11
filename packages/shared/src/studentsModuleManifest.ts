@@ -2,7 +2,7 @@ import type { Permission } from './permissions.js';
 import { z } from 'zod';
 import { normalizeStoredStudent, stripStudentClientSoftDeleteFields } from './studentUtils.js';
 
-export const studentCoreSchema = z.object({
+const studentCoreSchema = z.object({
   id: z.union([z.string(), z.number()]).optional(),
   contactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
   fatherContactId: z.union([z.string(), z.number()]).nullish().transform(v => v === null ? undefined : v),
@@ -84,5 +84,3 @@ export const STUDENTS_MODULE_MANIFEST = {
   defaultPageSize: 50,
   maxPageSize: 500,
 } as const;
-
-export type StudentsModuleTier = (typeof STUDENTS_MODULE_MANIFEST.tiers)[number];

@@ -23,7 +23,7 @@ vi.mock('../services/customTabsService.js', () => ({
   loadCustomTabs: (...args: unknown[]) => mockLoadCustomTabs(...args),
 }));
 
-vi.mock('../services/contactLookupsService.js', () => ({
+vi.mock('../lib/contactLookupsService.js', () => ({
   loadContactLookupKind: (...args: unknown[]) => mockLoadLookupKind(...args),
   replaceContactLookupKind: (...args: unknown[]) => mockReplaceLookupKind(...args),
 }));
@@ -35,11 +35,11 @@ vi.mock('../lib/tenantContext.js', () => ({
 import {
   loadContactFieldConfig,
   saveContactFieldConfig,
-} from '../services/contactConfigService.js';
+} from '../lib/contactConfigService.js';
 import {
   loadContactPreferences,
   saveContactPreferences,
-} from '../services/contactPreferencesService.js';
+} from '../lib/contactPreferencesService.js';
 
 describe('contact setup config services', () => {
   beforeEach(() => {

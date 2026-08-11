@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { isUniqueViolation } from '../lib/pgErrors.js';
 import {
-  isUniqueViolation,
+  mergeStudentPatch,
   prepareStudentRecord,
   resolveStudentRowId,
   throwGrUniqueConflict,
@@ -97,6 +98,32 @@ describe('studentNormalizeUseCases', () => {
       } as never);
       expect(parsed).not.toHaveProperty('fatherContactId');
       expect(parsed).not.toHaveProperty('guardianName');
+    });
+  });
+
+  describe('mergeStudentPatch', () => {
+    it('merges patch keys onto the existing row', () => {
+      const merged = mergeStudentPatch(
+        { id: 's1', name: 'Aisha', status: 'active' },
+        { status: 'graduated', grNumber: 'GR-9' },
+      );
+      expect(merged).toEqual({ id: 's1', name: 'Aisha', status: 'graduated', grNumber: 'GR-9' });
+    });
+
+    it('ignores undefined patch keys so omitted optional fields survive', () => {
+      const merged = mergeStudentPatch(
+        { id: 's1', name: 'Aisha', city: 'Karachi' },
+        { name: 'Aisha B', city: undefined, notes: undefined },
+      );
+      expect(merged).toEqual({ id: 's1', name: 'Aisha B', city: 'Karachi' });
+    });
+
+    it('overwrites with explicit null values', () => {
+      const merged = mergeStudentPatch(
+        { id: 's1', guardianName: 'Imran', city: 'Karachi' },
+        { guardianName: null, city: 'Lahore' },
+      );
+      expect(merged).toEqual({ id: 's1', guardianName: null, city: 'Lahore' });
     });
   });
 });

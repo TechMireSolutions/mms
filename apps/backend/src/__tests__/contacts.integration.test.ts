@@ -38,8 +38,6 @@ const mockRestoreContactById = vi.fn();
 const mockBulkSoftDeleteContacts = vi.fn();
 const mockBulkRestoreContacts = vi.fn();
 const mockMergeContactsById = vi.fn();
-const mockGetUserColumnPreferences = vi.fn();
-const mockSetUserColumnPreferences = vi.fn();
 const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();
 const mockListContactsSavedReports = vi.fn();
@@ -99,8 +97,6 @@ const mockLoadContactPreferences = vi.fn();
 const mockSaveContactPreferences = vi.fn();
 
 vi.mock('../services/contactPreferencesService.js', () => ({
-  getUserColumnPreferences: (...args: unknown[]) => mockGetUserColumnPreferences(...args),
-  setUserColumnPreferences: (...args: unknown[]) => mockSetUserColumnPreferences(...args),
   loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
   saveContactPreferences: (...args: unknown[]) => mockSaveContactPreferences(...args),
 }));
@@ -207,8 +203,6 @@ describe('contacts REST routes', () => {
       id: 'c1',
       name: 'Merged Person',
     });
-    mockGetUserColumnPreferences.mockReset().mockResolvedValue([]);
-    mockSetUserColumnPreferences.mockReset().mockResolvedValue(undefined);
     mockListContactsSavedReports.mockReset().mockResolvedValue([]);
     mockCreateContactsSavedReport.mockReset().mockResolvedValue({
       id: 'csr_test',
@@ -766,7 +760,7 @@ describe('contacts REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreContactById).toHaveBeenCalledWith('c1', 'u-admin');
+    expect(mockRestoreContactById).toHaveBeenCalledWith('c1');
     expect(res.json()).toMatchObject({ success: true, contact: expect.objectContaining({ id: 'c1' }) });
     await app.close();
   });
@@ -783,7 +777,7 @@ describe('contacts REST routes', () => {
       payload: { ids: ['c1', 'c2'] },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockBulkRestoreContacts).toHaveBeenCalledWith(['c1', 'c2'], 'u-admin');
+    expect(mockBulkRestoreContacts).toHaveBeenCalledWith(['c1', 'c2']);
     expect(res.json()).toMatchObject({ success: true, succeeded: 1, failed: 0 });
     await app.close();
   });

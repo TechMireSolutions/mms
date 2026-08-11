@@ -57,11 +57,10 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 select-none">
           <Button
             onClick={() => setIsEditMode(!isEditMode)}
-            variant={isEditMode ? 'default' : 'outline'}
-            className={`flex min-h-11 items-center justify-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl cursor-pointer shadow-none ${
-              isEditMode
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 border-transparent hover:bg-primary/95'
-                : 'surface-glass text-muted-foreground hover:text-foreground hover:bg-muted/30 border-border/60'
+            variant={isEditMode ? "capsPrimary" : "capsOutline"}
+            size="caps"
+            className={`flex items-center justify-center px-4 py-2 transition-all duration-300 cursor-pointer ${
+              isEditMode ? "shadow-md shadow-primary/20" : ""
             }`}
           >
             <Settings className="w-4 h-4" />

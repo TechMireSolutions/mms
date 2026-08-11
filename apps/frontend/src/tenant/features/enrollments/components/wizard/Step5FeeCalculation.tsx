@@ -6,6 +6,7 @@ import { Session } from '@/lib/data/sessionsData';
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { Badge } from "@/components/ui/badge";
 
 interface Step5FeeCalculationProps {
   student: Student | null | undefined;
@@ -53,7 +54,7 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
               <Tag className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
               <span className="text-sm text-muted-foreground">{displayFee.label}</span>
               {displayFee.pct > 0 && (
-                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary" aria-label={t("enrollments.wizard.step5DiscountPercentAria", { pct: displayFee.pct })}>–{displayFee.pct}%</span>
+                <Badge pill tone="primary" className="px-1.5 font-bold" aria-label={t("enrollments.wizard.step5DiscountPercentAria", { pct: displayFee.pct })}>–{displayFee.pct}%</Badge>
               )}
             </div>
             <span className={`text-sm font-semibold ${displayFee.discountAmt > 0 ? "text-success" : "text-muted-foreground"}`}>

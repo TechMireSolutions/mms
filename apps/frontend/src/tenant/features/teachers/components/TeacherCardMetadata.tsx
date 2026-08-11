@@ -36,7 +36,6 @@ export function TeacherCardMetadata({
           t,
           statusConfig,
           customFieldsById,
-          statusBadgeSize: "sm",
           emptyFallback: null,
         })
       }

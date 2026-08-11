@@ -3,6 +3,8 @@ import { Layers, Users, CheckCircle2 } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { Student } from '@/lib/data/studentsData';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -113,8 +115,8 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="text-sm font-bold text-foreground">{sessionClass.name}</p>
-                      {isSuggested && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{t("enrollments.wizard.step4Recommended")}</span>}
-                      {full && <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-destructive/15 text-destructive">{t("enrollment.session.full")}</span>}
+                      {isSuggested && <Badge pill tone="primary" className="px-1.5 font-bold">{t("enrollments.wizard.step4Recommended")}</Badge>}
+                      {full && <Badge pill tone="destructive" className="px-1.5 font-bold bg-destructive/15">{t("enrollment.session.full")}</Badge>}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                       <span>{t("enrollments.wizard.step4AgeRange", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</span>
@@ -129,12 +131,13 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                     <Users className="w-3.5 h-3.5" />
                     <span>{sessionClass.enrolled}/{sessionClass.capacity}</span>
                   </div>
-                  <div className="h-1.5 w-20 rounded-full bg-muted mt-1 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${spotsLeft <= 3 ? "bg-destructive" : spotsLeft <= 7 ? "bg-warning" : "bg-success"}`}
-                      style={{ width: `${(sessionClass.enrolled / sessionClass.capacity) * 100}%` }}
-                    />
-                  </div>
+                  <ProgressBar
+                    className="mt-1"
+                    value={(sessionClass.enrolled / sessionClass.capacity) * 100}
+                    fillClassName={spotsLeft <= 3 ? "bg-destructive" : spotsLeft <= 7 ? "bg-warning" : "bg-success"}
+                    trackClassName="w-20 flex-none"
+                    aria-hidden="true"
+                  />
                   <p className="text-xs text-muted-foreground mt-0.5">{t("enrollments.wizard.step4SpotsLeft", { count: spotsLeft })}</p>
                 </div>
               </div>

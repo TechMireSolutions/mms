@@ -15,8 +15,6 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
 import { cn } from "@/lib/utils";
 
-export type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
-
 interface ContactsTableProps {
   contacts: Contact[];
   selected: (number | string)[];

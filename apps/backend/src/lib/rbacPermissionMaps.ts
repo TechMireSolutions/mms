@@ -155,32 +155,9 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
 };
 
 export const ALLOWED_COLLECTIONS = new Set([
-  // contacts + students + teachers entity rows are REST-only (typed tables) — not document-store
-  USERS_MODULE_MANIFEST.collectionKey,
-  'user_activity_logs',
-  ATTENDANCE_MODULE_MANIFEST.collectionKey,
-  SESSIONS_MODULE_MANIFEST.collectionKey,
-  ENROLLMENTS_MODULE_MANIFEST.collectionKey,
-  FINANCE_MODULE_MANIFEST.collectionKey,
-  FINANCE_MODULE_MANIFEST.paymentCollectionKey,
-  OBLIGATIONS_MODULE_MANIFEST.collectionKey,
-  'obligation_types',
-  'mujtahids',
-  'mujtahid_reps',
-  'wakala_types',
-  'obligation_distributions',
-  ACCOUNTING_MODULE_MANIFEST.collectionKey,
-  ACCOUNTING_MODULE_MANIFEST.accountCollectionKey,
-  ACCOUNTING_MODULE_MANIFEST.fiscalYearCollectionKey,
-  HASANAT_MODULE_MANIFEST.collectionKey,
-  HASANAT_MODULE_MANIFEST.batchCollectionKey,
-  HASANAT_MODULE_MANIFEST.denomCollectionKey,
-  HASANAT_MODULE_MANIFEST.redemptionCollectionKey,
-  EXAMINATIONS_MODULE_MANIFEST.collectionKey,
-  EXAMINATIONS_MODULE_MANIFEST.resultsCollectionKey,
-  QUESTION_BANK_MODULE_MANIFEST.collectionKey,
-  QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey,
-  QUESTION_BANK_MODULE_MANIFEST.resultsCollectionKey,
+  // contacts/students/teachers/sessions/enrollments/users/user_activity_logs and all legacy
+  // entity rows (attendance, finance, obligations, accounting, hasanat, examinations,
+  // question-bank) are REST-only (typed tables) — not document-store
   'currencies',
   'sessionStatuses',
   'sessionTypes',

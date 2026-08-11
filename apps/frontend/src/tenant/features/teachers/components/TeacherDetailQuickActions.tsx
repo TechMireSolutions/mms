@@ -10,6 +10,8 @@ interface TeacherDetailQuickActionsProps {
   displayName: string;
   primaryPhone: string | null | undefined;
   primaryEmail: string | null | undefined;
+  /** Whether the primary phone resolves to a WhatsApp number (PuppeteerWhatsAppProvider). */
+  hasWhatsAppContact?: boolean;
   canWriteMessaging: boolean;
   onOpenComposer: (channel: MessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
@@ -19,6 +21,7 @@ export function TeacherDetailQuickActions({
   displayName,
   primaryPhone,
   primaryEmail,
+  hasWhatsAppContact,
   canWriteMessaging,
   onOpenComposer,
 }: TeacherDetailQuickActionsProps): React.JSX.Element | null {
@@ -30,10 +33,14 @@ export function TeacherDetailQuickActions({
       primaryPhone={primaryPhone}
       primaryEmail={primaryEmail}
       labels={labels}
-      callAriaLabel={labels.call}
+      callAriaLabel={
+        primaryPhone
+          ? t("teachers.detail.callPhone", { phone: primaryPhone })
+          : undefined
+      }
       messagingEnabled={canWriteMessaging}
       onWhatsApp={
-        primaryPhone && canWriteMessaging
+        primaryPhone && hasWhatsAppContact && canWriteMessaging
           ? () =>
               onOpenComposer("whatsapp", [
                 toMessagingRecipient({ ...teacher, phone: primaryPhone, name: displayName }),

@@ -8,14 +8,12 @@ import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
 import {
-  columnWidthStyle,
   type ContactsColumnConfig,
 } from "@/tenant/features/contacts/components/contactTableTypes";
 import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig };
-export { columnWidthStyle };
 
 interface ContactTableRowProps {
   contact: Contact;

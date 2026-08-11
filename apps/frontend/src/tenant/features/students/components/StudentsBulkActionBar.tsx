@@ -10,7 +10,7 @@ import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
 
-export interface StudentsBulkActionBarProps {
+interface StudentsBulkActionBarProps {
   selectedCount: number;
   viewingDeleted: boolean;
   canWrite: boolean;

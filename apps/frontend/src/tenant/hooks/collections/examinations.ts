@@ -10,3 +10,4 @@ export {
   useExaminationsMetrics,
   useExaminationsMutations,
 } from "@/tenant/features/examinations/hooks/useExaminationsApi";
+export { invalidateExaminationsQueries } from '@/tenant/features/examinations/hooks/invalidateExaminationsQueries';

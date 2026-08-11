@@ -3,6 +3,7 @@ import { AlertTriangle, GitMerge, Loader2 } from "lucide-react";
 import { mergeContacts, getDisplayName } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
+import { Badge } from "@/components/ui/badge";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -104,11 +105,9 @@ export function MergePreview({
                     {mergedValue || emptyDash}
                   </span>
                   {fromOther && (
-                    <span
-                      className={`text-xs ${colors.highlightBg} px-1.5 py-0.5 rounded-full font-medium`}
-                    >
+                    <Badge pill variant="outline" className={`px-1.5 font-medium ${colors.highlightBg}`}>
                       {t("contacts.duplicates.fromDuplicate")}
-                    </span>
+                    </Badge>
                   )}
                 </div>
               );

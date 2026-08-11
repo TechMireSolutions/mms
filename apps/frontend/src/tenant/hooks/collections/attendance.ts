@@ -13,3 +13,4 @@ export {
   useAttendanceMutations,
   useAttendanceMetrics,
 } from '@/tenant/features/attendance/hooks/useAttendance';
+export { invalidateAttendanceQueries } from '@/tenant/features/attendance/hooks/invalidateAttendanceQueries';

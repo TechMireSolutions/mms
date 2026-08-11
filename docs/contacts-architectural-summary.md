@@ -72,7 +72,7 @@ Server state is centralized in TanStack Query factories; components do not issue
 
 ```mermaid
 graph TD
-    CONTACTS_PAGE[ContactsPage] --> CONTROLLER[useContactsPageController]
+    CONTACTS_PAGE[ContactsPage] --> CONTROLLER[useContactsPageView]
     CONTROLLER --> DIRECTORY[useContactsDirectory]
     CONTROLLER --> MUTATIONS[createModuleCrudMutations]
     CONTROLLER --> CONFIG[ContactConfigProvider]
@@ -86,7 +86,7 @@ Key points:
 
 - Query factories: `createModuleCrudMutations`, `createModuleQueryInvalidator`, `createModuleSetupConfigApi`, `createPersonModuleResolveQueries` — all keys derived from `CONTACTS_MODULE_MANIFEST`.
 - The last raw HTTP call in the feature (`useAppleContactsPanel`) now runs through `useContactMutations` (`matchContactIdentity`), a Query mutation.
-- `useContactsPageController.ts` composes directory, overlay, actions, messaging, and export slices into `tabPanelProps` / `overlayProps` — no repeated flatten→rebuild chains.
+- `useContactsPageController.ts` (exports `useContactsPageView`) composes directory, overlay, actions, messaging, and export slices into `tabPanelProps` / `overlayProps` — no repeated flatten→rebuild chains.
 - Atomic design, low to high:
   - **Atoms** — `StatusBadge`, `WarningCallout`, `BulkSelectionBar`, `FieldErrorMessage` (`FormPrimitives.tsx`), `ModuleCommandMetricsGrid`, `FormField`.
   - **Molecules** — search/filter bar, `FieldErrorMessage` + input groupings.
@@ -117,7 +117,7 @@ These are accepted, documented decisions:
 2. **Stable shim layer.** `contactService.ts` remains for backward compatibility. It costs an indirection; new code should import `contactUseCases` directly.
 3. **SQL/JS key-normalization coupling.** The blocking query must stay in sync with `getContactDuplicateCandidateKeys`. This is mitigated by reusing `buildNamePrefixRegex` and the shared key builders (`getPhoneNumbers` / `getEmails`); the shared pair-finder remains the semantic authority.
 4. **No single global frontend store.** Server state is Query-first plus the module-config context; purely local ephemeral UI state still lives in component state. This avoids a bespoke global store while keeping all server data in one cache.
-5. **JS→SQL semantic parity via deletion.** The pre-SQL JS reference implementations (command metrics, report analytics, widget aggregates) were deleted, removing the only JS-level executable spec of those aggregate semantics. Accepted because the SQL repos are the production truth and `contacts.integration.test.ts` exercises `/metrics`, `/report-analytics`, and `/widget-aggregates` against the real DB. The shared query-shape types (`ContactsWidgetQuery`, `ContactsListQuery`, `ContactsListPageResult`) and the report-field predicate (`isContactsReportFieldId`) remain the FE/BE shape SSOT.
+5. **JS→SQL semantic parity via deletion.** The pre-SQL JS reference implementations (command metrics, report analytics, widget aggregates) were deleted, removing the only JS-level executable spec of those aggregate semantics. Accepted because the SQL repos are the production truth and are exercised by direct repository-level tests (`contactRepositoryMetrics.test.ts`, `contactRepositoryWidgets.test.ts`) against mocked tenant transactions, plus `contacts.integration.test.ts` covers the `/metrics`, `/report-analytics`, and `/widget-aggregates` route wiring (with the use-case layer mocked). The shared query-shape types (`ContactsWidgetQuery`, `ContactsListQuery`, `ContactsListPageResult`) and the report-field predicate (`isContactsReportFieldId`) remain the FE/BE shape SSOT.
 
 ## 8. Acceptance-Criteria Mapping
 

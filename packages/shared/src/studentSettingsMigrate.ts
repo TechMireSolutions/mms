@@ -11,7 +11,7 @@ import {
   refreshModuleTierTabLabels,
 } from './moduleTierTabs.js';
 
-export const OBSOLETE_STUDENT_SETUP_TABS = new Set(['guardian', 'academic']);
+const OBSOLETE_STUDENT_SETUP_TABS = new Set(['guardian', 'academic']);
 export const OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS = new Set([
   'fatherLink',
   'motherLink',
@@ -55,7 +55,7 @@ function mergeFieldLists(
 }
 
 /** Collapse guardian → basic and academic → registration (Setup Fields v3). */
-export function migrateStudentSetupFieldsToTwoTabs(
+function migrateStudentSetupFieldsToTwoTabs(
   fields: Record<string, FieldDefinition[]>,
 ): Record<string, FieldDefinition[]> {
   const next: Record<string, FieldDefinition[]> = { ...fields };
@@ -69,7 +69,7 @@ export function migrateStudentSetupFieldsToTwoTabs(
 }
 
 /** Replace father/mother/guardian triad with single contactRelationships field. */
-export function migrateStudentGuardianLinkFields(
+function migrateStudentGuardianLinkFields(
   fields: Record<string, FieldDefinition[]>,
 ): Record<string, FieldDefinition[]> {
   const next: Record<string, FieldDefinition[]> = {};
@@ -112,7 +112,7 @@ export function migrateStudentGuardianLinkFields(
   return next;
 }
 
-export function remapStudentEnabledTabs(tabs: string[] | undefined): string[] {
+function remapStudentEnabledTabs(tabs: string[] | undefined): string[] {
   const source = tabs ?? [];
   const out: string[] = [];
   let hadAcademic = false;
@@ -149,7 +149,7 @@ function rebuildStudentFormTabs(existing: TabDefinition[] | undefined): TabDefin
 }
 
 /** Inject missing INITIAL_STUDENT_FIELD_SEED keys without wiping customs. */
-export function ensureStudentSeedFields(
+function ensureStudentSeedFields(
   fields: Record<string, FieldDefinition[]>,
 ): Record<string, FieldDefinition[]> {
   const next: Record<string, FieldDefinition[]> = { ...fields };

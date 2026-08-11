@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
@@ -100,34 +101,41 @@ export function ObligationsRepDuesSection({
                     ))}
                   </div>
                 </div>
-                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.rep.colCollections")}</dt>
-                    <dd className="text-sm font-semibold text-foreground">{representativeSummary.count}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.rep.colTotalCollectedShort")}</dt>
-                    <dd className="font-mono font-bold text-foreground text-sm">{formatCurrency(representativeSummary.total)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-destructive">{t("obligations.summary.rep.colDueToRepShort")}</dt>
-                    <dd className="font-mono font-bold text-destructive text-sm">{formatCurrency(representativeSummary.due)}</dd>
-                  </div>
-                </dl>
+                <StatGrid columns="sm3">
+                  <StatRow
+                    label={t("obligations.summary.rep.colCollections")}
+                    value={representativeSummary.count}
+                    ddClassName="text-sm font-semibold"
+                  />
+                  <StatRow
+                    label={t("obligations.summary.rep.colTotalCollectedShort")}
+                    value={formatCurrency(representativeSummary.total)}
+                    ddClassName="font-mono font-bold text-sm"
+                  />
+                  <StatRow
+                    label={t("obligations.summary.rep.colDueToRepShort")}
+                    value={formatCurrency(representativeSummary.due)}
+                    dtClassName="text-destructive"
+                    ddClassName="font-mono font-bold text-destructive text-sm"
+                  />
+                </StatGrid>
               </article>
             ))}
             <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
               <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</p>
-              <dl className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.summary.rep.colTotalCollectedShort")}</dt>
-                  <dd className="font-mono font-bold text-foreground text-xs">{formatCurrency(totalAmount)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-destructive">{t("obligations.summary.rep.colDueToRepShort")}</dt>
-                  <dd className="font-mono font-bold text-destructive text-xs">{formatCurrency(totalDue)}</dd>
-                </div>
-              </dl>
+              <StatGrid>
+                <StatRow
+                  label={t("obligations.summary.rep.colTotalCollectedShort")}
+                  value={formatCurrency(totalAmount)}
+                  ddClassName="font-mono font-bold text-xs"
+                />
+                <StatRow
+                  label={t("obligations.summary.rep.colDueToRepShort")}
+                  value={formatCurrency(totalDue)}
+                  dtClassName="text-destructive"
+                  ddClassName="font-mono font-bold text-destructive text-xs"
+                />
+              </StatGrid>
             </article>
           </div>
           <div className="hidden md:block">

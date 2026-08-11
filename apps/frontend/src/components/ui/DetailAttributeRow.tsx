@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { FORM_LABEL, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 export type DetailAttributeRowVariant = "card" | "list" | "inset";
@@ -35,7 +35,7 @@ export function DetailAttributeRow({
           <Icon className={cn("h-4 w-4", iconClassName)} aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className={cn(FORM_LABEL, "mb-0")}>{label}</p>
           <div className="mt-0.5 text-sm font-medium text-foreground">{value}</div>
         </div>
       </div>
@@ -79,7 +79,7 @@ export function DetailAttributeRow({
         <Icon className={cn("h-4 w-4", iconClassName)} aria-hidden />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className={cn(FORM_LABEL, "mb-0")}>{label}</p>
         <div className="mt-0.5 text-sm font-semibold text-foreground">{value}</div>
       </div>
     </div>

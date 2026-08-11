@@ -4,6 +4,7 @@ import { Scale } from "lucide-react";
 import { formatMoney, formatDate } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import {
   OverdueUrgencyBadge,
@@ -66,15 +67,15 @@ export function OverdueObligationsWidgetMobileList({
                 {formatMoney(overdueStudent.amount, overdueStudent.currency || activeCurrencyCode)}
               </span>
             </div>
-            <dl className="grid grid-cols-1 gap-2 text-sm">
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("finance.columns.dueDate")}</dt>
-                <dd className="text-xs text-foreground font-semibold m-0 tabular-nums">{formatDate(overdueStudent.dueDate)}</dd>
-                <dd className="text-xs text-destructive font-bold mt-0.5 m-0 uppercase tracking-wide tabular-nums">
-                  {t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
-                </dd>
-              </div>
-            </dl>
+            <StatGrid columns="1">
+              <StatRow
+                label={t("finance.columns.dueDate")}
+                value={formatDate(overdueStudent.dueDate)}
+                ddClassName="text-xs font-semibold tabular-nums"
+                hint={t("dashboard.widgets.daysOverdue", { count: overdueStudent.daysOverdue })}
+                hintClassName="text-destructive font-bold uppercase tracking-wide tabular-nums"
+              />
+            </StatGrid>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
               <OverdueUrgencyBadge daysOverdue={overdueStudent.daysOverdue} t={t} />
               {canWriteMessaging && (
@@ -84,11 +85,6 @@ export function OverdueObligationsWidgetMobileList({
                   hasPhone={hasPhone}
                   onRemind={onRemind}
                   t={t}
-                  className={`flex items-center gap-1 px-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors min-h-11 shadow-none cursor-pointer ${
-                    reminded
-                      ? "bg-success/10 text-success border border-success/35 cursor-default hover:bg-success/10 hover:text-success"
-                      : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
-                  }`}
                 />
               )}
             </div>

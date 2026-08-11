@@ -1,22 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import {
-  normalizeStoredStudent,
-  stripStudentClientSoftDeleteFields,
-  type StudentRecord,
-  studentRecordSchema,
-} from '@mms/shared';
-
-/** Client-supplied soft-delete metadata must never reach storage. */
-export { normalizeStoredStudent, stripStudentClientSoftDeleteFields };
-
-/** Postgres unique-violation probe (GR number duplicates → HTTP 409). */
-export function isUniqueViolation(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-  const code = 'code' in error ? String((error as { code?: unknown }).code ?? '') : '';
-  if (code === '23505') return true;
-  const cause = 'cause' in error ? (error as { cause?: unknown }).cause : undefined;
-  return isUniqueViolation(cause);
-}
+import { type StudentRecord, studentRecordSchema } from '@mms/shared';
+import { isUniqueViolation } from '../../lib/pgErrors.js';
 
 /** Re-throws a unique violation as a 409 conflict (create/update GR duplicates). */
 export function throwGrUniqueConflict(error: unknown): never {
@@ -35,6 +19,21 @@ export function throwGrUniqueConflict(error: unknown): never {
 /** Resolves a stable row id for creates (matches the legacy `st-<uuid>` prefix). */
 export function resolveStudentRowId(id: unknown): string {
   return String(id ?? `st-${randomUUID()}`);
+}
+
+/**
+ * Merges a client patch onto an existing student row, ignoring undefined keys so
+ * omitted optional fields survive (Contacts partial-PUT parity).
+ */
+export function mergeStudentPatch(
+  existing: StudentRecord | Record<string, unknown>,
+  patch: StudentRecord | Record<string, unknown>,
+): StudentRecord | Record<string, unknown> {
+  const next: Record<string, unknown> = { ...existing };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value !== undefined) next[key] = value;
+  }
+  return next;
 }
 
 /**

@@ -32,4 +32,21 @@ describe('teacherRepositoryList Contacts SSOT', () => {
     expect(listOpsSrc).toContain('aggregateTeachersCommandMetrics');
     expect(listBarrelSrc).toContain('aggregateTeachersCommandMetrics');
   });
+
+  it('filters gender from the linked contact and supports quickFilter presets', () => {
+    expect(listQuerySrc).toContain('linkedContactGenderExpr');
+    expect(listQuerySrc).toMatch(/FROM contacts c/);
+    expect(listQuerySrc).toContain("c.custom_data->>'gender'");
+    expect(listQuerySrc).not.toMatch(/customData}->>'gender'/);
+    expect(listQuerySrc).toContain('missingEmployeeId');
+    expect(listQuerySrc).toContain('teacherStatusExpr()');
+    expect(listQuerySrc).toContain('teachersQuickFilterStatusValue');
+    expect(listQuerySrc).toContain('query.gender');
+  });
+
+  it('lists active teachers missing an employee id for backfill', () => {
+    expect(listQuerySrc).toContain('listActiveTeachersMissingEmployeeId');
+    expect(listQuerySrc).toMatch(/NULLIF\(trim\(COALESCE\(\$\{teachers\.customData\}->>'employeeId', ''\)\), ''\) IS NULL/);
+    expect(listBarrelSrc).toContain('listActiveTeachersMissingEmployeeId');
+  });
 });

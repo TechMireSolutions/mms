@@ -240,17 +240,6 @@ export async function listStudentsPage(
   });
 }
 
-export async function countStudentsActive(tenant: string): Promise<number> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
-    const rows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(students)
-      .where(and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt)));
-    return Number(rows[0]?.count ?? 0);
-  });
-}
-
 /** SQL aggregates for Students command-centre metrics (active rows only). */
 export async function aggregateStudentsCommandMetrics(
   tenant: string,

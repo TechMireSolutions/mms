@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Teacher, TeacherSortField } from '@mms/shared';
 import { getDirectoryPageSelection } from '@/lib/directorySelection';
 import { useTeacherStatusConfig } from '@/tenant/features/teachers/hooks/useTeacherStatusConfig';
@@ -34,9 +33,6 @@ export function useTeacherListState({
   const sortField = controlledSortField;
   const sortDir = controlledSortDir;
 
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [viewTeacher, setViewTeacher] = useState<Teacher | null>(null);
-
   const handleSort = (field: TeacherSortField) => {
     const resolvedDir = sortField === field && sortDir === 'asc' ? 'desc' : 'asc';
     onSortChange(field, resolvedDir);
@@ -60,10 +56,6 @@ export function useTeacherListState({
     statusConfig,
     isColumnVisible: columnVisible,
     selectedIds,
-    pendingDeleteId,
-    setPendingDeleteId,
-    viewTeacher,
-    setViewTeacher,
     allSelected,
     someSelected,
     handleSort,

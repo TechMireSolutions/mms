@@ -3,6 +3,7 @@ import { FileSpreadsheet, FileText, Printer, Settings as SettingsIcon } from 'lu
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import {
   exportExcel,
   exportPdf,
@@ -145,7 +146,7 @@ export function ExportToolbar({
         {showPdfSettings && (
           <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-popover flex flex-col gap-3 min-w-[12.5rem] max-w-full">
             <div className="space-y-1.5">
-              <label htmlFor="export-orientation" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('reports.export.orientation')}</label>
+              <SectionLabel as="label" htmlFor="export-orientation" weight="bold">{t('reports.export.orientation')}</SectionLabel>
               <div className="flex gap-1 p-1 bg-muted rounded-lg">
                 {[
                   { id: 'p', label: t('reports.export.portrait') },
@@ -163,7 +164,7 @@ export function ExportToolbar({
               </div>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="export-page-size" className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('reports.export.pageSize')}</label>
+              <SectionLabel as="label" htmlFor="export-page-size" weight="bold">{t('reports.export.pageSize')}</SectionLabel>
               <FormSelect
                 id="export-page-size"
                 value={formatSize}

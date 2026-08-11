@@ -17,13 +17,13 @@ vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => 'demo',
 }));
 
-vi.mock('../services/dbSyncService.js', () => ({
-  fetchObject: (...args: unknown[]) => mockFetchObject(...args),
-  deletePersistedObject: (...args: unknown[]) => mockDeletePersistedObject(...args),
-  persistObject: (...args: unknown[]) => mockPersistObject(...args),
+vi.mock('../db/database.js', () => ({
+  getObject: (...args: unknown[]) => mockFetchObject(...args),
+  deleteObject: (...args: unknown[]) => mockDeletePersistedObject(...args),
+  saveObject: (...args: unknown[]) => mockPersistObject(...args),
 }));
 
-vi.mock('../services/contactPreferencesService.js', () => ({
+vi.mock('../lib/contactPreferencesService.js', () => ({
   loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
 }));
 

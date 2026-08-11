@@ -3,7 +3,7 @@ import type { Contact, RelationshipPair } from '@mms/shared';
 
 const mockLoadContactPreferences = vi.fn();
 
-vi.mock('../services/contactPreferencesService.js', () => ({
+vi.mock('../lib/contactPreferencesService.js', () => ({
   loadContactPreferences: () => mockLoadContactPreferences(),
 }));
 

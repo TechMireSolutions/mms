@@ -3,7 +3,6 @@ import { bulkIdsBodySchema } from './commonSchemas.js';
 import { studentsListQuerySchema } from '@mms/shared';
 import {
   csvExportBodySchema,
-  moduleExportAuditBodySchema,
   moduleFieldsPrefsAuditBodySchema,
 } from './csvExportBodySchema.js';
 
@@ -34,8 +33,6 @@ export const studentsBulkStatusSchema = z.object({
   ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
   status: z.string().min(1).max(64),
 });
-
-export const studentExportAuditSchema = moduleExportAuditBodySchema;
 
 export const studentSetupAuditSchema = moduleFieldsPrefsAuditBodySchema;
 

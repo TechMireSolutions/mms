@@ -3,6 +3,7 @@ import { LayoutDashboard, SlidersHorizontal } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -74,12 +75,11 @@ export function PinnedWidgetsChrome({
 
         <Button
           type="button"
-          variant="outline"
+          variant={isBuilderOpen ? "capsPrimary" : "capsOutline"}
+          size="caps"
           onClick={onToggleBuilder}
-          className={`h-auto flex w-full sm:w-auto shrink-0 items-center gap-1.5 px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider shadow-none ${
-            isBuilderOpen
-              ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:text-primary-foreground"
-              : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/30"
+          className={`w-full sm:w-auto shrink-0 ${
+            isBuilderOpen ? "shadow-lg shadow-primary/20" : ""
           }`}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -90,8 +90,8 @@ export function PinnedWidgetsChrome({
       {showControls && (
         <div className={`p-5 space-y-4 ${WORK_SURFACE} select-none`}>
           <div>
-            <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none">{t("reports.widgets.controlsTitle")}</h4>
-            <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t("reports.widgets.controlsSubtitle")}</p>
+            <SectionLabel as="h4" tone="foreground" className="leading-none">{t("reports.widgets.controlsTitle")}</SectionLabel>
+            <SectionLabel as="p" weight="bold" tracking="wider" className="mt-1">{t("reports.widgets.controlsSubtitle")}</SectionLabel>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {category === "students" && (

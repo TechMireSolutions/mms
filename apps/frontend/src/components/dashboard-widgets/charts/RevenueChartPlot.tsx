@@ -1,10 +1,11 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ComposedChart, Bar, Line, Area, XAxis, YAxis, CartesianGrid,
+  ComposedChart, Bar, Line, Area, XAxis, YAxis,
   Tooltip,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { ROUTES } from "@/lib/config/routes";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { RevenueChartTooltip } from "@/components/dashboard-widgets/charts/RevenueChartTooltip";
@@ -58,9 +59,9 @@ export function RevenueChartPlot({
             <stop offset="95%" stopColor={activeColors.expenses} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={formatYAxisTick} />
+        <ChartGrid vertical={false} />
+        <XAxis dataKey="month" tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} />
+        <YAxis tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} tickFormatter={formatYAxisTick} />
         <Tooltip content={<RevenueChartTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }} />
 
         {chartType === "area" && (

@@ -28,7 +28,7 @@ type StudentsExportQueryInput = Omit<StudentsListQuery, 'includeDeleted'> & {
 
 export type { StudentsExportQueryInput };
 
-export interface StudentsCsvExportOptions {
+interface StudentsCsvExportOptions {
   columns?: StudentExportColumn[];
   filename?: string;
   viewerRole: string;
@@ -36,7 +36,7 @@ export interface StudentsCsvExportOptions {
   allowDeleted?: boolean;
 }
 
-export interface StudentsCsvExportResult {
+interface StudentsCsvExportResult {
   csv: string;
   filename: string;
   count: number;
@@ -94,8 +94,6 @@ const studentsCsv = createModuleCsvExportService<
   },
 });
 
-export const generateStudentsCsvStreamChunks = studentsCsv.generateStreamChunks;
-export const streamStudentsCsvExport = studentsCsv.streamExport;
 export const buildStudentsCsvExport = studentsCsv.buildExport as (
   query: StudentsExportQueryInput,
   options: StudentsCsvExportOptions,

@@ -23,7 +23,7 @@ export interface StudentsListQuery {
 }
 
 /** Work-directory filter presets — SSOT for schema + Filters menu. */
-export const STUDENTS_QUICK_FILTERS = [
+const STUDENTS_QUICK_FILTERS = [
   'all',
   'new',
   'missingGr',
@@ -68,8 +68,6 @@ export const studentsListQuerySchema = baseListQuerySchema.extend({
   sessionId: z.string().max(100).optional(),
   className: z.string().max(100).optional(),
 });
-
-export type StudentsListQueryParsed = z.infer<typeof studentsListQuerySchema>;
 
 export interface StudentsListPageResult {
   students: Student[];

@@ -38,7 +38,6 @@ const mockSaveUserModulePreferences = vi.fn();
 vi.mock('../services/userConfigService.js', () => ({
   loadUserFieldConfig: (...args: unknown[]) => mockLoadUserFieldConfig(...args),
   saveUserFieldConfig: (...args: unknown[]) => mockSaveUserFieldConfig(...args),
-  loadUsersSettingsCombined: (...args: unknown[]) => mockLoadUserFieldConfig(...args),
 }));
 
 vi.mock('../services/userPreferencesService.js', () => ({

@@ -12,7 +12,6 @@ import {
   Pie,
   Cell,
   RadarChart,
-  PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
@@ -20,9 +19,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
 } from 'recharts';
 import SafeResponsiveContainer from '@/components/ui/SafeResponsiveContainer';
+import { ChartGrid, ChartPolarGrid, chartAxisTick } from '@/components/ui/ChartGrid';
 import {
   capitalize,
   type AppTranslationKey,
@@ -89,14 +88,14 @@ export function DynamicChartVisualizerChart({
     borderRadius: '12px',
     fontSize: `${axisFontSize}px`,
   };
-  const axisTick = { fontSize: axisFontSize, fill: 'hsl(var(--muted-foreground))' };
+  const axisTick = chartAxisTick(axisFontSize, true);
 
   switch (chartType) {
     case 'bar':
       return (
         <SafeResponsiveContainer width="100%" height={260}>
           <BarChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
+            {showGrid && <ChartGrid vertical={false} />}
             <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} />
             {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
@@ -114,7 +113,7 @@ export function DynamicChartVisualizerChart({
       return (
         <SafeResponsiveContainer width="100%" height={260}>
           <LineChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
+            {showGrid && <ChartGrid vertical={false} />}
             <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} />
             {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
@@ -134,7 +133,7 @@ export function DynamicChartVisualizerChart({
                 <stop offset="95%" stopColor={firstColor} stopOpacity={0.0} />
               </linearGradient>
             </defs>
-            {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />}
+            {showGrid && <ChartGrid vertical={false} />}
             <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
             <YAxis tick={axisTick} tickLine={false} axisLine={false} />
             {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
@@ -181,9 +180,9 @@ export function DynamicChartVisualizerChart({
       return (
         <SafeResponsiveContainer width="100%" height={260}>
           <RadarChart cx="50%" cy="50%" outerRadius="75%" data={processedData}>
-            <PolarGrid stroke="hsl(var(--border))" />
-            <PolarAngleAxis dataKey="name" tick={{ fontSize: Math.max(8, axisFontSize - 1) }} />
-            <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={{ fontSize: Math.max(7, axisFontSize - 2) }} />
+            <ChartPolarGrid />
+            <PolarAngleAxis dataKey="name" tick={chartAxisTick(Math.max(8, axisFontSize - 1))} />
+            <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={chartAxisTick(Math.max(7, axisFontSize - 2))} />
             <Radar name={seriesName} dataKey="value" stroke={firstColor} fill={firstColor} fillOpacity={0.25} />
             {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
           </RadarChart>

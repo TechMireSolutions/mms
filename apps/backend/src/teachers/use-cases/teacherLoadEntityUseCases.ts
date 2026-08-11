@@ -29,7 +29,7 @@ export async function loadTeachersPage(
   const page = await repo.listPage(tenant, query);
   return {
     ...page,
-    teachers: await hydrateTeachersFromContacts(page.teachers),
+    teachers: await hydrateTeachersFromContacts(tenant, page.teachers),
   };
 }
 
@@ -43,7 +43,7 @@ export async function loadTeacherById(
   const found = await repo.findById(tenant, id);
   if (!found) return null;
   if (!includeDeleted && found.deletedAt) return null;
-  const [hydrated] = await hydrateTeachersFromContacts([found]);
+  const [hydrated] = await hydrateTeachersFromContacts(tenant, [found]);
   return hydrated ?? null;
 }
 
@@ -55,7 +55,7 @@ export async function loadTeachersByIds(
   const tenant = getRequestTenant();
   if (!tenant) return [];
   const matched = await repo.findByIds(tenant, ids);
-  return hydrateTeachersFromContacts(matched);
+  return hydrateTeachersFromContacts(tenant, matched);
 }
 
 export async function loadTeacherLinkedContactIds(

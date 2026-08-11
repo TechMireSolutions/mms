@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import { TRANSACTION_GROUP_COLORS, TRANSACTION_GROUPS, type QuickActionType } from "./simpleTransactionWizardTypes";
 
@@ -25,7 +26,7 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
           <article key={group.groupKey} className={`rounded-2xl border p-4 ${colors.card}`}>
             <header className={`flex items-center gap-2 mb-3 px-2 py-1.5 rounded-lg border w-fit ${colors.header}`}>
               <GroupIcon className="w-3.5 h-3.5" aria-hidden="true" />
-              <h4 className="text-xs font-bold uppercase tracking-wide m-0">{translatedGroupName}</h4>
+              <SectionLabel as="h4" weight="bold" tracking="wide" tone="inherit" className="m-0">{translatedGroupName}</SectionLabel>
             </header>
             <nav aria-label={`Select ${translatedGroupName} transaction type`} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {group.items.map((item) => {

@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import type { User } from '@mms/shared';
-import { canReadCollection } from '../services/rbacService.js';
+import { canReadCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { moduleColumnPreferencesBodySchema } from '../validation/moduleColumnPreferencesSchemas.js';

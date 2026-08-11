@@ -18,7 +18,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FiscalYear } from "@/lib/data/accountingData";
 import { AccountingSettingsField } from "./AccountingSettingsField";
-import { AccountingSettingsSectionCard } from "./AccountingSettingsSectionCard";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { localizedFiscalMonths } from "./accountingSettingsPreferencesShared";
 
 interface AccountingSettingsFiscalYearsSectionProps {
@@ -44,7 +44,7 @@ export function AccountingSettingsFiscalYearsSection({
   const sortedYears = [...fiscalYears].sort((firstYear, secondYear) => secondYear.startDate.localeCompare(firstYear.startDate));
 
   return (
-    <AccountingSettingsSectionCard title={t("accounting.settings.secFiscalYears")} icon={Calendar}>
+    <SectionCard title={t("accounting.settings.secFiscalYears")} icon={Calendar}>
       <AccountingSettingsField label={t("accounting.settings.fields.fyStartMonth")} hint={t("accounting.settings.fields.fyStartMonthHint")}>
         <FormSelect
           aria-label={t("accounting.settings.fields.fyStartMonth")}
@@ -170,6 +170,6 @@ export function AccountingSettingsFiscalYearsSection({
           </div>
         </div>
       </div>
-    </AccountingSettingsSectionCard>
+    </SectionCard>
   );
 }

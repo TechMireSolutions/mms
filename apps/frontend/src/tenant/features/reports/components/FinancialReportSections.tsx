@@ -2,7 +2,6 @@ import React from "react";
 import {
   Area,
   AreaChart,
-  CartesianGrid,
   Cell,
   Legend,
   Pie,
@@ -12,6 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Button } from "@/components/ui/button";
 import { ActiveFilterBanner } from "@/components/ui/ActiveFilterBanner";
@@ -69,10 +70,10 @@ export function FinancialReportCharts({
                 <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+            <ChartGrid />
+            <XAxis dataKey="month" tick={chartAxisTick(11)} />
             <YAxis
-              tick={{ fontSize: 11 }}
+              tick={chartAxisTick(11)}
               tickFormatter={(value: number) =>
                 value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`
               }
@@ -114,10 +115,14 @@ export function FinancialReportCharts({
                 }`}
               >
                 <span className="text-xs text-muted-foreground w-20 shrink-0 text-start">{monthTotals.month}</span>
-                <div className="flex-1 h-2 rounded-full bg-muted">
-                  <div className="h-2 rounded-full bg-primary" style={{ width: `${monthTotals.rate}%` }} />
-                </div>
-                <span className="text-xs font-bold text-foreground w-10 text-end">{monthTotals.rate}%</span>
+                <ProgressBar
+                  className="flex-1 gap-3"
+                  value={monthTotals.rate}
+                  size="md"
+                  fillClassName="bg-primary"
+                  label={`${monthTotals.rate}%`}
+                  labelClassName="w-10 text-end text-foreground"
+                />
               </Button>
             ))}
           </div>

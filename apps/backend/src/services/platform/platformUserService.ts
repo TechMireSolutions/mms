@@ -22,6 +22,7 @@ import {
 } from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
 import { PlatformError } from './platformErrorService.js';
+import { isUniqueViolation } from '../../lib/pgErrors.js';
 
 export async function countPlatformUsers(): Promise<number> {
   return countPlatformUserRows();
@@ -129,11 +130,7 @@ export async function createVerifiedPlatformUser(input: {
     await insertPlatformUser(user);
   } catch (error: unknown) {
     // Unique index platform_users_single_super_user_idx blocks concurrent dual super_users.
-    const code =
-      error && typeof error === 'object' && 'code' in error
-        ? String((error as { code: unknown }).code)
-        : '';
-    if (code === '23505' && role === 'super_user') {
+    if (isUniqueViolation(error) && role === 'super_user') {
       throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
     }
     throw error;
@@ -263,8 +260,6 @@ export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
  * Production / clean first-run presents the interactive setup screen instead.
  */
 export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
-  if ((await countPlatformUserRows()) > 0) return;
-
   if (process.env.PLATFORM_ALLOW_ENV_BOOTSTRAP !== 'true') {
     return;
   }
@@ -281,17 +276,35 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     return;
   }
 
-  const user: StoredPlatformUser = {
-    id: randomBytes(8).toString('hex'),
-    email: email.toLowerCase(),
-    name,
-    passwordHash: await hashPassword(password),
-    role: 'super_user',
-    permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
-    sessionVersion: 0,
-    createdAt: new Date().toISOString(),
-    emailVerifiedAt: new Date().toISOString(),
-  };
-  await insertPlatformUser(user);
-  console.log(`Platform super-user seeded from env for ${user.email}`);
+  const normalizedEmail = email.toLowerCase();
+  const existing = await findPlatformUserRowByEmail(normalizedEmail);
+
+  if (existing) {
+    const matches = await verifyPassword(password, existing.passwordHash);
+    if (!matches) {
+      const newHash = await hashPassword(password);
+      await updatePlatformUserRow(existing.id, {
+        passwordHash: newHash,
+        name: name || existing.name,
+      });
+      console.log(`[MMS] Updated platform super-user password from env for ${existing.email}`);
+    }
+    return;
+  }
+
+  if ((await countPlatformUserRows()) === 0) {
+    const user: StoredPlatformUser = {
+      id: randomBytes(8).toString('hex'),
+      email: normalizedEmail,
+      name,
+      passwordHash: await hashPassword(password),
+      role: 'super_user',
+      permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
+      sessionVersion: 0,
+      createdAt: new Date().toISOString(),
+      emailVerifiedAt: new Date().toISOString(),
+    };
+    await insertPlatformUser(user);
+    console.log(`Platform super-user seeded from env for ${user.email}`);
+  }
 }

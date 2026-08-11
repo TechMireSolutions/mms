@@ -14,7 +14,7 @@ vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => 'demo',
 }));
 
-vi.mock('../services/websocketService.js', () => ({
+vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: vi.fn(),
   broadcastTenantUpdate: vi.fn(),
 }));
@@ -23,7 +23,7 @@ import {
   loadStudentLookupKind,
   loadStudentLookupsMap,
   replaceStudentLookupKind,
-} from '../services/studentLookupsService.js';
+} from '../lib/studentLookupsService.js';
 
 describe('studentLookupsService', () => {
   beforeEach(() => {

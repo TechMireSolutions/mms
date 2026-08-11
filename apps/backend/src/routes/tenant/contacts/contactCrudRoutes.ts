@@ -166,7 +166,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const diff = before ? summarizeContactFieldChanges(before, updated) : `Updated contact ${params.data.id}`;
       await auditContact(user, 'contact.update', diff, params.data.id);
-      return reply.send({ contact: await sanitizeOneForUser(updated, user) });
+      return reply.send({ success: true, contact: await sanitizeOneForUser(updated, user) });
     } catch (error: unknown) {
       if (error instanceof ContactUniqueFieldError) {
         return replyValidationError(reply, error.message, { errors: error.errors });

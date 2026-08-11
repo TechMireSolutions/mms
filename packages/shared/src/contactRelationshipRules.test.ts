@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { Contact } from './contactEntityTypes.js';
+import { normalizeRelationshipTerm } from './contactRelationshipPairUtils.js';
 import {
   formatRelationshipDisplayLabel,
   isAllowedRelationshipLabel,
-  normalizeRelationshipTerm,
   resolveInverseRelationship,
 } from './contactRelationshipRules.js';
 

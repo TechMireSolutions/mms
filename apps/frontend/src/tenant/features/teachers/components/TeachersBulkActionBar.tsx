@@ -17,17 +17,20 @@ export interface TeachersBulkActionBarProps {
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
+  canWriteMessaging?: boolean;
   statusConfig: Record<string, StatusBadgeConfigItem>;
   onSms?: (teachers: Teacher[]) => void;
   onWhatsApp?: (teachers: Teacher[]) => void;
   onEmail?: (teachers: Teacher[]) => void;
-  onBulkStatusChange?: (ids: string[], status: string) => void;
+  onBulkStatusChange?: (status: string) => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
   canExport?: boolean;
   onBulkExport?: () => void;
   bulkActions?: readonly string[];
+  /** Disables the bulk status action while the status mutation is pending. */
+  statusPending?: boolean;
 }
 
 /** Teachers Work bulk bar — Students-shaped composition over shared ModuleWorkBulkActionBar. */
@@ -37,6 +40,7 @@ export function TeachersBulkActionBar({
   showDeleted,
   canWrite,
   canDelete,
+  canWriteMessaging = false,
   statusConfig,
   onSms,
   onWhatsApp,
@@ -48,12 +52,13 @@ export function TeachersBulkActionBar({
   canExport = false,
   onBulkExport,
   bulkActions = TEACHERS_MODULE_MANIFEST.work.bulkActions,
+  statusPending = false,
 }: TeachersBulkActionBarProps): ReactElement {
   const { t } = useTranslation();
 
-  const showWhatsApp = bulkActions.includes('whatsapp') && Boolean(onWhatsApp);
-  const showSms = bulkActions.includes('sms') && Boolean(onSms);
-  const showEmail = bulkActions.includes('email') && Boolean(onEmail);
+  const showWhatsApp = bulkActions.includes('whatsapp') && canWriteMessaging && Boolean(onWhatsApp);
+  const showSms = bulkActions.includes('sms') && canWriteMessaging && Boolean(onSms);
+  const showEmail = bulkActions.includes('email') && canWriteMessaging && Boolean(onEmail);
   const showMessaging = !showDeleted && (showWhatsApp || showSms || showEmail);
 
   const handleChannel = (channel: BulkSelectionMessageChannel): void => {
@@ -103,9 +108,9 @@ export function TeachersBulkActionBar({
             label={t('teachers.bulkStatus')}
             statuses={Object.keys(statusConfig)}
             statusBadgeConfig={statusConfig}
+            disabled={statusPending}
             onSelectStatus={(statusVal) => {
-              onBulkStatusChange(selectedIds, statusVal);
-              onClearSelection();
+              onBulkStatusChange(statusVal);
             }}
           />
         ) : undefined

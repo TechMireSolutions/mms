@@ -2,7 +2,8 @@ import type React from "react";
 import { CheckCircle2, Loader2, Mail } from "lucide-react";
 import type { TenantUserProfile } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -51,16 +52,13 @@ export function AccountProfileLoginEmailCard({
   return (
     <Card className="group/login-card">
       <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/login-card:bg-primary" />
-      <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 ps-6.5">
-        <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-          <Mail className="h-4 w-4 text-primary shrink-0" />
-          {t("account.loginSection")}
-        </CardTitle>
-        <CardDescription className="text-xs text-muted-foreground mt-1">
-          {t("account.loginSectionDesc")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6 space-y-4 ps-6.5">
+      <CardTitleBar
+        inset
+        icon={<Mail className="h-4 w-4 text-primary" />}
+        title={t("account.loginSection")}
+        subtitle={t("account.loginSectionDesc")}
+      />
+      <CardContent className="pt-5 space-y-4 ps-6.5">
         <div className="flex items-center gap-3 p-3 bg-muted/30 border border-border/30 rounded-xl text-sm">
           <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
           <div className="text-start">

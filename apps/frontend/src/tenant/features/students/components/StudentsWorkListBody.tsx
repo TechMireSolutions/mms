@@ -8,7 +8,7 @@ import StudentList from "@/tenant/features/students/components/StudentList";
 import type { StudentListProps } from "@/tenant/features/students/components/StudentList";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 
-export interface StudentsWorkListBodyProps
+interface StudentsWorkListBodyProps
   extends Omit<
     StudentListProps,
     | "students"

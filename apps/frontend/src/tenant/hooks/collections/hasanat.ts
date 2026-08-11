@@ -21,3 +21,4 @@ export {
   useHasanatMetrics,
   useHasanatMutations,
 } from "@/tenant/features/hasanat/hooks/useHasanatApi";
+export { invalidateHasanatQueries } from '@/tenant/features/hasanat/hooks/invalidateHasanatQueries';

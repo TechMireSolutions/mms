@@ -10,6 +10,8 @@ import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { ObligationCollectionRowActions } from "@/tenant/features/obligations/components/ObligationCollectionRowActions";
 import {
@@ -94,45 +96,43 @@ export function ObligationCollectionListCards(props: ObligationCollectionListCar
                 }
               />
 
-              <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <StatGrid columns="sm2" className="ms-1">
                 {isColumnVisible("receivedDate") && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.receivedDate")}</dt>
-                    <dd className="text-foreground">{formatDate(collection.received_date)}</dd>
-                  </div>
+                  <StatRow label={t("obligations.columns.receivedDate")} value={formatDate(collection.received_date)} />
                 )}
                 {isColumnVisible("obligationType") && (
-                  <div>
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("obligations.columns.obligationType")}</dt>
-                    <dd>
-                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">
-                        {obligationType?.name || "—"}
-                      </span>
-                    </dd>
-                  </div>
+                  <StatRow
+                    label={t("obligations.columns.obligationType")}
+                    value={<Badge pill tone="primary" className="px-2 font-bold">{obligationType?.name || "—"}</Badge>}
+                    dtClassName="mb-1"
+                  />
                 )}
                 {isColumnVisible("repMujtahid") && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.repMujtahid")}</dt>
-                    <dd className="text-foreground">
-                      <span>{rep?.name || "—"}</span>
-                      {mujtahid && <span className="block text-xs text-muted-foreground/70">{mujtahid.name}</span>}
-                    </dd>
-                  </div>
+                  <StatRow
+                    label={t("obligations.columns.repMujtahid")}
+                    value={
+                      <>
+                        <span>{rep?.name || "—"}</span>
+                        {mujtahid && <span className="block text-xs text-muted-foreground/70">{mujtahid.name}</span>}
+                      </>
+                    }
+                  />
                 )}
                 {isColumnVisible("amount") && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.columns.amount")}</dt>
-                    <dd className="font-semibold text-foreground">{formatObligationCollectionAmount(collection)}</dd>
-                  </div>
+                  <StatRow
+                    label={t("obligations.columns.amount")}
+                    value={formatObligationCollectionAmount(collection)}
+                    ddClassName="font-semibold"
+                  />
                 )}
                 {isColumnVisible("paymentMode") && (
-                  <div>
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("obligations.columns.paymentMode")}</dt>
-                    <dd><StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" /></dd>
-                  </div>
+                  <StatRow
+                    label={t("obligations.columns.paymentMode")}
+                    value={<StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />}
+                    dtClassName="mb-1"
+                  />
                 )}
-              </dl>
+              </StatGrid>
 
               <DirectoryCardFooter
                 trailing={

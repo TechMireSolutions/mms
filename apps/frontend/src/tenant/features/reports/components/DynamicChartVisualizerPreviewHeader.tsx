@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { getCollectionLabel, getFieldLabel } from "@/tenant/features/reports/components/reportMetadata";
 import type { CollectionMeta } from "@/tenant/features/reports/components/dynamicChartVisualizerTypes";
@@ -74,8 +75,10 @@ export function VisualizerPreviewHeader({
         {onSaveVisual && (
           <Button
             type="button"
+            variant="capsPrimary"
+            size="caps"
             onClick={onSaveVisual}
-            className="min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl bg-primary text-primary-foreground border border-primary/50 text-xs font-black uppercase tracking-wider hover:opacity-90 shadow-md shadow-primary/15"
+            className="shadow-md shadow-primary/15 border border-primary/50 bg-primary text-primary-foreground"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             {t("reports.visualizer.saveVisual")}
@@ -85,9 +88,9 @@ export function VisualizerPreviewHeader({
         {onClose && (
           <Button
             type="button"
-            variant="outline"
+            variant="capsOutline"
+            size="caps"
             onClick={onClose}
-            className="min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl border border-border bg-card/50 text-muted-foreground hover:text-foreground text-xs font-black uppercase tracking-wider shadow-none"
           >
             {t("reports.visualizer.cancel")}
           </Button>
@@ -95,13 +98,10 @@ export function VisualizerPreviewHeader({
 
         <Button
           type="button"
-          variant="outline"
+          variant={isPinned ? "capsSuccess" : "capsOutline"}
+          size="caps"
           onClick={onTogglePin}
-          className={`min-h-11 flex items-center gap-1.5 px-3.5 rounded-2xl border text-xs font-black uppercase tracking-wider shadow-none ${
-            isPinned
-              ? "border-success/30 bg-success/10 text-success shadow-md shadow-success/5 hover:bg-success/15 hover:text-success"
-              : "border-border bg-card/50 text-muted-foreground hover:text-foreground"
-          }`}
+          className={isPinned ? "shadow-md shadow-success/5" : undefined}
         >
           {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
           {isPinned ? t("reports.visualizer.pinnedToHome") : t("reports.visualizer.pinToDashboard")}
@@ -111,7 +111,7 @@ export function VisualizerPreviewHeader({
           {showPdfSettings && (
             <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-2xl p-4 shadow-xl z-popover flex flex-col gap-3.5 min-w-[12.5rem] backdrop-blur-xl">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfOrientation")}</label>
+                <SectionLabel as="label" weight="bold">{t("reports.visualizer.pdfOrientation")}</SectionLabel>
                 <div className="flex gap-1 p-1 bg-muted rounded-xl">
                   <Button
                     type="button"
@@ -132,7 +132,7 @@ export function VisualizerPreviewHeader({
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t("reports.visualizer.pdfPageSize")}</label>
+                <SectionLabel as="label" weight="bold">{t("reports.visualizer.pdfPageSize")}</SectionLabel>
                 <FormSelect
                   value={pdfFormat}
                   onChange={onPdfFormatChange}

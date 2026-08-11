@@ -4,6 +4,7 @@ import { Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { ReportFilterFieldsPanel } from './ReportFilterFieldsPanel';
 
@@ -25,6 +26,8 @@ interface ReportFiltersProps {
 const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
   attendance: ['session', 'class', 'dateFrom', 'dateTo', 'student'],
   students: ['session', 'class', 'status', 'student'],
+  faculty: ['session', 'class', 'status', 'student'],
+  teachers: ['session', 'class', 'status', 'student'],
   /** Contacts dashboard does not consume these academic filters — omit until contact-aware filters ship. */
   contacts: [],
   financial: ['session', 'dateFrom', 'dateTo', 'status'],
@@ -89,9 +92,9 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
           <Filter className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <span className="text-sm font-semibold text-foreground truncate">{t('reports.filters.title')}</span>
           {activeCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+            <Badge pill className="px-1.5 font-bold">
               {activeCount}
-            </span>
+            </Badge>
           )}
         </Button>
         <div className="flex shrink-0 items-center gap-1">

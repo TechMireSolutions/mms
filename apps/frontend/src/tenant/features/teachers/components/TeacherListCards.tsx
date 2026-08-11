@@ -11,6 +11,7 @@ import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/Tea
 import { TeacherCardActions } from "@/tenant/features/teachers/components/TeacherCardActions";
 import { TeacherCardHeader } from "@/tenant/features/teachers/components/TeacherCardHeader";
 import { TeacherCardMetadata } from "@/tenant/features/teachers/components/TeacherCardMetadata";
+import { resolveTeacherCardFaceVisibility } from "@/tenant/features/teachers/components/teacherCardFaceVisibility";
 import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 
@@ -25,8 +26,6 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
     selectedIds,
     allSelected,
     someSelected,
-    showSelectColumn,
-    showActionsColumn,
     showDeleted,
     canWrite,
     canDelete,
@@ -46,6 +45,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
   } = props;
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const faceVisible = resolveTeacherCardFaceVisibility(columnRegistry, isColumnVisible);
   const pageCountLabel = formatDirectoryPageCountLabel(teachers.length, t, {
     singular: "teachers.form.teacher",
     plural: "teachers.table.teachers",
@@ -53,7 +53,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
 
   return (
     <>
-      {showSelectColumn && teachers.length > 0 ? (
+      {teachers.length > 0 ? (
         <DirectoryCardsSelectAllBar
           checkboxId="teachers-select-all-cards"
           allSelected={allSelected}
@@ -84,7 +84,7 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 teacherId={teacherIdStr}
                 isSelected={isSelected}
                 displayName={displayName}
-                showSelectColumn={showSelectColumn}
+                isColumnVisible={faceVisible}
                 onSelectOne={onSelectOne}
                 onView={onView}
                 reducedMotion={reducedMotion}
@@ -93,8 +93,8 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 phone={phone}
                 phoneDisplay={phone}
                 email={email}
-                showPhone={isColumnVisible("phone")}
-                showEmail={isColumnVisible("email")}
+                showPhone={faceVisible("phone")}
+                showEmail={faceVisible("email")}
               />
               <TeacherCardMetadata
                 teacher={teacher}
@@ -109,7 +109,6 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 teacherId={teacherIdStr}
                 displayName={displayName}
                 showDeleted={showDeleted}
-                showActionsColumn={showActionsColumn}
                 canWrite={canWrite}
                 canDelete={canDelete}
                 onView={onView}

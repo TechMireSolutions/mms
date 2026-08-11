@@ -83,7 +83,6 @@ export default function StudentList({
   return (
     <div className="space-y-4">
       <StudentListContent
-        students={students}
         paginatedStudents={list.paginatedStudents}
         sessions={sessions}
         viewMode={viewMode}

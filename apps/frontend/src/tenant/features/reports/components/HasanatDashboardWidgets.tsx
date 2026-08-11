@@ -1,5 +1,6 @@
 import React from "react";
 import { HasanatChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export function HasanatDashboardWidgets(): React.JSX.Element {
@@ -9,9 +10,9 @@ export function HasanatDashboardWidgets(): React.JSX.Element {
     <div className="border-t border-border/50 pt-6 mt-6 space-y-4 text-start">
       <div>
         <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("hasanat.report.dashboardWidgetTitle")}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">
+        <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5">
           {t("hasanat.report.dashboardWidgetSubtitle")}
-        </p>
+        </SectionLabel>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <HasanatChart />

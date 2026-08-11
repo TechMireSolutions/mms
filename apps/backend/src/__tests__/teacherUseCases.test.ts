@@ -5,6 +5,7 @@ import type { TeachersRepository } from '../teachers/repository/teachersReposito
 const mockGetRequestTenant = vi.fn();
 const mockBroadcastCollection = vi.fn();
 const mockLoadTeacherFieldConfig = vi.fn();
+const mockLoadTeacherModulePreferences = vi.fn();
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
@@ -14,16 +15,20 @@ vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
 
-vi.mock('../services/websocketService.js', () => ({
+vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
 }));
 
 vi.mock('../teachers/use-cases/teacherHydrateUseCases.js', () => ({
-  hydrateTeachersFromContacts: async (rows: unknown) => rows,
+  hydrateTeachersFromContacts: async (_tenant: unknown, rows: unknown) => rows,
 }));
 
-vi.mock('../services/teacherConfigService.js', () => ({
+vi.mock('../lib/teacherConfigService.js', () => ({
   loadTeacherFieldConfig: (...args: unknown[]) => mockLoadTeacherFieldConfig(...args),
+}));
+
+vi.mock('../lib/teacherPreferencesService.js', () => ({
+  loadTeacherModulePreferences: (...args: unknown[]) => mockLoadTeacherModulePreferences(...args),
 }));
 
 import { createTeachersUseCases } from '../teachers/use-cases/teacherUseCases.js';
@@ -95,6 +100,8 @@ function createFakeRepo() {
       aggregateWidgetQueries: vi.fn(async () => ({})),
       listLinkedContactIds: vi.fn(async () => []),
       countNextEmployeeId: vi.fn(async () => 0),
+      listActiveMissingEmployeeId: vi.fn(async () => []),
+      findRegistrationConflict: vi.fn(async () => null),
       bulkUpdateStatusSql: vi.fn(async () => 0),
     } as unknown as TeachersRepository,
   };
@@ -106,6 +113,7 @@ describe('createTeachersUseCases (DI composition root)', () => {
     mockGetRequestTenant.mockReturnValue('demo');
     mockBroadcastCollection.mockResolvedValue(undefined);
     mockLoadTeacherFieldConfig.mockResolvedValue(null);
+    mockLoadTeacherModulePreferences.mockResolvedValue({});
   });
 
   it('loadTeachersPage returns paged rows from the injected repo', async () => {
@@ -245,7 +253,7 @@ describe('createTeachersUseCases (DI composition root)', () => {
     store.set('a', fakeTeacher('a', { deletedAt: '2026-07-27T00:00:00.000Z', deletedBy: 'u-admin' }));
     const useCases = createTeachersUseCases(repo);
 
-    const restored = await useCases.restoreTeacherById('a', 'u-admin');
+    const restored = await useCases.restoreTeacherById('a');
 
     expect(restored?.deletedAt).toBeUndefined();
     expect(restored?.deletedBy).toBeUndefined();
@@ -260,7 +268,7 @@ describe('createTeachersUseCases (DI composition root)', () => {
     store.set('a', fakeTeacher('a'));
     const useCases = createTeachersUseCases(repo);
 
-    const restored = await useCases.restoreTeacherById('a', 'u-admin');
+    const restored = await useCases.restoreTeacherById('a');
 
     expect(restored?.id).toBe('a');
     expect(repo.save).not.toHaveBeenCalled();
@@ -272,7 +280,7 @@ describe('createTeachersUseCases (DI composition root)', () => {
     store.set('active', fakeTeacher('active'));
     const useCases = createTeachersUseCases(repo);
 
-    const result = await useCases.bulkRestoreTeachers(['a', 'active'], 'u-admin');
+    const result = await useCases.bulkRestoreTeachers(['a', 'active']);
 
     expect(result).toEqual({ succeeded: 1, failed: 1 });
     expect(store.get('a')?.deletedAt).toBeUndefined();
@@ -412,6 +420,74 @@ describe('createTeachersUseCases (DI composition root)', () => {
 
     expect(await useCases.loadTeacherFieldUsageCount('qualification')).toBe(7);
     expect(repo.countFieldUsageByKeys).toHaveBeenCalledWith('demo', ['qualification']);
+  });
+
+  it('checkTeacherRegistrationDuplicate returns the conflict reason from the repo', async () => {
+    const { repo } = createFakeRepo();
+    vi.mocked(repo.findRegistrationConflict).mockResolvedValue('employeeId');
+    const useCases = createTeachersUseCases(repo);
+
+    const result = await useCases.checkTeacherRegistrationDuplicate({ employeeId: 'T-0001' });
+
+    expect(result).toEqual({ reason: 'employeeId' });
+    expect(repo.findRegistrationConflict).toHaveBeenCalledWith('demo', { employeeId: 'T-0001' });
+  });
+
+  it('checkTeacherRegistrationDuplicate returns no conflict when the repo finds none', async () => {
+    const { repo } = createFakeRepo();
+    const useCases = createTeachersUseCases(repo);
+
+    const result = await useCases.checkTeacherRegistrationDuplicate({ contactId: 'c-new' });
+
+    expect(result).toEqual({ reason: null });
+    expect(repo.findRegistrationConflict).toHaveBeenCalledWith('demo', { contactId: 'c-new' });
+  });
+
+  it('migrateTeachersMissingEmployeeIds backfills monotonic employee ids and broadcasts once', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('m1', fakeTeacher('m1'));
+    store.set('m2', fakeTeacher('m2'));
+    vi.mocked(repo.listActiveMissingEmployeeId).mockResolvedValue([
+      fakeTeacher('m1'),
+      fakeTeacher('m2'),
+    ]);
+    const countNextEmployeeIdMock = vi.mocked(repo.countNextEmployeeId);
+    countNextEmployeeIdMock.mockImplementation(async () => {
+      // countNextEmployeeId is called once per persisted row; return a growing count.
+      return countNextEmployeeIdMock.mock.calls.length - 1;
+    });
+    const useCases = createTeachersUseCases(repo);
+
+    const result = await useCases.migrateTeachersMissingEmployeeIds();
+
+    expect(result).toEqual({ updated: 2 });
+    expect(store.get('m1')?.employeeId).toBeDefined();
+    expect(store.get('m2')?.employeeId).toBeDefined();
+    expect(store.get('m2')?.employeeId).not.toBe(store.get('m1')?.employeeId);
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+  });
+
+  it('migrateTeachersMissingEmployeeIds is a no-op when no rows are missing', async () => {
+    const { repo } = createFakeRepo();
+    const useCases = createTeachersUseCases(repo);
+
+    const result = await useCases.migrateTeachersMissingEmployeeIds();
+
+    expect(result).toEqual({ updated: 0 });
+    expect(repo.countNextEmployeeId).not.toHaveBeenCalled();
+    expect(mockBroadcastCollection).not.toHaveBeenCalled();
+  });
+
+  it('migrateTeachersMissingEmployeeIds returns early without a tenant', async () => {
+    const { repo } = createFakeRepo();
+    mockGetRequestTenant.mockReturnValue(null);
+    const useCases = createTeachersUseCases(repo);
+
+    const result = await useCases.migrateTeachersMissingEmployeeIds();
+
+    expect(result).toEqual({ updated: 0 });
+    expect(repo.listActiveMissingEmployeeId).not.toHaveBeenCalled();
+    expect(mockBroadcastCollection).not.toHaveBeenCalled();
   });
 
   it('sanitizeTeacherForViewer passes the record through when no field config is registered', async () => {

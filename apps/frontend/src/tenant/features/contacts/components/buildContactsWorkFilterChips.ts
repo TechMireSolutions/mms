@@ -3,7 +3,7 @@ import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { WorkFilterChip } from "@/lib/query/buildWorkFilterChips";
 
-export type ContactsWorkFilterChip = WorkFilterChip;
+type ContactsWorkFilterChip = WorkFilterChip;
 
 /** Build removable FilterChips models for active Contacts Work filters (gender + quick filter). */
 export function buildContactsWorkFilterChips(input: {

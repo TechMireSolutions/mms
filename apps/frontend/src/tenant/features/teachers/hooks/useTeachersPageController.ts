@@ -1,15 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import type { Teacher } from '@mms/shared';
-import { teacherColumnLabelKey, TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import {
+  resolveModuleTierTab,
+  teacherColumnLabelKey,
+  TEACHERS_MODULE_MANIFEST,
+} from '@mms/shared';
 import { useTeacherMutations, useTeachersPaginated, useTeachersMetrics } from '@/tenant/features/teachers/hooks/useTeachers';
 import { useTeachersDirectoryFilters } from '@/tenant/features/teachers/hooks/useTeachersDirectoryFilters';
+import { useEmployeeIdMigration } from '@/tenant/features/teachers/hooks/useEmployeeIdMigration';
 import { useTeachersKeyboardShortcuts } from '@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts';
 import { useTeachersPageActions } from '@/tenant/features/teachers/hooks/useTeachersPageActions';
+import { useTeachersPageFormState } from '@/tenant/features/teachers/hooks/useTeachersPageFormState';
+import { useTeachersPageOverlayState } from '@/tenant/features/teachers/hooks/useTeachersPageOverlayState';
+import { useTeachersPageOverlayProps } from '@/tenant/features/teachers/hooks/useTeachersPageOverlayProps';
+import { useTeachersPageTabPanelProps } from '@/tenant/features/teachers/hooks/useTeachersPageTabPanelProps';
 import { useTeacherColumnLayout } from '@/tenant/features/teachers/hooks/useTeacherColumnLayout';
 import {
   buildTeachersDirectoryQuery,
@@ -29,6 +38,7 @@ export function useTeachersPageController() {
     canExport,
     canReports: canViewReports,
     canViewSetup,
+    canEditSetup,
   } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
 
   const visibleTabs = useFilteredModuleTierTabs({
@@ -37,6 +47,21 @@ export function useTeachersPageController() {
   });
 
   const { data: metrics } = useTeachersMetrics();
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+
+  const { settings, genderFilters } = useTeacherConfig();
+  const { statusOptions, specializationOptions } = useTeacherLookupOptions();
+
+  const columnLayout = useTeacherColumnLayout(settings);
+
+  const [activeTab, setActiveTab] = usePersistedTabState<string>('teachers_active_tab', 'work');
+  const effectiveTab = resolveModuleTierTab(
+    activeTab,
+    visibleTabs.map((tab) => tab.id),
+  );
+
+  useEmployeeIdMigration(effectiveTab, canEditSetup);
+
   const {
     listPage,
     setListPage,
@@ -53,6 +78,10 @@ export function useTeachersPageController() {
     setFilterStatus,
     filterSpecialization,
     setFilterSpecialization,
+    filterGender,
+    setFilterGender,
+    quickFilter,
+    changeQuickFilter,
     selectedIds,
     clearSelection,
     handleSelectOne,
@@ -60,17 +89,15 @@ export function useTeachersPageController() {
     toggleStatus,
     clearFilters,
     hasActiveFilters,
-  } = useTeachersDirectoryFilters();
-  const [showForm, setShowForm] = useState(false);
-  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+    activeFilterCount,
+  } = useTeachersDirectoryFilters({ setActiveTab });
 
-  const { settings } = useTeacherConfig();
-  const { statusOptions, specializationOptions } = useTeacherLookupOptions();
+  useEffect(() => {
+    setListPage(1);
+  }, [viewMode, setListPage]);
 
-  const columnLayout = useTeacherColumnLayout(settings);
-
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('teachers_active_tab', 'work');
-  const [editTeacher, setEditTeacher] = useState<Teacher | null>(null);
+  const formState = useTeachersPageFormState();
+  const overlays = useTeachersPageOverlayState();
 
   useTeachersKeyboardShortcuts({
     selectedCount: selectedIds.length,
@@ -79,14 +106,11 @@ export function useTeachersPageController() {
     clearSelection,
     canWrite,
     showDeleted,
-    onCreate: () => {
-      setEditTeacher(null);
-      setShowForm(true);
-    },
+    onCreate: formState.openCreate,
   });
 
-  const pageActions = useTeachersPageActions({ editTeacher });
-  const { logExportAudit } = useTeacherMutations();
+  const mutations = useTeacherMutations();
+  const pageActions = useTeachersPageActions({ editTeacher: formState.editTeacher });
 
   const exportColumns = useMemo(() => {
     const visible = columnLayout.columnRegistry.filter((col) =>
@@ -114,14 +138,16 @@ export function useTeachersPageController() {
     search,
     filterStatus,
     filterSpecialization,
+    filterGender,
+    quickFilter,
     sortField,
     sortDir,
     viewingDeleted: showDeleted,
     selectedIds,
-    logExportAudit,
+    logExportAudit: mutations.logExportAudit,
   });
 
-  const useServerWork = activeTab === 'work';
+  const useServerWork = effectiveTab === 'work';
   const workPageQuery = useTeachersPaginated({
     page: listPage,
     limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
@@ -129,6 +155,8 @@ export function useTeachersPageController() {
       search: debouncedSearch,
       filterStatus,
       filterSpecialization,
+      filterGender,
+      quickFilter,
       sortField,
       sortDir,
     }),
@@ -142,52 +170,109 @@ export function useTeachersPageController() {
   );
   const shownCount = workPageQuery.data?.total ?? workTeachers.length;
 
-  return {
-    canWrite,
-    canDelete,
-    canExport,
-    visibleTabs,
-    serverCount: metrics?.total,
-    showForm,
-    setShowForm,
-    showDeleted,
-    sortField,
-    sortDir,
-    statusOptions,
-    specializationOptions,
-    columnLayout,
-    activeTab,
-    setActiveTab,
+  const tabPanelProps = useTeachersPageTabPanelProps(effectiveTab, {
     search,
     filterStatus,
     filterSpecialization,
+    filterGender,
+    quickFilter,
+    changeQuickFilter,
+    genderFilters,
+    activeFilterCount,
+    statusOptions,
+    specializationOptions,
+    showDeleted,
+    canWrite,
+    canDelete,
+    canExport,
+    hasActiveFilters,
+    columnRegistry: columnLayout.columnRegistry,
+    isColumnVisible: columnLayout.isColumnVisible,
+    getColumnWidth: columnLayout.getColumnWidth,
+    onColumnResize: columnLayout.setColumnWidth,
+    updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+    onResetLayout: columnLayout.resetColumnLayout,
+    customizerLabels: columnLayout.customizerLabels,
+    teachers: workTeachers,
+    workPageQuery: {
+      data: workPageQuery.data,
+      isLoading: workPageQuery.isLoading,
+      isError: workPageQuery.isError,
+      isFetching: workPageQuery.isFetching,
+      refetch: () => {
+        void workPageQuery.refetch();
+      },
+    },
+    useServerWork,
     selectedIds,
-    clearSelection,
     handleSelectOne,
     handleSelectAll,
-    editTeacher,
-    setEditTeacher,
-    pageActions,
-    openComposer: pageActions.openComposer,
-    canWriteMessaging: pageActions.canWriteMessaging,
-    useServerWork,
-    workPageQuery,
-    workTeachers,
-    shownCount,
-    listPage,
-    toggleStatus,
+    clearSelection,
+    handleBulkExport,
+    sortField,
+    sortDir,
+    onSortChange: (field, dir) => {
+      setSortField(field);
+      setSortDir(dir);
+    },
     setSearch,
-    setFilterStatus,
+    toggleStatus,
     setFilterSpecialization,
-    setShowDeleted,
-    setSortField,
-    setSortDir,
+    setFilterGender,
+    toggleViewingDeleted: () => setShowDeleted((previous) => !previous),
+    clearFilters,
+    onRetry: () => {
+      void workPageQuery.refetch();
+    },
+    openEditForm: formState.openEdit,
+    handleRestore: pageActions.handleRestore,
+    handleBulkStatusChange: showDeleted ? undefined : pageActions.handleBulkStatusChange,
+    bulkStatusPending: mutations.bulkUpdateTeacherStatus.isPending,
+    handleWhatsApp: showDeleted ? undefined : pageActions.handleWhatsApp,
+    handleSms: showDeleted ? undefined : pageActions.handleSms,
+    handleEmail: showDeleted ? undefined : pageActions.handleEmail,
     setListPage,
     viewMode,
     setViewMode,
+    workOverlays: {
+      openComposer: overlays.openComposer,
+      openSelectionMessage: overlays.openSelectionMessage,
+      canWriteMessaging: overlays.canWriteMessaging,
+      setConfirmBulkDeleteOpen: overlays.setConfirmBulkDeleteOpen,
+      setConfirmBulkRestoreOpen: overlays.setConfirmBulkRestoreOpen,
+      setDeleteTarget: overlays.setDeleteTarget,
+      setViewTeacher: overlays.setViewTeacher,
+    },
+  });
+
+  const pageOverlaysProps = useTeachersPageOverlayProps({
+    canWrite,
+    canDelete,
+    formState,
+    overlays,
+    workActions: {
+      handleSaveTeacher: pageActions.handleSaveTeacher,
+      handleRestore: pageActions.handleRestore,
+      handleDelete: pageActions.handleDelete,
+      handleBulkDelete: pageActions.handleBulkDelete,
+      handleBulkRestore: pageActions.handleBulkRestore,
+    },
+    selectedIds,
+    clearSelection,
+  });
+
+  return {
+    canWrite,
+    canExport,
+    visibleTabs,
+    metricsTotal: metrics?.total,
+    activeTab: effectiveTab,
+    setActiveTab,
+    viewingDeleted: showDeleted,
+    shownCount,
+    openCreateForm: formState.openCreate,
     handleExportCSV,
-    handleBulkExport,
-    clearFilters,
-    hasActiveFilters,
+    tabPanelProps,
+    pageOverlaysProps,
   };
 }

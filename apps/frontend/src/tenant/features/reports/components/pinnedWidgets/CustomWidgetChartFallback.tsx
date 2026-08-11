@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { chartAxisTick } from "@/components/ui/ChartGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveWidgetChartHex } from "@/lib/brandingChartPalette";
@@ -63,7 +64,7 @@ export default function CustomWidgetChartFallback({
     <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
       <BarChart data={chartData} barSize={8} margin={{ top: 2, right: 2, left: -25, bottom: 2 }}>
         <XAxis dataKey="name" tick={false} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 6 }} axisLine={false} tickLine={false} />
+        <YAxis tick={chartAxisTick(6)} axisLine={false} tickLine={false} />
         <Bar dataKey="value" fill={colorHex} radius={[2, 2, 0, 0]} />
       </BarChart>
     </SafeResponsiveContainer>

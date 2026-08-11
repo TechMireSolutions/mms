@@ -4,6 +4,7 @@ import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useTeachersPaginated } from '@/tenant/hooks/collections/teachers';
@@ -99,7 +100,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
           <Filter className="w-4 h-4 shrink-0 text-muted-foreground" />
           <h2 className="text-sm font-semibold text-foreground m-0 truncate">{t("attendance.filters.title")}</h2>
           {activeCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-bold">{activeCount}</span>
+            <Badge pill className="px-1.5 font-bold">{activeCount}</Badge>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">

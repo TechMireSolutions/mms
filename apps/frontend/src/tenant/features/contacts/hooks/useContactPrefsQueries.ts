@@ -15,7 +15,7 @@ import {
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 import type { SavedReportsSource } from '@/hooks/useSavedReportsSource';
 
-export interface ContactsSavedReportCreateInput {
+interface ContactsSavedReportCreateInput {
   name: string;
   drillDown: ContactsWorkDrillDown;
   shareScope?: ContactsSavedReportShareScope;
@@ -77,7 +77,7 @@ export function useContactColumnPrefsMutation() {
   });
 }
 
-export function useContactsSavedReports() {
+function useContactsSavedReports() {
   const { isAuthenticated } = useAuth();
   return useQuery({
     queryKey: CONTACTS_SAVED_REPORTS_QUERY_KEY,
@@ -93,7 +93,7 @@ export function useContactsSavedReports() {
   });
 }
 
-export function useContactsSavedReportMutations() {
+function useContactsSavedReportMutations() {
   const queryClient = useQueryClient();
 
   const invalidate = () => {

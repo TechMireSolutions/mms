@@ -2,6 +2,7 @@ import type React from "react";
 import { formatDate, type AppTranslationKey } from "@mms/shared";
 import { CheckCircle2, DollarSign, Download, Plus, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
@@ -139,9 +140,9 @@ export function JournalQuickActionsPanel({
                         <span className="text-xs text-muted-foreground">{formatDate(entry.date)}</span>
                         <span className="text-xs font-mono text-muted-foreground">{entry.ref}</span>
                         {(entry.tags || []).map((tag) => (
-                          <span key={tag} className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                          <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
                             {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
-                          </span>
+                          </Badge>
                         ))}
                       </div>
                     </div>

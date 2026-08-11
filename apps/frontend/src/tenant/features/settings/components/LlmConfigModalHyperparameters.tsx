@@ -1,6 +1,7 @@
 import type React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { Slider } from '@/components/ui/slider';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 
@@ -25,7 +26,9 @@ export function LlmConfigModalHyperparameters({
 }: LlmConfigModalHyperparametersProps): React.JSX.Element {
   return (
     <div className="space-y-4 border-t border-border pt-4">
-      <h5 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('settings.llmModalHyperparameters')}</h5>
+      <SectionLabel as="h5" weight="semibold" tracking="wider">
+        {t('settings.llmModalHyperparameters')}
+      </SectionLabel>
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold">

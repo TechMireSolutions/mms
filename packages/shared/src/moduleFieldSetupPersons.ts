@@ -205,6 +205,21 @@ export const TEACHERS_TAB_REGISTRY: TabDefinition[] = [
   { key: "employment", label: "Employment Details", labelKey: "teachers.form.tab.employment", enabled: true, order: 1, isSystem: true },
 ];
 
+const TEACHER_SEED_FORM_TAB_KEYS = new Set(
+  TEACHERS_TAB_REGISTRY.map((tab) => tab.key.toLowerCase()),
+);
+
+/** True when `tabKey` is a seeded Teachers form tab (not a tenant custom tab). */
+export function isTeacherSeedFormTab(tabKey: string): boolean {
+  return TEACHER_SEED_FORM_TAB_KEYS.has(tabKey.toLowerCase());
+}
+
+/** Seeded Teachers form tab definition when `tabKey` matches the registry. */
+export function getTeacherSeedFormTab(tabKey: string): TabDefinition | undefined {
+  const key = tabKey.toLowerCase();
+  return TEACHERS_TAB_REGISTRY.find((tab) => tab.key.toLowerCase() === key);
+}
+
 export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
     {

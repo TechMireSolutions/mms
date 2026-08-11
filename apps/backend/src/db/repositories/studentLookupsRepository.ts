@@ -16,7 +16,7 @@ type LookupDbRow = {
   updatedAt: Date;
 };
 
-export interface StudentLookupRowInput extends Omit<ModuleLookupRowInput, 'kind'> {
+interface StudentLookupRowInput extends Omit<ModuleLookupRowInput, 'kind'> {
   kind: StudentLookupKind;
 }
 

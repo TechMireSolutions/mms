@@ -1,4 +1,3 @@
-import React from "react";
 import { AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
 import { MergePreview } from "@/tenant/features/contacts/components/DuplicateDetectionParts";

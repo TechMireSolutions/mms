@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface TabarrukListProps {
@@ -51,20 +52,24 @@ export function TabarrukList({ items, canWrite, t, onEdit, onDelete }: TabarrukL
                 </div>
               )}
             </div>
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.tabarruk.form.quantity")}</dt>
-                <dd className="text-sm text-foreground">{tabarrukItem.quantity || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.tabarruk.form.date")}</dt>
-                <dd className="text-sm text-muted-foreground">{tabarrukItem.date ? formatDate(tabarrukItem.date) : "—"}</dd>
-              </div>
-              <div className="col-span-2">
-                <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.tabarruk.form.occasion")}</dt>
-                <dd className="text-sm text-muted-foreground">{tabarrukItem.occasion || "—"}</dd>
-              </div>
-            </dl>
+            <StatGrid>
+              <StatRow
+                label={t("sessions.tabarruk.form.quantity")}
+                value={tabarrukItem.quantity || "—"}
+                ddClassName="text-sm"
+              />
+              <StatRow
+                label={t("sessions.tabarruk.form.date")}
+                value={tabarrukItem.date ? formatDate(tabarrukItem.date) : "—"}
+                ddClassName="text-sm text-muted-foreground"
+              />
+              <StatRow
+                fullWidth
+                label={t("sessions.tabarruk.form.occasion")}
+                value={tabarrukItem.occasion || "—"}
+                ddClassName="text-sm text-muted-foreground"
+              />
+            </StatGrid>
           </motion.article>
         ))}
       </div>

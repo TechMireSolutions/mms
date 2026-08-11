@@ -1,5 +1,4 @@
 /** Contact preference constants — tabs, palettes, labels, dial codes. */
-import type { WhatsAppTemplate } from './contactFieldSchemaTypes.js';
 
 export const CONFIG_VERSION = 2;
 
@@ -25,13 +24,6 @@ export const COLOR_PALETTES = {
   destructive: { bg: "bg-destructive/10 text-destructive border-destructive/20 dark:bg-destructive/15 dark:border-destructive/25", text: "text-destructive", border: "border-destructive/20 dark:border-destructive/25" },
 };
 
-export const DEFAULT_WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
-  { id: "fee", label: "Fee Reminder", body: "Assalamu Alaikum! This is a friendly reminder that your fee payment for this month is due. Please contact us at your earliest convenience. JazakAllah Khair." },
-  { id: "event", label: "Event Invitation", body: "Assalamu Alaikum! You are cordially invited to our upcoming event at the madrasa. Please confirm your attendance. JazakAllah Khair." },
-  { id: "absence", label: "Absence Notice", body: "Assalamu Alaikum! We noticed your child was absent today. Please inform us if there is an issue. JazakAllah Khair." },
-  { id: "custom", label: "Custom Message", body: "" },
-];
-
 export const DEFAULT_PHONE_LABELS = ["Mobile", "Home", "Work", "WhatsApp", "Other"];
 export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
 export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
@@ -40,8 +32,6 @@ export const SOCIAL_PLATFORMS = [
   "Facebook", "Twitter / X", "Instagram", "LinkedIn", "TikTok", "YouTube",
   "WhatsApp", "Telegram", "Snapchat",
 ];
-
-export const DEFAULT_SOCIAL_PLATFORMS = SOCIAL_PLATFORMS;
 
 export const COUNTRY_CODES = [
   { country: "Pakistan",       code: "+92"  },
@@ -56,7 +46,7 @@ export const COUNTRY_CODES = [
  * Names retired from the former expanded Contacts dial-code seed.
  * Presence in a persisted list means it should be replaced with {@link COUNTRY_CODES}.
  */
-export const RETIRED_CONTACT_COUNTRY_CODE_NAMES = [
+const RETIRED_CONTACT_COUNTRY_CODE_NAMES = [
   "Canada",
   "Australia",
   "Bangladesh",

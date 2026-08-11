@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface ObligationTypeManagerListProps {
@@ -63,20 +64,16 @@ export function ObligationTypeManagerList({
                 <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{obligationType.name}</p>
                 {renderActions(obligationType)}
               </div>
-              <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.types.colQuantity")}</dt>
-                  <dd>
-                    <StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.types.colDesignated")}</dt>
-                  <dd>
-                    <StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />
-                  </dd>
-                </div>
-              </dl>
+              <StatGrid columns="sm2">
+                <StatRow
+                  label={t("obligations.types.colQuantity")}
+                  value={<StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />}
+                />
+                <StatRow
+                  label={t("obligations.types.colDesignated")}
+                  value={<StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />}
+                />
+              </StatGrid>
             </article>
           ))}
         </div>

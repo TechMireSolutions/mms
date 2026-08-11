@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { getFieldLabel } from "@/tenant/features/reports/components/reportMetadata";
 import type { FilterRule } from "@/tenant/features/reports/components/dynamicChartVisualizerTypes";
@@ -25,15 +26,15 @@ export function DynamicChartVisualizerFiltersPanel({
             <Filter className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <h4 className="text-xs font-black text-foreground uppercase tracking-widest leading-none truncate">{t("reports.visualizer.queryFilters")}</h4>
-            <p className="text-xs text-muted-foreground mt-0.5 uppercase font-bold tracking-wider truncate">{t("reports.visualizer.filtersSubtitle")}</p>
+            <SectionLabel as="h4" tone="foreground" className="leading-none truncate">{t("reports.visualizer.queryFilters")}</SectionLabel>
+            <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5 truncate">{t("reports.visualizer.filtersSubtitle")}</SectionLabel>
           </div>
         </div>
         <Button
           type="button"
-          variant="outline"
+          variant="capsOutline"
+          size="caps"
           onClick={onAddFilter}
-          className="min-h-11 flex items-center gap-1 px-3 rounded-xl border border-border bg-card/50 text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-muted-foreground/30 shadow-none"
         >
           <Plus className="w-3 h-3" />
           {t("reports.visualizer.addRule")}

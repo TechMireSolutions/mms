@@ -5,8 +5,6 @@ import {
   resolveRelationshipPairs,
 } from './contactRelationshipPairUtils.js';
 
-export { normalizeRelationshipTerm } from './contactRelationshipPairUtils.js';
-
 export interface RelationshipLink {
   contactId: string;
   relationship?: string;

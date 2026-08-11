@@ -6,6 +6,7 @@ import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { ComposedDashboardWidget, isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -99,9 +100,9 @@ export function CustomWidgetComfortableLayout({
       <div className={`absolute -end-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="min-w-0 space-y-0.5 text-start">
-          <span className="block truncate text-xs font-black text-foreground uppercase tracking-widest leading-none">
+          <SectionLabel tone="foreground" className="block truncate leading-none">
             {resolveWidgetTitle(widget, t)}
-          </span>
+          </SectionLabel>
           <p className="truncate text-xs text-muted-foreground font-bold uppercase tracking-wider">
             {getWidgetSubtitle(widget, resolvedWidgetType, t)}
           </p>

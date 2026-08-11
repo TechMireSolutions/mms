@@ -1,10 +1,36 @@
 import {
   buildDynamicTeacherSchema,
   formatTeacherZodIssues,
+  type AppTranslationKey,
+  type Contact,
   type FieldDefinition,
+  type TeacherDuplicateReason,
   type TeachersSettings,
   type ValidationError,
 } from "@mms/shared";
+import { checkTeacherRegistrationDuplicate } from "@/tenant/features/teachers/hooks/useTeachers";
+
+export const DUPLICATE_ERROR_KEYS: Record<TeacherDuplicateReason, AppTranslationKey> = {
+  contact: "teachers.form.contactAlreadyTeacher",
+  employeeId: "teachers.form.duplicateEmployeeId",
+};
+
+export interface TeacherDuplicateCheckInput {
+  teacherId?: string;
+  contactId: string;
+  linkedContact?: Contact | null;
+  employeeId?: string;
+}
+
+export async function checkTeacherFormDuplicate(
+  input: TeacherDuplicateCheckInput,
+): Promise<TeacherDuplicateReason | null> {
+  return checkTeacherRegistrationDuplicate({
+    excludeId: input.teacherId ? String(input.teacherId) : undefined,
+    contactId: String(input.contactId),
+    employeeId: input.employeeId?.trim() || undefined,
+  });
+}
 
 export interface TeacherValidationContext {
   settings: TeachersSettings;

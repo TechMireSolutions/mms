@@ -1,12 +1,14 @@
 import React from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { motion } from "framer-motion";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  RadarChart, PolarGrid, PolarAngleAxis, Radar, LineChart, Line,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
+  RadarChart, PolarAngleAxis, Radar, LineChart, Line,
 } from "recharts";
+import { ChartGrid, ChartPolarGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { AlertTriangle, Trophy } from "lucide-react";
 import {
   QUESTION_ACCURACY_EXCELLENT_THRESHOLD,
@@ -74,9 +76,9 @@ export function PerformanceAnalyticsPanels({
           <div className="h-chart-sm" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                <ChartGrid />
+                <XAxis dataKey="name" tick={chartAxisTick(10)} />
+                <YAxis domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
                 <Tooltip
                   formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAvgScore")]}
                   contentStyle={{ fontSize: 11, borderRadius: 8 }}
@@ -92,8 +94,8 @@ export function PerformanceAnalyticsPanels({
             <div className="h-chart-sm" aria-hidden>
               <SafeResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
-                  <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9 }} />
+                  <ChartPolarGrid />
+                  <PolarAngleAxis dataKey="subject" tick={chartAxisTick(9)} />
                   <Radar dataKey="accuracy" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
                   <Tooltip
                     formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAccuracy")]}
@@ -115,9 +117,9 @@ export function PerformanceAnalyticsPanels({
           <div className="h-chart-sm" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={studentStats} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
+                <ChartGrid horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
+                <YAxis type="category" dataKey="name" tick={chartAxisTick(10)} width={90} />
                 <Tooltip
                   formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAvg")]}
                   contentStyle={{ fontSize: 11, borderRadius: 8 }}
@@ -132,9 +134,9 @@ export function PerformanceAnalyticsPanels({
           <div className="h-chart-sm" aria-hidden>
             <SafeResponsiveContainer width="100%" height="100%">
               <BarChart data={diffData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                <ChartGrid />
+                <XAxis dataKey="name" tick={chartAxisTick(11)} />
+                <YAxis domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
                 <Tooltip
                   formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAccuracy")]}
                   contentStyle={{ fontSize: 11, borderRadius: 8 }}
@@ -156,12 +158,12 @@ export function PerformanceAnalyticsPanels({
                   <p className="min-w-0 truncate text-sm font-semibold text-foreground">{categoryResult.name}</p>
                   <span className={`shrink-0 text-xs font-bold ${questionAccuracyTextClass(categoryResult.accuracy)}`}>{categoryResult.accuracy}%</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
-                  <div
-                    className={`h-full rounded-full transition-all ${questionAccuracyBarClass(categoryResult.accuracy)}`}
-                    style={{ width: `${categoryResult.accuracy}%` }}
-                  />
-                </div>
+                <ProgressBar
+                  value={categoryResult.accuracy}
+                  fillClassName={questionAccuracyBarClass(categoryResult.accuracy)}
+                  trackClassName="bg-border"
+                  aria-hidden="true"
+                />
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {t("questionBank.analytics.correctRatio", { correct: categoryResult.correct, total: categoryResult.total })}
                 </p>
@@ -197,9 +199,12 @@ export function PerformanceAnalyticsPanels({
                     </p>
                     <p className="shrink-0 text-sm font-bold text-foreground">{studentStat.avg}%</p>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${studentStat.avg}%` }} />
-                  </div>
+                  <ProgressBar
+                    value={studentStat.avg}
+                    fillClassName="bg-primary"
+                    trackClassName="bg-border"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             ))}

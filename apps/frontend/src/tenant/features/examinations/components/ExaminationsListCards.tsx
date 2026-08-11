@@ -9,6 +9,7 @@ import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
 import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import { ExaminationsRowActions } from '@/tenant/features/examinations/components/ExaminationsRowActions';
 import {
@@ -90,51 +91,46 @@ export function ExaminationsListCards(props: ExaminationsListCardsProps): JSX.El
                 }
               />
 
-              <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <StatGrid columns="sm2" className="ms-1">
                 {isColumnVisible('date') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('examinations.columns.exam.date')}</dt>
-                    <dd className="text-foreground">{formatDate(exam.date, true)}</dd>
-                  </div>
+                  <StatRow label={t('examinations.columns.exam.date')} value={formatDate(exam.date, true)} />
                 )}
                 {isColumnVisible('duration') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('examinations.columns.exam.duration')}</dt>
-                    <dd className="text-foreground">{t('examinations.durationMinutes', { minutes: exam.duration })}</dd>
-                  </div>
+                  <StatRow
+                    label={t('examinations.columns.exam.duration')}
+                    value={t('examinations.durationMinutes', { minutes: exam.duration })}
+                  />
                 )}
                 {isColumnVisible('totalMarks') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('examinations.columns.exam.totalMarks')}</dt>
-                    <dd className="font-semibold text-foreground">{exam.totalMarks}</dd>
-                  </div>
+                  <StatRow
+                    label={t('examinations.columns.exam.totalMarks')}
+                    value={exam.totalMarks}
+                    ddClassName="font-semibold"
+                  />
                 )}
                 {isColumnVisible('passingMarks') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('examinations.columns.exam.passingMarks')}</dt>
-                    <dd className="text-foreground">{exam.passingMarks}</dd>
-                  </div>
+                  <StatRow label={t('examinations.columns.exam.passingMarks')} value={exam.passingMarks} />
                 )}
                 {isColumnVisible('status') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('examinations.columns.exam.status')}</dt>
-                    <dd className="pt-1">
-                      <StatusBadge status={exam.status} config={statusConfig} size="sm" />
-                    </dd>
-                  </div>
+                  <StatRow
+                    label={t('examinations.columns.exam.status')}
+                    value={<StatusBadge status={exam.status} config={statusConfig} size="sm" />}
+                    dtClassName="mb-1"
+                  />
                 )}
                 {isColumnVisible('classes') && (
-                  <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('examinations.columns.exam.classes')}</dt>
-                    <dd className="text-foreground">
-                      {assignedClasses.length > 0
+                  <StatRow
+                    fullWidth
+                    label={t('examinations.columns.exam.classes')}
+                    value={
+                      assignedClasses.length > 0
                         ? assignedClasses.map((sessionClass) => sessionClass.name).join(', ')
-                        : '—'}
-                    </dd>
-                    <dd className="text-xs text-muted-foreground">{t('examinations.studentCount', { count: studentCount })}</dd>
-                  </div>
+                        : '—'
+                    }
+                    hint={t('examinations.studentCount', { count: studentCount })}
+                  />
                 )}
-              </dl>
+              </StatGrid>
 
               <DirectoryCardFooter
                 trailing={

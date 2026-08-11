@@ -1,4 +1,5 @@
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import type { Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
@@ -53,31 +54,35 @@ export function JournalEntryDetailLines({
                   <p className="text-xs text-muted-foreground m-0">{line.description}</p>
                 </div>
               ) : null}
-              <dl className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.debit")}</dt>
-                  <dd className="font-mono text-xs font-semibold text-info m-0">{line.debit > 0 ? formatCurrency(line.debit) : "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.credit")}</dt>
-                  <dd className="font-mono text-xs font-semibold text-success m-0">{line.credit > 0 ? formatCurrency(line.credit) : "—"}</dd>
-                </div>
-              </dl>
+              <StatGrid>
+                <StatRow
+                  label={t("accounting.journal.detail.debit")}
+                  value={line.debit > 0 ? formatCurrency(line.debit) : "—"}
+                  ddClassName="font-mono text-xs font-semibold text-info"
+                />
+                <StatRow
+                  label={t("accounting.journal.detail.credit")}
+                  value={line.credit > 0 ? formatCurrency(line.credit) : "—"}
+                  ddClassName="font-mono text-xs font-semibold text-success"
+                />
+              </StatGrid>
             </article>
           );
         })}
         <article className="rounded-xl border border-border bg-muted/30 p-3">
           <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.journal.detail.totals")}</p>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.debit")}</dt>
-              <dd className="font-mono font-bold text-info m-0">{formatCurrency(totalDebit)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.journal.detail.credit")}</dt>
-              <dd className="font-mono font-bold text-success m-0">{formatCurrency(totalCredit)}</dd>
-            </div>
-          </dl>
+          <StatGrid>
+            <StatRow
+              label={t("accounting.journal.detail.debit")}
+              value={formatCurrency(totalDebit)}
+              ddClassName="font-mono font-bold text-info"
+            />
+            <StatRow
+              label={t("accounting.journal.detail.credit")}
+              value={formatCurrency(totalCredit)}
+              ddClassName="font-mono font-bold text-success"
+            />
+          </StatGrid>
         </article>
       </div>
       <div className="hidden md:block">

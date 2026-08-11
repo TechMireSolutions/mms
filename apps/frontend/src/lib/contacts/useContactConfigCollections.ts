@@ -10,12 +10,10 @@ import { syncOptionsInConfig } from "@/lib/contacts/preferencesStorage";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   CONTACTS_FIELD_CONFIG_QUERY_KEY,
-} from "@/tenant/features/contacts/hooks/useContactSetupConfig";
-import {
   CONTACTS_LOOKUPS_QUERY_KEY,
   useContactLookupMutation,
   useContactLookupsQuery,
-} from "@/tenant/features/contacts/hooks/useContactLookups";
+} from "@/tenant/hooks/collections/contacts";
 
 type CountryCodeEntry = { country: string; code: string };
 

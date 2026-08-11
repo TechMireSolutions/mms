@@ -1,4 +1,5 @@
-import { Bar, BarChart, CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -60,9 +61,9 @@ export function SessionReportCharts({
             }}
             style={{ cursor: "pointer" }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="class" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
+            <ChartGrid />
+            <XAxis dataKey="class" tick={chartAxisTick(11)} />
+            <YAxis tick={chartAxisTick(11)} />
             <Tooltip />
             <Bar dataKey="enrolled" fill="hsl(var(--primary))" stackId="a" name={t("sessions.report.enrolledLabel")} radius={[0, 0, 0, 0]} />
             <Bar dataKey="available" fill="hsl(var(--muted))" stackId="a" name={t("sessions.report.availableLabel")} radius={[4, 4, 0, 0]} />
@@ -80,9 +81,9 @@ export function SessionReportCharts({
             }}
             style={{ cursor: "pointer" }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
+            <ChartGrid />
+            <XAxis dataKey="month" tick={chartAxisTick(11)} />
+            <YAxis tick={chartAxisTick(11)} />
             <Tooltip />
             <Line type="monotone" dataKey="students" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} name={t("sessions.report.studentsLabel")} />
           </LineChart>

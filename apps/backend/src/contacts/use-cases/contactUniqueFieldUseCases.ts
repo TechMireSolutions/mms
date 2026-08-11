@@ -5,7 +5,7 @@ import {
   type Contact,
   type ValidationError,
 } from '@mms/shared';
-import { loadContactFieldConfig } from '../../services/contactConfigService.js';
+import { loadContactFieldConfig } from '../../lib/contactConfigService.js';
 import { loadContactRuntimeDefaults } from './contactLoadUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';

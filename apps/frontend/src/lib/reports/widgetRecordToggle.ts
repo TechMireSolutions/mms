@@ -56,7 +56,7 @@ export function isRestWidgetCollection(collectionName: string): boolean {
   return collectionName in REST_WIDGET_TOGGLE_CONFIG;
 }
 
-export function nextToggleFieldValue(current: unknown): unknown {
+function nextToggleFieldValue(current: unknown): unknown {
   if (current === 'active') return 'inactive';
   if (current === 'inactive') return 'active';
   if (current === 'paid') return 'unpaid';
@@ -91,7 +91,6 @@ export async function persistWidgetRecordToggle(options: {
   collectionName: string;
   recordId: string;
   field?: string;
-  applyPatch?: (record: Record<string, unknown>) => Record<string, unknown>;
 }): Promise<void> {
   const { collectionName, recordId } = options;
   const field = options.field ?? 'status';
@@ -109,9 +108,7 @@ export async function persistWidgetRecordToggle(options: {
     throw new Error(`Record ${recordId} not found in ${collectionName} cache`);
   }
 
-  const patched = options.applyPatch
-    ? options.applyPatch({ ...existing })
-    : patchRecordForCollection(collectionName, { ...existing }, field);
+  const patched = patchRecordForCollection(collectionName, { ...existing }, field);
 
   if (config.bulkBody) {
     await apiJson(config.putPath(recordId), {

@@ -1,5 +1,6 @@
 import React from "react";
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { formatNumber } from "@mms/shared";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -36,9 +37,9 @@ export function HasanatReportCharts({
             }}
             style={{ cursor: "pointer" }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="faculty" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 11 }} />
+            <ChartGrid />
+            <XAxis dataKey="faculty" tick={chartAxisTick(11)} />
+            <YAxis tick={chartAxisTick(11)} />
             <Tooltip />
             <Bar dataKey="distributed" fill="hsl(var(--primary))" name={t("hasanat.report.distributed")} radius={[4, 4, 0, 0]} />
             <Bar dataKey="redeemed" fill="hsl(var(--chart-2))" name={t("hasanat.report.redeemed")} radius={[4, 4, 0, 0]} />

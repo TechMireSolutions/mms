@@ -18,13 +18,8 @@ export const {
   loadContactsByIds,
   loadExistingNormalizedContactNames,
   getContactById,
-  upsertContact,
   updateContactById,
-  restoreContactById,
-  bulkRestoreContacts,
-  bulkSoftDeleteContacts,
   bulkSaveContacts,
-  applyContactRelationshipInference,
 } = contactUseCases;
 
 // Non-instance exports kept on the stable path (routes + cross-module services).

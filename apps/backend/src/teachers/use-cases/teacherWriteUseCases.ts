@@ -1,7 +1,7 @@
 import type { TeacherRecord } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
-import { broadcastCollection } from '../../services/websocketService.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 import type { TeachersRepository } from '../repository/teachersRepository.js';
 import { teachersRepository } from '../repository/teachersRepositoryAdapter.js';
 import { prepareTeacherRecord } from './teacherNormalizeUseCases.js';

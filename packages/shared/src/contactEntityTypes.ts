@@ -6,30 +6,6 @@ export const WHATSAPP_STATUS_VALUES = ['PENDING', 'REGISTERED', 'NOT_REGISTERED'
 /** Status of WhatsApp registration checks for phone numbers. */
 export type WhatsAppStatus = (typeof WHATSAPP_STATUS_VALUES)[number];
 
-/** Preferences governing automated WhatsApp verification triggers and UI presentation. */
-export interface WhatsAppPreferences {
-  autoCheckEnabled: boolean;
-  excludedCountryCodes: string[];
-  verificationTrigger: 'IMMEDIATE_ON_SAVE' | 'BATCH_NIGHTLY' | 'MANUAL_ONLY';
-  uiIndicatorStyle: {
-    icon?: string;
-    color?: string;
-    label?: string;
-  };
-}
-
-/** Verification response payload for WhatsApp phone status lookups. */
-export interface WhatsAppVerificationResult {
-  status: WhatsAppStatus;
-  checkedAt: string;
-  error?: string;
-}
-
-/** Service interface for verifying WhatsApp capabilities on phone numbers. */
-export interface WhatsAppProvider {
-  verifyPhoneNumber(phoneNumber: string): Promise<WhatsAppVerificationResult>;
-}
-
 /** Phone number model for contacts with label, country code, and verification status. */
 export interface PhoneNumber {
   label: string;

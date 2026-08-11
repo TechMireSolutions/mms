@@ -108,8 +108,10 @@ export default function SavedReports({
         </div>
         {onApplyFilters && (
           <Button
+            variant="capsPrimary"
+            size="caps"
             onClick={() => setSaveOpen(true)}
-            className="flex w-full sm:w-auto items-center gap-1.5 min-h-11 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+            className="w-full sm:w-auto"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("reports.saved.saveCurrent")}

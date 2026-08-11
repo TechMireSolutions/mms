@@ -14,13 +14,13 @@ export const STUDENT_LOOKUP_LEGACY_COLLECTION_KEYS = {
   studentDiscountTypes: 'discountTypes',
 } as const satisfies Record<string, StudentLookupKind>;
 
-export type StudentLookupLegacyCollectionKey = keyof typeof STUDENT_LOOKUP_LEGACY_COLLECTION_KEYS;
+type StudentLookupLegacyCollectionKey = keyof typeof STUDENT_LOOKUP_LEGACY_COLLECTION_KEYS;
 
-export const studentLookupKindSchema = z.enum(STUDENT_LOOKUP_KINDS);
+const studentLookupKindSchema = z.enum(STUDENT_LOOKUP_KINDS);
 
-export const studentLookupStringItemsSchema = z.array(z.string().min(1).max(200)).max(500);
+const studentLookupStringItemsSchema = z.array(z.string().min(1).max(200)).max(500);
 
-export const studentLookupsMapSchema = z.object({
+const studentLookupsMapSchema = z.object({
   statuses: studentLookupStringItemsSchema,
   genderFilters: studentLookupStringItemsSchema,
   discountTypes: studentLookupStringItemsSchema,

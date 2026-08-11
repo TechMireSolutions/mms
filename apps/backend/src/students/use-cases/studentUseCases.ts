@@ -47,14 +47,12 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       write.updateStudentById(id, record, repo),
     softDeleteStudentById: (id: string, deletedBy: string, deletionReason?: string) =>
       softDelete.softDeleteStudentById(id, deletedBy, deletionReason, repo),
-    deleteStudentById: (id: string, deletedBy: string, deletionReason?: string) =>
-      softDelete.softDeleteStudentById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteStudents: (ids: string[], deletedBy: string, deletionReason?: string) =>
       softDelete.bulkSoftDeleteStudents(ids, deletedBy, deletionReason, repo),
-    restoreStudentById: (id: string, restoredBy: string) =>
-      softDelete.restoreStudentById(id, restoredBy, repo),
-    bulkRestoreStudents: (ids: string[], restoredBy: string) =>
-      softDelete.bulkRestoreStudents(ids, restoredBy, repo),
+    restoreStudentById: (id: string) =>
+      softDelete.restoreStudentById(id, repo),
+    bulkRestoreStudents: (ids: string[]) =>
+      softDelete.bulkRestoreStudents(ids, repo),
     bulkUpdateStudentStatus: (ids: string[], status: string) =>
       operation.bulkUpdateStudentStatus(ids, status, repo),
     computeNextGrNumberForDate: (

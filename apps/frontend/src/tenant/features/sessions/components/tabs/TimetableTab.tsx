@@ -4,6 +4,7 @@ import { Plus, Clock } from "lucide-react";
 import { DAYS, Session, TimetableItem } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LegendChip } from "@/components/ui/LegendChip";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { AppTranslationKey } from "@mms/shared";
@@ -79,10 +80,13 @@ export function TimetableTab({ session, onUpdate, canWrite }: TimetableTabProps)
 
       <div className="flex flex-wrap gap-2" aria-label={t("sessions.timetable.legend")}>
         {Object.entries(TIMETABLE_TYPE_CONFIG).map(([type, typeConfig]) => (
-          <div key={type} className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${typeConfig.dot}`} aria-hidden="true" />
-            <span className="text-xs text-muted-foreground">{t(`sessions.timetable.type.${type}` as AppTranslationKey)}</span>
-          </div>
+          <LegendChip
+            key={type}
+            dotSize="sm"
+            dotClassName={typeConfig.dot}
+            label={t(`sessions.timetable.type.${type}` as AppTranslationKey)}
+            labelClassName="text-muted-foreground"
+          />
         ))}
       </div>
 

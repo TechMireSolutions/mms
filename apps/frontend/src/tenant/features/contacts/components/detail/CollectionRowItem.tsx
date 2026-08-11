@@ -13,21 +13,10 @@ export interface CollectionRowAction {
   external?: boolean;
 }
 
-export interface CollectionRowItemProps {
+interface CollectionRowItemProps {
   label: string;
   value: string;
   copyable?: boolean;
-  /** @deprecated Prefer `actions` for multiple row controls. */
-  actionHref?: string;
-  /** @deprecated Prefer `actions` for multiple row controls. */
-  onAction?: () => void;
-  /** @deprecated Prefer `actions` for multiple row controls. */
-  actionIcon?: LucideIcon;
-  /** @deprecated Prefer `actions` for multiple row controls. */
-  actionTitle?: string;
-  /** @deprecated Prefer `actions` for multiple row controls. */
-  actionColorClass?: string;
-  external?: boolean;
   actions?: CollectionRowAction[];
 }
 
@@ -71,28 +60,8 @@ export function CollectionRowItem({
   label,
   value,
   copyable = true,
-  actionHref,
-  onAction,
-  actionIcon: ActionIcon,
-  actionTitle,
-  actionColorClass = "text-primary hover:bg-primary/10",
-  external = false,
   actions,
 }: CollectionRowItemProps): JSX.Element {
-  const legacyActions: CollectionRowAction[] = [];
-  if ((!actions || actions.length === 0) && ActionIcon && (onAction || actionHref)) {
-    legacyActions.push({
-      key: "primary",
-      icon: ActionIcon,
-      title: actionTitle || value,
-      href: onAction ? undefined : actionHref,
-      onClick: onAction,
-      className: actionColorClass,
-      external,
-    });
-  }
-  const resolvedActions = actions && actions.length > 0 ? actions : legacyActions;
-
   return (
     <div className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
       <div className="min-w-0">
@@ -112,7 +81,7 @@ export function CollectionRowItem({
               className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-foreground flex items-center justify-center opacity-100"
             />
           )}
-          {resolvedActions.map((action) => (
+          {(actions ?? []).map((action) => (
             <RowActionButton key={action.key} action={action} />
           ))}
         </div>

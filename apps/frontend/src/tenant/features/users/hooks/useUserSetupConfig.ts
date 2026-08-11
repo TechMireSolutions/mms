@@ -45,9 +45,9 @@ const setupConfigHooks = createModuleSetupConfigHooks<
   invalidateFieldConfigOnPreferencesSave: true,
 });
 
-export const useUserFieldConfigQuery = setupConfigHooks.useFieldConfigQuery;
+const useUserFieldConfigQuery = setupConfigHooks.useFieldConfigQuery;
 export const useUserFieldConfigMutation = setupConfigHooks.useFieldConfigMutation;
-export const useUserPreferencesQuery = setupConfigHooks.usePreferencesQuery;
+const useUserPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useUserPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
 /** Composed UsersSettings from typed field-config + preferences queries. */

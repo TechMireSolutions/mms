@@ -2,7 +2,6 @@
 export {
   useStudentsPaginated,
   fetchAllStudentsForQuery,
-  useStudentById,
   useStudentLinkedContactIds,
   useStudentsByIds,
 } from "@/tenant/features/students/hooks/useStudentsListQueries";
@@ -13,9 +12,3 @@ export {
   useStudentsMetrics,
   useStudentsWidgetAggregates,
 } from "@/tenant/features/students/hooks/useStudentsAnalyticsQueries";
-
-export type {
-  StudentsWidgetAggregateWidgetInput,
-  StudentNextGrNumberParams,
-  StudentsPaginatedParams,
-} from "@/tenant/features/students/hooks/studentsQueryKeys";

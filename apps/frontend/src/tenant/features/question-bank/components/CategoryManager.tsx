@@ -5,6 +5,7 @@ import { createQuestionCategory, type QuestionCategory } from '@mms/shared';
 import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { CategoryColorChip } from '@/tenant/features/question-bank/components/CategoryColorChip';
 
 interface CategoryManagerProps {
@@ -33,9 +34,9 @@ export function CategoryManager({
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h4 className="m-0 min-w-0 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        <SectionLabel as="h4" weight="bold" tracking="wide" className="m-0 min-w-0">
           {t('questionBank.categoriesTitle')}
-        </h4>
+        </SectionLabel>
         <Button
           type="button"
           onClick={addCategory}

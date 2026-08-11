@@ -4,7 +4,6 @@ import * as loadUseCases from './contactLoadUseCases.js';
 import * as writeUseCases from './contactWriteUseCases.js';
 import * as softDeleteUseCases from './contactSoftDeleteUseCases.js';
 import * as identityUseCases from './contactIdentityMatchUseCases.js';
-import * as relationshipUseCases from './contactRelationshipInferenceUseCases.js';
 import * as uniqueFieldUseCases from './contactUniqueFieldUseCases.js';
 
 // Barrel — raw functions keep the repository interface as a trailing DI param.
@@ -57,18 +56,16 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
       writeUseCases.mergeContactsById(keepId, deleteId, mergedInput, deletedBy, repo),
     bulkSaveContacts: (contacts: Parameters<typeof writeUseCases.bulkSaveContacts>[0]) =>
       writeUseCases.bulkSaveContacts(contacts, repo),
-    restoreContactById: (id: string, restoredBy: string) =>
-      softDeleteUseCases.restoreContactById(id, restoredBy, repo),
-    bulkRestoreContacts: (ids: string[], restoredBy: string) =>
-      softDeleteUseCases.bulkRestoreContacts(ids, restoredBy, repo),
+    restoreContactById: (id: string) =>
+      softDeleteUseCases.restoreContactById(id, repo),
+    bulkRestoreContacts: (ids: string[]) =>
+      softDeleteUseCases.bulkRestoreContacts(ids, repo),
     softDeleteContactById: (id: string, deletedBy: string, deletionReason?: string) =>
       softDeleteUseCases.softDeleteContactById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteContacts: (ids: string[], deletedBy: string, deletionReason?: string) =>
       softDeleteUseCases.bulkSoftDeleteContacts(ids, deletedBy, deletionReason, repo),
     matchContactIdentityIndex: (candidates: Parameters<typeof identityUseCases.matchContactIdentityIndex>[0]) =>
       identityUseCases.matchContactIdentityIndex(candidates, repo),
-    applyContactRelationshipInference: (tenant: string, sourceContact: Parameters<typeof relationshipUseCases.applyContactRelationshipInference>[1], customPairs?: Parameters<typeof relationshipUseCases.applyContactRelationshipInference>[2]) =>
-      relationshipUseCases.applyContactRelationshipInference(tenant, sourceContact, customPairs, repo),
     assertContactUniqueFields: (tenant: string, contact: Parameters<typeof uniqueFieldUseCases.assertContactUniqueFields>[1], languageOrOptions?: Parameters<typeof uniqueFieldUseCases.assertContactUniqueFields>[2], excludeContactIdsArg?: Parameters<typeof uniqueFieldUseCases.assertContactUniqueFields>[3]) =>
       uniqueFieldUseCases.assertContactUniqueFields(tenant, contact, languageOrOptions, excludeContactIdsArg, repo),
   };

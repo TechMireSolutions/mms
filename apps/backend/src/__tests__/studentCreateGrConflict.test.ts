@@ -25,7 +25,6 @@ vi.mock('../db/repositories/studentRepository.js', () => ({
 
 vi.mock('../db/repositories/studentRepositoryList.js', () => ({
   listStudentsPage: vi.fn(),
-  countStudentsActive: vi.fn(),
   aggregateStudentsCommandMetrics: vi.fn(),
   listActiveStudentsMissingGrNumber: vi.fn(),
   bulkUpdateStudentsStatusSql: vi.fn(),
@@ -39,7 +38,7 @@ vi.mock('../db/repositories/studentRepositoryWidgets.js', () => ({
   findSoftDeletedStudentByContactIdSql: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('../services/websocketService.js', () => ({
+vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcast(...args),
   broadcastTenantUpdate: (...args: unknown[]) => mockBroadcast(...args),
 }));
@@ -48,7 +47,7 @@ vi.mock('../services/contactService.js', () => ({
   loadContactsByIds: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../services/studentPreferencesService.js', () => ({
+vi.mock('../lib/studentPreferencesService.js', () => ({
   loadStudentModulePreferences: vi.fn().mockResolvedValue({}),
 }));
 

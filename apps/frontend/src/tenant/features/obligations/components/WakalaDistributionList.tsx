@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface WakalaDistributionListProps {
@@ -54,18 +55,17 @@ export function WakalaDistributionList({
                 </Button>
               </div>
             </div>
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.wakala.colType")}</dt>
-                <dd>
-                  <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("obligations.wakala.colPct")}</dt>
-                <dd className="font-mono text-xs font-semibold text-foreground">{distribution.percentage}%</dd>
-              </div>
-            </dl>
+            <StatGrid>
+              <StatRow
+                label={t("obligations.wakala.colType")}
+                value={<StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />}
+              />
+              <StatRow
+                label={t("obligations.wakala.colPct")}
+                value={`${distribution.percentage}%`}
+                ddClassName="font-mono text-xs font-semibold"
+              />
+            </StatGrid>
           </article>
         ))}
       </div>

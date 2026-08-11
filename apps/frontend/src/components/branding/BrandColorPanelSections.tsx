@@ -12,6 +12,7 @@ import {
 } from "@mms/shared";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { SettingsMetaBadge } from "@/components/ui/SettingsShell";
 import { cn } from "@/lib/utils";
@@ -136,8 +137,8 @@ export function BrandSemanticPreview({
             {t("theme.previewAccentAction")}
           </Button>
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: `${primaryColor}22`, color: primaryColor }}>{t("theme.previewStatusBadge")}</span>
-            <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: `${secondaryColor}22`, color: secondaryColor }}>{t("theme.previewAccentBadge")}</span>
+            <Badge pill variant="outline" className="px-2.5 py-1 border-transparent" style={{ backgroundColor: `${primaryColor}22`, color: primaryColor }}>{t("theme.previewStatusBadge")}</Badge>
+            <Badge pill variant="outline" className="px-2.5 py-1 border-transparent" style={{ backgroundColor: `${secondaryColor}22`, color: secondaryColor }}>{t("theme.previewAccentBadge")}</Badge>
           </div>
         </div>
         <div className="space-y-3 p-4">

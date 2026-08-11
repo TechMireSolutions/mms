@@ -13,6 +13,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { RequiredMark } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { GenderIcon } from "@/components/ui/GenderIcon";
 
@@ -89,10 +90,10 @@ export function ContactPickerSelected({
           <div className="flex flex-wrap items-center gap-1.5 mb-1">
             <p className="min-w-0 truncate text-sm font-bold text-foreground">{selectedName}</p>
             {selected.gender && (
-              <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${genderBadgeColor}`}>
+              <Badge as="span" pill variant="outline" className={`gap-1 px-2 capitalize ${genderBadgeColor}`}>
                 <GenderIcon gender={selected.gender} className="w-3 h-3" />
                 {formatContactGenderLabel(selected.gender, t)}
-              </span>
+              </Badge>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">

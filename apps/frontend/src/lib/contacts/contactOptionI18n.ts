@@ -4,7 +4,7 @@ import {
 } from '@mms/shared';
 
 /** Maps stored English option values → i18n keys (EditableSelect / detail display). */
-export const CONTACT_OPTION_LABEL_KEYS: Record<string, AppTranslationKey> = {
+const CONTACT_OPTION_LABEL_KEYS: Record<string, AppTranslationKey> = {
   male: 'contacts.gender.male',
   female: 'contacts.gender.female',
   other: 'contacts.gender.other',

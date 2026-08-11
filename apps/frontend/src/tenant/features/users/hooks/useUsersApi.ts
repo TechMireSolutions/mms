@@ -15,7 +15,7 @@ const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
 
 export { USERS_LIST_QUERY_KEY, USERS_METRICS_QUERY_KEY, ACTIVITY_LOGS_QUERY_KEY };
 
-export function useUsers(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+function useUsers(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
   const enabled = options?.enabled ?? true;
@@ -61,10 +61,6 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
   });
-}
-
-export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
-  return useActivityLogs(options).data ?? [];
 }
 
 export function useUsersMutations() {

@@ -43,7 +43,6 @@ vi.mock('../services/enrollmentService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/enrollmentService.js')>();
   return {
     ...actual,
-    loadEnrollments: vi.fn().mockResolvedValue([]),
     createEnrollment: vi.fn(),
     updateEnrollmentById: vi.fn(),
     deleteEnrollmentById: (...args: unknown[]) => mockDeleteEnrollmentById(...args),

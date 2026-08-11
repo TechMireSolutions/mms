@@ -128,12 +128,6 @@ export async function upsertWorkspaceUsers(records: WorkspaceUser[]): Promise<Wo
   return loadWorkspaceUsers();
 }
 
-export async function replaceWorkspaceUsers(records: WorkspaceUser[]): Promise<WorkspaceUser[]> {
-  const parsed = workspaceUserListSchema.parse(records);
-  await saveUsers(parsed);
-  return parsed;
-}
-
 export async function deleteUserById(id: string, deletedBy: string): Promise<boolean> {
   if (id === deletedBy) {
     const err = new Error('Cannot delete your own account') as Error & {
@@ -197,8 +191,6 @@ const logService = defineTenantBulkCollectionService<ActivityLog>(
   'user_activity_logs',
 );
 export const loadLogs = logService.load;
-/** @deprecated Migration / admin restore only — API bulk PUT must use upsertLogs. */
-export const replaceLogs = logService.replace;
 
 /** Upserts supplied activity logs without removing unrelated rows. */
 export async function upsertLogs(records: ActivityLog[]): Promise<ActivityLog[]> {

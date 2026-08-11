@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { Account, FiscalYear } from "@/lib/data/accountingData";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { AccountingSettingsField } from "./AccountingSettingsField";
-import { AccountingSettingsSectionCard } from "./AccountingSettingsSectionCard";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { AccountingSettingsCurrencySection } from "./AccountingSettingsCurrencySection";
 import { AccountingSettingsFiscalYearsSection } from "./AccountingSettingsFiscalYearsSection";
 import { AccountingSettingsRulesSection } from "./AccountingSettingsRulesSection";
@@ -47,11 +47,11 @@ export function AccountingSettingsPreferences({
 
   return (
     <div className="space-y-6">
-      <AccountingSettingsSectionCard title={t("accounting.settings.secOrganisation")} icon={null}>
+      <SectionCard title={t("accounting.settings.secOrganisation")}>
         <AccountingSettingsField label={t("accounting.settings.fields.organisationName")} hint={t("accounting.settings.fields.organisationNameHint")}>
           <Input value={settingsDraft.organizationName || ""} aria-label={t("accounting.settings.fields.organisationName")} onChange={(event) => upd("organizationName", event.target.value)} />
         </AccountingSettingsField>
-      </AccountingSettingsSectionCard>
+      </SectionCard>
 
       <AccountingSettingsCurrencySection
         settingsDraft={settingsDraft}

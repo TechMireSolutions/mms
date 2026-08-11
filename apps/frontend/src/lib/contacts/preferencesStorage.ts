@@ -1,5 +1,4 @@
 import {
-  DEFAULT_CONTACT_PREFERENCES,
   normalizeContactPreferences,
   type ContactPreferences,
   type FieldConfig,
@@ -80,5 +79,4 @@ export {
   savePreferencesAsync,
   fetchPreferences,
   setPreferencesMemory,
-  DEFAULT_CONTACT_PREFERENCES as DEFAULT_PREFERENCES,
 };

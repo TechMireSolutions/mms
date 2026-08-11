@@ -2,7 +2,8 @@ import type React from "react";
 import { Loader2, Lock } from "lucide-react";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { PasswordStrengthResult } from "./passwordStrength";
@@ -41,16 +42,13 @@ export function AccountProfilePasswordCard({
   return (
     <Card className="group/password-card">
       <div className="absolute start-0 top-0 bottom-0 w-1 bg-success/45 transition-colors group-hover/password-card:bg-success" />
-      <CardHeader className="pb-4 border-b border-border/40 bg-muted/20 ps-6.5">
-        <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-          <Lock className="h-4 w-4 text-primary shrink-0" />
-          {t("account.changePassword")}
-        </CardTitle>
-        <CardDescription className="text-xs text-muted-foreground mt-1">
-          {t("account.changePassword")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6 space-y-4 ps-6.5">
+      <CardTitleBar
+        inset
+        icon={<Lock className="h-4 w-4 text-primary" />}
+        title={t("account.changePassword")}
+        subtitle={t("account.changePassword")}
+      />
+      <CardContent className="pt-5 space-y-4 ps-6.5">
         {!showPasswordForm ? (
           <div className="pt-1">
             <Button type="button" variant="outline" onClick={onShowPasswordForm} className="w-full min-h-11">

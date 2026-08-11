@@ -1,7 +1,10 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { CompactSegmentedControl } from "@/components/ui/CompactSegmentedControl";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { Badge } from "@/components/ui/badge";
 import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -86,32 +89,17 @@ export function WidgetBuilderCardTextOptions({
 
       <div className="space-y-1 col-span-1 sm:col-span-2 border-t border-border/40 pt-3">
         <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.trendSource")}</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-card/20 border border-border/60 p-1 rounded-xl max-w-sm">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setTrendType("database")}
-            className={`min-h-11 text-xs font-bold uppercase tracking-wider rounded-lg shadow-none ${
-              trendType === "database"
-                ? "bg-primary text-primary-foreground shadow"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("reports.widgets.builder.sourceDb")}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setTrendType("manual")}
-            className={`min-h-11 text-xs font-bold uppercase tracking-wider rounded-lg shadow-none ${
-              trendType === "manual"
-                ? "bg-primary text-primary-foreground shadow"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("reports.widgets.builder.sourceManual")}
-          </Button>
-        </div>
+        <CompactSegmentedControl
+          tone="primary"
+          ariaLabel={t("reports.widgets.builder.trendSource")}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-sm bg-card/20"
+          value={trendType}
+          onChange={setTrendType}
+          options={[
+            { value: "database", label: t("reports.widgets.builder.sourceDb") },
+            { value: "manual", label: t("reports.widgets.builder.sourceManual") },
+          ]}
+        />
       </div>
 
       <div className="space-y-1 col-span-1 sm:col-span-2">
@@ -122,12 +110,14 @@ export function WidgetBuilderCardTextOptions({
         ) : (
           <>
             <div className="flex justify-between items-center select-none">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.widgets.builder.manualTrend")}</label>
-              <span className={`text-xs font-black px-1.5 py-0.5 rounded-full ${
-                trend > 0 ? "bg-success/20 text-success" : trend < 0 ? "bg-destructive/20 text-destructive" : "bg-muted text-muted-foreground"
-              }`}>
+              <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.widgets.builder.manualTrend")}</SectionLabel>
+              <Badge
+                pill
+                tone={trend > 0 ? "success" : trend < 0 ? "destructive" : "muted"}
+                className="px-1.5 font-black"
+              >
                 {trend > 0 ? "+" : ""}{trend}%
-              </span>
+              </Badge>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -140,9 +130,9 @@ export function WidgetBuilderCardTextOptions({
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="capsOutline"
+                size="caps"
                 onClick={() => setTrend(0)}
-                className="min-h-11 px-2 text-xs font-bold uppercase tracking-wider bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg shadow-none"
                 title={t("reports.widgets.builder.resetTrend")}
               >
                 {t("reports.widgets.builder.reset")}

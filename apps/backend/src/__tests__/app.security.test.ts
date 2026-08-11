@@ -232,7 +232,7 @@ describe('tenant JWT binding', () => {
     const token = signTenantToken(app, { role: 'viewer', id: 'u1' });
     const res = await app.inject({
       method: 'GET',
-      url: '/api/db/collections/users',
+      url: '/api/db/collections/backups',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${token}`,

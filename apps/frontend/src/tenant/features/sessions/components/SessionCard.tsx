@@ -6,6 +6,7 @@ import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Session } from "@/lib/data/sessionsData";
 import { SessionListRowActions } from "@/tenant/features/sessions/components/SessionListRowActions";
@@ -86,12 +87,12 @@ export function SessionCard({
 
       {totalCapacity > 0 && (
         <div className="ms-1">
-          <div className="h-1 rounded-full bg-border overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success"}`}
-              style={{ width: `${Math.min(capacityPercent, 100)}%` }}
-            />
-          </div>
+          <ProgressBar
+            value={Math.min(capacityPercent, 100)}
+            fillClassName={capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success"}
+            trackClassName="h-1 bg-border"
+            aria-hidden="true"
+          />
           <p className="text-xs text-muted-foreground mt-1">
             {t("sessions.card.capacityUsed", {
               percent: capacityPercent,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { TableCellLink } from "@/components/ui/TableCellLink";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
@@ -9,7 +9,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import type { FacultyWorkloadItem } from "@/tenant/features/reports/components/useFacultyReportData";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import type { FacultyWorkloadItem } from "@/tenant/features/reports/components/teacherReportTypes";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface FacultyReportWorkloadTableProps {
@@ -35,40 +37,31 @@ export function FacultyReportWorkloadTable({
             key={faculty.faculty}
             className={`${WORK_SURFACE_INNER} space-y-3 p-3 ${selectedFaculty === faculty.faculty ? "ring-1 ring-primary/20" : ""}`}
           >
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onToggleFacultyFilter(faculty.faculty)}
-              className={`h-auto min-h-11 px-0 py-0 text-sm font-semibold hover:bg-transparent hover:text-foreground ${
-                selectedFaculty === faculty.faculty ? "text-primary" : "text-foreground"
-              }`}
-            >
+            <TableCellLink tap toggle selected={selectedFaculty === faculty.faculty} onClick={() => onToggleFacultyFilter(faculty.faculty)}>
               {faculty.faculty}
-            </Button>
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div className="min-w-0">
-                <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colClasses")}</dt>
-                <dd>
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-16 rounded-full bg-muted">
-                      <div
-                        className="h-1.5 rounded-full bg-primary"
-                        style={{ width: `${(faculty.classes / maxClasses) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-foreground">{faculty.classes}</span>
-                  </div>
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colSessions")}</dt>
-                <dd className="text-foreground">{faculty.sessions}</dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-xs font-semibold text-muted-foreground">{t("teachers.report.colStudents")}</dt>
-                <dd className="font-semibold text-foreground">{faculty.totalStudents}</dd>
-              </div>
-            </dl>
+            </TableCellLink>
+            <StatGrid>
+              <StatRow
+                className="min-w-0"
+                label={t("teachers.report.colClasses")}
+                value={
+                  <ProgressBar
+                    value={(faculty.classes / maxClasses) * 100}
+                    fillClassName="bg-primary"
+                    trackClassName="w-16 flex-none"
+                    label={faculty.classes}
+                    labelClassName="text-foreground"
+                  />
+                }
+              />
+              <StatRow className="min-w-0" label={t("teachers.report.colSessions")} value={faculty.sessions} />
+              <StatRow
+                className="min-w-0"
+                label={t("teachers.report.colStudents")}
+                value={faculty.totalStudents}
+                ddClassName="font-semibold"
+              />
+            </StatGrid>
           </article>
         ))}
       </div>
@@ -94,27 +87,23 @@ export function FacultyReportWorkloadTable({
                 className={`hover:bg-muted/20 transition-colors ${selectedFaculty === faculty.faculty ? "bg-primary/10" : ""}`}
               >
                 <TableCell className="px-3 py-2.5 font-medium">
-                  <Button
-                    type="button"
-                    variant="ghost"
+                  <TableCellLink
+                    toggle
+                    selected={selectedFaculty === faculty.faculty}
                     onClick={() => onToggleFacultyFilter(faculty.faculty)}
-                    className={`h-auto px-0 py-0 font-medium hover:bg-transparent hover:text-foreground ${
-                      selectedFaculty === faculty.faculty ? "text-primary" : "text-foreground"
-                    }`}
+                    className="font-medium"
                   >
                     {faculty.faculty}
-                  </Button>
+                  </TableCellLink>
                 </TableCell>
                 <TableCell className="px-3 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-16 rounded-full bg-muted">
-                      <div
-                        className="h-1.5 rounded-full bg-primary"
-                        style={{ width: `${(faculty.classes / maxClasses) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold text-foreground">{faculty.classes}</span>
-                  </div>
+                  <ProgressBar
+                    value={(faculty.classes / maxClasses) * 100}
+                    fillClassName="bg-primary"
+                    trackClassName="w-16 flex-none"
+                    label={faculty.classes}
+                    labelClassName="text-foreground"
+                  />
                 </TableCell>
                 <TableCell className="px-3 py-2.5 text-muted-foreground">{faculty.sessions}</TableCell>
                 <TableCell className="px-3 py-2.5 font-semibold text-foreground">{faculty.totalStudents}</TableCell>

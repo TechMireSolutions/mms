@@ -10,14 +10,14 @@ import { STUDENTS_API } from "@/tenant/features/students/hooks/studentsQueryKeys
 
 export const STUDENTS_LOOKUPS_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.collectionKey, "lookups"] as const;
 
-export async function fetchStudentLookups(signal?: AbortSignal): Promise<StudentLookupsMap> {
+async function fetchStudentLookups(signal?: AbortSignal): Promise<StudentLookupsMap> {
   const response = await apiJson<{ lookups: StudentLookupsMap }>(`${STUDENTS_API}/lookups`, {
     signal,
   });
   return response.lookups ?? emptyStudentLookupsMap();
 }
 
-export async function putStudentLookupKind(
+async function putStudentLookupKind(
   kind: StudentLookupKind,
   items: string[],
 ): Promise<string[]> {

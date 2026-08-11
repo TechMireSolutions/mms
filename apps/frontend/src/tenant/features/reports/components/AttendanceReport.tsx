@@ -3,6 +3,7 @@ import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AttendanceReportCharts } from "./AttendanceReportCharts";
 import { AttendanceReportDashboardWidgets } from "./AttendanceReportDashboardWidgets";
@@ -131,12 +132,12 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
   const rateBar = (rate: number): React.JSX.Element => {
     const color = rate >= 90 ? "bg-success" : rate >= 75 ? "bg-warning" : "bg-destructive";
     return (
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 rounded-full bg-muted">
-          <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${rate}%` }} />
-        </div>
-        <span className={`text-xs font-bold ${rateColor(rate)}`}>{rate}%</span>
-      </div>
+      <ProgressBar
+        value={rate}
+        fillClassName={color}
+        label={`${rate}%`}
+        labelClassName={rateColor(rate)}
+      />
     );
   };
 

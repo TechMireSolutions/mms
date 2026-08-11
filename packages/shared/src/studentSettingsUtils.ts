@@ -22,13 +22,8 @@ import {
 } from './studentSettingsMigrate.js';
 
 export {
-  ensureStudentSeedFields,
-  migrateStudentGuardianLinkFields,
-  migrateStudentSetupFieldsToTwoTabs,
-  remapStudentEnabledTabs,
   STUDENT_SETTINGS_VERSION,
   OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
-  OBSOLETE_STUDENT_SETUP_TABS,
 } from './studentSettingsMigrate.js';
 
 function cloneStudentSettings(settings: StudentsSettings): StudentsSettings {

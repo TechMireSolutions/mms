@@ -1,6 +1,6 @@
 import type { ContactRelationship, RelationshipContact } from './contactEntityTypes.js';
-import { isAllowedRelationshipLabel, normalizeRelationshipTerm } from './contactRelationshipRules.js';
-import { DEFAULT_RELATIONSHIP_PAIRS } from './contactRelationshipPairUtils.js';
+import { isAllowedRelationshipLabel } from './contactRelationshipRules.js';
+import { DEFAULT_RELATIONSHIP_PAIRS, normalizeRelationshipTerm } from './contactRelationshipPairUtils.js';
 
 function pairForwardLabel(pairId: string): string {
   const pair = DEFAULT_RELATIONSHIP_PAIRS.find((entry) => entry.id === pairId);
@@ -24,7 +24,7 @@ export type StudentContactRelationshipLink = {
 };
 
 /** @deprecated Triad shape kept only for list/detail hydrate slots (Parent → father*, Guardian → guardian*). */
-export type DerivedStudentGuardianLinks = {
+type DerivedStudentGuardianLinks = {
   fatherContactId?: string;
   motherContactId?: string;
   guardianContactId?: string;

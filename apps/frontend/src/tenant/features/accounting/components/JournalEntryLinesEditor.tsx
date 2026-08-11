@@ -5,6 +5,7 @@ import {
   type Account,
 } from '@/lib/data/accountingData';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { FORM_CARD } from '@/components/ui/formStyles';
@@ -108,9 +109,9 @@ export function JournalEntryLinesEditor({
                           options={accountOptions}
                         />
                         {account && (
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${ACCOUNT_TYPE_META[account.type]?.color}`}>
+                          <Badge pill variant="outline" className={`mt-0.5 px-1.5 font-bold ${ACCOUNT_TYPE_META[account.type]?.color}`}>
                             {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
-                          </span>
+                          </Badge>
                         )}
                         <FieldErrorMessage message={errors[`line${lineIndex}`]} className="m-0" />
                       </TableCell>

@@ -1,8 +1,8 @@
 import { CalendarCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { TableCellLink } from "@/components/ui/TableCellLink";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
@@ -12,6 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { utilisationColour } from "./sessionReportUtils";
 
@@ -19,15 +21,12 @@ import type { SessionReportTableProps } from "./sessionReportTypes";
 
 function UtilisationBar({ rate }: { rate: number }): React.JSX.Element {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 rounded-full bg-muted">
-        <div
-          className={`h-1.5 rounded-full ${utilisationColour(rate)}`}
-          style={{ width: `${rate}%` }}
-        />
-      </div>
-      <span className="text-xs font-bold text-foreground">{rate}%</span>
-    </div>
+    <ProgressBar
+      value={rate}
+      fillClassName={utilisationColour(rate)}
+      label={`${rate}%`}
+      labelClassName="text-foreground"
+    />
   );
 }
 
@@ -65,41 +64,35 @@ export function SessionReportTable({
               >
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => onToggleSessionFilter(sessionCapacity.session)}
-                      className="h-auto min-h-11 max-w-full truncate px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
-                    >
+                    <TableCellLink tap onClick={() => onToggleSessionFilter(sessionCapacity.session)} className="max-w-full truncate">
                       {sessionCapacity.session}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => onToggleClassFilter(sessionCapacity.class)}
-                      className="h-auto min-h-11 px-0 py-0 text-xs font-normal text-muted-foreground hover:text-primary"
-                    >
+                    </TableCellLink>
+                    <TableCellLink tap muted onClick={() => onToggleClassFilter(sessionCapacity.class)} className="text-xs">
                       {sessionCapacity.class}
-                    </Button>
+                    </TableCellLink>
                   </div>
                   <StatusBadge status={sessionCapacity.status} config={sessionStatusConfig} size="sm" />
                 </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colEnrolled")}</dt>
-                    <dd className="font-semibold text-foreground">{sessionCapacity.enrolled}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("sessions.report.colCapacity")}</dt>
-                    <dd className="text-muted-foreground">{sessionCapacity.capacity}</dd>
-                  </div>
-                  <div className="col-span-2">
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("sessions.report.colUtilisation")}</dt>
-                    <dd>
-                      <UtilisationBar rate={sessionCapacity.rate} />
-                    </dd>
-                  </div>
-                </dl>
+                <StatGrid>
+                  <StatRow
+                    className="min-w-0"
+                    label={t("sessions.report.colEnrolled")}
+                    value={sessionCapacity.enrolled}
+                    ddClassName="font-semibold"
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("sessions.report.colCapacity")}
+                    value={sessionCapacity.capacity}
+                    ddClassName="text-muted-foreground"
+                  />
+                  <StatRow
+                    fullWidth
+                    label={t("sessions.report.colUtilisation")}
+                    value={<UtilisationBar rate={sessionCapacity.rate} />}
+                    dtClassName="mb-1"
+                  />
+                </StatGrid>
               </article>
             ))}
           </div>
@@ -124,24 +117,14 @@ export function SessionReportTable({
                 {sessionCapacityData.map((sessionCapacity) => (
                   <TableRow key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`} className="hover:bg-muted/20 transition-colors">
                     <TableCell className="px-3 py-2.5 font-medium max-w-[11.25rem] truncate">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => onToggleSessionFilter(sessionCapacity.session)}
-                        className="h-auto px-0 py-0 max-w-[11.25rem] truncate font-medium text-foreground hover:text-primary"
-                      >
+                      <TableCellLink onClick={() => onToggleSessionFilter(sessionCapacity.session)} className="max-w-[11.25rem] truncate font-medium">
                         {sessionCapacity.session}
-                      </Button>
+                      </TableCellLink>
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => onToggleClassFilter(sessionCapacity.class)}
-                        className="h-auto px-0 py-0 font-normal text-muted-foreground hover:text-primary"
-                      >
+                      <TableCellLink muted onClick={() => onToggleClassFilter(sessionCapacity.class)}>
                         {sessionCapacity.class}
-                      </Button>
+                      </TableCellLink>
                     </TableCell>
                     <TableCell className="px-3 py-2.5 font-semibold text-foreground">{sessionCapacity.enrolled}</TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">{sessionCapacity.capacity}</TableCell>

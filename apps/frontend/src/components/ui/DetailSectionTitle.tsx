@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/utils";
 
 export interface DetailSectionTitleProps {
@@ -15,5 +15,5 @@ export function DetailSectionTitle({
   children,
   className,
 }: DetailSectionTitleProps): React.JSX.Element {
-  return <h4 className={cn(DETAIL_SECTION_TITLE, "ps-1", className)}>{children}</h4>;
+  return <SectionLabel as="h4" className={cn("ps-1", className)}>{children}</SectionLabel>;
 }

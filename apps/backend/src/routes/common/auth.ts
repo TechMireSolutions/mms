@@ -42,7 +42,7 @@ import {
   confirmLoginEmailChange,
   requestLoginEmailChange,
 } from '../../services/auth/tenantLoginEmailService.js';
-import { ContactUniqueFieldError } from '../../services/contactUniqueValidationService.js';
+import { ContactUniqueFieldError } from '../../services/contactService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendForbidden, sendNotFound, sendUnauthorized } from '../../lib/httpErrors.js';
 

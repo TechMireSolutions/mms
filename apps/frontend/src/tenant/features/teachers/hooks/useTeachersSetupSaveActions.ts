@@ -20,6 +20,7 @@ import { useTeacherMutations } from "@/tenant/features/teachers/hooks/useTeacher
 import { syncTeachersCustomTabs } from "@/tenant/features/teachers/hooks/syncTeachersCustomTabs";
 import { teachersFieldsSetupSnapshot } from "@/tenant/features/teachers/hooks/teachersSetupPanelSnapshots";
 import { useTeachersSetupFieldDeleteGuard } from "@/tenant/features/teachers/hooks/useTeachersSetupFieldDeleteGuard";
+import { useTeachersSetupTabDeleteGuard } from "@/tenant/features/teachers/hooks/useTeachersSetupTabDeleteGuard";
 
 type FieldsEditorLike = {
   formTabs: TabDefinition[];
@@ -29,6 +30,7 @@ type FieldsEditorLike = {
   buildFieldsMap: () => Record<string, FieldDefinition[]>;
   markDraftPristine: () => void;
   handleDeleteField: (tabId: string, fieldId: string) => void;
+  handleDeleteTab: (tabId: string) => void;
 };
 
 /** Teachers Setup save + field delete guards (§7 await / dirty). Students Fields-save parity. */
@@ -64,7 +66,13 @@ export function useTeachersSetupSaveActions({
     onDeleteField: fieldsEditor.handleDeleteField,
   });
 
-  return useModuleSetupSaveActions<TeachersSettings>({
+  const handleDeleteTabWithGuard = useTeachersSetupTabDeleteGuard({
+    settings,
+    fieldsDraft,
+    onDeleteTab: fieldsEditor.handleDeleteTab,
+  });
+
+  const saveActions = useModuleSetupSaveActions<TeachersSettings>({
     settings,
     settingsDraft,
     fieldsEditor,
@@ -109,4 +117,9 @@ export function useTeachersSetupSaveActions({
       auditChannel: "teachers.setup_audit",
     },
   });
+
+  return {
+    ...saveActions,
+    handleDeleteTabWithGuard,
+  };
 }

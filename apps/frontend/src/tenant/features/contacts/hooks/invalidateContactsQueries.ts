@@ -3,6 +3,7 @@ import { createModuleQueryInvalidator } from '@/lib/query/createModuleQueryInval
 import {
   CONTACTS_QUERY_KEY,
   CONTACTS_DUPLICATES_QUERY_KEY,
+  CONTACTS_GOOGLE_SYNC_QUERY_KEY,
   CONTACTS_METRICS_QUERY_KEY,
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
@@ -32,6 +33,7 @@ export function invalidateContactsQueries(queryClient: QueryClient): void {
   invalidateModuleQueries(queryClient);
   void queryClient.invalidateQueries({ queryKey: CONTACTS_REPORT_ANALYTICS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: CONTACTS_DUPLICATES_QUERY_KEY });
+  void queryClient.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: MESSAGING_CONTACTS_RESOLVE_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: MESSAGING_RECIPIENTS_QUERY_KEY });
 }

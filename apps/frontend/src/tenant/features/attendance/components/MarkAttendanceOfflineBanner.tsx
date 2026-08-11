@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { UploadCloud, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { OfflinePayload } from "@/tenant/features/attendance/components/markAttendanceTypes";
@@ -30,9 +31,9 @@ export function MarkAttendanceOfflineBanner({ offline, queue, onSync }: MarkAtte
               <span className="inline-flex min-w-0 flex-wrap items-center gap-2">
                 <span className="min-w-0">{t("attendance.mark.offlineBannerOffline")}</span>
                 {queue.length > 0 && (
-                  <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-warning/30 text-xs font-bold">
+                  <Badge pill tone="warning" className="px-1.5 font-bold shrink-0">
                     {queue.length} {t("attendance.mark.pending")}
-                  </span>
+                  </Badge>
                 )}
               </span>
             }

@@ -6,15 +6,16 @@ import { formatNumber } from "@mms/shared";
 import {
   Bar,
   BarChart,
-  CartesianGrid,
   Legend,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 
 import type { ComparisonDataItem, DateRangeDataItem } from "./comparisonModeTypes";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
@@ -69,9 +70,9 @@ export function ComparisonModeCharts({
         <div className="h-[13.75rem] w-full">
           <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
             <BarChart data={translatedData} barSize={22}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey={mode === "sessions" ? "metric" : "month"} tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
+              <ChartGrid />
+              <XAxis dataKey={mode === "sessions" ? "metric" : "month"} tick={chartAxisTick(11)} />
+              <YAxis tick={chartAxisTick(11)} />
               <Tooltip />
               <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
               <Bar dataKey="a" name={labelA} fill={primary} radius={[4, 4, 0, 0]} />
@@ -89,22 +90,26 @@ export function ComparisonModeCharts({
               return (
                 <article key={row.metric} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
                   <h4 className="text-sm font-bold text-foreground m-0">{row.metric}</h4>
-                  <dl className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <dt className="text-xs font-semibold text-primary">{isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}</dt>
-                      <dd className="font-bold text-primary">{formatVal(row.a, row.metricKey)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold text-warning">{isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}</dt>
-                      <dd className="font-bold text-warning">{formatVal(row.b, row.metricKey)}</dd>
-                    </div>
-                    <div className="col-span-2">
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("reports.comparison.diff")}</dt>
-                      <dd className={`text-xs font-black ${diff > 0 ? "text-success" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                        {formatDiff(diff, row.metricKey)}
-                      </dd>
-                    </div>
-                  </dl>
+                  <StatGrid>
+                    <StatRow
+                      label={isContacts ? t("reports.comparison.targetA") : t("reports.comparison.sessionA")}
+                      value={formatVal(row.a, row.metricKey)}
+                      dtClassName="text-primary"
+                      ddClassName="font-bold text-primary"
+                    />
+                    <StatRow
+                      label={isContacts ? t("reports.comparison.targetB") : t("reports.comparison.sessionB")}
+                      value={formatVal(row.b, row.metricKey)}
+                      dtClassName="text-warning"
+                      ddClassName="font-bold text-warning"
+                    />
+                    <StatRow
+                      fullWidth
+                      label={t("reports.comparison.diff")}
+                      value={formatDiff(diff, row.metricKey)}
+                      ddClassName={`text-xs font-black ${diff > 0 ? "text-success" : diff < 0 ? "text-destructive" : "text-muted-foreground"}`}
+                    />
+                  </StatGrid>
                 </article>
               );
             })}

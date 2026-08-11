@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   useContactGoogleSyncConfig,
   useContactGoogleSyncMutations,
-  CONTACTS_GOOGLE_SYNC_QUERY_KEY,
 } from "@/tenant/features/contacts/hooks/useContacts";
 import { useGoogleContactsOAuth } from "@/tenant/features/contacts/hooks/useGoogleContactsOAuth";
 import { useInvalidateContactsQueries } from "@/tenant/features/contacts/hooks/useContactMutations";
@@ -11,7 +10,6 @@ import { type AppTranslationKey, type ContactGoogleSyncConfigClient } from "@mms
 import { isApiError } from "@/lib/apiClient";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { notify } from "@/lib/notify";
-import { queryClientInstance } from "@/lib/queryClient";
 
 function mapGoogleSyncError(
   error: unknown,
@@ -115,7 +113,6 @@ export function useGoogleContactsSync({
       const result = await runGoogleSync.mutateAsync();
       // Server already persisted imports via bulkSave — invalidate, do not re-upsert.
       invalidateContacts();
-      await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
       setSyncResult({
         total: result.total,
         imported: result.imported,
@@ -125,7 +122,7 @@ export function useGoogleContactsSync({
       });
     } catch (syncError) {
       if (isApiError(syncError) && syncError.type === "session_expired") {
-        await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
+        invalidateContacts();
       }
       setError(mapGoogleSyncError(syncError, t));
     } finally {
@@ -148,7 +145,7 @@ export function useGoogleContactsSync({
         reportClientError(auditError, { scope: "contacts.googleSync.audit.disconnected" });
         notify.warning(t("contacts.sync.auditFailed"));
       }
-      await queryClientInstance.invalidateQueries({ queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY });
+      invalidateContacts();
       setSyncResult(null);
       setError("");
       setShowAuthCode(false);

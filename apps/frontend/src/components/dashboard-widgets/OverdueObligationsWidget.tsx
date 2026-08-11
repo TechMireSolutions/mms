@@ -138,8 +138,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
             {canWriteMessaging && (
               <Button
                 variant="destructive"
+                size="caps"
                 onClick={handleRemindAll}
-                className="flex items-center gap-1.5 min-h-11 px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors cursor-pointer"
               >
                 <Bell className="w-3 h-3" aria-hidden="true" />
                 {t("dashboard.widgets.remindAll")}

@@ -3,6 +3,7 @@ import type { AppTranslationKey } from "@mms/shared";
 import { Download } from "lucide-react";
 import { ACCOUNT_TYPE_META, Account } from '@/lib/data/accountingData';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -32,9 +33,9 @@ export function GeneralLedgerAccountSummary({
         <div className="flex-1 min-w-0 ms-1">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-mono text-xs font-bold text-muted-foreground">{activeAccount.code}</span>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${ACCOUNT_TYPE_META[activeAccount.type]?.color}`}>
+            <Badge pill variant="outline" className={`px-2 font-bold ${ACCOUNT_TYPE_META[activeAccount.type]?.color}`}>
               {t(`accounting.type.${activeAccount.type}` as AppTranslationKey)}
-            </span>
+            </Badge>
             {activeAccount.subtype && <span className="text-xs text-muted-foreground">· {activeAccount.subtype}</span>}
           </div>
           <h3 className="text-base font-bold text-foreground m-0">{activeAccount.name}</h3>

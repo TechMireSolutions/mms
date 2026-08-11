@@ -12,3 +12,4 @@ export {
   useAccountingMutations,
   useAccountingMetrics,
 } from "@/tenant/features/accounting/hooks/useAccountingApi";
+export { invalidateAccountingQueries } from '@/tenant/features/accounting/hooks/invalidateAccountingQueries';

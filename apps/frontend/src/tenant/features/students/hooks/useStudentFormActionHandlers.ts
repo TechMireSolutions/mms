@@ -18,7 +18,7 @@ import {
   runStudentSaveFlow,
 } from "@/tenant/features/students/hooks/studentFormSaveFlow";
 
-export interface UseStudentFormActionHandlersOptions {
+interface UseStudentFormActionHandlersOptions {
   student?: Partial<Student> | null;
   studentDraft: Partial<Student>;
   linkedContact: Contact | null | undefined;
@@ -170,7 +170,6 @@ export function useStudentFormActionHandlers({
   }, [validationErrors]);
 
   return {
-    clearDuplicatePrompt,
     handleDuplicateDialogOpenChange,
     handleSave,
     confirmDuplicateSave,

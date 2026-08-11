@@ -1,10 +1,12 @@
 import { Card } from "@/components/ui/card";
+import { LegendChip } from "@/components/ui/LegendChip";
 import { motion } from "framer-motion";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip,
+  XAxis, YAxis, Tooltip,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
 import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -42,9 +44,9 @@ export function AttendanceAnalyticsChartPanels({
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.classRateTitle")}</h2>
           <SafeResponsiveContainer height={200}>
             <BarChart data={classStats} barSize={32}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+              <ChartGrid />
+              <XAxis dataKey="name" tick={chartAxisTick(11)} />
+              <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
               <Tooltip formatter={(value) => `${value}%`} />
               <Bar dataKey="rate" name={t("attendance.analytics.attendanceLabel")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
                 label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
@@ -68,9 +70,9 @@ export function AttendanceAnalyticsChartPanels({
                   <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+              <ChartGrid />
+              <XAxis dataKey="month" tick={chartAxisTick(11)} />
+              <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
               <Tooltip formatter={(value) => `${value}%`} />
               <Area type="monotone" dataKey="rate" name={t("attendance.analytics.attendancePercentLabel")} stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
             </AreaChart>
@@ -87,8 +89,8 @@ export function AttendanceAnalyticsChartPanels({
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.studentRatesTitle")}</h2>
           <SafeResponsiveContainer height={220}>
             <BarChart data={studentRates} layout="vertical" barSize={12}>
-              <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
+              <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(10)} unit="%" />
+              <YAxis dataKey="name" type="category" tick={chartAxisTick(10)} width={80} />
               <Tooltip formatter={(value) => `${value}%`} />
               <Bar dataKey="rate" name={t("attendance.analytics.rateLabel")} radius={[0, 4, 4, 0]}
                 fill="hsl(var(--primary))"
@@ -116,11 +118,14 @@ export function AttendanceAnalyticsChartPanels({
             </SafeResponsiveContainer>
             <div className="space-y-2">
               {statuses.map((status, index) => (
-                <div key={status.id} className="flex items-center gap-2 text-xs">
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: colors[index % colors.length] }} />
-                  <span className="text-muted-foreground">{attendanceStatusLabel(status, t)}</span>
-                  <span className="font-bold text-foreground ms-auto">{totalStats[status.id] || 0}</span>
-                </div>
+                <LegendChip
+                  key={status.id}
+                  gap="md"
+                  dotStyle={{ background: colors[index % colors.length] }}
+                  label={attendanceStatusLabel(status, t)}
+                  labelClassName="text-muted-foreground"
+                  value={totalStats[status.id] || 0}
+                />
               ))}
             </div>
           </div>

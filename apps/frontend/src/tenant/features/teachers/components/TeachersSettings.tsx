@@ -7,6 +7,7 @@ import {
   TEACHER_LOCKED_ENABLED_TABS,
   isTeacherLockedEnabledTab,
   isTeacherSystemFormField,
+  getTeacherSeedFormTab,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
@@ -94,6 +95,7 @@ export function TeachersSettings(): React.JSX.Element {
     isPrefsDirty,
     handleSave,
     handleDeleteFieldWithGuard,
+    handleDeleteTabWithGuard,
   } = useTeachersSetupSaveActions({
     settings,
     settingsDraft,
@@ -112,12 +114,12 @@ export function TeachersSettings(): React.JSX.Element {
       wrapModuleSetupFieldsEditor({
         fieldsEditor,
         handleDeleteField: handleDeleteFieldWithGuard,
-        handleDeleteTab: fieldsEditor.handleDeleteTab,
-        getSeedTab: (key) => TEACHERS_TAB_REGISTRY.find((tab) => tab.key === key),
+        handleDeleteTab: handleDeleteTabWithGuard,
+        getSeedTab: getTeacherSeedFormTab,
         initialFieldSeed: INITIAL_TEACHERS_FIELD_SEED,
         isLockedTab: isTeacherLockedEnabledTab,
       }),
-    [fieldsEditor, handleDeleteFieldWithGuard],
+    [fieldsEditor, handleDeleteFieldWithGuard, handleDeleteTabWithGuard],
   );
 
   const unsavedWarning = showFields

@@ -10,7 +10,7 @@ export type StudentListSortField =
   | "registeredDate"
   | "dob";
 
-export interface StudentListSession {
+interface StudentListSession {
   id: string;
   name: string;
 }
@@ -65,6 +65,5 @@ export interface StudentListTableProps extends StudentListSelectionProps {
 }
 
 export interface StudentListContentProps extends StudentListTableProps {
-  students: Student[];
   viewMode: WorkDirectoryViewMode;
 }

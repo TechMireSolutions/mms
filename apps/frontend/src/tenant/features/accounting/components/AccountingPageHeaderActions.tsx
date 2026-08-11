@@ -1,6 +1,7 @@
 import React from "react";
 import { Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FiscalYear } from '@/lib/data/accountingData';
 
@@ -27,9 +28,9 @@ export function AccountingPageHeaderActions({
         </ActionButton>
       ) : null}
       {activeFiscalYear && (
-        <span className="px-3 py-1 rounded-full text-xs font-bold bg-success/15 text-success border border-success/30">
+        <Badge pill tone="success" className="px-3 py-1 font-bold border-success/30">
           {t("page.accounting.activeBadge", { label: activeFiscalYear.label })}
-        </span>
+        </Badge>
       )}
     </div>
   );

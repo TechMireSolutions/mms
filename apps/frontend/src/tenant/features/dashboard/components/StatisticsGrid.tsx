@@ -1,10 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
-  TrendingUp, TrendingDown, Trash2, Plus, Pencil, DollarSign
+  Trash2, Plus, Pencil, DollarSign
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { StatCardBody } from "@/components/ui/StatCardBody";
 import { ICONS_LIST as ICONS } from "@/lib/reports/pinnedWidgetTypes";
 import {
   getWidgetColorTheme,
@@ -61,38 +62,23 @@ export default function StatsGrid({
             accentColor={accent}
             className="p-4.5 md:p-5 px-5.5 flex flex-col justify-between"
           >
-            <div className={`absolute -end-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
-            
-            <header className="flex items-start justify-between mb-3 select-none">
-              <div
-                className={`w-9 h-9 rounded-lg ${colorTheme.bg} ring-4 ${colorTheme.ring} flex items-center justify-center aspect-square flex-shrink-0 transition-transform group-hover:scale-105 duration-300`}
-                aria-hidden="true"
-              >
-                <Icon className={`w-4.5 h-4.5 ${colorTheme.text}`} />
-              </div>
-
-              <div className="flex items-center gap-1">
-                {statItem.trend !== 0 && !isEditMode && (
-                  <span
-                    className={`inline-flex items-center gap-1 text-xs font-black px-1.5 py-0.5 rounded-full border transition-colors ${
-                      hasPositiveTrend 
-                        ? "bg-success/10 text-success border-success/20" 
-                        : "bg-destructive/10 text-destructive border-destructive/20"
-                    }`}
-                    aria-label={t("dashboard.trendAria", {
+            <StatCardBody
+              colorTheme={colorTheme}
+              icon={<Icon className={`w-4.5 h-4.5 ${colorTheme.text}`} />}
+              value={statItem.value}
+              title={statItem.title}
+              footer={statItem.sub}
+              trend={isEditMode ? undefined : statItem.trend}
+              trendAriaLabel={
+                statItem.trend !== 0 && !isEditMode
+                  ? t("dashboard.trendAria", {
                       direction: hasPositiveTrend ? t("dashboard.trendUp") : t("dashboard.trendDown"),
                       value: Math.abs(statItem.trend),
-                    })}
-                  >
-                    {hasPositiveTrend ? (
-                      <TrendingUp className="w-3 h-3 text-success shrink-0" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3 text-destructive shrink-0" />
-                    )}
-                    <span>{hasPositiveTrend ? "+" : ""}{statItem.trend}%</span>
-                  </span>
-                )}
-                {isEditMode && (
+                    })
+                  : undefined
+              }
+              actions={
+                isEditMode ? (
                   <div className="flex items-center gap-1">
                     {onEditCustomCard && (
                       <Button
@@ -123,24 +109,9 @@ export default function StatsGrid({
                       </Button>
                     )}
                   </div>
-                )}
-              </div>
-            </header>
-
-            <div className="flex items-end justify-between mt-1">
-              <main className="space-y-0.5 flex-1 min-w-0">
-                <p className="text-2xl font-black text-foreground tracking-tight leading-none m-0 truncate tabular-nums">
-                  {statItem.value}
-                </p>
-                <h4 className="text-sm font-bold text-foreground/80 mt-1.5 m-0 truncate tracking-wide">
-                  {statItem.title}
-                </h4>
-              </main>
-            </div>
-
-            <footer className="text-xs text-muted-foreground mt-3 border-t border-border/30 pt-2 m-0 truncate">
-              {statItem.sub}
-            </footer>
+                ) : undefined
+              }
+            />
           </MotionWidgetCard>
         );
       })}

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ACCOUNT_TYPE_META, type AccountType } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import {
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { type AppTranslationKey } from "@mms/shared";
 
 interface TrialBalanceRow {
@@ -47,9 +49,9 @@ export function TrialBalanceTypeGroup({
   return (
     <section key={type} aria-label={t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })} className={WORK_SURFACE}>
       <header className={`px-4 py-2 border-b border-border ${typeMeta?.color} flex min-w-0 items-center justify-between gap-2`}>
-        <h3 className="min-w-0 truncate text-xs font-bold uppercase tracking-wide m-0">
+        <SectionLabel as="h3" weight="bold" tracking="wide" tone="inherit" className="min-w-0 truncate m-0">
           {typeMeta?.icon} {t(`accounting.type.${type}` as AppTranslationKey)} — {t(`accounting.reports.views.${typeMeta?.group}` as AppTranslationKey)}
-        </h3>
+        </SectionLabel>
         <span className="shrink-0 text-xs font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
       </header>
       <div className="space-y-3 p-3 md:hidden">
@@ -74,30 +76,34 @@ export function TrialBalanceTypeGroup({
             {trialBalanceRow.subtype ? (
               <p className="text-xs text-muted-foreground">{trialBalanceRow.subtype}</p>
             ) : null}
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
-                <dd className="font-mono text-xs font-semibold text-info">{formatPositiveNumber(trialBalanceRow.totalDebit)}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
-                <dd className="font-mono text-xs font-semibold text-success">{formatPositiveNumber(trialBalanceRow.totalCredit)}</dd>
-              </div>
-            </dl>
+            <StatGrid>
+              <StatRow
+                label={t("accounting.columns.journal.debit")}
+                value={formatPositiveNumber(trialBalanceRow.totalDebit)}
+                ddClassName="font-mono text-xs font-semibold text-info"
+              />
+              <StatRow
+                label={t("accounting.columns.journal.credit")}
+                value={formatPositiveNumber(trialBalanceRow.totalCredit)}
+                ddClassName="font-mono text-xs font-semibold text-success"
+              />
+            </StatGrid>
           </motion.article>
         ))}
         <article className="rounded-xl border border-border bg-muted/20 p-3">
           <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.tb.subTotal")}</p>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
-              <dd className="font-mono font-bold text-info">{formatPositiveNumber(groupDebit)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
-              <dd className="font-mono font-bold text-success">{formatPositiveNumber(groupCredit)}</dd>
-            </div>
-          </dl>
+          <StatGrid>
+            <StatRow
+              label={t("accounting.columns.journal.debit")}
+              value={formatPositiveNumber(groupDebit)}
+              ddClassName="font-mono font-bold text-info"
+            />
+            <StatRow
+              label={t("accounting.columns.journal.credit")}
+              value={formatPositiveNumber(groupCredit)}
+              ddClassName="font-mono font-bold text-success"
+            />
+          </StatGrid>
         </article>
       </div>
       <div className="hidden md:block">

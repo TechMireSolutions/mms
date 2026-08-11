@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account } from "@/lib/data/accountingData";
 import { AccountingSettingsField } from "./AccountingSettingsField";
-import { AccountingSettingsSectionCard } from "./AccountingSettingsSectionCard";
+import { SectionCard } from "@/components/ui/SectionCard";
 
 interface AccountingSettingsRulesSectionProps {
   accounts: Account[];
@@ -22,7 +22,7 @@ export function AccountingSettingsRulesSection({
 
   return (
     <>
-      <AccountingSettingsSectionCard title={t("accounting.settings.secRules")} icon={null}>
+      <SectionCard title={t("accounting.settings.secRules")}>
         <AccountingSettingsField label={t("accounting.settings.fields.requireNarration")} hint={t("accounting.settings.fields.requireNarrationHint")}>
           <Switch aria-label={t("accounting.settings.fields.requireNarration")} checked={settingsDraft.requireNarration} onCheckedChange={(checked) => upd("requireNarration", checked)} />
         </AccountingSettingsField>
@@ -35,9 +35,9 @@ export function AccountingSettingsRulesSection({
         <AccountingSettingsField label={t("accounting.settings.fields.autoPostDrafts")} hint={t("accounting.settings.fields.autoPostDraftsHint")}>
           <Switch aria-label={t("accounting.settings.fields.autoPostDrafts")} checked={settingsDraft.autoPostDrafts} onCheckedChange={(checked) => upd("autoPostDrafts", checked)} />
         </AccountingSettingsField>
-      </AccountingSettingsSectionCard>
+      </SectionCard>
 
-      <AccountingSettingsSectionCard title={t("accounting.settings.secNumbering")} icon={null}>
+      <SectionCard title={t("accounting.settings.secNumbering")}>
         <AccountingSettingsField label={t("accounting.settings.fields.defaultCodeLength")} hint={t("accounting.settings.fields.defaultCodeLengthHint")}>
           <FormSelect
             aria-label={t("accounting.settings.fields.defaultCodeLength")}
@@ -59,7 +59,7 @@ export function AccountingSettingsRulesSection({
               .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}
           />
         </AccountingSettingsField>
-      </AccountingSettingsSectionCard>
+      </SectionCard>
     </>
   );
 }

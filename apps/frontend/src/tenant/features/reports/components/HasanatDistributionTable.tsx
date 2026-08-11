@@ -2,7 +2,7 @@ import React from "react";
 import { Star } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
-import { Button } from "@/components/ui/button";
+import { TableCellLink } from "@/components/ui/TableCellLink";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
@@ -12,6 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { Badge } from "@/components/ui/badge";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { HasanatReportItem } from "./HasanatReport";
 
@@ -52,37 +54,48 @@ export function HasanatDistributionTable({
               >
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <h4 className="truncate text-sm font-semibold text-foreground">{hasanatRow.studentName}</h4>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${hasanatRow.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
+                  <Badge
+                    pill
+                    tone={hasanatRow.balance > 0 ? "warning" : "muted"}
+                    className="shrink-0"
+                  >
                     {hasanatRow.balance}
-                  </span>
+                  </Badge>
                 </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colClass")}</dt>
-                    <dd className="text-foreground">{hasanatRow.class}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colFaculty")}</dt>
-                    <dd>
-                      <Button
-                        type="button"
-                        variant="ghost"
+                <StatGrid>
+                  <StatRow
+                    className="min-w-0"
+                    label={t("hasanat.report.colClass")}
+                    value={hasanatRow.class}
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("hasanat.report.colFaculty")}
+                    value={
+                      <TableCellLink
+                        tap
+                        muted
+                        toggle
+                        selected={selectedFaculty === hasanatRow.faculty}
                         onClick={() => onToggleFacultyFilter(hasanatRow.faculty)}
-                        className={`h-auto min-h-11 px-0 py-0 font-normal hover:bg-transparent hover:text-foreground ${selectedFaculty === hasanatRow.faculty ? "text-primary" : "text-muted-foreground"}`}
                       >
                         {hasanatRow.faculty}
-                      </Button>
-                    </dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colDistributed")}</dt>
-                    <dd className="font-semibold text-primary">{hasanatRow.distributed}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.report.colRedeemed")}</dt>
-                    <dd className="font-semibold text-success">{hasanatRow.redeemed}</dd>
-                  </div>
-                </dl>
+                      </TableCellLink>
+                    }
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("hasanat.report.colDistributed")}
+                    value={hasanatRow.distributed}
+                    ddClassName="font-semibold text-primary"
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("hasanat.report.colRedeemed")}
+                    value={hasanatRow.redeemed}
+                    ddClassName="font-semibold text-success"
+                  />
+                </StatGrid>
               </article>
             ))}
           </div>
@@ -104,23 +117,21 @@ export function HasanatDistributionTable({
                     <TableCell className="px-3 py-2.5 font-medium">{hasanatRow.studentName}</TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">{hasanatRow.class}</TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">
-                      <Button
-                        type="button"
-                        variant="ghost"
+                      <TableCellLink
+                        muted
+                        toggle
+                        selected={selectedFaculty === hasanatRow.faculty}
                         onClick={() => onToggleFacultyFilter(hasanatRow.faculty)}
-                        className={`h-auto px-0 py-0 font-normal text-muted-foreground hover:bg-transparent hover:text-foreground ${
-                          selectedFaculty === hasanatRow.faculty ? "text-primary" : ""
-                        }`}
                       >
                         {hasanatRow.faculty}
-                      </Button>
+                      </TableCellLink>
                     </TableCell>
                     <TableCell className="px-3 py-2.5 font-semibold text-primary">{hasanatRow.distributed}</TableCell>
                     <TableCell className="px-3 py-2.5 font-semibold text-success">{hasanatRow.redeemed}</TableCell>
                     <TableCell className="px-3 py-2.5">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${hasanatRow.balance > 0 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
+                      <Badge as="span" pill tone={hasanatRow.balance > 0 ? "warning" : "muted"}>
                         {hasanatRow.balance}
-                      </span>
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}

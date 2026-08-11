@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { getQuestionCategoryIds, QUESTION_SOURCE_FIELD_IDS } from "@mms/shared";
 import { CategoryColorChip } from "@/tenant/features/question-bank/components/CategoryColorChip";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import type { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import type { QuestionBankQuestion as Question } from "@mms/shared";
 
@@ -38,12 +39,14 @@ export function renderQuestionMetaChip(
   }
   if (fieldId === "questionLanguage") {
     return (
-      <span
+      <Badge
         key="questionLanguage"
-        className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-bold text-foreground"
+        pill
+        variant="outline"
+        className="px-2 font-bold bg-muted text-foreground"
       >
         {config.questionLanguageLabel(question.questionLanguage)}
-      </span>
+      </Badge>
     );
   }
   if (fieldId === "difficulty") {

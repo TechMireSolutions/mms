@@ -1,4 +1,4 @@
-import type { Contact, EmailAddress, PhoneNumber } from "@mms/shared";
+import { ensureSinglePrimaryFlag, type Contact, type EmailAddress, type PhoneNumber } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,7 @@ export function withPrimaryPhone(contact: Contact, phone: PhoneNumber): Contact 
   );
   return {
     ...contact,
-    phones: [{ ...phone, isPrimary: true }, ...others.map((entry) => ({ ...entry, isPrimary: false }))],
+    phones: ensureSinglePrimaryFlag([{ ...phone, isPrimary: true }, ...others]),
   };
 }
 
@@ -49,9 +49,6 @@ export function withPrimaryEmail(contact: Contact, email: EmailAddress): Contact
   return {
     ...contact,
     email: address,
-    emails: [
-      { ...email, address, isPrimary: true },
-      ...others.map((entry) => ({ ...entry, isPrimary: false })),
-    ],
+    emails: ensureSinglePrimaryFlag([{ ...email, address, isPrimary: true }, ...others]),
   };
 }

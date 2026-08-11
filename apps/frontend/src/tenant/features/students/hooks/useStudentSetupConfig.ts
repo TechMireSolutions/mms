@@ -47,7 +47,7 @@ const setupConfigHooks = createModuleSetupConfigHooks<
 
 export const useStudentFieldConfigQuery = setupConfigHooks.useFieldConfigQuery;
 export const useStudentFieldConfigMutation = setupConfigHooks.useFieldConfigMutation;
-export const useStudentPreferencesQuery = setupConfigHooks.usePreferencesQuery;
+const useStudentPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useStudentPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
 /** Composed StudentsSettings from typed field-config + preferences queries. */

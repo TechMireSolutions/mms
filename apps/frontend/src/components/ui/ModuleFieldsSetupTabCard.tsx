@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { CoreFieldEditorList } from "@/components/ui/CoreFieldEditorList";
@@ -129,9 +130,9 @@ export function ModuleFieldsSetupTabCard({
           </div>
           <p className="text-xs text-muted-foreground">{tabDesc}</p>
         </div>
-        <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+        <Badge pill tone="primary" className="px-1.5 font-bold whitespace-nowrap">
           {tabDefs.filter((field) => enabledSet.has(field.key)).length}/{tabDefs.length}
-        </span>
+        </Badge>
         {isOn && (
           <Button
             type="button"

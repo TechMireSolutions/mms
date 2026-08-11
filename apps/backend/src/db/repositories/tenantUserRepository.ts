@@ -155,28 +155,6 @@ export async function findTenantUserRowById(id: string): Promise<TenantUserRow |
   return row ? rowToTenantUser(row) : null;
 }
 
-export async function findTenantUserRowByLoginEmail(
-  workspaceSubdomain: string,
-  loginEmail: string,
-  options?: { includeDeleted?: boolean },
-): Promise<TenantUserRow | null> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const email = loginEmail.trim().toLowerCase();
-  const conditions = [
-    eq(tenantUsers.workspaceSubdomain, subdomain),
-    eq(tenantUsers.loginEmail, email),
-  ];
-  if (!options?.includeDeleted) {
-    conditions.push(isNull(tenantUsers.deletedAt));
-  }
-  const rows = await getDb()
-    .select()
-    .from(tenantUsers)
-    .where(and(...conditions));
-  const row = rows[0];
-  return row ? rowToTenantUser(row) : null;
-}
-
 export async function replaceTenantUsersForWorkspace(
   workspaceSubdomain: string,
   users: TenantUserRow[],
@@ -316,9 +294,4 @@ export async function restoreTenantUserRow(id: string): Promise<boolean> {
     })
     .where(tenantUserIdWhere(id, workspaceSubdomain));
   return true;
-}
-
-export async function deleteTenantUsersByWorkspace(workspaceSubdomain: string): Promise<void> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await getDb().delete(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, subdomain));
 }

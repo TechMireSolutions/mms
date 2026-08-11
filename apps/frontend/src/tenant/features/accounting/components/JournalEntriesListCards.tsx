@@ -2,6 +2,7 @@ import React from "react";
 import { formatDate } from "@mms/shared";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import {
@@ -17,6 +18,7 @@ import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { cn } from "@/lib/utils";
 
@@ -100,44 +102,47 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
                   </div>
                 }
               />
-              <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <StatGrid columns="sm2" className="ms-1">
                 {isColumnVisible("date") && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.date")}</dt>
-                    <dd className="text-foreground">{formatDate(entry.date)}</dd>
-                  </div>
+                  <StatRow label={t("accounting.columns.journal.date")} value={formatDate(entry.date)} />
                 )}
                 {isColumnVisible("tags") && (entry.tags || []).length > 0 && (
-                  <div>
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.tags")}</dt>
-                    <dd className="flex flex-wrap gap-1">
-                      {(entry.tags || []).map((tag) => (
-                        <span key={tag} className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                          {getJournalTagLabel(tag, t)}
-                        </span>
-                      ))}
-                    </dd>
-                  </div>
+                  <StatRow
+                    label={t("accounting.columns.journal.tags")}
+                    value={
+                      <span className="flex flex-wrap gap-1">
+                        {(entry.tags || []).map((tag) => (
+                          <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
+                            {getJournalTagLabel(tag, t)}
+                          </Badge>
+                        ))}
+                      </span>
+                    }
+                    dtClassName="mb-1"
+                  />
                 )}
                 {isColumnVisible("status") && (
-                  <div>
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.status")}</dt>
-                    <dd><StatusBadge status={entry.status} config={journalStatusConfig} size="sm" /></dd>
-                  </div>
+                  <StatRow
+                    label={t("accounting.columns.journal.status")}
+                    value={<StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />}
+                    dtClassName="mb-1"
+                  />
                 )}
                 {isColumnVisible("debit") && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
-                    <dd className="font-mono text-xs font-semibold text-info">{formatAmount(totalDebit)}</dd>
-                  </div>
+                  <StatRow
+                    label={t("accounting.columns.journal.debit")}
+                    value={formatAmount(totalDebit)}
+                    ddClassName="font-mono text-xs font-semibold text-info"
+                  />
                 )}
                 {isColumnVisible("credit") && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
-                    <dd className="font-mono text-xs font-semibold text-success">{formatAmount(totalCredit)}</dd>
-                  </div>
+                  <StatRow
+                    label={t("accounting.columns.journal.credit")}
+                    value={formatAmount(totalCredit)}
+                    ddClassName="font-mono text-xs font-semibold text-success"
+                  />
                 )}
-              </dl>
+              </StatGrid>
               <DirectoryCardFooter
                 trailing={
                   <>
@@ -156,20 +161,22 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
       </DirectoryCardsGrid>
       <div className={cn(WORK_SURFACE, "flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between")}>
         <p className="text-xs font-bold text-muted-foreground uppercase m-0">{pageCountLabel}</p>
-        <dl className="grid grid-cols-2 gap-2 text-sm">
+        <StatGrid>
           {isColumnVisible("debit") && (
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
-              <dd className="font-mono font-bold text-info text-xs">{formatAmount(grandDebit)}</dd>
-            </div>
+            <StatRow
+              label={t("accounting.columns.journal.debit")}
+              value={formatAmount(grandDebit)}
+              ddClassName="font-mono font-bold text-info text-xs"
+            />
           )}
           {isColumnVisible("credit") && (
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
-              <dd className="font-mono font-bold text-success text-xs">{formatAmount(grandCredit)}</dd>
-            </div>
+            <StatRow
+              label={t("accounting.columns.journal.credit")}
+              value={formatAmount(grandCredit)}
+              ddClassName="font-mono font-bold text-success text-xs"
+            />
           )}
-        </dl>
+        </StatGrid>
         <p className="text-xs font-semibold text-muted-foreground m-0">
           {balanced ? (
             <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>

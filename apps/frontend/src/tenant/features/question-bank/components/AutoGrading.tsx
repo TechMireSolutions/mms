@@ -8,7 +8,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { WORK_SURFACE, FORM_LABEL } from "@/components/ui/formStyles";
 import { sumScores, testTotalMarks, type StatsSummary } from "@/tenant/features/question-bank/components/autoGradingShared";
 import { AutoGradingResultRow } from "@/tenant/features/question-bank/components/AutoGradingResultRow";
 import { AutoGradingStats } from "@/tenant/features/question-bank/components/AutoGradingStats";
@@ -39,7 +39,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
   return (
     <section className="space-y-5" aria-labelledby="auto-grading-title">
       <div>
-        <span id="auto-grading-title" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span id="auto-grading-title" className={FORM_LABEL}>
           {t("questionBank.grading.selectTest")}
         </span>
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("questionBank.grading.selectTestAria")}>

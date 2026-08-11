@@ -6,7 +6,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { WarningCallout } from "@/components/ui/WarningCallout";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGoogleContactsSync } from "@/tenant/features/contacts/hooks/useGoogleContactsSync";
 import {
@@ -34,9 +36,11 @@ export function GoogleContactsPanel({
     <span className="flex min-w-0 flex-wrap items-center gap-2">
       <span className="min-w-0 truncate">{t("contacts.sync.googleTitle")}</span>
       {sync.isConnected && (
-        <span className="shrink-0 rounded-full border border-success/30 bg-success/10 px-1.5 py-0.5 text-xs font-bold text-success">
-          {t("contacts.sync.connected")}
-        </span>
+        <StatusBadge
+          status="success"
+          size="sm"
+          config={{ success: { label: t("contacts.sync.connected"), cls: SEMANTIC_BADGE.success } }}
+        />
       )}
     </span>
   );
@@ -45,6 +49,7 @@ export function GoogleContactsPanel({
     <Button
       type="button"
       variant="ghost"
+      aria-expanded={sync.showSetup}
       onClick={() => sync.setShowSetup((v) => !v)}
       className="flex min-h-11 shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground shadow-none transition-colors hover:text-foreground"
     >

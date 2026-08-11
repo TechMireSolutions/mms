@@ -28,13 +28,13 @@ export function useContactsMetrics(options?: { enabled?: boolean }) {
   });
 }
 
-export interface ContactsReportAnalyticsParams {
+interface ContactsReportAnalyticsParams {
   enabled?: boolean;
   compareYears?: number[];
   language?: string;
 }
 
-export interface ContactsReportAnalyticsResult {
+interface ContactsReportAnalyticsResult {
   analytics: ContactsReportAnalyticsSnapshot;
   monthlyByYear?: ContactsMonthlyYearCounts[];
 }
@@ -61,7 +61,7 @@ export function useContactsReportAnalytics(params: ContactsReportAnalyticsParams
   });
 }
 
-export interface ContactsWidgetAggregateWidgetInput {
+interface ContactsWidgetAggregateWidgetInput {
   id: string;
   collection: string;
   operation: ContactsWidgetQuery['operation'];
@@ -93,7 +93,7 @@ export function useContactsWidgetAggregates(
   return useQuery(buildContactsWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
 }
 
-export interface ContactsDuplicatesParams {
+interface ContactsDuplicatesParams {
   page?: number;
   limit?: number;
   enabled?: boolean;

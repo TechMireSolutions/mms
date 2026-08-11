@@ -1,5 +1,6 @@
 import { CheckCircle2, Scan, WifiOff, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import { MarkAttendanceGeoTag } from "@/tenant/features/attendance/components/MarkAttendanceGeoTag";
@@ -47,14 +48,14 @@ export function MarkAttendanceClassBar({
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-bold text-foreground m-0">{classInfo?.name}</h2>
           {submitted && (
-            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-success/15 text-success font-bold">
+            <Badge pill tone="success" className="gap-1 px-2 font-bold bg-success/15">
               <CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" /> {t("attendance.mark.submitted")}
-            </span>
+            </Badge>
           )}
           {isOffline && (
-            <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning font-bold">
+            <Badge pill tone="warning" className="gap-1 px-2 font-bold bg-warning/15">
               <WifiOff className="w-2.5 h-2.5" aria-hidden="true" /> {t("attendance.mark.offline")}
-            </span>
+            </Badge>
           )}
         </div>
         <p className="text-sm text-muted-foreground">

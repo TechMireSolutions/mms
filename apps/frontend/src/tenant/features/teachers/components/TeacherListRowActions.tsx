@@ -3,7 +3,7 @@ import { ModuleRowActionsMenu } from "@/components/ui/ModuleRowActionsMenu";
 import { PersonMessagingRowActionsExtras } from "@/components/ui/PersonMessagingRowActionsExtras";
 import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { teacherMessagingLabels } from "@/lib/teachers/teacherMessagingLabels";
-import type { Teacher } from '@mms/shared';
+import { hasWhatsApp, type Teacher } from '@mms/shared';
 
 interface TeacherListRowActionsProps {
   teacher: Teacher;
@@ -66,11 +66,13 @@ export function TeacherListRowActions({
       onRestore={onRestore ? () => onRestore(teacherId) : undefined}
       hideViewItem={hideViewItem}
       triggerClassName={triggerClassName}
+      contentClassName="w-40"
+      iconClassName="w-3.5 h-3.5"
       extras={
         <PersonMessagingRowActionsExtras
           phone={phone}
           email={email}
-          hasWhatsApp={Boolean(phone)}
+          hasWhatsApp={hasWhatsApp({ phone })}
           hideMessagingItems={hideMessagingItems || showDeleted}
           onWhatsApp={() => onWhatsApp?.([teacher])}
           onSms={() => onSms?.([teacher])}

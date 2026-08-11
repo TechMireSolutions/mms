@@ -4,7 +4,6 @@ import {
   contactsListQueryKeyParams,
   contactsPaginatedQueryKey,
   fetchContactById,
-  fetchContactsPageForQuery,
   sameContactsListFilters,
   type ContactsPaginatedParams,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
@@ -113,12 +112,6 @@ describe("sameContactsListFilters", () => {
 describe("fetch helpers", () => {
   beforeEach(() => {
     apiJson.mockReset();
-  });
-
-  it("fetchContactsPageForQuery calls apiJson with the built URL", async () => {
-    apiJson.mockResolvedValue({ contacts: [], total: 0 });
-    await fetchContactsPageForQuery({ page: 1 });
-    expect(apiJson).toHaveBeenCalledWith("/api/contacts?page=1&limit=50", { signal: undefined });
   });
 
   it("fetchContactById unwraps the contact", async () => {

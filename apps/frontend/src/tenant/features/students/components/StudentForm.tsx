@@ -10,7 +10,7 @@ import { StudentFormTabContent } from "@/tenant/features/students/components/Stu
 import { useStudentFormState } from "@/tenant/features/students/hooks/useStudentFormState";
 import type { Student } from "@mms/shared";
 
-export interface StudentFormProps {
+interface StudentFormProps {
   student?: Partial<Student> | null;
   onClose: () => void;
   onSave: (student: Student) => void | Promise<void>;

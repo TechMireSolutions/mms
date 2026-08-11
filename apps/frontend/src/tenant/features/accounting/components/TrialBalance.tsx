@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear } from '@/lib/data/accountingData';
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
@@ -77,16 +78,18 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
             <div className="space-y-3 p-3 md:hidden">
               <article className={WORK_SURFACE_INNER}>
                 <p className="text-sm font-bold uppercase tracking-wide text-foreground m-0 mb-2">{t("accounting.tb.grandTotal")}</p>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.debit")}</dt>
-                    <dd className="font-mono font-bold text-info text-base">{formatCurrency(grandDebit)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.journal.credit")}</dt>
-                    <dd className="font-mono font-bold text-success text-base">{formatCurrency(grandCredit)}</dd>
-                  </div>
-                </dl>
+                <StatGrid>
+                  <StatRow
+                    label={t("accounting.columns.journal.debit")}
+                    value={formatCurrency(grandDebit)}
+                    ddClassName="font-mono font-bold text-info text-base"
+                  />
+                  <StatRow
+                    label={t("accounting.columns.journal.credit")}
+                    value={formatCurrency(grandCredit)}
+                    ddClassName="font-mono font-bold text-success text-base"
+                  />
+                </StatGrid>
               </article>
             </div>
             <div className="hidden md:block">

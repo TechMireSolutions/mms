@@ -1,6 +1,7 @@
 import React from 'react';
 import { WidgetCard } from '@/components/ui/WidgetCard';
 import { WidgetChartHeader } from '@/components/ui/WidgetChartHeader';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { formatNumber } from '@mms/shared';
 import {
   Select,
@@ -87,9 +88,12 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }): 
                   </div>
                   <span className="text-xs font-semibold text-foreground">{percentage}%</span>
                 </div>
-                <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${percentage}%`, background: hasanatPoint.color }} />
-                </div>
+                <ProgressBar
+                  value={Number(percentage)}
+                  fillStyle={{ background: hasanatPoint.color }}
+                  trackClassName="h-1"
+                  aria-hidden="true"
+                />
               </div>
             );
           })}

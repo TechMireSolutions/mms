@@ -1,23 +1,22 @@
 import React from 'react';
-import { TeacherListConfirmDialogs } from '@/tenant/features/teachers/components/TeacherListConfirmDialogs';
+import { useTranslation } from '@/hooks/useTranslation';
 import { TeacherListContent } from '@/tenant/features/teachers/components/TeacherListContent';
-import { TeacherListDetailDrawer } from '@/tenant/features/teachers/components/TeacherListDetailDrawer';
 import type { TeacherListProps } from '@/tenant/features/teachers/components/TeacherListTypes';
+import { resolveTeacherDisplayName } from '@/tenant/features/teachers/components/teacherFieldDisplay';
 import { useTeacherListState } from '@/tenant/features/teachers/components/useTeacherListState';
 
 export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
 
+/** Work directory content (table/cards + empty state) — confirms/drawer live at page level. */
 export function TeacherList({
   teachers,
   onEdit,
-  onDelete,
   onRestore,
-  onBulkDelete,
-  onBulkRestore,
   onSms,
   onWhatsApp,
   onEmail,
-  onBulkStatusChange,
+  onDeleteTargetChange,
+  onView,
   canWrite = true,
   canDelete = true,
   showDeleted = false,
@@ -27,7 +26,6 @@ export function TeacherList({
   selectedIds,
   onSelectOne,
   onSelectAll,
-  onClearSelection,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -36,23 +34,14 @@ export function TeacherList({
   onSortChange,
   viewMode,
   columnRegistry = [],
-  confirmBulkDeleteOpen,
-  confirmBulkRestoreOpen,
-  onBulkDeleteOpenChange,
-  onBulkRestoreOpenChange,
-  openComposer,
-  canWriteMessaging,
 }: TeacherListProps): React.JSX.Element {
+  const { t } = useTranslation();
   const {
     sorted,
     sortField,
     sortDir,
     statusConfig,
     isColumnVisible: columnVisible,
-    pendingDeleteId,
-    setPendingDeleteId,
-    viewTeacher,
-    setViewTeacher,
     allSelected,
     someSelected,
     handleSort,
@@ -70,9 +59,11 @@ export function TeacherList({
     isColumnVisible,
   });
 
-  const showSelectColumn = true;
-  const showActionsColumn = true;
-  const resolveColumnVisible = columnVisible;
+  const handleRequestDelete = (id: string) => {
+    const teacher = teachers.find((candidate) => String(candidate.id) === String(id));
+    const name = teacher ? resolveTeacherDisplayName(teacher, t, undefined) : undefined;
+    onDeleteTargetChange({ id, name });
+  };
 
   return (
     <div className="space-y-4">
@@ -85,12 +76,10 @@ export function TeacherList({
         selectedIds={selectedIds}
         allSelected={allSelected}
         someSelected={someSelected}
-        showSelectColumn={showSelectColumn}
-        showActionsColumn={showActionsColumn}
         showDeleted={showDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
-        isColumnVisible={resolveColumnVisible}
+        isColumnVisible={columnVisible}
         columnRegistry={columnRegistry}
         statusConfig={statusConfig}
         sortField={sortField}
@@ -100,52 +89,13 @@ export function TeacherList({
         onSort={handleSort}
         onSelectAll={handleSelectAll}
         onSelectOne={handleSelectOne}
-        onView={setViewTeacher}
+        onView={onView}
         onEdit={onEdit}
-        onRequestDelete={setPendingDeleteId}
+        onRequestDelete={handleRequestDelete}
         onRestore={onRestore}
         onSms={onSms}
         onWhatsApp={onWhatsApp}
         onEmail={onEmail}
-      />
-
-      <TeacherListConfirmDialogs
-        selectedCount={selectedIds.length}
-        confirmBulkDeleteOpen={confirmBulkDeleteOpen}
-        confirmBulkRestoreOpen={confirmBulkRestoreOpen}
-        pendingDeleteId={pendingDeleteId}
-        onBulkDeleteOpenChange={onBulkDeleteOpenChange}
-        onBulkRestoreOpenChange={onBulkRestoreOpenChange}
-        onPendingDeleteChange={setPendingDeleteId}
-        onConfirmBulkDelete={async (reason) => {
-          if (onBulkDelete) await onBulkDelete(selectedIds, reason);
-          onClearSelection();
-          onBulkDeleteOpenChange(false);
-        }}
-        onConfirmBulkRestore={async () => {
-          if (onBulkRestore) await onBulkRestore(selectedIds);
-          onClearSelection();
-          onBulkRestoreOpenChange(false);
-        }}
-        onConfirmDelete={async (reason) => {
-          if (pendingDeleteId) await onDelete(pendingDeleteId, reason);
-          setPendingDeleteId(null);
-        }}
-      />
-
-      <TeacherListDetailDrawer
-        teacher={viewTeacher}
-        canWrite={canWrite}
-        canDelete={canDelete}
-        showDeleted={showDeleted}
-        onClose={() => setViewTeacher(null)}
-        onEdit={(teacherToEdit) => {
-          setViewTeacher(null);
-          onEdit(teacherToEdit);
-        }}
-        onRestore={onRestore}
-        openComposer={openComposer}
-        canWriteMessaging={canWriteMessaging}
       />
     </div>
   );

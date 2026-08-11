@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { motion } from "framer-motion";
 import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
@@ -130,12 +131,12 @@ export function HasanatDashboard({
                     </div>
                     <span className="shrink-0 text-xs text-muted-foreground">{denomination.remaining}/{denomination.total}</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${denomination.name} stock usage`}>
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${pct}%`, background: denomination.color }}
-                    />
-                  </div>
+                  <ProgressBar
+                    value={pct}
+                    fillStyle={{ background: denomination.color }}
+                    trackClassName="bg-border"
+                    aria-label={`${denomination.name} stock usage`}
+                  />
                 </div>
               );
             })}
@@ -156,14 +157,13 @@ export function HasanatDashboard({
               {t("hasanat.dashboard.stockUsagePct", { count: usedPct })}
             </span>
           </div>
-          <div className="h-3 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={usedPct} aria-valuemin={0} aria-valuemax={100}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${usedPct}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="h-full rounded-full bg-gradient-to-r from-primary to-success"
-            />
-          </div>
+          <ProgressBar
+            value={usedPct}
+            animated
+            fillClassName="bg-gradient-to-r from-primary to-success"
+            trackClassName="h-3 bg-border"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          />
           <div className="flex justify-between mt-1.5">
             <span className="text-xs text-muted-foreground">
               {t("hasanat.dashboard.stockUsed", { count: totalStock - totalRemaining })}

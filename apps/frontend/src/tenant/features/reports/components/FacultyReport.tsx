@@ -1,67 +1,130 @@
-import React from "react";
-import {
-  FacultyReportChartSection,
-  FacultyReportExportSection,
-  FacultyReportFilterBar,
-  FacultyReportKpiSection,
-} from "@/tenant/features/reports/components/FacultyReportSections";
-import { useFacultyReportData, type FacultyWorkloadItem } from "@/tenant/features/reports/components/useFacultyReportData";
+import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import { Loader2 } from 'lucide-react';
+import { SubTabBar } from '@/components/ui/SubTabBar';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
+import { ExportToolbar } from '@/components/ui/ExportToolbar';
+import { ListPagination } from '@/components/ui/ListPagination';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { FacultyReportChartSection } from './FacultyReportSections';
+import { FacultyReportDashboardWidgets } from './FacultyReportDashboardWidgets';
+import { FacultyReportFilterBanner } from './FacultyReportFilterBanner';
+import { FacultyReportTables } from './FacultyReportTables';
+import { useFacultyReportController } from './useFacultyReportController';
+import type { TeacherReportProps } from './teacherReportTypes';
 
-export type { FacultyWorkloadItem };
+export type {
+  FacultyWorkloadItem,
+  ReportTeacher,
+  TeacherReportFilters,
+  TeacherReportProps,
+} from './teacherReportTypes';
 
-interface FacultyReportFilters {
-  [key: string]: string;
-}
+export default function FacultyReport({ filters }: TeacherReportProps): React.JSX.Element {
+  const report = useFacultyReportController({ filters });
 
-interface FacultyReportProps {
-  filters?: FacultyReportFilters;
-  onEditVisual?: (config: unknown) => void;
-}
-
-export default function FacultyReport({ filters: _filters }: FacultyReportProps): React.JSX.Element {
-  const {
-    t,
-    selectedFaculty,
-    setSelectedFaculty,
-    facultyWorkload,
-    filteredFacultyWorkload,
-    totalFaculty,
-    totalStudents,
-    totalClasses,
-    avgStudents,
-    toggleFacultyFilter,
-  } = useFacultyReportData();
+  if (report.activeSubTab === 'roster' && report.listError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={report.t('teachers.report.loadFailed')}
+          description={report.t('teachers.report.loadFailedHint')}
+          onRetry={() => {
+            void report.listRefetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <FacultyReportKpiSection
-        t={t}
-        totalFaculty={totalFaculty}
-        totalStudents={totalStudents}
-        totalClasses={totalClasses}
-        avgStudents={avgStudents}
-      />
-
-      <FacultyReportChartSection
-        t={t}
-        facultyWorkload={facultyWorkload}
-        onBarClick={toggleFacultyFilter}
-      />
-
-      {selectedFaculty && (
-        <FacultyReportFilterBar
-          t={t}
-          selectedFaculty={selectedFaculty}
-          onClear={() => setSelectedFaculty(null)}
-        />
+      {report.metricsLoading && !report.metrics ? (
+        <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
+          <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+          <span className="text-sm">{report.t("common.loading")}</span>
+        </div>
+      ) : (
+        <ModuleCommandMetricsGrid items={report.metricItems} />
       )}
 
-      <FacultyReportExportSection
-        t={t}
-        filteredFacultyWorkload={filteredFacultyWorkload}
-        selectedFaculty={selectedFaculty}
-        onToggleFacultyFilter={toggleFacultyFilter}
+      <FacultyReportFilterBanner
+        hasBaseStatusFilter={Boolean(report.filters.status && report.filters.status !== 'all')}
+        reportStatusFilter={report.reportStatusFilter}
+        studentFilter={report.filters.student}
+        onClearStatusFilter={() => report.setReportStatusFilter(null)}
       />
+
+      <SubTabBar
+        tabs={report.REPORT_TABS}
+        value={report.activeSubTab}
+        onChange={report.setActiveSubTab}
+        panelIdPrefix="faculty-report-subtab"
+      />
+
+      <ExportToolbar
+        title={report.activeSubTab === 'roster' ? report.t('teachers.report.rosterTab') : report.t('teachers.report.workloadTab')}
+        columns={report.activeSubTab === 'roster' ? report.rosterExportColumns : undefined}
+        rows={
+          report.activeSubTab === 'roster'
+            ? (report.teachers as unknown as Record<string, unknown>[])
+            : undefined
+        }
+        data={report.activeSubTab === 'roster' ? undefined : report.filteredFacultyWorkload}
+        headers={
+          report.activeSubTab === 'roster'
+            ? undefined
+            : [
+                report.t('teachers.report.colFaculty'),
+                report.t('teachers.report.colClasses'),
+                report.t('teachers.report.colSessions'),
+                report.t('teachers.report.colStudents'),
+              ]
+        }
+        resolveRows={report.activeSubTab === 'roster' ? report.resolveRosterExportRows : undefined}
+        moduleId="teachers"
+      />
+
+      {report.activeSubTab === 'roster' ? (
+        <div className="space-y-3">
+          <FacultyReportTables
+            activeSubTab={report.activeSubTab}
+            teachers={report.teachers}
+            statusBadgeConfig={report.statusBadgeConfig}
+            listLoading={report.listLoading}
+            workloadRows={report.filteredFacultyWorkload}
+            selectedFaculty={report.selectedFaculty}
+            onToggleFacultyFilter={report.toggleFacultyFilter}
+          />
+          <ListPagination
+            page={report.listPage}
+            total={report.listTotal}
+            limit={TEACHERS_MODULE_MANIFEST.defaultPageSize}
+            hasMore={report.listHasMore}
+            onPageChange={report.setListPage}
+            i18nNamespace="teachers"
+            variant="range"
+          />
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <FacultyReportChartSection
+            t={report.t}
+            facultyWorkload={report.facultyWorkload}
+            onBarClick={report.toggleFacultyFilter}
+          />
+          <FacultyReportTables
+            activeSubTab={report.activeSubTab}
+            teachers={report.teachers}
+            statusBadgeConfig={report.statusBadgeConfig}
+            listLoading={report.listLoading}
+            workloadRows={report.filteredFacultyWorkload}
+            selectedFaculty={report.selectedFaculty}
+            onToggleFacultyFilter={report.toggleFacultyFilter}
+          />
+        </div>
+      )}
+
+      <FacultyReportDashboardWidgets />
     </div>
   );
 }

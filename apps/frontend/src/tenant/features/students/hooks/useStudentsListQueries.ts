@@ -1,6 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
 import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { apiJson } from "@/lib/apiClient";
 import { createModulePaginatedListQuery } from "@/lib/query/createModulePaginatedListQuery";
 import { createPersonModuleResolveQueries } from "@/lib/query/createPersonModuleResolveQueries";
@@ -9,7 +7,6 @@ import {
   STUDENTS_QUERY_KEY,
   buildStudentsPageUrl,
   sameStudentsListFilters,
-  studentDetailQueryKey,
   studentsListQueryKeyParams,
   studentsPaginatedQueryKey,
   type StudentRecord,
@@ -56,21 +53,6 @@ export async function fetchAllStudentsForQuery(
   }
 
   return all;
-}
-
-export function useStudentById(studentId: string | undefined, enabled = true) {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: studentDetailQueryKey(studentId ?? ""),
-    queryFn: async ({ signal }) => {
-      const studentResponse = await apiJson<{ student: StudentRecord }>(`${STUDENTS_API}/${studentId}`, {
-        signal,
-      });
-      return studentResponse.student as unknown as Student;
-    },
-    enabled: isAuthenticated && enabled && Boolean(studentId),
-    staleTime: 30_000,
-  });
 }
 
 const studentResolveQueries = createPersonModuleResolveQueries<StudentRecord, Student>({

@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { Account } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -76,36 +77,39 @@ export function GeneralLedgerEntries({
             {line.lineDesc ? (
               <p className="text-xs text-muted-foreground">{line.lineDesc}</p>
             ) : null}
-            <dl className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.debit")}</dt>
-                <dd className="font-mono text-xs font-semibold text-info">{line.debit > 0 ? formatCurrency(line.debit) : "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.credit")}</dt>
-                <dd className="font-mono text-xs font-semibold text-success">{line.credit > 0 ? formatCurrency(line.credit) : "—"}</dd>
-              </div>
-            </dl>
+            <StatGrid>
+              <StatRow
+                label={t("accounting.ledger.columns.debit")}
+                value={line.debit > 0 ? formatCurrency(line.debit) : "—"}
+                ddClassName="font-mono text-xs font-semibold text-info"
+              />
+              <StatRow
+                label={t("accounting.ledger.columns.credit")}
+                value={line.credit > 0 ? formatCurrency(line.credit) : "—"}
+                ddClassName="font-mono text-xs font-semibold text-success"
+              />
+            </StatGrid>
           </motion.article>
         ))}
         <article className="rounded-xl border border-border bg-muted/30 p-3">
           <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.ledger.closingBalance")}</p>
-          <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.debit")}</dt>
-              <dd className="font-mono font-bold text-info">{formatCurrency(totalDebit)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.credit")}</dt>
-              <dd className="font-mono font-bold text-success">{formatCurrency(totalCredit)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.ledger.columns.balance")}</dt>
-              <dd className="font-mono font-bold">
-                {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
-              </dd>
-            </div>
-          </dl>
+          <StatGrid columns="sm3">
+            <StatRow
+              label={t("accounting.ledger.columns.debit")}
+              value={formatCurrency(totalDebit)}
+              ddClassName="font-mono font-bold text-info"
+            />
+            <StatRow
+              label={t("accounting.ledger.columns.credit")}
+              value={formatCurrency(totalCredit)}
+              ddClassName="font-mono font-bold text-success"
+            />
+            <StatRow
+              label={t("accounting.ledger.columns.balance")}
+              value={`${formatCurrency(Math.abs(balance))} ${balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}`}
+              ddClassName="font-mono font-bold"
+            />
+          </StatGrid>
         </article>
       </div>
       <div className="hidden md:block">

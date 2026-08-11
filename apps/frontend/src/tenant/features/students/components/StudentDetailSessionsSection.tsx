@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BookOpen } from "lucide-react";
@@ -86,7 +87,9 @@ export function StudentDetailSessionsSection({
               <h5 className="text-xs font-bold text-foreground ms-1">{session.name}</h5>
               {session.classes && session.classes.length > 0 ? (
                 <div className="text-xs text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ms-1">
-                  <p className="font-semibold uppercase tracking-wider text-xs text-muted-foreground/60">{t("students.detail.classAssignments")}</p>
+                  <SectionLabel as="p" weight="bold" tracking="wider" toneClassName="text-muted-foreground/60">
+                    {t("students.detail.classAssignments")}
+                  </SectionLabel>
                   {session.classes.map((sessionClass) => (
                     <div key={sessionClass.id} className="flex justify-between gap-1.5">
                       <span className="font-medium text-foreground">{t("students.detail.classByTeacher", { name: sessionClass.name ?? "", teacher: sessionClass.teacherName ?? "" })}</span>

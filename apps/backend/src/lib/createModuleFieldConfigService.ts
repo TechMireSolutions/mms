@@ -3,7 +3,7 @@ import {
   mapCustomTabRowToFormTabFields,
   mergeFormTabsFromCustomTabs,
 } from '../services/mergeFormTabsFromCustomTabs.js';
-import { broadcastCollection } from '../services/websocketService.js';
+import { broadcastCollection } from './livePush.js';
 
 type CustomTabRow = Parameters<typeof mapCustomTabRowToFormTabFields>[0];
 

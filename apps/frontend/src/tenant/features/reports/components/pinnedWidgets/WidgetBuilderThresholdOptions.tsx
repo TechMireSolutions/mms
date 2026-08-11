@@ -2,6 +2,7 @@ import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface WidgetBuilderThresholdOptionsProps {
@@ -40,7 +41,7 @@ export function WidgetBuilderThresholdOptions({
       {thresholdEnabled && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-start">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.triggerCondition")}</label>
+            <SectionLabel as="label" weight="bold" tracking="wider">{t("reports.widgets.builder.triggerCondition")}</SectionLabel>
             <FormSelect
               value={thresholdCondition}
               onChange={(value) => setThresholdCondition(value as "lt" | "gt" | "equals")}
@@ -53,7 +54,7 @@ export function WidgetBuilderThresholdOptions({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.thresholdValue")}</label>
+            <SectionLabel as="label" weight="bold" tracking="wider">{t("reports.widgets.builder.thresholdValue")}</SectionLabel>
             <Input
               type="number"
               value={thresholdValue}
@@ -63,7 +64,7 @@ export function WidgetBuilderThresholdOptions({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("reports.widgets.builder.alertColor")}</label>
+            <SectionLabel as="label" weight="bold" tracking="wider">{t("reports.widgets.builder.alertColor")}</SectionLabel>
             <FormSelect
               value={thresholdColor}
               onChange={(value) => setThresholdColor(value as "red" | "amber" | "yellow")}

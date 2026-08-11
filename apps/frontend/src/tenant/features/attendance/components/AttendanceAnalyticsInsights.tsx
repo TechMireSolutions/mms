@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { motion } from "framer-motion";
 import type { StudentRateEntry } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
@@ -56,9 +57,11 @@ export function AttendanceAnalyticsInsights({
                     <span className="text-sm font-semibold text-foreground">{studentRate.name}</span>
                     <span className="text-xs font-bold text-success">{studentRate.rate}%</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full bg-success" style={{ width: `${studentRate.rate}%` }} />
-                  </div>
+                  <ProgressBar
+                    value={studentRate.rate}
+                    fillClassName="bg-success"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             ))}

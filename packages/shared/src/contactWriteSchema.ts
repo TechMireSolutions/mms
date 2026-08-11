@@ -27,7 +27,7 @@ const LIST_TAB_WRITE_KEYS: Record<string, string> = {
  * Top-level keys always accepted on contact writes (system person model + scalar mirrors).
  * Soft-delete keys are intentionally omitted — stripped before validation.
  */
-export const CONTACT_WRITE_SYSTEM_KEYS = [
+const CONTACT_WRITE_SYSTEM_KEYS = [
   'id',
   '_blueprintId',
   'firstName',

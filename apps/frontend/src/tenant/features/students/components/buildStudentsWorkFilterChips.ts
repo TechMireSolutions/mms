@@ -3,8 +3,6 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { buildWorkFilterChips, type WorkFilterChip } from "@/lib/query/buildWorkFilterChips";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 
-export type StudentsWorkFilterChip = WorkFilterChip;
-
 /** Build removable FilterChips models for active Students Work filters. */
 export function buildStudentsWorkFilterChips(input: {
   studentFilterStatus: string[];
@@ -12,7 +10,7 @@ export function buildStudentsWorkFilterChips(input: {
   onToggleStatus: (status: string) => void;
   onGenderChange: (value: string) => void;
   t: TranslationFunction;
-}): StudentsWorkFilterChip[] {
+}): WorkFilterChip[] {
   return buildWorkFilterChips({
     statuses: input.studentFilterStatus,
     statusLabel: studentStatusLabel,

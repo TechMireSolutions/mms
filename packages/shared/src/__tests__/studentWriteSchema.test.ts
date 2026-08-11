@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildStudentWriteSchema,
-  collectStudentWriteExtraFieldKeys,
   studentWriteSchema,
 } from '../studentWriteSchema.js';
+import { collectStudentWriteExtraFieldKeys } from '../studentValidation.js';
 import type { StudentsSettings } from '../studentsModuleSettings.js';
 
 describe('studentWriteSchema allowlist', () => {

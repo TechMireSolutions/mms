@@ -1,9 +1,11 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { QrCode, Bell, Clock, Scan } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
+import { Badge } from "@/components/ui/badge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import type { AttendanceModuleSettings } from "@mms/shared";
@@ -24,11 +26,13 @@ export function AttendanceSettingsPreferencesSection({
   return (
     <>
       <Card accentColor="primary" className="p-0 overflow-hidden">
-        <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
-          <Clock className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.timingRules")}</h2>
-        </header>
-        <div className="px-4 ps-6.5 pb-2">
+        <CardTitleBar
+          headingLevel={2}
+          inset
+          icon={<Clock className="w-4 h-4 text-primary" />}
+          title={t("attendance.settings.timingRules")}
+        />
+        <div className="px-5 ps-6.5 pb-2">
           <AttendanceSettingRow label={t("attendance.settings.lateThreshold")} sub={t("attendance.settings.lateThresholdDesc")}>
             <div className="flex items-center gap-2">
               <label htmlFor="setting-late-threshold" className="sr-only">{t("attendance.settings.lateThresholdMinutes")}</label>
@@ -68,11 +72,13 @@ export function AttendanceSettingsPreferencesSection({
       </Card>
 
       <Card accentColor="info" className="p-0 overflow-hidden">
-        <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
-          <QrCode className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.qrAttendance")}</h2>
-        </header>
-        <div className="px-4 ps-6.5 pb-2">
+        <CardTitleBar
+          headingLevel={2}
+          inset
+          icon={<QrCode className="w-4 h-4 text-primary" />}
+          title={t("attendance.settings.qrAttendance")}
+        />
+        <div className="px-5 ps-6.5 pb-2">
           <AttendanceSettingRow label={t("attendance.settings.enableQr")} sub={t("attendance.settings.enableQrDesc")}>
             <Switch checked={Boolean(settingsDraft.qrEnabled)} onCheckedChange={(value) => upd("qrEnabled", value)} />
           </AttendanceSettingRow>
@@ -80,11 +86,13 @@ export function AttendanceSettingsPreferencesSection({
       </Card>
 
       <Card accentColor="warning" className="p-0 overflow-hidden">
-        <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
-          <Bell className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.alerts")}</h2>
-        </header>
-        <div className="px-4 ps-6.5 pb-2">
+        <CardTitleBar
+          headingLevel={2}
+          inset
+          icon={<Bell className="w-4 h-4 text-primary" />}
+          title={t("attendance.settings.alerts")}
+        />
+        <div className="px-5 ps-6.5 pb-2">
           <AttendanceSettingRow label={t("attendance.settings.lowThreshold")} sub={t("attendance.settings.lowThresholdDesc")}>
             <div className="flex items-center gap-2">
               <label htmlFor="setting-low-attendance" className="sr-only">{t("attendance.settings.lowThresholdPercent")}</label>
@@ -111,11 +119,13 @@ export function AttendanceSettingsPreferencesSection({
       </Card>
 
       <Card accentColor="success" className="p-0 overflow-hidden">
-        <header className="px-4 py-3 border-b border-border/40 bg-muted/20 flex items-center gap-2 ps-6.5">
-          <Scan className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-bold text-foreground m-0">{t("attendance.settings.advanced")}</h2>
-        </header>
-        <div className="px-4 ps-6.5 pb-2">
+        <CardTitleBar
+          headingLevel={2}
+          inset
+          icon={<Scan className="w-4 h-4 text-primary" />}
+          title={t("attendance.settings.advanced")}
+        />
+        <div className="px-5 ps-6.5 pb-2">
           <AttendanceSettingRow label={t("attendance.settings.offlineMode")} sub={t("attendance.settings.offlineModeDesc")}>
             <Switch checked={Boolean(settingsDraft.offlineEnabled)} onCheckedChange={(value) => upd("offlineEnabled", value)} />
           </AttendanceSettingRow>
@@ -134,13 +144,13 @@ export function AttendanceSettingsPreferencesSection({
             />
           </AttendanceSettingRow>
           <AttendanceSettingRow label={t("attendance.settings.facialRecognition")} sub={t("attendance.settings.facialRecognitionDesc")}>
-            <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</span>
+            <Badge pill variant="outline" className={cn("px-2 font-bold", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</Badge>
           </AttendanceSettingRow>
           <AttendanceSettingRow label={t("attendance.settings.dailyAutoLock")} sub={t("attendance.settings.dailyAutoLockDesc")}>
             <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
           </AttendanceSettingRow>
           <AttendanceSettingRow label={t("attendance.settings.auditLogging")} sub={t("attendance.settings.auditLoggingDesc")}>
-            <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</span>
+            <Badge pill variant="outline" className={cn("px-2 font-bold", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</Badge>
           </AttendanceSettingRow>
         </div>
       </Card>

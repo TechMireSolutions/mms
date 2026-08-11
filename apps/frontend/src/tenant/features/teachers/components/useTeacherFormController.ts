@@ -9,6 +9,7 @@ import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/featur
 import {
   Teacher,
   DEFAULT_TEACHERS_SETTINGS,
+  TeacherDuplicateReason,
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
 } from "@mms/shared";
@@ -17,7 +18,13 @@ import {
   getInitialTeacherDraft,
   teacherDraftSnapshot,
 } from "@/tenant/features/teachers/components/teacherFormDraft";
-import { runTeacherSaveFlow } from "@/tenant/features/teachers/components/teacherFormSaveFlow";
+import {
+  confirmPendingTeacherSave,
+  runTeacherSaveFlow,
+} from "@/tenant/features/teachers/components/teacherFormSaveFlow";
+import {
+  DUPLICATE_ERROR_KEYS,
+} from "@/tenant/features/teachers/components/teacherFormValidation";
 import { resolveTeacherFormModalTabs } from "@/tenant/features/teachers/components/teacherFormTabs";
 
 export interface UseTeacherFormControllerOptions {
@@ -54,6 +61,9 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState("basic");
+  const [pendingSaveData, setPendingSaveData] = useState<Partial<Teacher> | null>(null);
+  const [typedDuplicateReason, setTypedDuplicateReason] = useState<TeacherDuplicateReason | null>(null);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
   const formInstanceId = String(teacher?.id ?? "new");
 
   const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() =>
@@ -104,8 +114,12 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   /** FormModal error banner — deduped field validation messages (Students parity). */
   const validationErrorSummary = useMemo(() => {
     const messages = Object.values(errors).filter((message) => Boolean(message));
+    const reasonMessage = typedDuplicateReason
+      ? t(DUPLICATE_ERROR_KEYS[typedDuplicateReason])
+      : "";
+    if (reasonMessage) messages.push(reasonMessage);
     return messages.length > 0 ? [...new Set(messages)] : undefined;
-  }, [errors]);
+  }, [errors, typedDuplicateReason, t]);
 
   const { data: linkedContact } = useContactById(
     teacherDraft.contactId ? String(teacherDraft.contactId) : undefined,
@@ -133,12 +147,25 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     }
   }, [nextEmployeeId, teacher?.id, teacherDraft.employeeId, autoGenerateId]);
 
+  const clearDuplicatePrompt = () => {
+    setDuplicateConfirmOpen(false);
+    setTypedDuplicateReason(null);
+    setPendingSaveData(null);
+  };
+
+  const handleDuplicateDialogOpenChange = (open: boolean) => {
+    if (!open) clearDuplicatePrompt();
+    else setDuplicateConfirmOpen(true);
+  };
+
   const handleSave = async () => {
     await runTeacherSaveFlow({
       teacherDraft,
       teacher,
       autoGenerateId,
       nextEmployeeId,
+      formInstanceId,
+      linkedContact,
       settings,
       enabledTabs,
       fields: fieldsMap,
@@ -150,6 +177,22 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
       setErrors,
       setActiveTab,
       setSaving,
+      setPendingSaveData,
+      setTypedDuplicateReason,
+      setDuplicateConfirmOpen,
+    });
+  };
+
+  const confirmDuplicateSave = () => {
+    void confirmPendingTeacherSave({
+      pendingSaveData,
+      teacher,
+      t,
+      onSave,
+      onClose,
+      setSaving,
+      setPendingSaveData,
+      setDuplicateConfirmOpen,
     });
   };
 
@@ -180,5 +223,12 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     updateDraft,
     handleSave,
     validationErrorSummary,
+    pendingSaveData,
+    typedDuplicateReason,
+    duplicateConfirmOpen,
+    clearDuplicatePrompt,
+    handleDuplicateDialogOpenChange,
+    confirmDuplicateSave,
+    duplicateErrorKeys: DUPLICATE_ERROR_KEYS,
   };
 }

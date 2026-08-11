@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Table as TableIcon } from "lucide-react";
 import { formatNumber } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import {
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type {
   AggregatedItem,
@@ -35,15 +37,15 @@ export function VisualizerKpiCards({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.totalAggregated")}</span>
+        <SectionLabel weight="bold" tracking="wider" className="block">{t("reports.visualizer.totalAggregated")}</SectionLabel>
         <span className="text-sm font-black text-foreground mt-1 leading-none">{formatNumber(totalValue)}</span>
       </div>
       <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.avgPerGroup")}</span>
+        <SectionLabel weight="bold" tracking="wider" className="block">{t("reports.visualizer.avgPerGroup")}</SectionLabel>
         <span className="text-sm font-black text-foreground mt-1 leading-none">{formatNumber(avgGroupValue)}</span>
       </div>
       <div className="p-3 border border-border bg-card/30 rounded-2xl flex flex-col justify-between">
-        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">{t("reports.visualizer.topGroup")}</span>
+        <SectionLabel weight="bold" tracking="wider" className="block">{t("reports.visualizer.topGroup")}</SectionLabel>
         <span className="text-sm font-black text-foreground mt-1 leading-none truncate block max-w-full">{topGroup}</span>
       </div>
     </div>
@@ -93,18 +95,18 @@ export function VisualizerDataMatrix({
                 {processedData.map((processedRow, index) => (
                   <article key={index} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
                     <p className="text-sm font-semibold text-foreground">{processedRow.name}</p>
-                    <dl className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">
-                          {t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}
-                        </dt>
-                        <dd className="font-bold text-primary">{formatNumber(processedRow.value)}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-semibold text-muted-foreground">{t("reports.visualizer.recordCount")}</dt>
-                        <dd className="text-muted-foreground">{processedRow.count}</dd>
-                      </div>
-                    </dl>
+                    <StatGrid>
+                      <StatRow
+                        label={t("reports.visualizer.aggregatedValue", { op: operation.toUpperCase() })}
+                        value={formatNumber(processedRow.value)}
+                        ddClassName="font-bold text-primary"
+                      />
+                      <StatRow
+                        label={t("reports.visualizer.recordCount")}
+                        value={processedRow.count}
+                        ddClassName="text-muted-foreground"
+                      />
+                    </StatGrid>
                   </article>
                 ))}
               </div>

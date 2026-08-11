@@ -10,7 +10,7 @@ import {
 import {
   CONTACTS_PREFERENCES_QUERY_KEY,
   useContactPreferencesQuery,
-} from "@/tenant/features/contacts/hooks/useContactSetupConfig";
+} from "@/tenant/hooks/collections/contacts";
 
 /**
  * Contacts preferences slice (separate REST document from field config).

@@ -11,6 +11,7 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SimplePagination } from "@/components/ui/SimplePagination";
+import { Badge } from "@/components/ui/badge";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
 import { ROUTES } from "@/lib/config/routes";
 
@@ -76,9 +77,9 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
         headingId="sessions-table-heading"
         title={title || t("dashboard.widgets.todaysSessions")}
         badge={
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+          <Badge pill tone="primary" className="uppercase tracking-wider font-bold">
             {t("dashboard.widgets.sessionsScheduled", { count: filteredSessions.length })}
-          </span>
+          </Badge>
         }
         actions={
           <Link
@@ -117,13 +118,16 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
 
               <div className="flex-shrink-0">
                 {session.status === "live" ? (
-                  <span
-                    className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-success bg-success/10 px-2 py-0.5 rounded-full border border-success/20 select-none animate-pulse"
+                  <Badge
+                    as="span"
+                    pill
+                    tone="success"
+                    className="gap-1.5 font-black uppercase tracking-wider select-none animate-pulse"
                     aria-label={t("dashboard.widgets.sessionLiveAria")}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping shrink-0" />
                     <span>{t("dashboard.widgets.live")}</span>
-                  </span>
+                  </Badge>
                 ) : (
                   <div className="w-2 h-2 rounded-full bg-border/80 ms-2" aria-hidden="true" />
                 )}

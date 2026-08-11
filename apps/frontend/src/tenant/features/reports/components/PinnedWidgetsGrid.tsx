@@ -5,6 +5,7 @@ import type { AppTranslationKey } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetWorkDrillDown";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
@@ -76,9 +77,9 @@ export function PinnedWidgetsGrid({
             <div className="flex min-w-0 items-start justify-between gap-2">
               <div className="min-w-0 flex-1 space-y-0.5">
                 <span className="block truncate text-xs font-black uppercase leading-none tracking-widest text-foreground">{resolveWidgetTitle(widget, t)}</span>
-                <p className="truncate text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <SectionLabel as="p" weight="bold" tracking="wider" className="truncate">
                   {typeLabelKey ? t(typeLabelKey) : (widget.widgetType || "kpi")} • {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection.replace("_", " "), t)}
-                </p>
+                </SectionLabel>
               </div>
 
               <div className="flex shrink-0 items-center gap-1.5">

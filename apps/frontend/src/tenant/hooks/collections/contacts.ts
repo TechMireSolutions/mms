@@ -17,11 +17,6 @@ export {
   useContactsSavedReportsSource,
   useContactColumnPrefs,
   useContactColumnPrefsMutation,
-  type ContactsPaginatedParams,
-  type ContactsReportAnalyticsParams,
-  type ContactsReportAnalyticsResult,
-  type ContactsWidgetAggregateWidgetInput,
-  type ContactsSavedReportCreateInput,
 } from '@/tenant/features/contacts/hooks/useContacts';
 export {
   CONTACTS_LOOKUPS_QUERY_KEY,
@@ -36,3 +31,4 @@ export {
   useContactPreferencesQuery,
   useContactPreferencesMutation,
 } from '@/tenant/features/contacts/hooks/useContactSetupConfig';
+export { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';

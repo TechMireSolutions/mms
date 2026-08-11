@@ -12,7 +12,7 @@ const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
   registeredDate: "registeredDate",
 };
 
-export type StudentsPageWorkQueryInput = {
+type StudentsPageWorkQueryInput = {
   enabled: boolean;
   listPage: number;
   debouncedSearch: string;

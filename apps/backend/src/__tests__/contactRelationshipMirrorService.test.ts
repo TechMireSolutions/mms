@@ -6,17 +6,17 @@ const mockReplaceContactLookupKind = vi.fn();
 const mockLoadContactFieldConfig = vi.fn();
 const mockSaveContactFieldConfig = vi.fn();
 
-vi.mock('../services/contactLookupsService.js', () => ({
+vi.mock('../lib/contactLookupsService.js', () => ({
   loadContactLookupKind: (...args: unknown[]) => mockLoadContactLookupKind(...args),
   replaceContactLookupKind: (...args: unknown[]) => mockReplaceContactLookupKind(...args),
 }));
 
-vi.mock('../services/contactConfigService.js', () => ({
+vi.mock('../lib/contactConfigService.js', () => ({
   loadContactFieldConfig: () => mockLoadContactFieldConfig(),
   saveContactFieldConfig: (...args: unknown[]) => mockSaveContactFieldConfig(...args),
 }));
 
-import { syncRelationshipMirrorsFromPairs } from '../services/contactRelationshipMirrorService.js';
+import { syncRelationshipMirrorsFromPairs } from '../lib/contactRelationshipMirrorService.js';
 
 function makeFieldConfig(options: string[]): FieldConfig {
   const relationshipField: FieldDefinition = {

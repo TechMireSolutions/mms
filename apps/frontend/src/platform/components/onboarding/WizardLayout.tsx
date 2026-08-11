@@ -7,6 +7,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { AuthPageBackdrop } from "@/components/entry/AuthPageShell";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { Button } from "@/components/ui/button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { ROUTES } from "@/lib/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -104,14 +105,14 @@ export default function WizardLayout({
                   >
                     {done ? <Check className="h-4 w-4" aria-hidden /> : <span aria-hidden>{step.id}</span>}
                   </div>
-                  <span
-                    className={cn(
-                      "hidden text-xs font-semibold uppercase tracking-wider sm:block",
-                      active ? "text-foreground" : "text-muted-foreground",
-                    )}
+                  <SectionLabel
+                    as="span"
+                    weight="semibold"
+                    tracking="wider"
+                    className={cn("hidden sm:block", active ? "text-foreground" : "text-muted-foreground")}
                   >
                     {step.label}
-                  </span>
+                  </SectionLabel>
                 </div>
                 {index < steps.length - 1 ? (
                   <div

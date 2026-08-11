@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
   TEACHERS_MODULE_MANIFEST,
   type Teacher,
+  type TeacherDuplicateCheckInput,
+  type TeacherDuplicateReason,
   type TeacherRecord,
   type TeachersCommandMetricsSnapshot,
   type TeachersWidgetAggregateResult,
@@ -18,13 +20,11 @@ import {
   TEACHERS_API,
   TEACHERS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  teacherDetailQueryKey,
   type TeacherNextEmployeeIdParams,
   type TeachersWidgetAggregateWidgetInput,
 } from '@/tenant/features/teachers/hooks/teachersQueryKeys';
 import {
   buildTeachersPageUrl,
-  fetchTeacherById,
   sameTeachersListFilters,
   teachersListQueryKeyParams,
   teachersPaginatedQueryKey,
@@ -50,14 +50,28 @@ export function useTeachersPaginated(params: TeachersPaginatedParams) {
   return useTeachersPaginatedList(params);
 }
 
-export function useTeacherById(teacherId: string | undefined, enabled = true) {
-  const { isAuthenticated } = useAuth();
-  return useQuery({
-    queryKey: teacherDetailQueryKey(teacherId ?? ''),
-    queryFn: ({ signal }) => fetchTeacherById(teacherId!, signal),
-    enabled: isAuthenticated && enabled && Boolean(teacherId),
-    staleTime: 10_000,
-  });
+/** Fetches all pages matching Work filters for export (parity with Students §8). */
+export async function fetchAllTeachersForQuery(
+  params: Omit<TeachersPaginatedParams, 'page' | 'enabled'>,
+  onProgress?: (fetched: number, total: number) => void,
+): Promise<TeacherRecord[]> {
+  const limit = TEACHERS_MODULE_MANIFEST.maxPageSize;
+  const all: TeacherRecord[] = [];
+  let page = 1;
+  let total = 0;
+
+  for (;;) {
+    const teachersPage = await apiJson<TeachersListPageResult>(
+      buildTeachersPageUrl({ ...params, page, limit }),
+    );
+    all.push(...(teachersPage.teachers as TeacherRecord[]));
+    total = teachersPage.total;
+    onProgress?.(all.length, total);
+    if (!teachersPage.hasMore || page >= 200) break;
+    page += 1;
+  }
+
+  return all;
 }
 
 const teacherResolveQueries = createPersonModuleResolveQueries<TeacherRecord, Teacher>({
@@ -91,6 +105,20 @@ export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {
   });
 }
 
+/** Server-authoritative active duplicate probe (contact / employeeId) before save. */
+export async function checkTeacherRegistrationDuplicate(
+  input: TeacherDuplicateCheckInput,
+): Promise<TeacherDuplicateReason | null> {
+  const duplicateCheckResponse = await apiJson<{ reason: TeacherDuplicateReason | null }>(
+    `${TEACHERS_API}/duplicate-check`,
+    {
+      method: 'POST',
+      body: JSON.stringify(input),
+    },
+  );
+  return duplicateCheckResponse.reason;
+}
+
 export function useTeachersMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<TeachersCommandMetricsSnapshot>({
     moduleId: TEACHERS_MODULE_MANIFEST.moduleId,
@@ -116,6 +144,18 @@ export function useTeachersWidgetAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
   return useQuery(buildTeachersWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
+}
+
+/** One-shot employee-id backfill for active teachers missing one (Setup writers). */
+export async function migrateTeachersEmployeeIds(): Promise<{ updated: number }> {
+  const migrateResponse = await apiJson<{ success: boolean; updated: number }>(
+    `${TEACHERS_API}/migrate-employee-ids`,
+    {
+      method: 'POST',
+      body: JSON.stringify({}),
+    },
+  );
+  return { updated: migrateResponse.updated ?? 0 };
 }
 
 export type { TeachersPaginatedParams, TeacherNextEmployeeIdParams, TeachersWidgetAggregateWidgetInput };

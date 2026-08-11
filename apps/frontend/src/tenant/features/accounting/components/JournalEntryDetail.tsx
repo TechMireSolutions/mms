@@ -3,6 +3,7 @@ import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -54,9 +55,9 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
         <div className="flex items-center gap-2 flex-wrap mt-1">
           <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
           {entry.reversed_ref && (
-            <span className="text-xs font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full border border-warning/30">
+            <Badge pill tone="warning" className="px-2 font-semibold border-warning/30">
               ↩ {t("accounting.journal.detail.reversalOf", { ref: entry.reversed_ref })}
-            </span>
+            </Badge>
           )}
         </div>
       }
@@ -101,9 +102,9 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             <div className="flex flex-wrap gap-1.5" aria-label={t("accounting.columns.journal.tags")}>
               <Tag className="w-3.5 h-3.5 text-muted-foreground mt-0.5" aria-hidden="true" />
               {entry.tags!.map((tag) => (
-                <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                <Badge key={tag} pill tone="primary" className="px-2 font-bold">
                   {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
-                </span>
+                </Badge>
               ))}
             </div>
           )}

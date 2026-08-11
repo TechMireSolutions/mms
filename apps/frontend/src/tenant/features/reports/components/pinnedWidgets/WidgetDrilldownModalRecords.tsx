@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   Table,
@@ -48,12 +49,13 @@ export function WidgetDrilldownModalRecords({
                 <p className="min-w-0 truncate text-sm font-bold text-foreground">{name}</p>
                 <StatusBadge status={status.toLowerCase()} size="sm" config={statusConfig} />
               </div>
-              <dl className="grid grid-cols-1 gap-2 text-sm">
-                <div>
-                  <dt className="text-xs font-semibold text-muted-foreground">{t("reports.widgets.primaryInfo")}</dt>
-                  <dd className="text-muted-foreground font-semibold">{detailText}</dd>
-                </div>
-              </dl>
+              <StatGrid columns="1">
+                <StatRow
+                  label={t("reports.widgets.primaryInfo")}
+                  value={detailText}
+                  ddClassName="text-muted-foreground font-semibold"
+                />
+              </StatGrid>
               {(widget.collection === "hasanat_distributions" || hasAction) && (
                 <div className="pt-1">
                   {widget.collection === "hasanat_distributions" ? (

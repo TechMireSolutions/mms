@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { LegendChip } from "@/components/ui/LegendChip";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -135,11 +137,13 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
           aria-label={t("dashboard.widgets.feeSplitAria", { collected: collectedPct, outstanding: outstandingPct })}
         >
           {breakdown.map((b) => (
-            <div key={b.label} className="flex items-center gap-1.5">
-              <div className={`w-2.5 h-2.5 rounded-full ${b.color}`} aria-hidden="true" />
-              <span className="text-xs font-medium text-muted-foreground">{b.label}</span>
-              <span className="text-xs font-bold text-foreground tabular-nums">{b.pct}%</span>
-            </div>
+            <LegendChip
+              key={b.label}
+              dotClassName={b.color}
+              label={b.label}
+              labelClassName="text-muted-foreground font-medium"
+              value={`${b.pct}%`}
+            />
           ))}
         </div>
 
@@ -155,17 +159,14 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
                     {formatCurrency(classSummary.collected)} / {formatCurrency(classSummary.target)}
                   </span>
                 </header>
-                <div
-                  className="h-2 rounded-full bg-muted overflow-hidden"
+                <ProgressBar
+                  value={pct}
+                  size="md"
+                  fillClassName={`${
+                    pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-destructive"
+                  } duration-700 ease-out`}
                   aria-label={t("dashboard.widgets.classCollectionAria", { name: classSummary.name, pct })}
-                >
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ease-out ${
-                      pct >= 90 ? "bg-success" : pct >= 70 ? "bg-warning" : "bg-destructive"
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
+                />
               </article>
             );
           })}

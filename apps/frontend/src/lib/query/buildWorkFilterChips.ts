@@ -15,12 +15,18 @@ export interface BuildWorkFilterChipsInput {
     label: string;
     onRemove: () => void;
   };
+  /** Additional single-select filter chips (e.g. specialization + gender). */
+  extraChips?: Array<{
+    key: string;
+    label: string;
+    onRemove: () => void;
+  }>;
   t: TranslationFunction;
 }
 
 /**
  * Build removable FilterChips models for active module Work filters
- * (status chips + one optional extra filter chip).
+ * (status chips + optional extra filter chips).
  */
 export function buildWorkFilterChips(input: BuildWorkFilterChipsInput): WorkFilterChip[] {
   const chips: WorkFilterChip[] = input.statuses.map((status) => ({
@@ -31,6 +37,10 @@ export function buildWorkFilterChips(input: BuildWorkFilterChipsInput): WorkFilt
 
   if (input.extraChip) {
     chips.push(input.extraChip);
+  }
+
+  for (const chip of input.extraChips ?? []) {
+    chips.push(chip);
   }
 
   return chips;

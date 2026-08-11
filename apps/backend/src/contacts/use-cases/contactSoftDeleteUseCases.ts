@@ -1,8 +1,8 @@
 import type { Contact } from '@mms/shared';
-import { invalidateDuplicateScanCache } from '../../services/contactDuplicateScanService.js';
+import { invalidateDuplicateScanCache } from './contactDuplicateScanUseCases.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
-import { broadcastCollection } from '../../services/websocketService.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 import {
   assertContactUniqueFields,
   ContactUniqueFieldError,
@@ -23,7 +23,6 @@ interface ContactBulkRestoreResult {
 
 export async function restoreContactById(
   id: string,
-  _restoredBy: string,
   repo: ContactsRepository = contactsRepository,
 ): Promise<Contact | null> {
   const restored = await runInTransaction(async () => {
@@ -52,7 +51,6 @@ export async function restoreContactById(
 
 export async function bulkRestoreContacts(
   ids: string[],
-  _restoredBy: string,
   repo: ContactsRepository = contactsRepository,
 ): Promise<ContactBulkRestoreResult> {
   const result = await runInTransaction(async () => {

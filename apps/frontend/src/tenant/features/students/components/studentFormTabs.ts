@@ -3,9 +3,7 @@ import {
   STUDENT_TAB_REGISTRY,
   type TabDefinition,
 } from "@mms/shared";
-import { createFormModalTabs, type FormModalTabItem } from "@/lib/forms/createFormModalTabs";
-
-export type StudentFormTabItem = FormModalTabItem;
+import { createFormModalTabs } from "@/lib/forms/createFormModalTabs";
 
 const FORM_TAB_ICONS: Record<string, typeof User> = {
   basic: User,

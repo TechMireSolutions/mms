@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -37,7 +38,7 @@ export function GuardianContactCard({
             {badgeCode}
           </div>
           <div className="min-w-0">
-            <span className={cn("text-xs font-black uppercase tracking-widest mb-0.5 block", badgeTone, "bg-transparent border-0")}>{label}</span>
+            <SectionLabel toneClassName={badgeTone} className="mb-0.5 block bg-transparent border-0">{label}</SectionLabel>
             <h5 className="text-xs font-bold text-foreground truncate">{name}</h5>
             {(phone || email) && (
               <p className="text-xs text-muted-foreground mt-0.5 truncate">{phone || email}</p>

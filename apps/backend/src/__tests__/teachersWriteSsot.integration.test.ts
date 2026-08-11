@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
-import { adminToken } from './helpers/tokens.js';
+import { adminToken, viewerToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -32,6 +32,9 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 const mockCreateTeacher = vi.fn();
 const mockUpdateTeacherById = vi.fn();
+const mockCheckTeacherRegistrationDuplicate = vi.fn();
+const mockMigrateTeachersMissingEmployeeIds = vi.fn();
+const mockLoadTeachersPage = vi.fn();
 
 vi.mock('../teachers/use-cases/teacherUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../teachers/use-cases/teacherUseCases.js')>();
@@ -41,6 +44,11 @@ vi.mock('../teachers/use-cases/teacherUseCases.js', async (importOriginal) => {
       ...actual.teacherUseCases,
       createTeacher: (...args: unknown[]) => mockCreateTeacher(...args),
       updateTeacherById: (...args: unknown[]) => mockUpdateTeacherById(...args),
+      checkTeacherRegistrationDuplicate: (...args: unknown[]) =>
+        mockCheckTeacherRegistrationDuplicate(...args),
+      migrateTeachersMissingEmployeeIds: (...args: unknown[]) =>
+        mockMigrateTeachersMissingEmployeeIds(...args),
+      loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
       sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
       sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
     },
@@ -172,6 +180,124 @@ describe('teachers write contact-profile SSOT', () => {
     });
     expect(res.statusCode).toBe(400);
     expect(mockCreateTeacher).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/teachers/duplicate-check returns the conflict reason for writers', async () => {
+    mockCheckTeacherRegistrationDuplicate.mockResolvedValue({ reason: 'employeeId' });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/teachers/duplicate-check',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { contactId: 'c-300', employeeId: 'TCH-0001' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ reason: 'employeeId' });
+    expect(mockCheckTeacherRegistrationDuplicate).toHaveBeenCalledWith({
+      contactId: 'c-300',
+      employeeId: 'TCH-0001',
+    });
+    await app.close();
+  });
+
+  it('POST /api/teachers/duplicate-check rejects non-writers', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/teachers/duplicate-check',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: { contactId: 'c-300' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockCheckTeacherRegistrationDuplicate).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/teachers/migrate-employee-ids backfills for setup writers', async () => {
+    mockMigrateTeachersMissingEmployeeIds.mockResolvedValue({ updated: 3 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/teachers/migrate-employee-ids',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {},
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true, updated: 3 });
+    expect(mockMigrateTeachersMissingEmployeeIds).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it('POST /api/teachers/migrate-employee-ids rejects non-setup-writers', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/teachers/migrate-employee-ids',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {},
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockMigrateTeachersMissingEmployeeIds).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/teachers forwards gender and quickFilter to the list page', async () => {
+    mockLoadTeachersPage.mockResolvedValue({
+      teachers: [{ id: 't1', specialization: 'Hifz', status: 'active' }],
+      total: 1,
+      page: 1,
+      limit: 50,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/teachers?page=1&gender=male&quickFilter=active&specialization=Hifz',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { teachers: unknown[]; total: number };
+    expect(body.teachers).toHaveLength(1);
+    expect(body.total).toBe(1);
+    const query = mockLoadTeachersPage.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(query.gender).toBe('male');
+    expect(query.quickFilter).toBe('active');
+    expect(query.specialization).toBe('Hifz');
+    await app.close();
+  });
+
+  it('GET /api/teachers rejects an unknown quickFilter preset', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/teachers?page=1&quickFilter=bogus',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(mockLoadTeachersPage).not.toHaveBeenCalled();
     await app.close();
   });
 });

@@ -5,6 +5,7 @@ import { formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
 import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import type { DashboardRole } from '@/lib/dashboardRole';
 
 interface WelcomeBannerProps {
@@ -75,9 +76,9 @@ export default function WelcomeBanner({
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-warning animate-pulse" aria-hidden="true" />
-            <span className="text-xs font-black text-primary-foreground/70 uppercase tracking-widest">
+            <SectionLabel toneClassName="text-primary-foreground/70">
               {t(BADGE_BY_ROLE[dashboardRole])}
-            </span>
+            </SectionLabel>
           </div>
           <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight m-0 text-primary-foreground">
             {userName ? t('dashboard.greeting.personal', { name: userName }) : t(GREETING_BY_ROLE[dashboardRole])}

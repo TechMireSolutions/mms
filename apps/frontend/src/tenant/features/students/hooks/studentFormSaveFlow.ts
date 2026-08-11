@@ -11,7 +11,7 @@ import {
   type StudentValidationContext,
 } from "./studentFormValidation";
 
-export interface StudentSaveFlowInput {
+interface StudentSaveFlowInput {
   studentDraft: Partial<Student>;
   student?: Partial<Student> | null;
   linkedContact?: Contact | null;

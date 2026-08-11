@@ -9,7 +9,7 @@ export interface ContactsSavedReportViewer {
   isAdmin?: boolean;
 }
 
-export interface ContactsSavedReportIssue {
+interface ContactsSavedReportIssue {
   kind: 'stale_gender' | 'stale_quick_filter';
   field: keyof ContactsWorkDrillDown;
   value: string;

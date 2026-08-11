@@ -24,6 +24,7 @@ import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
 import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
 import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
@@ -113,20 +114,18 @@ export function MessagingWorkRecipientsList({
                         selectAriaLabel={t('messaging.selectRecipient', { name: displayName })}
                         reducedMotion={reducedMotion}
                       />
-                      <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                        <div>
-                          <dt className="text-xs font-semibold text-muted-foreground">{t('contacts.form.primaryPhone')}</dt>
-                          <dd className="font-mono text-xs text-foreground">
-                            {getPrimaryPhone(contact) ?? <MissingFieldBadge label={t('messaging.missingPhone')} />}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-xs font-semibold text-muted-foreground">{t('contacts.form.primaryEmail')}</dt>
-                          <dd className="text-xs text-foreground">
-                            {getPrimaryEmail(contact) ?? <MissingFieldBadge label={t('messaging.missingEmail')} />}
-                          </dd>
-                        </div>
-                      </dl>
+                      <StatGrid columns="sm2" className="ms-1">
+                        <StatRow
+                          label={t('contacts.form.primaryPhone')}
+                          value={getPrimaryPhone(contact) ?? <MissingFieldBadge label={t('messaging.missingPhone')} />}
+                          ddClassName="font-mono text-xs"
+                        />
+                        <StatRow
+                          label={t('contacts.form.primaryEmail')}
+                          value={getPrimaryEmail(contact) ?? <MissingFieldBadge label={t('messaging.missingEmail')} />}
+                          ddClassName="text-xs"
+                        />
+                      </StatGrid>
                     </DirectoryEntityCard>
                   );
                 })}

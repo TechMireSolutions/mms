@@ -30,7 +30,7 @@ export async function loadStudentsPage(
   const page = await repo.listPage(tenant, query);
   return {
     ...page,
-    students: await hydrateStudentsFromContacts(page.students),
+    students: await hydrateStudentsFromContacts(tenant, page.students),
   };
 }
 
@@ -44,7 +44,7 @@ export async function loadStudentById(
   const found = await repo.findById(tenant, id);
   if (!found) return null;
   if (!includeDeleted && found.deletedAt) return null;
-  const [hydrated] = await hydrateStudentsFromContacts([found]);
+  const [hydrated] = await hydrateStudentsFromContacts(tenant, [found]);
   return hydrated ?? null;
 }
 
@@ -56,7 +56,7 @@ export async function loadStudentsByIds(
   const tenant = getRequestTenant();
   if (!tenant) return [];
   const matched = await repo.findByIds(tenant, ids);
-  return hydrateStudentsFromContacts(matched);
+  return hydrateStudentsFromContacts(tenant, matched.filter((student) => !student.deletedAt));
 }
 
 export async function loadStudentLinkedContactIds(

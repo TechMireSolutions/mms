@@ -2,7 +2,9 @@ import React from "react";
 import { Eye, EyeOff, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -86,7 +88,7 @@ export function AccountMobileCard({
           {isColumnVisible("name") && (
             <h4 className="m-0 mt-0.5 text-sm font-semibold text-foreground">
               {account.name}
-              {account.isActive === false && <span className="ms-2 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">{t("accounting.coa.inactive")}</span>}
+              {account.isActive === false && <Badge as="span" pill tone="muted" className="ms-2 px-1.5">{t("accounting.coa.inactive")}</Badge>}
             </h4>
           )}
         </div>
@@ -98,20 +100,18 @@ export function AccountMobileCard({
           />
         )}
       </div>
-      <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+      <StatGrid columns="sm2">
         {isColumnVisible("subtype") && (
-          <div>
-            <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.subtype")}</dt>
-            <dd className="text-foreground">{account.subtype || "—"}</dd>
-          </div>
+          <StatRow label={t("accounting.columns.account.subtype")} value={account.subtype || "—"} />
         )}
         {isColumnVisible("description") && (
-          <div>
-            <dt className="text-xs font-semibold text-muted-foreground">{t("accounting.columns.account.description")}</dt>
-            <dd className="break-words text-foreground">{account.description || "—"}</dd>
-          </div>
+          <StatRow
+            label={t("accounting.columns.account.description")}
+            value={account.description || "—"}
+            ddClassName="break-words"
+          />
         )}
-      </dl>
+      </StatGrid>
       {canWrite && (
         <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
           <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} />
@@ -138,7 +138,7 @@ export function AccountTableRow({
       {isColumnVisible("name") && (
         <TableCell className="px-4 py-2.5">
           <span className="font-semibold text-foreground">{account.name}</span>
-          {account.isActive === false && <span className="ms-2 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">{t("accounting.coa.inactive")}</span>}
+          {account.isActive === false && <Badge as="span" pill tone="muted" className="ms-2 px-1.5">{t("accounting.coa.inactive")}</Badge>}
         </TableCell>
       )}
       {isColumnVisible("subtype") && <TableCell className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">{account.subtype || "—"}</TableCell>}

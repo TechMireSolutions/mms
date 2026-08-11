@@ -1,8 +1,9 @@
-import { and, eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import {
   DEFAULT_TEACHER_STATUS,
   TEACHERS_MODULE_MANIFEST,
   TEACHER_SORT_FIELD_SET,
+  teachersQuickFilterStatusValue,
   type Teacher,
   type TeachersListPageResult,
   type TeachersListQuery,
@@ -32,6 +33,17 @@ function linkedContactNameSortExpr(): SQL {
       NULLIF(trim(COALESCE(c.custom_data->>'name', '')), ''),
       ''
     )
+    FROM contacts c
+    WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
+      AND c.id = ${teachers.contactId}
+    LIMIT 1
+  ), '')))`;
+}
+
+/** Gender from linked contact (Contacts SSOT — not teachers custom_data). */
+function linkedContactGenderExpr(): SQL {
+  return sql`lower(trim(COALESCE((
+    SELECT c.custom_data->>'gender'
     FROM contacts c
     WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
       AND c.id = ${teachers.contactId}
@@ -118,6 +130,21 @@ function buildListConditions(subdomain: string, query: TeachersListQuery & { inc
     conditions.push(sql`${specializationExpr()} = ${query.specialization.trim()}`);
   }
 
+  if (query.gender?.trim()) {
+    const genderFilter = query.gender.trim().toLowerCase();
+    conditions.push(sql`${linkedContactGenderExpr()} = ${genderFilter}`);
+  }
+
+  const quickFilter = query.quickFilter;
+  if (quickFilter && quickFilter !== 'all') {
+    if (quickFilter === 'missingEmployeeId') {
+      conditions.push(sql`NULLIF(trim(COALESCE(${teachers.customData}->>'employeeId', '')), '') IS NULL`);
+    } else {
+      const statusValue = teachersQuickFilterStatusValue(quickFilter);
+      if (statusValue) conditions.push(sql`${teacherStatusExpr()} = ${statusValue}`);
+    }
+  }
+
   const search = query.search?.trim();
   if (search) {
     const searchSql = buildSearchSql(search);
@@ -194,6 +221,27 @@ export async function countTeachersForNextEmployeeId(tenant: string): Promise<nu
   return countTeachersActive(tenant);
 }
 
+/** Active teachers missing typed `employee_id` (null or blank) — backfill candidates. */
+export async function listActiveTeachersMissingEmployeeId(
+  workspaceSubdomain: string,
+): Promise<Teacher[]> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(teachers)
+      .where(
+        and(
+          eq(teachers.workspaceSubdomain, subdomain),
+          isNull(teachers.deletedAt),
+          sql`NULLIF(trim(COALESCE(${teachers.customData}->>'employeeId', '')), '') IS NULL`,
+        ),
+      )
+      .orderBy(asc(teachers.id));
+    return rows.map(teacherRowToRecord);
+  });
+}
+
 /** Distinct linked contact ids for active teachers (typed contact_id). */
 export async function listTeacherLinkedContactIdsSql(
   tenant: string,
@@ -246,5 +294,55 @@ export async function findSoftDeletedTeacherByContactIdSql(
       .limit(1);
     const row = rows[0];
     return row ? teacherRowToRecord(row as never) : null;
+  });
+}
+
+/**
+ * Probes for an active teacher already linked to the same contact or using the
+ * same employee id (server-authoritative duplicate check on save).
+ */
+export async function findTeacherRegistrationConflictSql(
+  tenant: string,
+  input: {
+    excludeId?: string;
+    contactId?: string | number;
+    employeeId?: string;
+  },
+): Promise<'contact' | 'employeeId' | null> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    const exclude = input.excludeId?.trim();
+    const baseConditions: SQL[] = [
+      eq(teachers.workspaceSubdomain, subdomain),
+      isNull(teachers.deletedAt),
+    ];
+    if (exclude) baseConditions.push(ne(teachers.id, exclude));
+
+    if (input.contactId != null && String(input.contactId).trim() !== '') {
+      const contactId = String(input.contactId).trim();
+      const rows = await tx
+        .select({ id: teachers.id })
+        .from(teachers)
+        .where(and(...baseConditions, eq(teachers.contactId, contactId)))
+        .limit(1);
+      if (rows.length > 0) return 'contact';
+    }
+
+    const employeeId = input.employeeId?.trim().toLowerCase();
+    if (employeeId) {
+      const rows = await tx
+        .select({ id: teachers.id })
+        .from(teachers)
+        .where(
+          and(
+            ...baseConditions,
+            sql`${employeeIdExpr()} = ${employeeId}`,
+          ),
+        )
+        .limit(1);
+      if (rows.length > 0) return 'employeeId';
+    }
+
+    return null;
   });
 }

@@ -8,6 +8,7 @@ import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { useStudentsByIds, useStudentsPaginated } from "@/tenant/hooks/collections/students";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
@@ -112,9 +113,9 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
                 {student.enrolledSessions && student.enrolledSessions.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {student.enrolledSessions.map((sessionId: string) => (
-                      <span key={sessionId} className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                      <Badge key={sessionId} pill tone="muted" className="px-1.5 font-medium">
                         {sessionName(sessionId)}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
                 )}

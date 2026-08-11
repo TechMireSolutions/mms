@@ -45,6 +45,7 @@ export function usePinnedWidgetsController(category: string) {
   const defaultCollection = useMemo<CustomWidget["collection"]>(() => {
     if (category === "students") return "students";
     if (category === "contacts") return "contacts";
+    if (category === "teachers" || category === "faculty") return "teachers";
     if (category === "attendance") return "attendance_records";
     if (category === "financial" || category === "accounting") return "finance_invoices";
     if (category === "hasanat") return "hasanat_distributions";

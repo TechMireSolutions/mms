@@ -1,8 +1,8 @@
 import { UserCheck, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { TableCellLink } from "@/components/ui/TableCellLink";
 import {
   Table,
   TableBody,
@@ -11,6 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { Badge } from "@/components/ui/badge";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 
 import type { AttendanceSummaryItem, RateBarRenderer, StudentAttendanceItem } from "./attendanceReportTypes";
@@ -50,36 +52,23 @@ export function AttendanceReportTables({
           <div className="space-y-3 p-3 md:hidden">
             {summary.map((summaryRow) => (
               <article key={summaryRow.class} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onToggleClassFilter(summaryRow.class)}
-                  className="h-auto min-h-11 px-0 py-0 text-sm font-semibold text-foreground hover:text-primary"
-                >
+                <TableCellLink tap onClick={() => onToggleClassFilter(summaryRow.class)}>
                   {summaryRow.class}
-                </Button>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotalStudents")}</dt>
-                    <dd className="text-foreground">{summaryRow.total}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAvgRate")}</dt>
-                    <dd>{rateBar(summaryRow.avgRate)}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPerfectAttendance")}</dt>
-                    <dd>
-                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">{summaryRow.perfectAttendance}</span>
-                    </dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colBelowThreshold")}</dt>
-                    <dd>
-                      <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">{summaryRow.belowThreshold}</span>
-                    </dd>
-                  </div>
-                </dl>
+                </TableCellLink>
+                <StatGrid>
+                  <StatRow className="min-w-0" label={t("attendance.report.colTotalStudents")} value={summaryRow.total} />
+                  <StatRow className="min-w-0" label={t("attendance.report.colAvgRate")} value={rateBar(summaryRow.avgRate)} />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("attendance.report.colPerfectAttendance")}
+                    value={<Badge pill tone="success">{summaryRow.perfectAttendance}</Badge>}
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("attendance.report.colBelowThreshold")}
+                    value={<Badge pill tone="destructive">{summaryRow.belowThreshold}</Badge>}
+                  />
+                </StatGrid>
               </article>
             ))}
           </div>
@@ -103,22 +92,17 @@ export function AttendanceReportTables({
                 {summary.map((summaryRow) => (
                   <TableRow key={summaryRow.class} className="hover:bg-muted/20 transition-colors">
                     <TableCell className="px-3 py-2.5 font-medium text-foreground">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => onToggleClassFilter(summaryRow.class)}
-                        className="h-auto px-0 py-0 font-medium text-foreground hover:text-primary"
-                      >
+                      <TableCellLink onClick={() => onToggleClassFilter(summaryRow.class)} className="font-medium">
                         {summaryRow.class}
-                      </Button>
+                      </TableCellLink>
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">{summaryRow.total}</TableCell>
                     <TableCell className="px-3 py-2.5 w-44">{rateBar(summaryRow.avgRate)}</TableCell>
                     <TableCell className="px-3 py-2.5">
-                      <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-semibold">{summaryRow.perfectAttendance}</span>
+                      <Badge as="span" pill tone="success">{summaryRow.perfectAttendance}</Badge>
                     </TableCell>
                     <TableCell className="px-3 py-2.5">
-                      <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold">{summaryRow.belowThreshold}</span>
+                      <Badge as="span" pill tone="destructive">{summaryRow.belowThreshold}</Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -155,28 +139,33 @@ export function AttendanceReportTables({
                   <h4 className="truncate text-sm font-semibold text-foreground">{studentAttendance.studentName}</h4>
                   <div className="w-24 shrink-0">{rateBar(studentAttendance.rate)}</div>
                 </div>
-                <dl className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colStudentClass")}</dt>
-                    <dd className="text-foreground">{studentAttendance.class}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colTotal")}</dt>
-                    <dd className="text-muted-foreground">{studentAttendance.total}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colPresent")}</dt>
-                    <dd className="font-medium text-success">{studentAttendance.present}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colAbsent")}</dt>
-                    <dd className="font-medium text-destructive">{studentAttendance.absent}</dd>
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("attendance.report.colLate")}</dt>
-                    <dd className="font-medium text-warning">{studentAttendance.late}</dd>
-                  </div>
-                </dl>
+                <StatGrid>
+                  <StatRow className="min-w-0" label={t("attendance.report.colStudentClass")} value={studentAttendance.class} />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("attendance.report.colTotal")}
+                    value={studentAttendance.total}
+                    ddClassName="text-muted-foreground"
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("attendance.report.colPresent")}
+                    value={studentAttendance.present}
+                    ddClassName="font-medium text-success"
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("attendance.report.colAbsent")}
+                    value={studentAttendance.absent}
+                    ddClassName="font-medium text-destructive"
+                  />
+                  <StatRow
+                    className="min-w-0"
+                    label={t("attendance.report.colLate")}
+                    value={studentAttendance.late}
+                    ddClassName="font-medium text-warning"
+                  />
+                </StatGrid>
               </article>
             ))}
           </div>

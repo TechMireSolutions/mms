@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { and, eq, lt } from 'drizzle-orm';
 import { authArtifacts } from '../../db/schema.js';
 import { getDb } from '../../db/dbClient.js';
+import { isUniqueViolation } from '../../lib/pgErrors.js';
 
 export type AuthArtifactKind =
   | 'handoff'
@@ -41,14 +42,6 @@ export function authArtifactUserScopeKey(userId: string): string {
 
 export function authArtifactWorkspaceScopeKey(subdomain: string): string {
   return `ws:${subdomain.trim().toLowerCase()}`;
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-  const code = 'code' in error ? String((error as { code?: unknown }).code ?? '') : '';
-  if (code === '23505') return true;
-  const cause = 'cause' in error ? (error as { cause?: unknown }).cause : undefined;
-  return isUniqueViolation(cause);
 }
 
 export async function putAuthArtifact<T>(

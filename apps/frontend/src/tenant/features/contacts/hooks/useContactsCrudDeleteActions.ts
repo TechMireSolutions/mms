@@ -82,7 +82,7 @@ export function useContactsCrudDeleteActions({
       failed: number;
       conflicts?: Array<{ id: string; errors: Array<{ message: string }> }>;
     }> => {
-      return bulkRestoreMutation.mutateAsync(ids);
+      return bulkRestoreMutation.mutateAsync(ids.map(String));
     },
     [bulkRestoreMutation],
   );

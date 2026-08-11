@@ -15,19 +15,19 @@ vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
 
-vi.mock('../services/websocketService.js', () => ({
+vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
 }));
 
 vi.mock('../students/use-cases/studentHydrateUseCases.js', () => ({
-  hydrateStudentsFromContacts: async (rows: unknown) => rows,
+  hydrateStudentsFromContacts: async (_tenant: unknown, rows: unknown) => rows,
 }));
 
-vi.mock('../services/studentConfigService.js', () => ({
+vi.mock('../lib/studentConfigService.js', () => ({
   loadStudentFieldConfig: (...args: unknown[]) => mockLoadStudentFieldConfig(...args),
 }));
 
-vi.mock('../services/studentPreferencesService.js', () => ({
+vi.mock('../lib/studentPreferencesService.js', () => ({
   loadStudentModulePreferences: (...args: unknown[]) => mockLoadStudentModulePreferences(...args),
 }));
 
@@ -275,7 +275,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     store.set('a', fakeStudent('a', { deletedAt: '2026-07-27T00:00:00.000Z', deletedBy: 'u-admin' }));
     const useCases = createStudentsUseCases(repo);
 
-    const restored = await useCases.restoreStudentById('a', 'u-admin');
+    const restored = await useCases.restoreStudentById('a');
 
     expect(restored?.deletedAt).toBeUndefined();
     expect(restored?.deletedBy).toBeUndefined();
@@ -288,7 +288,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     store.set('a', fakeStudent('a'));
     const useCases = createStudentsUseCases(repo);
 
-    const restored = await useCases.restoreStudentById('a', 'u-admin');
+    const restored = await useCases.restoreStudentById('a');
 
     expect(restored?.id).toBe('a');
     expect(repo.save).not.toHaveBeenCalled();
@@ -300,7 +300,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     vi.mocked(repo.findRegistrationConflict).mockResolvedValue('grNumber');
     const useCases = createStudentsUseCases(repo);
 
-    await expect(useCases.restoreStudentById('a', 'u-admin')).rejects.toBeInstanceOf(
+    await expect(useCases.restoreStudentById('a')).rejects.toBeInstanceOf(
       StudentRestoreConflictError,
     );
     expect(repo.save).not.toHaveBeenCalled();
@@ -312,7 +312,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     store.set('active', fakeStudent('active'));
     const useCases = createStudentsUseCases(repo);
 
-    const result = await useCases.bulkRestoreStudents(['a', 'active'], 'u-admin');
+    const result = await useCases.bulkRestoreStudents(['a', 'active']);
 
     expect(result).toEqual({ succeeded: 1, failed: 1, conflicts: [] });
     expect(store.get('a')?.deletedAt).toBeUndefined();
@@ -330,7 +330,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     });
     const useCases = createStudentsUseCases(repo);
 
-    const result = await useCases.bulkRestoreStudents(['a', 'ok'], 'u-admin');
+    const result = await useCases.bulkRestoreStudents(['a', 'ok']);
 
     expect(result.succeeded).toBe(1);
     expect(result.failed).toBe(1);
@@ -455,6 +455,40 @@ describe('createStudentsUseCases (DI composition root)', () => {
 
     expect(sanitized.phone).toBeUndefined();
     expect(sanitized.city).toBe('Karachi');
+  });
+
+  it('sanitizeStudentsForViewer strips disabled fields across every row', async () => {
+    const { repo } = createFakeRepo();
+    mockLoadStudentFieldConfig.mockResolvedValue({
+      fields: {
+        basic: [
+          { key: 'phone', label: 'Phone', type: 'text', enabled: false, order: 0 },
+          { key: 'city', label: 'City', type: 'text', enabled: true, order: 1 },
+        ],
+      },
+      formTabs: [{ key: 'basic', label: 'Basic', enabled: true, order: 0 }],
+    });
+    const useCases = createStudentsUseCases(repo);
+
+    const students = [
+      fakeStudent('a', { phone: '+923001234567', city: 'Karachi' }),
+      fakeStudent('b', { phone: '+923009999999', city: 'Lahore' }),
+    ];
+    const sanitized = await useCases.sanitizeStudentsForViewer(students, 'teacher');
+
+    expect(sanitized[0]?.phone).toBeUndefined();
+    expect(sanitized[0]?.city).toBe('Karachi');
+    expect(sanitized[1]?.phone).toBeUndefined();
+    expect(sanitized[1]?.city).toBe('Lahore');
+  });
+
+  it('sanitizeStudentsForViewer returns rows unchanged when no field config is registered', async () => {
+    const { repo } = createFakeRepo();
+    mockLoadStudentFieldConfig.mockResolvedValue(null);
+    const useCases = createStudentsUseCases(repo);
+
+    const students = [fakeStudent('a', { phone: '+923001234567' })];
+    expect(await useCases.sanitizeStudentsForViewer(students, 'teacher')).toEqual(students);
   });
 
   it('loadStudentsByIds returns matched rows from the injected repo', async () => {

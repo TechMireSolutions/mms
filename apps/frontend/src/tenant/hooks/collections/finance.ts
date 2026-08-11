@@ -15,3 +15,4 @@ export {
   useFinanceMutations,
 } from "@/tenant/features/finance/hooks/useFinanceApi";
 export { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
+export { invalidateFinanceQueries } from '@/tenant/features/finance/hooks/invalidateFinanceQueries';

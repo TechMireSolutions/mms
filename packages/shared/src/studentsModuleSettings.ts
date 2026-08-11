@@ -2,11 +2,6 @@ import type { TabDefinition, ColumnRegistryEntry } from "./contactTypes.js";
 
 // ─── Students Module Settings ─────────────────────────────────────────────────
 
-export interface StudentFieldConfig {
-  enabled: boolean;
-  required: boolean;
-}
-
 export interface StudentCustomField {
   id: string;
   label: string;
@@ -58,7 +53,7 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
   fieldOrder: ["gender", "dob", "contactRelationships", "registeredDate"],
 };
 
-export interface StudentFieldDef {
+interface StudentFieldDef {
   id: string;
   label: string;
   type?: string;

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
+import { CompactSegmentedControl } from "@/components/ui/CompactSegmentedControl";
 import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -76,21 +76,16 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
                 </Select>
               </div>
             )}
-            <div className="flex gap-1 bg-muted/65 rounded-lg p-0.5 border border-border/50">
-              {(["6m", "10m"] as const).map((periodOption) => (
-                <Button
-                  key={periodOption}
-                  variant="ghost"
-                  onClick={() => setPeriod(periodOption)}
-                  aria-pressed={period === periodOption}
-                  className={`min-h-11 text-xs font-bold uppercase tracking-wider px-2.5 rounded-md transition-all shadow-none cursor-pointer ${
-                    period === periodOption ? "bg-card text-foreground hover:bg-card hover:text-foreground" : "text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
-                  }`}
-                >
-                  {periodOption}
-                </Button>
-              ))}
-            </div>
+            <CompactSegmentedControl
+              tone="card"
+              className="bg-muted/65 rounded-lg p-0.5 border-border/50"
+              value={period}
+              onChange={setPeriod}
+              options={[
+                { value: "6m", label: "6m" },
+                { value: "10m", label: "10m" },
+              ]}
+            />
           </>
         }
       />

@@ -6,6 +6,7 @@ import type {
 import { contacts } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { activeWorkspaceWhere } from './contactRepositoryAggregateHelpers.js';
+import { jsonbFieldKeyLiteral } from './jsonbFieldUsage.js';
 
 const customDataSql = sql.raw('"contacts"."custom_data"');
 
@@ -16,7 +17,7 @@ function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
-  const safeField = sql.raw(`'${trimmedField.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+  const safeField = jsonbFieldKeyLiteral(trimmedField);
   const op = operator ?? 'equals';
   if (op === 'equals') {
     return sql`lower(trim(COALESCE(${customDataSql}->>${safeField}, ''))) = ${value.trim().toLowerCase()}`;
@@ -93,7 +94,7 @@ export async function aggregateContactsWidgetQueries(
       } else if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = sql.raw(`'${target.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+          const safeTarget = jsonbFieldKeyLiteral(target);
           const aggRows = await tx
             .select({
               sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
@@ -108,7 +109,7 @@ export async function aggregateContactsWidgetQueries(
       }
 
       const xAxis = query.xAxisField?.trim() || 'gender';
-      const safeXAxis = sql.raw(`'${xAxis.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+      const safeXAxis = jsonbFieldKeyLiteral(xAxis);
       const groupExpr = sql<string>`COALESCE(NULLIF(trim(${customDataSql}->>${safeXAxis}), ''), 'Unknown')`;
 
       const chartRows = await tx
@@ -130,16 +131,24 @@ export async function aggregateContactsWidgetQueries(
       if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = sql.raw(`'${target.replace(/[^a-zA-Z0-9_]/g, '')}'`);
+          const safeTarget = jsonbFieldKeyLiteral(target);
+          const sumExpr = sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`;
+          const countExpr = sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`;
+          // Order by the reported value so the top-N slice is deterministic.
+          const orderExpr =
+            query.operation === 'sum'
+              ? sql`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0) desc`
+              : sql`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric) / NULLIF(count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL), 0), 0) desc`;
           const numericChart = await tx
             .select({
               name: groupExpr,
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sumExpr,
+              count: countExpr,
             })
             .from(contacts)
             .where(whereClause)
             .groupBy(groupExpr)
+            .orderBy(orderExpr)
             .limit(chartLimit);
           chartData = numericChart
             .map((row) => {
@@ -150,7 +159,6 @@ export async function aggregateContactsWidgetQueries(
                 value: query.operation === 'sum' ? sum : count > 0 ? Math.round(sum / count) : 0,
               };
             })
-            .sort((a, b) => b.value - a.value)
             .slice(0, chartLimit);
         }
       }

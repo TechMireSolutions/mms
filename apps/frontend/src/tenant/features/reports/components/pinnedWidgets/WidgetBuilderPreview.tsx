@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
@@ -36,12 +37,12 @@ export function WidgetBuilderPreview({
     <div className={cn(WORK_SURFACE, "p-4 flex flex-col justify-between relative min-h-[21.875rem]")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between text-start">
-          <span className="text-xs font-black text-muted-foreground uppercase tracking-widest block">{t("reports.widgets.builder.testerPreview")}</span>
+          <SectionLabel className="block">{t("reports.widgets.builder.testerPreview")}</SectionLabel>
           <span className="text-xs text-primary font-bold">{scalerSize}x{scalerSize}px</span>
         </div>
 
         <div className="space-y-1 bg-card/30 p-2.5 rounded-xl border border-border/50">
-          <label className="text-xs font-black uppercase tracking-wider text-muted-foreground block">{t("reports.widgets.builder.dragToScale")}</label>
+          <SectionLabel as="label" tracking="wider" className="block">{t("reports.widgets.builder.dragToScale")}</SectionLabel>
           <input
             type="range"
             min={100}

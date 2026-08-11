@@ -8,8 +8,6 @@ import { StudentsWorkListBody } from "@/tenant/features/students/components/Stud
 import { StudentsWorkTierToolbar } from "@/tenant/features/students/components/StudentsWorkTierToolbar";
 import type { StudentsWorkTierProps } from "@/tenant/features/students/components/StudentsWorkTierTypes";
 
-export type { StudentsWorkTierProps } from "@/tenant/features/students/components/StudentsWorkTierTypes";
-
 export function StudentsWorkTier({
   studentSearch,
   studentFilterStatus,
@@ -94,7 +92,6 @@ export function StudentsWorkTier({
           columnLayout={columnLayout}
           viewMode={viewMode}
           sortField={sortField}
-          sortDir={sortDir}
           onViewModeChange={onViewModeChange}
           onSearchChange={onSearchChange}
           onToggleStatus={onToggleStatus}

@@ -3,6 +3,7 @@ import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer
 import { useTranslation } from "@/hooks/useTranslation";
 import { BarChart2, Layers, TrendingUp } from "lucide-react";
 import { Bar, BarChart, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+import { chartAxisTick } from "@/components/ui/ChartGrid";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
@@ -46,8 +47,8 @@ export function ObligationsSummaryChartsSection({
         <SectionHeader icon={<BarChart2 className="w-3.5 h-3.5 text-primary" aria-hidden="true" />} title={t("obligations.summary.charts.byTypeTitle")} subtitle={t("obligations.summary.charts.byTypeSubtitle")} />
         <SafeResponsiveContainer height={200}>
           <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={(value) => value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`} />
+            <XAxis dataKey="name" tick={chartAxisTick(11)} />
+            <YAxis tick={chartAxisTick(10)} tickFormatter={(value) => value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`} />
             <Tooltip formatter={(value) => value !== undefined ? formatCurrency(Number(value)) : ""} />
             <Bar dataKey="total" radius={[6, 6, 0, 0]}>
               {typeBreakdown.map((_, index) => <Cell key={index} fill={colors[index % colors.length]} />)}
@@ -61,8 +62,8 @@ export function ObligationsSummaryChartsSection({
           <SectionHeader icon={<TrendingUp className="w-3.5 h-3.5 text-primary" aria-hidden="true" />} title={t("obligations.summary.charts.monthlyTrendTitle")} subtitle={t("obligations.summary.charts.monthlyTrendSubtitle")} />
           <SafeResponsiveContainer height={200}>
             <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 10 }} tickFormatter={(value) => value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`} />
+              <XAxis dataKey="label" tick={chartAxisTick(11)} />
+              <YAxis tick={chartAxisTick(10)} tickFormatter={(value) => value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`} />
               <Tooltip formatter={(value) => value !== undefined ? formatCurrency(Number(value)) : ""} />
               <Bar dataKey="total" fill={primary} radius={[6, 6, 0, 0]} />
             </BarChart>

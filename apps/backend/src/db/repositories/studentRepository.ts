@@ -17,7 +17,5 @@ export const findStudentById = repo.findById;
 export const findStudentsByIds = repo.findByIds;
 export const saveStudent = repo.save;
 export const bulkSaveStudents = repo.bulkSave;
-export const deleteStudent = repo.deleteById;
 export const replaceStudentsForWorkspace = repo.replaceForWorkspace;
-export const deleteStudentsByWorkspace = repo.deleteByWorkspace;
 export const countStudentsByWorkspace = repo.countByWorkspace;

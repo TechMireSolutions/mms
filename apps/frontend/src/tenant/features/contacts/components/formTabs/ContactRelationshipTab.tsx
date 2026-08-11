@@ -1,4 +1,3 @@
-import React from "react";
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { listEnabledCustomContactFormFields } from "@mms/shared";

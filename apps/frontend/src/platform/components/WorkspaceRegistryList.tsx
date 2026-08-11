@@ -11,6 +11,7 @@ import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { containerVariants, cardVariants } from "@/platform/lib/animations";
 
 type WorkspaceLinkDestination = typeof ROUTES.login | typeof ROUTES.forgotPassword;
@@ -63,9 +64,9 @@ export default function WorkspaceRegistryList({
 
   return (
     <div className="w-full space-y-3">
-      <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground/80">
+      <SectionLabel as="p" weight="semibold" toneClassName="text-muted-foreground/80" className="text-center">
         {t(headingKey)}
-      </p>
+      </SectionLabel>
       <motion.ul
         variants={reducedMotion ? undefined : containerVariants}
         initial={reducedMotion ? false : "hidden"}

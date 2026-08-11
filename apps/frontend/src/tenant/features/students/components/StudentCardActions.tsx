@@ -7,7 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { StudentListActionsMenu } from "@/tenant/features/students/components/StudentListActionsMenu";
 import type { StudentListMessagingRecipient } from "@/tenant/features/students/components/StudentListContentTypes";
 
-export interface StudentCardActionsProps {
+interface StudentCardActionsProps {
   student: Student;
   studentId: string;
   displayName: string;

@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { KPI_TONE } from "@/lib/semanticTone";
 
 export interface SectionCardProps {
@@ -30,9 +31,15 @@ export function SectionCard({
   return (
     <Card className={className} accentColor={accentColor}>
       {hasHeader && (
-        <div className={cn("flex min-w-0 items-center justify-between gap-2 rounded-t-2xl border-b border-border/40 bg-muted/20 px-5 py-3.5", accentColor && "ps-6.5")}>
-          <div className="flex min-w-0 items-center gap-2.5">
-            {Icon && (() => {
+        <CardTitleBar
+          title={title}
+          subtitle={subtitle}
+          actions={actions}
+          inset={!!accentColor}
+          className="rounded-t-2xl"
+          icon={
+            Icon &&
+            (() => {
               const resolvedAccent = accentColor === "emerald" ? "success" : accentColor === "rose" ? "destructive" : accentColor === "amber" ? "warning" : accentColor === "indigo" ? "primary" : accentColor;
               const tone = KPI_TONE[resolvedAccent as keyof typeof KPI_TONE] || KPI_TONE.primary;
               return (
@@ -40,14 +47,9 @@ export function SectionCard({
                   <Icon className={cn("h-3.5 w-3.5", tone.text)} />
                 </div>
               );
-            })()}
-            <div className="min-w-0">
-              {title && <h3 className="truncate text-sm font-bold text-foreground">{title}</h3>}
-              {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
-            </div>
-          </div>
-          {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
-        </div>
+            })()
+          }
+        />
       )}
       <div className={cn(padding ? "px-5 py-4" : undefined, accentColor && "ps-6.5")}>{children}</div>
     </Card>

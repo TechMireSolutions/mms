@@ -12,7 +12,7 @@ export interface StudentStatusSelectOption {
   label: string;
 }
 
-export function findStudentTabField(
+function findStudentTabField(
   fields: Record<string, FieldDefinition[]>,
   tabId: string,
   key: string,
@@ -32,7 +32,6 @@ export function resolveStudentFieldLabel(
   return field ? resolveRegistryLabel(field, t) : t(fallbackKey);
 }
 
-export { FieldErrorMessage } from "@/components/ui/FormPrimitives";
 export { FieldErrorMessage as FieldError };
 
 export function ContactProfileValue({

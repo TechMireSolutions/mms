@@ -41,10 +41,10 @@ export default function ContactsSyncConflictPanel({
   }, [open, refreshList]);
 
   useEffect(() => {
-    const handler = () => setConflicts(getContactsSyncConflicts());
+    const handler = () => refreshList();
     window.addEventListener("contacts-sync-outbox-changed", handler);
     return () => window.removeEventListener("contacts-sync-outbox-changed", handler);
-  }, []);
+  }, [refreshList]);
 
   const handleDismiss = useCallback(
     (id: string) => {

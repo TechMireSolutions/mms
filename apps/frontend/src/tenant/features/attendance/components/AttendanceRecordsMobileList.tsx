@@ -8,6 +8,7 @@ import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
 import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
 import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
@@ -96,31 +97,33 @@ export function AttendanceRecordsMobileList({
                   ) : undefined
                 }
               />
-              <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <StatGrid columns="sm2" className="ms-1">
                 {isColumnVisible("date") && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('attendance.columns.date')}</dt>
-                    <dd className="font-mono text-foreground">{formatDate(attendanceRecord.date, true)}</dd>
-                  </div>
+                  <StatRow
+                    label={t('attendance.columns.date')}
+                    value={formatDate(attendanceRecord.date, true)}
+                    ddClassName="font-mono"
+                  />
                 )}
                 {isColumnVisible("status") && (
-                  <div>
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('attendance.columns.status')}</dt>
-                    <dd>
+                  <StatRow
+                    label={t('attendance.columns.status')}
+                    value={
                       <AttendanceRecordStatusCell
                         attendanceRecord={attendanceRecord}
                         editingRecord={editingRecord}
                         statuses={statuses}
                         updateDraft={updateDraft}
                       />
-                    </dd>
-                  </div>
+                    }
+                    dtClassName="mb-1"
+                  />
                 )}
                 {isColumnVisible("timeIn") && (
-                  <div>
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('attendance.columns.timeIn')}</dt>
-                    <dd>
-                      {editingRecord?.id === attendanceRecord.id
+                  <StatRow
+                    label={t('attendance.columns.timeIn')}
+                    value={
+                      editingRecord?.id === attendanceRecord.id
                         ? <TimePicker
                             id={`attendance-mobile-time-in-${attendanceRecord.id}`}
                             name="timeIn"
@@ -130,14 +133,14 @@ export function AttendanceRecordsMobileList({
                             className="w-full min-w-0 text-xs"
                           />
                         : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || '—'}</span>}
-                    </dd>
-                  </div>
+                    dtClassName="mb-1"
+                  />
                 )}
                 {isColumnVisible("timeOut") && (
-                  <div>
-                    <dt className="mb-1 text-xs font-semibold text-muted-foreground">{t('attendance.columns.timeOut')}</dt>
-                    <dd>
-                      {editingRecord?.id === attendanceRecord.id
+                  <StatRow
+                    label={t('attendance.columns.timeOut')}
+                    value={
+                      editingRecord?.id === attendanceRecord.id
                         ? <TimePicker
                             id={`attendance-mobile-time-out-${attendanceRecord.id}`}
                             name="timeOut"
@@ -147,16 +150,18 @@ export function AttendanceRecordsMobileList({
                             className="w-full min-w-0 text-xs"
                           />
                         : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || '—'}</span>}
-                    </dd>
-                  </div>
+                    dtClassName="mb-1"
+                  />
                 )}
                 {isColumnVisible("notes") && (
-                  <div className="sm:col-span-2">
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('attendance.columns.notes')}</dt>
-                    <dd className="break-words text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</dd>
-                  </div>
+                  <StatRow
+                    fullWidth
+                    label={t('attendance.columns.notes')}
+                    value={attendanceRecord.notes || '—'}
+                    ddClassName="break-words text-xs text-muted-foreground"
+                  />
                 )}
-              </dl>
+              </StatGrid>
               <DirectoryCardFooter trailing={renderRowActions(attendanceRecord)} />
             </DirectoryEntityCard>
           );

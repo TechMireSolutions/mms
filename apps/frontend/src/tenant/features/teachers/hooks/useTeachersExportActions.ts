@@ -5,6 +5,7 @@ import {
   type AppTranslationKey,
   type TeacherExportColumn,
   type TeachersListQuery,
+  type TeachersQuickFilter,
 } from "@mms/shared";
 import { startServerTeachersCsvExport } from "@/lib/backgroundJobs/startServerTeachersCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
@@ -21,6 +22,8 @@ export interface UseTeachersExportActionsOptions {
   search: string;
   filterStatus: string[];
   filterSpecialization: string;
+  filterGender: string;
+  quickFilter: TeachersQuickFilter;
   sortField: TeacherSortField | null;
   sortDir: "asc" | "desc";
   viewingDeleted: boolean;
@@ -40,6 +43,8 @@ export function useTeachersExportActions({
   search,
   filterStatus,
   filterSpecialization,
+  filterGender,
+  quickFilter,
   sortField,
   sortDir,
   viewingDeleted,
@@ -54,10 +59,12 @@ export function useTeachersExportActions({
         search,
         filterStatus,
         filterSpecialization,
+        filterGender,
+        quickFilter,
         sortField,
         sortDir,
       }),
-    [search, filterStatus, filterSpecialization, sortField, sortDir],
+    [search, filterStatus, filterSpecialization, filterGender, quickFilter, sortField, sortDir],
   );
 
   const onError = useCallback(

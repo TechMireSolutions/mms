@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -21,7 +22,7 @@ export function MarkAttendanceFacePlaceholder({ onClose }: MarkAttendanceFacePla
       <div>
         <h3 className="text-sm font-bold text-foreground m-0">{t("attendance.mark.facialRecognition")}</h3>
         <p className="text-xs text-muted-foreground mt-1">{t("attendance.mark.facialRecognitionDesc")}</p>
-        <span className="inline-block mt-2 px-2.5 py-1 rounded-full bg-warning/15 text-warning text-xs font-bold">{t("attendance.mark.comingSoon")}</span>
+        <Badge pill tone="warning" className="mt-2 px-2.5 py-1 font-bold bg-warning/15">{t("attendance.mark.comingSoon")}</Badge>
       </div>
       <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center" style={{ height: 160 }}>
         <div className="text-center space-y-2">

@@ -34,7 +34,8 @@ export function useContactMutations() {
   const queryClient = useQueryClient();
   const invalidate = () => invalidateContactsQueries(queryClient);
 
-  const { bulkDelete, restore, logExportAudit, logSetupAudit } = useSharedCrudMutations();
+  const { bulkDelete, restore, bulkRestore, logExportAudit, logSetupAudit } =
+    useSharedCrudMutations();
 
   const upsertContact = useMutation({
     mutationFn: async (contact: Contact) =>
@@ -78,19 +79,7 @@ export function useContactMutations() {
     },
   });
 
-  const bulkRestoreContacts = useMutation({
-    mutationFn: async (ids: (string | number)[]) =>
-      apiJson<{
-        success: boolean;
-        succeeded: number;
-        failed: number;
-        conflicts?: Array<{ id: string; errors: Array<{ message: string }> }>;
-      }>(`${CONTACTS_API}/bulk-restore`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
-    onSuccess: invalidate,
-  });
+  const bulkRestoreContacts = bulkRestore;
 
   const mergeContacts = useMutation({
     mutationFn: async (payload: {

@@ -5,7 +5,7 @@ import type {
   ContactsListPageResult,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { loadDuplicatePairsPage } from '../../services/contactDuplicateScanService.js';
+import { loadDuplicatePairsPage } from './contactDuplicateScanUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 

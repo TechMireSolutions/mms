@@ -3,8 +3,8 @@ import { type AccountingSettings } from "@mms/shared";
 import { DollarSign } from "lucide-react";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { AccountingSettingsField } from "./AccountingSettingsField";
-import { AccountingSettingsSectionCard } from "./AccountingSettingsSectionCard";
 import { DATE_FORMATS } from "./accountingSettingsPreferencesShared";
 
 type CurrencyOption = {
@@ -31,7 +31,7 @@ export function AccountingSettingsCurrencySection({
   const { t } = useTranslation();
 
   return (
-    <AccountingSettingsSectionCard title={t("accounting.settings.secCurrency")} icon={DollarSign}>
+    <SectionCard title={t("accounting.settings.secCurrency")} icon={DollarSign}>
       <AccountingSettingsField label={t("accounting.settings.fields.baseCurrency")} hint={t("accounting.settings.fields.baseCurrencyHint")}>
         <FormSelect
           aria-label={t("accounting.settings.fields.baseCurrency")}
@@ -77,6 +77,6 @@ export function AccountingSettingsCurrencySection({
           className="w-32"
         />
       </AccountingSettingsField>
-    </AccountingSettingsSectionCard>
+    </SectionCard>
   );
 }

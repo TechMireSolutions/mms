@@ -30,13 +30,6 @@ export interface FieldDefinition {
   precision?: number;
 }
 
-/** Field grouping container for layout organization. */
-export interface FieldGroup {
-  id: string;
-  label: string;
-  description: string;
-}
-
 /** Tab specification entry for module layout customization. */
 export interface TabDefinition {
   key: string;

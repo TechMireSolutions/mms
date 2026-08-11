@@ -8,7 +8,7 @@ import {
   type PlannedRelationship,
   type RelationshipLink,
 } from '@mms/shared';
-import { loadContactPreferences } from '../../services/contactPreferencesService.js';
+import { loadContactPreferences } from '../../lib/contactPreferencesService.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 

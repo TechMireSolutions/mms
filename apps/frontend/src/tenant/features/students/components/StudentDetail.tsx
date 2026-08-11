@@ -1,9 +1,9 @@
 import React from "react";
-import { Clock, GraduationCap } from "lucide-react";
-import { formatDate, type Student } from "@mms/shared";
+import { GraduationCap } from "lucide-react";
+import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
-import { formatEntityStamp } from "@/lib/formatEntityStamp";
+import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
@@ -13,7 +13,7 @@ import { StudentDetailQuickActions } from "@/tenant/features/students/components
 import { StudentDetailSessionsSection } from "@/tenant/features/students/components/StudentDetailSessionsSection";
 import { useStudentDetailModel } from "@/tenant/features/students/components/useStudentDetailModel";
 
-export interface StudentDetailProps {
+interface StudentDetailProps {
   student: Student;
   onClose: () => void;
   onEdit?: (student: Student) => void;
@@ -50,7 +50,6 @@ export default function StudentDetail({
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
-  const stamp = formatEntityStamp(student.updatedAt) || formatEntityStamp(student.createdAt);
 
   const headerActions = (
     <DetailDrawerRestoreOrEditAction
@@ -80,14 +79,11 @@ export default function StudentDetail({
       headerActions={headerActions}
       headerExtra={<StudentArchivedBanner student={student} />}
       footer={
-        stamp ? (
-          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-            <Clock className="w-3 h-3" aria-hidden />
-            <span>
-              {t("students.detail.updatedLabel")} {formatDate(stamp)}
-            </span>
-          </div>
-        ) : null
+        <DrawerUpdatedStamp
+          updatedAt={student.updatedAt}
+          createdAt={student.createdAt}
+          label={t("students.detail.updatedLabel")}
+        />
       }
     >
       <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />

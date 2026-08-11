@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { RedeemModal } from "@/tenant/features/hasanat/components/RedeemModal";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
@@ -119,26 +120,29 @@ export function RedemptionTracker({
                     </div>
                   )}
                 </div>
-                <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                <StatGrid columns="sm2">
                   {columnVisible("reward") && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.reward")}</dt>
-                      <dd className="break-words text-foreground">{redemption.reward}</dd>
-                    </div>
+                    <StatRow
+                      label={t("hasanat.columns.redemption.reward")}
+                      value={redemption.reward}
+                      ddClassName="break-words"
+                    />
                   )}
                   {columnVisible("date") && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.date")}</dt>
-                      <dd className="text-muted-foreground">{formatDate(redemption.date)}</dd>
-                    </div>
+                    <StatRow
+                      label={t("hasanat.columns.redemption.date")}
+                      value={formatDate(redemption.date)}
+                      ddClassName="text-muted-foreground"
+                    />
                   )}
                   {columnVisible("approvedBy") && (
-                    <div>
-                      <dt className="text-xs font-semibold text-muted-foreground">{t("hasanat.columns.redemption.approvedBy")}</dt>
-                      <dd className="break-words text-muted-foreground">{redemption.approvedBy || "—"}</dd>
-                    </div>
+                    <StatRow
+                      label={t("hasanat.columns.redemption.approvedBy")}
+                      value={redemption.approvedBy || "—"}
+                      ddClassName="break-words text-muted-foreground"
+                    />
                   )}
-                </dl>
+                </StatGrid>
               </motion.article>
             ))}
           </div>

@@ -9,8 +9,6 @@ export interface TeacherListContentProps {
   selectedIds: string[];
   allSelected: boolean;
   someSelected: boolean;
-  showSelectColumn: boolean;
-  showActionsColumn: boolean;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;

@@ -7,8 +7,6 @@ import { ContactsWorkListBody } from "@/tenant/features/contacts/components/Cont
 import { buildContactsWorkFilterChips } from "@/tenant/features/contacts/components/buildContactsWorkFilterChips";
 import type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 
-export type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
-
 export function ContactsWorkTier({
   search,
   onSearchChange,

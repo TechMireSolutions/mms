@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UserCheck, Users, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -11,6 +12,8 @@ import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/atten
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { rateToneClass } from "@/lib/semanticTone";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { Badge } from "@/components/ui/badge";
 import { type AppTranslationKey, todayISO, formatDate } from "@mms/shared";
 
 // Type definitions
@@ -107,7 +110,9 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
         title={title || (isToday ? t("dashboard.widgets.todaysAttendanceSummary") : t("dashboard.widgets.latestAttendanceSummary"))}
         badge={
           !isToday && (
-            <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-muted font-bold border border-border/40">{formatDate(displayDate)}</span>
+            <Badge pill tone="muted" className="font-bold border-border/40">
+              {formatDate(displayDate)}
+            </Badge>
           )
         }
         actions={
@@ -139,9 +144,13 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
                   <span className="text-xs text-muted-foreground font-semibold">{t("dashboard.widgets.overallRate")}</span>
                   <span className={`text-sm font-bold tabular-nums ${rateColor}`}>{rate}%</span>
                 </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden shadow-inner">
-                  <div className={`h-full rounded-full ${rateBarColor} transition-all duration-700 ease-out`} style={{ width: `${rate}%` }} />
-                </div>
+                <ProgressBar
+                  value={rate}
+                  size="md"
+                  fillClassName={`${rateBarColor} duration-700 ease-out`}
+                  trackClassName="shadow-inner"
+                  aria-hidden="true"
+                />
               </div>
               <div className="text-end">
                 <p className={`text-2xl font-black tabular-nums leading-none m-0 ${rateColor}`}>{rate}%</p>
@@ -172,15 +181,19 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
 
             {/* Class breakdown */}
             <div className="space-y-3">
-              <h3 className="text-xs font-black text-muted-foreground uppercase tracking-wider select-none">{t("dashboard.widgets.byClass")}</h3>
+              <SectionLabel as="h3" tracking="wider" className="select-none">{t("dashboard.widgets.byClass")}</SectionLabel>
               {classBreakdown.map((classStats) => (
                 <div key={classStats.classId} className="flex min-w-0 items-center gap-3">
                   <span className="w-28 shrink-0 truncate text-xs font-bold text-foreground">{classStats.name}</span>
-                  <div className="min-w-0 flex-1 h-2 rounded-full bg-muted overflow-hidden shadow-inner">
-                    <div className={`h-full rounded-full transition-all duration-700 ease-out ${rateToneClass(classStats.rate).bar}`}
-                      style={{ width: `${classStats.rate}%` }} />
-                  </div>
-                  <span className={`text-xs font-bold w-10 text-end tabular-nums ${rateToneClass(classStats.rate).text}`}>{classStats.rate}%</span>
+                  <ProgressBar
+                    className="min-w-0 flex-1 gap-3"
+                    value={classStats.rate}
+                    size="md"
+                    fillClassName={`${rateToneClass(classStats.rate).bar} duration-700 ease-out`}
+                    trackClassName="shadow-inner"
+                    label={`${classStats.rate}%`}
+                    labelClassName={`w-10 text-end tabular-nums ${rateToneClass(classStats.rate).text}`}
+                  />
                 </div>
               ))}
             </div>

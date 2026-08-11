@@ -3,11 +3,11 @@ import {
   type Contact,
   type User,
 } from '@mms/shared';
-import { invalidateDuplicateScanCache } from '../../services/contactDuplicateScanService.js';
+import { invalidateDuplicateScanCache } from './contactDuplicateScanUseCases.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { applyContactRelationshipInference } from './contactRelationshipInferenceUseCases.js';
 import { runInTransaction } from '../../db/database.js';
-import { canDeleteContacts } from '../../services/rbacService.js';
+import { canDeleteContacts } from '../../lib/rbacCanHelpers.js';
 import {
   assertContactUniqueFields,
 } from './contactUniqueFieldUseCases.js';
@@ -17,7 +17,7 @@ import {
   prepareContactRecord,
   stripClientSoftDeleteFields,
 } from './contactNormalizeUseCases.js';
-import { broadcastCollection } from '../../services/websocketService.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 

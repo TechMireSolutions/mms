@@ -18,29 +18,29 @@ vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
 
-vi.mock('../services/websocketService.js', () => ({
+vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
 }));
 
-vi.mock('../services/contactDuplicateScanService.js', () => ({
+vi.mock('../contacts/use-cases/contactDuplicateScanUseCases.js', () => ({
   invalidateDuplicateScanCache: (...args: unknown[]) => mockInvalidateDuplicateScanCache(...args),
   getDuplicateScanCache: (...args: unknown[]) => mockGetDuplicateScanCache(...args),
   loadDuplicatePairsPage: (...args: unknown[]) => mockLoadDuplicatePairsPage(...args),
 }));
 
-vi.mock('../services/contactConfigService.js', () => ({
+vi.mock('../lib/contactConfigService.js', () => ({
   loadContactFieldConfig: (...args: unknown[]) => mockLoadContactFieldConfig(...args),
 }));
 
-vi.mock('../services/contactPreferencesService.js', () => ({
+vi.mock('../lib/contactPreferencesService.js', () => ({
   loadContactPreferences: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('../services/contactLookupsService.js', () => ({
+vi.mock('../lib/contactLookupsService.js', () => ({
   loadContactLookupKind: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../services/rbacService.js', () => ({
+vi.mock('../lib/rbacCanHelpers.js', () => ({
   canDeleteContacts: (...args: unknown[]) => mockCanDeleteContacts(...args),
 }));
 
@@ -48,8 +48,8 @@ import { createContactsUseCases } from '../contacts/use-cases/contactUseCases.js
 import { ContactUniqueFieldError } from '../contacts/use-cases/contactUniqueFieldUseCases.js';
 import { ContactPermissionError } from '../contacts/use-cases/contactNormalizeUseCases.js';
 import type { ContactDuplicateCandidateKeys } from '../contacts/repository/contactsRepository.js';
-import { loadContactLookupKind } from '../services/contactLookupsService.js';
-import { loadContactPreferences } from '../services/contactPreferencesService.js';
+import { loadContactLookupKind } from '../lib/contactLookupsService.js';
+import { loadContactPreferences } from '../lib/contactPreferencesService.js';
 
 function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   return {
@@ -320,7 +320,7 @@ describe('createContactsUseCases (DI composition root)', () => {
     store.set('a', fakeContact('a', { deletedAt: '2026-07-27T00:00:00.000Z', deletedBy: 'u-admin' }));
     const useCases = createContactsUseCases(repo);
 
-    const restored = await useCases.restoreContactById('a', 'u-admin');
+    const restored = await useCases.restoreContactById('a');
     expect(restored?.deletedAt).toBeUndefined();
     expect(store.get('a')?.deletedAt).toBeUndefined();
   });
@@ -330,7 +330,7 @@ describe('createContactsUseCases (DI composition root)', () => {
     store.set('a', fakeContact('a'));
     const useCases = createContactsUseCases(repo);
 
-    const restored = await useCases.restoreContactById('a', 'u-admin');
+    const restored = await useCases.restoreContactById('a');
     expect(restored?.id).toBe('a');
     expect(restored?.deletedAt).toBeUndefined();
     expect(repo.save).not.toHaveBeenCalled();
@@ -584,7 +584,7 @@ describe('createContactsUseCases (DI composition root)', () => {
     store.set('active', fakeContact('active'));
     const useCases = createContactsUseCases(repo);
 
-    const result = await useCases.bulkRestoreContacts(['a', 'active'], 'u-admin');
+    const result = await useCases.bulkRestoreContacts(['a', 'active']);
     expect(result).toEqual({ succeeded: 1, failed: 1, conflicts: [] });
     expect(store.get('a')?.deletedAt).toBeUndefined();
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
@@ -600,7 +600,7 @@ describe('createContactsUseCases (DI composition root)', () => {
     store.set('b', fakeContact('b', { deletedAt: '2026-07-27T00:00:00.000Z', emails: sharedEmail }));
     const useCases = createContactsUseCases(repo);
 
-    const result = await useCases.bulkRestoreContacts(['a', 'b'], 'u-admin');
+    const result = await useCases.bulkRestoreContacts(['a', 'b']);
 
     expect(result).toMatchObject({ succeeded: 1, failed: 1 });
     expect(result.conflicts).toHaveLength(1);

@@ -7,6 +7,8 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -51,7 +53,7 @@ export function ReportSection({
   return (
     <section aria-label={title} className={WORK_SURFACE}>
       <header className={`px-4 py-2.5 border-b border-border ${color || "bg-muted/60"}`}>
-        <h3 className="text-xs font-bold uppercase tracking-wide text-foreground m-0">{title}</h3>
+        <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{title}</SectionLabel>
       </header>
       <div className="space-y-3 p-3 md:hidden">
         {rows.map((reportRow, index) => {
@@ -74,9 +76,12 @@ export function ReportSection({
                 </div>
                 <span className="shrink-0 font-mono font-semibold text-foreground">{formatCurrency(Math.abs(rowAmount))}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: `${percentage}%` }} />
-              </div>
+              <ProgressBar
+                value={percentage}
+                size="sm"
+                fillClassName="bg-primary/40"
+                aria-hidden="true"
+              />
             </motion.article>
           );
         })}
@@ -99,9 +104,12 @@ export function ReportSection({
                       <span className="font-medium text-foreground">{reportRow.name}</span>
                       <span className="font-mono font-semibold text-foreground ms-2">{formatCurrency(Math.abs(rowAmount))}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                      <div className="h-full rounded-full bg-primary/40 transition-all" style={{ width: `${percentage}%` }} />
-                    </div>
+                    <ProgressBar
+                      value={percentage}
+                      size="sm"
+                      fillClassName="bg-primary/40"
+                      aria-hidden="true"
+                    />
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono m-0">
                       {reportRow.code} · {reportRow.subtype || reportRow.type}
                     </p>

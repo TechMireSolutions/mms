@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 
 type MessagingLogColumn = "recipient" | "channel" | "body" | "dateSent";
@@ -103,16 +104,18 @@ export function MessagingReportsLogTable({
                     <StatusBadge status={log.status || "sent"} size="sm" config={logStatusConfig} />
                   </div>
                 </div>
-                <dl className="grid grid-cols-1 gap-2 text-sm">
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("messaging.messageBody")}</dt>
-                    <dd className="text-xs text-muted-foreground">{log.body}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t("messaging.dateSent")}</dt>
-                    <dd className="font-mono text-xs text-muted-foreground">{formatDateTime(log.sentAt)}</dd>
-                  </div>
-                </dl>
+                <StatGrid columns="1">
+                  <StatRow
+                    label={t("messaging.messageBody")}
+                    value={log.body}
+                    ddClassName="text-xs text-muted-foreground"
+                  />
+                  <StatRow
+                    label={t("messaging.dateSent")}
+                    value={formatDateTime(log.sentAt)}
+                    ddClassName="font-mono text-xs text-muted-foreground"
+                  />
+                </StatGrid>
                 {canWrite && (
                   <Button
                     variant="ghost"

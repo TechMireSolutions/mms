@@ -3,7 +3,9 @@ import type { ChangeEvent, RefObject } from "react";
 import { Camera } from "lucide-react";
 import { getInitials, type TenantUserProfile } from "@mms/shared";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface AccountProfileHeaderCardProps {
@@ -66,9 +68,9 @@ export function AccountProfileHeaderCard({
           <div className="space-y-1">
             <h1 className="text-xl font-bold text-foreground tracking-tight">{name || profile.name}</h1>
             <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 capitalize">
+              <Badge pill tone="primary" className="capitalize">
                 {profile.role}
-              </span>
+              </Badge>
               <span className="text-xs text-muted-foreground">{profile.loginEmail}</span>
             </div>
           </div>
@@ -80,12 +82,12 @@ export function AccountProfileHeaderCard({
               <span className="text-muted-foreground">{t("account.completeness")}</span>
               <span className="text-primary">{completeness}%</span>
             </div>
-            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-info transition-all duration-500 ease-out"
-                style={{ width: `${completeness}%` }}
-              />
-            </div>
+            <ProgressBar
+              value={completeness}
+              size="md"
+              fillClassName="bg-gradient-to-r from-primary to-info duration-500 ease-out"
+              aria-hidden="true"
+            />
           </div>
         )}
       </CardContent>

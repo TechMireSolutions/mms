@@ -4,6 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
 import { DETAIL_STYLES } from "./contactDetailStyles";
@@ -62,11 +63,9 @@ export function ContactNetworkLinkCard({
           <h5 className="text-sm font-bold text-foreground leading-snug break-words">
             {resolvedName}
           </h5>
-          <p
-            className={`text-xs font-semibold uppercase tracking-widest ${DETAIL_STYLES.networkRelType}`}
-          >
+          <SectionLabel as="p" weight="semibold" toneClassName={DETAIL_STYLES.networkRelType}>
             {relationshipLabel}
-          </p>
+          </SectionLabel>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import type { Student } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
-import { broadcastCollection } from '../../services/websocketService.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 import type { StudentsRepository } from '../repository/studentsRepository.js';
 import { studentsRepository } from '../repository/studentsRepositoryAdapter.js';
 import { StudentRestoreConflictError } from './studentNormalizeUseCases.js';
@@ -34,7 +34,6 @@ function restoredRow(existing: Student): Student {
 
 export async function restoreStudentById(
   id: string,
-  _restoredBy: string,
   repo: StudentsRepository = studentsRepository,
 ): Promise<Student | null> {
   const restored = await runInTransaction(async () => {
@@ -62,7 +61,6 @@ export async function restoreStudentById(
 
 export async function bulkRestoreStudents(
   ids: string[],
-  _restoredBy: string,
   repo: StudentsRepository = studentsRepository,
 ): Promise<StudentBulkRestoreResult> {
   const result = await runInTransaction(async () => {
@@ -72,15 +70,23 @@ export async function bulkRestoreStudents(
     let failed = 0;
     const conflicts: StudentBulkRestoreConflict[] = [];
     const toSave: Student[] = [];
-    const restoredIds = new Set<string>();
 
     const existingStudents = await repo.findByIds(tenant, ids);
     const existingMap = new Map(existingStudents.map((student) => [String(student.id), student]));
+    const acceptedGrNumbers = new Set<string>();
 
     for (const id of ids) {
       const existing = existingMap.get(String(id));
       if (!existing || !existing.deletedAt) {
         failed += 1;
+        continue;
+      }
+      if (existing.grNumber && acceptedGrNumbers.has(existing.grNumber)) {
+        failed += 1;
+        conflicts.push({
+          id: String(id),
+          errors: [{ field: 'grNumber', message: 'A student with this GR number already exists' }],
+        });
         continue;
       }
       const conflict = await repo.findRegistrationConflict(tenant, {
@@ -96,7 +102,7 @@ export async function bulkRestoreStudents(
         continue;
       }
       toSave.push(restoredRow(existing));
-      restoredIds.add(String(id));
+      if (existing.grNumber) acceptedGrNumbers.add(existing.grNumber);
       succeeded += 1;
     }
 

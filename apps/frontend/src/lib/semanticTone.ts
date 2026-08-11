@@ -22,6 +22,8 @@ export const BANNER_FROST_CHIP =
   'bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/15';
 
 export const SEMANTIC_BADGE = {
+  primary: 'bg-primary/10 text-primary border-primary/20',
+  primaryStrong: 'bg-primary/15 text-primary border-primary/30',
   success: 'bg-success/10 text-success border-success/20',
   successStrong: 'bg-success/15 text-success border-success/30',
   destructive: 'bg-destructive/10 text-destructive border-destructive/20',

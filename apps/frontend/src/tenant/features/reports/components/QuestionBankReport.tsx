@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { BarChart2, ClipboardList, FileCheck2, Target, Users } from "lucide-react";
@@ -99,9 +100,9 @@ export default function QuestionBankReport(): React.JSX.Element {
             <div className="h-chart-sm" aria-hidden>
               <SafeResponsiveContainer width="100%" height={180}>
                 <BarChart data={difficultyData} barSize={28}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <ChartGrid />
+                  <XAxis dataKey="name" tick={chartAxisTick(10)} />
+                  <YAxis allowDecimals={false} tick={chartAxisTick(11)} />
                   <Tooltip />
                   <Bar dataKey="questions" name={t("questionBank.questions")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="tests" name={t("questionBank.report.generatedTests")} fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
@@ -118,9 +119,9 @@ export default function QuestionBankReport(): React.JSX.Element {
             <div className="h-chart-sm" aria-hidden>
               <SafeResponsiveContainer width="100%" height={180}>
                 <BarChart data={categoryData} barSize={28} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" width={96} tick={{ fontSize: 10 }} />
+                  <ChartGrid horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tick={chartAxisTick(11)} />
+                  <YAxis type="category" dataKey="name" width={96} tick={chartAxisTick(10)} />
                   <Tooltip />
                   <Bar dataKey="questions" name={t("questionBank.questions")} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>

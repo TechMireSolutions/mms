@@ -1,6 +1,7 @@
 import React from "react";
 import { School } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { Teacher } from "@mms/shared";
 import { TeacherFormTabContent } from "@/tenant/features/teachers/components/TeacherFormTabContent";
@@ -46,59 +47,77 @@ export function TeacherForm({
     updateDraft,
     handleSave,
     validationErrorSummary,
+    typedDuplicateReason,
+    duplicateConfirmOpen,
+    handleDuplicateDialogOpenChange,
+    confirmDuplicateSave,
+    duplicateErrorKeys,
   } = useTeacherFormController({ teacher, onClose, onSave });
 
   return (
-    <FormModal
-      open
-      onClose={onClose}
-      title={teacher ? t("teachers.form.editTitle") : t("teachers.form.addTitle")}
-      subtitle={t("teachers.form.contactHint")}
-      icon={School}
-      tall
-      tabs={visibleTabs}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      tabPanelIdPrefix="teacher-form-tab"
-      lang={language}
-      cancelLabel={t("common.cancel")}
-      saveLabel={saving ? t("teachers.form.saving") : teacher ? t("teachers.form.saveUpdate") : t("teachers.form.saveCreate")}
-      onSave={() => { void handleSave(); }}
-      saving={saving}
-      error={validationErrorSummary}
-      saveDisabled={
-        (requireContactLink && isFieldEnabled("contactId") && !teacherDraft.contactId)
-        || (Boolean(teacher?.id) && !isDirty)
-      }
-      footerStart={
-        <TeacherFormFooter
-          linkedContact={linkedContact}
+    <>
+      <FormModal
+        open
+        onClose={onClose}
+        title={teacher ? t("teachers.form.editTitle") : t("teachers.form.addTitle")}
+        subtitle={t("teachers.form.contactHint")}
+        icon={School}
+        tall
+        tabs={visibleTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        tabPanelIdPrefix="teacher-form-tab"
+        lang={language}
+        cancelLabel={t("common.cancel")}
+        saveLabel={saving ? t("teachers.form.saving") : teacher ? t("teachers.form.saveUpdate") : t("teachers.form.saveCreate")}
+        onSave={() => { void handleSave(); }}
+        saving={saving}
+        error={validationErrorSummary}
+        saveDisabled={
+          (requireContactLink && isFieldEnabled("contactId") && !teacherDraft.contactId)
+          || (Boolean(teacher?.id) && !isDirty)
+        }
+        footerStart={
+          <TeacherFormFooter
+            linkedContact={linkedContact}
+            teacherDraft={teacherDraft}
+            requireContactLink={requireContactLink}
+            statusConfig={statusConfig}
+            t={t}
+          />
+        }
+      >
+        <TeacherFormTabContent
+          tab={activeTab}
+          formInstanceId={formInstanceId}
+          teacher={teacher}
           teacherDraft={teacherDraft}
-          requireContactLink={requireContactLink}
-          statusConfig={statusConfig}
-          t={t}
+          errors={errors}
+          fields={fieldsMap}
+          defaultSpecialization={defaultSpecialization}
+          linkedTeacherContactIds={linkedTeacherContactIds}
+          specializationOptions={specializationOptions}
+          autoGenerateId={autoGenerateId}
+          idPrefix={idPrefix}
+          nextEmployeeId={nextEmployeeId}
+          statusOptions={statusOptions}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          getFieldError={getFieldError}
+          onDraftChange={updateDraft}
         />
-      }
-    >
-      <TeacherFormTabContent
-        tab={activeTab}
-        formInstanceId={formInstanceId}
-        teacher={teacher}
-        teacherDraft={teacherDraft}
-        errors={errors}
-        fields={fieldsMap}
-        defaultSpecialization={defaultSpecialization}
-        linkedTeacherContactIds={linkedTeacherContactIds}
-        specializationOptions={specializationOptions}
-        autoGenerateId={autoGenerateId}
-        idPrefix={idPrefix}
-        nextEmployeeId={nextEmployeeId}
-        statusOptions={statusOptions}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        getFieldError={getFieldError}
-        onDraftChange={updateDraft}
+      </FormModal>
+      <ConfirmAlertDialog
+        open={duplicateConfirmOpen}
+        onOpenChange={handleDuplicateDialogOpenChange}
+        title={teacher ? t("teachers.form.editTitle") : t("teachers.form.addTitle")}
+        description={typedDuplicateReason
+          ? t("teachers.form.duplicateSaveWarning", { message: t(duplicateErrorKeys[typedDuplicateReason]) })
+          : ""}
+        confirmLabel={t("teachers.form.saveAnyway")}
+        cancelLabel={t("teachers.form.reviewDuplicate")}
+        onConfirm={confirmDuplicateSave}
       />
-    </FormModal>
+    </>
   );
 }

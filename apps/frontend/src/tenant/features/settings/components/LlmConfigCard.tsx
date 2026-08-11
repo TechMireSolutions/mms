@@ -2,6 +2,7 @@ import type React from 'react';
 import { Check, Edit2, Globe, Loader2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { LlmConfig } from '@mms/shared';
 
@@ -57,9 +58,9 @@ export function LlmConfigCard({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {config.isDefaultText && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+              <Badge pill tone="primary" className="gap-1 px-2 py-1">
                 <Check className="h-3 w-3" /> {t('settings.llmTextDefault')}
-              </span>
+              </Badge>
             )}
           </div>
         </div>

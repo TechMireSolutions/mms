@@ -2,6 +2,7 @@ import { getInitials } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SearchBar } from '@/components/ui/SearchBar';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { SegmentedPillFilter } from '@/components/ui/SegmentedPillFilter';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ValidatedMessagingRecipient } from './useMessageComposerDispatch';
@@ -48,7 +49,9 @@ export function MessageComposerRecipients({
     <>
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('messaging.confirmRecipients')} ({displayedRecipients.length})</span>
+          <SectionLabel weight="bold" tracking="wider" className="block">
+            {t('messaging.confirmRecipients')} ({displayedRecipients.length})
+          </SectionLabel>
           <SegmentedPillFilter
             options={[
               { value: 'all', label: `${t('messaging.filter.all')} (${validatedRecipients.length})` },

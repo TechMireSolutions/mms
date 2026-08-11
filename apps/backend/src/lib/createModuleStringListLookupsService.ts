@@ -1,6 +1,6 @@
 import { slugifyLookupLabel } from './slugifyLookupLabel.js';
 import { getRequestTenant } from './tenantContext.js';
-import { broadcastCollection } from '../services/websocketService.js';
+import { broadcastCollection } from './livePush.js';
 
 type StringLookupRow = { kind: string; label: string };
 

@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import {
@@ -138,9 +139,9 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
                 <TableCell className="px-3 py-2.5 hidden lg:table-cell">
                   <div className="flex flex-wrap gap-1">
                     {(entry.tags || []).slice(0, 2).map((tag) => (
-                      <span key={tag} className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                      <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
                         {getJournalTagLabel(tag, t)}
-                      </span>
+                      </Badge>
                     ))}
                     {(entry.tags || []).length > 2 && <span className="text-xs text-muted-foreground">+{entry.tags.length - 2}</span>}
                   </div>

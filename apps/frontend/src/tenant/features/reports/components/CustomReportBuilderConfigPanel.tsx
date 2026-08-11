@@ -1,9 +1,11 @@
 import type { Dispatch, JSX, SetStateAction } from "react";
 import { Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CompactSegmentedControl } from "@/components/ui/CompactSegmentedControl";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   AGGREGATE_FNS,
@@ -56,9 +58,9 @@ export function CustomReportBuilderConfigPanel({
   return (
     <div className="space-y-5 lg:col-span-1">
       <div className="space-y-1.5">
-        <label htmlFor="report-builder-name" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+        <SectionLabel as="label" htmlFor="report-builder-name" weight="bold" className="block ms-1">
           {t("reports.builder.reportTitleLabel")}
-        </label>
+        </SectionLabel>
         <Input
           id="report-builder-name"
           name="reportName"
@@ -71,9 +73,9 @@ export function CustomReportBuilderConfigPanel({
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="report-builder-source" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+        <SectionLabel as="label" htmlFor="report-builder-source" weight="bold" className="block ms-1">
           {t("reports.builder.queryDataSource")}
-        </label>
+        </SectionLabel>
         <FormSelect
           id="report-builder-source"
           name="reportSource"
@@ -99,9 +101,9 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="space-y-1.5">
         <div className="flex justify-between items-center ms-1">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
+          <SectionLabel weight="bold" className="block">
             {t("reports.builder.schemaFieldsPicker")}
-          </span>
+          </SectionLabel>
           <span className="text-xs text-muted-foreground font-black uppercase bg-primary/10 px-1.5 py-0.5 rounded-md text-primary">
             {t("reports.builder.availableCount", { count: availableFields.length })}
           </span>
@@ -133,9 +135,9 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
         <div className="space-y-1.5">
-          <label htmlFor="report-builder-aggregate" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <SectionLabel as="label" htmlFor="report-builder-aggregate" weight="bold" className="block ms-1">
             {t("reports.builder.aggregatorFunction")}
-          </label>
+          </SectionLabel>
           <FormSelect
             id="report-builder-aggregate"
             name="reportAggregate"
@@ -155,9 +157,9 @@ export function CustomReportBuilderConfigPanel({
           />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="report-builder-group-by" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <SectionLabel as="label" htmlFor="report-builder-group-by" weight="bold" className="block ms-1">
             {t("reports.builder.groupCategory")}
-          </label>
+          </SectionLabel>
           <FormSelect
             id="report-builder-group-by"
             name="reportGroupBy"
@@ -178,32 +180,25 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
         <div className="space-y-1.5">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <SectionLabel weight="bold" className="block ms-1">
             {t("reports.builder.docAlignment")}
-          </span>
-          <div className="flex gap-1 p-1 bg-muted/30 border border-border/50 rounded-xl">
-            <Button
-              onClick={() => setOrientation("p")}
-              variant={orientation === "p" ? "default" : "ghost"}
-              className={`flex-1 min-h-11 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${orientation === "p" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
-              type="button"
-            >
-              {t("reports.builder.portrait")}
-            </Button>
-            <Button
-              onClick={() => setOrientation("l")}
-              variant={orientation === "l" ? "default" : "ghost"}
-              className={`flex-1 min-h-11 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${orientation === "l" ? "bg-card text-foreground shadow-sm hover:bg-card hover:text-foreground" : "text-sidebar-muted-foreground hover:text-foreground hover:bg-muted"}`}
-              type="button"
-            >
-              {t("reports.builder.landscape")}
-            </Button>
-          </div>
+          </SectionLabel>
+          <CompactSegmentedControl
+            tone="card"
+            fill
+            ariaLabel={t("reports.builder.docAlignment")}
+            value={orientation}
+            onChange={setOrientation}
+            options={[
+              { value: "p", label: t("reports.builder.portrait") },
+              { value: "l", label: t("reports.builder.landscape") },
+            ]}
+          />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="report-builder-page-size" className="text-xs font-bold text-muted-foreground uppercase tracking-widest block ms-1">
+          <SectionLabel as="label" htmlFor="report-builder-page-size" weight="bold" className="block ms-1">
             {t("reports.builder.exportLayoutFormat")}
-          </label>
+          </SectionLabel>
           <FormSelect
             id="report-builder-page-size"
             name="reportPageSize"

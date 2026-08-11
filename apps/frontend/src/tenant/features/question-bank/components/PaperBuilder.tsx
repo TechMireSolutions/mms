@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Badge } from "@/components/ui/badge";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import { type QuestionBankQuestion as Question, type QuestionBankTest } from "@mms/shared";
 import { usePaperBuilderState } from "@/tenant/features/question-bank/hooks/usePaperBuilderState";
@@ -95,10 +96,10 @@ export function PaperBuilder({ questions, tests, activeTab, showHeader = true, o
             </div>
           )}
           {saved && (
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+            <Badge pill tone="success" className="gap-1.5 w-fit px-2.5 py-1 border-success/30">
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
               {t("questionBank.paperSaved")}
-            </span>
+            </Badge>
           )}
         </div>
       ) : null}

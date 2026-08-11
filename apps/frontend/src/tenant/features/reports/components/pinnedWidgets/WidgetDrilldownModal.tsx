@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { SimplePagination } from "@/components/ui/SimplePagination";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { Badge } from "@/components/ui/badge";
 import { useWidgetDrilldownModal } from "@/tenant/features/reports/components/pinnedWidgets/useWidgetDrilldownModal";
 import { WidgetDrilldownModalRecords } from "@/tenant/features/reports/components/pinnedWidgets/WidgetDrilldownModalRecords";
 
@@ -50,9 +51,9 @@ export function WidgetDrilldownModal({
             placeholder={t("reports.widgets.searchRecords")}
             className="min-w-0 flex-1 max-w-sm"
           />
-          <span className="text-xs text-muted-foreground font-bold px-2 py-1.5 bg-muted rounded-full border border-border shrink-0">
+          <Badge pill tone="muted" className="px-2 py-1.5 font-bold shrink-0">
             {t("reports.widgets.foundCount", { count: filteredRecords.length })}
-          </span>
+          </Badge>
         </div>
       }
       footer={

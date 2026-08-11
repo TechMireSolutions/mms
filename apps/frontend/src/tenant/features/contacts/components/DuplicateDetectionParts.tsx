@@ -8,9 +8,9 @@ import {
   getDuplicateFieldValue,
 } from "@/lib/contacts/contactI18n";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export {
-  getDuplicateThemeColors,
   type DuplicatePair,
 } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 export { MergePreview } from "@/tenant/features/contacts/components/DuplicateMergePreview";
@@ -25,10 +25,10 @@ export function ConfidenceBadge({
   const { t } = useTranslation();
   const { colorClass } = getDuplicateConfidenceBadgeStyle(score, prefs);
   return (
-    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full border", colorClass)}>
+    <Badge pill variant="outline" className={cn("px-2 font-bold", colorClass)}>
       {score}
       {t("contacts.duplicates.matchSuffix")}
-    </span>
+    </Badge>
   );
 }
 
@@ -48,18 +48,11 @@ export function DuplicateContactCard({
   const fields = prefs.duplicateDetectionFields || [];
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       aria-pressed={selected}
       onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
-      className={`flex-1 rounded-xl border-2 p-4 cursor-pointer transition-all text-start ${
+      className={`flex-1 cursor-pointer rounded-xl border-2 p-4 text-start transition-all ${
         selected ? "border-primary bg-primary/[0.03]" : "border-border hover:border-primary/30"
       }`}
     >
@@ -81,6 +74,6 @@ export function DuplicateContactCard({
           </div>
         ))}
       </div>
-    </div>
+    </button>
   );
 }

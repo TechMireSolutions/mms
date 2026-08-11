@@ -13,6 +13,7 @@ import {
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { QuestionSourceInput } from '@/tenant/features/question-bank/components/QuestionSourceInput';
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
@@ -56,9 +57,9 @@ export function QuestionSourcesCitationsSection({
               className="space-y-3 rounded-xl border border-border/70 bg-muted/10 p-4"
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-foreground">
+                <SectionLabel as="p" weight="bold" tracking="wide" tone="foreground">
                   {t('questionBank.citationEntry', { n: index + 1 })}
-                </p>
+                </SectionLabel>
                 {citationEntries.length > 1 && entry.bookId && (
                   <Button
                     type="button"

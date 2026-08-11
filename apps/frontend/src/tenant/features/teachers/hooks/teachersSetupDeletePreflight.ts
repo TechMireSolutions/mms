@@ -25,7 +25,7 @@ type TeacherPreflightContext = {
   onBlocked: TeachersSetupDeleteNotify;
 };
 
-const { preflightFieldDelete } =
+const { preflightFieldDelete, preflightFieldsDelete } =
   createModuleFieldDeletePreflight<
     FieldDefinition,
     ColumnRegistryEntry,
@@ -51,4 +51,14 @@ export async function preflightTeacherFieldDelete(
   context: TeacherPreflightContext,
 ): Promise<boolean> {
   return preflightFieldDelete(fieldId, context);
+}
+
+/**
+ * Prefights many field deletes: sync deps first, then one batch usage POST.
+ */
+export async function preflightTeacherFieldsDelete(
+  fieldIds: string[],
+  context: TeacherPreflightContext,
+): Promise<boolean> {
+  return preflightFieldsDelete(fieldIds, context);
 }

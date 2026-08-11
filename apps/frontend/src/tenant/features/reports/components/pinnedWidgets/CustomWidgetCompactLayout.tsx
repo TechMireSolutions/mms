@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { Switch } from "@/components/ui/switch";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { METADATA_FIELDS, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import { ProgressRing } from "@/tenant/features/reports/components/pinnedWidgets/WidgetProgressRing";
@@ -66,9 +67,9 @@ export function CustomWidgetCompactLayout({
         <span className="text-base font-black tracking-tight font-mono my-auto max-w-full truncate text-foreground">
           {computedCard.value}
         </span>
-        <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
+        <SectionLabel toneClassName="text-muted-foreground/60" className="mb-0.5">
           {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
-        </span>
+        </SectionLabel>
       </motion.button>
     );
   }
@@ -128,12 +129,12 @@ export function CustomWidgetCompactLayout({
           aria-label={switchLabel}
         />
 
-        <span
-          className="text-xs font-black uppercase tracking-widest mb-0.5"
+        <SectionLabel
+          className="mb-0.5"
           style={{ color: isSwitchOn ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
         >
           {switchLabel}
-        </span>
+        </SectionLabel>
       </div>
     );
   }
@@ -181,9 +182,9 @@ function CompactMetricButton({
           {body}
         </span>
       )}
-      <span className="text-xs font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">
+      <SectionLabel toneClassName="text-muted-foreground/60" className="mb-0.5">
         {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
-      </span>
+      </SectionLabel>
     </motion.button>
   );
 }

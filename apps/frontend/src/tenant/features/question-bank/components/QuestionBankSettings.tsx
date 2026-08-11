@@ -18,6 +18,7 @@ import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
 import { CategoryManager } from "@/tenant/features/question-bank/components/CategoryManager";
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
@@ -162,9 +163,9 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
           />
 
           <div className="space-y-2 border-t border-border/60 pt-3">
-            <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            <SectionLabel as="h4" weight="bold" tracking="wide">
               {t('questionBank.typesTitle')}
-            </h4>
+            </SectionLabel>
             <div className="flex flex-wrap gap-2">
               {(questionBankSettings.questionTypes ?? []).map((entry: QuestionTypeRegistryEntry) => (
                 <Button
@@ -181,9 +182,9 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            <SectionLabel as="h4" weight="bold" tracking="wide">
               {t('questionBank.difficultiesTitle')}
-            </h4>
+            </SectionLabel>
             <div className="flex flex-wrap gap-2">
               {(questionBankSettings.difficultyLevels ?? []).map((entry: QuestionDifficultyRegistryEntry) => (
                 <Button

@@ -8,14 +8,12 @@ import {
   useContactFieldConfigMutation,
   useContactFieldConfigQuery,
   useContactPreferencesMutation,
-} from "@/tenant/features/contacts/hooks/useContactSetupConfig";
+} from "@/tenant/hooks/collections/contacts";
 import type {
   ContactConfigExtras,
   ContactsConfigSettings,
 } from "./useContactConfigTypes";
 import { useContactsConfigEnhance } from "./useContactsConfigEnhance";
-
-export type { ContactsConfigSettings, ContactConfigExtras } from "./useContactConfigTypes";
 
 const useContactsConfigImpl = createStandardModuleConfigHook<
   ContactsConfigSettings,

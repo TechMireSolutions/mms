@@ -1,13 +1,5 @@
 import { students } from '../schema.js';
-import {
-  countJsonbFieldUsageByKeys,
-  jsonbCustomDataFieldNonEmptySql,
-} from './jsonbFieldUsage.js';
-
-/** Non-empty custom_data value for a Students field key. */
-export function studentFieldNonEmptySql(fieldKey: string) {
-  return jsonbCustomDataFieldNonEmptySql(students.customData, fieldKey);
-}
+import { countJsonbFieldUsageByKeys } from './jsonbFieldUsage.js';
 
 /**
  * Counts active students with a non-empty value for each field key (SQL, no full-list load).

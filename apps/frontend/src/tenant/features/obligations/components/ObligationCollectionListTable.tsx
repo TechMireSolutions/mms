@@ -3,6 +3,7 @@ import { formatDate } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import {
   Table,
@@ -134,7 +135,7 @@ export function ObligationCollectionListTable(props: ObligationCollectionListTab
               )}
               {isColumnVisible("obligationType") && (
                 <TableCell className="px-3 py-2.5">
-                  <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{obligationType?.name || "—"}</span>
+                  <Badge as="span" pill tone="primary" className="px-2 font-bold">{obligationType?.name || "—"}</Badge>
                 </TableCell>
               )}
               {isColumnVisible("repMujtahid") && (

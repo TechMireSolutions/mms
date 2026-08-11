@@ -5,6 +5,7 @@ import { canDeleteContactsSavedReport, validateContactsSavedReportDrillDown } fr
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -101,15 +102,15 @@ export function ContactsSavedReportsList({
                   {formatDrillDownSummary(savedReport.drillDown, searchLabel)}
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                  <Badge pill tone="primary" className="gap-1 uppercase tracking-wide px-2">
                     <Users className="w-3 h-3" />
                     {shareLabel(savedReport.shareScope)}
-                  </span>
+                  </Badge>
                   {issues.length > 0 && (
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-warning/15 text-warning">
+                    <Badge pill tone="warning" className="gap-1 px-2 bg-warning/15">
                       <AlertTriangle className="w-3 h-3" />
                       {t("contacts.savedReports.staleBadge")}
-                    </span>
+                    </Badge>
                   )}
                 </div>
               </div>

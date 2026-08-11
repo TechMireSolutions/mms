@@ -14,7 +14,7 @@ import { useStudentsCrudNotify } from "@/tenant/features/students/hooks/useStude
 
 type ExportAuditScope = "all" | "filtered" | "selection";
 
-export interface UseStudentsExportActionsOptions {
+interface UseStudentsExportActionsOptions {
   tableColumns: StudentExportColumn[];
   canExport: boolean;
   search: string;

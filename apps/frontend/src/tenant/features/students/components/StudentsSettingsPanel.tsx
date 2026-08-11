@@ -38,10 +38,9 @@ export default function StudentsSettingsPanel(): React.JSX.Element {
 
   const settingsSubTabs = useMemo(
     () =>
-      STUDENTS_MODULE_MANIFEST.setupSubTabs.map((key, index) => ({
+      STUDENTS_MODULE_MANIFEST.setupSubTabs.map((key) => ({
         key,
         label: t(SETUP_TAB_LABEL_KEYS[key]),
-        order: index,
       })),
     [t],
   );

@@ -3,8 +3,10 @@ export {
   listTeachersPage,
   countTeachersActive,
   countTeachersForNextEmployeeId,
+  listActiveTeachersMissingEmployeeId,
   listTeacherLinkedContactIdsSql,
   findSoftDeletedTeacherByContactIdSql,
+  findTeacherRegistrationConflictSql,
 } from './teacherRepositoryListQuery.js';
 
 /** Teachers bulk-status + command metrics SQL. */

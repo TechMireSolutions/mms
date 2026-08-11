@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
-import { canDeleteCollection, canReadCollection, canWriteCollection } from '../services/rbacService.js';
+import { canDeleteCollection, canReadCollection, canWriteCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError, sendNotFound, sendConflict } from './httpErrors.js';
 import { parseRequest, replyValidationError, executeDynamicValidation } from './zodRequest.js';
 import {

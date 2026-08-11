@@ -153,7 +153,7 @@ export function defaultStudentEnabledTabIds(): string[] {
   return STUDENT_TAB_REGISTRY.filter((tab) => tab.enabled !== false).map((tab) => tab.key);
 }
 
-export type StudentEnabledTabsInput = {
+type StudentEnabledTabsInput = {
   enabledTabs?: readonly string[] | null;
   formTabs?: readonly TabDefinition[] | null;
 };

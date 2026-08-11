@@ -11,7 +11,7 @@ import { useContactConfigPrefs } from "@/lib/contacts/useContactConfigPrefs";
 import { useContactConfigTabFields } from "@/lib/contacts/useContactConfigTabFields";
 import { useContactColumnLayout } from "@/lib/contacts/useContactColumnLayout";
 import { notify } from "@/lib/notify";
-import { CONTACTS_FIELD_CONFIG_QUERY_KEY } from "@/tenant/features/contacts/hooks/useContactSetupConfig";
+import { CONTACTS_FIELD_CONFIG_QUERY_KEY } from "@/tenant/hooks/collections/contacts";
 import type {
   ContactConfigExtras,
   ContactsConfigSettings,

@@ -1,24 +1,34 @@
-import { useState } from "react";
-import type { ModuleColumnRegistryEntry, Teacher, TeachersListPageResult } from "@mms/shared";
+import type {
+  ModuleColumnRegistryEntry,
+  Teacher,
+  TeacherSortField,
+  TeachersListPageResult,
+  TeachersQuickFilter,
+} from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import { TeacherList, type TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
+import { TeacherList } from "@/tenant/features/teachers/components/TeacherList";
 import { buildTeachersWorkFilterChips } from "@/tenant/features/teachers/components/buildTeachersWorkFilterChips";
 import { TeachersBulkActionBar } from "@/tenant/features/teachers/components/TeachersBulkActionBar";
 import { TeachersWorkTierToolbar } from "@/tenant/features/teachers/components/TeachersWorkTierToolbar";
 import { computeTeachersSelectionTargets } from "@/tenant/features/teachers/hooks/teachersSelectionTargets";
 import { useTeacherStatusConfig } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
+import type { TeachersWorkOverlayInteractions } from "@/tenant/features/teachers/hooks/teachersPageOverlaysTypes";
 
-interface TeachersWorkTierProps {
+export interface TeachersWorkTierProps {
   search: string;
   filterStatus: string[];
   filterSpecialization: string;
+  filterGender: string;
+  quickFilter: TeachersQuickFilter;
+  onQuickFilterChange: (preset: string) => void;
+  genderFilters: string[];
+  activeFilterCount: number;
   statusOptions: string[];
   specializationOptions: string[];
   showDeleted: boolean;
@@ -27,6 +37,9 @@ interface TeachersWorkTierProps {
   canExport?: boolean;
   hasActiveFilters: boolean;
   columnRegistry: ModuleColumnRegistryEntry[];
+  isColumnVisible: (key: string) => boolean;
+  getColumnWidth: (key: string) => number | undefined;
+  onColumnResize: (key: string, width: number) => void;
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   onResetLayout: () => void;
   customizerLabels: ModuleColumnCustomizerLabels;
@@ -43,21 +56,17 @@ interface TeachersWorkTierProps {
   onBulkExport?: () => void | Promise<void>;
   sortField: TeacherSortField;
   sortDir: "asc" | "desc";
-  isColumnVisible: (key: string) => boolean;
-  getColumnWidth: (key: string) => number | undefined;
-  onColumnResize: (key: string, width: number) => void;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
   onSpecializationChange: (value: string) => void;
+  onGenderChange: (value: string) => void;
   onToggleDeleted: () => void;
   onClearFilters: () => void;
   onRetry: () => unknown;
   onEdit: (teacher: Teacher) => void;
-  onDelete: (id: string, deletionReason?: string) => void | Promise<void>;
   onRestore: (id: string) => void | Promise<void>;
-  onBulkDelete: (ids: string[], deletionReason?: string) => void | Promise<void>;
-  onBulkRestore: (ids: string[]) => void | Promise<void>;
   onBulkStatusChange?: (ids: string[], status: string) => void | Promise<void>;
+  bulkStatusPending?: boolean;
   onWhatsApp?: (teachers: Teacher[]) => void;
   onSms?: (teachers: Teacher[]) => void;
   onEmail?: (teachers: Teacher[]) => void;
@@ -65,9 +74,8 @@ interface TeachersWorkTierProps {
   onPageChange: (page: number) => void;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
-  /** Page-owned composer passed to the detail drawer (Students parity). */
-  openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
-  canWriteMessaging: boolean;
+  /** Page-owned overlay interactions (composer, confirms, drawer target). */
+  workOverlays: TeachersWorkOverlayInteractions;
 }
 
 export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Element {
@@ -75,14 +83,31 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
   const filterChips = buildTeachersWorkFilterChips({
     filterStatus: props.filterStatus,
     filterSpecialization: props.filterSpecialization,
+    filterGender: props.filterGender,
     onToggleStatus: props.onToggleStatus,
     onSpecializationChange: props.onSpecializationChange,
+    onGenderChange: props.onGenderChange,
     t,
   });
 
   const statusConfig = useTeacherStatusConfig();
-  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
-  const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
+
+  const handleBulkStatusChange = async (status: string): Promise<void> => {
+    try {
+      await props.onBulkStatusChange?.(props.selectedIds, status);
+      props.onClearSelection();
+    } catch {
+      // Toast already emitted by the crud action; keep selection for retry.
+    }
+  };
+
+  const handleSortFieldChange = (field: TeacherSortField): void => {
+    if (field === props.sortField) {
+      props.onSortChange(field, props.sortDir === "asc" ? "desc" : "asc");
+    } else {
+      props.onSortChange(field, "asc");
+    }
+  };
 
   const selectionTargets = computeTeachersSelectionTargets({
     selectedIds: props.selectedIds,
@@ -100,6 +125,11 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           search={props.search}
           filterStatus={props.filterStatus}
           filterSpecialization={props.filterSpecialization}
+          filterGender={props.filterGender}
+          quickFilter={props.quickFilter}
+          onQuickFilterChange={props.onQuickFilterChange}
+          genderFilters={props.genderFilters}
+          activeFilterCount={props.activeFilterCount}
           statusOptions={props.statusOptions}
           specializationOptions={props.specializationOptions}
           showDeleted={props.showDeleted}
@@ -108,14 +138,18 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           onClearFilters={props.onClearFilters}
           shownCount={props.workPageData?.total ?? 0}
           columnRegistry={props.columnRegistry}
+          isColumnVisible={props.isColumnVisible}
           updateUserColumnLayout={props.updateUserColumnLayout}
           onResetLayout={props.onResetLayout}
           customizerLabels={props.customizerLabels}
           viewMode={props.viewMode}
           onViewModeChange={props.onViewModeChange}
+          sortField={props.sortField}
+          onSortChange={handleSortFieldChange}
           onSearchChange={props.onSearchChange}
           onToggleStatus={props.onToggleStatus}
           onSpecializationChange={props.onSpecializationChange}
+          onGenderChange={props.onGenderChange}
           onToggleDeleted={props.onToggleDeleted}
         />
 
@@ -127,16 +161,18 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           showDeleted={props.showDeleted}
           canWrite={props.canWrite}
           canDelete={props.canDelete}
+          canWriteMessaging={props.workOverlays.canWriteMessaging}
           statusConfig={statusConfig}
           onSms={props.onSms}
           onWhatsApp={props.onWhatsApp}
           onEmail={props.onEmail}
-          onBulkStatusChange={props.onBulkStatusChange}
-          onRequestBulkDelete={() => setConfirmBulkDeleteOpen(true)}
-          onRequestBulkRestore={() => setConfirmBulkRestoreOpen(true)}
+          onBulkStatusChange={handleBulkStatusChange}
+          onRequestBulkDelete={() => props.workOverlays.setConfirmBulkDeleteOpen(true)}
+          onRequestBulkRestore={() => props.workOverlays.setConfirmBulkRestoreOpen(true)}
           onClearSelection={props.onClearSelection}
           canExport={props.canExport}
           onBulkExport={props.onBulkExport ? () => void props.onBulkExport?.() : undefined}
+          statusPending={props.bulkStatusPending}
         />
 
         <ModuleWorkListStateShell
@@ -160,11 +196,9 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
             viewMode={props.viewMode}
             hasActiveFilters={props.hasActiveFilters}
             onEdit={props.onEdit}
-            onDelete={props.onDelete}
             onRestore={props.onRestore}
-            onBulkDelete={props.onBulkDelete}
-            onBulkRestore={props.onBulkRestore}
-            onBulkStatusChange={props.onBulkStatusChange}
+            onDeleteTargetChange={props.workOverlays.setDeleteTarget}
+            onView={props.workOverlays.setViewTeacher}
             onWhatsApp={props.onWhatsApp}
             onSms={props.onSms}
             onEmail={props.onEmail}
@@ -174,7 +208,6 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
             selectedIds={props.selectedIds}
             onSelectOne={props.onSelectOne}
             onSelectAll={props.onSelectAll}
-            onClearSelection={props.onClearSelection}
             isColumnVisible={props.isColumnVisible}
             columnRegistry={props.columnRegistry}
             getColumnWidth={props.getColumnWidth}
@@ -183,13 +216,9 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
             sortDir={props.sortDir}
             onSortChange={props.onSortChange}
             onClearFilters={props.onClearFilters}
-            onShowActive={props.onToggleDeleted}
-            confirmBulkDeleteOpen={confirmBulkDeleteOpen}
-            confirmBulkRestoreOpen={confirmBulkRestoreOpen}
-            onBulkDeleteOpenChange={setConfirmBulkDeleteOpen}
-            onBulkRestoreOpenChange={setConfirmBulkRestoreOpen}
-            openComposer={props.openComposer}
-            canWriteMessaging={props.canWriteMessaging}
+            onShowActive={() => {
+              if (props.showDeleted) props.onToggleDeleted();
+            }}
           />
         </ModuleWorkListStateShell>
       </ModuleTierMotion>

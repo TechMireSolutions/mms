@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import {
   Briefcase,
   Calendar,
-  Clock,
   GraduationCap,
   Hash,
   Mail,
@@ -11,24 +10,30 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
-import { formatDate, type Teacher } from "@mms/shared";
+import {
+  TEACHERS_TAB_REGISTRY,
+  teacherFieldLabelKey,
+  type Teacher,
+  type TeachersSettings,
+} from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18nFormat";
-import { formatEntityStamp } from "@/lib/formatEntityStamp";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
-import { teacherFieldLabelKey } from "@mms/shared";
 import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/TeacherArchivedBanner";
 import { TeacherDetailAttributeRow } from "@/tenant/features/teachers/components/TeacherDetailAttributeRow";
 import { TeacherDetailHero } from "@/tenant/features/teachers/components/TeacherDetailHero";
 import { TeacherDetailNotesSection } from "@/tenant/features/teachers/components/TeacherDetailNotesSection";
 import { TeacherDetailQuickActions } from "@/tenant/features/teachers/components/TeacherDetailQuickActions";
+import type { TeacherDetailFieldRow } from "@/tenant/features/teachers/components/teacherDetailFields";
 import {
   resolveTeacherDisplayName,
   resolveTeacherFieldDisplayText,
@@ -55,6 +60,20 @@ const SYSTEM_FIELD_ICONS: Record<string, LucideIcon> = {
   status: Briefcase,
 };
 
+/** Resolve a tab key to its translated section title (Students grouped-fields parity). */
+function resolveTeacherTabLabel(
+  settings: TeachersSettings,
+  tabId: string,
+  t: TranslationFunction,
+): string {
+  const tabs = settings.formTabs && settings.formTabs.length > 0
+    ? settings.formTabs
+    : TEACHERS_TAB_REGISTRY;
+  const tab = tabs.find((candidate) => candidate.key === tabId);
+  if (!tab) return tabId;
+  return resolveRegistryLabel({ label: tab.label, labelKey: tab.labelKey }, t);
+}
+
 export default function TeacherDetail({
   teacher,
   onClose,
@@ -65,13 +84,14 @@ export default function TeacherDetail({
   canWriteMessaging,
 }: TeacherDetailProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { isFieldEnabled } = useTeacherConfig();
+  const { settings, isFieldEnabled } = useTeacherConfig();
   const {
     statusConfig,
     detailFields,
     linkedContact,
     primaryPhone,
     primaryEmail,
+    hasWhatsAppContact,
     hasVisibleDetailFields,
   } = useTeacherDetailModel(teacher);
 
@@ -79,7 +99,6 @@ export default function TeacherDetail({
   const emptyDash = t("teachers.table.emptyDash");
 
   const displayName = resolveTeacherDisplayName(teacher, t, linkedContact);
-  const stamp = formatEntityStamp(teacher.updatedAt) || formatEntityStamp(teacher.createdAt);
 
   const headerActions = (
     <DetailDrawerRestoreOrEditAction
@@ -93,51 +112,48 @@ export default function TeacherDetail({
     />
   );
 
-  const fieldsCard = useMemo(() => {
+  const fieldsSections = useMemo(() => {
     if (!hasVisibleDetailFields) return null;
 
-    const mutedDash = <span className="text-muted-foreground/40">{emptyDash}</span>;
-
-    const rows: React.ReactNode[] = detailFields
-      .filter((field) => field.key !== "status" && field.key !== "notes")
-      .map((field) => {
-        const label = resolveRegistryLabel(field, t);
-        const icon = field.isCustom
-          ? School
-          : (SYSTEM_FIELD_ICONS[field.key] ?? School);
-        const displayValue = resolveTeacherFieldDisplayText(teacher, field.key, {
-          t,
-          displayName,
-          customFieldLabel: field.label,
-          customFieldType: field.type,
-          isCustom: field.isCustom,
-        });
-        return (
-          <TeacherDetailAttributeRow
-            key={field.key}
-            icon={icon}
-            label={label}
-            value={displayValue || mutedDash}
-          />
-        );
+    const rowForField = (field: TeacherDetailFieldRow): React.ReactNode => {
+      const label = resolveRegistryLabel(field, t);
+      const icon = field.isCustom
+        ? School
+        : (SYSTEM_FIELD_ICONS[field.key] ?? School);
+      const displayValue = resolveTeacherFieldDisplayText(teacher, field.key, {
+        t,
+        displayName,
+        customFieldLabel: field.label,
+        customFieldType: field.type,
+        isCustom: field.isCustom,
       });
-
-    if (teacher.gender) {
-      rows.push(
+      return (
         <TeacherDetailAttributeRow
-          key="gender"
-          icon={getGenderIcon(teacher.gender)}
-          iconClassName={getGenderIconClass(teacher.gender)}
-          label={t(teacherFieldLabelKey("gender"))}
-          value={formatContactGenderLabel(teacher.gender, t)}
-        />,
+          key={field.key}
+          variant="inset"
+          icon={icon}
+          label={label}
+          value={displayValue || emptyDash}
+        />
       );
-    }
+    };
 
+    const contactRows: React.ReactNode[] = [];
+    contactRows.push(
+      <TeacherDetailAttributeRow
+        key="gender"
+        variant="inset"
+        icon={getGenderIcon(teacher.gender)}
+        iconClassName={getGenderIconClass(teacher.gender)}
+        label={t(teacherFieldLabelKey("gender"))}
+        value={teacher.gender ? formatContactGenderLabel(teacher.gender, t) : emptyDash}
+      />,
+    );
     if (primaryPhone) {
-      rows.push(
+      contactRows.push(
         <TeacherDetailAttributeRow
           key="phone"
+          variant="inset"
           icon={Phone}
           label={t(teacherFieldLabelKey("phone"))}
           value={primaryPhone}
@@ -145,9 +161,10 @@ export default function TeacherDetail({
       );
     }
     if (primaryEmail) {
-      rows.push(
+      contactRows.push(
         <TeacherDetailAttributeRow
           key="email"
+          variant="inset"
           icon={Mail}
           label={t(teacherFieldLabelKey("email"))}
           value={primaryEmail}
@@ -155,15 +172,37 @@ export default function TeacherDetail({
       );
     }
 
-    return (
-      <Card accentColor="primary" className="p-4">
-        <DetailSectionTitle className="mb-2">
-          {t("teachers.detail.sectionDetails")}
-        </DetailSectionTitle>
-        {rows}
-      </Card>
-    );
-  }, [detailFields, displayName, emptyDash, hasVisibleDetailFields, primaryEmail, primaryPhone, t, teacher]);
+    const byTab = new Map<string, TeacherDetailFieldRow[]>();
+    const order: string[] = [];
+    for (const field of detailFields) {
+      if (field.key === "status" || field.key === "notes") continue;
+      let list = byTab.get(field.tab);
+      if (!list) {
+        list = [];
+        byTab.set(field.tab, list);
+        order.push(field.tab);
+      }
+      list.push(field);
+    }
+
+    // Contact-owned rows (gender/phone/email) attach to the basic profile tab.
+    const basicTabId = "basic";
+    if (contactRows.length > 0 && !order.includes(basicTabId)) order.unshift(basicTabId);
+
+    return order.map((tabId) => {
+      const rows: React.ReactNode[] = (byTab.get(tabId) ?? []).map(rowForField);
+      if (tabId === basicTabId) rows.push(...contactRows);
+      if (rows.length === 0) return null;
+      return (
+        <div key={tabId} className="space-y-2">
+          <DetailSectionTitle>
+            {resolveTeacherTabLabel(settings, tabId, t)}
+          </DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">{rows}</Card>
+        </div>
+      );
+    });
+  }, [detailFields, displayName, emptyDash, hasVisibleDetailFields, primaryEmail, primaryPhone, settings, t, teacher]);
 
   return (
     <DetailDrawerShell
@@ -183,14 +222,11 @@ export default function TeacherDetail({
       headerActions={headerActions}
       headerExtra={<TeacherArchivedBanner teacher={teacher} />}
       footer={
-        stamp ? (
-          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-            <Clock className="w-3 h-3" aria-hidden />
-            <span>
-              {t("teachers.detail.updatedLabel")} {formatDate(stamp)}
-            </span>
-          </div>
-        ) : null
+        <DrawerUpdatedStamp
+          updatedAt={teacher.updatedAt}
+          createdAt={teacher.createdAt}
+          label={t("teachers.detail.updatedLabel")}
+        />
       }
     >
       <TeacherDetailHero
@@ -207,14 +243,15 @@ export default function TeacherDetail({
           displayName={displayName}
           primaryPhone={primaryPhone}
           primaryEmail={primaryEmail}
+          hasWhatsAppContact={hasWhatsAppContact}
           canWriteMessaging={canWriteMessaging}
           onOpenComposer={openComposer}
         />
       )}
 
-      {fieldsCard}
+      {fieldsSections}
 
-      {teacher.notes && (
+      {teacher.notes && isFieldEnabled("notes") && (
         <TeacherDetailNotesSection notes={teacher.notes} />
       )}
     </DetailDrawerShell>

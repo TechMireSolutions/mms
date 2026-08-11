@@ -5,6 +5,7 @@ import { Denomination, StockBatch } from '@/lib/data/hasanatData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StockAddBatchModal } from '@/tenant/features/hasanat/components/StockAddBatchModal';
@@ -66,9 +67,12 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
                 <p className="truncate text-xs text-muted-foreground m-0">{t('hasanat.stock.pointsAvailable', { points: den.points, remaining: totalRemaining, total: totalStock })}</p>
               </div>
               <div className="w-20 shrink-0">
-                <div className="h-1.5 rounded-full bg-border overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${den.name} availability`}>
-                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: den.color }} />
-                </div>
+                <ProgressBar
+                  value={pct}
+                  fillStyle={{ background: den.color }}
+                  trackClassName="bg-border"
+                  aria-label={`${den.name} availability`}
+                />
                 <p className="text-xs text-end text-muted-foreground mt-0.5 m-0">{pct}%</p>
               </div>
             </header>

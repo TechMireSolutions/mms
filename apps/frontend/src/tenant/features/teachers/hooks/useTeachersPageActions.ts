@@ -118,6 +118,7 @@ export function useTeachersPageActions({
       );
     } catch (error) {
       handleError(error, "teachers.bulk_status", "teachers.bulkStatusFailed");
+      throw error;
     }
   };
 

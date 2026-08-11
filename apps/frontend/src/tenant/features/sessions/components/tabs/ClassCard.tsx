@@ -3,6 +3,7 @@ import { Edit2, GraduationCap, MessageCircle, MessageSquare, Trash2, Users } fro
 import type { Teacher } from "@mms/shared";
 
 import { Button } from "@/components/ui/button";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -81,9 +82,12 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
           <span className="text-xs text-muted-foreground">{t("sessions.classes.form.capacity")}</span>
           <span className="text-xs font-semibold text-foreground">{sessionClass.enrolled}/{sessionClass.capacity}</span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-border" aria-hidden="true">
-          <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${Math.min(capacityPercent, 100)}%` }} />
-        </div>
+        <ProgressBar
+          value={Math.min(capacityPercent, 100)}
+          fillClassName={barColor}
+          trackClassName="bg-border"
+          aria-hidden="true"
+        />
       </div>
     </motion.article>
   );

@@ -1,9 +1,9 @@
 import { matchesWidgetFilter } from './utils.js';
 
 export type StudentsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-export type StudentsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
+type StudentsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
 
-export interface StudentsWidgetFilter {
+interface StudentsWidgetFilter {
   field: string;
   operator?: StudentsWidgetFilterOperator;
   value?: string;
@@ -104,17 +104,6 @@ export function computeStudentsWidgetAggregate(
     totalCount,
     chartData: buildChartData(filtered, query),
   };
-}
-
-export function computeStudentsWidgetAggregates(
-  students: StudentRow[],
-  queries: StudentsWidgetQuery[],
-): Record<string, StudentsWidgetAggregateResult> {
-  const results: Record<string, StudentsWidgetAggregateResult> = {};
-  for (const query of queries) {
-    results[query.id] = computeStudentsWidgetAggregate(students, query);
-  }
-  return results;
 }
 
 export function studentsWidgetQueryFromWidget(widget: {

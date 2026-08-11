@@ -36,7 +36,6 @@ const crud = createGenericRelationalService<EnrollmentRecord>({
   idPrefix: 'enr',
 });
 
-export const loadEnrollments = crud.loadAll;
 export const createEnrollment = crud.create;
 export const updateEnrollmentById = crud.updateById;
 export const deleteEnrollmentById = crud.deleteById;

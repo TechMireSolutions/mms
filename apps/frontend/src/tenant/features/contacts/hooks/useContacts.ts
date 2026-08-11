@@ -1,15 +1,9 @@
 export {
   CONTACTS_QUERY_KEY,
-  CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
-  CONTACTS_SAVED_REPORTS_QUERY_KEY,
-  CONTACTS_GOOGLE_SYNC_QUERY_KEY,
   CONTACTS_METRICS_QUERY_KEY,
-  CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
   CONTACTS_DUPLICATES_QUERY_KEY,
-  contactsPaginatedQueryKey,
   useContactsPaginated,
-  fetchContactsPageForQuery,
   useContactsMetrics,
   useContactsReportAnalytics,
   useContactsWidgetAggregates,
@@ -22,18 +16,9 @@ export {
   useContactGoogleSyncMutations,
   useContactColumnPrefs,
   useContactColumnPrefsMutation,
-  useContactsSavedReports,
-  useContactsSavedReportMutations,
   useContactsSavedReportsSource,
-  type ContactsSavedReportCreateInput,
-  type ContactsPaginatedParams,
-  type ContactsReportAnalyticsParams,
-  type ContactsReportAnalyticsResult,
-  type ContactsWidgetAggregateWidgetInput,
-  type ContactsDuplicatesParams,
 } from '@/tenant/features/contacts/hooks/useContactsQueries';
 
 export {
-  useInvalidateContactsQueries,
   useContactMutations,
 } from '@/tenant/features/contacts/hooks/useContactMutations';

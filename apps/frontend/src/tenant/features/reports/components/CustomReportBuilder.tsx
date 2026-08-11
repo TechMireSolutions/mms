@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { X, Sliders } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SectionLabel } from '@/components/ui/SectionLabel';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CustomReportBuilderConfigPanel } from './CustomReportBuilderConfigPanel';
@@ -56,7 +57,7 @@ export default function CustomReportBuilder({ onClose, initialSource }: CustomRe
           </div>
           <div className="min-w-0">
             <h3 className="truncate text-sm font-black text-foreground uppercase tracking-wider leading-none">{t('reports.builder.title')}</h3>
-            <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-wider">{t('reports.builder.subtitle')}</p>
+            <SectionLabel as="p" weight="bold" tracking="wider" className="mt-1">{t('reports.builder.subtitle')}</SectionLabel>
           </div>
         </div>
         <Button

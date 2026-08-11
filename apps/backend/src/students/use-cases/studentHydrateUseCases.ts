@@ -17,9 +17,13 @@ type ContactWithRelationships = Contact & {
  *
  * Contacts are loaded through the contacts composition root (`contactUseCases`),
  * never through raw Drizzle — the same dependency direction the use-case layer
- * uses for every cross-module read.
+ * uses for every cross-module read. The tenant is passed explicitly so hydration
+ * works outside a tenant-scoped request (background jobs, scripts, tests).
  */
-export async function hydrateStudentsFromContacts(rows: Student[]): Promise<Student[]> {
+export async function hydrateStudentsFromContacts(
+  tenant: string,
+  rows: Student[],
+): Promise<Student[]> {
   if (rows.length === 0) return [];
 
   const firstPassIds = new Set<string>();
@@ -30,7 +34,7 @@ export async function hydrateStudentsFromContacts(rows: Student[]): Promise<Stud
   }
 
   let contacts = (
-    firstPassIds.size === 0 ? [] : await contactUseCases.loadContactsByIds([...firstPassIds])
+    firstPassIds.size === 0 ? [] : await contactUseCases.loadContactsByIdsForTenant(tenant, [...firstPassIds])
   ) as ContactWithRelationships[];
   const contactById = new Map(contacts.map((contact) => [String(contact.id), contact]));
 
@@ -60,7 +64,7 @@ export async function hydrateStudentsFromContacts(rows: Student[]): Promise<Stud
     }
   }
   if (secondPassIds.size > 0) {
-    const more = (await contactUseCases.loadContactsByIds([...secondPassIds])) as ContactWithRelationships[];
+    const more = (await contactUseCases.loadContactsByIdsForTenant(tenant, [...secondPassIds])) as ContactWithRelationships[];
     contacts = [...contacts, ...more];
   }
 

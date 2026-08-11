@@ -25,7 +25,6 @@ export {
 } from './contactNestedSchemas.js';
 
 export {
-  CONTACT_WRITE_SYSTEM_KEYS,
   collectContactWriteExtraFieldKeys,
   buildContactWriteSchema,
   contactWriteSchema,
@@ -116,5 +115,3 @@ export const CONTACTS_MODULE_MANIFEST = {
   /** Contact count above which duplicate scan runs as a background job. */
   duplicateScanAsyncMinContacts: 500,
 } as const;
-
-export type ContactsModuleTier = (typeof CONTACTS_MODULE_MANIFEST.tiers)[number];

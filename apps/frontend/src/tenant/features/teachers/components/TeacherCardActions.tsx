@@ -13,7 +13,6 @@ export interface TeacherCardActionsProps {
   teacherId: string;
   displayName: string;
   showDeleted: boolean;
-  showActionsColumn: boolean;
   canWrite: boolean;
   canDelete: boolean;
   onView: (teacher: Teacher) => void;
@@ -31,7 +30,6 @@ export function TeacherCardActions({
   teacherId,
   displayName,
   showDeleted,
-  showActionsColumn,
   canWrite,
   canDelete,
   onView,
@@ -79,25 +77,23 @@ export function TeacherCardActions({
             ariaLabel={`${t("teachers.list.viewDetails")} - ${displayName}`}
             onClick={() => onView(teacher)}
           />
-          {showActionsColumn ? (
-            <TeacherListRowActions
-              teacher={teacher}
-              teacherId={teacherId}
-              showDeleted={showDeleted}
-              canWrite={canWrite}
-              canDelete={canDelete}
-              hideViewItem
-              hideMessagingItems={hasFaceChannels}
-              triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
-              onEdit={onEdit}
-              onRequestDelete={onRequestDelete}
-              onView={onView}
-              onRestore={onRestore}
-              onSms={onSms}
-              onWhatsApp={onWhatsApp}
-              onEmail={onEmail}
-            />
-          ) : null}
+          <TeacherListRowActions
+            teacher={teacher}
+            teacherId={teacherId}
+            showDeleted={showDeleted}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            hideViewItem
+            hideMessagingItems={hasFaceChannels}
+            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            onEdit={onEdit}
+            onRequestDelete={onRequestDelete}
+            onView={onView}
+            onRestore={onRestore}
+            onSms={onSms}
+            onWhatsApp={onWhatsApp}
+            onEmail={onEmail}
+          />
         </>
       }
     />

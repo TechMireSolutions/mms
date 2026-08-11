@@ -63,7 +63,7 @@ export default async function teachersRoutes(
     customPostRoute: true,
     updateFn: (id, data) => teacherUseCases.updateTeacherById(id, data),
     deleteFn: (id, userId, reason) => teacherUseCases.deleteTeacherById(id, userId, reason),
-    restoreFn: (id, userId) => teacherUseCases.restoreTeacherById(id, userId),
+    restoreFn: (id) => teacherUseCases.restoreTeacherById(id),
     loadMetricsFn: () => teacherUseCases.loadTeachersCommandMetrics(),
     loadWidgetAggregatesFn: teacherUseCases.loadTeachersWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
     loadByIdsFn: async (ids, request) => {

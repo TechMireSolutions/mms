@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { FORM_LABEL } from "@/components/ui/formStyles";
+import { LegendChip } from "@/components/ui/LegendChip";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveWidgetChartHex } from "@/lib/brandingChartPalette";
@@ -42,8 +43,11 @@ export function WidgetBuilderColorOptions({
                   : "border-border hover:border-muted-foreground/30 text-muted-foreground bg-card/25"
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full border border-black/5 flex-shrink-0" style={{ background: cMap }} />
-              {t(colorOption.labelKey)}
+              <LegendChip
+                dotStyle={{ background: cMap }}
+                dotClassName="border border-black/5"
+                label={t(colorOption.labelKey)}
+              />
             </Button>
           );
         })}

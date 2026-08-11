@@ -140,7 +140,6 @@ export * from './teacherTypes.js';
 export * from './teacherUtils.js';
 export * from './demoSeedBuilders.js';
 export * from './demoTeachers.js';
-export * from './demoStudents.js';
 export * from './studentTypes.js';
 export * from './studentsModuleManifest.js';
 export * from './studentWriteSchema.js';

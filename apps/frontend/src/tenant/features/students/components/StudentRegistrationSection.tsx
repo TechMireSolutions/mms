@@ -124,12 +124,7 @@ export function StudentRegistrationSection({
           {showRegisteredDate ? (
             <div className="sm:col-span-2">
               <Field label={registeredLabel} hint={t("students.form.registeredDateHint")}>
-                <div
-                  role="text"
-                  aria-readonly="true"
-                  aria-label={`${registeredLabel}: ${registeredDateText}`}
-                  className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5 min-h-11 text-sm text-muted-foreground select-none font-medium"
-                >
+                <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 py-2.5 min-h-11 text-sm text-muted-foreground select-none font-medium">
                   <Clock className="w-4 h-4 text-muted-foreground/60 shrink-0" aria-hidden />
                   <span>{registeredDateText}</span>
                 </div>

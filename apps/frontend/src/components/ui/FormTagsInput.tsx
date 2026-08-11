@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -53,9 +54,11 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selected.map((tag) => (
-            <div
+            <Badge
               key={tag}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
+              pill
+              tone="primary"
+              className="gap-1.5 px-3 py-1"
             >
               <span>{tag}</span>
               <button
@@ -66,7 +69,7 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
               >
                 <X className="w-3 h-3" />
               </button>
-            </div>
+            </Badge>
           ))}
         </div>
       )}

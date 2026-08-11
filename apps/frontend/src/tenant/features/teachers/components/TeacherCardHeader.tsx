@@ -12,7 +12,8 @@ export interface TeacherCardHeaderProps {
   teacherId: string;
   isSelected: boolean;
   displayName: string;
-  showSelectColumn: boolean;
+  /** Column-visibility gate — employees show employee id / gender like Students gates GR/gender on cards. */
+  isColumnVisible: (key: string) => boolean;
   onSelectOne: (id: string) => void;
   onView: (teacher: Teacher) => void;
   reducedMotion?: boolean;
@@ -24,7 +25,7 @@ export function TeacherCardHeader({
   teacherId,
   isSelected,
   displayName,
-  showSelectColumn,
+  isColumnVisible,
   onSelectOne,
   onView,
   reducedMotion = false,
@@ -37,7 +38,6 @@ export function TeacherCardHeader({
       displayName={displayName}
       avatar={teacher.avatar}
       isSelected={isSelected}
-      showSelect={showSelectColumn}
       onSelect={() => onSelectOne(teacherId)}
       selectAriaLabel={t("teachers.table.selectTeacher", { name: displayName })}
       onView={() => onView(teacher)}
@@ -45,7 +45,7 @@ export function TeacherCardHeader({
       reducedMotion={reducedMotion}
       subtitle={
         <DirectoryCardSubtitleStack>
-          {teacher.employeeId ? (
+          {isColumnVisible("employeeId") && teacher.employeeId ? (
             <FormFooterBadge
               tone="muted"
               className="mt-1 max-w-full px-1.5 py-0.5 rounded font-bold tracking-tight truncate self-start"
@@ -53,7 +53,9 @@ export function TeacherCardHeader({
               {teacher.employeeId}
             </FormFooterBadge>
           ) : null}
-          <PersonIdentityMeta gender={teacher.gender} className="font-semibold truncate" />
+          {isColumnVisible("gender") ? (
+            <PersonIdentityMeta gender={teacher.gender} className="font-semibold truncate" />
+          ) : null}
         </DirectoryCardSubtitleStack>
       }
     />

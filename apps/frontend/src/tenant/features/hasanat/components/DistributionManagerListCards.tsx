@@ -6,6 +6,7 @@ import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
 import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
@@ -94,46 +95,35 @@ export function DistributionManagerListCards(props: DistributionManagerListCards
                 }
               />
 
-              <dl className="ms-1 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+              <StatGrid columns="sm2" className="ms-1">
                 {isColumnVisible('recipientClass') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.recipientClass')}</dt>
-                    <dd className="text-foreground">{distribution.recipientClass || '—'}</dd>
-                  </div>
+                  <StatRow label={t('hasanat.columns.distribution.recipientClass')} value={distribution.recipientClass || '—'} />
                 )}
                 {isColumnVisible('quantity') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.quantity')}</dt>
-                    <dd className="font-bold text-foreground">{distribution.quantity}</dd>
-                  </div>
+                  <StatRow label={t('hasanat.columns.distribution.quantity')} value={distribution.quantity} ddClassName="font-bold" />
                 )}
                 {isColumnVisible('reason') && (
-                  <div className={isColumnVisible('recipientClass') || isColumnVisible('quantity') ? '' : 'sm:col-span-2'}>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.reason')}</dt>
-                    <dd className="break-words text-foreground">{distribution.reason || '—'}</dd>
-                  </div>
+                  <StatRow
+                    className={isColumnVisible('recipientClass') || isColumnVisible('quantity') ? '' : 'sm:col-span-2'}
+                    label={t('hasanat.columns.distribution.reason')}
+                    value={distribution.reason || '—'}
+                    ddClassName="break-words"
+                  />
                 )}
                 {isColumnVisible('issuedDate') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.issuedDate')}</dt>
-                    <dd className="text-foreground">{distribution.issuedDate}</dd>
-                  </div>
+                  <StatRow label={t('hasanat.columns.distribution.issuedDate')} value={distribution.issuedDate} />
                 )}
                 {isColumnVisible('issuedBy') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.issuedBy')}</dt>
-                    <dd className="break-words text-foreground">{distribution.issuedBy || '—'}</dd>
-                  </div>
+                  <StatRow label={t('hasanat.columns.distribution.issuedBy')} value={distribution.issuedBy || '—'} ddClassName="break-words" />
                 )}
                 {isColumnVisible('status') && (
-                  <div>
-                    <dt className="text-xs font-semibold text-muted-foreground">{t('hasanat.columns.distribution.status')}</dt>
-                    <dd className="pt-1">
-                      <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
-                    </dd>
-                  </div>
+                  <StatRow
+                    label={t('hasanat.columns.distribution.status')}
+                    value={<StatusBadge status={distribution.status} config={statusConfig} size="sm" />}
+                    dtClassName="mb-1"
+                  />
                 )}
-              </dl>
+              </StatGrid>
 
               <DirectoryCardFooter
                 trailing={

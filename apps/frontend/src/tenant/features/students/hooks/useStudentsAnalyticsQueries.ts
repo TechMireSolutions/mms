@@ -86,5 +86,3 @@ export function useStudentsWidgetAggregates(
   const enabled = options?.enabled ?? true;
   return useQuery(buildStudentsWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
 }
-
-export type { StudentsWidgetAggregateWidgetInput, StudentNextGrNumberParams };

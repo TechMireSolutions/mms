@@ -1,10 +1,13 @@
 import React, { useMemo } from "react";
 import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
 import {
-  ComposedChart, Area, Line, Bar, XAxis, YAxis, CartesianGrid,
+  ComposedChart, Area, Line, Bar, XAxis, YAxis,
   Tooltip, TooltipContentProps
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
+import { Badge } from "@/components/ui/badge";
+import { ChartTooltip } from "@/components/ui/ChartTooltip";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
 import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
@@ -31,14 +34,14 @@ interface EnrollmentPoint {
  */
 const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
   const { t } = useTranslation();
-  if (!active || !payload?.length) return null;
   return (
-    <div className="surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start">
-      <p className="text-muted-foreground/80 text-xs mb-0.5 m-0 font-medium select-none">{label}</p>
-      <p className="font-bold text-foreground m-0 tabular-nums">
-        {t("dashboard.widgets.studentsCount", { count: Number(payload[0].value) })}
-      </p>
-    </div>
+    <ChartTooltip
+      active={active}
+      payload={payload}
+      label={label}
+      labelClassName="text-muted-foreground/80 mb-0.5 font-medium"
+      value={t("dashboard.widgets.studentsCount", { count: Number(payload?.[0]?.value) })}
+    />
   );
 };
 
@@ -137,10 +140,10 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                 </Select>
               </div>
             )}
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>
+            <Badge pill variant="outline" className={`gap-1.5 px-2.5 py-1 ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>
               <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="text-xs font-bold tabular-nums">+{growth}%</span>
-            </div>
+            </Badge>
           </>
         }
       />
@@ -155,9 +158,9 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} domain={["dataMin - 20", "dataMax + 10"]} />
+          <ChartGrid vertical={false} />
+          <XAxis dataKey="month" tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} />
+          <YAxis tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} domain={["dataMin - 20", "dataMax + 10"]} />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: activeColor.stroke, strokeWidth: 1, strokeDasharray: "4 4" }} />
 
           {chartType === "area" && (

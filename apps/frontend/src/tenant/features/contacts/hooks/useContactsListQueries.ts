@@ -20,7 +20,6 @@ import {
 export type { ContactsPaginatedParams } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
 export {
   contactsPaginatedQueryKey,
-  fetchContactsPageForQuery,
   fetchContactById,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
 

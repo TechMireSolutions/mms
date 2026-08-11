@@ -1,18 +1,19 @@
 import type { StudentRecord, User } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
-import { broadcastCollection } from '../../services/websocketService.js';
-import { canDeleteCollection } from '../../services/rbacService.js';
+import { broadcastCollection } from '../../lib/livePush.js';
+import { canDeleteCollection } from '../../lib/rbacCanHelpers.js';
 import type { StudentsRepository } from '../repository/studentsRepository.js';
 import { studentsRepository } from '../repository/studentsRepositoryAdapter.js';
 import {
+  mergeStudentPatch,
   prepareStudentRecord,
   throwGrUniqueConflict,
   StudentPermissionError,
   StudentRestoreConflictError,
 } from './studentNormalizeUseCases.js';
 
-export interface CreateStudentResult {
+interface CreateStudentResult {
   record: StudentRecord;
   /** True when an archived student with the same contactId was restored instead of inserting. */
   restored: boolean;
@@ -85,7 +86,10 @@ export async function updateStudentById(
     if (!tenant) return null;
     const existing = await repo.findById(tenant, id);
     if (!existing || existing.deletedAt) return null;
-    const normalized = prepareStudentRecord({ ...record, id });
+    const normalized = prepareStudentRecord({
+      ...mergeStudentPatch(existing, record),
+      id,
+    });
     try {
       await repo.save(tenant, normalized);
     } catch (error: unknown) {

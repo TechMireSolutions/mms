@@ -9,6 +9,7 @@ import {
   type WorkspaceRole,
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 
@@ -35,9 +36,9 @@ export function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Eleme
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary">
+            <Badge pill tone="primary" className="px-2 font-bold bg-primary/15 border-primary/30">
               {workspaceRoleLabel(role, t)}
-            </span>
+            </Badge>
             <Button
               type="button"
               variant="link"

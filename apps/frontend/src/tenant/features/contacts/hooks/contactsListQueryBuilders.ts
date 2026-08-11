@@ -1,7 +1,6 @@
 import {
   CONTACTS_MODULE_MANIFEST,
   type Contact,
-  type ContactsListPageResult,
   type ContactsQuickFilter,
 } from "@mms/shared";
 import { apiJson } from "@/lib/apiClient";
@@ -91,13 +90,6 @@ export function sameContactsListFilters(
 }
 
 /** Single SQL page — preferred for report visualizer (no unbounded walk). */
-export async function fetchContactsPageForQuery(
-  params: Omit<ContactsPaginatedParams, "enabled">,
-  signal?: AbortSignal,
-): Promise<ContactsListPageResult> {
-  return apiJson<ContactsListPageResult>(buildContactsPageUrl(params), { signal });
-}
-
 export async function fetchContactById(
   contactId: string,
   signal?: AbortSignal,

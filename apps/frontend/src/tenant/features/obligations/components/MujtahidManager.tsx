@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { NameFormModal } from "@/tenant/features/obligations/components/MujtahidNameFormModal";
 import type {
   Mujtahid,
@@ -84,7 +85,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                   className="flex h-auto min-h-11 min-w-0 flex-1 items-center gap-2 px-1 text-sm font-semibold text-foreground shadow-none transition-colors hover:bg-transparent hover:text-primary">
                   {isOpen ? <ChevronDown className="w-4 h-4 shrink-0" aria-hidden="true" /> : <ChevronRight className="w-4 h-4 shrink-0" aria-hidden="true" />}
                   <span className="min-w-0 truncate">{mujtahid.name}</span>
-                  <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-xs font-bold text-muted-foreground">{t("obligations.mujtahids.repsCount", { count: mujtahidReps.length })}</span>
+                  <Badge as="span" pill tone="muted" className="px-1.5 font-bold shrink-0">{t("obligations.mujtahids.repsCount", { count: mujtahidReps.length })}</Badge>
                 </Button>
                 <div className="flex shrink-0 items-center gap-1">
                   <Button type="button" aria-label={t("obligations.mujtahids.addRepAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "add-rep", data: { name: "", mujtahid_id: mujtahid.id } })}

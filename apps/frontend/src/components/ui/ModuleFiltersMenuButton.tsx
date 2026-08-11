@@ -17,6 +17,7 @@ import {
   WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE,
   WORK_TOOLBAR_TRIGGER_FILTER_IDLE,
 } from "@/components/ui/formStyles";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export interface ModuleFiltersMenuTriggerProps extends ComponentPropsWithoutRef<"button"> {
@@ -60,9 +61,9 @@ export const ModuleFiltersMenuTrigger = forwardRef<HTMLButtonElement, ModuleFilt
         <Icon className="w-3.5 h-3.5" aria-hidden="true" />
         <span>{label}</span>
         {isActive ? (
-          <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+          <Badge pill className="w-4 h-4 px-0 font-bold">
             {activeCount}
-          </span>
+          </Badge>
         ) : null}
         {children}
       </Button>

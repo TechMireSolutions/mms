@@ -4,7 +4,6 @@ import {
   STUDENTS_PREFERENCES_QUERY_KEY,
 } from '@/tenant/features/students/hooks/useStudentSetupConfig';
 import {
-  STUDENT_COUNT_QUERY_KEY,
   STUDENTS_METRICS_QUERY_KEY,
   STUDENTS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
@@ -14,7 +13,7 @@ import { STUDENTS_LOOKUPS_QUERY_KEY } from '@/tenant/features/students/hooks/use
 /** Invalidate Students list/metrics/setup/lookups Query keys (mutations + live push). */
 export const invalidateStudentsQueries = createModuleQueryInvalidator({
   list: STUDENTS_QUERY_KEY,
-  count: STUDENT_COUNT_QUERY_KEY,
+  count: STUDENTS_QUERY_KEY,
   metrics: STUDENTS_METRICS_QUERY_KEY,
   widgetAggregates: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
   fieldConfig: STUDENTS_FIELD_CONFIG_QUERY_KEY,

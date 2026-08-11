@@ -23,7 +23,7 @@ import { useContactsSelectionTargets } from "@/tenant/features/contacts/hooks/us
  * Contacts page orchestrator — composes domain slices and builds view prop bags
  * without a flatten→rebuild intermediate.
  */
-export function useContactsPageController() {
+export function useContactsPageView() {
   const {
     canRead,
     canWrite,
