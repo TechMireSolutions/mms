@@ -167,7 +167,7 @@ export function normalizeEnrollmentsSettings(config: unknown): EnrollmentsSettin
       ? (raw.requiredTabs as string[])
       : (raw.requiredTabs as string[] | undefined),
     fields:
-      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields)
+      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields) && Object.keys(raw.fields).length > 0
         ? (raw.fields as EnrollmentsSettings['fields'])
         : defaults.fields,
   };

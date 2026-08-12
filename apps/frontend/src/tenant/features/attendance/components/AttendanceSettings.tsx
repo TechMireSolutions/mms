@@ -12,8 +12,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 import { AttendanceSettingsPreferencesSection } from "@/tenant/features/attendance/components/AttendanceSettingsPreferencesSection";
 
@@ -47,6 +49,19 @@ export function AttendanceSettings() {
   );
   const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key ?? "fields");
 
+  const wrappedFieldsEditor = useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => ATTENDANCE_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_ATTENDANCE_FIELD_SEED,
+        isLockedTab: (key) => key === "basic",
+      }),
+    [fieldsEditor],
+  );
+
   const handleSave = async () => {
     try {
       await saveSettingsAsync();
@@ -65,9 +80,7 @@ export function AttendanceSettings() {
     <section className="max-w-2xl space-y-6">
       <SubTabBar tabs={settingsSubTabs} value={sub} onChange={setSub} />
       {!canEditSetup ? (
-        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-          {t("attendance.settings.readOnly")}
-        </p>
+        <SetupReadOnlyMessage title={t("attendance.settings.readOnly")} />
       ) : (
       <>
       {showPrefs && (
@@ -76,7 +89,7 @@ export function AttendanceSettings() {
 
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
+          editor={wrappedFieldsEditor}
           isCoreField={(tabId, key) => INITIAL_ATTENDANCE_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />

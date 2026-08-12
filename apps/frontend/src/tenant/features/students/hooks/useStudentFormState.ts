@@ -25,7 +25,7 @@ interface UseStudentFormStateOptions {
 }
 
 export function useStudentFormState({ student, onClose, onSave }: UseStudentFormStateOptions) {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
   const { settings, statuses: configStatuses, isFieldEnabled, isFieldRequired } = useStudentConfig();
@@ -164,6 +164,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
 
   return {
     t,
+    dir,
     language,
     saving,
     studentDraft,

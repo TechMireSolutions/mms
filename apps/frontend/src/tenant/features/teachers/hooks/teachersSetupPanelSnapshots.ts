@@ -4,9 +4,11 @@ import {
   TEACHER_LOCKED_ENABLED_TABS,
 } from "@mms/shared";
 
-function withTeacherLockedEnabledTabs(tabIds: Iterable<string>): string[] {
+function withTeacherLockedEnabledTabs(tabIds?: Iterable<string> | null): string[] {
   const next = new Set(
-    [...tabIds].map((tabId) => tabId.toLowerCase()).filter(Boolean),
+    Array.from(tabIds || [])
+      .map((tabId) => String(tabId).toLowerCase())
+      .filter(Boolean),
   );
   for (const locked of TEACHER_LOCKED_ENABLED_TABS) {
     next.add(locked);

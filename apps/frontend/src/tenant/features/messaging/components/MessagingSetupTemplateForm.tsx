@@ -6,6 +6,7 @@ import { FormSelect } from '@/components/ui/FormSelect';
 import { FORM_LABEL, WORK_SURFACE } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
+import { SetupReadOnlyMessage } from '@/components/ui/SetupReadOnlyMessage';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingSetupTemplateFormProps {
@@ -103,7 +104,7 @@ export function MessagingSetupTemplateForm({
           </form>
         </>
       ) : (
-        <p className="rounded-xl border border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground">{t('messaging.setup.readOnly')}</p>
+        <SetupReadOnlyMessage title={t('messaging.setup.readOnly')} />
       )}
     </div>
   );

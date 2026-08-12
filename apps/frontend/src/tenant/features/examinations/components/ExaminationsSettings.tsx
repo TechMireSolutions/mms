@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 
 interface ExaminationsSettingsProps {
@@ -48,6 +49,19 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
 
   const showPrefs = mode === "preferences";
   const showFields = mode === "fields";
+
+  const wrappedFieldsEditor = React.useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => EXAMINATIONS_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_EXAMINATIONS_FIELD_SEED,
+        isLockedTab: (key) => key === "basic",
+      }),
+    [fieldsEditor],
+  );
 
   return (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80" aria-labelledby="exams-settings-title">
@@ -123,7 +137,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
 
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
+          editor={wrappedFieldsEditor}
           isCoreField={(tabId, key) => INITIAL_EXAMINATIONS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />

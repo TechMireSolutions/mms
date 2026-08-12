@@ -34,7 +34,7 @@ export interface UseTeacherFormControllerOptions {
 }
 
 export function useTeacherFormController({ teacher, onClose, onSave }: UseTeacherFormControllerOptions) {
-  const { t, language } = useTranslation();
+  const { t, dir, language } = useTranslation();
   const { settings, isFieldEnabled, isFieldRequired } = useTeacherConfig();
 
   const { statusOptions: statusValues, specializationOptions } = useTeacherLookupOptions();
@@ -198,6 +198,8 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
 
   return {
     t,
+    dir,
+    language,
     saving,
     errors,
     teacherDraft,

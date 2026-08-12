@@ -1,6 +1,7 @@
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useTranslation } from "@/hooks/useTranslation";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { ObligationTypeManager } from "@/tenant/features/obligations/components/ObligationTypeManager";
 import { MujtahidManager } from "@/tenant/features/obligations/components/MujtahidManager";
 import { WakalaTypeManager } from "@/tenant/features/obligations/components/WakalaTypeManager";
@@ -61,9 +62,7 @@ export function ObligationsSetupTier({
       />
 
       {!canEditSetup && (
-        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-          {t("obligations.setup.readOnly")}
-        </p>
+        <SetupReadOnlyMessage title={t("obligations.setup.readOnly")} />
       )}
 
       {canEditSetup && activeTab === "types" && (

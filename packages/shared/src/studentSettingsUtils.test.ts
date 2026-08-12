@@ -241,4 +241,11 @@ describe('normalizeStudentsSettings', () => {
     expect(legacy.maxAge).toBeUndefined();
     expect(legacy.allowSiblingDiscount).toBeUndefined();
   });
+
+  it('falls back to default seed fields when raw.fields is an empty object', () => {
+    const settings = normalizeStudentsSettings({ fields: {} });
+    expect(settings.fields).toBeDefined();
+    expect(Object.keys(settings.fields as Record<string, unknown>).length).toBeGreaterThan(0);
+    expect((settings.fields as any).basic).toBeDefined();
+  });
 });

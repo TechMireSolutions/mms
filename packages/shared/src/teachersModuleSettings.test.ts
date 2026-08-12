@@ -5,6 +5,7 @@ import {
   getSortedTeacherFields,
 } from './teachersModuleSettings.js';
 import { INITIAL_TEACHERS_FIELD_SEED } from './moduleFieldSetupPersons.js';
+import { normalizeTeachersSettings } from './teacherSetupConfigTypes.js';
 
 describe('DEFAULT_TEACHERS_SETTINGS.fields', () => {
   it('defaults to a tabbed FieldDefinition[] map from the seed', () => {
@@ -57,3 +58,13 @@ describe('getSortedTeacherFields', () => {
     expect(DEFAULT_TEACHER_FIELD_DEFS.map((field) => field.id)).toEqual(seedKeys);
   });
 });
+
+describe('normalizeTeachersSettings', () => {
+  it('falls back to default seed fields when raw.fields is an empty object', () => {
+    const normalized = normalizeTeachersSettings({ fields: {} });
+    expect(normalized.fields).toBeDefined();
+    expect(Object.keys(normalized.fields as Record<string, unknown>).length).toBeGreaterThan(0);
+    expect((normalized.fields as any).basic).toBeDefined();
+  });
+});
+

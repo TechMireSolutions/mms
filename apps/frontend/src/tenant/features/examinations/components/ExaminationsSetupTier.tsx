@@ -1,6 +1,7 @@
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { ExaminationsSettings } from "@/tenant/features/examinations/components/ExaminationsSettings";
 
 interface SetupTab {
@@ -32,9 +33,7 @@ export function ExaminationsSetupTier({
           onChange={onTabChange}
         />
         {!canEditSetup ? (
-          <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-            {t("examinations.setup.readOnly")}
-          </p>
+          <SetupReadOnlyMessage title={t("examinations.setup.readOnly")} />
         ) : (
           <ExaminationsSettings mode={activeTab as "fields" | "preferences"} />
         )}

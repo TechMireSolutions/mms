@@ -48,7 +48,11 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
   const storedVersion = typeof rawConfig.version === 'number' ? rawConfig.version : 0;
   const draft = { ...rawConfig } as Partial<StudentsSettings>;
   const hasLegacyFlatFields = isLegacyFlatFields(draft.fields);
-  const hasModernTabbedFields = !!draft.fields && !hasLegacyFlatFields;
+  const hasModernTabbedFields =
+    !!draft.fields &&
+    !hasLegacyFlatFields &&
+    typeof draft.fields === 'object' &&
+    Object.keys(draft.fields).length > 0;
 
   if (!hasModernTabbedFields && (storedVersion < 2 || !draft.fields || hasLegacyFlatFields)) {
     const legacyFields = (draft.fields ?? {}) as Record<string, { enabled?: boolean; required?: boolean }>;
@@ -131,7 +135,10 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
     );
     draft.enabledTabs = draft.enabledTabs ?? defaults.enabledTabs ?? DEFAULT_STUDENT_ENABLED_TABS;
     draft.requiredTabs = draft.requiredTabs ?? defaults.requiredTabs ?? DEFAULT_STUDENT_REQUIRED_TABS;
-    draft.fields = draft.fields ?? defaults.fields;
+    draft.fields =
+      draft.fields && typeof draft.fields === 'object' && Object.keys(draft.fields).length > 0
+        ? draft.fields
+        : defaults.fields;
     draft.columnRegistry = draft.columnRegistry ?? defaults.columnRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY;
   }
 
@@ -142,7 +149,10 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
     ...draft,
     enabledTabs: draft.enabledTabs ?? defaults.enabledTabs ?? DEFAULT_STUDENT_ENABLED_TABS,
     requiredTabs: draft.requiredTabs ?? defaults.requiredTabs ?? DEFAULT_STUDENT_REQUIRED_TABS,
-    fields: draft.fields ?? defaults.fields,
+    fields:
+      draft.fields && typeof draft.fields === 'object' && Object.keys(draft.fields).length > 0
+        ? draft.fields
+        : defaults.fields,
     version: typeof draft.version === 'number' ? draft.version : STUDENT_SETTINGS_VERSION,
   } as StudentsSettings;
 

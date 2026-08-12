@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Shield } from "lucide-react";
-import { INITIAL_USERS_FIELD_SEED, type UsersSettings } from "@mms/shared";
+import { INITIAL_USERS_FIELD_SEED, USERS_TAB_REGISTRY, type UsersSettings } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import type { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 
 type UsersFieldsEditor = ReturnType<typeof useModuleSettingsEditor<UsersSettings>>["fieldsEditor"];
@@ -37,6 +38,19 @@ export function UsersSettingsPanel({
   const { t } = useTranslation();
   const showPrefs = mode === "preferences";
   const showFields = mode === "fields";
+
+  const wrappedFieldsEditor = useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => USERS_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_USERS_FIELD_SEED,
+        isLockedTab: (key) => key === "basic",
+      }),
+    [fieldsEditor],
+  );
 
   const unsavedWarning = showFields
     ? t("users.setup.unsavedFieldsWarning")
@@ -72,7 +86,7 @@ export function UsersSettingsPanel({
 
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
+          editor={wrappedFieldsEditor}
           isCoreField={(tabId, key) => INITIAL_USERS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />
@@ -90,3 +104,4 @@ export function UsersSettingsPanel({
     </Card>
   );
 }
+

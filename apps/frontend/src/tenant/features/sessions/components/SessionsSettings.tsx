@@ -17,6 +17,8 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { SessionsSettingsPreferences } from "@/tenant/features/sessions/components/SessionsSettingsPreferences";
 import { useSessionsSetupSaveActions } from "@/tenant/features/sessions/hooks/useSessionsSetupSaveActions";
 
@@ -44,6 +46,19 @@ export function SessionsSettings(): React.JSX.Element {
     tabRegistry: SESSIONS_TAB_REGISTRY,
   });
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
+
+  const wrappedFieldsEditor = useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => SESSIONS_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_SESSIONS_FIELD_SEED,
+        isLockedTab: (key) => key === "basic",
+      }),
+    [fieldsEditor],
+  );
 
   const settingsSubTabs = useMemo(
     () =>
@@ -109,9 +124,7 @@ export function SessionsSettings(): React.JSX.Element {
       />
 
       {!canEditSetup ? (
-        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-          {t("sessions.setupReadOnly")}
-        </p>
+        <SetupReadOnlyMessage title={t("sessions.setupReadOnly")} />
       ) : (
         <section className={`${WORK_SURFACE} p-5 space-y-4`}>
           <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
@@ -131,7 +144,7 @@ export function SessionsSettings(): React.JSX.Element {
 
           {showFields && (
             <ModuleFieldsSetup
-              editor={fieldsEditor}
+              editor={wrappedFieldsEditor}
               isCoreField={(tabId, key) => INITIAL_SESSIONS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
               onStateChange={() => setSaved(false)}
             />

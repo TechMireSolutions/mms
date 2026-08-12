@@ -23,6 +23,7 @@ import { SettingsCallout, SettingsPanel } from '@/components/ui/SettingsShell';
 import { CategoryManager } from "@/tenant/features/question-bank/components/CategoryManager";
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 
 interface QuestionBankSettingsProps {
   mode?: 'fields' | 'preferences';
@@ -107,6 +108,19 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
     );
     upd('difficultyLevels', updated);
   };
+
+  const wrappedFieldsEditor = React.useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => QUESTION_BANK_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_QUESTION_BANK_FIELD_SEED,
+        isLockedTab: (key) => key === "basic",
+      }),
+    [fieldsEditor],
+  );
 
   return (
     <SettingsPanel
@@ -204,7 +218,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
 
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
+          editor={wrappedFieldsEditor}
           isCoreField={(tabId, key) => INITIAL_QUESTION_BANK_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setFieldsDirty(true)}
         />

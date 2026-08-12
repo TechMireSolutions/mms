@@ -6,6 +6,7 @@ import {
   TEACHERS_MODULE_MANIFEST,
   TEACHER_LOCKED_ENABLED_TABS,
   isTeacherLockedEnabledTab,
+  isTeacherSeedFormTab,
   isTeacherSystemFormField,
   getTeacherSeedFormTab,
   type AppTranslationKey,
@@ -153,6 +154,7 @@ export function TeachersSettings(): React.JSX.Element {
               <ModuleFieldsSetup
                 editor={wrappedFieldsEditor}
                 isCoreField={isTeacherSystemFormField}
+                isProtectedTab={isTeacherSeedFormTab}
                 isLockedTab={isTeacherLockedEnabledTab}
                 onStateChange={() => setSaved(false)}
               />

@@ -124,7 +124,7 @@ export function normalizeUsersSettings(config: unknown): UsersSettings {
       ? (raw.requiredTabs as string[])
       : (raw.requiredTabs as string[] | undefined),
     fields:
-      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields)
+      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields) && Object.keys(raw.fields).length > 0
         ? (raw.fields as UsersSettings['fields'])
         : defaults.fields,
   };

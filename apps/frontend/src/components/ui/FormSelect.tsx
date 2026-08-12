@@ -49,7 +49,7 @@ export function FormSelect({
         className={cn(FORM_SELECT, "appearance-none pe-10 disabled:cursor-not-allowed disabled:opacity-50")}
       >
         {placeholder !== undefined ? <option value="">{placeholder}</option> : null}
-        {options.map((selectOption) => {
+        {(Array.isArray(options) ? options : []).map((selectOption) => {
           const option = typeof selectOption === "string" ? { value: selectOption, label: selectOption } : selectOption;
           return (
             <option key={option.value} value={option.value}>

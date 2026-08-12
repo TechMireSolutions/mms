@@ -2,7 +2,6 @@ import React from "react";
 import { School } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { Teacher } from "@mms/shared";
 import { TeacherFormTabContent } from "@/tenant/features/teachers/components/TeacherFormTabContent";
 import { useTeacherFormController } from "@/tenant/features/teachers/components/useTeacherFormController";
@@ -12,16 +11,19 @@ export interface TeacherFormProps {
   teacher?: Teacher;
   onClose: () => void;
   onSave: (teacher: Teacher) => void | Promise<void>;
+  priority?: boolean;
 }
 
 export function TeacherForm({
   teacher,
   onClose,
   onSave,
+  priority = false,
 }: TeacherFormProps): React.JSX.Element {
-  const { language } = useGlobalSettings();
   const {
     t,
+    dir,
+    language,
     saving,
     errors,
     teacherDraft,
@@ -63,11 +65,13 @@ export function TeacherForm({
         subtitle={t("teachers.form.contactHint")}
         icon={School}
         tall
+        priority={priority}
         tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         tabPanelIdPrefix="teacher-form-tab"
         lang={language}
+        dir={dir}
         cancelLabel={t("common.cancel")}
         saveLabel={saving ? t("teachers.form.saving") : teacher ? t("teachers.form.saveUpdate") : t("teachers.form.saveCreate")}
         onSave={() => { void handleSave(); }}

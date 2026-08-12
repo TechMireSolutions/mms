@@ -180,12 +180,12 @@ export function ModuleFieldsSetupTabCard({
           />
           <div className="border-t border-border pt-3">
             <CustomFieldsBuilder
-              fields={(editor.tabFields[tabId] || [])
+              fields={(Array.isArray(editor.tabFields[tabId]) ? editor.tabFields[tabId] : [])
                 .filter((field) => !isCoreField(tabId, field.key))
                 .map((field) => ({ ...field, id: field.key })) as unknown as CustomFieldConfig[]}
               droppableId={`custom-fields-${tabId}`}
               onChange={(customFields) => {
-                const coreFields = (editor.tabFields[tabId] || []).filter((field) =>
+                const coreFields = (Array.isArray(editor.tabFields[tabId]) ? editor.tabFields[tabId] : []).filter((field) =>
                   isCoreField(tabId, field.key),
                 );
                 onCustomFieldsChange(tabId, [

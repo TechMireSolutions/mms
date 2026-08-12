@@ -1,5 +1,6 @@
 import type { FieldDefinition, TabDefinition } from "@mms/shared";
 import type { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
+import { safeArray } from "@/tenant/hooks/moduleFieldsEditorUtils";
 
 type FieldsEditor = ReturnType<typeof useModuleSettingsEditor>["fieldsEditor"];
 
@@ -21,11 +22,14 @@ export function wrapModuleSetupFieldsEditor({
   initialFieldSeed: Record<string, FieldDefinition[]>;
   isLockedTab: (tabKey: string) => boolean;
 }) {
+  const formTabs = safeArray<TabDefinition>(fieldsEditor?.formTabs);
+  const tabFieldsMap = fieldsEditor?.tabFields || {};
+
   return {
     ...fieldsEditor,
     handleDeleteField,
     handleDeleteTab,
-    formTabs: fieldsEditor.formTabs.map((tab) => {
+    formTabs: formTabs.map((tab) => {
       const seed = getSeedTab(tab.key);
       return {
         ...tab,
@@ -34,12 +38,12 @@ export function wrapModuleSetupFieldsEditor({
       };
     }),
     tabFields: Object.fromEntries(
-      Object.entries(fieldsEditor.tabFields).map(([tabId, list]) => {
-        const seedFields = initialFieldSeed[tabId] || [];
+      Object.entries(tabFieldsMap).map(([tabId, list]) => {
+        const seedFields = safeArray<FieldDefinition>(initialFieldSeed?.[tabId]);
         const seedByKey = new Map(seedFields.map((field) => [field.key, field]));
         return [
           tabId,
-          list.map((field) => ({
+          safeArray<FieldDefinition>(list).map((field) => ({
             ...field,
             labelKey: field.labelKey ?? seedByKey.get(field.key)?.labelKey,
             descriptionKey: field.descriptionKey ?? seedByKey.get(field.key)?.descriptionKey,

@@ -108,7 +108,7 @@ export function normalizeTeachersSettings(config: unknown): TeachersSettings {
     enabledTabs: Array.isArray(raw.enabledTabs) ? (raw.enabledTabs as string[]) : raw.enabledTabs as string[] | undefined,
     requiredTabs: Array.isArray(raw.requiredTabs) ? (raw.requiredTabs as string[]) : raw.requiredTabs as string[] | undefined,
     fields:
-      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields)
+      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields) && Object.keys(raw.fields).length > 0
         ? (raw.fields as TeachersSettings['fields'])
         : defaults.fields,
     columnRegistry: Array.isArray(raw.columnRegistry)

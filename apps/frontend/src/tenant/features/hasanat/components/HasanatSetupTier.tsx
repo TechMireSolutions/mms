@@ -1,5 +1,6 @@
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DenominationsManager } from "@/tenant/features/hasanat/components/DenominationsManager";
 import { HasanatSettings } from "@/tenant/features/hasanat/components/HasanatSettings";
@@ -40,9 +41,7 @@ export function HasanatSetupTier({
           onChange={onTabChange}
         />
         {!canEditSetup ? (
-          <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-            {t("hasanat.setup.readOnly")}
-          </p>
+          <SetupReadOnlyMessage title={t("hasanat.setup.readOnly")} />
         ) : (
           <>
             {activeTab === "denominations" && (

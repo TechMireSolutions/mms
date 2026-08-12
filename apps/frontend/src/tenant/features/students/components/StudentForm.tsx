@@ -14,12 +14,14 @@ interface StudentFormProps {
   student?: Partial<Student> | null;
   onClose: () => void;
   onSave: (student: Student) => void | Promise<void>;
+  priority?: boolean;
 }
 
 export default function StudentForm({
   student,
   onClose,
   onSave,
+  priority = false,
 }: StudentFormProps): React.JSX.Element {
   const form = useStudentFormState({ student, onClose, onSave });
 
@@ -46,11 +48,13 @@ export default function StudentForm({
         subtitle={form.t("students.form.subtitle")}
         icon={GraduationCap}
         tall
+        priority={priority}
         tabs={form.visibleTabs}
         activeTab={form.activeTab}
         onTabChange={form.setActiveTab}
         tabPanelIdPrefix="student-form-tab"
         lang={form.language}
+        dir={form.dir}
         cancelLabel={form.t("common.cancel")}
         saveLabel={form.saving ? form.t("students.form.saving") : student ? form.t("students.form.saveUpdate") : form.t("students.form.saveRegister")}
         onSave={form.handleSave}

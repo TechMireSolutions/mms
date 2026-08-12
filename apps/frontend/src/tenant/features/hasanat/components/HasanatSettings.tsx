@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 
 interface HasanatSettingsProps {
@@ -47,6 +48,19 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
 
   const showPrefs = mode === "preferences";
   const showFields = mode === "fields";
+
+  const wrappedFieldsEditor = React.useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => HASANAT_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_HASANAT_FIELD_SEED,
+        isLockedTab: (key) => key === "basic",
+      }),
+    [fieldsEditor],
+  );
 
   return (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
@@ -86,7 +100,7 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
 
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
+          editor={wrappedFieldsEditor}
           isCoreField={(tabId, key) => INITIAL_HASANAT_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
           onStateChange={() => setSaved(false)}
         />

@@ -46,26 +46,28 @@ export function ModuleStringListLookupEditor({
     }
   };
 
+  const safeItems = Array.isArray(items) ? items : [];
+
   const handleAdd = (): void => {
     const text = draft.trim();
     if (!text || disabled || saving) return;
-    const exists = items.some((item) => item.toLowerCase() === text.toLowerCase());
+    const exists = safeItems.some((item) => item.toLowerCase() === text.toLowerCase());
     if (exists) {
       setDraft("");
       return;
     }
-    void persist([...items, text]).then(() => setDraft(""));
+    void persist([...safeItems, text]).then(() => setDraft(""));
   };
 
   const handleRemove = (label: string): void => {
     if (disabled || saving) return;
-    void persist(items.filter((item) => item !== label));
+    void persist(safeItems.filter((item) => item !== label));
   };
 
   return (
     <Field label={t(titleKey)} hint={t(hintKey)}>
       <ul className="flex flex-wrap gap-2 mb-2" aria-label={t(titleKey)}>
-        {items.map((item) => (
+        {safeItems.map((item) => (
           <li
             key={item}
             className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5 text-xs text-foreground"

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Save, ClipboardList } from "lucide-react";
+import React, { useEffect, useMemo, useRef } from "react";
+import { ClipboardList } from "lucide-react";
 import {
   ENROLLMENTS_TAB_REGISTRY,
   INITIAL_ENROLLMENTS_FIELD_SEED,
@@ -9,13 +9,17 @@ import {
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { FORM_LABEL, WORK_SURFACE } from "@/components/ui/formStyles";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
@@ -34,10 +38,24 @@ export function EnrollmentsSettings(): React.JSX.Element {
     setSaved,
     upd,
     saveSettings,
+    discardDrafts,
   } = useModuleSettingsEditor({
     config,
     tabRegistry: ENROLLMENTS_TAB_REGISTRY,
   });
+
+  const wrappedFieldsEditor = useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => ENROLLMENTS_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_ENROLLMENTS_FIELD_SEED,
+        isLockedTab: (key) => key === "basic",
+      }),
+    [fieldsEditor],
+  );
 
   const settingsSubTabs = useMemo(
     () =>
@@ -49,27 +67,55 @@ export function EnrollmentsSettings(): React.JSX.Element {
     [t],
   );
 
-  const [sub, setSub] = useState<string>(() => settingsSubTabs[0]?.key || "fields");
-  const showFields = sub === "fields";
-  const showPrefs = sub === "preferences";
+  const dirtyRef = useRef({ fields: false, prefs: false });
+
+  const subTabs = useModuleSetupSubTabs({
+    initialKey: settingsSubTabs[0]?.key || "fields",
+    isDirty: (currentKey) => {
+      if (currentKey === "fields") return dirtyRef.current.fields;
+      if (currentKey === "preferences") return dirtyRef.current.prefs;
+      return false;
+    },
+    onDiscard: () => {
+      discardDrafts();
+      dirtyRef.current = { fields: false, prefs: false };
+      setSaved(true);
+    },
+  });
+
+  const showFields = subTabs.showFields;
+  const showPrefs = subTabs.showPrefs;
+
+  const isFieldsDirty = !saved;
+  const isPrefsDirty = !saved;
+  const isDirty = !saved;
+
+  useEffect(() => {
+    dirtyRef.current.fields = isFieldsDirty;
+    dirtyRef.current.prefs = isPrefsDirty;
+  }, [isFieldsDirty, isPrefsDirty]);
 
   const handleSave = (): void => {
     saveSettings();
     notify.success(t("enrollments.settings.saved"));
   };
 
+  const unsavedWarning = showFields
+    ? t("enrollments.setup.unsavedFieldsWarning")
+    : showPrefs
+      ? t("enrollments.setup.unsavedPreferencesWarning")
+      : undefined;
+
   return (
     <div className="space-y-4">
       <SubTabBar
         tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
-        value={sub}
-        onChange={setSub}
+        value={subTabs.sub}
+        onChange={subTabs.handleSubTabChange}
       />
 
       {!canEditSetup ? (
-        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-          {t("enrollments.setupReadOnly")}
-        </p>
+        <SetupReadOnlyMessage title={t("enrollments.setupReadOnly")} />
       ) : (
         <section className={`${WORK_SURFACE} p-5 space-y-4`}>
           <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
@@ -149,24 +195,41 @@ export function EnrollmentsSettings(): React.JSX.Element {
 
           {showFields && (
             <ModuleFieldsSetup
-              editor={fieldsEditor}
+              editor={wrappedFieldsEditor}
               isCoreField={(tabId, key) => INITIAL_ENROLLMENTS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
               onStateChange={() => setSaved(false)}
             />
           )}
 
-          <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-            <Button
-              type="button"
-              onClick={handleSave}
-              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
-            >
-              <Save className="w-4 h-4" />
-              {saved ? t("settings.savedBadge") : t("common.save")}
-            </Button>
-          </footer>
+          <ModuleSetupSaveFooter
+            dirty={isDirty}
+            saving={false}
+            saved={saved}
+            unsavedWarning={unsavedWarning}
+            saveLabel={t("common.save")}
+            savedLabel={t("settings.savedBadge")}
+            onSave={handleSave}
+          />
         </section>
       )}
+
+      <ConfirmAlertDialog
+        open={subTabs.discardConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) subTabs.clearPendingSubTab();
+        }}
+        title={t("settings.unsavedChanges")}
+        description={
+          subTabs.discardConfirmIsFields
+            ? t("enrollments.setup.discardUnsavedFieldsConfirm")
+            : t("enrollments.setup.discardUnsavedPreferencesConfirm")
+        }
+        confirmLabel={t("common.yes")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={subTabs.handleConfirmDiscard}
+      />
     </div>
   );
 }
+

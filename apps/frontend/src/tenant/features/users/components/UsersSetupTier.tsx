@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useModuleSetupSubTabs } from '@/lib/setup/useModuleSetupSubTabs';
+import { SetupReadOnlyMessage } from '@/components/ui/SetupReadOnlyMessage';
 import { RolesPermissions } from '@/tenant/features/users/components/RolesPermissions';
 import { UsersSettingsPanel } from '@/tenant/features/users/components/UsersSettingsPanel';
 import { useUsersSetupPanelState } from '@/tenant/features/users/hooks/useUsersSetupPanelState';
@@ -88,9 +89,7 @@ export function UsersSetupTier({
         onChange={subTabs.handleSubTabChange}
       />
       {!canEditSetup ? (
-        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-          {t('users.setup.readOnly')}
-        </p>
+        <SetupReadOnlyMessage title={t('users.setup.readOnly')} />
       ) : (
         <>
           {subTabs.sub === 'permissions' ? (
