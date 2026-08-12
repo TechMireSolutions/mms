@@ -211,6 +211,13 @@
       "when": 1786057000000,
       "tag": "0029_enrollment_setup_config",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1786569600000,
+      "tag": "0030_schema_performance_and_audit_triggers",
+      "breakpoints": true
     }
   ]
 }

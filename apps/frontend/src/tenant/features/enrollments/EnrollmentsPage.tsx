@@ -4,7 +4,7 @@ import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, Download, Plus, UserCheck } from "lucide-react";
+import { ClipboardList, UserCheck } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -13,8 +13,8 @@ import { EnrollmentsModalLayer } from "@/tenant/features/enrollments/components/
 import { EnrollmentsReportsTier } from "@/tenant/features/enrollments/components/EnrollmentsReportsTier";
 import { EnrollmentsSetupTier } from "@/tenant/features/enrollments/components/EnrollmentsSetupTier";
 import { EnrollmentsWorkTier } from "@/tenant/features/enrollments/components/EnrollmentsWorkTier";
+import { EnrollmentsPageHeaderActions } from "@/tenant/features/enrollments/components/EnrollmentsPageHeaderActions";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ActionButton } from "@/components/ui/ActionButton";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import {
   useEnrollmentMutations,
@@ -160,22 +160,17 @@ export default function EnrollmentsPage() {
       headerTitle={t("nav.enrollments")}
       headerSubtitle={t("page.enrollments.subtitle")}
       headerActions={
-        <div className="flex items-center gap-2">
-          {canExport && !showDeleted ? (
-            <ActionButton variant="ghost" icon={Download} onClick={() => void handleExportCSV()}>
-              {t("common.export")}
-            </ActionButton>
-          ) : null}
-          {canWriteEnrollments && !showDeleted && (
-            <ActionButton
-              variant="primary"
-              icon={Plus}
-              onClick={() => { setTab("work"); setShowWizard(true); }}
-            >
-              {t("enrollments.new")}
-            </ActionButton>
-          )}
-        </div>
+        <EnrollmentsPageHeaderActions
+          canExport={canExport}
+          canWriteEnrollments={canWriteEnrollments}
+          showDeleted={showDeleted}
+          t={t}
+          onExport={() => void handleExportCSV()}
+          onNew={() => {
+            setTab("work");
+            setShowWizard(true);
+          }}
+        />
       }
       metricsStrip={
         <EnrollmentsCommandMetrics total={filteredCount} shown={filteredCount} />
