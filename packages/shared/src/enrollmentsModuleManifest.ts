@@ -29,6 +29,7 @@ export const enrollmentRecordSchema = z.object({
   paymentStatus: z.enum(["paid", "pending", "none"]),
   notes: z.string(),
   timeline: z.array(enrollmentTimelineItemSchema),
+  customData: z.record(z.string(), z.unknown()).optional(),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),

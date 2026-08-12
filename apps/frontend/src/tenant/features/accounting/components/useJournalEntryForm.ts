@@ -3,7 +3,8 @@ import { generateJERef, type Account, type JournalEntry, type FiscalYear } from 
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { journalEntryRecordSchema, todayISO } from "@mms/shared";
+import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
+import { applyDfsCustomFieldDefaults, validateDfsCustomFields, journalEntryRecordSchema, todayISO } from "@mms/shared";
 import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
 
 const EMPTY_LINE = (): DraftLine => ({ id: `l-${crypto.randomUUID()}`, account_id: "", debit: "", credit: "", description: "" });
@@ -19,13 +20,15 @@ interface UseJournalEntryFormOptions {
 export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears }: UseJournalEntryFormOptions) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { data: dfsTabs } = useModuleTabs("accounting");
   const isEdit = !!initial?.id;
   const activeFiscalYear = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
 
-  const [form, setForm] = useState<DraftForm>(
-    initial
+  const [form, setForm] = useState<DraftForm>(() => {
+    const base: DraftForm = initial
       ? {
           ...initial,
+          customData: initial.customData ?? {},
           lines: initial.lines.map((entryLine) => ({ ...entryLine, debit: entryLine.debit || "", credit: entryLine.credit || "" }))
         }
       : {
@@ -37,35 +40,38 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
           tags: [],
           attachments: [],
           fiscal_year: activeFiscalYear,
+          customData: {},
           lines: [EMPTY_LINE(), EMPTY_LINE()],
           created_by: user?.name ?? ""
-        }
-  );
+        };
+    return applyDfsCustomFieldDefaults(base, dfsTabs);
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setForm(
-      initial
-        ? {
-            ...initial,
-            lines: initial.lines.map((entryLine) => ({ ...entryLine, debit: entryLine.debit || "", credit: entryLine.credit || "" }))
-          }
-        : {
-            id: "",
-            ref: "",
-            date: todayISO(),
-            description: "",
-            status: "draft",
-            tags: [],
-            attachments: [],
-            fiscal_year: activeFiscalYear,
-            lines: [EMPTY_LINE(), EMPTY_LINE()],
-            created_by: user?.name ?? ""
-          }
-    );
+    const base: DraftForm = initial
+      ? {
+          ...initial,
+          customData: initial.customData ?? {},
+          lines: initial.lines.map((entryLine) => ({ ...entryLine, debit: entryLine.debit || "", credit: entryLine.credit || "" }))
+        }
+      : {
+          id: "",
+          ref: "",
+          date: todayISO(),
+          description: "",
+          status: "draft",
+          tags: [],
+          attachments: [],
+          fiscal_year: activeFiscalYear,
+          customData: {},
+          lines: [EMPTY_LINE(), EMPTY_LINE()],
+          created_by: user?.name ?? ""
+        };
+    setForm(applyDfsCustomFieldDefaults(base, dfsTabs));
     setErrors({});
-  }, [initial, activeFiscalYear, user?.name]);
+  }, [initial, activeFiscalYear, user?.name, dfsTabs]);
 
   const totalDebit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0);
   const totalCredit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0);
@@ -105,6 +111,15 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     if (filledLines.length < 2) validationErrors.lines = t("accounting.journal.form.errorLines");
     if (!isBalanced) validationErrors.balance = t("accounting.journal.form.errorBalance");
     form.lines.forEach((journalLine, lineIndex) => { if (!journalLine.account_id) validationErrors[`line${lineIndex}`] = t("accounting.journal.form.errorAccountRequired"); });
+
+    // DFS customData dynamic Zod schema validation
+    const dfsErrors = validateDfsCustomFields(dfsTabs, form.customData, form as unknown as Record<string, unknown>);
+    for (const dfsErr of dfsErrors) {
+      if (!validationErrors[dfsErr.fieldId]) {
+        validationErrors[dfsErr.fieldId] = dfsErr.message;
+      }
+    }
+
     return validationErrors;
   };
 
@@ -168,5 +183,6 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     saveEntry,
     flattenedAccountOptions,
     errorMessages,
+    dfsTabs,
   };
 }

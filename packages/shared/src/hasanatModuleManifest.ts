@@ -45,6 +45,7 @@ export const distributionRecordSchema = z.object({
   issuedByUserId: z.string().optional(),
   issuedBy: z.string().optional(),
   status: z.enum(['active', 'redeemed', 'returned']),
+  customData: z.record(z.string(), z.unknown()).optional(),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),

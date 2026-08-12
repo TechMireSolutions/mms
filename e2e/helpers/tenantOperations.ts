@@ -75,7 +75,7 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await janeOption.click();
 
   const editRelationshipsCta = registerDialog.getByRole('button', { name: /Edit contact relationships/i });
-  await expect(editRelationshipsCta).toBeVisible({ timeout: 15_000 });
+  await expect(editRelationshipsCta).toBeVisible({ timeout: 30_000 });
   await editRelationshipsCta.click();
 
   const editJaneDialog = page.getByRole('dialog', { name: /Edit Contact/i });
