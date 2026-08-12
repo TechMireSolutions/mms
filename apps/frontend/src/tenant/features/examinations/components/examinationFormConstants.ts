@@ -21,4 +21,5 @@ export const EXAMINATION_FORM_EMPTY: Omit<Exam, "id"> = {
   classIds: [],
   description: "",
   status: "upcoming",
+  customData: {},
 };

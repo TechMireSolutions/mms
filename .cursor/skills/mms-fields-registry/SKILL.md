@@ -85,9 +85,16 @@ Tables: column registry `{ key, label, enabled, order, sortable, width }`.
 - Locked tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic`) + `useModuleSettingsEditor({ lockedEnabledTabs })` on save/sync.
 - Fields Save: dirty-gated; sync `columnRegistry` via `syncContactColumnRegistryWithFields` on Fields save.
 
-## Forms
+## Forms & Dynamic Form System (DFS)
 
-Entity create/edit uses **static** `FormModal` + shared Zod — **ban** dynamic form compilers / memoized validation compilation. Norms → `mms-form-architecture.mdc` · skill **`mms-form-architecture`**.
+Entity create/edit and custom fields/tabs use the approved **Dynamic Form System (DFS)** architecture (`DFS.md` v2.0 / `mms-fields.mdc`). 
+
+- Dynamic validation schemas are constructed via `buildDynamicValidationSchema` from `@mms/shared` (`packages/shared/src/utils/dynamicSchemaBuilder.ts`). Currency = decimal-as-string; phone = E.164; date = `YYYY-MM-DD`; `z.unknown()` default (not `z.any()`); `z.preprocess` empty→null on optional fields (`DFS.md` §3.3).
+- Frontend entity forms render dynamic tabs and custom fields using `DynamicForm` and `FieldRenderer` (`apps/frontend/src/components/dynamic-form/`). Client validation is UX only — server re-validates on save (`DFS.md` §4.5).
+- Dynamic field definitions persist via Fastify 5 `/api/v2/modules/:module/tabs` endpoints (`dynamicFormPlugin`), backed by `custom_tabs`, `custom_fields` (both `workspaceSubdomain: text` + composite PK + `FORCE RLS` + app-generated `text` IDs), and the existing `audit_logs` table.
+- Write DTOs: `customFieldConfigSchema` (`.strict()`), `updateFieldBodySchema` (PATCH), `reorderFieldsBodySchema`. RBAC: `authenticateTenant` + `can(module, 'editSetup')` on all writes; `/check-unique` is a probe (not audited).
+- Type-lock: `hasData: true` blocks `type` change (422). Uniqueness enforcer: `unique false→true` scans `customData @>` for duplicates (409).
+- Field metadata: `FIELD_TYPES_META` (`packages/shared/src/constants/fieldTypesMeta.ts`) — 14 types. Custom-field helpers: `createFormCustomFieldHelpers` (`packages/shared/src/createFormCustomFieldHelpers.ts`) for system-vs-custom partitioning.
 
 ## One DraggableFieldList
 

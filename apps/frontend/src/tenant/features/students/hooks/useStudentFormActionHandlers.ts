@@ -5,6 +5,7 @@ import type {
   Student,
   StudentDuplicateReason,
   StudentsSettings,
+  TabConfig,
   ValidationError,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -26,6 +27,7 @@ interface UseStudentFormActionHandlersOptions {
   autoGenerateId: boolean;
   settings: StudentsSettings;
   enabledTabs: Set<string>;
+  dfsTabs?: TabConfig[];
   language: string;
   t: TranslationFunction;
   onSave: (student: Student) => void | Promise<void>;
@@ -52,6 +54,7 @@ export function useStudentFormActionHandlers({
   autoGenerateId,
   settings,
   enabledTabs,
+  dfsTabs,
   language,
   t,
   onSave,
@@ -102,6 +105,7 @@ export function useStudentFormActionHandlers({
         requiredTabs: new Set(settings.requiredTabs || []),
         fields: (settings.fields || {}) as unknown as Record<string, FieldDefinition[]>,
         language,
+        dfsTabs,
       },
       blueprintVersion: settings.version,
       formInstanceId,

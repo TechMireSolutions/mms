@@ -7,6 +7,7 @@ import {
   STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
   STUDENT_PARENT_RELATIONSHIP_LABEL,
   OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
+  collectActiveDfsFields,
   type FieldDefinition,
   type Student,
   type StudentContactRelationshipLink,
@@ -18,6 +19,7 @@ import {
 import { useSessions } from '@/tenant/hooks/collections/sessions';
 import { useContactsByIds, useContactById } from '@/tenant/hooks/collections/contacts';
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
+import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 
@@ -50,6 +52,7 @@ export function useStudentDetailModel(student: Student) {
   const contactList = contacts.data ?? [];
 
   const { settings } = useStudentConfig();
+  const { data: dfsTabs } = useModuleTabs("students");
   const fields = useMemo(() => settings.fields || {}, [settings.fields]);
 
   const tabOrderMap = useMemo(() => {
@@ -89,6 +92,23 @@ export function useStudentDetailModel(student: Student) {
       });
     });
 
+    // Append DFS fields (deduped by key) using the shared collector.
+    const { fields: dfsFields, tabByFieldKey } = collectActiveDfsFields(dfsTabs);
+    for (const field of dfsFields) {
+      if (list.some((existing) => existing.key === field.key)) continue;
+      const dfsTabKey = tabByFieldKey.get(field.key) ?? "";
+      const dfsTabLabel = dfsTabs?.find((t) => t.key === dfsTabKey)?.label;
+      list.push({
+        key: field.key,
+        label: field.label,
+        type: field.type,
+        tab: dfsTabKey,
+        enabled: true,
+        order: (field as { sortOrder?: number }).sortOrder ?? 999,
+        group: dfsTabLabel || t("students.detail.extendedProfiles"),
+      });
+    }
+
     return list.sort((a, b) => {
       const aTabIdx = tabOrderMap[a.tab] ?? 9999;
       const bTabIdx = tabOrderMap[b.tab] ?? 9999;
@@ -97,7 +117,7 @@ export function useStudentDetailModel(student: Student) {
       }
       return (a.order ?? 999) - (b.order ?? 999);
     });
-  }, [fields, enabledTabIds, tabOrderMap, t]);
+  }, [fields, enabledTabIds, dfsTabs, tabOrderMap, t]);
 
   const studentContact = contactList.find((contact) => String(contact.id) === String(student.contactId))
     ?? primaryContact

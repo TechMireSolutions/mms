@@ -1,16 +1,16 @@
 /** Helpers for student form custom (non-seed) fields. */
 import { INITIAL_STUDENT_FIELD_SEED } from './moduleFieldSetupPersons.js';
+import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
+import { applyDfsCustomFieldDefaults } from './dynamicFormHelpers.js';
+import type { Student } from './studentTypes.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
+import type { CustomFieldConfig, TabConfig } from './schemas/dynamicFormSchemas.js';
+
+const helpers = createFormCustomFieldHelpers(INITIAL_STUDENT_FIELD_SEED);
 
 /** Keys owned by static student form chrome (INITIAL_STUDENT_FIELD_SEED). */
 export function listStudentSystemFormFieldKeys(): ReadonlySet<string> {
-  const keys = new Set<string>();
-  for (const tabFields of Object.values(INITIAL_STUDENT_FIELD_SEED)) {
-    for (const field of tabFields) {
-      keys.add(field.key);
-    }
-  }
-  return keys;
+  return helpers.listSystemFormFieldKeys();
 }
 
 /**
@@ -18,32 +18,52 @@ export function listStudentSystemFormFieldKeys(): ReadonlySet<string> {
  * When `tabId` is set, only fields stored under that config tab are returned.
  * When omitted, returns enabled non-seed fields from every tab.
  */
-export function listEnabledCustomStudentFormFields(
-  fields: Record<string, FieldDefinition[]>,
+export function listEnabledCustomStudentFormFields<T extends FieldDefinition | CustomFieldConfig>(
+  fields: Record<string, T[]>,
   tabId?: string,
-): FieldDefinition[] {
-  const systemKeys = listStudentSystemFormFieldKeys();
-  const byKey = new Map<string, FieldDefinition>();
-  const sourceTabs: FieldDefinition[][] =
-    tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
-
-  for (const tabFields of sourceTabs) {
-    for (const field of tabFields) {
-      if (!field.enabled || systemKeys.has(field.key)) continue;
-      if (!byKey.has(field.key)) {
-        byKey.set(field.key, field);
-      }
-    }
-  }
-
-  return [...byKey.values()].sort((left, right) => {
-    const orderDelta = (left.order ?? 0) - (right.order ?? 0);
-    if (orderDelta !== 0) return orderDelta;
-    return left.key.localeCompare(right.key);
-  });
+): T[] {
+  return helpers.listEnabledCustomFormFields(fields, tabId);
 }
 
 /** True when `fieldId` is part of the static form seed for `tabId`. */
 export function isStudentSystemFormField(tabId: string, fieldId: string): boolean {
-  return (INITIAL_STUDENT_FIELD_SEED[tabId] ?? []).some((field) => field.key === fieldId);
+  return helpers.isSystemFormField(tabId, fieldId);
+}
+
+/**
+ * Seeds Setup `defaultValue` for enabled scalar custom fields on new students only.
+ * Does not overwrite keys already present on the draft.
+ */
+export function applyStudentScalarCustomFieldDefaults(
+  draft: Partial<Student>,
+  fields: Record<string, FieldDefinition[]> | undefined,
+): Partial<Student> {
+  if (!fields) return draft;
+  if (draft.id != null && String(draft.id).length > 0) return draft;
+
+  const next: Record<string, unknown> = { ...draft };
+  const customFields = [
+    ...listEnabledCustomStudentFormFields(fields, 'basic'),
+    ...listEnabledCustomStudentFormFields(fields, 'registration'),
+  ];
+  for (const field of customFields) {
+    if (Object.prototype.hasOwnProperty.call(next, field.key)) continue;
+    if (field.defaultValue === undefined || field.defaultValue === null) continue;
+    next[field.key] = field.defaultValue;
+  }
+  return next as Partial<Student>;
+}
+
+/**
+ * Seeds DFS custom field defaults into student draft customData for new students.
+ * Delegates to the shared {@link applyDfsCustomFieldDefaults} helper.
+ */
+export function applyStudentDfsCustomFieldDefaults(
+  draft: Partial<Student>,
+  dfsTabs?: TabConfig[],
+): Partial<Student> {
+  return applyDfsCustomFieldDefaults(
+    draft as { id?: unknown; customData?: Record<string, unknown> | null },
+    dfsTabs,
+  ) as Partial<Student>;
 }

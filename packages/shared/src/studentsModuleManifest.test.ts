@@ -35,8 +35,8 @@ describe('STUDENTS_MODULE_MANIFEST', () => {
     expect(STUDENTS_MODULE_MANIFEST.softDelete.workExcludesDeleted).toBe(true);
   });
 
-  it('orders Setup sub-tabs as fields/preferences/lookups', () => {
-    expect(STUDENTS_MODULE_MANIFEST.setupSubTabs).toEqual(['fields', 'preferences', 'lookups']);
+  it('orders Setup sub-tabs as fields/preferences', () => {
+    expect(STUDENTS_MODULE_MANIFEST.setupSubTabs).toEqual(['fields', 'preferences']);
   });
 });
 

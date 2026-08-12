@@ -1,5 +1,6 @@
 import type React from "react";
-import type { Contact, FieldDefinition, Student } from "@mms/shared";
+import type { Contact, FieldDefinition, Student, TabConfig } from "@mms/shared";
+import { findDfsTab } from "@mms/shared";
 import {
   StudentContactSection,
   StudentGuardianSection,
@@ -9,6 +10,7 @@ import {
   type StudentStatusSelectOption,
 } from "@/tenant/features/students/components/StudentFormSections";
 import { StudentCustomFieldsBlock } from "@/tenant/features/students/components/StudentCustomFieldsBlock";
+import { normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
 
 interface StudentFormTabContentProps {
   tab: string;
@@ -22,7 +24,10 @@ interface StudentFormTabContentProps {
   isGrAutoAssigned: boolean;
   grInputDisabled: boolean;
   statusSelectOptions: StudentStatusSelectOption[];
+  statuses?: string[];
+  onUpdateStatuses?: (statuses: string[]) => void | Promise<void>;
   fields: Record<string, FieldDefinition[]>;
+  dfsTabs?: TabConfig[];
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   getFieldError: StudentFieldErrorGetter;
@@ -44,7 +49,10 @@ export function StudentFormTabContent({
   isGrAutoAssigned,
   grInputDisabled,
   statusSelectOptions,
+  statuses,
+  onUpdateStatuses,
   fields,
+  dfsTabs,
   isFieldEnabled,
   isFieldRequired,
   getFieldError,
@@ -53,41 +61,9 @@ export function StudentFormTabContent({
   onGrNumberChange,
   onDraftChange,
 }: StudentFormTabContentProps): React.JSX.Element {
-  if (tab === "registration") {
-    return (
-      <div className="space-y-6 pb-6">
-        <StudentRegistrationSection
-          studentDraft={studentDraft}
-          isGrAutoAssigned={isGrAutoAssigned}
-          grInputDisabled={grInputDisabled}
-          statusSelectOptions={statusSelectOptions}
-          fields={fields}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          getFieldError={getFieldError}
-          onGrNumberChange={onGrNumberChange}
-          onDraftChange={onDraftChange}
-        />
-        <StudentNotesSection
-          notes={studentDraft.notes}
-          fields={fields}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-        />
-        <StudentCustomFieldsBlock
-          studentDraft={studentDraft}
-          formInstanceId={formInstanceId}
-          fields={fields}
-          tabId="registration"
-          getFieldError={getFieldError}
-          updateDraft={onDraftChange}
-        />
-      </div>
-    );
-  }
-
-  if (tab === "basic") {
+  const normalizedTab = normalizeStudentFormModalTab(tab);
+  const dfsTab = findDfsTab(dfsTabs, tab, normalizedTab);
+  if (normalizedTab === "basic") {
     return (
       <div className="space-y-6 pb-6">
         <StudentContactSection
@@ -115,6 +91,7 @@ export function StudentFormTabContent({
           studentDraft={studentDraft}
           formInstanceId={formInstanceId}
           fields={fields}
+          customFields={dfsTabs?.find((t) => t.key === "basic")?.fields}
           tabId="basic"
           getFieldError={getFieldError}
           updateDraft={onDraftChange}
@@ -123,13 +100,51 @@ export function StudentFormTabContent({
     );
   }
 
-  // Setup custom tabs — customs only for that tabId.
+  if (normalizedTab === "registration") {
+    return (
+      <div className="space-y-6 pb-6">
+        <StudentRegistrationSection
+          studentDraft={studentDraft}
+          isGrAutoAssigned={isGrAutoAssigned}
+          grInputDisabled={grInputDisabled}
+          statusSelectOptions={statusSelectOptions}
+          statuses={statuses}
+          onUpdateStatuses={onUpdateStatuses}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          getFieldError={getFieldError}
+          onGrNumberChange={onGrNumberChange}
+          onDraftChange={onDraftChange}
+        />
+        <StudentNotesSection
+          notes={studentDraft.notes}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+        />
+        <StudentCustomFieldsBlock
+          studentDraft={studentDraft}
+          formInstanceId={formInstanceId}
+          fields={fields}
+          customFields={dfsTabs?.find((t) => t.key === "registration")?.fields}
+          tabId="registration"
+          getFieldError={getFieldError}
+          updateDraft={onDraftChange}
+        />
+      </div>
+    );
+  }
+
+  // Dynamic custom DFS tabs (or setup custom tabs)
   return (
     <div className="space-y-6 pb-6">
       <StudentCustomFieldsBlock
         studentDraft={studentDraft}
         formInstanceId={formInstanceId}
         fields={fields}
+        customFields={dfsTab?.fields}
         tabId={tab}
         getFieldError={getFieldError}
         updateDraft={onDraftChange}
@@ -138,3 +153,4 @@ export function StudentFormTabContent({
     </div>
   );
 }
+

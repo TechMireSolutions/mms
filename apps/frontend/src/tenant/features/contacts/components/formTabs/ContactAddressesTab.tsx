@@ -4,15 +4,11 @@ import { Input } from "@/components/ui/input";
 import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
-import {
-  ContactSubListCustomFields,
-  withSubListCustomFieldDefaults,
-} from "./ContactSubListCustomFields";
 import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
-import { Address, listEnabledCustomContactFormFields } from "@mms/shared";
+import type { Address } from "@mms/shared";
 
 interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
   addressLabels: string[];
@@ -50,24 +46,15 @@ export function ContactAddressesTab({
   const showCity = isFieldEnabled("addresses", "city");
   const showState = isFieldEnabled("addresses", "state");
   const showCountry = isFieldEnabled("addresses", "country");
-  const customFields = listEnabledCustomContactFormFields(fields, "addresses");
-  const allowAdd = resolveSubListAllowAdd(
-    [showLabel, showLine1, showCity, showState, showCountry],
-    customFields.length,
-  );
+  const allowAdd = resolveSubListAllowAdd([showLabel, showLine1, showCity, showState, showCountry]);
   const addresses = contactDraft.addresses || [];
-  const emptyAddress = () =>
-    withSubListCustomFieldDefaults(
-      {
-        label: resolveAddressLabel(undefined, addressLabels, t),
-        line1: "",
-        city: defaultCity,
-        state: defaultProvince,
-        country: defaultCountry,
-      },
-      fields,
-      "addresses",
-    );
+  const emptyAddress = (): Address => ({
+    label: resolveAddressLabel(undefined, addressLabels, t),
+    line1: "",
+    city: defaultCity,
+    state: defaultProvince,
+    country: defaultCountry,
+  });
   const addAddress = () => {
     addSubListItem("addresses", emptyAddress());
   };
@@ -186,15 +173,6 @@ export function ContactAddressesTab({
                     ) : null}
                   </div>
                 ) : null}
-                <ContactSubListCustomFields
-                  tabId="addresses"
-                  fields={fields}
-                  formInstanceId={formInstanceId}
-                  rowIndex={idx}
-                  row={addr}
-                  getListItemError={getListItemError}
-                  onPatch={(patch) => updateAddress(idx, patch)}
-                />
               </div>
             </ListFieldCard>
           );

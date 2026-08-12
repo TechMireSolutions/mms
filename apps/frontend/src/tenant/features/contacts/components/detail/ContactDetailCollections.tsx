@@ -31,7 +31,6 @@ export function ContactDetailCollections({
   const {
     enabledTabIds,
     fields,
-    fieldConfig,
     phoneLabels,
     emailLabels,
     addressLabels,
@@ -73,7 +72,6 @@ export function ContactDetailCollections({
         contact={contact}
         fields={fields}
         enabledTabIds={enabledTabIds}
-        formTabs={fieldConfig.formTabs}
       />
     </>
   );

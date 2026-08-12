@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import {
-  User, BookOpen, Layers, DollarSign, Clock, ArrowRight,
+  User, BookOpen, Layers, DollarSign, Clock, ArrowRight, FileText,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Enrollment } from '@/lib/data/enrollmentData';
@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { formatDate, formatDateTime } from "@mms/shared";
+import { formatDate, formatDateTime, collectActiveDfsFields } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { EnrollmentArchivedBanner } from "@/tenant/features/enrollments/components/EnrollmentArchivedBanner";
 
 interface SectionProps {
@@ -57,7 +58,20 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
   const { t } = useTranslation();
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
   const { formatCurrency } = useFinanceCurrency();
+  const { data: dfsTabs } = useModuleTabs("enrollments");
   const student = resolvedStudents[0];
+
+  // Collect DFS custom fields for read-only display
+  const dfsCustomFields = useMemo(() => {
+    const { fields } = collectActiveDfsFields(dfsTabs);
+    return fields;
+  }, [dfsTabs]);
+
+  // Legacy customFields map from the enrollment record
+  const legacyCustomFields = useMemo(() => {
+    const customFieldsMap = (enrollment as unknown as { customFields?: Record<string, unknown> }).customFields;
+    return customFieldsMap ?? {};
+  }, [enrollment]);
 
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
@@ -142,6 +156,19 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
               : "—"
           } />
         </Section>
+
+        {/* DFS custom fields — read-only display */}
+        {dfsCustomFields.length > 0 && (
+          <Section icon={FileText} title={t("enrollments.detail.sectionCustomFields")}>
+            {dfsCustomFields.map((field) => {
+              const rawValue = legacyCustomFields[field.key];
+              const displayValue = rawValue != null && String(rawValue) !== "" ? String(rawValue) : null;
+              return (
+                <Row key={field.key} label={field.label} value={displayValue ?? "—"} />
+              );
+            })}
+          </Section>
+        )}
 
         {enrollment.timeline && enrollment.timeline.length > 0 && (
           <Section icon={Clock} title={t("enrollments.detail.sectionTimeline")}>

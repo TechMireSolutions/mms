@@ -1,10 +1,8 @@
 import React from 'react';
 import { FORM_LABEL } from '@/components/ui/formStyles';
-import { Input } from '@/components/ui/input';
-import { FormSelect } from '@/components/ui/FormSelect';
-import { RegistryDateField } from '@/components/ui/RegistryDateField';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import { CustomFieldInput } from '@/components/ui/FormCustomFieldInput';
+import { Field } from '@/components/ui/FormPrimitives';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useEnrollmentConfig } from '@/hooks/useStandardModuleConfig';
 
@@ -54,67 +52,34 @@ export function Step6ConfirmationCustomFields({
           );
         }
 
-        if (!['studentId', 'sessionId', 'classId', 'notes'].includes(field.id)) {
-          const rawValue = customFieldValues[field.id];
-          const stringValue = typeof rawValue === 'string' || typeof rawValue === 'number' ? String(rawValue) : '';
-          const boolValue = Boolean(rawValue);
-          return (
-            <div key={field.id}>
-              <label className={FORM_LABEL}>
-                {field.label} {field.required ? '*' : ''}
-              </label>
-              {field.type === 'textarea' ? (
-                <Textarea
-                  id={`custom-${field.id}`}
-                  name={field.id}
-                  value={stringValue}
-                  onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
-                  placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}…`}
-                  required={field.required}
-                />
-              ) : field.type === 'select' ? (
-                <FormSelect
-                  id={`custom-${field.id}`}
-                  name={field.id}
-                  value={stringValue}
-                  onChange={(val) => onCustomFieldChange(field.id, val)}
-                  options={field.options || []}
-                  placeholder={t('enrollments.wizard.step6SelectOption')}
-                />
-              ) : field.type === 'boolean' ? (
-                <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
-                  <Checkbox
-                    id={`custom-${field.id}`}
-                    name={field.id}
-                    checked={boolValue}
-                    onCheckedChange={(checked) => onCustomFieldChange(field.id, checked)}
-                  />
-                  <span className="text-xs font-medium text-foreground">{field.label}</span>
-                </label>
-              ) : field.type === 'date' ? (
-                <RegistryDateField
-                  id={`custom-${field.id}`}
-                  name={field.id}
-                  value={stringValue}
-                  onChange={(val) => onCustomFieldChange(field.id, val)}
-                  required={field.required}
-                />
-              ) : (
-                <Input
-                  id={`custom-${field.id}`}
-                  name={field.id}
-                  type={field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text'}
-                  value={stringValue}
-                  onChange={(event) => onCustomFieldChange(field.id, event.target.value)}
-                  placeholder={field.placeholder || t('enrollments.wizard.step6EnterField', { label: field.label.toLowerCase() })}
-                  required={field.required}
-                />
-              )}
-            </div>
-          );
-        }
+        if (['studentId', 'sessionId', 'classId', 'notes'].includes(field.id)) return null;
 
-        return null;
+        // Use the shared CustomFieldInput component — eliminates the hand-rolled type-switch
+        // that duplicated FormCustomFieldInput's rendering logic.
+        const rawValue = customFieldValues[field.id];
+        const adaptedField = {
+          key: field.id,
+          label: field.label,
+          type: (field.type || "text") as "text" | "textarea" | "select" | "boolean" | "date" | "number" | "email" | "url" | "phone" | "currency" | "datetime" | "tags" | "file" | "rating",
+          required: field.required,
+          options: field.options,
+          placeholder: field.placeholder,
+          defaultValue: field.defaultValue,
+        };
+        return (
+          <Field
+            key={field.id}
+            label={`${field.label}${field.required ? ' *' : ''}`}
+            required={field.required}
+            id={`custom-${field.id}`}
+          >
+            <CustomFieldInput
+              field={adaptedField as any}
+              value={rawValue}
+              onChange={(value) => onCustomFieldChange(field.id, value)}
+            />
+          </Field>
+        );
       })}
     </div>
   );

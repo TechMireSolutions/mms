@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/teachers/hooks/useTeachers";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
+import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { teacherStatusOptions } from "@/lib/teachers/teacherStatusUi";
 import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
@@ -12,6 +14,7 @@ import {
   TeacherDuplicateReason,
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
+  mergeDfsTabs,
 } from "@mms/shared";
 import type { TeacherStatusOption } from "@/tenant/features/teachers/components/TeacherFormSections";
 import {
@@ -36,6 +39,7 @@ export interface UseTeacherFormControllerOptions {
 export function useTeacherFormController({ teacher, onClose, onSave }: UseTeacherFormControllerOptions) {
   const { t, dir, language } = useTranslation();
   const { settings, isFieldEnabled, isFieldRequired } = useTeacherConfig();
+  const { data: dfsTabs } = useModuleTabs("teachers");
 
   const { statusOptions: statusValues, specializationOptions } = useTeacherLookupOptions();
   const defaultSpecialization =
@@ -67,19 +71,19 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   const formInstanceId = String(teacher?.id ?? "new");
 
   const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() =>
-    getInitialTeacherDraft(teacher, defaultSpecialization),
+    getInitialTeacherDraft({ teacher, defaultSpecialization, dfsTabs }),
   );
   const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
-    teacherDraftSnapshot(getInitialTeacherDraft(teacher, defaultSpecialization)),
+    teacherDraftSnapshot(getInitialTeacherDraft({ teacher, defaultSpecialization, dfsTabs })),
   );
 
   useEffect(() => {
-    const nextDraft = getInitialTeacherDraft(teacher, defaultSpecialization);
+    const nextDraft = getInitialTeacherDraft({ teacher, defaultSpecialization, dfsTabs });
     setTeacherDraft(nextDraft);
     setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
     setErrors({});
     setActiveTab("basic");
-  }, [teacher, defaultSpecialization]);
+  }, [teacher, defaultSpecialization, dfsTabs]);
 
   const updateDraft = (patch: Partial<Teacher>) => {
     setTeacherDraft((prev) => ({ ...prev, ...patch }));
@@ -92,15 +96,23 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     [settings],
   );
 
-  const visibleTabs = useMemo(
-    () =>
-      resolveTeacherFormModalTabs(settings.formTabs, enabledTabs).map((tabItem) => ({
-        key: tabItem.key,
-        icon: tabItem.icon,
-        label: resolveRegistryLabel(tabItem, t),
-      })),
-    [settings.formTabs, enabledTabs, t],
-  );
+  const visibleTabs = useMemo(() => {
+    const resolved = resolveTeacherFormModalTabs(settings.formTabs, enabledTabs).map((tabItem) => ({
+      key: tabItem.key,
+      icon: tabItem.icon,
+      label: resolveRegistryLabel(tabItem, t),
+    }));
+
+    return mergeDfsTabs(
+      resolved,
+      dfsTabs,
+      (dfsTab) => ({
+        key: dfsTab.key,
+        icon: SlidersHorizontal as typeof SlidersHorizontal,
+        label: dfsTab.label,
+      }),
+    );
+  }, [settings.formTabs, enabledTabs, dfsTabs, t]);
 
   useEffect(() => {
     if (!visibleTabs.some((tabItem) => tabItem.key === activeTab)) {
@@ -170,6 +182,7 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
       enabledTabs,
       fields: fieldsMap,
       language,
+      dfsTabs,
       visibleTabKeys: visibleTabs.map((tab) => tab.key),
       t,
       onSave,
@@ -211,6 +224,7 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     autoGenerateId,
     requireContactLink,
     fieldsMap,
+    dfsTabs,
     linkedContact,
     linkedTeacherContactIds,
     idPrefix,
@@ -234,3 +248,4 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     duplicateErrorKeys: DUPLICATE_ERROR_KEYS,
   };
 }
+

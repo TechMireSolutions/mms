@@ -58,10 +58,13 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Tenant protected routes use **`authenticateTenant`** — not raw `jwtVerify`
 - [ ] Cookie CSRF / Origin on state-changing cookie-auth routes
 - [ ] `host` / `x-forwarded-host` tested in `inject()` tests for tenant routes
-- [ ] Zod write DTOs (prefer `.strict()`); no parallel Ajv for same shape
-- [ ] `rbacService` on writes; admin-only on sync download/upload
-- [ ] Drizzle migration + journal via **`mms-schema-migrate`** (no `drizzle-kit push` on shared/prod)
+- [ ] Zod write DTOs (prefer `.strict()`); no parallel Ajv for same shape. DFS: `customFieldConfigSchema`/`updateFieldBodySchema`/`reorderFieldsBodySchema` on every mutating route — no `request.body as any` (`DFS.md` §4.1)
+- [ ] `rbacService` on writes; admin-only on sync download/upload. DFS writes require `can(module, 'editSetup')` (`DFS.md` §4.1)
+- [ ] Drizzle migration + journal via **`mms-schema-migrate`** (no `drizzle-kit push` on shared/prod). DFS `custom_fields` → `migrations_drizzle/0030_custom_fields.sql` + journal `idx:30` + `FORCE RLS` + tenant-scoping policy (`DFS.md` §2.5)
 - [ ] Stable error `type` codes; no stack traces in responses
+- [ ] DFS audit: `onSend` returns `payload`; re-fetches new state from DB; skips `/check-unique` probes + errors (`DFS.md` §4.4)
+- [ ] DFS uniqueness: `fieldKey` registry-validated before `@>` containment; parameterized `sql` only (`DFS.md` §4.2)
+- [ ] DFS server-side `customData` re-validation on entity save via `buildDynamicValidationSchema` + `safeParse` + `unique` enforcement (`DFS.md` §4.5)
 
 ### Frontend API
 - [ ] Internal MMS calls use `apiFetch` / `apiJson` — no raw `fetch('/api/...')`
@@ -78,7 +81,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 ### UI / config
 - [ ] No hardcoded labels/colours/status maps — `t()` + registries
 - [ ] No new `uiStrings` keys outside Contacts module
-- [ ] Fields/tabs from registry
+- [ ] Fields/tabs from DFS (`DFS.md`) / registry
 - [ ] Module tier: `work` | `reports` | `setup`
 - [ ] `ResponsiveAccordionTabs` / `SubTabBar` — no inline tab bars
 - [ ] Mobile-first layout: no fixed `w-[Npx]` page widths; no `max-lg:` layout forks; logical CSS for RTL
@@ -121,6 +124,8 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Field on `@mms/shared` type + `DEFAULT_*` + merge helper
 - [ ] Write reaches PostgreSQL
 - [ ] UI control bound to save path — not orphaned `useState`
+- [ ] DFS: `custom_fields` row uses `workspaceSubdomain: text` + composite PK + app-generated `text` id (`cf_<ts>_<rand>`); `FORCE RLS` in migration (`DFS.md` §2)
+- [ ] DFS: server-side `customData` validation + `unique` enforcement on save (`DFS.md` §4.5) — client validation alone is insufficient
 
 ### Auth / security
 - [ ] No secrets in diff

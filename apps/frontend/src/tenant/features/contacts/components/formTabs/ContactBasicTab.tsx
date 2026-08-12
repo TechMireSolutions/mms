@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import type { Contact, FieldDefinition } from "@mms/shared";
+import type { Contact, CustomFieldConfig } from "@mms/shared";
 import { ContactBasicAvatarSection } from "@/tenant/features/contacts/components/formTabs/ContactBasicAvatarSection";
 import { ContactBasicIdentityFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicIdentityFields";
 import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
@@ -8,7 +8,7 @@ import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/fo
 interface ContactBasicTabProps {
   contactDraft: Partial<Contact>;
   formInstanceId: string;
-  fields: Record<string, FieldDefinition[]>;
+  customFields?: CustomFieldConfig[];
   isFieldEnabled: (tabId: string, fieldId: string) => boolean;
   isFieldRequired: (tabId: string, fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
@@ -24,7 +24,7 @@ interface ContactBasicTabProps {
 export function ContactBasicTab({
   contactDraft,
   formInstanceId,
-  fields,
+  customFields,
   isFieldEnabled,
   isFieldRequired,
   getFieldError,
@@ -65,10 +65,10 @@ export function ContactBasicTab({
         <ContactCustomFieldsTab
           contactDraft={contactDraft}
           formInstanceId={formInstanceId}
-          fields={fields}
-          tabId="basic"
+          customFields={customFields}
           getFieldError={getFieldError}
           updateDraft={updateDraft}
+          tabId="basic"
           hideWhenEmpty
           className="mt-4"
         />
@@ -76,3 +76,4 @@ export function ContactBasicTab({
     </div>
   );
 }
+

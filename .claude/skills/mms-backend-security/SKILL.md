@@ -121,13 +121,14 @@ cd apps/backend && pnpm test
 
 1. Is the route tenant-scoped? → `authenticateTenant` (+ `bindRequestUserId`)
 2. Is the route platform apex? → `requireMainDomain` + `authenticatePlatform` (+ `requireSuperUser` / `requirePlatformPermission` as needed)
-3. Is it a mutation **or** sensitive read? → `rbacService` / `canReadCollection` / `requireAdmin` (tenant) or `platformUserCan` (platform)
-4. Is body validated? → Zod via `parseRequest` before service layer (write schema strips soft-delete when applicable)
-5. Never trust body `workspaceSubdomain` / authz `userId` — session only
-6. Does it touch auth or messaging send? → rate limit preserved
+3. Is it a mutation **or** sensitive read? → `rbacService` / `canReadCollection` / `requireAdmin` (tenant) or `platformUserCan` (platform). DFS config writes require `can(module, 'editSetup')`; `/check-unique` probe requires `authenticateTenant` + `can(module, 'editSetup')` but is NOT audited (`DFS.md` §4.1)
+4. Is body validated? → Zod via `parseRequest` before service layer (write schema strips soft-delete when applicable). DFS uses `.strict()` write DTOs (`customFieldConfigSchema`/`updateFieldBodySchema`/`reorderFieldsBodySchema`)
+5. Never trust body `workspaceSubdomain` / authz `userId` — session only. DFS `workspaceSubdomain` always from `getRequestTenant()`; uniqueness `fieldKey` registry-validated before `@>` query
+6. Does it touch auth or messaging send? → rate limit preserved. DFS `/check-unique` (high-frequency probe) + write routes rate-limited
 7. Prod cookies `Secure`; prefer Helmet/secure headers when touching `app.ts`
 8. Integration test with wrong-subdomain host returns `403`? (platform routes: tenant host must `403`)
 9. New secret store? → FORCE-RLS table + exclude from backup snapshots
+10. New tenant table? → composite PK `(workspace_subdomain, id)` + `FORCE RLS` + tenant-scoping policy (DFS `custom_fields` pattern, `DFS.md` §2.4)
 
 ## Rules
 

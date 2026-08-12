@@ -5,13 +5,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { cn } from "@/lib/utils";
-import { type FieldDefinition, type AppTranslationKey } from "@mms/shared";
+import { type FieldDefinition, type CustomFieldConfig, type AppTranslationKey } from "@mms/shared";
 import { LayoutGrid } from "lucide-react";
 
 export interface ModuleCustomFieldsBlockProps<TRecord extends object> {
   draft: Partial<TRecord>;
   formInstanceId: string;
   fields: Record<string, FieldDefinition[]>;
+  customFields?: (FieldDefinition | CustomFieldConfig)[];
   tabId: string;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<TRecord>) => void;
@@ -27,6 +28,7 @@ export function ModuleCustomFieldsBlock<TRecord extends object>({
   draft,
   formInstanceId,
   fields,
+  customFields,
   tabId,
   getFieldError,
   updateDraft,
@@ -37,9 +39,21 @@ export function ModuleCustomFieldsBlock<TRecord extends object>({
   emptyKey,
 }: ModuleCustomFieldsBlockProps<TRecord>): React.JSX.Element | null {
   const { t } = useTranslation();
-  const customFields = listCustomFields(fields, tabId);
 
-  if (customFields.length === 0) {
+  const activeCustomFields = React.useMemo(() => {
+    const legacyActive = listCustomFields(fields, tabId);
+    if (!customFields) return legacyActive;
+    const dfsActive = customFields.filter((f) => (f as CustomFieldConfig).enabled !== false);
+    const combined = [...dfsActive];
+    for (const leg of legacyActive) {
+      if (!combined.some((f) => f.key === leg.key)) {
+        combined.push(leg);
+      }
+    }
+    return combined;
+  }, [customFields, fields, tabId, listCustomFields]);
+
+  if (activeCustomFields.length === 0) {
     if (hideWhenEmpty) return null;
     return (
       <EmptyState
@@ -52,11 +66,15 @@ export function ModuleCustomFieldsBlock<TRecord extends object>({
 
   return (
     <div className={cn("grid grid-cols-1 gap-4 @md:grid-cols-2", className)}>
-      {customFields.map((field) => {
+      {activeCustomFields.map((field) => {
         const fieldId = `${idPrefix}-${formInstanceId}-${field.key}`;
         const error = getFieldError(field.key);
-        const rawValue = (draft as Record<string, unknown>)[field.key];
-        const inputField: FieldDefinition = { ...field, key: fieldId };
+        const draftObj = draft as Record<string, unknown>;
+        const customDataObj = draftObj.customData as Record<string, unknown> | undefined;
+        const rawValue = draftObj[field.key] ?? customDataObj?.[field.key];
+        const inputField: FieldDefinition | CustomFieldConfig = { ...field, key: fieldId };
+        const isDfsField = Boolean(customFields && customFields.some((f) => f.key === field.key));
+
         return (
           <div
             key={field.key}
@@ -71,7 +89,19 @@ export function ModuleCustomFieldsBlock<TRecord extends object>({
               <CustomFieldInput
                 field={inputField}
                 value={rawValue}
-                onChange={(nextValue) => updateDraft({ [field.key]: nextValue } as Partial<TRecord>)}
+                onChange={(nextValue) => {
+                  if (isDfsField) {
+                    const currentCustomData = (draftObj.customData as Record<string, unknown> | undefined) ?? {};
+                    updateDraft({
+                      customData: {
+                        ...currentCustomData,
+                        [field.key]: nextValue,
+                      },
+                    } as unknown as Partial<TRecord>);
+                  } else {
+                    updateDraft({ [field.key]: nextValue } as Partial<TRecord>);
+                  }
+                }}
                 error={Boolean(error)}
               />
             </Field>
@@ -81,3 +111,4 @@ export function ModuleCustomFieldsBlock<TRecord extends object>({
     </div>
   );
 }
+

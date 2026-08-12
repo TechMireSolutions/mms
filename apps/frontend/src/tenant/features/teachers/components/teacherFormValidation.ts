@@ -1,9 +1,11 @@
 import {
   buildDynamicTeacherSchema,
   formatTeacherZodIssues,
+  validateDfsCustomFields,
   type AppTranslationKey,
   type Contact,
   type FieldDefinition,
+  type TabConfig,
   type TeacherDuplicateReason,
   type TeachersSettings,
   type ValidationError,
@@ -37,9 +39,10 @@ export interface TeacherValidationContext {
   enabledTabs: Set<string>;
   fields: Record<string, FieldDefinition[]>;
   language: string;
+  dfsTabs?: TabConfig[];
 }
 
-/** Validate a teacher form draft against the dynamic Setup registry schema. */
+/** Validate a teacher form draft against the dynamic Setup registry schema + DFS customData. */
 export function validateTeacherDraft(
   draft: Record<string, unknown>,
   context: TeacherValidationContext,
@@ -51,8 +54,16 @@ export function validateTeacherDraft(
     context.language,
   );
   const result = schema.safeParse(draft);
-  if (result.success) return null;
-  return formatTeacherZodIssues(result.error, draft, context.fields);
+  const errors: ValidationError[] = result.success
+    ? []
+    : formatTeacherZodIssues(result.error, draft, context.fields);
+
+  // DFS Dynamic Zod schema validation for active custom fields across module tabs
+  const customData = (draft.customData as Record<string, unknown> | undefined) ?? {};
+  const dfsErrors = validateDfsCustomFields(context.dfsTabs, customData, draft);
+  errors.push(...dfsErrors);
+
+  return errors.length > 0 ? errors : null;
 }
 
 export function teacherValidationErrorsByField(

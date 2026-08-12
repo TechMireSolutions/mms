@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
+import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { studentStatusBadgeConfig, studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { getInitialStudentDraft, studentDraftSnapshot } from "@/tenant/features/students/components/studentFormDraft";
 import type { StudentStatusSelectOption } from "@/tenant/features/students/components/StudentFormSectionShared";
 import { useStudentFormLinkedData } from "@/tenant/features/students/hooks/useStudentFormLinkedData";
 import { useStudentFormActionHandlers } from "@/tenant/features/students/hooks/useStudentFormActionHandlers";
+import { useStudentLookupMutation } from "@/tenant/features/students/hooks/useStudentLookups";
 import { isStudentCreate } from "@/tenant/features/students/hooks/studentFormHandlers";
 import { resolveStudentFormModalTabs, normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
@@ -16,6 +19,7 @@ import {
   type Student,
   resolveStudentStatuses,
   DEFAULT_STUDENT_ENABLED_TABS,
+  mergeDfsTabs,
 } from "@mms/shared";
 
 interface UseStudentFormStateOptions {
@@ -29,22 +33,28 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const { language } = useGlobalSettings();
   const { updateContact } = useContactMutations();
   const { settings, statuses: configStatuses, isFieldEnabled, isFieldRequired } = useStudentConfig();
-
-  const [saving, setSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<import("@mms/shared").ValidationError[]>([]);
-  const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() => getInitialStudentDraft(student));
-  const [baselineSnapshot, setBaselineSnapshot] = useState(() => studentDraftSnapshot(getInitialStudentDraft(student)));
-  const [typedDuplicateReason, setTypedDuplicateReason] = useState<import("@mms/shared").StudentDuplicateReason | null>(null);
-  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
-  const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
-  const [activeTab, setActiveTab] = useState("basic");
-  const grManuallyEdited = useRef(false);
+  const { data: dfsTabs } = useModuleTabs("students");
+  const lookupMutation = useStudentLookupMutation();
 
   const formInstanceId = String(student?.id ?? "new");
   const fields = useMemo(
     () => (settings.fields || {}) as Record<string, FieldDefinition[]>,
     [settings.fields],
   );
+
+  const [saving, setSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<import("@mms/shared").ValidationError[]>([]);
+  const [studentDraft, setStudentDraft] = useState<Partial<Student>>(() =>
+    getInitialStudentDraft({ student, fields, dfsTabs }),
+  );
+  const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
+    studentDraftSnapshot(getInitialStudentDraft({ student, fields, dfsTabs })),
+  );
+  const [typedDuplicateReason, setTypedDuplicateReason] = useState<import("@mms/shared").StudentDuplicateReason | null>(null);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
+  const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
+  const [activeTab, setActiveTab] = useState("basic");
+  const grManuallyEdited = useRef(false);
 
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const statusSelectOptions = useMemo((): StudentStatusSelectOption[] => {
@@ -57,14 +67,18 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     }));
   }, [configStatuses, studentDraft.status, t]);
 
+  const handleUpdateStatuses = async (nextStatuses: string[]) => {
+    await lookupMutation.mutateAsync({ kind: "statuses", items: nextStatuses });
+  };
+
   useEffect(() => {
-    const nextDraft = getInitialStudentDraft(student);
+    const nextDraft = getInitialStudentDraft({ student, fields, dfsTabs });
     setStudentDraft(nextDraft);
     setBaselineSnapshot(studentDraftSnapshot(nextDraft));
     setValidationErrors([]);
     setActiveTab("basic");
     grManuallyEdited.current = false;
-  }, [student]);
+  }, [student, fields, dfsTabs]);
 
   const updateDraft = (patch: Partial<Student>) => {
     setStudentDraft((prev) => ({ ...prev, ...patch }));
@@ -74,15 +88,23 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
 
   const enabledTabs = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
 
-  const visibleTabs = useMemo(
-    () =>
-      resolveStudentFormModalTabs(settings.formTabs, enabledTabs, fields).map((tabItem) => ({
-        key: tabItem.key,
-        icon: tabItem.icon,
-        label: resolveRegistryLabel(tabItem, t),
-      })),
-    [settings.formTabs, enabledTabs, fields, t],
-  );
+  const visibleTabs = useMemo(() => {
+    const resolved = resolveStudentFormModalTabs(settings.formTabs, enabledTabs, fields).map((tabItem) => ({
+      key: tabItem.key,
+      icon: tabItem.icon,
+      label: resolveRegistryLabel(tabItem, t),
+    }));
+
+    return mergeDfsTabs(
+      resolved,
+      dfsTabs,
+      (dfsTab) => ({
+        key: dfsTab.key,
+        icon: SlidersHorizontal as typeof SlidersHorizontal,
+        label: dfsTab.label,
+      }),
+    );
+  }, [settings.formTabs, enabledTabs, fields, dfsTabs, t]);
 
   useEffect(() => {
     const normalized = normalizeStudentFormModalTab(activeTab);
@@ -144,6 +166,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     autoGenerateId,
     settings,
     enabledTabs,
+    dfsTabs,
     language,
     t,
     onSave,
@@ -170,7 +193,10 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     studentDraft,
     statusBadgeConfig,
     statusSelectOptions,
+    statuses: configStatuses,
+    onUpdateStatuses: handleUpdateStatuses,
     fields,
+    dfsTabs,
     formInstanceId,
     activeTab,
     setActiveTab,
@@ -193,3 +219,4 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     ...actions,
   };
 }
+

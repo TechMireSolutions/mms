@@ -35,6 +35,7 @@ export function TeacherForm({
     autoGenerateId,
     requireContactLink,
     fieldsMap,
+    dfsTabs,
     linkedContact,
     linkedTeacherContactIds,
     idPrefix,
@@ -98,6 +99,7 @@ export function TeacherForm({
           teacherDraft={teacherDraft}
           errors={errors}
           fields={fieldsMap}
+          dfsTabs={dfsTabs}
           defaultSpecialization={defaultSpecialization}
           linkedTeacherContactIds={linkedTeacherContactIds}
           specializationOptions={specializationOptions}

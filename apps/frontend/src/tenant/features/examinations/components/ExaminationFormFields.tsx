@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { BookOpen, Trophy, CheckCircle2, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -7,14 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/FormPrimitives";
+import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
 import { Exam } from '@/lib/data/examinationData';
 import { FORM_INPUT } from "@/components/ui/formStyles";
+import { findDfsTab } from "@mms/shared";
 import { EXAMINATION_SUBJECT_OPTIONS } from "./examinationFormConstants";
 import type { useExaminationForm } from "./useExaminationForm";
 
 type ExaminationFormFieldsProps = Pick<
   ReturnType<typeof useExaminationForm>,
-  "t" | "errors" | "examDraft" | "classes" | "updateDraft"
+  "t" | "errors" | "examDraft" | "classes" | "updateDraft" | "dfsTabs" | "getFieldError"
 >;
 
 export function ExaminationFormFields({
@@ -23,7 +25,15 @@ export function ExaminationFormFields({
   examDraft,
   classes,
   updateDraft,
+  dfsTabs,
+  getFieldError,
 }: ExaminationFormFieldsProps): React.JSX.Element {
+  const basicDfsFields = useMemo(() => findDfsTab(dfsTabs, "basic")?.fields, [dfsTabs]);
+  const dfsCustomTabs = useMemo(
+    () => (dfsTabs ?? []).filter((tab) => tab.enabled && tab.key !== "basic"),
+    [dfsTabs],
+  );
+
   return (
     <div className="space-y-5 text-start">
       <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
@@ -174,8 +184,69 @@ export function ExaminationFormFields({
               />
             </Field>
           </div>
+
+          {/* DFS custom fields on the "basic" tab */}
+          {basicDfsFields && basicDfsFields.length > 0 && (
+            <>
+              {basicDfsFields.filter((f) => f.enabled).map((field) => {
+                const customData = (examDraft as Record<string, unknown>).customData as Record<string, unknown> | undefined;
+                const rawValue = customData?.[field.key];
+                const fieldId = `ex-custom-${field.key}`;
+                return (
+                  <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+                    <Field id={fieldId} label={`${field.label}${field.required ? " *" : ""}`} required={field.required} error={getFieldError(field.key)}>
+                      <CustomFieldInput
+                        field={field}
+                        value={rawValue}
+                        onChange={(value) => {
+                          const currentCustomData = ((examDraft as Record<string, unknown>).customData as Record<string, unknown> | undefined) ?? {};
+                          updateDraft({ customData: { ...currentCustomData, [field.key]: value } } as Partial<typeof examDraft>);
+                        }}
+                        error={Boolean(getFieldError(field.key))}
+                      />
+                    </Field>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </Card>
+
+      {/* DFS custom-field-only tabs (non-system tabs) */}
+      {dfsCustomTabs.map((dfsTab) => {
+        const enabledFields = (dfsTab.fields || []).filter((f) => f.enabled);
+        if (enabledFields.length === 0) return null;
+        return (
+          <Card key={dfsTab.key} accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{dfsTab.label}</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {enabledFields.map((field) => {
+                const customData = (examDraft as Record<string, unknown>).customData as Record<string, unknown> | undefined;
+                const rawValue = customData?.[field.key];
+                const fieldId = `ex-custom-${field.key}`;
+                return (
+                  <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+                    <Field id={fieldId} label={`${field.label}${field.required ? " *" : ""}`} required={field.required} error={getFieldError(field.key)}>
+                      <CustomFieldInput
+                        field={field}
+                        value={rawValue}
+                        onChange={(value) => {
+                          const currentCustomData = ((examDraft as Record<string, unknown>).customData as Record<string, unknown> | undefined) ?? {};
+                          updateDraft({ customData: { ...currentCustomData, [field.key]: value } } as Partial<typeof examDraft>);
+                        }}
+                        error={Boolean(getFieldError(field.key))}
+                      />
+                    </Field>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }

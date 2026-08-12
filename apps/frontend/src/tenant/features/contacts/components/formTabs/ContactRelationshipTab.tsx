@@ -1,37 +1,21 @@
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { listEnabledCustomContactFormFields } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
-import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
-import { FormSelect } from "@/components/ui/FormSelect";
+import { Field, FieldErrorMessage, EditableSelect } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
-import {
-  ContactSubListCustomFields,
-  withSubListCustomFieldDefaults,
-} from "./ContactSubListCustomFields";
 import type { ContactSubListTabBaseProps } from "./types";
 
 interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions: string[];
-}
-
-function relationshipSelectOptions(
-  catalog: readonly string[],
-  currentValue: string | undefined,
-): string[] {
-  const value = typeof currentValue === "string" ? currentValue.trim() : "";
-  if (!value) return [...catalog];
-  const exists = catalog.some(
-    (option) => option.trim().toLowerCase() === value.toLowerCase(),
-  );
-  return exists ? [...catalog] : [...catalog, value];
+  onUpdateRelationships?: (options: string[]) => void;
 }
 
 export function ContactRelationshipTab({
   contactDraft,
   getLocalId,
   relationshipOptions,
+  onUpdateRelationships,
   isFieldEnabled,
   isFieldRequired,
   getListItemError,
@@ -46,22 +30,13 @@ export function ContactRelationshipTab({
   const links = contactDraft.relationshipContacts || [];
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
-  const customFields = listEnabledCustomContactFormFields(fields, "relationship");
-  const allowAdd = resolveSubListAllowAdd(
-    [showLinkedContact, showRelationshipType],
-    customFields.length,
-  );
+  const allowAdd = resolveSubListAllowAdd([showLinkedContact, showRelationshipType]);
   const contactIdRequired = isFieldRequired("relationship", "contactId");
 
-  const emptyLink = () =>
-    withSubListCustomFieldDefaults(
-      {
-        relationship: relationshipOptions[0] || "",
-        contactId: "",
-      },
-      fields,
-      "relationship",
-    );
+  const emptyLink = () => ({
+    relationship: relationshipOptions[0] || "",
+    contactId: "",
+  });
 
   const excludeIds = (idx: number): (string | number)[] => {
     const linked = links
@@ -132,31 +107,20 @@ export function ContactRelationshipTab({
                       required={isFieldRequired("relationship", "relationship")}
                       error={typeError}
                     >
-                      <FormSelect
-                        options={relationshipSelectOptions(relationshipOptions, link.relationship)}
+                      <EditableSelect
+                        options={relationshipOptions}
                         value={typeValue}
                         onChange={(val) =>
                           updateSubListItem("relationshipContacts", idx, { relationship: val })
                         }
+                        onUpdateOptions={onUpdateRelationships}
                         placeholder={t("common.selectPlaceholder")}
-                        className="w-full"
+                        className="w-full min-w-0"
                         id={`relationship-type-${idx}`}
                         name={`relationship-type-${idx}`}
                       />
                     </Field>
                   ) : null}
-
-                  <ContactSubListCustomFields
-                    tabId="relationship"
-                    fields={fields}
-                    formInstanceId={formInstanceId}
-                    rowIndex={idx}
-                    row={link}
-                    getListItemError={getListItemError}
-                    onPatch={(patch) =>
-                      updateSubListItem("relationshipContacts", idx, patch)
-                    }
-                  />
                 </div>
               </ListFieldCard>
             );

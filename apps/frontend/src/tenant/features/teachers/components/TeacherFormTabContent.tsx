@@ -1,5 +1,6 @@
 import type React from "react";
-import type { FieldDefinition, Teacher } from "@mms/shared";
+import type { FieldDefinition, TabConfig, Teacher } from "@mms/shared";
+import { findDfsTab } from "@mms/shared";
 import {
   TeacherBasicSection,
   TeacherEmploymentSection,
@@ -15,6 +16,7 @@ export interface TeacherFormTabContentProps {
   teacherDraft: Partial<Teacher>;
   errors: Record<string, string>;
   fields: Record<string, FieldDefinition[]>;
+  dfsTabs?: TabConfig[];
   defaultSpecialization: string;
   linkedTeacherContactIds: Array<string | number>;
   specializationOptions: string[];
@@ -35,6 +37,7 @@ export function TeacherFormTabContent({
   teacherDraft,
   errors,
   fields,
+  dfsTabs,
   defaultSpecialization,
   linkedTeacherContactIds,
   specializationOptions,
@@ -47,6 +50,25 @@ export function TeacherFormTabContent({
   getFieldError,
   onDraftChange,
 }: TeacherFormTabContentProps): React.JSX.Element {
+  const dfsTab = findDfsTab(dfsTabs, tab);
+
+  if (dfsTab && tab !== "basic" && tab !== "employment") {
+    return (
+      <div className="space-y-6 pb-6">
+        <TeacherCustomFieldsBlock
+          teacherDraft={teacherDraft}
+          formInstanceId={formInstanceId}
+          fields={fields}
+          customFields={dfsTab.fields}
+          tabId={tab}
+          getFieldError={getFieldError}
+          updateDraft={onDraftChange}
+          hideWhenEmpty={false}
+        />
+      </div>
+    );
+  }
+
   if (tab === "employment") {
     return (
       <div className="space-y-6 pb-6">
@@ -74,6 +96,7 @@ export function TeacherFormTabContent({
           teacherDraft={teacherDraft}
           formInstanceId={formInstanceId}
           fields={fields}
+          customFields={findDfsTab(dfsTabs, "employment")?.fields}
           tabId="employment"
           getFieldError={getFieldError}
           updateDraft={onDraftChange}
@@ -100,6 +123,7 @@ export function TeacherFormTabContent({
           teacherDraft={teacherDraft}
           formInstanceId={formInstanceId}
           fields={fields}
+          customFields={findDfsTab(dfsTabs, "basic")?.fields}
           tabId="basic"
           getFieldError={getFieldError}
           updateDraft={onDraftChange}
@@ -114,6 +138,7 @@ export function TeacherFormTabContent({
         teacherDraft={teacherDraft}
         formInstanceId={formInstanceId}
         fields={fields}
+        customFields={dfsTab?.fields}
         tabId={tab}
         getFieldError={getFieldError}
         updateDraft={onDraftChange}
@@ -122,3 +147,4 @@ export function TeacherFormTabContent({
     </div>
   );
 }
+

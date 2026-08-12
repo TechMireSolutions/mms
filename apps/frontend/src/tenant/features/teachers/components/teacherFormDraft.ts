@@ -1,4 +1,4 @@
-import { resolveTeacherStatus, type Teacher, todayISO } from "@mms/shared";
+import { applyTeacherDfsCustomFieldDefaults, resolveTeacherStatus, type Teacher, type TabConfig, todayISO } from "@mms/shared";
 import { createModuleFormDraft } from "@/lib/forms/createModuleFormDraft";
 
 /** Hydrated / archive chrome — not edited on the Teachers form. */
@@ -28,12 +28,24 @@ const { getInitialDraft, draftSnapshot } = createModuleFormDraft<Teacher>({
   }),
 });
 
+interface GetInitialTeacherDraftOptions {
+  teacher?: Teacher;
+  defaultSpecialization: string;
+  dfsTabs?: TabConfig[];
+}
+
 /** Draft for FormModal — form-owned fields + Setup custom values; strip hydrated chrome. */
 export function getInitialTeacherDraft(
-  teacher: Teacher | undefined,
-  defaultSpecialization: string,
+  teacherOrOptions?: Teacher | GetInitialTeacherDraftOptions,
+  defaultSpecializationOrUndefined?: string,
 ): Partial<Teacher> {
-  return getInitialDraft(teacher, defaultSpecialization);
+  const isOptions = teacherOrOptions && typeof teacherOrOptions === "object" && "defaultSpecialization" in teacherOrOptions;
+  const teacher = isOptions ? (teacherOrOptions as GetInitialTeacherDraftOptions).teacher : (teacherOrOptions as Teacher | undefined);
+  const defaultSpecialization = isOptions ? (teacherOrOptions as GetInitialTeacherDraftOptions).defaultSpecialization : (defaultSpecializationOrUndefined ?? "");
+  const dfsTabs = isOptions ? (teacherOrOptions as GetInitialTeacherDraftOptions).dfsTabs : undefined;
+
+  const draft = getInitialDraft(teacher, defaultSpecialization);
+  return dfsTabs ? applyTeacherDfsCustomFieldDefaults(draft, dfsTabs) : draft;
 }
 
 export function teacherDraftSnapshot(draft: Partial<Teacher>): string {

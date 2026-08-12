@@ -1,4 +1,4 @@
-import { todayISO } from "@mms/shared";
+import { todayISO, applyDfsCustomFieldDefaults, type TabConfig } from "@mms/shared";
 
 export interface InvoiceDraft {
   studentId: string;
@@ -9,6 +9,7 @@ export interface InvoiceDraft {
   discountType: string;
   discountValue: string;
   dueDate: string;
+  customData?: Record<string, unknown>;
 }
 
 export function nextInvoiceId(prefix: string): string {
@@ -16,10 +17,10 @@ export function nextInvoiceId(prefix: string): string {
   return `${prefix}-${stamp}`;
 }
 
-export function createInitialDraft(dueDays: string): InvoiceDraft {
+export function createInitialDraft(dueDays: string, dfsTabs?: TabConfig[]): InvoiceDraft {
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + Math.max(0, Number.parseInt(dueDays, 10) || 0));
-  return {
+  const baseDraft: InvoiceDraft = {
     studentId: "",
     studentName: "",
     class: "",
@@ -28,7 +29,9 @@ export function createInitialDraft(dueDays: string): InvoiceDraft {
     discountType: "",
     discountValue: "0",
     dueDate: dueDate.toISOString().slice(0, 10) || todayISO(),
+    customData: {},
   };
+  return applyDfsCustomFieldDefaults(baseDraft, dfsTabs);
 }
 
 export function computeInvoiceAmounts(baseFeeRaw: string, discountValueRaw: string) {

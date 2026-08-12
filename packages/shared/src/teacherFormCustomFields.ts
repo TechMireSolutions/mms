@@ -1,7 +1,10 @@
 import { INITIAL_TEACHERS_FIELD_SEED } from './moduleFieldSetupPersons.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
+import type { TabConfig } from './schemas/dynamicFormSchemas.js';
+import type { Teacher } from './teacherTypes.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
+import { applyDfsCustomFieldDefaults } from './dynamicFormHelpers.js';
 
 const helpers = createFormCustomFieldHelpers(INITIAL_TEACHERS_FIELD_SEED);
 
@@ -86,4 +89,18 @@ export function findTeacherTabField(
   fieldKey: string,
 ): FieldDefinition | undefined {
   return (fields[tabId] ?? []).find((field) => field.key === fieldKey);
+}
+
+/**
+ * Seeds DFS custom field defaults into teacher draft customData for new teachers.
+ * Delegates to the shared {@link applyDfsCustomFieldDefaults} helper.
+ */
+export function applyTeacherDfsCustomFieldDefaults(
+  draft: Partial<Teacher>,
+  dfsTabs?: TabConfig[],
+): Partial<Teacher> {
+  return applyDfsCustomFieldDefaults(
+    draft as { id?: unknown; customData?: Record<string, unknown> | null },
+    dfsTabs,
+  ) as Partial<Teacher>;
 }

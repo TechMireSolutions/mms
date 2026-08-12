@@ -49,10 +49,28 @@ MMS uses a strict `pnpm` workspace monorepo layout:
 | Static Constants | `SCREAMING_SNAKE` | `DEFAULT_GLOBAL_SETTINGS` |
 | TypeScript Types & Interfaces | `PascalCase` (no `I` prefix) | `Contact`, `StudentCreateInput` |
 | JSON API properties | `camelCase` | `{ firstName, loginEmail }` |
-| DB tables, JSON keys, fields | `snake_case` | `contact_roles`, `global_settings` |
-| URL route paths | `kebab-case` | `/api/students`, `/api/platform/workspaces` |
-| Translation & permission keys | `dot.notation` | `students.actions.add`, `students.write` |
+| DB tables, JSON keys, fields | `snake_case` | `contact_roles`, `global_settings`, `custom_fields`, `sort_order` |
+| URL route paths | `kebab-case` | `/api/students`, `/api/v2/modules/:module/tabs` |
+| Translation & permission keys | `dot.notation` | `students.actions.add`, `students.write`, `dfs.fieldType.text` |
 | Script files | `kebab-case.sh` | `sync-skills.sh`, `deploy-on-server.sh` |
+
+### DFS file paths (authoritative)
+
+DFS files follow the repo's actual layout (not the v1 spec's fictional `schema/custom-tabs.ts` etc.):
+
+| Artifact | Path |
+|---|---|
+| Spec | `DFS.md` (repo root) |
+| Shared schemas | `packages/shared/src/schemas/dynamicFormSchemas.ts` |
+| Field-type metadata | `packages/shared/src/constants/fieldTypesMeta.ts` |
+| Dynamic Zod builder | `packages/shared/src/utils/dynamicSchemaBuilder.ts` |
+| Custom-field helpers | `packages/shared/src/createFormCustomFieldHelpers.ts` |
+| Backend plugin | `apps/backend/src/plugins/dynamicFormPlugin.ts` |
+| Backend service | `apps/backend/src/services/dynamic-form/fieldService.ts` |
+| Audit hooks | `apps/backend/src/hooks/auditHooks.ts` |
+| FE query hooks | `apps/frontend/src/hooks/useDynamicFormConfig.ts` (→ relocate to `src/tenant/hooks/collections/`) |
+| FE components | `apps/frontend/src/components/dynamic-form/` (`DynamicForm.tsx`, `FieldRenderer.tsx`, `CustomFieldEditor.tsx`) |
+| Migration | `apps/backend/src/db/migrations_drizzle/0030_custom_fields.sql` + `meta/_journal.json` |
 
 ### Casing Alignment across Layers (Strict UI-DB Casing)
 All internal naming (variables, parameters, types) and database naming (tables, columns, index fields) must strictly align with the UI representation, regardless of position (prefix/suffix).

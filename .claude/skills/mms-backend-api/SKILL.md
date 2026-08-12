@@ -99,9 +99,28 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 
 E.164 + title-case via repository (FORCE RLS). Runtime dial/label defaults from prefs + collections. `handleContactSaveOrUpdate` enqueues WA. List/filter SSOT: `@mms/shared` `contactsListQuerySchema`. WA: `whatsAppService` → queue → `PuppeteerWhatsAppProvider` (dev only).
 
-## Custom-field / JSONB writes
+## Custom-field / Dynamic Form System (DFS) writes
 
-Static FormModal + shared Zod (no blueprint compilers). GIN / SET LOCAL / `COALESCE ||` merge → **`mms-form-architecture`**. Builder routes may use `zodToJsonSchema` for AJV; custom-data entry routes validate Zod in-handler.
+Custom tabs and fields are managed via the Fastify 5 `dynamicFormPlugin` (`DFS.md` §4). Endpoints under `/api/v2`:
+
+- `GET  /modules/:module/tabs` — list tabs + fields (any authenticated tenant user)
+- `POST /modules/:module/tabs` — create tab (`can(module, 'editSetup')`)
+- `POST /modules/:module/tabs/:tabId/fields` — create field (`can(module, 'editSetup')`; write DTO `customFieldConfigSchema.omit({id,tabId})` `.strict()`)
+- `PATCH /modules/:module/tabs/:tabId/fields/:fieldId` — update field (`can(module, 'editSetup')`; `updateFieldBodySchema` `.strict()`; type-lock when `hasData: true` → 422; uniqueness enforcer when `unique false→true` → 409)
+- `PUT   /modules/:module/tabs/:tabId/fields/reorder` — transactional batch (`reorderFieldsBodySchema`; single `db.transaction`)
+- `POST /modules/:module/fields/check-unique` — probe (NOT audited; `fieldKey` validated against `custom_fields` registry before `@>` containment query — SQL-injection guard)
+
+Key invariants (`DFS.md` §1):
+- **Tenant isolation**: `workspaceSubdomain: text` + composite PK + `FORCE RLS` on `custom_fields`/`custom_tabs`; app-generated `text` IDs (`cf_<ts>_<rand>`, `custom_<ts>_<rand>`) via `crypto.randomUUID()` — never DB `uuid` PKs.
+- **RBAC**: `authenticateTenant` + `can(module, 'editSetup')` on all writes; reads open to authenticated tenant users.
+- **Validation**: Zod `.strict()` write DTOs on every mutating route (no `request.body as any`). PATCH must validate via `updateFieldBodySchema`.
+- **Audit**: `auditPreHandler`/`auditOnSend` (`onSend` returns `payload` — Fastify v5 contract); re-fetch new state from DB (not response body); skip `/check-unique` probes + error responses (`statusCode >= 400`). Writes to existing `audit_logs` table (`tableName`/`recordId`/`oldValues`/`newValues`/`userId`).
+- **Uniqueness**: `checkValueUniqueness(workspaceSubdomain, moduleName, fieldKey, value)` uses parameterized `sql` + GIN `@>` containment; `fieldKey` MUST be registry-validated first; module-aware typed table map (no `any`).
+- **Server-side entity validation**: entity save routes (students/contacts/teachers) MUST re-validate `customData` via `buildDynamicValidationSchema` + `safeParse` and enforce `unique` fields via `checkValueUniqueness` before persisting — never trust the client (`DFS.md` §4.5).
+- **Idempotency/concurrency**: retryable POSTs may use `Idempotency-Key` bound to body digest (409 on mismatch); contested PATCH may use `If-Match: <updatedAt>` → 409 `stale_version` (`DFS.md` §4.7/§4.8).
+- **Body limits / rate limits**: set `bodyLimit` on plugin registration; `@fastify/rate-limit` on `/check-unique` (high-frequency probe) and write routes.
+
+Ref: `apps/backend/src/plugins/dynamicFormPlugin.ts`, `services/dynamic-form/fieldService.ts`, `hooks/auditHooks.ts`.
 
 ## Verify
 

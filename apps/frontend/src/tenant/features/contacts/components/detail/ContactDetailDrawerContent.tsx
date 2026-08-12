@@ -1,12 +1,10 @@
 import type { ChangeEvent, FormEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { isContactCustomCollectionTab, listEnabledCustomContactFormFields, type Contact } from "@mms/shared";
+import { type Contact, type TabConfig } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { DETAIL_SYSTEM_TAB_KEYS } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { FieldGroupCard } from "@/tenant/features/contacts/components/detail/ContactDetailShared";
-import { ContactDetailCustomCollections } from "@/tenant/features/contacts/components/detail/ContactDetailCustomCollections";
 import { ContactDetailOverview } from "@/tenant/features/contacts/components/detail/ContactDetailOverview";
 import { ContactDetailTimeline } from "@/tenant/features/contacts/components/detail/ContactDetailTimeline";
 import { ContactDetailFiles } from "@/tenant/features/contacts/components/detail/ContactDetailFiles";
@@ -45,6 +43,7 @@ interface ContactDetailDrawerContentProps {
   onFiles: (filesList: FileList | null) => void;
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onRequestDelete: (attachment: { id: string; name: string }) => void;
+  dfsTabs?: TabConfig[];
 }
 
 export function ContactDetailDrawerContent({
@@ -73,11 +72,11 @@ export function ContactDetailDrawerContent({
   onFiles,
   onFileChange,
   onRequestDelete,
+  dfsTabs,
 }: ContactDetailDrawerContentProps): JSX.Element {
   const reducedMotion = useReducedMotion();
   const { t } = useTranslation();
-  const { enabledTabIds, fields, fieldConfig } = useContactConfig();
-  const isCustomCollectionTab = isContactCustomCollectionTab(activeTab);
+  const dfsTab = dfsTabs?.find((t) => t.key === activeTab);
   const customTabFields = Object.entries(grouped)
     .map(([groupName, fieldsList]) => ({
       groupName,
@@ -139,27 +138,39 @@ export function ContactDetailDrawerContent({
           />
         )}
 
-        {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && isCustomCollectionTab && (
+        {/* DFS-managed custom tab — single source of truth for custom field tabs */}
+        {dfsTab && (
           <div className="space-y-4">
-            <ContactDetailCustomCollections
-              contact={contactState}
-              fields={fields}
-              enabledTabIds={enabledTabIds}
-              formTabs={fieldConfig.formTabs}
-              onlyTabId={activeTab}
-            />
-            {listEnabledCustomContactFormFields(fields, activeTab).length === 0 ? (
+            {dfsTab.fields.filter((f) => f.enabled).length === 0 ? (
               <EmptyState
                 title={t("contacts.detail.emptyCustomTab")}
                 compact
                 icon={null}
                 className="uppercase tracking-widest"
               />
-            ) : null}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {dfsTab.fields
+                  .filter((f) => f.enabled)
+                  .map((field) => {
+                    const customData = (contactState.customData as Record<string, unknown> | undefined) || {};
+                    const val = customData[field.key] ?? (contactState as Record<string, unknown>)[field.key];
+                    return (
+                      <div key={field.key} className="p-3 rounded-lg border border-border bg-card">
+                        <div className="text-xs text-muted-foreground font-medium">{field.label}</div>
+                        <div className="text-sm font-semibold mt-1">
+                          {val !== undefined && val !== null && String(val) !== "" ? String(val) : "—"}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         )}
 
-        {!DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && !isCustomCollectionTab && (
+        {/* Legacy grouped-field fallback for non-DFS, non-system tabs */}
+        {!dfsTab && !DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
           <div className="space-y-4">
             {customTabFields.length === 0 ? (
               <EmptyState
@@ -175,7 +186,10 @@ export function ContactDetailDrawerContent({
                   group={groupName}
                   fields={groupFields}
                   formatValue={formatFieldValue}
-                  getRawValue={(key) => (contactState as Record<string, unknown>)[key]}
+                  getRawValue={(key) =>
+                    (contactState.customData as Record<string, unknown> | undefined)?.[key] ??
+                    (contactState as Record<string, unknown>)[key]
+                  }
                 />
               ))
             )}

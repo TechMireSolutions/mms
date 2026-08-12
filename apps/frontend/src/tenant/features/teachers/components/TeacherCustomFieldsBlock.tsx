@@ -1,6 +1,7 @@
 import React from "react";
 import {
   listEnabledCustomTeacherFormFields,
+  type CustomFieldConfig,
   type FieldDefinition,
   type Teacher,
 } from "@mms/shared";
@@ -10,6 +11,7 @@ interface TeacherCustomFieldsBlockProps {
   teacherDraft: Partial<Teacher>;
   formInstanceId: string;
   fields: Record<string, FieldDefinition[]>;
+  customFields?: (FieldDefinition | CustomFieldConfig)[];
   tabId: string;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Teacher>) => void;
@@ -22,6 +24,7 @@ export function TeacherCustomFieldsBlock({
   teacherDraft,
   formInstanceId,
   fields,
+  customFields,
   tabId,
   getFieldError,
   updateDraft,
@@ -33,6 +36,7 @@ export function TeacherCustomFieldsBlock({
       draft={teacherDraft}
       formInstanceId={formInstanceId}
       fields={fields}
+      customFields={customFields}
       tabId={tabId}
       getFieldError={getFieldError}
       updateDraft={updateDraft}
@@ -44,3 +48,4 @@ export function TeacherCustomFieldsBlock({
     />
   );
 }
+

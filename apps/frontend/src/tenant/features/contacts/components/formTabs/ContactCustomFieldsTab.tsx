@@ -1,59 +1,49 @@
 import React from "react";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleCustomFieldsBlock } from "@/components/ui/ModuleCustomFieldsBlock";
 import {
   listEnabledCustomContactFormFields,
   type Contact,
   type FieldDefinition,
+  type CustomFieldConfig,
 } from "@mms/shared";
-import { ContactCustomFieldControls } from "./ContactCustomFieldControls";
 
 export function ContactCustomFieldsTab({
   contactDraft,
   formInstanceId,
-  fields,
-  tabId = "custom",
+  customFields = [],
   getFieldError,
   updateDraft,
   hideWhenEmpty = false,
   className,
+  fields = {},
+  tabId = "custom",
 }: {
   contactDraft: Partial<Contact>;
   formInstanceId: string;
-  fields: Record<string, FieldDefinition[]>;
-  /** Config tab whose non-seed fields to render (default: system Custom tab). */
-  tabId?: string;
+  customFields?: (FieldDefinition | CustomFieldConfig)[];
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
-  /** When true, render nothing if this tab has no custom fields (e.g. embed under Basic). */
   hideWhenEmpty?: boolean;
   className?: string;
+  fields?: Record<string, FieldDefinition[]>;
+  tabId?: string;
 }): React.JSX.Element | null {
-  const { t } = useTranslation();
-  const customFields = listEnabledCustomContactFormFields(fields, tabId);
-
-  if (customFields.length === 0) {
-    if (hideWhenEmpty) return null;
-    return (
-      <EmptyState title={t("contacts.form.customFieldsEmpty")} compact icon={null} />
-    );
-  }
-
   return (
-    <ContactCustomFieldControls
+    <ModuleCustomFieldsBlock<Contact>
+      draft={contactDraft}
+      formInstanceId={formInstanceId}
+      fields={fields}
+      customFields={customFields}
+      tabId={tabId}
+      getFieldError={getFieldError}
+      updateDraft={updateDraft}
+      hideWhenEmpty={hideWhenEmpty}
       className={className}
-      t={t}
-      items={customFields.map((field) => {
-        const fieldId = `cf-${formInstanceId}-${field.key}`;
-        return {
-          field,
-          fieldId,
-          value: (contactDraft as Record<string, unknown>)[field.key],
-          error: getFieldError(field.key),
-          onChange: (nextValue: unknown) =>
-            updateDraft({ [field.key]: nextValue } as Partial<Contact>),
-        };
-      })}
+      listCustomFields={listEnabledCustomContactFormFields}
+      idPrefix="cf"
+      emptyKey="contacts.form.customFieldsEmpty"
     />
   );
 }
+
+

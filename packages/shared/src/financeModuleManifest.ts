@@ -17,6 +17,7 @@ export const invoiceRecordSchema = z.object({
   paidDate: z.string().nullable(),
   method: z.string().nullable(),
   paidAmt: z.number().nonnegative().optional(),
+  customData: z.record(z.string(), z.unknown()).optional(),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),

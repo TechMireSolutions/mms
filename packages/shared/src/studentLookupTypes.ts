@@ -28,18 +28,22 @@ const studentLookupsMapSchema = z.object({
 
 export type StudentLookupsMap = z.infer<typeof studentLookupsMapSchema>;
 
+/** Schema for validating student lookup kind url parameters. */
 export const studentLookupKindParamsSchema = z.object({
   kind: studentLookupKindSchema,
 });
 
+/** Schema for validating student lookup put request body. */
 export const studentLookupPutBodySchema = z.object({
   items: studentLookupStringItemsSchema,
 });
 
+/** Type guard checking if a string is a valid StudentLookupKind. */
 export function isStudentLookupKind(value: string): value is StudentLookupKind {
   return (STUDENT_LOOKUP_KINDS as readonly string[]).includes(value);
 }
 
+/** Type guard checking if a string is a valid legacy collection key for student lookups. */
 export function isStudentLookupLegacyCollectionKey(
   value: string,
 ): value is StudentLookupLegacyCollectionKey {
@@ -68,3 +72,18 @@ export function emptyStudentLookupsMap(): StudentLookupsMap {
     discountTypes: defaultStudentLookupItems('discountTypes'),
   };
 }
+
+/**
+ * Field-config target whose `options` mirror each string lookup kind — used both
+ * when Setup persists a list and when validation overlays the live list.
+ */
+export const STUDENT_LOOKUP_FIELD_TARGETS = {
+  statuses: { tabId: 'registration', fieldId: 'status' },
+  genderFilters: { tabId: 'basic', fieldId: 'gender' },
+} as const satisfies Record<
+  Exclude<StudentLookupKind, 'discountTypes'>,
+  { tabId: string; fieldId: string }
+>;
+
+export type StudentLookupStringKind = keyof typeof STUDENT_LOOKUP_FIELD_TARGETS;
+

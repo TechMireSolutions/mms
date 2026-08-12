@@ -1,11 +1,12 @@
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
+import type { CustomFieldConfig } from './schemas/dynamicFormSchemas.js';
 
 export interface ModuleFormCustomFieldHelpers {
   listSystemFormFieldKeys: () => ReadonlySet<string>;
-  listEnabledCustomFormFields: (
-    fields: Record<string, FieldDefinition[]>,
+  listEnabledCustomFormFields: <T extends FieldDefinition | CustomFieldConfig>(
+    fields: Record<string, T[]>,
     tabId?: string,
-  ) => FieldDefinition[];
+  ) => T[];
   isSystemFormField: (tabId: string, fieldId: string) => boolean;
 }
 
@@ -27,13 +28,13 @@ export function createFormCustomFieldHelpers(
     return keys;
   }
 
-  function listEnabledCustomFormFields(
-    fields: Record<string, FieldDefinition[]>,
+  function listEnabledCustomFormFields<T extends FieldDefinition | CustomFieldConfig>(
+    fields: Record<string, T[]>,
     tabId?: string,
-  ): FieldDefinition[] {
+  ): T[] {
     const systemKeys = listSystemFormFieldKeys();
-    const byKey = new Map<string, FieldDefinition>();
-    const sourceTabs: FieldDefinition[][] =
+    const byKey = new Map<string, T>();
+    const sourceTabs: T[][] =
       tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
 
     for (const tabFields of sourceTabs) {
@@ -46,7 +47,9 @@ export function createFormCustomFieldHelpers(
     }
 
     return [...byKey.values()].sort((left, right) => {
-      const orderDelta = (left.order ?? 0) - (right.order ?? 0);
+      const leftOrder = 'sortOrder' in left ? left.sortOrder : (left.order ?? 0);
+      const rightOrder = 'sortOrder' in right ? right.sortOrder : (right.order ?? 0);
+      const orderDelta = leftOrder - rightOrder;
       return orderDelta !== 0 ? orderDelta : left.key.localeCompare(right.key);
     });
   }

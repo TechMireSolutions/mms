@@ -180,6 +180,7 @@ export * from './moduleCommandMetrics.js';
 export * from './moduleColumnPreferences.js';
 export * from './studentUtils.js';
 export * from './studentFormCustomFields.js';
+export * from './sessionFormCustomFields.js';
 export * from './createFormCustomFieldHelpers.js';
 export * from './studentGuardianFromContacts.js';
 export * from './contactLinkPolicy.js';
@@ -219,3 +220,8 @@ export * from './savedReportsSchemas.js';
 export * from './dashboardModuleManifest.js';
 export * from './whatsappProvider.js';
 export * from './vcardUtils.js';
+export * from './schemas/dynamicFormSchemas.js';
+export * from './constants/fieldTypesMeta.js';
+export * from './utils/dynamicSchemaBuilder.js';
+export * from './dynamicFormHelpers.js';
+

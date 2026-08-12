@@ -1,21 +1,14 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { User } from "lucide-react";
+import { useState, useMemo, useEffect, type ComponentType } from "react";
+import { User, Phone, Mail, MapPin, Share2, Heart, SlidersHorizontal } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import {
-  isContactCustomCollectionTab,
-  listEnabledCustomContactFormFields,
-  type Contact,
-} from "@mms/shared";
+import { type Contact, DEFAULT_FORM_TABS, mergeDfsTabs } from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import {
   ContactFormTabContent,
   ContactFormFooterStart,
 } from "@/tenant/features/contacts/components/ContactFormTabContent";
-import { resolveContactFormTabs } from "@/tenant/features/contacts/components/contactFormTabs";
 
 interface ContactFormProps {
   open?: boolean;
@@ -31,6 +24,21 @@ interface ContactFormProps {
   priority?: boolean;
 }
 
+/**
+ * Icon map for the six system form tabs. The tab definitions (key, labelKey,
+ * order) come from the shared `DEFAULT_FORM_TABS` SSOT in `@mms/shared`
+ * (`contactTabRegistry.ts`); only the Lucide icon components are local because
+ * `TabDefinition.icon` is an optional string name, not a component reference.
+ */
+const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
+  basic: User,
+  phones: Phone,
+  emails: Mail,
+  addresses: MapPin,
+  socials: Share2,
+  relationship: Heart,
+};
+
 export default function ContactForm({
   open = true,
   contact,
@@ -45,10 +53,7 @@ export default function ContactForm({
 }: ContactFormProps): JSX.Element {
   const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
-  const { enabledTabIds, fields, fieldConfig } = useContactConfig();
   const [tab, setTab] = useState("basic");
-  const hasCustomFields = listEnabledCustomContactFormFields(fields, "custom").length > 0;
-  const formTabs = resolveContactFormTabs(fieldConfig.formTabs, fields);
   const formInstanceId = String(contact?.id ?? "new");
 
   const draft = useContactFormDraft({
@@ -60,13 +65,10 @@ export default function ContactForm({
     defaultProvince,
     onSave,
     onClose,
-    onValidationTab: (tabId, fieldId, index) => {
+    onValidationTab: (tabId, fieldId) => {
       setTab(tabId);
       if (!fieldId) return;
-      const targetId =
-        typeof index === "number" && isContactCustomCollectionTab(tabId)
-          ? `cf-${formInstanceId}-${tabId}-${index}-${fieldId}`
-          : `cf-${formInstanceId}-${fieldId}`;
+      const targetId = `cf-${formInstanceId}-${fieldId}`;
       requestAnimationFrame(() => {
         const target = document.getElementById(targetId);
         if (target instanceof HTMLElement) target.focus();
@@ -88,20 +90,29 @@ export default function ContactForm({
       relationship: draft.collectionCounts.filledRelationships,
     };
 
-    return formTabs.filter((tabItem) => {
-      if (tabItem.key === "basic") return true;
-      if (tabItem.key === "custom") return enabledTabIds.has("custom") && hasCustomFields;
-      return enabledTabIds.has(tabItem.key);
-    }).map((tabItem) => {
-      const count = countMap[tabItem.key];
+    // System tabs from shared SSOT (DEFAULT_FORM_TABS) — always shown; "basic" is mandatory
+    const resolved: Array<{ key: string; icon: ComponentType; label: string; badge: number | undefined }> = DEFAULT_FORM_TABS.map((sys) => {
+      const count = countMap[sys.key];
       return {
-        key: tabItem.key,
-        icon: tabItem.icon,
-        label: resolveRegistryLabel(tabItem, t),
+        key: sys.key,
+        icon: SYSTEM_TAB_ICONS[sys.key] ?? User,
+        label: t(sys.labelKey!),
         badge: count && count > 0 ? count : undefined,
       };
     });
-  }, [draft.collectionCounts, enabledTabIds, formTabs, hasCustomFields, t]);
+
+    // DFS-managed custom tabs — appended via shared helper
+    return mergeDfsTabs(
+      resolved,
+      draft.dfsTabs,
+      (dfsTab) => ({
+        key: dfsTab.key,
+        icon: SlidersHorizontal as ComponentType,
+        label: dfsTab.label,
+        badge: undefined,
+      }),
+    );
+  }, [draft.collectionCounts, draft.dfsTabs, t]);
 
   return (
     <FormModal

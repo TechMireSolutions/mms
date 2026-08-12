@@ -9,6 +9,7 @@ import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useCont
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
 import { useContactFormDraftOptions } from "@/tenant/features/contacts/hooks/useContactFormDraftOptions";
+import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 
 export function useContactFormDraft({
   open,
@@ -31,6 +32,7 @@ export function useContactFormDraft({
   onClose: () => void;
   onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
 }) {
+  const { data: dfsTabs } = useModuleTabs("contacts");
   const {
     isTabFieldEnabled,
     isTabFieldRequired,
@@ -83,6 +85,7 @@ export function useContactFormDraft({
       fields,
       socialPlatforms,
       relationshipOptions,
+      dfsTabs,
     }),
   );
   const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
@@ -96,6 +99,7 @@ export function useContactFormDraft({
     onSave,
     onClose,
     onValidationTab,
+    dfsTabs,
   });
 
   const isDirty = contactDraftSnapshot(contactDraft) !== baselineSnapshot;
@@ -118,7 +122,6 @@ export function useContactFormDraft({
   } = useContactFormDraftHelpers({
     formInstanceId,
     defaultCountryCode,
-    fields,
     isTabFieldEnabled,
     isTabFieldRequired,
     validationErrors,
@@ -138,12 +141,13 @@ export function useContactFormDraft({
       fields,
       socialPlatforms,
       relationshipOptions,
+      dfsTabs,
     });
     setContactDraft(nextDraft);
     setBaselineSnapshot(contactDraftSnapshot(nextDraft));
     setValidationErrors([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, contact?.id]);
+  }, [open, contact?.id, dfsTabs]);
 
   return {
     formInstanceId,
@@ -184,5 +188,6 @@ export function useContactFormDraft({
     removeSubListItem,
     handleSave,
     fields,
+    dfsTabs,
   };
 }

@@ -66,7 +66,7 @@ describe("buildInitialContactDraft", () => {
     ],
   };
 
-  it("normalizes a fresh draft with empty rows and applies scalar custom defaults", () => {
+  it("normalizes a fresh draft with empty rows", () => {
     const draft = buildInitialContactDraft({
       contact: undefined,
       initialDraft: undefined,
@@ -78,10 +78,54 @@ describe("buildInitialContactDraft", () => {
       socialPlatforms: ["Facebook"],
       relationshipOptions: ["Parent"],
     });
-    expect(draft.nickname).toBe("Ali");
     expect(Array.isArray(draft.phones)).toBe(true);
     expect(draft.socials).toEqual([{ platform: "Facebook", url: "" }]);
     expect(draft.relationshipContacts).toEqual([{ relationship: "Parent", contactId: "" }]);
+  });
+
+  it("applies DFS custom field defaults into customData for new contacts", () => {
+    const dfsTabs = [
+      {
+        id: "tab-1",
+        key: "custom_tab",
+        label: "Custom Info",
+        enabled: true,
+        required: false,
+        sortOrder: 0,
+        isSystem: false,
+        fields: [
+          {
+            id: "f-1",
+            tabId: "tab-1",
+            key: "bloodGroup",
+            label: "Blood Group",
+            type: "select" as const,
+            enabled: true,
+            required: false,
+            unique: false,
+            defaultValue: "O+",
+            sortOrder: 0,
+            hasData: false,
+            isSystem: false,
+          },
+        ],
+      },
+    ];
+
+    const draft = buildInitialContactDraft({
+      contact: undefined,
+      initialDraft: undefined,
+      defaultCity: "",
+      defaultProvince: "",
+      defaultCountry: "",
+      optionDefaults,
+      fields,
+      socialPlatforms: ["Facebook"],
+      relationshipOptions: ["Parent"],
+      dfsTabs,
+    });
+
+    expect((draft.customData as Record<string, unknown>)?.bloodGroup).toBe("O+");
   });
 
   it("does not apply scalar defaults when editing an existing contact", () => {
@@ -100,3 +144,4 @@ describe("buildInitialContactDraft", () => {
     expect(draft.nickname).toBeUndefined();
   });
 });
+

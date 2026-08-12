@@ -1,6 +1,6 @@
 ---
 description: Known gaps between rules (target) and codebase (current) — do not opportunistically fix outside task scope
-alwaysApply: true
+alwaysApply: false
 ---
 
 # MMS Migration Status

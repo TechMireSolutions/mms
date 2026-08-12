@@ -1,4 +1,11 @@
-import { type Student, todayISO } from "@mms/shared";
+import {
+  type Student,
+  type FieldDefinition,
+  type TabConfig,
+  todayISO,
+  applyStudentScalarCustomFieldDefaults,
+  applyStudentDfsCustomFieldDefaults,
+} from "@mms/shared";
 
 const STUDENT_FORM_VOLATILE_KEYS = new Set([
   "id",
@@ -31,9 +38,24 @@ const STUDENT_FORM_VOLATILE_KEYS = new Set([
   "studentId",
 ]);
 
+interface GetInitialStudentDraftOptions {
+  student?: Partial<Student> | null;
+  fields?: Record<string, FieldDefinition[]>;
+  dfsTabs?: TabConfig[];
+}
+
 /** Draft for FormModal — form-owned fields + Setup custom values; strip hydrated/obsolete chrome. */
-export function getInitialStudentDraft(student?: Partial<Student> | null): Partial<Student> {
-  const draft: Partial<Student> = {
+export function getInitialStudentDraft(
+  studentOrOptions?: Partial<Student> | null | GetInitialStudentDraftOptions,
+): Partial<Student> {
+  const options: GetInitialStudentDraftOptions =
+    studentOrOptions && typeof studentOrOptions === "object" && ("fields" in studentOrOptions || "dfsTabs" in studentOrOptions)
+      ? (studentOrOptions as GetInitialStudentDraftOptions)
+      : { student: studentOrOptions as Partial<Student> | null | undefined };
+
+  const { student, fields, dfsTabs } = options;
+
+  let draft: Partial<Student> = {
     contactId: student?.contactId ?? "",
     status: student?.status ?? "active",
     grNumber: student?.grNumber ?? "",
@@ -41,13 +63,21 @@ export function getInitialStudentDraft(student?: Partial<Student> | null): Parti
     notes: student?.notes ?? "",
   };
 
-  if (!student) return draft;
-
-  for (const [key, value] of Object.entries(student)) {
-    if (STUDENT_FORM_VOLATILE_KEYS.has(key)) continue;
-    if (key in draft) continue;
-    (draft as Record<string, unknown>)[key] = value;
+  if (student) {
+    for (const [key, value] of Object.entries(student)) {
+      if (STUDENT_FORM_VOLATILE_KEYS.has(key)) continue;
+      if (key in draft) continue;
+      (draft as Record<string, unknown>)[key] = value;
+    }
   }
+
+  if (fields) {
+    draft = applyStudentScalarCustomFieldDefaults(draft, fields);
+  }
+  if (dfsTabs) {
+    draft = applyStudentDfsCustomFieldDefaults(draft, dfsTabs);
+  }
+
   return draft;
 }
 
@@ -59,3 +89,4 @@ export function studentDraftSnapshot(draft: Partial<Student>): string {
   }
   return JSON.stringify(payload);
 }
+

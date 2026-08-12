@@ -5,10 +5,9 @@ import { ContactAddressesTab } from "@/tenant/features/contacts/components/formT
 import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTabs/ContactSocialsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
 import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
-import { ContactCustomCollectionTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomCollectionTab";
 import type { ContactSubListTabBaseProps } from "@/tenant/features/contacts/components/formTabs/types";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
-import { normalizeContactFormTabId } from "@mms/shared";
+import { normalizeContactFormTabId, findDfsTab } from "@mms/shared";
 
 export { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
@@ -46,14 +45,31 @@ export function ContactFormTabContent({
   defaultProvince: string;
 }): JSX.Element | null {
   const listBase = subListBaseProps(draft);
+  const normalizedTab = normalizeContactFormTabId(tab);
 
-  switch (normalizeContactFormTabId(tab)) {
+  // Resolve DFS tab from draft — single source, no prop-drilling needed
+  const dfsTab = findDfsTab(draft.dfsTabs, tab, normalizedTab);
+
+  if (dfsTab && normalizedTab !== "basic") {
+    return (
+      <ContactCustomFieldsTab
+        contactDraft={draft.contactDraft}
+        formInstanceId={draft.formInstanceId}
+        customFields={dfsTab.fields}
+        getFieldError={draft.getFieldError}
+        updateDraft={draft.updateDraft}
+        tabId={dfsTab.key}
+      />
+    );
+  }
+
+  switch (normalizedTab) {
     case "basic":
       return (
         <ContactBasicTab
           contactDraft={draft.contactDraft}
           formInstanceId={draft.formInstanceId}
-          fields={draft.fields}
+          customFields={draft.dfsTabs?.find((t) => t.key === "basic")?.fields}
           isFieldEnabled={draft.isFieldEnabled}
           isFieldRequired={draft.isFieldRequired}
           getFieldError={draft.getFieldError}
@@ -112,30 +128,10 @@ export function ContactFormTabContent({
         <ContactRelationshipTab
           {...listBase}
           relationshipOptions={draft.relationshipOptions}
-        />
-      );
-    case "custom":
-      return (
-        <ContactCustomFieldsTab
-          contactDraft={draft.contactDraft}
-          formInstanceId={draft.formInstanceId}
-          fields={draft.fields}
-          tabId="custom"
-          getFieldError={draft.getFieldError}
-          updateDraft={draft.updateDraft}
+          onUpdateRelationships={draft.updateRelationships}
         />
       );
     default:
-      return (
-        <ContactCustomCollectionTab
-          contactDraft={draft.contactDraft}
-          formInstanceId={draft.formInstanceId}
-          fields={draft.fields}
-          tabId={tab}
-          getLocalId={draft.getLocalId}
-          getListItemError={draft.getListItemError}
-          updateDraft={draft.updateDraft}
-        />
-      );
+      return null;
   }
 }

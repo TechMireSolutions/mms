@@ -1,10 +1,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { RegistryDateField } from "@/components/ui/RegistryDateField";
-import { FormSelect } from "@/components/ui/FormSelect";
 import { Field, RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type ModuleFieldDef } from "@mms/shared";
 
@@ -24,6 +20,7 @@ export function DistributeModalCustomField({
   const { t } = useTranslation();
   const fieldId = `custom-${field.id}`;
 
+  // Boolean fields render inline with label (not inside a Field wrapper) for checkbox UX.
   if (field.type === "boolean") {
     return (
       <label htmlFor={fieldId} className="flex cursor-pointer select-none items-center gap-2.5 py-2">
@@ -40,58 +37,25 @@ export function DistributeModalCustomField({
     );
   }
 
+  // Adapt ModuleFieldDef → shape CustomFieldInput accepts (key instead of id).
+  const adaptedField = {
+    key: field.id,
+    label: field.label,
+    type: (field.type || "text") as any,
+    required: field.required,
+    options: field.options,
+    placeholder: field.placeholder || getCustomFieldPlaceholder(field.label),
+    defaultValue: field.defaultValue,
+  };
+
   return (
     <div className={field.type === "textarea" ? "sm:col-span-2" : ""}>
       <Field id={fieldId} label={field.label} required={field.required}>
-      {field.type === "textarea" ? (
-        <Textarea
-          id={fieldId}
-          name={field.id}
-          value={String(fieldValue)}
-          onChange={(event) => updateField(field.id, event.target.value)}
-          placeholder={field.placeholder || getCustomFieldPlaceholder(field.label)}
-          required={field.required}
-        />
-      ) : field.type === "select" ? (
-        <FormSelect
-          id={fieldId}
-          name={field.id}
-          value={String(fieldValue)}
+        <CustomFieldInput
+          field={adaptedField as any}
+          value={fieldValue}
           onChange={(value) => updateField(field.id, value)}
-          placeholder={t("hasanat.form.selectOption")}
-          options={field.options || []}
         />
-      ) : field.type === "number" ? (
-        <Input
-          id={fieldId}
-          name={field.id}
-          type="number"
-          className={FORM_INPUT}
-          value={typeof fieldValue === "number" ? fieldValue : String(fieldValue)}
-          onChange={(event) => updateField(field.id, event.target.value)}
-          placeholder={field.placeholder || t("hasanat.form.enterNumber")}
-          required={field.required}
-        />
-      ) : field.type === "date" ? (
-        <RegistryDateField
-          id={fieldId}
-          name={field.id}
-          value={String(fieldValue)}
-          onChange={(value) => updateField(field.id, value)}
-          required={field.required}
-        />
-      ) : (
-        <Input
-          id={fieldId}
-          name={field.id}
-          type="text"
-          className={FORM_INPUT}
-          value={String(fieldValue)}
-          onChange={(event) => updateField(field.id, event.target.value)}
-          placeholder={field.placeholder || getCustomFieldPlaceholder(field.label)}
-          required={field.required}
-        />
-      )}
       </Field>
     </div>
   );

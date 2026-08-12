@@ -17,16 +17,10 @@ import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 const StudentsSetupPanel = lazy(
   () => import("@/tenant/features/students/components/StudentsSetupPanel"),
 );
-const StudentsSettingsLookupsPanel = lazy(() =>
-  import("@/tenant/features/students/components/StudentsSettingsLookupsPanel").then((mod) => ({
-    default: mod.StudentsSettingsLookupsPanel,
-  })),
-);
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   fields: "students.setup.fields",
   preferences: "students.setup.preferences",
-  lookups: "students.setup.lookups",
 };
 
 /** Students Setup shell — SubTabBar + leave-guard (Contacts SettingsPanel analogue). */
@@ -95,7 +89,6 @@ export default function StudentsSettingsPanel(): React.JSX.Element {
               {subTabs.showPrefs ? (
                 <StudentsSetupPanel mode="preferences" onPrefsDirtyChange={setPrefsDirty} />
               ) : null}
-              {subTabs.showLookups ? <StudentsSettingsLookupsPanel /> : null}
             </Suspense>
           )}
 

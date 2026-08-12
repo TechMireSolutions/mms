@@ -1,4 +1,4 @@
-import { AppTranslationKey, DEFAULT_CURRENCIES, todayISO } from '@mms/shared';
+import { AppTranslationKey, DEFAULT_CURRENCIES, todayISO, applySessionDfsCustomFieldDefaults, type TabConfig } from '@mms/shared';
 import type { Session } from '@/lib/data/sessionsData';
 
 export const SESSION_STATUSES = ['active', 'upcoming', 'completed', 'cancelled'] as const;
@@ -6,6 +6,7 @@ export const SESSION_CURRENCIES = DEFAULT_CURRENCIES.map((currency) => currency.
 
 export type SessionFormDraft = Omit<Partial<Session>, 'baseFee'> & {
   baseFee: string;
+  customData?: Record<string, unknown>;
 };
 
 export const SESSION_TYPE_LABEL_KEYS: Record<string, AppTranslationKey> = {
@@ -33,6 +34,7 @@ export function buildEmptySessionDraft(defaultType: string, defaultCurrency: str
     budget: { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
     events: [],
     tabarruk: [],
+    customData: {},
   };
 }
 
@@ -40,8 +42,9 @@ export function buildSessionDraftFromRecord(
   session: Session | null | undefined,
   defaultType: string,
   defaultCurrency: string,
+  dfsTabs?: TabConfig[],
 ): SessionFormDraft {
-  return {
+  const draft: SessionFormDraft = {
     name: session?.name ?? '',
     type: session?.type ?? defaultType,
     status: session?.status ?? 'active',
@@ -56,7 +59,9 @@ export function buildSessionDraftFromRecord(
     budget: session?.budget ?? { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
     events: session?.events ?? [],
     tabarruk: session?.tabarruk ?? [],
+    customData: (session as { customData?: Record<string, unknown> } | undefined)?.customData ?? {},
   };
+  return dfsTabs ? applySessionDfsCustomFieldDefaults(draft as unknown as Partial<Session>, dfsTabs) as unknown as SessionFormDraft : draft;
 }
 
 /** Stable snapshot for FormModal dirty detection (editable fields only). */
@@ -70,5 +75,6 @@ export function sessionFormDraftSnapshot(draft: SessionFormDraft): string {
     baseFee: draft.baseFee ?? '',
     currency: draft.currency ?? '',
     description: draft.description ?? '',
+    customData: draft.customData ?? {},
   });
 }

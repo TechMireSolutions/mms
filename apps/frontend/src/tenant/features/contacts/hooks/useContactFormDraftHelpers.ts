@@ -13,7 +13,6 @@ import {
   IMAGE_UPLOAD_MAX_INPUT_BYTES,
   REMOVED_FORM_FIELD_KEYS,
   type Contact,
-  type FieldDefinition,
   type ValidationError,
 } from "@mms/shared";
 
@@ -28,7 +27,6 @@ export function useContactFormDraftHelpers({
 }: {
   formInstanceId: string;
   defaultCountryCode: string;
-  fields?: Record<string, FieldDefinition[]>;
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
   isTabFieldRequired: (tabId: string, fieldId: string) => boolean;
   validationErrors: ValidationError[];
@@ -101,6 +99,12 @@ export function useContactFormDraftHelpers({
   const updateDraft = useCallback((patch: Partial<Contact>) => {
     setContactDraft((prev) => {
       const next = { ...prev, ...patch };
+      if (patch.customData !== undefined && prev.customData !== undefined) {
+        next.customData = {
+          ...(prev.customData as Record<string, unknown>),
+          ...(patch.customData as Record<string, unknown>),
+        };
+      }
       if (patch.firstName !== undefined || patch.lastName !== undefined) {
         const first = next.firstName || "";
         const last = next.lastName || "";

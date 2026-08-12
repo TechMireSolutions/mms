@@ -61,7 +61,7 @@ export function ListFieldCard({
 /** True when any Setup field for the sub-list is enabled or custom fields exist. */
 export function resolveSubListAllowAdd(
   enabledFieldFlags: boolean[],
-  customFieldsLength: number,
+  customFieldsLength: number = 0,
 ): boolean {
   return enabledFieldFlags.some(Boolean) || customFieldsLength > 0;
 }

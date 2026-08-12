@@ -5,9 +5,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
+import { useModuleTabs } from '@/hooks/useDynamicFormConfig';
 import { notify } from '@/lib/notify';
 import { Session, SESSION_TYPES } from '@/lib/data/sessionsData';
-import { SessionSchema, toTitleCase, AppTranslationKey } from '@mms/shared';
+import { SessionSchema, toTitleCase, validateDfsCustomFields, findDfsTab, AppTranslationKey } from '@mms/shared';
 import {
   SessionDetailsSection,
   SessionFinancialSection,
@@ -22,6 +23,7 @@ import {
   type SessionFormDraft,
 } from '@/tenant/features/sessions/components/sessionFormShared';
 import { SessionFormFooter } from '@/tenant/features/sessions/components/SessionFormFooter';
+import { SessionCustomFieldsBlock } from '@/tenant/features/sessions/components/SessionCustomFieldsBlock';
 
 interface SessionFormProps {
   open?: boolean;
@@ -38,9 +40,12 @@ export function SessionForm({
 }: SessionFormProps): React.JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
-  const { settings, types, statuses } = useSessionConfig();
+  const { settings, types, statuses, isFieldEnabled, isFieldRequired } = useSessionConfig();
+  const { data: dfsTabs } = useModuleTabs("sessions");
   const { activeCurrency } = useFinanceCurrency();
   const defaultCurrency = activeCurrency.code;
+  const formInstanceId = String(session?.id ?? "new");
+  const fieldsMap = (settings.fields || {}) as Record<string, import("@mms/shared").FieldDefinition[]>;
 
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
   const statusValues = statuses.length > 0 ? statuses : [...SESSION_STATUSES];
@@ -51,18 +56,18 @@ export function SessionForm({
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sessionDraft, setSessionDraft] = useState<SessionFormDraft>(() =>
-    buildSessionDraftFromRecord(session, defaultType, defaultCurrency),
+    buildSessionDraftFromRecord(session, defaultType, defaultCurrency, dfsTabs),
   );
   const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
-    sessionFormDraftSnapshot(buildSessionDraftFromRecord(session, defaultType, defaultCurrency)),
+    sessionFormDraftSnapshot(buildSessionDraftFromRecord(session, defaultType, defaultCurrency, dfsTabs)),
   );
 
   useEffect(() => {
-    const nextDraft = buildSessionDraftFromRecord(session, defaultType, defaultCurrency);
+    const nextDraft = buildSessionDraftFromRecord(session, defaultType, defaultCurrency, dfsTabs);
     setSessionDraft(nextDraft);
     setBaselineSnapshot(sessionFormDraftSnapshot(nextDraft));
     setErrors({});
-  }, [session, defaultCurrency, defaultType]);
+  }, [session, defaultCurrency, defaultType, dfsTabs]);
 
   const updateDraft = (patch: Partial<SessionFormDraft>) => {
     setSessionDraft((prev) => ({ ...prev, ...patch }));
@@ -86,6 +91,19 @@ export function SessionForm({
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      notify.error(t('common.formPleaseFixErrors'));
+      return;
+    }
+
+    // DFS Dynamic Zod schema validation for active custom fields
+    const customData = (sessionDraft.customData as Record<string, unknown> | undefined) ?? {};
+    const dfsErrors = validateDfsCustomFields(dfsTabs, customData, sessionDraft as Record<string, unknown>);
+    if (dfsErrors.length > 0) {
+      const errorMap: Record<string, string> = {};
+      for (const err of dfsErrors) {
+        if (!errorMap[err.fieldId]) errorMap[err.fieldId] = err.message;
+      }
+      setErrors({ ...newErrors, ...errorMap });
       notify.error(t('common.formPleaseFixErrors'));
       return;
     }
@@ -141,6 +159,16 @@ export function SessionForm({
     [statusValues, t],
   );
 
+  const getFieldError = (fieldId: string): string | undefined => errors[fieldId];
+
+  // DFS custom-field tabs to render after the system sections (flat form — no tab bar).
+  const dfsCustomTabs = useMemo(
+    () => (dfsTabs ?? []).filter((tab) => tab.enabled && tab.key !== "basic" && tab.key !== "financial"),
+    [dfsTabs],
+  );
+  const basicDfsFields = useMemo(() => findDfsTab(dfsTabs, "basic")?.fields, [dfsTabs]);
+  const financialDfsFields = useMemo(() => findDfsTab(dfsTabs, "financial")?.fields, [dfsTabs]);
+
   return (
     <FormModal
       open={open}
@@ -184,6 +212,46 @@ export function SessionForm({
           defaultCurrency={defaultCurrency}
           onDraftChange={updateDraft}
         />
+        {/* DFS custom fields on the "basic" tab */}
+        {basicDfsFields && basicDfsFields.length > 0 && (
+          <SessionCustomFieldsBlock
+            sessionDraft={sessionDraft}
+            formInstanceId={formInstanceId}
+            fields={fieldsMap}
+            customFields={basicDfsFields}
+            tabId="basic"
+            getFieldError={getFieldError}
+            updateDraft={updateDraft}
+            hideWhenEmpty
+          />
+        )}
+        {/* DFS custom fields on the "financial" tab */}
+        {financialDfsFields && financialDfsFields.length > 0 && (
+          <SessionCustomFieldsBlock
+            sessionDraft={sessionDraft}
+            formInstanceId={formInstanceId}
+            fields={fieldsMap}
+            customFields={financialDfsFields}
+            tabId="financial"
+            getFieldError={getFieldError}
+            updateDraft={updateDraft}
+            hideWhenEmpty
+          />
+        )}
+        {/* DFS custom-field-only tabs (non-system tabs) */}
+        {dfsCustomTabs.map((dfsTab) => (
+          <SessionCustomFieldsBlock
+            key={dfsTab.key}
+            sessionDraft={sessionDraft}
+            formInstanceId={formInstanceId}
+            fields={fieldsMap}
+            customFields={dfsTab.fields}
+            tabId={dfsTab.key}
+            getFieldError={getFieldError}
+            updateDraft={updateDraft}
+            hideWhenEmpty={false}
+          />
+        ))}
       </div>
     </FormModal>
   );

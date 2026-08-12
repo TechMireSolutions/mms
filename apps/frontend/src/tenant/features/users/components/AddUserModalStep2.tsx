@@ -2,16 +2,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CalendarClock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { RegistryDateField } from "@/components/ui/RegistryDateField";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Input as UiInput } from "@/components/ui/input";
+import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
+import { Field } from "@/components/ui/FormPrimitives";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { useWorkspaceRoles } from "@/tenant/hooks/useWorkspaceRoles";
 import { todayISO } from "@mms/shared";
-import { FieldError, Label } from "./AddUserModalFieldHelpers";
+import { FieldError } from "./AddUserModalFieldHelpers";
 import { RoleCard } from "./AddUserModalRoleCard";
 import type { AddUserFormValue, AddUserStepProps } from "./addUserModalTypes";
 
@@ -73,57 +71,44 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
               const updateFieldValue = (fieldValue: AddUserFormValue): void => {
                 setForm((previousForm) => ({ ...previousForm, [field.id]: fieldValue }));
               };
-              return (
-                <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
-                  <Label required={field.required}>{field.label}</Label>
-                  {field.type === "textarea" ? (
-                    <Textarea
-                      className="min-h-[3.75rem]"
-                      value={String(value)}
-                      onChange={(event) => updateFieldValue(event.target.value)}
-                      placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
-                      required={field.required}
-                    />
-                  ) : field.type === "select" ? (
-                    <FormSelect
-                      value={String(value)}
-                      onChange={updateFieldValue}
-                      options={field.options || []}
-                      placeholder={t("users.addSelectOption")}
-                    />
-                  ) : field.type === "boolean" ? (
+              const fieldId = `users-custom-${field.id}`;
+
+              // Boolean fields render inline with label (checkbox UX).
+              if (field.type === "boolean") {
+                return (
+                  <div key={field.id}>
                     <label className="flex items-center gap-2.5 py-2 cursor-pointer select-none">
                       <Checkbox
+                        id={fieldId}
                         checked={!!value}
                         onCheckedChange={(checked) => updateFieldValue(!!checked)}
                       />
                       <span className="text-xs font-medium text-foreground">{field.label}</span>
                     </label>
-                  ) : field.type === "number" ? (
-                    <UiInput
-                      type="number"
-                      value={typeof value === "number" || typeof value === "string" ? value : ""}
-                      onChange={(event) => updateFieldValue(event.target.value)}
-                      placeholder={field.placeholder || t("users.addEnterNumber")}
-                      required={field.required}
+                  </div>
+                );
+              }
+
+              // Use the shared CustomFieldInput component — eliminates the hand-rolled type-switch.
+              const adaptedField = {
+                key: field.id,
+                label: field.label,
+                type: (field.type || "text") as any,
+                required: field.required,
+                options: field.options,
+                placeholder: field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() }),
+                defaultValue: field.defaultValue,
+              };
+
+              return (
+                <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+                  <Field id={fieldId} label={field.label} required={field.required}>
+                    <CustomFieldInput
+                      field={adaptedField as any}
+                      value={value}
+                      onChange={(val) => updateFieldValue(val as AddUserFormValue)}
                     />
-                  ) : field.type === "date" ? (
-                    <RegistryDateField
-                      id={`users-custom-${field.id}`}
-                      name={field.id}
-                      value={String(value)}
-                      onChange={(val) => updateFieldValue(val)}
-                      required={field.required}
-                    />
-                  ) : (
-                    <UiInput
-                      type="text"
-                      value={String(value)}
-                      onChange={(event) => updateFieldValue(event.target.value)}
-                      placeholder={field.placeholder || t("users.addEnterField", { label: field.label.toLowerCase() })}
-                      required={field.required}
-                    />
-                  )}
+                  </Field>
                 </div>
               );
             })}

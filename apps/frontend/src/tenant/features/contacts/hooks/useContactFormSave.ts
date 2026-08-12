@@ -2,9 +2,7 @@ import { useCallback, useState } from "react";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactValidation } from "@/lib/contacts/useContactValidation";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { getApiValidationErrors, getApiValidationMessage } from "@/lib/apiValidationMessage";
 import {
   toTitleCase,
@@ -16,7 +14,8 @@ import {
   syncContactScalarFields,
   normalizeToE164,
   isContactDeleted,
-  findContactUniqueFieldConflicts,
+  validateDfsCustomFields,
+  type TabConfig,
   type ValidationError,
 } from "@mms/shared";
 
@@ -27,6 +26,7 @@ export function useContactFormSave({
   onSave,
   onClose,
   onValidationTab,
+  dfsTabs,
 }: {
   contact?: Contact;
   contactDraft: Partial<Contact>;
@@ -34,10 +34,9 @@ export function useContactFormSave({
   onSave: (contact: Contact) => void | Promise<void>;
   onClose: () => void;
   onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
+  dfsTabs?: TabConfig[];
 }) {
   const { t } = useTranslation();
-  const { language } = useGlobalSettings();
-  const { fields } = useContactConfig();
   const validate = useContactValidation();
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -75,16 +74,10 @@ export function useContactFormSave({
       });
     }
 
-    const uniqueCandidate = {
-      ...cleanedDraft,
-      id: cleanedDraft.id || contact?.id,
-    };
-    // Within-candidate uniqueness only — peer collisions are enforced by the server.
-    formErrors.push(
-      ...findContactUniqueFieldConflicts(uniqueCandidate, [], fields, language, {
-        defaultPhoneCountryCode: defaultCountryCode,
-      }),
-    );
+    // DFS Dynamic Zod schema validation for active custom fields across module tabs
+    const customData = (cleanedDraft.customData as Record<string, unknown> | undefined) || {};
+    const dfsErrors = validateDfsCustomFields(dfsTabs, customData, cleanedDraft as Record<string, unknown>);
+    formErrors.push(...dfsErrors);
 
     if (formErrors.length > 0) {
       setValidationErrors(formErrors);
@@ -166,8 +159,7 @@ export function useContactFormSave({
     contact,
     contactDraft,
     defaultCountryCode,
-    fields,
-    language,
+    dfsTabs,
     onClose,
     onSave,
     onValidationTab,
@@ -177,3 +169,4 @@ export function useContactFormSave({
 
   return { saving, validationErrors, setValidationErrors, handleSave };
 }
+

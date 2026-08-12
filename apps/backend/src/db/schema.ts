@@ -865,5 +865,40 @@ export const messageLogs = pgTable('message_logs', {
     .where(sql`${table.deletedAt} is null`),
 ]);
 
+export const customFields = pgTable('custom_fields', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  tabId: text('tab_id').notNull(),
+  key: text('key').notNull(),
+  label: text('label').notNull(),
+  type: text('type').notNull(),
+  enabled: boolean('enabled').notNull().default(true),
+  required: boolean('required').notNull().default(false),
+  unique: boolean('unique').notNull().default(false),
+  placeholder: text('placeholder'),
+  description: text('description'),
+  defaultValue: text('default_value'),
+  options: jsonb('options').$type<string[]>(),
+  minValue: integer('min_value'),
+  maxValue: integer('max_value'),
+  mask: text('mask'),
+  allowedExtensions: text('allowed_extensions'),
+  maxFileSize: integer('max_file_size'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  hasData: boolean('has_data').notNull().default(false),
+  isSystem: boolean('is_system').notNull().default(false),
+  deletedAt: timestamp('deleted_at', { mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('custom_fields_tab_idx').on(table.workspaceSubdomain, table.tabId),
+  index('custom_fields_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+
+
 
 

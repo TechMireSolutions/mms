@@ -1,9 +1,6 @@
 import type React from "react";
-
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
-import { RegistryDateField } from "@/components/ui/RegistryDateField";
-import { Textarea } from "@/components/ui/textarea";
+import { Field } from "@/components/ui/FormPrimitives";
+import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
 import type { ModuleFieldDef } from "@mms/shared";
 
 interface QuestionSourceInputProps {
@@ -23,43 +20,25 @@ export function QuestionSourceInput({
   inputId,
   required,
 }: QuestionSourceInputProps): React.ReactNode {
-  const requiredMark = required ? " *" : "";
-  if (field.type === "textarea") {
-    return (
-      <div key={field.id} className="sm:col-span-2">
-        <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
-        <Textarea id={inputId} name={field.id} value={value} onChange={(event) => onChange(event.target.value)} />
-      </div>
-    );
-  }
-
-  if (field.type === "date") {
-    return (
-      <div key={field.id}>
-        <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
-        <RegistryDateField
-          id={inputId}
-          name={field.id}
-          value={value}
-          onChange={onChange}
-          required={required}
-        />
-      </div>
-    );
-  }
+  const adaptedField = {
+    key: field.id,
+    label,
+    type: (field.type || "text") as any,
+    required,
+    options: field.options,
+    placeholder: field.placeholder,
+    defaultValue: field.defaultValue,
+  };
 
   return (
-    <div key={field.id}>
-      <label htmlFor={inputId} className={FORM_LABEL}>{label}{requiredMark}</label>
-      <Input
-        id={inputId}
-        name={field.id}
-        type="text"
-        className={FORM_INPUT}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required={required}
-      />
+    <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+      <Field id={inputId} label={`${label}${required ? " *" : ""}`} required={required}>
+        <CustomFieldInput
+          field={adaptedField as any}
+          value={value}
+          onChange={(val) => onChange(String(val ?? ""))}
+        />
+      </Field>
     </div>
   );
 }

@@ -8,10 +8,12 @@ import {
   type StudentDuplicateReason,
   type AppTranslationKey,
   buildDynamicStudentSchema,
+  validateDfsCustomFields,
   formatStudentZodIssues,
   type ValidationError,
   type FieldDefinition,
   type StudentsSettings,
+  type TabConfig,
 } from "@mms/shared";
 import { checkStudentRegistrationDuplicate } from "@/tenant/features/students/hooks/useStudents";
 
@@ -31,6 +33,7 @@ export interface StudentValidationContext {
   linkedGenderRaw: string;
   linkedDob: string;
   linkedContact?: Contact | null;
+  dfsTabs?: TabConfig[];
 }
 
 export function validateStudentDraft(
@@ -52,11 +55,25 @@ export function validateStudentDraft(
     gender: context.linkedGenderRaw,
     dob: context.linkedDob,
   };
+
+  const errors: ValidationError[] = [];
+
   const parseResult = schema.safeParse(validationDraft);
   if (!parseResult.success) {
-    return formatStudentZodIssues(parseResult.error, validationDraft, context.fields);
+    errors.push(...formatStudentZodIssues(parseResult.error, validationDraft, context.fields));
   }
-  return null;
+
+  if (context.dfsTabs && context.dfsTabs.length > 0) {
+    const customDataPayload = (studentDraft.customData as Record<string, unknown> | undefined) ?? {};
+    const dfsErrors = validateDfsCustomFields(
+      context.dfsTabs,
+      customDataPayload,
+      studentDraft as Record<string, unknown>,
+    );
+    errors.push(...dfsErrors);
+  }
+
+  return errors.length > 0 ? errors : null;
 }
 
 interface StudentDuplicateCheckInput {

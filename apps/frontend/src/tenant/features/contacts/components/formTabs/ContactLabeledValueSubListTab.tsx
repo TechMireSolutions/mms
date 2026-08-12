@@ -2,14 +2,10 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
-import { listEnabledCustomContactFormFields, type Contact } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
-import {
-  ContactSubListCustomFields,
-  withSubListCustomFieldDefaults,
-} from "./ContactSubListCustomFields";
 import type { ContactSubListKey, ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -89,12 +85,10 @@ export function ContactLabeledValueSubListTab({
   const { t } = useTranslation();
   const showLabel = isFieldEnabled(listKey, labelFieldKey);
   const showValue = isFieldEnabled(listKey, valueFieldKey);
-  const customFields = listEnabledCustomContactFormFields(fields, listKey);
-  const allowAdd = resolveSubListAllowAdd([showLabel, showValue], customFields.length);
+  const allowAdd = resolveSubListAllowAdd([showLabel, showValue]);
   const items = (contactDraft[listKey] as ListItem[] | undefined) ?? [];
 
-  const makeEmpty = () =>
-    withSubListCustomFieldDefaults(emptyItem(resolveLabel(undefined, options, t)), fields, listKey);
+  const makeEmpty = () => emptyItem(resolveLabel(undefined, options, t));
   const addItem = () => {
     addSubListItem(listKey, makeEmpty() as unknown as NonNullable<Contact[typeof listKey]>[number]);
   };
@@ -187,15 +181,6 @@ export function ContactLabeledValueSubListTab({
                     <FieldErrorMessage message={valueError} />
                   </>
                 ) : null}
-                <ContactSubListCustomFields
-                  tabId={listKey}
-                  fields={fields}
-                  formInstanceId={formInstanceId}
-                  rowIndex={idx}
-                  row={item}
-                  getListItemError={getListItemError}
-                  onPatch={(patch) => updateItem(idx, patch)}
-                />
               </div>
             </ListFieldCard>
           );

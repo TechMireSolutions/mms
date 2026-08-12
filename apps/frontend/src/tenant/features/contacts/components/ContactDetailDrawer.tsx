@@ -59,6 +59,7 @@ export default function ContactDetailDrawer({
     primaryEmail,
     handleAddNote,
     handleNavigateToContact,
+    dfsTabs,
   } = useContactDetailViewModel({
     initialContact,
     allContacts,
@@ -140,6 +141,7 @@ export default function ContactDetailDrawer({
         onFiles={handleFiles}
         onFileChange={handleFileChange}
         onRequestDelete={setPendingAttachmentDelete}
+        dfsTabs={dfsTabs}
       />
       <ConfirmAlertDialog
         open={pendingAttachmentDelete !== null}

@@ -10,17 +10,17 @@ import { TagsInput } from "@/components/ui/FormTagsInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { cn } from "@/lib/utils";
-import type { FieldDefinition } from "@mms/shared";
+import type { FieldDefinition, CustomFieldConfig as SharedCustomFieldConfig } from "@mms/shared";
 import {
   CustomFieldAiSummaryInput,
   CustomFieldLocationInput,
   CustomFieldRatingInput,
 } from "./formCustomFieldSpecialInputs";
 
-export type CustomFieldConfig = FieldDefinition;
+export type CustomFieldConfig = SharedCustomFieldConfig;
 
 interface CustomFieldInputProps {
-  field: FieldDefinition;
+  field: FieldDefinition | SharedCustomFieldConfig;
   value: unknown;
   onChange: (fieldValue: unknown) => void;
   disabled?: boolean;
@@ -32,7 +32,7 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
   const { activeCurrency } = useFinanceCurrency();
   const displayValue = value ?? "";
 
-  const getOptionsArray = (options: string | string[] | undefined): string[] => {
+  const getOptionsArray = (options: string | string[] | null | undefined): string[] => {
     if (Array.isArray(options)) return options;
     if (typeof options === "string") {
       return options.split(",").map((option) => option.trim()).filter(Boolean);
@@ -170,17 +170,33 @@ export function CustomFieldInput({ field, value, onChange, disabled = false, err
     );
   }
 
-  const inputType = field.type === "number" ? "number" : "text";
+  const getInputType = (type: string) => {
+    switch (type) {
+      case "number":
+        return "number";
+      case "phone":
+        return "tel";
+      case "email":
+        return "email";
+      case "url":
+        return "url";
+      default:
+        return "text";
+    }
+  };
+
   return (
     <Input
       id={field.key}
       name={field.key}
-      type={inputType}
+      type={getInputType(field.type)}
       value={String(displayValue)}
       onChange={(event) => onChange(event.target.value)}
       placeholder={field.mask || field.placeholder || ""}
       disabled={disabled}
       readOnly={disabled}
+      aria-invalid={error}
+      aria-required={field.required}
       className={error ? "border-destructive focus-visible:ring-destructive" : ""}
     />
   );

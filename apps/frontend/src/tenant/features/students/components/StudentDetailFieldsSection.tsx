@@ -146,7 +146,8 @@ export function StudentDetailFieldsSection({
       });
     }
 
-    const rawValue = (student as Record<string, unknown>)[field.key];
+    const customDataObj = (student as Record<string, unknown>).customData as Record<string, unknown> | undefined;
+    const rawValue = (student as Record<string, unknown>)[field.key] ?? customDataObj?.[field.key];
     const displayValue = formatStudentListCustomValue(rawValue, t, field.type);
     if (displayValue == null) return null;
     return (

@@ -1,6 +1,6 @@
 import type React from "react";
 import { Clock, GraduationCap, Hash } from "lucide-react";
-import { Field } from "@/components/ui/FormPrimitives";
+import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_INPUT } from "@/components/ui/formStyles";
@@ -24,6 +24,8 @@ interface StudentRegistrationSectionProps {
   isGrAutoAssigned: boolean;
   grInputDisabled: boolean;
   statusSelectOptions: StudentStatusSelectOption[];
+  statuses?: string[];
+  onUpdateStatuses?: (statuses: string[]) => void | Promise<void>;
   fields: Record<string, FieldDefinition[]>;
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
@@ -37,6 +39,8 @@ export function StudentRegistrationSection({
   isGrAutoAssigned,
   grInputDisabled,
   statusSelectOptions,
+  statuses,
+  onUpdateStatuses,
   fields,
   isFieldEnabled,
   isFieldRequired,
@@ -66,6 +70,8 @@ export function StudentRegistrationSection({
     "students.form.registeredDate",
     t,
   );
+
+  const rawStatuses = statuses ?? statusSelectOptions.map((opt) => opt.value);
 
   return (
     <div className="space-y-6">
@@ -113,11 +119,25 @@ export function StudentRegistrationSection({
               error={getFieldError("status")}
               id="status"
             >
-              <FormSelect
-                value={studentDraft.status || "active"}
-                onChange={(value) => onDraftChange({ status: value as StudentStatus })}
-                options={statusSelectOptions}
-              />
+              {onUpdateStatuses ? (
+                <EditableSelect
+                  id="status"
+                  options={rawStatuses}
+                  value={studentDraft.status || "active"}
+                  onChange={(value) => onDraftChange({ status: value as StudentStatus })}
+                  onUpdateOptions={onUpdateStatuses}
+                  placeholder={t("contacts.form.selectOption")}
+                  className="w-full"
+                />
+              ) : (
+                <FormSelect
+                  id="status"
+                  name="status"
+                  value={studentDraft.status || "active"}
+                  onChange={(value) => onDraftChange({ status: value as StudentStatus })}
+                  options={statusSelectOptions}
+                />
+              )}
             </Field>
           ) : null}
 
