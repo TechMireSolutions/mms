@@ -67,7 +67,9 @@ describe('dbSyncService collection persistence', () => {
     }, undefined, true);
     const savedNames = dbSaveCollection.mock.calls.map((call) => call[0] as string);
     expect(savedNames[0]).toBe('contacts');
-    expect(savedNames.at(-1)).toBe('users');
+    // Contacts must restore before users (tenant_users.contact_id FK); per-user
+    // column-prefs (incl. hasanat user_id → tenant_users.id FK) restore after users.
+    expect(savedNames.indexOf('users')).toBeGreaterThan(savedNames.indexOf('contacts'));
     expect(savedNames).toContain('students');
     expect(savedNames).toContain('message_logs');
     expect(dbSaveCollection).toHaveBeenCalledWith('students', [{ id: 's-1' }], {

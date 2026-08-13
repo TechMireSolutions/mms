@@ -38,11 +38,21 @@ export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   finance_user_column_prefs: 38,
   hasanat_field_configs: 39,
   hasanat_module_preferences: 40,
-  hasanat_distribution_user_column_prefs: 41,
-  hasanat_redemption_user_column_prefs: 42,
   accounting_field_configs: 43,
   accounting_module_preferences: 44,
   users: 900,
+  // Per-user column prefs restore after `users` because the hasanat
+  // distribution/redemption tables have `user_id → tenant_users.id` FKs.
+  // The no-FK column-prefs tables join them here for a single consistent group.
+  hasanat_distribution_user_column_prefs: 910,
+  hasanat_redemption_user_column_prefs: 911,
+  finance_payment_user_column_prefs: 912,
+  accounting_account_user_column_prefs: 913,
+  accounting_journal_user_column_prefs: 914,
+  examination_exam_user_column_prefs: 915,
+  examination_results_user_column_prefs: 916,
+  question_bank_user_column_prefs: 917,
+  attendance_user_column_prefs: 918,
   audit_log: 950,
 };
 
@@ -131,6 +141,11 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     fnName: 'replaceAttendanceModulePreferencesForWorkspace',
     snapshotFnName: 'listAllAttendanceModulePreferencesByWorkspace',
   },
+  attendance_user_column_prefs: {
+    importPath: './repositories/attendanceUserColumnPrefsRepository.js',
+    fnName: 'replaceAttendanceUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllAttendanceUserColumnPrefsByWorkspace',
+  },
   attendance_records: {
     importPath: './repositories/attendanceRepository.js',
     fnName: 'replaceAttendanceRecordsForWorkspace',
@@ -196,6 +211,11 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     fnName: 'replaceFinanceUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllFinanceUserColumnPrefsByWorkspace',
   },
+  finance_payment_user_column_prefs: {
+    importPath: './repositories/financePaymentUserColumnPrefsRepository.js',
+    fnName: 'replaceFinancePaymentUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllFinancePaymentUserColumnPrefsByWorkspace',
+  },
   exams: {
     importPath: './repositories/examinationRepository.js',
     fnName: 'replaceExamsForWorkspace',
@@ -215,6 +235,16 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/examinationModulePreferencesRepository.js',
     fnName: 'replaceExaminationModulePreferencesForWorkspace',
     snapshotFnName: 'listAllExaminationModulePreferencesByWorkspace',
+  },
+  examination_exam_user_column_prefs: {
+    importPath: './repositories/examinationExamUserColumnPrefsRepository.js',
+    fnName: 'replaceExaminationExamUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllExaminationExamUserColumnPrefsByWorkspace',
+  },
+  examination_results_user_column_prefs: {
+    importPath: './repositories/examinationResultsUserColumnPrefsRepository.js',
+    fnName: 'replaceExaminationResultsUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllExaminationResultsUserColumnPrefsByWorkspace',
   },
   hasanat_denoms: {
     importPath: './repositories/hasanatRepository.js',
@@ -271,6 +301,16 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     fnName: 'replaceFiscalYearsForWorkspace',
     snapshotFnName: 'listFiscalYearsByWorkspace',
   },
+  accounting_account_user_column_prefs: {
+    importPath: './repositories/accountingAccountUserColumnPrefsRepository.js',
+    fnName: 'replaceAccountingAccountUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllAccountingAccountUserColumnPrefsByWorkspace',
+  },
+  accounting_journal_user_column_prefs: {
+    importPath: './repositories/accountingJournalUserColumnPrefsRepository.js',
+    fnName: 'replaceAccountingJournalUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllAccountingJournalUserColumnPrefsByWorkspace',
+  },
   questions: {
     importPath: './repositories/questionBankRepository.js',
     fnName: 'replaceQuestionsForWorkspace',
@@ -295,6 +335,11 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/questionBankModulePreferencesRepository.js',
     fnName: 'replaceQuestionBankModulePreferencesForWorkspace',
     snapshotFnName: 'listAllQuestionBankModulePreferencesByWorkspace',
+  },
+  question_bank_user_column_prefs: {
+    importPath: './repositories/questionBankUserColumnPrefsRepository.js',
+    fnName: 'replaceQuestionBankUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllQuestionBankUserColumnPrefsByWorkspace',
   },
   user_activity_logs: {
     importPath: './repositories/logsRepository.js',

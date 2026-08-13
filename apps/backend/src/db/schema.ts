@@ -493,6 +493,17 @@ export const attendanceModulePreferences = pgTable('attendance_module_preference
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
+/** Per-user Attendance Work column layout (was document-store `attendance_user_column_preferences`). */
+export const attendanceUserColumnPrefs = pgTable('attendance_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('attendance_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
 export const attendance = pgTable('attendance', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -662,6 +673,28 @@ export const accountingModulePreferences = pgTable('accounting_module_preference
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 });
 
+/** Per-user Accounting accounts Work column layout (was document-store `accounting_account_user_column_preferences`). */
+export const accountingAccountUserColumnPrefs = pgTable('accounting_account_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('accounting_account_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Per-user Accounting journal Work column layout (was document-store `accounting_journal_user_column_preferences`). */
+export const accountingJournalUserColumnPrefs = pgTable('accounting_journal_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('accounting_journal_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
 export const financeUserColumnPrefs = pgTable('finance_user_column_prefs', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   userId: text('user_id').notNull(),
@@ -670,6 +703,17 @@ export const financeUserColumnPrefs = pgTable('finance_user_column_prefs', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
   index('finance_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Per-user Finance payments Work column layout (was document-store `finance_payment_user_column_preferences`). */
+export const financePaymentUserColumnPrefs = pgTable('finance_payment_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('finance_payment_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
 export const hasanatFieldConfigs = pgTable('hasanat_field_configs', {
@@ -695,6 +739,28 @@ export const examinationsModulePreferences = pgTable('examinations_module_prefer
   preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 });
+
+/** Per-user Examinations exams Work column layout (was document-store `examination_exam_user_column_preferences`). */
+export const examinationExamUserColumnPrefs = pgTable('examination_exam_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('examination_exam_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Per-user Examinations results Work column layout (was document-store `examination_results_user_column_preferences`). */
+export const examinationResultsUserColumnPrefs = pgTable('examination_results_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('examination_results_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
 
 export const hasanatDistributionUserColumnPrefs = pgTable('hasanat_distribution_user_column_prefs', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -1042,3 +1108,14 @@ export const questionBankModulePreferences = pgTable('question_bank_module_prefe
   preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull().default({}),
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 });
+
+/** Per-user Question Bank Work column layout (was document-store `question_bank_user_column_preferences`). */
+export const questionBankUserColumnPrefs = pgTable('question_bank_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('question_bank_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);

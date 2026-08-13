@@ -24,4 +24,28 @@ END $$;
 --> statement-breakpoint
 ALTER TABLE "examinations_field_configs" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
+DROP POLICY IF EXISTS tenant_isolation_policy ON "examinations_field_configs";
+--> statement-breakpoint
+CREATE POLICY tenant_isolation_policy ON "examinations_field_configs" FOR ALL USING (
+  current_setting('app.rls_bypass', true) = 'on'
+  OR workspace_subdomain = NULLIF(current_setting('app.current_tenant', true), '')
+) WITH CHECK (
+  current_setting('app.rls_bypass', true) = 'on'
+  OR workspace_subdomain = NULLIF(current_setting('app.current_tenant', true), '')
+);
+--> statement-breakpoint
+ALTER TABLE "examinations_field_configs" FORCE ROW LEVEL SECURITY;
+--> statement-breakpoint
 ALTER TABLE "examinations_module_preferences" ENABLE ROW LEVEL SECURITY;
+--> statement-breakpoint
+DROP POLICY IF EXISTS tenant_isolation_policy ON "examinations_module_preferences";
+--> statement-breakpoint
+CREATE POLICY tenant_isolation_policy ON "examinations_module_preferences" FOR ALL USING (
+  current_setting('app.rls_bypass', true) = 'on'
+  OR workspace_subdomain = NULLIF(current_setting('app.current_tenant', true), '')
+) WITH CHECK (
+  current_setting('app.rls_bypass', true) = 'on'
+  OR workspace_subdomain = NULLIF(current_setting('app.current_tenant', true), '')
+);
+--> statement-breakpoint
+ALTER TABLE "examinations_module_preferences" FORCE ROW LEVEL SECURITY;

@@ -15,7 +15,11 @@ export function generateTabId(): string {
 }
 
 /**
- * Checks value uniqueness across entity customData using PostgreSQL GIN containment (@>).
+ * DFS §4.2 — `fieldKey` is client-supplied; validate it against the tenant's
+ * `custom_fields` registry before probing JSONB `@>` containment. The value is
+ * bound as a parameterized `sql` argument (never string-interpolated), so this
+ * guard is defense-in-depth against probing arbitrary JSONB keys, not a SQL-i
+ * fix. Throws `FIELD_NOT_REGISTERED` when the key is absent from the registry.
  */
 export async function checkValueUniqueness(
   workspaceSubdomain: string,
@@ -23,34 +27,67 @@ export async function checkValueUniqueness(
   fieldKey: string,
   value: unknown
 ): Promise<boolean> {
-  const matchPattern = JSON.stringify({ [fieldKey]: value });
   const db = activeDb();
 
-  // Map module to target Drizzle entity table
-  let table: any = contacts;
-  if (moduleName === 'students') {
-    table = students;
-  } else if (moduleName === 'contacts') {
-    table = contacts;
-  } else if (moduleName === 'teachers') {
-    table = teachers;
-  } else if (moduleName === 'users') {
-    table = tenantUsers;
-  } else if (moduleName === 'finance' || moduleName === 'invoices') {
-    table = financeInvoices;
-  }
-
-  const [result] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(table)
+  // Validate fieldKey against the tenant's custom_fields registry. `module_id`
+  // lives on `custom_tabs`, so join through the tab. Throws when the key is not
+  // a registered field for this module (defense-in-depth — the value is already
+  // bound as a parameterized `sql` argument, never string-interpolated).
+  const [registered] = await db
+    .select({ id: customFields.id })
+    .from(customFields)
+    .innerJoin(customTabs, eq(customFields.tabId, customTabs.id))
     .where(
       and(
-        eq(table.workspaceSubdomain, workspaceSubdomain),
-        sql`${table.customData} @> ${matchPattern}::jsonb`
-      )
+        eq(customFields.workspaceSubdomain, workspaceSubdomain),
+        eq(customTabs.workspaceSubdomain, workspaceSubdomain),
+        eq(customTabs.moduleId, moduleName),
+        eq(customFields.key, fieldKey),
+      ),
     );
+  if (!registered) {
+    throw new Error('FIELD_NOT_REGISTERED');
+  }
 
-  return Number(result?.count ?? 0) === 0;
+  const matchPattern = JSON.stringify({ [fieldKey]: value });
+
+  // Count existing rows whose customData (or profileJson for users) contains
+  // the field key/value via GIN-backed `@>` containment.
+  const countCustomData = async (
+    table: typeof contacts | typeof students | typeof teachers | typeof financeInvoices,
+  ): Promise<number> => {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(table)
+      .where(
+        and(
+          eq(table.workspaceSubdomain, workspaceSubdomain),
+          sql`${table.customData} @> ${matchPattern}::jsonb`,
+        ),
+      );
+    return Number(result?.count ?? 0);
+  };
+
+  if (moduleName === 'students') return (await countCustomData(students)) === 0;
+  if (moduleName === 'teachers') return (await countCustomData(teachers)) === 0;
+  if (moduleName === 'finance' || moduleName === 'invoices') {
+    return (await countCustomData(financeInvoices)) === 0;
+  }
+  if (moduleName === 'users') {
+    // tenant_users stores DFS custom data in `profile_json`, not `custom_data`.
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(tenantUsers)
+      .where(
+        and(
+          eq(tenantUsers.workspaceSubdomain, workspaceSubdomain),
+          sql`${tenantUsers.profileJson} @> ${matchPattern}::jsonb`,
+        ),
+      );
+    return Number(result?.count ?? 0) === 0;
+  }
+
+  return (await countCustomData(contacts)) === 0;
 }
 
 export async function listModuleTabs(
@@ -82,7 +119,7 @@ export async function listModuleTabs(
       tabId: field.tabId,
       key: field.key,
       label: field.label,
-      type: field.type as any,
+      type: field.type as CustomFieldConfig['type'],
       enabled: field.enabled,
       required: field.required,
       unique: field.unique,

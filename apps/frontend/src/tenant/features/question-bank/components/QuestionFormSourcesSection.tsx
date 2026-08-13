@@ -9,18 +9,19 @@ import type { QuestionFormDraft, UpdateQuestionDraft } from "./questionFormTypes
 interface QuestionFormSourcesSectionProps {
   questionDraft: QuestionFormDraft;
   updateDraft: UpdateQuestionDraft;
+  sourceBooks: QuestionSourceBook[];
+  onPersistBook: (book: QuestionSourceBook) => Promise<void> | void;
+  onRemoveBook: (bookId: string) => Promise<void> | void;
 }
 
 export function QuestionFormSourcesSection({
   questionDraft,
   updateDraft,
+  sourceBooks,
+  onPersistBook,
+  onRemoveBook,
 }: QuestionFormSourcesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const sourceBooks: QuestionSourceBook[] = [
-    { id: "quran", name: t("questionBank.sourceBook.nobleQuran"), fieldIds: ["sourceSurah", "sourceAyah"], metadata: {} },
-    { id: "hadith", name: t("questionBank.sourceBook.sahihBukhari"), fieldIds: ["sourceHadithNumber"], metadata: {} },
-    { id: "fiqh", name: t("questionBank.sourceBook.fiqhBasics"), fieldIds: ["sourceBookName", "sourcePageNumber"], metadata: {} },
-  ];
   const sourceFields: ModuleFieldDef[] = [
     { id: "sourceSurah", label: t("questionBank.source.surah"), type: "text", required: false, enabled: true },
     { id: "sourceAyah", label: t("questionBank.source.ayah"), type: "text", required: false, enabled: true },
@@ -43,7 +44,8 @@ export function QuestionFormSourcesSection({
           availableFieldIds={availableFieldIds}
           orderedSourceFields={sourceFields}
           onCitationsChange={(next) => updateDraft({ sourceCitations: next })}
-          onBooksUpdated={() => {}}
+          onPersistBook={onPersistBook}
+          onRemoveBook={onRemoveBook}
           fieldLabel={(id, fallback) => fallback ?? String(id)}
           translate={(key) => t(key as AppTranslationKey)}
         />

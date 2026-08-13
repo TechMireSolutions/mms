@@ -3,6 +3,7 @@ import { activeDb } from '../db/dbConnection.js';
 import { auditLogs, customFields, customTabs } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { getRequestTenant, getRequestUserId } from '../lib/tenantContext.js';
+import type { AuthenticatedRequest } from '../middleware/authenticate.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -61,7 +62,7 @@ export async function auditOnResponse(
   if (request.method === 'GET' || !request.auditContext || reply.statusCode >= 400) return;
 
   const tenantSubdomain = getRequestTenant();
-  const userId = getRequestUserId() ?? (request as any).user?.id;
+  const userId = getRequestUserId() ?? (request as AuthenticatedRequest).user?.id;
 
   if (!tenantSubdomain || !userId) return;
   const db = activeDb();
@@ -72,8 +73,8 @@ export async function auditOnResponse(
       tableName: request.auditContext.entityType,
       recordId: request.auditContext.entityId,
       action: request.method,
-      oldValues: request.auditContext.previousState as any ?? null,
-      newValues: request.body as any ?? null,
+      oldValues: request.auditContext.previousState ?? null,
+      newValues: request.body ?? null,
       userId,
     });
   } catch (err) {

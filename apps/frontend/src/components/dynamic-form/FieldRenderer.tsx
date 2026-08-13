@@ -1,9 +1,10 @@
 import { useFormContext, Controller } from 'react-hook-form';
-import type { CustomFieldConfig, AppTranslationKey } from '@mms/shared';
+import { normalizePhoneInput, type CustomFieldConfig } from '@mms/shared';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { FormSelect } from '@/components/ui/FormSelect';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { TimePicker } from '@/components/ui/TimePicker';
@@ -14,6 +15,7 @@ export function FieldRenderer({ field }: { field: CustomFieldConfig }) {
   const {
     register,
     control,
+    setValue,
     formState: { errors },
   } = useFormContext();
   const error = errors[field.key];
@@ -31,12 +33,27 @@ export function FieldRenderer({ field }: { field: CustomFieldConfig }) {
       case 'text':
       case 'email':
       case 'url':
+        return (
+          <Input
+            {...commonProps}
+            type={field.type}
+            {...register(field.key)}
+            className="min-h-11"
+          />
+        );
+
       case 'phone':
         return (
           <Input
             {...commonProps}
-            type={field.type === 'phone' ? 'tel' : field.type}
-            {...register(field.key)}
+            type="tel"
+            inputMode="tel"
+            {...register(field.key, {
+              onBlur: (e) => {
+                const normalized = normalizePhoneInput(e.target.value);
+                setValue(field.key, normalized, { shouldValidate: true });
+              },
+            })}
             className="min-h-11"
           />
         );
@@ -63,6 +80,7 @@ export function FieldRenderer({ field }: { field: CustomFieldConfig }) {
           <Input
             {...commonProps}
             type="text"
+            inputMode="decimal"
             placeholder="0.00"
             {...register(field.key)}
             className="min-h-11 font-mono"
@@ -138,19 +156,16 @@ export function FieldRenderer({ field }: { field: CustomFieldConfig }) {
             name={field.key}
             control={control}
             render={({ field: { onChange, value } }) => (
-              <select
+              <FormSelect
                 id={field.key}
+                name={field.key}
+                aria-label={field.label}
                 value={(value as string) ?? ''}
                 onChange={onChange}
-                className="w-full min-h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="">{t('common.none' as AppTranslationKey) || 'Select option...'}</option>
-                {field.options?.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+                placeholder={t('common.selectOption')}
+                options={field.options ?? []}
+                className="min-h-11"
+              />
             )}
           />
         );

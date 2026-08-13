@@ -1,5 +1,5 @@
 import { Tag } from "lucide-react";
-import { APP_LANGUAGES, formatLanguageSelectLabel, type AppLanguageCode, type AppTranslationKey, type QuestionDifficulty } from "@mms/shared";
+import { APP_LANGUAGES, formatLanguageSelectLabel, type AppLanguageCode, type AppTranslationKey, type QuestionCategory, type QuestionDifficulty } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -13,12 +13,16 @@ interface QuestionFormClassificationSectionProps {
   questionDraft: QuestionFormDraft;
   errors: QuestionFormErrors;
   updateDraft: UpdateQuestionDraft;
+  categories: QuestionCategory[];
+  onCreateCategory: (category: QuestionCategory) => Promise<QuestionCategory[] | void> | QuestionCategory[] | void;
 }
 
 export function QuestionFormClassificationSection({
   questionDraft,
   errors,
   updateDraft,
+  categories,
+  onCreateCategory,
 }: QuestionFormClassificationSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -56,12 +60,13 @@ export function QuestionFormClassificationSection({
 
         <CategorySelector
           multiple
-          categories={[]}
+          categories={categories}
           value={questionDraft.categoryIds}
           onChange={(ids) => {
             const list = Array.isArray(ids) ? ids : [ids].filter(Boolean);
             updateDraft({ categoryIds: list });
           }}
+          onCreateCategory={onCreateCategory}
           required
           translate={(key) => t(key as AppTranslationKey)}
         />

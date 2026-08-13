@@ -99,9 +99,11 @@ export function buildDynamicValidationSchema(
       if (field.type === 'boolean') {
         base = base.refine((val) => val === true, { message: `${field.label} is required` });
       } else if (field.type === 'tags') {
-        base = (base as z.ZodArray<any>).min(1, `${field.label} requires at least one selection`);
-      } else if (typeof (base as any).min === 'function') {
-        base = (base as any).min(1, `${field.label} is required`);
+        base = (base as z.ZodArray<z.ZodTypeAny>).min(1, `${field.label} requires at least one selection`);
+      } else if (base instanceof z.ZodString) {
+        base = base.min(1, `${field.label} is required`);
+      } else if (base instanceof z.ZodNumber) {
+        base = base.min(1, `${field.label} is required`);
       }
     } else {
       base = z.preprocess((val) => (val === '' ? null : val), base.optional().nullable());

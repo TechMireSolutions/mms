@@ -11,19 +11,19 @@ import {
 
 const SETTINGS_KEY = 'question_bank_settings';
 
-export async function runMigration068(): Promise<void> {
+export async function runMigration072(): Promise<void> {
   console.log('Migrating Question Bank setup config to relational tables...');
   const db = getDb();
-  
+
   const rows = await db.select().from(schema.objects);
   const settingsByTenant = new Map<string, Record<string, unknown>>();
-  
+
   for (const row of rows) {
     const parsed = parseTenantScopedStorageKey(row.key);
     if (!parsed) continue;
     const tenant = parsed.subdomain.trim().toLowerCase();
     if (!tenant) continue;
-    
+
     if (parsed.logicalKey === SETTINGS_KEY) {
       if (row.data && typeof row.data === 'object' && !Array.isArray(row.data)) {
         settingsByTenant.set(tenant, row.data as Record<string, unknown>);
@@ -32,7 +32,7 @@ export async function runMigration068(): Promise<void> {
   }
 
   let migrated = 0;
-  
+
   await withTenantTransaction(null, async (tx) => {
     for (const [tenant, raw] of settingsByTenant) {
       const [workspace] = await tx
@@ -40,35 +40,35 @@ export async function runMigration068(): Promise<void> {
         .from(schema.workspaces)
         .where(eq(schema.workspaces.subdomain, tenant))
         .limit(1);
-        
+
       if (!workspace) {
-        console.warn(`[Migration 068] Skipping orphaned Question Bank settings for missing workspace: ${tenant}`);
+        console.warn(`[Migration 072] Skipping orphaned Question Bank settings for missing workspace: ${tenant}`);
         continue;
       }
-      
+
       const normalizedFieldConfig = normalizeQuestionBankFieldConfigOnly(raw);
       const normalizedPrefs = normalizeQuestionBankModulePreferences(raw);
       const fieldConfigOnly = stripQuestionBankFieldConfigForPersist(normalizedFieldConfig);
-      
+
       const existingField = await tx
         .select({ workspaceSubdomain: schema.questionBankFieldConfigs.workspaceSubdomain })
         .from(schema.questionBankFieldConfigs)
         .where(eq(schema.questionBankFieldConfigs.workspaceSubdomain, tenant))
         .limit(1);
-        
+
       if (existingField.length === 0) {
         await tx.insert(schema.questionBankFieldConfigs).values({
           workspaceSubdomain: tenant,
           config: fieldConfigOnly as never,
         } as never);
       }
-      
+
       const existingPrefs = await tx
         .select({ workspaceSubdomain: schema.questionBankModulePreferences.workspaceSubdomain })
         .from(schema.questionBankModulePreferences)
         .where(eq(schema.questionBankModulePreferences.workspaceSubdomain, tenant))
         .limit(1);
-        
+
       if (existingPrefs.length === 0) {
         await tx.insert(schema.questionBankModulePreferences).values({
           workspaceSubdomain: tenant,
@@ -78,6 +78,6 @@ export async function runMigration068(): Promise<void> {
       migrated++;
     }
   });
-  
+
   console.log(`Migrated ${migrated} Question Bank setup configs.`);
 }

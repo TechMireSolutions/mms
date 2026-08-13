@@ -1,10 +1,11 @@
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { customFieldConfigSchema, type CustomFieldConfig, FIELD_TYPES_META, type AppTranslationKey } from '@mms/shared';
+import { customFieldConfigSchema, type CustomFieldConfig, FIELD_TYPES_META } from '@mms/shared';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { FormSelect } from '@/components/ui/FormSelect';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -24,7 +25,7 @@ export function CustomFieldEditor({
   const { t } = useTranslation();
 
   const methods = useForm<CustomFieldConfig>({
-    resolver: zodResolver(customFieldConfigSchema) as any,
+    resolver: zodResolver(customFieldConfigSchema) as unknown as Resolver<CustomFieldConfig>,
     defaultValues: {
       id: initialData?.id || crypto.randomUUID(),
       tabId,
@@ -54,7 +55,7 @@ export function CustomFieldEditor({
       <form onSubmit={methods.handleSubmit((data) => onSave(data as CustomFieldConfig))} className="space-y-4">
         <div>
           <Label htmlFor="label" className="text-sm font-medium">
-            {t('common.label' as AppTranslationKey) || 'Field Label'}
+            {t('dfs.editor.fieldLabel')}
           </Label>
           <Input id="label" {...methods.register('label')} className="min-h-11 mt-1" />
           {methods.formState.errors.label && (
@@ -64,23 +65,30 @@ export function CustomFieldEditor({
 
         <div>
           <Label htmlFor="type" className="text-sm font-medium">
-            {t('common.type' as AppTranslationKey) || 'Field Type'}
+            {t('dfs.editor.fieldType')}
           </Label>
-          <select
-            id="type"
-            disabled={initialData?.hasData}
-            {...methods.register('type')}
-            className="w-full min-h-11 mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            {Object.keys(FIELD_TYPES_META).map((typeKey) => (
-              <option key={typeKey} value={typeKey}>
-                {FIELD_TYPES_META[typeKey as keyof typeof FIELD_TYPES_META].displayLabelKey}
-              </option>
-            ))}
-          </select>
+          <Controller
+            name="type"
+            control={methods.control}
+            render={({ field: { onChange, value } }) => (
+              <FormSelect
+                id="type"
+                name="type"
+                aria-label={t('dfs.editor.fieldType')}
+                value={value ?? 'text'}
+                onChange={onChange}
+                disabled={!!initialData?.hasData}
+                options={Object.keys(FIELD_TYPES_META).map((typeKey) => ({
+                  value: typeKey,
+                  label: t(FIELD_TYPES_META[typeKey as keyof typeof FIELD_TYPES_META].displayLabelKey),
+                }))}
+                className="mt-1"
+              />
+            )}
+          />
           {initialData?.hasData && (
             <p className="text-xs text-amber-600 mt-1">
-              Type is locked because field contains active data
+              {t('dfs.editor.typeLocked')}
             </p>
           )}
         </div>
@@ -88,11 +96,11 @@ export function CustomFieldEditor({
         {typeMeta?.hasOptions && (
           <div>
             <Label htmlFor="options" className="text-sm font-medium">
-              Dropdown Options (comma-separated)
+              {t('dfs.editor.optionsLabel')}
             </Label>
             <Input
               id="options"
-              placeholder="Option 1, Option 2, Option 3"
+              placeholder={t('dfs.editor.optionsPlaceholder')}
               className="min-h-11 mt-1"
               value={(methods.watch('options') || []).join(', ')}
               onChange={(e) => {
@@ -114,7 +122,7 @@ export function CustomFieldEditor({
               onCheckedChange={(c) => methods.setValue('required', c === true)}
             />
             <Label htmlFor="required" className="text-sm cursor-pointer">
-              Required Field
+              {t('dfs.editor.required')}
             </Label>
           </div>
 
@@ -125,7 +133,7 @@ export function CustomFieldEditor({
               onCheckedChange={(c) => methods.setValue('unique', c === true)}
             />
             <Label htmlFor="unique" className="text-sm cursor-pointer">
-              Enforce Uniqueness
+              {t('dfs.editor.unique')}
             </Label>
           </div>
         </div>

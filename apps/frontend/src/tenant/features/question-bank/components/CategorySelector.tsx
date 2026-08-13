@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { createQuestionCategory, type AppTranslationKey, type QuestionCategory } from '@mms/shared';
-import { persistQuestionCategory } from '@/lib/data/questionBankCategories';
 import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +12,13 @@ interface CategorySelectorProps {
   value: string | string[];
   onChange: (value: string | string[]) => void;
   onCategoriesUpdated?: (categories: QuestionCategory[]) => void;
+  /**
+   * Persists a newly created category to the tenant registry via typed REST
+   * (`PUT /api/question-bank/config/preferences`). When omitted, the category
+   * is only appended locally (no persistence). Resolves to the updated registry
+   * when async so the caller can sync local state.
+   */
+  onCreateCategory?: (category: QuestionCategory) => Promise<QuestionCategory[] | void> | QuestionCategory[] | void;
   required?: boolean;
   /** When set (e.g. question language ≠ system UI), category UI uses this translator. */
   translate?: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
@@ -29,6 +35,7 @@ export function CategorySelector({
   value,
   onChange,
   onCategoriesUpdated,
+  onCreateCategory,
   required = false,
   translate,
 }: CategorySelectorProps): React.JSX.Element {
@@ -66,7 +73,7 @@ export function CategorySelector({
     applySelection(selectedCategoryIds);
   };
 
-  const handleCreate = (): void => {
+  const handleCreate = async (): Promise<void> => {
     const trimmed = newName.trim();
     if (!trimmed) return;
     const existingByName = categories.find(
@@ -79,8 +86,13 @@ export function CategorySelector({
       return;
     }
     const created = createQuestionCategory(trimmed, categories);
-    const updatedCategories = persistQuestionCategory(created);
-    onCategoriesUpdated?.(updatedCategories);
+    const localNext = [...categories, created];
+    if (onCreateCategory) {
+      const persisted = await onCreateCategory(created);
+      onCategoriesUpdated?.(Array.isArray(persisted) ? persisted : localNext);
+    } else {
+      onCategoriesUpdated?.(localNext);
+    }
     if (multiple) {
       applySelection([...selectedIds, created.id]);
     } else {

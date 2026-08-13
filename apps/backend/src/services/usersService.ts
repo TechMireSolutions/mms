@@ -125,6 +125,7 @@ export async function upsertWorkspaceUsers(records: WorkspaceUser[]): Promise<Wo
   }
 
   await saveUsers(merged as unknown as Parameters<typeof saveUsers>[0]);
+  await broadcastCollection('users');
   return loadWorkspaceUsers();
 }
 
@@ -145,12 +146,15 @@ export async function deleteUserById(id: string, deletedBy: string): Promise<boo
   const ok = await softDeleteTenantUserRow(id, deletedBy);
   if (ok) {
     await deleteRefreshTokensForUser(id);
+    await broadcastCollection('users');
   }
   return ok;
 }
 
 export async function restoreUserById(id: string): Promise<boolean> {
-  return restoreTenantUserRow(id);
+  const ok = await restoreTenantUserRow(id);
+  if (ok) await broadcastCollection('users');
+  return ok;
 }
 
 export async function bulkSoftDeleteUsers(

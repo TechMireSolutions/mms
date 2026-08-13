@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { DEFAULT_QUESTION_BANK_SETTINGS, type QuestionBankSettings } from './questionBankModuleSettings.js';
 import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import type {
+  QuestionCategory,
+  QuestionSourceBook,
+  QuestionTypeRegistryEntry,
+  QuestionDifficultyRegistryEntry,
+} from './questionBankTypes.js';
 
 /** PUT /api/question-bank/config/fields — field registry JSON without prefs keys. */
 export const questionBankFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
@@ -26,10 +32,10 @@ export const questionBankPreferencesPutBodySchema = z
 export interface QuestionBankModulePreferences {
   aiGrading: boolean;
   defaultTestDuration: number;
-  categories: any[];
-  sourceBooks: any[];
-  questionTypes: any[];
-  difficultyLevels: any[];
+  categories: QuestionCategory[];
+  sourceBooks: QuestionSourceBook[];
+  questionTypes: QuestionTypeRegistryEntry[];
+  difficultyLevels: QuestionDifficultyRegistryEntry[];
 }
 
 /** Extracts preferences slice from a raw composed settings blob. */

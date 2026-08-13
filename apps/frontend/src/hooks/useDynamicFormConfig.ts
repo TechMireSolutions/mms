@@ -1,13 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { TabConfig, CustomFieldConfig } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export function useModuleTabs(moduleName: string) {
+  const { isAuthenticated } = useAuth();
   return useQuery<TabConfig[]>({
     queryKey: ['module-tabs', moduleName],
-    queryFn: async () => {
+    enabled: isAuthenticated,
+    queryFn: async ({ signal }) => {
       const response = await apiJson<{ data: TabConfig[] }>(
-        `/api/v2/modules/${moduleName}/tabs`
+        `/api/v2/modules/${moduleName}/tabs`,
+        { signal }
       );
       return response.data;
     },

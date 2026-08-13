@@ -87,3 +87,12 @@ playwright/.cache/
 .deploy-apache-fingerprint
 .deploy-current-sha
 .deploy-releases/
+
+# Local throwaway dev/scratch scripts
+/scratch.ts
+/scratch*.js
+/temp*.js
+/fix_generic.js
+/test-ts.js
+/test-ts.ts
+/typecheck_output.txt

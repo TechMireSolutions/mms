@@ -93,6 +93,10 @@ const dataMigrationsToRun = [
   { id: '069', load: async () => (await import('./migrations/069_clear_legacy_session_lookup_collections.js')).runMigration069 },
   { id: '070', load: async () => (await import('./migrations/070_migrate_attendance_lookups.js')).runMigration070 },
   { id: '071', load: async () => (await import('./migrations/071_clear_legacy_attendance_lookup_collections.js')).runMigration071 },
+  { id: '072', load: async () => (await import('./migrations/072_migrate_question_bank_setup_config.js')).runMigration072 },
+  { id: '073', load: async () => (await import('./migrations/073_clear_legacy_question_bank_setup_objects.js')).runMigration073 },
+  { id: '074', load: async () => (await import('./migrations/074_migrate_column_prefs.js')).runMigration074 },
+  { id: '075', load: async () => (await import('./migrations/075_clear_legacy_column_prefs_objects.js')).runMigration075 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in tsx, dist in production). */

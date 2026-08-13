@@ -9,10 +9,13 @@ import {
   questionBankQuestionWriteSchema,
   type AppLanguageCode,
   type AppTranslationKey,
+  type QuestionCategory,
   type QuestionDifficulty,
   type QuestionBankQuestion as Question,
+  type QuestionSourceBook,
 } from '@mms/shared';
 import { mapZodFormErrors } from '@/lib/forms/mapZodFormErrors';
+import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { QuestionFormClassificationSection } from "@/tenant/features/question-bank/components/QuestionFormClassificationSection";
 import { QuestionFormContentSection } from "@/tenant/features/question-bank/components/QuestionFormContentSection";
 import { QuestionFormFooterSummary } from "@/tenant/features/question-bank/components/QuestionFormFooterSummary";
@@ -23,10 +26,12 @@ import type { QuestionFormDraft, QuestionFormProps } from "./questionFormTypes";
 export function QuestionForm({
   open,
   question,
+  questions,
   onClose,
   onSave,
 }: QuestionFormProps): React.JSX.Element {
   const { t, language } = useTranslation();
+  const { settings, categories, sourceBooks, updateSettingsAsync } = useQuestionBankConfig(questions);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -63,6 +68,30 @@ export function QuestionForm({
 
   const updateDraft = (patch: Partial<typeof questionDraft>) => {
     setQuestionDraft((prev) => ({ ...prev, ...patch }));
+  };
+
+  // Inline category/source-book creation in the question form persists to the
+  // typed Question Bank preferences (`PUT /api/question-bank/config/preferences`)
+  // — never the legacy `question_bank_settings` document-store object.
+  const handleCreateCategory = async (
+    created: QuestionCategory,
+  ): Promise<QuestionCategory[]> => {
+    const next = [...(settings.categories ?? []), created];
+    await updateSettingsAsync({ ...settings, categories: next });
+    return next;
+  };
+
+  const handlePersistSourceBook = async (book: QuestionSourceBook): Promise<void> => {
+    const current = settings.sourceBooks ?? [];
+    const index = current.findIndex((entry) => entry.id === book.id);
+    const next =
+      index >= 0 ? current.map((entry) => (entry.id === book.id ? book : entry)) : [...current, book];
+    await updateSettingsAsync({ ...settings, sourceBooks: next });
+  };
+
+  const handleRemoveSourceBook = async (bookId: string): Promise<void> => {
+    const next = (settings.sourceBooks ?? []).filter((entry) => entry.id !== bookId);
+    await updateSettingsAsync({ ...settings, sourceBooks: next });
   };
 
   const handleSave = async () => {
@@ -110,13 +139,25 @@ export function QuestionForm({
     >
       <div className="space-y-5 pb-6">
         <div className="relative z-30">
-          <QuestionFormClassificationSection questionDraft={questionDraft} errors={errors} updateDraft={updateDraft} />
+          <QuestionFormClassificationSection
+            questionDraft={questionDraft}
+            errors={errors}
+            updateDraft={updateDraft}
+            categories={categories}
+            onCreateCategory={handleCreateCategory}
+          />
         </div>
         <div className="relative z-20">
           <QuestionFormContentSection questionDraft={questionDraft} errors={errors} updateDraft={updateDraft} />
         </div>
         <div className="relative z-10">
-          <QuestionFormSourcesSection questionDraft={questionDraft} updateDraft={updateDraft} />
+          <QuestionFormSourcesSection
+            questionDraft={questionDraft}
+            updateDraft={updateDraft}
+            sourceBooks={sourceBooks}
+            onPersistBook={handlePersistSourceBook}
+            onRemoveBook={handleRemoveSourceBook}
+          />
         </div>
       </div>
     </FormModal>

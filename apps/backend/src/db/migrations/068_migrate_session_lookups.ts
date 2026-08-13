@@ -77,12 +77,13 @@ export async function runMigration068(): Promise<void> {
             eq(schema.sessionLookups.workspaceSubdomain, tenant),
             eq(schema.sessionLookups.kind, kind),
           ),
-        )
-        .limit(1);
-      if (existing.length > 0) return 0;
+        );
+      const existingIds = new Set(existing.map((r) => r.id));
+      const fresh = values.filter((v) => !existingIds.has(v.id));
+      if (fresh.length === 0) return 0;
 
-      await tx.insert(schema.sessionLookups).values(values);
-      return values.length;
+      await tx.insert(schema.sessionLookups).values(fresh).onConflictDoNothing();
+      return fresh.length;
     });
 
     if (inserted === 0) continue;

@@ -1,9 +1,10 @@
 import type { FieldType } from '../schemas/dynamicFormSchemas.js';
+import type { AppTranslationKey } from '../appTranslations.js';
 
 export interface FieldTypeMeta {
   type: FieldType;
-  displayLabelKey: string;
-  descriptionKey: string;
+  displayLabelKey: AppTranslationKey;
+  descriptionKey: AppTranslationKey;
   hasOptions: boolean;
   isNumeric: boolean;
   supportsMinMax: boolean;

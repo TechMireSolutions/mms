@@ -10,10 +10,6 @@ import {
   type QuestionSourceFieldId,
   type QuestionSourceReference,
 } from '@mms/shared';
-import {
-  persistQuestionSourceBook,
-  removeQuestionSourceBook,
-} from '@/lib/data/questionBankSourceBooks';
 import { QuestionSourceBooksSection } from "@/tenant/features/question-bank/components/QuestionSourceBooksSection";
 import { QuestionSourcesCitationsSection } from "@/tenant/features/question-bank/components/QuestionSourcesCitationsSection";
 
@@ -25,7 +21,12 @@ interface QuestionSourcesTabProps {
   availableFieldIds: QuestionSourceFieldId[];
   orderedSourceFields: ModuleFieldDef[];
   onCitationsChange: (citations: QuestionBookCitation[]) => void;
-  onBooksUpdated: () => void;
+  /** Notifies the parent after a book is created/edited/removed (post-persistence). */
+  onBooksUpdated?: () => void;
+  /** Persists a created/edited source book to the tenant registry via typed REST. */
+  onPersistBook?: (book: QuestionSourceBook) => Promise<void> | void;
+  /** Removes a source book from the tenant registry via typed REST. */
+  onRemoveBook?: (bookId: string) => Promise<void> | void;
   fieldLabel: (fieldId: string, fallback?: string) => string;
   translate?: TranslateFn;
 }
@@ -37,6 +38,8 @@ export function QuestionSourcesTab({
   orderedSourceFields,
   onCitationsChange,
   onBooksUpdated,
+  onPersistBook,
+  onRemoveBook,
   fieldLabel,
   translate,
 }: QuestionSourcesTabProps): React.JSX.Element {
@@ -85,7 +88,7 @@ export function QuestionSourcesTab({
     });
   };
 
-  const saveBook = (): void => {
+  const saveBook = async (): Promise<void> => {
     if (!draftBook?.name.trim()) return;
     const payload: QuestionSourceBook = {
       ...draftBook,
@@ -95,16 +98,20 @@ export function QuestionSourcesTab({
         bookName: draftBook.metadata.bookName?.trim() || draftBook.name.trim(),
       },
     };
-    persistQuestionSourceBook(payload);
-    onBooksUpdated();
+    if (onPersistBook) {
+      await onPersistBook(payload);
+    }
+    onBooksUpdated?.();
     setShowBookForm(false);
     setDraftBook(null);
     setEditingBookId(null);
   };
 
-  const deleteBook = (bookId: string): void => {
-    removeQuestionSourceBook(bookId);
-    onBooksUpdated();
+  const deleteBook = async (bookId: string): Promise<void> => {
+    if (onRemoveBook) {
+      await onRemoveBook(bookId);
+    }
+    onBooksUpdated?.();
     onCitationsChange(citations.filter((entry) => entry.bookId !== bookId));
   };
 

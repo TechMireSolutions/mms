@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply } from 'fastify';
 import { authenticateTenant } from '../middleware/authenticate.js';
 import { auditPreHandler, auditOnResponse } from '../hooks/auditHooks.js';
 import {
@@ -8,11 +8,33 @@ import {
   generateTabId,
 } from '../services/dynamic-form/fieldService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { sendForbidden } from '../lib/httpErrors.js';
 import { activeDb } from '../db/dbConnection.js';
 import { customFields, customTabs } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
-import { customFieldConfigSchema } from '@mms/shared';
+import {
+  customFieldConfigSchema,
+  updateFieldBodySchema,
+  roleHasPermission,
+  type Permission,
+  type User,
+} from '@mms/shared';
 import { z } from 'zod';
+
+/**
+ * DFS writes (create tab/field, update field) and the uniqueness probe require
+ * `can(module, 'editSetup')`. Every module manifest's `permissions.setupWrite` resolves
+ * to `settings.global.write` — the canonical editSetup permission (`DFS.md` §4.1).
+ */
+const SETUP_WRITE_PERMISSION: Permission = 'settings.global.write';
+
+function requireEditSetup(user: User | undefined, reply: FastifyReply): boolean {
+  if (!user || !roleHasPermission(user.role, SETUP_WRITE_PERMISSION)) {
+    sendForbidden(reply);
+    return false;
+  }
+  return true;
+}
 
 export async function dynamicFormPlugin(app: FastifyInstance) {
   app.register(async (protectedRoutes) => {
@@ -38,6 +60,7 @@ export async function dynamicFormPlugin(app: FastifyInstance) {
     protectedRoutes.post<{ Params: { module: string } }>(
       '/modules/:module/tabs',
       async (request, reply) => {
+        if (!requireEditSetup(request.user as User | undefined, reply)) return;
         const tenantSubdomain = getRequestTenant();
         if (!tenantSubdomain) {
           return reply.status(401).send({ type: 'auth_required', message: 'Tenant required' });
@@ -73,6 +96,7 @@ export async function dynamicFormPlugin(app: FastifyInstance) {
     protectedRoutes.post<{ Params: { module: string; tabId: string } }>(
       '/modules/:module/tabs/:tabId/fields',
       async (request, reply) => {
+        if (!requireEditSetup(request.user as User | undefined, reply)) return;
         const tenantSubdomain = getRequestTenant();
         if (!tenantSubdomain) {
           return reply.status(401).send({ type: 'auth_required', message: 'Tenant required' });
@@ -114,6 +138,7 @@ export async function dynamicFormPlugin(app: FastifyInstance) {
     protectedRoutes.patch<{ Params: { module: string; tabId: string; fieldId: string } }>(
       '/modules/:module/tabs/:tabId/fields/:fieldId',
       async (request, reply) => {
+        if (!requireEditSetup(request.user as User | undefined, reply)) return;
         const tenantSubdomain = getRequestTenant();
         if (!tenantSubdomain) {
           return reply.status(401).send({ type: 'auth_required', message: 'Tenant required' });
@@ -135,7 +160,7 @@ export async function dynamicFormPlugin(app: FastifyInstance) {
           return reply.status(404).send({ type: 'not_found', message: 'Field not found' });
         }
 
-        const body = request.body as Record<string, any>;
+        const body = updateFieldBodySchema.parse(request.body);
         if (existing.hasData && body.type && body.type !== existing.type) {
           return reply.status(422).send({
             type: 'validation_error',
@@ -168,10 +193,11 @@ export async function dynamicFormPlugin(app: FastifyInstance) {
       }
     );
 
-    // Check Uniqueness
+    // Check Uniqueness (probe — auth-gated, editSetup required, not audited)
     protectedRoutes.post<{ Params: { module: string } }>(
       '/modules/:module/fields/check-unique',
       async (request, reply) => {
+        if (!requireEditSetup(request.user as User | undefined, reply)) return;
         const tenantSubdomain = getRequestTenant();
         if (!tenantSubdomain) {
           return reply.status(401).send({ type: 'auth_required', message: 'Tenant required' });
@@ -188,8 +214,16 @@ export async function dynamicFormPlugin(app: FastifyInstance) {
           request.params.module,
           parsed.fieldKey,
           parsed.value
-        );
+        ).catch((err) => {
+          if (err instanceof Error && err.message === 'FIELD_NOT_REGISTERED') {
+            return reply
+              .status(422)
+              .send({ type: 'validation_error', message: 'Field is not registered for this module' });
+          }
+          throw err;
+        });
 
+        if (typeof isUnique !== 'boolean') return;
         return reply.send({ data: { isUnique } });
       }
     );

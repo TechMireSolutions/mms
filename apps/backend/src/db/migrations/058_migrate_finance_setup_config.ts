@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
@@ -91,7 +91,10 @@ export async function runMigration058(): Promise<void> {
         const existingCol = await tx
           .select({ workspaceSubdomain: schema.financeUserColumnPrefs.workspaceSubdomain })
           .from(schema.financeUserColumnPrefs)
-          .where(eq(schema.financeUserColumnPrefs.workspaceSubdomain, tenant))
+          .where(and(
+            eq(schema.financeUserColumnPrefs.workspaceSubdomain, tenant),
+            eq(schema.financeUserColumnPrefs.userId, userId),
+          ))
           .limit(1);
         if (existingCol.length === 0) {
           await tx.insert(schema.financeUserColumnPrefs).values({

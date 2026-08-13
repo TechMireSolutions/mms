@@ -1,23 +1,22 @@
 import {
   computeQuestionBankCommandMetrics,
-  DEFAULT_QUESTION_BANK_SETTINGS,
-  normalizeQuestionBankSettings,
+  normalizeQuestionBankModulePreferences,
   type QuestionBankCommandMetricsSnapshot,
 } from '@mms/shared';
-import { fetchObject } from './dbSyncService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import { getQuestionBankModulePreferencesForWorkspace } from '../db/repositories/questionBankModulePreferencesRepository.js';
 import { loadQuestions, loadTests, loadResults } from './questionBankService.js';
 
 export async function loadQuestionBankCommandMetrics(): Promise<QuestionBankCommandMetricsSnapshot> {
   const questions = await loadQuestions();
   const tests = await loadTests();
   const results = await loadResults();
-  const settingsRaw = await fetchObject('question_bank_settings');
-  const settings = normalizeQuestionBankSettings(
-    settingsRaw && typeof settingsRaw === 'object'
-      ? (settingsRaw as Partial<typeof DEFAULT_QUESTION_BANK_SETTINGS>)
-      : null,
-  );
-  const categoryCount = settings.categories?.length ?? 0;
+  // Categories live on the typed `question_bank_module_preferences` table now;
+  // the legacy `question_bank_settings` object is cleared by migration 073.
+  const tenant = getRequestTenant();
+  const prefsRaw = tenant ? await getQuestionBankModulePreferencesForWorkspace(tenant) : null;
+  const prefs = normalizeQuestionBankModulePreferences(prefsRaw);
+  const categoryCount = prefs.categories?.length ?? 0;
   return computeQuestionBankCommandMetrics(
     questions as Array<{ difficulty?: string }>,
     tests,
