@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
+import type { UseQueryResult } from "@tanstack/react-query";
 import type { Distribution } from '@/lib/data/hasanatData';
+import { HASANAT_MODULE_MANIFEST, type HasanatDistributionsListPageResult } from '@mms/shared';
 import { useTranslation } from "@/hooks/useTranslation";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useHasanatPaginated } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 type DistributionStatus = Distribution["status"];
 
+const DISTRIBUTION_SEARCH_DEBOUNCE_MS = 300;
+
 export interface UseDistributionManagerStateOptions {
+  /** Full list — used by mutation handlers (`handleDistribute`/`changeStatus`) only. */
   distributions: Distribution[];
   onUpdate: (dists: Distribution[]) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
@@ -40,22 +47,32 @@ export function useDistributionManagerState({
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<DistributionStatus[]>([]);
+  const [listPage, setListPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    return distributions.filter((distribution) => {
-      const query = search.toLowerCase();
-      const matchSearch = !query
-        || (distribution.recipientName || "").toLowerCase().includes(query)
-        || distribution.denominationName.toLowerCase().includes(query)
-        || distribution.reason?.toLowerCase().includes(query);
-      const matchStatus = filterStatus.length === 0 || filterStatus.includes(distribution.status);
-      return matchSearch && matchStatus;
-    });
-  }, [distributions, search, filterStatus]);
+  const debouncedSearch = useDebounce(search, DISTRIBUTION_SEARCH_DEBOUNCE_MS);
+
+  // Server-side filter/page reset whenever a filter dimension changes.
+  useEffect(() => {
+    setListPage(1);
+  }, [debouncedSearch, filterStatus, showDeleted]);
+
+  const pageQuery: UseQueryResult<HasanatDistributionsListPageResult> = useHasanatPaginated({
+    page: listPage,
+    limit: HASANAT_MODULE_MANIFEST.defaultPageSize,
+    search: debouncedSearch,
+    status: filterStatus.length ? filterStatus.join(',') : undefined,
+    includeDeleted: showDeleted,
+  });
+
+  const pageDistributions: Distribution[] = pageQuery.data?.distributions ?? [];
+  const serverTotal = pageQuery.data?.total ?? 0;
+  const serverPage = pageQuery.data?.page ?? listPage;
+  const serverLimit = pageQuery.data?.limit ?? HASANAT_MODULE_MANIFEST.defaultPageSize;
+  const serverHasMore = pageQuery.data?.hasMore ?? false;
 
   useEffect(() => {
-    onFilteredCountChange?.(filtered.length);
-  }, [filtered.length, onFilteredCountChange]);
+    onFilteredCountChange?.(serverTotal);
+  }, [onFilteredCountChange, serverTotal]);
 
   useEffect(() => {
     if (createRequestKey > 0 && canWrite && !showDeleted) {
@@ -84,7 +101,14 @@ export function useDistributionManagerState({
     setSearch,
     filterStatus,
     setFilterStatus,
-    filtered,
+    listPage,
+    setListPage,
+    pageDistributions,
+    pageQuery,
+    serverTotal,
+    serverPage,
+    serverLimit,
+    serverHasMore,
     toggleStatus,
     handleDistribute,
     changeStatus,

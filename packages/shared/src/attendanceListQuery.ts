@@ -8,6 +8,8 @@ export interface AttendanceListQuery {
   search?: string;
   classId?: string;
   date?: string;
+  dateFrom?: string;
+  dateTo?: string;
   status?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';

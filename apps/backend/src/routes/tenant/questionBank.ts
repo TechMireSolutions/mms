@@ -16,6 +16,7 @@ import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRout
 import { loadQuestionBankCommandMetrics } from '../../services/questionBankMetricsService.js';
 import {
   loadQuestions,
+  loadQuestionsPage,
   upsertQuestions,
   loadTests,
   upsertTests,
@@ -28,6 +29,7 @@ import {
 } from '../../services/questionBankService.js';
 
 import { questionBankSetupConfigRoutes } from './questionBankSetupConfigRoutes.js';
+import { questionBankListQuerySchema } from '../../validation/questionBankSchemas.js';
 
 const QUESTIONS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.collectionKey;
 const TESTS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey;
@@ -61,6 +63,9 @@ export default async function questionBankRoutes(
     collection: QUESTIONS_COLLECTION,
     schema: questionBankQuestionListSchema,
     loadFn: loadQuestions,
+    loadPageFn: loadQuestionsPage,
+    listQuerySchema: questionBankListQuerySchema,
+    defaultPageSize: QUESTION_BANK_MODULE_MANIFEST.defaultPageSize,
     saveFn: upsertQuestions,
     deleteFn: deleteQuestionById,
     restoreFn: restoreQuestionById,

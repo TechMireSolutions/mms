@@ -27,9 +27,10 @@ export default function Attendance() {
     setActiveOpsTab,
     setActiveAnalyticsTab,
     attendanceCollectionQuery,
-    attendancePageQuery,
     activeAttendanceRecords,
     attendanceRecords,
+    shownCount,
+    setShownCount,
     columnLayout,
     messagingTarget,
     closeComposer,
@@ -48,7 +49,6 @@ export default function Attendance() {
     effectiveTab,
     effectiveOpsTab,
     effectiveAnalyticsTab,
-    pageFilteredCount,
   } = useAttendancePageController();
 
   const renderContent = () => {
@@ -74,7 +74,6 @@ export default function Attendance() {
       <AttendanceWorkTier
         filters={filters}
         role={role}
-        records={attendanceRecords}
         activeRecords={activeAttendanceRecords}
         activeOpsTab={effectiveOpsTab}
         operationsTabs={visibleOperationsTabs}
@@ -96,6 +95,7 @@ export default function Attendance() {
         onBulkDeleteRecords={handleBulkDeleteRecords}
         onBulkRestoreRecords={handleBulkRestoreRecords}
         onMessage={handleMessageAttendance}
+        onTotalChange={setShownCount}
         columnProps={{
           isColumnVisible: columnLayout.isColumnVisible,
           getColumnWidth: columnLayout.getColumnWidth,
@@ -133,8 +133,8 @@ export default function Attendance() {
       }
       metricsStrip={
         <AttendanceCommandMetrics
-          total={attendanceRecords.length}
-          shown={pageFilteredCount}
+          total={shownCount}
+          shown={shownCount}
           selectedDate={filters.date}
         />
       }
@@ -155,13 +155,12 @@ export default function Attendance() {
             transition={{ duration: 0.2 }}
           >
             <ErrorBoundary>
-              {(attendanceCollectionQuery.isError || (effectiveTab === 'work' && attendancePageQuery.isError)) ? (
+              {attendanceCollectionQuery.isError ? (
                 <ErrorState
                   title={t('attendance.toast.loadFailed')}
                   description={t('attendance.loadFailedHint')}
                   onRetry={() => {
                     void attendanceCollectionQuery.refetch();
-                    void attendancePageQuery.refetch();
                   }}
                 />
               ) : renderContent()}

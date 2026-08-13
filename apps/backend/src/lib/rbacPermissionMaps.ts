@@ -52,7 +52,6 @@ export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   custom_tabs: 'configuration.view',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.read,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.read,
-  saved_reports: 'analytics.view',
 };
 
 export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
@@ -87,7 +86,6 @@ export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   custom_tabs: 'settings.global.write',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.write,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.write,
-  saved_reports: 'settings.global.write',
 };
 
 /** Distinct delete permission when the module manifest defines one; else write. */
@@ -101,26 +99,8 @@ export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
 export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   global_settings: 'configuration.view',
   branding: 'configuration.view',
-  workspace: 'configuration.view',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [ATTENDANCE_MODULE_MANIFEST.settingsObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.setupView,
-  [ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.read,
-  [FINANCE_MODULE_MANIFEST.settingsObjectKey]: FINANCE_MODULE_MANIFEST.permissions.setupView,
-  [FINANCE_MODULE_MANIFEST.invoiceColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
-  [FINANCE_MODULE_MANIFEST.paymentColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
-  [OBLIGATIONS_MODULE_MANIFEST.settingsObjectKey]: OBLIGATIONS_MODULE_MANIFEST.permissions.setupView,
   [OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey]: OBLIGATIONS_MODULE_MANIFEST.permissions.read,
-  [ACCOUNTING_MODULE_MANIFEST.settingsObjectKey]: ACCOUNTING_MODULE_MANIFEST.permissions.setupView,
-  [ACCOUNTING_MODULE_MANIFEST.journalColumnPreferencesObjectKey]: ACCOUNTING_MODULE_MANIFEST.permissions.read,
-  [ACCOUNTING_MODULE_MANIFEST.accountColumnPreferencesObjectKey]: ACCOUNTING_MODULE_MANIFEST.permissions.read,
-  [HASANAT_MODULE_MANIFEST.settingsObjectKey]: HASANAT_MODULE_MANIFEST.permissions.setupView,
-  [HASANAT_MODULE_MANIFEST.distributionColumnPreferencesObjectKey]: HASANAT_MODULE_MANIFEST.permissions.read,
-  [HASANAT_MODULE_MANIFEST.redemptionColumnPreferencesObjectKey]: HASANAT_MODULE_MANIFEST.permissions.read,
-  [EXAMINATIONS_MODULE_MANIFEST.settingsObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.setupView,
-  [EXAMINATIONS_MODULE_MANIFEST.examColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.read,
-  [EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.read,
-  [QUESTION_BANK_MODULE_MANIFEST.settingsObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.setupView,
-  [QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.read,
   [MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
   [MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
   [MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
@@ -129,26 +109,8 @@ export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
 export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
   global_settings: 'settings.global.write',
   branding: 'settings.branding.write',
-  workspace: 'settings.global.write',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [ATTENDANCE_MODULE_MANIFEST.settingsObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.setupWrite,
-  [ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey]: ATTENDANCE_MODULE_MANIFEST.permissions.read,
-  [FINANCE_MODULE_MANIFEST.settingsObjectKey]: FINANCE_MODULE_MANIFEST.permissions.setupWrite,
-  [FINANCE_MODULE_MANIFEST.invoiceColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
-  [FINANCE_MODULE_MANIFEST.paymentColumnPreferencesObjectKey]: FINANCE_MODULE_MANIFEST.permissions.read,
-  [OBLIGATIONS_MODULE_MANIFEST.settingsObjectKey]: OBLIGATIONS_MODULE_MANIFEST.permissions.setupWrite,
   [OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey]: OBLIGATIONS_MODULE_MANIFEST.permissions.read,
-  [ACCOUNTING_MODULE_MANIFEST.settingsObjectKey]: ACCOUNTING_MODULE_MANIFEST.permissions.setupWrite,
-  [ACCOUNTING_MODULE_MANIFEST.journalColumnPreferencesObjectKey]: ACCOUNTING_MODULE_MANIFEST.permissions.read,
-  [ACCOUNTING_MODULE_MANIFEST.accountColumnPreferencesObjectKey]: ACCOUNTING_MODULE_MANIFEST.permissions.read,
-  [HASANAT_MODULE_MANIFEST.settingsObjectKey]: HASANAT_MODULE_MANIFEST.permissions.setupWrite,
-  [HASANAT_MODULE_MANIFEST.distributionColumnPreferencesObjectKey]: HASANAT_MODULE_MANIFEST.permissions.read,
-  [HASANAT_MODULE_MANIFEST.redemptionColumnPreferencesObjectKey]: HASANAT_MODULE_MANIFEST.permissions.read,
-  [EXAMINATIONS_MODULE_MANIFEST.settingsObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.setupWrite,
-  [EXAMINATIONS_MODULE_MANIFEST.examColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.read,
-  [EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey]: EXAMINATIONS_MODULE_MANIFEST.permissions.read,
-  [QUESTION_BANK_MODULE_MANIFEST.settingsObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.setupWrite,
-  [QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey]: QUESTION_BANK_MODULE_MANIFEST.permissions.read,
   [MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
   [MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
   [MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
@@ -157,34 +119,24 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
 export const ALLOWED_COLLECTIONS = new Set([
   // contacts/students/teachers/sessions/enrollments/users/user_activity_logs and all legacy
   // entity rows (attendance, finance, obligations, accounting, hasanat, examinations,
-  // question-bank) are REST-only (typed tables) — not document-store
+  // question-bank) are REST-only (typed tables) — not document-store.
+  // `custom_tabs` stays: the typed /api/custom-tabs route uses it as its RBAC collection id.
+  // `sessionStatuses`/`sessionTypes`/`attendanceStatuses`/`saved_reports` were doc-store seeds or
+  // typed-table keys with no runtime collection read; removed (restore strips them gracefully).
   'currencies',
-  'sessionStatuses',
-  'sessionTypes',
-  'attendanceStatuses',
   'backups',
   'custom_tabs',
-  'saved_reports',
 ]);
 
 export const ALLOWED_OBJECTS = new Set([
   'global_settings',
   'branding',
-  'workspace',
   EMAIL_INTEGRATION_OBJECT_KEY,
-  'socialPlaceholders',
-  ATTENDANCE_MODULE_MANIFEST.settingsObjectKey,
-  ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey,
-  OBLIGATIONS_MODULE_MANIFEST.settingsObjectKey,
+  // Doc-store-fallback column prefs (no typed table yet): keep allowlisted so backup restore
+  // (stripUnwritableObjects) preserves them. Typed-module column-prefs keys were removed after
+  // their typed tables became authority (FE uses /api/:module/column-preferences, not the
+  // generic object route).
   OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
-  ACCOUNTING_MODULE_MANIFEST.settingsObjectKey,
-  ACCOUNTING_MODULE_MANIFEST.journalColumnPreferencesObjectKey,
-  ACCOUNTING_MODULE_MANIFEST.accountColumnPreferencesObjectKey,
-  EXAMINATIONS_MODULE_MANIFEST.settingsObjectKey,
-  EXAMINATIONS_MODULE_MANIFEST.examColumnPreferencesObjectKey,
-  EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey,
-  QUESTION_BANK_MODULE_MANIFEST.settingsObjectKey,
-  QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey,
   MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey,
   MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
   MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey,

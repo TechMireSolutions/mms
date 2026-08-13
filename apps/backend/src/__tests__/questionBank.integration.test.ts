@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
-import { guardianToken, teacherToken } from './helpers/tokens.js';
+import { adminToken, assistantTeacherToken, guardianToken, teacherToken } from './helpers/tokens.js';
 import type { QuestionBankQuestion, QuestionBankTest, QuestionBankResult } from '@mms/shared';
 
 vi.mock('../db/database.js', () => ({
@@ -32,6 +32,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadQuestions = vi.fn();
+const mockLoadQuestionsPage = vi.fn();
 const mockUpsertQuestions = vi.fn();
 const mockLoadTests = vi.fn();
 const mockUpsertTests = vi.fn();
@@ -44,6 +45,7 @@ const mockBulkRestoreQuestions = vi.fn();
 
 vi.mock('../services/questionBankService.js', () => ({
   loadQuestions: (...args: unknown[]) => mockLoadQuestions(...args),
+  loadQuestionsPage: (...args: unknown[]) => mockLoadQuestionsPage(...args),
   upsertQuestions: (...args: unknown[]) => mockUpsertQuestions(...args),
   loadTests: (...args: unknown[]) => mockLoadTests(...args),
   upsertTests: (...args: unknown[]) => mockUpsertTests(...args),
@@ -373,6 +375,99 @@ describe('question bank REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ preferences: [] });
     expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('question bank questions pagination', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockLoadQuestionsPage.mockReset().mockResolvedValue({
+      questions: [],
+      total: 0,
+      page: 1,
+      limit: 15,
+      hasMore: false,
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('GET /api/question-bank/questions returns paginated shape and forwards filters', async () => {
+    mockLoadQuestionsPage.mockResolvedValueOnce({
+      questions: [{ id: 'q-9', text: 'What is wudu?', categoryId: 'cat-1', difficulty: 'easy' }],
+      total: 1,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/question-bank/questions?page=1&limit=10&search=wudu&categoryId=cat-1&difficulty=easy',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      questions: [{ id: 'q-9', text: 'What is wudu?', categoryId: 'cat-1', difficulty: 'easy' }],
+      total: 1,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+    expect(mockLoadQuestionsPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        page: 1,
+        limit: 10,
+        search: 'wudu',
+        categoryId: 'cat-1',
+        difficulty: 'easy',
+        includeDeleted: false,
+      }),
+    );
+    await app.close();
+  });
+
+  it('includeDeleted=true forwards deleted-only request for admins', async () => {
+    mockLoadQuestionsPage.mockResolvedValueOnce({
+      questions: [{ id: 'q-8', text: 'Archived question', deletedAt: '2026-07-27T12:00:00.000Z' }],
+      total: 1,
+      page: 1,
+      limit: 15,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/question-bank/questions?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadQuestionsPage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
+    expect(res.json().questions[0]?.deletedAt).toBeTruthy();
+    await app.close();
+  });
+
+  it('forbids includeDeleted for roles without delete access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/question-bank/questions?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${assistantTeacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadQuestionsPage).not.toHaveBeenCalled();
     await app.close();
   });
 });

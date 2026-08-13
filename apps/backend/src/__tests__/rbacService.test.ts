@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY, type User } from "@mms/shared";
+import { DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY, MESSAGING_MODULE_MANIFEST, type User } from "@mms/shared";
 import {
   canBulkSync,
   canDeleteContacts,
@@ -13,6 +13,7 @@ import {
   canWriteObject,
   canClearMessagingLogs,
   isAllowedCollectionName,
+  isAllowedObjectKey,
 } from "../services/rbacService.js";
 
 const admin: User = { id: "1", email: "a@test.com", name: "Admin", role: "admin", workspaceSubdomain: "demo" };
@@ -118,8 +119,28 @@ describe("rbacService", () => {
     expect(canWriteCollection(admin, "currencies")).toBe(true);
     expect(canWriteCollection(admin, "teachers")).toBe(true);
     expect(canWriteCollection(admin, "teacherStatuses")).toBe(false);
-    expect(canWriteCollection(admin, "sessionTypes")).toBe(true);
-    expect(canWriteCollection(admin, "attendanceStatuses")).toBe(true);
+    // Legacy doc-store config collections pruned from ALLOWED_COLLECTIONS (typed tables / no runtime read).
+    expect(canWriteCollection(admin, "sessionTypes")).toBe(false);
+    expect(canWriteCollection(admin, "attendanceStatuses")).toBe(false);
+    expect(canWriteCollection(admin, "sessionStatuses")).toBe(false);
+    expect(canWriteCollection(admin, "saved_reports")).toBe(false);
+    expect(isAllowedCollectionName("sessionTypes")).toBe(false);
+    expect(isAllowedCollectionName("saved_reports")).toBe(false);
+    // custom_tabs stays allowlisted: typed /api/custom-tabs route uses it as its RBAC collection id.
+    expect(isAllowedCollectionName("custom_tabs")).toBe(true);
+    // Pruned stale object keys (typed module prefs / column-prefs are authority; nothing reads the doc-store object).
+    expect(isAllowedObjectKey("attendance_settings")).toBe(false);
+    expect(isAllowedObjectKey("accounting_settings")).toBe(false);
+    expect(isAllowedObjectKey("examinations_settings")).toBe(false);
+    expect(isAllowedObjectKey("question_bank_settings")).toBe(false);
+    expect(isAllowedObjectKey("obligations_settings")).toBe(false);
+    expect(isAllowedObjectKey("workspace")).toBe(false);
+    expect(isAllowedObjectKey("socialPlaceholders")).toBe(false);
+    expect(isAllowedObjectKey("attendance_user_column_preferences")).toBe(false);
+    expect(isAllowedObjectKey("question_bank_user_column_preferences")).toBe(false);
+    // Doc-store-fallback column prefs remain allowlisted (no typed table yet).
+    expect(isAllowedObjectKey("obligations_user_column_preferences")).toBe(true);
+    expect(isAllowedObjectKey(MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey)).toBe(true);
   });
 
   it("restricts tenant reset to admin", () => {

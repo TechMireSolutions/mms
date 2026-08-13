@@ -9,8 +9,17 @@ import { QUESTION_BANK_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
+import {
+  buildQuestionBankPageUrl,
+  questionBankPaginatedQueryKey,
+  questionBankListQueryKeyParams,
+  sameQuestionBankListFilters,
+  type QuestionBankPaginatedParams,
+  type QuestionBankListPageResult,
+} from '@/tenant/features/question-bank/hooks/questionBankListQueryBuilders';
 
-const QUESTION_BANK_API = QUESTION_BANK_MODULE_MANIFEST.restBasePath;
+export const QUESTION_BANK_API = QUESTION_BANK_MODULE_MANIFEST.restBasePath;
 
 export const QUESTION_BANK_METRICS_QUERY_KEY = [QUESTION_BANK_MODULE_MANIFEST.moduleId, 'metrics'] as const;
 
@@ -41,6 +50,18 @@ export function useQuestionBankQuestionsCollection(options?: {
 }): QuestionBankQuestion[] {
   return useQuestionBankQuestions(options).data ?? [];
 }
+
+/** SQL-paged questions Work list (server-side search/category/difficulty/soft-delete). */
+export const useQuestionBankPaginated = createModulePaginatedListQuery<
+  QuestionBankListPageResult,
+  QuestionBankPaginatedParams,
+  ReturnType<typeof questionBankListQueryKeyParams>
+>({
+  queryKey: questionBankPaginatedQueryKey,
+  keyParams: questionBankListQueryKeyParams,
+  sameFilters: sameQuestionBankListFilters,
+  buildUrl: buildQuestionBankPageUrl,
+});
 
 export function useQuestionBankTests(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();

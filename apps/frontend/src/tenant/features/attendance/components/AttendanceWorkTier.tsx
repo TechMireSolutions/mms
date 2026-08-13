@@ -22,7 +22,6 @@ type AttendanceColumnProps = Pick<
 interface AttendanceWorkTierProps {
   filters: React.ComponentProps<typeof AttendanceFilters>["filters"];
   role: string;
-  records: AttendanceRecord[];
   activeRecords: AttendanceRecord[];
   activeOpsTab: string;
   operationsTabs: AttendanceWorkTab[];
@@ -44,13 +43,13 @@ interface AttendanceWorkTierProps {
   onBulkDeleteRecords: (ids: string[]) => Promise<void>;
   onBulkRestoreRecords: (ids: string[]) => Promise<void>;
   onMessage: React.ComponentProps<typeof AttendanceRecords>["onMessage"];
+  onTotalChange?: (total: number) => void;
   columnProps: AttendanceColumnProps;
 }
 
 export function AttendanceWorkTier({
   filters,
   role,
-  records,
   activeRecords,
   activeOpsTab,
   operationsTabs,
@@ -72,6 +71,7 @@ export function AttendanceWorkTier({
   onBulkDeleteRecords,
   onBulkRestoreRecords,
   onMessage,
+  onTotalChange,
   columnProps,
 }: AttendanceWorkTierProps): React.JSX.Element {
   return (
@@ -117,7 +117,6 @@ export function AttendanceWorkTier({
       {activeOpsTab === "records" && (
         <AttendanceRecords
           filters={filters}
-          records={records}
           onUpdateRecord={onUpdateRecord}
           onDeleteRecord={onDeleteRecord}
           onRestoreRecord={onRestoreRecord}
@@ -125,6 +124,7 @@ export function AttendanceWorkTier({
           onBulkRestoreRecords={onBulkRestoreRecords}
           showDeleted={showDeleted}
           onMessage={onMessage}
+          onTotalChange={onTotalChange}
           {...columnProps}
         />
       )}

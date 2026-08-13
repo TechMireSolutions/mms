@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
-import { teacherToken } from './helpers/tokens.js';
+import { adminToken, assistantTeacherToken, teacherToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -24,9 +24,11 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadExams = vi.fn();
+const mockLoadExamsPage = vi.fn();
 
 vi.mock('../services/examinationService.js', () => ({
   loadExams: (...args: unknown[]) => mockLoadExams(...args),
+  loadExamsPage: (...args: unknown[]) => mockLoadExamsPage(...args),
   upsertExams: vi.fn().mockResolvedValue([]),
   replaceExams: vi.fn(),
   loadExamResults: vi.fn().mockResolvedValue([]),
@@ -71,6 +73,98 @@ describe('examinations REST routes integration', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ exams: [] });
+    await app.close();
+  });
+});
+
+describe('examinations exams pagination', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockLoadExamsPage.mockReset().mockResolvedValue({
+      exams: [],
+      total: 0,
+      page: 1,
+      limit: 12,
+      hasMore: false,
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('GET /api/examinations/exams returns paginated shape and forwards filters', async () => {
+    mockLoadExamsPage.mockResolvedValueOnce({
+      exams: [{ id: 'e-1', name: 'Midterm', subject: 'Quran', status: 'upcoming' }],
+      total: 1,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/examinations/exams?page=1&limit=10&search=mid&status=upcoming',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      exams: [{ id: 'e-1', name: 'Midterm', subject: 'Quran', status: 'upcoming' }],
+      total: 1,
+      page: 1,
+      limit: 10,
+      hasMore: false,
+    });
+    expect(mockLoadExamsPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        page: 1,
+        limit: 10,
+        search: 'mid',
+        status: 'upcoming',
+        includeDeleted: false,
+      }),
+    );
+    await app.close();
+  });
+
+  it('includeDeleted=true forwards deleted-only request for admins', async () => {
+    mockLoadExamsPage.mockResolvedValueOnce({
+      exams: [{ id: 'e-2', name: 'Old Exam', deletedAt: '2026-07-27T12:00:00.000Z' }],
+      total: 1,
+      page: 1,
+      limit: 12,
+      hasMore: false,
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/examinations/exams?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadExamsPage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
+    expect(res.json().exams[0]?.deletedAt).toBeTruthy();
+    await app.close();
+  });
+
+  it('forbids includeDeleted for roles without delete access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/examinations/exams?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${assistantTeacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadExamsPage).not.toHaveBeenCalled();
     await app.close();
   });
 });

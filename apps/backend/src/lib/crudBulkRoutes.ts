@@ -17,6 +17,10 @@ export interface BulkRoutesOptions<T> {
   schema: ZodType<T>;
   loadFn: () => Promise<unknown>;
   loadPageFn?: (query: any) => Promise<unknown>;
+  /** When provided, the GET branch validates the full query (page/limit/search/sort/filters) and forwards it to `loadPageFn`. */
+  listQuerySchema?: ZodType;
+  /** Fallback page size when the client omits `limit` (schema path). */
+  defaultPageSize?: number;
   saveFn: (data: T) => Promise<unknown>;
   responseKey: string;
   errorMessagePrefix: string;
@@ -37,6 +41,8 @@ export function registerBulkRoutes<T>(
     schema,
     loadFn,
     loadPageFn,
+    listQuerySchema,
+    defaultPageSize,
     saveFn,
     responseKey,
     errorMessagePrefix,
@@ -47,21 +53,35 @@ export function registerBulkRoutes<T>(
   fastify.get(path, async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
-    
-    try {
-      const queryParams = request.query as Record<string, string>;
-      const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
 
-      if (isPaginated && loadPageFn) {
-        const page = parseInt(queryParams.page || '1', 10);
-        const limit = parseInt(queryParams.limit || '50', 10);
-        
+    try {
+      let pageQuery: Record<string, unknown> | undefined;
+      if (listQuerySchema) {
+        const parsed = parseRequest(listQuerySchema, request.query);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+        const query = parsed.data as Record<string, unknown>;
+        if (query.page != null && loadPageFn) pageQuery = query;
+      } else {
+        const queryParams = request.query as Record<string, string>;
+        const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
+        if (isPaginated && loadPageFn) {
+          const page = parseInt(queryParams.page || '1', 10);
+          const limit = parseInt(queryParams.limit || '50', 10);
+          const data = await loadPageFn({
+            page,
+            limit,
+            search: queryParams.search,
+            sortField: queryParams.sortField,
+            sortDir: queryParams.sortDir as 'asc' | 'desc',
+          });
+          return reply.send(data);
+        }
+      }
+
+      if (pageQuery && loadPageFn) {
         const data = await loadPageFn({
-          page,
-          limit,
-          search: queryParams.search,
-          sortField: queryParams.sortField,
-          sortDir: queryParams.sortDir as 'asc' | 'desc',
+          ...pageQuery,
+          limit: pageQuery.limit ?? defaultPageSize,
         });
         return reply.send(data);
       }
@@ -105,6 +125,10 @@ export interface SoftDeletableBulkRoutesOptions<T> {
   schema: ZodType<T>;
   loadFn: (options?: { includeDeleted?: boolean }) => Promise<unknown>;
   loadPageFn?: (query: any) => Promise<unknown>;
+  /** When provided, the GET branch validates the full query (page/limit/search/sort/filters) and forwards it to `loadPageFn`. */
+  listQuerySchema?: ZodType;
+  /** Fallback page size when the client omits `limit` (schema path). */
+  defaultPageSize?: number;
   saveFn: (data: T) => Promise<unknown>;
   deleteFn: (id: string, userId: string, reason?: string) => Promise<boolean | null | unknown>;
   restoreFn: (id: string) => Promise<boolean | null | unknown>;
@@ -137,6 +161,10 @@ export function registerIncludableBulkRoutes<T>(
     schema: ZodType<T>;
     loadFn: (options?: { includeDeleted?: boolean }) => Promise<unknown>;
     loadPageFn?: (query: any) => Promise<unknown>;
+    /** When provided, the GET branch validates the full query (page/limit/search/sort/filters) and forwards it to `loadPageFn`. */
+    listQuerySchema?: ZodType;
+    /** Fallback page size when the client omits `limit` (schema path). */
+    defaultPageSize?: number;
     saveFn: (data: T) => Promise<unknown>;
     responseKey: string;
     errorMessagePrefix: string;
@@ -150,6 +178,8 @@ export function registerIncludableBulkRoutes<T>(
     schema,
     loadFn,
     loadPageFn,
+    listQuerySchema,
+    defaultPageSize,
     saveFn,
     responseKey,
     errorMessagePrefix,
@@ -162,30 +192,51 @@ export function registerIncludableBulkRoutes<T>(
   fastify.get(path, async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
-    const parsed = parseRequest(includeDeletedQuerySchema, request.query);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    const includeDeleted = parsed.data.includeDeleted === 'true';
+
+    let includeDeleted: boolean;
+    let pageQuery: Record<string, unknown> | undefined;
+    if (listQuerySchema) {
+      const parsed = parseRequest(listQuerySchema, request.query);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const query = parsed.data as Record<string, unknown>;
+      includeDeleted = query.includeDeleted === 'true';
+      if (query.page != null && loadPageFn) pageQuery = query;
+    } else {
+      const parsed = parseRequest(includeDeletedQuerySchema, request.query);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      includeDeleted = parsed.data.includeDeleted === 'true';
+    }
+
     if (includeDeleted && !canDeleteCollection(user, collection)) {
       return sendForbidden(reply);
     }
-    
-    try {
-      const queryParams = request.query as Record<string, string>;
-      const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
 
-      if (isPaginated && loadPageFn) {
-        const page = parseInt(queryParams.page || '1', 10);
-        const limit = parseInt(queryParams.limit || '50', 10);
-        
+    try {
+      if (pageQuery && loadPageFn) {
         const data = await loadPageFn({
-          page,
-          limit,
-          search: queryParams.search,
-          sortField: queryParams.sortField,
-          sortDir: queryParams.sortDir as 'asc' | 'desc',
+          ...pageQuery,
+          limit: pageQuery.limit ?? defaultPageSize,
           includeDeleted,
         });
         return reply.send(data);
+      }
+
+      if (!listQuerySchema) {
+        const queryParams = request.query as Record<string, string>;
+        const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
+        if (isPaginated && loadPageFn) {
+          const page = parseInt(queryParams.page || '1', 10);
+          const limit = parseInt(queryParams.limit || '50', 10);
+          const data = await loadPageFn({
+            page,
+            limit,
+            search: queryParams.search,
+            sortField: queryParams.sortField,
+            sortDir: queryParams.sortDir as 'asc' | 'desc',
+            includeDeleted,
+          });
+          return reply.send(data);
+        }
       }
 
       const data = await loadFn({ includeDeleted });
@@ -338,6 +389,8 @@ export function registerSoftDeletableBulkRoutes<T>(
     schema,
     loadFn,
     loadPageFn: options.loadPageFn,
+    listQuerySchema: options.listQuerySchema,
+    defaultPageSize: options.defaultPageSize,
     saveFn,
     responseKey,
     errorMessagePrefix,

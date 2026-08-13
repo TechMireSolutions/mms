@@ -3,6 +3,8 @@ import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ListPagination } from "@/components/ui/ListPagination";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DistributeModal } from "./DistributeModal";
 import { DistributionManagerList } from "./DistributionManagerList";
@@ -77,7 +79,14 @@ export function DistributionManager({
     setSearch,
     filterStatus,
     setFilterStatus,
-    filtered,
+    listPage,
+    setListPage,
+    pageDistributions,
+    pageQuery,
+    serverTotal,
+    serverPage,
+    serverLimit,
+    serverHasMore,
     toggleStatus,
     handleDistribute,
     changeStatus,
@@ -97,11 +106,11 @@ export function DistributionManager({
     someVisibleSelected,
     toggleSelectAll,
     toggleSelectedDistribution,
-  } = useDistributionSelection(filtered);
+  } = useDistributionSelection(pageDistributions);
 
   useEffect(() => {
     setSelectedIds([]);
-  }, [showDeleted, setSelectedIds]);
+  }, [showDeleted, listPage, search, filterStatus, setSelectedIds]);
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
@@ -148,31 +157,48 @@ export function DistributionManager({
         />
       )}
 
-      <DistributionManagerList
-        viewMode={viewMode}
-        distributions={filtered}
-        denoms={denoms}
-        selectedIds={selectedIds}
-        allVisibleSelected={allVisibleSelected}
-        someVisibleSelected={someVisibleSelected}
-        isColumnVisible={columnVisible}
-        statusLabels={statusLabels}
-        statusConfig={statusConfig}
-        canWrite={canWrite}
-        canDelete={canDelete}
-        showDeleted={showDeleted}
-        canRestoreRows={!!onRestore}
-        canDeleteRows={!!onDelete}
-        onMessage={onMessage}
-        onChangeStatus={changeStatus}
-        onToggleSelectedDistribution={toggleSelectedDistribution}
-        onToggleSelectAll={toggleSelectAll}
-        onTrashAction={(id) => {
-          if (showDeleted) void onRestore?.(id);
-          else setPendingTrashId(id);
-        }}
-        getColumnWidth={getColumnWidth}
-        onColumnResize={onColumnResize}
+      {pageQuery.isError ? (
+        <ErrorState
+          title={t('hasanat.loadFailed')}
+          description={t('hasanat.loadFailedHint')}
+          onRetry={() => { void pageQuery.refetch(); }}
+        />
+      ) : pageDistributions.length > 0 && (
+        <DistributionManagerList
+          viewMode={viewMode}
+          distributions={pageDistributions}
+          denoms={denoms}
+          selectedIds={selectedIds}
+          allVisibleSelected={allVisibleSelected}
+          someVisibleSelected={someVisibleSelected}
+          isColumnVisible={columnVisible}
+          statusLabels={statusLabels}
+          statusConfig={statusConfig}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          canRestoreRows={!!onRestore}
+          canDeleteRows={!!onDelete}
+          onMessage={onMessage}
+          onChangeStatus={changeStatus}
+          onToggleSelectedDistribution={toggleSelectedDistribution}
+          onToggleSelectAll={toggleSelectAll}
+          onTrashAction={(id) => {
+            if (showDeleted) void onRestore?.(id);
+            else setPendingTrashId(id);
+          }}
+          getColumnWidth={getColumnWidth}
+          onColumnResize={onColumnResize}
+        />
+      )}
+
+      <ListPagination
+        page={serverPage}
+        total={serverTotal}
+        limit={serverLimit}
+        hasMore={serverHasMore}
+        onPageChange={setListPage}
+        i18nNamespace="hasanat"
       />
 
       {canWrite && !showDeleted && (

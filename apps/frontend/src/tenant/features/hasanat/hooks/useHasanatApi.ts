@@ -7,12 +7,21 @@ import type {
   HasanatCommandMetricsSnapshot,
   HasanatReportAggregates,
   HasanatReportComparisonQuery,
+  HasanatDistributionsListPageResult,
 } from '@mms/shared';
 import { HASANAT_MODULE_MANIFEST, normalizeHasanatReportComparisonQuery } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
+import {
+  buildHasanatPageUrl,
+  hasanatPaginatedQueryKey,
+  hasanatListQueryKeyParams,
+  sameHasanatListFilters,
+  type HasanatPaginatedParams,
+} from '@/tenant/features/hasanat/hooks/hasanatListQueryBuilders';
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
 export const HASANAT_BATCHES_QUERY_KEY = ['hasanat', 'batches', 'list'] as const;
@@ -24,7 +33,7 @@ export const HASANAT_REPORT_AGGREGATES_QUERY_KEY = [
   'report-aggregates',
 ] as const;
 
-const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
+export const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
 
 /** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
 export class NotifiedHasanatMutationError extends NotifiedMutationError {}
@@ -86,6 +95,18 @@ export function useHasanatDistributionsCollection(options?: {
 }): Distribution[] {
   return useHasanatDistributions(options).data ?? [];
 }
+
+/** SQL-paged distributions Work list (server-side search/status/soft-delete). */
+export const useHasanatPaginated = createModulePaginatedListQuery<
+  HasanatDistributionsListPageResult,
+  HasanatPaginatedParams,
+  ReturnType<typeof hasanatListQueryKeyParams>
+>({
+  queryKey: hasanatPaginatedQueryKey,
+  keyParams: hasanatListQueryKeyParams,
+  sameFilters: sameHasanatListFilters,
+  buildUrl: buildHasanatPageUrl,
+});
 
 export function useHasanatReportAggregates(
   options?: { enabled?: boolean; comparison?: HasanatReportComparisonQuery },

@@ -4,6 +4,7 @@ import {
   type Distribution,
   type Redemption,
   type HasanatReportComparisonQuery,
+  type HasanatListQuery,
   denomListSchema,
   batchListSchema,
   distributionListSchema,
@@ -11,6 +12,7 @@ import {
   distributionRecordSchema,
   normalizeHasanatReportComparisonQuery,
 } from '@mms/shared';
+import { listDistributionsPage } from '../db/repositories/hasanatRepositoryList.js';
 import {
   listDenomsByWorkspace,
   bulkSaveDenoms,
@@ -83,6 +85,29 @@ export async function loadDistributions(options?: {
 }): Promise<Distribution[]> {
   const rows = await distributionCrud.loadAll({ includeDeleted: true });
   return scopeDeleted(rows, options?.includeDeleted);
+}
+
+/** SQL-paged distributions Work list (server-side search/status/soft-delete). */
+export async function loadDistributionsPage(
+  query: HasanatListQuery & { includeDeleted?: boolean },
+): Promise<{
+  distributions: Distribution[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      distributions: [],
+      total: 0,
+      page: query.page ?? 1,
+      limit: query.limit ?? 15,
+      hasMore: false,
+    };
+  }
+  return listDistributionsPage(tenant, query);
 }
 
 export const upsertDenoms = (records: Denomination[]) =>

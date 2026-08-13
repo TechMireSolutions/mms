@@ -29,6 +29,8 @@ export interface AttendancePaginatedParams {
   search?: string;
   classId?: string;
   date?: string;
+  dateFrom?: string;
+  dateTo?: string;
   status?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
@@ -43,6 +45,8 @@ function buildAttendancePageUrl(params: AttendancePaginatedParams): string {
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.classId?.trim()) queryParams.set('classId', params.classId.trim());
   if (params.date?.trim()) queryParams.set('date', params.date.trim());
+  if (params.dateFrom?.trim()) queryParams.set('dateFrom', params.dateFrom.trim());
+  if (params.dateTo?.trim()) queryParams.set('dateTo', params.dateTo.trim());
   if (params.status?.trim()) queryParams.set('status', params.status.trim());
   if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
   if (params.sortDir) queryParams.set('sortDir', params.sortDir);

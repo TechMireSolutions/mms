@@ -5,12 +5,21 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
+import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
+import {
+  buildExaminationsPageUrl,
+  examinationsPaginatedQueryKey,
+  examinationsListQueryKeyParams,
+  sameExaminationsListFilters,
+  type ExaminationsPaginatedParams,
+  type ExaminationsListPageResult,
+} from '@/tenant/features/examinations/hooks/examinationsListQueryBuilders';
 
 export const EXAMINATIONS_EXAMS_QUERY_KEY = ['examinations', 'exams', 'list'] as const;
 export const EXAMINATIONS_RESULTS_QUERY_KEY = ['examinations', 'results', 'list'] as const;
 export const EXAMINATIONS_METRICS_QUERY_KEY = ['examinations', 'metrics'] as const;
 
-const EXAMINATIONS_API = EXAMINATIONS_MODULE_MANIFEST.restBasePath;
+export const EXAMINATIONS_API = EXAMINATIONS_MODULE_MANIFEST.restBasePath;
 
 /** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
 export class NotifiedExaminationsMutationError extends NotifiedMutationError {}
@@ -38,6 +47,18 @@ export function useExaminationsExamsCollection(options?: {
 }): Exam[] {
   return useExaminationsExams(options).data ?? [];
 }
+
+/** SQL-paged exams Work list (server-side search/status/soft-delete). */
+export const useExaminationsPaginated = createModulePaginatedListQuery<
+  ExaminationsListPageResult,
+  ExaminationsPaginatedParams,
+  ReturnType<typeof examinationsListQueryKeyParams>
+>({
+  queryKey: examinationsPaginatedQueryKey,
+  keyParams: examinationsListQueryKeyParams,
+  sameFilters: sameExaminationsListFilters,
+  buildUrl: buildExaminationsPageUrl,
+});
 
 export function useExaminationsResults(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();

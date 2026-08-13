@@ -6,6 +6,8 @@ import { useQuestionBankSelection } from '@/tenant/features/question-bank/hooks/
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
+import { ListPagination } from '@/components/ui/ListPagination';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
 import { QuestionBankList } from '@/tenant/features/question-bank/components/QuestionBankList';
 import { QuestionBankToolbar } from '@/tenant/features/question-bank/components/QuestionBankToolbar';
@@ -64,6 +66,7 @@ export function QuestionBank({
 }: QuestionBankProps): React.ReactElement {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+  // Config (category/difficulty options) derives from the FULL question list.
   const config = useQuestionBankConfig(questions);
   const {
     search,
@@ -72,8 +75,15 @@ export function QuestionBank({
     setFilterCats,
     filterDiff,
     setFilterDiff,
-    filtered,
-  } = useQuestionBankFilters({ questions, onFilteredCountChange });
+    listPage,
+    setListPage,
+    pageQuestions,
+    pageQuery,
+    serverTotal,
+    serverPage,
+    serverLimit,
+    serverHasMore,
+  } = useQuestionBankFilters({ showDeleted, onFilteredCountChange });
 
   const {
     selectedIds,
@@ -83,14 +93,14 @@ export function QuestionBank({
     toggleSelectAll,
     toggleSelectedQuestion,
     clearSelection,
-  } = useQuestionBankSelection(filtered);
+  } = useQuestionBankSelection(pageQuestions);
 
   const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   useEffect(() => {
     setSelectedIds([]);
-  }, [showDeleted, setSelectedIds]);
+  }, [showDeleted, listPage, search, filterCats, filterDiff, setSelectedIds]);
 
   const { difficultyConfig, typeConfig } = useQuestionBankDisplayConfig(config);
 
@@ -171,12 +181,18 @@ export function QuestionBank({
         />
       )}
 
-      {filtered.length === 0 && <QuestionBankEmptyState />}
-
-      {filtered.length > 0 && (
+      {pageQuery.isError ? (
+        <ErrorState
+          title={t('questionBank.loadFailed')}
+          description={t('questionBank.loadFailedHint')}
+          onRetry={() => { void pageQuery.refetch(); }}
+        />
+      ) : pageQuestions.length === 0 && !pageQuery.isPending ? (
+        <QuestionBankEmptyState />
+      ) : pageQuestions.length > 0 && (
         <QuestionBankList
           viewMode={viewMode}
-          questions={filtered}
+          questions={pageQuestions}
           config={config}
           difficultyConfig={difficultyConfig}
           typeConfig={typeConfig}
@@ -201,6 +217,15 @@ export function QuestionBank({
           onToggleSelectAll={toggleSelectAll}
         />
       )}
+
+      <ListPagination
+        page={serverPage}
+        total={serverTotal}
+        limit={serverLimit}
+        hasMore={serverHasMore}
+        onPageChange={setListPage}
+        i18nNamespace="questionBank"
+      />
 
       <ConfirmAlertDialog
         open={pendingTrashId !== null}

@@ -19,6 +19,7 @@ import {
   loadBatches,
   upsertBatches,
   loadDistributions,
+  loadDistributionsPage,
   upsertDistributions,
   loadRedemptions,
   upsertRedemptions,
@@ -29,6 +30,7 @@ import {
 } from '../../services/hasanatService.js';
 import { hasanatReportRoutes } from './hasanat/hasanatReportRoutes.js';
 import { hasanatSetupConfigRoutes } from './hasanatSetupConfigRoutes.js';
+import { hasanatListQuerySchema } from '../../validation/hasanatSchemas.js';
 
 const HASANAT_DISTRIBUTIONS_COLLECTION = HASANAT_MODULE_MANIFEST.collectionKey;
 const HASANAT_DENOMS_COLLECTION = HASANAT_MODULE_MANIFEST.denomCollectionKey;
@@ -93,6 +95,9 @@ export default async function hasanatRoutes(
     collection: HASANAT_DISTRIBUTIONS_COLLECTION,
     schema: distributionListSchema,
     loadFn: loadDistributions,
+    loadPageFn: loadDistributionsPage,
+    listQuerySchema: hasanatListQuerySchema,
+    defaultPageSize: HASANAT_MODULE_MANIFEST.defaultPageSize,
     saveFn: upsertDistributions,
     deleteFn: deleteDistributionById,
     restoreFn: restoreDistributionById,

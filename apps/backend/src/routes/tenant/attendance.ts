@@ -10,6 +10,7 @@ import {
   bulkRestoreAttendance,
   loadAttendanceRecords,
   loadAttendancePage,
+  countAttendanceRecords,
   upsertAttendanceRecords,
   updateAttendanceRecordById,
 } from '../../services/attendanceService.js';
@@ -53,6 +54,7 @@ export default async function attendanceRoutes(
     loadPageFn: loadAttendancePage,
     canWriteDeletedCheck: (user) => canDeleteCollection(user, COLLECTION),
     loadAllFn: loadAttendanceRecords,
+    loadCountFn: countAttendanceRecords,
     createFn: createAttendanceRecord,
     updateFn: updateAttendanceRecordById,
     deleteFn: deleteAttendanceRecordById,

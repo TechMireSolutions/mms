@@ -35,6 +35,7 @@ const mockLoadAttendanceReportAggregates = vi.fn();
 vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: (...args: unknown[]) => mockLoadAttendanceRecords(...args),
   loadAttendancePage: (...args: unknown[]) => mockLoadAttendancePage(...args),
+  countAttendanceRecords: vi.fn().mockResolvedValue(0),
   createAttendanceRecord: vi.fn(),
   updateAttendanceRecordById: vi.fn(),
   deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
@@ -209,6 +210,21 @@ describe('attendance REST routes integration', () => {
     expect(res.statusCode).toBe(200);
     expect(mockLoadAttendancePage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
     expect(res.json().records[0].deletedAt).toBeTruthy();
+    await app.close();
+  });
+
+  it('forbids includeDeleted for roles without delete access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance?page=1&includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadAttendancePage).not.toHaveBeenCalled();
     await app.close();
   });
 

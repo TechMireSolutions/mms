@@ -2,6 +2,7 @@ import {
   type QuestionBankQuestion,
   type QuestionBankTest,
   type QuestionBankResult,
+  type QuestionBankListQuery,
   questionBankQuestionListSchema,
   questionBankTestListSchema,
   questionBankResultListSchema,
@@ -21,12 +22,14 @@ import {
   bulkSaveResults,
   replaceResultsForWorkspace,
 } from '../db/repositories/questionBankRepository.js';
+import { listQuestionsPage } from '../db/repositories/questionBankRepositoryList.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
   upsertWithBroadcast,
 } from './tenantBulkService.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 const questionBulkService = defineTenantBulkCollectionService<QuestionBankQuestion>(
   { listByWorkspace: listQuestionsByWorkspace, replaceForWorkspace: replaceQuestionsForWorkspace },
@@ -65,6 +68,29 @@ const questionCrud = createGenericRelationalService<QuestionBankQuestion>({
 export async function loadQuestions(options?: { includeDeleted?: boolean }): Promise<QuestionBankQuestion[]> {
   const rows = await questionCrud.loadAll({ includeDeleted: true });
   return scopeDeleted(rows, options?.includeDeleted);
+}
+
+/** SQL-paged questions Work list (server-side search/category/difficulty/soft-delete). */
+export async function loadQuestionsPage(
+  query: QuestionBankListQuery & { includeDeleted?: boolean },
+): Promise<{
+  questions: QuestionBankQuestion[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      questions: [],
+      total: 0,
+      page: query.page ?? 1,
+      limit: query.limit ?? 15,
+      hasMore: false,
+    };
+  }
+  return listQuestionsPage(tenant, query);
 }
 
 export async function loadTests(): Promise<QuestionBankTest[]> {

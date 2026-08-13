@@ -418,7 +418,6 @@ describe('tenant JWT binding', () => {
         expect.objectContaining({
           collections: expect.objectContaining({
             users: [{ id: 'u-admin', role: 'admin', email: 'admin@demo.local' }],
-            sessionTypes: [{ id: 'regular', name: 'Regular' }],
           }),
         }),
         expect.any(AbortSignal),
@@ -430,10 +429,11 @@ describe('tenant JWT binding', () => {
       expect(synced.collections).not.toHaveProperty('audit_log');
       expect(synced.collections).not.toHaveProperty('hasanat_payouts');
       expect(synced.collections).not.toHaveProperty('teacherStatuses');
+      expect(synced.collections).not.toHaveProperty('sessionTypes');
       await app.close();
     });
 
-    it('allows admin sync of module lookup collections and strips legacy messages_u / teacherStatuses', async () => {
+    it('allows admin sync of allowlisted collections and strips legacy messages_u / teacherStatuses / sessionTypes', async () => {
       const app = await buildApp();
       const token = adminToken(app);
       const { synchronizeData } = await import('../services/dbSyncService.js');
@@ -462,10 +462,10 @@ describe('tenant JWT binding', () => {
       const synced = vi.mocked(synchronizeData).mock.calls.at(-1)?.[0] as {
         collections: Record<string, unknown[]>;
       };
-      expect(synced.collections).toHaveProperty('sessionTypes');
       expect(synced.collections).toHaveProperty('currencies');
       expect(synced.collections).not.toHaveProperty('messages_u:peer');
       expect(synced.collections).not.toHaveProperty('teacherStatuses');
+      expect(synced.collections).not.toHaveProperty('sessionTypes');
       await app.close();
     });
   });

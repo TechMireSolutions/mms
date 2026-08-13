@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { ListPagination } from "@/components/ui/ListPagination";
-import { useLocalPagination } from "@/hooks/useLocalPagination";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { AttendanceRecord } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { ATTENDANCE_MODULE_MANIFEST, type AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -17,18 +18,18 @@ import { AttendanceRecordsMobileList } from "./AttendanceRecordsMobileList";
 import { AttendanceRecordsToolbar } from "./AttendanceRecordsToolbar";
 import { AttendanceBulkActionBar } from "./AttendanceBulkActionBar";
 import { useAttendanceSelection } from "@/tenant/features/attendance/hooks/useAttendanceSelection";
+import { useAttendancePaginated } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 
-const PAGE_SIZE = 15;
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 const ATTENDANCE_COLUMN_KEYS = ["date", "class", "student", "status", "timeIn", "timeOut", "notes"] as const;
+const ATTENDANCE_SEARCH_DEBOUNCE_MS = 300;
 
 
 
 interface AttendanceRecordsProps {
   filters: AttendanceFilterState;
-  records: AttendanceRecord[];
   onUpdateRecord: (record: AttendanceRecord) => Promise<void>;
   onDeleteRecord: (id: string) => Promise<void>;
   onRestoreRecord: (id: string) => Promise<void>;
@@ -40,11 +41,12 @@ interface AttendanceRecordsProps {
   onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', records: AttendanceRecord[]) => void;
+  /** Reports the server-filtered total up to the page metrics strip. */
+  onTotalChange?: (total: number) => void;
 }
 
 export function AttendanceRecords({
   filters,
-  records,
   onUpdateRecord,
   onDeleteRecord,
   onRestoreRecord,
@@ -56,6 +58,7 @@ export function AttendanceRecords({
   onColumnResize,
   columnCustomizer,
   onMessage,
+  onTotalChange,
 }: AttendanceRecordsProps) {
   const { statuses } = useAttendanceConfig();
   const { t } = useTranslation();
@@ -72,35 +75,43 @@ export function AttendanceRecords({
     );
   }, [sessions]);
 
+  const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [listPage, setListPage] = useState(1);
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
-  const baseFiltered = useMemo(() => {
-    return records.filter((attendanceRecord) => {
-      if (filters.classId && attendanceRecord.classId !== filters.classId) return false;
-      if (statusFilter !== "all" && attendanceRecord.status !== statusFilter) return false;
-      if (dateFrom && attendanceRecord.date < dateFrom) return false;
-      if (dateTo && attendanceRecord.date > dateTo) return false;
-      return true;
-    });
-  }, [records, filters, statusFilter, dateFrom, dateTo]);
+  const debouncedSearch = useDebounce(searchInput, ATTENDANCE_SEARCH_DEBOUNCE_MS);
 
-  const {
-    searchQuery: search,
-    currentPage: page,
-    setCurrentPage: setPage,
-    handleSearchChange,
-    paginatedItems: paginatedRecords,
-    filteredItems: filtered,
-  } = useLocalPagination({
-    items: baseFiltered,
-    pageSize: PAGE_SIZE,
-    searchFields: (attendanceRecord) => [attendanceRecord.studentName],
+  // Server-side filter/page reset whenever a filter dimension changes.
+  useEffect(() => {
+    setListPage(1);
+  }, [debouncedSearch, statusFilter, dateFrom, dateTo, filters.classId, filters.date, showDeleted]);
+
+  const attendancePageQuery = useAttendancePaginated({
+    page: listPage,
+    limit: ATTENDANCE_MODULE_MANIFEST.defaultPageSize,
+    search: debouncedSearch,
+    classId: filters.classId,
+    date: filters.date,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    dateFrom,
+    dateTo,
+    includeDeleted: showDeleted,
   });
+
+  const pageRecords = attendancePageQuery.data?.records ?? [];
+  const serverTotal = attendancePageQuery.data?.total ?? 0;
+  const serverPage = attendancePageQuery.data?.page ?? listPage;
+  const serverLimit = attendancePageQuery.data?.limit ?? ATTENDANCE_MODULE_MANIFEST.defaultPageSize;
+  const serverHasMore = attendancePageQuery.data?.hasMore ?? false;
+
+  useEffect(() => {
+    onTotalChange?.(serverTotal);
+  }, [onTotalChange, serverTotal]);
 
   const {
     selectedIds,
@@ -110,11 +121,11 @@ export function AttendanceRecords({
     toggleSelectAll,
     toggleSelectedRecord,
     clearSelection,
-  } = useAttendanceSelection(filtered);
+  } = useAttendanceSelection(pageRecords);
 
   useEffect(() => {
     clearSelection();
-  }, [showDeleted, clearSelection]);
+  }, [showDeleted, listPage, debouncedSearch, statusFilter, dateFrom, dateTo, filters.classId, filters.date, clearSelection]);
 
   const statusLabel = (statusId: string) => {
     const found = statuses.find((status) => status.id === statusId);
@@ -145,6 +156,10 @@ export function AttendanceRecords({
 
   const classLabel = (classId: string) => allClasses.find((sessionClass) => sessionClass.id === classId)?.name || classId;
 
+  const handleSearchChange = (query: string) => {
+    setSearchInput(query);
+  };
+
   const createRowActionsRenderer = (variant: 'table' | 'cards') =>
     (attendanceRecord: AttendanceRecord) => (
       <AttendanceRecordRowActions
@@ -174,11 +189,11 @@ export function AttendanceRecords({
   };
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" aria-busy={attendancePageQuery.isFetching}>
       <AttendanceRecordsToolbar
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        search={search}
+        search={searchInput}
         handleSearchChange={handleSearchChange}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
@@ -188,7 +203,7 @@ export function AttendanceRecords({
         setDateFrom={setDateFrom}
         dateTo={dateTo}
         setDateTo={setDateTo}
-        setPage={setPage}
+        setPage={setListPage}
         columnCustomizer={columnCustomizer}
       />
 
@@ -203,9 +218,15 @@ export function AttendanceRecords({
         />
       ) : null}
 
-      {viewMode === "cards" ? (
+      {attendancePageQuery.isError ? (
+        <ErrorState
+          title={t("attendance.toast.loadFailed")}
+          description={t("attendance.loadFailedHint")}
+          onRetry={() => { void attendancePageQuery.refetch(); }}
+        />
+      ) : viewMode === "cards" ? (
         <AttendanceRecordsMobileList
-          paginatedRecords={paginatedRecords}
+          paginatedRecords={pageRecords}
           isColumnVisible={columnVisible}
           editingRecord={editingRecord}
           statuses={statuses}
@@ -222,7 +243,7 @@ export function AttendanceRecords({
         />
       ) : (
         <AttendanceRecordsTable
-          paginatedRecords={paginatedRecords}
+          paginatedRecords={pageRecords}
           isColumnVisible={columnVisible}
           visibleColCount={visibleColCount}
           editingRecord={editingRecord}
@@ -243,10 +264,11 @@ export function AttendanceRecords({
       )}
 
       <ListPagination
-        page={page}
-        total={filtered.length}
-        limit={PAGE_SIZE}
-        onPageChange={setPage}
+        page={serverPage}
+        total={serverTotal}
+        limit={serverLimit}
+        hasMore={serverHasMore}
+        onPageChange={setListPage}
         i18nNamespace="attendance"
         variant="summary"
       />

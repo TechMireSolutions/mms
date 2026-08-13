@@ -13,6 +13,7 @@ import {
 } from '../../lib/crudRouter.js';
 import {
   loadExams,
+  loadExamsPage,
   upsertExams,
   loadExamResults,
   upsertExamResults,
@@ -23,6 +24,7 @@ import {
 } from '../../services/examinationService.js';
 
 import { examinationSetupConfigRoutes } from './examinationSetupConfigRoutes.js';
+import { examinationsListQuerySchema } from '../../validation/examinationsSchemas.js';
 
 const EXAMS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.collectionKey;
 const RESULTS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.resultsCollectionKey;
@@ -56,6 +58,9 @@ export default async function examinationsRoutes(
     collection: EXAMS_COLLECTION,
     schema: examListSchema,
     loadFn: loadExams,
+    loadPageFn: loadExamsPage,
+    listQuerySchema: examinationsListQuerySchema,
+    defaultPageSize: EXAMINATIONS_MODULE_MANIFEST.defaultPageSize,
     saveFn: upsertExams,
     deleteFn: deleteExamById,
     restoreFn: restoreExamById,

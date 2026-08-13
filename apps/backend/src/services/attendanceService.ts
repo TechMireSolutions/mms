@@ -13,12 +13,12 @@ import {
   replaceAttendanceRecordsForWorkspace,
 } from '../db/repositories/attendanceRepository.js';
 import { loadAttendanceReportAggregatesSql } from '../db/repositories/attendanceRepositoryReport.js';
+import { listAttendancePage, countAttendanceActiveByWorkspace } from '../db/repositories/attendanceRepositoryList.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { broadcastCollection } from './websocketService.js';
 import {
-  paginateAttendance,
   type AttendanceListQuery,
 } from '@mms/shared';
 
@@ -66,11 +66,18 @@ export async function upsertAttendanceRecords(records: AttendanceRecord[]): Prom
 export async function loadAttendancePage(
   query: AttendanceListQuery & { includeDeleted?: boolean },
 ) {
-  const rows = await loadAttendanceRecords({ includeDeleted: query.includeDeleted });
-  const scoped = query.includeDeleted
-    ? rows.filter((row) => Boolean(row.deletedAt))
-    : rows;
-  return paginateAttendance(scoped, query);
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { records: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 15, hasMore: false };
+  }
+  return listAttendancePage(tenant, query);
+}
+
+/** Active attendance count for `/count` (SQL — no full-row load). */
+export async function countAttendanceRecords(): Promise<number> {
+  const tenant = getRequestTenant();
+  if (!tenant) return 0;
+  return countAttendanceActiveByWorkspace(tenant);
 }
 
 /** ComparisonMode attendance SQL aggregates (session attendancePct + dual monthly ranges). */

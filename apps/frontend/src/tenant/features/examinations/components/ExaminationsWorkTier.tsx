@@ -95,7 +95,6 @@ export function ExaminationsWorkTier({
         <>
           {activeSubTab === "exams" && (
             <ExamsList
-              exams={exams}
               canWrite={canWrite}
               canDelete={canDelete}
               showDeleted={showDeleted}

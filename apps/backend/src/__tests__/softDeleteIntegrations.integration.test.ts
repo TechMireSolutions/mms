@@ -53,6 +53,7 @@ vi.mock('../services/enrollmentService.js', async (importOriginal) => {
 vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: vi.fn().mockResolvedValue([]),
   loadAttendancePage: vi.fn().mockResolvedValue({ records: [], total: 0, page: 1, limit: 15, hasMore: false }),
+  countAttendanceRecords: vi.fn().mockResolvedValue(0),
   createAttendanceRecord: vi.fn(),
   updateAttendanceRecordById: vi.fn(),
   replaceAttendanceRecords: vi.fn(),
@@ -112,6 +113,7 @@ vi.mock('../services/hasanatService.js', () => ({
   loadBatches: vi.fn().mockResolvedValue([]),
   upsertBatches: vi.fn(),
   loadDistributions: vi.fn().mockResolvedValue([]),
+  loadDistributionsPage: vi.fn().mockResolvedValue({ distributions: [], total: 0, page: 1, limit: 15, hasMore: false }),
   upsertDistributions: vi.fn(),
   loadRedemptions: vi.fn().mockResolvedValue([]),
   upsertRedemptions: vi.fn(),
@@ -129,6 +131,7 @@ const mockRestoreExamById = vi.fn();
 
 vi.mock('../services/examinationService.js', () => ({
   loadExams: vi.fn().mockResolvedValue([]),
+  loadExamsPage: vi.fn().mockResolvedValue({ exams: [], total: 0, page: 1, limit: 12, hasMore: false }),
   upsertExams: vi.fn(),
   loadExamResults: vi.fn().mockResolvedValue([]),
   upsertExamResults: vi.fn(),
