@@ -26,6 +26,7 @@ import {
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sessionExportRoutes } from './sessions/sessionExportRoutes.js';
 import { sessionSetupConfigRoutes } from './sessions/sessionSetupConfigRoutes.js';
+import { sessionLookupRoutes } from './sessions/sessionLookupRoutes.js';
 import { sessionReportRoutes } from './sessions/sessionReportRoutes.js';
 
 const COLLECTION = SESSIONS_MODULE_MANIFEST.collectionKey;
@@ -40,6 +41,7 @@ export default async function sessionsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   await fastify.register(sessionSetupConfigRoutes);
+  await fastify.register(sessionLookupRoutes);
   await fastify.register(sessionExportRoutes);
   await fastify.register(sessionReportRoutes);
 

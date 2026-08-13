@@ -60,12 +60,12 @@ export function useObligationsPageController() {
   const distributionsResult = useObligationsDistributions();
   const collectionsResult = useObligationsCollections({ includeDeleted: showDeleted });
 
-  const obligationTypes = typesResult.syncedData;
-  const mujtahids = mujtahidsResult.syncedData;
-  const reps = repsResult.syncedData;
-  const wakalaTypes = wakalaResult.syncedData;
-  const distributions = distributionsResult.syncedData;
-  const collections = collectionsResult.syncedData;
+  const obligationTypes = typesResult.data ?? [];
+  const mujtahids = mujtahidsResult.data ?? [];
+  const reps = repsResult.data ?? [];
+  const wakalaTypes = wakalaResult.data ?? [];
+  const distributions = distributionsResult.data ?? [];
+  const collections = collectionsResult.data ?? [];
 
   const {
     replaceTypes,
@@ -166,7 +166,7 @@ export function useObligationsPageController() {
     PAGE_TABS.map((tab) => tab.id),
   );
   const effectiveConfigTab = CONFIG_SUB_TABS.find((tab) => tab.id === activeConfigTab) ? activeConfigTab : 'types';
-  const listLoadFailed = collectionsResult.queryResult.isError;
+  const listLoadFailed = collectionsResult.isError;
 
   return {
     t,
@@ -211,6 +211,6 @@ export function useObligationsPageController() {
     replaceWakala,
     replaceDistributions,
     setActiveConfigTab,
-    refetchCollections: () => { void collectionsResult.queryResult.refetch(); },
+    refetchCollections: () => { void collectionsResult.refetch(); },
   };
 }

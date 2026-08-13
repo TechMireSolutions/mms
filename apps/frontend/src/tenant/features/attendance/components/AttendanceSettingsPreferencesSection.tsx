@@ -8,14 +8,14 @@ import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { Badge } from "@/components/ui/badge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
-import type { AttendanceModuleSettings } from "@mms/shared";
+import type { AttendanceSettings } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { AttendanceSettingRow } from "@/tenant/features/attendance/components/AttendanceSettingRow";
 
 interface AttendanceSettingsPreferencesSectionProps {
   t: TranslationFunction;
-  settingsDraft: AttendanceModuleSettings;
-  upd: <K extends keyof AttendanceModuleSettings>(key: K, value: AttendanceModuleSettings[K]) => void;
+  settingsDraft: AttendanceSettings;
+  upd: <K extends keyof AttendanceSettings>(key: K, value: AttendanceSettings[K]) => void;
 }
 
 export function AttendanceSettingsPreferencesSection({

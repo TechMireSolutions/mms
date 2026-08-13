@@ -58,7 +58,7 @@ export function useContactsSetupPanelState({
     [config.formTabs, config.fields],
   );
 
-  const { fieldsEditor, saved, setSaved, saveSettingsAsync } = useModuleSettingsEditor({
+  const { fieldsEditor, saved, setSaved, saveSettingsAsync } = useModuleSettingsEditor<FieldConfig>({
     config: editorConfig,
     tabRegistry: initialTabs,
     defaultEnabledTabs,

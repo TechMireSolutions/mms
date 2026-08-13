@@ -79,6 +79,20 @@ const dataMigrationsToRun = [
   { id: '055', load: async () => (await import('./migrations/055_clear_legacy_teacher_lookup_collections.js')).runMigration055 },
   { id: '056', load: async () => (await import('./migrations/056_migrate_enrollment_setup_config.js')).runMigration056 },
   { id: '057', load: async () => (await import('./migrations/057_clear_legacy_enrollment_setup_objects.js')).runMigration057 },
+  { id: '058', load: async () => (await import('./migrations/058_migrate_finance_setup_config.js')).runMigration058 },
+  { id: '059', load: async () => (await import('./migrations/059_clear_legacy_finance_setup_objects.js')).runMigration059 },
+  { id: '060', load: async () => (await import('./migrations/060_migrate_hasanat_setup_config.js')).runMigration060 },
+  { id: '061', load: async () => (await import('./migrations/061_clear_legacy_hasanat_setup_objects.js')).runMigration061 },
+  { id: '062', load: async () => (await import('./migrations/062_migrate_attendance_setup_config.js')).runMigration062 },
+  { id: '063', load: async () => (await import('./migrations/063_clear_legacy_attendance_setup_objects.js')).runMigration063 },
+  { id: '064', load: async () => (await import('./migrations/064_migrate_accounting_setup_config.js')).runMigration064 },
+  { id: '065', load: async () => (await import('./migrations/065_clear_legacy_accounting_setup_objects.js')).runMigration065 },
+  { id: '066', load: async () => (await import('./migrations/066_migrate_examinations_setup_config.js')).runMigration066 },
+  { id: '067', load: async () => (await import('./migrations/067_clear_legacy_examinations_setup_objects.js')).runMigration067 },
+  { id: '068', load: async () => (await import('./migrations/068_migrate_session_lookups.js')).runMigration068 },
+  { id: '069', load: async () => (await import('./migrations/069_clear_legacy_session_lookup_collections.js')).runMigration069 },
+  { id: '070', load: async () => (await import('./migrations/070_migrate_attendance_lookups.js')).runMigration070 },
+  { id: '071', load: async () => (await import('./migrations/071_clear_legacy_attendance_lookup_collections.js')).runMigration071 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in tsx, dist in production). */

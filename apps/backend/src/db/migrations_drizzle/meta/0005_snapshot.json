@@ -1,6 +1,6 @@
 {
   "id": "0005_contacts_active_partial_idx",
-  "prevId": "dcbc94e3-abf5-43eb-903e-bc359d3bd586",
+  "prevId": "4244d0b0-23a5-4dc9-956a-3658962d98a7",
   "version": "7",
   "dialect": "postgresql",
   "tables": {

@@ -26,8 +26,10 @@ import {
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import { attendanceReportRoutes } from './attendance/attendanceReportRoutes.js';
+import { attendanceSetupConfigRoutes } from './attendanceSetupConfigRoutes.js';
+import { attendanceLookupRoutes } from './attendance/attendanceLookupRoutes.js';
 
-const COLLECTION = 'attendance_records';
+const COLLECTION = ATTENDANCE_MODULE_MANIFEST.collectionKey;
 
 /**
  * Server-first attendance resource routes (TanStack Query on FE).
@@ -39,6 +41,8 @@ export default async function attendanceRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   await fastify.register(attendanceReportRoutes);
+  await fastify.register(attendanceSetupConfigRoutes);
+  await fastify.register(attendanceLookupRoutes);
 
   registerStandardTenantRoutes(fastify, {
     collection: COLLECTION,

@@ -1,5 +1,5 @@
 import {
-  type AttendanceModuleSettings as AttendanceSettings,
+  type AttendanceSettings,
   type AttendanceRecord,
   DEFAULT_ATTENDANCE_SETTINGS as DEFAULT_ATT_SETTINGS,
   toTitleCase,

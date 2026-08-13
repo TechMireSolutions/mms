@@ -40,9 +40,15 @@ export function registerPaginatedListRoute<
 
   fastify.get(path || '/', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadCollection(user, collection)) return sendForbidden(reply);
+    if (!canReadCollection(user, collection)) {
+      console.log(`[DEBUG 403] canReadCollection returned false for ${collection} as role ${user.role}`);
+      return sendForbidden(reply);
+    }
     const queryParsed = parseRequest(schema, request.query);
-    if (!queryParsed.ok) return replyValidationError(reply, queryParsed.message);
+    if (!queryParsed.ok) {
+      console.log(`[DEBUG 400] parseRequest failed: ${queryParsed.message}`);
+      return replyValidationError(reply, queryParsed.message);
+    }
     try {
       const query = queryParsed.data;
       const includeDeleted = query.includeDeleted === 'true';

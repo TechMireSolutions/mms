@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   QuestionBankCommandMetricsSnapshot,
   QuestionBankQuestion,
@@ -8,7 +8,7 @@ import type {
 import { QUESTION_BANK_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 const QUESTION_BANK_API = QUESTION_BANK_MODULE_MANIFEST.restBasePath;
 
@@ -19,14 +19,19 @@ export const QUESTION_BANK_TESTS_QUERY_KEY = [QUESTION_BANK_MODULE_MANIFEST.modu
 export const QUESTION_BANK_RESULTS_QUERY_KEY = [QUESTION_BANK_MODULE_MANIFEST.moduleId, 'results', 'list'] as const;
 
 export function useQuestionBankQuestions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<QuestionBankQuestion>({
+  return useQuery<QuestionBankQuestion[]>({
     queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, { includeDeleted }],
-    apiPath: `${QUESTION_BANK_API}/questions?includeDeleted=${includeDeleted}`,
-    responseKey: 'questions',
-    collectionName: 'questions',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ questions: QuestionBankQuestion[] }>(
+        `${QUESTION_BANK_API}/questions?includeDeleted=${includeDeleted}`,
+        { signal },
+      );
+      return res?.questions ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
@@ -34,37 +39,47 @@ export function useQuestionBankQuestionsCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): QuestionBankQuestion[] {
-  return useQuestionBankQuestions(options).syncedData;
+  return useQuestionBankQuestions(options).data ?? [];
 }
 
 export function useQuestionBankTests(options?: { enabled?: boolean }) {
-  return useCollectionSync<QuestionBankTest>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<QuestionBankTest[]>({
     queryKey: QUESTION_BANK_TESTS_QUERY_KEY,
-    apiPath: `${QUESTION_BANK_API}/tests`,
-    responseKey: 'tests',
-    collectionName: 'tests',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ tests: QuestionBankTest[] }>(
+        `${QUESTION_BANK_API}/tests`,
+        { signal },
+      );
+      return res?.tests ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
 export function useQuestionBankTestsCollection(options?: { enabled?: boolean }): QuestionBankTest[] {
-  return useQuestionBankTests(options).syncedData;
+  return useQuestionBankTests(options).data ?? [];
 }
 
 export function useQuestionBankResults(options?: { enabled?: boolean }) {
-  return useCollectionSync<QuestionBankResult>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<QuestionBankResult[]>({
     queryKey: QUESTION_BANK_RESULTS_QUERY_KEY,
-    apiPath: `${QUESTION_BANK_API}/assessment-results`,
-    responseKey: 'results',
-    collectionName: 'assessment_results',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ results: QuestionBankResult[] }>(
+        `${QUESTION_BANK_API}/assessment-results`,
+        { signal },
+      );
+      return res?.results ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
 export function useQuestionBankResultsCollection(options?: { enabled?: boolean }): QuestionBankResult[] {
-  return useQuestionBankResults(options).syncedData;
+  return useQuestionBankResults(options).data ?? [];
 }
 
 export function useQuestionBankMutations() {

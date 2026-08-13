@@ -11,10 +11,8 @@ import {
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import { ATTENDANCE_RECORDS } from '@/lib/data/attendanceData';
 
 export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
 export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
@@ -64,16 +62,23 @@ export function useAttendancePaginated(params: AttendancePaginatedParams) {
 }
 
 export function useAttendanceRecords(options?: { enabled?: boolean }) {
-  return useCollectionSync<AttendanceRecord>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<AttendanceRecord[]>({
     queryKey: ATTENDANCE_QUERY_KEY,
-    apiPath: `${ATTENDANCE_API}?page=1&limit=${ATTENDANCE_MODULE_MANIFEST.maxPageSize}`,
-    responseKey: 'records',
-    collectionName: 'attendance_records',
-    defaultData: ATTENDANCE_RECORDS,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ records: AttendanceRecord[] }>(
+        `${ATTENDANCE_API}?page=1&limit=${ATTENDANCE_MODULE_MANIFEST.maxPageSize}`,
+        { signal },
+      );
+      return res?.records ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 15_000,
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
   });
+}
+
+export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
+  return useAttendanceRecords(options).data ?? [];
 }
 
 export function useAttendanceMutations() {
@@ -155,10 +160,6 @@ export function useAttendanceMutations() {
   };
 }
 
-/** Query-first attendance; falls back to localStorage cache (hydrated). */
-export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
-  return useAttendanceRecords(options).syncedData;
-}
 
 export function useAttendanceReportAggregates(
   options?: { enabled?: boolean; comparison?: AttendanceReportComparisonQuery },

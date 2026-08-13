@@ -364,6 +364,24 @@ export const teacherLookups = pgTable('teacher_lookups', {
   index('teacher_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
 ]);
 
+export const sessionLookups = pgTable('session_lookups', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // 'statuses' | 'types'
+  label: text('label').notNull(),
+  meta: jsonb('meta').$type<Record<string, unknown> | null>(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  uniqueIndex('session_lookups_workspace_kind_sort_idx').on(
+    table.workspaceSubdomain,
+    table.kind,
+    table.sortOrder,
+  ),
+  index('session_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
+]);
+
 /** Sessions Setup field registry (was document-store `sessions_settings` fields slice). */
 export const sessionFieldConfigs = pgTable('session_field_configs', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -442,6 +460,38 @@ export const sessions = pgTable('sessions', {
     .where(sql`${table.deletedAt} is null`),
   index('sessions_custom_data_gin_idx').using('gin', table.customData),
 ]);
+
+export const attendanceLookups = pgTable('attendance_lookups', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // 'statuses'
+  label: text('label').notNull(),
+  meta: jsonb('meta').$type<Record<string, unknown> | null>(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  uniqueIndex('attendance_lookups_workspace_kind_sort_idx').on(
+    table.workspaceSubdomain,
+    table.kind,
+    table.sortOrder,
+  ),
+  index('attendance_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
+]);
+
+/** Attendance Setup field registry (was document-store `attendance_settings` fields slice). */
+export const attendanceFieldConfigs = pgTable('attendance_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+/** Attendance Setup preferences (was document-store `attendance_settings` prefs slice). */
+export const attendanceModulePreferences = pgTable('attendance_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
 
 export const attendance = pgTable('attendance', {
   id: text('id').notNull(),
@@ -586,6 +636,84 @@ export const financePayments = pgTable('finance_payments', {
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('finance_payments_workspace_subdomain_idx').on(table.workspaceSubdomain),
   index('finance_payments_custom_data_gin_idx').using('gin', table.customData),
+]);
+
+export const financeFieldConfigs = pgTable('finance_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const financeModulePreferences = pgTable('finance_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const accountingFieldConfigs = pgTable('accounting_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const accountingModulePreferences = pgTable('accounting_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const financeUserColumnPrefs = pgTable('finance_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('finance_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+export const hasanatFieldConfigs = pgTable('hasanat_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const hasanatModulePreferences = pgTable('hasanat_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const examinationsFieldConfigs = pgTable('examinations_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const examinationsModulePreferences = pgTable('examinations_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const hasanatDistributionUserColumnPrefs = pgTable('hasanat_distribution_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => tenantUsers.id, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('hasanat_dist_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+export const hasanatRedemptionUserColumnPrefs = pgTable('hasanat_redemption_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => tenantUsers.id, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('hasanat_redemp_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
 export const exams = pgTable('exams', {
@@ -902,3 +1030,15 @@ export const customFields = pgTable('custom_fields', {
 
 
 
+
+export const questionBankFieldConfigs = pgTable('question_bank_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});
+
+export const questionBankModulePreferences = pgTable('question_bank_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+});

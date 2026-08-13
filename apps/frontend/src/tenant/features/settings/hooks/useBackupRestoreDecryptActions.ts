@@ -78,7 +78,7 @@ export function useBackupRestoreDecryptActions({
         setDecryptLoading(false);
       }
     },
-    [errorDescription, pendingDecrypt, queuePlaintextRestore, t],
+    [errorDescription, pendingDecrypt, queuePlaintextRestore, t, setPendingDecrypt, setDecryptLoading, setSelectedFileName],
   );
 
   const processImportFile = useCallback(
@@ -86,7 +86,7 @@ export function useBackupRestoreDecryptActions({
       if (!file) return;
       processBackupImportFile(file, adminEmail, subdomain, t, setPendingDecrypt);
     },
-    [adminEmail, subdomain, t],
+    [adminEmail, subdomain, t, setPendingDecrypt],
   );
 
   const openHistoryRestore = useCallback(
@@ -103,7 +103,7 @@ export function useBackupRestoreDecryptActions({
         description: t('backup.encryptedRequired'),
       });
     },
-    [t],
+    [t, setPendingDecrypt],
   );
 
   const handleDownloadBackup = useCallback(
@@ -127,7 +127,7 @@ export function useBackupRestoreDecryptActions({
     saveCollection('backups', DEFAULT_BACKUP_HISTORY);
     setClearHistoryOpen(false);
     notify.success(t('settings.backupResetToast'), { description: t('settings.backupResetToastDesc') });
-  }, [t]);
+  }, [t, setClearHistoryOpen]);
 
   return {
     handleDecryptSubmit,

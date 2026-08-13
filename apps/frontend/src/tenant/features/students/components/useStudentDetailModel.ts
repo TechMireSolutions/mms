@@ -27,7 +27,7 @@ export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const sessionsQuery = useSessions();
-  const sessions = sessionsQuery.syncedData;
+  const sessions = sessionsQuery.data ?? [];
   const { data: primaryContact } = useContactById(
     student.contactId != null ? String(student.contactId) : undefined,
   );
@@ -194,8 +194,8 @@ export function useStudentDetailModel(student: Student) {
     relationshipLinks: hydratedLinks,
     age,
     enrolledSessionDetails,
-    sessionsLoading: sessionsQuery.queryResult.isLoading,
-    sessionsError: sessionsQuery.queryResult.isError,
+    sessionsLoading: sessionsQuery.isLoading,
+    sessionsError: sessionsQuery.isError,
     primaryPhone,
     primaryEmail,
     // Gate on the number actually used for the WhatsApp recipient (effective

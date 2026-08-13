@@ -1,3 +1,4 @@
+import { type FinanceSettings } from "@mms/shared";
 import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Save, DollarSign } from "lucide-react";
@@ -38,7 +39,7 @@ export function FinanceSettings(): React.ReactElement {
     setSaved,
     upd,
     saveSettingsAsync,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<FinanceSettings>({
     config,
     tabRegistry: FINANCE_TAB_REGISTRY,
   });

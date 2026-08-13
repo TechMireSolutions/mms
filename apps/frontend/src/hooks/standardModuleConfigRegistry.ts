@@ -35,7 +35,7 @@ import {
   DEFAULT_QUESTION_BANK_FIELD_DEFS,
   normalizeQuestionBankSettings,
   type AccountingSettings,
-  type AttendanceModuleSettings,
+  type AttendanceSettings,
   type EnrollmentsSettings,
   type ExaminationsSettings,
   type FinanceSettings,
@@ -46,11 +46,6 @@ import {
   type UsersSettings,
   type QuestionBankSettings,
 } from '@mms/shared';
-import {
-  ATTENDANCE_CONFIG_COLLECTION_KEYS,
-  DEFAULT_ATTENDANCE_STATUSES,
-  SESSION_CONFIG_COLLECTION_KEYS,
-} from '@/hooks/standardModuleConfigRegistryKeys';
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
 
 export const STANDARD_MODULES_CONFIG_REGISTRY = {
@@ -63,12 +58,6 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     settingsObjectKey: ATTENDANCE_MODULE_MANIFEST.settingsObjectKey,
     defaultSettings: DEFAULT_ATTENDANCE_SETTINGS,
     defaultFieldDefs: DEFAULT_ATTENDANCE_FIELD_DEFS,
-    collections: {
-      statuses: {
-        dbKey: ATTENDANCE_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => DEFAULT_ATTENDANCE_STATUSES,
-      },
-    },
   },
   enrollments: {
     settingsObjectKey: ENROLLMENTS_MODULE_MANIFEST.settingsObjectKey,
@@ -94,16 +83,6 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     settingsObjectKey: SESSIONS_MODULE_MANIFEST.settingsObjectKey,
     defaultSettings: DEFAULT_SESSIONS_SETTINGS,
     defaultFieldDefs: DEFAULT_SESSIONS_FIELD_DEFS,
-    collections: {
-      statuses: {
-        dbKey: SESSION_CONFIG_COLLECTION_KEYS.statuses,
-        default: () => [],
-      },
-      types: {
-        dbKey: SESSION_CONFIG_COLLECTION_KEYS.types,
-        default: () => [],
-      },
-    },
   },
   students: {
     settingsObjectKey: STUDENTS_MODULE_MANIFEST.settingsObjectKey,
@@ -133,7 +112,7 @@ export type StandardModuleId = keyof typeof STANDARD_MODULES_CONFIG_REGISTRY;
 
 export type StandardModuleSettingsMap = {
   accounting: AccountingSettings;
-  attendance: AttendanceModuleSettings;
+  attendance: AttendanceSettings;
   enrollments: EnrollmentsSettings;
   examinations: ExaminationsSettings;
   finance: FinanceSettings;

@@ -1,6 +1,10 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import type {
   AccountingCommandMetricsSnapshot,
+  AccountingListQuery,
+  AccountingAccountsListPageResult,
+  AccountingEntriesListPageResult,
+  AccountingFiscalYearsListPageResult,
   Account,
   JournalEntry,
   FiscalYear,
@@ -8,8 +12,8 @@ import type {
 import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 const ACCOUNTING_API = ACCOUNTING_MODULE_MANIFEST.restBasePath;
 
@@ -22,51 +26,100 @@ export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.mod
 /** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
 export class NotifiedAccountingMutationError extends NotifiedMutationError {}
 
-export function useAccountingAccounts(options?: { enabled?: boolean; includeDeleted?: boolean }) {
-  const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<Account>({
-    queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, { includeDeleted }],
-    apiPath: `${ACCOUNTING_API}/accounts?includeDeleted=${includeDeleted}`,
-    responseKey: 'accounts',
-    collectionName: 'accounting_accounts',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+export function useAccountingAccountsPaginated(query: AccountingListQuery, options?: { enabled?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  const enabled = (options?.enabled ?? true) && isAuthenticated;
+  
+  const queryParams = new URLSearchParams();
+  if (query.page) queryParams.set('page', String(query.page));
+  if (query.limit) queryParams.set('limit', String(query.limit));
+  if (query.search) queryParams.set('search', query.search);
+  if (query.sortField) queryParams.set('sortField', query.sortField);
+  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
+  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
+  
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, query],
+    queryFn: async ({ signal }): Promise<AccountingAccountsListPageResult> =>
+      apiJson<AccountingAccountsListPageResult>(
+        `${ACCOUNTING_API}/accounts${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled,
+    placeholderData: keepPreviousData,
   });
 }
 
+export function useAccountingEntriesPaginated(query: AccountingListQuery, options?: { enabled?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  const enabled = (options?.enabled ?? true) && isAuthenticated;
+  
+  const queryParams = new URLSearchParams();
+  if (query.page) queryParams.set('page', String(query.page));
+  if (query.limit) queryParams.set('limit', String(query.limit));
+  if (query.search) queryParams.set('search', query.search);
+  if (query.sortField) queryParams.set('sortField', query.sortField);
+  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
+  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
+  
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, query],
+    queryFn: async ({ signal }): Promise<AccountingEntriesListPageResult> =>
+      apiJson<AccountingEntriesListPageResult>(
+        `${ACCOUNTING_API}/entries${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAccountingFiscalYearsPaginated(query: AccountingListQuery, options?: { enabled?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  const enabled = (options?.enabled ?? true) && isAuthenticated;
+  
+  const queryParams = new URLSearchParams();
+  if (query.page) queryParams.set('page', String(query.page));
+  if (query.limit) queryParams.set('limit', String(query.limit));
+  if (query.search) queryParams.set('search', query.search);
+  if (query.sortField) queryParams.set('sortField', query.sortField);
+  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
+  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
+  
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...ACCOUNTING_FISCAL_YEARS_QUERY_KEY, query],
+    queryFn: async ({ signal }): Promise<AccountingFiscalYearsListPageResult> =>
+      apiJson<AccountingFiscalYearsListPageResult>(
+        `${ACCOUNTING_API}/fiscal-years${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** @deprecated Use useAccountingAccountsPaginated instead */
 export function useAccountingAccountsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Account[] {
-  return useAccountingAccounts(options).syncedData;
+  const query = useAccountingAccountsPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
+  return query.data?.accounts ?? [];
 }
 
-export function useAccountingEntries(options?: { enabled?: boolean; includeDeleted?: boolean }) {
-  const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<JournalEntry>({
-    queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, { includeDeleted }],
-    apiPath: `${ACCOUNTING_API}/entries?includeDeleted=${includeDeleted}`,
-    responseKey: 'entries',
-    collectionName: 'accounting_entries',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
-  });
-}
-
+/** @deprecated Use useAccountingEntriesPaginated instead */
 export function useAccountingEntriesCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): JournalEntry[] {
-  return useAccountingEntries(options).syncedData;
+  const query = useAccountingEntriesPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
+  return query.data?.entries ?? [];
 }
 
-export function useAccountingFiscalYears(options?: { enabled?: boolean }) {
-  return useCollectionSync<FiscalYear>({
-    queryKey: ACCOUNTING_FISCAL_YEARS_QUERY_KEY,
-    apiPath: `${ACCOUNTING_API}/fiscal-years`,
-    responseKey: 'fiscalYears',
-    collectionName: 'accounting_fiscal_years',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
-  });
-}
-
+/** @deprecated Use useAccountingFiscalYearsPaginated instead */
 export function useAccountingFiscalYearsCollection(options?: { enabled?: boolean }): FiscalYear[] {
-  return useAccountingFiscalYears(options).syncedData;
+  const query = useAccountingFiscalYearsPaginated({ page: 1, limit: 500 }, options);
+  return query.data?.fiscalYears ?? [];
 }
 
 export function useAccountingMutations() {

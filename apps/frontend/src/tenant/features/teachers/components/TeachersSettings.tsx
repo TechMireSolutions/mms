@@ -1,3 +1,4 @@
+import { type TeachersSettings } from "@mms/shared";
 import React, { lazy, Suspense, useEffect, useMemo, useRef } from "react";
 import { School } from "lucide-react";
 import {
@@ -53,7 +54,7 @@ export function TeachersSettings(): React.JSX.Element {
     setSaved,
     upd,
     discardDrafts,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<TeachersSettings>({
     config,
     tabRegistry: TEACHERS_TAB_REGISTRY,
     lockedEnabledTabs: TEACHER_LOCKED_ENABLED_TABS,

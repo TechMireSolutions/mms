@@ -47,7 +47,7 @@ export function useQuestionBankPageController() {
   );
   const [showDeleted, setShowDeleted] = useState(false);
   const questionsResult = useQuestionBankQuestions({ includeDeleted: showDeleted });
-  const questions = questionsResult.syncedData;
+  const questions = questionsResult.data ?? [];
   const tests = useQuestionBankTestsCollection();
   const questionBankResults = useQuestionBankResultsCollection();
   const questionBankConfig = useQuestionBankConfig(questions);
@@ -148,7 +148,7 @@ export function useQuestionBankPageController() {
     ? activeSubTab
     : 'questions';
   const effectiveConfigTab = SETUP_TABS.find((tab) => tab.id === configSubTab)?.id ?? 'preferences';
-  const listLoadFailed = questionsResult.queryResult.isError;
+  const listLoadFailed = questionsResult.isError;
 
   useEffect(() => {
     if (effectiveTab === 'work' && effectiveSubTab === 'questions') return;
@@ -207,6 +207,6 @@ export function useQuestionBankPageController() {
     handleBulkRestore,
     handleSaveTest,
     setQuestions,
-    refetchQuestions: () => { void questionsResult.queryResult.refetch(); },
+    refetchQuestions: () => { void questionsResult.refetch(); },
   };
 }

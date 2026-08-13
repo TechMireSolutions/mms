@@ -37,7 +37,7 @@ export function useAttendancePageController() {
     includeDeleted: showDeleted,
     enabled: activeTab === 'work',
   });
-  const activeAttendanceRecords = attendanceCollectionQuery.syncedData;
+  const activeAttendanceRecords = attendanceCollectionQuery.data ?? [];
   const workAttendanceRecords = attendancePageQuery.data?.records ?? [];
   const attendanceRecords = activeTab === 'work' ? workAttendanceRecords : activeAttendanceRecords;
   const columnLayout = useAttendanceColumnLayout();

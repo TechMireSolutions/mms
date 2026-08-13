@@ -1,3 +1,4 @@
+import { type HasanatSettings } from "@mms/shared";
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, Star } from "lucide-react";
@@ -30,7 +31,7 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
     setSaved,
     upd,
     saveSettingsAsync,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<HasanatSettings>({
     config,
     tabRegistry: HASANAT_TAB_REGISTRY,
   });

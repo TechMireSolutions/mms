@@ -1,3 +1,5 @@
+import { listAccountsPage, listEntriesPage, listFiscalYearsPage } from "../db/repositories/accountingRepositoryList.js";
+import type { AccountingListQuery } from "@mms/shared";
 import {
   type Account,
   type JournalEntry,
@@ -143,3 +145,27 @@ export const deleteAccountById = accountCrud.deleteById;
 export const restoreAccountById = accountCrud.restoreById;
 export const bulkSoftDeleteAccounts = accountCrud.bulkDeleteByIds;
 export const bulkRestoreAccounts = accountCrud.bulkRestoreByIds;
+
+export async function loadAccountsPage(query: AccountingListQuery & { includeDeleted?: boolean }) {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { accounts: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 12, hasMore: false };
+  }
+  return listAccountsPage(tenant, query);
+}
+
+export async function loadEntriesPage(query: AccountingListQuery & { includeDeleted?: boolean }) {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { entries: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 12, hasMore: false };
+  }
+  return listEntriesPage(tenant, query);
+}
+
+export async function loadFiscalYearsPage(query: AccountingListQuery & { includeDeleted?: boolean }) {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return { fiscalYears: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 12, hasMore: false };
+  }
+  return listFiscalYearsPage(tenant, query);
+}

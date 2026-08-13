@@ -1,3 +1,4 @@
+import { type EnrollmentsSettings } from "@mms/shared";
 import React, { useEffect, useMemo, useRef } from "react";
 import { ClipboardList } from "lucide-react";
 import {
@@ -39,7 +40,7 @@ export function EnrollmentsSettings(): React.JSX.Element {
     upd,
     saveSettings,
     discardDrafts,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<EnrollmentsSettings>({
     config,
     tabRegistry: ENROLLMENTS_TAB_REGISTRY,
   });

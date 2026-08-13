@@ -78,16 +78,18 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
  *
  * @param {TenantDatabaseSnapshot} payload - The sync collections and objects.
  * @param {AbortSignal} [signal] - Aborts mid-restore so the transaction rolls back.
+ * @param {boolean} [fullRestore] - When true, prunes collections/objects not present in the
+ *   payload and clears ephemeral keys. Must be set explicitly by the caller; do not infer from
+ *   payload shape to avoid accidentally wiping the workspace on partial syncs.
  * @returns {Promise<void>}
  */
 export async function synchronizeData(
   payload: TenantDatabaseSnapshot,
   signal?: AbortSignal,
+  fullRestore = false,
 ): Promise<void> {
-  // Only a full workspace backup carries users; partial syncs must not prune.
-  const isFullRestore = Array.isArray(payload.collections?.users);
   const collections = withCompleteRelationalRestoreCollections(
-    isFullRestore
+    fullRestore
       ? hydrateTeachersSetupCollectionsFromLegacyObjects(
           hydrateStudentsSetupCollectionsFromLegacyObjects(
             { ...(payload.collections ?? {}) },
@@ -99,7 +101,7 @@ export async function synchronizeData(
   );
   const { objects } = payload;
   const skipLegacySetupObjects = new Set<string>(
-    isFullRestore
+    fullRestore
       ? [...STUDENTS_LEGACY_SETUP_OBJECT_KEYS, ...TEACHERS_LEGACY_SETUP_OBJECT_KEYS]
       : [],
   );
@@ -107,7 +109,7 @@ export async function synchronizeData(
   const restoredCollectionKeys = new Set<string>();
 
   await runInTransaction(async () => {
-    if (isFullRestore) {
+    if (fullRestore) {
       // Jobs race mid-restore and export artifacts are not in the envelope.
       await clearTenantBackgroundJobs();
       // Ephemeral workspace log — do not populate target workspace with source backup history.
@@ -124,7 +126,7 @@ export async function synchronizeData(
       }
     }
 
-    if (isFullRestore) {
+    if (fullRestore) {
       for (const key of await dbListTenantCollectionLogicalKeys()) {
         throwIfSyncAborted(signal);
         if (!restoredCollectionKeys.has(key)) await dbDeleteCollection(key);
@@ -141,7 +143,7 @@ export async function synchronizeData(
         restoredKeys.add(key);
       }
 
-      if (isFullRestore) {
+      if (fullRestore) {
         // Settings created after the backup must not survive a full restore.
         for (const key of await dbListTenantObjectLogicalKeys()) {
           throwIfSyncAborted(signal);
@@ -153,7 +155,7 @@ export async function synchronizeData(
           await dbDeleteObject(key);
         }
       }
-    } else if (isFullRestore) {
+    } else if (fullRestore) {
       for (const key of BACKUP_EPHEMERAL_OBJECT_KEYS) {
         await dbDeleteObject(key);
       }

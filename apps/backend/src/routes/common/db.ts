@@ -154,7 +154,7 @@ export default async function dbRoutes(
           stripServerOnlyObjects(payload.objects);
           stripUnwritableObjects(payload.objects, user);
         }
-        await withSyncTimeout((signal) => synchronizeData(payload, signal));
+        await withSyncTimeout((signal) => synchronizeData(payload, signal, true));
         await recordAudit({
           userId: String(user.id),
           userEmail: user.email,

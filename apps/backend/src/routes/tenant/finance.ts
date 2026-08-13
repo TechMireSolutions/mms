@@ -33,6 +33,7 @@ import { canDeleteCollection, canWriteCollection } from '../../services/rbacServ
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { financeReportRoutes } from './finance/financeReportRoutes.js';
+import { financeSetupConfigRoutes } from './finance/financeSetupConfigRoutes.js';
 
 const FINANCE_COLLECTION = FINANCE_MODULE_MANIFEST.collectionKey;
 const PAYMENT_COLLECTION = FINANCE_MODULE_MANIFEST.paymentCollectionKey;
@@ -47,6 +48,7 @@ export default async function financeRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   await fastify.register(financeReportRoutes);
+  await fastify.register(financeSetupConfigRoutes);
 
   // --- Metrics ---
   registerMetricsRoute(fastify, {

@@ -1,0 +1,43 @@
+$ turbo run typecheck
+• turbo 2.10.8
+
+   • Packages in scope: @mms/shared, e2e-tests, mms-backend, mms-frontend
+   • Running typecheck in 4 packages
+   • Remote caching disabled
+
+e2e-tests:typecheck: cache hit, replaying logs cb0e52ea3d2ff1f0
+e2e-tests:typecheck: $ tsc --noEmit
+@mms/shared:typecheck: cache hit, replaying logs 7c8c3f325a1b62e8
+@mms/shared:typecheck: $ tsc --noEmit
+@mms/shared:build: cache hit, replaying logs e47ca1ffd4f6fc33
+@mms/shared:build: $ tsc
+mms-backend:typecheck: cache miss, executing 8324170275083756
+mms-frontend:typecheck: cache miss, executing b9728a7dc45d2635
+mms-frontend:typecheck: $ tsc -p ./tsconfig.json
+mms-backend:typecheck: $ tsc --noEmit
+mms-backend:typecheck: src/db/migrations/060_migrate_hasanat_setup_config.ts(80,11): error TS2769: No overload matches this call.
+mms-backend:typecheck:   The last overload gave the following error.
+mms-backend:typecheck:     Object literal may only specify known properties, and 'workspaceSubdomain' does not exist in type '{ preferences: Placeholder<string, any> | Record<string, unknown> | SQL<unknown>; updatedAt?: Date | Placeholder<string, any> | SQL<unknown> | undefined; workspaceSubdomain: string | ... 1 more ... | SQL<...>; }[]'.
+mms-backend:typecheck: [ELIFECYCLE] Command failed with exit code 1.
+mms-frontend:typecheck: src/hooks/useStandardModuleConfig.ts(33,8): error TS2300: Duplicate identifier 'HasanatSettings'.
+mms-frontend:typecheck: src/hooks/useStandardModuleConfig.ts(118,3): error TS2724: '"@/tenant/features/hasanat/hooks/useHasanatSetupConfig"' has no exported member named 'useUpdateHasanatFieldConfigMutation'. Did you mean 'useHasanatFieldConfigMutation'?
+mms-frontend:typecheck: src/hooks/useStandardModuleConfig.ts(119,3): error TS2724: '"@/tenant/features/hasanat/hooks/useHasanatSetupConfig"' has no exported member named 'useUpdateHasanatPreferencesMutation'. Did you mean 'useHasanatPreferencesMutation'?
+mms-frontend:typecheck: src/hooks/useStandardModuleConfig.ts(125,15): error TS2300: Duplicate identifier 'HasanatSettings'.
+mms-frontend:typecheck: src/tenant/features/hasanat/hooks/hasanatSetupConfigApi.ts(1,10): error TS2305: Module '"@/lib/apiClient"' has no exported member 'apiClient'.
+mms-frontend:typecheck: src/tenant/features/hasanat/hooks/useHasanatSetupConfig.ts(11,3): error TS2724: '"@/tenant/features/hasanat/hooks/hasanatSetupConfigApi"' has no exported member named 'fetchHasanatFieldConfig'. Did you mean 'getHasanatFieldConfig'?
+mms-frontend:typecheck: src/tenant/features/hasanat/hooks/useHasanatSetupConfig.ts(12,3): error TS2724: '"@/tenant/features/hasanat/hooks/hasanatSetupConfigApi"' has no exported member named 'fetchHasanatPreferences'. Did you mean 'getHasanatPreferences'?
+mms-frontend:typecheck: src/tenant/features/hasanat/hooks/useHasanatSetupConfig.ts(13,3): error TS2305: Module '"@/tenant/features/hasanat/hooks/hasanatSetupConfigApi"' has no exported member 'getHasanatSettingsMemoryFallback'.
+mms-frontend:typecheck: src/tenant/features/hasanat/hooks/useHasanatSetupConfig.ts(14,3): error TS2724: '"@/tenant/features/hasanat/hooks/hasanatSetupConfigApi"' has no exported member named 'saveHasanatFieldConfigAsync'. Did you mean 'getHasanatFieldConfig'?
+mms-frontend:typecheck: src/tenant/features/hasanat/hooks/useHasanatSetupConfig.ts(15,3): error TS2724: '"@/tenant/features/hasanat/hooks/hasanatSetupConfigApi"' has no exported member named 'saveHasanatPreferencesAsync'. Did you mean 'getHasanatPreferences'?
+mms-frontend:typecheck: src/tenant/hooks/collections/hasanat.ts(27,3): error TS2724: '"@/tenant/features/hasanat/hooks/useHasanatSetupConfig"' has no exported member named 'useUpdateHasanatFieldConfigMutation'. Did you mean 'useHasanatFieldConfigMutation'?
+mms-frontend:typecheck: src/tenant/hooks/collections/hasanat.ts(29,3): error TS2724: '"@/tenant/features/hasanat/hooks/useHasanatSetupConfig"' has no exported member named 'useUpdateHasanatPreferencesMutation'. Did you mean 'useHasanatPreferencesMutation'?
+mms-frontend:typecheck: [ELIFECYCLE] Command failed with exit code 1.
+mms-backend#typecheck:  ERROR  command (/Users/syedaalin/Documents/mms/apps/backend) /Users/syedaalin/Library/pnpm/store/v11/links/@/pnpm/11.15.1/f19ccd35eef469581990ac8f87b5f6627016489fde9212eefa451003757538ca/bin/pnpm run typecheck exited (1)
+
+ Tasks:    3 successful, 5 total
+Cached:    3 cached, 5 total
+  Time:    2.17s 
+Failed:    mms-backend#typecheck
+
+ ERROR  run failed: command  exited (1)
+[ELIFECYCLE] Command failed with exit code 1.

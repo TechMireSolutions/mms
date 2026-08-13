@@ -28,6 +28,7 @@ import {
   bulkRestoreDistributions,
 } from '../../services/hasanatService.js';
 import { hasanatReportRoutes } from './hasanat/hasanatReportRoutes.js';
+import { hasanatSetupConfigRoutes } from './hasanatSetupConfigRoutes.js';
 
 const HASANAT_DISTRIBUTIONS_COLLECTION = HASANAT_MODULE_MANIFEST.collectionKey;
 const HASANAT_DENOMS_COLLECTION = HASANAT_MODULE_MANIFEST.denomCollectionKey;
@@ -44,6 +45,7 @@ export default async function hasanatRoutes(
   fastify.addHook('preHandler', authenticateTenant);
 
   await fastify.register(hasanatReportRoutes);
+  await fastify.register(hasanatSetupConfigRoutes);
 
   registerMetricsRoute(fastify, {
     collection: HASANAT_DISTRIBUTIONS_COLLECTION,
@@ -112,4 +114,5 @@ export default async function hasanatRoutes(
     errorMessagePrefix: 'redemptions',
     columnPreferencesObjectKey: HASANAT_MODULE_MANIFEST.redemptionColumnPreferencesObjectKey,
   });
+
 }

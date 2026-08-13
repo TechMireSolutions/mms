@@ -99,14 +99,14 @@ export function useBackupRestoreImportActions({
         setRestoreId(null);
       }
     },
-    [errorDescription, safetyReady, t],
+    [errorDescription, safetyReady, t, setRestoreId, setPendingRestore, setSelectedFileName],
   );
 
   const cancelRestore = useCallback((): void => {
     setPendingRestore(null);
     setSelectedFileName(null);
     setSafetyReady(false);
-  }, []);
+  }, [setPendingRestore, setSelectedFileName, setSafetyReady]);
 
   const decryptActions = useBackupRestoreDecryptActions({
     subdomain,

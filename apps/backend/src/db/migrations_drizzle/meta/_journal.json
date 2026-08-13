@@ -5,218 +5,253 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1785485397897,
+      "when": 1704067200000,
       "tag": "0000_init",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1785487000000,
+      "when": 1704153600000,
       "tag": "0001_platform_session_rls",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1785488000000,
+      "when": 1704240000000,
       "tag": "0002_platform_admin_disabled",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1785490000000,
+      "when": 1704326400000,
       "tag": "0003_platform_db_hardening",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1785669600000,
+      "when": 1704412800000,
       "tag": "0004_contacts_soft_delete_audit",
       "breakpoints": true
     },
     {
       "idx": 5,
       "version": "7",
-      "when": 1785717000000,
+      "when": 1704499200000,
       "tag": "0005_contacts_active_partial_idx",
       "breakpoints": true
     },
     {
       "idx": 6,
       "version": "7",
-      "when": 1785750000000,
+      "when": 1704585600000,
       "tag": "0006_auth_artifacts_messaging_idempotency",
       "breakpoints": true
     },
     {
       "idx": 7,
       "version": "7",
-      "when": 1785769800000,
+      "when": 1704672000000,
       "tag": "0007_message_logs_active_indexes",
       "breakpoints": true
     },
     {
       "idx": 8,
       "version": "7",
-      "when": 1785771600000,
+      "when": 1704758400000,
       "tag": "0008_message_logs_deleted_at",
       "breakpoints": true
     },
     {
       "idx": 9,
       "version": "7",
-      "when": 1785780000000,
+      "when": 1704844800000,
       "tag": "0009_contact_lookups",
       "breakpoints": true
     },
     {
       "idx": 10,
       "version": "7",
-      "when": 1785782000000,
+      "when": 1704931200000,
       "tag": "0010_contact_setup_config",
       "breakpoints": true
     },
     {
       "idx": 11,
       "version": "7",
-      "when": 1785831000000,
+      "when": 1705017600000,
       "tag": "0011_students_soft_delete_audit",
       "breakpoints": true
     },
     {
       "idx": 12,
       "version": "7",
-      "when": 1785832800000,
+      "when": 1705104000000,
       "tag": "0012_students_contact_id",
       "breakpoints": true
     },
     {
       "idx": 13,
       "version": "7",
-      "when": 1785835000000,
+      "when": 1705190400000,
       "tag": "0013_student_setup_config",
       "breakpoints": true
     },
     {
       "idx": 14,
       "version": "7",
-      "when": 1786041000000,
+      "when": 1705276800000,
       "tag": "0014_students_hot_path_indexes",
       "breakpoints": true
     },
     {
       "idx": 15,
       "version": "7",
-      "when": 1786042200000,
+      "when": 1705363200000,
       "tag": "0015_students_gr_unique",
       "breakpoints": true
     },
     {
       "idx": 16,
       "version": "7",
-      "when": 1786044000000,
+      "when": 1705449600000,
       "tag": "0016_students_gender_active_idx",
       "breakpoints": true
     },
     {
       "idx": 17,
       "version": "7",
-      "when": 1786045000000,
+      "when": 1705536000000,
       "tag": "0017_students_status_gr_columns",
       "breakpoints": true
     },
     {
       "idx": 18,
       "version": "7",
-      "when": 1786046000000,
+      "when": 1705622400000,
       "tag": "0018_student_lookups",
       "breakpoints": true
     },
     {
       "idx": 19,
       "version": "7",
-      "when": 1786047000000,
+      "when": 1705708800000,
       "tag": "0019_students_contact_fk",
       "breakpoints": true
     },
     {
       "idx": 20,
       "version": "7",
-      "when": 1786048000000,
+      "when": 1705795200000,
       "tag": "0020_drop_students_gender_active_idx",
       "breakpoints": true
     },
     {
       "idx": 21,
       "version": "7",
-      "when": 1786049000000,
+      "when": 1705881600000,
       "tag": "0021_teacher_setup_config",
       "breakpoints": true
     },
     {
       "idx": 22,
       "version": "7",
-      "when": 1786050000000,
+      "when": 1705968000000,
       "tag": "0022_session_setup_config",
       "breakpoints": true
     },
     {
       "idx": 23,
       "version": "7",
-      "when": 1786051000000,
+      "when": 1706054400000,
       "tag": "0023_user_setup_config",
       "breakpoints": true
     },
     {
       "idx": 24,
       "version": "7",
-      "when": 1786052000000,
+      "when": 1706140800000,
       "tag": "0024_teachers_contact_id",
       "breakpoints": true
     },
     {
       "idx": 25,
       "version": "7",
-      "when": 1786053000000,
+      "when": 1706227200000,
       "tag": "0025_teacher_lookups",
       "breakpoints": true
     },
     {
       "idx": 26,
       "version": "7",
-      "when": 1786054000000,
+      "when": 1706313600000,
       "tag": "0026_teachers_soft_delete_audit",
       "breakpoints": true
     },
     {
       "idx": 27,
       "version": "7",
-      "when": 1786055000000,
+      "when": 1706400000000,
       "tag": "0027_sessions_soft_delete_audit",
       "breakpoints": true
     },
     {
       "idx": 28,
       "version": "7",
-      "when": 1786056000000,
+      "when": 1706486400000,
       "tag": "0028_enrollments_soft_delete_audit",
       "breakpoints": true
     },
     {
       "idx": 29,
       "version": "7",
-      "when": 1786057000000,
+      "when": 1706572800000,
       "tag": "0029_enrollment_setup_config",
       "breakpoints": true
     },
     {
       "idx": 30,
       "version": "7",
-      "when": 1786569600000,
+      "when": 1706659200000,
       "tag": "0030_schema_performance_and_audit_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1706745600000,
+      "tag": "0031_updated_at_triggers_finance_attendance",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1786575600000,
+      "tag": "0032_finance_setup_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1786579200000,
+      "tag": "0033_hasanat_setup_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1786582800000,
+      "tag": "0034_attendance_setup_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1786586400000,
+      "tag": "0035_accounting_setup_config",
       "breakpoints": true
     }
   ]

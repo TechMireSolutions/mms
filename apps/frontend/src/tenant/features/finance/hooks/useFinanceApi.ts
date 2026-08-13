@@ -1,7 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import type {
   FinanceReportAggregates,
   FinanceReportComparisonQuery,
+  FinanceListQuery,
+  FinanceInvoicesListPageResult,
+  FinancePaymentsListPageResult,
   Invoice,
   InvoiceCreateInput,
   Payment,
@@ -9,7 +12,6 @@ import type {
 } from '@mms/shared';
 import { FINANCE_MODULE_MANIFEST, normalizeFinanceReportComparisonQuery } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
@@ -26,36 +28,68 @@ const FINANCE_API = FINANCE_MODULE_MANIFEST.restBasePath;
 /** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
 export class NotifiedFinanceMutationError extends NotifiedMutationError {}
 
-export function useFinanceInvoices(options?: { enabled?: boolean; includeDeleted?: boolean }) {
-  const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<Invoice>({
-    queryKey: [...FINANCE_INVOICES_QUERY_KEY, { includeDeleted }],
-    apiPath: `${FINANCE_API}/invoices?page=1&limit=${FINANCE_MODULE_MANIFEST.maxPageSize}&includeDeleted=${includeDeleted}`,
-    responseKey: 'invoices',
-    collectionName: 'finance_invoices',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+export function useFinanceInvoicesPaginated(query: FinanceListQuery, options?: { enabled?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  const enabled = (options?.enabled ?? true) && isAuthenticated;
+  
+  const queryParams = new URLSearchParams();
+  if (query.page) queryParams.set('page', String(query.page));
+  if (query.limit) queryParams.set('limit', String(query.limit));
+  if (query.search) queryParams.set('search', query.search);
+  if (query.sortField) queryParams.set('sortField', query.sortField);
+  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
+  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
+  
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...FINANCE_INVOICES_QUERY_KEY, query],
+    queryFn: async ({ signal }): Promise<FinanceInvoicesListPageResult> =>
+      apiJson<FinanceInvoicesListPageResult>(
+        `${FINANCE_API}/invoices${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled,
+    placeholderData: keepPreviousData,
   });
 }
 
-export function useFinancePayments(options?: { enabled?: boolean; includeDeleted?: boolean }) {
-  const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<Payment>({
-    queryKey: [...FINANCE_PAYMENTS_QUERY_KEY, { includeDeleted }],
-    apiPath: `${FINANCE_API}/payments?page=1&limit=${FINANCE_MODULE_MANIFEST.maxPageSize}&includeDeleted=${includeDeleted}`,
-    responseKey: 'payments',
-    collectionName: 'finance_payments',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+export function useFinancePaymentsPaginated(query: FinanceListQuery, options?: { enabled?: boolean }) {
+  const { isAuthenticated } = useAuth();
+  const enabled = (options?.enabled ?? true) && isAuthenticated;
+  
+  const queryParams = new URLSearchParams();
+  if (query.page) queryParams.set('page', String(query.page));
+  if (query.limit) queryParams.set('limit', String(query.limit));
+  if (query.search) queryParams.set('search', query.search);
+  if (query.sortField) queryParams.set('sortField', query.sortField);
+  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
+  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
+  
+  const queryString = queryParams.toString();
+
+  return useQuery({
+    queryKey: [...FINANCE_PAYMENTS_QUERY_KEY, query],
+    queryFn: async ({ signal }): Promise<FinancePaymentsListPageResult> =>
+      apiJson<FinancePaymentsListPageResult>(
+        `${FINANCE_API}/payments${queryString ? `?${queryString}` : ''}`,
+        { signal },
+      ),
+    enabled,
+    placeholderData: keepPreviousData,
   });
 }
 
+/** @deprecated Use useFinanceInvoicesPaginated instead */
 export function useFinanceInvoicesCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Invoice[] {
-  return useFinanceInvoices(options).syncedData;
+  const query = useFinanceInvoicesPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
+  return query.data?.invoices ?? [];
 }
 
+/** @deprecated Use useFinancePaymentsPaginated instead */
 export function useFinancePaymentsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Payment[] {
-  return useFinancePayments(options).syncedData;
+  const query = useFinancePaymentsPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
+  return query.data?.payments ?? [];
 }
 
 export function useFinanceReportAggregates(

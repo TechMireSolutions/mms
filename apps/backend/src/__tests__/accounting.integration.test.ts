@@ -39,10 +39,13 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadAccounts = vi.fn();
+const mockLoadAccountsPage = vi.fn();
 const mockUpsertAccounts = vi.fn();
 const mockLoadEntries = vi.fn();
+const mockLoadEntriesPage = vi.fn();
 const mockUpsertEntries = vi.fn();
 const mockLoadFiscalYears = vi.fn();
+const mockLoadFiscalYearsPage = vi.fn();
 const mockUpsertFiscalYears = vi.fn();
 const mockDeleteJournalEntryById = vi.fn();
 const mockRestoreJournalEntryById = vi.fn();
@@ -51,10 +54,13 @@ const mockBulkRestoreJournalEntries = vi.fn();
 
 vi.mock('../services/accountingService.js', () => ({
   loadAccounts: (...args: unknown[]) => mockLoadAccounts(...args),
+  loadAccountsPage: (...args: unknown[]) => mockLoadAccountsPage(...args),
   upsertAccounts: (...args: unknown[]) => mockUpsertAccounts(...args),
   loadEntries: (...args: unknown[]) => mockLoadEntries(...args),
+  loadEntriesPage: (...args: unknown[]) => mockLoadEntriesPage(...args),
   upsertEntries: (...args: unknown[]) => mockUpsertEntries(...args),
   loadFiscalYears: (...args: unknown[]) => mockLoadFiscalYears(...args),
+  loadFiscalYearsPage: (...args: unknown[]) => mockLoadFiscalYearsPage(...args),
   upsertFiscalYears: (...args: unknown[]) => mockUpsertFiscalYears(...args),
   deleteJournalEntryById: (...args: unknown[]) => mockDeleteJournalEntryById(...args),
   restoreJournalEntryById: (...args: unknown[]) => mockRestoreJournalEntryById(...args),

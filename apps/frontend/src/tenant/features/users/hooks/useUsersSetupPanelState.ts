@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { USERS_TAB_REGISTRY } from "@mms/shared";
+import { USERS_TAB_REGISTRY , type UsersSettings } from "@mms/shared";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useUsersSetupSaveActions } from "@/tenant/features/users/hooks/useUsersSetupSaveActions";
@@ -16,7 +16,7 @@ export function useUsersSetupPanelState() {
     upd,
     saveSettingsAsync,
     discardDrafts,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<UsersSettings>({
     config,
     tabRegistry: USERS_TAB_REGISTRY,
   });

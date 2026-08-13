@@ -11,7 +11,6 @@ import type {
 import { HASANAT_MODULE_MANIFEST, normalizeHasanatReportComparisonQuery } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
@@ -31,44 +30,53 @@ const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
 export class NotifiedHasanatMutationError extends NotifiedMutationError {}
 
 export function useHasanatDenoms(options?: { enabled?: boolean }) {
-  return useCollectionSync<Denomination>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<Denomination[]>({
     queryKey: HASANAT_DENOMS_QUERY_KEY,
-    apiPath: `${HASANAT_API}/denoms`,
-    responseKey: 'denoms',
-    collectionName: 'hasanat_denoms',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ denoms: Denomination[] }>(`${HASANAT_API}/denoms`, { signal });
+      return res?.denoms ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
-  return useHasanatDenoms(options).syncedData;
+  return useHasanatDenoms(options).data ?? [];
 }
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
-  return useCollectionSync<StockBatch>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<StockBatch[]>({
     queryKey: HASANAT_BATCHES_QUERY_KEY,
-    apiPath: `${HASANAT_API}/batches`,
-    responseKey: 'batches',
-    collectionName: 'hasanat_batches',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ batches: StockBatch[] }>(`${HASANAT_API}/batches`, { signal });
+      return res?.batches ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
-  return useHasanatBatches(options).syncedData;
+  return useHasanatBatches(options).data ?? [];
 }
 
 export function useHasanatDistributions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<Distribution>({
+  return useQuery<Distribution[]>({
     queryKey: [...HASANAT_DISTRIBUTIONS_QUERY_KEY, { includeDeleted }],
-    apiPath: `${HASANAT_API}/distributions?includeDeleted=${includeDeleted}`,
-    responseKey: 'distributions',
-    collectionName: 'hasanat_distributions',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ distributions: Distribution[] }>(
+        `${HASANAT_API}/distributions?includeDeleted=${includeDeleted}`,
+        { signal },
+      );
+      return res?.distributions ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
@@ -76,7 +84,7 @@ export function useHasanatDistributionsCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): Distribution[] {
-  return useHasanatDistributions(options).syncedData;
+  return useHasanatDistributions(options).data ?? [];
 }
 
 export function useHasanatReportAggregates(
@@ -106,18 +114,20 @@ export function useHasanatReportAggregates(
 }
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {
-  return useCollectionSync<Redemption>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<Redemption[]>({
     queryKey: HASANAT_REDEMPTIONS_QUERY_KEY,
-    apiPath: `${HASANAT_API}/redemptions`,
-    responseKey: 'redemptions',
-    collectionName: 'hasanat_redemptions',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ redemptions: Redemption[] }>(`${HASANAT_API}/redemptions`, { signal });
+      return res?.redemptions ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
-  return useHasanatRedemptions(options).syncedData;
+  return useHasanatRedemptions(options).data ?? [];
 }
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {

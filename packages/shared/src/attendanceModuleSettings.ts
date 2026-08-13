@@ -3,7 +3,7 @@ import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
 
 // ─── Attendance Module Settings ───────────────────────────────────────────────
 
-export interface AttendanceModuleSettings {
+export interface AttendanceSettings {
   workingDays: string[];
   cutoffTime: string;
   lateThresholdMins: number;
@@ -28,7 +28,7 @@ export interface AttendanceModuleSettings {
   requiredTabs?: string[];
 }
 
-export const DEFAULT_ATTENDANCE_SETTINGS: AttendanceModuleSettings = {
+export const DEFAULT_ATTENDANCE_SETTINGS: AttendanceSettings = {
   workingDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
   cutoffTime: "09:30",
   lateThresholdMins: 15,

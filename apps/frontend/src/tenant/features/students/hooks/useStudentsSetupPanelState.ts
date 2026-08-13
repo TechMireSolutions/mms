@@ -10,6 +10,7 @@ import {
 } from "@mms/shared";
 import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
+import { type StudentsSettings } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useStudentsSetupSaveActions } from "@/tenant/features/students/hooks/useStudentsSetupSaveActions";
 
@@ -27,7 +28,7 @@ export function useStudentsSetupPanelState({
     saved,
     setSaved,
     upd,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<StudentsSettings>({
     config,
     tabRegistry: STUDENT_TAB_REGISTRY,
     defaultEnabledTabs: DEFAULT_STUDENT_ENABLED_TABS,

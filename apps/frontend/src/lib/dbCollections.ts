@@ -13,9 +13,6 @@ import {
 
 const BUSINESS_COLLECTIONS = new Set([
   "currencies",
-  "sessionStatuses",
-  "sessionTypes",
-  "attendanceStatuses",
   "backups",
 ]);
 

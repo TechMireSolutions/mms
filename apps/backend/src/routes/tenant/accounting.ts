@@ -25,7 +25,11 @@ import {
   restoreJournalEntryById,
   bulkSoftDeleteJournalEntries,
   bulkRestoreJournalEntries,
+  loadAccountsPage,
+  loadEntriesPage,
+  loadFiscalYearsPage,
 } from '../../services/accountingService.js';
+import { accountingSetupConfigRoutes } from './accountingSetupConfigRoutes.js';
 
 const ACCOUNTING_ENTRIES_COLLECTION = ACCOUNTING_MODULE_MANIFEST.collectionKey;
 const ACCOUNTING_ACCOUNTS_COLLECTION = ACCOUNTING_MODULE_MANIFEST.accountCollectionKey;
@@ -40,11 +44,14 @@ export default async function accountingRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
+  fastify.register(accountingSetupConfigRoutes);
+
   registerIncludableBulkRoutes(fastify, {
     path: '/accounts',
     collection: ACCOUNTING_ACCOUNTS_COLLECTION,
     schema: accountListSchema,
     loadFn: loadAccounts,
+    loadPageFn: loadAccountsPage,
     saveFn: upsertAccounts,
     responseKey: 'accounts',
     errorMessagePrefix: 'accounts',
@@ -56,6 +63,7 @@ export default async function accountingRoutes(
     collection: ACCOUNTING_ENTRIES_COLLECTION,
     schema: journalEntryListSchema,
     loadFn: loadEntries,
+    loadPageFn: loadEntriesPage,
     saveFn: upsertEntries,
     deleteFn: deleteJournalEntryById,
     restoreFn: restoreJournalEntryById,
@@ -79,6 +87,7 @@ export default async function accountingRoutes(
     collection: ACCOUNTING_FISCAL_YEARS_COLLECTION,
     schema: fiscalYearListSchema,
     loadFn: loadFiscalYears,
+    loadPageFn: loadFiscalYearsPage,
     saveFn: upsertFiscalYears,
     responseKey: 'fiscalYears',
     errorMessagePrefix: 'fiscal years',

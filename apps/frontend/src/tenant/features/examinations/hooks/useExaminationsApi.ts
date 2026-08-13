@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Exam, ExamResult, ExaminationsCommandMetricsSnapshot } from '@mms/shared';
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
 export const EXAMINATIONS_EXAMS_QUERY_KEY = ['examinations', 'exams', 'list'] as const;
@@ -16,14 +16,19 @@ const EXAMINATIONS_API = EXAMINATIONS_MODULE_MANIFEST.restBasePath;
 export class NotifiedExaminationsMutationError extends NotifiedMutationError {}
 
 export function useExaminationsExams(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+  const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useCollectionSync<Exam>({
+  return useQuery<Exam[]>({
     queryKey: [...EXAMINATIONS_EXAMS_QUERY_KEY, { includeDeleted }],
-    apiPath: `${EXAMINATIONS_API}/exams?includeDeleted=${includeDeleted}`,
-    responseKey: 'exams',
-    collectionName: 'exams',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ exams: Exam[] }>(
+        `${EXAMINATIONS_API}/exams?includeDeleted=${includeDeleted}`,
+        { signal },
+      );
+      return res?.exams ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
@@ -31,22 +36,27 @@ export function useExaminationsExamsCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): Exam[] {
-  return useExaminationsExams(options).syncedData;
+  return useExaminationsExams(options).data ?? [];
 }
 
 export function useExaminationsResults(options?: { enabled?: boolean }) {
-  return useCollectionSync<ExamResult>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<ExamResult[]>({
     queryKey: EXAMINATIONS_RESULTS_QUERY_KEY,
-    apiPath: `${EXAMINATIONS_API}/results`,
-    responseKey: 'results',
-    collectionName: 'exam_results',
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ results: ExamResult[] }>(
+        `${EXAMINATIONS_API}/results`,
+        { signal },
+      );
+      return res?.results ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
   });
 }
 
 export function useExaminationsResultsCollection(options?: { enabled?: boolean }): ExamResult[] {
-  return useExaminationsResults(options).syncedData;
+  return useExaminationsResults(options).data ?? [];
 }
 
 export function useExaminationsMetrics(options?: { enabled?: boolean }) {

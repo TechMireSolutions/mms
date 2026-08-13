@@ -3,11 +3,11 @@
  * Other features and shared UI must import from here — not `@/tenant/features/accounting/hooks/*`.
  */
 export {
-  useAccountingAccounts,
+  useAccountingAccountsPaginated,
   useAccountingAccountsCollection,
-  useAccountingEntries,
+  useAccountingEntriesPaginated,
   useAccountingEntriesCollection,
-  useAccountingFiscalYears,
+  useAccountingFiscalYearsPaginated,
   useAccountingFiscalYearsCollection,
   useAccountingMutations,
   useAccountingMetrics,

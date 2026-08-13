@@ -1,6 +1,4 @@
 import {
-  paginateFinanceInvoices,
-  paginateFinancePayments,
   normalizeFinanceReportComparisonQuery,
   type FinanceListQuery,
   type FinanceReportComparisonQuery,
@@ -11,6 +9,10 @@ import {
 } from '@mms/shared';
 import { invoiceRecordSchema, paymentRecordSchema } from '../validation/financeSchemas.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  listInvoicesPage,
+  listPaymentsPage,
+} from '../db/repositories/financeRepositoryList.js';
 import {
   listInvoicesByWorkspace,
   findInvoiceById,
@@ -46,9 +48,17 @@ export const bulkSoftDeleteInvoices = invoiceCrud.bulkDeleteByIds;
 export const bulkRestoreInvoices = invoiceCrud.bulkRestoreByIds;
 
 export async function loadInvoicesPage(query: FinanceListQuery & { includeDeleted?: boolean }) {
-  const rows = await loadInvoices({ includeDeleted: query.includeDeleted });
-  const scoped = query.includeDeleted ? rows.filter((row) => Boolean(row.deletedAt)) : rows;
-  return paginateFinanceInvoices(scoped, query);
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      invoices: [],
+      total: 0,
+      page: query.page ?? 1,
+      limit: query.limit ?? 12,
+      hasMore: false,
+    };
+  }
+  return listInvoicesPage(tenant, query);
 }
 
 // --- Payments CRUD ---
@@ -71,9 +81,17 @@ export const bulkSoftDeletePayments = paymentCrud.bulkDeleteByIds;
 export const bulkRestorePayments = paymentCrud.bulkRestoreByIds;
 
 export async function loadPaymentsPage(query: FinanceListQuery & { includeDeleted?: boolean }) {
-  const rows = await loadPayments({ includeDeleted: query.includeDeleted });
-  const scoped = query.includeDeleted ? rows.filter((row) => Boolean(row.deletedAt)) : rows;
-  return paginateFinancePayments(scoped, query);
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      payments: [],
+      total: 0,
+      page: query.page ?? 1,
+      limit: query.limit ?? 12,
+      hasMore: false,
+    };
+  }
+  return listPaymentsPage(tenant, query);
 }
 
 /**

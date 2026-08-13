@@ -22,6 +22,8 @@ import {
   bulkRestoreExams,
 } from '../../services/examinationService.js';
 
+import { examinationSetupConfigRoutes } from './examinationSetupConfigRoutes.js';
+
 const EXAMS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.collectionKey;
 const RESULTS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.resultsCollectionKey;
 
@@ -33,6 +35,8 @@ export default async function examinationsRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  fastify.register(examinationSetupConfigRoutes);
 
   registerMetricsRoute(fastify, {
     collection: EXAMS_COLLECTION,

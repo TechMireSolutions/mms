@@ -155,12 +155,12 @@ export default function Attendance() {
             transition={{ duration: 0.2 }}
           >
             <ErrorBoundary>
-              {(attendanceCollectionQuery.queryResult.isError || (effectiveTab === 'work' && attendancePageQuery.isError)) ? (
+              {(attendanceCollectionQuery.isError || (effectiveTab === 'work' && attendancePageQuery.isError)) ? (
                 <ErrorState
                   title={t('attendance.toast.loadFailed')}
                   description={t('attendance.loadFailedHint')}
                   onRetry={() => {
-                    void attendanceCollectionQuery.queryResult.refetch();
+                    void attendanceCollectionQuery.refetch();
                     void attendancePageQuery.refetch();
                   }}
                 />

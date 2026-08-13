@@ -8,9 +8,8 @@ import type {
 import { SESSIONS_MODULE_MANIFEST, sessionsWidgetQueryFromWidget } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { SESSIONS_DATA, type Session } from '@/lib/data/sessionsData';
+import type { Session } from '@/lib/data/sessionsData';
 import { invalidateSessionsQueries } from '@/tenant/features/sessions/hooks/invalidateSessionsQueries';
 
 export const SESSIONS_QUERY_KEY = ['sessions', 'list'] as const;
@@ -75,15 +74,18 @@ export function useSessionsPaginated(params: SessionsPaginatedParams) {
 }
 
 export function useSessions(options?: { enabled?: boolean }) {
-  return useCollectionSync<Session>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<Session[]>({
     queryKey: SESSIONS_QUERY_KEY,
-    apiPath: `${SESSIONS_API}?page=1&limit=${SESSIONS_MODULE_MANIFEST.maxPageSize}`,
-    responseKey: 'sessions',
-    collectionName: 'sessions',
-    defaultData: SESSIONS_DATA,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ sessions: Session[] }>(
+        `${SESSIONS_API}?page=1&limit=${SESSIONS_MODULE_MANIFEST.maxPageSize}`,
+        { signal },
+      );
+      return res?.sessions ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 15_000,
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
   });
 }
 
@@ -169,9 +171,8 @@ export function useSessionMutations() {
   };
 }
 
-/** Query-first sessions; falls back to localStorage cache (hydrated). */
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
-  return useSessions(options).syncedData;
+  return useSessions(options).data ?? [];
 }
 
 export function useSessionsWidgetAggregates(

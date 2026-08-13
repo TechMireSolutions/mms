@@ -1,3 +1,4 @@
+import { type QuestionBankSettings } from "@mms/shared";
 import React, { useCallback, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Library } from 'lucide-react';
@@ -70,7 +71,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
   const {
     fieldsEditor,
     saveSettingsAsync,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<QuestionBankSettings>({
     config: editorConfig,
     tabRegistry: QUESTION_BANK_TAB_REGISTRY,
   });

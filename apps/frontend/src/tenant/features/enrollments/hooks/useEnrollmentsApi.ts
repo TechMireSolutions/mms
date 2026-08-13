@@ -16,7 +16,6 @@ import {
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { apiJson } from '@/lib/apiClient';
-import { useCollectionSync } from '@/hooks/useCollectionSync';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
 
@@ -78,19 +77,23 @@ export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
 }
 
 export function useEnrollments(options?: { enabled?: boolean }) {
-  return useCollectionSync<Enrollment>({
+  const { isAuthenticated } = useAuth();
+  return useQuery<Enrollment[]>({
     queryKey: ENROLLMENTS_QUERY_KEY,
-    apiPath: `${ENROLLMENTS_API}?page=1&limit=${ENROLLMENTS_MODULE_MANIFEST.maxPageSize}`,
-    responseKey: 'enrollments',
-    collectionName: 'enrollments',
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ enrollments: Enrollment[] }>(
+        `${ENROLLMENTS_API}?page=1&limit=${ENROLLMENTS_MODULE_MANIFEST.maxPageSize}`,
+        { signal },
+      );
+      return res?.enrollments ?? [];
+    },
+    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 15_000,
-    enabled: options?.enabled,
-    mirrorToLocalCache: false,
   });
 }
 
 export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrollment[] {
-  return useEnrollments(options).syncedData;
+  return useEnrollments(options).data ?? [];
 }
 
 export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {

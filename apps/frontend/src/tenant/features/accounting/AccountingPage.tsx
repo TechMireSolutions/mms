@@ -19,10 +19,10 @@ import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { ACCOUNTING_MODULE_MANIFEST } from "@mms/shared";
 import {
-  useAccountingAccounts,
-  useAccountingEntries,
-  useAccountingFiscalYears,
-} from "@/tenant/features/accounting/hooks/useAccountingApi";
+  useAccountingAccountsPaginated,
+  useAccountingEntriesPaginated,
+  useAccountingFiscalYearsPaginated,
+} from "./hooks/useAccountingApi";
 import { useAccountingPageActions } from "@/tenant/features/accounting/hooks/useAccountingPageActions";
 import {
   ACCOUNTING_PAGE_ICON,
@@ -56,12 +56,12 @@ export default function Accounting() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [createJournalRequestKey, setCreateJournalRequestKey] = useState(0);
 
-  const accountsResult = useAccountingAccounts({ includeDeleted: false });
-  const entriesResult = useAccountingEntries({ includeDeleted: showDeleted });
-  const fiscalYearsResult = useAccountingFiscalYears();
-  const accounts = accountsResult.syncedData;
-  const journalEntries = entriesResult.syncedData;
-  const fiscalYears = fiscalYearsResult.syncedData;
+  const accountsResult = useAccountingAccountsPaginated({ includeDeleted: false, page: 1, limit: 100 });
+  const entriesResult = useAccountingEntriesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
+  const fiscalYearsResult = useAccountingFiscalYearsPaginated({ page: 1, limit: 100 });
+  const accounts = accountsResult.data?.accounts ?? [];
+  const journalEntries = entriesResult.data?.entries ?? [];
+  const fiscalYears = fiscalYearsResult.data?.fiscalYears ?? [];
   const { settings } = useAccountingConfig();
   const { activeCurrency } = useAccountingCurrency();
   const [filteredCount, setFilteredCount] = useState(0);
@@ -95,7 +95,7 @@ export default function Accounting() {
   });
 
   const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");
-  const listLoadFailed = accountsResult.queryResult.isError || entriesResult.queryResult.isError;
+  const listLoadFailed = accountsResult.isError || entriesResult.isError;
 
   return (
     <ModulePageShell
@@ -157,8 +157,8 @@ export default function Accounting() {
               }}
               onShowDeletedChange={() => setShowDeleted((prev) => !prev)}
               onRetry={() => {
-                void accountsResult.queryResult.refetch();
-                void entriesResult.queryResult.refetch();
+                void accountsResult.refetch();
+                void entriesResult.refetch();
               }}
               onAccountsChange={setAccounts}
               onEntriesChange={setEntries}

@@ -1,3 +1,4 @@
+import { type AttendanceSettings } from "@mms/shared";
 import React, { useMemo, useState } from "react";
 import { Save } from "lucide-react";
 import {
@@ -35,7 +36,7 @@ export function AttendanceSettings() {
     setSaved,
     upd,
     saveSettingsAsync,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<AttendanceSettings>({
     config,
     tabRegistry: ATTENDANCE_TAB_REGISTRY,
   });

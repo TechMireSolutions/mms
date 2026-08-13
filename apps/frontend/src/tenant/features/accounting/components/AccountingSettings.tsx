@@ -1,3 +1,4 @@
+import { type AccountingSettings } from "@mms/shared";
 import { useState, useMemo } from "react";
 import {
   DEFAULT_CURRENCIES,
@@ -54,7 +55,7 @@ export function AccountingSettings({
     setSaved,
     upd,
     saveSettingsAsync,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<AccountingSettings>({
     config,
     tabRegistry: ACCOUNTING_TAB_REGISTRY,
   });

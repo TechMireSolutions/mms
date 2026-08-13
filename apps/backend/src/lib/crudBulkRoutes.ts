@@ -16,6 +16,7 @@ export interface BulkRoutesOptions<T> {
   collection: string;
   schema: ZodType<T>;
   loadFn: () => Promise<unknown>;
+  loadPageFn?: (query: any) => Promise<unknown>;
   saveFn: (data: T) => Promise<unknown>;
   responseKey: string;
   errorMessagePrefix: string;
@@ -35,6 +36,7 @@ export function registerBulkRoutes<T>(
     collection,
     schema,
     loadFn,
+    loadPageFn,
     saveFn,
     responseKey,
     errorMessagePrefix,
@@ -45,7 +47,25 @@ export function registerBulkRoutes<T>(
   fastify.get(path, async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
+    
     try {
+      const queryParams = request.query as Record<string, string>;
+      const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
+
+      if (isPaginated && loadPageFn) {
+        const page = parseInt(queryParams.page || '1', 10);
+        const limit = parseInt(queryParams.limit || '50', 10);
+        
+        const data = await loadPageFn({
+          page,
+          limit,
+          search: queryParams.search,
+          sortField: queryParams.sortField,
+          sortDir: queryParams.sortDir as 'asc' | 'desc',
+        });
+        return reply.send(data);
+      }
+
       const data = await loadFn();
       return reply.send({ [responseKey]: data });
     } catch {
@@ -84,6 +104,7 @@ export interface SoftDeletableBulkRoutesOptions<T> {
   collection: string;
   schema: ZodType<T>;
   loadFn: (options?: { includeDeleted?: boolean }) => Promise<unknown>;
+  loadPageFn?: (query: any) => Promise<unknown>;
   saveFn: (data: T) => Promise<unknown>;
   deleteFn: (id: string, userId: string, reason?: string) => Promise<boolean | null | unknown>;
   restoreFn: (id: string) => Promise<boolean | null | unknown>;
@@ -115,6 +136,7 @@ export function registerIncludableBulkRoutes<T>(
     collection: string;
     schema: ZodType<T>;
     loadFn: (options?: { includeDeleted?: boolean }) => Promise<unknown>;
+    loadPageFn?: (query: any) => Promise<unknown>;
     saveFn: (data: T) => Promise<unknown>;
     responseKey: string;
     errorMessagePrefix: string;
@@ -127,6 +149,7 @@ export function registerIncludableBulkRoutes<T>(
     collection,
     schema,
     loadFn,
+    loadPageFn,
     saveFn,
     responseKey,
     errorMessagePrefix,
@@ -145,7 +168,26 @@ export function registerIncludableBulkRoutes<T>(
     if (includeDeleted && !canDeleteCollection(user, collection)) {
       return sendForbidden(reply);
     }
+    
     try {
+      const queryParams = request.query as Record<string, string>;
+      const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
+
+      if (isPaginated && loadPageFn) {
+        const page = parseInt(queryParams.page || '1', 10);
+        const limit = parseInt(queryParams.limit || '50', 10);
+        
+        const data = await loadPageFn({
+          page,
+          limit,
+          search: queryParams.search,
+          sortField: queryParams.sortField,
+          sortDir: queryParams.sortDir as 'asc' | 'desc',
+          includeDeleted,
+        });
+        return reply.send(data);
+      }
+
       const data = await loadFn({ includeDeleted });
       return reply.send({ [responseKey]: data });
     } catch (error: unknown) {
@@ -295,6 +337,7 @@ export function registerSoftDeletableBulkRoutes<T>(
     collection,
     schema,
     loadFn,
+    loadPageFn: options.loadPageFn,
     saveFn,
     responseKey,
     errorMessagePrefix,

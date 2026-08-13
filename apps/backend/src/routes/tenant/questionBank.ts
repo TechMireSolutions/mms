@@ -27,6 +27,8 @@ import {
   bulkRestoreQuestions,
 } from '../../services/questionBankService.js';
 
+import { questionBankSetupConfigRoutes } from './questionBankSetupConfigRoutes.js';
+
 const QUESTIONS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.collectionKey;
 const TESTS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey;
 const RESULTS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.resultsCollectionKey;
@@ -39,6 +41,8 @@ export default async function questionBankRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  fastify.register(questionBankSetupConfigRoutes);
 
   registerMetricsRoute(fastify, {
     collection: QUESTIONS_COLLECTION,

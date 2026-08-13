@@ -24,22 +24,40 @@ import {
   normalizeUsersSettings,
   normalizeEnrollmentsSettings,
   emptyStudentLookupsMap,
+  emptySessionLookupsMap,
+  emptyAttendanceLookupsMap,
   emptyTeacherLookupsMap,
   type SessionsSettings,
   type StudentsSettings,
   type TeachersSettings,
   type UsersSettings,
   type EnrollmentsSettings,
+  type HasanatSettings,
+  composeHasanatSettings,
+  normalizeHasanatModulePreferences,
+  normalizeHasanatSettings,
+  type FinanceSettings,
+  composeFinanceSettings,
+  normalizeFinanceModulePreferences,
+  normalizeFinanceSettings,
+  type AttendanceSettings,
+  composeAttendanceSettings,
+  normalizeAttendanceModulePreferences,
+  normalizeAttendanceSettings,
+  type AccountingSettings,
+  composeAccountingSettings,
+  normalizeAccountingModulePreferences,
+  normalizeAccountingSettings,
+  type ExaminationsSettings,
+  composeExaminationsSettings,
+  normalizeExaminationsModulePreferences,
+  normalizeExaminationsSettings,
 } from '@mms/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { createStandardModuleConfigHook } from './createStandardModuleConfigHook';
-import { useModuleConfig } from './useModuleConfig';
-import { useLiveCollectionsAndObjects } from './useLiveCollectionsAndObjects';
+import { createStandardModuleConfigHook, type StandardModuleConfigCore } from './createStandardModuleConfigHook';
 import {
   STANDARD_MODULES_CONFIG_REGISTRY,
   type StandardModuleConfigExtraMap,
-  type StandardModuleId,
-  type StandardModuleSettingsMap,
 } from './standardModuleConfigRegistry';
 import {
   STUDENTS_FIELD_CONFIG_QUERY_KEY,
@@ -72,6 +90,7 @@ import {
   setSessionFieldConfigMemory,
   setSessionPreferencesMemory,
 } from '@/tenant/features/sessions/hooks/sessionSetupConfigApi';
+import { useSessionLookupsQuery } from '@/tenant/features/sessions/hooks/useSessionLookups';
 import {
   USERS_FIELD_CONFIG_QUERY_KEY,
   USERS_PREFERENCES_QUERY_KEY,
@@ -92,6 +111,63 @@ import {
   setEnrollmentFieldConfigMemory,
   setEnrollmentPreferencesMemory,
 } from '@/tenant/features/enrollments/hooks/enrollmentSetupConfigApi';
+import {
+  FINANCE_FIELD_CONFIG_QUERY_KEY,
+  FINANCE_PREFERENCES_QUERY_KEY,
+  useComposedFinanceSettings,
+  useFinanceFieldConfigMutation,
+  useFinancePreferencesMutation,
+} from '@/tenant/features/finance/hooks/useFinanceSetupConfig';
+import {
+  setFinanceFieldConfigMemory,
+  setFinancePreferencesMemory,
+} from '@/tenant/features/finance/hooks/financeSetupConfigApi';
+import {
+  HASANAT_FIELD_CONFIG_QUERY_KEY,
+  HASANAT_PREFERENCES_QUERY_KEY,
+  useComposedHasanatSettings,
+  useHasanatFieldConfigMutation,
+  useHasanatPreferencesMutation,
+} from '@/tenant/features/hasanat/hooks/useHasanatSetupConfig';
+import {
+  useComposedExaminationsSettings,
+  useExaminationFieldConfigMutation,
+  useExaminationPreferencesMutation,
+  EXAMINATIONS_FIELD_CONFIG_QUERY_KEY,
+  EXAMINATIONS_PREFERENCES_QUERY_KEY,
+} from '@/tenant/features/examinations/hooks/useExaminationSetupConfig';
+import {
+  setExaminationFieldConfigMemory,
+  setExaminationPreferencesMemory,
+} from '@/tenant/features/examinations/hooks/examinationSetupConfigApi';
+import {
+  setHasanatFieldConfigMemory,
+  setHasanatPreferencesMemory,
+} from '@/tenant/features/hasanat/hooks/hasanatSetupConfigApi';
+import {
+  ATTENDANCE_FIELD_CONFIG_QUERY_KEY,
+  ATTENDANCE_PREFERENCES_QUERY_KEY,
+  useComposedAttendanceSettings,
+  useAttendanceFieldConfigMutation,
+  useAttendancePreferencesMutation,
+} from '@/tenant/features/attendance/hooks/useAttendanceSetupConfig';
+import {
+  setAttendanceFieldConfigMemory,
+  setAttendancePreferencesMemory,
+} from '@/tenant/features/attendance/hooks/attendanceSetupConfigApi';
+import { useAttendanceLookupsQuery } from '@/tenant/features/attendance/hooks/useAttendanceLookups';
+import {
+  ACCOUNTING_FIELD_CONFIG_QUERY_KEY,
+  ACCOUNTING_PREFERENCES_QUERY_KEY,
+  useComposedAccountingSettings,
+  useAccountingFieldConfigMutation,
+  useAccountingPreferencesMutation,
+} from '@/tenant/features/accounting/hooks/useAccountingSetupConfig';
+import {
+  setAccountingFieldConfigMemory,
+  setAccountingPreferencesMemory,
+} from '@/tenant/features/accounting/hooks/accountingSetupConfigApi';
+
 
 export type {
   StandardModuleId,
@@ -99,43 +175,6 @@ export type {
   StandardModuleConfigExtraMap,
 } from './standardModuleConfigRegistry';
 export { STANDARD_MODULES_CONFIG_REGISTRY } from './standardModuleConfigRegistry';
-export { useLiveCollectionsAndObjects } from './useLiveCollectionsAndObjects';
-
-export function useStandardModuleConfig<M extends StandardModuleId>(
-  moduleId: M,
-): ReturnType<typeof useModuleConfig<StandardModuleSettingsMap[M]>> &
-  StandardModuleConfigExtraMap[M] {
-  const config = STANDARD_MODULES_CONFIG_REGISTRY[moduleId];
-
-  const defaultFieldDefs = useMemo(() => {
-    if (moduleId === 'teachers') {
-      return (config.defaultFieldDefs as unknown as ModuleFieldDef[]).map((field) => ({
-        ...field,
-        label: field.label || (field as { labelKey?: string }).labelKey || field.id,
-      }));
-    }
-    return config.defaultFieldDefs as unknown as ModuleFieldDef[];
-  }, [moduleId, config.defaultFieldDefs]);
-
-  const moduleConfigResult = useModuleConfig<StandardModuleSettingsMap[M]>({
-    settingsObjectKey: config.settingsObjectKey,
-    defaultSettings: config.defaultSettings as unknown as StandardModuleSettingsMap[M],
-    defaultFieldDefs,
-    normalizeFn: 'normalizeFn' in config ? (config.normalizeFn as unknown as (settings: unknown) => StandardModuleSettingsMap[M]) : undefined,
-  });
-
-  const aux = useLiveCollectionsAndObjects(
-    'collections' in config ? (config.collections as Record<string, { dbKey: string; default: () => unknown[] }>) : undefined,
-    'objects' in config ? (config.objects as Record<string, { dbKey: string; default: () => unknown }>) : undefined,
-  );
-
-  return {
-    ...moduleConfigResult,
-    ...aux.collections,
-    ...aux.objects,
-  } as ReturnType<typeof useModuleConfig<StandardModuleSettingsMap[M]>> &
-    StandardModuleConfigExtraMap[M];
-}
 
 /**
  * Users settings authority is typed REST + TanStack Query (not document-store getObject).
@@ -230,7 +269,7 @@ export function useUsersConfig() {
     loadSettings,
     isFieldEnabled,
     isFieldRequired,
-  } as ReturnType<typeof useModuleConfig<UsersSettings>> &
+  } as StandardModuleConfigCore<UsersSettings> &
     StandardModuleConfigExtraMap['users'];
 }
 
@@ -284,7 +323,7 @@ const useTeacherConfigImpl = createStandardModuleConfigHook<
 });
 
 export function useTeacherConfig() {
-  return useTeacherConfigImpl() as ReturnType<typeof useModuleConfig<TeachersSettings>> &
+  return useTeacherConfigImpl() as StandardModuleConfigCore<TeachersSettings> &
     StandardModuleConfigExtraMap['teachers'];
 }
 
@@ -326,7 +365,7 @@ const useStudentConfigImpl = createStandardModuleConfigHook<
 });
 
 export function useStudentConfig() {
-  return useStudentConfigImpl() as ReturnType<typeof useModuleConfig<StudentsSettings>> &
+  return useStudentConfigImpl() as StandardModuleConfigCore<StudentsSettings> &
     StandardModuleConfigExtraMap['students'];
 }
 
@@ -334,216 +373,259 @@ export function useStudentConfig() {
  * Sessions settings authority is typed REST + TanStack Query (not document-store getObject).
  * Lookups (statuses / types) remain document-store collections this slice.
  */
+const useSessionConfigImpl = createStandardModuleConfigHook<
+  SessionsSettings,
+  { statuses: string[]; types: string[] }
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.sessions.defaultSettings as SessionsSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.sessions.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedSessionsSettings,
+  useFieldConfigMutation: useSessionFieldConfigMutation,
+  usePreferencesMutation: useSessionPreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setSessionFieldConfigMemory,
+  setPreferencesMemory: setSessionPreferencesMemory as unknown as (prefs: unknown) => void,
+  fieldConfigQueryKey: SESSIONS_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: SESSIONS_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeSessionsSettings,
+  normalizePrefs: normalizeSessionModulePreferences as unknown as (
+    settings: SessionsSettings,
+  ) => unknown,
+  composeSettings: (merged, prefs, tabs) =>
+    composeSessionsSettings(
+      merged as SessionsSettings,
+      prefs as any,
+      tabs as any,
+    ),
+  lookupsFrom: function useSessionConfigLookups() {
+    const lookupsQuery = useSessionLookupsQuery();
+    const lookups = lookupsQuery.data ?? emptySessionLookupsMap;
+    return {
+      statuses: lookups.statuses,
+      types: lookups.types,
+    };
+  },
+});
+
 export function useSessionConfig() {
-  const registry = STANDARD_MODULES_CONFIG_REGISTRY.sessions;
-  const queryClient = useQueryClient();
-  const settings = useComposedSessionsSettings();
-  const fieldMutation = useSessionFieldConfigMutation();
-  const prefsMutation = useSessionPreferencesMutation();
-
-  const aux = useLiveCollectionsAndObjects(
-    'collections' in registry
-      ? (registry.collections as Record<string, { dbKey: string; default: () => unknown[] }>)
-      : undefined,
-    undefined,
-  );
-
-  const defaultSettings = registry.defaultSettings as SessionsSettings;
-  const defaultFieldDefs = registry.defaultFieldDefs as unknown as ModuleFieldDef[];
-
-  const mergeSettings = useCallback(
-    (settingsDraft: Partial<SessionsSettings> | null | undefined): SessionsSettings => {
-      return normalizeSessionsSettings({
-        ...defaultSettings,
-        ...(settingsDraft ?? {}),
-        formTabs: settingsDraft?.formTabs ?? defaultSettings.formTabs ?? [],
-        enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
-        requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
-        fields: mergeTabbedFields(defaultSettings.fields || {}, settingsDraft?.fields),
-        customFields: settingsDraft?.customFields ?? defaultSettings.customFields ?? [],
-        fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-      });
-    },
-    [defaultSettings],
-  );
-
-  const updateSettings = useCallback(
-    (settingsDraft: SessionsSettings) => {
-      const merged = normalizeSessionsSettings(settingsDraft);
-      const prefs = normalizeSessionModulePreferences(settingsDraft);
-      const composed = composeSessionsSettings(merged, prefs, merged.formTabs);
-      setSessionFieldConfigMemory(composed);
-      setSessionPreferencesMemory(prefs);
-      queryClient.setQueryData(SESSIONS_FIELD_CONFIG_QUERY_KEY, composed);
-      queryClient.setQueryData(SESSIONS_PREFERENCES_QUERY_KEY, prefs);
-    },
-    [queryClient],
-  );
-
-  const updateSettingsAsync = useCallback(
-    async (settingsDraft: SessionsSettings) => {
-      await fieldMutation.mutateAsync(normalizeSessionsSettings(settingsDraft));
-      await prefsMutation.mutateAsync(normalizeSessionModulePreferences(settingsDraft));
-    },
-    [fieldMutation, prefsMutation],
-  );
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(
-    () => (settings.customFields || []) as ModuleCustomField[],
-    [settings.customFields],
-  );
-  const fieldOrder = useMemo(
-    () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-    [settings.fieldOrder, defaultSettings.fieldOrder],
-  );
-
-  const orderedFields = useMemo(
-    () => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields),
-    [defaultFieldDefs, fieldOrder, fields, customFields],
-  );
-
-  const isFieldEnabled = useCallback(
-    (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
-    [fields],
-  );
-
-  const isFieldRequired = useCallback(
-    (fieldId: string): boolean => !!fields[fieldId]?.required,
-    [fields],
-  );
-
-  const reloadConfig = useCallback(() => {}, []);
-  const loadSettings = useCallback(() => settings, [settings]);
-
-  return {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-    updateSettingsAsync,
-    reloadConfig,
-    mergeSettings,
-    loadSettings,
-    isFieldEnabled,
-    isFieldRequired,
-    statuses: aux.collections.statuses,
-    types: aux.collections.types,
-  } as ReturnType<typeof useModuleConfig<SessionsSettings>> &
+  return useSessionConfigImpl() as StandardModuleConfigCore<SessionsSettings> &
     StandardModuleConfigExtraMap['sessions'];
 }
 
 /**
  * Enrollments settings authority is typed REST + TanStack Query (not document-store getObject).
  */
+const useEnrollmentConfigImpl = createStandardModuleConfigHook<
+  EnrollmentsSettings,
+  Record<string, never>
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.enrollments.defaultSettings as EnrollmentsSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.enrollments.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedEnrollmentsSettings,
+  useFieldConfigMutation: useEnrollmentFieldConfigMutation,
+  usePreferencesMutation: useEnrollmentPreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setEnrollmentFieldConfigMemory,
+  setPreferencesMemory: setEnrollmentPreferencesMemory as unknown as (prefs: unknown) => void,
+  fieldConfigQueryKey: ENROLLMENTS_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: ENROLLMENTS_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeEnrollmentsSettings,
+  normalizePrefs: normalizeEnrollmentModulePreferences as unknown as (
+    settings: EnrollmentsSettings,
+  ) => unknown,
+  composeSettings: (merged, prefs, tabs) =>
+    composeEnrollmentsSettings(
+      merged as EnrollmentsSettings,
+      prefs as any,
+      tabs as any,
+    ),
+  lookupsFrom: function useEnrollmentConfigLookups() {
+    return {};
+  },
+});
+
 export function useEnrollmentConfig() {
-  const registry = STANDARD_MODULES_CONFIG_REGISTRY.enrollments;
-  const queryClient = useQueryClient();
-  const settings = useComposedEnrollmentsSettings();
-  const fieldMutation = useEnrollmentFieldConfigMutation();
-  const prefsMutation = useEnrollmentPreferencesMutation();
-
-  const defaultSettings = registry.defaultSettings as EnrollmentsSettings;
-  const defaultFieldDefs = registry.defaultFieldDefs as unknown as ModuleFieldDef[];
-
-  const mergeSettings = useCallback(
-    (settingsDraft: Partial<EnrollmentsSettings> | null | undefined): EnrollmentsSettings => {
-      return normalizeEnrollmentsSettings({
-        ...defaultSettings,
-        ...(settingsDraft ?? {}),
-        formTabs: settingsDraft?.formTabs ?? defaultSettings.formTabs ?? [],
-        enabledTabs: settingsDraft?.enabledTabs ?? defaultSettings.enabledTabs ?? [],
-        requiredTabs: settingsDraft?.requiredTabs ?? defaultSettings.requiredTabs ?? [],
-        fields: mergeTabbedFields(defaultSettings.fields || {}, settingsDraft?.fields),
-        customFields: settingsDraft?.customFields ?? defaultSettings.customFields ?? [],
-        fieldOrder: settingsDraft?.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-      });
-    },
-    [defaultSettings],
-  );
-
-  const updateSettings = useCallback(
-    (settingsDraft: EnrollmentsSettings) => {
-      const merged = normalizeEnrollmentsSettings(settingsDraft);
-      const prefs = normalizeEnrollmentModulePreferences(settingsDraft);
-      const composed = composeEnrollmentsSettings(merged, prefs, merged.formTabs);
-      setEnrollmentFieldConfigMemory(composed);
-      setEnrollmentPreferencesMemory(prefs);
-      queryClient.setQueryData(ENROLLMENTS_FIELD_CONFIG_QUERY_KEY, composed);
-      queryClient.setQueryData(ENROLLMENTS_PREFERENCES_QUERY_KEY, prefs);
-    },
-    [queryClient],
-  );
-
-  const updateSettingsAsync = useCallback(
-    async (settingsDraft: EnrollmentsSettings) => {
-      await fieldMutation.mutateAsync(normalizeEnrollmentsSettings(settingsDraft));
-      await prefsMutation.mutateAsync(normalizeEnrollmentModulePreferences(settingsDraft));
-    },
-    [fieldMutation, prefsMutation],
-  );
-
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(
-    () => (settings.customFields || []) as ModuleCustomField[],
-    [settings.customFields],
-  );
-  const fieldOrder = useMemo(
-    () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-    [settings.fieldOrder, defaultSettings.fieldOrder],
-  );
-
-  const orderedFields = useMemo(
-    () => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields),
-    [defaultFieldDefs, fieldOrder, fields, customFields],
-  );
-
-  const isFieldEnabled = useCallback(
-    (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
-    [fields],
-  );
-
-  const isFieldRequired = useCallback(
-    (fieldId: string): boolean => !!fields[fieldId]?.required,
-    [fields],
-  );
-
-  const reloadConfig = useCallback(() => {}, []);
-  const loadSettings = useCallback(() => settings, [settings]);
-
-  return {
-    settings,
-    orderedFields,
-    fields,
-    customFields,
-    updateSettings,
-    updateSettingsAsync,
-    reloadConfig,
-    mergeSettings,
-    loadSettings,
-    isFieldEnabled,
-    isFieldRequired,
-  } as ReturnType<typeof useModuleConfig<EnrollmentsSettings>> &
+  return useEnrollmentConfigImpl() as StandardModuleConfigCore<EnrollmentsSettings> &
     StandardModuleConfigExtraMap['enrollments'];
 }
 
+const useExaminationConfigImpl = createStandardModuleConfigHook<
+  ExaminationsSettings,
+  Record<string, never>
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.examinations.defaultSettings as ExaminationsSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.examinations.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedExaminationsSettings,
+  useFieldConfigMutation: useExaminationFieldConfigMutation,
+  usePreferencesMutation: useExaminationPreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setExaminationFieldConfigMemory,
+  setPreferencesMemory: setExaminationPreferencesMemory as unknown as (prefs: unknown) => void,
+  fieldConfigQueryKey: EXAMINATIONS_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: EXAMINATIONS_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeExaminationsSettings,
+  normalizePrefs: normalizeExaminationsModulePreferences as unknown as (
+    settings: ExaminationsSettings,
+  ) => unknown,
+  composeSettings: (merged, prefs, tabs) =>
+    composeExaminationsSettings(
+      merged as ExaminationsSettings,
+      prefs as any,
+      tabs as any,
+    ),
+  lookupsFrom: function useExaminationConfigLookups() {
+    return {};
+  },
+});
+
 export function useExaminationConfig() {
-  return useStandardModuleConfig('examinations');
+  return useExaminationConfigImpl() as StandardModuleConfigCore<ExaminationsSettings> &
+    StandardModuleConfigExtraMap['examinations'];
 }
+
+const useHasanatConfigImpl = createStandardModuleConfigHook<
+  HasanatSettings,
+  Record<string, never>
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.hasanat.defaultSettings as HasanatSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.hasanat.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedHasanatSettings,
+  useFieldConfigMutation: useHasanatFieldConfigMutation,
+  usePreferencesMutation: useHasanatPreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setHasanatFieldConfigMemory,
+  setPreferencesMemory: setHasanatPreferencesMemory as unknown as (prefs: unknown) => void,
+  fieldConfigQueryKey: HASANAT_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: HASANAT_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeHasanatSettings,
+  normalizePrefs: normalizeHasanatModulePreferences as unknown as (
+    settings: HasanatSettings,
+  ) => unknown,
+  composeSettings: (merged, prefs, tabs) =>
+    composeHasanatSettings(
+      merged as HasanatSettings,
+      prefs as any,
+      tabs as any,
+    ),
+  lookupsFrom: function useHasanatConfigLookups() {
+    return {};
+  },
+});
 
 export function useHasanatConfig() {
-  return useStandardModuleConfig('hasanat');
+  return useHasanatConfigImpl() as StandardModuleConfigCore<HasanatSettings> &
+    StandardModuleConfigExtraMap['hasanat'];
 }
+
+const useFinanceConfigImpl = createStandardModuleConfigHook<
+  FinanceSettings,
+  Record<string, never>
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.finance.defaultSettings as FinanceSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.finance.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedFinanceSettings,
+  useFieldConfigMutation: useFinanceFieldConfigMutation,
+  usePreferencesMutation: useFinancePreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setFinanceFieldConfigMemory,
+  setPreferencesMemory: setFinancePreferencesMemory as unknown as (prefs: unknown) => void,
+  fieldConfigQueryKey: FINANCE_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: FINANCE_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeFinanceSettings,
+  normalizePrefs: normalizeFinanceModulePreferences as unknown as (
+    settings: FinanceSettings,
+  ) => unknown,
+  composeSettings: (merged, prefs, tabs) =>
+    composeFinanceSettings(
+      merged as FinanceSettings,
+      prefs as any,
+      tabs as any,
+    ),
+  lookupsFrom: function useFinanceConfigLookups() {
+    return {};
+  },
+});
 
 export function useFinanceConfig() {
-  return useStandardModuleConfig('finance');
+  return useFinanceConfigImpl() as StandardModuleConfigCore<FinanceSettings> &
+    StandardModuleConfigExtraMap['finance'];
 }
+
+const useAccountingConfigImpl = createStandardModuleConfigHook<
+  AccountingSettings,
+  Record<string, never>
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.accounting.defaultSettings as AccountingSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.accounting.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedAccountingSettings,
+  useFieldConfigMutation: useAccountingFieldConfigMutation,
+  usePreferencesMutation: useAccountingPreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setAccountingFieldConfigMemory,
+  setPreferencesMemory: setAccountingPreferencesMemory as unknown as (prefs: unknown) => void,
+  fieldConfigQueryKey: ACCOUNTING_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: ACCOUNTING_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeAccountingSettings,
+  normalizePrefs: normalizeAccountingModulePreferences as unknown as (
+    settings: AccountingSettings,
+  ) => unknown,
+  composeSettings: (merged, prefs, tabs) =>
+    composeAccountingSettings(
+      merged as AccountingSettings,
+      prefs as any,
+      tabs as any,
+    ),
+  lookupsFrom: function useAccountingConfigLookups() {
+    return {};
+  },
+});
 
 export function useAccountingConfig() {
-  return useStandardModuleConfig('accounting');
+  return useAccountingConfigImpl() as StandardModuleConfigCore<AccountingSettings> &
+    StandardModuleConfigExtraMap['accounting'];
 }
 
+const useAttendanceConfigImpl = createStandardModuleConfigHook<
+  AttendanceSettings,
+  { statuses: import('@/lib/data/attendanceData').AttendanceStatus[] }
+>({
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.attendance.defaultSettings as AttendanceSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.attendance.defaultFieldDefs as unknown as ModuleFieldDef[],
+  useComposedSettings: useComposedAttendanceSettings,
+  useFieldConfigMutation: useAttendanceFieldConfigMutation,
+  usePreferencesMutation: useAttendancePreferencesMutation as unknown as () => {
+    mutateAsync: (payload: unknown) => Promise<unknown>;
+  },
+  setFieldConfigMemory: setAttendanceFieldConfigMemory,
+  setPreferencesMemory: setAttendancePreferencesMemory as unknown as (prefs: unknown) => void,
+  fieldConfigQueryKey: ATTENDANCE_FIELD_CONFIG_QUERY_KEY,
+  preferencesQueryKey: ATTENDANCE_PREFERENCES_QUERY_KEY,
+  normalizeSettings: normalizeAttendanceSettings,
+  normalizePrefs: normalizeAttendanceModulePreferences as unknown as (
+    settings: AttendanceSettings,
+  ) => unknown,
+  composeSettings: (merged, prefs, tabs) =>
+    composeAttendanceSettings(
+      merged as AttendanceSettings,
+      prefs as any,
+      tabs as any,
+    ),
+  lookupsFrom: function useAttendanceConfigLookups() {
+    const lookupsQuery = useAttendanceLookupsQuery();
+    const lookups = lookupsQuery.data ?? emptyAttendanceLookupsMap;
+    return {
+      statuses: lookups.statuses,
+    };
+  },
+});
+
 export function useAttendanceConfig() {
-  return useStandardModuleConfig('attendance');
+  return useAttendanceConfigImpl() as StandardModuleConfigCore<AttendanceSettings> &
+    StandardModuleConfigExtraMap['attendance'];
 }

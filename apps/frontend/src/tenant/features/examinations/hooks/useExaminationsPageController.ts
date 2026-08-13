@@ -60,8 +60,8 @@ export function useExaminationsPageController() {
 
   const examsResult = useExaminationsExams({ includeDeleted: showDeleted });
   const resultsResult = useExaminationsResults();
-  const exams = examsResult.syncedData;
-  const examResults = resultsResult.syncedData;
+  const exams = examsResult.data ?? [];
+  const examResults = resultsResult.data ?? [];
   const {
     replaceExams,
     replaceExamResults,
@@ -120,7 +120,7 @@ export function useExaminationsPageController() {
     },
   });
 
-  const listLoadFailed = examsResult.queryResult.isError;
+  const listLoadFailed = examsResult.isError;
 
   const openCreateExam = () => {
     setActiveTab('work');
@@ -168,6 +168,6 @@ export function useExaminationsPageController() {
     handleBulkDelete,
     handleBulkRestore,
     openCreateExam,
-    refetchExams: () => { void examsResult.queryResult.refetch(); },
+    refetchExams: () => { void examsResult.refetch(); },
   };
 }

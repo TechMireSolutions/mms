@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { type TabDefinition } from "@mms/shared";
-import { type ModuleSettingsShape } from "@/hooks/useModuleConfig";
+
+export interface ModuleSettingsShape {
+  fields?: Record<string, any>;
+  customFields?: any[];
+  fieldOrder?: string[];
+  formTabs?: any[];
+  enabledTabs?: string[];
+  requiredTabs?: string[];
+}
 import { moduleSettingsEditorFingerprint } from "./moduleSettingsEditorFingerprint";
 import { useModuleFieldsEditor } from "./useModuleFieldsEditor";
 import { useSavedFlash } from "./useSavedFlash";

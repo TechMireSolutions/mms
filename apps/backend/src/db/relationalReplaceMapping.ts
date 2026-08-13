@@ -33,7 +33,17 @@ export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   teacher_field_configs: 33,
   teacher_module_preferences: 34,
   teacher_user_column_prefs: 35,
+  finance_field_configs: 36,
+  finance_module_preferences: 37,
+  finance_user_column_prefs: 38,
+  hasanat_field_configs: 39,
+  hasanat_module_preferences: 40,
+  hasanat_distribution_user_column_prefs: 41,
+  hasanat_redemption_user_column_prefs: 42,
+  accounting_field_configs: 43,
+  accounting_module_preferences: 44,
   users: 900,
+  audit_log: 950,
 };
 
 /** Stable collection restore order for FK-safe admin backup restore. */
@@ -101,6 +111,26 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     fnName: 'replaceSessionsForWorkspace',
     snapshotFnName: 'listSessionsByWorkspace',
   },
+  attendance_field_configs: {
+    importPath: './repositories/attendanceFieldConfigRepository.js',
+    fnName: 'replaceAttendanceFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllAttendanceFieldConfigsByWorkspace',
+  },
+  accounting_field_configs: {
+    importPath: './repositories/accountingFieldConfigRepository.js',
+    fnName: 'replaceAccountingFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllAccountingFieldConfigsByWorkspace',
+  },
+  accounting_module_preferences: {
+    importPath: './repositories/accountingModulePreferencesRepository.js',
+    fnName: 'replaceAccountingModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllAccountingModulePreferencesByWorkspace',
+  },
+  attendance_module_preferences: {
+    importPath: './repositories/attendanceModulePreferencesRepository.js',
+    fnName: 'replaceAttendanceModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllAttendanceModulePreferencesByWorkspace',
+  },
   attendance_records: {
     importPath: './repositories/attendanceRepository.js',
     fnName: 'replaceAttendanceRecordsForWorkspace',
@@ -151,6 +181,21 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     fnName: 'replacePaymentsForWorkspace',
     snapshotFnName: 'listPaymentsByWorkspace',
   },
+  finance_field_configs: {
+    importPath: './repositories/financeFieldConfigRepository.js',
+    fnName: 'replaceFinanceFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllFinanceFieldConfigsByWorkspace',
+  },
+  finance_module_preferences: {
+    importPath: './repositories/financeModulePreferencesRepository.js',
+    fnName: 'replaceFinanceModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllFinanceModulePreferencesByWorkspace',
+  },
+  finance_user_column_prefs: {
+    importPath: './repositories/financeUserColumnPrefsRepository.js',
+    fnName: 'replaceFinanceUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllFinanceUserColumnPrefsByWorkspace',
+  },
   exams: {
     importPath: './repositories/examinationRepository.js',
     fnName: 'replaceExamsForWorkspace',
@@ -160,6 +205,16 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/examinationRepository.js',
     fnName: 'replaceExamResultsForWorkspace',
     snapshotFnName: 'listExamResultsByWorkspace',
+  },
+  examinations_field_configs: {
+    importPath: './repositories/examinationFieldConfigRepository.js',
+    fnName: 'replaceExaminationFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllExaminationFieldConfigsByWorkspace',
+  },
+  examinations_module_preferences: {
+    importPath: './repositories/examinationModulePreferencesRepository.js',
+    fnName: 'replaceExaminationModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllExaminationModulePreferencesByWorkspace',
   },
   hasanat_denoms: {
     importPath: './repositories/hasanatRepository.js',
@@ -180,6 +235,26 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/hasanatRepository.js',
     fnName: 'replaceRedemptionsForWorkspace',
     snapshotFnName: 'listRedemptionsByWorkspace',
+  },
+  hasanat_field_configs: {
+    importPath: './repositories/hasanatFieldConfigRepository.js',
+    fnName: 'replaceHasanatFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllHasanatFieldConfigsByWorkspace',
+  },
+  hasanat_module_preferences: {
+    importPath: './repositories/hasanatModulePreferencesRepository.js',
+    fnName: 'replaceHasanatModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllHasanatModulePreferencesByWorkspace',
+  },
+  hasanat_distribution_user_column_prefs: {
+    importPath: './repositories/hasanatDistributionUserColumnPrefsRepository.js',
+    fnName: 'replaceHasanatDistributionUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllHasanatDistributionUserColumnPrefsByWorkspace',
+  },
+  hasanat_redemption_user_column_prefs: {
+    importPath: './repositories/hasanatRedemptionUserColumnPrefsRepository.js',
+    fnName: 'replaceHasanatRedemptionUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllHasanatRedemptionUserColumnPrefsByWorkspace',
   },
   accounting_accounts: {
     importPath: './repositories/accountingRepository.js',
@@ -210,6 +285,16 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/questionBankRepository.js',
     fnName: 'replaceResultsForWorkspace',
     snapshotFnName: 'listResultsByWorkspace',
+  },
+  question_bank_field_configs: {
+    importPath: './repositories/questionBankFieldConfigRepository.js',
+    fnName: 'replaceQuestionBankFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllQuestionBankFieldConfigsByWorkspace',
+  },
+  question_bank_module_preferences: {
+    importPath: './repositories/questionBankModulePreferencesRepository.js',
+    fnName: 'replaceQuestionBankModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllQuestionBankModulePreferencesByWorkspace',
   },
   user_activity_logs: {
     importPath: './repositories/logsRepository.js',
@@ -345,4 +430,5 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/logsRepository.js',
     fnName: 'replaceAuditLogEntriesForWorkspace',
   },
+
 };

@@ -1,3 +1,4 @@
+import { type ExaminationsSettings } from "@mms/shared";
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, FileText } from "lucide-react";
@@ -31,7 +32,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
     setSaved,
     upd,
     saveSettingsAsync,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<ExaminationsSettings>({
     config,
     tabRegistry: EXAMINATIONS_TAB_REGISTRY,
   });

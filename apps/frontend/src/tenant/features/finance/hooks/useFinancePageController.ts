@@ -8,8 +8,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Invoice } from '@/lib/data/financeData';
 import { FINANCE_MODULE_MANIFEST, type InvoiceCreateInput, type PaymentCreateInput } from "@mms/shared";
 import {
-  useFinanceInvoices,
-  useFinancePayments,
+  useFinanceInvoicesPaginated,
+  useFinancePaymentsPaginated,
   useFinanceMutations,
   NotifiedFinanceMutationError,
 } from "@/tenant/features/finance/hooks/useFinanceApi";
@@ -37,10 +37,10 @@ export function useFinancePageController() {
   const [activeTab, setActiveTab] = usePersistedTabState<string>("finance_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const [showDeleted, setShowDeleted] = useState(false);
-  const invoicesResult = useFinanceInvoices({ includeDeleted: showDeleted });
-  const paymentsResult = useFinancePayments({ includeDeleted: showDeleted });
-  const invoices = invoicesResult.data;
-  const payments = paymentsResult.data;
+  const invoicesResult = useFinanceInvoicesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
+  const paymentsResult = useFinancePaymentsPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
+  const invoices = invoicesResult.data?.invoices ?? [];
+  const payments = paymentsResult.data?.payments ?? [];
   const {
     createInvoice,
     createPayment,

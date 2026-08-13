@@ -422,6 +422,7 @@ describe('tenant JWT binding', () => {
           }),
         }),
         expect.any(AbortSignal),
+        true,
       );
       const synced = vi.mocked(synchronizeData).mock.calls.at(-1)?.[0] as {
         collections: Record<string, unknown[]>;

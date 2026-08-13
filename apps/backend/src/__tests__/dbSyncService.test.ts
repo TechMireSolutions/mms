@@ -64,7 +64,7 @@ describe('dbSyncService collection persistence', () => {
     await synchronizeData({
       collections: { users: [{ id: 'u-1' }], contacts: [{ id: 'c-1' }], students: [{ id: 's-1' }] },
       objects: {},
-    });
+    }, undefined, true);
     const savedNames = dbSaveCollection.mock.calls.map((call) => call[0] as string);
     expect(savedNames[0]).toBe('contacts');
     expect(savedNames.at(-1)).toBe('users');
@@ -107,7 +107,7 @@ describe('dbSyncService collection persistence', () => {
           'u-admin': [{ key: 'name', enabled: true, order: 0 }],
         },
       },
-    });
+    }, undefined, true);
 
     const fieldCall = dbSaveCollection.mock.calls.find((call) => call[0] === 'student_field_configs');
     const prefsCall = dbSaveCollection.mock.calls.find(
@@ -140,7 +140,7 @@ describe('dbSyncService collection persistence', () => {
     await synchronizeData({
       collections: { users: [{ id: 'u-1' }] },
       objects: { branding: { madrasaName: 'Dar ul Quran' } },
-    });
+    }, undefined, true);
 
     expect(dbSaveObject).toHaveBeenCalledWith('branding', { madrasaName: 'Dar ul Quran' });
     expect(dbDeleteObject.mock.calls.map((call) => call[0]).sort()).toEqual([
@@ -166,7 +166,7 @@ describe('dbSyncService collection persistence', () => {
         'messages_u:admin': [{ id: 'm-1' }],
       },
       objects: { branding: {} },
-    });
+    }, undefined, true);
 
     expect(dbDeleteCollection.mock.calls.map((call) => call[0]).sort()).toEqual([
       'messages_u:peer',
@@ -188,6 +188,7 @@ describe('dbSyncService collection persistence', () => {
           objects: { branding: {} },
         },
         controller.signal,
+        true,
       ),
     ).rejects.toThrow('backup.syncTimeout');
 

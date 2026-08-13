@@ -1,3 +1,4 @@
+import { type SessionsSettings } from "@mms/shared";
 import React, { useEffect, useMemo, useRef } from "react";
 import { Calendar } from "lucide-react";
 import {
@@ -41,7 +42,7 @@ export function SessionsSettings(): React.JSX.Element {
     upd,
     saveSettingsAsync,
     discardDrafts,
-  } = useModuleSettingsEditor({
+  } = useModuleSettingsEditor<SessionsSettings>({
     config,
     tabRegistry: SESSIONS_TAB_REGISTRY,
   });

@@ -60,9 +60,9 @@ export function useHasanatCardsPageController() {
   const denomsResult = useHasanatDenoms();
   const batchesResult = useHasanatBatches();
   const distributionsResult = useHasanatDistributions({ includeDeleted: showDeleted });
-  const denoms = denomsResult.syncedData;
-  const batches = batchesResult.syncedData;
-  const distributions = distributionsResult.syncedData;
+  const denoms = denomsResult.data ?? [];
+  const batches = batchesResult.data ?? [];
+  const distributions = distributionsResult.data ?? [];
 
   const {
     replaceDenoms,
@@ -143,7 +143,7 @@ export function useHasanatCardsPageController() {
     }
   };
 
-  const listLoadFailed = distributionsResult.queryResult.isError;
+  const listLoadFailed = distributionsResult.isError;
 
   const openDistribute = () => {
     setActiveTab('work');
@@ -190,6 +190,6 @@ export function useHasanatCardsPageController() {
     replaceBatches,
     replaceDistributions,
     openDistribute,
-    refetchDistributions: () => { void distributionsResult.queryResult.refetch(); },
+    refetchDistributions: () => { void distributionsResult.refetch(); },
   };
 }
