@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import {
   HASANAT_MODULE_MANIFEST,
   denomListSchema,
@@ -45,6 +46,7 @@ export default async function hasanatRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('hasanat'));
 
   await fastify.register(hasanatReportRoutes);
   await fastify.register(hasanatSetupConfigRoutes);

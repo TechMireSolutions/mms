@@ -98,6 +98,7 @@ export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
 
 export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   global_settings: 'configuration.view',
+  platform_settings: 'configuration.view',
   branding: 'configuration.view',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
   [OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey]: OBLIGATIONS_MODULE_MANIFEST.permissions.read,
@@ -130,6 +131,7 @@ export const ALLOWED_COLLECTIONS = new Set([
 
 export const ALLOWED_OBJECTS = new Set([
   'global_settings',
+  'platform_settings',
   'branding',
   EMAIL_INTEGRATION_OBJECT_KEY,
   // Doc-store-fallback column prefs (no typed table yet): keep allowlisted so backup restore

@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { MESSAGING_MODULE_MANIFEST } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { registerDefaultBackgroundJobRunners } from '../../services/backgroundJobRunnerService.js';
 import { messagingExportRoutes } from './messaging/messagingExportRoutes.js';
@@ -22,6 +23,7 @@ export default async function messagingRoutes(
 ): Promise<void> {
   ensureBackgroundJobRunners();
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('messaging'));
 
   registerColumnPreferencesRoutes(fastify, {
     path: '/recipients/column-preferences',

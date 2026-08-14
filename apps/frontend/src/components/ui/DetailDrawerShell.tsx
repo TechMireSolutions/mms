@@ -23,8 +23,8 @@ export interface DetailDrawerShellProps {
 }
 
 /**
- * Standard slide-over drawer shell for entity/contact detailed profiles.
- * Manages spring motion animations, standard layouts, backdrop overlays, and headers.
+ * Standard touch-first responsive drawer shell.
+ * Adapts between a bottom sheet on mobile viewports (<640px) and a right-sliding drawer on desktop (≥640px).
  */
 export function DetailDrawerShell({
   open = true,
@@ -51,7 +51,7 @@ export function DetailDrawerShell({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-modal flex items-center justify-end">
+        <div className="fixed inset-0 z-modal flex items-end sm:items-center justify-end">
           {/* Backdrop */}
           <motion.div
             initial={reducedMotion ? false : { opacity: 0 }}
@@ -61,8 +61,8 @@ export function DetailDrawerShell({
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
           />
-          
-          {/* Drawer content panel */}
+
+          {/* Drawer content panel: Bottom sheet on mobile, right drawer on sm: desktop */}
           <motion.aside
             ref={containerRef}
             initial={reducedMotion ? false : { x: slideFrom, opacity: 0 }}
@@ -73,13 +73,18 @@ export function DetailDrawerShell({
             aria-modal="true"
             aria-labelledby={titleId}
             className={cn(
-              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain border-s border-border/80 bg-card/90 text-start shadow-2xl backdrop-blur-xl sm:max-w-sm",
+              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card text-start shadow-2xl backdrop-blur-xl border-t sm:border-t-0 sm:border-s border-border/80 max-h-[85vh] sm:max-h-full rounded-t-2xl sm:rounded-none sm:max-w-md",
               className
             )}
             aria-label={ariaLabel}
           >
+            {/* Mobile Drag Handle Indicator */}
+            <div className="sm:hidden flex items-center justify-center pt-2.5 pb-1">
+              <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+            </div>
+
             {/* Sticky Header */}
-            <div className="sticky top-0 bg-card/75 backdrop-blur-md z-10 px-5 pt-4 pb-3 border-b border-border/40 flex-shrink-0 space-y-3">
+            <div className="sticky top-0 bg-card/75 backdrop-blur-md z-10 px-5 pt-3 pb-3 border-b border-border/40 flex-shrink-0 space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   {Icon && (
@@ -98,7 +103,7 @@ export function DetailDrawerShell({
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {headerActions}
                   <Button
@@ -106,7 +111,7 @@ export function DetailDrawerShell({
                     variant="ghost"
                     size="icon"
                     onClick={onClose}
-                    className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
+                    className="min-h-[44px] min-w-[44px] h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground transition-colors shadow-none"
                     aria-label={t("common.close")}
                   >
                     <X className="w-4 h-4" />

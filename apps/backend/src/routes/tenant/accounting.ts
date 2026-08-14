@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import {
   ACCOUNTING_MODULE_MANIFEST,
   accountListSchema,
@@ -43,6 +44,7 @@ export default async function accountingRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('accounting'));
 
   fastify.register(accountingSetupConfigRoutes);
 

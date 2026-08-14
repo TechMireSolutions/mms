@@ -10,7 +10,10 @@ import {
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
-import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
+import {
+  insertPlatformActivityLog,
+  listPlatformActivityLogs,
+} from '../../db/repositories/platformActivityLogsRepository.js';
 import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import {
   isMigrateRestartInFlight,
@@ -93,6 +96,18 @@ export default async function platformAdminSystemRoutes(
           delayMs: MIGRATE_RESTART_DELAY_MS,
         };
         return reply.status(200).send(body);
+      },
+    );
+
+    inner.get(
+      '/activity-logs',
+      { preHandler: [authenticatePlatform, requireSuperUser] },
+      async (request, reply) => {
+        const query = request.query as { limit?: string; offset?: string };
+        const limit = query.limit ? parseInt(query.limit, 10) : 50;
+        const offset = query.offset ? parseInt(query.offset, 10) : 0;
+        const logs = await listPlatformActivityLogs(limit, offset);
+        return reply.send({ logs });
       },
     );
   });

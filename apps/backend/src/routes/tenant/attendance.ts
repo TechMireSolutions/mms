@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection } from '../../services/rbacService.js';
 
 import {
@@ -40,6 +41,7 @@ export default async function attendanceRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('attendance'));
 
   await fastify.register(attendanceReportRoutes);
   await fastify.register(attendanceSetupConfigRoutes);

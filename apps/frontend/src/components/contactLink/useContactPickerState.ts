@@ -113,6 +113,8 @@ export function useContactPickerState({
     };
   }, [open, closeDropdown]);
 
+  const [selectedCache, setSelectedCache] = useState<Contact | null>(null);
+
   const matches = useMemo(
     () =>
       filterContactsForQuery(directory, {
@@ -128,11 +130,15 @@ export function useContactPickerState({
     if (value == null) return null;
     const valStr = String(value);
     const matchById = (contact: Contact) => String(contact.id) === valStr;
+    if (selectedCache && String(selectedCache.id) === valStr) {
+      return selectedFromServer ?? selectedCache;
+    }
     return (
       (serverMode ? selectedFromServer : contacts?.find(matchById)) ??
-      directory.find(matchById)
+      directory.find(matchById) ??
+      null
     );
-  }, [serverMode, selectedFromServer, contacts, value, directory]);
+  }, [serverMode, selectedFromServer, contacts, value, directory, selectedCache]);
 
   const handleFileChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -174,6 +180,7 @@ export function useContactPickerState({
     closeDropdown,
     handleFileChange,
     openCreateFlow,
+    setSelectedCache,
     onChange,
     onAvatarChange,
   };

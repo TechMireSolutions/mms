@@ -45,6 +45,23 @@ export function getPool(): pg.Pool {
   return pool;
 }
 
+/** Interface representing active DB connection pool utilization metrics. */
+export interface PoolMetrics {
+  totalCount: number;
+  idleCount: number;
+  waitingCount: number;
+}
+
+/** Returns connection count telemetry for database health checks. */
+export function getPoolMetrics(): PoolMetrics | null {
+  if (!pool) return null;
+  return {
+    totalCount: pool.totalCount,
+    idleCount: pool.idleCount,
+    waitingCount: pool.waitingCount,
+  };
+}
+
 /** Lightweight DB connectivity check for `/ready`. */
 export async function pingDatabase(): Promise<boolean> {
   try {
@@ -88,13 +105,25 @@ export async function runInReadSnapshotTransaction<T>(cb: () => Promise<T>): Pro
   return await runTransaction(cb, true);
 }
 
+const SLOW_QUERY_THRESHOLD_MS = 200;
+
 async function runTransaction<T>(cb: () => Promise<T>, readSnapshot: boolean): Promise<T> {
   const existing = txStorage.getStore();
   if (existing) return cb();
 
   const tenant = getRequestTenant();
-  return await getDb().transaction(async (tx) => {
-    await applyTenantTransactionGuards(tx, tenant);
-    return await txStorage.run(tx, cb);
-  }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
+  const startTime = Date.now();
+  try {
+    return await getDb().transaction(async (tx) => {
+      await applyTenantTransactionGuards(tx, tenant);
+      return await txStorage.run(tx, cb);
+    }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
+  } finally {
+    const duration = Date.now() - startTime;
+    if (duration > SLOW_QUERY_THRESHOLD_MS) {
+      console.warn(
+        `[SLOW DB TX] Transaction for tenant "${tenant || 'none'}" took ${duration}ms (threshold: ${SLOW_QUERY_THRESHOLD_MS}ms)`,
+      );
+    }
+  }
 }

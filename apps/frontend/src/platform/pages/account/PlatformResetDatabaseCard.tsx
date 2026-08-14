@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { RESET_DATABASE_CONFIRM } from "@mms/shared";
-import { Card } from "@/components/ui/card";
+import { Flame } from "lucide-react";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
@@ -42,11 +43,13 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
 
   return (
     <>
-      <Card accentColor="destructive" className="p-6 space-y-4 text-start border-destructive/10 bg-destructive/5">
-        <h3 className="text-sm font-bold text-destructive">{t("platform.profileDestroyDatabase")}</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {t("platform.profileDestroyDatabaseDesc")}
-        </p>
+      <SectionCard
+        accentColor="destructive"
+        title={t("platform.profileDestroyDatabase")}
+        subtitle={t("platform.profileDestroyDatabaseDesc")}
+        icon={Flame}
+        className="text-start"
+      >
         <Button
           type="button"
           variant="destructive"
@@ -60,7 +63,7 @@ export function PlatformResetDatabaseCard(): React.JSX.Element {
         >
           {t("platform.profileDestroyDatabaseButton")}
         </Button>
-      </Card>
+      </SectionCard>
 
       <PlatformTypedConfirmDialog
         open={resetDialogOpen}

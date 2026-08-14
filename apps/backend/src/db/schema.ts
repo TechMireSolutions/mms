@@ -48,6 +48,7 @@ export const workspaces = pgTable('workspaces', {
   updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   uniqueIndex('workspaces_subdomain_idx').on(table.subdomain),
+  index('workspaces_enabled_idx').on(table.enabled),
 ]);
 
 /** Apex platform super-users — not tenant-scoped. */
@@ -1027,6 +1028,7 @@ export const platformActivityLogs = pgTable('platform_activity_logs', {
   createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   index('platform_activity_logs_created_at_idx').on(table.createdAt),
+  index('platform_activity_logs_action_created_at_idx').on(table.action, table.createdAt),
 ]);
 
 export const messageTemplates = pgTable('message_templates', {

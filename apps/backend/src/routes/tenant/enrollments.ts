@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection } from '../../services/rbacService.js';
 import { ENROLLMENTS_MODULE_MANIFEST, type User } from '@mms/shared';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
@@ -37,6 +38,7 @@ export default async function enrollmentsRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('enrollment'));
 
   await fastify.register(enrollmentSetupConfigRoutes);
   await fastify.register(enrollmentExportRoutes);

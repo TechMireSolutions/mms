@@ -35,15 +35,15 @@ export default function PlatformBootGate({
   }
 
   if (requireAuth && !isPlatformAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
+    return <Navigate to={ROUTES.platformLogin} replace />;
   }
 
   if (requireSuperUser && platformUser?.role !== 'super_user') {
-    return <Navigate to={ROUTES.home} replace />;
+    return <Navigate to={ROUTES.platformDashboard} replace />;
   }
 
   if (requirePermission && !platformUserCan(platformUser, requirePermission)) {
-    return <Navigate to={ROUTES.home} replace />;
+    return <Navigate to={ROUTES.platformDashboard} replace />;
   }
 
   return <Outlet />;

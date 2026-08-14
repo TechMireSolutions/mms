@@ -18,6 +18,13 @@ interface ActiveConnection {
 
 const activeConnections = new Set<ActiveConnection>();
 
+// Redis Pub/Sub adapter for horizontal multi-node cluster scaling
+let redisPublisher: { publish: (channel: string, message: string) => Promise<unknown> } | null = null;
+
+export function configureRedisPubSub(publisher: { publish: (channel: string, message: string) => Promise<unknown> }): void {
+  redisPublisher = publisher;
+}
+
 /**
  * Registers an active WebSocket connection for a given tenant subdomain and user ID.
  * Returns an unregister function to call when the connection closes.
@@ -59,9 +66,9 @@ export function registerConnection(subdomain: string, socket: MinimalWebSocket, 
 }
 
 /**
- * Broadcasts a real-time data update notification to all active client sockets of a tenant subdomain.
+ * Broadcasts a real-time data update notification locally to connected sockets on this process node.
  */
-export function broadcastTenantUpdate(
+export function broadcastLocalTenantUpdate(
   subdomain: string,
   type: 'collection' | 'object',
   key: string
@@ -86,6 +93,27 @@ export function broadcastTenantUpdate(
 
   if (sentCount > 0) {
     console.log(`[WS] Broadcasted database-update (${type}: "${key}") to ${sentCount} clients in subdomain "${subdomain}".`);
+  }
+}
+
+/**
+ * Broadcasts a real-time data update notification to all active client sockets of a tenant subdomain,
+ * publishing to Redis Pub/Sub if configured for multi-node cluster scale out.
+ */
+export function broadcastTenantUpdate(
+  subdomain: string,
+  type: 'collection' | 'object',
+  key: string
+): void {
+  // Always emit locally on current node
+  broadcastLocalTenantUpdate(subdomain, type, key);
+
+  // If Redis Pub/Sub is configured, publish to cluster
+  if (redisPublisher) {
+    const payload = JSON.stringify({ subdomain, type, key });
+    redisPublisher.publish('mms:ws-invalidation', payload).catch((err) => {
+      console.error('[WS] Failed to publish WS invalidation to Redis:', err);
+    });
   }
 }
 

@@ -22,10 +22,16 @@ export const ROUTES = {
   settings: "/settings",
   messaging: "/messaging",
   login: "/login",
+  platformLogin: "/platform/login",
   forgotPassword: "/forgot-password",
   platformForgotPassword: "/platform/forgot-password",
   platformAccount: "/platform/account",
   platformAdmins: "/platform/admins",
+  platformDashboard: "/platform/dashboard",
+  platformWorkspaces: "/platform/workspaces",
+  platformReports: "/platform/reports",
+  platformActivityLogs: "/platform/activity-logs",
+  platformSystem: "/platform/system",
   twoFactor: "/2fa",
   onboarding: "/onboarding",
   /** Apex-only: unknown tenant host redirected here with `?subdomain=` */
@@ -35,6 +41,7 @@ export const ROUTES = {
 /** Paths that do not require tenant authentication */
 export const PUBLIC_PATHS: readonly string[] = [
   ROUTES.login,
+  ROUTES.platformLogin,
   ROUTES.forgotPassword,
   ROUTES.platformForgotPassword,
   ROUTES.twoFactor,
@@ -42,10 +49,12 @@ export const PUBLIC_PATHS: readonly string[] = [
 
 /**
  * Platform apex paths reachable without a platform super-user session.
- * Setup/sign-in/console share `/`; tenant module URLs show the workspace gate.
+ * Dedicated platform sign-in at `/platform/login`; tenant module URLs show the workspace gate.
  */
 export const PLATFORM_ENTRY_PATHS: readonly string[] = [
   ROUTES.home,
+  ROUTES.login,
+  ROUTES.platformLogin,
   ROUTES.forgotPassword,
   ROUTES.platformForgotPassword,
   ROUTES.twoFactor,
@@ -59,10 +68,19 @@ export function tenantNotFoundPath(subdomain: string): string {
 }
 
 /** Platform paths that require any authenticated platform user. */
-export const PLATFORM_AUTH_PATHS: readonly string[] = [ROUTES.platformAccount];
+export const PLATFORM_AUTH_PATHS: readonly string[] = [
+  ROUTES.platformAccount,
+  ROUTES.platformDashboard,
+  ROUTES.platformWorkspaces,
+  ROUTES.platformReports,
+];
 
 /** Platform paths that require an authenticated platform super-user. */
-export const PLATFORM_SUPER_USER_PATHS: readonly string[] = [ROUTES.platformAdmins];
+export const PLATFORM_SUPER_USER_PATHS: readonly string[] = [
+  ROUTES.platformAdmins,
+  ROUTES.platformActivityLogs,
+  ROUTES.platformSystem,
+];
 
 /** Platform paths that require the onboard permission (or super-user). */
 export const PLATFORM_ONBOARD_PATHS: readonly string[] = [ROUTES.onboarding];

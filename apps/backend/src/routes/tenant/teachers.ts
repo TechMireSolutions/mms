@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection, canReadCollection } from '../../services/rbacService.js';
 import { teacherUseCases } from '../../teachers/use-cases/teacherUseCases.js';
 import { TEACHERS_MODULE_MANIFEST, type Teacher, type User } from '@mms/shared';
@@ -29,6 +30,7 @@ export default async function teachersRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('teachers'));
 
   await fastify.register(teacherSetupConfigRoutes);
   await fastify.register(teacherLookupRoutes);

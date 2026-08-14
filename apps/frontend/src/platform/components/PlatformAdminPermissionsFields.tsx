@@ -1,8 +1,10 @@
 import React from 'react';
+import { Shield, Building2, UserPlus } from 'lucide-react';
 import type { PlatformAdminPermissions } from '@mms/shared';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
+import { SEMANTIC_BADGE } from '@/lib/semanticTone';
+import { cn } from '@/lib/utils';
 
 interface PlatformAdminPermissionsFieldsProps {
   value: PlatformAdminPermissions;
@@ -10,7 +12,7 @@ interface PlatformAdminPermissionsFieldsProps {
   disabled?: boolean;
 }
 
-/** Shared grantable-permission checkboxes for create/edit admin flows. */
+/** Modern grantable-permission checkboxes with capability badges and accessibility helpers. */
 export function PlatformAdminPermissionsFields({
   value,
   onChange,
@@ -21,10 +23,21 @@ export function PlatformAdminPermissionsFields({
   const onboardId = React.useId();
 
   return (
-    <fieldset className="space-y-3 rounded-xl border border-border/50 bg-muted/20 p-4">
-      <legend className={`${FORM_LABEL} px-1`}>{t('platform.adminPermissionsLabel')}</legend>
+    <fieldset className="space-y-3 rounded-2xl border border-border/50 bg-card/40 p-4 transition-all">
+      <legend className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+        <Shield className="w-3.5 h-3.5 text-primary" aria-hidden />
+        {t('platform.adminPermissionsLabel')}
+      </legend>
 
-      <label htmlFor={workspacesId} className="flex min-h-11 cursor-pointer items-start gap-3">
+      {/* 1. Workspaces Capability */}
+      <label
+        htmlFor={workspacesId}
+        className={cn(
+          'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
+          value.workspaces && 'border-primary/40 bg-primary/5',
+          disabled && 'opacity-60 cursor-not-allowed',
+        )}
+      >
         <Checkbox
           id={workspacesId}
           name="permWorkspaces"
@@ -35,13 +48,29 @@ export function PlatformAdminPermissionsFields({
           }
           className="mt-1"
         />
-        <span className="space-y-0.5 text-start">
-          <span className="block text-sm font-semibold text-foreground">{t('platform.permWorkspaces')}</span>
-          <span className="block text-xs text-muted-foreground">{t('platform.permWorkspacesDesc')}</span>
-        </span>
+        <div className="flex-1 min-w-0 text-start space-y-1">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
+            <span className="text-xs font-bold text-foreground">{t('platform.permWorkspaces')}</span>
+            <span className={cn('ms-auto text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.workspaces ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
+              {value.workspaces ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
+            </span>
+          </div>
+          <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
+            {t('platform.permWorkspacesDesc')}
+          </p>
+        </div>
       </label>
 
-      <label htmlFor={onboardId} className="flex min-h-11 cursor-pointer items-start gap-3">
+      {/* 2. Onboarding Capability */}
+      <label
+        htmlFor={onboardId}
+        className={cn(
+          'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
+          value.onboard && 'border-primary/40 bg-primary/5',
+          disabled && 'opacity-60 cursor-not-allowed',
+        )}
+      >
         <Checkbox
           id={onboardId}
           name="permOnboard"
@@ -52,10 +81,18 @@ export function PlatformAdminPermissionsFields({
           }
           className="mt-1"
         />
-        <span className="space-y-0.5 text-start">
-          <span className="block text-sm font-semibold text-foreground">{t('platform.permOnboard')}</span>
-          <span className="block text-xs text-muted-foreground">{t('platform.permOnboardDesc')}</span>
-        </span>
+        <div className="flex-1 min-w-0 text-start space-y-1">
+          <div className="flex items-center gap-2">
+            <UserPlus className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
+            <span className="text-xs font-bold text-foreground">{t('platform.permOnboard')}</span>
+            <span className={cn('ms-auto text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.onboard ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
+              {value.onboard ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
+            </span>
+          </div>
+          <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
+            {t('platform.permOnboardDesc')}
+          </p>
+        </div>
       </label>
     </fieldset>
   );

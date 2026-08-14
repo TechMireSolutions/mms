@@ -24,4 +24,5 @@ export const onboardBodySchema = z.object({
   region: z.string().optional(),
   postalCode: z.string().optional(),
   socialLinks: z.array(z.object({ platform: z.string(), url: z.string() })).optional(),
+  modules: z.array(z.string()).optional(),
 });

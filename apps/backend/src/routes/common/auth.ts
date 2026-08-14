@@ -135,6 +135,7 @@ export default async function authRoutes(
             region: body.region,
             postalCode: body.postalCode,
             socialLinks: body.socialLinks,
+            modules: body.modules,
           });
           return reply.send(result);
         } catch (error: unknown) {

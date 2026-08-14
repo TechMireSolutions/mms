@@ -41,16 +41,33 @@ export function useSetWorkspaceEnabled() {
           body: JSON.stringify({ enabled }),
         },
       ),
+    onMutate: async ({ subdomain, enabled }) => {
+      await queryClient.cancelQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
+      const previousWorkspaces = queryClient.getQueryData<PlatformWorkspaceRow[]>(
+        PLATFORM_WORKSPACES_QUERY_KEY,
+      );
+
+      queryClient.setQueryData<PlatformWorkspaceRow[]>(PLATFORM_WORKSPACES_QUERY_KEY, (old = []) =>
+        old.map((w) => (w.subdomain === subdomain ? { ...w, enabled } : w)),
+      );
+
+      return { previousWorkspaces };
+    },
     onSuccess: (_workspaceMutationResponse, variables) => {
-      void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: WORKSPACE_REGISTRY_QUERY_KEY });
       notify.success(
         variables.enabled ? t('platform.workspaceEnabledToast') : t('platform.workspaceDisabledToast'),
         { description: variables.subdomain },
       );
     },
-    onError: () => {
+    onError: (_error, _variables, context) => {
+      if (context?.previousWorkspaces) {
+        queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousWorkspaces);
+      }
       notify.error(t('platform.workspaceToggleFailed'));
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: WORKSPACE_REGISTRY_QUERY_KEY });
     },
   });
 }
@@ -85,6 +102,43 @@ export function useDeleteWorkspace() {
       if (isApiError(error) && error.type === 'invalid_current_password') {
         return;
       }
+      notify.error(getPlatformErrorMessage(error, t));
+    },
+  });
+}
+
+export function useWorkspaceModules(subdomain: string, open: boolean) {
+  const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
+
+  return useQuery({
+    queryKey: ['platform', 'workspace-modules', subdomain],
+    queryFn: async ({ signal }) => {
+      const response = await apiJson<{ modules: string[] }>(`/api/platform/workspaces/${encodeURIComponent(subdomain)}/modules`, { signal });
+      return response.modules;
+    },
+    enabled: isPlatformAuthenticated && canWorkspaces && open && !!subdomain,
+    staleTime: 0,
+  });
+}
+
+export function useUpdateWorkspaceModules() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: async ({ subdomain, modules }: { subdomain: string; modules: string[] }) =>
+      apiJson<{ success: true; modules: string[] }>(
+        `/api/platform/workspaces/${encodeURIComponent(subdomain)}/modules`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({ modules }),
+        },
+      ),
+    onSuccess: (response, variables) => {
+      queryClient.setQueryData(['platform', 'workspace-modules', variables.subdomain], response.modules);
+      notify.success(t('platform.modulesTitle'));
+    },
+    onError: (error) => {
       notify.error(getPlatformErrorMessage(error, t));
     },
   });

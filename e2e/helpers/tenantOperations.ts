@@ -70,9 +70,10 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
 
   const studentContactSearch = registerDialog.getByLabel('Student contact');
   await studentContactSearch.fill('Jane Doe');
+  await page.waitForTimeout(300);
   const janeOption = page.getByRole('option', { name: /Jane Doe/ }).first();
   await expect(janeOption).toBeVisible({ timeout: 15_000 });
-  await janeOption.click();
+  await janeOption.click({ force: true });
 
   const editRelationshipsCta = registerDialog.getByRole('button', { name: /Edit contact relationships/i });
   // Wait for the linked contact to load before the guardian section renders the button.
@@ -89,11 +90,12 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await relContactPicker.fill('John Doe');
   const johnRelOption = page.getByRole('option', { name: /John Doe/ }).first();
   await expect(johnRelOption).toBeVisible({ timeout: 15_000 });
-  await johnRelOption.click();
+  await johnRelOption.click({ force: true });
 
   // Set relationship type to Parent (system catalog FormSelect)
   const relTypeSelect = editJaneDialog.locator('#relationship-type-0');
-  await relTypeSelect.selectOption('Parent');
+  await relTypeSelect.click();
+  await page.locator('[role="option"]').filter({ hasText: /^Parent$/i }).click();
 
   await waitForToastOverlayToClear(page, 'before saving Jane relationship');
 

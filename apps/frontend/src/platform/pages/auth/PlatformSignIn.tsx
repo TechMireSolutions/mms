@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { AuthEmailField } from "@/components/entry/AuthEmailField";
@@ -14,11 +15,13 @@ import {
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { ROUTES } from "@/lib/config/routes";
 
-/** Apex-only sign-in for platform super-users who can provision new madrasas. */
+/** Apex-only sign-in for platform super-users who can provision and manage madrasas. */
 export default function PlatformSignIn(): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const { platformLogin, isPlatformLoginSubmitting } = usePlatformAuth();
   const emailFieldId = "platform-email";
   const passwordFieldId = "platform-password";
@@ -55,9 +58,12 @@ export default function PlatformSignIn(): React.JSX.Element {
         title={t("platform.signInTitle")}
         subtitle={t("platform.signInSubtitle")}
       >
-        <form
+        <motion.form
+          initial={reducedMotion ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
           onSubmit={(event) => void handleSubmit(event)}
-          className="space-y-4"
+          className="space-y-4 text-start"
           noValidate
           aria-busy={isPlatformLoginSubmitting}
         >
@@ -68,9 +74,9 @@ export default function PlatformSignIn(): React.JSX.Element {
               id={emailFieldId}
               label={t("auth.emailAddress")}
               value={email}
-              autoFocus
+              autoFocus={false}
               autoComplete="email"
-              placeholder={t("auth.emailPlaceholder")}
+              placeholder=""
               error={fieldErrors.email}
               onChange={(value) => {
                 setEmail(value);
@@ -83,7 +89,7 @@ export default function PlatformSignIn(): React.JSX.Element {
               id={passwordFieldId}
               label={t("auth.password")}
               value={password}
-              placeholder={t("auth.passwordPlaceholder")}
+              placeholder=""
               error={fieldErrors.password}
               forgotPasswordTo={ROUTES.platformForgotPassword}
               forgotPasswordLabel={t("auth.forgotPassword")}
@@ -100,7 +106,7 @@ export default function PlatformSignIn(): React.JSX.Element {
               label={t("platform.signIn")}
             />
           </fieldset>
-        </form>
+        </motion.form>
       </PlatformAuthLayout>
     </>
   );

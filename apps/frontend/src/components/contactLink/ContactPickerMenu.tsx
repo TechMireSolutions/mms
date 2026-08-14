@@ -45,7 +45,7 @@ export function ContactPickerMenu({
       ref={menuRef}
       id={`${resolvedId}-listbox`}
       style={menuStyle}
-      className="overflow-y-auto rounded-xl border border-border bg-card shadow-xl divide-y divide-border/60"
+      className="overflow-y-auto rounded-xl border border-border bg-card shadow-xl divide-y divide-border/60 z-[100]"
       role="listbox"
       aria-label={label}
     >
@@ -77,10 +77,8 @@ export function ContactPickerMenu({
             role="option"
             onMouseDown={(event) => {
               event.preventDefault();
-              onSelect(contact);
             }}
-            onClick={(event) => {
-              event.preventDefault();
+            onClick={() => {
               onSelect(contact);
             }}
             className="w-full flex items-center h-auto font-normal justify-start gap-3 px-3.5 py-2.5 hover:bg-muted transition-colors text-start focus:outline-none rounded-none shadow-none text-foreground"

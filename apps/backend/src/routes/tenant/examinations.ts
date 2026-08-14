@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import {
   EXAMINATIONS_MODULE_MANIFEST,
   examListSchema,
@@ -37,6 +38,7 @@ export default async function examinationsRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('examination'));
 
   fastify.register(examinationSetupConfigRoutes);
 

@@ -78,7 +78,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     setValidationErrors([]);
     setActiveTab("basic");
     grManuallyEdited.current = false;
-  }, [student, fields, dfsTabs]);
+  }, [student?.id]);
 
   const updateDraft = (patch: Partial<Student>) => {
     setStudentDraft((prev) => ({ ...prev, ...patch }));

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
+import { useLiveObject } from '@/hooks/useLiveObject';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/tenant/features/settings/components/modules/ModuleSettingsNavGrid';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
@@ -21,6 +22,9 @@ export default function SystemModulesSettings(): React.JSX.Element {
     handleSaveModules,
     clearSaved,
   } = useSettingsGlobalDraft();
+
+  const platformSettings = useLiveObject<Record<string, any>>('platform_settings', {});
+  const grantedModules = platformSettings?.grantedModules;
 
   const enabledModules = useMemo(
     () => normalizeEnabledModules(data.enabledModules),
@@ -51,7 +55,11 @@ export default function SystemModulesSettings(): React.JSX.Element {
         />
       }
     >
-      <ModuleSettingsNavGrid enabledModules={enabledModules} onToggleModule={updModule} />
+      <ModuleSettingsNavGrid 
+        enabledModules={enabledModules} 
+        grantedModules={grantedModules} 
+        onToggleModule={updModule} 
+      />
     </SettingsPanel>
   );
 }

@@ -49,6 +49,7 @@ export interface OnboardInput {
   region?: string;
   postalCode?: string;
   socialLinks?: BrandingSocialLink[];
+  modules?: string[];
 }
 
 export interface OnboardResult extends AuthResult {
@@ -140,6 +141,26 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
 
   await runWithTenant(workspace.subdomain, async () => {
     await seedTenantDefaults();
+
+    if (input.modules) {
+      const { getObject } = await import('../../db/database.js');
+      const { SYSTEM_MODULES } = await import('@mms/shared');
+      const globalSettings = await getObject('global_settings') || {};
+      const enabledModules: Record<string, boolean> = {};
+
+      for (const mod of SYSTEM_MODULES) {
+        if (mod.required) {
+          enabledModules[mod.id] = true;
+        } else {
+          enabledModules[mod.id] = input.modules.includes(mod.id);
+        }
+      }
+
+      await saveObject('global_settings', {
+        ...globalSettings,
+        enabledModules,
+      });
+    }
 
     const branding = buildBrandingFromOnboarding({
       madrasaName: input.madrasaName,

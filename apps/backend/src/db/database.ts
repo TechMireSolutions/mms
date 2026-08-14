@@ -1,11 +1,23 @@
 export {
   closeDatabase,
   getPool,
+  getPoolMetrics,
   initializeDatabaseConnection,
   pingDatabase,
   runInReadSnapshotTransaction,
   runInTransaction,
+  type PoolMetrics,
 } from './dbConnection.js';
+
+export async function getDatabaseHealth() {
+  const { pingDatabase, getPoolMetrics } = await import('./dbConnection.js');
+  const isConnected = await pingDatabase();
+  const poolMetrics = getPoolMetrics();
+  return {
+    status: isConnected ? 'healthy' : 'unhealthy',
+    pool: poolMetrics,
+  };
+}
 export {
   deleteCollectionByStorageName,
   deleteCollection,

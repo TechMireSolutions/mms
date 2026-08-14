@@ -1,6 +1,10 @@
 import React from "react";
+import { ShieldCheck, Lock, ShieldAlert } from "lucide-react";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { AuthCardShell, AuthFormHeading, AuthPageFrame } from "@/components/entry";
+import { useTranslation } from "@/hooks/useTranslation";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 export interface PlatformAuthLayoutProps {
   children: React.ReactNode;
@@ -9,26 +13,63 @@ export interface PlatformAuthLayoutProps {
   footer?: React.ReactNode;
 }
 
-/** Apex platform auth shell — English/LTR, product mark, no tenant branding. */
+/** Apex platform auth shell — English/LTR, product mark, apex badge & security trust indicators. */
 export default function PlatformAuthLayout({
   children,
   title,
   subtitle,
   footer,
 }: PlatformAuthLayoutProps): React.JSX.Element {
+  const { t } = useTranslation();
+
+  const combinedFooter = (
+    <div className="space-y-4">
+      {footer}
+      <div className="pt-3 border-t border-border/40 text-center space-y-1.5">
+        <div className="flex items-center justify-center gap-3 text-[11px] font-semibold text-muted-foreground/80">
+          <span className="flex items-center gap-1 text-primary">
+            <Lock className="w-3 h-3 shrink-0" aria-hidden />
+            256-Bit TLS
+          </span>
+          <span className="text-border">•</span>
+          <span className="flex items-center gap-1 text-success">
+            <ShieldCheck className="w-3 h-3 shrink-0" aria-hidden />
+            PostgreSQL RLS
+          </span>
+        </div>
+        <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wider">
+          {t("platform.consoleTitle")}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <AuthPageFrame dir="ltr">
-      <AuthCardShell
-        footer={footer}
-        header={
-          <div className="space-y-4">
-            <PlatformLogoMark />
-            <AuthFormHeading title={title} subtitle={subtitle} />
-          </div>
-        }
-      >
-        {children}
-      </AuthCardShell>
+      <div className="relative z-10 w-full max-w-md text-start">
+        {/* Backdrop Glow */}
+        <div className="absolute -inset-4 bg-gradient-to-tr from-primary/25 via-primary/10 to-transparent rounded-3xl blur-2xl opacity-75 pointer-events-none" />
+
+        <AuthCardShell
+          footer={combinedFooter}
+          header={
+            <div className="space-y-3.5 text-center">
+              <PlatformLogoMark />
+
+              <div className="flex justify-center">
+                <span className={cn(SEMANTIC_BADGE.primary, "px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs")}>
+                  <ShieldAlert className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
+                  {t("platform.consoleTitle")}
+                </span>
+              </div>
+
+              <AuthFormHeading title={title} subtitle={subtitle} />
+            </div>
+          }
+        >
+          {children}
+        </AuthCardShell>
+      </div>
     </AuthPageFrame>
   );
 }

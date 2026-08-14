@@ -3,8 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * A full-page loading spinner with the app's branding.
- * 
- * @returns {React.ReactElement} A centered loading layout.
  */
 export function PageLoader(): React.ReactElement {
   return (
@@ -26,9 +24,6 @@ interface CardSkeletonProps {
 
 /**
  * A skeleton loader for card-based layouts.
- * 
- * @param {CardSkeletonProps} props - Component props.
- * @returns {React.ReactElement} A grid of card skeletons.
  */
 export function CardSkeleton({ count = 3, className = "" }: CardSkeletonProps): React.ReactElement {
   return (
@@ -56,9 +51,6 @@ interface StatsSkeletonProps {
 
 /**
  * A skeleton loader for dashboard stat grids.
- * 
- * @param {StatsSkeletonProps} props - Component props.
- * @returns {React.ReactElement} A responsive grid of stat card skeletons.
  */
 export function StatsSkeleton({ count = 4 }: StatsSkeletonProps): React.ReactElement {
   return (
@@ -84,16 +76,13 @@ interface TableSkeletonProps {
 
 /**
  * A skeleton loader for data tables.
- * 
- * @param {TableSkeletonProps} props - Component props.
- * @returns {React.ReactElement} A table-like skeleton layout.
  */
 export function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps): React.ReactElement {
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-muted/40 flex gap-4">
         {Array.from({ length: cols }).map((_, i) => (
-          <Skeleton key={i} className="h-3 rounded" style={{ width: `${50 + Math.random() * 60}px` }} />
+          <Skeleton key={i} className="h-3 rounded w-24" />
         ))}
       </div>
       <div className="divide-y divide-border/50">
@@ -101,11 +90,35 @@ export function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps): React
           <div key={i} className="px-4 py-3.5 flex gap-4 items-center">
             <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
             {Array.from({ length: cols - 1 }).map((_, j) => (
-              <Skeleton key={j} className="h-3.5 rounded flex-1" style={{ maxWidth: `${60 + Math.random() * 80}px` }} />
+              <Skeleton key={j} className="h-3.5 rounded flex-1 max-w-[140px]" />
             ))}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton loader matching Three-Tier Module layout to eliminate Cumulative Layout Shift (CLS).
+ */
+export function ModuleViewSkeleton(): React.ReactElement {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* Module Header Skeleton */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-48 rounded-lg" />
+          <Skeleton className="h-4 w-72 rounded-md" />
+        </div>
+        <Skeleton className="h-[44px] w-36 rounded-xl" />
+      </div>
+
+      {/* KPI Stats Grid Skeleton */}
+      <StatsSkeleton count={4} />
+
+      {/* Main Content Table/Grid Skeleton */}
+      <TableSkeleton rows={6} cols={5} />
     </div>
   );
 }

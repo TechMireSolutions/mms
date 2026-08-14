@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useDeferredValue } from "react";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -10,13 +10,13 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { notify } from "@/lib/notify";
 import { AttendanceRecordRowActions } from "./AttendanceRecordRowActions";
 import { AttendanceRecordsTable } from "./AttendanceRecordsTable";
 import { AttendanceRecordsMobileList } from "./AttendanceRecordsMobileList";
 import { AttendanceRecordsToolbar } from "./AttendanceRecordsToolbar";
 import { AttendanceBulkActionBar } from "./AttendanceBulkActionBar";
+import { AttendanceRecordsConfirmDialogs } from "./AttendanceRecordsConfirmDialogs";
 import { useAttendanceSelection } from "@/tenant/features/attendance/hooks/useAttendanceSelection";
 import { useAttendancePaginated } from "@/tenant/features/attendance/hooks/useAttendance";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -85,16 +85,17 @@ export function AttendanceRecords({
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const debouncedSearch = useDebounce(searchInput, ATTENDANCE_SEARCH_DEBOUNCE_MS);
+  const deferredSearch = useDeferredValue(debouncedSearch);
 
   // Server-side filter/page reset whenever a filter dimension changes.
   useEffect(() => {
     setListPage(1);
-  }, [debouncedSearch, statusFilter, dateFrom, dateTo, filters.classId, filters.date, showDeleted]);
+  }, [deferredSearch, statusFilter, dateFrom, dateTo, filters.classId, filters.date, showDeleted]);
 
   const attendancePageQuery = useAttendancePaginated({
     page: listPage,
     limit: ATTENDANCE_MODULE_MANIFEST.defaultPageSize,
-    search: debouncedSearch,
+    search: deferredSearch,
     classId: filters.classId,
     date: filters.date,
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -272,27 +273,16 @@ export function AttendanceRecords({
         i18nNamespace="attendance"
         variant="summary"
       />
-      <ConfirmAlertDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
-        title={t("attendance.confirmArchiveTitle")}
-        description={t("attendance.confirmArchiveDescription")}
-        confirmLabel={t("attendance.archive")}
-        onConfirm={() => {
-          const id = pendingDeleteId;
-          setPendingDeleteId(null);
-          if (id) void onDeleteRecord(id);
-        }}
-        destructive
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={setConfirmBulkOpen}
-        title={showDeleted ? t("attendance.trash.restore") : t("attendance.confirmArchiveTitle")}
-        description={t(showDeleted ? "attendance.trash.bulkRestoreConfirm" : "attendance.trash.bulkDeleteConfirm", { count: selectedIds.length })}
-        confirmLabel={showDeleted ? t("attendance.trash.restore") : t("common.delete")}
-        onConfirm={confirmBulkTrash}
-        destructive={!showDeleted}
+      <AttendanceRecordsConfirmDialogs
+        pendingDeleteId={pendingDeleteId}
+        onPendingDeleteChange={setPendingDeleteId}
+        onConfirmDelete={(id) => void onDeleteRecord(id)}
+        confirmBulkOpen={confirmBulkOpen}
+        onConfirmBulkOpenChange={setConfirmBulkOpen}
+        showDeleted={showDeleted}
+        selectedIdsCount={selectedIds.length}
+        onConfirmBulkTrash={confirmBulkTrash}
+        t={t}
       />
     </section>
   );

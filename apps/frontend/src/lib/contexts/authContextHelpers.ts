@@ -38,6 +38,7 @@ export interface OnboardPayload {
   footerText?: string;
   city?: string;
   region?: string;
+  modules?: string[];
 }
 
 export interface AuthContextType {

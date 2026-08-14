@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Loader2, User } from "lucide-react";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FORM_LABEL, DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
@@ -47,38 +47,35 @@ export function PlatformProfileNameForm({
   };
 
   return (
-    <>
-      <h2 className={`${DETAIL_SECTION_TITLE} text-start`}>
-        {t("platform.profileName")}
-      </h2>
-      
-      <Card accentColor="info" className="p-0 overflow-hidden">
-        <form onSubmit={(event) => void handleSaveName(event)} className="p-6 space-y-4 text-start">
-          <h3 className="text-sm font-bold text-foreground">{t("platform.profileName")}</h3>
-          {nameError ? <FieldErrorMessage message={nameError} /> : null}
-          <div className="space-y-1.5">
-            <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
-            <Input
-              id="platform-profile-name"
-              autoComplete="name"
-              required
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="min-h-11"
-            />
-          </div>
-          <Button type="submit" className={PLATFORM_PROFILE_SUBMIT_CLASS} disabled={updateName.isPending || name === platformUser?.name}>
-            {updateName.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
-                {t("common.save")}
-              </>
-            ) : (
-              t("platform.profileSave")
-            )}
-          </Button>
-        </form>
-      </Card>
-    </>
+    <SectionCard
+      title={t("platform.profileName")}
+      icon={User}
+      accentColor="info"
+    >
+      <form onSubmit={(event) => void handleSaveName(event)} className="space-y-4 text-start">
+        {nameError ? <FieldErrorMessage message={nameError} /> : null}
+        <div className="space-y-1.5">
+          <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
+          <Input
+            id="platform-profile-name"
+            autoComplete="name"
+            required
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            className="min-h-11"
+          />
+        </div>
+        <Button type="submit" className={PLATFORM_PROFILE_SUBMIT_CLASS} disabled={updateName.isPending || name === platformUser?.name}>
+          {updateName.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
+              {t("common.save")}
+            </>
+          ) : (
+            t("platform.profileSave")
+          )}
+        </Button>
+      </form>
+    </SectionCard>
   );
 }

@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { Contact, ContactsListPageResult, User } from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteContacts, canReadContacts } from '../../services/rbacService.js';
 import {
   contactFieldUsageBatchBodySchema,
@@ -51,6 +52,7 @@ export async function contactRoutes(
 ): Promise<void> {
   ensureBackgroundJobRunners();
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('contacts'));
 
   registerPaginatedListRoute(fastify, {
     collection: 'contacts',

@@ -1,47 +1,60 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Shield } from "lucide-react";
 import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
 import { useTranslation } from "@/hooks/useTranslation";
-import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { usePlatformProfile } from "@/platform/hooks/usePlatformProfile";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
+import { CardSkeleton } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { DETAIL_SECTION_TITLE } from "@/components/ui/formStyles";
 
 import { containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 import { PlatformProfileCard } from "./account/PlatformProfileCard";
-import { PlatformMigrateRestartCard } from "./account/PlatformMigrateRestartCard";
-import { PlatformResetDatabaseCard } from "./account/PlatformResetDatabaseCard";
 import { PlatformProfileNameForm } from "./account/PlatformProfileNameForm";
 import { PlatformProfilePasswordForm } from "./account/PlatformProfilePasswordForm";
 
+type AccountTab = "profile" | "security";
+
 /**
- * Platform operator profile — view name/email and update display name or password.
+ * Platform operator account hub — Profile information and security password management.
  */
 export default function PlatformAccount(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const { platformUser } = usePlatformAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     data: profile,
     isLoading: loadingProfile,
     isError: profileError,
     refetch,
   } = usePlatformProfile();
-  const isSuperUser = platformUser?.role === "super_user";
+
+  const rawTab = searchParams.get("tab");
+  const activeTab: AccountTab = rawTab === "security" ? "security" : "profile";
+
+  const handleTabChange = (nextTab: AccountTab) => {
+    setSearchParams({ tab: nextTab }, { replace: true });
+  };
+
+  const tabs: SubTab<AccountTab>[] = [
+    { key: "profile", label: t("platform.myAccount"), icon: User },
+    { key: "security", label: t("auth.password"), icon: Shield },
+  ];
 
   return (
     <PlatformPageShell width="7xl">
-      <div className="space-y-8">
+      <div className="space-y-8 text-start">
         <PageHeader
+          icon={User}
           title={t("platform.profileTitle")}
           subtitle={t("platform.profileSubtitle")}
         />
 
         {loadingProfile ? (
-          <RouteStatusFallback />
+          <CardSkeleton count={2} className="grid-cols-1 lg:grid-cols-3" />
         ) : profileError || !profile ? (
           <ErrorState
             title={t("platform.loadFailed")}
@@ -49,26 +62,53 @@ export default function PlatformAccount(): React.JSX.Element {
             onRetry={() => void refetch()}
           />
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial={reducedMotion ? false : "hidden"}
-            animate="show"
-            className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start"
-          >
-            <motion.div variants={cardVariants} className="space-y-6">
-              <h2 className={`${DETAIL_SECTION_TITLE} text-start`}>
-                {t("platform.myAccount")}
-              </h2>
-              <PlatformProfileCard profile={profile} />
-              {isSuperUser && <PlatformMigrateRestartCard />}
-              {isSuperUser && <PlatformResetDatabaseCard />}
-            </motion.div>
+          <div className="space-y-6">
+            <SubTabBar
+              tabs={tabs}
+              value={activeTab}
+              onChange={(key) => handleTabChange(key)}
+            />
 
-            <motion.div variants={cardVariants} className="lg:col-span-2 space-y-6">
-              <PlatformProfileNameForm initialName={profile.name ?? ""} />
-              <PlatformProfilePasswordForm />
-            </motion.div>
-          </motion.div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                {activeTab === "profile" && (
+                  <motion.div
+                    variants={containerVariants}
+                    initial={reducedMotion ? false : "hidden"}
+                    animate="show"
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start"
+                  >
+                    <motion.div variants={cardVariants}>
+                      <PlatformProfileCard profile={profile} />
+                    </motion.div>
+
+                    <motion.div variants={cardVariants} className="lg:col-span-2">
+                      <PlatformProfileNameForm initialName={profile.name ?? ""} />
+                    </motion.div>
+                  </motion.div>
+                )}
+
+                {activeTab === "security" && (
+                  <motion.div
+                    variants={containerVariants}
+                    initial={reducedMotion ? false : "hidden"}
+                    animate="show"
+                    className="max-w-3xl"
+                  >
+                    <motion.div variants={cardVariants}>
+                      <PlatformProfilePasswordForm />
+                    </motion.div>
+                  </motion.div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         )}
       </div>
     </PlatformPageShell>

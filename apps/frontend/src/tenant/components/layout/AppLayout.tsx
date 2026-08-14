@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import Sidebar from "@/tenant/components/layout/Sidebar";
 import TopBar from "@/tenant/components/layout/TopBar";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
 import MobileSidebar from "@/tenant/components/layout/MobileSidebar";
+import { CommandPalette } from "@/components/ui/CommandPalette";
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { getInitials } from "@mms/shared";
 import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
@@ -20,9 +21,21 @@ import { cn } from "@/lib/utils";
 export default function AppLayout(): React.JSX.Element {
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
   const branding = useBranding();
   const { t } = useTranslation();
   useSessionTimeout();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <div className="box-border min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern">
@@ -39,7 +52,10 @@ export default function AppLayout(): React.JSX.Element {
 
       {/* Top Bar */}
       <div className="hidden lg:block">
-        <TopBar sidebarCollapsed={sidebarCollapsed} />
+        <TopBar
+          sidebarCollapsed={sidebarCollapsed}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        />
       </div>
 
       {/* Mobile Top Bar */}
@@ -77,8 +93,11 @@ export default function AppLayout(): React.JSX.Element {
             {branding.madrasaName || t("entry.productName")}
           </span>
         </div>
-        <TopBarActions compact />
+        <TopBarActions compact onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
       </div>
+
+      {/* Command Palette Modal */}
+      <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
 
       {/* Main Content */}
       <main

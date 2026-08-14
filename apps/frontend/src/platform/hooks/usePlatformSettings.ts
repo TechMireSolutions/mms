@@ -1,8 +1,9 @@
-import { useMutation } from '@tanstack/react-query';
-import type { MigrateAndRestartAccepted } from '@mms/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { MigrateAndRestartAccepted, PlatformSettings } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 
 /** Default delay before migrate starts when the response omits delayMs. */
 const DEFAULT_MIGRATE_RESTART_DELAY_MS = 1_500;
@@ -12,6 +13,8 @@ const READY_POLL_TIMEOUT_MS = 60_000;
 
 /** Interval between `/ready` probes while waiting for the backend. */
 const READY_POLL_INTERVAL_MS = 750;
+
+export const PLATFORM_SETTINGS_QUERY_KEY = ['platform', 'settings'] as const;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -37,6 +40,38 @@ export async function waitForBackendReadyAfterMigrate(delayMs: number): Promise<
     }
     await sleep(READY_POLL_INTERVAL_MS);
   }
+}
+
+/** Hook for platform super-users to read global platform settings. */
+export function usePlatformSettingsQuery() {
+  const { isPlatformAuthenticated, isSuperUser } = usePlatformPermissions();
+
+  return useQuery({
+    queryKey: PLATFORM_SETTINGS_QUERY_KEY,
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ settings: PlatformSettings }>('/api/platform/settings', { signal });
+      return res.settings;
+    },
+    enabled: isPlatformAuthenticated && isSuperUser,
+    staleTime: 60_000,
+  });
+}
+
+/** Hook for platform super-users to update global platform settings. */
+export function useUpdatePlatformSettings() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (patch: Partial<PlatformSettings>) =>
+      apiJson<{ settings: PlatformSettings; success: boolean }>('/api/platform/settings', {
+        method: 'PUT',
+        body: JSON.stringify(patch),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(PLATFORM_SETTINGS_QUERY_KEY, data.settings);
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_SETTINGS_QUERY_KEY });
+    },
+  });
 }
 
 /** Hook for platform super-users to reset and re-seed the entire database. */

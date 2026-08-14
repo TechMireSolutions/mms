@@ -1,33 +1,39 @@
 import React from 'react';
+import { ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { PlatformPageShell } from '@/platform/components/PlatformPageShell';
 import { useTranslation } from '@/hooks/useTranslation';
-import { usePlatformAdmins } from '@/platform/hooks/usePlatformAdmins';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { PlatformAdminsList } from '@/platform/pages/PlatformAdminsList';
+import { PlatformAdminsContent } from '@/platform/components/PlatformAdminsContent';
 import { PlatformAddAdminForm } from '@/platform/pages/PlatformAddAdminForm';
+import { containerVariantsConsole as containerVariants, itemVariants } from '@/platform/lib/animations';
 
 export default function PlatformAdmins(): React.JSX.Element {
   const { t } = useTranslation();
-  const { data: admins, isLoading: loadingAdmins, isError: fetchError, refetch } = usePlatformAdmins();
+  const reducedMotion = useReducedMotion();
 
   return (
     <PlatformPageShell width="7xl">
-      <div className="space-y-8">
-        <PageHeader
-          title={t('platform.adminsTitle')}
-          subtitle={t('platform.adminsSubtitle')}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <PlatformAdminsList
-            admins={admins}
-            loading={loadingAdmins}
-            fetchError={fetchError}
-            onRetry={() => void refetch()}
+      <motion.div
+        variants={containerVariants}
+        initial={reducedMotion ? false : 'hidden'}
+        animate="show"
+        className="space-y-6"
+      >
+        <motion.div variants={itemVariants}>
+          <PageHeader
+            icon={ShieldCheck}
+            title={t('platform.adminsTitle')}
+            subtitle={t('platform.adminsSubtitle')}
+            actions={<PlatformAddAdminForm asTriggerOnly />}
           />
-          <PlatformAddAdminForm />
-        </div>
-      </div>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <PlatformAdminsContent />
+        </motion.div>
+      </motion.div>
     </PlatformPageShell>
   );
 }

@@ -94,6 +94,12 @@ export const workspaceEnabledPatchBodySchema = z.object({
 
 export type WorkspaceEnabledPatchInput = z.infer<typeof workspaceEnabledPatchBodySchema>;
 
+export const platformWorkspaceModulesPatchBodySchema = z.object({
+  modules: z.array(z.string()),
+});
+
+export type PlatformWorkspaceModulesPatchInput = z.infer<typeof platformWorkspaceModulesPatchBodySchema>;
+
 export const workspaceDeleteBodySchema = z.object({
   password: z.string().min(1),
   confirmSubdomain: z.string().min(1),

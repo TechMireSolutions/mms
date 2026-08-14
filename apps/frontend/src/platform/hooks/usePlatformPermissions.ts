@@ -17,3 +17,5 @@ export function usePlatformPermissions() {
     can,
   };
 }
+
+export type PlatformPermissionsState = ReturnType<typeof usePlatformPermissions>;

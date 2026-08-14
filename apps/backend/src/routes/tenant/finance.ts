@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { FINANCE_MODULE_MANIFEST, computeFinanceCommandMetrics, type User } from '@mms/shared';
 import { registerStandardTenantRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import {
@@ -46,6 +47,7 @@ export default async function financeRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('finance'));
 
   await fastify.register(financeReportRoutes);
   await fastify.register(financeSetupConfigRoutes);

@@ -6,6 +6,7 @@ import {
   LogOut,
   User,
   Settings,
+  Search,
 } from "lucide-react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { ROUTES } from "@/lib/config/routes";
@@ -41,13 +42,14 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 export interface TopBarActionsProps {
   /** Tighter spacing for mobile header. */
   compact?: boolean;
+  onOpenCommandPalette?: () => void;
   className?: string;
 }
 
 /**
  * Notifications, sync status, and user session menu — shared across desktop and mobile headers.
  */
-export default function TopBarActions({ compact = false, className }: TopBarActionsProps): React.JSX.Element {
+export default function TopBarActions({ compact = false, onOpenCommandPalette, className }: TopBarActionsProps): React.JSX.Element {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
 
@@ -87,6 +89,28 @@ export default function TopBarActions({ compact = false, className }: TopBarActi
 
   return (
     <div className={cn("flex shrink-0 items-center gap-1 sm:gap-2", className)}>
+      {onOpenCommandPalette && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onOpenCommandPalette}
+          aria-label="Search pages (Cmd+K)"
+          className={cn(
+            "relative flex items-center gap-2 rounded-lg text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer",
+            compact ? "h-9 w-9 p-0 justify-center min-h-9 min-w-9" : "h-9 px-3 py-1.5 min-h-9",
+          )}
+        >
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          {!compact && (
+            <>
+              <span className="hidden md:inline font-normal">Search...</span>
+              <kbd className="hidden md:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground select-none">
+                ⌘K
+              </kbd>
+            </>
+          )}
+        </Button>
+      )}
       <SyncStatusBadge />
       <BackgroundJobsTray compact={compact} />
 

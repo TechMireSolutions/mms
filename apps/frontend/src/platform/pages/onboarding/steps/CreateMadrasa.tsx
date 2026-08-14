@@ -4,6 +4,7 @@ import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { useCreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 import { CreateMadrasaIdentitySection } from "@/platform/pages/onboarding/steps/CreateMadrasaIdentitySection";
 import { CreateMadrasaThemeSection } from "@/platform/pages/onboarding/steps/CreateMadrasaThemeSection";
+import { CreateMadrasaModulesSection } from "@/platform/pages/onboarding/steps/CreateMadrasaModulesSection";
 
 interface CreateMadrasaProps {
   data: OnboardingData;
@@ -20,6 +21,7 @@ export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): R
     <div className="space-y-6">
       <CreateMadrasaIdentitySection controller={controller} />
       <CreateMadrasaThemeSection controller={controller} />
+      <CreateMadrasaModulesSection controller={controller} />
     </div>
   );
 }

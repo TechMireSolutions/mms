@@ -100,6 +100,7 @@ export function useOnboardingWizardController() {
         adminPhone: data.phone || undefined,
         website: data.subdomain ? `https://${data.subdomain}.${appDomain}` : undefined,
         footerText: data.footerText.trim() || defaultFooterForMadrasa(data.name),
+        modules: data.modules,
       });
 
       navigate(ROUTES.home, { replace: true });

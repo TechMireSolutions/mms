@@ -6,6 +6,7 @@ export {
   platformProfilePatchBodySchema,
   platformChangePasswordBodySchema,
   workspaceEnabledPatchBodySchema,
+  platformWorkspaceModulesPatchBodySchema,
   workspaceDeleteBodySchema,
   platformCreateAdminBodySchema,
   platformUpdateAdminPermissionsBodySchema,

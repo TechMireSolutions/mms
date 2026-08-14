@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ServerCog } from "lucide-react";
 import { MIGRATE_AND_RESTART_CONFIRM } from "@mms/shared";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -46,11 +46,13 @@ export function PlatformMigrateRestartCard(): React.JSX.Element {
 
   return (
     <>
-      <Card className="p-6 space-y-4 text-start">
-        <h3 className="text-sm font-bold text-foreground">{t("platform.profileMigrateRestart")}</h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {t("platform.profileMigrateRestartDesc")}
-        </p>
+      <SectionCard
+        title={t("platform.profileMigrateRestart")}
+        subtitle={t("platform.profileMigrateRestartDesc")}
+        icon={ServerCog}
+        accentColor="indigo"
+        className="text-start"
+      >
         <Button
           type="button"
           variant="outline"
@@ -72,7 +74,7 @@ export function PlatformMigrateRestartCard(): React.JSX.Element {
             t("platform.profileMigrateRestartButton")
           )}
         </Button>
-      </Card>
+      </SectionCard>
 
       <PlatformTypedConfirmDialog
         open={dialogOpen}

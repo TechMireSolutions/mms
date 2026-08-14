@@ -66,12 +66,29 @@ export function useUpdatePlatformAdminPermissions() {
           body: JSON.stringify({ permissions }),
         },
       ),
+    onMutate: async ({ adminId, permissions }) => {
+      await queryClient.cancelQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
+      const previousUsers = queryClient.getQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY);
+
+      queryClient.setQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY, (old = []) =>
+        old.map((u) => (u.id === adminId ? { ...u, permissions } : u)),
+      );
+
+      return { previousUsers };
+    },
     onSuccess: async (response) => {
-      void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(t('platform.adminAccessUpdated'));
       if (platformUser?.id === response.user.id) {
         await checkPlatformAuth();
       }
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousUsers) {
+        queryClient.setQueryData(PLATFORM_ADMINS_QUERY_KEY, context.previousUsers);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
     },
   });
 }
@@ -98,11 +115,28 @@ export function useSetPlatformAdminDisabled() {
           body: JSON.stringify({ disabled, password }),
         },
       ),
+    onMutate: async ({ adminId, disabled }) => {
+      await queryClient.cancelQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
+      const previousUsers = queryClient.getQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY);
+
+      queryClient.setQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY, (old = []) =>
+        old.map((u) => (u.id === adminId ? { ...u, disabled } : u)),
+      );
+
+      return { previousUsers };
+    },
     onSuccess: (_response, variables) => {
-      void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(
         t(variables.disabled ? 'platform.disableAdminSuccess' : 'platform.enableAdminSuccess'),
       );
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousUsers) {
+        queryClient.setQueryData(PLATFORM_ADMINS_QUERY_KEY, context.previousUsers);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
     },
   });
 }

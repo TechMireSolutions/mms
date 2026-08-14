@@ -1,7 +1,7 @@
 import type React from "react";
 import CreateMadrasa from "@/platform/pages/onboarding/steps/CreateMadrasa";
 import AdminSetup from "@/platform/pages/onboarding/steps/AdminSetup";
-import { DEFAULT_BRANDING_SETTINGS } from "@mms/shared";
+import { DEFAULT_BRANDING_SETTINGS, SYSTEM_MODULES } from "@mms/shared";
 
 export interface OnboardingData {
   name: string;
@@ -22,6 +22,7 @@ export interface OnboardingData {
   password: string;
   confirmPassword: string;
   agreedTerms: boolean;
+  modules: string[];
 }
 
 interface OnboardingStep {
@@ -71,4 +72,5 @@ export const ONBOARDING_INITIAL_DATA: OnboardingData = {
   password: "",
   confirmPassword: "",
   agreedTerms: false,
+  modules: SYSTEM_MODULES.map((m) => m.id),
 };

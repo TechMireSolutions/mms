@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
-import { Mail, User, UserPlus } from 'lucide-react';
+import { Mail, User, UserPlus, ShieldPlus } from 'lucide-react';
 import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS, type PlatformAdminPermissions } from '@mms/shared';
 import PasswordInput from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FORM_LABEL, DETAIL_SECTION_TITLE } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 import { FormModal } from '@/components/ui/FormModal';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { getPlatformRegisterError } from '@/platform/lib/platformValidation';
 import { useAddPlatformAdmin } from '@/platform/hooks/usePlatformAdmins';
 import { PlatformAdminPermissionsFields } from '@/platform/components/PlatformAdminPermissionsFields';
+import { getPasswordStrength } from '@/tenant/features/profile/passwordStrength';
+import { cn } from '@/lib/utils';
 
-export function PlatformAddAdminForm(): React.JSX.Element {
+export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?: boolean } = {}): React.JSX.Element {
   const { t } = useTranslation();
   const addAdmin = useAddPlatformAdmin();
   const [open, setOpen] = useState(false);
@@ -23,6 +26,8 @@ export function PlatformAddAdminForm(): React.JSX.Element {
     DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const passwordStrength = getPasswordStrength(password);
 
   const resetForm = (): void => {
     setName('');
@@ -59,14 +64,16 @@ export function PlatformAddAdminForm(): React.JSX.Element {
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <h2 className={`${DETAIL_SECTION_TITLE} text-start`}>
-        {t('platform.addAdmin')}
-      </h2>
+
+
+  const content = (
+    <>
       <Button
         type="button"
-        className="w-full font-bold min-h-11 rounded-xl"
+        className={cn(
+          "font-bold min-h-11 rounded-xl shadow-sm shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer",
+          asTriggerOnly ? "px-5" : "w-full"
+        )}
         onClick={() => setOpen(true)}
       >
         <UserPlus className="w-4 h-4 me-2" aria-hidden />
@@ -88,8 +95,11 @@ export function PlatformAddAdminForm(): React.JSX.Element {
         lang="en"
       >
         <div className="space-y-4 text-start">
+          {/* Full Name Field */}
           <div className="space-y-1.5">
-            <label htmlFor="admin-name" className={FORM_LABEL}>{t('platform.adminName')}</label>
+            <label htmlFor="admin-name" className={FORM_LABEL}>
+              {t('platform.adminName')}
+            </label>
             <div className="relative">
               <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
               <Input
@@ -98,15 +108,22 @@ export function PlatformAddAdminForm(): React.JSX.Element {
                 type="text"
                 required
                 value={name}
-                onChange={(event) => setName(event.target.value)}
-                className="ps-9 min-h-11"
+                onChange={(event) => {
+                  setName(event.target.value);
+                  if (submitError) setSubmitError(null);
+                }}
+                className="ps-9 min-h-11 rounded-xl"
                 disabled={addAdmin.isPending}
+                placeholder="Full Operator Name"
               />
             </div>
           </div>
 
+          {/* Email Address Field */}
           <div className="space-y-1.5">
-            <label htmlFor="admin-email" className={FORM_LABEL}>{t('platform.adminEmail')}</label>
+            <label htmlFor="admin-email" className={FORM_LABEL}>
+              {t('platform.adminEmail')}
+            </label>
             <div className="relative">
               <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
               <Input
@@ -115,24 +132,56 @@ export function PlatformAddAdminForm(): React.JSX.Element {
                 type="email"
                 required
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="ps-9 min-h-11"
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  if (submitError) setSubmitError(null);
+                }}
+                className="ps-9 min-h-11 rounded-xl"
                 disabled={addAdmin.isPending}
+                placeholder="operator@platform.com"
               />
             </div>
           </div>
 
-          <PasswordInput
-            id="admin-password"
-            name="adminPassword"
-            label={t('platform.adminPassword')}
-            autoComplete="new-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            disabled={addAdmin.isPending}
-          />
+          {/* Password Field & Real-time Strength Bar */}
+          <div className="space-y-2">
+            <PasswordInput
+              id="admin-password"
+              name="adminPassword"
+              label={t('platform.adminPassword')}
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                if (submitError) setSubmitError(null);
+              }}
+              disabled={addAdmin.isPending}
+            />
 
+            {password.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex h-1.5 w-full gap-1.5 overflow-hidden rounded-full bg-muted">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <div
+                      key={level}
+                      className={cn(
+                        'h-full flex-1 transition-all duration-300',
+                        passwordStrength.score >= level ? passwordStrength.colorClass : 'bg-muted/40',
+                      )}
+                    />
+                  ))}
+                </div>
+                {passwordStrength.key && (
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    {t(passwordStrength.key)}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Capability Flags */}
           <PlatformAdminPermissionsFields
             value={permissions}
             onChange={setPermissions}
@@ -140,6 +189,26 @@ export function PlatformAddAdminForm(): React.JSX.Element {
           />
         </div>
       </FormModal>
-    </div>
+    </>
+  );
+
+  if (asTriggerOnly) {
+    return content;
+  }
+
+  return (
+    <SectionCard
+      title={t('platform.addAdmin')}
+      subtitle={t('platform.addAdminSubtitle')}
+      icon={ShieldPlus}
+      accentColor="primary"
+    >
+      <div className="space-y-4">
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {t('platform.addAdminCardDesc')}
+        </p>
+        {content}
+      </div>
+    </SectionCard>
   );
 }

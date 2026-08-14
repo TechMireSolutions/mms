@@ -1,13 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, UserCheck } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
-import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { EnrollmentsCommandMetrics } from "@/tenant/features/enrollments/components/EnrollmentsCommandMetrics";
 import { EnrollmentsModalLayer } from "@/tenant/features/enrollments/components/EnrollmentsModalLayer";
 import { EnrollmentsReportsTier } from "@/tenant/features/enrollments/components/EnrollmentsReportsTier";
@@ -15,43 +10,46 @@ import { EnrollmentsSetupTier } from "@/tenant/features/enrollments/components/E
 import { EnrollmentsWorkTier } from "@/tenant/features/enrollments/components/EnrollmentsWorkTier";
 import { EnrollmentsPageHeaderActions } from "@/tenant/features/enrollments/components/EnrollmentsPageHeaderActions";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { Enrollment } from '@/lib/data/enrollmentData';
-import {
-  useEnrollmentMutations,
-  useEnrollmentsPaginated,
-} from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
-import { useEnrollmentsDirectoryFilters } from "@/tenant/features/enrollments/hooks/useEnrollmentsDirectoryFilters";
 import { ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
-import { useEnrollmentsPageActions } from "@/tenant/features/enrollments/hooks/useEnrollmentsPageActions";
-import {
-  defaultEnrollmentsExportColumns,
-  useEnrollmentsExportActions,
-} from "@/tenant/features/enrollments/hooks/useEnrollmentsExportActions";
-import { useEnrollmentColumnLayout } from "@/tenant/features/enrollments/hooks/useEnrollmentColumnLayout";
-import { useEnrollmentsSelection } from "@/tenant/features/enrollments/hooks/useEnrollmentsSelection";
+import { useEnrollmentsPageState } from "@/tenant/features/enrollments/hooks/useEnrollmentsPageState";
 
 /**
  * Enrollments management — Work | Reports | Setup.
  */
 export default function EnrollmentsPage() {
-  const { t } = useTranslation();
-  const SUB_TABS = useMemo(
-    () => [
-      { id: "list", label: t("enrollments.list"), icon: ClipboardList },
-      { id: "eligibility", label: t("enrollments.eligibility"), icon: UserCheck },
-    ],
-    [t]
-  );
   const {
-    canWrite: canWriteEnrollments,
+    t,
+    SUB_TABS,
+    TABS,
+    tab,
+    setTab,
+    activeSubTab,
+    setActiveSubTab,
+    canWriteEnrollments,
     canDelete,
     canExport,
-    canReports: canViewReports,
-    canViewSetup,
-  } = useModulePermissions(ENROLLMENTS_MODULE_MANIFEST);
-  const TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const [tab, setTab] = usePersistedTabState<string>("enrollments_active_tab", "work");
-  const [activeSubTab, setActiveSubTab] = useState("list");
+    canSelectEnrollments,
+    directoryFilters,
+    enrollments,
+    filteredCount,
+    isWorkPageError,
+    refetchWorkPage,
+    viewing,
+    setViewing,
+    showWizard,
+    setShowWizard,
+    pendingDeleteId,
+    setPendingDeleteId,
+    confirmBulkDeleteOpen,
+    setConfirmBulkDeleteOpen,
+    confirmBulkRestoreOpen,
+    setConfirmBulkRestoreOpen,
+    columnLayout,
+    selection,
+    exportActions,
+    pageActions,
+  } = useEnrollmentsPageState();
+
   const {
     listPage,
     setListPage,
@@ -59,81 +57,22 @@ export default function EnrollmentsPage() {
     setShowDeleted,
     search,
     setSearch,
-    debouncedSearch,
     statusFilter,
     setStatusFilter,
     sessionFilter,
     setSessionFilter,
-  } = useEnrollmentsDirectoryFilters();
+  } = directoryFilters;
 
-  const useServerWork = tab === "work" && activeSubTab === "list";
-  const {
-    data: workPageData,
-    isError: isWorkPageError,
-    refetch: refetchWorkPage,
-  } = useEnrollmentsPaginated({
-    page: listPage,
-    limit: ENROLLMENTS_MODULE_MANIFEST.defaultPageSize,
-    search: debouncedSearch,
-    status: statusFilter !== "all" ? statusFilter : undefined,
-    sessionId: sessionFilter !== "all" ? sessionFilter : undefined,
-    includeDeleted: showDeleted,
-    enabled: useServerWork,
-  });
-
-  const enrollments = useMemo(
-    () => (workPageData?.enrollments ?? []) as Enrollment[],
-    [workPageData],
-  );
-  const filteredCount = workPageData?.total ?? enrollments.length;
-
-  const [viewing, setViewing] = useState<Enrollment | null>(null);
-  const [showWizard, setShowWizard] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
-  const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
-  const columnLayout = useEnrollmentColumnLayout();
   const {
     selectedIds,
-    setSelectedIds,
     allVisibleSelected,
     someVisibleSelected,
     toggleSelectAll,
     toggleSelectedEnrollment,
     clearSelection,
-  } = useEnrollmentsSelection(enrollments);
+  } = selection;
 
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [debouncedSearch, statusFilter, sessionFilter, showDeleted, setSelectedIds]);
-
-  const { logExportAudit } = useEnrollmentMutations();
-  const exportColumns = useMemo(() => defaultEnrollmentsExportColumns(t), [t]);
-  const { handleExportCSV, handleBulkExport } = useEnrollmentsExportActions({
-    tableColumns: exportColumns,
-    canExport,
-    search,
-    statusFilter,
-    sessionFilter,
-    viewingDeleted: showDeleted,
-    selectedIds,
-    logExportAudit,
-  });
-
-  useEffect(() => {
-    if (!canWriteEnrollments && activeSubTab === "eligibility") {
-      setActiveSubTab("list");
-    }
-  }, [canWriteEnrollments, activeSubTab]);
-
-  useModuleCreateHotkey({
-    enabled: canWriteEnrollments && !showDeleted,
-    onCreate: () => {
-      setTab("work");
-      setShowWizard(true);
-    },
-  });
-
+  const { handleExportCSV, handleBulkExport } = exportActions;
   const {
     handleComplete,
     handleCancel,
@@ -143,14 +82,7 @@ export default function EnrollmentsPage() {
     handleBulkDelete,
     handleBulkRestore,
     handleBulkCancel,
-  } = useEnrollmentsPageActions({
-    enrollments,
-    viewing,
-    onViewingChange: setViewing,
-    onActiveSubTabChange: setActiveSubTab,
-  });
-
-  const canSelectEnrollments = canWriteEnrollments || canDelete;
+  } = pageActions;
 
   return (
     <ModulePageShell

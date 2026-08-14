@@ -124,11 +124,13 @@ export default function ContactPicker({
       onOpenCreate={() => picker.openCreateFlow(picker.query)}
       onCloseDropdown={picker.closeDropdown}
       onSelect={(contact) => {
+        picker.setSelectedCache(contact);
         onChange(contact.id, contact);
         picker.closeDropdown();
       }}
       onCloseCreate={() => picker.setCreateOpen(false)}
       onCreated={(contact) => {
+        picker.setSelectedCache(contact);
         onChange(contact.id, contact);
         picker.setCreateOpen(false);
       }}

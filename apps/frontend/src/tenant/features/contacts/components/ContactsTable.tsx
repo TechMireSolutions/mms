@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -64,6 +65,7 @@ export default function ContactsTable({
 }: ContactsTableProps): React.JSX.Element {
   const { prefs, countryCodesMap, countryCodes, getColumnWidth, setColumnWidth } = useContactConfig();
   const { t } = useTranslation();
+  const parentRef = useRef<HTMLDivElement>(null);
 
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
   const selectedSet = useMemo(() => new Set(selected), [selected]);
@@ -72,52 +74,118 @@ export default function ContactsTable({
     plural: "contacts.table.contacts",
   });
 
+  const isVirtualized = contacts.length > 50;
+
+  const rowVirtualizer = useVirtualizer({
+    count: contacts.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 52,
+    overscan: 10,
+    enabled: isVirtualized,
+  });
+
   return (
     <div className={cn(WORK_SURFACE, "shadow-xs")}>
-      <Table className="table-fixed">
-        <ContactsTableHeader
-          columns={columns}
-          sortField={sortField}
-          sortDir={sortDir}
-          onSort={onSort}
-          getColumnWidth={getColumnWidth}
-          setColumnWidth={setColumnWidth}
-          allSelected={allSelected}
-          someSelected={someSelected}
-          onSelectAll={onSelectAll}
-          t={t}
-        />
-        <TableBody className="divide-y divide-border/50">
-          <AnimatePresence>
-            {contacts.map((contact) => (
-              <ContactTableRow
-                key={contact.id}
-                contact={contact}
-                isSelected={selectedSet.has(contact.id)}
-                columns={columns}
-                getColumnWidth={getColumnWidth}
-                prefs={prefs}
-                countryCodesMap={countryCodesMap}
-                countryCodes={countryCodes}
-                contactsMap={contactsMap}
-                allContacts={allContacts}
-                showArchived={showArchived}
-                canWrite={canWrite}
-                canDelete={canDelete}
-                t={t}
-                onSelect={onSelect}
-                onView={onView}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onRestore={onRestore}
-                onWhatsApp={onWhatsApp}
-                onSms={onSms}
-                onEmail={onEmail}
-              />
-            ))}
-          </AnimatePresence>
-        </TableBody>
-      </Table>
+      <div
+        ref={parentRef}
+        className={cn("w-full overflow-x-auto", isVirtualized && "max-h-[600px] overflow-y-auto")}
+      >
+        <Table className="table-fixed">
+          <ContactsTableHeader
+            columns={columns}
+            sortField={sortField}
+            sortDir={sortDir}
+            onSort={onSort}
+            getColumnWidth={getColumnWidth}
+            setColumnWidth={setColumnWidth}
+            allSelected={allSelected}
+            someSelected={someSelected}
+            onSelectAll={onSelectAll}
+            t={t}
+          />
+          <TableBody className="divide-y divide-border/50">
+            {isVirtualized ? (
+              <>
+                {rowVirtualizer.getVirtualItems().length > 0 && (
+                  <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}>
+                    <td colSpan={columns.length + 3} />
+                  </tr>
+                )}
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const contact = contacts[virtualRow.index];
+                  return (
+                    <ContactTableRow
+                      key={contact.id}
+                      contact={contact}
+                      isSelected={selectedSet.has(contact.id)}
+                      columns={columns}
+                      getColumnWidth={getColumnWidth}
+                      prefs={prefs}
+                      countryCodesMap={countryCodesMap}
+                      countryCodes={countryCodes}
+                      contactsMap={contactsMap}
+                      allContacts={allContacts}
+                      showArchived={showArchived}
+                      canWrite={canWrite}
+                      canDelete={canDelete}
+                      t={t}
+                      onSelect={onSelect}
+                      onView={onView}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onRestore={onRestore}
+                      onWhatsApp={onWhatsApp}
+                      onSms={onSms}
+                      onEmail={onEmail}
+                    />
+                  );
+                })}
+                {rowVirtualizer.getVirtualItems().length > 0 && (
+                  <tr
+                    style={{
+                      height: `${
+                        rowVirtualizer.getTotalSize() -
+                        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
+                      }px`,
+                    }}
+                  >
+                    <td colSpan={columns.length + 3} />
+                  </tr>
+                )}
+              </>
+            ) : (
+              <AnimatePresence>
+                {contacts.map((contact) => (
+                  <ContactTableRow
+                    key={contact.id}
+                    contact={contact}
+                    isSelected={selectedSet.has(contact.id)}
+                    columns={columns}
+                    getColumnWidth={getColumnWidth}
+                    prefs={prefs}
+                    countryCodesMap={countryCodesMap}
+                    countryCodes={countryCodes}
+                    contactsMap={contactsMap}
+                    allContacts={allContacts}
+                    showArchived={showArchived}
+                    canWrite={canWrite}
+                    canDelete={canDelete}
+                    t={t}
+                    onSelect={onSelect}
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onRestore={onRestore}
+                    onWhatsApp={onWhatsApp}
+                    onSms={onSms}
+                    onEmail={onEmail}
+                  />
+                ))}
+              </AnimatePresence>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <ModuleTableFooterCount
         selectedCount={selected.length}
