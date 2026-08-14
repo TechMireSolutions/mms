@@ -131,6 +131,8 @@ if [ "${MMS_FORCE_PNPM_INSTALL:-0}" = "1" ] \
     fi
     exit 1
   fi
+  echo "Pruning unreferenced packages from pnpm store to free up disk space..."
+  pnpm store prune
   if [ -n "$CURRENT_LOCK_HASH" ]; then
     printf '%s\n' "$CURRENT_LOCK_HASH" > "$LOCK_HASH_FILE"
   fi
