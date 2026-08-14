@@ -3707,7 +3707,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "platform.sessionAuthenticated": "احراز هویت شده",
   "platform.stackDatabase": "پایگاه داده",
   "platform.stackWebsocket": "همگام‌سازی WebSocket",
-  "platform.stackSecurity": "امنیتی",
+  "platform.stackIsolation": "جداسازی مستاجر",
   "platform.adminLimitedDescription": "می‌توانید حساب خود را مدیریت کنید. برای ایجاد یا مدیریت فضاهای کار از یک کاربر برتر پلتفرم بخواهید.",
   "platform.activityLogsTitle": "سوابق فعالیت‌های پلتفرم",
   "platform.activityLogsSubtitle": "تاریخچه حسابرسی اقدامات مدیریتی و رویدادهای امنیتی در سراسر پلتفرم",

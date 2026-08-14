@@ -267,10 +267,10 @@ export function PlatformDashboard(): React.JSX.Element {
               </div>
               <div className="flex items-center justify-between py-1 border-b border-border/40">
                 <span className="text-muted-foreground">{t("platform.stackWebsocket")}</span>
-                <span className="text-success font-bold">Redis 7 Pub/Sub</span>
+                <span className="text-success font-bold">Fastify WebSocket</span>
               </div>
               <div className="flex items-center justify-between py-1">
-                <span className="text-muted-foreground">{t("platform.stackSecurity")}</span>
+                <span className="text-muted-foreground">{t("platform.stackIsolation")}</span>
                 <span className="text-primary font-bold">AsyncLocalStorage</span>
               </div>
             </div>

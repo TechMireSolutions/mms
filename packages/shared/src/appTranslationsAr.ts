@@ -408,7 +408,7 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "platform.sessionAuthenticated": "موثق",
   "platform.stackDatabase": "قاعدة البيانات",
   "platform.stackWebsocket": "مزامنة WebSocket",
-  "platform.stackSecurity": "الأمان",
+  "platform.stackIsolation": "عزل المستأجر",
   "platform.adminLimitedDescription": "يمكنك إدارة حسابك. اطلب من مستخدم خارق في المنصة إنشاء مساحات العمل أو إدارتها.",
   "platform.activityLogsTitle": "سجلات أنشطة المنصة",
   "platform.activityLogsSubtitle": "سجل التدقيق للإجراءات الإدارية والأحداث الأمنية عبر المنصة",

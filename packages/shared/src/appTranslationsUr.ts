@@ -408,7 +408,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "platform.sessionAuthenticated": "تصدیق شدہ",
   "platform.stackDatabase": "ڈیٹا بیس",
   "platform.stackWebsocket": "Websocket مطابقت پذیری",
-  "platform.stackSecurity": "سیکیورٹی",
+  "platform.stackIsolation": "ٹیننٹ آئسولیشن",
   "platform.adminLimitedDescription": "آپ اپنا اکاؤنٹ منظم کر سکتے ہیں۔ ورک اسپیس بنانے یا منظم کرنے کے لیے پلیٹ فارم سپر یوزر سے رابطہ کریں۔",
   "platform.activityLogsTitle": "پلیٹ فارم سرگرمی لاگز",
   "platform.activityLogsSubtitle": "پلیٹ فارم پر انتظامی کارروائیوں اور سیکیورٹی واقعات کا آڈٹ ریکارڈ",

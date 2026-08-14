@@ -393,7 +393,7 @@ export const APP_TRANSLATIONS_EN = {
   "platform.sessionAuthenticated": "Authenticated",
   "platform.stackDatabase": "Database",
   "platform.stackWebsocket": "WebSocket Sync",
-  "platform.stackSecurity": "Security",
+  "platform.stackIsolation": "Tenant Isolation",
   "platform.adminLimitedDescription": "You can manage your account. Contact a platform super-user to request workspace management permissions.",
   "platform.activityLogsTitle": "Platform Activity Logs",
   "platform.activityLogsSubtitle": "Audit trail of administrative actions and security events across the platform",

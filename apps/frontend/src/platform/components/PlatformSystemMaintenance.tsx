@@ -30,8 +30,8 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
         <StatCard
           variant="compact"
           label={t("platform.wsBroadcaster")}
-          value="Redis 7"
-          sub="Pub/Sub Cluster"
+          value="Fastify WebSocket"
+          sub="In-Process"
           icon={Activity}
           accent="success"
         />
