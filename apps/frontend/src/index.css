@@ -120,20 +120,20 @@
   --font-sans: 'Inter', sans-serif;
   --font-display: 'Amiri', serif;
 
-  --background: 40 20% 98%;
-  --foreground: 160 30% 10%;
+  --background: 40 30% 97%;
+  --foreground: 28 50% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 160 30% 10%;
+  --card-foreground: 28 50% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 160 30% 10%;
-  --primary: 160 84% 22%;
+  --popover-foreground: 28 50% 12%;
+  --primary: 42 85% 44%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 42 60% 70%;
-  --secondary-foreground: 160 30% 10%;
-  --muted: 40 15% 94%;
-  --muted-foreground: 160 10% 45%;
-  --accent: 42 60% 70%;
-  --accent-foreground: 160 30% 10%;
+  --secondary: 28 65% 22%;
+  --secondary-foreground: 40 30% 97%;
+  --muted: 40 20% 93%;
+  --muted-foreground: 28 20% 45%;
+  --accent: 42 60% 90%;
+  --accent-foreground: 28 50% 12%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
   --success: 142 71% 36%;
@@ -142,69 +142,69 @@
   --warning-foreground: 0 0% 100%;
   --info: 217 91% 52%;
   --info-foreground: 0 0% 100%;
-  --border: 40 15% 90%;
-  --input: 40 15% 90%;
-  --ring: 160 84% 22%;
-  --chart-1: 160 84% 22%;
-  --chart-2: 42 60% 70%;
-  --chart-3: 160 40% 40%;
-  --chart-4: 42 40% 55%;
-  --chart-5: 160 20% 60%;
+  --border: 40 20% 88%;
+  --input: 40 20% 88%;
+  --ring: 42 85% 44%;
+  --chart-1: 42 88% 46%;
+  --chart-2: 158 72% 38%;
+  --chart-3: 217 91% 54%;
+  --chart-4: 28 75% 48%;
+  --chart-5: 265 60% 55%;
   --radius: 0.625rem;
 
-  --sidebar-background: 160 30% 10%;
-  --sidebar-foreground: 40 15% 85%;
-  --sidebar-primary: 42 60% 70%;
-  --sidebar-primary-foreground: 160 30% 10%;
-  --sidebar-accent: 160 25% 16%;
-  --sidebar-accent-foreground: 40 15% 92%;
-  --sidebar-border: 160 20% 18%;
-  --sidebar-ring: 42 60% 70%;
-  --sidebar-muted-foreground: 160 10% 55%;
+  --sidebar-background: 28 45% 10%;
+  --sidebar-foreground: 40 25% 90%;
+  --sidebar-primary: 42 85% 48%;
+  --sidebar-primary-foreground: 28 50% 10%;
+  --sidebar-accent: 28 35% 16%;
+  --sidebar-accent-foreground: 40 25% 95%;
+  --sidebar-border: 28 30% 18%;
+  --sidebar-ring: 42 85% 48%;
+  --sidebar-muted-foreground: 40 15% 60%;
 }
 
 .dark {
   color-scheme: dark;
-  --background: 160 20% 5%;
-  --foreground: 40 15% 92%;
-  --card: 160 20% 8%;
-  --card-foreground: 40 15% 92%;
-  --popover: 160 20% 8%;
-  --popover-foreground: 40 15% 92%;
-  --primary: 160 60% 40%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 42 40% 50%;
-  --secondary-foreground: 40 15% 92%;
-  --muted: 160 15% 14%;
-  --muted-foreground: 160 10% 55%;
-  --accent: 42 40% 50%;
-  --accent-foreground: 40 15% 92%;
+  --background: 32 35% 7%;
+  --foreground: 40 25% 92%;
+  --card: 32 28% 11%;
+  --card-foreground: 40 25% 92%;
+  --popover: 32 28% 11%;
+  --popover-foreground: 40 25% 92%;
+  --primary: 42 90% 50%;
+  --primary-foreground: 28 65% 10%;
+  --secondary: 38 55% 65%;
+  --secondary-foreground: 32 35% 7%;
+  --muted: 32 20% 15%;
+  --muted-foreground: 40 15% 60%;
+  --accent: 32 20% 16%;
+  --accent-foreground: 40 25% 92%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --success: 142 60% 38%;
+  --success: 158 65% 42%;
   --success-foreground: 0 0% 100%;
   --warning: 32 80% 46%;
   --warning-foreground: 0 0% 100%;
   --info: 217 80% 54%;
   --info-foreground: 0 0% 100%;
-  --border: 160 15% 16%;
-  --input: 160 15% 16%;
-  --ring: 160 60% 40%;
-  --chart-1: 160 60% 40%;
-  --chart-2: 42 40% 50%;
-  --chart-3: 160 30% 50%;
-  --chart-4: 42 30% 45%;
-  --chart-5: 160 15% 50%;
+  --border: 32 20% 18%;
+  --input: 32 20% 18%;
+  --ring: 42 90% 50%;
+  --chart-1: 42 90% 50%;
+  --chart-2: 158 65% 45%;
+  --chart-3: 217 85% 60%;
+  --chart-4: 28 70% 55%;
+  --chart-5: 265 60% 65%;
 
-  --sidebar-background: 160 25% 6%;
-  --sidebar-foreground: 40 15% 85%;
-  --sidebar-primary: 42 50% 60%;
-  --sidebar-primary-foreground: 160 30% 10%;
-  --sidebar-accent: 160 20% 12%;
-  --sidebar-accent-foreground: 40 15% 92%;
-  --sidebar-border: 160 15% 14%;
-  --sidebar-ring: 42 50% 60%;
-  --sidebar-muted-foreground: 160 10% 50%;
+  --sidebar-background: 32 40% 6%;
+  --sidebar-foreground: 40 25% 90%;
+  --sidebar-primary: 42 90% 50%;
+  --sidebar-primary-foreground: 28 65% 10%;
+  --sidebar-accent: 32 25% 12%;
+  --sidebar-accent-foreground: 40 25% 92%;
+  --sidebar-border: 32 20% 15%;
+  --sidebar-ring: 42 90% 50%;
+  --sidebar-muted-foreground: 40 15% 55%;
 }
 
 @layer base {
@@ -274,8 +274,8 @@
 
 .islamic-pattern {
   background-image:
-    radial-gradient(hsl(var(--primary) / 0.07) 1px, transparent 1px),
-    radial-gradient(hsl(var(--secondary) / 0.04) 1px, transparent 1px);
+    radial-gradient(hsl(var(--primary) / 0.08) 1.25px, transparent 1.25px),
+    radial-gradient(hsl(var(--secondary) / 0.05) 1.25px, transparent 1.25px);
   background-size: 28px 28px, 42px 42px;
   background-position: 0 0, 14px 14px;
 }

@@ -166,10 +166,10 @@ export interface OnboardingBrandingInput {
 export const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {
   madrasaName: 'MMS',
   tagline: 'Nurturing Knowledge & Character',
-  primaryColor: '#047857',
-  secondaryColor: '#c2410c',
+  primaryColor: '#d99b00',
+  secondaryColor: '#5c3412',
   cornerStyle: DEFAULT_BRANDING_CORNER_STYLE,
-  logoUrl: '',
+  logoUrl: '/platform-logo.webp',
   faviconUrl: '',
   footerText: '© 2026 MMS. All rights reserved.',
   email: '',

@@ -14,9 +14,12 @@ import { getAppDomain } from '@/lib/config/tenantConfig';
  * Never reads tenant localStorage or customised institution branding.
  * Platform UI is English-only (LTR).
  */
-export const MMS_PLATFORM_BRANDING: BrandingSettings = mergeBrandingSettings(
-  DEFAULT_BRANDING_SETTINGS,
-);
+export const MMS_PLATFORM_BRANDING: BrandingSettings = mergeBrandingSettings({
+  ...DEFAULT_BRANDING_SETTINGS,
+  primaryColor: '#d99b00',
+  secondaryColor: '#5c3412',
+  logoUrl: '/platform-logo.webp',
+});
 
 /** Default global settings on apex (light theme, English). */
 export const MMS_PLATFORM_GLOBAL_SETTINGS: GlobalSettings = mergeGlobalSettings(

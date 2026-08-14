@@ -107,14 +107,16 @@ export function PlatformLogoMark({
     <div
       className={
         isSm
-          ? 'flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-secondary shadow-sm shadow-primary/20 ring-1 ring-white/20'
-          : 'mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary via-primary/90 to-secondary shadow-lg shadow-primary/25 ring-1 ring-white/25 transition-transform hover:scale-105 select-none'
+          ? 'flex h-9 w-9 items-center justify-center rounded-xl bg-card border border-primary/40 p-1 shadow-sm shadow-primary/10 overflow-hidden'
+          : 'mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-card border border-primary/40 p-2 shadow-xl shadow-primary/15 transition-transform hover:scale-105 select-none overflow-hidden'
       }
       aria-hidden
     >
-      <span className={isSm ? 'font-display text-sm font-black text-primary-foreground' : 'font-display text-2xl font-black text-primary-foreground'}>
-        م
-      </span>
+      <img
+        src="/platform-logo.webp"
+        alt="Platform Logo"
+        className="h-full w-full object-contain"
+      />
     </div>
   );
 }
