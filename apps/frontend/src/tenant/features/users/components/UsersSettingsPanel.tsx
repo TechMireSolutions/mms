@@ -1,7 +1,14 @@
 import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Shield } from "lucide-react";
-import { INITIAL_USERS_FIELD_SEED, USERS_TAB_REGISTRY, type UsersSettings } from "@mms/shared";
+import {
+  INITIAL_USERS_FIELD_SEED,
+  USERS_TAB_REGISTRY,
+  isUsersSystemFormField,
+  isUsersSeedFormTab,
+  isUsersLockedEnabledTab,
+  type UsersSettings,
+} from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
@@ -47,7 +54,7 @@ export function UsersSettingsPanel({
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => USERS_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_USERS_FIELD_SEED,
-        isLockedTab: (key) => key === "basic",
+        isLockedTab: isUsersLockedEnabledTab,
       }),
     [fieldsEditor],
   );
@@ -87,7 +94,9 @@ export function UsersSettingsPanel({
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_USERS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+          isCoreField={isUsersSystemFormField}
+          isProtectedTab={isUsersSeedFormTab}
+          isLockedTab={isUsersLockedEnabledTab}
           onStateChange={() => setSaved(false)}
         />
       )}

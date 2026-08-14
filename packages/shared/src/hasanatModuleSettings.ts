@@ -1,5 +1,6 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import { INITIAL_HASANAT_FIELD_SEED } from "./moduleFieldSetupFinance.js";
 
 // ─── Hasanat Module Settings ──────────────────────────────────────────────────
 
@@ -20,11 +21,10 @@ export const DEFAULT_HASANAT_SETTINGS: HasanatSettings = {
   autoApprovePayouts: false,
   defaultViewLayout: "list",
   fields: {
-    recipientClass: { enabled: true, required: false },
-    issuedBy: { enabled: true, required: false },
+    basic: INITIAL_HASANAT_FIELD_SEED.basic.map((f) => ({ ...f })),
   },
   customFields: [],
-  fieldOrder: ["recipientClass", "issuedBy"],
+  fieldOrder: ["denominationId", "recipientType", "recipientName", "recipientClass", "quantity", "issuedDate", "reason", "issuedBy"],
 };
 
 export const DEFAULT_HASANAT_FIELD_DEFS: ModuleFieldDef[] = [

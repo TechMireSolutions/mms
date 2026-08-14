@@ -5,6 +5,9 @@ import {
   SESSIONS_TAB_REGISTRY,
   INITIAL_SESSIONS_FIELD_SEED,
   SESSIONS_MODULE_MANIFEST,
+  isSessionSystemFormField,
+  isSessionSeedFormTab,
+  isSessionLockedEnabledTab,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
@@ -56,7 +59,7 @@ export function SessionsSettings(): React.JSX.Element {
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => SESSIONS_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_SESSIONS_FIELD_SEED,
-        isLockedTab: (key) => key === "basic",
+        isLockedTab: isSessionLockedEnabledTab,
       }),
     [fieldsEditor],
   );
@@ -146,7 +149,9 @@ export function SessionsSettings(): React.JSX.Element {
           {showFields && (
             <ModuleFieldsSetup
               editor={wrappedFieldsEditor}
-              isCoreField={(tabId, key) => INITIAL_SESSIONS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+              isCoreField={isSessionSystemFormField}
+              isProtectedTab={isSessionSeedFormTab}
+              isLockedTab={isSessionLockedEnabledTab}
               onStateChange={() => setSaved(false)}
             />
           )}

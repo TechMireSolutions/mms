@@ -1,8 +1,84 @@
 import { z } from 'zod';
-import type { TabDefinition } from './contactTypes.js';
+import type { FieldDefinition, TabDefinition } from './contactTypes.js';
 import { DEFAULT_HASANAT_SETTINGS, type HasanatSettings } from './hasanatModuleSettings.js';
 import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import {
+  HASANAT_TAB_REGISTRY,
+  INITIAL_HASANAT_FIELD_SEED,
+} from './moduleFieldSetupFinance.js';
+import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 
+/** Deep clone {@link INITIAL_HASANAT_FIELD_SEED} for default and Setup states. */
+export function cloneHasanatFieldSeed(): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = {};
+  for (const [tabId, fields] of Object.entries(INITIAL_HASANAT_FIELD_SEED)) {
+    next[tabId] = fields.map((field) => ({ ...field }));
+  }
+  return next;
+}
+
+/** True when `fieldKey` is a core/system field within `tabId`'s seed. */
+export function isHasanatSystemFormField(tabId: string, fieldKey: string): boolean {
+  return INITIAL_HASANAT_FIELD_SEED[tabId]?.some((field) => field.key === fieldKey) ?? false;
+}
+
+/** True when `tabKey` is a seed/system form tab for Hasanat. */
+export function isHasanatSeedFormTab(tabKey: string): boolean {
+  return HASANAT_TAB_REGISTRY.some((tab) => tab.key === tabKey);
+}
+
+/** True when `tabKey` is locked as enabled (Basic Info tab). */
+export function isHasanatLockedEnabledTab(tabKey: string): boolean {
+  return tabKey.toLowerCase() === 'basic';
+}
+
+/**
+ * Resolve Hasanat `settings.fields` to a tabbed Setup Fields map.
+ * Flat legacy `{ fieldId: { enabled, required } }` overlays onto {@link INITIAL_HASANAT_FIELD_SEED}.
+ */
+export function resolveHasanatFieldsMap(
+  fields: Record<string, unknown> | undefined,
+): Record<string, FieldDefinition[]> {
+  if (!fields || typeof fields !== 'object') {
+    return cloneHasanatFieldSeed();
+  }
+  const entries = Object.entries(fields);
+  if (entries.length > 0 && entries.every(([, value]) => Array.isArray(value))) {
+    const tabbed = cloneHasanatFieldSeed();
+    for (const [tabId, tabFields] of entries) {
+      tabbed[tabId] = Array.isArray(tabFields) ? (tabFields as FieldDefinition[]) : [];
+    }
+    for (const [tabId, seedFields] of Object.entries(INITIAL_HASANAT_FIELD_SEED)) {
+      if (!tabbed[tabId]) {
+        tabbed[tabId] = seedFields.map((f) => ({ ...f }));
+      } else {
+        const existingKeys = new Set(tabbed[tabId].map((f) => f.key));
+        for (const seedField of seedFields) {
+          if (!existingKeys.has(seedField.key)) {
+            tabbed[tabId].push({ ...seedField });
+          }
+        }
+      }
+    }
+    return tabbed;
+  }
+
+  const flat = getFlatFieldsConfig(fields);
+  const tabbed = cloneHasanatFieldSeed();
+  for (const tabFields of Object.values(tabbed)) {
+    for (let index = 0; index < tabFields.length; index += 1) {
+      const field = tabFields[index];
+      const flags = flat[field.key];
+      if (!flags) continue;
+      tabFields[index] = {
+        ...field,
+        enabled: flags.enabled !== false,
+        required: flags.required ?? field.required,
+      };
+    }
+  }
+  return tabbed;
+}
 
 /** PUT /api/hasanat/field-config — field registry JSON without prefs keys. */
 export const hasanatFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
@@ -62,7 +138,11 @@ export function normalizeHasanatSettings(raw: unknown): HasanatSettings {
     pointsPerUnit: DEFAULT_HASANAT_SETTINGS.pointsPerUnit, // managed by preferences
     autoApprovePayouts: DEFAULT_HASANAT_SETTINGS.autoApprovePayouts, // managed by preferences
     defaultViewLayout: DEFAULT_HASANAT_SETTINGS.defaultViewLayout, // managed by preferences
-    fields: safe.fields ?? DEFAULT_HASANAT_SETTINGS.fields ?? {},
+    fields: resolveHasanatFieldsMap(
+      safe.fields && typeof safe.fields === 'object' && !Array.isArray(safe.fields)
+        ? (safe.fields as Record<string, unknown>)
+        : undefined,
+    ),
     customFields: safe.customFields ?? DEFAULT_HASANAT_SETTINGS.customFields ?? [],
     fieldOrder: safe.fieldOrder ?? DEFAULT_HASANAT_SETTINGS.fieldOrder ?? [],
     formTabs: safe.formTabs,
@@ -93,8 +173,6 @@ export function stripHasanatFieldConfigForPersist(
   const { pointsPerUnit, autoApprovePayouts, defaultViewLayout, ...fieldConfigOnly } = config;
   return fieldConfigOnly;
 }
-
-import { HASANAT_TAB_REGISTRY } from './moduleFieldSetupFinance.js';
 
 export function mergeHasanatFormTabsFromApi(
   documentFormTabs: TabDefinition[] | undefined,

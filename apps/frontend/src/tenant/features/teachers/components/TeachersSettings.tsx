@@ -1,5 +1,5 @@
 import { type TeachersSettings } from "@mms/shared";
-import React, { lazy, Suspense, useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { School } from "lucide-react";
 import {
   TEACHERS_TAB_REGISTRY,
@@ -19,7 +19,6 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
-import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
@@ -29,16 +28,9 @@ import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEd
 import { useTeachersSetupSaveActions } from "@/tenant/features/teachers/hooks/useTeachersSetupSaveActions";
 import { TeachersPreferencesSection } from "@/tenant/features/teachers/components/TeachersPreferencesSection";
 
-const TeachersSettingsLookupsPanel = lazy(() =>
-  import("@/tenant/features/teachers/components/TeachersSettingsLookupsPanel").then((mod) => ({
-    default: mod.TeachersSettingsLookupsPanel,
-  })),
-);
-
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
   fields: "teachers.setup.fields",
   preferences: "teachers.setup.preferences",
-  lookups: "teachers.setup.lookups",
 };
 
 export function TeachersSettings(): React.JSX.Element {
@@ -88,7 +80,6 @@ export function TeachersSettings(): React.JSX.Element {
 
   const showFields = subTabs.showFields;
   const showPrefs = subTabs.showPrefs;
-  const showLookups = subTabs.showLookups;
 
   const {
     saving,
@@ -161,23 +152,15 @@ export function TeachersSettings(): React.JSX.Element {
               />
             )}
 
-            {showLookups ? (
-              <Suspense fallback={<ModulePanelSuspenseFallback />}>
-                <TeachersSettingsLookupsPanel />
-              </Suspense>
-            ) : null}
-
-            {!showLookups ? (
-              <ModuleSetupSaveFooter
-                dirty={isDirty}
-                saving={saving}
-                saved={saved}
-                unsavedWarning={unsavedWarning}
-                saveLabel={t("common.save")}
-                savedLabel={t("settings.savedBadge")}
-                onSave={handleSave}
-              />
-            ) : null}
+            <ModuleSetupSaveFooter
+              dirty={isDirty}
+              saving={saving}
+              saved={saved}
+              unsavedWarning={unsavedWarning}
+              saveLabel={t("common.save")}
+              savedLabel={t("settings.savedBadge")}
+              onSave={handleSave}
+            />
           </div>
         </SectionCard>
       )}

@@ -5,6 +5,9 @@ import {
   ENROLLMENTS_TAB_REGISTRY,
   INITIAL_ENROLLMENTS_FIELD_SEED,
   ENROLLMENTS_MODULE_MANIFEST,
+  isEnrollmentSystemFormField,
+  isEnrollmentSeedFormTab,
+  isEnrollmentLockedEnabledTab,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
@@ -53,7 +56,7 @@ export function EnrollmentsSettings(): React.JSX.Element {
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => ENROLLMENTS_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_ENROLLMENTS_FIELD_SEED,
-        isLockedTab: (key) => key === "basic",
+        isLockedTab: isEnrollmentLockedEnabledTab,
       }),
     [fieldsEditor],
   );
@@ -197,7 +200,9 @@ export function EnrollmentsSettings(): React.JSX.Element {
           {showFields && (
             <ModuleFieldsSetup
               editor={wrappedFieldsEditor}
-              isCoreField={(tabId, key) => INITIAL_ENROLLMENTS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+              isCoreField={isEnrollmentSystemFormField}
+              isProtectedTab={isEnrollmentSeedFormTab}
+              isLockedTab={isEnrollmentLockedEnabledTab}
               onStateChange={() => setSaved(false)}
             />
           )}

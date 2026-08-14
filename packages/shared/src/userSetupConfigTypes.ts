@@ -4,9 +4,85 @@ import {
   DEFAULT_USERS_SETTINGS,
   type UsersSettings,
 } from './usersModuleSettings.js';
-import { USERS_TAB_REGISTRY } from './moduleFieldSetupPersons.js';
+import {
+  USERS_TAB_REGISTRY,
+  INITIAL_USERS_FIELD_SEED,
+} from './moduleFieldSetupPersons.js';
+import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
 import type { WorkspaceRole } from './userEntityTypes.js';
+
+/** Deep clone {@link INITIAL_USERS_FIELD_SEED} for default and Setup states. */
+export function cloneUsersFieldSeed(): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = {};
+  for (const [tabId, fields] of Object.entries(INITIAL_USERS_FIELD_SEED)) {
+    next[tabId] = fields.map((field) => ({ ...field }));
+  }
+  return next;
+}
+
+/** True when `fieldKey` is a core/system field within `tabId`'s seed. */
+export function isUsersSystemFormField(tabId: string, fieldKey: string): boolean {
+  return INITIAL_USERS_FIELD_SEED[tabId]?.some((field) => field.key === fieldKey) ?? false;
+}
+
+/** True when `tabKey` is a seed/system form tab for Users. */
+export function isUsersSeedFormTab(tabKey: string): boolean {
+  return USERS_TAB_REGISTRY.some((tab) => tab.key === tabKey);
+}
+
+/** True when `tabKey` is locked as enabled (Basic Account Info Setup tab). */
+export function isUsersLockedEnabledTab(tabKey: string): boolean {
+  return tabKey.toLowerCase() === 'basic';
+}
+
+/**
+ * Resolve Users `settings.fields` to a tabbed Setup Fields map.
+ * Flat legacy `{ fieldId: { enabled, required } }` overlays onto {@link INITIAL_USERS_FIELD_SEED}.
+ */
+export function resolveUsersFieldsMap(
+  fields: Record<string, unknown> | undefined,
+): Record<string, FieldDefinition[]> {
+  if (!fields || typeof fields !== 'object') {
+    return cloneUsersFieldSeed();
+  }
+  const entries = Object.entries(fields);
+  if (entries.length > 0 && entries.every(([, value]) => Array.isArray(value))) {
+    const tabbed = cloneUsersFieldSeed();
+    for (const [tabId, tabFields] of entries) {
+      tabbed[tabId] = Array.isArray(tabFields) ? (tabFields as FieldDefinition[]) : [];
+    }
+    for (const [tabId, seedFields] of Object.entries(INITIAL_USERS_FIELD_SEED)) {
+      if (!tabbed[tabId]) {
+        tabbed[tabId] = seedFields.map((f) => ({ ...f }));
+      } else {
+        const existingKeys = new Set(tabbed[tabId].map((f) => f.key));
+        for (const seedField of seedFields) {
+          if (!existingKeys.has(seedField.key)) {
+            tabbed[tabId].push({ ...seedField });
+          }
+        }
+      }
+    }
+    return tabbed;
+  }
+
+  const flat = getFlatFieldsConfig(fields);
+  const tabbed = cloneUsersFieldSeed();
+  for (const tabFields of Object.values(tabbed)) {
+    for (let index = 0; index < tabFields.length; index += 1) {
+      const field = tabFields[index];
+      const flags = flat[field.key];
+      if (!flags) continue;
+      tabFields[index] = {
+        ...field,
+        enabled: flags.enabled !== false,
+        required: flags.required ?? field.required,
+      };
+    }
+  }
+  return tabbed;
+}
 
 /** PUT /api/users/field-config — field registry JSON without formTabs SSOT. */
 export const userFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
@@ -123,10 +199,11 @@ export function normalizeUsersSettings(config: unknown): UsersSettings {
     requiredTabs: Array.isArray(raw.requiredTabs)
       ? (raw.requiredTabs as string[])
       : (raw.requiredTabs as string[] | undefined),
-    fields:
-      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields) && Object.keys(raw.fields).length > 0
-        ? (raw.fields as UsersSettings['fields'])
-        : defaults.fields,
+    fields: resolveUsersFieldsMap(
+      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields)
+        ? (raw.fields as Record<string, unknown>)
+        : undefined,
+    ),
   };
 }
 

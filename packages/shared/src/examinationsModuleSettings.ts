@@ -1,5 +1,6 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import { INITIAL_EXAMINATIONS_FIELD_SEED } from "./moduleFieldSetupAcademic.js";
 
 // ─── Examinations Module Settings ─────────────────────────────────────────────
 
@@ -8,25 +9,25 @@ import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
  * Stored under the key "examinations_settings".
  */
 export interface ExaminationsSettings {
-  /** Minimum mark required to pass. */
+  /** Default passing mark threshold, e.g. "50". */
   passMark: string;
-  /** Maximum achievable mark. */
+  /** Maximum possible mark for exams, e.g. "100". */
   maxMark: string;
-  /** Grading system: "percentage" | "gpa" | "letter" | "custom". */
+  /** Grading scheme: "percentage" | "letter" | "gpa" | "rubric". */
   gradingSystem: string;
-  /** Whether student rankings are displayed on result cards. */
+  /** Whether student class rankings are calculated and shown on reports. */
   showRankings: boolean;
-  /** Whether students can retake failed exams. */
+  /** Whether students who failed an exam can take a retake. */
   allowRetake: boolean;
-  /** Whether results are published immediately after grading. */
+  /** Whether exam results are immediately visible to students upon entry. */
   autoPublishResults: boolean;
-  /** Whether students/guardians receive a notification when results are published. */
+  /** Whether an SMS/email notification is sent to guardians upon result entry. */
   notifyOnResult: boolean;
-  /** Certificate template identifier. */
+  /** Certificate/transcript layout template identifier. */
   certificateTemplate: string;
-  /** Whether AI-assisted grading is enabled. */
+  /** Whether AI-assisted rubric grading is enabled. */
   aiGrading: boolean;
-  /** Whether honours/distinction are awarded to high scorers. */
+  /** Whether distinction / honours badges are assigned for top performers. */
   distinguishHonours: boolean;
   /** Whether exam reminder notifications are sent to students/guardians. */
   examReminders: boolean;
@@ -54,15 +55,10 @@ export const DEFAULT_EXAMINATIONS_SETTINGS: ExaminationsSettings = {
   examReminders: true,
   defaultViewLayout: "list",
   fields: {
-    subject: { enabled: true, required: true },
-    status: { enabled: true, required: true },
-    totalMarks: { enabled: true, required: false },
-    passingMarks: { enabled: true, required: false },
-    duration: { enabled: true, required: false },
-    description: { enabled: true, required: false },
+    basic: INITIAL_EXAMINATIONS_FIELD_SEED.basic.map((f) => ({ ...f })),
   },
   customFields: [],
-  fieldOrder: ["subject", "status", "totalMarks", "passingMarks", "duration", "description"],
+  fieldOrder: ["name", "subject", "status", "totalMarks", "passingMarks", "duration", "date", "classIds", "description"],
 };
 
 export const DEFAULT_EXAMINATIONS_FIELD_DEFS: ModuleFieldDef[] = [

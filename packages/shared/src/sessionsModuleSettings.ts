@@ -1,5 +1,6 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import { INITIAL_SESSIONS_FIELD_SEED } from "./moduleFieldSetupAcademic.js";
 
 // ─── Sessions Module Settings ─────────────────────────────────────────────────
 
@@ -48,14 +49,11 @@ export const DEFAULT_SESSIONS_SETTINGS: SessionsSettings = {
   sessionStart: "april",
   defaultViewLayout: "table",
   fields: {
-    type: { enabled: true, required: true },
-    status: { enabled: true, required: true },
-    baseFee: { enabled: true, required: true },
-    currency: { enabled: true, required: true },
-    description: { enabled: true, required: false },
+    basic: INITIAL_SESSIONS_FIELD_SEED.basic.map((f) => ({ ...f })),
+    financial: INITIAL_SESSIONS_FIELD_SEED.financial.map((f) => ({ ...f })),
   },
   customFields: [],
-  fieldOrder: ["type", "status", "baseFee", "currency", "description"],
+  fieldOrder: ["name", "type", "status", "startDate", "endDate", "baseFee", "currency", "description"],
 };
 
 export const DEFAULT_SESSIONS_FIELD_DEFS: ModuleFieldDef[] = [

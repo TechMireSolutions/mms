@@ -5,6 +5,9 @@ import { Save, FileText } from "lucide-react";
 import {
   EXAMINATIONS_TAB_REGISTRY,
   INITIAL_EXAMINATIONS_FIELD_SEED,
+  isExaminationSystemFormField,
+  isExaminationSeedFormTab,
+  isExaminationLockedEnabledTab,
 } from "@mms/shared";
 import { useExaminationConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -59,7 +62,7 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => EXAMINATIONS_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_EXAMINATIONS_FIELD_SEED,
-        isLockedTab: (key) => key === "basic",
+        isLockedTab: isExaminationLockedEnabledTab,
       }),
     [fieldsEditor],
   );
@@ -139,7 +142,9 @@ export function ExaminationsSettings({ mode }: ExaminationsSettingsProps): React
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_EXAMINATIONS_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+          isCoreField={isExaminationSystemFormField}
+          isProtectedTab={isExaminationSeedFormTab}
+          isLockedTab={isExaminationLockedEnabledTab}
           onStateChange={() => setSaved(false)}
         />
       )}

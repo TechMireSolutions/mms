@@ -1,5 +1,6 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import { INITIAL_ACCOUNTING_FIELD_SEED } from "./moduleFieldSetupFinance.js";
 
 // ─── Accounting Settings ─────────────────────────────────────────────────────
 
@@ -40,11 +41,10 @@ export const DEFAULT_ACCOUNTING_SETTINGS: AccountingSettings = {
   organizationName: "Al-Madrasa Al-Islamiyya",
   defaultViewLayout: "list",
   fields: {
-    subtype: { enabled: true, required: false },
-    description: { enabled: true, required: false },
+    basic: INITIAL_ACCOUNTING_FIELD_SEED.basic.map((f) => ({ ...f })),
   },
   customFields: [],
-  fieldOrder: ["subtype", "description"],
+  fieldOrder: ["code", "type", "name", "subtype", "description"],
 };
 
 export const DEFAULT_ACCOUNT_FIELD_DEFS: ModuleFieldDef[] = [

@@ -48,13 +48,8 @@ export const DEFAULT_QUESTION_BANK_SETTINGS: QuestionBankSettings = {
   ],
   defaultViewLayout: 'list',
   fields: {
-    text: { enabled: true, required: true },
-    categoryId: { enabled: true, required: true },
-    questionLanguage: { enabled: true, required: true },
-    type: { enabled: true, required: true },
-    difficulty: { enabled: true, required: true },
-    options: { enabled: true, required: false },
-    answer: { enabled: true, required: false },
+    basic: INITIAL_QUESTION_BANK_FIELD_SEED.basic.map((f) => ({ ...f })),
+    options: INITIAL_QUESTION_BANK_FIELD_SEED.options.map((f) => ({ ...f })),
   },
   customFields: [],
   fieldOrder: [

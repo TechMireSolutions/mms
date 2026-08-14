@@ -1,5 +1,6 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import { INITIAL_ENROLLMENTS_FIELD_SEED } from "./moduleFieldSetupAcademic.js";
 
 // ─── Enrollments Module Settings ──────────────────────────────────────────────
 
@@ -45,10 +46,10 @@ export const DEFAULT_ENROLLMENTS_SETTINGS: EnrollmentsSettings = {
   reenrollmentReminder: true,
   defaultViewLayout: "list",
   fields: {
-    notes: { enabled: true, required: false },
+    basic: INITIAL_ENROLLMENTS_FIELD_SEED.basic.map((f) => ({ ...f })),
   },
   customFields: [],
-  fieldOrder: ["notes"],
+  fieldOrder: ["studentId", "sessionId", "classId", "notes"],
 };
 
 export const DEFAULT_ENROLLMENTS_FIELD_DEFS: ModuleFieldDef[] = [

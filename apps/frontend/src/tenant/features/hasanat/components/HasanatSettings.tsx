@@ -5,6 +5,9 @@ import { Save, Star } from "lucide-react";
 import {
   HASANAT_TAB_REGISTRY,
   INITIAL_HASANAT_FIELD_SEED,
+  isHasanatSystemFormField,
+  isHasanatSeedFormTab,
+  isHasanatLockedEnabledTab,
 } from "@mms/shared";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -58,7 +61,7 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => HASANAT_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_HASANAT_FIELD_SEED,
-        isLockedTab: (key) => key === "basic",
+        isLockedTab: isHasanatLockedEnabledTab,
       }),
     [fieldsEditor],
   );
@@ -102,7 +105,9 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_HASANAT_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+          isCoreField={isHasanatSystemFormField}
+          isProtectedTab={isHasanatSeedFormTab}
+          isLockedTab={isHasanatLockedEnabledTab}
           onStateChange={() => setSaved(false)}
         />
       )}

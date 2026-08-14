@@ -8,6 +8,9 @@ import {
   type QuestionTypeRegistryEntry,
   QUESTION_BANK_TAB_REGISTRY,
   INITIAL_QUESTION_BANK_FIELD_SEED,
+  isQuestionBankSystemFormField,
+  isQuestionBankSeedFormTab,
+  isQuestionBankLockedEnabledTab,
   type AppTranslationKey,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -118,7 +121,7 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => QUESTION_BANK_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_QUESTION_BANK_FIELD_SEED,
-        isLockedTab: (key) => key === "basic",
+        isLockedTab: isQuestionBankLockedEnabledTab,
       }),
     [fieldsEditor],
   );
@@ -220,7 +223,9 @@ export function QuestionBankSettings({ mode }: QuestionBankSettingsProps): React
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_QUESTION_BANK_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+          isCoreField={isQuestionBankSystemFormField}
+          isProtectedTab={isQuestionBankSeedFormTab}
+          isLockedTab={isQuestionBankLockedEnabledTab}
           onStateChange={() => setFieldsDirty(true)}
         />
       )}

@@ -1,5 +1,6 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import { INITIAL_FINANCE_FIELD_SEED } from "./moduleFieldSetupFinance.js";
 
 // ─── Finance Module Settings ──────────────────────────────────────────────────
 
@@ -42,13 +43,10 @@ export const DEFAULT_FINANCE_SETTINGS: FinanceSettings = {
   feeReminders: true,
   defaultViewLayout: "list",
   fields: {
-    method: { enabled: true, required: true },
-    date: { enabled: true, required: true },
-    receivedBy: { enabled: true, required: false },
-    note: { enabled: true, required: false },
+    basic: INITIAL_FINANCE_FIELD_SEED.basic.map((f) => ({ ...f })),
   },
   customFields: [],
-  fieldOrder: ["method", "date", "receivedBy", "note"],
+  fieldOrder: ["studentId", "amount", "dueDate", "status"],
 };
 
 export const DEFAULT_FINANCE_FIELD_DEFS: ModuleFieldDef[] = [

@@ -1,12 +1,93 @@
 import { z } from 'zod';
-import { DEFAULT_QUESTION_BANK_SETTINGS, type QuestionBankSettings } from './questionBankModuleSettings.js';
+import type { FieldDefinition, TabDefinition } from './contactTypes.js';
+import {
+  DEFAULT_QUESTION_BANK_SETTINGS,
+  type QuestionBankSettings,
+} from './questionBankModuleSettings.js';
 import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import {
+  QUESTION_BANK_TAB_REGISTRY,
+  INITIAL_QUESTION_BANK_FIELD_SEED,
+} from './moduleFieldSetupAcademic.js';
+import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import type {
   QuestionCategory,
   QuestionSourceBook,
   QuestionTypeRegistryEntry,
   QuestionDifficultyRegistryEntry,
 } from './questionBankTypes.js';
+
+/** Deep clone {@link INITIAL_QUESTION_BANK_FIELD_SEED} for default and Setup states. */
+export function cloneQuestionBankFieldSeed(): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = {};
+  for (const [tabId, fields] of Object.entries(INITIAL_QUESTION_BANK_FIELD_SEED)) {
+    next[tabId] = fields.map((field) => ({ ...field }));
+  }
+  return next;
+}
+
+/** True when `fieldKey` is a core/system field within `tabId`'s seed. */
+export function isQuestionBankSystemFormField(tabId: string, fieldKey: string): boolean {
+  return INITIAL_QUESTION_BANK_FIELD_SEED[tabId]?.some((field) => field.key === fieldKey) ?? false;
+}
+
+/** True when `tabKey` is a seed/system form tab for Question Bank. */
+export function isQuestionBankSeedFormTab(tabKey: string): boolean {
+  return QUESTION_BANK_TAB_REGISTRY.some((tab) => tab.key === tabKey);
+}
+
+/** True when `tabKey` is locked as enabled (Basic Setup tab). */
+export function isQuestionBankLockedEnabledTab(tabKey: string): boolean {
+  return tabKey.toLowerCase() === 'basic';
+}
+
+/**
+ * Resolve Question Bank `settings.fields` to a tabbed Setup Fields map.
+ * Flat legacy `{ fieldId: { enabled, required } }` overlays onto {@link INITIAL_QUESTION_BANK_FIELD_SEED}.
+ */
+export function resolveQuestionBankFieldsMap(
+  fields: Record<string, unknown> | undefined,
+): Record<string, FieldDefinition[]> {
+  if (!fields || typeof fields !== 'object') {
+    return cloneQuestionBankFieldSeed();
+  }
+  const entries = Object.entries(fields);
+  if (entries.length > 0 && entries.every(([, value]) => Array.isArray(value))) {
+    const tabbed = cloneQuestionBankFieldSeed();
+    for (const [tabId, tabFields] of entries) {
+      tabbed[tabId] = Array.isArray(tabFields) ? (tabFields as FieldDefinition[]) : [];
+    }
+    for (const [tabId, seedFields] of Object.entries(INITIAL_QUESTION_BANK_FIELD_SEED)) {
+      if (!tabbed[tabId]) {
+        tabbed[tabId] = seedFields.map((f) => ({ ...f }));
+      } else {
+        const existingKeys = new Set(tabbed[tabId].map((f) => f.key));
+        for (const seedField of seedFields) {
+          if (!existingKeys.has(seedField.key)) {
+            tabbed[tabId].push({ ...seedField });
+          }
+        }
+      }
+    }
+    return tabbed;
+  }
+
+  const flat = getFlatFieldsConfig(fields);
+  const tabbed = cloneQuestionBankFieldSeed();
+  for (const tabFields of Object.values(tabbed)) {
+    for (let index = 0; index < tabFields.length; index += 1) {
+      const field = tabFields[index];
+      const flags = flat[field.key];
+      if (!flags) continue;
+      tabFields[index] = {
+        ...field,
+        enabled: flags.enabled !== false,
+        required: flags.required ?? field.required,
+      };
+    }
+  }
+  return tabbed;
+}
 
 /** PUT /api/question-bank/config/fields — field registry JSON without prefs keys. */
 export const questionBankFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
@@ -75,7 +156,11 @@ export function normalizeQuestionBankFieldConfigOnly(raw: unknown): QuestionBank
     aiGrading: DEFAULT_QUESTION_BANK_SETTINGS.aiGrading ?? false,
     defaultTestDuration: DEFAULT_QUESTION_BANK_SETTINGS.defaultTestDuration ?? 30,
     categories: DEFAULT_QUESTION_BANK_SETTINGS.categories ?? [],
-    fields: safe.fields ?? DEFAULT_QUESTION_BANK_SETTINGS.fields ?? {},
+    fields: resolveQuestionBankFieldsMap(
+      safe.fields && typeof safe.fields === 'object' && !Array.isArray(safe.fields)
+        ? (safe.fields as Record<string, unknown>)
+        : undefined,
+    ),
     customFields: safe.customFields ?? DEFAULT_QUESTION_BANK_SETTINGS.customFields ?? [],
     fieldOrder: safe.fieldOrder ?? DEFAULT_QUESTION_BANK_SETTINGS.fieldOrder ?? [],
   };

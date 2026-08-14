@@ -72,7 +72,7 @@ export const TEACHERS_MODULE_MANIFEST = {
   restBasePath: '/api/teachers',
   analyticsCategory: 'teachers',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['fields', 'preferences', 'lookups'] as const,
+  setupSubTabs: ['fields', 'preferences'] as const,
   permissions: {
     read: 'teachers.read',
     write: 'teachers.write',

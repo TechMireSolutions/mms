@@ -5,6 +5,9 @@ import {
   ACCOUNTING_TAB_REGISTRY,
   INITIAL_ACCOUNTING_FIELD_SEED,
   ACCOUNTING_MODULE_MANIFEST,
+  isAccountingSystemFormField,
+  isAccountingSeedFormTab,
+  isAccountingLockedEnabledTab,
 } from "@mms/shared";
 import {
   CheckCircle2, Save, BookOpen
@@ -19,6 +22,7 @@ import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { AccountingFiscalYearModal } from "./AccountingFiscalYearModal";
@@ -59,6 +63,19 @@ export function AccountingSettings({
     config,
     tabRegistry: ACCOUNTING_TAB_REGISTRY,
   });
+
+  const wrappedFieldsEditor = useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => ACCOUNTING_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_ACCOUNTING_FIELD_SEED,
+        isLockedTab: isAccountingLockedEnabledTab,
+      }),
+    [fieldsEditor],
+  );
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
   const settingsSubTabs = useMemo(
     () => ACCOUNTING_MODULE_MANIFEST.setupSubTabs.map((key) => ({
@@ -137,8 +154,10 @@ export function AccountingSettings({
 
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_ACCOUNTING_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+          editor={wrappedFieldsEditor}
+          isCoreField={isAccountingSystemFormField}
+          isProtectedTab={isAccountingSeedFormTab}
+          isLockedTab={isAccountingLockedEnabledTab}
           onStateChange={() => setSaved(false)}
         />
       )}

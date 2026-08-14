@@ -5,6 +5,9 @@ import {
   ATTENDANCE_TAB_REGISTRY,
   ATTENDANCE_MODULE_MANIFEST,
   INITIAL_ATTENDANCE_FIELD_SEED,
+  isAttendanceSystemFormField,
+  isAttendanceSeedFormTab,
+  isAttendanceLockedEnabledTab,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
@@ -58,7 +61,7 @@ export function AttendanceSettings() {
         handleDeleteTab: fieldsEditor.handleDeleteTab,
         getSeedTab: (key) => ATTENDANCE_TAB_REGISTRY.find((tab) => tab.key === key),
         initialFieldSeed: INITIAL_ATTENDANCE_FIELD_SEED,
-        isLockedTab: (key) => key === "basic",
+        isLockedTab: isAttendanceLockedEnabledTab,
       }),
     [fieldsEditor],
   );
@@ -91,7 +94,9 @@ export function AttendanceSettings() {
       {showFields && (
         <ModuleFieldsSetup
           editor={wrappedFieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_ATTENDANCE_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+          isCoreField={isAttendanceSystemFormField}
+          isProtectedTab={isAttendanceSeedFormTab}
+          isLockedTab={isAttendanceLockedEnabledTab}
           onStateChange={() => setSaved(false)}
         />
       )}

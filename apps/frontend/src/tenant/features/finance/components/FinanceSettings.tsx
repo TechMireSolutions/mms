@@ -8,6 +8,9 @@ import {
   INITIAL_FINANCE_FIELD_SEED,
   DEFAULT_CURRENCIES,
   FINANCE_MODULE_MANIFEST,
+  isFinanceSystemFormField,
+  isFinanceSeedFormTab,
+  isFinanceLockedEnabledTab,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -20,6 +23,7 @@ import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 
 const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
@@ -43,6 +47,19 @@ export function FinanceSettings(): React.ReactElement {
     config,
     tabRegistry: FINANCE_TAB_REGISTRY,
   });
+
+  const wrappedFieldsEditor = useMemo(
+    () =>
+      wrapModuleSetupFieldsEditor({
+        fieldsEditor,
+        handleDeleteField: fieldsEditor.handleDeleteField,
+        handleDeleteTab: fieldsEditor.handleDeleteTab,
+        getSeedTab: (key) => FINANCE_TAB_REGISTRY.find((tab) => tab.key === key),
+        initialFieldSeed: INITIAL_FINANCE_FIELD_SEED,
+        isLockedTab: isFinanceLockedEnabledTab,
+      }),
+    [fieldsEditor],
+  );
 
   const handleSave = async (): Promise<void> => {
     try {
@@ -190,8 +207,10 @@ export function FinanceSettings(): React.ReactElement {
 
       {showFields && (
         <ModuleFieldsSetup
-          editor={fieldsEditor}
-          isCoreField={(tabId, key) => INITIAL_FINANCE_FIELD_SEED[tabId]?.some((field) => field.key === key) ?? false}
+          editor={wrappedFieldsEditor}
+          isCoreField={isFinanceSystemFormField}
+          isProtectedTab={isFinanceSeedFormTab}
+          isLockedTab={isFinanceLockedEnabledTab}
           onStateChange={() => setSaved(false)}
         />
       )}

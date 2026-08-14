@@ -4,9 +4,80 @@ import {
   DEFAULT_SESSIONS_SETTINGS,
   type SessionsSettings,
 } from './sessionsModuleSettings.js';
-import { SESSIONS_TAB_REGISTRY } from './moduleFieldSetupAcademic.js';
+import {
+  SESSIONS_TAB_REGISTRY,
+  INITIAL_SESSIONS_FIELD_SEED,
+} from './moduleFieldSetupAcademic.js';
+import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
 import { normalizeSessionsViewLayout } from './sessionsExportUtils.js';
+
+/** Deep clone {@link INITIAL_SESSIONS_FIELD_SEED} for default and Setup states. */
+export function cloneSessionFieldSeed(): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = {};
+  for (const [tabId, fields] of Object.entries(INITIAL_SESSIONS_FIELD_SEED)) {
+    next[tabId] = fields.map((field) => ({ ...field }));
+  }
+  return next;
+}
+
+/** True when `tabKey` is a seed/system form tab for Sessions. */
+export function isSessionSeedFormTab(tabKey: string): boolean {
+  return SESSIONS_TAB_REGISTRY.some((tab) => tab.key === tabKey);
+}
+
+/** True when `tabKey` is locked as enabled (Basic Info tab). */
+export function isSessionLockedEnabledTab(tabKey: string): boolean {
+  return tabKey.toLowerCase() === 'basic';
+}
+
+/**
+ * Resolve Sessions `settings.fields` to a tabbed Setup Fields map.
+ * Flat legacy `{ fieldId: { enabled, required } }` overlays onto {@link INITIAL_SESSIONS_FIELD_SEED}.
+ */
+export function resolveSessionsFieldsMap(
+  fields: Record<string, unknown> | undefined,
+): Record<string, FieldDefinition[]> {
+  if (!fields || typeof fields !== 'object') {
+    return cloneSessionFieldSeed();
+  }
+  const entries = Object.entries(fields);
+  if (entries.length > 0 && entries.every(([, value]) => Array.isArray(value))) {
+    const tabbed = cloneSessionFieldSeed();
+    for (const [tabId, tabFields] of entries) {
+      tabbed[tabId] = Array.isArray(tabFields) ? (tabFields as FieldDefinition[]) : [];
+    }
+    for (const [tabId, seedFields] of Object.entries(INITIAL_SESSIONS_FIELD_SEED)) {
+      if (!tabbed[tabId]) {
+        tabbed[tabId] = seedFields.map((f) => ({ ...f }));
+      } else {
+        const existingKeys = new Set(tabbed[tabId].map((f) => f.key));
+        for (const seedField of seedFields) {
+          if (!existingKeys.has(seedField.key)) {
+            tabbed[tabId].push({ ...seedField });
+          }
+        }
+      }
+    }
+    return tabbed;
+  }
+
+  const flat = getFlatFieldsConfig(fields);
+  const tabbed = cloneSessionFieldSeed();
+  for (const tabFields of Object.values(tabbed)) {
+    for (let index = 0; index < tabFields.length; index += 1) {
+      const field = tabFields[index];
+      const flags = flat[field.key];
+      if (!flags) continue;
+      tabFields[index] = {
+        ...field,
+        enabled: flags.enabled !== false,
+        required: flags.required ?? field.required,
+      };
+    }
+  }
+  return tabbed;
+}
 
 /** PUT /api/sessions/field-config — field registry JSON without formTabs SSOT. */
 export const sessionFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
@@ -166,10 +237,11 @@ export function normalizeSessionsSettings(config: unknown): SessionsSettings {
     requiredTabs: Array.isArray(raw.requiredTabs)
       ? (raw.requiredTabs as string[])
       : (raw.requiredTabs as string[] | undefined),
-    fields:
-      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields) && Object.keys(raw.fields).length > 0
-        ? (raw.fields as SessionsSettings['fields'])
-        : defaults.fields,
+    fields: resolveSessionsFieldsMap(
+      raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields)
+        ? (raw.fields as Record<string, unknown>)
+        : undefined,
+    ),
   };
 }
 
