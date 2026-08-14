@@ -22,7 +22,7 @@ Dedicated REST (/api/{resource})?
 
 Contacts (and other typed person entities): **Query + REST only** — never `saveCollection('contacts')`. Lookups via ContactConfig / `useContactLookups*` + `/api/contacts/lookups` — **never** `saveCollection` for genders/labels/countryCodes.
 
-Query factories SSOT: before hand-rolling per-module `queryOptions` / `mutationOptions`, reuse `apps/frontend/src/lib/query/` — `createModuleCrudMutations`, `createModuleQueryInvalidator`, `createModuleSetupConfigApi`, `createPersonModuleResolveQueries` — and export cross-feature facades from `@/tenant/hooks/collections/{module}`. Module config: `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) via `useStandardModuleConfig` (standard modules) or `useContactStandardConfig` (Contacts richer config) — extend the hook, do not fork providers.
+Query factories SSOT: before hand-rolling per-module `queryOptions` / `mutationOptions`, reuse `apps/frontend/src/lib/query/` — `createModuleCrudMutations`, `createModuleQueryInvalidator`, `createModuleSetupConfigApi`, `createPersonModuleResolveQueries` — and export cross-feature facades from `@/tenant/hooks/collections/{module}` or `@/platform/hooks/collections/{module}`. Module config: `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) via `useStandardModuleConfig` (standard modules) or `useContactStandardConfig` (Contacts richer config) — extend the hook, do not fork providers.
 
 ## Before editing
 
@@ -101,4 +101,4 @@ App-wide only — not module Fields/Preferences. Workflow → **`mms-settings-i1
 
 ## Done
 
-`mms-completion-review.md` — typecheck → FE lint → tests if hooks touched. Layout: spot-check 375 / 768 / 1440. Prefer Query `signal`; no new `useMemo`/`useCallback` by default.
+`mms-completion-review.md` — typecheck → FE lint → tests if hooks touched. Layout: spot-check 375 / 768 / 1440. Prefer Query `signal`; no new `useMemo`/`useCallback` by default (React 19: prefer `useEffectEvent`, `startTransition`, `useDeferredValue`).

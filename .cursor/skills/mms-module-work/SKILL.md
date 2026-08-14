@@ -11,6 +11,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 
 - Contacts: `apps/frontend/src/tenant/features/contacts/ContactsPage.tsx`
 - Soft-delete Work pattern: Students, Teachers, Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, QB questions, Users
+- Platform pattern: Work directories on the platform apex (e.g. Workspaces) follow identical patterns to tenant modules.
 - Variants: Messaging (log clear soft-archive); QB tests/papers + assessment_results (upsert-only)
 - Manifests: `packages/shared/src/*ModuleManifest.ts`
 - Collections hooks: `apps/frontend/src/tenant/hooks/collections/*`
@@ -23,7 +24,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 4. **Filters SSOT**: one Filters menu owns presets/dimensions; no always-visible chip bar that repeats the same options. Build the filter menu with the shared `ModuleFilterDropdown` + `ModuleFilterCheckboxGroup` / `ModuleFilterRadioGroup` (`ModuleFiltersMenuButton`) — do not inline raw `DropdownMenu` filter chrome in Work toolbars. Preset ids + `labelKey`s live in `@mms/shared` next to the list-query schema (Contacts: `CONTACTS_QUICK_FILTER_OPTIONS`). Active state = badge + Clear; `FilterChips` only for removable active multi-selects.
 5. **View mode**: person-directory Work → `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes (finance/attendance/…). Resolve one `viewMode`; defaults/cards paging — rule §3.
 6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET. Prefer **keyset/cursor** for hot/large directories when touching list APIs — `mms-data-layer.mdc`.
-7. `useModulePermissions(manifest)` / `can()` — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` still required).
+7. `useModulePermissions(manifest)` / `can()` (tenant) or `platformUserCan` (platform) — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` / platform guards still required).
 8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** `WarningCallout` archive chrome + Restore + `DrawerSyncStatusFooter` (shared synced/archived footer); hide Call/WA/SMS/Email when `deletedAt`.
 9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `ModuleWorkDirectoryEmpty` (`title` via `t()`; `compact` when dense; Clear Filters / Show Active CTAs — Teachers uses `teachers.noTeachersMatchFilters` / `teachers.noDeletedTeachers` / `teachers.tryAdjustingFilters` / `teachers.clickAddTeacher` / `teachers.emptyDirectoryReadOnly` / `teachers.clearFilters`); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate). Pass `isColumnVisible` through content — ban `visibleColumns` boolean object fans.
@@ -35,8 +36,8 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 ## Checklist
 
 ```
-- [ ] PageHeader visible on all tiers; metrics permission-scoped
-- [ ] Create omitted when !canWrite; Cmd/Ctrl+N when allowed
+- [ ] PageHeader visible on all tiers; metrics permission-scoped (tenant or platform)
+- [ ] Create omitted when !canWrite (or !platformUserCan); Cmd/Ctrl+N when allowed
 - [ ] Server pagination / metrics — no unbounded client lists / no `loadAllFn`
 - [ ] Hot/large directories: keyset preference when touching list APIs
 - [ ] Person-directory: `directoryViews: ['table','cards']`; cards + table same page API

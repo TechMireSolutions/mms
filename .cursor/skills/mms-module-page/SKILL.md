@@ -20,14 +20,14 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 | §7 | Gold-standard parity | checklist below |
 | Reports | Analytics / export | skill **`mms-reports-export`** |
 
-Modules live under `apps/frontend/src/tenant/features/{module}/` (lazy route in `HostRoutes` / tenant routes — not legacy `src/pages/`).
+Modules live under `apps/frontend/src/tenant/features/{module}/` (tenant) or `apps/frontend/src/platform/features/{module}/` (platform). Both use identical three-tier structures.
 
 ## Workflow
 
 1. Add `packages/shared/src/{module}ModuleManifest.ts` (`moduleId`, tiers, permissions, `work.directoryViews`, `setupSubTabs`, `softDelete`).
 2. Person-directory Work: `directoryViews: ['table','cards']` (never `list`). Domain modules keep their own sub-modes — `mms-module-work`.
-3. Scaffold `{Module}Page.tsx` + `use{Module}PageController` under `tenant/features/{module}/`.
-4. Wire nav: `navConfig.tsx` + `SYSTEM_MODULES` / `SYSTEM_MODULE_NAV`.
+3. Scaffold `{Module}Page.tsx` + `use{Module}PageController` under `tenant/features/{module}/` or `platform/features/{module}/`.
+4. Wire nav: `navConfig.tsx` + `SYSTEM_MODULES` / `SYSTEM_MODULE_NAV` (tenant) or platform routing.
 5. Shell: `PageHeader` (always visible) + `ResponsiveAccordionTabs` + `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`.
 6. Work → skill **`mms-module-work`**. Reports → **`mms-reports-export`**. Setup → **`mms-module-setup`**.
 7. Data: REST Query-first via **`mms-query-factories`** — no new `useLiveCollection` for REST entities.

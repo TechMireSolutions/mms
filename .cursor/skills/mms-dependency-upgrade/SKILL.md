@@ -17,7 +17,7 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 4. `pnpm install` then `pnpm audit` (or OSV) — fix/document high+ findings. Prefer `onlyBuiltDependencies` allowlist so arbitrary postinstall scripts stay off.
 5. Read upstream major migration guides before landing breaking API changes.
 6. `pnpm typecheck && pnpm test` + FE/BE lint when those apps changed.
-7. **React Compiler** (only if enabling): Babel/Vite plugin in `apps/frontend` Vite config only → add `eslint-plugin-react-compiler` → delete redundant `useMemo`/`useCallback`/`React.memo` → update stack note in `mms-core.mdc` / this rule.
+7. **React Compiler** (only if enabling): Babel/Vite plugin in `apps/frontend` Vite config only → add `eslint-plugin-react-compiler` → delete redundant `useMemo`/`useCallback`/`React.memo` in **both tenant and platform** code → update stack note in `mms-core.mdc` / this rule.
 8. Keep GitHub `dependency-review` green on the PR.
 9. Do not enable `exactOptionalPropertyTypes` mid-feature — dedicated TS-strictness PR only (`mms-dependencies.mdc`).
 

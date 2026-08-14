@@ -13,7 +13,7 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 
 1. `FormModal` for create/edit/builders; raw `Modal` for confirm/preview only.
 2. Primitives + `formStyles` (`FORM_INPUT`, `FORM_ERROR`, `FORM_CARD`, `FORM_INPUT_BUILDER`); inline errors via `FieldErrorMessage`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred). Form inputs/footers: `LeadingIconInput` for leading-icon inputs and `FormFooterChip` (`FormFooterEntityChip` / `FormFooterBadge` / `FormFooterErrorChip`) for form-footer badges — do not hand-roll in features.
-3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164. **Ban** Server Actions / `useActionState` / form `action=` for tenant writes.
+3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164. **Ban** Server Actions / `useActionState` / form `action=` for all MMS writes (tenant and platform).
 4. Collection tabs: `cleanContactDraft` / `mergeContactEditSavePayload` — empty arrays clear scalars (rule §3).
 5. Persist with `mutateAsync`; soft-delete only via DELETE/restore routes.
 6. Uploads: authenticated multipart `/api/uploads/*` + `resolveApiUrl`; magic-byte + size + dimension/page caps; auth (or short-TTL) to read.
@@ -25,7 +25,7 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 ```
 - [ ] FormModal + tall/scroll rules from rule §1 (dvh/svh when touching)
 - [ ] Focus-return to opener on close
-- [ ] No Server Actions / useActionState for tenant writes
+- [ ] No Server Actions / useActionState for tenant or platform writes
 - [ ] Shared Zod write/read DTOs; soft-delete stripped on write
 - [ ] Contact-linked modules (`contactId`): strip `CONTACT_PROFILE_FIELDS` / guardian dual-write on prepare; hydrate on read (Students closed)
 - [ ] formStyles + DatePicker / TimePicker / DateTimePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`

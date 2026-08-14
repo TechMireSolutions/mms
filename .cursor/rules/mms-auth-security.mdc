@@ -8,7 +8,7 @@ alwaysApply: false
 
 **Workflow skill:** `mms-backend-security` (CSRF/Origin, cookies, RBAC, tenant isolation). Route/service wiring → `mms-backend-api`.
 
-Governs user authentication, sessions, tenant isolation, role-based authorization (RBAC), and server threat protections in the Madrasa Management System (MMS).
+Governs user authentication, sessions, tenant isolation, role-based authorization (RBAC), and server threat protections in the Madrasa Management System (MMS). These security rules apply **equally and rigorously to both tenant workspaces and the platform apex**.
 
 ---
 
@@ -23,7 +23,7 @@ Governs user authentication, sessions, tenant isolation, role-based authorizatio
 
 **Platform apex** (separate from tenant — do not reuse `mms_access` / `mms_refresh`)
 - **Access Token**: httpOnly cookie `mms_platform_access` — browser **session** cookie (no `maxAge`; cleared when the browser closes).
-- **JWT**: Sign only `{ id, tokenType: 'platform_access', sessionVersion }` (`PlatformAccessTokenPayload`); ~8h `expiresIn`. Do **not** embed role/permissions/email — reload via DB in `authenticatePlatform`.
+- **JWT**: Sign only `{ id, tokenType: 'platform_access', sessionVersion }` (`PlatformAccessTokenPayload`); ~8h `expiresIn`. Do **not** embed role/permissions/email — reload via DB in `authenticatePlatform`. The JWT has an ~8h server-side max-expiry; the *cookie* is a session cookie (no `maxAge`) and is cleared when the browser closes — whichever ends first wins.
 - **No platform refresh cookie** — expired/revoked sessions require re-login. FE idle timeout (`PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES`, 30) also signs out.
 - **Verification**: On apex, `attachPlatformTokenFromCookie` binds the cookie. `authenticatePlatform` runs `requireMainDomain`, **deletes** any client `Authorization` header, then re-attaches from cookie only (Bearer injection is not trusted).
 - **Mutual exclusion**: Issuing or clearing a platform session also clears tenant auth cookies (and logout clears both).

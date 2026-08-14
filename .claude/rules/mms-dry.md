@@ -14,7 +14,7 @@ paths:
 
 **Workflow skill:** `mms-shared-package` (extract/export pure helpers and Zod DTOs).
 
-**Don't Repeat Yourself (DRY)** — every piece of knowledge, logic, and configuration must have a single, unambiguous, authoritative representation within the Madrasa Management System (MMS).
+**Don't Repeat Yourself (DRY)** — every piece of knowledge, logic, and configuration must have a single, unambiguous, authoritative representation within the Madrasa Management System (MMS), applying equally across tenant and platform boundaries.
 
 ---
 

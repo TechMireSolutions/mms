@@ -6,7 +6,7 @@ trigger: model_decision
 
 **Workflow skills:** new/three-tier page → `mms-module-page` · Work/trash/directory → `mms-module-work` · Setup Fields/Preferences → `mms-module-setup` · jobs → `mms-background-jobs` · Reports → `mms-reports-export`.
 
-Definitive specification for creating, structuring, and running directory-based feature modules (e.g., Contacts, Students, Teachers) in the MMS monorepo.
+Definitive specification for creating, structuring, and running directory-based feature modules (e.g., Contacts, Students, Teachers) in the MMS monorepo. These architecture standards apply equally to tenant modules and platform pages; platform must not invent a parallel page shell.
 
 ---
 
@@ -66,7 +66,7 @@ Operations that exceed direct interaction limits or process massive records must
 
 ---
 
-## 7. Gold-standard module parity (required for REST modules)
+## 7. Gold-standard parity (REST tenant modules and platform pages)
 
 Align new or refactored modules with **Contacts, Students, and Teachers** as the gold-standard bar for person-directory Work/Setup (shared `Module*` / `createModule*` / `registerModule*` factories; module config via `createStandardModuleConfigHook` + `useStandardModuleConfig` — `mms-hooks.md`). **Users / Sessions** Work REST and typed Setup REST are closed; residual document-store Setup is other modules per `mms-migration-status.md` P3. Checklist:
 

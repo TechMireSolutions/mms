@@ -78,7 +78,7 @@ OTP: `crypto.randomInt()` — never `Math.random()`.
 |--------|---------|
 | `mms_access` | Tenant JWT, httpOnly, 15 min, `SameSite=Lax` |
 | `mms_refresh` | Tenant opaque refresh; hash in `auth_artifacts` |
-| `mms_platform_access` | Platform JWT (`tokenType: 'platform_access'`), httpOnly **session** cookie (no `maxAge`), ~8h JWT TTL; **no** platform refresh cookie |
+| `mms_platform_access` | Platform JWT (`tokenType: 'platform_access'`), httpOnly **session** cookie (clears on browser close). JWT payload TTL is ~8h. The shorter of the two applies; **no** platform refresh cookie |
 
 Mutual exclusion: issuing/clearing a platform session also clears tenant auth cookies (and logout clears both).
 

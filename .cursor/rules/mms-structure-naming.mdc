@@ -8,7 +8,7 @@ alwaysApply: false
 
 **Workflow skills:** FE feature scaffolding → `mms-frontend` · shared barrels/exports → `mms-shared-package` · module page layout → `mms-module-page`.
 
-Governs code layout, file colocation, splitting thresholds, casing conventions, and naming consistency across the monorepo workspaces.
+Governs code layout, file colocation, splitting thresholds, casing conventions, and naming consistency across the monorepo workspaces — applying identically to tenant and platform code.
 
 ---
 

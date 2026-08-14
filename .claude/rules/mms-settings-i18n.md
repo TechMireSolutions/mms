@@ -17,7 +17,7 @@ paths:
 
 **Workflow skills:** `/settings` + i18n → `mms-settings-i18n` · Backup wipe-restore → `mms-backup-restore`. Module Setup (not `/settings`) → `mms-module-setup`.
 
-Governs application-wide configuration tabs, live settings preview states, sidebar navigation rules, and localization copy mappings across English, Arabic, Urdu, and Persian.
+Governs application-wide configuration tabs, live settings preview states, sidebar navigation rules, and localization copy mappings across English, Arabic, Urdu, and Persian. Platform apex settings and navigation registries follow the same `t()` discipline and token rules — no parallel hardcoded string/colour tables — but the platform locale is **locked to English + LTR** and never reads tenant `settings.language`.
 
 ---
 

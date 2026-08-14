@@ -1,11 +1,12 @@
 ---
-description: Data Layer — PostgreSQL, Drizzle schema, migrations, database transactions, localStorage cache, sync API, and TanStack Query fetching.
+description: Data Layer — PostgreSQL, Drizzle schema, migrations, database transactions, localStorage cache, sync API, and TanStack Query fetching. Applies to tenant and platform.
 paths:
   - "apps/backend/src/db/**"
   - "apps/backend/drizzle.config.ts"
   - "apps/backend/src/db/migrations/**"
   - "apps/backend/src/routes/common/db.ts"
   - "apps/backend/src/routes/tenant/**"
+  - "apps/backend/src/routes/platform/**"
   - "apps/backend/src/services/dbSyncService.ts"
   - "apps/backend/src/contacts/**"
   - "apps/backend/src/lib/**"
@@ -13,6 +14,7 @@ paths:
   - "apps/frontend/src/lib/queryClient.ts"
   - "apps/frontend/src/hooks/**"
   - "apps/frontend/src/tenant/hooks/**"
+  - "apps/frontend/src/platform/**"
   - "apps/frontend/src/tenant/features/**/hooks/**"
   - "packages/shared/src/apiSchemas.ts"
 ---
@@ -21,7 +23,7 @@ paths:
 
 **Workflow skills:** REST Query factories → `mms-query-factories` · Drizzle DDL/RLS → `mms-schema-migrate` · legacy `/api/db` / localStorage → `mms-data-sync` · backup wipe → `mms-backup-restore`.
 
-Authoritative standards for backend databases, migrations, caching architectures, and client fetching strategies in the MMS monorepo.
+Authoritative standards for backend databases, migrations, caching architectures, and client fetching strategies in the MMS monorepo. These standards apply **identically to both tenant and platform** logic.
 
 ---
 
@@ -138,7 +140,7 @@ Settings singletons (`branding`, `global_settings`) must survive authentication 
 Align with `queryClient.ts`: `staleTime` 30s, `gcTime` 5m, `refetchOnWindowFocus: false`, `refetchOnReconnect: true`, `retry` ≤ 1 (skip 401/403). Keep `structuralSharing` on unless a `select` returns unstable new refs every render. Prefer pause/disable queries when unauthenticated — do not invent a second offline sync stack.
 
 ### Fetching Standards (policy)
-- **Tuple Keys**: Named tuple constants / shared key factories — not ad-hoc strings. Prefer colocated TanStack Query v5 `queryOptions` / `mutationOptions` factories — hooks wrap factories (`mms-hooks.md`).
+- **Tuple Keys**: Named tuple constants / shared key factories — not ad-hoc strings. Prefer colocated TanStack Query v5 `queryOptions` / `mutationOptions` factories — hooks wrap factories (`mms-hooks.md`). Applies equally to tenant and platform queries.
 - **Auth Gate**: `enabled: isAuthenticated` for tenant queries.
 - **Cancellation**: Pass Query `signal` into `apiFetch` / `queryFn` (required).
 - **Mutations**: Narrow invalidation of list + count keys — avoid blanket `invalidateQueries()`. Await success before UI “saved” / form close — **`mms-module-architecture.md` §7**. Surface success/error via call-site `notify.*` + `t()` — do not add a global `MutationCache` toast middleware or `mutation.meta` toast bus (`mms-hooks.md`).

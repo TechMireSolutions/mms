@@ -1,6 +1,6 @@
 ---
-description: Universal module architecture — manifest schemas, three-tier layout, soft-delete, gold-standard parity (§7), background jobs, and lifecycle rules.
-globs: apps/frontend/src/tenant/features/**,apps/frontend/src/components/ui/ModuleCommandMetricsGrid.tsx,apps/frontend/src/components/ui/PageHeader.tsx,apps/frontend/src/components/ui/ResponsiveAccordionTabs.tsx,apps/frontend/src/components/ui/SubTabBar.tsx,apps/frontend/src/components/ui/DetailDrawerShell.tsx,apps/frontend/src/tenant/hooks/useModuleTierTabs.ts,apps/frontend/src/hooks/useWorkDirectoryViewMode.ts,apps/frontend/src/hooks/useModuleColumnLayout.ts,packages/shared/src/settingsTypes.ts,packages/shared/src/*ModuleManifest.ts,apps/backend/src/routes/**/*.ts,apps/backend/src/services/backgroundJob*.ts
+description: Universal module architecture — manifest schemas, three-tier layout, soft-delete, gold-standard parity (§7), background jobs, and lifecycle rules. Applies to tenant modules and platform pages.
+globs: apps/frontend/src/tenant/features/**,apps/frontend/src/platform/pages/**,apps/frontend/src/components/ui/ModuleCommandMetricsGrid.tsx,apps/frontend/src/components/ui/PageHeader.tsx,apps/frontend/src/components/ui/ResponsiveAccordionTabs.tsx,apps/frontend/src/components/ui/SubTabBar.tsx,apps/frontend/src/components/ui/DetailDrawerShell.tsx,apps/frontend/src/tenant/hooks/useModuleTierTabs.ts,apps/frontend/src/hooks/useWorkDirectoryViewMode.ts,apps/frontend/src/hooks/useModuleColumnLayout.ts,packages/shared/src/settingsTypes.ts,packages/shared/src/*ModuleManifest.ts,apps/backend/src/routes/**/*.ts,apps/backend/src/services/backgroundJob*.ts
 alwaysApply: false
 ---
 
@@ -8,7 +8,7 @@ alwaysApply: false
 
 **Workflow skills:** new/three-tier page → `mms-module-page` · Work/trash/directory → `mms-module-work` · Setup Fields/Preferences → `mms-module-setup` · jobs → `mms-background-jobs` · Reports → `mms-reports-export`.
 
-Definitive specification for creating, structuring, and running directory-based feature modules (e.g., Contacts, Students, Teachers) in the MMS monorepo.
+Definitive specification for creating, structuring, and running directory-based feature modules (e.g., Contacts, Students, Teachers) in the MMS monorepo. These architecture standards apply equally to tenant modules and platform pages; platform must not invent a parallel page shell.
 
 ---
 
@@ -68,7 +68,7 @@ Operations that exceed direct interaction limits or process massive records must
 
 ---
 
-## 7. Gold-standard module parity (required for REST modules)
+## 7. Gold-standard parity (REST tenant modules and platform pages)
 
 Align new or refactored modules with **Contacts, Students, and Teachers** as the gold-standard bar for person-directory Work/Setup (shared `Module*` / `createModule*` / `registerModule*` factories; module config via `createStandardModuleConfigHook` + `useStandardModuleConfig` — `mms-hooks.mdc`). **Users / Sessions** Work REST and typed Setup REST are closed; residual document-store Setup is other modules per `mms-migration-status.mdc` P3. Checklist:
 

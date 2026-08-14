@@ -1,9 +1,11 @@
 ---
-description: Frontend hooks — Query, page controllers / action handlers, Work layout, live data, branding, settings
+description: Frontend hooks — Query, page controllers / action handlers, Work layout, live data, branding, settings. Applies to tenant and platform hooks.
 paths:
   - "apps/frontend/src/hooks/**"
   - "apps/frontend/src/tenant/hooks/**"
   - "apps/frontend/src/tenant/features/**/hooks/**"
+  - "apps/frontend/src/platform/**/*hook*"
+  - "apps/frontend/src/platform/**/hooks/**"
   - "apps/frontend/src/lib/contexts/ContactConfigContext.tsx"
   - "apps/frontend/src/lib/contacts/**"
   - "apps/frontend/src/lib/contexts/TenantContext.tsx"
@@ -32,6 +34,8 @@ Hook **implementations** stay in `tenant/features/{module}/hooks/`. Cross-featur
 `@/tenant/hooks/collections/{contacts|students|teachers|sessions|enrollments|users|finance|accounting|hasanat|examinations|questionBank|attendance|messaging}`
 
 Same-feature files may keep direct feature-hook imports. Shared person UI: `ContactPicker` / `ContactCreateModal` under `@/components/contactLink/`.
+
+**Platform:** Platform cross-feature hooks colocate in `@/platform/hooks/` and follow the same facade pattern — implementations in `platform/pages/{page}/hooks/` or `platform/hooks/` for shared platform concerns. Platform hooks must not import tenant collection facades (and vice versa).
 
 ## `useLiveCollection(key, seed?)`
 
@@ -92,7 +96,7 @@ Return a flat object the shell destructures; keep public page/component export p
 - [ ] No ad-hoc polling loops — events, TanStack Query (incl. documented `refetchInterval`), or job-progress polls — `mms-core.md`
 - [ ] Internal API via `apiClient`
 - [ ] Export query keys when using Query; pass `signal`
-- [ ] `enabled: isAuthenticated` for tenant REST
+- [ ] `enabled: isAuthenticated` (tenant) / `enabled: isPlatformAuthenticated` (platform) for REST queries
 - [ ] No new `useLiveCollection` for REST-migrated entities
 - [ ] Controllers stay under soft ~220 lines when split — extract action/presentational siblings rather than growing one mega-hook
 - [ ] Test pure wrappers where ROI is high (`mms-testing-observability.md`)

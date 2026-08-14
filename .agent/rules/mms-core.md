@@ -4,7 +4,7 @@ trigger: always_on
 
 # MMS Core
 
-Madrasa Management System monorepo — applies on every task.
+Madrasa Management System monorepo — applies on every task across both **tenant** and **platform** boundaries.
 
 **Workflow skills:** orientation → `antigravity-workspace` · install/run → `mms-dev-setup`. Per-topic workflows in the Standards index below (rules = norms; skills = checklists).
 
@@ -35,12 +35,12 @@ packages/shared/   @mms/shared
 @mms/shared                          Pure domain logic (types, schemas, helpers)
 apps/frontend/src/lib/*              FE-wide logic: query factories, channel resolvers, i18n helpers
 apps/frontend/src/components/ui/*    Prop-driven chrome, zero domain imports
-apps/frontend/src/tenant/features/*  Thin adapters: config + labels + wiring only
+apps/frontend/src/tenant/features/*  Thin adapters: config + labels + wiring only (applies identically to platform/pages)
 ```
 
-- `lib/*` and `components/ui/*` are the sanctioned FE-wide shared layers — any feature may import them (e.g. `formatContactGenderLabel` from `@/lib/contacts/contactI18n` feeds `components/ui/PersonIdentityMeta` and the Students module).
+- `lib/*` and `components/ui/*` are the sanctioned FE-wide shared layers — any feature (tenant or platform) may import them (e.g. `formatContactGenderLabel` from `@/lib/contacts/contactI18n` feeds `components/ui/PersonIdentityMeta` and the Students module).
 - **Extraction corollary:** the cross-module ban forbids *coupling*, not duplication. When 2+ feature components are near-identical, extract the shared 90% — chrome → `components/ui/`, logic → `lib/` or `@mms/shared` — and keep per-module wrappers thin. A per-module adapter must contain only config/labels/wiring, never forked markup; do not fork components to keep them "self-contained" — `mms-dry.md`.
-- **Enforcement:** feature modules reach each other's hooks/data only through `@/tenant/hooks/collections/*` facades; the FE ESLint boundary rule (`apps/frontend/eslint.config.js`) flags direct feature→feature imports (`reports` / `settings` are sanctioned cross-cutting targets) — `mms-dry.md`.
+- **Enforcement:** feature modules reach each other's hooks/data only through `@/tenant/hooks/collections/*` facades; the FE ESLint boundary rule (`apps/frontend/eslint.config.js`) flags direct feature→feature imports. Sanctioned cross-cutting targets and facade rules → **`mms-dry.md` §3**.
 
 ## Stack (current)
 
@@ -68,9 +68,10 @@ Prefer the existing tenant WS channel when wiring live push (`mms-migration-stat
 | **Current** | Per-entity REST + TanStack Query; report widgets/visualizer Query-first; BE broadcasts on `/api/ws` and FE subscribes → Query invalidation | `mms-data-layer.md`, `mms-reports.md` |
 | **Target** | localStorage as offline cache only; FE WS → Query invalidation (shipped); remaining niche chart/statement panels on server aggregates | `mms-data-layer.md`, `mms-reports.md` (gap register → `mms-migration-status.md`) |
 
-## Tenant write invariant
+## Tenant & Platform write invariant
 
 Any new tenant write path must use **`authenticateTenant`** + transaction-scoped RLS (`SET LOCAL`) + `can()` / collection permission. Never trust client-supplied `workspaceSubdomain` or authz `userId`.
+Any new platform write path must use **`authenticatePlatform`** + explicit platform capability checks (`platformUserCan`).
 
 ## Validation SSOT
 
@@ -122,11 +123,11 @@ Hardcoding ban (copy, colours, formats, statuses): follow the owner row above �
 - **Module pages:** three tiers only — `mms-module-architecture.md` (+ shell components `mms-ui-ux-design.md`).
 - **No Server Actions** for tenant writes — cookie SPA + `apiClient` only — `mms-form-architecture.md`.
 
-## Performance (agent-checkable)
+## Performance & Modern Best Practices (agent-checkable)
 
-- Route-lazy heavy deps (charts, PDF, xlsx, editors) — do not grow the initial Work-tier bundle with report-only libs.
+- Route-lazy heavy deps (charts, PDF, xlsx, editors) — do not grow the initial Work-tier or Platform bundle with report-only libs. Leverage Vite 8 tree-shaking where possible.
 - Declare size on media/charts to avoid CLS — `mms-ui-ux-design.md`.
-- React 19: keep route-level `lazy` + `Suspense`. Prefer TanStack Query for lists/entities. Use `use()` only behind existing Suspense boundaries for promise-backed reads — **ban** inventing a second data stack beside Query (`mms-data-layer.md`, `mms-hooks.md`).
+- React 19: keep route-level `lazy` + `Suspense`. Avoid premature memoization (`useMemo`, `useCallback`) unless strictly necessary for expensive rendering or referential equality in dependency arrays. Prefer TanStack Query for lists/entities. Use `use()` only behind existing Suspense boundaries for promise-backed reads — **ban** inventing a second data stack beside Query (`mms-data-layer.md`, `mms-hooks.md`).
 
 ## MMS edit discipline
 

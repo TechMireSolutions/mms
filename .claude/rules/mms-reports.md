@@ -1,11 +1,13 @@
 ---
-description: Module-embedded analytics, exports, report builder
+description: Module-embedded analytics, exports, report builder. Applies to tenant module reports and any platform analytics pages.
 paths:
   - "apps/frontend/src/lib/reports/**"
   - "apps/frontend/src/tenant/features/**/reports/**"
   - "apps/frontend/src/tenant/features/**/*Report*"
   - "apps/frontend/src/tenant/features/**/*Reports*"
   - "apps/frontend/src/tenant/features/dashboard*/**"
+  - "apps/frontend/src/platform/**/*Report*"
+  - "apps/frontend/src/platform/**/*Analytics*"
   - "apps/frontend/src/components/ui/ExportToolbar.tsx"
   - "apps/frontend/src/components/ui/ExportToolbarCompact.tsx"
   - "apps/frontend/src/components/ui/exportToolbarUtils.ts"

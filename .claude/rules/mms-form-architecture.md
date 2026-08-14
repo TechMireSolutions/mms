@@ -1,5 +1,5 @@
 ---
-description: Static FormModal architecture — shell chrome, Zod validation, React 19 defaults, decimal-as-string, collection-list save clears, RLS pointer, local multipart uploads
+description: Static FormModal architecture — shell chrome, Zod validation, React 19 defaults, decimal-as-string, collection-list save clears, RLS pointer, local multipart uploads. Applies to tenant and platform forms.
 paths:
   - "apps/frontend/src/components/ui/FormPrimitives.tsx"
   - "apps/frontend/src/components/ui/FormModal.tsx"
@@ -10,6 +10,9 @@ paths:
   - "apps/frontend/src/tenant/features/**/*Form*.tsx"
   - "apps/frontend/src/tenant/features/**/hooks/use*Write*.ts"
   - "apps/frontend/src/tenant/features/**/hooks/use*Form*.ts"
+  - "apps/frontend/src/platform/**/*Form*.tsx"
+  - "apps/frontend/src/platform/**/hooks/use*Write*.ts"
+  - "apps/frontend/src/platform/**/hooks/use*Form*.ts"
   - "packages/shared/src/**/*Schema*.ts"
   - "packages/shared/src/contactFormNormalize.ts"
   - "packages/shared/src/contactItemNormalize.ts"
@@ -50,7 +53,7 @@ Simple static forms with design-system primitives — not dynamic layout engines
 ## 2. State & React 19 defaults
 
 - Prefer simple controlled state (or RHF + zodResolver for complex multi-step forms). Same Zod schema as BE DTOs from `@mms/shared`.
-- **Ban** React 19 Server Actions / `useActionState` / native form `action=` posts for tenant MMS writes — cookie SPA + `apiClient` / Query mutations only (no RSC action posts against the Fastify API).
+- **Ban** React 19 Server Actions / `useActionState` / native form `action=` posts for all MMS writes (tenant or platform) — cookie SPA + `apiClient` / Query mutations only (no RSC action posts against the Fastify API).
 - Initialize fields to avoid uncontrolled→controlled warnings: strings `""`, numbers/dates `null`, lists `[]`.
 - Every control needs `name` + `id` (fallback `useId()`).
 - Phones: single `type="tel"` input; parse/normalize E.164 on blur/save via `parsePhoneNumber` + `normalizeToE164` from `@mms/shared`.
@@ -89,6 +92,7 @@ Simple static forms with design-system primitives — not dynamic layout engines
 ## 6. Security pointers
 
 - Tenant writes: transaction-scoped RLS — `mms-data-layer.md`.
+- Platform writes: `authenticatePlatform` + `platformUserCan` capability checks — platform tables are not tenant-scoped (no RLS needed), but all mutations must still go through `authenticatePlatform` with explicit capability gates — `mms-auth-security.md`.
 - Soft-delete only via dedicated DELETE/restore routes — never from the create/edit form body.
 - File uploads: authenticated multipart to `/api/uploads/image` or `/api/uploads/attachment` (local disk under `/uploads/…`); resolve returned URLs via `resolveApiUrl` — no S3/presign in tree.
 - Local `/uploads/*`: require auth (or signed short-TTL) to read; on write enforce **magic-byte sniff** + MIME allowlist + **size** caps and **dimension/page** caps for images/PDFs (mitigate decompression bombs) — pointer `mms-auth-security.md`. Do not invent public long-lived CDN URLs.

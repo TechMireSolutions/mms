@@ -62,8 +62,8 @@ Upsert only (`bulkSave` + `conflictTarget`). **Never** wire `replaceForWorkspace
 
 1. Zod schemas — `validation/` or `@mms/shared` (`.strict()` on write bodies)
 2. Domain layer — `{module}/use-cases/**` (orchestration, repo DI) + `{module}/repository/` interface + Drizzle adapter + composition root (`{module}UseCases`) — `mms-api-interface.md` §2
-3. `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection`; call the composition root
-4. Register under `/api/{resource}` in `routes/index.ts`
+3. `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection` (or `authenticatePlatform` + `platformUserCan` for platform routes); call the composition root
+4. Register under `/api/{resource}` or `/api/platform/{resource}` in `routes/index.ts`
 5. `inject()` tests with `host: 'tenant.localhost'`
 6. FE Query hooks — **`mms-query-factories`** / **`mms-frontend`**
 
@@ -73,7 +73,7 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 
 ```
 - [ ] FastifyPluginAsync in routes/
-- [ ] preHandler: authenticateTenant (not raw jwtVerify)
+- [ ] preHandler: `authenticateTenant` or `authenticatePlatform` (not raw jwtVerify)
 - [ ] Zod via parseRequest + replyValidationError on writes
 - [ ] rbacService / canWrite on mutations
 - [ ] Errors: { type, message } + correct status

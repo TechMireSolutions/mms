@@ -16,7 +16,7 @@ Related: `mms-ui-ux-design.md` (RTL/a11y), `mms-fields.md` (labelKey). Backup wi
 3. Drafts via `useSettingsDraft` / `useBrandingDraft` / `useThemeSettingsDraft`; `onPreview(draft)`; `revertSettingsPreviews()` on leave.
 4. New copy: key in `appTranslationsEn.ts` → ar → ur → fa overrides; render with `t('key')` only (no English `||` fallbacks).
 5. Dates/money: `formatDate` / `formatMoney` (+ currency hooks) — never raw locale string math.
-6. Platform apex English/LTR + unknown-tenant hard-redirect — follow the rule (host lock / `TenantBootGate`).
+6. **Platform apex**: English/LTR always — do not create platform locale packs. Platform UI still uses `t()` but all translations resolve to English (no ar/ur/fa overrides for platform). Unknown-tenant hard-redirect enforced via `TenantBootGate`.
 7. Backup UI: two-step + password step-up + validate-before-wipe — details in **`mms-backup-restore`**; copy via `backup.*` keys.
 
 ## Checklist
@@ -37,7 +37,7 @@ Related: `mms-ui-ux-design.md` (RTL/a11y), `mms-fields.md` (labelKey). Backup wi
 - Hardcode UI strings or directional `left`/`ml-*`
 - Open `/settings` on a missing tenant host
 - Dual-write backup from browser cache alone
-- Invent platform locale packs
+- Add ar/ur/fa locale packs for platform views — platform is English-only
 
 ## Done
 

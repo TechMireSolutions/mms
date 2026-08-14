@@ -25,6 +25,8 @@ Hook **implementations** stay in `tenant/features/{module}/hooks/`. Cross-featur
 
 Same-feature files may keep direct feature-hook imports. Shared person UI: `ContactPicker` / `ContactCreateModal` under `@/components/contactLink/`.
 
+**Platform:** Platform cross-feature hooks colocate in `@/platform/hooks/` and follow the same facade pattern — implementations in `platform/pages/{page}/hooks/` or `platform/hooks/` for shared platform concerns. Platform hooks must not import tenant collection facades (and vice versa).
+
 ## `useLiveCollection(key, seed?)`
 
 Legacy localStorage reactive reads only. **Hard ban** on new use for REST-migrated entities. Contacts entity rows are REST-only (not in FE `BUSINESS_COLLECTIONS`). Contacts Setup config (field-config, preferences, lookups) uses Query via `@/tenant/hooks/collections/contacts` (`useContactFieldConfigQuery`, `useContactPreferencesQuery`, `useContactLookupsQuery`) — **never** `getObject` / `getCollection` for those keys.
@@ -84,7 +86,7 @@ Return a flat object the shell destructures; keep public page/component export p
 - [ ] No ad-hoc polling loops — events, TanStack Query (incl. documented `refetchInterval`), or job-progress polls — `mms-core.md`
 - [ ] Internal API via `apiClient`
 - [ ] Export query keys when using Query; pass `signal`
-- [ ] `enabled: isAuthenticated` for tenant REST
+- [ ] `enabled: isAuthenticated` (tenant) / `enabled: isPlatformAuthenticated` (platform) for REST queries
 - [ ] No new `useLiveCollection` for REST-migrated entities
 - [ ] Controllers stay under soft ~220 lines when split — extract action/presentational siblings rather than growing one mega-hook
 - [ ] Test pure wrappers where ROI is high (`mms-testing-observability.md`)

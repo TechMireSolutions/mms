@@ -1,5 +1,5 @@
 ---
-description: Field/tab registry, system vs custom fields, Setup Fields wiring
+description: Field/tab registry, system vs custom fields, Setup Fields wiring — applies to tenant and platform
 paths:
   - "apps/frontend/src/lib/contactFieldsStore.ts"
   - "apps/frontend/src/lib/contacts/useContactConfigTabFields.ts"
@@ -9,6 +9,8 @@ paths:
   - "apps/frontend/src/components/ui/ModuleFieldsSetup*.tsx"
   - "apps/frontend/src/tenant/features/**/*Fields*"
   - "apps/frontend/src/tenant/features/**/*Setup*"
+  - "apps/frontend/src/platform/**/*Fields*"
+  - "apps/frontend/src/platform/**/*Setup*"
   - "packages/shared/src/contactTypes.ts"
   - "packages/shared/src/contactEnabledTabs.ts"
   - "packages/shared/src/contactColumnRegistrySync.ts"

@@ -82,7 +82,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] No hardcoded labels/colours/status maps — `t()` + registries
 - [ ] No new `uiStrings` keys outside Contacts module
 - [ ] Fields/tabs from DFS (`DFS.md`) / registry
-- [ ] Module tier: `work` | `reports` | `setup`
+- [ ] Module tier: `work` | `reports` | `setup` (applies to both tenant and platform modules)
 - [ ] `ResponsiveAccordionTabs` / `SubTabBar` — no inline tab bars
 - [ ] Mobile-first layout: no fixed `w-[Npx]` page widths; no `max-lg:` layout forks; logical CSS for RTL
 - [ ] Tables wrapped (`Table` or `overflow-x-auto`); interactive controls ≥ 44×44 (`min-h-11 min-w-11`)
@@ -109,9 +109,9 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Bulk PUT upsert-only — no `replaceForWorkspace` / wipe-missing-rows (incl. custom-tabs) on API write paths
 - [ ] Forms/setup use `mutateAsync` / await; close only after success
 - [ ] Manifest `setupSubTabs` + `softDelete` metadata when applicable
-- [ ] Setup gated by `canEditSetup`; Work shows `ErrorState` on list failure **with hint** (`loadFailedHint` — tenant and platform apex)
+- [ ] Setup gated by `canEditSetup` (or `platformUserCan`); Work shows `ErrorState` on list failure **with hint** (`loadFailedHint` — tenant and platform apex)
 - [ ] Directory empties use `EmptyState` (`title` required; `compact` when dense); column gates use `isColumnVisible` (not `show*` fans)
-- [ ] Cmd/Ctrl+N create when `canWrite` and not in trash
+- [ ] Cmd/Ctrl+N create when `canWrite` (or `platformUserCan`) and not in trash
 - [ ] Prefer shared Work chrome (`EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` / `WORK_SURFACE` / `FORM_CARD` / `ModuleCommandMetricsGrid` for KPI strips; person-module chrome: `LeadingIconInput`, `DetailSectionTitle`, `FormFooterChip`, `ModuleFilterDropdown`, `DrawerSyncStatusFooter`; `h-chart-*` / `z-modal*` / `max-w-toast` over ad-hoc sizes) — `mms-ui-ux-design.mdc`
 
 ### Messaging (when touched)
@@ -145,8 +145,9 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] When shells/primitives/FormModal change → run skill **`mms-a11y-smoke`** (axe serious/critical + focus-return)
 - [ ] Icon buttons `aria-label` from `t()`; Suspense `role="status"`; honor `prefers-reduced-motion`
 
-### Performance / deps
-- [ ] jspdf/xlsx/html2canvas dynamically imported; no ad-hoc poll loops
+### Performance / deps / React 19
+- [ ] jspdf/xlsx/html2canvas dynamically imported via Vite 8 tree-shaking; no ad-hoc poll loops
+- [ ] React 19: Prefer `useEffectEvent`, `startTransition`, `useDeferredValue` over `useMemo`/`useCallback` unless referential equality is strictly required.
 - [ ] Dependency bumps → skill **`mms-dependency-upgrade`**
 
 ### Scope

@@ -38,6 +38,24 @@ Project rules for the Madrasa Management System. Antigravity loads `.md` files f
 
 Single prose owner per topic. Duplicate essays elsewhere must be short pointers. Full matrix in always-on `mms-core.md` Standards index (soft-delete schema vs Work UX, write Zod, bulk PUT, `mutateAsync` split there).
 
+## Tenant = Platform Parity Principle
+
+All rules in this directory apply **equally** to tenant workspace code and platform apex code. There is no separate ruleset for platform. Specifically:
+
+| Rule | Applies to platform? |
+|------|--------------------|
+| Primitive components (`Button`, `FormModal`, `Table`, etc.) | ✅ Yes — no parallel platform forks |
+| Design tokens (`@theme`, semantic colors, logical CSS) | ✅ Yes |
+| WCAG AA a11y, RTL, touch targets | ✅ Yes |
+| TanStack Query v5 factories, `AbortSignal` | ✅ Yes |
+| Zod `.strict()` DTOs via `@mms/shared` | ✅ Yes |
+| File size bands (~300 hard / ~220 soft), naming | ✅ Yes |
+| `ErrorState` with hint description on list failures | ✅ Yes |
+| `notify.*` for all toasts | ✅ Yes |
+| Fastify layering (routes → services → repository) | ✅ Yes |
+
+The only *differences* are intentional domain split: `authenticatePlatform` vs `authenticateTenant`; platform uses `platformUserCan`/`requirePlatformPermission` instead of `can()`; platform WS uses existing `/api/ws` tenant channel or its own mechanism — **no new parallel stacks**.
+
 ## Skills (Workflows)
 
 `.cursor/skills/` — task-discovered workflow guides. Index: [../skills/README.md](../skills/README.md). Overview: [../../AGENTS.md](../../AGENTS.md).

@@ -1,6 +1,6 @@
 ---
-description: Field/tab registry, system vs custom fields, Setup Fields wiring
-globs: apps/frontend/src/lib/contactFieldsStore.ts,apps/frontend/src/lib/contacts/useContactConfigTabFields.ts,apps/frontend/src/components/ui/CustomFieldsBuilder.tsx,apps/frontend/src/components/ui/CoreFieldEditorList.tsx,apps/frontend/src/components/ui/ModuleFieldsSetup.tsx,apps/frontend/src/components/ui/ModuleFieldsSetup*.tsx,apps/frontend/src/tenant/features/**/*Fields*,apps/frontend/src/tenant/features/**/*Setup*,packages/shared/src/contactTypes.ts,packages/shared/src/contactEnabledTabs.ts,packages/shared/src/contactColumnRegistrySync.ts,packages/shared/src/contactFieldDependencies.ts,packages/shared/src/*Field*
+description: Field/tab registry, system vs custom fields, Setup Fields wiring — applies to tenant and platform
+globs: apps/frontend/src/lib/contactFieldsStore.ts,apps/frontend/src/lib/contacts/useContactConfigTabFields.ts,apps/frontend/src/components/ui/CustomFieldsBuilder.tsx,apps/frontend/src/components/ui/CoreFieldEditorList.tsx,apps/frontend/src/components/ui/ModuleFieldsSetup.tsx,apps/frontend/src/components/ui/ModuleFieldsSetup*.tsx,apps/frontend/src/tenant/features/**/*Fields*,apps/frontend/src/tenant/features/**/*Setup*,apps/frontend/src/platform/**/*Fields*,apps/frontend/src/platform/**/*Setup*,packages/shared/src/contactTypes.ts,packages/shared/src/contactEnabledTabs.ts,packages/shared/src/contactColumnRegistrySync.ts,packages/shared/src/contactFieldDependencies.ts,packages/shared/src/*Field*
 alwaysApply: false
 ---
 

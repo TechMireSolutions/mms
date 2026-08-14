@@ -6,12 +6,12 @@ trigger: model_decision
 
 **Workflow skills:** FE shell/`apiClient` → `mms-frontend` · Fastify routes/`inject()` → `mms-backend-api` · CSRF/cookies → `mms-backend-security`.
 
-Governs the communications contract between the React SPA frontend and the Fastify backend — routing layers, payload schemas, fetch clients. Sessions/middleware recipes → `mms-auth-security.md`. Query policy → `mms-data-layer.md`.
+Governs the communications contract between the React SPA frontend and the Fastify backend — routing layers, payload schemas, fetch clients. This applies **equally to both tenant and platform** boundaries. Sessions/middleware recipes → `mms-auth-security.md`. Query policy → `mms-data-layer.md`.
 
 ---
 
 ## 1. Client-Server Communication Flow
-All frontend requests to backend resources must use `apiFetch` or `apiJson` from the `apiClient.ts` wrapper.
+All frontend requests to backend resources (tenant or platform) must use `apiFetch` or `apiJson` from the `apiClient.ts` wrapper.
 - **Credentials**: Always `credentials: 'include'`. Cookie names, refresh rules, JWT trust → **`mms-auth-security.md`**.
 - **AbortSignal**: Pass Query/`fetch` `signal` into `apiFetch` / `apiJson` — required for cancellation — `mms-data-layer.md`.
 - **REST Trajectory**: New features must implement resource-specific endpoints (e.g. `GET /api/students`) instead of the generic collections sync API.
