@@ -85,16 +85,25 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     category: 'Navigation',
     path: ROUTES.platformAdmins,
     icon: ShieldCheck,
-    keywords: ['admins', 'super_user', 'operators', 'users', 'access'],
+    keywords: ['admins', 'super_user', 'operators', 'users', 'access', 'rbac', 'permissions'],
   },
   {
     id: 'account',
     labelKey: 'platform.myAccount',
-    fallbackLabel: 'My Account Settings',
+    fallbackLabel: 'My Account & Credentials',
     category: 'Navigation',
     path: ROUTES.platformAccount,
     icon: User,
-    keywords: ['account', 'profile', 'session', 'email', 'me'],
+    keywords: ['account', 'profile', 'session', 'email', 'me', 'password', 'security'],
+  },
+  {
+    id: 'migrations',
+    labelKey: 'platform.systemMaintenance',
+    fallbackLabel: 'Database Migrations & Maintenance',
+    category: 'Actions',
+    path: `${ROUTES.platformSystem}?tab=system`,
+    icon: Server,
+    keywords: ['migrations', 'drizzle', 'database', 'schema', 'reset', 'maintenance'],
   },
   {
     id: 'onboard-madrasa',
@@ -103,7 +112,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     category: 'Actions',
     path: ROUTES.onboarding,
     icon: PlusCircle,
-    keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa'],
+    keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa', 'tenant'],
   },
 ];
 
@@ -233,6 +242,20 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
                 );
               })
             )}
+          </div>
+
+          {/* Footer Shortcuts Bar */}
+          <div className="border-t border-border/50 px-4 py-2 bg-muted/30 flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↑</kbd>
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↓</kbd> Navigate
+              </span>
+              <span className="flex items-center gap-1">
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↵</kbd> Select
+              </span>
+            </div>
+            <span className="hidden sm:inline">Platform Command Hub</span>
           </div>
         </motion.div>
       </div>
