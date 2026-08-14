@@ -23,6 +23,7 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'accounting_module_preferences',
       'assessment_results',
       'attendance_field_configs',
+      'attendance_lookups',
       'attendance_module_preferences',
       'attendance_records',
       'attendance_user_column_prefs',
@@ -31,6 +32,7 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'contact_module_preferences',
       'contact_user_column_prefs',
       'contacts',
+      'custom_fields',
       'custom_tabs',
       'enrollment_field_configs',
       'enrollment_module_preferences',
@@ -69,6 +71,7 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'questions',
       'saved_reports',
       'session_field_configs',
+      'session_lookups',
       'session_module_preferences',
       'session_user_column_prefs',
       'sessions',
@@ -103,6 +106,24 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'students',
       'message_logs',
       'users',
+    ]);
+  });
+
+  it('restores all per-user column prefs after users to preserve user foreign keys', () => {
+    expect(
+      sortCollectionNamesForRestore([
+        'user_user_column_prefs',
+        'enrollment_user_column_prefs',
+        'users',
+        'enrollment_field_configs',
+        'contacts',
+      ]),
+    ).toEqual([
+      'contacts',
+      'enrollment_field_configs',
+      'users',
+      'enrollment_user_column_prefs',
+      'user_user_column_prefs',
     ]);
   });
 

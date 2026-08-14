@@ -1,6 +1,7 @@
 import type { AppTranslationKey } from './appTranslations.js';
 import {
   BACKUP_FORMAT_ID,
+  BACKUP_FORMAT_VERSION,
   type WorkspaceBackupDataSource,
   type WorkspaceBackupEnvelope,
   type WorkspaceBackupSummary,
@@ -8,6 +9,7 @@ import {
 } from './backupSchemas.js';
 import {
   buildStorageKeysFromSnapshot,
+  computeBackupChecksum,
   computeBackupStats,
   extractBackupRawKeys,
   parseStorageKeysToSnapshot,
@@ -29,9 +31,29 @@ export type ParseAndValidateResult =
   | { ok: true; data: ValidatedBackupPayload }
   | { ok: false; errorKey: AppTranslationKey };
 
+/** Verifies cryptographic SHA-256 checksum if present in envelope. */
+export async function validateBackupPayloadChecksum(
+  parsed: unknown,
+  raw: Record<string, string>,
+): Promise<boolean> {
+  if (
+    typeof parsed === 'object' &&
+    parsed !== null &&
+    !Array.isArray(parsed) &&
+    (parsed as Record<string, unknown>).format === BACKUP_FORMAT_ID
+  ) {
+    const checksum = (parsed as WorkspaceBackupEnvelope).checksum;
+    if (typeof checksum === 'string' && checksum.length > 0) {
+      const computed = await computeBackupChecksum(raw);
+      return computed.toLowerCase() === checksum.toLowerCase();
+    }
+  }
+  return true;
+}
+
 /**
  * Common internal logic for validating and parsing a workspace backup payload.
- * Enforces prototype pollution prevention, restricted key detection, and admin user verification.
+ * Enforces prototype pollution prevention, restricted key detection, version compatibility, and admin user verification.
  */
 export function parseAndValidateBackupPayload(
   jsonString: string,
@@ -41,6 +63,24 @@ export function parseAndValidateBackupPayload(
     const parsed: unknown = JSON.parse(jsonString);
     if (hasPrototypePollution(parsed)) {
       return { ok: false, errorKey: 'backup.securityViolation' };
+    }
+
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      !Array.isArray(parsed) &&
+      (parsed as Record<string, unknown>).format === BACKUP_FORMAT_ID
+    ) {
+      const envelope = parsed as WorkspaceBackupEnvelope;
+      if (typeof envelope.version === 'number' && envelope.version > BACKUP_FORMAT_VERSION) {
+        return { ok: false, errorKey: 'backup.unsupportedFutureVersion' };
+      }
+      if (
+        typeof envelope.minCompatibleVersion === 'number' &&
+        envelope.minCompatibleVersion > BACKUP_FORMAT_VERSION
+      ) {
+        return { ok: false, errorKey: 'backup.unsupportedFutureVersion' };
+      }
     }
 
     const raw = extractBackupRawKeys(parsed);
@@ -78,6 +118,25 @@ export function parseAndValidateBackupPayload(
   }
 }
 
+/** Asynchronously validates and parses payload with full SHA-256 checksum verification. */
+export async function parseAndValidateBackupPayloadAsync(
+  jsonString: string,
+  targetPrefix: string,
+): Promise<ParseAndValidateResult> {
+  const syncResult = parseAndValidateBackupPayload(jsonString, targetPrefix);
+  if (!syncResult.ok) return syncResult;
+
+  const checksumValid = await validateBackupPayloadChecksum(
+    syncResult.data.parsed,
+    syncResult.data.raw,
+  );
+  if (!checksumValid) {
+    return { ok: false, errorKey: 'backup.checksumMismatch' };
+  }
+
+  return syncResult;
+}
+
 /** Summarizes a backup file for pre-restore preview (no writes). */
 export function summarizeWorkspaceBackup(
   jsonString: string,
@@ -99,6 +158,9 @@ export function summarizeWorkspaceBackup(
   let exportedAt: string | null = null;
   let subdomain: string | null = null;
   let dataSource: WorkspaceBackupDataSource | null = null;
+  let checksum: string | null = null;
+  let version: number | undefined;
+
   if (
     typeof parsed === 'object' &&
     parsed !== null &&
@@ -110,6 +172,8 @@ export function summarizeWorkspaceBackup(
     subdomain = typeof env.subdomain === 'string' ? env.subdomain : null;
     dataSource =
       env.dataSource === 'server' || env.dataSource === 'local' ? env.dataSource : null;
+    checksum = typeof env.checksum === 'string' ? env.checksum : null;
+    version = typeof env.version === 'number' ? env.version : undefined;
   }
 
   return {
@@ -120,6 +184,8 @@ export function summarizeWorkspaceBackup(
       subdomain,
       legacyFormat,
       dataSource,
+      checksum,
+      version,
     },
   };
 }
@@ -138,6 +204,39 @@ export function validateWorkspaceBackupJson(
   expectedSubdomain?: string | null,
 ): BackupValidationResult {
   const result = parseAndValidateBackupPayload(jsonString, targetPrefix);
+  if (!result.ok) {
+    return result;
+  }
+  if (expectedSubdomain) {
+    const parsed = result.data.parsed;
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed) ||
+      (parsed as Record<string, unknown>).format !== BACKUP_FORMAT_ID
+    ) {
+      return { ok: false, errorKey: 'backup.workspaceUnidentified' };
+    }
+    const sourceSubdomain = (parsed as WorkspaceBackupEnvelope).subdomain;
+    if (!sourceSubdomain) {
+      return { ok: false, errorKey: 'backup.workspaceUnidentified' };
+    }
+    if (sourceSubdomain.toLowerCase() !== expectedSubdomain.toLowerCase()) {
+      return { ok: false, errorKey: 'backup.workspaceMismatch' };
+    }
+  }
+  return { ok: true, data: result.data.remapped };
+}
+
+/**
+ * Asynchronously validates exported workspace JSON before restore, including SHA-256 checksum check.
+ */
+export async function validateWorkspaceBackupJsonAsync(
+  jsonString: string,
+  targetPrefix: string,
+  expectedSubdomain?: string | null,
+): Promise<BackupValidationResult> {
+  const result = await parseAndValidateBackupPayloadAsync(jsonString, targetPrefix);
   if (!result.ok) {
     return result;
   }

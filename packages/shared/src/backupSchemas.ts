@@ -39,6 +39,9 @@ export const BACKUP_FORMAT_ID = 'mms-workspace-backup' as const;
 /** Current envelope schema version. */
 export const BACKUP_FORMAT_VERSION = 1;
 
+/** Minimum compatible envelope schema version this build can restore. */
+export const BACKUP_MIN_COMPATIBLE_VERSION = 1;
+
 /** Max upload size for restore file picker (bytes). */
 export const BACKUP_UPLOAD_MAX_BYTES = 50 * 1024 * 1024;
 
@@ -85,10 +88,13 @@ export type WorkspaceBackupDataSource = 'server' | 'local';
 export interface WorkspaceBackupEnvelope {
   format: typeof BACKUP_FORMAT_ID;
   version: number;
+  minCompatibleVersion?: number;
   exportedAt: string;
   subdomain: string | null;
   /** `server` = PostgreSQL snapshot; `local` = browser cache only. */
   dataSource?: WorkspaceBackupDataSource;
+  /** Cryptographic SHA-256 integrity checksum across sorted payload keys. */
+  checksum?: string;
   stats: WorkspaceBackupStats;
   keys: Record<string, string>;
 }
@@ -98,6 +104,8 @@ export interface WorkspaceBackupStats {
   collectionCount: number;
   objectCount: number;
   byteSize: number;
+  /** Breakdown of entity counts per logical collection. */
+  entityBreakdown?: Record<string, number>;
 }
 
 export const workspaceBackupStatsSchema = z.object({
@@ -105,14 +113,17 @@ export const workspaceBackupStatsSchema = z.object({
   collectionCount: z.number(),
   objectCount: z.number(),
   byteSize: z.number(),
+  entityBreakdown: z.record(z.string(), z.number()).optional(),
 });
 
 export const workspaceBackupEnvelopeSchema = z.object({
   format: z.literal(BACKUP_FORMAT_ID),
-  version: z.number(),
+  version: z.number().int().min(1),
+  minCompatibleVersion: z.number().int().min(1).optional(),
   exportedAt: z.string(),
   subdomain: z.string().nullable(),
   dataSource: z.enum(['server', 'local']).optional(),
+  checksum: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
   stats: workspaceBackupStatsSchema,
   keys: z.record(z.string(), z.string()),
 });
@@ -122,6 +133,8 @@ export interface WorkspaceBackupSummary extends WorkspaceBackupStats {
   subdomain: string | null;
   legacyFormat: boolean;
   dataSource: WorkspaceBackupDataSource | null;
+  checksum?: string | null;
+  version?: number;
 }
 
 export type WorkspaceBackupSummaryResult =

@@ -108,6 +108,30 @@ export default function BackupRestoreConfirmModal({
                 {t('backup.previewObjects', { count: summary.objectCount })}
               </SettingsMetaBadge>
             </div>
+            {summary.checksum ? (
+              <p className="flex items-center gap-1.5 text-xs text-success font-medium">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {t('backup.integrityVerified')}
+              </p>
+            ) : null}
+            {summary.entityBreakdown && Object.keys(summary.entityBreakdown).length > 0 ? (
+              <div className="space-y-1.5 pt-1 border-t border-border/40">
+                <p className="text-xs font-medium text-foreground/80">{t('backup.entityBreakdownTitle')}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(summary.entityBreakdown)
+                    .filter(([, count]) => count > 0)
+                    .slice(0, 10)
+                    .map(([name, count]) => (
+                      <span
+                        key={name}
+                        className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-background border border-border text-foreground/90 capitalize"
+                      >
+                        {name.replace(/_/g, ' ')}: {count}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               {t('backup.previewSize', { size: formatBackupSize(summary.byteSize) })}
             </p>

@@ -3,9 +3,12 @@ import {
   BACKUP_FORMAT_ID,
   buildStorageKeysFromSnapshot,
   buildWorkspaceBackupEnvelope,
+  buildWorkspaceBackupEnvelopeAsync,
+  computeBackupChecksum,
   extractBackupRawKeys,
   summarizeWorkspaceBackup,
   validateWorkspaceBackupJson,
+  validateWorkspaceBackupJsonAsync,
   isBackupErrorKey,
   createBackupHistoryEntry,
   findRestrictedKeyInSnapshot,
@@ -460,6 +463,75 @@ describe('backupTypes', () => {
       expect(MODULE_TO_SETTINGS_KEY.examination).toBe('examinations_settings');
       expect(MODULE_TO_SETTINGS_KEY['question-bank']).toBe('question_bank_settings');
       expect(MODULE_TO_SETTINGS_KEY.questionBank).toBe('question_bank_settings');
+    });
+  });
+
+  describe('modern backup features (checksum, versioning, entity breakdown)', () => {
+    it('computes and embeds SHA-256 checksum in async envelope', async () => {
+      const keys = {
+        'mms_t:demo:students': '[{"id":"s-1"}]',
+        'mms_t:demo:contacts': '[{"id":"c-1"}]',
+      };
+      const json = await buildWorkspaceBackupEnvelopeAsync(keys, { subdomain: 'demo' });
+      const parsed = JSON.parse(json);
+
+      expect(parsed.checksum).toBeDefined();
+      expect(parsed.checksum).toMatch(/^[a-f0-9]{64}$/i);
+      expect(parsed.stats.entityBreakdown).toEqual({
+        students: 1,
+        contacts: 1,
+      });
+
+      const validResult = await validateWorkspaceBackupJsonAsync(json, PREFIX, 'demo');
+      expect(validResult.ok).toBe(true);
+    });
+
+    it('rejects backup when checksum does not match modified payload', async () => {
+      const keys = {
+        'mms_t:demo:contacts': '[{"id":"c-1"}]',
+      };
+      const json = await buildWorkspaceBackupEnvelopeAsync(keys, { subdomain: 'demo' });
+      const parsed = JSON.parse(json);
+
+      // Tamper with payload keys
+      parsed.keys['mms_t:demo:contacts'] = '[{"id":"c-tampered"}]';
+      const tamperedJson = JSON.stringify(parsed);
+
+      const result = await validateWorkspaceBackupJsonAsync(tamperedJson, PREFIX, 'demo');
+      expect(result).toEqual({ ok: false, errorKey: 'backup.checksumMismatch' });
+    });
+
+    it('rejects backup with future unsupported schema version', () => {
+      const keys = {
+        'mms_t:demo:contacts': '[{"id":"c-1"}]',
+      };
+      const json = buildWorkspaceBackupEnvelope(keys, { subdomain: 'demo' });
+      const parsed = JSON.parse(json);
+      parsed.version = 999;
+      const futureJson = JSON.stringify(parsed);
+
+      const result = validateWorkspaceBackupJson(futureJson, PREFIX, 'demo');
+      expect(result).toEqual({ ok: false, errorKey: 'backup.unsupportedFutureVersion' });
+    });
+
+    it('provides entity breakdown and checksum in summary', async () => {
+      const keys = {
+        'mms_t:demo:students': '[{"id":"1"},{"id":"2"}]',
+        'mms_t:demo:contacts': '[{"id":"1"}]',
+        'mms_t:demo:general_settings': '{"name":"Madrasa"}',
+      };
+      const json = await buildWorkspaceBackupEnvelopeAsync(keys, { subdomain: 'demo' });
+      const summaryResult = summarizeWorkspaceBackup(json, PREFIX);
+
+      expect(summaryResult.ok).toBe(true);
+      if (summaryResult.ok) {
+        expect(summaryResult.summary.entityBreakdown).toEqual({
+          students: 2,
+          contacts: 1,
+        });
+        expect(summaryResult.summary.checksum).toBeDefined();
+        expect(summaryResult.summary.version).toBe(1);
+      }
     });
   });
 });

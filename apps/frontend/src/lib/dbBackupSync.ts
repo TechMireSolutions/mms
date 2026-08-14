@@ -1,9 +1,9 @@
 import { apiFetch } from "@/lib/apiClient";
 import {
-  buildWorkspaceBackupEnvelope,
+  buildWorkspaceBackupEnvelopeAsync,
   buildStorageKeysFromSnapshot,
   parseStorageKeysToSnapshot,
-  validateWorkspaceBackupJson,
+  validateWorkspaceBackupJsonAsync,
   encryptWorkspaceBackup,
   type TenantDatabaseSnapshot,
   type BackupCredentials,
@@ -87,13 +87,13 @@ export async function exportTenantBackup(): Promise<string> {
   const keys = buildStorageKeysFromSnapshot(snapshot, prefix);
   const subdomain = getCurrentSubdomain();
 
-  return buildWorkspaceBackupEnvelope(keys, { subdomain, dataSource: "server" });
+  return await buildWorkspaceBackupEnvelopeAsync(keys, { subdomain, dataSource: "server" });
 }
 
 export async function importDatabase(jsonString: string): Promise<void> {
   try {
     const prefix = getStoragePrefix();
-    const validated = validateWorkspaceBackupJson(
+    const validated = await validateWorkspaceBackupJsonAsync(
       jsonString,
       prefix,
     );

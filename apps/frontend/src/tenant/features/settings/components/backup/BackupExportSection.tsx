@@ -1,7 +1,6 @@
 import React from 'react';
 import { Database, Download, RefreshCw, Layers, Settings, HardDrive, CheckCircle2, Users, DollarSign, BookOpen } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { SectionLabel } from '@/components/ui/SectionLabel';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StatCard } from '@/components/ui/StatCard';
@@ -69,24 +68,24 @@ export default function BackupExportSection({
               </div>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              <SectionLabel weight="bold" tracking="wider" toneClassName="text-muted-foreground/80" className="block">
-                {t('backup.safetyBackupNote')}
-              </SectionLabel>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
+            <div className="space-y-3 py-1">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {t('backup.createDesc')}
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/40 px-3 py-2">
                   <Users className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate">{t('backup.badgeStudentsAndTeachers')}</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
+                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/40 px-3 py-2">
                   <DollarSign className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate">{t('backup.badgeFinanceAndFees')}</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
+                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/40 px-3 py-2">
                   <Database className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate">{t('backup.badgeCrmContacts')}</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/30 px-3 py-2">
+                <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/40 px-3 py-2">
                   <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate">{t('nav.questionBank')}</span>
                 </div>

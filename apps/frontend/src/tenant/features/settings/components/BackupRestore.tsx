@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ListChecks, ShieldAlert, Trash2 } from 'lucide-react';
+import { ShieldAlert, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import BackupRestoreConfirmModal from '@/tenant/features/settings/components/BackupRestoreConfirmModal';
 import BackupCredentialsModal, { type BackupCredentialsModalProps } from '@/tenant/features/settings/components/BackupCredentialsModal';
@@ -90,18 +90,6 @@ export default function BackupRestore(): React.JSX.Element {
         </div>
       }
     >
-      <p className="text-xs text-muted-foreground">{backup.workspaceNote}</p>
-
-      <SectionCard title={t('backup.tipsTitle')} icon={ListChecks} padding={false}>
-        <ul className="divide-y divide-border/50">
-          {backup.tips.map((tip) => (
-            <li key={tip} className="px-5 py-3 text-xs leading-relaxed text-muted-foreground">
-              {tip}
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
-
       <div className="grid gap-4 lg:grid-cols-2">
         <BackupExportSection
           adminEmail={adminEmail}

@@ -52,18 +52,42 @@ export function remapBackupKeysToPrefix(
   return result;
 }
 
-/** Counts collections vs singleton objects in a raw key map. */
+/** Computes standard SHA-256 hex string from UTF-8 string input. */
+export async function computeSha256Hex(data: string): Promise<string> {
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) {
+    throw new Error('backup.cryptoUnavailable');
+  }
+  const encoded = new TextEncoder().encode(data);
+  const hashBuffer = await subtle.digest('SHA-256', encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Computes a deterministic SHA-256 checksum across all keys in the backup. */
+export async function computeBackupChecksum(keys: Record<string, string>): Promise<string> {
+  const sortedEntries = Object.keys(keys)
+    .sort()
+    .map((k) => `${k}:${keys[k]}`)
+    .join('\n');
+  return computeSha256Hex(sortedEntries);
+}
+
+/** Counts collections vs singleton objects in a raw key map and breaks down entity counts. */
 export function computeBackupStats(keys: Record<string, string>): WorkspaceBackupStats {
   let collectionCount = 0;
   let objectCount = 0;
   let byteSize = 0;
+  const entityBreakdown: Record<string, number> = {};
 
   for (const [key, value] of Object.entries(keys)) {
     byteSize += key.length + value.length;
+    const logical = extractLogicalStorageKey(key) || key;
     try {
       const parsed: unknown = JSON.parse(value);
       if (Array.isArray(parsed)) {
         collectionCount += 1;
+        entityBreakdown[logical] = parsed.length;
       } else {
         objectCount += 1;
       }
@@ -77,6 +101,7 @@ export function computeBackupStats(keys: Record<string, string>): WorkspaceBacku
     collectionCount,
     objectCount,
     byteSize,
+    entityBreakdown,
   };
 }
 
@@ -127,18 +152,36 @@ export function buildStorageKeysFromSnapshot(
 /** Builds a versioned backup envelope JSON string. */
 export function buildWorkspaceBackupEnvelope(
   keys: Record<string, string>,
-  options?: { subdomain?: string | null; dataSource?: WorkspaceBackupDataSource },
+  options?: {
+    subdomain?: string | null;
+    dataSource?: WorkspaceBackupDataSource;
+    checksum?: string;
+  },
 ): string {
   const envelope: WorkspaceBackupEnvelope = {
     format: BACKUP_FORMAT_ID,
     version: BACKUP_FORMAT_VERSION,
+    minCompatibleVersion: BACKUP_FORMAT_VERSION,
     exportedAt: new Date().toISOString(),
     subdomain: options?.subdomain ?? null,
     dataSource: options?.dataSource,
+    checksum: options?.checksum,
     stats: computeBackupStats(keys),
     keys,
   };
   return JSON.stringify(envelope);
+}
+
+/** Asynchronously builds a versioned backup envelope JSON string with a calculated SHA-256 checksum. */
+export async function buildWorkspaceBackupEnvelopeAsync(
+  keys: Record<string, string>,
+  options?: { subdomain?: string | null; dataSource?: WorkspaceBackupDataSource },
+): Promise<string> {
+  const checksum = await computeBackupChecksum(keys);
+  return buildWorkspaceBackupEnvelope(keys, {
+    ...options,
+    checksum,
+  });
 }
 
 /**

@@ -160,7 +160,29 @@ export async function synchronizeData(
         await dbDeleteObject(key);
       }
     }
+
+    if (fullRestore) {
+      const tenant = getRequestTenant();
+      if (tenant) {
+        await verifyPostRestoreIntegrity(tenant);
+      }
+    }
   });
+}
+
+/**
+ * Validates post-restore state before committing the database transaction.
+ * Ensures the tenant retains at least one active administrator.
+ */
+async function verifyPostRestoreIntegrity(subdomain: string): Promise<void> {
+  const { listAllTenantUsersByWorkspace } = await import('../db/repositories/tenantUserRepository.js');
+  const users = await listAllTenantUsersByWorkspace(subdomain);
+  if (users.length > 0) {
+    const hasAdmin = users.some((u) => u.role === 'admin' && !u.deletedAt);
+    if (!hasAdmin) {
+      throw new Error('backup.missingAdminUser');
+    }
+  }
 }
 
 /**

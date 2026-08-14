@@ -91,7 +91,7 @@ export default function BackupImportSection({
       <div className="mt-4">
         <SettingsCallout variant="warning">
           <span className="flex items-start gap-2.5 text-xs font-medium leading-relaxed">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 animate-bounce" aria-hidden />
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
             <span>{t('backup.restoreWarning')}</span>
           </span>
         </SettingsCallout>
