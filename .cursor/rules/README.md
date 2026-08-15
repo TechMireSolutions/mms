@@ -107,7 +107,6 @@ bash .agent/scripts/sync-all.sh
 - [ ] Work column widths persist (local + `/column-preferences`; merge preserves device widths) — `mms-module-architecture.mdc` §3
 - [ ] Dashboard/report KPI cards use `/metrics` where available — `mms-reports.mdc`
 - [ ] Setup Fields / form: tab enablement SSOT + enabled fields render in form **and** drawer — `mms-fields.mdc` / `mms-form-architecture.mdc`
-- [ ] DFS: `custom_fields` migration + `FORCE RLS` + composite PK + server-side `customData` validation — `DFS.md` / `mms-fields.mdc`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
 - [ ] Touched app files stay under hard ~300 lines (prefer ~220 for FE shells); splits keep public import barrels — `mms-structure-naming.mdc`
 - [ ] No commit unless user requested

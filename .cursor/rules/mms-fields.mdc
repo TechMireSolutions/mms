@@ -6,7 +6,7 @@ alwaysApply: false
 
 # MMS Fields & Registry Specification
 
-**Workflow skills:** registry/types → `mms-fields-registry` · Setup Fields/Preferences UI → `mms-module-setup` · FormModal binding → `mms-form-architecture` · DFS DDL/migration → `mms-schema-migrate` · DFS routes/audit → `mms-backend-api`.
+**Workflow skills:** registry/types → `mms-fields-registry` · Setup Fields/Preferences UI → `mms-module-setup` · FormModal binding → `mms-form-architecture` · Schema migrations → `mms-schema-migrate` · Backend API → `mms-backend-api`.
 
 Governs column layouts, field schemas, and Setup Fields configuration across the monorepo.
 
@@ -15,22 +15,20 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 | Kind | Where | Notes |
 |------|-------|--------|
 | **System fields** | Typed in `@mms/shared` + Drizzle columns | Preferred for core domain data |
-| **Custom fields** | Tenant `custom_data` JSONB + field config registries | Constrained via `CustomFieldsBuilder` — not free-form layout engines |
+| **Custom fields** | Tenant `custom_data` JSONB + field config registries | Constrained via field registries — not free-form layout engines |
 
-- Free-form dynamic form compilers / visual schema generators are **banned** — the only approved dynamic-form system is the DFS (`DFS.md`).
-- Custom **tabs** persist in typed `custom_tabs` (composite PK `(workspace_subdomain, id)` + **FORCE RLS**; Drizzle baseline `0000_init`; data migrate `021_migrate_custom_tabs`) via `/api/custom-tabs`. Bulk PUT **upserts** only — never wipe rows absent from the payload. Do not reintroduce object-only tab SSOT. Contacts field registry is typed `contact_field_configs` + `GET/PUT /api/contacts/field-config` — never dual-write `formTabs` into field-config (tabs SSOT remains `/api/custom-tabs`) — `mms-migration-status.mdc`.
-- Custom **fields** (DFS) persist in typed `custom_fields` (composite PK `(workspace_subdomain, id)` + **FORCE RLS** + tenant-scoping policy; denormalized `module_id` for scoped list queries; migration `migrations_drizzle/0030_custom_fields.sql`) via `/api/v2/modules/:module/tabs` (`dynamicFormPlugin`). See `DFS.md` §2/§4. `id: text` (app-generated `cf_<ts>_<rand>` via `crypto.randomUUID()`) — never DB `uuid` PKs. RBAC: `authenticateTenant` + `can(module, 'editSetup')` on all writes; `/check-unique` is a probe (not audited). Audit via `auditPreHandler`/`auditOnSend` → existing `audit_logs` table. Server-side `customData` re-validation on entity save via `buildDynamicValidationSchema` + `safeParse` — never trust client (`DFS.md` §4.5).
+- Free-form dynamic form compilers / visual schema generators are **banned** — forms are strictly registry- and shared-schema-driven.
 - Tenant-created form tabs (`custom_*`, `isContactCustomCollectionTab`) persist as **row arrays** on the contact (like phones/emails). Blank rows strip on save via `cleanContactDraft`; emptied arrays must persist — `mms-form-architecture.mdc` §3.
 - Column visibility **and width** prefs → **`mms-module-architecture.mdc` §3** (local width wins; clamp with `clampModuleColumnWidth`).
 
 ## 2. New / changed field checklist
 
-1. **Shared** — type + Zod in `@mms/shared` (`customFieldConfigSchema` `.strict()`, `FIELD_TYPES_META`, `buildDynamicValidationSchema`, `createFormCustomFieldHelpers` — `DFS.md` §3)
+1. **Shared** — type + Zod in `@mms/shared` (`FIELD_TYPES_META`, `createFormCustomFieldHelpers`, field config schemas)
 2. **Drizzle** — column or `custom_data` key + forward-only migration when needed (`mms-schema-migrate`)
-3. **REST** — `parseRequest` Zod on BE routes; custom field values via shared Zod builders driven by registry type — no ad-hoc `typeof` switches in handlers. DFS field config writes via `dynamicFormPlugin` with `updateFieldBodySchema`/`reorderFieldsBodySchema` (`.strict()`)
-4. **UI** — bind via registry / form draft; `labelKey` only (no hardcoded labels); dynamic fields via `DynamicForm` + `FieldRenderer` (`DFS.md` §5)
-5. **Removal** — call `get*FieldRemovalIssues()` before delete (`mms-module-architecture.mdc` §4); enforce DFS type-lock (`hasData: true` blocks `type` change → 422)
-6. **Server-side validation** — entity save routes re-validate `customData` via `buildDynamicValidationSchema` + `safeParse`; enforce `unique` fields via `checkValueUniqueness` (`DFS.md` §4.5) — client validation is UX only
+3. **REST** — `parseRequest` Zod on BE routes; field values via shared Zod builders driven by registry type — no ad-hoc `typeof` switches in handlers
+4. **UI** — bind via registry / form draft; `labelKey` only (no hardcoded labels)
+5. **Removal** — call `get*FieldRemovalIssues()` before delete (`mms-module-architecture.mdc` §4)
+6. **Validation** — entity save routes validate via shared Zod schemas (`safeParse`) — client validation is UX only
 
 ## 3. Localization
 

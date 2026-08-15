@@ -32,15 +32,12 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 - [ ] Empty collection arrays persist; no scalar resurrection
 - [ ] canWrite gates; no fire-and-forget mutate close
 - [ ] Upload sniff + size + dimension/page caps
-- [ ] DFS dynamic fields via `DynamicForm` + `FieldRenderer` (DFS §5); currency = `inputMode="decimal"` text; phone = E.164 `type="tel"`; date/datetime via shared pickers
-- [ ] DFS client validation via `buildDynamicValidationSchema` from @mms/shared (UX only) — server re-validates on save (DFS §4.5)
-- [ ] DFS `customData` defaults seeded for new entities only (`apply*DfsCustomFieldDefaults`); never overwrite existing keys
-- [ ] Copy via t() / labelKey; no hardcoded labels (DFS §5.7 — en/ar/ur/fa + RTL)
+- [ ] Copy via t() / labelKey; no hardcoded labels (en/ar/ur/fa + RTL)
 ```
 
 ## Do Not
 
-- Reintroduce unapproved blueprint compilers outside the DFS specification (`DFS.md`)
+- Reintroduce dynamic form compilers on the frontend
 - Dual-write Query + `saveCollection` on save
 - Persist person profile keys on student/teacher JSONB when `contactId` is set
 - Accept client soft-delete fields on create/update

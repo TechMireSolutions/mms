@@ -12,11 +12,9 @@ description: Extends @mms/shared with types, settings defaults, module manifests
 ```
 packages/shared/src/
   index.ts                 # Named barrel only — no subpath imports in apps
-  *Types.ts / *Schemas.ts  # Domain models + Zod (incl. DFS: schemas/dynamicFormSchemas.ts)
-  schemas/dynamicFormSchemas.ts  # DFS customFieldConfigSchema (.strict()), tabConfigSchema, updateFieldBodySchema, reorderFieldsBodySchema
-  constants/fieldTypesMeta.ts    # DFS FIELD_TYPES_META registry (14 field types)
-  utils/dynamicSchemaBuilder.ts  # DFS buildDynamicValidationSchema (decimal-as-string, E.164, runtime-safe enums)
-  createFormCustomFieldHelpers.ts # DFS system-vs-custom field partitioning factory
+  *Types.ts / *Schemas.ts  # Domain models + Zod schemas
+  constants/               # Metadata registries and defaults
+  createFormCustomFieldHelpers.ts # System-vs-custom field partitioning factory
   *ModuleManifest.ts       # Module contracts / permissions metadata
   appTranslations*.ts      # en (SSOT keys) + ar/ur/fa
   messagingSchemas.ts

@@ -45,13 +45,12 @@ Gate edits with `canEditSetup`: show settings even when view-only; use a read-on
 
 ## Workflow: add Setup Fields capability
 
-1. Extend schema/types in `@mms/shared` (`customFieldConfigSchema` `.strict()`, `FIELD_TYPES_META`, `buildDynamicValidationSchema`, `createFormCustomFieldHelpers`) per `DFS.md` §3. File paths: `packages/shared/src/schemas/dynamicFormSchemas.ts`, `constants/fieldTypesMeta.ts`, `utils/dynamicSchemaBuilder.ts`.
-2. Add UI in `{Module}SettingsPanel` — `CustomFieldEditor` + `@hello-pangea/dnd` Tab & Field Builder (`DFS.md` §5.2/§5.3). All labels via `t()` — no hardcoded strings (en/ar/ur/fa + RTL, `DFS.md` §5.7).
-3. Wire visibility cascade: form (`DynamicForm` + `FieldRenderer`), drawer, table columns, reports, export.
-4. On save: persist field & tab configurations via Fastify 5 `/api/v2/modules/:module/tabs` API endpoints (`dynamicFormPlugin`, `DFS.md` §4.1). RBAC: `authenticateTenant` + `can(module, 'editSetup')` on writes. Write DTOs: `customFieldConfigSchema.omit({id,tabId})` (create), `updateFieldBodySchema` (PATCH), `reorderFieldsBodySchema` (reorder) — all `.strict()`. Audit via `auditPreHandler`/`auditOnSend` → existing `audit_logs` table.
-5. Block delete with dependency helper (`get*FieldRemovalIssues()`) and enforce DFS type locking (`hasData: true` → 422 on `type` change) + uniqueness enforcer (`unique false→true` → 409 if duplicates exist).
-6. **Server-side validation**: entity save routes MUST re-validate `customData` via `buildDynamicValidationSchema` + `safeParse` and enforce `unique` fields via `checkValueUniqueness` before persisting — never trust the client (`DFS.md` §4.5). Client validation is UX only.
-7. Copy via `t()` — no new `uiStrings`.
+1. Extend schema/types in `@mms/shared` (`FIELD_TYPES_META`, `createFormCustomFieldHelpers`).
+2. Add UI in `{Module}SettingsPanel` — all labels via `t()` — no hardcoded strings (en/ar/ur/fa + RTL).
+3. Wire visibility cascade: form, drawer, table columns, reports, export.
+4. Block delete with dependency helper (`get*FieldRemovalIssues()`).
+5. Server-side validation: entity save routes validate via shared Zod schemas (`safeParse`) — never trust the client. Client validation is UX only.
+6. Copy via `t()` — no new `uiStrings`.
 
 ## Workflow: add Preferences control
 

@@ -67,17 +67,16 @@ API errors must resolve to a uniform JSON payload format:
 ---
 
 ## 5. Bulk PUT / collection replace semantics
-Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload) must **upsert** rows by composite tenant key (`bulkSave` + `conflictTarget`, merge-by-id helpers, or `bulkUpsertCustomTabsForModule`).
+Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload) must **upsert** rows by composite tenant key (`bulkSave` + `conflictTarget`, or merge-by-id helpers).
 - **Allowed**: Insert new ids; update existing ids; leave rows absent from the payload untouched.
 - **Bulk id lists**: Prefer shared `bulkIdsBodySchema` / `bulkStringIdsBodySchema` (`.max(500)`) for bulk-delete / bulk-restore — do not fork unbounded id arrays per module.
 - **Contacts list/filter query**: Shared `contactsListQuerySchema` (SQL `listPage` pagination) — do not fork Messaging “select all with email” flags per route.
-- **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Prefer `bulkSave` / `bulkUpsertCustomTabsForModule`. Keep replace helpers only for migrations, intentional admin clears, backup restore, or documented one-shot archives.
+- **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Keep replace helpers only for migrations, intentional admin clears, backup restore, or documented one-shot archives.
 - Frontend mutations: await success before closing forms — **`mms-module-architecture.md` §7**.
 
 ## 6. Pagination, idempotency & concurrency
 - HTTP contract: clients **should send** `page` and `limit` (shared `baseListQuerySchema`); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
 - Target: tighten schemas to required `page` (+ `limit`) when clients are all migrated — do not claim Zod already requires them.
-- **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header or body) when retries are likely. **Bind** the key to a body digest (or equivalent) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload (Messaging target; generalize on new retryable POSTs). DFS `/check-unique` is a probe (POST) — idempotency optional; DFS field/tab create POSTs may use idempotency keys when retry-likely (`DFS.md` §4.8).
-- **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.md`. DFS PATCH on `custom_fields`/`custom_tabs` may accept `If-Match: <updatedAt>` and return `409 stale_version` (`DFS.md` §4.7).
-- **Reorder**: DFS `PUT /modules/:module/tabs/:tabId/fields/reorder` accepts `{ items: [{ id, sortOrder }] }` and updates in a single transaction — never N independent calls (`DFS.md` §4.6). Schema: `reorderFieldsBodySchema` (`.strict()`).
+- **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header or body) when retries are likely. **Bind** the key to a body digest (or equivalent) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload (Messaging target; generalize on new retryable POSTs).
+- **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.md`.
 - Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.

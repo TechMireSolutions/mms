@@ -84,7 +84,7 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
   - **Tenant Host** (`{slug}.localhost` / `{slug}.{MMS_APP_DOMAIN}`): Full workspace instance.
 - **Unknown tenant SPA gate**: If the FE resolves no registered workspace for the host subdomain, **hard-redirect** to apex `/tenant-not-found?subdomain=…` — never mount tenant `/settings` or leave the user on the unregistered host (`mms-settings-i18n.md`, `mms-ui-ux-design.md` §8).
 - **Request Context**: Backend parses tenant from `Host` or `X-Forwarded-Host` headers (never from client JSON bodies) and starts an AsyncLocalStorage scope (`tenantStorage`).
-- **Endpoint Protection**: Tenant API routes require **`authenticateTenant`**: JWT from cookie **or** Bearer (does **not** strip client `Authorization`) → workspace enabled → `workspaceSubdomain` match → reject `refresh` / `platform_access` → `twoFactorVerified !== false` → `bindRequestUserId`. Apex requests to tenant routes return `403`. DFS `/api/v2/modules/:module/tabs` routes follow the same guard; writes additionally require `can(module, 'editSetup')` (`DFS.md` §4.1). `/check-unique` is a probe — still auth-gated, **not** audited.
+- **Endpoint Protection**: Tenant API routes require **`authenticateTenant`**: JWT from cookie **or** Bearer (does **not** strip client `Authorization`) → workspace enabled → `workspaceSubdomain` match → reject `refresh` / `platform_access` → `twoFactorVerified !== false` → `bindRequestUserId`. Apex requests to tenant routes return `403`.
 
 ### Platform API protection
 - All `/api/platform/*` routes: apex-only (`requireMainDomain` inside `authenticatePlatform` and on public platform plugins — tenant subdomain → `403`).

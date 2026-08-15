@@ -100,7 +100,6 @@ Single prose owner per topic — other rules/skills use short pointers only. **W
 | UI tokens, tabs, a11y, responsive §7 | `mms-ui-ux-design.mdc` | `mms-frontend` · `mms-a11y-smoke` |
 | Module Work/Reports/Setup, §7 gold-standard | `mms-module-architecture.mdc` | `mms-module-page` · `mms-module-work` · `mms-module-setup` · `mms-background-jobs` |
 | Field/tab registry | `mms-fields.mdc` | `mms-fields-registry` · `mms-module-setup` |
-| Dynamic Form System (DFS) — custom_fields/tabs, dynamic Zod, audit, server-side validation | `DFS.md` (spec) · `mms-fields.mdc` (registry norms) · `mms-data-layer.mdc` (RLS/JSONB) · `mms-api-interface.mdc` (routes) | `mms-fields-registry` · `mms-module-setup` · `mms-backend-api` · `mms-schema-migrate` · `mms-form-architecture` |
 | Module config hook (`createStandardModuleConfigHook`) | `mms-hooks.mdc` | `mms-frontend` · `mms-module-setup` |
 | Settings, i18n, formatters, backup UI | `mms-settings-i18n.mdc` | `mms-settings-i18n` · `mms-backup-restore` |
 | Health, ports, purge/reset, env, CI (match root engines) | `mms-ops-infrastructure.mdc` | `mms-dev-setup` · `mms-ops-deploy` · `mms-linux-compatibility` |
@@ -115,9 +114,6 @@ Hardcoding ban (copy, colours, formats, statuses): follow the owner row above �
 ## Domain invariants (one-liners)
 
 - **Contacts canonical** for persons; module rows link by `contactId`; hydrate on read, strip profile/guardian dual-write keys on save; Work list identity filter/sort joins `contacts` (Students closed) — `mms-fields.mdc` / `mms-form-architecture.mdc` / `mms-data-layer.mdc`.
-- **DFS tenant isolation** — `custom_fields`/`custom_tabs` use `workspaceSubdomain: text` + composite PK + `FORCE RLS`; app-generated `text` IDs (`cf_<ts>_<rand>`, `custom_<ts>_<rand>`) via `crypto.randomUUID()`, never DB `uuid` PKs — `DFS.md` §1/§2.
-- **DFS server-side validation** — entity save routes re-validate `customData` via `buildDynamicValidationSchema` + `safeParse`; `unique` fields enforced via `checkValueUniqueness`; client validation is UX only — `DFS.md` §4.5.
-- **DFS money/phone** — currency is decimal-as-string (`z.string().regex(/^\d+(\.\d{1,2})?)`); phone is E.164 (`z.string().regex(/^\+[1-9]\d{1,14}$/)`) — `DFS.md` §3.3.
 - **`persona` purged** — residual = migration defect.
 - **Phones E.164** on save via `parsePhoneNumber` — `mms-form-architecture.mdc`.
 - **WhatsApp number id** only via `PuppeteerWhatsAppProvider.getNumberId` — `mms-messaging.mdc`.

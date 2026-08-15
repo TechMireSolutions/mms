@@ -41,10 +41,10 @@ Refactored/growing modules (Contacts is the reference) gate all storage behind a
 - Bind `app.current_user_id` from authenticated session (`bindRequestUserId` after `authenticateTenant`) so audit triggers can attribute writes.
 
 ### New tenant tables
-- Composite PK `(workspace_subdomain, id)` (or equivalent tenant-scoped key). DFS `custom_fields` follows this: `id: text` (app-generated), `module_id` denormalized for scoped list queries (`DFS.md` §2.1).
-- RLS policy + **`FORCE ROW LEVEL SECURITY`** on the table (Messaging / Contacts / `custom_tabs` / `custom_fields` / `saved_reports` / `contact_google_sync_credentials` pattern). DFS `custom_fields` migration `0030_custom_fields.sql` includes FORCE RLS + tenant-scoping policy (`DFS.md` §2.4/§2.5).
+- Composite PK `(workspace_subdomain, id)` (or equivalent tenant-scoped key).
+- RLS policy + **`FORCE ROW LEVEL SECURITY`** on the table (Messaging / Contacts / `saved_reports` / `contact_google_sync_credentials` pattern).
 - Writes go through `withTenantTransaction` / SET LOCAL — never rely on app filters alone.
-- API bulk write upsert / ban `replaceForWorkspace` as route `saveFn` → **`mms-api-interface.md` §5**. DFS reorder is a transactional batch `PUT` (`DFS.md` §4.6) — never `replaceForWorkspace`.
+- API bulk write upsert / ban `replaceForWorkspace` as route `saveFn` → **`mms-api-interface.md` §5**.
 
 ### Soft-delete on entity tables
 - Prefer a typed nullable `deleted_at` column + `(workspace_subdomain, deleted_at)` index.
@@ -86,7 +86,7 @@ Refactored/growing modules (Contacts is the reference) gate all storage behind a
 - **Expand/contract**: Prefer add-nullable → backfill → constrain; drop columns/tables only after a dual-read window. Never expand-and-break live tenants in one migration.
 - **Platform audit FK**: `platform_activity_logs.user_id` is nullable with `ON DELETE SET NULL` so deleting a platform user retains audit history — do not “fix” back to `NOT NULL` / cascade-delete of log rows.
 - **TypeScript Transforms**: Implement idempotent data updates in `migrations/00N_*.ts` to execute on server startup.
-- **GIN & JSONB Indexes**: Dynamic fields are stored in a native `JSONB` column (`custom_data`). Search indexing uses `GIN` definitions or Expression Indexes in Drizzle migrations. DFS uniqueness checks use `custom_data @> '{"cf_key": "value"}'::jsonb` containment against the GIN index — `fieldKey` MUST be validated against the `custom_fields` registry first (SQL-injection guard) and the query must use parameterized `sql` (`DFS.md` §4.1/§4.2 — ban `JSON.stringify` of user-supplied keys into `sql.raw`).
+- **GIN & JSONB Indexes**: Custom JSONB data is stored in native `JSONB` column (`custom_data`). Search indexing uses `GIN` definitions or Expression Indexes in Drizzle migrations. Parameterized `sql` must be used for containment queries.
 - **JSONB write strategies** (`createGenericRepository`):
   | `updateStrategy` | Single-row `save` | `bulkSave` on conflict |
   |---|---|---|
