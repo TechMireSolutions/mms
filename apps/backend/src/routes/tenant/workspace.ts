@@ -10,6 +10,8 @@ import {
 } from '../../services/workspaceService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { sendNotFound } from '../../lib/httpErrors.js';
+import { subdomainParamsSchema } from '../../validation/commonSchemas.js';
+import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 export default async function workspaceRoutes(
   fastify: FastifyInstance,
@@ -41,10 +43,13 @@ export default async function workspaceRoutes(
     return reply.send({ workspace, branding });
   });
 
-  fastify.get<{ Params: { subdomain: string } }>(
+  fastify.get(
     '/by-subdomain/:subdomain',
     async (request, reply) => {
-      const subdomain = normalizeSubdomainInput(request.params.subdomain);
+      const params = parseRequest(subdomainParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
+
+      const subdomain = normalizeSubdomainInput(params.data.subdomain);
       const workspace = await getWorkspaceBySubdomain(subdomain);
       if (!workspace) {
         return sendNotFound(reply, 'Workspace not found');
@@ -62,10 +67,13 @@ export default async function workspaceRoutes(
     }
   );
 
-  fastify.get<{ Params: { subdomain: string } }>(
+  fastify.get(
     '/subdomain-available/:subdomain',
     async (request, reply) => {
-      const subdomain = normalizeSubdomainInput(request.params.subdomain);
+      const params = parseRequest(subdomainParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
+
+      const subdomain = normalizeSubdomainInput(params.data.subdomain);
       const available = await isSubdomainAvailable(subdomain);
       return reply.send({ subdomain, available });
     }

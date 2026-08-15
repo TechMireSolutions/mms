@@ -19,7 +19,7 @@ export function PlatformEditAdminAccessDialog({
   open,
   onOpenChange,
 }: PlatformEditAdminAccessDialogProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir, language } = useTranslation();
   const updatePermissions = useUpdatePlatformAdminPermissions();
   const [permissions, setPermissions] = useState<PlatformAdminPermissions>(() =>
     normalizePlatformAdminPermissions(admin.permissions),
@@ -59,8 +59,8 @@ export function PlatformEditAdminAccessDialog({
       saveLabel={t('platform.editAdminAccessSave')}
       onSave={handleSave}
       saving={updatePermissions.isPending}
-      dir="ltr"
-      lang="en"
+      dir={dir}
+      lang={language}
     >
       <PlatformAdminPermissionsFields
         value={permissions}

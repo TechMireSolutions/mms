@@ -9,6 +9,7 @@ import {
   AuthSubmitButton,
 } from "@/components/entry";
 import { OtpInput, isOtpComplete } from "@/components/ui/OtpInput";
+import { PasswordStrengthMeter } from "@/components/ui/PasswordStrengthMeter";
 import { ROUTES } from "@/lib/config/routes";
 import type { PlatformForgotPasswordController } from "@/platform/pages/auth/usePlatformForgotPasswordController";
 
@@ -38,7 +39,7 @@ export function PlatformForgotPasswordResetStep({ controller }: PlatformForgotPa
 
   return (
     <PlatformAuthLayout title={t("platform.forgotResetTitle")} subtitle={t("platform.forgotResetSubtitle")}>
-      <form onSubmit={(event) => void handleReset(event)} className="space-y-4" noValidate aria-busy={loading}>
+      <form onSubmit={(event) => void handleReset(event)} className="space-y-4 text-start" noValidate aria-busy={loading}>
         <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
           {devHint ? <AuthStatusBanner variant="warning" message={devHint} /> : null}
 
@@ -55,13 +56,16 @@ export function PlatformForgotPasswordResetStep({ controller }: PlatformForgotPa
 
           {error ? <AuthStatusBanner message={error} /> : null}
 
-          <AuthPasswordField
-            id={newPasswordId}
-            label={t("platform.forgotNewPassword")}
-            autoComplete="new-password"
-            value={password}
-            onChange={setPassword}
-          />
+          <div className="space-y-2">
+            <AuthPasswordField
+              id={newPasswordId}
+              label={t("platform.forgotNewPassword")}
+              autoComplete="new-password"
+              value={password}
+              onChange={setPassword}
+            />
+            <PasswordStrengthMeter password={password} />
+          </div>
 
           <AuthPasswordField
             id={confirmPasswordId}

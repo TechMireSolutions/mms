@@ -12,52 +12,10 @@ import {
   getPlatformPasswordError,
   getPlatformPasswordMatchError,
 } from "@/platform/lib/platformValidation";
+import { PasswordStrengthMeter } from "@/components/ui/PasswordStrengthMeter";
 import { notify } from "@/lib/notify";
 import { ROUTES } from "@/lib/config/routes";
 import { PLATFORM_PROFILE_SUBMIT_CLASS } from "./platformAccountStyles";
-
-function PasswordStrengthMeter({ password }: { password: string }): React.JSX.Element | null {
-  if (!password) return null;
-
-  const checks = [
-    { label: "8+ characters", pass: password.length >= 8 },
-    { label: "Uppercase letter", pass: /[A-Z]/.test(password) },
-    { label: "Number", pass: /[0-9]/.test(password) },
-    { label: "Special symbol", pass: /[^A-Za-z0-9]/.test(password) },
-  ];
-
-  const score = checks.filter((c) => c.pass).length;
-  const strengthColor =
-    score <= 1
-      ? "bg-destructive text-destructive"
-      : score === 2
-        ? "bg-amber-500 text-amber-500"
-        : score === 3
-          ? "bg-primary text-primary"
-          : "bg-emerald-500 text-emerald-500";
-
-  const strengthLabel =
-    score <= 1 ? "Weak" : score === 2 ? "Fair" : score === 3 ? "Good" : "Strong";
-
-  return (
-    <div className="space-y-2 pt-2 md:col-span-2">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground font-medium">New password strength</span>
-        <span className="font-semibold text-xs capitalize">{strengthLabel}</span>
-      </div>
-      <div className="grid grid-cols-4 gap-1.5 h-1.5 rounded-full overflow-hidden bg-muted">
-        {[1, 2, 3, 4].map((step) => (
-          <div
-            key={step}
-            className={`h-full transition-all duration-300 ${
-              score >= step ? strengthColor.split(" ")[0] : "bg-transparent"
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function PlatformProfilePasswordForm(): React.JSX.Element {
   const { t } = useTranslation();

@@ -41,7 +41,7 @@ export function PlatformAdminTable({
               {t('platform.roleAdmin')}
             </ModuleTableHeaderCell>
             <ModuleTableHeaderCell columnKey="permissions" className="px-4 py-3 w-48">
-              {t('platform.manageAdmins')}
+              {t('platform.adminPermissionsLabel')}
             </ModuleTableHeaderCell>
             <ModuleTableHeaderCell columnKey="actions" className="px-4 py-3 w-32 text-end">
               {t('common.actions')}
@@ -139,6 +139,7 @@ export function PlatformAdminTable({
                         type="button"
                         variant="outline"
                         size="sm"
+                        className="min-h-9 rounded-lg font-bold"
                         onClick={() => onEditAccess(admin)}
                       >
                         {t('platform.editAdminAccess')}
@@ -147,6 +148,7 @@ export function PlatformAdminTable({
                         type="button"
                         variant="outline"
                         size="sm"
+                        className="min-h-9 rounded-lg font-bold"
                         onClick={() => onToggleStatus(admin, isDisabled ? 'enable' : 'disable')}
                       >
                         {t(isDisabled ? 'platform.enableAdmin' : 'platform.disableAdmin')}
@@ -155,6 +157,7 @@ export function PlatformAdminTable({
                         type="button"
                         variant="destructive"
                         size="sm"
+                        className="min-h-9 rounded-lg font-bold"
                         onClick={() => onDelete(admin)}
                       >
                         {t('platform.deleteAdmin')}

@@ -105,7 +105,7 @@ export function PlatformDashboard(): React.JSX.Element {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-                {t("platform.welcomeBack", { name: platformUser?.name ?? "Operator" })}
+                {t("platform.welcomeBack", { name: platformUser?.name ?? t("platform.operatorRole") })}
               </h1>
               <p className="text-sm font-medium text-muted-foreground max-w-xl leading-relaxed mt-1">
                 {isSuperUser

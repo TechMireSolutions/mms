@@ -1,6 +1,10 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
-import { migrateAndRestartSchema, type MigrateAndRestartAccepted } from '@mms/shared';
+import { type MigrateAndRestartAccepted } from '@mms/shared';
+import {
+  migrateAndRestartSchema,
+  platformActivityLogsQuerySchema,
+} from '../../validation/platformSchemas.js';
 import {
   authenticatePlatform,
   requireMainDomain,
@@ -103,9 +107,9 @@ export default async function platformAdminSystemRoutes(
       '/activity-logs',
       { preHandler: [authenticatePlatform, requireSuperUser] },
       async (request, reply) => {
-        const query = request.query as { limit?: string; offset?: string };
-        const limit = query.limit ? parseInt(query.limit, 10) : 50;
-        const offset = query.offset ? parseInt(query.offset, 10) : 0;
+        const parsed = parseRequest(platformActivityLogsQuerySchema, request.query ?? {});
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+        const { limit, offset } = parsed.data;
         const logs = await listPlatformActivityLogs(limit, offset);
         return reply.send({ logs });
       },

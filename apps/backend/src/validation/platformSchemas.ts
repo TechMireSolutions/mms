@@ -12,4 +12,28 @@ export {
   platformUpdateAdminPermissionsBodySchema,
   platformAdminDisabledBodySchema,
   platformDeleteAdminBodySchema,
+  platformActivityLogsQuerySchema,
+  migrateAndRestartSchema,
+  platformSettingsUpdateSchema,
+  resetDatabaseSchema,
+} from '@mms/shared';
+
+export type {
+  PlatformSetupRegisterInput,
+  PlatformPasswordForgotInput,
+  PlatformPasswordResetInput,
+  PlatformPasswordResendInput,
+  PlatformProfilePatchInput,
+  PlatformChangePasswordInput,
+  WorkspaceEnabledPatchInput,
+  PlatformWorkspaceModulesPatchInput,
+  WorkspaceDeleteInput,
+  PlatformCreateAdminInput,
+  PlatformUpdateAdminPermissionsInput,
+  PlatformAdminDisabledInput,
+  PlatformDeleteAdminInput,
+  PlatformActivityLogsQueryInput,
+  MigrateAndRestartInput,
+  PlatformSettingsUpdateInput,
+  ResetDatabaseInput,
 } from '@mms/shared';

@@ -57,42 +57,59 @@ export function PlatformWorkspaceModulesDialog({
       subtitle={t('platform.modulesSubtitle')}
       footer={
         <>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            className="min-h-11 rounded-xl font-bold"
+          >
             {t('common.cancel')}
           </Button>
-          <Button onClick={handleSave} disabled={isPending || isLoading}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button
+            onClick={handleSave}
+            disabled={isPending || isLoading}
+            className="min-h-11 rounded-xl font-bold"
+          >
+            {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" aria-hidden />}
             {t('common.save')}
           </Button>
         </>
       }
     >
-      <div className="flex-1 overflow-y-auto px-1 py-2">
+      <div className="flex-1 overflow-y-auto px-1 py-2 text-start">
         {isLoading ? (
           <div className="flex items-center justify-center p-8 text-muted-foreground">
-            <Loader2 className="h-8 w-8 animate-spin" />
+            <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 pb-4">
             {SYSTEM_MODULES.map((module) => (
               <div
                 key={module.id}
-                className="flex items-start space-x-3 rounded-lg border p-4 shadow-sm"
+                className="flex items-start gap-3 rounded-xl border border-border/60 p-4 shadow-2xs bg-card/50 hover:bg-card transition-colors"
               >
                 <Checkbox
                   id={`module-${module.id}`}
                   checked={selectedModules.includes(module.id)}
                   disabled={module.required || isPending}
                   onCheckedChange={(checked) => toggleModule(module.id, checked as boolean)}
+                  className="mt-0.5"
                 />
                 <div className="space-y-1 leading-none">
                   <label
                     htmlFor={`module-${module.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                   >
-                    {module.label} {module.required && <span className="text-xs text-muted-foreground">{t('platform.moduleRequired')}</span>}
+                    {module.label}{' '}
+                    {module.required && (
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {t('platform.moduleRequired')}
+                      </span>
+                    )}
                   </label>
-                  <p className="text-sm text-muted-foreground">{module.description}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+                    {module.description}
+                  </p>
                 </div>
               </div>
             ))}

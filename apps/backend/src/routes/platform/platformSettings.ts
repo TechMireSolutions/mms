@@ -1,6 +1,9 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
-import { platformSettingsUpdateSchema, resetDatabaseSchema } from '@mms/shared';
+import {
+  platformSettingsUpdateSchema,
+  resetDatabaseSchema,
+} from '../../validation/platformSchemas.js';
 import {
   authenticatePlatform,
   requireMainDomain,

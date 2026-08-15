@@ -121,7 +121,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             size="icon"
             onClick={() => closeMobileSidebar()}
             className="h-8 w-8 text-sidebar-muted-foreground hover:text-sidebar-foreground shrink-0 rounded-lg"
-            aria-label="Close menu"
+            aria-label={t('nav.closeSidebar')}
           >
             <X className="w-4 h-4" />
           </Button>
@@ -182,8 +182,8 @@ export function PlatformSidebar(): React.JSX.Element | null {
               size="icon"
               onClick={() => setCollapsed(!collapsed)}
               className="h-11 w-11 shrink-0 rounded-lg text-sidebar-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
-              title={collapsed ? 'Expand sidebar' : t('nav.collapse')}
-              aria-label={collapsed ? 'Expand sidebar' : t('nav.collapse')}
+              title={collapsed ? t('nav.expand') : t('nav.collapse')}
+              aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
             >
               {collapsed ? (
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" />

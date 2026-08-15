@@ -7,13 +7,12 @@ import {
 } from '../../middleware/authenticatePlatform.js';
 import {
   deleteWorkspace,
+  getWorkspaceGrantedModules,
   listPlatformWorkspaces,
   setWorkspaceEnabled,
+  updateWorkspaceModules,
 } from '../../services/workspaceService.js';
 import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
-import { runWithTenant } from '../../lib/tenantContext.js';
-import { getObject, saveObject } from '../../db/database.js';
-import { SYSTEM_MODULES } from '@mms/shared';
 import { subdomainParamsSchema } from '../../validation/commonSchemas.js';
 import {
   workspaceDeleteBodySchema,
@@ -65,71 +64,30 @@ export default async function platformWorkspaceRoutes(
   fastify.get('/:subdomain/modules', async (request, reply) => {
     const params = parseRequest(subdomainParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
-    
-    return runWithTenant(params.data.subdomain, async () => {
-      const platformSettings = (await getObject('platform_settings')) as any || {};
-      const grantedModules = platformSettings.grantedModules || {};
-      
-      const modules = Object.entries(grantedModules)
-        .filter(([_, granted]) => granted)
-        .map(([id]) => id);
-        
-      return reply.send({ modules });
-    });
+
+    const modules = await getWorkspaceGrantedModules(params.data.subdomain);
+    return reply.send({ modules });
   });
 
   fastify.patch('/:subdomain/modules', async (request, reply) => {
     const { platformUser } = request as PlatformAuthenticatedRequest;
     const params = parseRequest(subdomainParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
-    
+
     const body = parseRequest(platformWorkspaceModulesPatchBodySchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
 
-    return runWithTenant(params.data.subdomain, async () => {
-      const platformSettings = (await getObject('platform_settings')) as any || {};
-      const globalSettings = (await getObject('global_settings')) as any || {};
-      
-      const grantedModules: Record<string, boolean> = {};
-      const enabledModules: Record<string, boolean> = globalSettings.enabledModules || {};
+    const result = await updateWorkspaceModules(params.data.subdomain, body.data.modules);
 
-      for (const mod of SYSTEM_MODULES) {
-        if (mod.required) {
-          grantedModules[mod.id] = true;
-          enabledModules[mod.id] = true;
-        } else {
-          const isGranted = body.data.modules.includes(mod.id);
-          const wasGranted = platformSettings.grantedModules?.[mod.id] === true;
-          grantedModules[mod.id] = isGranted;
-          
-          if (!isGranted) {
-            enabledModules[mod.id] = false;
-          } else if (!wasGranted) {
-            enabledModules[mod.id] = true;
-          }
-        }
-      }
-
-      await saveObject('platform_settings', {
-        ...platformSettings,
-        grantedModules,
-      });
-
-      await saveObject('global_settings', {
-        ...globalSettings,
-        enabledModules,
-      });
-
-      await insertPlatformActivityLog({
-        userId: platformUser.id,
-        userEmail: platformUser.email,
-        action: 'update_workspace_modules',
-        details: { subdomain: params.data.subdomain, modules: body.data.modules },
-        ipAddress: request.ip,
-      });
-
-      return reply.send({ success: true, modules: body.data.modules });
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'update_workspace_modules',
+      details: { subdomain: params.data.subdomain, modules: body.data.modules },
+      ipAddress: request.ip,
     });
+
+    return reply.send({ success: true, modules: result.modules });
   });
 
   await fastify.register(async function platformWorkspaceDeleteRateLimited(inner) {

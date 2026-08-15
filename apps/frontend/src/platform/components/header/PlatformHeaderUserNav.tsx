@@ -56,16 +56,16 @@ export function PlatformHeaderUserNav({
           type="button"
           variant="outline"
           onClick={onOpenSearch}
-          aria-label="Search platform console (Cmd+K)"
+          aria-label={t('platform.openSearchAria')}
           className={cn(
             'relative flex items-center gap-2 rounded-lg text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer',
             compact ? 'h-9 w-9 p-0 justify-center min-h-9 min-w-9' : 'h-9 px-3 py-1.5 min-h-9',
           )}
         >
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           {!compact && (
             <>
-              <span className="hidden md:inline font-normal">{t('nav.globalSearchPlaceholder') || 'Search console...'}</span>
+              <span className="hidden md:inline font-normal">{t('platform.searchConsolePlaceholder')}</span>
               <kbd className="hidden md:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground select-none font-mono">
                 ⌘K
               </kbd>
@@ -81,24 +81,24 @@ export function PlatformHeaderUserNav({
             type="button"
             variant="ghost"
             size="icon"
-            aria-label="Platform Notifications"
+            aria-label={t('platform.notificationsAria')}
             className="relative min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted transition-colors"
           >
-            <Bell className="h-4.5 w-4.5 text-muted-foreground" />
+            <Bell className="h-4.5 w-4.5 text-muted-foreground" aria-hidden />
             {unreadCount > 0 && (
               <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] p-0 rounded-2xl shadow-xl border-border/60">
+        <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] p-0 rounded-2xl shadow-xl border-border/60 text-start">
           {popoverOpen && (
             <>
               <div className="border-b border-border px-4 py-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-foreground">Platform Notifications</h3>
+                  <h3 className="text-sm font-black text-foreground">{t('platform.notificationsTitle')}</h3>
                   {unreadCount > 0 && (
                     <Badge variant="secondary" className="px-2 py-0.5 text-xs font-bold bg-primary/10 text-primary">
-                      {unreadCount} new
+                      {t('platform.notificationsNewBadge', { count: String(unreadCount) })}
                     </Badge>
                   )}
                 </div>
@@ -106,7 +106,7 @@ export function PlatformHeaderUserNav({
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="px-4 py-6 text-center text-xs text-muted-foreground font-semibold">
-                    All caught up! No active notifications.
+                    {t('platform.notificationsAllCaughtUp')}
                   </div>
                 ) : (
                   notifications.map((notification) => (
@@ -141,7 +141,7 @@ export function PlatformHeaderUserNav({
                   }}
                   className="text-xs font-bold text-primary hover:underline min-h-10 p-0"
                 >
-                  View full analytics & reports
+                  {t('platform.notificationsViewAllReports')}
                 </Button>
               </div>
             </>
@@ -158,7 +158,7 @@ export function PlatformHeaderUserNav({
           <Button
             type="button"
             variant="ghost"
-            aria-label="Platform account menu"
+            aria-label={t('platform.myAccount')}
             className={cn(
               'flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto',
               compact ? 'min-h-11 min-w-11 gap-1 p-2' : 'min-h-11 gap-2.5 py-1.5 ps-2 pe-3',
@@ -173,7 +173,7 @@ export function PlatformHeaderUserNav({
               <>
                 <div className="hidden sm:flex flex-col text-start">
                   <span className="text-xs font-bold text-foreground leading-tight truncate max-w-[120px]">
-                    {platformUser?.name ?? 'Operator'}
+                    {platformUser?.name ?? t('platform.operatorRole')}
                   </span>
                   <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1 leading-tight">
                     {isSuperUser ? (
@@ -191,7 +191,7 @@ export function PlatformHeaderUserNav({
             ) : null}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-2xl shadow-xl border-border/60">
+        <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-2xl shadow-xl border-border/60 text-start">
           <DropdownMenuLabel className="p-2">
             <div className="flex flex-col text-start">
               <p className="text-sm font-black text-foreground">{platformUser?.name}</p>

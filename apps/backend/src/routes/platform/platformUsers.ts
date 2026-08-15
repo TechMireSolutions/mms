@@ -21,6 +21,7 @@ import {
   platformDeleteAdminBodySchema,
   platformUpdateAdminPermissionsBodySchema,
 } from '../../validation/platformSchemas.js';
+import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { sendForbidden, sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
@@ -71,18 +72,19 @@ export default async function platformUsersRoutes(
 
   fastify.patch('/:id/permissions', async (request, reply) => {
     const { platformUser } = request as PlatformAuthenticatedRequest;
-    const { id } = request.params as { id: string };
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
     const parsed = parseRequest(platformUpdateAdminPermissionsBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const user = await setPlatformAdminPermissions(id, parsed.data.permissions);
+    const user = await setPlatformAdminPermissions(params.data.id, parsed.data.permissions);
 
     await insertPlatformActivityLog({
       userId: platformUser.id,
       userEmail: platformUser.email,
       action: 'update_admin_permissions',
       details: {
-        adminId: id,
+        adminId: params.data.id,
         adminEmail: user.email,
         permissions: parsed.data.permissions,
       },
@@ -97,11 +99,12 @@ export default async function platformUsersRoutes(
 
     inner.patch('/:id/disabled', async (request, reply) => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
-      const { id } = request.params as { id: string };
+      const params = parseRequest(resourceIdParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
       const parsed = parseRequest(platformAdminDisabledBodySchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-      if (id === platformUser.id) {
+      if (params.data.id === platformUser.id) {
         return sendForbidden(reply, 'Cannot disable your own platform account');
       }
 
@@ -110,14 +113,14 @@ export default async function platformUsersRoutes(
         return sendInvalidCurrentPassword(reply);
       }
 
-      const user = await setPlatformAdminDisabled(id, parsed.data.disabled);
+      const user = await setPlatformAdminDisabled(params.data.id, parsed.data.disabled);
 
       await insertPlatformActivityLog({
         userId: platformUser.id,
         userEmail: platformUser.email,
         action: parsed.data.disabled ? 'disable_admin' : 'enable_admin',
         details: {
-          adminId: id,
+          adminId: params.data.id,
           adminEmail: user.email,
           disabled: parsed.data.disabled,
         },
@@ -129,11 +132,12 @@ export default async function platformUsersRoutes(
 
     inner.delete('/:id', async (request, reply) => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
-      const { id } = request.params as { id: string };
+      const params = parseRequest(resourceIdParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
       const parsed = parseRequest(platformDeleteAdminBodySchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-      if (id === platformUser.id) {
+      if (params.data.id === platformUser.id) {
         return sendForbidden(reply, 'Cannot delete your own platform account');
       }
 
@@ -142,17 +146,17 @@ export default async function platformUsersRoutes(
         return sendInvalidCurrentPassword(reply);
       }
 
-      await deletePlatformAdmin(id);
+      await deletePlatformAdmin(params.data.id);
 
       await insertPlatformActivityLog({
         userId: platformUser.id,
         userEmail: platformUser.email,
         action: 'delete_admin',
-        details: { adminId: id },
+        details: { adminId: params.data.id },
         ipAddress: request.ip,
       });
 
-      return reply.send({ deleted: true, id });
+      return reply.send({ deleted: true, id: params.data.id });
     });
   });
 }

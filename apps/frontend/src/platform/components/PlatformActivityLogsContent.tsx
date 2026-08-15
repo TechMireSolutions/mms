@@ -14,6 +14,7 @@ import {
   Settings,
   Key,
 } from 'lucide-react';
+import { formatDate } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformActivityLogs } from '@/platform/hooks/usePlatformActivityLogs';
 import { WidgetCard } from '@/components/ui/WidgetCard';
@@ -22,6 +23,7 @@ import { CardSkeleton } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { cn } from '@/lib/utils';
 
@@ -33,10 +35,10 @@ function getActionMeta(action: string): { tone: string; Icon: React.ElementType 
     return { tone: SEMANTIC_BADGE.success, Icon: PlusCircle };
   }
   if (action.includes('migrate') || action.includes('restart') || action.includes('reload')) {
-    return { tone: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25', Icon: RefreshCw };
+    return { tone: SEMANTIC_BADGE.info, Icon: RefreshCw };
   }
   if (action.includes('login') || action.includes('auth') || action.includes('password')) {
-    return { tone: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25', Icon: Key };
+    return { tone: SEMANTIC_BADGE.warning, Icon: Key };
   }
   if (action.includes('setting') || action.includes('config') || action.includes('update')) {
     return { tone: SEMANTIC_BADGE.primary, Icon: Settings };
@@ -86,15 +88,16 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
             subtitle={t('platform.activityLogsSubtitle')}
           />
 
-          {/* Search Filter Input */}
-          <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2" />
-            <input
+          {/* Search Filter Input using Design System Input */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden />
+            <Input
               type="text"
               value={filterQuery}
               onChange={(e) => setFilterQuery(e.target.value)}
-              placeholder="Filter logs by user, action..."
-              className="w-full h-9 ps-9 pe-3 text-xs rounded-xl border border-border/80 bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder={t('platform.filterLogsPlaceholder')}
+              className="w-full h-9 ps-9 pe-3 text-xs rounded-xl"
+              aria-label={t('platform.filterLogsPlaceholder')}
             />
           </div>
         </div>
@@ -102,17 +105,14 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
         {items.length === 0 ? (
           <EmptyState
             icon={ShieldAlert}
-            title={filterQuery ? 'No matching logs found' : t('platform.noActivityLogsYet')}
+            title={filterQuery ? t('platform.noMatchingLogs') : t('platform.noActivityLogsYet')}
             compact
           />
         ) : (
           <div className="relative border-s-2 border-border/60 ms-4 ps-6 space-y-4">
             {items.map((log) => {
               const { tone, Icon } = getActionMeta(log.action);
-              const formattedDate = new Date(log.createdAt).toLocaleString(undefined, {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-              });
+              const formattedDate = formatDate(log.createdAt);
               const isExpanded = expandedLogId === log.id;
               const hasDetails = log.details && Object.keys(log.details).length > 0;
 
@@ -160,7 +160,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
                           className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground gap-1"
                         >
                           {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                          {isExpanded ? 'Hide Payload' : 'Inspect Details'}
+                          {isExpanded ? t('common.close') : t('common.readMore')}
                         </Button>
 
                         {isExpanded && (

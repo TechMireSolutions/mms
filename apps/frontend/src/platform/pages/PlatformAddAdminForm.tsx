@@ -12,7 +12,7 @@ import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { getPlatformRegisterError } from '@/platform/lib/platformValidation';
 import { useAddPlatformAdmin } from '@/platform/hooks/usePlatformAdmins';
 import { PlatformAdminPermissionsFields } from '@/platform/components/PlatformAdminPermissionsFields';
-import { getPasswordStrength } from '@/tenant/features/profile/passwordStrength';
+import { PasswordStrengthMeter } from '@/components/ui/PasswordStrengthMeter';
 import { cn } from '@/lib/utils';
 
 export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?: boolean } = {}): React.JSX.Element {
@@ -26,8 +26,6 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
     DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const passwordStrength = getPasswordStrength(password);
 
   const resetForm = (): void => {
     setName('');
@@ -159,26 +157,7 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
               disabled={addAdmin.isPending}
             />
 
-            {password.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <div className="flex h-1.5 w-full gap-1.5 overflow-hidden rounded-full bg-muted">
-                  {[1, 2, 3, 4, 5].map((level) => (
-                    <div
-                      key={level}
-                      className={cn(
-                        'h-full flex-1 transition-all duration-300',
-                        passwordStrength.score >= level ? passwordStrength.colorClass : 'bg-muted/40',
-                      )}
-                    />
-                  ))}
-                </div>
-                {passwordStrength.key && (
-                  <p className="text-[11px] font-semibold text-muted-foreground">
-                    {t(passwordStrength.key)}
-                  </p>
-                )}
-              </div>
-            )}
+            <PasswordStrengthMeter password={password} />
           </div>
 
           {/* Capability Flags */}

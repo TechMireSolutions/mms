@@ -10,13 +10,15 @@ import {
   FOOTER_MAX,
   defaultFooterForMadrasa,
 } from "@/components/branding/BrandingShared";
+import { useTranslation } from "@/hooks/useTranslation";
 import type { CreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 
 interface CreateMadrasaThemeSectionProps {
   controller: CreateMadrasaController;
 }
 
-export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSectionProps): React.ReactElement {
+export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSectionProps): React.JSX.Element {
+  const { language } = useTranslation();
   const { t, data, onChange, updateField, resolvedFooter } = controller;
 
   return (
@@ -51,14 +53,15 @@ export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSect
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => updateField("footerText", defaultFooterForMadrasa(data.name, "en"))}
+            className="min-h-9 rounded-lg font-bold gap-1.5"
+            onClick={() => updateField("footerText", defaultFooterForMadrasa(data.name, language))}
           >
-            <Wand2 className="h-3.5 w-3.5" />
+            <Wand2 className="h-3.5 w-3.5 text-primary" aria-hidden />
             {t("theme.footerGenerate")}
           </Button>
         }
       >
-        <div className="space-y-2">
+        <div className="space-y-2 text-start">
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="onboarding-footer">{t("theme.footerLabel")}</Label>
             <span className="text-xs text-muted-foreground" aria-live="polite">
@@ -70,7 +73,7 @@ export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSect
             value={data.footerText}
             maxLength={FOOTER_MAX}
             rows={2}
-            placeholder={defaultFooterForMadrasa(data.name, "en")}
+            placeholder={defaultFooterForMadrasa(data.name, language)}
             aria-describedby="onboarding-footer-hint"
             onChange={(event) => updateField("footerText", event.target.value)}
           />
@@ -78,7 +81,7 @@ export function CreateMadrasaThemeSection({ controller }: CreateMadrasaThemeSect
         </div>
         <div className="mt-4 rounded-lg border border-border bg-muted/30 px-4 py-3 text-center">
           <p className="text-xs text-muted-foreground">{t("theme.footerPreviewLabel")}</p>
-          <p className="mt-1 text-xs text-foreground">{resolvedFooter}</p>
+          <p className="mt-1 text-xs text-foreground font-medium">{resolvedFooter}</p>
         </div>
       </SectionCard>
     </>

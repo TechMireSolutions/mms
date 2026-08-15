@@ -4,6 +4,7 @@ import {
   type PublicWorkspaceSummary,
   type PlatformWorkspaceRow,
   type BrandingSettings,
+  SYSTEM_MODULES,
   mergeBrandingSettings,
   slugifySubdomain,
   isValidSubdomain,
@@ -12,25 +13,22 @@ import {
 } from '@mms/shared';
 import {
   getObject,
+  saveObject,
   purgeTenantDataBySubdomain,
   runInTransaction,
 } from '../db/database.js';
 import { getRequestTenant, runWithTenant } from '../lib/tenantContext.js';
-import { getDb } from '../db/dbClient.js';
-import { workspaces as workspacesTable } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+import {
+  deleteWorkspaceRow,
+  findWorkspaceRowBySubdomain,
+  insertWorkspaceRow,
+  listWorkspaceRows,
+  updateWorkspaceBrandingRow,
+  updateWorkspaceEnabledRow,
+} from '../db/repositories/workspaceRepository.js';
 
 async function listWorkspaces(): Promise<Workspace[]> {
-  const rows = await getDb().select().from(workspacesTable);
-  return rows.map((ws) => ({
-    id: ws.id,
-    subdomain: ws.subdomain,
-    madrasaName: ws.madrasaName,
-    tagline: ws.tagline ?? undefined,
-    country: ws.country ?? undefined,
-    enabled: ws.enabled,
-    createdAt: ws.createdAt.toISOString(),
-  }));
+  return listWorkspaceRows();
 }
 
 /** Public branding for a workspace subdomain (login shell, registry cards). */
@@ -91,7 +89,7 @@ export async function deleteWorkspace(subdomain: string): Promise<Workspace | nu
     const ws = await getWorkspaceBySubdomain(normalized);
     if (!ws) return null;
     await purgeTenantDataBySubdomain(normalized);
-    await getDb().delete(workspacesTable).where(eq(workspacesTable.subdomain, normalized));
+    await deleteWorkspaceRow(normalized);
     return ws;
   });
 }
@@ -104,9 +102,7 @@ export async function setWorkspaceEnabled(
   return runInTransaction(async () => {
     const ws = await getWorkspaceBySubdomain(normalized);
     if (!ws) return null;
-    await getDb().update(workspacesTable)
-      .set({ enabled })
-      .where(eq(workspacesTable.subdomain, normalized));
+    await updateWorkspaceEnabledRow(normalized, enabled);
     return { ...ws, enabled };
   });
 }
@@ -127,18 +123,7 @@ export async function assertWorkspaceActive(subdomain: string): Promise<Workspac
 
 export async function getWorkspaceBySubdomain(subdomain: string): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  const rows = await getDb().select().from(workspacesTable).where(eq(workspacesTable.subdomain, normalized));
-  const ws = rows[0];
-  if (!ws) return null;
-  return {
-    id: ws.id,
-    subdomain: ws.subdomain,
-    madrasaName: ws.madrasaName,
-    tagline: ws.tagline ?? undefined,
-    country: ws.country ?? undefined,
-    enabled: ws.enabled,
-    createdAt: ws.createdAt.toISOString(),
-  };
+  return findWorkspaceRowBySubdomain(normalized);
 }
 
 /** Resolves workspace for the active request tenant only — never falls back on apex. */
@@ -174,12 +159,7 @@ export async function syncWorkspaceFromBranding(
   branding: Pick<BrandingSettings, 'madrasaName' | 'tagline'>,
 ): Promise<void> {
   const normalized = normalizeSubdomainInput(subdomain);
-  await getDb().update(workspacesTable)
-    .set({
-      madrasaName: branding.madrasaName.trim(),
-      tagline: branding.tagline?.trim() || null,
-    })
-    .where(eq(workspacesTable.subdomain, normalized));
+  await updateWorkspaceBrandingRow(normalized, branding);
 }
 
 export async function createWorkspace(workspaceInput: {
@@ -213,7 +193,7 @@ export async function createWorkspace(workspaceInput: {
       enabled: true,
     };
 
-    await getDb().insert(workspacesTable).values(newWs);
+    await insertWorkspaceRow(newWs);
 
     return {
       ...newWs,
@@ -221,5 +201,68 @@ export async function createWorkspace(workspaceInput: {
       country: newWs.country ?? undefined,
       createdAt: new Date().toISOString(),
     };
+  });
+}
+
+/**
+ * Returns granted module IDs for the specified workspace.
+ */
+export async function getWorkspaceGrantedModules(subdomain: string): Promise<string[]> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  return runWithTenant(normalized, async () => {
+    const platformSettings = (await getObject('platform_settings')) as Record<string, unknown> | null;
+    const grantedModules = (platformSettings?.grantedModules as Record<string, boolean> | undefined) || {};
+    return Object.entries(grantedModules)
+      .filter(([_, granted]) => Boolean(granted))
+      .map(([id]) => id);
+  });
+}
+
+/**
+ * Updates granted and enabled modules for the specified workspace.
+ */
+export async function updateWorkspaceModules(
+  subdomain: string,
+  modules: string[],
+): Promise<{ modules: string[] }> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  return runWithTenant(normalized, async () => {
+    const platformSettings = ((await getObject('platform_settings')) as Record<string, unknown> | null) || {};
+    const globalSettings = ((await getObject('global_settings')) as Record<string, unknown> | null) || {};
+
+    const prevGranted = (platformSettings.grantedModules as Record<string, boolean> | undefined) || {};
+    const prevEnabled = (globalSettings.enabledModules as Record<string, boolean> | undefined) || {};
+
+    const grantedModules: Record<string, boolean> = {};
+    const enabledModules: Record<string, boolean> = { ...prevEnabled };
+
+    for (const mod of SYSTEM_MODULES) {
+      if (mod.required) {
+        grantedModules[mod.id] = true;
+        enabledModules[mod.id] = true;
+      } else {
+        const isGranted = modules.includes(mod.id);
+        const wasGranted = prevGranted[mod.id] === true;
+        grantedModules[mod.id] = isGranted;
+
+        if (!isGranted) {
+          enabledModules[mod.id] = false;
+        } else if (!wasGranted) {
+          enabledModules[mod.id] = true;
+        }
+      }
+    }
+
+    await saveObject('platform_settings', {
+      ...platformSettings,
+      grantedModules,
+    });
+
+    await saveObject('global_settings', {
+      ...globalSettings,
+      enabledModules,
+    });
+
+    return { modules };
   });
 }

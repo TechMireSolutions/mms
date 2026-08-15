@@ -66,7 +66,7 @@ export function PlatformReports(): React.JSX.Element {
               {
                 icon: ShieldCheck,
                 label: t("platform.roleSuperUser"),
-                value: platformUser?.name ?? "Operator",
+                value: platformUser?.name ?? t("platform.operatorRole"),
                 accent: "warning",
               },
             ]}

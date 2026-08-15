@@ -1,10 +1,10 @@
-import { eq } from 'drizzle-orm';
 import type { PlatformSettings, PlatformSettingsUpdateInput } from '@mms/shared';
 import { DEFAULT_PLATFORM_SETTINGS } from '@mms/shared';
-import { getDb } from '../../db/dbClient.js';
-import { platformSettings } from '../../db/schema.js';
-
-const GLOBAL_SETTINGS_ID = 'global';
+import {
+  findPlatformSettingsRow,
+  insertPlatformSettingsDefaultRow,
+  upsertPlatformSettingsRow,
+} from '../../db/repositories/platformSettingsRepository.js';
 
 let cachedPlatformSettings: PlatformSettings = { ...DEFAULT_PLATFORM_SETTINGS };
 
@@ -13,49 +13,23 @@ let cachedPlatformSettings: PlatformSettings = { ...DEFAULT_PLATFORM_SETTINGS };
  * Creates the single 'global' row if it does not exist yet.
  */
 export async function initPlatformSettings(): Promise<PlatformSettings> {
-  const db = getDb();
   try {
-    const rows = await db
-      .select()
-      .from(platformSettings)
-      .where(eq(platformSettings.id, GLOBAL_SETTINGS_ID))
-      .limit(1);
-
-    if (rows.length > 0 && rows[0]) {
-      const row = rows[0];
-      cachedPlatformSettings = {
-        id: row.id,
-        syncTlsOnCreate: row.syncTlsOnCreate,
-        tlsExtraSans: row.tlsExtraSans,
-        certbotEmail: row.certbotEmail,
-        updatedAt: row.updatedAt?.toISOString(),
-      };
+    const existing = await findPlatformSettingsRow();
+    if (existing) {
+      cachedPlatformSettings = existing;
     } else {
       const defaultSyncTls = process.env.MMS_SYNC_TLS_ON_CREATE !== 'false';
       const defaultTlsExtraSans = process.env.MMS_TLS_EXTRA_SANS?.trim() || '';
       const defaultCertbotEmail = process.env.MMS_CERTBOT_EMAIL?.trim() || '';
 
-      const inserted = await db
-        .insert(platformSettings)
-        .values({
-          id: GLOBAL_SETTINGS_ID,
-          syncTlsOnCreate: defaultSyncTls,
-          tlsExtraSans: defaultTlsExtraSans,
-          certbotEmail: defaultCertbotEmail,
-          updatedAt: new Date(),
-        })
-        .onConflictDoNothing()
-        .returning();
+      const inserted = await insertPlatformSettingsDefaultRow({
+        syncTlsOnCreate: defaultSyncTls,
+        tlsExtraSans: defaultTlsExtraSans,
+        certbotEmail: defaultCertbotEmail,
+      });
 
-      if (inserted.length > 0 && inserted[0]) {
-        const row = inserted[0];
-        cachedPlatformSettings = {
-          id: row.id,
-          syncTlsOnCreate: row.syncTlsOnCreate,
-          tlsExtraSans: row.tlsExtraSans,
-          certbotEmail: row.certbotEmail,
-          updatedAt: row.updatedAt?.toISOString(),
-        };
+      if (inserted) {
+        cachedPlatformSettings = inserted;
       }
     }
   } catch (error) {
@@ -78,40 +52,8 @@ export function getPlatformSettings(): PlatformSettings {
 export async function updatePlatformSettings(
   input: PlatformSettingsUpdateInput,
 ): Promise<PlatformSettings> {
-  const db = getDb();
   const current = getPlatformSettings();
-
-  const syncTlsOnCreate = input.syncTlsOnCreate ?? current.syncTlsOnCreate;
-  const tlsExtraSans = input.tlsExtraSans !== undefined ? input.tlsExtraSans.trim() : current.tlsExtraSans;
-  const certbotEmail = input.certbotEmail !== undefined ? input.certbotEmail.trim() : current.certbotEmail;
-  const updatedAt = new Date();
-
-  await db
-    .insert(platformSettings)
-    .values({
-      id: GLOBAL_SETTINGS_ID,
-      syncTlsOnCreate,
-      tlsExtraSans,
-      certbotEmail,
-      updatedAt,
-    })
-    .onConflictDoUpdate({
-      target: platformSettings.id,
-      set: {
-        syncTlsOnCreate,
-        tlsExtraSans,
-        certbotEmail,
-        updatedAt,
-      },
-    });
-
-  cachedPlatformSettings = {
-    id: GLOBAL_SETTINGS_ID,
-    syncTlsOnCreate,
-    tlsExtraSans,
-    certbotEmail,
-    updatedAt: updatedAt.toISOString(),
-  };
-
+  const next = await upsertPlatformSettingsRow(input, current);
+  cachedPlatformSettings = next;
   return cachedPlatformSettings;
 }

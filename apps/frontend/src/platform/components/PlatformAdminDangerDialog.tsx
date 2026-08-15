@@ -25,7 +25,7 @@ export function PlatformAdminDangerDialog({
   open,
   onOpenChange,
 }: PlatformAdminDangerDialogProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir, language } = useTranslation();
   const setDisabled = useSetPlatformAdminDisabled();
   const deleteAdmin = useDeletePlatformAdmin();
   const [password, setPassword] = useState('');
@@ -92,8 +92,8 @@ export function PlatformAdminDangerDialog({
       onSave={handleSave}
       saving={pending}
       saveDisabled={!password.trim()}
-      dir="ltr"
-      lang="en"
+      dir={dir}
+      lang={language}
     >
       <div className="space-y-4 text-start">
         <p className="text-sm text-muted-foreground leading-relaxed">{t(descKey)}</p>

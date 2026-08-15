@@ -6,8 +6,27 @@ import {
   migrateAndRestartSchema,
   MIGRATE_AND_RESTART_CONFIRM,
 } from '../platformSettingsTypes.js';
+import { platformActivityLogsQuerySchema } from '../platformSchemas.js';
 
 describe('platformSettingsValidation', () => {
+  describe('platformActivityLogsQuerySchema', () => {
+    it('applies defaults for empty query', () => {
+      const parsed = platformActivityLogsQuerySchema.parse({});
+      expect(parsed).toEqual({ limit: 50, offset: 0 });
+    });
+
+    it('coerces and clamps valid query parameters', () => {
+      const parsed = platformActivityLogsQuerySchema.parse({ limit: '25', offset: '10' });
+      expect(parsed).toEqual({ limit: 25, offset: 10 });
+    });
+
+    it('rejects out-of-range limit and negative offset', () => {
+      expect(platformActivityLogsQuerySchema.safeParse({ limit: '0' }).success).toBe(false);
+      expect(platformActivityLogsQuerySchema.safeParse({ limit: '201' }).success).toBe(false);
+      expect(platformActivityLogsQuerySchema.safeParse({ offset: '-1' }).success).toBe(false);
+    });
+  });
+
   describe('platformSettingsUpdateSchema', () => {
     it('validates correct update payloads', () => {
       const valid = {

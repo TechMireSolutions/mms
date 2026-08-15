@@ -33,7 +33,7 @@ export function PlatformPageShellHeader({ onOpenSearch }: PlatformPageShellHeade
             size="icon"
             onClick={openMobileSidebar}
             aria-label={t('nav.openMenu')}
-            className="md:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-foreground hover:bg-muted"
+            className="md:hidden flex min-h-11 min-w-11 h-11 w-11 shrink-0 items-center justify-center rounded-xl text-foreground hover:bg-muted"
           >
             <Menu className="h-5 w-5" />
           </Button>

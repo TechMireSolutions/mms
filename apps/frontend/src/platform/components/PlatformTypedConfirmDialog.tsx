@@ -135,12 +135,15 @@ export function PlatformTypedConfirmDialog({
           {error ? <FieldErrorMessage message={error} /> : null}
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending} className="min-h-11 rounded-xl font-bold">
+            {t('common.cancel')}
+          </AlertDialogCancel>
           <Button
             type="button"
             variant={confirmVariant}
             disabled={pending || !matches || !password.trim()}
             onClick={onConfirm}
+            className="min-h-11 rounded-xl font-bold"
           >
             {pending ? (
               <>

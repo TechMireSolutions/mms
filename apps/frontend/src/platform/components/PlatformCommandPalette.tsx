@@ -12,9 +12,11 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import type { AppTranslationKey } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export interface PlatformCommandPaletteProps {
@@ -24,8 +26,7 @@ export interface PlatformCommandPaletteProps {
 
 interface PlatformCommandItem {
   id: string;
-  labelKey: string;
-  fallbackLabel: string;
+  labelKey: AppTranslationKey;
   category: 'Navigation' | 'Actions';
   path: string;
   icon: React.ElementType;
@@ -35,17 +36,15 @@ interface PlatformCommandItem {
 const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'dashboard',
-    labelKey: 'platform.navDashboard',
-    fallbackLabel: 'Dashboard Overview',
+    labelKey: 'dashboard.title',
     category: 'Navigation',
     path: ROUTES.platformDashboard,
     icon: LayoutDashboard,
-    keywords: ['home', 'overview', 'metrics', 'stats', 'kpi'],
+    keywords: ['home', 'overview', 'metrics', 'stats', 'kpi', 'dashboard'],
   },
   {
     id: 'workspaces',
-    labelKey: 'platform.navWorkspaces',
-    fallbackLabel: 'Madrasas & Workspaces',
+    labelKey: 'platform.manageMadrasas',
     category: 'Navigation',
     path: ROUTES.platformWorkspaces,
     icon: Building2,
@@ -53,8 +52,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   },
   {
     id: 'reports',
-    labelKey: 'platform.navReports',
-    fallbackLabel: 'Analytics & Reports',
+    labelKey: 'module.reports',
     category: 'Navigation',
     path: ROUTES.platformReports,
     icon: BarChart3,
@@ -62,8 +60,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   },
   {
     id: 'activity-logs',
-    labelKey: 'platform.navActivityLogs',
-    fallbackLabel: 'Activity Audit Logs',
+    labelKey: 'platform.activityLogsTitle',
     category: 'Navigation',
     path: ROUTES.platformActivityLogs,
     icon: Activity,
@@ -71,17 +68,15 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   },
   {
     id: 'system',
-    labelKey: 'platform.navSystem',
-    fallbackLabel: 'System Diagnostics & Health',
+    labelKey: 'platform.systemMaintenance',
     category: 'Navigation',
     path: ROUTES.platformSystem,
     icon: Server,
-    keywords: ['system', 'health', 'database', 'postgres', 'rls'],
+    keywords: ['system', 'health', 'database', 'postgres', 'rls', 'maintenance'],
   },
   {
     id: 'admins',
-    labelKey: 'platform.navAdmins',
-    fallbackLabel: 'Platform Administrators',
+    labelKey: 'platform.adminsTitle',
     category: 'Navigation',
     path: ROUTES.platformAdmins,
     icon: ShieldCheck,
@@ -90,7 +85,6 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'account',
     labelKey: 'platform.myAccount',
-    fallbackLabel: 'My Account & Credentials',
     category: 'Navigation',
     path: ROUTES.platformAccount,
     icon: User,
@@ -98,8 +92,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   },
   {
     id: 'migrations',
-    labelKey: 'platform.systemMaintenance',
-    fallbackLabel: 'Database Migrations & Maintenance',
+    labelKey: 'platform.profileMigrateRestart',
     category: 'Actions',
     path: `${ROUTES.platformSystem}?tab=system`,
     icon: Server,
@@ -107,8 +100,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   },
   {
     id: 'onboard-madrasa',
-    labelKey: 'platform.onboardCapability',
-    fallbackLabel: 'Onboard New Madrasa',
+    labelKey: 'auth.createMadrasa',
     category: 'Actions',
     path: ROUTES.onboarding,
     icon: PlusCircle,
@@ -127,10 +119,9 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
     const q = query.trim().toLowerCase();
     if (!q) return PLATFORM_COMMAND_ITEMS;
     return PLATFORM_COMMAND_ITEMS.filter((item) => {
-      const translatedLabel = t(item.labelKey as Parameters<typeof t>[0]) || item.fallbackLabel;
+      const translatedLabel = t(item.labelKey);
       return (
         translatedLabel.toLowerCase().includes(q) ||
-        item.fallbackLabel.toLowerCase().includes(q) ||
         item.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
@@ -181,27 +172,28 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         onClick={onClose}
         role="dialog"
         aria-modal="true"
-        aria-label="Platform Console Search"
+        aria-label={t('platform.openSearchAria')}
       >
         <motion.div
           initial={reducedMotion ? false : { opacity: 0, scale: 0.96, y: -8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={reducedMotion ? undefined : { opacity: 0, scale: 0.96, y: -8 }}
           transition={{ duration: 0.15 }}
-          className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl surface-glass"
+          className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl surface-glass text-start"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Search Bar Header */}
           <div className="flex items-center gap-3 border-b border-border/60 px-4 py-3.5">
-            <Search className="h-5 w-5 shrink-0 text-primary" />
-            <input
+            <Search className="h-5 w-5 shrink-0 text-primary pointer-events-none" aria-hidden />
+            <Input
               type="text"
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={t('nav.globalSearchPlaceholder') || 'Search console pages, madrasas, or actions... (Cmd+K)'}
-              className="flex-1 bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none"
+              placeholder={t('platform.searchConsolePlaceholder')}
+              className="flex-1 bg-transparent text-sm font-semibold border-0 shadow-none focus-visible:ring-0 px-0 h-9"
+              aria-label={t('platform.searchConsolePlaceholder')}
             />
             <kbd className="hidden sm:inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-mono font-bold text-muted-foreground select-none">
               ESC
@@ -209,31 +201,33 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
           </div>
 
           {/* Search Results List */}
-          <div className="max-h-80 overflow-y-auto p-2">
+          <div className="max-h-80 overflow-y-auto p-2" role="listbox">
             {filteredItems.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm font-semibold text-muted-foreground">
-                No matching console pages or actions found for &quot;{query}&quot;
+                {t('platform.noMatchingConsolePages', { query })}
               </div>
             ) : (
               filteredItems.map((item, index) => {
                 const Icon = item.icon;
                 const isSelected = index === selectedIndex;
-                const translatedLabel = t(item.labelKey as Parameters<typeof t>[0]) || item.fallbackLabel;
+                const translatedLabel = t(item.labelKey);
 
                 return (
                   <button
                     key={item.id}
                     type="button"
+                    role="option"
+                    aria-selected={isSelected}
                     onClick={() => handleSelect(item.path)}
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm transition-all cursor-pointer',
+                      'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm transition-all cursor-pointer min-h-11',
                       isSelected
                         ? 'bg-primary text-primary-foreground font-bold shadow-sm'
                         : 'text-foreground hover:bg-muted/70 font-semibold',
                     )}
                   >
-                    <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} />
+                    <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} aria-hidden />
                     <span className="flex-1 truncate">{translatedLabel}</span>
                     <span className={cn('text-xs opacity-80 font-mono', isSelected ? 'text-primary-foreground' : 'text-muted-foreground')}>
                       {item.path}
@@ -245,17 +239,17 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
           </div>
 
           {/* Footer Shortcuts Bar */}
-          <div className="border-t border-border/50 px-4 py-2 bg-muted/30 flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+          <div className="border-t border-border/50 px-4 py-2 bg-muted/30 flex items-center justify-between text-[11px] text-muted-foreground font-medium select-none">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
                 <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↑</kbd>
-                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↓</kbd> Navigate
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↓</kbd>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↵</kbd> Select
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↵</kbd>
               </span>
             </div>
-            <span className="hidden sm:inline">Platform Command Hub</span>
+            <span className="hidden sm:inline font-semibold">{t('platform.consoleTitle')}</span>
           </div>
         </motion.div>
       </div>
