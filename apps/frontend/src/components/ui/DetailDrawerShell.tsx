@@ -9,18 +9,31 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 
+export type DetailDrawerSize = "sm" | "md" | "lg" | "xl" | "full";
+
+const SIZE_MAP: Record<DetailDrawerSize, string> = {
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-xl",
+  full: "sm:max-w-2xl",
+};
+
 export interface DetailDrawerShellProps {
   open?: boolean;
   onClose: () => void;
   title: React.ReactNode;
   subtitle?: React.ReactNode;
+  badge?: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
+  size?: DetailDrawerSize;
   headerActions?: React.ReactNode;
   headerExtra?: React.ReactNode;
   footer?: React.ReactNode;
   children: React.ReactNode;
   ariaLabel?: string;
   className?: string;
+  contentClassName?: string;
 }
 
 /**
@@ -32,13 +45,16 @@ export function DetailDrawerShell({
   onClose,
   title,
   subtitle,
+  badge,
   icon: Icon,
+  size = "md",
   headerActions,
   headerExtra,
   footer,
   children,
   ariaLabel,
   className,
+  contentClassName,
 }: DetailDrawerShellProps): React.JSX.Element {
   const { t, isRtl } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -81,7 +97,7 @@ export function DetailDrawerShell({
     : {
         drag: "y" as const,
         dragConstraints: { top: 0, bottom: 0 },
-        dragElastic: 0.2,
+        dragElastic: { top: 0, bottom: 0.6 },
         onDragEnd: handleDragEnd,
         dragListener: false, // Disables dragging the entire content area
         dragControls,
@@ -110,17 +126,19 @@ export function DetailDrawerShell({
             transition={panelTransition}
             role="dialog"
             aria-modal="true"
-            aria-labelledby={titleId}
+            aria-labelledby={ariaLabel ? undefined : titleId}
+            aria-label={ariaLabel}
             {...dragProps}
             className={cn(
-              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-[0_8px_40px_rgb(0,0,0,0.12)] backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-[85vh] sm:max-h-full rounded-t-[1.5rem] sm:rounded-none sm:max-w-md",
+              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-[0_8px_40px_rgb(0,0,0,0.12)] backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-[85vh] sm:max-h-full rounded-t-[1.5rem] sm:rounded-none",
+              SIZE_MAP[size],
               className
             )}
-            aria-label={ariaLabel}
           >
             {/* Mobile Drag Handle Indicator */}
             <div 
-              className="sm:hidden flex items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none"
+              className="sm:hidden flex items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none min-h-[20px]"
+              aria-hidden="true"
               onPointerDown={(e) => {
                 if (!isDesktop) dragControls.start(e);
               }}
@@ -132,8 +150,11 @@ export function DetailDrawerShell({
             <div 
               className="sticky top-0 z-10 px-5 pt-2 sm:pt-4 pb-3 border-b border-border/30 flex-shrink-0 space-y-3 sm:touch-auto touch-none"
               onPointerDown={(e) => {
-                // Ensure we don't intercept drag if they are clicking a button (like close)
-                if (!isDesktop && !(e.target as HTMLElement).closest('button')) {
+                const target = e.target as HTMLElement | null;
+                const isInteractive = target?.closest(
+                  'button, input, select, textarea, a, [role="tab"], [data-no-drag]'
+                );
+                if (!isDesktop && !isInteractive) {
                   dragControls.start(e);
                 }
               }}
@@ -146,9 +167,12 @@ export function DetailDrawerShell({
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h2 id={titleId} className="text-sm font-bold text-foreground leading-tight truncate">
-                      {title}
-                    </h2>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h2 id={titleId} className="text-sm font-bold text-foreground leading-tight truncate">
+                        {title}
+                      </h2>
+                      {badge}
+                    </div>
                     {subtitle && (
                       <span className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold block truncate mt-0.5">
                         {subtitle}
@@ -164,10 +188,10 @@ export function DetailDrawerShell({
                     variant="ghost"
                     size="icon"
                     onClick={onClose}
-                    className="h-9 w-9 sm:h-11 sm:w-11 rounded-full sm:rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-full sm:rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
                     aria-label={t("common.close")}
                   >
-                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                   </Button>
                 </div>
               </div>
@@ -175,7 +199,7 @@ export function DetailDrawerShell({
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-6">
+            <div className={cn("flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-6", contentClassName)}>
               {children}
             </div>
 

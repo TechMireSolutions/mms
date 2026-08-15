@@ -62,7 +62,7 @@ sudo -u "$DEPLOY_USER" bash -lc "
 "
 
 echo "── Apache modules ──"
-sudo a2enmod proxy proxy_http ssl headers rewrite 2>/dev/null || true
+sudo a2enmod proxy proxy_http proxy_wstunnel ssl headers rewrite 2>/dev/null || true
 sudo systemctl enable apache2
 sudo systemctl restart apache2
 

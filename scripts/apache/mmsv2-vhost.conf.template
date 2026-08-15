@@ -30,6 +30,10 @@
     RequestHeader unset X-Forwarded-Host
     RequestHeader set X-Forwarded-Proto "https"
 
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/(.*) ws://127.0.0.1:@@BACKEND_PORT@@/$1 [P,L]
+
     ProxyPass / http://127.0.0.1:@@BACKEND_PORT@@/
     ProxyPassReverse / http://127.0.0.1:@@BACKEND_PORT@@/
 

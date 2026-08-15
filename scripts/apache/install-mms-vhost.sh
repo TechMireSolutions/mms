@@ -100,7 +100,7 @@ run_priv a2dissite mmsv2.conf z-mmsv2.conf 2>/dev/null || true
 run_priv rm -f /etc/apache2/sites-enabled/mmsv2.conf /etc/apache2/sites-enabled/z-mmsv2.conf 2>/dev/null || true
 run_priv rm -f /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null || true
 run_priv a2ensite 000-mmsv2.conf 2>/dev/null || true
-run_priv a2enmod proxy proxy_http headers ssl rewrite 2>/dev/null || true
+run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite 2>/dev/null || true
 run_priv apache2ctl configtest
 run_priv systemctl reload apache2
 if [[ -f /etc/apache2/sites-enabled/000-mmsv2.conf ]] \

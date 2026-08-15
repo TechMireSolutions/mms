@@ -91,7 +91,7 @@ if [[ "$PATCHED" != true ]]; then
   exit 1
 fi
 
-run_priv a2enmod proxy proxy_http headers ssl 2>/dev/null || true
+run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite 2>/dev/null || true
 run_priv apache2ctl configtest
 run_priv systemctl reload apache2
 echo "Apache reloaded — upstream is ${UPSTREAM}"

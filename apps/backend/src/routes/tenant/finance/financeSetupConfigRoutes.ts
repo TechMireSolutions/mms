@@ -23,7 +23,8 @@ const auditFinance = createCollectionAuditHelper('finance');
 /** Finance Setup field-config + preferences (typed FORCE-RLS tables). */
 export const financeSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
   registerModuleSetupConfigRoutes(fastify, {
-    canRead: (user) => canReadCollection(user, 'finance'),
+    canRead: (user) =>
+      canReadCollection(user, FINANCE_MODULE_MANIFEST.collectionKey),
     setupWritePermission: FINANCE_MODULE_MANIFEST.permissions.setupWrite,
     fieldConfigSchema: financeFieldConfigPutBodySchema,
     preferencesSchema: financePreferencesPutBodySchema,
