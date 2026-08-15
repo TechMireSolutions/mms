@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Users, Filter, MessageCircle, AlertCircle, GitMerge, Clock, CalendarPlus, AlertTriangle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
@@ -15,7 +15,7 @@ interface ContactsCommandMetricsProps {
 }
 
 /** Permission-scoped quick metrics for the Contacts module command centre (globle1 §2.1). */
-export function ContactsCommandMetrics({
+export const ContactsCommandMetrics = React.memo(function ContactsCommandMetrics({
   shown,
   pendingCount,
   conflictCount,
@@ -27,15 +27,15 @@ export function ContactsCommandMetrics({
   const { t } = useTranslation();
   const { data: serverMetrics } = useContactsMetrics();
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     total: serverMetrics?.total ?? 0,
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
     whatsappCount: serverMetrics?.whatsappCount ?? 0,
     incompleteCount: serverMetrics?.incompleteCount ?? 0,
     duplicatePairCount: serverMetrics?.duplicatePairCount ?? 0,
-  };
+  }), [serverMetrics]);
 
-  const items = [
+  const items = useMemo(() => [
     { icon: Users, label: t("contacts.metrics.total"), value: metrics.total, accent: "primary" as const },
     { icon: Filter, label: t("contacts.metrics.filtered"), value: shown, accent: "info" as const },
     { icon: CalendarPlus, label: t("contacts.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "success" as const },
@@ -62,7 +62,17 @@ export function ContactsCommandMetrics({
       accent: "warning" as const,
       onClick: metrics.duplicatePairCount > 0 ? onOpenDuplicates : undefined,
     },
-  ];
+  ], [
+    t,
+    shown,
+    pendingCount,
+    conflictCount,
+    flushing,
+    onFlushPending,
+    onReviewConflicts,
+    onOpenDuplicates,
+    metrics,
+  ]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

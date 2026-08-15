@@ -28,7 +28,7 @@ export type {
  * @param props - The component props.
  * @returns The AcademicReport component.
  */
-export default function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
+const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
   const examResults = useExaminationsResultsCollection();
   const exams = useExaminationsExamsCollection();
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -177,4 +177,7 @@ export default function AcademicReport({ filters }: AcademicReportProps): React.
       />
     </div>
   );
-}
+});
+
+export default AcademicReport;
+

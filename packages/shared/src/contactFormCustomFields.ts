@@ -14,11 +14,10 @@ const removedKeySet = new Set(REMOVED_FORM_FIELD_KEYS);
  * When omitted, returns enabled non-seed fields from every tab (legacy aggregate).
  */
 export function listEnabledCustomContactFormFields<T extends FieldDefinition>(
-  fields: Record<string, T[]>,
+  fields: Record<string, ReadonlyArray<T>>,
   tabId?: string,
-): T[] {
+): ReadonlyArray<T> {
   return helpers
     .listEnabledCustomFormFields(fields, tabId)
     .filter((field) => !removedKeySet.has(field.key));
 }
-

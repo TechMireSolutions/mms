@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { DollarSign } from "lucide-react";
 import { formatDate } from "@mms/shared";
 import type { Invoice } from "@/lib/data/financeData";
@@ -28,17 +28,17 @@ interface FinancialInvoiceTableProps {
   invoices: Invoice[];
 }
 
-export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps): React.JSX.Element {
+export const FinancialInvoiceTable = React.memo(function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
-  const statusConfig = {
+  const statusConfig = useMemo(() => ({
     paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
     overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
     partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
-  };
-  const headers = [
+  }), [t]);
+  const headers = useMemo(() => [
     { key: "invoice", label: t("finance.columns.invoice") },
     { key: "student", label: t("finance.columns.student") },
     { key: "class", label: t("finance.report.classColumn") },
@@ -47,8 +47,8 @@ export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps):
     { key: "final", label: t("finance.columns.final") },
     { key: "dueDate", label: t("finance.columns.dueDate") },
     { key: "status", label: t("finance.columns.status") },
-  ];
-  const exportHeaders = headers.map((header) => header.label);
+  ], [t]);
+  const exportHeaders = useMemo(() => headers.map((header) => header.label), [headers]);
 
   return (
     <>
@@ -61,38 +61,29 @@ export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps):
             {invoices.map((invoice) => (
               <article key={invoice.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <div>
                     <h4 className="truncate text-sm font-semibold text-foreground">{invoice.studentName}</h4>
-                    <p className="font-mono text-xs text-muted-foreground">{invoice.id}</p>
+                    <p className="text-xs text-muted-foreground">{invoice.id} • {invoice.class}</p>
                   </div>
                   <StatusBadge status={invoice.status} config={statusConfig} />
                 </div>
                 <StatGrid>
-                  <StatRow className="min-w-0" label={t("finance.report.classColumn")} value={invoice.class} />
+                  <StatRow className="min-w-0" label={t("finance.columns.baseFee")} value={formatCurrency(invoice.baseFee)} />
+                  {invoice.discountAmt > 0 ? (
+                    <StatRow
+                      className="min-w-0"
+                      label={t("finance.columns.discount")}
+                      value={`-${formatCurrency(invoice.discountAmt)} (${invoice.discountType || "discount"})`}
+                      ddClassName="text-destructive font-medium"
+                    />
+                  ) : null}
                   <StatRow
                     className="min-w-0"
-                    label={t("finance.columns.dueDate")}
-                    value={formatDate(invoice.dueDate)}
-                    ddClassName="text-muted-foreground"
-                  />
-                  <StatRow
-                    className="min-w-0"
-                    label={t("finance.columns.baseFee")}
-                    value={formatCurrency(invoice.baseFee)}
-                    ddClassName="text-muted-foreground"
-                  />
-                  <StatRow
-                    className="min-w-0"
-                    label={t("finance.columns.discount")}
-                    value={invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}
-                    ddClassName="text-warning"
-                  />
-                  <StatRow
-                    fullWidth
                     label={t("finance.columns.final")}
                     value={formatCurrency(invoice.finalAmt)}
-                    ddClassName="text-base font-semibold"
+                    ddClassName="font-semibold text-foreground"
                   />
+                  <StatRow className="min-w-0" label={t("finance.columns.dueDate")} value={formatDate(invoice.dueDate)} />
                 </StatGrid>
               </article>
             ))}
@@ -112,11 +103,13 @@ export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps):
               <TableBody className="divide-y divide-border/50">
                 {invoices.map((invoice) => (
                   <TableRow key={invoice.id} className="hover:bg-muted/20 transition-colors">
-                    <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{invoice.id}</TableCell>
-                    <TableCell className="px-3 py-2.5 font-medium">{invoice.studentName}</TableCell>
+                    <TableCell className="px-3 py-2.5 font-medium text-foreground">{invoice.id}</TableCell>
+                    <TableCell className="px-3 py-2.5 font-medium text-foreground">{invoice.studentName}</TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">{invoice.class}</TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">{formatCurrency(invoice.baseFee)}</TableCell>
-                    <TableCell className="px-3 py-2.5 text-warning">{invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-destructive">
+                      {invoice.discountAmt > 0 ? `-${formatCurrency(invoice.discountAmt)}` : "—"}
+                    </TableCell>
                     <TableCell className="px-3 py-2.5 font-semibold text-foreground">{formatCurrency(invoice.finalAmt)}</TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">{formatDate(invoice.dueDate)}</TableCell>
                     <TableCell className="px-3 py-2.5">
@@ -131,9 +124,9 @@ export function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps):
       )}
     </>
   );
-}
+});
 
-export function FinancialDashboardWidgets(): React.JSX.Element {
+export const FinancialDashboardWidgets = React.memo(function FinancialDashboardWidgets(): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -154,4 +147,4 @@ export function FinancialDashboardWidgets(): React.JSX.Element {
       </div>
     </div>
   );
-}
+});

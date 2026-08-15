@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { Bar, BarChart, Tooltip, XAxis, YAxis } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
@@ -7,7 +7,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 
-export function FacultyReportDashboardWidgets(): React.JSX.Element {
+export const FacultyReportDashboardWidgets = React.memo(function FacultyReportDashboardWidgets(): React.JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
 
@@ -43,4 +43,4 @@ export function FacultyReportDashboardWidgets(): React.JSX.Element {
       </div>
     </div>
   );
-}
+});

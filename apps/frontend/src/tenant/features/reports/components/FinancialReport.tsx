@@ -37,7 +37,7 @@ interface FinancialReportProps {
  * @param props - The component props.
  * @returns The FinancialReport component.
  */
-export default function FinancialReport({ filters }: FinancialReportProps): React.JSX.Element {
+const FinancialReport = React.memo(function FinancialReport({ filters }: FinancialReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();
@@ -60,9 +60,12 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       
       if (!monthlyTotals[monthLabel]) monthlyTotals[monthLabel] = { collected: 0, outstanding: 0, total: 0 };
       
+      const collected = getCollectedAmountForInvoice(invoice);
+      const outstanding = getOutstandingAmountForInvoice(invoice);
+      
+      monthlyTotals[monthLabel].collected += collected;
+      monthlyTotals[monthLabel].outstanding += outstanding;
       monthlyTotals[monthLabel].total += invoice.finalAmt;
-      monthlyTotals[monthLabel].collected += getCollectedAmountForInvoice(invoice);
-      monthlyTotals[monthLabel].outstanding += getOutstandingAmountForInvoice(invoice);
     });
 
     return Object.entries(monthlyTotals).map(([month, monthTotals]) => ({
@@ -103,6 +106,13 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
   const totalDiscounted = financeMetrics?.discountTotal
     ?? discountUsageByType.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
 
+  const kpiItems = useMemo(() => [
+    { icon: DollarSign, label: t("finance.report.totalCollected"), value: formatCurrency(totalCollected), accent: "green" as const },
+    { icon: AlertCircle, label: t("finance.report.outstanding"), value: formatCurrency(totalOutstanding), accent: "red" as const },
+    { icon: TrendingUp, label: t("finance.report.netRevenue"), value: formatCurrency(totalCollected - totalOutstanding), accent: "primary" as const },
+    { icon: Tag, label: t("finance.report.totalDiscounted"), value: formatCurrency(totalDiscounted), accent: "amber" as const },
+  ], [t, formatCurrency, totalCollected, totalOutstanding, totalDiscounted]);
+
   const invoices = useMemo(() => {
     let filteredInvoices = financeInvoices;
     if (filters.status !== "all") {
@@ -129,14 +139,7 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
 
   return (
     <div className="space-y-4">
-      <ModuleCommandMetricsGrid
-        items={[
-          { icon: DollarSign, label: t("finance.report.totalCollected"), value: formatCurrency(totalCollected), accent: "green" },
-          { icon: AlertCircle, label: t("finance.report.outstanding"), value: formatCurrency(totalOutstanding), accent: "red" },
-          { icon: TrendingUp, label: t("finance.report.netRevenue"), value: formatCurrency(totalCollected - totalOutstanding), accent: "primary" },
-          { icon: Tag, label: t("finance.report.totalDiscounted"), value: formatCurrency(totalDiscounted), accent: "amber" },
-        ]}
-      />
+      <ModuleCommandMetricsGrid items={kpiItems} />
 
       <FinancialReportCharts
         monthlyFeeCollection={monthlyFeeCollection}
@@ -150,4 +153,6 @@ export default function FinancialReport({ filters }: FinancialReportProps): Reac
       <FinancialDashboardWidgets />
     </div>
   );
-}
+});
+
+export default FinancialReport;

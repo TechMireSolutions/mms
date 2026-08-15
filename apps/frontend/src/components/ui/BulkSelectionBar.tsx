@@ -1,3 +1,4 @@
+import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,7 @@ export interface BulkSelectionBarProps {
   "aria-label"?: string;
 }
 
-export function BulkSelectionBar({
+export const BulkSelectionBar = React.memo(function BulkSelectionBar({
   selectedCount,
   countLabel,
   placement = "inline",
@@ -95,4 +96,4 @@ export function BulkSelectionBar({
       )}
     </AnimatePresence>
   );
-}
+});

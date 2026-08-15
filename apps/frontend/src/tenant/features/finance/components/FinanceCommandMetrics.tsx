@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ReceiptText, AlertTriangle, CheckCircle2, Clock, CreditCard, PieChart } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
@@ -8,29 +8,29 @@ interface FinanceCommandMetricsProps {
   invoiceTotal: number;
 }
 
-export function FinanceCommandMetrics({
+export const FinanceCommandMetrics = React.memo(function FinanceCommandMetrics({
   invoiceTotal,
 }: FinanceCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useFinanceMetrics();
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     totalInvoices: serverMetrics?.totalInvoices ?? invoiceTotal,
     outstanding: serverMetrics?.outstanding ?? 0,
     overdue: serverMetrics?.overdue ?? 0,
     paid: serverMetrics?.paid ?? 0,
     partial: serverMetrics?.partial ?? 0,
     totalPayments: serverMetrics?.totalPayments ?? 0,
-  };
+  }), [serverMetrics, invoiceTotal]);
 
-  const items = [
+  const items = useMemo(() => [
     { icon: ReceiptText, label: t("finance.metrics.totalInvoices"), value: metrics.totalInvoices, accent: "primary" as const },
     { icon: Clock, label: t("finance.metrics.outstanding"), value: metrics.outstanding, accent: "warning" as const },
     { icon: AlertTriangle, label: t("finance.metrics.overdue"), value: metrics.overdue, accent: "destructive" as const },
     { icon: PieChart, label: t("finance.metrics.partial"), value: metrics.partial, accent: "info" as const },
     { icon: CheckCircle2, label: t("finance.metrics.paid"), value: metrics.paid, accent: "success" as const },
     { icon: CreditCard, label: t("finance.metrics.totalPayments"), value: metrics.totalPayments, accent: "info" as const },
-  ];
+  ], [t, metrics]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

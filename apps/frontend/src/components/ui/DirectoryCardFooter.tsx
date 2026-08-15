@@ -1,3 +1,4 @@
+import React from "react";
 import type { ReactNode } from "react";
 
 export interface DirectoryCardFooterProps {
@@ -6,7 +7,7 @@ export interface DirectoryCardFooterProps {
 }
 
 /** Shared Work directory card footer: optional leading (messaging) + trailing actions. */
-export function DirectoryCardFooter({
+export const DirectoryCardFooter = React.memo(function DirectoryCardFooter({
   leading,
   trailing,
 }: DirectoryCardFooterProps): React.JSX.Element {
@@ -16,4 +17,5 @@ export function DirectoryCardFooter({
       <div className="flex shrink-0 items-center gap-1.5">{trailing}</div>
     </div>
   );
-}
+});
+

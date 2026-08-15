@@ -1,3 +1,4 @@
+import React from "react";
 import { BookOpen } from "lucide-react";
 import {
   Bar,
@@ -30,7 +31,7 @@ function getActiveLabel(state: unknown): string | null {
   return typeof activeLabel === "string" && activeLabel.length > 0 ? activeLabel : null;
 }
 
-export function AcademicReportCharts({
+export const AcademicReportCharts = React.memo(function AcademicReportCharts({
   academicResults,
   classRankings,
   onToggleStudentFilter,
@@ -87,4 +88,4 @@ export function AcademicReportCharts({
       </SectionCard>
     </div>
   );
-}
+});

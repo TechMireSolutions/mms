@@ -26,11 +26,9 @@ const GRID_COLS_BY_COUNT: Record<number, string> = {
   8: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8',
 };
 
-/**
- * Renders a responsive grid of metric cards with automated column width calculation
- * and staggered Framer Motion entrance animations.
- */
-export function ModuleCommandMetricsGrid({ items }: ModuleCommandMetricsGridProps): React.JSX.Element {
+export const ModuleCommandMetricsGrid = React.memo(function ModuleCommandMetricsGrid({
+  items,
+}: ModuleCommandMetricsGridProps): React.JSX.Element {
   const count = items.length;
   const gridColsClass = GRID_COLS_BY_COUNT[count] ?? GRID_COLS_BY_COUNT[4];
 
@@ -52,4 +50,4 @@ export function ModuleCommandMetricsGrid({ items }: ModuleCommandMetricsGridProp
       ))}
     </div>
   );
-}
+});

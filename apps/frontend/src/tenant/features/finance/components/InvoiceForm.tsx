@@ -24,100 +24,100 @@ interface InvoiceFormProps {
   onSave: (invoice: InvoiceCreateInput) => void | Promise<void>;
 }
 
-export function InvoiceForm({
-  open,
-  saving = false,
-  onClose,
-  onSave,
-}: InvoiceFormProps): React.ReactElement {
-  const { t } = useTranslation();
-  const { settings } = useFinanceConfig();
-  const { formatCurrency } = useFinanceCurrency();
+export const InvoiceForm = React.memo(function InvoiceForm({
+      open,
+      saving = false,
+      onClose,
+      onSave,
+    }: InvoiceFormProps): React.ReactElement {
+      const { t } = useTranslation();
+      const { settings } = useFinanceConfig();
+      const { formatCurrency } = useFinanceCurrency();
 
-  const [draft, setDraft] = useState<InvoiceDraft>(() => createInitialDraft(settings.dueDays));
-  const [submitting, setSubmitting] = useState(false);
+      const [draft, setDraft] = useState<InvoiceDraft>(() => createInitialDraft(settings.dueDays));
+      const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      setDraft(createInitialDraft(settings.dueDays));
-    }
-  }, [open, settings.dueDays]);
+      useEffect(() => {
+        if (open) {
+          setDraft(createInitialDraft(settings.dueDays));
+        }
+      }, [open, settings.dueDays]);
 
-  const { baseFee, discountValue, discountAmt, finalAmt } = computeInvoiceAmounts(draft.baseFee, draft.discountValue);
-  const canSave = useMemo(() => canSaveInvoiceDraft(draft, baseFee), [baseFee, draft]);
+      const { baseFee, discountValue, discountAmt, finalAmt } = computeInvoiceAmounts(draft.baseFee, draft.discountValue);
+      const canSave = useMemo(() => canSaveInvoiceDraft(draft, baseFee), [baseFee, draft]);
 
-  const setField = (key: keyof InvoiceDraft, value: string): void => {
-    setDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
-  };
+      const setField = (key: keyof InvoiceDraft, value: string): void => {
+        setDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
+      };
 
-  const resetAndClose = (): void => {
-    setDraft(createInitialDraft(settings.dueDays));
-    onClose();
-  };
+      const resetAndClose = (): void => {
+        setDraft(createInitialDraft(settings.dueDays));
+        onClose();
+      };
 
-  const handleSubmit = async (): Promise<void> => {
-    if (!canSave) return;
+      const handleSubmit = async (): Promise<void> => {
+        if (!canSave) return;
 
-    setSubmitting(true);
-    try {
-      await onSave({
-        id: nextInvoiceId(settings.invoicePrefix.trim() || "INV"),
-        studentId: draft.studentId.trim(),
-        studentName: draft.studentName.trim(),
-        class: draft.class.trim(),
-        session: draft.session.trim(),
-        baseFee,
-        discountType: draft.discountType.trim() || null,
-        discountValue,
-        discountAmt,
-        finalAmt,
-        status: "pending",
-        dueDate: draft.dueDate,
-        paidDate: null,
-        method: null,
-        paidAmt: 0,
-        customData: draft.customData ?? {},
-      });
-      notify.success(t("finance.invoiceSaved"));
-      resetAndClose();
-    } catch (error: unknown) {
-      if (!(error instanceof NotifiedFinanceMutationError)) {
-        notify.error(t("finance.invoiceSaveFailed"), {
-          description: error instanceof Error ? error.message : String(error),
-        });
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
+        setSubmitting(true);
+        try {
+          await onSave({
+            id: nextInvoiceId(settings.invoicePrefix.trim() || "INV"),
+            studentId: draft.studentId.trim(),
+            studentName: draft.studentName.trim(),
+            class: draft.class.trim(),
+            session: draft.session.trim(),
+            baseFee,
+            discountType: draft.discountType.trim() || null,
+            discountValue,
+            discountAmt,
+            finalAmt,
+            status: "pending",
+            dueDate: draft.dueDate,
+            paidDate: null,
+            method: null,
+            paidAmt: 0,
+            customData: draft.customData ?? {},
+          });
+          notify.success(t("finance.invoiceSaved"));
+          resetAndClose();
+        } catch (error: unknown) {
+          if (!(error instanceof NotifiedFinanceMutationError)) {
+            notify.error(t("finance.invoiceSaveFailed"), {
+              description: error instanceof Error ? error.message : String(error),
+            });
+          }
+        } finally {
+          setSubmitting(false);
+        }
+      };
 
-  return (
-    <FormModal
-      open={open}
-      onClose={resetAndClose}
-      title={t("finance.newInvoice")}
-      subtitle={t("finance.form.subtitle")}
-      icon={ReceiptText}
-      cancelLabel={t("common.cancel")}
-      saveLabel={t("finance.form.create")}
-      onSave={handleSubmit}
-      saving={saving || submitting}
-      saveDisabled={!canSave}
-    >
-      <div className="space-y-5 text-start">
-        <InvoiceFormFieldsSection
-          t={t}
-          draft={draft}
-          onFieldChange={setField}
-        />
-        <InvoiceFormSummarySection
-          t={t}
-          baseFee={baseFee}
-          discountAmt={discountAmt}
-          finalAmt={finalAmt}
-          formatCurrency={formatCurrency}
-        />
-      </div>
-    </FormModal>
-  );
-}
+      return (
+        <FormModal
+          open={open}
+          onClose={resetAndClose}
+          title={t("finance.newInvoice")}
+          subtitle={t("finance.form.subtitle")}
+          icon={ReceiptText}
+          cancelLabel={t("common.cancel")}
+          saveLabel={t("finance.form.create")}
+          onSave={handleSubmit}
+          saving={saving || submitting}
+          saveDisabled={!canSave}
+        >
+          <div className="space-y-5 text-start">
+            <InvoiceFormFieldsSection
+              t={t}
+              draft={draft}
+              onFieldChange={setField}
+            />
+            <InvoiceFormSummarySection
+              t={t}
+              baseFee={baseFee}
+              discountAmt={discountAmt}
+              finalAmt={finalAmt}
+              formatCurrency={formatCurrency}
+            />
+          </div>
+        </FormModal>
+      );
+    });

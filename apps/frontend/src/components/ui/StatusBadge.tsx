@@ -41,7 +41,7 @@ const DEFAULT_CLS: Record<string, string> = {
   skipped: SEMANTIC_BADGE.muted,
 };
 
-export function StatusBadge({
+export const StatusBadge = React.memo(function StatusBadge({
   status,
   config = {},
   size = "md",
@@ -92,4 +92,5 @@ export function StatusBadge({
       {badgeConfig.label}
     </span>
   );
-}
+});
+

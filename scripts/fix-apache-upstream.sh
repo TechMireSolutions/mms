@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Point Apache ProxyPass at the Fastify backend (default :5002). Requires root/sudo.
-set -euo pipefail
+set -Eeuo pipefail
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -38,7 +44,7 @@ if [[ -z "$APP_DOMAIN" && -n "${MMS_APP_DOMAIN:-}" ]]; then
 fi
 
 if ! command -v apache2ctl >/dev/null 2>&1; then
-  echo "Apache not installed — skip upstream patch"
+  echo -e "${YELLOW}WARNING: Apache not installed — skip upstream patch${NC}"
   exit 0
 fi
 
@@ -48,7 +54,7 @@ run_priv() {
   elif command -v sudo >/dev/null 2>&1; then
     sudo "$@"
   else
-    echo "ERROR: need root/sudo to patch Apache"
+    echo -e "${RED}ERROR: need root/sudo to patch Apache${NC}"
     exit 1
   fi
 }
@@ -90,7 +96,7 @@ if [[ -d /etc/apache2/sites-enabled ]]; then
 fi
 
 if [[ "$PATCHED" != true ]]; then
-  echo "ERROR: no Apache ProxyPass vhost patched for ${APP_DOMAIN:-MMS}"
+  echo -e "${RED}ERROR: no Apache ProxyPass vhost patched for ${APP_DOMAIN:-MMS}${NC}"
   echo "Check: grep -r ProxyPass /etc/apache2/sites-enabled/"
   echo "Template: scripts/apache/mmsv2-vhost.conf.template"
   exit 1
@@ -107,4 +113,4 @@ else
   run_priv apache2ctl graceful
 fi
 
-echo "Apache reloaded — upstream is ${UPSTREAM}"
+echo -e "${GREEN}Apache reloaded — upstream is ${UPSTREAM}${NC}"

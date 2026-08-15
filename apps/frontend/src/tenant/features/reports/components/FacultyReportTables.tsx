@@ -1,3 +1,4 @@
+import React from "react";
 import { Loader2, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -17,7 +18,7 @@ import { FacultyReportWorkloadTable } from "@/tenant/features/reports/components
 
 import type { TeacherReportTablesProps } from "./teacherReportTypes";
 
-export function FacultyReportTables({
+export const FacultyReportTables = React.memo(function FacultyReportTables({
   activeSubTab,
   teachers,
   statusBadgeConfig,
@@ -132,4 +133,4 @@ export function FacultyReportTables({
       </div>
     </div>
   );
-}
+});

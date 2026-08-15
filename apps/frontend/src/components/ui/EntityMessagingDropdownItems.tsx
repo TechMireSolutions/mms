@@ -1,3 +1,4 @@
+import React from 'react';
 import { Mail, MessageCircle, MessageSquare } from 'lucide-react';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
@@ -22,7 +23,7 @@ export interface EntityMessagingDropdownItemsProps {
  * Modules translate the labels and pass `show*` + click handlers; the icon
  * tones stay canonical (`text-success` WhatsApp, `text-info` SMS, `text-primary` Email).
  */
-export function EntityMessagingDropdownItems({
+export const EntityMessagingDropdownItems = React.memo(function EntityMessagingDropdownItems({
   showWhatsApp,
   showSms,
   showEmail,
@@ -50,4 +51,5 @@ export function EntityMessagingDropdownItems({
       ) : null}
     </>
   );
-}
+});
+

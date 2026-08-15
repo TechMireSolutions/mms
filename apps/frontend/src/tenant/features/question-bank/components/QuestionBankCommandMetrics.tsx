@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   HelpCircle, Filter, Sparkles, FileCheck, BarChart3, Layers, ClipboardList,
 } from 'lucide-react';
@@ -11,14 +11,14 @@ interface QuestionBankCommandMetricsProps {
   total: number;
 }
 
-export function QuestionBankCommandMetrics({
+export const QuestionBankCommandMetrics = React.memo(function QuestionBankCommandMetrics({
   shown,
   total,
 }: QuestionBankCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useQuestionBankMetrics();
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     total: serverMetrics?.total ?? total,
     easy: serverMetrics?.easy ?? 0,
     medium: serverMetrics?.medium ?? 0,
@@ -26,9 +26,9 @@ export function QuestionBankCommandMetrics({
     totalTests: serverMetrics?.totalTests ?? 0,
     totalResults: serverMetrics?.totalResults ?? 0,
     categories: serverMetrics?.categories ?? 0,
-  };
+  }), [serverMetrics, total]);
 
-  const items = [
+  const items = useMemo(() => [
     { icon: HelpCircle, label: t('questionBank.metrics.total'), value: metrics.total, accent: 'primary' as const },
     { icon: Filter, label: t('questionBank.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Sparkles, label: t('questionBank.metrics.easy'), value: metrics.easy, accent: 'success' as const },
@@ -36,7 +36,7 @@ export function QuestionBankCommandMetrics({
     { icon: Layers, label: t('questionBank.metrics.hard'), value: metrics.hard, accent: 'destructive' as const },
     { icon: ClipboardList, label: t('questionBank.metrics.tests'), value: metrics.totalTests, accent: 'indigo' as const },
     { icon: FileCheck, label: t('questionBank.metrics.categories'), value: metrics.categories, accent: 'purple' as const },
-  ];
+  ], [t, shown, metrics]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

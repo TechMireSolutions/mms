@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   ENROLLMENTS_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
@@ -16,7 +17,7 @@ import type { StudentReportProps } from './studentReportTypes';
 
 export type { EnrollmentHistoryItem, ReportStudent, StudentReportFilters, StudentReportProps } from './studentReportTypes';
 
-export default function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
+const StudentReport = React.memo(function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
   const report = useStudentReportController({ filters });
 
   if ((report.activeSubTab === 'list' && report.listError) || (report.activeSubTab === 'history' && report.historyError)) {
@@ -104,4 +105,7 @@ export default function StudentReport({ filters }: StudentReportProps): React.JS
       <StudentReportDashboardWidgets />
     </div>
   );
-}
+});
+
+export default StudentReport;
+

@@ -1,3 +1,4 @@
+import React from "react";
 import type { ReactNode } from "react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ export interface DirectoryCardHeaderProps {
 }
 
 /** Shared Work directory card header: checkbox | avatar + title + subtitle. */
-export function DirectoryCardHeader({
+export const DirectoryCardHeader = React.memo(function DirectoryCardHeader({
   id,
   displayName,
   avatar,
@@ -77,4 +78,5 @@ export function DirectoryCardHeader({
       )}
     </div>
   );
-}
+});
+

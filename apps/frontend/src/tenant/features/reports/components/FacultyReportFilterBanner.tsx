@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { teacherStatusLabel } from "@/lib/teachers/teacherStatusUi";
 import { ActiveFilterBanner } from "@/components/ui/ActiveFilterBanner";
@@ -9,7 +10,7 @@ interface FacultyReportFilterBannerProps {
   onClearStatusFilter: () => void;
 }
 
-export function FacultyReportFilterBanner({
+export const FacultyReportFilterBanner = React.memo(function FacultyReportFilterBanner({
   hasBaseStatusFilter,
   reportStatusFilter,
   studentFilter,
@@ -35,4 +36,4 @@ export function FacultyReportFilterBanner({
       }
     />
   );
-}
+});

@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import type { ChangeEvent, FormEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
@@ -46,7 +46,7 @@ interface ContactDetailDrawerContentProps {
   onRequestDelete: (attachment: { id: string; name: string }) => void;
 }
 
-export function ContactDetailDrawerContent({
+export const ContactDetailDrawerContent = React.memo(function ContactDetailDrawerContent({
   activeTab,
   contactState,
   allContacts,
@@ -168,4 +168,4 @@ export function ContactDetailDrawerContent({
       </motion.div>
     </AnimatePresence>
   );
-}
+});

@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ActiveFilterBanner } from "@/components/ui/ActiveFilterBanner";
 
@@ -8,7 +9,7 @@ interface SessionReportFilterBannerProps {
   onClearClassFilter: () => void;
 }
 
-export function SessionReportFilterBanner({
+export const SessionReportFilterBanner = React.memo(function SessionReportFilterBanner({
   selectedSession,
   selectedClass,
   onClearSessionFilter,
@@ -40,4 +41,5 @@ export function SessionReportFilterBanner({
       ]}
     />
   );
-}
+});
+

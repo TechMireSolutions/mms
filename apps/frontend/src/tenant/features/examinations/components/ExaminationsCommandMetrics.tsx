@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   BookOpen, Filter, Clock, PlayCircle, CheckCircle2, FileText, ClipboardList,
 } from 'lucide-react';
@@ -11,23 +11,23 @@ interface ExaminationsCommandMetricsProps {
   total: number;
 }
 
-export function ExaminationsCommandMetrics({
+export const ExaminationsCommandMetrics = React.memo(function ExaminationsCommandMetrics({
   shown,
   total,
 }: ExaminationsCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useExaminationsMetrics();
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     total: serverMetrics?.total ?? total,
     upcoming: serverMetrics?.upcoming ?? 0,
     ongoing: serverMetrics?.ongoing ?? 0,
     completed: serverMetrics?.completed ?? 0,
     totalResults: serverMetrics?.totalResults ?? 0,
     examsWithResults: serverMetrics?.examsWithResults ?? 0,
-  };
+  }), [serverMetrics, total]);
 
-  const items = [
+  const items = useMemo(() => [
     { icon: BookOpen, label: t('examinations.metrics.total'), value: metrics.total, accent: 'primary' as const },
     { icon: Filter, label: t('examinations.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Clock, label: t('examinations.metrics.upcoming'), value: metrics.upcoming, accent: 'warning' as const },
@@ -35,7 +35,7 @@ export function ExaminationsCommandMetrics({
     { icon: CheckCircle2, label: t('examinations.metrics.completed'), value: metrics.completed, accent: 'success' as const },
     { icon: FileText, label: t('examinations.metrics.totalResults'), value: metrics.totalResults, accent: 'teal' as const },
     { icon: ClipboardList, label: t('examinations.metrics.examsWithResults'), value: metrics.examsWithResults, accent: 'purple' as const },
-  ];
+  ], [t, shown, metrics]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

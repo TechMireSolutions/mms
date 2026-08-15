@@ -11,14 +11,14 @@ interface AccountingCommandMetricsProps {
   shown: number;
 }
 
-export function AccountingCommandMetrics({
+export const AccountingCommandMetrics = React.memo(function AccountingCommandMetrics({
   entryTotal,
   shown,
 }: AccountingCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useAccountingMetrics();
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     totalEntries: serverMetrics?.totalEntries ?? entryTotal,
     posted: serverMetrics?.posted ?? 0,
     draft: serverMetrics?.draft ?? 0,
@@ -26,7 +26,7 @@ export function AccountingCommandMetrics({
     inactiveAccounts: serverMetrics?.inactiveAccounts ?? 0,
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
     postedVolume: serverMetrics?.postedVolume ?? 0,
-  };
+  }), [serverMetrics, entryTotal]);
 
   const items = useMemo(() => [
     { icon: BookOpen, label: t('accounting.metrics.totalEntries'), value: metrics.totalEntries, accent: 'primary' as const },
@@ -36,7 +36,7 @@ export function AccountingCommandMetrics({
     { icon: Layers, label: t('accounting.metrics.activeAccounts'), value: metrics.activeAccounts, accent: 'indigo' as const },
     { icon: EyeOff, label: t('accounting.metrics.inactiveAccounts'), value: metrics.inactiveAccounts, accent: undefined },
     { icon: TrendingUp, label: t('accounting.metrics.postedVolume'), value: metrics.postedVolume, accent: 'success' as const },
-  ], [t, metrics.totalEntries, shown, metrics.posted, metrics.draft, metrics.activeAccounts, metrics.inactiveAccounts, metrics.postedVolume]);
+  ], [t, metrics, shown]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

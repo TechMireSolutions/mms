@@ -1,3 +1,4 @@
+import React from 'react';
 import { Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,13 +19,13 @@ export interface ModuleTrashToggleProps {
 /**
  * Work-tier trash/archive toggle used across soft-delete modules.
  */
-export function ModuleTrashToggle({
+export const ModuleTrashToggle = React.memo(function ModuleTrashToggle({
   showDeleted,
   onToggle,
   showActiveLabel,
   showDeletedLabel,
   className,
-}: ModuleTrashToggleProps) {
+}: ModuleTrashToggleProps): React.JSX.Element {
   return (
     <Button
       type="button"
@@ -41,4 +42,5 @@ export function ModuleTrashToggle({
       {showDeleted ? showActiveLabel : showDeletedLabel}
     </Button>
   );
-}
+});
+

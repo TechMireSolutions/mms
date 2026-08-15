@@ -15,7 +15,7 @@ export interface FormModalFooterProps {
   saved: boolean;
 }
 
-export function FormModalFooter({
+export const FormModalFooter = React.memo(function FormModalFooter({
   footerStart,
   cancelLabel,
   saveLabel,
@@ -64,4 +64,5 @@ export function FormModalFooter({
       </div>
     </div>
   );
-}
+});
+

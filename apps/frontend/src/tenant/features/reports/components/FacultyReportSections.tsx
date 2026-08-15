@@ -14,7 +14,7 @@ interface FacultyReportChartSectionProps {
   onBarClick: (faculty: string) => void;
 }
 
-export function FacultyReportChartSection({ t, facultyWorkload, onBarClick }: FacultyReportChartSectionProps): React.JSX.Element {
+export const FacultyReportChartSection = React.memo(function FacultyReportChartSection({ t, facultyWorkload, onBarClick }: FacultyReportChartSectionProps): React.JSX.Element {
   return (
     <SectionCard title={t("teachers.report.workloadOverview")}>
       <SafeResponsiveContainer width="100%" height={200}>
@@ -40,4 +40,4 @@ export function FacultyReportChartSection({ t, facultyWorkload, onBarClick }: Fa
       </SafeResponsiveContainer>
     </SectionCard>
   );
-}
+});

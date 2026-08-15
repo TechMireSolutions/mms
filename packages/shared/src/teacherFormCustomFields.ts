@@ -33,7 +33,7 @@ export function cloneTeacherFieldSeed(): Record<string, FieldDefinition[]> {
  */
 export function resolveTeacherFieldsMapForColumnSync(
   fields: Record<string, unknown> | undefined,
-): Record<string, FieldDefinition[]> {
+): Readonly<Record<string, FieldDefinition[]>> {
   if (!fields || typeof fields !== 'object') {
     return cloneTeacherFieldSeed();
   }
@@ -65,9 +65,9 @@ export function resolveTeacherFieldsMapForColumnSync(
  * When omitted, returns enabled non-seed fields from every tab.
  */
 export function listEnabledCustomTeacherFormFields<T extends FieldDefinition>(
-  fields: Record<string, T[]>,
+  fields: Record<string, ReadonlyArray<T>>,
   tabId?: string,
-): T[] {
+): ReadonlyArray<T> {
   return helpers.listEnabledCustomFormFields(fields, tabId);
 }
 

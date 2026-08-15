@@ -1,3 +1,4 @@
+import React from "react";
 import type { LucideIcon } from "lucide-react";
 import { AlertTriangle } from "lucide-react";
 import type { ReactNode } from "react";
@@ -49,7 +50,7 @@ export interface WarningCalloutProps {
   className?: string;
 }
 
-export function WarningCallout({
+export const WarningCallout = React.memo(function WarningCallout({
   icon: Icon = AlertTriangle,
   title,
   description,
@@ -96,4 +97,5 @@ export function WarningCallout({
       {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );
-}
+});
+

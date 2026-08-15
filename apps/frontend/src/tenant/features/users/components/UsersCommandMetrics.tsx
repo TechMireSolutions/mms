@@ -9,18 +9,24 @@ interface UsersCommandMetricsProps {
   shown: number;
 }
 
-export function UsersCommandMetrics({ shown }: UsersCommandMetricsProps): React.JSX.Element {
+export const UsersCommandMetrics = React.memo(function UsersCommandMetrics({
+  shown,
+}: UsersCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: metrics } = useUsersMetrics();
 
-  const snapshot: UsersCommandMetricsSnapshot = metrics ?? {
-    total: 0,
-    active: 0,
-    suspended: 0,
-    admins: 0,
-    twoFaEnabled: 0,
-    activeSessions: 0,
-  };
+  const snapshot: UsersCommandMetricsSnapshot = useMemo(
+    () =>
+      metrics ?? {
+        total: 0,
+        active: 0,
+        suspended: 0,
+        admins: 0,
+        twoFaEnabled: 0,
+        activeSessions: 0,
+      },
+    [metrics],
+  );
 
   const items = useMemo(
     () => [
@@ -71,4 +77,4 @@ export function UsersCommandMetrics({ shown }: UsersCommandMetricsProps): React.
   );
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

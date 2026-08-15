@@ -1,3 +1,4 @@
+import React from "react";
 import type { ReactNode } from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { FORM_CARD } from "@/components/ui/formStyles";
@@ -21,7 +22,7 @@ export interface DirectoryEntityCardProps extends Omit<HTMLMotionProps<"div">, "
 }
 
 /** Shared Work directory entity card shell (FORM_CARD + selection chrome). */
-export function DirectoryEntityCard({
+export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
   isSelected = false,
   reducedMotion = false,
   accentClassName,
@@ -62,4 +63,5 @@ export function DirectoryEntityCard({
       {children}
     </motion.div>
   );
-}
+});
+

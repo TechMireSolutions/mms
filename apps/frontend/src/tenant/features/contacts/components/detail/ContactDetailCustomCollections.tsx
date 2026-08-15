@@ -11,6 +11,7 @@ import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
 import { isEmptyValue } from "./contactDetailStyles";
 import { readContactCustomCollectionRows } from "../contactCustomCollectionRows";
+import React from "react";
 
 function formatCellValue(value: unknown): string | null {
   if (isEmptyValue(value)) return null;
@@ -71,60 +72,56 @@ function resolveCustomCollectionTabs(
     .map((tabId) => ({ key: tabId, label: tabId, enabled: true, order: 0 }));
 }
 
-/**
- * Renders tenant `custom_*` collection tabs (array rows on the contact),
- * matching phones/emails detail sections.
- */
-export function ContactDetailCustomCollections({
-  contact,
-  fields,
-  enabledTabIds,
-  formTabs,
-  onlyTabId,
-}: {
-  contact: Contact;
-  fields: Record<string, FieldDefinition[]>;
-  enabledTabIds: Set<string>;
-  formTabs?: TabDefinition[];
-  /** When set, only that tab section is rendered (drawer tab panel). */
-  onlyTabId?: string;
-}): JSX.Element | null {
-  const { t } = useTranslation();
-  const tabs = resolveCustomCollectionTabs(formTabs, fields, enabledTabIds, onlyTabId);
+export const ContactDetailCustomCollections = React.memo(function ContactDetailCustomCollections({
+      contact,
+      fields,
+      enabledTabIds,
+      formTabs,
+      onlyTabId,
+    }: {
+      contact: Contact;
+      fields: Record<string, FieldDefinition[]>;
+      enabledTabIds: Set<string>;
+      formTabs?: TabDefinition[];
+      /** When set, only that tab section is rendered (drawer tab panel). */
+      onlyTabId?: string;
+    }): JSX.Element | null {
+      const { t } = useTranslation();
+      const tabs = resolveCustomCollectionTabs(formTabs, fields, enabledTabIds, onlyTabId);
 
-  if (tabs.length === 0) return null;
+      if (tabs.length === 0) return null;
 
-  return (
-    <>
-      {tabs.map((tab) => {
-        const rowFields = listEnabledCustomContactFormFields(fields, tab.key);
-        if (rowFields.length === 0) return null;
+      return (
+        <>
+          {tabs.map((tab) => {
+            const rowFields = listEnabledCustomContactFormFields(fields, tab.key);
+            if (rowFields.length === 0) return null;
 
-        const rows = readContactCustomCollectionRows(contact, tab.key);
-        const title = tab.labelKey ? t(tab.labelKey) : tab.label || tab.key;
+            const rows = readContactCustomCollectionRows(contact, tab.key);
+            const title = tab.labelKey ? t(tab.labelKey) : tab.label || tab.key;
 
-        return (
-          <DetailSection key={tab.key} title={title}>
-            {rows.length === 0 ? (
-              <DetailCollectionEmpty title={t("contacts.form.noCustomTabEntriesYet")} />
-            ) : (
-              rows.map((row, rowIndex) => {
-                const summary = formatRowSummary(row, rowFields, (field) =>
-                  resolveRegistryLabel(field, t),
-                );
-                if (!summary) return null;
-                return (
-                  <CollectionRowItem
-                    key={`${tab.key}-${rowIndex}`}
-                    label={t("contacts.form.customTabEntryLabel", { index: rowIndex + 1 })}
-                    value={summary}
-                  />
-                );
-              })
-            )}
-          </DetailSection>
-        );
-      })}
-    </>
-  );
-}
+            return (
+              <DetailSection key={tab.key} title={title}>
+                {rows.length === 0 ? (
+                  <DetailCollectionEmpty title={t("contacts.form.noCustomTabEntriesYet")} />
+                ) : (
+                  rows.map((row, rowIndex) => {
+                    const summary = formatRowSummary(row, rowFields as FieldDefinition[], (field) =>
+                      resolveRegistryLabel(field, t),
+                    );
+                    if (!summary) return null;
+                    return (
+                      <CollectionRowItem
+                        key={`${tab.key}-${rowIndex}`}
+                        label={t("contacts.form.customTabEntryLabel", { index: rowIndex + 1 })}
+                        value={summary}
+                      />
+                    );
+                  })
+                )}
+              </DetailSection>
+            );
+          })}
+        </>
+      );
+    }) as any;

@@ -74,7 +74,7 @@ function resolveTeacherTabLabel(
   return resolveRegistryLabel({ label: tab.label, labelKey: tab.labelKey }, t);
 }
 
-export default function TeacherDetail({
+export const TeacherDetail = React.memo(function TeacherDetail({
   teacher,
   onClose,
   onEdit,
@@ -100,16 +100,35 @@ export default function TeacherDetail({
 
   const displayName = resolveTeacherDisplayName(teacher, t, linkedContact);
 
-  const headerActions = (
-    <DetailDrawerRestoreOrEditAction
-      isArchived={isArchived}
-      canRestore={canDelete}
-      canEdit={Boolean(onEdit)}
-      restoreLabel={t("teachers.restore")}
-      editLabel={t("teachers.detail.editTitle")}
-      onRestore={onRestore ? () => onRestore(String(teacher.id)) : undefined}
-      onEdit={onEdit ? () => onEdit(teacher) : undefined}
-    />
+  const headerActionsNode = useMemo(
+    () => (
+      <DetailDrawerRestoreOrEditAction
+        isArchived={isArchived}
+        canRestore={canDelete}
+        canEdit={Boolean(onEdit)}
+        restoreLabel={t("teachers.restore")}
+        editLabel={t("teachers.detail.editTitle")}
+        onRestore={onRestore ? () => onRestore(String(teacher.id)) : undefined}
+        onEdit={onEdit ? () => onEdit(teacher) : undefined}
+      />
+    ),
+    [isArchived, canDelete, onEdit, t, onRestore, teacher],
+  );
+
+  const headerExtraNode = useMemo(
+    () => <TeacherArchivedBanner teacher={teacher} />,
+    [teacher],
+  );
+
+  const footerNode = useMemo(
+    () => (
+      <DrawerUpdatedStamp
+        updatedAt={teacher.updatedAt}
+        createdAt={teacher.createdAt}
+        label={t("teachers.detail.updatedLabel")}
+      />
+    ),
+    [teacher.updatedAt, teacher.createdAt, t],
   );
 
   const fieldsSections = useMemo(() => {
@@ -219,15 +238,9 @@ export default function TeacherDetail({
       ariaLabel={t("teachers.detail.ariaLabel", {
         name: displayName,
       })}
-      headerActions={headerActions}
-      headerExtra={<TeacherArchivedBanner teacher={teacher} />}
-      footer={
-        <DrawerUpdatedStamp
-          updatedAt={teacher.updatedAt}
-          createdAt={teacher.createdAt}
-          label={t("teachers.detail.updatedLabel")}
-        />
-      }
+      headerActions={headerActionsNode}
+      headerExtra={headerExtraNode}
+      footer={footerNode}
     >
       <TeacherDetailHero
         teacher={teacher}
@@ -256,4 +269,6 @@ export default function TeacherDetail({
       )}
     </DetailDrawerShell>
   );
-}
+});
+
+export default TeacherDetail;

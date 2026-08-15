@@ -30,19 +30,19 @@ interface AcademicReportResultsBodyProps {
   onToggleStudentFilter: (studentName: string) => void;
 }
 
-export function AcademicReportResultsBody({
+export const AcademicReportResultsBody = React.memo(function AcademicReportResultsBody({
   academicResults,
   onToggleStudentFilter,
 }: AcademicReportResultsBodyProps): React.JSX.Element {
   const { t } = useTranslation();
-  const headers = [
+  const headers = React.useMemo(() => [
     { key: "rank", label: t("examinations.report.colRank") },
     { key: "student", label: t("examinations.report.colStudent") },
     { key: "class", label: t("examinations.report.colClass") },
     { key: "subject", label: t("examinations.report.colSubject") },
     { key: "marks", label: t("examinations.report.colMarks") },
     { key: "grade", label: t("examinations.report.colGrade") },
-  ];
+  ], [t]);
 
   return (
     <div className={WORK_SURFACE}>
@@ -134,6 +134,6 @@ export function AcademicReportResultsBody({
       </div>
     </div>
   );
-}
+});
 
 export { GRADE_BADGE_CLS };

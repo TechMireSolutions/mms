@@ -1,8 +1,9 @@
+import React from "react";
 import EnrollmentChart from "@/components/dashboard-widgets/charts/EnrollmentChart";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export function StudentReportDashboardWidgets(): React.JSX.Element {
+export const StudentReportDashboardWidgets = React.memo(function StudentReportDashboardWidgets(): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -16,4 +17,5 @@ export function StudentReportDashboardWidgets(): React.JSX.Element {
       </div>
     </div>
   );
-}
+});
+

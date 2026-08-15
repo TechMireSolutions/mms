@@ -1,3 +1,4 @@
+import React from "react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +9,7 @@ export interface DirectoryCardMetaTileProps {
 }
 
 /** Shared metadata tile for Work directory entity cards. */
-export function DirectoryCardMetaTile({
+export const DirectoryCardMetaTile = React.memo(function DirectoryCardMetaTile({
   label,
   children,
   className,
@@ -26,4 +27,5 @@ export function DirectoryCardMetaTile({
       <div className="text-xs font-semibold text-foreground truncate mt-0.5">{children}</div>
     </div>
   );
-}
+});
+

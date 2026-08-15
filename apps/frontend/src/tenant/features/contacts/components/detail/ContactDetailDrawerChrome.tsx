@@ -2,6 +2,7 @@
  * @file ContactDetailDrawerChrome.tsx
  * @description Header actions, banner, tab-bar, and footer chrome partitions for ContactDetailDrawer.
  */
+import React from "react";
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
@@ -17,7 +18,7 @@ export interface ContactDetailDrawerHeaderActionsProps {
   onRestore?: (contactId: string | number) => void | Promise<void>;
 }
 
-export function ContactDetailDrawerHeaderActions({
+export const ContactDetailDrawerHeaderActions = React.memo(function ContactDetailDrawerHeaderActions({
   canWrite,
   canDelete,
   contact,
@@ -38,17 +39,17 @@ export function ContactDetailDrawerHeaderActions({
       onEdit={() => onEdit(contact)}
     />
   );
-}
+});
 
 export interface ContactDetailDrawerArchivedBannerProps {
   contact: Contact;
 }
 
-export function ContactDetailDrawerArchivedBanner({
+export const ContactDetailDrawerArchivedBanner = React.memo(function ContactDetailDrawerArchivedBanner({
   contact,
 }: ContactDetailDrawerArchivedBannerProps): React.JSX.Element | null {
   return <ContactArchivedBanner contact={contact} />;
-}
+});
 
 export interface ContactDetailDrawerTabBarProps {
   detailTabs: readonly SubTab[];
@@ -56,7 +57,7 @@ export interface ContactDetailDrawerTabBarProps {
   onTabChange: (tab: string) => void;
 }
 
-export function ContactDetailDrawerTabBar({
+export const ContactDetailDrawerTabBar = React.memo(function ContactDetailDrawerTabBar({
   detailTabs,
   activeTab,
   onTabChange,
@@ -72,13 +73,13 @@ export function ContactDetailDrawerTabBar({
       className="w-full pt-1"
     />
   );
-}
+});
 
 export interface ContactDetailDrawerFooterProps {
   contact: Contact;
 }
 
-export function ContactDetailDrawerFooter({
+export const ContactDetailDrawerFooter = React.memo(function ContactDetailDrawerFooter({
   contact,
 }: ContactDetailDrawerFooterProps): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -89,5 +90,5 @@ export function ContactDetailDrawerFooter({
       label={t("contacts.detail.updatedLabel")}
     />
   );
-}
+});
 

@@ -1,3 +1,4 @@
+import React from "react";
 import { Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -11,7 +12,7 @@ interface AcademicReportClassRankingsProps {
   onToggleClassFilter: (className: string) => void;
 }
 
-export function AcademicReportClassRankings({
+export const AcademicReportClassRankings = React.memo(function AcademicReportClassRankings({
   classRankings,
   onToggleClassFilter,
 }: AcademicReportClassRankingsProps): React.JSX.Element {
@@ -53,4 +54,4 @@ export function AcademicReportClassRankings({
       )}
     </>
   );
-}
+});

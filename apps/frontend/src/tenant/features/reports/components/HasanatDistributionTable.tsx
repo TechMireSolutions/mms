@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Star } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
@@ -23,21 +23,21 @@ interface HasanatDistributionTableProps {
   onToggleFacultyFilter: (faculty: string) => void;
 }
 
-export function HasanatDistributionTable({
+export const HasanatDistributionTable = React.memo(function HasanatDistributionTable({
   distribution,
   selectedFaculty,
   onToggleFacultyFilter,
 }: HasanatDistributionTableProps): React.JSX.Element {
   const { t } = useTranslation();
-  const headers = [
+  const headers = useMemo(() => [
     { key: "student", label: t("hasanat.report.colStudent") },
     { key: "class", label: t("hasanat.report.colClass") },
     { key: "faculty", label: t("hasanat.report.colFaculty") },
     { key: "distributed", label: t("hasanat.report.colDistributed") },
     { key: "redeemed", label: t("hasanat.report.colRedeemed") },
     { key: "balance", label: t("hasanat.report.colBalance") },
-  ];
-  const exportHeaders = headers.map((header) => header.label);
+  ], [t]);
+  const exportHeaders = useMemo(() => headers.map((header) => header.label), [headers]);
 
   return (
     <>
@@ -142,4 +142,5 @@ export function HasanatDistributionTable({
       )}
     </>
   );
-}
+});
+

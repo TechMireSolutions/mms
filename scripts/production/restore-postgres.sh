@@ -5,7 +5,18 @@
 # Usage:
 #   bash scripts/production/restore-postgres.sh /path/to/backup.sql.gz
 #
-set -euo pipefail
+set -eEuo pipefail
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+log_info() { echo -e "${GREEN}[MMS-RESTORE]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[MMS-RESTORE-WARN]${NC} $1"; }
+log_err() { echo -e "${RED}[MMS-RESTORE-ERR]${NC} $1"; }
+
+trap 'log_err "Failed at line $LINENO: command \"$BASH_COMMAND\" exited with status $?"' ERR
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ENV_FILE="${MMS_DEPLOY_ENV:-${ROOT_DIR}/apps/backend/.env}"
@@ -19,7 +30,7 @@ fi
 BACKUP_FILE="$1"
 
 if [[ ! -f "$BACKUP_FILE" ]]; then
-  echo "ERROR: Backup file not found at ${BACKUP_FILE}"
+  log_err "Backup file not found at ${BACKUP_FILE}"
   exit 1
 fi
 
@@ -29,7 +40,7 @@ source "${ROOT_DIR}/scripts/lib/read-env.sh"
 DATABASE_URL="$(read_env_var DATABASE_URL 'postgres://postgres:postgres@localhost:5432/mms')"
 
 if ! command -v psql >/dev/null 2>&1; then
-  echo "ERROR: psql CLI not found. Please install postgresql-client."
+  log_err "psql CLI not found. Please install postgresql-client."
   exit 1
 fi
 
@@ -46,17 +57,17 @@ fi
 
 if command -v pm2 >/dev/null 2>&1; then
   if pm2 describe "$PM2_PROCESS" >/dev/null 2>&1; then
-    echo "Stopping PM2 process: ${PM2_PROCESS}..."
+    log_info "Stopping PM2 process: ${PM2_PROCESS}..."
     pm2 stop "$PM2_PROCESS"
     PM2_STOPPED=true
   fi
 else
-  echo "WARNING: PM2 not found. Continuing without stopping PM2."
+  log_warn "PM2 not found. Continuing without stopping PM2."
 fi
 
 # 3.5. Take pre-restore database backup for rollback capability in case of failure
 if command -v pg_dump >/dev/null 2>&1; then
-  echo "Creating pre-restore safety backup..."
+  log_info "Creating pre-restore safety backup..."
   TEMP_BACKUP_DIR="/tmp/mms_pre_restore_backups"
   mkdir -p "$TEMP_BACKUP_DIR"
   STAMP_PRE="$(date -u +%Y%m%dT%H%M%SZ)"

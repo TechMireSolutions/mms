@@ -21,7 +21,7 @@ export const examRecordSchema = z.object({
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),
-});
+}).strict();
 
 export type Exam = z.infer<typeof examRecordSchema>;
 export const examListSchema = z.array(examRecordSchema);
@@ -32,7 +32,7 @@ export const examResultRecordSchema = z.object({
   examId: z.string(),
   studentId: z.string(),
   marksObtained: z.number(),
-});
+}).strict();
 
 export type ExamResult = z.infer<typeof examResultRecordSchema>;
 export const examResultListSchema = z.array(examResultRecordSchema);

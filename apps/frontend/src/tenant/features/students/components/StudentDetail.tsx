@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { GraduationCap } from "lucide-react";
 import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
@@ -24,7 +24,7 @@ interface StudentDetailProps {
   canWriteMessaging: boolean;
 }
 
-export default function StudentDetail({
+export const StudentDetail = React.memo(function StudentDetail({
   student,
   onClose,
   onEdit,
@@ -51,16 +51,35 @@ export default function StudentDetail({
 
   const isArchived = Boolean(student.deletedAt);
 
-  const headerActions = (
-    <DetailDrawerRestoreOrEditAction
-      isArchived={isArchived}
-      canRestore={canDelete}
-      canEdit={Boolean(onEdit)}
-      restoreLabel={t("students.restore")}
-      editLabel={t("students.detail.editTitle")}
-      onRestore={onRestore ? () => onRestore(String(student.id)) : undefined}
-      onEdit={onEdit ? () => onEdit(student) : undefined}
-    />
+  const headerActionsNode = useMemo(
+    () => (
+      <DetailDrawerRestoreOrEditAction
+        isArchived={isArchived}
+        canRestore={canDelete}
+        canEdit={Boolean(onEdit)}
+        restoreLabel={t("students.restore")}
+        editLabel={t("students.detail.editTitle")}
+        onRestore={onRestore ? () => onRestore(String(student.id)) : undefined}
+        onEdit={onEdit ? () => onEdit(student) : undefined}
+      />
+    ),
+    [isArchived, canDelete, onEdit, t, onRestore, student],
+  );
+
+  const headerExtraNode = useMemo(
+    () => <StudentArchivedBanner student={student} />,
+    [student],
+  );
+
+  const footerNode = useMemo(
+    () => (
+      <DrawerUpdatedStamp
+        updatedAt={student.updatedAt}
+        createdAt={student.createdAt}
+        label={t("students.detail.updatedLabel")}
+      />
+    ),
+    [student.updatedAt, student.createdAt, t],
   );
 
   return (
@@ -76,15 +95,9 @@ export default function StudentDetail({
       ariaLabel={t("students.detail.ariaLabel", {
         name: student.name?.trim() || t("students.form.student"),
       })}
-      headerActions={headerActions}
-      headerExtra={<StudentArchivedBanner student={student} />}
-      footer={
-        <DrawerUpdatedStamp
-          updatedAt={student.updatedAt}
-          createdAt={student.createdAt}
-          label={t("students.detail.updatedLabel")}
-        />
-      }
+      headerActions={headerActionsNode}
+      headerExtra={headerExtraNode}
+      footer={footerNode}
     >
       <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
 
@@ -118,4 +131,6 @@ export default function StudentDetail({
       />
     </DetailDrawerShell>
   );
-}
+});
+
+export default StudentDetail;

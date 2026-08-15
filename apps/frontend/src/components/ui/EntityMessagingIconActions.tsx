@@ -1,3 +1,4 @@
+import React from "react";
 import { Mail, MessageCircle, MessageSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +42,7 @@ export interface EntityMessagingIconActionsProps {
 /**
  * Dense icon-only Call / WhatsApp / SMS / Email row for directory cards and network links.
  */
-export function EntityMessagingIconActions({
+export const EntityMessagingIconActions = React.memo(function EntityMessagingIconActions({
   primaryPhone,
   primaryEmail,
   labels,
@@ -130,4 +131,5 @@ export function EntityMessagingIconActions({
       ) : null}
     </div>
   );
-}
+});
+

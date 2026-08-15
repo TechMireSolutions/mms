@@ -5,6 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { DenominationsManager } from "@/tenant/features/hasanat/components/DenominationsManager";
 import { HasanatSettings } from "@/tenant/features/hasanat/components/HasanatSettings";
 import type { Denomination } from "@/lib/data/hasanatData";
+import React from "react";
 
 interface SetupTab {
   id: string;
@@ -21,38 +22,38 @@ interface HasanatSetupTierProps {
   onUpdateDenoms: (denoms: Denomination[]) => Promise<void>;
 }
 
-export function HasanatSetupTier({
-  tabs,
-  activeTab,
-  canEditSetup,
-  canWrite,
-  denoms,
-  onTabChange,
-  onUpdateDenoms,
-}: HasanatSetupTierProps) {
-  const { t } = useTranslation();
+export const HasanatSetupTier = React.memo(function HasanatSetupTier({
+      tabs,
+      activeTab,
+      canEditSetup,
+      canWrite,
+      denoms,
+      onTabChange,
+      onUpdateDenoms,
+    }: HasanatSetupTierProps) {
+      const { t } = useTranslation();
 
-  return (
-    <ErrorBoundary>
-      <div className="space-y-4">
-        <SubTabBar
-          tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={activeTab}
-          onChange={onTabChange}
-        />
-        {!canEditSetup ? (
-          <SetupReadOnlyMessage title={t("hasanat.setup.readOnly")} />
-        ) : (
-          <>
-            {activeTab === "denominations" && (
-              <DenominationsManager denoms={denoms} onUpdate={onUpdateDenoms} canWrite={canWrite} />
+      return (
+        <ErrorBoundary>
+          <div className="space-y-4">
+            <SubTabBar
+              tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+              value={activeTab}
+              onChange={onTabChange}
+            />
+            {!canEditSetup ? (
+              <SetupReadOnlyMessage title={t("hasanat.setup.readOnly")} />
+            ) : (
+              <>
+                {activeTab === "denominations" && (
+                  <DenominationsManager denoms={denoms} onUpdate={onUpdateDenoms} canWrite={canWrite} />
+                )}
+                {activeTab === "preferences" && (
+                  <HasanatSettings />
+                )}
+              </>
             )}
-            {activeTab === "preferences" && (
-              <HasanatSettings />
-            )}
-          </>
-        )}
-      </div>
-    </ErrorBoundary>
-  );
-}
+          </div>
+        </ErrorBoundary>
+      );
+    });

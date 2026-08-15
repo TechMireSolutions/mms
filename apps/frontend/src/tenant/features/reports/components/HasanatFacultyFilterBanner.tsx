@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ActiveFilterBanner } from "@/components/ui/ActiveFilterBanner";
 
@@ -6,7 +7,7 @@ interface HasanatFacultyFilterBannerProps {
   onClear: () => void;
 }
 
-export function HasanatFacultyFilterBanner({
+export const HasanatFacultyFilterBanner = React.memo(function HasanatFacultyFilterBanner({
   selectedFaculty,
   onClear,
 }: HasanatFacultyFilterBannerProps): React.JSX.Element | null {
@@ -19,4 +20,5 @@ export function HasanatFacultyFilterBanner({
       actions={[{ key: "faculty", label: t("hasanat.report.clearFacultyFilter"), onClick: onClear }]}
     />
   );
-}
+});
+

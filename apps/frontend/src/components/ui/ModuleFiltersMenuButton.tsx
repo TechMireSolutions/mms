@@ -1,5 +1,5 @@
+import React, { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { RotateCcw, SlidersHorizontal, type LucideIcon } from "lucide-react";
-import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,44 +31,46 @@ export interface ModuleFiltersMenuTriggerProps extends ComponentPropsWithoutRef<
 /**
  * Shared Filters menu trigger (badge + active styles). Use as DropdownMenuTrigger child via asChild.
  */
-export const ModuleFiltersMenuTrigger = forwardRef<HTMLButtonElement, ModuleFiltersMenuTriggerProps>(
-  function ModuleFiltersMenuTrigger(
-    {
-      label,
-      activeCount = 0,
-      icon: Icon = SlidersHorizontal,
-      className,
-      children,
-      type = "button",
-      ...rest
-    },
-    ref,
-  ) {
-    const isActive = activeCount > 0;
+export const ModuleFiltersMenuTrigger = React.memo(
+  forwardRef<HTMLButtonElement, ModuleFiltersMenuTriggerProps>(
+    function ModuleFiltersMenuTrigger(
+      {
+        label,
+        activeCount = 0,
+        icon: Icon = SlidersHorizontal,
+        className,
+        children,
+        type = "button",
+        ...rest
+      },
+      ref,
+    ) {
+      const isActive = activeCount > 0;
 
-    return (
-      <Button
-        ref={ref}
-        type={type}
-        variant="ghost"
-        className={cn(
-          WORK_TOOLBAR_TRIGGER,
-          isActive ? WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE : WORK_TOOLBAR_TRIGGER_FILTER_IDLE,
-          className,
-        )}
-        {...rest}
-      >
-        <Icon className="w-3.5 h-3.5" aria-hidden="true" />
-        <span>{label}</span>
-        {isActive ? (
-          <Badge pill className="w-4 h-4 px-0 font-bold">
-            {activeCount}
-          </Badge>
-        ) : null}
-        {children}
-      </Button>
-    );
-  },
+      return (
+        <Button
+          ref={ref}
+          type={type}
+          variant="ghost"
+          className={cn(
+            WORK_TOOLBAR_TRIGGER,
+            isActive ? WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE : WORK_TOOLBAR_TRIGGER_FILTER_IDLE,
+            className,
+          )}
+          {...rest}
+        >
+          <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>{label}</span>
+          {isActive ? (
+            <Badge pill className="w-4 h-4 px-0 font-bold">
+              {activeCount}
+            </Badge>
+          ) : null}
+          {children}
+        </Button>
+      );
+    },
+  ),
 );
 
 export interface ModuleFilterDropdownProps {
@@ -90,7 +92,7 @@ export interface ModuleFilterDropdownProps {
  * filter menus (Contacts / Students / Teachers / Messaging). Compose checkbox/radio
  * groups via {@link ModuleFilterCheckboxGroup} / {@link ModuleFilterRadioGroup}.
  */
-export function ModuleFilterDropdown({
+export const ModuleFilterDropdown = React.memo(function ModuleFilterDropdown({
   label,
   activeCount,
   icon,
@@ -124,7 +126,7 @@ export function ModuleFilterDropdown({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
 
 export interface ModuleFilterCheckboxOption {
   value: string;
@@ -139,7 +141,7 @@ export interface ModuleFilterCheckboxGroupProps {
 }
 
 /** Labeled multi-select checkbox group for a filter dropdown. */
-export function ModuleFilterCheckboxGroup({
+export const ModuleFilterCheckboxGroup = React.memo(function ModuleFilterCheckboxGroup({
   label,
   options,
   selected,
@@ -159,7 +161,7 @@ export function ModuleFilterCheckboxGroup({
       ))}
     </>
   );
-}
+});
 
 export interface ModuleFilterRadioOption {
   value: string;
@@ -174,7 +176,7 @@ export interface ModuleFilterRadioGroupProps {
 }
 
 /** Labeled single-select radio group for a filter dropdown. */
-export function ModuleFilterRadioGroup({
+export const ModuleFilterRadioGroup = React.memo(function ModuleFilterRadioGroup({
   label,
   options,
   value,
@@ -192,13 +194,14 @@ export function ModuleFilterRadioGroup({
       </DropdownMenuRadioGroup>
     </>
   );
-}
+});
 
 export interface ModuleFilterDividerProps {
   className?: string;
 }
 
 /** Vertical divider between groups within a filter dropdown. */
-export function ModuleFilterDivider({ className }: ModuleFilterDividerProps): React.JSX.Element {
+export const ModuleFilterDivider = React.memo(function ModuleFilterDivider({ className }: ModuleFilterDividerProps): React.JSX.Element {
   return <DropdownMenuSeparator className={cn("bg-border", className)} />;
-}
+});
+

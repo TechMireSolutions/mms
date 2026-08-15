@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Receipt, Filter, Banknote, Wallet, Globe, CalendarPlus, ClipboardList,
 } from 'lucide-react';
@@ -12,7 +12,7 @@ interface ObligationsCommandMetricsProps {
   shown: number;
 }
 
-export function ObligationsCommandMetrics({
+export const ObligationsCommandMetrics = React.memo(function ObligationsCommandMetrics({
   total,
   shown,
 }: ObligationsCommandMetricsProps): React.JSX.Element {
@@ -20,16 +20,16 @@ export function ObligationsCommandMetrics({
   const { data: serverMetrics } = useObligationsMetrics();
   const { formatCurrency } = useFinanceCurrency();
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     total: serverMetrics?.total ?? total,
     totalAmount: serverMetrics?.totalAmount ?? 0,
     cash: serverMetrics?.cash ?? 0,
     online: serverMetrics?.online ?? 0,
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
     obligationTypes: serverMetrics?.obligationTypes ?? 0,
-  };
+  }), [serverMetrics, total]);
 
-  const items = [
+  const items = useMemo(() => [
     { icon: Receipt, label: t('obligations.metrics.total'), value: metrics.total, accent: 'primary' as const },
     { icon: Filter, label: t('obligations.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Banknote, label: t('obligations.metrics.totalAmount'), value: formatCurrency(metrics.totalAmount), accent: 'indigo' as const },
@@ -37,7 +37,7 @@ export function ObligationsCommandMetrics({
     { icon: Globe, label: t('obligations.metrics.online'), value: metrics.online, accent: 'teal' as const },
     { icon: CalendarPlus, label: t('obligations.metrics.newThisPeriod'), value: metrics.newThisPeriod, accent: 'warning' as const },
     { icon: ClipboardList, label: t('obligations.metrics.obligationTypes'), value: metrics.obligationTypes, accent: 'purple' as const },
-  ];
+  ], [t, shown, metrics, formatCurrency]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

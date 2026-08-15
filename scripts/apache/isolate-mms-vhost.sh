@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 # Remove MMS backend ProxyPass from Apache vhosts that are NOT for MMS_APP_DOMAIN.
 # Fixes cases where aabtaab.com / darulquran.pk incorrectly proxy to :5002.
-set -euo pipefail
+set -eEuo pipefail
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+log_info() { echo -e "${GREEN}[MMS-ISOLATE]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[MMS-ISOLATE-WARN]${NC} $1"; }
+log_err() { echo -e "${RED}[MMS-ISOLATE-ERR]${NC} $1"; }
+
+trap 'log_err "Failed at line $LINENO: command \"$BASH_COMMAND\" exited with status $?"' ERR
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
@@ -36,12 +47,12 @@ APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}")"
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 
 if [[ -z "$APP_DOMAIN" ]]; then
-  echo "WARNING: MMS_APP_DOMAIN unset — skip Apache isolation"
+  log_warn "MMS_APP_DOMAIN unset — skip Apache isolation"
   exit 0
 fi
 
 if ! command -v apache2ctl >/dev/null 2>&1; then
-  echo "Apache not installed — skip isolation"
+  log_warn "Apache not installed — skip isolation"
   exit 0
 fi
 
@@ -51,7 +62,7 @@ run_priv() {
   elif command -v sudo >/dev/null 2>&1; then
     sudo "$@"
   else
-    echo "ERROR: need root/sudo"
+    log_err "Need root/sudo"
     exit 1
   fi
 }

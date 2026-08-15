@@ -16,7 +16,7 @@ export interface ModuleColumnCustomizerListProps {
   clearDrag: () => void;
 }
 
-export function ModuleColumnCustomizerList({
+export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustomizerList({
   visibleColumns,
   hiddenColumns,
   dragging,
@@ -99,4 +99,5 @@ export function ModuleColumnCustomizerList({
       )}
     </div>
   );
-}
+});
+

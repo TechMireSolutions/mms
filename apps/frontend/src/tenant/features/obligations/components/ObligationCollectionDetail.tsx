@@ -52,7 +52,15 @@ export interface ObligationCollectionDetailProps {
 /**
  * Displays obligation collection details including distribution breakdown.
  */
-export function ObligationCollectionDetail({ collection, obligationTypes, reps, mujtahids, distributions, wakalaTypes, onClose }: ObligationCollectionDetailProps) {
+export const ObligationCollectionDetail = React.memo(function ObligationCollectionDetail({
+  collection,
+  obligationTypes,
+  reps,
+  mujtahids,
+  distributions,
+  wakalaTypes,
+  onClose,
+}: ObligationCollectionDetailProps) {
   const { t } = useTranslation();
   const currencies = DEFAULT_CURRENCIES;
   const [showPrint, setShowPrint] = useState(false);
@@ -75,29 +83,49 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
     Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
   }), [t]);
 
-  const getContact = (id?: string | number | null) => contacts.find((contact) => String(contact.id) === String(id));
-  const getCurrency = (id: string) => currencies.find((currencyOption) => currencyOption.id === id);
-  const getUser = (id?: string | number | null) => users.find((u) => String(u.id) === String(id));
-  const getRep = (id: string) => reps.find((r) => r.id === id);
-  const getMujtahid = (repId: string) => {
-    const rep = getRep(repId);
-    return rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null;
-  };
-  const getObType = (id: string) => obligationTypes.find((obligationType) => obligationType.id === id);
-
-  const selectedCollection = collection;
-  const sender = getContact(selectedCollection.sender_id);
-  const reference = selectedCollection.reference_id ? getContact(selectedCollection.reference_id) : null;
-  const currency = getCurrency(selectedCollection.currency_id);
-  const user = getUser(selectedCollection.received_by);
-  const rep = getRep(selectedCollection.mujtahid_representative_id);
-  const mujtahid = getMujtahid(selectedCollection.mujtahid_representative_id);
-  const obType = getObType(selectedCollection.obligation_type_id);
-
-  const wakalaType = wakalaTypes.find(
-    (wakalaTypeItem) => wakalaTypeItem.obligation_type_id === selectedCollection.obligation_type_id && wakalaTypeItem.mujtahid_representative_id === selectedCollection.mujtahid_representative_id
+  const sender = useMemo(
+    () => contacts.find((contact) => String(contact.id) === String(collection.sender_id)),
+    [contacts, collection.sender_id],
   );
-  const dists = wakalaType ? distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id) : [];
+  const reference = useMemo(
+    () => (collection.reference_id ? contacts.find((contact) => String(contact.id) === String(collection.reference_id)) : null),
+    [contacts, collection.reference_id],
+  );
+  const currency = useMemo(
+    () => currencies.find((currencyOption) => currencyOption.id === collection.currency_id),
+    [currencies, collection.currency_id],
+  );
+  const user = useMemo(
+    () => users.find((u) => String(u.id) === String(collection.received_by)),
+    [users, collection.received_by],
+  );
+  const rep = useMemo(
+    () => reps.find((r) => r.id === collection.mujtahid_representative_id),
+    [reps, collection.mujtahid_representative_id],
+  );
+  const mujtahid = useMemo(
+    () => (rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null),
+    [rep, mujtahids],
+  );
+  const obType = useMemo(
+    () => obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id),
+    [obligationTypes, collection.obligation_type_id],
+  );
+
+  const wakalaType = useMemo(
+    () =>
+      wakalaTypes.find(
+        (wakalaTypeItem) =>
+          wakalaTypeItem.obligation_type_id === collection.obligation_type_id &&
+          wakalaTypeItem.mujtahid_representative_id === collection.mujtahid_representative_id,
+      ),
+    [wakalaTypes, collection.obligation_type_id, collection.mujtahid_representative_id],
+  );
+
+  const dists = useMemo(
+    () => (wakalaType ? distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id) : []),
+    [wakalaType, distributions],
+  );
 
   return (
     <DetailDrawerShell open onClose={onClose} title={t("obligations.detail.title")} icon={Receipt} className="max-w-2xl">
@@ -107,11 +135,11 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.columns.receiptNo")}</h3>
-            <p className="text-xl font-bold text-primary font-mono m-0">{selectedCollection.receipt_no}</p>
+            <p className="text-xl font-bold text-primary font-mono m-0">{collection.receipt_no}</p>
           </div>
           <div className="ms-auto text-end">
             <h3 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("obligations.columns.receivedDate")}</h3>
-            <p className="text-sm font-semibold text-foreground m-0">{formatDate(selectedCollection.received_date)}</p>
+            <p className="text-sm font-semibold text-foreground m-0">{formatDate(collection.received_date)}</p>
           </div>
         </header>
 
@@ -122,13 +150,13 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
           <Row label={t("obligations.detail.designatedFor")} value={obType?.designated_for} />
           <Row label={t("obligations.form.representative")} value={rep?.name} />
           <Row label={t("obligations.form.mujtahidLabel")} value={mujtahid?.name} />
-          <Row label={t("obligations.columns.amount")} value={formatMoney(selectedCollection.amount, currency?.code)} mono />
+          <Row label={t("obligations.columns.amount")} value={formatMoney(collection.amount, currency?.code)} mono />
           <div className="flex justify-between items-start gap-4 py-2.5 border-b border-border last:border-0">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex-shrink-0">{t("obligations.columns.paymentMode")}</span>
-            <StatusBadge status={selectedCollection.payment_mode} config={paymentModeConfig} size="sm" />
+            <StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />
           </div>
           <Row label={t("obligations.form.receivedBy")} value={user?.name} />
-          <Row label={t("obligations.detail.created")} value={formatDate(selectedCollection.created_at)} />
+          <Row label={t("obligations.detail.created")} value={formatDate(collection.created_at)} />
         </Card>
 
         {dists.length > 0 && (
@@ -150,7 +178,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                       />
                       <StatRow
                         label={t("obligations.columns.amount")}
-                        value={formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
+                        value={formatMoney((collection.amount * distribution.percentage) / 100, currency?.code)}
                         ddClassName="font-mono text-xs font-semibold"
                       />
                     </StatGrid>
@@ -159,7 +187,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
               </div>
               <div className="hidden md:block">
                 <Table>
-                  <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: selectedCollection.receipt_no })}</caption>
+                  <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: collection.receipt_no })}</caption>
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
                       <ModuleTableHeaderCell columnKey="name" className="px-5 py-2">{t("obligations.detail.colName")}</ModuleTableHeaderCell>
@@ -177,7 +205,7 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
                         </TableCell>
                         <TableCell className="px-4 py-2.5 text-end font-mono text-xs font-semibold">{distribution.percentage}%</TableCell>
                         <TableCell className="px-5 py-2.5 text-end font-mono text-xs font-semibold text-foreground">
-                          {formatMoney((selectedCollection.amount * distribution.percentage) / 100, currency?.code)}
+                          {formatMoney((collection.amount * distribution.percentage) / 100, currency?.code)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -225,4 +253,5 @@ export function ObligationCollectionDetail({ collection, obligationTypes, reps, 
       {showEditor && <InvoiceTemplateEditor onClose={() => setShowEditor(false)} />}
     </DetailDrawerShell>
   );
-}
+});
+

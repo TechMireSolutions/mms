@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Install Apache vhost for MMS_APP_DOMAIN only (apex + *.domain → :5002).
-set -euo pipefail
+set -Eeuo pipefail
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
@@ -38,12 +44,12 @@ APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}")"
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 
 if [[ -z "$APP_DOMAIN" ]]; then
-  echo "ERROR: MMS_APP_DOMAIN required"
+  echo -e "${RED}ERROR: MMS_APP_DOMAIN required${NC}"
   exit 1
 fi
 
 if ! command -v apache2ctl >/dev/null 2>&1; then
-  echo "Apache not installed — skip vhost install"
+  echo -e "${YELLOW}WARNING: Apache not installed — skip vhost install${NC}"
   exit 0
 fi
 
@@ -77,10 +83,10 @@ if [[ -d "$CERT_DIR" ]]; then
     CERT_SANS="$(openssl x509 -in "${CERT_DIR}/fullchain.pem" -noout -ext subjectAltName 2>/dev/null || true)"
     if ! echo "$CERT_SANS" | grep -qF "DNS:*.${APP_DOMAIN}"; then
       if echo "$CERT_SANS" | grep -qF ".${APP_DOMAIN}"; then
-        echo "WARNING: cert lacks wildcard DNS:*.${APP_DOMAIN} (named tenant SANs only)"
+        echo -e "${YELLOW}WARNING: cert lacks wildcard DNS:*.${APP_DOMAIN} (named tenant SANs only)${NC}"
         echo "         Registered tenants work; new madrasas need: certbot --expand --apache -d slug.${APP_DOMAIN}"
       else
-        echo "ERROR: cert at ${CERT_DIR} lacks DNS:*.${APP_DOMAIN}"
+        echo -e "${RED}ERROR: cert at ${CERT_DIR} lacks DNS:*.${APP_DOMAIN}${NC}"
         echo "       Tenant subdomains will route to the default SSL site (e.g. Moodle → edu.aabtaab.com)."
         echo "       Fix: bash scripts/production/fix-tenant-tls-wildcard.sh ${ENV_FILE}"
       fi
@@ -90,10 +96,10 @@ if [[ -d "$CERT_DIR" ]]; then
     fi
   fi
 else
-  echo "WARNING: no cert at ${CERT_DIR} — edit SSL paths in ${TARGET} after certbot"
+  echo -e "${YELLOW}WARNING: no cert at ${CERT_DIR} — edit SSL paths in ${TARGET} after certbot${NC}"
 fi
 
-echo "Installing ${TARGET} for ${APP_DOMAIN} → :${BACKEND_PORT}"
+echo -e "${GREEN}Installing ${TARGET} for ${APP_DOMAIN} → :${BACKEND_PORT}${NC}"
 run_priv cp "$TMP" "$TARGET"
 
 run_priv a2dissite mmsv2.conf z-mmsv2.conf 2>/dev/null || true
@@ -113,7 +119,7 @@ fi
 
 if [[ -f /etc/apache2/sites-enabled/000-mmsv2.conf ]] \
   && grep -F -q "ServerAlias *.${APP_DOMAIN}" /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null; then
-  echo "MMS vhost enabled — ${APP_DOMAIN} and *.${APP_DOMAIN} → :${BACKEND_PORT}"
+  echo -e "${GREEN}MMS vhost enabled — ${APP_DOMAIN} and *.${APP_DOMAIN} → :${BACKEND_PORT}${NC}"
 else
-  echo "WARNING: 000-mmsv2.conf missing ServerAlias *.${APP_DOMAIN} on :443"
+  echo -e "${YELLOW}WARNING: 000-mmsv2.conf missing ServerAlias *.${APP_DOMAIN} on :443${NC}"
 fi

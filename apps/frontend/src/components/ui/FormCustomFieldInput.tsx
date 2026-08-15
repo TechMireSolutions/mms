@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DateTimePicker } from "@/components/ui/DateTimePicker";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -50,7 +50,7 @@ function getInputType(type: string): string {
   }
 }
 
-export function CustomFieldInput({
+export const CustomFieldInput = React.memo(function CustomFieldInput({
   field,
   value,
   onChange,
@@ -242,4 +242,4 @@ export function CustomFieldInput({
       className={error ? "border-destructive focus-visible:ring-destructive" : ""}
     />
   );
-}
+});

@@ -1,3 +1,4 @@
+import React from "react";
 import { Bar, BarChart, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
@@ -40,7 +41,7 @@ function getTrendPayload(state: unknown): EnrollmentTrendItem | null {
   return payload as EnrollmentTrendItem;
 }
 
-export function SessionReportCharts({
+export const SessionReportCharts = React.memo(function SessionReportCharts({
   capacityChartData,
   enrollmentTrends,
   onToggleClassFilter,
@@ -91,4 +92,5 @@ export function SessionReportCharts({
       </SectionCard>
     </div>
   );
-}
+});
+

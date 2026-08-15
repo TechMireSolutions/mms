@@ -14,7 +14,7 @@ export interface PageHeaderProps {
  * @param {PageHeaderProps} props - The component props.
  * @returns {React.ReactElement} The rendered PageHeader component.
  */
-export function PageHeader({
+export const PageHeader = React.memo(function PageHeader({
   icon: Icon = null,
   title,
   subtitle = "",
@@ -40,4 +40,5 @@ export function PageHeader({
       {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
     </div>
   );
-}
+});
+

@@ -31,7 +31,7 @@ export interface UserDetailProps {
   onRestore?: (userId: string) => void | Promise<void>;
 }
 
-export function UserDetail({
+export const UserDetail = React.memo(function UserDetail({
   user,
   onClose,
   onEdit,
@@ -68,16 +68,19 @@ export function UserDetail({
     [user],
   );
 
-  const headerActions = (
-    <DetailDrawerRestoreOrEditAction
-      isArchived={isArchived}
-      canRestore={canDelete}
-      canEdit={Boolean(onEdit)}
-      restoreLabel={t('users.trash.restore')}
-      editLabel={t('users.edit')}
-      onRestore={onRestore ? () => onRestore(String(user.id)) : undefined}
-      onEdit={onEdit ? () => onEdit(user) : undefined}
-    />
+  const headerActionsNode = useMemo(
+    () => (
+      <DetailDrawerRestoreOrEditAction
+        isArchived={isArchived}
+        canRestore={canDelete}
+        canEdit={Boolean(onEdit)}
+        restoreLabel={t('users.trash.restore')}
+        editLabel={t('users.edit')}
+        onRestore={onRestore ? () => onRestore(String(user.id)) : undefined}
+        onEdit={onEdit ? () => onEdit(user) : undefined}
+      />
+    ),
+    [isArchived, canDelete, onEdit, t, onRestore, user],
   );
 
   return (
@@ -87,7 +90,7 @@ export function UserDetail({
         title={user.name}
         subtitle={isArchived ? t('users.detail.archivedSubtitle') : user.email}
         icon={Shield}
-        headerActions={headerActions}
+        headerActions={headerActionsNode}
       >
         {isArchived ? (
           <DetailDrawerArchivedBanner
@@ -235,4 +238,4 @@ export function UserDetail({
       )}
     </>
   );
-}
+});

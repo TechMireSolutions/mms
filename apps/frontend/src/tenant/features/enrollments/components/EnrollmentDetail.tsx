@@ -53,7 +53,12 @@ interface EnrollmentDetailProps {
   canWrite: boolean;
 }
 
-export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite }: EnrollmentDetailProps): React.ReactElement | null {
+export const EnrollmentDetail = React.memo(function EnrollmentDetail({
+  enrollment,
+  onClose,
+  onStatusChange,
+  canWrite,
+}: EnrollmentDetailProps): React.ReactElement | null {
   const { t } = useTranslation();
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
   const { formatCurrency } = useFinanceCurrency();
@@ -72,6 +77,23 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
     none: { label: t("enrollments.payment.none"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
+  const headerExtraNode = useMemo(() => {
+    if (!enrollment) return null;
+    return (
+      <div className="flex flex-col gap-2 mt-1">
+        {enrollment.deletedAt && (
+          <EnrollmentArchivedBanner enrollment={enrollment} />
+        )}
+        <div className="flex items-center gap-2">
+          <StatusBadge status={enrollment.status} config={statusConfig} />
+          {enrollment.paymentStatus && (
+            <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} />
+          )}
+        </div>
+      </div>
+    );
+  }, [enrollment, statusConfig, paymentConfig]);
+
   if (!enrollment) return null;
 
   const nextStatuses = (
@@ -89,19 +111,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
       icon={User}
       ariaLabel={t("enrollments.detail.ariaLabel")}
       className="max-w-2xl"
-      headerExtra={
-        <div className="flex flex-col gap-2 mt-1">
-          {enrollment.deletedAt && (
-             <EnrollmentArchivedBanner enrollment={enrollment} />
-          )}
-          <div className="flex items-center gap-2">
-            <StatusBadge status={enrollment.status} config={statusConfig} />
-            {enrollment.paymentStatus && (
-              <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} />
-            )}
-          </div>
-        </div>
-      }
+      headerExtra={headerExtraNode}
     >
       <div className="space-y-4">
         <Section icon={User} title={t("enrollments.detail.sectionStudent")}>
@@ -190,4 +200,5 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
       </div>
     </DetailDrawerShell>
   );
-}
+});
+

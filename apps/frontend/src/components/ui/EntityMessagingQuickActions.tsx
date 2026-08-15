@@ -1,3 +1,4 @@
+import React from "react";
 import { Mail, MessageCircle, MessageSquare, Phone } from "lucide-react";
 import { QuickActionButton } from "@/components/ui/QuickActionButton";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
@@ -33,7 +34,7 @@ const ACTION_BASE = cn(WORK_SURFACE_INNER, MESSAGING_QUICK_ACTION_BASE, "shadow-
 /**
  * Presentational Call / WhatsApp / SMS / Email grid for person-directory detail drawers.
  */
-export function EntityMessagingQuickActions({
+export const EntityMessagingQuickActions = React.memo(function EntityMessagingQuickActions({
   primaryPhone,
   primaryEmail,
   labels,
@@ -87,4 +88,5 @@ export function EntityMessagingQuickActions({
       ) : null}
     </div>
   );
-}
+});
+

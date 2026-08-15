@@ -22,9 +22,9 @@ export function listStudentSystemFormFieldKeys(): ReadonlySet<string> {
  * When omitted, returns enabled non-seed fields from every tab.
  */
 export function listEnabledCustomStudentFormFields<T extends FieldDefinition>(
-  fields: Record<string, T[]>,
+  fields: Record<string, ReadonlyArray<T>>,
   tabId?: string,
-): T[] {
+): ReadonlyArray<T> {
   return helpers.listEnabledCustomFormFields(fields, tabId);
 }
 

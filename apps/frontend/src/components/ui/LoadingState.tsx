@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 /**
  * A full-page loading spinner with the app's branding.
  */
-export function PageLoader(): React.ReactElement {
+export const PageLoader = React.memo(function PageLoader(): React.ReactElement {
   return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="flex flex-col items-center gap-4">
@@ -15,7 +15,7 @@ export function PageLoader(): React.ReactElement {
       </div>
     </div>
   );
-}
+});
 
 interface CardSkeletonProps {
   count?: number;
@@ -25,7 +25,7 @@ interface CardSkeletonProps {
 /**
  * A skeleton loader for card-based layouts.
  */
-export function CardSkeleton({ count = 3, className = "" }: CardSkeletonProps): React.ReactElement {
+export const CardSkeleton = React.memo(function CardSkeleton({ count = 3, className = "" }: CardSkeletonProps): React.ReactElement {
   return (
     <div className={`grid gap-4 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
@@ -43,7 +43,7 @@ export function CardSkeleton({ count = 3, className = "" }: CardSkeletonProps): 
       ))}
     </div>
   );
-}
+});
 
 interface StatsSkeletonProps {
   count?: number;
@@ -52,7 +52,7 @@ interface StatsSkeletonProps {
 /**
  * A skeleton loader for dashboard stat grids.
  */
-export function StatsSkeleton({ count = 4 }: StatsSkeletonProps): React.ReactElement {
+export const StatsSkeleton = React.memo(function StatsSkeleton({ count = 4 }: StatsSkeletonProps): React.ReactElement {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
@@ -67,7 +67,7 @@ export function StatsSkeleton({ count = 4 }: StatsSkeletonProps): React.ReactEle
       ))}
     </div>
   );
-}
+});
 
 interface TableSkeletonProps {
   rows?: number;
@@ -77,7 +77,7 @@ interface TableSkeletonProps {
 /**
  * A skeleton loader for data tables.
  */
-export function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps): React.ReactElement {
+export const TableSkeleton = React.memo(function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps): React.ReactElement {
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-muted/40 flex gap-4">
@@ -97,12 +97,12 @@ export function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps): React
       </div>
     </div>
   );
-}
+});
 
 /**
  * Skeleton loader matching Three-Tier Module layout to eliminate Cumulative Layout Shift (CLS).
  */
-export function ModuleViewSkeleton(): React.ReactElement {
+export const ModuleViewSkeleton = React.memo(function ModuleViewSkeleton(): React.ReactElement {
   return (
     <div className="space-y-6 animate-pulse">
       {/* Module Header Skeleton */}
@@ -121,4 +121,5 @@ export function ModuleViewSkeleton(): React.ReactElement {
       <TableSkeleton rows={6} cols={5} />
     </div>
   );
-}
+});
+

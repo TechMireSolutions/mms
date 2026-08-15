@@ -32,7 +32,7 @@ export interface SubTabBarProps<K extends string> {
 /**
  * Responsive sub-tab navigation. Supports modern underline, segmented pill, and accordion modes.
  */
-export function SubTabBar<K extends string>({
+export const SubTabBar = React.memo(function SubTabBar<K extends string>({
   tabs,
   value,
   onChange,
@@ -310,5 +310,5 @@ export function SubTabBar<K extends string>({
       </div>
     </div>
   );
-}
+}) as <K extends string>(props: SubTabBarProps<K>) => React.JSX.Element | null;
 

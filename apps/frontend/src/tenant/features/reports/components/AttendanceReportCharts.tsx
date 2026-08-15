@@ -1,3 +1,4 @@
+import React from "react";
 import { Bar, BarChart, Tooltip, XAxis, YAxis } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
@@ -20,7 +21,7 @@ function getActiveLabel(state: unknown): string | null {
   return typeof activeLabel === "string" && activeLabel.length > 0 ? activeLabel : null;
 }
 
-export function AttendanceReportCharts({
+export const AttendanceReportCharts = React.memo(function AttendanceReportCharts({
   summary,
   onToggleClassFilter,
 }: AttendanceReportChartsProps): React.JSX.Element | null {
@@ -51,4 +52,5 @@ export function AttendanceReportCharts({
       </SafeResponsiveContainer>
     </SectionCard>
   );
-}
+});
+

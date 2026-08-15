@@ -1,3 +1,4 @@
+import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ActiveFilterBanner } from "@/components/ui/ActiveFilterBanner";
 
@@ -6,7 +7,7 @@ interface AttendanceReportFilterBannerProps {
   onClearClassFilter: () => void;
 }
 
-export function AttendanceReportFilterBanner({
+export const AttendanceReportFilterBanner = React.memo(function AttendanceReportFilterBanner({
   selectedClass,
   onClearClassFilter,
 }: AttendanceReportFilterBannerProps): React.JSX.Element | null {
@@ -22,4 +23,5 @@ export function AttendanceReportFilterBanner({
       actions={[{ key: "class", label: t("attendance.report.clearClassFilter"), onClick: onClearClassFilter }]}
     />
   );
-}
+});
+

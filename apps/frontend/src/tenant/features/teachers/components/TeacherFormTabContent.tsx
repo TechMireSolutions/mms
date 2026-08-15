@@ -1,4 +1,3 @@
-import type React from "react";
 import type { FieldDefinition, Teacher } from "@mms/shared";
 import {
   TeacherBasicSection,
@@ -6,6 +5,7 @@ import {
   type TeacherStatusOption,
 } from "@/tenant/features/teachers/components/TeacherFormSections";
 import { TeacherNotesSection } from "@/tenant/features/teachers/components/TeacherNotesSection";
+import React from "react";
 
 export interface TeacherFormTabContentProps {
   tab: string;
@@ -27,65 +27,63 @@ export interface TeacherFormTabContentProps {
   onDraftChange: (patch: Partial<Teacher>) => void;
 }
 
-export function TeacherFormTabContent({
-  tab,
-  teacher,
-  teacherDraft,
-  errors,
-  fields,
-  defaultSpecialization,
-  linkedTeacherContactIds,
-  specializationOptions,
-  autoGenerateId,
-  idPrefix,
-  nextEmployeeId,
-  statusOptions,
-  isFieldEnabled,
-  isFieldRequired,
-  onDraftChange,
-}: TeacherFormTabContentProps): React.JSX.Element {
-  if (tab === "employment") {
-    return (
-      <div className="space-y-6 pb-6">
-        <TeacherEmploymentSection
-          teacher={teacher}
-          teacherDraft={teacherDraft}
-          errors={errors}
-          fields={fields}
-          autoGenerateId={autoGenerateId}
-          idPrefix={idPrefix}
-          nextEmployeeId={nextEmployeeId}
-          statusOptions={statusOptions}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-        />
-        <TeacherNotesSection
-          notes={teacherDraft.notes}
-          fields={fields}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-        />
-      </div>
-    );
-  }
+export const TeacherFormTabContent = React.memo(function TeacherFormTabContent({
+      tab,
+      teacher,
+      teacherDraft,
+      errors,
+      fields,
+      defaultSpecialization,
+      linkedTeacherContactIds,
+      specializationOptions,
+      autoGenerateId,
+      idPrefix,
+      nextEmployeeId,
+      statusOptions,
+      isFieldEnabled,
+      isFieldRequired,
+      onDraftChange,
+    }: TeacherFormTabContentProps): React.JSX.Element {
+      if (tab === "employment") {
+        return (
+          <div className="space-y-6 pb-6">
+            <TeacherEmploymentSection
+              teacher={teacher}
+              teacherDraft={teacherDraft}
+              errors={errors}
+              fields={fields}
+              autoGenerateId={autoGenerateId}
+              idPrefix={idPrefix}
+              nextEmployeeId={nextEmployeeId}
+              statusOptions={statusOptions}
+              isFieldEnabled={isFieldEnabled}
+              isFieldRequired={isFieldRequired}
+              onDraftChange={onDraftChange}
+            />
+            <TeacherNotesSection
+              notes={teacherDraft.notes}
+              fields={fields}
+              isFieldEnabled={isFieldEnabled}
+              isFieldRequired={isFieldRequired}
+              onDraftChange={onDraftChange}
+            />
+          </div>
+        );
+      }
 
-  return (
-    <div className="space-y-6 pb-6">
-      <TeacherBasicSection
-        teacherDraft={teacherDraft}
-        errors={errors}
-        fields={fields}
-        defaultSpecialization={defaultSpecialization}
-        linkedTeacherContactIds={linkedTeacherContactIds}
-        specializationOptions={specializationOptions}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
-      />
-    </div>
-  );
-}
-
-
+      return (
+        <div className="space-y-6 pb-6">
+          <TeacherBasicSection
+            teacherDraft={teacherDraft}
+            errors={errors}
+            fields={fields}
+            defaultSpecialization={defaultSpecialization}
+            linkedTeacherContactIds={linkedTeacherContactIds}
+            specializationOptions={specializationOptions}
+            isFieldEnabled={isFieldEnabled}
+            isFieldRequired={isFieldRequired}
+            onDraftChange={onDraftChange}
+          />
+        </div>
+      );
+    });

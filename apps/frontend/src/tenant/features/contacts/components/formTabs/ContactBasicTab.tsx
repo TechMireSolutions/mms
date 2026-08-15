@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import type { ChangeEvent } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import type { Contact } from "@mms/shared";
@@ -23,7 +23,7 @@ export interface ContactBasicTabProps {
 /**
  * Basic Info form tab: coordinates avatar photo upload/cropping and core personal identity fields.
  */
-export function ContactBasicTab({
+export const ContactBasicTab = React.memo(function ContactBasicTab({
   contactDraft,
   formInstanceId,
   isFieldEnabled,
@@ -65,7 +65,7 @@ export function ContactBasicTab({
       </SectionCard>
     </div>
   );
-}
+});
 
 
 

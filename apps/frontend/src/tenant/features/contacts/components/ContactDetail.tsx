@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useMemo } from "react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { getDisplayName, type Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -31,7 +31,7 @@ export interface ContactDetailProps {
  * Contacts Detail Drawer: orchestrates tab state, timeline notes, file uploads,
  * communications actions, and soft-delete/restore operations within {@link DetailDrawerShell}.
  */
-export default function ContactDetail({
+export const ContactDetail = React.memo(function ContactDetail({
   contact: initialContact,
   onClose,
   onEdit,
@@ -92,32 +92,47 @@ export default function ContactDetail({
     onUpdateContact,
   });
 
+  const headerActionsNode = useMemo(
+    () => (
+      <ContactDetailDrawerHeaderActions
+        canWrite={canWrite}
+        canDelete={canDelete}
+        contact={contactState}
+        onEdit={onEdit}
+        onRestore={onRestore}
+      />
+    ),
+    [canWrite, canDelete, contactState, onEdit, onRestore],
+  );
+
+  const headerExtraNode = useMemo(
+    () => (
+      <div className="space-y-2">
+        <ContactDetailDrawerArchivedBanner contact={contactState} />
+        <ContactDetailDrawerTabBar
+          detailTabs={detailTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </div>
+    ),
+    [contactState, detailTabs, activeTab, setActiveTab],
+  );
+
+  const footerNode = useMemo(
+    () => (hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null),
+    [hasFooterStamp, contactState],
+  );
+
   return (
     <DetailDrawerShell
       onClose={onClose}
       title={displayName}
       subtitle={isArchived ? t("contacts.detail.archivedSubtitle") : undefined}
       ariaLabel={t("contacts.detail.ariaLabel", { name: displayName })}
-      headerActions={
-        <ContactDetailDrawerHeaderActions
-          canWrite={canWrite}
-          canDelete={canDelete}
-          contact={contactState}
-          onEdit={onEdit}
-          onRestore={onRestore}
-        />
-      }
-      headerExtra={
-        <div className="space-y-2">
-          <ContactDetailDrawerArchivedBanner contact={contactState} />
-          <ContactDetailDrawerTabBar
-            detailTabs={detailTabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-        </div>
-      }
-      footer={hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null}
+      headerActions={headerActionsNode}
+      headerExtra={headerExtraNode}
+      footer={footerNode}
     >
       <ContactDetailDrawerContent
         activeTab={activeTab}
@@ -163,7 +178,7 @@ export default function ContactDetail({
       />
     </DetailDrawerShell>
   );
-}
+});
 
-export { ContactDetail };
+export default ContactDetail;
 

@@ -19,7 +19,7 @@ interface EmptyStateProps {
  * @param {EmptyStateProps} props - The component props.
  * @returns {React.ReactElement} The rendered EmptyState component.
  */
-export function EmptyState({
+export const EmptyState = React.memo(function EmptyState({
   icon,
   title,
   description = "",
@@ -96,4 +96,5 @@ export function EmptyState({
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
-}
+});
+

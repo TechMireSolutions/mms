@@ -1,3 +1,4 @@
+import React, { type JSX } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,7 +12,7 @@ export interface QuickActionButtonProps {
   ariaLabel?: string;
 }
 
-export function QuickActionButton({
+export const QuickActionButton = React.memo(function QuickActionButton({
   label,
   icon: Icon,
   onClick,
@@ -47,4 +48,5 @@ export function QuickActionButton({
       <span className="text-xs font-bold">{label}</span>
     </Button>
   );
-}
+});
+

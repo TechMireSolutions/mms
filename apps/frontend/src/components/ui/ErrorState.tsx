@@ -15,7 +15,7 @@ export interface ErrorStateProps {
 /**
  * ErrorState — shown when a data fetch or validation fails.
  */
-export function ErrorState({
+export const ErrorState = React.memo(function ErrorState({
   title,
   description,
   onRetry,
@@ -60,4 +60,5 @@ export function ErrorState({
       )}
     </div>
   );
-}
+});
+

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Gift, Star, TrendingDown, Users } from "lucide-react";
 import { formatNumber } from "@mms/shared";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
@@ -11,7 +11,7 @@ interface HasanatReportKpisProps {
   redemptionRate: string | number;
 }
 
-export function HasanatReportKpis({
+export const HasanatReportKpis = React.memo(function HasanatReportKpis({
   totalDistributed,
   totalRedeemed,
   totalBalance,
@@ -19,14 +19,13 @@ export function HasanatReportKpis({
 }: HasanatReportKpisProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  return (
-    <ModuleCommandMetricsGrid
-      items={[
-        { icon: Star, label: t("hasanat.report.totalDistributed"), value: formatNumber(totalDistributed), accent: "primary" },
-        { icon: Gift, label: t("hasanat.report.totalRedeemed"), value: formatNumber(totalRedeemed), accent: "green" },
-        { icon: TrendingDown, label: t("hasanat.report.balance"), value: formatNumber(totalBalance), accent: "amber" },
-        { icon: Users, label: t("hasanat.report.redemptionRate"), value: `${redemptionRate}%`, accent: "blue" },
-      ]}
-    />
-  );
-}
+  const items = useMemo(() => [
+    { icon: Star, label: t("hasanat.report.totalDistributed"), value: formatNumber(totalDistributed), accent: "primary" as const },
+    { icon: Gift, label: t("hasanat.report.totalRedeemed"), value: formatNumber(totalRedeemed), accent: "green" as const },
+    { icon: TrendingDown, label: t("hasanat.report.balance"), value: formatNumber(totalBalance), accent: "amber" as const },
+    { icon: Users, label: t("hasanat.report.redemptionRate"), value: `${redemptionRate}%`, accent: "blue" as const },
+  ], [t, totalDistributed, totalRedeemed, totalBalance, redemptionRate]);
+
+  return <ModuleCommandMetricsGrid items={items} />;
+});
+

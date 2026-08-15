@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ReceiptText, User, Calendar, CreditCard } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
@@ -28,11 +28,16 @@ interface InvoiceDetailProps {
  * @param {InvoiceDetailProps} props - The component props.
  * @returns {React.ReactElement}
  */
-export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: InvoiceDetailProps) {
+export const InvoiceDetail = React.memo(function InvoiceDetail({
+  invoice,
+  onClose,
+  onRecord,
+  canWrite = true,
+}: InvoiceDetailProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
 
-  const statusConfig = React.useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
     overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
@@ -40,13 +45,24 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
-  const rows = [
+  const rows = useMemo(() => [
     { label: t("finance.columns.baseFee"), value: formatCurrency(invoice.baseFee), highlight: false, neg: false },
     ...(invoice.discountAmt > 0 ? [{ label: t("finance.detail.discount", { type: invoice.discountType ?? t("common.none"), value: invoice.discountValue }), value: `– ${formatCurrency(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
     { label: t("finance.form.finalAmount"), value: formatCurrency(invoice.finalAmt), highlight: true, neg: false },
     ...(invoice.paidAmt ? [{ label: t("finance.detail.amountPaid"), value: formatCurrency(invoice.paidAmt), highlight: false, neg: false }] : []),
     ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: t("finance.balanceDue"), value: formatCurrency(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
-  ];
+  ], [t, formatCurrency, invoice]);
+
+  const footerNode = useMemo(() => (
+    canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" ? (
+      <Button
+        onClick={() => { onRecord(invoice); onClose(); }}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+      >
+        <ReceiptText className="w-4 h-4" aria-hidden="true" /> {t("finance.recordPayment")}
+      </Button>
+    ) : null
+  ), [canWrite, invoice, onRecord, onClose, t]);
 
   return (
     <DetailDrawerShell
@@ -55,16 +71,7 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
       title={t("finance.detail.title", { id: invoice.id })}
       icon={ReceiptText}
       className="max-w-2xl"
-      footer={
-        canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" ? (
-          <Button
-            onClick={() => { onRecord(invoice); onClose(); }}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            <ReceiptText className="w-4 h-4" aria-hidden="true" /> {t("finance.recordPayment")}
-          </Button>
-        ) : null
-      }
+      footer={footerNode}
     >
       <div className="space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-2" aria-label={t("finance.detail.status", { status: statusConfig[invoice.status]?.label ?? invoice.status })}>
@@ -110,4 +117,5 @@ export function InvoiceDetail({ invoice, onClose, onRecord, canWrite = true }: I
       </div>
     </DetailDrawerShell>
   );
-}
+});
+

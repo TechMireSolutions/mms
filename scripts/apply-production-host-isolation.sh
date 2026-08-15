@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # Restrict MMS to MMS_APP_DOMAIN Apache vhost only — run on Hetzner (SSH or GitHub Actions).
-set -euo pipefail
+set -eEuo pipefail
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+log_info() { echo -e "${GREEN}[MMS-ISOLATION]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[MMS-ISOLATION-WARN]${NC} $1"; }
+log_err() { echo -e "${RED}[MMS-ISOLATION-ERR]${NC} $1"; }
+
+trap 'log_err "Failed at line $LINENO: command \"$BASH_COMMAND\" exited with status $?"' ERR
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -9,7 +20,7 @@ ENV_FILE="${1:-apps/backend/.env}"
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
 
-echo "══ MMS host isolation (MMS only on MMS_APP_DOMAIN) ══"
+log_info "══ MMS host isolation (MMS only on MMS_APP_DOMAIN) ══"
 
 if [ -f scripts/merge-backend-env.sh ]; then
   bash scripts/merge-backend-env.sh "$ENV_FILE"
@@ -36,10 +47,10 @@ read_env_var() {
 
 APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}")"
 if [[ -z "$APP_DOMAIN" ]]; then
-  echo "ERROR: MMS_APP_DOMAIN must be set (e.g. mmsv2.aabtaab.com)"
+  log_err "MMS_APP_DOMAIN must be set (e.g. mmsv2.aabtaab.com)"
   exit 1
 fi
-echo "MMS_APP_DOMAIN=${APP_DOMAIN}"
+log_info "MMS_APP_DOMAIN=${APP_DOMAIN}"
 
 bash scripts/apache/isolate-mms-vhost.sh "$ENV_FILE"
 export MMS_REQUIRE_WILDCARD_TLS=1
@@ -54,4 +65,4 @@ pm2 restart mmsv2-backend --update-env 2>/dev/null || bash scripts/deploy-recove
 bash scripts/deploy-verify.sh "$ENV_FILE"
 pm2 save 2>/dev/null || true
 
-echo "Done — MMS should only respond on https://${APP_DOMAIN}/ and *.${APP_DOMAIN}"
+log_info "Done — MMS should only respond on https://${APP_DOMAIN}/ and *.${APP_DOMAIN}"

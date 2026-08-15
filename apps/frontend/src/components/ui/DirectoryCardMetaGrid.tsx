@@ -1,3 +1,4 @@
+import React from "react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -7,7 +8,7 @@ export interface DirectoryCardMetaGridProps {
 }
 
 /** Shared metadata tile grid wrapper for Work directory entity cards. */
-export function DirectoryCardMetaGrid({
+export const DirectoryCardMetaGrid = React.memo(function DirectoryCardMetaGrid({
   children,
   className,
 }: DirectoryCardMetaGridProps): React.JSX.Element {
@@ -21,4 +22,5 @@ export function DirectoryCardMetaGrid({
       {children}
     </div>
   );
-}
+});
+

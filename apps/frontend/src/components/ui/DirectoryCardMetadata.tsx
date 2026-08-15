@@ -1,3 +1,4 @@
+import React from "react";
 import type { ReactNode } from "react";
 import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
@@ -21,7 +22,9 @@ export interface DirectoryCardMetadataProps<TColumn extends { label: string }> {
  * (Contacts/Students/Teachers) pass their own column list and value closures,
  * so the mapper chrome stays single-authority.
  */
-export function DirectoryCardMetadata<TColumn extends { label: string }>({
+export const DirectoryCardMetadata = React.memo(function DirectoryCardMetadata<
+  TColumn extends { label: string },
+>({
   columns,
   keyFor,
   labelFor,
@@ -41,4 +44,7 @@ export function DirectoryCardMetadata<TColumn extends { label: string }>({
   if (!hasTiles) return null;
 
   return <DirectoryCardMetaGrid>{tiles}</DirectoryCardMetaGrid>;
-}
+}) as <TColumn extends { label: string }>(
+  props: DirectoryCardMetadataProps<TColumn>,
+) => React.JSX.Element | null;
+

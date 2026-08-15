@@ -3,9 +3,9 @@ import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 export interface ModuleFormCustomFieldHelpers {
   listSystemFormFieldKeys: () => ReadonlySet<string>;
   listEnabledCustomFormFields: <T extends FieldDefinition>(
-    fields: Record<string, T[]>,
+    fields: Record<string, ReadonlyArray<T>>,
     tabId?: string,
-  ) => T[];
+  ) => ReadonlyArray<T>;
   isSystemFormField: (tabId: string, fieldId: string) => boolean;
 }
 
@@ -28,12 +28,12 @@ export function createFormCustomFieldHelpers(
   }
 
   function listEnabledCustomFormFields<T extends FieldDefinition>(
-    fields: Record<string, T[]>,
+    fields: Record<string, ReadonlyArray<T>>,
     tabId?: string,
-  ): T[] {
+  ): ReadonlyArray<T> {
     const systemKeys = listSystemFormFieldKeys();
     const byKey = new Map<string, T>();
-    const sourceTabs: T[][] =
+    const sourceTabs: ReadonlyArray<ReadonlyArray<T>> =
       tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
 
     for (const tabFields of sourceTabs) {

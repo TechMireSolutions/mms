@@ -7,7 +7,18 @@
 #   sudo bash scripts/production/bootstrap-ubuntu-vps.sh
 #
 # After this script: set apps/backend/.env, DNS, certbot, then apply-production-host-isolation.sh
-set -euo pipefail
+set -Eeuo pipefail
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+if [[ "${EUID}" -eq 0 ]]; then
+  echo -e "${YELLOW}WARNING: Running as root is not recommended for nvm/pm2 paths.${NC}"
+  echo "         Prefer running as a standard user with sudo privileges."
+fi
 
 DEPLOY_ROOT="${MMS_DEPLOY_ROOT:-/var/www/mmsv2}"
 DEPLOY_USER="${SUDO_USER:-$USER}"
@@ -18,12 +29,12 @@ DEPLOY_HOME="${DEPLOY_HOME:-/home/${DEPLOY_USER}}"
 NODE_VERSION="${MMS_NODE_VERSION:-24}"
 PNPM_VERSION="${MMS_PNPM_VERSION:-11.15.1}"
 
-echo "══ MMS Ubuntu VPS bootstrap ══"
+echo -e "${GREEN}══ MMS Ubuntu VPS bootstrap ══${NC}"
 echo "Deploy root: ${DEPLOY_ROOT}"
 echo "Deploy user: ${DEPLOY_USER} (${DEPLOY_HOME})"
 
 if ! command -v apt-get >/dev/null 2>&1; then
-  echo "ERROR: This script targets Debian/Ubuntu (apt-get)."
+  echo -e "${RED}ERROR: This script targets Debian/Ubuntu (apt-get).${NC}"
   exit 1
 fi
 

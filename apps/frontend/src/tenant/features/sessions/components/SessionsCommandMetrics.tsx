@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Calendar, Filter, CheckCircle2, Clock, XCircle, Users,
 } from 'lucide-react';
@@ -11,14 +11,14 @@ interface SessionsCommandMetricsProps {
   shown: number;
 }
 
-export function SessionsCommandMetrics({
+export const SessionsCommandMetrics = React.memo(function SessionsCommandMetrics({
   total,
   shown,
 }: SessionsCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useSessionsMetrics();
 
-  const metrics = {
+  const metrics = useMemo(() => ({
     total: serverMetrics?.total ?? total,
     active: serverMetrics?.active ?? 0,
     upcoming: serverMetrics?.upcoming ?? 0,
@@ -26,9 +26,9 @@ export function SessionsCommandMetrics({
     cancelled: serverMetrics?.cancelled ?? 0,
     totalEnrolled: serverMetrics?.totalEnrolled ?? 0,
     totalCapacity: serverMetrics?.totalCapacity ?? 0,
-  };
+  }), [serverMetrics, total]);
 
-  const items = [
+  const items = useMemo(() => [
     { icon: Calendar, label: t('sessions.metrics.total'), value: metrics.total, accent: 'primary' as const },
     { icon: Filter, label: t('sessions.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: CheckCircle2, label: t('sessions.metrics.active'), value: metrics.active, accent: 'success' as const },
@@ -36,7 +36,7 @@ export function SessionsCommandMetrics({
     { icon: Users, label: t('sessions.metrics.enrolled'), value: metrics.totalEnrolled, accent: 'indigo' as const },
     { icon: CheckCircle2, label: t('sessions.metrics.completed'), value: metrics.completed, accent: 'success' as const },
     { icon: XCircle, label: t('sessions.metrics.cancelled'), value: metrics.cancelled, accent: 'destructive' as const },
-  ];
+  ], [t, shown, metrics]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-}
+});

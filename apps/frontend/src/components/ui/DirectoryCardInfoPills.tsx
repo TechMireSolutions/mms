@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import React, { type JSX } from "react";
 import { Mail, Phone, type LucideIcon } from "lucide-react";
 import { CopyBtn } from "@/components/ui/CopyBtn";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
@@ -11,7 +11,7 @@ export interface DirectoryCardInfoPillProps {
 }
 
 /** Single phone/email face pill for Work directory entity cards. */
-export function DirectoryCardInfoPill({
+export const DirectoryCardInfoPill = React.memo(function DirectoryCardInfoPill({
   icon: Icon,
   text,
   copyText,
@@ -37,7 +37,7 @@ export function DirectoryCardInfoPill({
       />
     </div>
   );
-}
+});
 
 export interface DirectoryCardInfoPillsProps {
   phone?: string | null;
@@ -49,7 +49,7 @@ export interface DirectoryCardInfoPillsProps {
 }
 
 /** Phone/email face pills stack for Work directory entity cards. */
-export function DirectoryCardInfoPills({
+export const DirectoryCardInfoPills = React.memo(function DirectoryCardInfoPills({
   phone,
   phoneDisplay,
   countryCode,
@@ -76,4 +76,5 @@ export function DirectoryCardInfoPills({
       ) : null}
     </div>
   );
-}
+});
+

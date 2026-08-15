@@ -1,9 +1,10 @@
+import React from "react";
 import { LayoutGrid, Table } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
-export function WorkViewModeToggle({
+export const WorkViewModeToggle = React.memo(function WorkViewModeToggle({
   viewMode,
   onViewModeChange,
 }: {
@@ -48,4 +49,5 @@ export function WorkViewModeToggle({
       </Button>
     </div>
   );
-}
+});
+

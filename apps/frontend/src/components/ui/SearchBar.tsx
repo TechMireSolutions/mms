@@ -19,7 +19,7 @@ export interface SearchBarProps {
  * @param {SearchBarProps} props - The component props.
  * @returns {React.ReactElement} The rendered SearchBar component.
  */
-export function SearchBar({
+export const SearchBar = React.memo(function SearchBar({
   value,
   onChange,
   placeholder,
@@ -58,4 +58,5 @@ export function SearchBar({
       )}
     </div>
   );
-}
+});
+

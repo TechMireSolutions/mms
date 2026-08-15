@@ -30,7 +30,7 @@ function testTotalMarks(test: QuestionBankTest, questions: QuestionBankQuestion[
   }, 0);
 }
 
-export default function QuestionBankReport(): React.JSX.Element {
+const QuestionBankReport = React.memo(function QuestionBankReport(): React.JSX.Element {
   const { t } = useTranslation();
   const questions = useQuestionBankQuestionsCollection();
   const tests = useQuestionBankTestsCollection();
@@ -52,47 +52,51 @@ export default function QuestionBankReport(): React.JSX.Element {
       : 0;
   }, [questions, questionBankResults, tests]);
 
-  const difficultyData = questionBankConfig.enabledDifficulties.map((difficulty) => ({
-    name: questionBankConfig.difficultyLabel(difficulty),
-    questions: questions.filter((question) => question.difficulty === difficulty).length,
-    tests: tests.filter((test) => test.difficulty === difficulty).length,
-  }));
+  const difficultyData = useMemo(() => {
+    return questionBankConfig.enabledDifficulties.map((difficulty) => ({
+      name: questionBankConfig.difficultyLabel(difficulty),
+      questions: questions.filter((question) => question.difficulty === difficulty).length,
+      tests: tests.filter((test) => test.difficulty === difficulty).length,
+    }));
+  }, [questionBankConfig, questions, tests]);
 
-  const categoryData = questionBankConfig.categories.map((category) => ({
-    name: category.name,
-    questions: questions.filter((question) => getQuestionCategoryIds(question).includes(category.id)).length,
-  }));
+  const categoryData = useMemo(() => {
+    return questionBankConfig.categories.map((category) => ({
+      name: category.name,
+      questions: questions.filter((question) => getQuestionCategoryIds(question).includes(category.id)).length,
+    }));
+  }, [questionBankConfig.categories, questions]);
+
+  const kpiItems = useMemo(() => [
+    {
+      icon: ClipboardList,
+      label: t("questionBank.report.totalQuestions"),
+      value: questions.length,
+      accent: "primary" as const,
+    },
+    {
+      icon: FileCheck2,
+      label: t("questionBank.report.generatedTests"),
+      value: tests.length,
+      accent: "blue" as const,
+    },
+    {
+      icon: Users,
+      label: t("questionBank.report.submissions"),
+      value: questionBankResults.length,
+      accent: "violet" as const,
+    },
+    {
+      icon: Target,
+      label: t("questionBank.report.avgScore"),
+      value: `${avgScore}%`,
+      accent: "green" as const,
+    },
+  ], [t, questions.length, tests.length, questionBankResults.length, avgScore]);
 
   return (
     <div className="space-y-4">
-      <ModuleCommandMetricsGrid
-        items={[
-          {
-            icon: ClipboardList,
-            label: t("questionBank.report.totalQuestions"),
-            value: questions.length,
-            accent: "primary",
-          },
-          {
-            icon: FileCheck2,
-            label: t("questionBank.report.generatedTests"),
-            value: tests.length,
-            accent: "blue",
-          },
-          {
-            icon: Users,
-            label: t("questionBank.report.submissions"),
-            value: questionBankResults.length,
-            accent: "violet",
-          },
-          {
-            icon: Target,
-            label: t("questionBank.report.avgScore"),
-            value: `${avgScore}%`,
-            accent: "green",
-          },
-        ]}
-      />
+      <ModuleCommandMetricsGrid items={kpiItems} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title={t("questionBank.analytics.difficultyBreakdown")}>
@@ -134,4 +138,7 @@ export default function QuestionBankReport(): React.JSX.Element {
       </div>
     </div>
   );
-}
+});
+
+export default QuestionBankReport;
+

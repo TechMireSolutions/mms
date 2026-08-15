@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ export interface DirectoryCardViewButtonProps {
 }
 
 /** Shared outline View control for Work directory entity card footers. */
-export function DirectoryCardViewButton({
+export const DirectoryCardViewButton = React.memo(function DirectoryCardViewButton({
   label,
   ariaLabel,
   onClick,
@@ -42,4 +43,5 @@ export function DirectoryCardViewButton({
       <span>{label}</span>
     </MotionButton>
   );
-}
+});
+

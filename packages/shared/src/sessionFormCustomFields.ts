@@ -21,9 +21,9 @@ export function listSessionSystemFormFieldKeys(): ReadonlySet<string> {
  * When omitted, returns enabled non-seed fields across all tabs.
  */
 export function listEnabledCustomSessionFormFields<T extends FieldDefinition>(
-  fields: Record<string, T[]>,
+  fields: Record<string, ReadonlyArray<T>>,
   tabId?: string,
-): T[] {
+): ReadonlyArray<T> {
   return helpers.listEnabledCustomFormFields(fields, tabId);
 }
 

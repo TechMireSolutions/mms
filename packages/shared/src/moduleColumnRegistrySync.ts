@@ -3,20 +3,20 @@ import type { ColumnRegistryEntry, FieldDefinition } from './contactFieldSchemaT
 export type ModuleColumnFieldMapping = Record<string, { tabId: string; fieldId: string }>;
 
 export interface SyncModuleColumnRegistryWithFieldsOptions {
-  defaultRegistry: readonly ColumnRegistryEntry[];
+  defaultRegistry: ReadonlyArray<ColumnRegistryEntry>;
   columnFieldMapping: ModuleColumnFieldMapping;
   /** Tab ids that are always treated as enabled (e.g. `basic`). */
-  lockedEnabledTabs: readonly string[];
-  columnRegistry: ColumnRegistryEntry[] | undefined;
-  fields: Record<string, FieldDefinition[]>;
+  lockedEnabledTabs: ReadonlyArray<string>;
+  columnRegistry: ReadonlyArray<ColumnRegistryEntry> | undefined;
+  fields: Record<string, ReadonlyArray<FieldDefinition>>;
   enabledTabIds: Iterable<string>;
   /**
    * When set, upserts `custom:{field.key}` columns for enabled custom fields
    * and drops custom columns whose fields are no longer enabled.
    */
   listEnabledCustomFields?: (
-    fields: Record<string, FieldDefinition[]>,
-  ) => FieldDefinition[];
+    fields: Record<string, ReadonlyArray<FieldDefinition>>,
+  ) => ReadonlyArray<FieldDefinition>;
   /**
    * When true, drop stored system keys that are not in `defaultRegistry`
    * (Students). Contacts soft-merges unknown keys (false / omit).

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { CalendarCheck, Users, TrendingUp, BarChart2 } from "lucide-react";
 import {
   useSessionsMetrics,
@@ -33,7 +33,7 @@ export type {
  * Renders session utilisation and capacity reports with stacked bar and
  * enrollment trend charts, plus a filterable session capacity table.
  */
-export default function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
+const SessionReport = React.memo(function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
     () => ({
@@ -88,6 +88,16 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
     return filteredSessionCapacity;
   }, [filters.session, sessionCapacity, selectedSession, selectedClass]);
 
+  const capacityChartData = useMemo<CapacityBarDatum[]>(
+    () =>
+      sessionCapacityData.map((capacityItem) => ({
+        class: capacityItem.class,
+        enrolled: capacityItem.enrolled,
+        available: capacityItem.capacity - capacityItem.enrolled,
+      })),
+    [sessionCapacityData],
+  );
+
   const filtersAreGlobal = filters.session === "all" && !selectedSession && !selectedClass;
   const filteredEnrolled = sessionCapacityData.reduce(
     (total, capacityItem) => total + capacityItem.enrolled,
@@ -117,11 +127,33 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
   const activeSessionsCount = sessionsMetrics?.active ?? 0;
 
-  const capacityChartData: CapacityBarDatum[] = sessionCapacityData.map((capacityItem) => ({
-    class: capacityItem.class,
-    enrolled: capacityItem.enrolled,
-    available: capacityItem.capacity - capacityItem.enrolled,
-  }));
+  const kpiItems = useMemo(() => [
+    {
+      icon: CalendarCheck,
+      label: t("sessions.report.activeSessions"),
+      value: activeSessionsCount,
+      accent: "primary" as const,
+    },
+    {
+      icon: Users,
+      label: t("sessions.report.totalEnrolled"),
+      value: totalEnrolled,
+      accent: "blue" as const,
+    },
+    {
+      icon: BarChart2,
+      label: t("sessions.report.totalCapacity"),
+      value: totalCapacity,
+      accent: "violet" as const,
+    },
+    {
+      icon: TrendingUp,
+      label: t("sessions.report.avgUtilisation"),
+      value: `${averageUtilization}%`,
+      accent: "green" as const,
+    },
+  ], [t, activeSessionsCount, totalEnrolled, totalCapacity, averageUtilization]);
+
 
   const toggleSessionFilter = (sessionName: string): void => {
     setSelectedSession((currentSession) => (currentSession === sessionName ? null : sessionName));
@@ -145,34 +177,7 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
 
   return (
     <div className="space-y-4">
-      <ModuleCommandMetricsGrid
-        items={[
-          {
-            icon: CalendarCheck,
-            label: t("sessions.report.activeSessions"),
-            value: activeSessionsCount,
-            accent: "primary",
-          },
-          {
-            icon: Users,
-            label: t("sessions.report.totalEnrolled"),
-            value: totalEnrolled,
-            accent: "blue",
-          },
-          {
-            icon: BarChart2,
-            label: t("sessions.report.totalCapacity"),
-            value: totalCapacity,
-            accent: "violet",
-          },
-          {
-            icon: TrendingUp,
-            label: t("sessions.report.avgUtilisation"),
-            value: `${averageUtilization}%`,
-            accent: "green",
-          },
-        ]}
-      />
+      <ModuleCommandMetricsGrid items={kpiItems} />
 
       <SessionReportCharts
         capacityChartData={capacityChartData}
@@ -198,4 +203,6 @@ export default function SessionReport({ filters }: SessionReportProps): React.JS
       <SessionReportDashboardWidgets todaysSessions={todaysSessions} />
     </div>
   );
-}
+});
+
+export default SessionReport;

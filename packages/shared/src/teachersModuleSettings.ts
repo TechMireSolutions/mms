@@ -93,21 +93,21 @@ const seedFieldsByKey = new Map(
 );
 
 /** Seed system field defs in seed order (from tabbed {@link INITIAL_TEACHERS_FIELD_SEED}). */
-export const DEFAULT_TEACHER_FIELD_DEFS: TeacherFieldDef[] = defaultTeacherFieldOrderFromSeed().map(
-  (fieldId) => {
+export const DEFAULT_TEACHER_FIELD_DEFS: ReadonlyArray<TeacherFieldDef> = Object.freeze(
+  defaultTeacherFieldOrderFromSeed().map((fieldId) => {
     const field = seedFieldsByKey.get(fieldId);
     if (!field) {
       throw new Error(`Teachers seed missing system field: ${fieldId}`);
     }
     return teacherFieldDefFromDefinition(field, false);
-  },
+  }),
 );
 
 /**
  * Returns sorted teacher field definitions (system + custom) from tabbed `fields` only.
  */
 export function getSortedTeacherFields(
-  fieldOrder?: string[],
+  fieldOrder?: ReadonlyArray<string> | string[],
   fieldsRaw?: unknown,
 ): TeacherFieldDef[] {
   const tabbed = resolveTeacherFieldsMapForColumnSync(

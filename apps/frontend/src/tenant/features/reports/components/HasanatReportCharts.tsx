@@ -14,7 +14,7 @@ interface HasanatReportChartsProps {
   onToggleFacultyFilter: (faculty: string) => void;
 }
 
-export function HasanatReportCharts({
+export const HasanatReportCharts = React.memo(function HasanatReportCharts({
   facultyChartData,
   redemptionPieData,
   pieColors,
@@ -76,4 +76,5 @@ export function HasanatReportCharts({
       </SectionCard>
     </div>
   );
-}
+});
+

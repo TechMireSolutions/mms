@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import { CalendarCheck } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
@@ -19,7 +20,7 @@ import { utilisationColour } from "./sessionReportUtils";
 
 import type { SessionReportTableProps } from "./sessionReportTypes";
 
-function UtilisationBar({ rate }: { rate: number }): React.JSX.Element {
+const UtilisationBar = React.memo(function UtilisationBar({ rate }: { rate: number }): React.JSX.Element {
   return (
     <ProgressBar
       value={rate}
@@ -28,9 +29,9 @@ function UtilisationBar({ rate }: { rate: number }): React.JSX.Element {
       labelClassName="text-foreground"
     />
   );
-}
+});
 
-export function SessionReportTable({
+export const SessionReportTable = React.memo(function SessionReportTable({
   sessionCapacityData,
   sessionStatusConfig,
   onToggleSessionFilter,
@@ -38,19 +39,21 @@ export function SessionReportTable({
 }: SessionReportTableProps): React.JSX.Element {
   const { t } = useTranslation();
 
+  const headers = useMemo(() => [
+    t("sessions.report.colSession"),
+    t("sessions.report.colClass"),
+    t("sessions.report.colEnrolled"),
+    t("sessions.report.colCapacity"),
+    t("sessions.report.colUtilisation"),
+    t("sessions.report.colStatus"),
+  ], [t]);
+
   return (
     <>
       <ExportToolbar
         title={t("sessions.report.capacityReportTitle")}
         data={sessionCapacityData}
-        headers={[
-          t("sessions.report.colSession"),
-          t("sessions.report.colClass"),
-          t("sessions.report.colEnrolled"),
-          t("sessions.report.colCapacity"),
-          t("sessions.report.colUtilisation"),
-          t("sessions.report.colStatus"),
-        ]}
+        headers={headers}
       />
       {sessionCapacityData.length === 0 ? (
         <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />
@@ -143,4 +146,5 @@ export function SessionReportTable({
       )}
     </>
   );
-}
+});
+

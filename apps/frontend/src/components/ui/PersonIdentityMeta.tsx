@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import React, { type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { GenderIcon } from "@/components/ui/GenderIcon";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
@@ -17,7 +17,7 @@ export interface PersonIdentityMetaProps {
 }
 
 /** Gender (+ optional Syed) identity row for person directory cards/tables/detail. */
-export function PersonIdentityMeta({
+export const PersonIdentityMeta = React.memo(function PersonIdentityMeta({
   gender,
   isSyed,
   syedLabel,
@@ -61,10 +61,10 @@ export function PersonIdentityMeta({
       ) : null}
     </p>
   );
-}
+});
 
 /** Optional wrapper when subtitle stacks multiple identity rows (e.g. GR + gender). */
-export function DirectoryCardSubtitleStack({
+export const DirectoryCardSubtitleStack = React.memo(function DirectoryCardSubtitleStack({
   children,
   className,
 }: {
@@ -72,4 +72,5 @@ export function DirectoryCardSubtitleStack({
   className?: string;
 }): React.JSX.Element {
   return <div className={cn("mt-0.5 flex flex-col gap-0.5 min-w-0", className)}>{children}</div>;
-}
+});
+

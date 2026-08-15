@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { Edit2, Eye, MoreHorizontal, RotateCcw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +45,7 @@ export interface ModuleRowActionsMenuProps {
  * delete / restore items; modules inject their own extras (messaging channels)
  * and translated labels, so Contacts and Students no longer fork the menu shell.
  */
-export function ModuleRowActionsMenu({
+export const ModuleRowActionsMenu = React.memo(function ModuleRowActionsMenu({
   triggerLabel,
   viewLabel,
   editLabel,
@@ -114,4 +114,5 @@ export function ModuleRowActionsMenu({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
+

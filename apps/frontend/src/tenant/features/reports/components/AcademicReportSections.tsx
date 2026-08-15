@@ -15,7 +15,7 @@ interface AcademicReportKpisProps {
   passRate: string | number;
 }
 
-export function AcademicReportKpis({
+export const AcademicReportKpis = React.memo(function AcademicReportKpis({
   totalRecords,
   averageMarks,
   topScore,
@@ -33,7 +33,7 @@ export function AcademicReportKpis({
       ]}
     />
   );
-}
+});
 
 interface AcademicReportFilterBannerProps {
   selectedStudent: string | null;
@@ -42,7 +42,7 @@ interface AcademicReportFilterBannerProps {
   onClearClass: () => void;
 }
 
-export function AcademicReportFilterBanner({
+export const AcademicReportFilterBanner = React.memo(function AcademicReportFilterBanner({
   selectedStudent,
   selectedClass,
   onClearStudent,
@@ -71,26 +71,26 @@ export function AcademicReportFilterBanner({
       ]}
     />
   );
-}
+});
 
 interface AcademicReportResultsTableProps {
   academicResults: AcademicResultItem[];
   onToggleStudentFilter: (studentName: string) => void;
 }
 
-export function AcademicReportResultsTable({
+export const AcademicReportResultsTable = React.memo(function AcademicReportResultsTable({
   academicResults,
   onToggleStudentFilter,
 }: AcademicReportResultsTableProps): React.JSX.Element {
   const { t } = useTranslation();
-  const headers = [
+  const headers = React.useMemo(() => [
     t("examinations.report.colRank"),
     t("examinations.report.colStudent"),
     t("examinations.report.colClass"),
     t("examinations.report.colSubject"),
     t("examinations.report.colMarks"),
     t("examinations.report.colGrade"),
-  ];
+  ], [t]);
 
   return (
     <>
@@ -105,4 +105,4 @@ export function AcademicReportResultsTable({
       )}
     </>
   );
-}
+});

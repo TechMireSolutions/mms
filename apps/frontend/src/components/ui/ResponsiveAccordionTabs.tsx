@@ -13,7 +13,7 @@ export type { AccordionTabItem, ResponsiveAccordionTabsProps } from "@/component
  * Responsive tab shell — mobile accordion (content under active heading),
  * desktop horizontal tabs or sidebar nav.
  */
-export function ResponsiveAccordionTabs({
+export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTabs({
   tabs,
   activeTab,
   onTabChange,
@@ -112,4 +112,5 @@ export function ResponsiveAccordionTabs({
       />
     </div>
   );
-}
+});
+

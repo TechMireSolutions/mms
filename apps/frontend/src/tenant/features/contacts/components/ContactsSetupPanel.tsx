@@ -13,60 +13,60 @@ interface ContactsSetupPanelProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export default function ContactsSetupPanel({
-  config,
-  onConfigChange,
-  onConfigChangeAsync,
-  onPrefsDirtyChange,
-}: ContactsSetupPanelProps): React.JSX.Element {
-  const { t } = useTranslation();
-  const {
-    saved,
-    prefs,
-    isSaving,
-    isPrefsDirty,
-    countryOptions,
-    countryCodes,
-    updateCountryCodes,
-    updatePreference,
-    handleSave,
-  } = useContactsSetupPanelState({
-    config,
-    onConfigChange,
-    onConfigChangeAsync,
-    mode: "preferences",
-  });
+const ContactsSetupPanel = React.memo(function ContactsSetupPanel({
+      config,
+      onConfigChange,
+      onConfigChangeAsync,
+      onPrefsDirtyChange,
+    }: ContactsSetupPanelProps): React.JSX.Element {
+      const { t } = useTranslation();
+      const {
+        saved,
+        prefs,
+        isSaving,
+        isPrefsDirty,
+        countryOptions,
+        countryCodes,
+        updateCountryCodes,
+        updatePreference,
+        handleSave,
+      } = useContactsSetupPanelState({
+        config,
+        onConfigChange,
+        onConfigChangeAsync,
+        mode: "preferences",
+      });
 
-  useEffect(() => {
-    onPrefsDirtyChange?.(isPrefsDirty);
-  }, [isPrefsDirty, onPrefsDirtyChange]);
+      useEffect(() => {
+        onPrefsDirtyChange?.(isPrefsDirty);
+      }, [isPrefsDirty, onPrefsDirtyChange]);
 
-  const isDirty = isPrefsDirty;
-  const unsavedWarning = isDirty ? t("contacts.setup.unsavedWarning") : undefined;
+      const isDirty = isPrefsDirty;
+      const unsavedWarning = isDirty ? t("contacts.setup.unsavedWarning") : undefined;
 
-  return (
-    <div className="space-y-6 max-w-3xl text-start">
-      <ContactsPreferencesSection
-        prefs={prefs}
-        isPrefsDirty={isPrefsDirty}
-        countryOptions={countryOptions}
-        countryCodes={countryCodes}
-        onUpdatePreference={updatePreference}
-        onUpdateCountryCodes={updateCountryCodes}
-      />
+      return (
+        <div className="space-y-6 max-w-3xl text-start">
+          <ContactsPreferencesSection
+            prefs={prefs}
+            isPrefsDirty={isPrefsDirty}
+            countryOptions={countryOptions}
+            countryCodes={countryCodes}
+            onUpdatePreference={updatePreference}
+            onUpdateCountryCodes={updateCountryCodes}
+          />
 
-      <ModuleSetupSaveFooter
-        dirty={isDirty}
-        saving={isSaving}
-        saved={saved}
-        unsavedWarning={unsavedWarning}
-        saveLabel={isSaving ? t("global.saving") : t("contacts.setup.saveAndApply")}
-        savedLabel={t("contacts.form.saved")}
-        onSave={handleSave}
-        footerClassName="sticky bottom-0 bg-background mt-0 pt-2 pb-2 justify-start border-border flex-wrap gap-3"
-        buttonClassName="flex items-center gap-2 px-5 min-h-11 ms-0"
-      />
-    </div>
-  );
-}
-
+          <ModuleSetupSaveFooter
+            dirty={isDirty}
+            saving={isSaving}
+            saved={saved}
+            unsavedWarning={unsavedWarning}
+            saveLabel={isSaving ? t("global.saving") : t("contacts.setup.saveAndApply")}
+            savedLabel={t("contacts.form.saved")}
+            onSave={handleSave}
+            footerClassName="sticky bottom-0 bg-background mt-0 pt-2 pb-2 justify-start border-border flex-wrap gap-3"
+            buttonClassName="flex items-center gap-2 px-5 min-h-11 ms-0"
+          />
+        </div>
+      );
+    });
+export default ContactsSetupPanel;

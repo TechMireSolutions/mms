@@ -42,7 +42,7 @@ interface FinancialReportChartsProps {
   onToggleMonthFilter: (month: string) => void;
 }
 
-export function FinancialReportCharts({
+export const FinancialReportCharts = React.memo(function FinancialReportCharts({
   monthlyFeeCollection,
   discountUsageByType,
   pieColors,
@@ -153,14 +153,14 @@ export function FinancialReportCharts({
       </div>
     </>
   );
-}
+});
 
 interface FinancialMonthFilterBannerProps {
   selectedMonth: string | null;
   onClear: () => void;
 }
 
-export function FinancialMonthFilterBanner({
+export const FinancialMonthFilterBanner = React.memo(function FinancialMonthFilterBanner({
   selectedMonth,
   onClear,
 }: FinancialMonthFilterBannerProps): React.JSX.Element | null {
@@ -173,5 +173,6 @@ export function FinancialMonthFilterBanner({
       actions={[{ key: "month", label: t("finance.report.clearMonthFilter"), onClick: onClear }]}
     />
   );
-}
+});
+
 

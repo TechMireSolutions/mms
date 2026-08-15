@@ -9,6 +9,7 @@ import {
   ContactFormTabContent,
   ContactFormFooterStart,
 } from "@/tenant/features/contacts/components/ContactFormTabContent";
+import React from "react";
 
 interface ContactFormProps {
   open?: boolean;
@@ -38,105 +39,105 @@ const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
   social: Share2,
   relationship: Heart,
 };
+const ContactForm = React.memo(function ContactForm({
+      open = true,
+      contact,
+      onClose,
+      onSave,
+      defaultCountry = "Pakistan",
+      defaultCity = "Karachi",
+      defaultProvince = "Sindh",
+      initialDraft,
+      lockGender = false,
+      priority = false,
+    }: ContactFormProps) {
+      const { t, dir } = useTranslation();
+      const { language } = useGlobalSettings();
+      const [tab, setTab] = useState("basic");
 
-export default function ContactForm({
-  open = true,
-  contact,
-  onClose,
-  onSave,
-  defaultCountry = "Pakistan",
-  defaultCity = "Karachi",
-  defaultProvince = "Sindh",
-  initialDraft,
-  lockGender = false,
-  priority = false,
-}: ContactFormProps) {
-  const { t, dir } = useTranslation();
-  const { language } = useGlobalSettings();
-  const [tab, setTab] = useState("basic");
+      const draft = useContactFormDraft({
+        open,
+        contact,
+        initialDraft,
+        defaultCountry,
+        defaultCity,
+        defaultProvince,
+        onSave,
+        onClose,
+        onValidationTab: (tabId) => setTab(tabId),
+      });
 
-  const draft = useContactFormDraft({
-    open,
-    contact,
-    initialDraft,
-    defaultCountry,
-    defaultCity,
-    defaultProvince,
-    onSave,
-    onClose,
-    onValidationTab: (tabId) => setTab(tabId),
-  });
+      useEffect(() => {
+        if (!open) return;
+        setTab("basic");
+      }, [open, contact, initialDraft]);
 
-  useEffect(() => {
-    if (!open) return;
-    setTab("basic");
-  }, [open, contact, initialDraft]);
+      const visibleTabs = useMemo(() => {
+        const countMap: Record<string, number> = {
+          phones: draft.collectionCounts.filledPhones,
+          emails: draft.collectionCounts.filledEmails,
+          addresses: draft.collectionCounts.filledAddresses,
+          social: draft.collectionCounts.filledSocials,
+          relationship: draft.collectionCounts.filledRelationships,
+        };
 
-  const visibleTabs = useMemo(() => {
-    const countMap: Record<string, number> = {
-      phones: draft.collectionCounts.filledPhones,
-      emails: draft.collectionCounts.filledEmails,
-      addresses: draft.collectionCounts.filledAddresses,
-      social: draft.collectionCounts.filledSocials,
-      relationship: draft.collectionCounts.filledRelationships,
-    };
+        // System tabs from shared SSOT (DEFAULT_FORM_TABS) — always shown; "basic" is mandatory
+        return DEFAULT_FORM_TABS.map((sys) => {
+          const count = countMap[sys.key];
+          return {
+            key: sys.key,
+            icon: SYSTEM_TAB_ICONS[sys.key] ?? User,
+            label: t(sys.labelKey!),
+            badge: count && count > 0 ? count : undefined,
+          };
+        });
+      }, [draft.collectionCounts, t]);
 
-    // System tabs from shared SSOT (DEFAULT_FORM_TABS) — always shown; "basic" is mandatory
-    return DEFAULT_FORM_TABS.map((sys) => {
-      const count = countMap[sys.key];
-      return {
-        key: sys.key,
-        icon: SYSTEM_TAB_ICONS[sys.key] ?? User,
-        label: t(sys.labelKey!),
-        badge: count && count > 0 ? count : undefined,
-      };
+      return (
+        <FormModal
+          open={open}
+          onClose={onClose}
+          title={contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")}
+          subtitle={
+            contact
+              ? t("contacts.form.editing", { name: contact.name || "" })
+              : t("contacts.form.createNewContact")
+          }
+          icon={User}
+          tall
+          priority={priority}
+          tabs={visibleTabs}
+          activeTab={tab}
+          onTabChange={setTab}
+          tabPanelIdPrefix="contact-form-tab"
+          lang={language}
+          dir={dir}
+          cancelLabel={t("common.cancel")}
+          saveLabel={t("contacts.form.saveContact")}
+          onSave={() => {
+            void draft.handleSave();
+          }}
+          saving={draft.saving}
+          saveDisabled={
+            !draft.contactDraft.firstName?.trim() || (Boolean(contact) && !draft.isDirty)
+          }
+          footerStart={
+            <ContactFormFooterStart
+              contactDraft={draft.contactDraft}
+              collectionCounts={draft.collectionCounts}
+              t={t}
+            />
+          }
+        >
+          <ContactFormTabContent
+            tab={tab}
+            draft={draft}
+            lockGender={lockGender}
+            defaultCountry={defaultCountry}
+            defaultCity={defaultCity}
+            defaultProvince={defaultProvince}
+          />
+        </FormModal>
+      );
     });
-  }, [draft.collectionCounts, t]);
-
-  return (
-    <FormModal
-      open={open}
-      onClose={onClose}
-      title={contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")}
-      subtitle={
-        contact
-          ? t("contacts.form.editing", { name: contact.name || "" })
-          : t("contacts.form.createNewContact")
-      }
-      icon={User}
-      tall
-      priority={priority}
-      tabs={visibleTabs}
-      activeTab={tab}
-      onTabChange={setTab}
-      tabPanelIdPrefix="contact-form-tab"
-      lang={language}
-      dir={dir}
-      cancelLabel={t("common.cancel")}
-      saveLabel={t("contacts.form.saveContact")}
-      onSave={() => {
-        void draft.handleSave();
-      }}
-      saving={draft.saving}
-      saveDisabled={
-        !draft.contactDraft.firstName?.trim() || (Boolean(contact) && !draft.isDirty)
-      }
-      footerStart={
-        <ContactFormFooterStart
-          contactDraft={draft.contactDraft}
-          collectionCounts={draft.collectionCounts}
-          t={t}
-        />
-      }
-    >
-      <ContactFormTabContent
-        tab={tab}
-        draft={draft}
-        lockGender={lockGender}
-        defaultCountry={defaultCountry}
-        defaultCity={defaultCity}
-        defaultProvince={defaultProvince}
-      />
-    </FormModal>
-  );
-}
+export default ContactForm;

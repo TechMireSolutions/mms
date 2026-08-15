@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { UserCheck, Users, AlertTriangle, Award } from "lucide-react";
 import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
@@ -20,7 +20,7 @@ export type { AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceIte
  * @param props - Component props.
  * @returns React.JSX.Element
  */
-export default function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
+const AttendanceReport = React.memo(function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const attendanceRecords = useAttendanceRecordsCollection();
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -58,32 +58,21 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
     });
 
     // Calculate rates
-    const studentAttendanceRows = Object.values(attendanceByStudent).map((studentAttendance) => {
-       studentAttendance.rate = studentAttendance.total > 0 ? Math.round((studentAttendance.present / studentAttendance.total) * 100) : 0;
-       return studentAttendance;
-     });
-
-    let filteredAttendanceRows = studentAttendanceRows;
-    // Note: We use class name for filtering here to match UI text filter if it's name-based, or ID if it's ID-based.
-    // Assuming filters.class is the class ID, we should probably group by classId internally, but for display we need name.
-    // Let's refine the filter:
-    if (filters.class !== "all") {
-       const targetClassName = sessionClasses.find((sessionClass) => sessionClass.id === filters.class)?.name;
-       if (targetClassName) filteredAttendanceRows = filteredAttendanceRows.filter((studentAttendance) => studentAttendance.class === targetClassName);
-    }
-    if (filters.student) {
-      filteredAttendanceRows = filteredAttendanceRows.filter((studentAttendance) => studentAttendance.studentName.toLowerCase().includes(filters.student.toLowerCase()));
-    }
-    return filteredAttendanceRows;
-  }, [filters, attendanceRecords, sessionClasses]);
+    return Object.values(attendanceByStudent).map((studentAttendance) => ({
+      ...studentAttendance,
+      rate: studentAttendance.total > 0 ? Math.round((studentAttendance.present / studentAttendance.total) * 100) : 0
+    }));
+  }, [attendanceRecords, sessionClasses]);
 
   const summary = useMemo<AttendanceSummaryItem[]>(() => {
+     // Group by Class
      const classGroups: Record<string, { totalStudents: number, sumRates: number, perfect: number, below: number }> = {};
-
+     
      studentAttendanceRows.forEach((studentAttendance) => {
        if (!classGroups[studentAttendance.class]) {
-          classGroups[studentAttendance.class] = { totalStudents: 0, sumRates: 0, perfect: 0, below: 0 };
+         classGroups[studentAttendance.class] = { totalStudents: 0, sumRates: 0, perfect: 0, below: 0 };
        }
+       
        classGroups[studentAttendance.class].totalStudents++;
        classGroups[studentAttendance.class].sumRates += studentAttendance.rate;
        if (studentAttendance.rate === 100) classGroups[studentAttendance.class].perfect++;
@@ -108,8 +97,12 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
     () =>
       selectedClass
         ? studentAttendanceRows.filter((studentAttendance) => studentAttendance.class === selectedClass)
-        : studentAttendanceRows,
-    [studentAttendanceRows, selectedClass],
+        : studentAttendanceRows.filter((row) => {
+            const matchesClass = filters.class === "all" || sessionClasses.find(c => c.name === row.class)?.id === filters.class;
+            const matchesStudent = !filters.student || row.studentName.toLowerCase().includes(filters.student.toLowerCase());
+            return matchesClass && matchesStudent;
+          }),
+    [studentAttendanceRows, selectedClass, filters, sessionClasses],
   );
 
   const avgRate = filteredSummary.length
@@ -118,6 +111,13 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
     
   const perfect = filteredSummary.reduce((totalPerfect, summaryItem) => totalPerfect + summaryItem.perfectAttendance, 0);
   const belowThreshold = filteredSummary.reduce((totalBelowThreshold, summaryItem) => totalBelowThreshold + summaryItem.belowThreshold, 0);
+
+  const kpiItems = useMemo(() => [
+    { icon: UserCheck, label: t("attendance.report.avgAttendance"), value: `${avgRate}%`, accent: "green" as const },
+    { icon: Users, label: t("attendance.report.classesCount"), value: filteredSummary.length, accent: "primary" as const },
+    { icon: Award, label: t("attendance.report.perfectAttendance"), value: perfect, accent: "amber" as const },
+    { icon: AlertTriangle, label: t("attendance.report.belowThreshold"), value: belowThreshold, accent: "red" as const },
+  ], [t, avgRate, filteredSummary.length, perfect, belowThreshold]);
 
   const toggleClassFilter = (className: string): void => {
     setSelectedClass((currentClass) => (currentClass === className ? null : className));
@@ -143,14 +143,7 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
 
   return (
     <div className="space-y-4 text-start">
-      <ModuleCommandMetricsGrid
-        items={[
-          { icon: UserCheck, label: t("attendance.report.avgAttendance"), value: `${avgRate}%`, accent: "green" },
-          { icon: Users, label: t("attendance.report.classesCount"), value: filteredSummary.length, accent: "primary" },
-          { icon: Award, label: t("attendance.report.perfectAttendance"), value: perfect, accent: "amber" },
-          { icon: AlertTriangle, label: t("attendance.report.belowThreshold"), value: belowThreshold, accent: "red" },
-        ]}
-      />
+      <ModuleCommandMetricsGrid items={kpiItems} />
 
       <AttendanceReportCharts summary={filteredSummary} onToggleClassFilter={toggleClassFilter} />
       <AttendanceReportFilterBanner selectedClass={selectedClass} onClearClassFilter={() => setSelectedClass(null)} />
@@ -163,4 +156,6 @@ export default function AttendanceReport({ filters }: AttendanceReportProps): Re
       <AttendanceReportDashboardWidgets />
     </div>
   );
-}
+});
+
+export default AttendanceReport;

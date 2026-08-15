@@ -45,13 +45,14 @@ export interface HasanatByFacultyItem {
 }
 
 /**
- * Renders Hasanat reward-point reports including summary KPIs, a faculty
- * distribution bar chart, a redeemed-vs-balance donut, and a filterable table.
+ * Renders the Hasanat rewards and points distribution reports,
+ * including faculty distribution bar charts, redemption pie charts,
+ * and a filterable distribution table.
  *
  * @param props - The component props.
  * @returns The HasanatReport component.
  */
-export default function HasanatReport({ filters }: HasanatReportProps): React.JSX.Element {
+const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const [selectedFaculty, setSelectedFaculty] = useState<string | null>(null);
   const palette = useBrandPalette();
@@ -145,10 +146,10 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
     setSelectedFaculty((current) => (current === faculty ? null : faculty));
   };
 
-  const redemptionPieData: HasanatPieItem[] = [
+  const redemptionPieData = useMemo<HasanatPieItem[]>(() => [
     { name: t("hasanat.report.redeemedPieLabel"), value: totalRedeemed },
     { name: t("hasanat.report.balancePieLabel"),  value: totalBalance  },
-  ];
+  ], [t, totalRedeemed, totalBalance]);
 
   return (
     <div className="space-y-4">
@@ -173,4 +174,6 @@ export default function HasanatReport({ filters }: HasanatReportProps): React.JS
       <HasanatDashboardWidgets />
     </div>
   );
-}
+});
+
+export default HasanatReport;

@@ -1,3 +1,4 @@
+import React from 'react';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { Loader2 } from 'lucide-react';
 import { SubTabBar } from '@/components/ui/SubTabBar';
@@ -19,7 +20,7 @@ export type {
   TeacherReportProps,
 } from './teacherReportTypes';
 
-export default function FacultyReport({ filters }: TeacherReportProps): React.JSX.Element {
+const FacultyReport = React.memo(function FacultyReport({ filters }: TeacherReportProps): React.JSX.Element {
   const report = useFacultyReportController({ filters });
 
   if (report.activeSubTab === 'roster' && report.listError) {
@@ -127,4 +128,7 @@ export default function FacultyReport({ filters }: TeacherReportProps): React.JS
       <FacultyReportDashboardWidgets />
     </div>
   );
-}
+});
+
+export default FacultyReport;
+

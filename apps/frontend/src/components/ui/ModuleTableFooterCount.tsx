@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface ModuleTableFooterCountProps {
   /** Number of rows currently selected in the Work table. */
   selectedCount: number;
@@ -11,7 +13,7 @@ export interface ModuleTableFooterCountProps {
  * Work table footer count bar shared by Contacts, Students, and Teachers.
  * Shows the selected-count + page-count combo, or just the page count when nothing is selected.
  */
-export function ModuleTableFooterCount({
+export const ModuleTableFooterCount = React.memo(function ModuleTableFooterCount({
   selectedCount,
   selectedCountLabel,
   pageCountLabel,
@@ -33,4 +35,5 @@ export function ModuleTableFooterCount({
       </p>
     </div>
   );
-}
+});
+

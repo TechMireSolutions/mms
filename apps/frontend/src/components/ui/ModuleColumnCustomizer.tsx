@@ -17,7 +17,7 @@ import type {
 export type { ModuleColumnCustomizerLabels, ModuleColumnCustomizerProps };
 
 /** Per-user Work directory column layout picker (globle1 §3.4). */
-export function ModuleColumnCustomizer({
+export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer({
   columnRegistry,
   updateUserColumnLayout,
   onResetLayout,
@@ -153,4 +153,5 @@ export function ModuleColumnCustomizer({
       </PopoverContent>
     </Popover>
   );
-}
+});
+

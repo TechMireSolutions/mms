@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useMemo } from "react";
 import { ContactBasicTab } from "@/tenant/features/contacts/components/formTabs/ContactBasicTab";
 import { ContactPhonesTab } from "@/tenant/features/contacts/components/formTabs/ContactPhonesTab";
 import { ContactEmailsTab } from "@/tenant/features/contacts/components/formTabs/ContactEmailsTab";
@@ -41,7 +41,7 @@ function subListBaseProps(draft: ContactFormDraftState): ContactSubListTabBasePr
 /**
  * Dispatches active ContactForm tab view rendering (Basic info vs nested collection lists).
  */
-export function ContactFormTabContent({
+export const ContactFormTabContent = React.memo(function ContactFormTabContent({
   tab,
   draft,
   lockGender,
@@ -50,6 +50,20 @@ export function ContactFormTabContent({
   defaultProvince,
 }: ContactFormTabContentProps): React.JSX.Element | null {
   const normalizedTab = normalizeContactFormTabId(tab);
+
+  const listBase = useMemo(() => subListBaseProps(draft), [
+    draft.contactDraft,
+    draft.getLocalId,
+    draft.getListItemError,
+    draft.isFieldEnabled,
+    draft.isFieldRequired,
+    draft.fields,
+    draft.formInstanceId,
+    draft.addSubListItem,
+    draft.ensureSubListItem,
+    draft.updateSubListItem,
+    draft.removeSubListItem,
+  ]);
 
   if (normalizedTab === "basic") {
     return (
@@ -69,8 +83,6 @@ export function ContactFormTabContent({
       />
     );
   }
-
-  const listBase = subListBaseProps(draft);
 
   switch (normalizedTab) {
     case "phones":
@@ -125,5 +137,5 @@ export function ContactFormTabContent({
     default:
       return null;
   }
-}
+});
 

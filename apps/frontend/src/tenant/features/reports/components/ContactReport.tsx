@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Users, MessageCircle, UserPlus, AlertCircle, Loader2 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsReportAnalytics } from "@/tenant/hooks/collections/contacts";
@@ -11,12 +11,48 @@ interface ContactReportProps {
 }
 
 /** Contacts CRM Report dashboard — KPIs only; saved reports live under Reports → Saved. */
-export default function ContactReport(props: ContactReportProps): React.JSX.Element {
+const ContactReport = React.memo(function ContactReport(props: ContactReportProps): React.JSX.Element {
   void props.onEditVisual;
 
   const { t } = useTranslation();
   const { data, isLoading, isError, refetch } = useContactsReportAnalytics();
   const analytics = data?.analytics;
+
+  const totalContacts = analytics?.total ?? 0;
+  const missingInfoCount = analytics?.missingInfoCount ?? 0;
+  const whatsappRate = analytics?.whatsappRate ?? 0;
+  const newLast30Days = analytics?.newLast30Days ?? 0;
+
+  const kpiItems = useMemo(() => [
+    {
+      icon: Users,
+      label: t("contacts.report.totalContacts"),
+      value: totalContacts,
+      accent: "primary" as const,
+      onClick: () => applyContactsWorkDrillDown({}),
+    },
+    {
+      icon: MessageCircle,
+      label: t("contacts.report.whatsappVerified"),
+      value: `${whatsappRate}%`,
+      accent: "warning" as const,
+      onClick: () => applyContactsWorkDrillDown({ quickFilter: "whatsapp" }),
+    },
+    {
+      icon: UserPlus,
+      label: t("contacts.report.newLast30Days"),
+      value: newLast30Days,
+      accent: "secondary" as const,
+      onClick: () => applyContactsWorkDrillDown({ quickFilter: "recent" }),
+    },
+    {
+      icon: AlertCircle,
+      label: t("contacts.report.missingContactInfo"),
+      value: missingInfoCount,
+      accent: "destructive" as const,
+      onClick: () => applyContactsWorkDrillDown({ quickFilter: "missingInfo" }),
+    },
+  ], [t, totalContacts, whatsappRate, newLast30Days, missingInfoCount]);
 
   if (isError) {
     return (
@@ -41,45 +77,12 @@ export default function ContactReport(props: ContactReportProps): React.JSX.Elem
     );
   }
 
-  const totalContacts = analytics?.total ?? 0;
-  const missingInfoCount = analytics?.missingInfoCount ?? 0;
-  const whatsappRate = analytics?.whatsappRate ?? 0;
-  const newLast30Days = analytics?.newLast30Days ?? 0;
-
   return (
     <div className="space-y-6 text-start p-4">
-      <ModuleCommandMetricsGrid
-        items={[
-          {
-            icon: Users,
-            label: t("contacts.report.totalContacts"),
-            value: totalContacts,
-            accent: "primary",
-            onClick: () => applyContactsWorkDrillDown({}),
-          },
-          {
-            icon: MessageCircle,
-            label: t("contacts.report.whatsappVerified"),
-            value: `${whatsappRate}%`,
-            accent: "warning",
-            onClick: () => applyContactsWorkDrillDown({ quickFilter: "whatsapp" }),
-          },
-          {
-            icon: UserPlus,
-            label: t("contacts.report.newLast30Days"),
-            value: newLast30Days,
-            accent: "secondary",
-            onClick: () => applyContactsWorkDrillDown({ quickFilter: "recent" }),
-          },
-          {
-            icon: AlertCircle,
-            label: t("contacts.report.missingContactInfo"),
-            value: missingInfoCount,
-            accent: "destructive",
-            onClick: () => applyContactsWorkDrillDown({ quickFilter: "missingInfo" }),
-          },
-        ]}
-      />
+      <ModuleCommandMetricsGrid items={kpiItems} />
     </div>
   );
-}
+});
+
+export default ContactReport;
+

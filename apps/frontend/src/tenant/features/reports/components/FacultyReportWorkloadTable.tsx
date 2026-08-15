@@ -21,7 +21,7 @@ interface FacultyReportWorkloadTableProps {
   onToggleFacultyFilter: (faculty: string) => void;
 }
 
-export function FacultyReportWorkloadTable({
+export const FacultyReportWorkloadTable = React.memo(function FacultyReportWorkloadTable({
   t,
   rows,
   selectedFaculty,
@@ -114,4 +114,4 @@ export function FacultyReportWorkloadTable({
       </div>
     </div>
   );
-}
+});

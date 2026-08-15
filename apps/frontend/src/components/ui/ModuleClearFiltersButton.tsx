@@ -1,3 +1,4 @@
+import React from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,7 @@ export interface ModuleClearFiltersButtonProps {
 }
 
 /** Shared Work toolbar clear-filters control (ghost + RefreshCw). */
-export function ModuleClearFiltersButton({
+export const ModuleClearFiltersButton = React.memo(function ModuleClearFiltersButton({
   label,
   onClearFilters,
   className,
@@ -29,4 +30,5 @@ export function ModuleClearFiltersButton({
       <span>{label}</span>
     </Button>
   );
-}
+});
+

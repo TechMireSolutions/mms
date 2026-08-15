@@ -12,74 +12,73 @@ import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { notify } from "@/lib/notify";
 
-export function HasanatSettings(): React.ReactElement {
-  const { t } = useTranslation();
-  const config = useHasanatConfig();
-  const {
-    settingsDraft,
-    saved,
-    upd,
-    saveSettingsAsync,
-  } = useModuleSettingsEditor<HasanatSettingsType>({
-    config,
-    tabRegistry: HASANAT_TAB_REGISTRY,
-  });
-
-  const handleSave = async () => {
-    try {
-      await saveSettingsAsync();
-      notify.success(t("hasanat.settings.saved"));
-    } catch (error: unknown) {
-      notify.error(t("hasanat.settings.saveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
+export const HasanatSettings = React.memo(function HasanatSettings(): React.ReactElement {
+      const { t } = useTranslation();
+      const config = useHasanatConfig();
+      const {
+        settingsDraft,
+        saved,
+        upd,
+        saveSettingsAsync,
+      } = useModuleSettingsEditor<HasanatSettingsType>({
+        config,
+        tabRegistry: HASANAT_TAB_REGISTRY,
       });
-    }
-  };
 
-  return (
-    <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
-      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
-        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Star className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-        </div>
-        <h3 id="hasanat-settings-title" className="text-sm font-bold text-foreground">
-          {t("hasanat.settings.titlePreferences")}
-        </h3>
-      </div>
+      const handleSave = async () => {
+        try {
+          await saveSettingsAsync();
+          notify.success(t("hasanat.settings.saved"));
+        } catch (error: unknown) {
+          notify.error(t("hasanat.settings.saveFailed"), {
+            description: error instanceof Error ? error.message : String(error),
+          });
+        }
+      };
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="points-per-unit" className={FORM_LABEL}>{t("hasanat.settings.pointsPerUnit")}</label>
-            <Input
-              id="points-per-unit"
-              type="number"
-              className={FORM_INPUT}
-              value={settingsDraft.pointsPerUnit || 10}
-              onChange={(event) => upd("pointsPerUnit", Number(event.target.value))}
-            />
+      return (
+        <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
+          <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Star className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+            </div>
+            <h3 id="hasanat-settings-title" className="text-sm font-bold text-foreground">
+              {t("hasanat.settings.titlePreferences")}
+            </h3>
           </div>
-        </div>
-        <div className="pt-1">
-          <ToggleRow
-            label={t("hasanat.settings.autoApprovePayouts")}
-            description={t("hasanat.settings.autoApprovePayoutsHint")}
-            value={settingsDraft.autoApprovePayouts || false}
-            onChange={(value) => upd("autoApprovePayouts", value)}
-          />
-        </div>
-      </div>
 
-      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-        <Button
-          type="button"
-          onClick={() => { void handleSave(); }}
-          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
-        >
-          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("hasanat.settings.btnSaved") : t("hasanat.settings.btnSave")}
-        </Button>
-      </footer>
-    </Card>
-  );
-}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="points-per-unit" className={FORM_LABEL}>{t("hasanat.settings.pointsPerUnit")}</label>
+                <Input
+                  id="points-per-unit"
+                  type="number"
+                  className={FORM_INPUT}
+                  value={settingsDraft.pointsPerUnit || 10}
+                  onChange={(event) => upd("pointsPerUnit", Number(event.target.value))}
+                />
+              </div>
+            </div>
+            <div className="pt-1">
+              <ToggleRow
+                label={t("hasanat.settings.autoApprovePayouts")}
+                description={t("hasanat.settings.autoApprovePayoutsHint")}
+                value={settingsDraft.autoApprovePayouts || false}
+                onChange={(value) => upd("autoApprovePayouts", value)}
+              />
+            </div>
+          </div>
 
+          <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
+            <Button
+              type="button"
+              onClick={() => { void handleSave(); }}
+              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
+            >
+              <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("hasanat.settings.btnSaved") : t("hasanat.settings.btnSave")}
+            </Button>
+          </footer>
+        </Card>
+      );
+    });

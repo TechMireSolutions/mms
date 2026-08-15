@@ -1,3 +1,4 @@
+import React from "react";
 import { Loader2, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -16,7 +17,7 @@ import { toTitleCase } from "@mms/shared";
 
 import type { StudentReportTablesProps } from "./studentReportTypes";
 
-export function StudentReportTables({
+export const StudentReportTables = React.memo(function StudentReportTables({
   activeSubTab,
   students,
   enrollments,
@@ -174,4 +175,4 @@ export function StudentReportTables({
       </div>
     </div>
   );
-}
+});

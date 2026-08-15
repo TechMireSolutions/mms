@@ -1,4 +1,4 @@
-import { type TeachersSettings } from "@mms/shared";
+import { type TeachersSettings as TeachersSettingsType } from "@mms/shared";
 import React from "react";
 import { School } from "lucide-react";
 import {
@@ -17,66 +17,65 @@ import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTeachersSetupSaveActions } from "@/tenant/features/teachers/hooks/useTeachersSetupSaveActions";
 import { TeachersPreferencesSection } from "@/tenant/features/teachers/components/TeachersPreferencesSection";
 
-export function TeachersSettings(): React.JSX.Element {
-  const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
-  const config = useTeacherConfig();
-  const { specializationOptions } = useTeacherLookupOptions();
-  const {
-    settings,
-    settingsDraft,
-    fieldsEditor,
-    saved,
-    setSaved,
-    upd,
-  } = useModuleSettingsEditor<TeachersSettings>({
-    config,
-    tabRegistry: TEACHERS_TAB_REGISTRY,
-    lockedEnabledTabs: TEACHER_LOCKED_ENABLED_TABS,
-  });
+export const TeachersSettings = React.memo(function TeachersSettings(): React.JSX.Element {
+      const { t } = useTranslation();
+      const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
+      const config = useTeacherConfig();
+      const { specializationOptions } = useTeacherLookupOptions();
+      const {
+        settings,
+        settingsDraft,
+        fieldsEditor,
+        saved,
+        setSaved,
+        upd,
+      } = useModuleSettingsEditor<TeachersSettingsType>({
+        config,
+        tabRegistry: TEACHERS_TAB_REGISTRY,
+        lockedEnabledTabs: TEACHER_LOCKED_ENABLED_TABS,
+      });
 
-  const {
-    saving,
-    isDirty,
-    handleSave,
-  } = useTeachersSetupSaveActions({
-    settings,
-    settingsDraft,
-    fieldsEditor,
-    mode: "preferences",
-    setSaved,
-  });
+      const {
+        saving,
+        isDirty,
+        handleSave,
+      } = useTeachersSetupSaveActions({
+        settings,
+        settingsDraft,
+        fieldsEditor,
+        mode: "preferences",
+        setSaved,
+      });
 
-  const unsavedWarning = isDirty
-    ? t("teachers.setup.unsavedPreferencesWarning")
-    : undefined;
+      const unsavedWarning = isDirty
+        ? t("teachers.setup.unsavedPreferencesWarning")
+        : undefined;
 
-  return (
-    <div className="space-y-4">
-      {!canEditSetup ? (
-        <SetupReadOnlyMessage title={t("teachers.setupReadOnly")} />
-      ) : (
-        <SectionCard title={t("teachers.settings.title")} icon={School} accentColor="primary">
-          <div className="space-y-4">
-            <TeachersPreferencesSection
-              settingsDraft={settingsDraft}
-              upd={upd}
-              specializationOptions={specializationOptions}
-            />
+      return (
+        <div className="space-y-4">
+          {!canEditSetup ? (
+            <SetupReadOnlyMessage title={t("teachers.setupReadOnly")} />
+          ) : (
+            <SectionCard title={t("teachers.settings.title")} icon={School} accentColor="primary">
+              <div className="space-y-4">
+                <TeachersPreferencesSection
+                  settingsDraft={settingsDraft}
+                  upd={upd}
+                  specializationOptions={specializationOptions}
+                />
 
-            <ModuleSetupSaveFooter
-              dirty={isDirty}
-              saving={saving}
-              saved={saved}
-              unsavedWarning={unsavedWarning}
-              saveLabel={t("common.save")}
-              savedLabel={t("settings.savedBadge")}
-              onSave={handleSave}
-            />
-          </div>
-        </SectionCard>
-      )}
-    </div>
-  );
-}
-
+                <ModuleSetupSaveFooter
+                  dirty={isDirty}
+                  saving={saving}
+                  saved={saved}
+                  unsavedWarning={unsavedWarning}
+                  saveLabel={t("common.save")}
+                  savedLabel={t("settings.savedBadge")}
+                  onSave={handleSave}
+                />
+              </div>
+            </SectionCard>
+          )}
+        </div>
+      );
+    });
