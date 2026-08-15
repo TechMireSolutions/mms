@@ -62,7 +62,7 @@ export function PlatformPageShell({
             </main>
             <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6 mt-auto">
               {t('theme.footerDefault', {
-                year: new Date().getFullYear(),
+                year: String(new Date().getFullYear()),
                 name: t('entry.productName'),
               })}
             </footer>
@@ -88,7 +88,7 @@ export function PlatformPageShell({
       </main>
       <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6 mt-auto">
         {t('theme.footerDefault', {
-          year: new Date().getFullYear(),
+          year: String(new Date().getFullYear()),
           name: t('entry.productName'),
         })}
       </footer>

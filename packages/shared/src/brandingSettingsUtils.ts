@@ -27,7 +27,7 @@ function normalizeBrandingHexLocal(raw: string | undefined, fallback: string): s
 /** Default copyright footer for auth screens and documents (locale-aware). */
 export function formatBrandingFooterDefault(madrasaName: string, language: string): string {
   const name = madrasaName.trim() || DEFAULT_BRANDING_SETTINGS.madrasaName;
-  const year = new Date().getFullYear();
+  const year = String(new Date().getFullYear());
   return translateAppParams("theme.footerDefault", language, { year, name });
 }
 

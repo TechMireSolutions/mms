@@ -112,7 +112,7 @@ export default function AppLayout(): React.JSX.Element {
         </div>
         <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6">
           {branding.footerText || t("theme.footerDefault", {
-            year: new Date().getFullYear(),
+            year: String(new Date().getFullYear()),
             name: branding.madrasaName || t("entry.productName"),
           })}
         </footer>

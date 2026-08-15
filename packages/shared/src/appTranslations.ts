@@ -90,7 +90,7 @@ export function translateAppParams<K extends AppTranslationKey>(
     let formattedValue = String(value);
     if (typeof value === "number") {
       const lowerName = name.toLowerCase();
-      if (!lowerName.endsWith("id") && !lowerName.endsWith("code")) {
+      if (!lowerName.endsWith("id") && !lowerName.endsWith("code") && !lowerName.endsWith("year")) {
         const locale = getIntlLocaleForLanguage(language);
         formattedValue = new Intl.NumberFormat(locale).format(value);
       }
