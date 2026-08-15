@@ -4,7 +4,6 @@ import {
   Contact,
   getPrimaryPhone,
   getPrimaryEmail,
-  mergeDfsTabs,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -16,7 +15,6 @@ import {
 } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { useContactDetailActions } from "@/tenant/features/contacts/hooks/useContactDetailActions";
 import { useContactDetailFields } from "@/tenant/features/contacts/hooks/useContactDetailFields";
-import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 
 export type { DetailFieldView } from "@/tenant/features/contacts/hooks/useContactDetailFields";
 
@@ -32,7 +30,6 @@ export function useContactDetailViewModel({
   canWrite: boolean;
 }) {
   const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields } = useContactConfig();
-  const { data: dfsTabs } = useModuleTabs("contacts");
   const { role } = usePermissions();
   const viewerRole = role ?? "";
   const { t } = useTranslation();
@@ -53,7 +50,7 @@ export function useContactDetailViewModel({
           (DETAIL_SYSTEM_TAB_KEYS.has(tab.key) || enabledTabIds.has(tab.key)),
       );
 
-    const resolved = sorted.map((tab) => {
+    return sorted.map((tab) => {
       const defaultTab = DEFAULT_DETAIL_TAB_BY_KEY.get(tab.key);
       const labelKey = tab.labelKey ?? defaultTab?.labelKey;
       return {
@@ -62,17 +59,7 @@ export function useContactDetailViewModel({
         icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
       };
     });
-
-    if (dfsTabs && dfsTabs.length > 0) {
-      mergeDfsTabs(resolved, dfsTabs, (dfsTab) => ({
-        key: dfsTab.key,
-        label: dfsTab.label,
-        icon: LayoutDashboard,
-      }));
-    }
-
-    return resolved;
-  }, [fieldConfig.detailTabs, enabledTabIds, dfsTabs, t]);
+  }, [fieldConfig.detailTabs, enabledTabIds, t]);
 
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");
 
@@ -127,7 +114,7 @@ export function useContactDetailViewModel({
     primaryEmail,
     handleAddNote,
     handleNavigateToContact,
-    dfsTabs,
   };
 }
+
 

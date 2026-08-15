@@ -50,7 +50,6 @@ export function UsersSetupTier({
   const subTabs = useModuleSetupSubTabs({
     initialKey: activeTab || 'permissions',
     isDirty: (currentKey) => {
-      if (currentKey === 'fields') return panelState.dirtyRef.current.fields;
       if (currentKey === 'preferences') return panelState.dirtyRef.current.prefs;
       if (currentKey === 'permissions') return permissionsDirtyRef.current;
       return false;
@@ -71,9 +70,7 @@ export function UsersSetupTier({
     }
   }, [subTabs.sub, activeTab, onTabChange]);
 
-  const settingsMode = subTabs.showPrefs ? 'preferences' : 'fields';
-  const settingsDirty = subTabs.showPrefs ? panelState.isPrefsDirty : panelState.isFieldsDirty;
-  const showSettingsPanel = subTabs.showFields || subTabs.showPrefs;
+  const showSettingsPanel = subTabs.showPrefs;
 
   return (
     <motion.div
@@ -100,15 +97,12 @@ export function UsersSetupTier({
           ) : null}
           {showSettingsPanel ? (
             <UsersSettingsPanel
-              mode={settingsMode}
               settingsDraft={panelState.settingsDraft}
-              fieldsEditor={panelState.fieldsEditor}
               saved={panelState.saved}
               saving={panelState.saving}
-              isDirty={settingsDirty}
+              isDirty={panelState.isPrefsDirty}
               upd={panelState.upd}
-              setSaved={panelState.setSaved}
-              onSave={() => panelState.handleSave(settingsMode)}
+              onSave={() => panelState.handleSave('preferences')}
             />
           ) : null}
         </>

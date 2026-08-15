@@ -81,7 +81,6 @@ export default function StudentForm({
           statuses={form.statuses}
           onUpdateStatuses={form.onUpdateStatuses}
           fields={form.fields}
-          dfsTabs={form.dfsTabs}
           isFieldEnabled={form.isFieldEnabled}
           isFieldRequired={form.isFieldRequired}
           getFieldError={form.getFieldError}

@@ -1,6 +1,5 @@
 import {
   composeFinanceSettings,
-  mergeFinanceFormTabsFromApi,
   stripFinanceFieldConfigForPersist,
   type FieldDefinition,
   type FinanceSettings,
@@ -8,7 +7,6 @@ import {
 } from '@mms/shared';
 import {
   createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
   requireFieldConfigTenant,
 } from './createModuleFieldConfigService.js';
 import {
@@ -16,7 +14,6 @@ import {
   upsertFinanceFieldConfig,
 } from '../db/repositories/financeFieldConfigRepository.js';
 import { getFinanceModulePreferencesByWorkspace } from '../db/repositories/financeModulePreferencesRepository.js';
-import { mergeFormTabsFromCustomTabs } from '../services/mergeFormTabsFromCustomTabs.js';
 
 const financeFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,
@@ -25,12 +22,9 @@ const financeFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripFinanceFieldConfigForPersist>
 >({
-  moduleId: 'finance',
   broadcastKey: 'finance',
   getByWorkspace: getFinanceFieldConfigByWorkspace,
   upsert: upsertFinanceFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeFinanceFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getFinanceModulePreferencesByWorkspace(tenant);
     return composeFinanceSettings(raw, prefs);
@@ -52,13 +46,5 @@ export async function loadFinanceSettingsCombined(): Promise<FinanceSettings> {
   const tenant = requireFieldConfigTenant();
   const field = await getFinanceFieldConfigByWorkspace(tenant);
   const prefs = await getFinanceModulePreferencesByWorkspace(tenant);
-  const composed = composeFinanceSettings(field, prefs);
-  const formTabs = await mergeFormTabsFromCustomTabs({
-    moduleId: 'finance',
-    documentFormTabs: composed.formTabs,
-    fields: composed.fields as Record<string, FieldDefinition[]> | undefined,
-    mapRow: mapCustomTabRowToFormTabFields,
-    merge: mergeFinanceFormTabsFromApi,
-  });
-  return { ...composed, formTabs };
+  return composeFinanceSettings(field, prefs);
 }

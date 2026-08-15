@@ -1,17 +1,24 @@
+/**
+ * @file teacherFormCustomFields.ts
+ * @description Helpers for Teachers form custom (non-seed) fields and field lookups.
+ */
 import { INITIAL_TEACHERS_FIELD_SEED } from './moduleFieldSetupPersons.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
-import type { TabConfig } from './schemas/dynamicFormSchemas.js';
-import type { Teacher } from './teacherTypes.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
-import { applyDfsCustomFieldDefaults } from './dynamicFormHelpers.js';
 
 const helpers = createFormCustomFieldHelpers(INITIAL_TEACHERS_FIELD_SEED);
 
-/** Keys owned by static teacher form chrome ({@link INITIAL_TEACHERS_FIELD_SEED}). */
-export const listTeacherSystemFormFieldKeys = helpers.listSystemFormFieldKeys;
+/**
+ * Returns keys owned by static teacher form chrome ({@link INITIAL_TEACHERS_FIELD_SEED}).
+ */
+export function listTeacherSystemFormFieldKeys(): ReadonlySet<string> {
+  return helpers.listSystemFormFieldKeys();
+}
 
-/** Deep-clone {@link INITIAL_TEACHERS_FIELD_SEED} for defaults and Setup overlays. */
+/**
+ * Deep-clone {@link INITIAL_TEACHERS_FIELD_SEED} for defaults and Setup overlays.
+ */
 export function cloneTeacherFieldSeed(): Record<string, FieldDefinition[]> {
   const next: Record<string, FieldDefinition[]> = {};
   for (const [tabId, fields] of Object.entries(INITIAL_TEACHERS_FIELD_SEED)) {
@@ -53,16 +60,27 @@ export function resolveTeacherFieldsMapForColumnSync(
 }
 
 /**
- * Enabled non-seed fields for the teacher form.
+ * Returns enabled non-seed fields for the Teachers form.
  * When `tabId` is set, only fields stored under that config tab are returned.
  * When omitted, returns enabled non-seed fields from every tab.
  */
-export const listEnabledCustomTeacherFormFields = helpers.listEnabledCustomFormFields;
+export function listEnabledCustomTeacherFormFields<T extends FieldDefinition>(
+  fields: Record<string, T[]>,
+  tabId?: string,
+): T[] {
+  return helpers.listEnabledCustomFormFields(fields, tabId);
+}
 
-/** True when `fieldId` is part of the static form seed for `tabId`. */
-export const isTeacherSystemFormField = helpers.isSystemFormField;
+/**
+ * Returns true when `fieldId` is part of the static form seed for `tabId`.
+ */
+export function isTeacherSystemFormField(tabId: string, fieldId: string): boolean {
+  return helpers.isSystemFormField(tabId, fieldId);
+}
 
-/** Find a field definition by key across a tabbed Teachers fields map. */
+/**
+ * Find a field definition by key across a tabbed Teachers fields map.
+ */
 export function findTeacherFieldInMap(
   fields: Record<string, FieldDefinition[]>,
   fieldKey: string,
@@ -70,7 +88,9 @@ export function findTeacherFieldInMap(
   return findTeacherFieldLocation(fields, fieldKey)?.field;
 }
 
-/** Find tab id + field definition by key across a tabbed Teachers fields map. */
+/**
+ * Find tab id + field definition by key across a tabbed Teachers fields map.
+ */
 export function findTeacherFieldLocation(
   fields: Record<string, FieldDefinition[]>,
   fieldKey: string,
@@ -82,7 +102,9 @@ export function findTeacherFieldLocation(
   return null;
 }
 
-/** Find a field definition under a specific Teachers Setup tab. */
+/**
+ * Find a field definition under a specific Teachers Setup tab.
+ */
 export function findTeacherTabField(
   fields: Record<string, FieldDefinition[]>,
   tabId: string,
@@ -91,16 +113,3 @@ export function findTeacherTabField(
   return (fields[tabId] ?? []).find((field) => field.key === fieldKey);
 }
 
-/**
- * Seeds DFS custom field defaults into teacher draft customData for new teachers.
- * Delegates to the shared {@link applyDfsCustomFieldDefaults} helper.
- */
-export function applyTeacherDfsCustomFieldDefaults(
-  draft: Partial<Teacher>,
-  dfsTabs?: TabConfig[],
-): Partial<Teacher> {
-  return applyDfsCustomFieldDefaults(
-    draft as { id?: unknown; customData?: Record<string, unknown> | null },
-    dfsTabs,
-  ) as Partial<Teacher>;
-}

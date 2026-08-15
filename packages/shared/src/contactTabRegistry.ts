@@ -110,9 +110,8 @@ export const DEFAULT_DETAIL_TABS: TabDefinition[] = [
 ];
 
 export const DEFAULT_SETTINGS_SUB_TABS: TabDefinition[] = [
-  { key: "fields",      label: "Fields",               labelKey: "contacts.setup.fields",      enabled: true, order: 0, isSystem: true },
-  { key: "preferences", label: "Preferences",          labelKey: "contacts.setup.preferences", enabled: true, order: 1, isSystem: true },
-  { key: "sync",        label: "Sync (Google / Apple)", labelKey: "contacts.setup.sync",        enabled: true, order: 2, isSystem: true },
+  { key: "preferences", label: "Preferences",          labelKey: "contacts.setup.preferences", enabled: true, order: 0, isSystem: true },
+  { key: "sync",        label: "Sync (Google / Apple)", labelKey: "contacts.setup.sync",        enabled: true, order: 1, isSystem: true },
 ];
 
 export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [

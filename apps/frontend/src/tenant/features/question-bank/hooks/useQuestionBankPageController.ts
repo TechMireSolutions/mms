@@ -24,7 +24,6 @@ import {
 import { useQuestionBankTrashActions } from '@/tenant/features/question-bank/hooks/useQuestionBankTrashActions';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof QUESTION_BANK_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
-  fields: 'questionBank.setup.fields',
   preferences: 'questionBank.setup.preferences',
 };
 

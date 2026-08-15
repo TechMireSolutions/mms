@@ -10,7 +10,6 @@ An enterprise-ready technical blueprint and architectural review of the Madrasa 
 | --- | --- | --- | --- |
 | **Context Propagation** | Manual parameter passing | Node.js `AsyncLocalStorage` (`TenantContext`) | Eliminates prop-drilling of tenant headers across service and repository layers. |
 | **Background Processing** | Custom SQL `FOR UPDATE SKIP LOCKED` polling | `pg-boss` / Redis-backed queue engine with DLQ | Guarantees job retries, backoff strategies, idempotency, and dead-letter queues. |
-| **Dynamic Form System** | Unindexed `JSONB` storage | `JSONB` GIN indexing (`jsonb_path_ops`) + `drizzle-zod` | Prevents full table scans on custom fields and guarantees end-to-end schema DRYness. |
 | **WebSocket Scaling** | Single-instance server state | Fastify WS with Redis Pub/Sub adapter | Enables multi-node / PM2 cluster scale-out for real-time cache invalidation. |
 | **Containerization & Deployment** | Bare-metal host with PM2 process manager | Docker multi-stage builds + Nginx SPA sidecar | Container isolation, reproducible builds, and zero-downtime rolling deployments. |
 | **RTL & Typography** | Global `dir="rtl"` attribute toggle | Script-aware dynamic font family loader | Ensures native typography rendering for Nastaliq (Urdu) and Naskh/Cairo (Arabic). |
@@ -153,26 +152,28 @@ Fastify Root Instance
  └── apiRoutes           (Mounted under /api/v1)
 ```
 
-### 3.2 Production Job Engine (`pg-boss`)
+### 3.2 Production Job Engine (PostgreSQL `SKIP LOCKED` Queue)
 
-To prevent database overhead caused by continuous raw table polling, MMS utilizes **`pg-boss`**—a production-grade job queue built on PostgreSQL transaction isolation:
+To prevent database overhead and eliminate external Redis dependencies, MMS implements a durable PostgreSQL task queue utilizing `FOR UPDATE SKIP LOCKED` semantics with explicit tenant isolation:
 
 ```typescript
-// jobs/queueEngine.ts
-import PgBoss from 'pg-boss';
-import { tenantStorage } from '../context/tenantContext';
+// services/backgroundJobsService.ts
+import { db } from '../db/dbConnection.js';
+import { tenantStorage } from '../context/tenantContext.js';
 
-export const boss = new PgBoss(process.env.DATABASE_URL!);
-
-export async function initJobEngine() {
-  await boss.start();
-  
-  // Register Job Workers
-  await boss.work('GENERATE_PDF_REPORT', async ([job]) => {
-    const { workspaceSubdomain, reportParams } = job.data;
-    // Process job within explicit tenant context
-    await tenantStorage.run({ workspaceSubdomain }, async () => {
-      await generateReportPdf(reportParams);
+export async function processNextJob() {
+  return await db.transaction(async (tx) => {
+    // Lock next available job without contention
+    const job = await tx.query.backgroundJobs.findFirst({
+      where: (jobs, { eq, and, lte }) =>
+        and(eq(jobs.status, 'pending'), lte(jobs.runAt, new Date())),
+      // FOR UPDATE SKIP LOCKED
+    });
+    if (!job) return null;
+    
+    // Execute job strictly within job's workspace tenant context
+    return await tenantStorage.run({ workspaceSubdomain: job.workspaceSubdomain }, async () => {
+      return await executeJobTask(job);
     });
   });
 }
@@ -202,15 +203,14 @@ export async function initJobEngine() {
 │       ├── obligations.ts
 │       ├── messaging.ts
 │       ├── users.ts
-│       ├── savedReports.ts
-│       └── customTabs.ts
+│       └── savedReports.ts
 ├── ws                       # Real-Time WebSocket Channel (Query Invalidation Push)
 └── uploads/                 # Authenticated Media & File Upload Handler
 ```
 
 ---
 
-## 4. Database Schema & Dynamic Form System (DFS)
+## 4. Relational Database Schema & Domain Modeling
 
 ### 4.1 Core Relational Entities
 
@@ -225,20 +225,20 @@ erDiagram
     STUDENTS ||--|{ ATTENDANCE : records
     STUDENTS ||--|{ INVOICES : billed
     INVOICES ||--|{ PAYMENTS : clears
-    CUSTOM_FIELDS ||--|{ WORKSPACES : configures
 ```
 
-### 4.2 Indexing Strategy for Dynamic JSONB Attributes
+### 4.2 Multi-Tenant Indexing Strategy
 
-To allow fast lookups and filtering on custom dynamic attributes without full table scans, JSONB fields utilize **GIN indexing** (`jsonb_path_ops`):
+To guarantee sub-millisecond lookups across high-volume tenant tables, primary queries use compound indexes on `(workspace_subdomain, id)` alongside partial indexes for soft-delete filtering:
 
 ```sql
--- Schema Migration for High-Performance DFS Queries
-CREATE INDEX idx_contacts_custom_attrs_gin 
-ON contacts USING gin (custom_attributes jsonb_path_ops);
+-- Schema Migration for High-Performance Multi-Tenant Queries
+CREATE INDEX idx_contacts_tenant_active 
+ON contacts (workspace_subdomain, id)
+WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_students_tenant_id 
-ON students (workspace_subdomain, id);
+CREATE INDEX idx_students_tenant_contact 
+ON students (workspace_subdomain, contact_id);
 ```
 
 ### 4.3 Single Source of Truth (SSOT) Schema Construction
@@ -247,13 +247,14 @@ Drizzle schema definitions automatically generate Zod validation schemas using `
 
 ```typescript
 // packages/shared/src/schemas/student.ts
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { contacts } from './contact.js';
 
 export const students = pgTable('students', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: serial('id').primaryKey(),
   workspaceSubdomain: text('workspace_subdomain').notNull(),
-  fullName: text('full_name').notNull(),
+  contactId: integer('contact_id').references(() => contacts.id).notNull(),
   enrollmentNumber: text('enrollment_number').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -278,7 +279,7 @@ Every functional feature (Students, Finance, Contacts, etc.) follows a consisten
 ├──────────────────────────────────────┬────────────────────────────────────┤
 │ 📊 Tier 1: Work (Command Centre)     │ Primary Data Grid, Quick Drawers   │
 │ 📈 Tier 2: Reports (Analytics)       │ Interactive Recharts, Export Engine│
-│ ⚙️ Tier 3: Setup (Custom Fields)     │ Drag-and-Drop Registry & Prefs     │
+│ ⚙️ Tier 3: Setup (Preferences)       │ Behavioral Preferences & Rules     │
 └──────────────────────────────────────┴────────────────────────────────────┘
 ```
 
@@ -291,10 +292,9 @@ Every functional feature (Students, Finance, Contacts, etc.) follows a consisten
    - Interactive charts built with Recharts.
    - Custom Report Builder for query filtering and saved report configurations.
    - Standardized Export Toolbar (PDF generation, Excel `.xlsx`, CSV, print formats).
-3. **Tier 3: Setup (Configuration & Fields)**
-   - Fields Sub-Tab: Drag-and-drop field reordering, system tab visibility toggles, custom field creation via [`CustomFieldsBuilder.tsx`](file:///Users/syedaalin/Documents/mms/apps/frontend/src/components/dynamic-form/CustomFieldsBuilder.tsx).
-   - Preferences Sub-Tab: Module-specific behavioral settings and automated rules.
-   - Setup Audit Sub-Tab: Log of field and preference modifications over time.
+3. **Tier 3: Setup (Preferences & Settings)**
+   - Preferences: Module-specific behavioral settings and automated rules.
+   - Defaults: System lookups and default values.
 
 ### 5.2 State Management & WebSocket Invalidation
 
@@ -406,9 +406,9 @@ The platform encapsulates comprehensive functionality across 18 specialized modu
 
 ## 8. Background Processing & Messaging Engine
 
-### 8.1 Background Job Architecture (`pg-boss`)
+### 8.1 Background Job Architecture (PostgreSQL `SKIP LOCKED` Queue)
 
-Large workloads execute asynchronously outside the primary HTTP request/response cycle using `pg-boss` or custom PostgreSQL job queues.
+Large workloads execute asynchronously outside the primary HTTP request/response cycle using an in-database PostgreSQL `FOR UPDATE SKIP LOCKED` durable job queue.
 
 - **Job Worker Process**: Background workers process jobs within explicit `AsyncLocalStorage` tenant contexts.
 - **Supported Job Types**: Bulk PDF generation, large dataset CSV/Excel exports, student promotion batch operations, backup archive creation, duplicate contact detection scans.
@@ -449,7 +449,7 @@ MMS provides an enterprise backup and disaster recovery framework ([`backupCrypt
 
 ### 10.2 Accessibility (a11y) Standards
 
-- **Keyboard Navigation**: Full keyboard tab accessibility across dialogs, dropdowns, dynamic forms, and navigation menus.
+- **Keyboard Navigation**: Full keyboard tab accessibility across dialogs, dropdowns, forms, and navigation menus.
 - **ARIA Semantics**: Radix UI primitives provide compliant ARIA roles (`dialog`, `listbox`, `combobox`, `tablist`).
 - **Focus Trap & Return**: Modals trap focus during interaction and return focus to the invoking element upon dismissal.
 
@@ -517,6 +517,7 @@ CMD ["node", "dist/index.js"]
 | **Type Safety** | Verified | Strict TypeScript compilation across all apps and packages (`pnpm build`). |
 | **Data Isolation** | Verified | PostgreSQL `FORCE ROW LEVEL SECURITY` verified via RLS transaction context (`withTenantTransaction`). |
 | **Context Safety** | Verified | `AsyncLocalStorage` tenant context propagation wrapped in explicit database transaction guards. |
-| **Performance** | Verified | `JSONB` GIN indexing (`jsonb_path_ops`) + `pg-boss` async background execution queue. |
+| **Performance** | Verified | Multi-tenant composite indexing + PostgreSQL `SKIP LOCKED` background execution queue. |
 | **Accessibility & i18n** | Verified | WCAG contrast validation, Radix UI ARIA primitives, and script-aware font switching. |
 | **Disaster Recovery** | Verified | Passphrase-derived AES-256-GCM backup encryption with pre-wipe safety snapshots. |
+

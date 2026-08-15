@@ -20,8 +20,6 @@ export interface RelationalCollectionMapping {
 export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   contacts: 10,
   students: 15,
-  custom_tabs: 20,
-  custom_fields: 21,
   contact_lookups: 25,
   contact_field_configs: 26,
   contact_module_preferences: 27,
@@ -378,16 +376,6 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/messagingRepository.js',
     fnName: 'replaceMessageLogsForWorkspace',
     snapshotFnName: 'listMessageLogsByWorkspace',
-  },
-  custom_tabs: {
-    importPath: './repositories/customTabsRepository.js',
-    fnName: 'replaceCustomTabsForWorkspace',
-    snapshotFnName: 'listAllCustomTabsByWorkspace',
-  },
-  custom_fields: {
-    importPath: './repositories/customFieldsRepository.js',
-    fnName: 'replaceCustomFieldsForWorkspace',
-    snapshotFnName: 'listAllCustomFieldsByWorkspace',
   },
   contact_lookups: {
     importPath: './repositories/contactLookupsRepository.js',

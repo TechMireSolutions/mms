@@ -5,30 +5,20 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { ModuleCustomFieldsBlock } from "@/components/ui/ModuleCustomFieldsBlock";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { InvoiceDraft } from "@/tenant/features/finance/components/invoiceFormDraft";
-import type { TabConfig } from "@mms/shared";
 
 interface InvoiceFormFieldsSectionProps {
   t: TranslationFunction;
   draft: InvoiceDraft;
   onFieldChange: (key: keyof InvoiceDraft, value: string) => void;
-  onCustomDataChange?: (patch: Partial<InvoiceDraft>) => void;
-  dfsTabs?: TabConfig[];
-  getFieldError?: (fieldId: string) => string | undefined;
 }
 
 export function InvoiceFormFieldsSection({
   t,
   draft,
   onFieldChange,
-  onCustomDataChange,
-  dfsTabs,
-  getFieldError,
 }: InvoiceFormFieldsSectionProps): React.ReactElement {
-  const basicDfsTab = dfsTabs?.find((tab) => tab.key === "basic" || tab.id === "basic");
-  const extraDfsTabs = dfsTabs?.filter((tab) => tab.enabled && tab.key !== "basic" && tab.id !== "basic");
 
   return (
     <div className="space-y-4">
@@ -170,51 +160,7 @@ export function InvoiceFormFieldsSection({
             </div>
           </div>
         </div>
-
-        {basicDfsTab?.fields && basicDfsTab.fields.length > 0 && onCustomDataChange && (
-          <div className="mt-4 pt-4 border-t border-border/40">
-            <ModuleCustomFieldsBlock<InvoiceDraft>
-              draft={draft}
-              formInstanceId="invoice-new"
-              fields={{}}
-              customFields={basicDfsTab.fields}
-              tabId="basic"
-              getFieldError={getFieldError ?? (() => undefined)}
-              updateDraft={onCustomDataChange}
-              hideWhenEmpty
-              listCustomFields={() => []}
-              idPrefix="inv-cf"
-              emptyKey="common.none"
-            />
-          </div>
-        )}
       </Card>
-
-      {extraDfsTabs && extraDfsTabs.length > 0 && onCustomDataChange && (
-        <>
-          {extraDfsTabs.map((tab) => (
-            <Card key={tab.id} accentColor="primary" className="p-5.5 px-6.5 pb-6 shadow-sm">
-              <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
-                <ReceiptText className="w-4 h-4 text-primary/70" />
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{tab.label}</h3>
-              </div>
-              <ModuleCustomFieldsBlock<InvoiceDraft>
-                draft={draft}
-                formInstanceId="invoice-new"
-                fields={{}}
-                customFields={tab.fields}
-                tabId={tab.key || tab.id}
-                getFieldError={getFieldError ?? (() => undefined)}
-                updateDraft={onCustomDataChange}
-                hideWhenEmpty
-                listCustomFields={() => []}
-                idPrefix="inv-cf"
-                emptyKey="common.none"
-              />
-            </Card>
-          ))}
-        </>
-      )}
     </div>
   );
 }

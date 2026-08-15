@@ -43,7 +43,7 @@ export interface ModuleSetupSaveActionsOptions<TSettings> {
     fields: Record<string, FieldDefinition[]>,
     enabledTabIds: Iterable<string>,
   ) => ColumnRegistryEntry[];
-  syncCustomTabs: (formTabs: TabDefinition[]) => Promise<void>;
+  syncCustomTabs?: (formTabs: TabDefinition[]) => Promise<void>;
   prefsKeys: readonly string[];
   normalizePrefs: (settingsDraft: TSettings) => unknown;
   buildFieldConfigPayload: (ctx: {

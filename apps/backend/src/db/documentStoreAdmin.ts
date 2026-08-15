@@ -7,7 +7,6 @@ import { eq } from 'drizzle-orm';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { activeDb } from './dbConnection.js';
 import * as schema from './schema.js';
-import { hydrateObjectData } from './documentStoreCustomTabs.js';
 
 export async function getAllData(): Promise<{ collections: Record<string, unknown[]>; objects: Record<string, unknown> }> {
   try {
@@ -34,7 +33,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
 
       if (tenant) {
         if (!parsed || parsed.subdomain !== tenant) continue;
-        objects[parsed.logicalKey] = await hydrateObjectData(parsed.logicalKey, row.data, tenant);
+        objects[parsed.logicalKey] = row.data;
       } else if (!parsed) {
         objects[row.key] = row.data;
       }

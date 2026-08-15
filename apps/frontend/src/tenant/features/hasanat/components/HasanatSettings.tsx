@@ -1,14 +1,8 @@
-import { type HasanatSettings } from "@mms/shared";
+import { type HasanatSettings as HasanatSettingsType } from "@mms/shared";
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Save, Star } from "lucide-react";
-import {
-  HASANAT_TAB_REGISTRY,
-  INITIAL_HASANAT_FIELD_SEED,
-  isHasanatSystemFormField,
-  isHasanatSeedFormTab,
-  isHasanatLockedEnabledTab,
-} from "@mms/shared";
+import { HASANAT_TAB_REGISTRY } from "@mms/shared";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -16,25 +10,17 @@ import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
-import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 
-interface HasanatSettingsProps {
-  mode?: "fields" | "preferences";
-}
-
-export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElement {
+export function HasanatSettings(): React.ReactElement {
   const { t } = useTranslation();
   const config = useHasanatConfig();
   const {
     settingsDraft,
-    fieldsEditor,
     saved,
-    setSaved,
     upd,
     saveSettingsAsync,
-  } = useModuleSettingsEditor<HasanatSettings>({
+  } = useModuleSettingsEditor<HasanatSettingsType>({
     config,
     tabRegistry: HASANAT_TAB_REGISTRY,
   });
@@ -50,22 +36,6 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
     }
   };
 
-  const showPrefs = mode === "preferences";
-  const showFields = mode === "fields";
-
-  const wrappedFieldsEditor = React.useMemo(
-    () =>
-      wrapModuleSetupFieldsEditor({
-        fieldsEditor,
-        handleDeleteField: fieldsEditor.handleDeleteField,
-        handleDeleteTab: fieldsEditor.handleDeleteTab,
-        getSeedTab: (key) => HASANAT_TAB_REGISTRY.find((tab) => tab.key === key),
-        initialFieldSeed: INITIAL_HASANAT_FIELD_SEED,
-        isLockedTab: isHasanatLockedEnabledTab,
-      }),
-    [fieldsEditor],
-  );
-
   return (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
       <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
@@ -73,44 +43,32 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
           <Star className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         </div>
         <h3 id="hasanat-settings-title" className="text-sm font-bold text-foreground">
-          {showFields ? t("hasanat.settings.titleFields") : t("hasanat.settings.titlePreferences")}
+          {t("hasanat.settings.titlePreferences")}
         </h3>
       </div>
 
-      {showPrefs && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="points-per-unit" className={FORM_LABEL}>{t("hasanat.settings.pointsPerUnit")}</label>
-              <Input
-                id="points-per-unit"
-                type="number"
-                className={FORM_INPUT}
-                value={settingsDraft.pointsPerUnit || 10}
-                onChange={(event) => upd("pointsPerUnit", Number(event.target.value))}
-              />
-            </div>
-          </div>
-          <div className="pt-1">
-            <ToggleRow
-              label={t("hasanat.settings.autoApprovePayouts")}
-              description={t("hasanat.settings.autoApprovePayoutsHint")}
-              value={settingsDraft.autoApprovePayouts || false}
-              onChange={(value) => upd("autoApprovePayouts", value)}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="points-per-unit" className={FORM_LABEL}>{t("hasanat.settings.pointsPerUnit")}</label>
+            <Input
+              id="points-per-unit"
+              type="number"
+              className={FORM_INPUT}
+              value={settingsDraft.pointsPerUnit || 10}
+              onChange={(event) => upd("pointsPerUnit", Number(event.target.value))}
             />
           </div>
         </div>
-      )}
-
-      {showFields && (
-        <ModuleFieldsSetup
-          editor={wrappedFieldsEditor}
-          isCoreField={isHasanatSystemFormField}
-          isProtectedTab={isHasanatSeedFormTab}
-          isLockedTab={isHasanatLockedEnabledTab}
-          onStateChange={() => setSaved(false)}
-        />
-      )}
+        <div className="pt-1">
+          <ToggleRow
+            label={t("hasanat.settings.autoApprovePayouts")}
+            description={t("hasanat.settings.autoApprovePayoutsHint")}
+            value={settingsDraft.autoApprovePayouts || false}
+            onChange={(value) => upd("autoApprovePayouts", value)}
+          />
+        </div>
+      </div>
 
       <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
         <Button
@@ -124,3 +82,4 @@ export function HasanatSettings({ mode }: HasanatSettingsProps): React.ReactElem
     </Card>
   );
 }
+

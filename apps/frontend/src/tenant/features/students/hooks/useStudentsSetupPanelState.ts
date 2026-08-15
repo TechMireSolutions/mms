@@ -1,14 +1,9 @@
-import { useMemo } from "react";
 import {
   STUDENT_TAB_REGISTRY,
   DEFAULT_STUDENT_ENABLED_TABS,
   DEFAULT_STUDENT_REQUIRED_TABS,
   STUDENT_LOCKED_ENABLED_TABS,
-  INITIAL_STUDENT_FIELD_SEED,
-  isStudentLockedEnabledTab,
-  getStudentSeedFormTab,
 } from "@mms/shared";
-import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { type StudentsSettings } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -42,8 +37,6 @@ export function useStudentsSetupPanelState({
     isFieldsDirty,
     isPrefsDirty,
     handleSave,
-    handleDeleteFieldWithGuard,
-    handleDeleteTabWithGuard,
   } = useStudentsSetupSaveActions({
     settings,
     settingsDraft,
@@ -51,19 +44,6 @@ export function useStudentsSetupPanelState({
     mode,
     setSaved,
   });
-
-  const wrappedFieldsEditor = useMemo(
-    () =>
-      wrapModuleSetupFieldsEditor({
-        fieldsEditor,
-        handleDeleteField: handleDeleteFieldWithGuard,
-        handleDeleteTab: handleDeleteTabWithGuard,
-        getSeedTab: getStudentSeedFormTab,
-        initialFieldSeed: INITIAL_STUDENT_FIELD_SEED,
-        isLockedTab: isStudentLockedEnabledTab,
-      }),
-    [fieldsEditor, handleDeleteFieldWithGuard, handleDeleteTabWithGuard],
-  );
 
   return {
     settingsDraft,
@@ -75,8 +55,8 @@ export function useStudentsSetupPanelState({
     isFieldsDirty,
     isPrefsDirty,
     handleSave,
-    wrappedFieldsEditor,
     showFields: mode === "fields",
     showPrefs: mode === "preferences",
   };
 }
+

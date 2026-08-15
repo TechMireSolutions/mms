@@ -1,15 +1,11 @@
 import {
   composeExaminationsSettings,
-  mergeExaminationsFormTabsFromApi,
   stripExaminationsFieldConfigForPersist,
   type FieldDefinition,
   type ExaminationsSettings,
   type TabDefinition,
 } from '@mms/shared';
-import {
-  createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
-} from '../lib/createModuleFieldConfigService.js';
+import { createModuleFieldConfigService } from '../lib/createModuleFieldConfigService.js';
 import {
   getExaminationFieldConfig,
   setExaminationFieldConfig,
@@ -23,12 +19,9 @@ const examinationFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripExaminationsFieldConfigForPersist>
 >({
-  moduleId: 'examinations',
   broadcastKey: 'examinations',
   getByWorkspace: getExaminationFieldConfig,
   upsert: setExaminationFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeExaminationsFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getExaminationModulePreferences(tenant);
     return composeExaminationsSettings((raw as unknown) as ExaminationsSettings, (prefs || {}) as any);
@@ -44,3 +37,4 @@ export async function updateExaminationFieldConfigService(
 ): Promise<ExaminationsSettings> {
   return examinationFieldConfig.save(config as Partial<ExaminationsSettings> as any);
 }
+

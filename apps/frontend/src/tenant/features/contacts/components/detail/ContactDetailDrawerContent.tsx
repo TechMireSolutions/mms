@@ -1,6 +1,7 @@
+import type React from "react";
 import type { ChangeEvent, FormEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { type Contact, type TabConfig } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DETAIL_SYSTEM_TAB_KEYS } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
@@ -43,7 +44,6 @@ interface ContactDetailDrawerContentProps {
   onFiles: (filesList: FileList | null) => void;
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onRequestDelete: (attachment: { id: string; name: string }) => void;
-  dfsTabs?: TabConfig[];
 }
 
 export function ContactDetailDrawerContent({
@@ -72,17 +72,19 @@ export function ContactDetailDrawerContent({
   onFiles,
   onFileChange,
   onRequestDelete,
-  dfsTabs,
-}: ContactDetailDrawerContentProps): JSX.Element {
+}: ContactDetailDrawerContentProps): React.JSX.Element {
   const reducedMotion = useReducedMotion();
   const { t } = useTranslation();
-  const dfsTab = dfsTabs?.find((t) => t.key === activeTab);
-  const customTabFields = Object.entries(grouped)
-    .map(([groupName, fieldsList]) => ({
-      groupName,
-      fields: fieldsList.filter((field) => field.tab === activeTab),
-    }))
-    .filter((entry) => entry.fields.length > 0);
+
+  const isSystemTab = DETAIL_SYSTEM_TAB_KEYS.has(activeTab);
+  const customTabFields = isSystemTab
+    ? []
+    : Object.entries(grouped)
+        .map(([groupName, fieldsList]) => ({
+          groupName,
+          fields: fieldsList.filter((field) => field.tab === activeTab),
+        }))
+        .filter((entry) => entry.fields.length > 0);
 
   return (
     <AnimatePresence mode="wait">
@@ -138,39 +140,7 @@ export function ContactDetailDrawerContent({
           />
         )}
 
-        {/* DFS-managed custom tab — single source of truth for custom field tabs */}
-        {dfsTab && (
-          <div className="space-y-4">
-            {dfsTab.fields.filter((f) => f.enabled).length === 0 ? (
-              <EmptyState
-                title={t("contacts.detail.emptyCustomTab")}
-                compact
-                icon={null}
-                className="uppercase tracking-widest"
-              />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {dfsTab.fields
-                  .filter((f) => f.enabled)
-                  .map((field) => {
-                    const customData = (contactState.customData as Record<string, unknown> | undefined) || {};
-                    const val = customData[field.key] ?? (contactState as Record<string, unknown>)[field.key];
-                    return (
-                      <div key={field.key} className="p-3 rounded-lg border border-border bg-card">
-                        <div className="text-xs text-muted-foreground font-medium">{field.label}</div>
-                        <div className="text-sm font-semibold mt-1">
-                          {val !== undefined && val !== null && String(val) !== "" ? String(val) : "—"}
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Legacy grouped-field fallback for non-DFS, non-system tabs */}
-        {!dfsTab && !DETAIL_SYSTEM_TAB_KEYS.has(activeTab) && (
+        {!isSystemTab && (
           <div className="space-y-4">
             {customTabFields.length === 0 ? (
               <EmptyState

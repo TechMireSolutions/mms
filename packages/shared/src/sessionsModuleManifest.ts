@@ -13,7 +13,7 @@ export const SESSIONS_MODULE_MANIFEST = {
   restBasePath: '/api/sessions',
   analyticsCategory: 'sessions',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['preferences'] as const,
   permissions: {
     read: 'enrollments.read',
     write: 'enrollments.write',

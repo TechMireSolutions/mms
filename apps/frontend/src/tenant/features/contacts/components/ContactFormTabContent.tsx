@@ -1,19 +1,28 @@
+import type React from "react";
 import { ContactBasicTab } from "@/tenant/features/contacts/components/formTabs/ContactBasicTab";
 import { ContactPhonesTab } from "@/tenant/features/contacts/components/formTabs/ContactPhonesTab";
 import { ContactEmailsTab } from "@/tenant/features/contacts/components/formTabs/ContactEmailsTab";
 import { ContactAddressesTab } from "@/tenant/features/contacts/components/formTabs/ContactAddressesTab";
 import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTabs/ContactSocialsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
-import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
 import type { ContactSubListTabBaseProps } from "@/tenant/features/contacts/components/formTabs/types";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
-import { normalizeContactFormTabId, findDfsTab } from "@mms/shared";
+import { normalizeContactFormTabId } from "@mms/shared";
 
 export { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
-type FormDraft = ReturnType<typeof useContactFormDraft>;
+export type ContactFormDraftState = ReturnType<typeof useContactFormDraft>;
 
-function subListBaseProps(draft: FormDraft): ContactSubListTabBaseProps {
+export interface ContactFormTabContentProps {
+  tab: string;
+  draft: ContactFormDraftState;
+  lockGender: boolean;
+  defaultCountry: string;
+  defaultCity: string;
+  defaultProvince: string;
+}
+
+function subListBaseProps(draft: ContactFormDraftState): ContactSubListTabBaseProps {
   return {
     contactDraft: draft.contactDraft,
     getLocalId: draft.getLocalId,
@@ -29,6 +38,9 @@ function subListBaseProps(draft: FormDraft): ContactSubListTabBaseProps {
   };
 }
 
+/**
+ * Dispatches active ContactForm tab view rendering (Basic info vs nested collection lists).
+ */
 export function ContactFormTabContent({
   tab,
   draft,
@@ -36,52 +48,31 @@ export function ContactFormTabContent({
   defaultCountry,
   defaultCity,
   defaultProvince,
-}: {
-  tab: string;
-  draft: FormDraft;
-  lockGender: boolean;
-  defaultCountry: string;
-  defaultCity: string;
-  defaultProvince: string;
-}): JSX.Element | null {
-  const listBase = subListBaseProps(draft);
+}: ContactFormTabContentProps): React.JSX.Element | null {
   const normalizedTab = normalizeContactFormTabId(tab);
 
-  // Resolve DFS tab from draft — single source, no prop-drilling needed
-  const dfsTab = findDfsTab(draft.dfsTabs, tab, normalizedTab);
-
-  if (dfsTab && normalizedTab !== "basic") {
+  if (normalizedTab === "basic") {
     return (
-      <ContactCustomFieldsTab
+      <ContactBasicTab
         contactDraft={draft.contactDraft}
         formInstanceId={draft.formInstanceId}
-        customFields={dfsTab.fields}
+        isFieldEnabled={draft.isFieldEnabled}
+        isFieldRequired={draft.isFieldRequired}
         getFieldError={draft.getFieldError}
         updateDraft={draft.updateDraft}
-        tabId={dfsTab.key}
+        cropSrc={draft.cropSrc}
+        setCropSrc={draft.setCropSrc}
+        genders={draft.genders}
+        onUpdateGenders={draft.updateGenders}
+        lockGender={lockGender}
+        handleAvatarChange={draft.handleAvatarChange}
       />
     );
   }
 
+  const listBase = subListBaseProps(draft);
+
   switch (normalizedTab) {
-    case "basic":
-      return (
-        <ContactBasicTab
-          contactDraft={draft.contactDraft}
-          formInstanceId={draft.formInstanceId}
-          customFields={draft.dfsTabs?.find((t) => t.key === "basic")?.fields}
-          isFieldEnabled={draft.isFieldEnabled}
-          isFieldRequired={draft.isFieldRequired}
-          getFieldError={draft.getFieldError}
-          updateDraft={draft.updateDraft}
-          cropSrc={draft.cropSrc}
-          setCropSrc={draft.setCropSrc}
-          genders={draft.genders}
-          onUpdateGenders={draft.updateGenders}
-          lockGender={lockGender}
-          handleAvatarChange={draft.handleAvatarChange}
-        />
-      );
     case "phones":
       return (
         <ContactPhonesTab
@@ -135,3 +126,4 @@ export function ContactFormTabContent({
       return null;
   }
 }
+

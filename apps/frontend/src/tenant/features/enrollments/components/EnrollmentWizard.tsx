@@ -15,12 +15,10 @@ import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
-import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildEnrollmentPayload } from "@/tenant/features/enrollments/components/enrollmentWizardBuildPayload";
 import { EnrollmentWizardSuccess } from "@/tenant/features/enrollments/components/EnrollmentWizardSuccess";
 import { EnrollmentWizardFooter } from "@/tenant/features/enrollments/components/EnrollmentWizardFooter";
-import { validateDfsCustomFields } from "@mms/shared";
 
 interface EnrollmentWizardProps {
   onComplete: (enrollment: Enrollment) => void | Promise<void>;
@@ -45,7 +43,6 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
   const [direction, setDirection]   = useState<number>(1);
 
   const { fields, customFields } = useEnrollmentConfig();
-  const { data: dfsTabs } = useModuleTabs("enrollments");
 
   const steps: Step[] = useMemo(() => [
     { id: "student",     label: t("enrollments.columns.student"), icon: User },
@@ -76,10 +73,7 @@ export function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps
     const legacyOk = customFields.every(
       (customField) => !customField.required || Boolean(customFieldValues[customField.id])
     );
-    if (!legacyOk) return false;
-    // DFS validation — proper Zod schema validation via shared helper
-    const dfsErrors = validateDfsCustomFields(dfsTabs, customFieldValues, customFieldValues);
-    return dfsErrors.length === 0;
+    return legacyOk;
   };
 
   const go = (directionDelta: number) => {

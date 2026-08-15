@@ -1,11 +1,9 @@
 import {
   cleanContactDraft,
   normalizeContactForEdit,
-  applyDfsCustomFieldDefaults,
   type Contact,
   type ContactItemNormalizeDefaults,
   type FieldDefinition,
-  type TabConfig,
 } from "@mms/shared";
 
 export function contactDraftSnapshot(draft: Partial<Contact>): string {
@@ -65,10 +63,8 @@ export function buildInitialContactDraft({
   defaultProvince,
   defaultCountry,
   optionDefaults,
-  fields,
   socialPlatforms,
   relationshipOptions,
-  dfsTabs,
 }: {
   contact?: Contact;
   initialDraft?: Partial<Contact>;
@@ -79,9 +75,8 @@ export function buildInitialContactDraft({
   fields: Record<string, FieldDefinition[]>;
   socialPlatforms: string[];
   relationshipOptions: string[];
-  dfsTabs?: TabConfig[];
 }): Partial<Contact> {
-  const baseDraft = withEmptyCollectionRows(
+  return withEmptyCollectionRows(
     normalizeContactForEdit(
       contact,
       initialDraft,
@@ -93,6 +88,6 @@ export function buildInitialContactDraft({
     socialPlatforms,
     relationshipOptions,
   );
-  return applyDfsCustomFieldDefaults(baseDraft, dfsTabs);
 }
+
 

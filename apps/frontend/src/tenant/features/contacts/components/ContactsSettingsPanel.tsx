@@ -26,8 +26,8 @@ export default function ContactsSettingsPanel({
   canEditSetup,
 }: ContactsSettingsPanelProps): JSX.Element {
   const { t } = useTranslation();
-  const { fieldConfig, formTabsReady, updateConfig, updateConfigAsync } = useContactConfig();
-  const dirtyRef = useRef({ fields: false, prefs: false });
+  const { fieldConfig, updateConfig, updateConfigAsync } = useContactConfig();
+  const dirtyRef = useRef({ prefs: false });
 
   const settingsSubTabs = useMemo(() => {
     const tabsFromConfig = fieldConfig.settingsSubTabs || [];
@@ -56,19 +56,14 @@ export default function ContactsSettingsPanel({
       ? "sync"
       : settingsSubTabs[0]?.key || "preferences",
     isDirty: (currentKey) => {
-      if (currentKey === "fields") return dirtyRef.current.fields;
       if (currentKey === "preferences") return dirtyRef.current.prefs;
       return false;
     },
     onDiscard: (leavingKey) => {
-      if (leavingKey === "fields") dirtyRef.current.fields = false;
       if (leavingKey === "preferences") dirtyRef.current.prefs = false;
     },
   });
 
-  const setFieldsDirty = (isDirty: boolean): void => {
-    dirtyRef.current.fields = isDirty;
-  };
   const setPrefsDirty = (isDirty: boolean): void => {
     dirtyRef.current.prefs = isDirty;
   };
@@ -81,27 +76,12 @@ export default function ContactsSettingsPanel({
         onChange={subTabs.handleSubTabChange}
       />
       <Suspense fallback={<ModulePanelSuspenseFallback />}>
-        {subTabs.showFields &&
-          (!formTabsReady ? (
-            <ModulePanelSuspenseFallback />
-          ) : canEditSetup ? (
-            <ContactsSetupPanel
-              config={fieldConfig}
-              onConfigChange={updateConfig}
-              onConfigChangeAsync={updateConfigAsync}
-              mode="fields"
-              onFieldsDirtyChange={setFieldsDirty}
-            />
-          ) : (
-            <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
-          ))}
         {subTabs.showPrefs &&
           (canEditSetup ? (
             <ContactsSetupPanel
               config={fieldConfig}
               onConfigChange={updateConfig}
               onConfigChangeAsync={updateConfigAsync}
-              mode="preferences"
               onPrefsDirtyChange={setPrefsDirty}
             />
           ) : (
@@ -120,11 +100,7 @@ export default function ContactsSettingsPanel({
           if (!open) subTabs.clearPendingSubTab();
         }}
         title={t("settings.unsavedChanges")}
-        description={
-          subTabs.discardConfirmIsFields
-            ? t("contacts.setup.discardUnsavedFieldsConfirm")
-            : t("contacts.setup.discardUnsavedPreferencesConfirm")
-        }
+        description={t("contacts.setup.discardUnsavedPreferencesConfirm")}
         confirmLabel={t("common.yes")}
         cancelLabel={t("common.cancel")}
         destructive
@@ -133,3 +109,4 @@ export default function ContactsSettingsPanel({
     </div>
   );
 }
+

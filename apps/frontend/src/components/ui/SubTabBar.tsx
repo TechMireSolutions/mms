@@ -14,7 +14,7 @@ export interface SubTab<K extends string = string> {
 
 export type SubTabBarVariant = "pill" | "underline" | "enclosed";
 
-interface SubTabBarProps<K extends string> {
+export interface SubTabBarProps<K extends string> {
   tabs: readonly SubTab<K>[];
   value: K;
   onChange: (key: K) => void;
@@ -41,7 +41,7 @@ export function SubTabBar<K extends string>({
   children,
   panelIdPrefix = "subtab-panel",
   resetScrollOnChange = true,
-}: SubTabBarProps<K>): React.JSX.Element {
+}: SubTabBarProps<K>): React.JSX.Element | null {
   const sectionRefs = useRef<Partial<Record<string, HTMLElement | null>>>({});
 
   useScrollSurfaceOnChange(value, {
@@ -51,14 +51,18 @@ export function SubTabBar<K extends string>({
   });
 
   if (tabs.length <= 1 && !children) {
-    return <></>;
+    return null;
   }
 
   // Underline variant for modern drawers, headers, and clean panels
   if (variant === "underline") {
     return (
       <div className={cn("w-full space-y-3", className)}>
-        <div className="flex w-full items-center gap-1 border-b border-border/40 overflow-x-auto no-scrollbar">
+        <div
+          role="tablist"
+          aria-orientation="horizontal"
+          className="flex w-full items-center gap-1 border-b border-border/40 overflow-x-auto no-scrollbar"
+        >
           {tabs.map((tab) => {
             const active = value === tab.key;
             return (
@@ -142,7 +146,7 @@ export function SubTabBar<K extends string>({
                   )}
                 >
                   <span className="flex items-center gap-1.5">
-                    {tab.icon && <tab.icon className="h-3.5 w-3.5" />}
+                    {tab.icon && <tab.icon className="h-3.5 w-3.5" aria-hidden />}
                     <span>{tab.label}</span>
                   </span>
                   <ChevronDown
@@ -173,13 +177,19 @@ export function SubTabBar<K extends string>({
         </div>
 
         <div className="hidden lg:block space-y-3">
-          <div className="flex w-fit items-center gap-1 rounded-xl bg-muted/60 p-1 border border-border/40 backdrop-blur-xs">
+          <div
+            role="tablist"
+            aria-orientation="horizontal"
+            className="flex w-fit items-center gap-1 rounded-xl bg-muted/60 p-1 border border-border/40 backdrop-blur-xs"
+          >
             {tabs.map((t) => {
               const active = value === t.key;
               return (
                 <button
                   key={t.key}
                   type="button"
+                  role="tab"
+                  aria-selected={active}
                   onClick={() => onChange(t.key)}
                   className={cn(
                     "relative flex min-h-9 min-w-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
@@ -191,6 +201,7 @@ export function SubTabBar<K extends string>({
                   {t.icon && (
                     <t.icon
                       className={cn("h-3.5 w-3.5 transition-colors", active ? "text-primary" : "text-muted-foreground")}
+                      aria-hidden
                     />
                   )}
                   <span>{t.label}</span>
@@ -216,15 +227,20 @@ export function SubTabBar<K extends string>({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="space-y-1 lg:hidden">
+      <div
+        role="tablist"
+        aria-orientation="vertical"
+        className="space-y-1 lg:hidden"
+      >
         {tabs.map((tab) => {
           const active = value === tab.key;
           return (
             <button
               key={tab.key}
               type="button"
+              role="tab"
+              aria-selected={active}
               onClick={() => onChange(tab.key)}
-              aria-pressed={active}
               className={cn(
                 "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-start text-xs font-semibold transition-colors",
                 active
@@ -233,7 +249,7 @@ export function SubTabBar<K extends string>({
               )}
             >
               <span className="flex min-w-0 items-center gap-1.5">
-                {tab.icon && <tab.icon className="h-3.5 w-3.5 shrink-0" />}
+                {tab.icon && <tab.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
                 <span className="truncate">{tab.label}</span>
               </span>
               {tab.badge !== undefined && (
@@ -250,13 +266,19 @@ export function SubTabBar<K extends string>({
           );
         })}
       </div>
-      <div className="hidden w-fit items-center gap-1 overflow-x-auto rounded-xl bg-muted/60 p-1 border border-border/40 backdrop-blur-xs lg:flex">
+      <div
+        role="tablist"
+        aria-orientation="horizontal"
+        className="hidden w-fit items-center gap-1 overflow-x-auto rounded-xl bg-muted/60 p-1 border border-border/40 backdrop-blur-xs lg:flex"
+      >
         {tabs.map((t) => {
           const active = value === t.key;
           return (
             <button
               key={t.key}
               type="button"
+              role="tab"
+              aria-selected={active}
               onClick={() => onChange(t.key)}
               className={cn(
                 "relative flex min-h-9 min-w-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
@@ -268,6 +290,7 @@ export function SubTabBar<K extends string>({
               {t.icon && (
                 <t.icon
                   className={cn("h-3.5 w-3.5 transition-colors", active ? "text-primary" : "text-muted-foreground")}
+                  aria-hidden
                 />
               )}
               <span>{t.label}</span>

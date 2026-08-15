@@ -302,6 +302,13 @@
       "when": 1786611600000,
       "tag": "0042_platform_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1786615200000,
+      "tag": "0043_drop_custom_fields_and_tabs",
+      "breakpoints": true
     }
   ]
 }

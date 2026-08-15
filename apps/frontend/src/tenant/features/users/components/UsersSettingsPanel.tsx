@@ -1,69 +1,36 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Shield } from "lucide-react";
 import {
-  INITIAL_USERS_FIELD_SEED,
-  USERS_TAB_REGISTRY,
-  isUsersSystemFormField,
-  isUsersSeedFormTab,
-  isUsersLockedEnabledTab,
   type UsersSettings,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ToggleRow } from "@/components/ui/ToggleRow";
-import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
-import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
-import type { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
-
-type UsersFieldsEditor = ReturnType<typeof useModuleSettingsEditor<UsersSettings>>["fieldsEditor"];
 
 export interface UsersSettingsPanelProps {
-  mode: "fields" | "preferences";
   settingsDraft: UsersSettings;
-  fieldsEditor: UsersFieldsEditor;
   saved: boolean;
   saving: boolean;
   isDirty: boolean;
   upd: <K extends keyof UsersSettings>(field: K, value: UsersSettings[K]) => void;
-  setSaved: (value: boolean | ((curr: boolean) => boolean)) => void;
   onSave: () => void | Promise<void>;
 }
 
-/** Presentational Users Fields/Preferences panel — editor owned by Setup tier. */
+/** Presentational Users Preferences panel — editor owned by Setup tier. */
 export function UsersSettingsPanel({
-  mode,
   settingsDraft,
-  fieldsEditor,
   saved,
   saving,
   isDirty,
   upd,
-  setSaved,
   onSave,
 }: UsersSettingsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const showPrefs = mode === "preferences";
-  const showFields = mode === "fields";
 
-  const wrappedFieldsEditor = useMemo(
-    () =>
-      wrapModuleSetupFieldsEditor({
-        fieldsEditor,
-        handleDeleteField: fieldsEditor.handleDeleteField,
-        handleDeleteTab: fieldsEditor.handleDeleteTab,
-        getSeedTab: (key) => USERS_TAB_REGISTRY.find((tab) => tab.key === key),
-        initialFieldSeed: INITIAL_USERS_FIELD_SEED,
-        isLockedTab: isUsersLockedEnabledTab,
-      }),
-    [fieldsEditor],
-  );
-
-  const unsavedWarning = showFields
-    ? t("users.setup.unsavedFieldsWarning")
-    : showPrefs
-      ? t("users.setup.unsavedPreferencesWarning")
-      : undefined;
+  const unsavedWarning = isDirty
+    ? t("users.setup.unsavedPreferencesWarning")
+    : undefined;
 
   return (
     <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
@@ -74,32 +41,20 @@ export function UsersSettingsPanel({
         <h3 className="text-sm font-bold text-foreground">{t("users.settingsPrefsTitle")}</h3>
       </div>
 
-      {showPrefs && (
-        <div className="space-y-2 pt-1">
-          <ToggleRow
-            label={t("users.selfRegistration")}
-            description={t("users.selfRegistrationDesc")}
-            value={settingsDraft.allowSelfRegistration || false}
-            onChange={(value) => upd("allowSelfRegistration", value)}
-          />
-          <ToggleRow
-            label={t("users.emailVerification")}
-            description={t("users.emailVerificationDesc")}
-            value={settingsDraft.requireEmailVerification || false}
-            onChange={(value) => upd("requireEmailVerification", value)}
-          />
-        </div>
-      )}
-
-      {showFields && (
-        <ModuleFieldsSetup
-          editor={wrappedFieldsEditor}
-          isCoreField={isUsersSystemFormField}
-          isProtectedTab={isUsersSeedFormTab}
-          isLockedTab={isUsersLockedEnabledTab}
-          onStateChange={() => setSaved(false)}
+      <div className="space-y-2 pt-1">
+        <ToggleRow
+          label={t("users.selfRegistration")}
+          description={t("users.selfRegistrationDesc")}
+          value={settingsDraft.allowSelfRegistration || false}
+          onChange={(value) => upd("allowSelfRegistration", value)}
         />
-      )}
+        <ToggleRow
+          label={t("users.emailVerification")}
+          description={t("users.emailVerificationDesc")}
+          value={settingsDraft.requireEmailVerification || false}
+          onChange={(value) => upd("requireEmailVerification", value)}
+        />
+      </div>
 
       <ModuleSetupSaveFooter
         dirty={isDirty}
@@ -113,4 +68,5 @@ export function UsersSettingsPanel({
     </Card>
   );
 }
+
 

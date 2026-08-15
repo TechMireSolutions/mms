@@ -17,7 +17,6 @@ import {
   useTeacherPreferencesMutation,
 } from "@/tenant/features/teachers/hooks/useTeacherSetupConfig";
 import { useTeacherMutations } from "@/tenant/features/teachers/hooks/useTeachers";
-import { syncTeachersCustomTabs } from "@/tenant/features/teachers/hooks/syncTeachersCustomTabs";
 import { teachersFieldsSetupSnapshot } from "@/tenant/features/teachers/hooks/teachersSetupPanelSnapshots";
 import { useTeachersSetupFieldDeleteGuard } from "@/tenant/features/teachers/hooks/useTeachersSetupFieldDeleteGuard";
 import { useTeachersSetupTabDeleteGuard } from "@/tenant/features/teachers/hooks/useTeachersSetupTabDeleteGuard";
@@ -85,7 +84,6 @@ export function useTeachersSetupSaveActions({
     lockedTabPredicate: isTeacherLockedEnabledTab,
     defaultColumnRegistry: DEFAULT_TEACHER_COLUMN_REGISTRY,
     registrySyncFn: syncTeacherColumnRegistryWithFields,
-    syncCustomTabs: syncTeachersCustomTabs,
     prefsKeys: TEACHER_MODULE_PREFERENCE_KEYS,
     normalizePrefs: normalizeTeacherModulePreferences,
     buildFieldConfigPayload: ({

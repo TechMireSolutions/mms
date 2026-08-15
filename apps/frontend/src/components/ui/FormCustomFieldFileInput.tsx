@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { uploadUserImage } from "@/lib/imageUpload";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
-import type { FieldDefinition, CustomFieldConfig } from "@mms/shared";
+import type { FieldDefinition } from "@mms/shared";
 
 interface FormCustomFieldFileInputProps {
-  field: FieldDefinition | CustomFieldConfig;
+  field: FieldDefinition;
   value: unknown;
   onChange: (fieldValue: unknown) => void;
   uploadInstructions: string;

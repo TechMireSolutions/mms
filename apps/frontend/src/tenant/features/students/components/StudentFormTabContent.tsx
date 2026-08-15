@@ -1,6 +1,5 @@
 import type React from "react";
-import type { Contact, FieldDefinition, Student, TabConfig } from "@mms/shared";
-import { findDfsTab } from "@mms/shared";
+import type { Contact, FieldDefinition, Student } from "@mms/shared";
 import {
   StudentContactSection,
   StudentGuardianSection,
@@ -9,7 +8,6 @@ import {
   type StudentFieldErrorGetter,
   type StudentStatusSelectOption,
 } from "@/tenant/features/students/components/StudentFormSections";
-import { StudentCustomFieldsBlock } from "@/tenant/features/students/components/StudentCustomFieldsBlock";
 import { normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
 
 interface StudentFormTabContentProps {
@@ -27,7 +25,6 @@ interface StudentFormTabContentProps {
   statuses?: string[];
   onUpdateStatuses?: (statuses: string[]) => void | Promise<void>;
   fields: Record<string, FieldDefinition[]>;
-  dfsTabs?: TabConfig[];
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   getFieldError: StudentFieldErrorGetter;
@@ -52,7 +49,6 @@ export function StudentFormTabContent({
   statuses,
   onUpdateStatuses,
   fields,
-  dfsTabs,
   isFieldEnabled,
   isFieldRequired,
   getFieldError,
@@ -62,44 +58,6 @@ export function StudentFormTabContent({
   onDraftChange,
 }: StudentFormTabContentProps): React.JSX.Element {
   const normalizedTab = normalizeStudentFormModalTab(tab);
-  const dfsTab = findDfsTab(dfsTabs, tab, normalizedTab);
-  if (normalizedTab === "basic") {
-    return (
-      <div className="space-y-6 pb-6">
-        <StudentContactSection
-          contactId={studentDraft.contactId}
-          excludeIds={excludeIds}
-          linkedGenderRaw={linkedGenderRaw}
-          linkedGenderLabel={linkedGenderLabel}
-          linkedDob={linkedDob}
-          genderError={getFieldError("gender")}
-          dobError={getFieldError("dob")}
-          fields={fields}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          getFieldError={getFieldError}
-          onContactSelect={onContactSelect}
-          onStudentAvatarChange={onStudentAvatarChange}
-        />
-        <StudentGuardianSection
-          formInstanceId={formInstanceId}
-          studentDraft={studentDraft}
-          linkedContact={linkedContact}
-          isFieldEnabled={isFieldEnabled}
-        />
-        <StudentCustomFieldsBlock
-          studentDraft={studentDraft}
-          formInstanceId={formInstanceId}
-          fields={fields}
-          customFields={dfsTabs?.find((t) => t.key === "basic")?.fields}
-          tabId="basic"
-          getFieldError={getFieldError}
-          updateDraft={onDraftChange}
-        />
-      </div>
-    );
-  }
-
   if (normalizedTab === "registration") {
     return (
       <div className="space-y-6 pb-6">
@@ -124,33 +82,35 @@ export function StudentFormTabContent({
           isFieldRequired={isFieldRequired}
           onDraftChange={onDraftChange}
         />
-        <StudentCustomFieldsBlock
-          studentDraft={studentDraft}
-          formInstanceId={formInstanceId}
-          fields={fields}
-          customFields={dfsTabs?.find((t) => t.key === "registration")?.fields}
-          tabId="registration"
-          getFieldError={getFieldError}
-          updateDraft={onDraftChange}
-        />
       </div>
     );
   }
 
-  // Dynamic custom DFS tabs (or setup custom tabs)
   return (
     <div className="space-y-6 pb-6">
-      <StudentCustomFieldsBlock
-        studentDraft={studentDraft}
-        formInstanceId={formInstanceId}
+      <StudentContactSection
+        contactId={studentDraft.contactId}
+        excludeIds={excludeIds}
+        linkedGenderRaw={linkedGenderRaw}
+        linkedGenderLabel={linkedGenderLabel}
+        linkedDob={linkedDob}
+        genderError={getFieldError("gender")}
+        dobError={getFieldError("dob")}
         fields={fields}
-        customFields={dfsTab?.fields}
-        tabId={tab}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
         getFieldError={getFieldError}
-        updateDraft={onDraftChange}
-        hideWhenEmpty={false}
+        onContactSelect={onContactSelect}
+        onStudentAvatarChange={onStudentAvatarChange}
+      />
+      <StudentGuardianSection
+        formInstanceId={formInstanceId}
+        studentDraft={studentDraft}
+        linkedContact={linkedContact}
+        isFieldEnabled={isFieldEnabled}
       />
     </div>
   );
 }
+
 

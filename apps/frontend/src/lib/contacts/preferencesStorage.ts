@@ -1,25 +1,33 @@
 import {
   normalizeContactPreferences,
+  CONTACTS_MODULE_MANIFEST,
   type ContactPreferences,
   type FieldConfig,
 } from "@mms/shared";
 import { apiJson } from "@/lib/apiClient";
-import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 
-function syncOptionsInConfig(config: FieldConfig, tabId: string, fieldKey: string, options: string[]): FieldConfig {
-  const nextConfig = { ...config };
-  if (nextConfig.fields?.[tabId]) {
-    nextConfig.fields = {
-      ...nextConfig.fields,
-      [tabId]: nextConfig.fields[tabId].map((field) =>
-        field.key === fieldKey ? { ...field, options } : field
+/**
+ * Immutably synchronizes option list changes for a specific field definition in field configuration.
+ */
+export function syncOptionsInConfig(
+  config: FieldConfig,
+  tabId: string,
+  fieldKey: string,
+  options: string[],
+): FieldConfig {
+  if (!config.fields?.[tabId]) return config;
+  return {
+    ...config,
+    fields: {
+      ...config.fields,
+      [tabId]: config.fields[tabId].map((field) =>
+        field.key === fieldKey ? { ...field, options: [...options] } : field,
       ),
-    };
-  }
-  return nextConfig;
+    },
+  };
 }
 
-const PREFERENCES_API = `${CONTACTS_API}/preferences`;
+const PREFERENCES_API = `${CONTACTS_MODULE_MANIFEST.restBasePath}/preferences`;
 const LEGACY_LOCAL_PREFERENCES_KEY = "mms_contact_preferences";
 
 let memoryPreferences: ContactPreferences | null = null;
@@ -33,31 +41,48 @@ function parseLegacyLocalPreferences(): Partial<ContactPreferences> {
   }
 }
 
-/** Sync read — last hydrated server prefs or defaults (+ one-shot legacy local merge). */
-function loadPreferences(): ContactPreferences {
+/**
+ * Synchronous read — returns last hydrated server preferences in memory,
+ * or falls back to system defaults with one-shot legacy local migration.
+ */
+export function loadPreferences(): ContactPreferences {
   if (memoryPreferences) return memoryPreferences;
   const fromLocal = parseLegacyLocalPreferences();
   return normalizeContactPreferences(fromLocal);
 }
 
-function setPreferencesMemory(preferences: ContactPreferences): void {
+export function setPreferencesMemory(preferences: ContactPreferences): void {
   memoryPreferences = preferences;
-  localStorage.removeItem(LEGACY_LOCAL_PREFERENCES_KEY);
+  try {
+    localStorage.removeItem(LEGACY_LOCAL_PREFERENCES_KEY);
+  } catch {
+    // Ignore storage errors in restricted/SSR environments
+  }
 }
 
-async function fetchPreferences(signal?: AbortSignal): Promise<ContactPreferences> {
+/**
+ * Fetches contact preferences from `/api/contacts/preferences` and updates in-memory cache.
+ */
+export async function fetchPreferences(signal?: AbortSignal): Promise<ContactPreferences> {
   const response = await apiJson<{ preferences: ContactPreferences }>(PREFERENCES_API, { signal });
   const normalized = normalizeContactPreferences(response.preferences ?? null);
   setPreferencesMemory(normalized);
   return normalized;
 }
 
-/** Optimistic local write — prefer savePreferencesAsync for server persistence. */
-function savePreferences(preferences: ContactPreferences): void {
+/**
+ * Optimistic local write — does not hit the server. Prefer `savePreferencesAsync`.
+ */
+export function savePreferences(preferences: ContactPreferences): void {
   setPreferencesMemory(preferences);
 }
 
-async function savePreferencesAsync(preferences: ContactPreferences): Promise<ContactPreferences> {
+/**
+ * Persists contact preferences via PUT `/api/contacts/preferences` and updates memory cache.
+ */
+export async function savePreferencesAsync(
+  preferences: ContactPreferences,
+): Promise<ContactPreferences> {
   const normalized = normalizeContactPreferences(preferences);
   const response = await apiJson<{ success: boolean; preferences: ContactPreferences }>(
     PREFERENCES_API,
@@ -72,11 +97,3 @@ async function savePreferencesAsync(preferences: ContactPreferences): Promise<Co
   return saved;
 }
 
-export {
-  syncOptionsInConfig,
-  loadPreferences,
-  savePreferences,
-  savePreferencesAsync,
-  fetchPreferences,
-  setPreferencesMemory,
-};

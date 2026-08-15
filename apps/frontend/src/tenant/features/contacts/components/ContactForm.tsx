@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect, type ComponentType } from "react";
-import { User, Phone, Mail, MapPin, Share2, Heart, SlidersHorizontal } from "lucide-react";
+import { User, Phone, Mail, MapPin, Share2, Heart } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { type Contact, DEFAULT_FORM_TABS, mergeDfsTabs } from "@mms/shared";
+import { type Contact, DEFAULT_FORM_TABS } from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import {
   ContactFormTabContent,
@@ -28,14 +28,14 @@ interface ContactFormProps {
  * Icon map for the six system form tabs. The tab definitions (key, labelKey,
  * order) come from the shared `DEFAULT_FORM_TABS` SSOT in `@mms/shared`
  * (`contactTabRegistry.ts`); only the Lucide icon components are local because
- * `TabDefinition.icon` is an optional string name, not a component reference.
+ * Lucide React icons are a frontend concern.
  */
 const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
   basic: User,
   phones: Phone,
   emails: Mail,
   addresses: MapPin,
-  socials: Share2,
+  social: Share2,
   relationship: Heart,
 };
 
@@ -44,17 +44,16 @@ export default function ContactForm({
   contact,
   onClose,
   onSave,
-  defaultCountry = "",
-  defaultCity = "",
-  defaultProvince = "",
+  defaultCountry = "Pakistan",
+  defaultCity = "Karachi",
+  defaultProvince = "Sindh",
   initialDraft,
   lockGender = false,
   priority = false,
-}: ContactFormProps): JSX.Element {
+}: ContactFormProps) {
   const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
   const [tab, setTab] = useState("basic");
-  const formInstanceId = String(contact?.id ?? "new");
 
   const draft = useContactFormDraft({
     open,
@@ -65,15 +64,7 @@ export default function ContactForm({
     defaultProvince,
     onSave,
     onClose,
-    onValidationTab: (tabId, fieldId) => {
-      setTab(tabId);
-      if (!fieldId) return;
-      const targetId = `cf-${formInstanceId}-${fieldId}`;
-      requestAnimationFrame(() => {
-        const target = document.getElementById(targetId);
-        if (target instanceof HTMLElement) target.focus();
-      });
-    },
+    onValidationTab: (tabId) => setTab(tabId),
   });
 
   useEffect(() => {
@@ -86,12 +77,12 @@ export default function ContactForm({
       phones: draft.collectionCounts.filledPhones,
       emails: draft.collectionCounts.filledEmails,
       addresses: draft.collectionCounts.filledAddresses,
-      socials: draft.collectionCounts.filledSocials,
+      social: draft.collectionCounts.filledSocials,
       relationship: draft.collectionCounts.filledRelationships,
     };
 
     // System tabs from shared SSOT (DEFAULT_FORM_TABS) — always shown; "basic" is mandatory
-    const resolved: Array<{ key: string; icon: ComponentType; label: string; badge: number | undefined }> = DEFAULT_FORM_TABS.map((sys) => {
+    return DEFAULT_FORM_TABS.map((sys) => {
       const count = countMap[sys.key];
       return {
         key: sys.key,
@@ -100,19 +91,7 @@ export default function ContactForm({
         badge: count && count > 0 ? count : undefined,
       };
     });
-
-    // DFS-managed custom tabs — appended via shared helper
-    return mergeDfsTabs(
-      resolved,
-      draft.dfsTabs,
-      (dfsTab) => ({
-        key: dfsTab.key,
-        icon: SlidersHorizontal as ComponentType,
-        label: dfsTab.label,
-        badge: undefined,
-      }),
-    );
-  }, [draft.collectionCounts, draft.dfsTabs, t]);
+  }, [draft.collectionCounts, t]);
 
   return (
     <FormModal

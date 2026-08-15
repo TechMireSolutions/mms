@@ -1,7 +1,17 @@
 import type { Dispatch, SetStateAction } from "react";
-import { type FieldDefinition } from "@mms/shared";
-import { CustomFieldConfig } from "@/components/ui/CustomFieldsBuilder";
+import type { FieldDefinition } from "@mms/shared";
 import { safeArray, syncOrder } from "./moduleFieldsEditorUtils";
+
+export type CustomFieldConfig = {
+  key: string;
+  label?: string;
+  type?: string;
+  required?: boolean;
+  unique?: boolean;
+  enabled?: boolean;
+  options?: string[];
+  [key: string]: unknown;
+};
 
 type StringSetMapSetter = Dispatch<SetStateAction<Record<string, Set<string>>>>;
 

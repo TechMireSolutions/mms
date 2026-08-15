@@ -24,7 +24,6 @@ import {
 } from '@/tenant/features/examinations/hooks/examinationsPageControllerActions';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof EXAMINATIONS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
-  fields: 'examinations.setup.fields',
   preferences: 'examinations.setup.preferences',
 };
 

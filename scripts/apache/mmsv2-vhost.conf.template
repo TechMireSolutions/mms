@@ -5,7 +5,9 @@
 <VirtualHost *:80>
     ServerName @@MMS_APP_DOMAIN@@
     ServerAlias *.@@MMS_APP_DOMAIN@@
+
     RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 </VirtualHost>
 
@@ -13,30 +15,37 @@
     ServerName @@MMS_APP_DOMAIN@@
     ServerAlias *.@@MMS_APP_DOMAIN@@
 
+    Protocols h2 http/1.1
+
     SSLEngine on
     # Example certbot paths — update if your host uses different files:
     # SSLCertificateFile /etc/letsencrypt/live/@@MMS_APP_DOMAIN@@/fullchain.pem
     # SSLCertificateKeyFile /etc/letsencrypt/live/@@MMS_APP_DOMAIN@@/privkey.pem
     Include /etc/letsencrypt/options-ssl-apache.conf
 
-    # Security headers (mms-security.mdc — terminate TLS here, not in Node)
+    # Security headers (mms-auth-security.md — terminate TLS here, not in Node)
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 
+    # Request limits (50MB multipart uploads for avatars/attachments/backups)
+    LimitRequestBody 52428800
+
     ProxyPreserveHost On
     RequestHeader unset X-Forwarded-Host
     RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
 
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
     RewriteRule ^/(.*) ws://127.0.0.1:@@BACKEND_PORT@@/$1 [P,L]
 
-    ProxyPass / http://127.0.0.1:@@BACKEND_PORT@@/
+    ProxyPass / http://127.0.0.1:@@BACKEND_PORT@@/ retry=0 timeout=120
     ProxyPassReverse / http://127.0.0.1:@@BACKEND_PORT@@/
 
     ErrorLog ${APACHE_LOG_DIR}/mmsv2-error.log
     CustomLog ${APACHE_LOG_DIR}/mmsv2-access.log combined
 </VirtualHost>
+

@@ -11,13 +11,16 @@ set -euo pipefail
 
 DEPLOY_ROOT="${MMS_DEPLOY_ROOT:-/var/www/mmsv2}"
 DEPLOY_USER="${SUDO_USER:-$USER}"
+DEPLOY_HOME="$(getent passwd "$DEPLOY_USER" 2>/dev/null | cut -d: -f6 || true)"
+DEPLOY_HOME="${DEPLOY_HOME:-/home/${DEPLOY_USER}}"
+
 # Match package.json engines (>=24.14) and GitHub Actions (Node 24).
 NODE_VERSION="${MMS_NODE_VERSION:-24}"
 PNPM_VERSION="${MMS_PNPM_VERSION:-11.15.1}"
 
 echo "══ MMS Ubuntu VPS bootstrap ══"
 echo "Deploy root: ${DEPLOY_ROOT}"
-echo "Deploy user: ${DEPLOY_USER}"
+echo "Deploy user: ${DEPLOY_USER} (${DEPLOY_HOME})"
 
 if ! command -v apt-get >/dev/null 2>&1; then
   echo "ERROR: This script targets Debian/Ubuntu (apt-get)."
@@ -36,7 +39,7 @@ echo "── PostgreSQL Client ──"
 # The target database is typically run in a Docker container or via an external service.
 
 echo "── Node ${NODE_VERSION} (nvm) ──"
-export NVM_DIR="/home/${DEPLOY_USER}/.nvm"
+export NVM_DIR="${DEPLOY_HOME}/.nvm"
 if [ ! -s "$NVM_DIR/nvm.sh" ]; then
   sudo -u "$DEPLOY_USER" bash -c "curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash"
 fi
@@ -62,14 +65,19 @@ sudo -u "$DEPLOY_USER" bash -lc "
 "
 
 echo "── Apache modules ──"
-sudo a2enmod proxy proxy_http proxy_wstunnel ssl headers rewrite 2>/dev/null || true
-sudo systemctl enable apache2
-sudo systemctl restart apache2
+sudo a2enmod proxy proxy_http proxy_wstunnel ssl headers rewrite http2 2>/dev/null || true
+
+if command -v systemctl >/dev/null 2>&1; then
+  sudo systemctl enable apache2 2>/dev/null || true
+  sudo systemctl restart apache2
+elif command -v service >/dev/null 2>&1; then
+  sudo service apache2 restart
+fi
 
 echo "── Firewall (ufw) ──"
 sudo ufw allow OpenSSH
 sudo ufw allow 'Apache Full'
-echo "y" | sudo ufw enable || true
+sudo ufw --force enable || true
 
 echo "── Deploy directory ──"
 sudo mkdir -p "$DEPLOY_ROOT"

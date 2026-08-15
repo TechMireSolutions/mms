@@ -21,7 +21,6 @@ import { notify } from '@/lib/notify';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof HASANAT_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
   denominations: 'hasanat.setup.denominations',
-  fields: 'hasanat.setup.fields',
   preferences: 'hasanat.setup.preferences',
 };
 

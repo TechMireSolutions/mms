@@ -1,57 +1,23 @@
 import { createContext } from "react";
-import type {
-  FieldConfig,
-  ContactPreferences,
-  FieldDefinition,
-  ColumnRegistryEntry,
-} from "@mms/shared";
-import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
+import type { FieldConfig } from "@mms/shared";
+import type { ContactConfigExtras } from "./useContactConfigTypes";
 
-export interface ContactConfigContextType {
-  fieldConfig: FieldConfig;
-  /** True after first authenticated `/api/custom-tabs` hydrate settles (or when logged out). */
-  formTabsReady: boolean;
-  prefs: ContactPreferences;
-  updateConfig: (nextConfig: FieldConfig) => void;
-  updateConfigAsync: (nextConfig: FieldConfig) => Promise<void>;
-  updatePrefs: (newPrefs: Partial<ContactPreferences>) => void;
-  updatePrefsAsync: (newPrefs: Partial<ContactPreferences>) => Promise<void>;
-
-  enabledTabIds: Set<string>;
-  requiredTabIds: Set<string>;
-  fields: Record<string, FieldDefinition[]>;
-  isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
-  isTabFieldRequired: (tabId: string, fieldId: string) => boolean;
-
-  genders: string[];
-  socialPlatforms: string[];
-  relationships: string[];
-  phoneLabels: string[];
-  emailLabels: string[];
-  addressLabels: string[];
-  countryCodes: Array<{ country: string; code: string }>;
-
-  countryCodesMap: Record<string, string>;
-  defaultPhoneCountryCode: string;
-
-  columnRegistry: ColumnRegistryEntry[];
-  availableColumns: ContactsColumnConfig[];
-  visibleColumns: ContactsColumnConfig[];
-
-  updateGenders: (genderOptions: string[]) => void | Promise<void>;
-  updateSocialPlatforms: (socialPlatformOptions: string[]) => void | Promise<void>;
-  updateRelationships: (relationshipOptions: string[]) => void | Promise<void>;
-  updatePhoneLabels: (phoneLabelOptions: string[]) => void | Promise<void>;
-  updateEmailLabels: (emailLabelOptions: string[]) => void | Promise<void>;
-  updateAddressLabels: (addressLabelOptions: string[]) => void | Promise<void>;
-  updateCountryCodes: (countryCodeOptions: Array<{ country: string; code: string }>) => void | Promise<void>;
-  updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
-
-  updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
-  isColumnVisible: (key: string) => boolean;
-  getColumnWidth: (key: string) => number | undefined;
-  setColumnWidth: (key: string, width: number) => void;
-  systemSortOptions: Array<{ field: string; label: string }>;
+/** Column descriptor for Contacts tables and grid views. */
+export interface ContactsColumnConfig {
+  id: string;
+  label: string;
+  sortField?: string;
+  width?: number;
 }
 
+/** Complete Contact Configuration Context shape consumed by tenant views and forms. */
+export interface ContactConfigContextType
+  extends Omit<ContactConfigExtras, "lookupsReady" | "reloadCollections"> {
+  fieldConfig: FieldConfig;
+  defaultPhoneCountryCode: string;
+}
+
+/** React Context instance for Contacts module configuration. */
 export const ContactConfigContext = createContext<ContactConfigContextType | null>(null);
+
+

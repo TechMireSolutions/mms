@@ -158,10 +158,6 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     } = rehydrateInputRef.current;
     if (!currentSettings) return;
 
-    const coreTabKeys = new Set(currentTabRegistry.map((tab) => tab.key.toLowerCase()));
-    const customTabs = (currentSettings.formTabs || []).filter(
-      (tab: TabDefinition) => !coreTabKeys.has(tab.key.toLowerCase()),
-    );
     const currentActiveEnabledTabs = withLockedEnabledTabs(
       currentSettings.enabledTabs && currentSettings.enabledTabs.length > 0
         ? currentSettings.enabledTabs
@@ -170,7 +166,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     const enabledSet = new Set(currentActiveEnabledTabs);
 
-    const updatedTabs = [...currentTabRegistry, ...customTabs].map((tab) => ({
+    const updatedTabs = currentTabRegistry.map((tab) => ({
       ...tab,
       enabled: isLockedEnabledTab(tab.key) ? true : enabledSet.has(tab.key.toLowerCase()),
     }));
@@ -240,17 +236,13 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     settingsDraftDirtyRef.current = false;
     setSettingsDraft(settings);
 
-    const coreTabKeys = new Set(tabRegistry.map((tab) => tab.key.toLowerCase()));
-    const customTabs = (settings.formTabs || []).filter(
-      (tab: TabDefinition) => !coreTabKeys.has(tab.key.toLowerCase()),
-    );
     const currentActiveEnabledTabs = withLockedEnabledTabs(
       settings.enabledTabs && settings.enabledTabs.length > 0
         ? settings.enabledTabs
         : resolvedDefaultEnabledTabs,
     );
     const enabledSet = new Set(currentActiveEnabledTabs);
-    const updatedTabs = [...tabRegistry, ...customTabs].map((tab) => ({
+    const updatedTabs = tabRegistry.map((tab) => ({
       ...tab,
       enabled: isLockedEnabledTab(tab.key) ? true : enabledSet.has(tab.key.toLowerCase()),
     }));

@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { hasWhatsApp, type Teacher } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useTeacherStatusConfig } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
@@ -10,7 +9,6 @@ import { listTeacherDetailAttributeFields } from "@/tenant/features/teachers/com
 /** Teacher detail drawer model — mirrors useStudentDetailModel (Students parity). */
 export function useTeacherDetailModel(teacher: Teacher) {
   const { settings } = useTeacherConfig();
-  const { data: dfsTabs } = useModuleTabs("teachers");
   const statusConfig = useTeacherStatusConfig();
   const { data: linkedContact } = useContactById(
     teacher.contactId != null ? String(teacher.contactId) : undefined,
@@ -18,8 +16,8 @@ export function useTeacherDetailModel(teacher: Teacher) {
   );
 
   const detailFields = useMemo(
-    () => listTeacherDetailAttributeFields(settings, dfsTabs),
-    [settings, dfsTabs],
+    () => listTeacherDetailAttributeFields(settings),
+    [settings],
   );
 
   const { phone: primaryPhone, email: primaryEmail } = resolveTeacherPrimaryChannels(

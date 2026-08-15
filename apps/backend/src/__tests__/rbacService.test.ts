@@ -126,8 +126,7 @@ describe("rbacService", () => {
     expect(canWriteCollection(admin, "saved_reports")).toBe(false);
     expect(isAllowedCollectionName("sessionTypes")).toBe(false);
     expect(isAllowedCollectionName("saved_reports")).toBe(false);
-    // custom_tabs stays allowlisted: typed /api/custom-tabs route uses it as its RBAC collection id.
-    expect(isAllowedCollectionName("custom_tabs")).toBe(true);
+    expect(isAllowedCollectionName("custom_tabs")).toBe(false);
     // Pruned stale object keys (typed module prefs / column-prefs are authority; nothing reads the doc-store object).
     expect(isAllowedObjectKey("attendance_settings")).toBe(false);
     expect(isAllowedObjectKey("accounting_settings")).toBe(false);

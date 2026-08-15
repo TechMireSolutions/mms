@@ -5,10 +5,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
-import { useModuleTabs } from '@/hooks/useDynamicFormConfig';
 import { notify } from '@/lib/notify';
 import { Session, SESSION_TYPES } from '@/lib/data/sessionsData';
-import { SessionSchema, toTitleCase, validateDfsCustomFields, findDfsTab, AppTranslationKey } from '@mms/shared';
+import { SessionSchema, toTitleCase, AppTranslationKey } from '@mms/shared';
 import {
   SessionDetailsSection,
   SessionFinancialSection,
@@ -23,7 +22,6 @@ import {
   type SessionFormDraft,
 } from '@/tenant/features/sessions/components/sessionFormShared';
 import { SessionFormFooter } from '@/tenant/features/sessions/components/SessionFormFooter';
-import { SessionCustomFieldsBlock } from '@/tenant/features/sessions/components/SessionCustomFieldsBlock';
 
 interface SessionFormProps {
   open?: boolean;
@@ -40,12 +38,9 @@ export function SessionForm({
 }: SessionFormProps): React.JSX.Element {
   const { t } = useTranslation();
   const { language } = useGlobalSettings();
-  const { settings, types, statuses, isFieldEnabled, isFieldRequired } = useSessionConfig();
-  const { data: dfsTabs } = useModuleTabs("sessions");
+  const { settings, types, statuses } = useSessionConfig();
   const { activeCurrency } = useFinanceCurrency();
   const defaultCurrency = activeCurrency.code;
-  const formInstanceId = String(session?.id ?? "new");
-  const fieldsMap = (settings.fields || {}) as Record<string, import("@mms/shared").FieldDefinition[]>;
 
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
   const statusValues = statuses.length > 0 ? statuses : [...SESSION_STATUSES];
@@ -56,18 +51,18 @@ export function SessionForm({
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sessionDraft, setSessionDraft] = useState<SessionFormDraft>(() =>
-    buildSessionDraftFromRecord(session, defaultType, defaultCurrency, dfsTabs),
+    buildSessionDraftFromRecord(session, defaultType, defaultCurrency),
   );
   const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
-    sessionFormDraftSnapshot(buildSessionDraftFromRecord(session, defaultType, defaultCurrency, dfsTabs)),
+    sessionFormDraftSnapshot(buildSessionDraftFromRecord(session, defaultType, defaultCurrency)),
   );
 
   useEffect(() => {
-    const nextDraft = buildSessionDraftFromRecord(session, defaultType, defaultCurrency, dfsTabs);
+    const nextDraft = buildSessionDraftFromRecord(session, defaultType, defaultCurrency);
     setSessionDraft(nextDraft);
     setBaselineSnapshot(sessionFormDraftSnapshot(nextDraft));
     setErrors({});
-  }, [session, defaultCurrency, defaultType, dfsTabs]);
+  }, [session, defaultCurrency, defaultType]);
 
   const updateDraft = (patch: Partial<SessionFormDraft>) => {
     setSessionDraft((prev) => ({ ...prev, ...patch }));
@@ -95,79 +90,65 @@ export function SessionForm({
       return;
     }
 
-    // DFS Dynamic Zod schema validation for active custom fields
-    const customData = (sessionDraft.customData as Record<string, unknown> | undefined) ?? {};
-    const dfsErrors = validateDfsCustomFields(dfsTabs, customData, sessionDraft as Record<string, unknown>);
-    if (dfsErrors.length > 0) {
-      const errorMap: Record<string, string> = {};
-      for (const err of dfsErrors) {
-        if (!errorMap[err.fieldId]) errorMap[err.fieldId] = err.message;
-      }
-      setErrors({ ...newErrors, ...errorMap });
-      notify.error(t('common.formPleaseFixErrors'));
-      return;
-    }
-
     setSaving(true);
     try {
-      const name = toTitleCase(sessionDraft.name?.trim() || '');
-      const candidate = {
-        ...sessionDraft,
-        id: session?.id ?? `sess-${crypto.randomUUID()}`,
-        name,
-        baseFee: Number(sessionDraft.baseFee) || 0,
-        _blueprintId: '1.0',
+      const payload: Session = {
+        id: session?.id || `ses${crypto.randomUUID()}`,
+        name: toTitleCase(sessionDraft.name || ''),
+        type: sessionDraft.type || defaultType,
+        status: (sessionDraft.status as Session['status']) || 'active',
+        startDate: sessionDraft.startDate || '',
+        endDate: sessionDraft.endDate || '',
+        baseFee: Number(sessionDraft.baseFee || 0),
+        currency: sessionDraft.currency || defaultCurrency,
+        description: sessionDraft.description || '',
+        classes: sessionDraft.classes || [],
+        timetable: sessionDraft.timetable || [],
+        discounts: sessionDraft.discounts || [],
+        budget: sessionDraft.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
+        events: sessionDraft.events || [],
+        tabarruk: sessionDraft.tabarruk || [],
+        customData: sessionDraft.customData ?? {},
       };
-      const parsed = SessionSchema.safeParse(candidate);
+
+      const parsed = SessionSchema.safeParse(payload);
       if (!parsed.success) {
-        setErrors({ schema: t('common.formPleaseFixErrors') });
         notify.error(t('common.formPleaseFixErrors'));
         return;
       }
 
-      await onSave(parsed.data as Session);
+      await onSave(payload);
+      notify.success(session ? t('sessions.toast.updated') : t('sessions.toast.created'));
       onClose();
-    } catch (err: unknown) {
-      notify.error(t('sessions.toast.saveFailed'), {
-        description: err instanceof Error ? err.message : String(err),
-      });
+    } catch {
+      notify.error(t('sessions.toast.saveFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   const sessionTypeOptions = useMemo(
-    () =>
-      typeOptions.map((sessionType) => {
-        const translationKey = SESSION_TYPE_LABEL_KEYS[sessionType];
+    (): SessionSelectOption[] =>
+      typeOptions.map((typeOption) => {
+        const translationKey = SESSION_TYPE_LABEL_KEYS[typeOption];
         return {
-          value: sessionType,
-          label: translationKey ? t(translationKey) : sessionType,
+          value: typeOption,
+          label: translationKey ? t(translationKey) : typeOption,
         };
       }),
     [typeOptions, t],
   );
 
-  const statusOptions = useMemo<SessionSelectOption[]>(
-    () =>
+  const statusOptions = useMemo(
+    (): SessionSelectOption[] =>
       statusValues.map((statusOption) => {
-        const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
+        const translationKey = `sessions.statuses.${statusOption}` as AppTranslationKey;
         const translated = t(translationKey);
         const label = translated === translationKey ? toTitleCase(statusOption) : translated;
         return { value: statusOption, label };
       }),
     [statusValues, t],
   );
-
-  const getFieldError = (fieldId: string): string | undefined => errors[fieldId];
-
-  // DFS custom-field tabs to render after the system sections (flat form — no tab bar).
-  const dfsCustomTabs = useMemo(
-    () => (dfsTabs ?? []).filter((tab) => tab.enabled && tab.key !== "basic" && tab.key !== "financial"),
-    [dfsTabs],
-  );
-  const basicDfsFields = useMemo(() => findDfsTab(dfsTabs, "basic")?.fields, [dfsTabs]);
-  const financialDfsFields = useMemo(() => findDfsTab(dfsTabs, "financial")?.fields, [dfsTabs]);
 
   return (
     <FormModal
@@ -212,46 +193,6 @@ export function SessionForm({
           defaultCurrency={defaultCurrency}
           onDraftChange={updateDraft}
         />
-        {/* DFS custom fields on the "basic" tab */}
-        {basicDfsFields && basicDfsFields.length > 0 && (
-          <SessionCustomFieldsBlock
-            sessionDraft={sessionDraft}
-            formInstanceId={formInstanceId}
-            fields={fieldsMap}
-            customFields={basicDfsFields}
-            tabId="basic"
-            getFieldError={getFieldError}
-            updateDraft={updateDraft}
-            hideWhenEmpty
-          />
-        )}
-        {/* DFS custom fields on the "financial" tab */}
-        {financialDfsFields && financialDfsFields.length > 0 && (
-          <SessionCustomFieldsBlock
-            sessionDraft={sessionDraft}
-            formInstanceId={formInstanceId}
-            fields={fieldsMap}
-            customFields={financialDfsFields}
-            tabId="financial"
-            getFieldError={getFieldError}
-            updateDraft={updateDraft}
-            hideWhenEmpty
-          />
-        )}
-        {/* DFS custom-field-only tabs (non-system tabs) */}
-        {dfsCustomTabs.map((dfsTab) => (
-          <SessionCustomFieldsBlock
-            key={dfsTab.key}
-            sessionDraft={sessionDraft}
-            formInstanceId={formInstanceId}
-            fields={fieldsMap}
-            customFields={dfsTab.fields}
-            tabId={dfsTab.key}
-            getFieldError={getFieldError}
-            updateDraft={updateDraft}
-            hideWhenEmpty={false}
-          />
-        ))}
       </div>
     </FormModal>
   );

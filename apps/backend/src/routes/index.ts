@@ -25,12 +25,10 @@ import sessionsRoutes from "./tenant/sessions.js";
 import backgroundJobRoutes from "./common/backgroundJobs.js";
 import uploadRoutes from "./common/uploads.js";
 import workspaceRoutes from "./tenant/workspace.js";
-import customTabRoutes from "./tenant/customTabs.js";
 import aiRoutes from "./common/ai.js";
 import websocketRoutes from "./common/websocket.js";
 import messagingRoutes from "./tenant/messaging.js";
 import savedReportsRoutes from "./tenant/savedReports.js";
-import { dynamicFormPlugin } from "../plugins/dynamicFormPlugin.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(healthRoutes);
@@ -44,7 +42,6 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });
   await app.register(uploadRoutes, { prefix: '/api/uploads' });
   await app.register(dbRoutes, { prefix: '/api/db' });
-  await app.register(customTabRoutes, { prefix: '/api/custom-tabs' });
   await app.register(contactRoutes, { prefix: '/api/contacts' });
   await app.register(emailRoutes, { prefix: '/api/email' });
   await app.register(studentsRoutes, { prefix: '/api/students' });
@@ -62,7 +59,6 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(messagingRoutes, { prefix: '/api/messaging' });
   await app.register(savedReportsRoutes, { prefix: '/api/saved-reports' });
   await app.register(backgroundJobRoutes, { prefix: '/api/background-jobs' });
-  await app.register(dynamicFormPlugin, { prefix: '/api/v2' });
   await app.register(aiRoutes, { prefix: '/api/ai' });
   await app.register(websocketRoutes, { prefix: '/api' });
 }

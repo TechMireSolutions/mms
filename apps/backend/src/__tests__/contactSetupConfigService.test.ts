@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_FORM_TABS } from '@mms/shared';
 
 const mockGetConfig = vi.fn();
 const mockUpsertConfig = vi.fn();
-const mockLoadCustomTabs = vi.fn();
 const mockGetPrefs = vi.fn();
 const mockUpsertPrefs = vi.fn();
 const mockLoadLookupKind = vi.fn();
@@ -17,10 +15,6 @@ vi.mock('../db/repositories/contactFieldConfigRepository.js', () => ({
 vi.mock('../db/repositories/contactModulePreferencesRepository.js', () => ({
   getContactModulePreferencesByWorkspace: (...args: unknown[]) => mockGetPrefs(...args),
   upsertContactModulePreferences: (...args: unknown[]) => mockUpsertPrefs(...args),
-}));
-
-vi.mock('../services/customTabsService.js', () => ({
-  loadCustomTabs: (...args: unknown[]) => mockLoadCustomTabs(...args),
 }));
 
 vi.mock('../lib/contactLookupsService.js', () => ({
@@ -45,12 +39,10 @@ describe('contact setup config services', () => {
   beforeEach(() => {
     mockGetConfig.mockReset();
     mockUpsertConfig.mockReset();
-    mockLoadCustomTabs.mockReset();
     mockGetPrefs.mockReset();
     mockUpsertPrefs.mockReset();
     mockLoadLookupKind.mockReset();
     mockReplaceLookupKind.mockReset();
-    mockLoadCustomTabs.mockResolvedValue([]);
     mockLoadLookupKind.mockResolvedValue([]);
     mockReplaceLookupKind.mockResolvedValue([]);
   });
@@ -79,40 +71,6 @@ describe('contact setup config services', () => {
       expect.not.objectContaining({ formTabs: expect.anything() }),
     );
     expect(saved.enabledTabs).toEqual(['basic']);
-  });
-
-  it('does not re-append custom tabs deleted from custom_tabs but still on document formTabs', async () => {
-    mockGetConfig.mockResolvedValue({
-      version: 1,
-      enabledTabs: ['basic', 'custom_notes'],
-      requiredTabs: [],
-      fields: {
-        basic: [{ key: 'firstName', label: 'First Name', type: 'text', enabled: true, order: 0 }],
-      },
-      formTabs: [
-        { key: 'basic', label: 'Identity', enabled: true, order: 0, isSystem: true },
-        { key: 'custom_notes', label: 'Notes', enabled: true, order: 10, isSystem: false },
-      ],
-    });
-    mockLoadCustomTabs.mockResolvedValue(
-      DEFAULT_FORM_TABS.map((tab) => ({
-        key: tab.key,
-        label: tab.label,
-        enabled: true,
-        sortOrder: tab.order,
-        isSystem: true,
-        icon: null,
-        permissions: null,
-        description: null,
-        color: null,
-      })),
-    );
-
-    const loaded = await loadContactFieldConfig();
-    expect(loaded?.formTabs?.map((tab) => tab.key)).not.toContain('custom_notes');
-    expect(loaded?.formTabs?.map((tab) => tab.key)).toEqual(
-      DEFAULT_FORM_TABS.map((tab) => tab.key),
-    );
   });
 
   it('normalizes preferences on save', async () => {

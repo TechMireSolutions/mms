@@ -1,35 +1,20 @@
 import { type SessionsSettings } from "@mms/shared";
-import React, { useEffect, useMemo, useRef } from "react";
+import React from "react";
 import { Calendar } from "lucide-react";
 import {
   SESSIONS_TAB_REGISTRY,
-  INITIAL_SESSIONS_FIELD_SEED,
   SESSIONS_MODULE_MANIFEST,
-  isSessionSystemFormField,
-  isSessionSeedFormTab,
-  isSessionLockedEnabledTab,
-  type AppTranslationKey,
 } from "@mms/shared";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SESSION_TYPES } from "@/lib/data/sessionsData";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
-import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { SessionsSettingsPreferences } from "@/tenant/features/sessions/components/SessionsSettingsPreferences";
 import { useSessionsSetupSaveActions } from "@/tenant/features/sessions/hooks/useSessionsSetupSaveActions";
-
-const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
-  fields: "sessions.setup.fields",
-  preferences: "sessions.setup.preferences",
-};
 
 export function SessionsSettings(): React.JSX.Element {
   const { t } = useTranslation();
@@ -44,89 +29,31 @@ export function SessionsSettings(): React.JSX.Element {
     setSaved,
     upd,
     saveSettingsAsync,
-    discardDrafts,
   } = useModuleSettingsEditor<SessionsSettings>({
     config,
     tabRegistry: SESSIONS_TAB_REGISTRY,
   });
   const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
 
-  const wrappedFieldsEditor = useMemo(
-    () =>
-      wrapModuleSetupFieldsEditor({
-        fieldsEditor,
-        handleDeleteField: fieldsEditor.handleDeleteField,
-        handleDeleteTab: fieldsEditor.handleDeleteTab,
-        getSeedTab: (key) => SESSIONS_TAB_REGISTRY.find((tab) => tab.key === key),
-        initialFieldSeed: INITIAL_SESSIONS_FIELD_SEED,
-        isLockedTab: isSessionLockedEnabledTab,
-      }),
-    [fieldsEditor],
-  );
-
-  const settingsSubTabs = useMemo(
-    () =>
-      SESSIONS_MODULE_MANIFEST.setupSubTabs.map((key, index) => ({
-        key,
-        label: t(SETUP_TAB_LABEL_KEYS[key]),
-        order: index,
-      })),
-    [t],
-  );
-
-  const dirtyRef = useRef({ fields: false, prefs: false });
-
-  const subTabs = useModuleSetupSubTabs({
-    initialKey: settingsSubTabs[0]?.key || "fields",
-    isDirty: (currentKey) => {
-      if (currentKey === "fields") return dirtyRef.current.fields;
-      if (currentKey === "preferences") return dirtyRef.current.prefs;
-      return false;
-    },
-    onDiscard: () => {
-      discardDrafts();
-      dirtyRef.current = { fields: false, prefs: false };
-      setSaved(true);
-    },
-  });
-
-  const showFields = subTabs.showFields;
-  const showPrefs = subTabs.showPrefs;
-
   const {
     saving,
     isDirty,
-    isFieldsDirty,
-    isPrefsDirty,
     handleSave,
   } = useSessionsSetupSaveActions({
     settings,
     settingsDraft,
     fieldsEditor,
-    mode: showPrefs ? "preferences" : "fields",
+    mode: "preferences",
     setSaved,
     saveSettingsAsync,
   });
 
-  useEffect(() => {
-    dirtyRef.current.fields = isFieldsDirty;
-    dirtyRef.current.prefs = isPrefsDirty;
-  }, [isFieldsDirty, isPrefsDirty]);
-
-  const unsavedWarning = showFields
-    ? t("sessions.setup.unsavedFieldsWarning")
-    : showPrefs
-      ? t("sessions.setup.unsavedPreferencesWarning")
-      : undefined;
+  const unsavedWarning = isDirty
+    ? t("sessions.setup.unsavedPreferencesWarning")
+    : undefined;
 
   return (
     <div className="space-y-4">
-      <SubTabBar
-        tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
-        value={subTabs.sub}
-        onChange={subTabs.handleSubTabChange}
-      />
-
       {!canEditSetup ? (
         <SetupReadOnlyMessage title={t("sessions.setupReadOnly")} />
       ) : (
@@ -138,23 +65,11 @@ export function SessionsSettings(): React.JSX.Element {
             <h3 className="text-sm font-bold text-foreground">{t("sessions.settings.title")}</h3>
           </div>
 
-          {showPrefs && (
-            <SessionsSettingsPreferences
-              settingsDraft={settingsDraft}
-              typeOptions={typeOptions}
-              upd={upd}
-            />
-          )}
-
-          {showFields && (
-            <ModuleFieldsSetup
-              editor={wrappedFieldsEditor}
-              isCoreField={isSessionSystemFormField}
-              isProtectedTab={isSessionSeedFormTab}
-              isLockedTab={isSessionLockedEnabledTab}
-              onStateChange={() => setSaved(false)}
-            />
-          )}
+          <SessionsSettingsPreferences
+            settingsDraft={settingsDraft}
+            typeOptions={typeOptions}
+            upd={upd}
+          />
 
           <ModuleSetupSaveFooter
             dirty={isDirty}
@@ -167,23 +82,7 @@ export function SessionsSettings(): React.JSX.Element {
           />
         </section>
       )}
-
-      <ConfirmAlertDialog
-        open={subTabs.discardConfirmOpen}
-        onOpenChange={(open) => {
-          if (!open) subTabs.clearPendingSubTab();
-        }}
-        title={t("settings.unsavedChanges")}
-        description={
-          subTabs.discardConfirmIsFields
-            ? t("sessions.setup.discardUnsavedFieldsConfirm")
-            : t("sessions.setup.discardUnsavedPreferencesConfirm")
-        }
-        confirmLabel={t("common.yes")}
-        cancelLabel={t("common.cancel")}
-        destructive
-        onConfirm={subTabs.handleConfirmDiscard}
-      />
     </div>
   );
 }
+

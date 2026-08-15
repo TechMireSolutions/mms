@@ -40,11 +40,9 @@ Every standard module page (e.g., `ContactsPage.tsx`, `StudentsPage.tsx`) must i
 
 ---
 
-## 4. Setup, Fields Registry & Preferences
-- **Custom Fields Builder**: Custom fields can be created dynamically, storing definitions in tenant-scoped registries (Contacts: typed `contact_field_configs` + `/api/contacts/field-config`; other modules may still use document-store `*_field_config` until migrated).
-- **Dependency Guard**: Warn and block field deletions using `get*FieldRemovalIssues()` if the field contains active data or is configured in table column views.
-- **Explicit Save (Fields / Preferences)**: Draft in local editor state; persist on explicit Save when dirty. Do **not** auto-persist on every Fields reorder/toggle for Contacts-style `ModuleFieldsSetup` (Save disabled until dirty). Locked tab enablement must match persist SSOT; sync `columnRegistry` with field/tab toggles on Fields save — details in `mms-fields.mdc`.
-- **Tab enablement**: Form/drawer/export respect Setup toggles — SSOT **`mms-fields.mdc`**.
+## 4. Setup & Module Preferences
+- **Preferences Draft & Save**: Draft preferences in local editor state; persist on explicit Save when dirty. Do not leave Save always enabled on first mount.
+- **Access Control**: Restricted via `useModulePermissions(manifest)` → `canEditSetup` / `canViewSetup`. Render a read-only message when view-only.
 
 ---
 
@@ -77,9 +75,9 @@ Align new or refactored modules with **Contacts, Students, and Teachers** as the
 | **Bulk PUT** | Upsert only — HTTP norms → **`mms-api-interface.mdc` §5** (never wipe-missing-rows on API write paths). |
 | **Soft-delete** | `DELETE` + `POST :id/restore` (+ bulk when applicable); Work page-level `viewingDeleted` + list `includeDeleted` trash UI (map `ModuleTrashToggle` / shortcuts `showDeleted` at the control boundary only); detail-drawer archive chrome via `WarningCallout` + Restore (not ad-hoc markup); hide messaging actions when deleted; manifest `softDelete` metadata. Schema strip → `mms-data-layer.mdc`. |
 | **Mutations** | `mutateAsync` + await form `onSave` / setup save; close modals only after success. |
-| **Setup** | Manifest `setupSubTabs`; `canEditSetup` gates edits (`saveSettingsAsync`); SubTabBar always visible; read-only message when view-only; Fields/Preferences Save dirty-gated. |
+| **Setup** | Manifest `setupSubTabs` (`preferences` default); `canEditSetup` gates edits (`saveSettingsAsync`); read-only message when view-only; Preferences Save dirty-gated. |
 | **Work UX** | `ErrorState` + retry **and** hint description (`loadFailedHint` or module/platform equivalent — tenant Work **and** apex lists); directory empties via `EmptyState` (`title` required; dashed when bordered; `compact` when dense); Cmd/Ctrl+N opens create when `canWrite` and not in trash; Filters menu SSOT (no duplicate preset chip bar); selection UI via `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging) on list/parent (not toolbar-inline trash); column gates via `isColumnVisible` through content (not typed boolean maps); single resolved directory `viewMode` (`table` \| `cards`; cards `< md`, table `md+`); same server pagination for both views; column visibility **and** width via `useModuleColumnLayout` (local + `/column-preferences`, merge preserves device widths). |
 | **Manifest** | `setupSubTabs`, `softDelete`, `work.bulkActions`, permissions — import constants; do not hardcode tier/sub-tab ids. Person-directory Work: `directoryViews: ['table','cards']` (never `list`). Other modules may use domain sub-modes (finance/attendance/…) — do not coerce those to table\|cards. |
 | **i18n / RBAC** | All copy via `t()`; `useModulePermissions(manifest)` — omit forbidden CTAs. |
 
-**Do not regress**: reintroducing bulk wipe on PUT, fire-and-forget `mutate()` that closes forms before success, soft-delete API without Work trash (unless manifest documents the intentional variant), a Work preset pill bar that duplicates the Filters menu, person-directory `directoryViews: ['list',…]` drift, unpaged `loadAllFn` dumps, or drawers that drop enabled Setup fields.
+**Do not regress**: reintroducing bulk wipe on PUT, fire-and-forget `mutate()` that closes forms before success, soft-delete API without Work trash (unless manifest documents the intentional variant), a Work preset pill bar that duplicates the Filters menu, person-directory `directoryViews: ['list',…]` drift, unpaged `loadAllFn` dumps.

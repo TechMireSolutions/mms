@@ -47,8 +47,8 @@ export function HasanatSetupTier({
             {activeTab === "denominations" && (
               <DenominationsManager denoms={denoms} onUpdate={onUpdateDenoms} canWrite={canWrite} />
             )}
-            {(activeTab === "fields" || activeTab === "preferences") && (
-              <HasanatSettings mode={activeTab} />
+            {activeTab === "preferences" && (
+              <HasanatSettings />
             )}
           </>
         )}

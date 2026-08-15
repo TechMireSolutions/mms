@@ -1,3 +1,4 @@
+import type React from "react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { getDisplayName, type Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -12,7 +13,7 @@ import {
   ContactDetailDrawerTabBar,
 } from "./detail/ContactDetailDrawerChrome";
 
-interface ContactDetailProps {
+export interface ContactDetailProps {
   contact: Contact;
   onClose: () => void;
   onEdit: (contact: Contact) => void;
@@ -26,6 +27,10 @@ interface ContactDetailProps {
   onRestore?: (contactId: string | number) => void | Promise<void>;
 }
 
+/**
+ * Contacts Detail Drawer: orchestrates tab state, timeline notes, file uploads,
+ * communications actions, and soft-delete/restore operations within {@link DetailDrawerShell}.
+ */
 export default function ContactDetail({
   contact: initialContact,
   onClose,
@@ -38,7 +43,7 @@ export default function ContactDetail({
   canWrite = false,
   canDelete = false,
   onRestore,
-}: ContactDetailProps): JSX.Element {
+}: ContactDetailProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const {
@@ -59,7 +64,6 @@ export default function ContactDetail({
     primaryEmail,
     handleAddNote,
     handleNavigateToContact,
-    dfsTabs,
   } = useContactDetailViewModel({
     initialContact,
     allContacts,
@@ -141,7 +145,6 @@ export default function ContactDetail({
         onFiles={handleFiles}
         onFileChange={handleFileChange}
         onRequestDelete={setPendingAttachmentDelete}
-        dfsTabs={dfsTabs}
       />
       <ConfirmAlertDialog
         open={pendingAttachmentDelete !== null}
@@ -161,3 +164,6 @@ export default function ContactDetail({
     </DetailDrawerShell>
   );
 }
+
+export { ContactDetail };
+

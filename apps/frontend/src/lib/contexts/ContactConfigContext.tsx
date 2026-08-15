@@ -1,7 +1,7 @@
 /**
  * ContactConfigContext
  * Broadcasts contact field configuration and preferences via TanStack Query + REST
- * (`/api/contacts/field-config`, preferences, lookups, column-prefs, custom-tabs).
+ * (`/api/contacts/field-config`, preferences, lookups, column-prefs).
  * Mount once under TenantScopedProviders — never nest on child pages.
  *
  * The provider delegates the shared settings slice to `createStandardModuleConfigHook`
@@ -17,10 +17,13 @@ import React, { ReactNode, useContext } from "react";
 import {
   ContactConfigContext,
   type ContactConfigContextType,
+  type ContactsColumnConfig,
 } from "@/lib/contacts/contactConfigContextTypes";
 import { useContactConfigProviderValue } from "@/lib/contacts/useContactConfigProviderValue";
 import { useContactsConfig } from "@/lib/contacts/useContactStandardConfig";
-import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
+
+export { ContactConfigContext };
+export type { ContactConfigContextType, ContactsColumnConfig };
 
 /**
  * Context Provider that loads contact configuration from typed Contacts Setup REST
@@ -36,9 +39,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const value: ContactConfigContextType = useContactConfigProviderValue(config);
 
   return (
-    <ContactConfigContext.Provider value={value}>
+    <ContactConfigContext value={value}>
       {children}
-    </ContactConfigContext.Provider>
+    </ContactConfigContext>
   );
 }
 
@@ -49,7 +52,9 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
  */
 export function useContactConfig(): ContactConfigContextType {
   const contactConfig = useContext(ContactConfigContext);
-  if (!contactConfig) throw new Error("useContactConfig must be used inside <ContactConfigProvider>");
+  if (!contactConfig) {
+    throw new Error("useContactConfig must be used inside <ContactConfigProvider>");
+  }
   return contactConfig;
 }
 
@@ -63,3 +68,4 @@ export function useContactConfig(): ContactConfigContextType {
 export function useContactColumns(): ContactsColumnConfig[] {
   return useContactConfig().visibleColumns;
 }
+

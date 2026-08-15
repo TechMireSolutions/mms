@@ -67,7 +67,7 @@ export const STUDENTS_MODULE_MANIFEST = {
     directoryViews: ['table', 'cards'] as const,
     bulkActions: ['whatsapp', 'sms', 'email', 'export', 'delete', 'status'] as const,
   },
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['preferences'] as const,
   defaultExportFilename: 'students.csv',
   searchableFieldKeys: ['name', 'grNumber', 'studentId', 'cnic', 'fatherName', 'guardianName'] as const,
   softDelete: {

@@ -4,13 +4,16 @@ import type {
   FieldConfig,
   FieldDefinition,
 } from "@mms/shared";
-import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
+import type { ContactsColumnConfig } from "./contactConfigContextTypes";
+
+export type { ContactsColumnConfig };
 
 /** Contacts settings = field config (prefs stay a separate slice). */
 export type ContactsConfigSettings = FieldConfig;
 
 /** Extra state Contacts layers on top of the standard-module config core. */
 export type ContactConfigExtras = {
+  // ── Preferences & Tabs ──────────────────────────────────────────────────────
   prefs: ContactPreferences;
   updatePrefs: (newPrefs: Partial<ContactPreferences>) => void;
   updatePrefsAsync: (newPrefs: Partial<ContactPreferences>) => Promise<void>;
@@ -20,6 +23,8 @@ export type ContactConfigExtras = {
   fields: Record<string, FieldDefinition[]>;
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
   isTabFieldRequired: (tabId: string, fieldId: string) => boolean;
+
+  // ── Lookups & Catalogs ──────────────────────────────────────────────────────
   genders: string[];
   socialPlatforms: string[];
   relationships: string[];
@@ -39,6 +44,8 @@ export type ContactConfigExtras = {
   updateCountryCodes: (
     countryCodeOptions: Array<{ country: string; code: string }>,
   ) => void | Promise<void>;
+
+  // ── Column Layout & Visibility ──────────────────────────────────────────────
   columnRegistry: ColumnRegistryEntry[];
   availableColumns: ContactsColumnConfig[];
   visibleColumns: ContactsColumnConfig[];
@@ -47,7 +54,10 @@ export type ContactConfigExtras = {
   updateUserColumnLayout: (columnRegistry: ColumnRegistryEntry[]) => void;
   isColumnVisible: (key: string) => boolean;
   systemSortOptions: Array<{ field: string; label: string }>;
+
+  // ── Configuration Mutations ─────────────────────────────────────────────────
   updateConfig: (nextConfig: FieldConfig) => void;
   updateConfigAsync: (nextConfig: FieldConfig) => Promise<void>;
   updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
 };
+

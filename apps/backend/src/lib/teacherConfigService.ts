@@ -1,6 +1,5 @@
 import {
   composeTeachersSettings,
-  mergeTeachersFormTabsFromApi,
   stripTeacherFieldConfigForPersist,
   type FieldDefinition,
   type TeachersSettings,
@@ -8,7 +7,6 @@ import {
 } from '@mms/shared';
 import {
   createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
   requireFieldConfigTenant,
 } from './createModuleFieldConfigService.js';
 import {
@@ -16,7 +14,6 @@ import {
   upsertTeacherFieldConfig,
 } from '../db/repositories/teacherFieldConfigRepository.js';
 import { getTeacherModulePreferencesByWorkspace } from '../db/repositories/teacherModulePreferencesRepository.js';
-import { mergeFormTabsFromCustomTabs } from '../services/mergeFormTabsFromCustomTabs.js';
 
 const teacherFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,
@@ -25,12 +22,9 @@ const teacherFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripTeacherFieldConfigForPersist>
 >({
-  moduleId: 'teachers',
   broadcastKey: 'teachers',
   getByWorkspace: getTeacherFieldConfigByWorkspace,
   upsert: upsertTeacherFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeTeachersFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getTeacherModulePreferencesByWorkspace(tenant);
     return composeTeachersSettings(raw, prefs);
@@ -52,13 +46,5 @@ export async function loadTeachersSettingsCombined(): Promise<TeachersSettings> 
   const tenant = requireFieldConfigTenant();
   const field = await getTeacherFieldConfigByWorkspace(tenant);
   const prefs = await getTeacherModulePreferencesByWorkspace(tenant);
-  const composed = composeTeachersSettings(field, prefs);
-  const formTabs = await mergeFormTabsFromCustomTabs({
-    moduleId: 'teachers',
-    documentFormTabs: composed.formTabs,
-    fields: composed.fields as Record<string, FieldDefinition[]> | undefined,
-    mapRow: mapCustomTabRowToFormTabFields,
-    merge: mergeTeachersFormTabsFromApi,
-  });
-  return { ...composed, formTabs };
+  return composeTeachersSettings(field, prefs);
 }

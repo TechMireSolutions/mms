@@ -1,6 +1,5 @@
 import {
   composeSessionsSettings,
-  mergeSessionsFormTabsFromApi,
   stripSessionFieldConfigForPersist,
   type FieldDefinition,
   type SessionsSettings,
@@ -8,7 +7,6 @@ import {
 } from '@mms/shared';
 import {
   createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
   requireFieldConfigTenant,
 } from './createModuleFieldConfigService.js';
 import {
@@ -16,7 +14,6 @@ import {
   upsertSessionFieldConfig,
 } from '../db/repositories/sessionFieldConfigRepository.js';
 import { getSessionModulePreferencesByWorkspace } from '../db/repositories/sessionModulePreferencesRepository.js';
-import { mergeFormTabsFromCustomTabs } from '../services/mergeFormTabsFromCustomTabs.js';
 
 const sessionFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,
@@ -25,12 +22,9 @@ const sessionFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripSessionFieldConfigForPersist>
 >({
-  moduleId: 'sessions',
   broadcastKey: 'sessions',
   getByWorkspace: getSessionFieldConfigByWorkspace,
   upsert: upsertSessionFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeSessionsFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getSessionModulePreferencesByWorkspace(tenant);
     return composeSessionsSettings(raw, prefs);
@@ -52,13 +46,5 @@ export async function loadSessionsSettingsCombined(): Promise<SessionsSettings> 
   const tenant = requireFieldConfigTenant();
   const field = await getSessionFieldConfigByWorkspace(tenant);
   const prefs = await getSessionModulePreferencesByWorkspace(tenant);
-  const composed = composeSessionsSettings(field, prefs);
-  const formTabs = await mergeFormTabsFromCustomTabs({
-    moduleId: 'sessions',
-    documentFormTabs: composed.formTabs,
-    fields: composed.fields as Record<string, FieldDefinition[]> | undefined,
-    mapRow: mapCustomTabRowToFormTabFields,
-    merge: mergeSessionsFormTabsFromApi,
-  });
-  return { ...composed, formTabs };
+  return composeSessionsSettings(field, prefs);
 }

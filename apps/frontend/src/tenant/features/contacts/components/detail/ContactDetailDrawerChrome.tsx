@@ -1,9 +1,21 @@
+/**
+ * @file ContactDetailDrawerChrome.tsx
+ * @description Header actions, banner, tab-bar, and footer chrome partitions for ContactDetailDrawer.
+ */
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
+
+export interface ContactDetailDrawerHeaderActionsProps {
+  canWrite: boolean;
+  canDelete: boolean;
+  contact: Contact;
+  onEdit: (contact: Contact) => void;
+  onRestore?: (contactId: string | number) => void | Promise<void>;
+}
 
 export function ContactDetailDrawerHeaderActions({
   canWrite,
@@ -11,13 +23,7 @@ export function ContactDetailDrawerHeaderActions({
   contact,
   onEdit,
   onRestore,
-}: {
-  canWrite: boolean;
-  canDelete: boolean;
-  contact: Contact;
-  onEdit: (contact: Contact) => void;
-  onRestore?: (contactId: string | number) => void | Promise<void>;
-}): React.JSX.Element | null {
+}: ContactDetailDrawerHeaderActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const isArchived = Boolean(contact.deletedAt);
 
@@ -34,23 +40,27 @@ export function ContactDetailDrawerHeaderActions({
   );
 }
 
+export interface ContactDetailDrawerArchivedBannerProps {
+  contact: Contact;
+}
+
 export function ContactDetailDrawerArchivedBanner({
   contact,
-}: {
-  contact: Contact;
-}): React.JSX.Element | null {
+}: ContactDetailDrawerArchivedBannerProps): React.JSX.Element | null {
   return <ContactArchivedBanner contact={contact} />;
+}
+
+export interface ContactDetailDrawerTabBarProps {
+  detailTabs: readonly SubTab[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }
 
 export function ContactDetailDrawerTabBar({
   detailTabs,
   activeTab,
   onTabChange,
-}: {
-  detailTabs: Array<{ key: string; label: string; icon?: React.ComponentType<{ className?: string }> }>;
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}): React.JSX.Element {
+}: ContactDetailDrawerTabBarProps): React.JSX.Element | null {
   return (
     <SubTabBar
       tabs={detailTabs}
@@ -64,11 +74,13 @@ export function ContactDetailDrawerTabBar({
   );
 }
 
+export interface ContactDetailDrawerFooterProps {
+  contact: Contact;
+}
+
 export function ContactDetailDrawerFooter({
   contact,
-}: {
-  contact: Contact;
-}): React.JSX.Element | null {
+}: ContactDetailDrawerFooterProps): React.JSX.Element | null {
   const { t } = useTranslation();
   return (
     <DrawerUpdatedStamp
@@ -78,3 +90,4 @@ export function ContactDetailDrawerFooter({
     />
   );
 }
+

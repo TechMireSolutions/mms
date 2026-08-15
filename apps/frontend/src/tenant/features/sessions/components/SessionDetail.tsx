@@ -1,3 +1,7 @@
+/**
+ * @file SessionDetail.tsx
+ * @description Detail drawer for Session records (Classes, Timetable, Discounts, Budget, Events, Tabarruk).
+ */
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,9 +15,17 @@ import {
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import { SessionArchivedBanner } from "@/tenant/features/sessions/components/SessionArchivedBanner";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatMoney, SESSIONS_MODULE_MANIFEST, formatDate, toTitleCase, type AppTranslationKey } from "@mms/shared";
+import {
+  formatMoney,
+  SESSIONS_MODULE_MANIFEST,
+  formatDate,
+  toTitleCase,
+  sessionTypeI18nKey,
+  type Session,
+  type AppTranslationKey,
+} from "@mms/shared";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { SubTabBar } from "@/components/ui/SubTabBar";
+import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -25,8 +37,6 @@ import { DiscountsTab } from "@/tenant/features/sessions/components/tabs/Discoun
 import { BudgetTab } from "@/tenant/features/sessions/components/tabs/BudgetTab";
 import { EventsTab } from "@/tenant/features/sessions/components/tabs/EventsTab";
 import { TabarrukTab } from "@/tenant/features/sessions/components/tabs/TabarrukTab";
-
-import { Session } from "@/lib/data/sessionsData";
 
 const TAB_KEYS = ["classes", "timetable", "discounts", "budget", "events", "tabarruk"] as const;
 
@@ -48,7 +58,7 @@ const TAB_COMPONENTS: Record<string, React.ElementType> = {
   tabarruk: TabarrukTab,
 };
 
-interface SessionDetailProps {
+export interface SessionDetailProps {
   session: Session;
   onClose: () => void;
   onUpdate: (session: Session) => void | Promise<void>;
@@ -64,7 +74,7 @@ export function SessionDetail({
   onEdit,
   canDelete = false,
   onRestore,
-}: SessionDetailProps) {
+}: SessionDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const { canWrite } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const { statuses: statusOptions } = useSessionConfig();
@@ -72,6 +82,9 @@ export function SessionDetail({
   const TabContent = TAB_COMPONENTS[tab];
   const isArchived = Boolean(session.deletedAt);
   const canMutate = canWrite && !isArchived;
+
+  const typeKey = sessionTypeI18nKey(session.type);
+  const sessionTypeLabel = typeKey ? t(typeKey) : session.type;
 
   const statusLabels = useMemo(() => {
     const labels: Record<string, string> = {};
@@ -90,7 +103,7 @@ export function SessionDetail({
     cancelled: { label: statusLabels.cancelled || t("sessions.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
   }), [statusLabels, t]);
 
-  const tabs = useMemo(
+  const tabs: readonly SubTab[] = useMemo(
     () =>
       TAB_KEYS.map((key) => ({
         key,
@@ -140,7 +153,7 @@ export function SessionDetail({
           {!isArchived ? (
             <div className="flex items-center gap-2 flex-wrap">
               <StatusBadge status={session.status} config={statusConfig} />
-              <span className="text-xs text-muted-foreground">{session.type}</span>
+              <span className="text-xs text-muted-foreground">{sessionTypeLabel}</span>
             </div>
           ) : null}
         </>
@@ -170,7 +183,7 @@ export function SessionDetail({
         {isArchived ? (
           <div className="space-y-3 text-sm text-muted-foreground">
             <p>{formatSessionDate(session.startDate)} → {formatSessionDate(session.endDate)}</p>
-            <p>{session.type}</p>
+            <p>{sessionTypeLabel}</p>
             <StatusBadge status={session.status} config={statusConfig} />
           </div>
         ) : (

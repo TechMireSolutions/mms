@@ -30,7 +30,6 @@ import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof USERS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
   permissions: 'users.permissions',
-  fields: 'users.setup.fields',
   preferences: 'users.setup.preferences',
 };
 

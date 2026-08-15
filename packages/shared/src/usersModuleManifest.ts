@@ -90,7 +90,7 @@ export const USERS_MODULE_MANIFEST = {
   restBasePath: '/api/users',
   analyticsCategory: 'users',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['permissions', 'fields', 'preferences'] as const,
+  setupSubTabs: ['permissions', 'preferences'] as const,
   /** Soft-delete via tenant_users.deleted_at; status remains invite/suspend lifecycle. */
   softDelete: {
     workExcludesDeleted: true,

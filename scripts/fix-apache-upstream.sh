@@ -58,12 +58,15 @@ PATCHED=false
 
 patch_proxy_in_file() {
   local conf="$1"
-  if ! grep -q "ProxyPass" "$conf" 2>/dev/null; then
+  if ! grep -E -q "(ProxyPass|RewriteRule.*ws://)" "$conf" 2>/dev/null; then
     return 1
   fi
-  echo "Patching ProxyPass in ${conf} → ${UPSTREAM}"
+  echo "Patching ProxyPass and WebSocket rules in ${conf} → ${UPSTREAM}"
   run_priv sed -i -E \
     "s#(ProxyPass(Reverse)?[[:space:]]+/[[:space:]]+)http://(127\\.0\\.0\\.1|localhost):[0-9]+/?#\1${UPSTREAM}#g" \
+    "$conf"
+  run_priv sed -i -E \
+    "s#(RewriteRule[[:space:]]+\\^/\\?\\(\\.\\*\\)[[:space:]]+\"ws://)(127\\.0\\.0\\.1|localhost):[0-9]+(/\\\$1\"[[:space:]]+\\[P,L\\])#\1127.0.0.1:${BACKEND_PORT}\3#g" \
     "$conf"
   return 0
 }
@@ -77,12 +80,14 @@ should_patch_file() {
   return 1
 }
 
-for conf in /etc/apache2/sites-enabled/*; do
-  [[ -f "$conf" ]] || continue
-  if should_patch_file "$conf" && patch_proxy_in_file "$conf"; then
-    PATCHED=true
-  fi
-done
+if [[ -d /etc/apache2/sites-enabled ]]; then
+  for conf in /etc/apache2/sites-enabled/*; do
+    [[ -f "$conf" ]] || continue
+    if should_patch_file "$conf" && patch_proxy_in_file "$conf"; then
+      PATCHED=true
+    fi
+  done
+fi
 
 if [[ "$PATCHED" != true ]]; then
   echo "ERROR: no Apache ProxyPass vhost patched for ${APP_DOMAIN:-MMS}"
@@ -91,7 +96,15 @@ if [[ "$PATCHED" != true ]]; then
   exit 1
 fi
 
-run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite 2>/dev/null || true
+run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite http2 2>/dev/null || true
 run_priv apache2ctl configtest
-run_priv systemctl reload apache2
+
+if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet apache2 2>/dev/null; then
+  run_priv systemctl reload apache2
+elif command -v service >/dev/null 2>&1; then
+  run_priv service apache2 reload
+else
+  run_priv apache2ctl graceful
+fi
+
 echo "Apache reloaded — upstream is ${UPSTREAM}"

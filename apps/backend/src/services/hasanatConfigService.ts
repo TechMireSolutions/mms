@@ -1,15 +1,12 @@
 import {
   composeHasanatSettings,
-  mergeHasanatFormTabsFromApi,
+  normalizeHasanatSettings,
+  normalizeHasanatModulePreferences,
   stripHasanatFieldConfigForPersist,
-  type FieldDefinition,
   type HasanatSettings,
   type TabDefinition,
 } from '@mms/shared';
-import {
-  createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
-} from '../lib/createModuleFieldConfigService.js';
+import { createModuleFieldConfigService } from '../lib/createModuleFieldConfigService.js';
 import {
   getHasanatFieldConfig,
   setHasanatFieldConfig,
@@ -20,18 +17,17 @@ const hasanatFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,
   HasanatSettings,
   TabDefinition,
-  Record<string, FieldDefinition[]> | undefined,
-  ReturnType<typeof stripHasanatFieldConfigForPersist>
+  unknown,
+  Partial<HasanatSettings>
 >({
-  moduleId: 'hasanat',
   broadcastKey: 'hasanat',
   getByWorkspace: getHasanatFieldConfig,
   upsert: setHasanatFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeHasanatFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getHasanatModulePreferences(tenant);
-    return composeHasanatSettings((raw as unknown) as HasanatSettings, (prefs || {}) as any);
+    const normalizedPrefs = normalizeHasanatModulePreferences(prefs);
+    const normalizedConfig = normalizeHasanatSettings(raw);
+    return composeHasanatSettings(normalizedConfig, normalizedPrefs);
   },
   stripForPersist: stripHasanatFieldConfigForPersist,
   reloadFailedMessage: 'Failed to reload hasanat field config after save',
@@ -40,7 +36,8 @@ const hasanatFieldConfig = createModuleFieldConfigService<
 export const getHasanatFieldConfigService = hasanatFieldConfig.load;
 
 export async function updateHasanatFieldConfigService(
-  config: HasanatSettings | Record<string, unknown>,
+  config: HasanatSettings,
 ): Promise<HasanatSettings> {
-  return hasanatFieldConfig.save(config as Partial<HasanatSettings> as any);
+  return hasanatFieldConfig.save(config);
 }
+

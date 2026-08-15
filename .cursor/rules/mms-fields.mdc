@@ -41,23 +41,16 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 
 - When `formTabs` exist, their `enabled` flags are authoritative for the form, drawer, export, and BE dynamic validation.
 - Use `resolveContactEnabledTabIds` from `@mms/shared` — do **not** blind-union `DEFAULT_ENABLED_TABS` onto active `formTabs` (that made Setup toggles cosmetic).
-- Locked always-on tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic` only). UI locks + `useModuleSettingsEditor({ lockedEnabledTabs })` must force the same keys on sync/save/`enabledTabs`. Pass a **stable** `readonly` array/const for `lockedEnabledTabs` (module-level or memoized) — never inline `[...CONST]` / new array literals each render (unstable identity → infinite rehydrate). Retired seed `custom` is not locked — omit from Setup/form unless field-config still has fields under `tabId: "custom"` (`omitContactLegacyCustomFormTabUnlessUsed`). New extras use `+ Add custom tab` (`custom_*`).
+- Locked always-on tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic` only). Pass a **stable** `readonly` array/const for `lockedEnabledTabs` (module-level or memoized) — never inline `[...CONST]` / new array literals each render (unstable identity → infinite rehydrate). Retired seed `custom` is not locked — omit unless field-config still has fields under `tabId: "custom"`.
 - `DEFAULT_ENABLED_TABS` is the **fallback seed** when `formTabs` are absent — not a permanent override.
 
 ## 4b. Contact-linked module Identity (Students)
 
-- Setup Identity fields (student contact link, gender, DOB, relationships) are **validation/display** registry config — person data SSOT remains Contacts.
+- Identity fields (student contact link, gender, DOB, relationships) are **validation/display** registry config — person data SSOT remains Contacts.
 - Do not treat enabling those fields as permission to dual-write profile keys onto `students.custom_data` when `contactId` is set — strip/hydrate rules → `mms-data-layer.mdc` / `mms-form-architecture.mdc`.
 
-## 5. Setup Fields save & column sync
+## 5. Form & drawer render parity
 
-- Fields / Preferences draft locally; **Save disabled until dirty** (structural snapshot vs persisted config). Do not leave Save always enabled on first mount.
-- **Never rehydrate over an unsaved draft.** `useModuleSettingsEditor` rehydrates only on persisted *content* change (`moduleSettingsEditorFingerprint`) **and** only while the editor draft is pristine (`useModuleFieldsEditor` `isDraftDirty()`; cleared by `resetAllState` / `markDraftPristine()` after a successful save). A config reload landing mid-edit (custom-tab sync, Query refetch, WS invalidate) must not drop newly added tabs/fields or toggle state.
-- On Fields save: persist `fields` / `enabledTabs` (and related registry) via Contacts `PUT /api/contacts/field-config` (or module typed REST); sync custom tabs via `/api/custom-tabs` — never `saveObject('contact_field_config')` or dual-write `formTabs` into field-config. Sync `columnRegistry` with field/tab enablement (`syncContactColumnRegistryWithFields` or module equivalent).
-- CustomFieldsBuilder lists non-core fields; merges must keep core seed fields intact (do not replace the whole tab map with customs only).
-- Field delete: run `get*FieldRemovalIssues()` (prefs + columns + usage) before `handleDeleteField`.
+- Every system / core field that validation can require must have a control (form) and a read row (detail drawer).
+- Ban hard-coded `switch (field.key)` / allowlists that `return null` for unknown keys for active fields.
 
-## 6. Form & drawer render parity
-
-- Every **enabled** registry / custom field that validation can require must have a control (form) and a read row (detail drawer).
-- Ban hard-coded `switch (field.key)` / allowlists that `return null` for unknown keys while Setup can still enable those fields.

@@ -1,6 +1,5 @@
 import {
   composeStudentsSettings,
-  mergeStudentsFormTabsFromApi,
   stripStudentFieldConfigForPersist,
   type FieldDefinition,
   type StudentsSettings,
@@ -8,7 +7,6 @@ import {
 } from '@mms/shared';
 import {
   createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
   requireFieldConfigTenant,
 } from './createModuleFieldConfigService.js';
 import {
@@ -16,7 +14,6 @@ import {
   upsertStudentFieldConfig,
 } from '../db/repositories/studentFieldConfigRepository.js';
 import { getStudentModulePreferencesByWorkspace } from '../db/repositories/studentModulePreferencesRepository.js';
-import { mergeFormTabsFromCustomTabs } from '../services/mergeFormTabsFromCustomTabs.js';
 
 const studentFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,
@@ -25,12 +22,9 @@ const studentFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripStudentFieldConfigForPersist>
 >({
-  moduleId: 'students',
   broadcastKey: 'students',
   getByWorkspace: getStudentFieldConfigByWorkspace,
   upsert: upsertStudentFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeStudentsFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getStudentModulePreferencesByWorkspace(tenant);
     return composeStudentsSettings(raw, prefs);
@@ -39,7 +33,7 @@ const studentFieldConfig = createModuleFieldConfigService<
   reloadFailedMessage: 'Failed to reload student field config after save',
 });
 
-/** Load typed field-config row (merged with custom_tabs for formTabs). */
+/** Load typed field-config row. */
 export const loadStudentFieldConfig = studentFieldConfig.load;
 
 export async function saveStudentFieldConfig(
@@ -53,13 +47,6 @@ export async function loadStudentsSettingsCombined(): Promise<StudentsSettings> 
   const tenant = requireFieldConfigTenant();
   const field = await getStudentFieldConfigByWorkspace(tenant);
   const prefs = await getStudentModulePreferencesByWorkspace(tenant);
-  const composed = composeStudentsSettings(field, prefs);
-  const formTabs = await mergeFormTabsFromCustomTabs({
-    moduleId: 'students',
-    documentFormTabs: composed.formTabs,
-    fields: composed.fields as Record<string, FieldDefinition[]> | undefined,
-    mapRow: mapCustomTabRowToFormTabFields,
-    merge: mergeStudentsFormTabsFromApi,
-  });
-  return { ...composed, formTabs };
+  return composeStudentsSettings(field, prefs);
 }
+

@@ -148,7 +148,7 @@ export const QUESTION_BANK_MODULE_MANIFEST = {
   restBasePath: '/api/question-bank',
   analyticsCategory: 'questionBank',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['preferences'] as const,
   /** Questions soft-delete via JSONB; tests/papers and assessment_results are upsert-only (no trash UI). */
   softDelete: {
     workExcludesDeleted: true,

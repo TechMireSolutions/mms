@@ -27,8 +27,8 @@ export interface TeacherCustomField {
 
 /**
  * Configuration for the Teachers module.
- * Field registry + prefs live on typed `teacher_field_configs` / `teacher_module_preferences`
- * (+ form tabs via `/api/custom-tabs`). Work directory view uses `useWorkDirectoryViewMode`.
+ * Field registry + prefs live on typed `teacher_field_configs` / `teacher_module_preferences`.
+ * Work directory view uses `useWorkDirectoryViewMode`.
  * `fields` is a tabbed `Record<tabId, FieldDefinition[]>` (flat legacy blobs still accepted on read).
  */
 export interface TeachersSettings {
@@ -86,24 +86,29 @@ export interface TeacherFieldDef {
   isCustom?: boolean;
 }
 
+const seedFieldsByKey = new Map(
+  Object.values(INITIAL_TEACHERS_FIELD_SEED)
+    .flat()
+    .map((field) => [field.key, field]),
+);
+
 /** Seed system field defs in seed order (from tabbed {@link INITIAL_TEACHERS_FIELD_SEED}). */
 export const DEFAULT_TEACHER_FIELD_DEFS: TeacherFieldDef[] = defaultTeacherFieldOrderFromSeed().map(
   (fieldId) => {
-    const field = Object.values(INITIAL_TEACHERS_FIELD_SEED)
-      .flat()
-      .find((candidate) => candidate.key === fieldId);
+    const field = seedFieldsByKey.get(fieldId);
     if (!field) {
       throw new Error(`Teachers seed missing system field: ${fieldId}`);
     }
     return teacherFieldDefFromDefinition(field, false);
   },
 );
+
 /**
  * Returns sorted teacher field definitions (system + custom) from tabbed `fields` only.
  */
 export function getSortedTeacherFields(
-  fieldOrder: string[] | undefined,
-  fieldsRaw: Record<string, unknown> | TeacherFieldConfig[] | Record<string, TeacherFieldConfig> | undefined,
+  fieldOrder?: string[],
+  fieldsRaw?: unknown,
 ): TeacherFieldDef[] {
   const tabbed = resolveTeacherFieldsMapForColumnSync(
     fieldsRaw && typeof fieldsRaw === "object" && !Array.isArray(fieldsRaw)
@@ -111,18 +116,23 @@ export function getSortedTeacherFields(
       : undefined,
   );
   const systemKeys = listTeacherSystemFormFieldKeys();
+  const seenKeys = new Set<string>();
   const fieldDefinitions: TeacherFieldDef[] = [];
 
   for (const tabFields of Object.values(tabbed)) {
     for (const field of tabFields) {
-      if (systemKeys.has(field.key)) {
+      if (systemKeys.has(field.key) && !seenKeys.has(field.key)) {
+        seenKeys.add(field.key);
         fieldDefinitions.push(teacherFieldDefFromDefinition(field, false));
       }
     }
   }
 
   for (const field of listEnabledCustomTeacherFormFields(tabbed)) {
-    fieldDefinitions.push(teacherFieldDefFromDefinition(field, true));
+    if (!seenKeys.has(field.key)) {
+      seenKeys.add(field.key);
+      fieldDefinitions.push(teacherFieldDefFromDefinition(field, true));
+    }
   }
 
   const order = fieldOrder || DEFAULT_TEACHERS_SETTINGS.fieldOrder || [];
@@ -134,3 +144,4 @@ export function getSortedTeacherFields(
     return left.id.localeCompare(right.id);
   });
 }
+

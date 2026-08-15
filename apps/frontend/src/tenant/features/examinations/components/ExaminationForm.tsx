@@ -33,7 +33,6 @@ export default function ExamForm({ open = true, exam, onClose, onSave }: ExamFor
         examDraft={form.examDraft}
         classes={form.classes}
         updateDraft={form.updateDraft}
-        dfsTabs={form.dfsTabs}
         getFieldError={form.getFieldError}
       />
     </FormModal>

@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { mergeContactsFormTabsFromApi, type ColumnRegistryEntry, type FieldConfig, type TabDefinition } from "@mms/shared";
+import type { ColumnRegistryEntry, FieldConfig, TabDefinition } from "@mms/shared";
 import type { StandardModuleConfigCore } from "@/hooks/createStandardModuleConfigHook";
 import { saveFieldConfigAsync, setFieldConfigMemory } from "@/lib/contactFieldsStore";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { loadContactsFormTabs } from "@/lib/contacts/contactsCustomTabsApi";
 import { useContactConfigCollections } from "@/lib/contacts/useContactConfigCollections";
 import { useContactConfigPrefs } from "@/lib/contacts/useContactConfigPrefs";
 import { useContactConfigTabFields } from "@/lib/contacts/useContactConfigTabFields";
 import { useContactColumnLayout } from "@/lib/contacts/useContactColumnLayout";
-import { notify } from "@/lib/notify";
 import { CONTACTS_FIELD_CONFIG_QUERY_KEY } from "@/tenant/hooks/collections/contacts";
 import type {
   ContactConfigExtras,
@@ -59,17 +57,11 @@ export function useContactsConfigEnhance(
     viewerRole,
   });
 
-  // ── Custom-tab hydration (typed `/api/custom-tabs` merged into formTabs) ───
+  // Form-tab readiness from documentConfig
   const reloadContactConfigFromDatabaseCache = useCallback(() => {
-    tabsAbortRef.current?.abort();
-    const controller = new AbortController();
-    tabsAbortRef.current = controller;
-
     const documentConfig = settingsRef.current;
     syncFromQueryCache();
 
-    // Unauthenticated hosts (tenant login) must not refetch lookups — Query.refetch()
-    // bypasses `enabled: false` and floods /lookups + /auth/refresh with 401s.
     if (!isAuthenticated) {
       updateSettings(documentConfig);
       hasHydratedTabsOnceRef.current = true;
@@ -78,46 +70,11 @@ export function useContactsConfigEnhance(
     }
 
     reloadCollections();
-
-    if (!hasHydratedTabsOnceRef.current) {
-      setFormTabsReady(false);
-    }
-
-    void (async () => {
-      try {
-        const apiTabs = await loadContactsFormTabs(controller.signal);
-        if (controller.signal.aborted) return;
-        const formTabs = mergeContactsFormTabsFromApi(
-          documentConfig.formTabs,
-          apiTabs,
-          documentConfig.fields,
-        );
-        rememberFormTabs(formTabs);
-        updateSettings({ ...documentConfig, formTabs });
-        hasHydratedTabsOnceRef.current = true;
-        setFormTabsReady(true);
-      } catch {
-        if (controller.signal.aborted) return;
-        const fallbackTabs = lastGoodFormTabsRef.current;
-        updateSettings({
-          ...documentConfig,
-          formTabs: fallbackTabs
-            ? mergeContactsFormTabsFromApi(
-                documentConfig.formTabs,
-                fallbackTabs,
-                documentConfig.fields,
-              )
-            : documentConfig.formTabs,
-        });
-        hasHydratedTabsOnceRef.current = true;
-        setFormTabsReady(true);
-        notify.warning(t("contacts.setup.formTabsLoadFailed"));
-      }
-    })();
+    updateSettings(documentConfig);
+    hasHydratedTabsOnceRef.current = true;
+    setFormTabsReady(true);
   }, [
     isAuthenticated,
-    rememberFormTabs,
-    t,
     updateSettings,
     reloadCollections,
     syncFromQueryCache,
@@ -125,9 +82,6 @@ export function useContactsConfigEnhance(
 
   useEffect(() => {
     reloadContactConfigFromDatabaseCache();
-    return () => {
-      tabsAbortRef.current?.abort();
-    };
   }, [reloadContactConfigFromDatabaseCache, userId]);
 
   // Keep the memory store in sync when the composed settings (Query) change.

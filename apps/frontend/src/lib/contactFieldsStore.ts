@@ -4,9 +4,13 @@
  * Thin adapter over the shared `createModuleSetupConfigApi` factory; the
  * migrate + sanitize + merge-with-defaults pipeline stays contacts-local.
  */
-import { CONFIG_VERSION, type FieldConfig, type FieldDefinition } from "@mms/shared";
+import {
+  CONFIG_VERSION,
+  CONTACTS_MODULE_MANIFEST,
+  type FieldConfig,
+  type FieldDefinition,
+} from "@mms/shared";
 import { createModuleSetupConfigApi } from "@/lib/query/createModuleSetupConfigApi";
-import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 import { getContactFieldSystemDefaults, migrateContactFieldConfig } from "./contactFieldsMigration";
 import { sanitizeContactFieldConfig } from "./contactFieldsSanitize";
 
@@ -15,7 +19,7 @@ function mergeWithDefaults(parsed: FieldConfig): FieldConfig {
   const migrated = migrateContactFieldConfig(parsed);
 
   const mergedFields: Record<string, FieldDefinition[]> = { ...fallback.fields };
-  if (migrated.fields && typeof migrated.fields === "object") {
+  if (migrated.fields && typeof migrated.fields === "object" && !Array.isArray(migrated.fields)) {
     for (const [tabKey, fieldsList] of Object.entries(migrated.fields)) {
       if (Array.isArray(fieldsList) && fieldsList.length > 0) {
         mergedFields[tabKey] = fieldsList;
@@ -33,7 +37,7 @@ function mergeWithDefaults(parsed: FieldConfig): FieldConfig {
   return sanitizeContactFieldConfig(merged);
 }
 
-/** Strip formTabs — typed `custom_tabs` + `/api/custom-tabs` are the write SSOT. */
+/** Strip formTabs on store save — fieldConfig manages field registry and preferences. */
 function fieldConfigWithoutFormTabs(config: FieldConfig): Omit<FieldConfig, "formTabs"> & {
   version: number;
 } {
@@ -56,7 +60,7 @@ function composeSettings(
 }
 
 const api = createModuleSetupConfigApi<FieldConfig, unknown>({
-  restBasePath: CONTACTS_API,
+  restBasePath: CONTACTS_MODULE_MANIFEST.restBasePath,
   normalizeFieldConfig,
   composeSettings,
   normalizePrefs: (prefs: unknown) => prefs,

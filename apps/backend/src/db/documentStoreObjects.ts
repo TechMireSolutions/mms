@@ -5,7 +5,6 @@ import { activeDb } from './dbConnection.js';
 import * as schema from './schema.js';
 import { resolveObjectStorageKey } from './documentStoreKeys.js';
 import { deleteObjectByStorageKey } from './documentStoreAdmin.js';
-import { hydrateObjectData, saveCustomTabsForObject } from './documentStoreCustomTabs.js';
 
 export async function getObject(key: string): Promise<unknown | null> {
   try {
@@ -13,10 +12,6 @@ export async function getObject(key: string): Promise<unknown | null> {
     const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, storageKey));
     const row = rows[0];
     if (!row) return null;
-    const tenant = getRequestTenant();
-    if (tenant) {
-      return await hydrateObjectData(key, row.data, tenant);
-    }
     return row.data;
   } catch (error) {
     console.error(`Error getting object "${key}":`, error);
@@ -28,10 +23,7 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
   try {
     const storageKey = resolveObjectStorageKey(key);
     const tenant = getRequestTenant();
-    let processedData = applyTitleCaseRecursive(data);
-    if (tenant) {
-      processedData = await saveCustomTabsForObject(key, processedData, tenant);
-    }
+    const processedData = applyTitleCaseRecursive(data);
     await activeDb().insert(schema.objects)
       .values({ key: storageKey, data: processedData })
       .onConflictDoUpdate({

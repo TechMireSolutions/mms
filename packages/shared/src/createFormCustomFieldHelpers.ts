@@ -1,9 +1,8 @@
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
-import type { CustomFieldConfig } from './schemas/dynamicFormSchemas.js';
 
 export interface ModuleFormCustomFieldHelpers {
   listSystemFormFieldKeys: () => ReadonlySet<string>;
-  listEnabledCustomFormFields: <T extends FieldDefinition | CustomFieldConfig>(
+  listEnabledCustomFormFields: <T extends FieldDefinition>(
     fields: Record<string, T[]>,
     tabId?: string,
   ) => T[];
@@ -28,7 +27,7 @@ export function createFormCustomFieldHelpers(
     return keys;
   }
 
-  function listEnabledCustomFormFields<T extends FieldDefinition | CustomFieldConfig>(
+  function listEnabledCustomFormFields<T extends FieldDefinition>(
     fields: Record<string, T[]>,
     tabId?: string,
   ): T[] {
@@ -47,8 +46,8 @@ export function createFormCustomFieldHelpers(
     }
 
     return [...byKey.values()].sort((left, right) => {
-      const leftOrder = 'sortOrder' in left ? left.sortOrder : (left.order ?? 0);
-      const rightOrder = 'sortOrder' in right ? right.sortOrder : (right.order ?? 0);
+      const leftOrder = Number((left as { order?: number; sortOrder?: number }).sortOrder ?? (left as { order?: number }).order ?? 0);
+      const rightOrder = Number((right as { order?: number; sortOrder?: number }).sortOrder ?? (right as { order?: number }).order ?? 0);
       const orderDelta = leftOrder - rightOrder;
       return orderDelta !== 0 ? orderDelta : left.key.localeCompare(right.key);
     });

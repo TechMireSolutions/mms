@@ -49,7 +49,6 @@ export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   assessment_results: QUESTION_BANK_MODULE_MANIFEST.permissions.read,
   users: USERS_MODULE_MANIFEST.permissions.read,
   user_activity_logs: 'analytics.view',
-  custom_tabs: 'configuration.view',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.read,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.read,
 };
@@ -83,7 +82,6 @@ export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   assessment_results: QUESTION_BANK_MODULE_MANIFEST.permissions.write,
   users: USERS_MODULE_MANIFEST.permissions.write,
   user_activity_logs: 'analytics.view',
-  custom_tabs: 'settings.global.write',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.write,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.write,
 };
@@ -118,15 +116,8 @@ export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
 };
 
 export const ALLOWED_COLLECTIONS = new Set([
-  // contacts/students/teachers/sessions/enrollments/users/user_activity_logs and all legacy
-  // entity rows (attendance, finance, obligations, accounting, hasanat, examinations,
-  // question-bank) are REST-only (typed tables) — not document-store.
-  // `custom_tabs` stays: the typed /api/custom-tabs route uses it as its RBAC collection id.
-  // `sessionStatuses`/`sessionTypes`/`attendanceStatuses`/`saved_reports` were doc-store seeds or
-  // typed-table keys with no runtime collection read; removed (restore strips them gracefully).
   'currencies',
   'backups',
-  'custom_tabs',
 ]);
 
 export const ALLOWED_OBJECTS = new Set([

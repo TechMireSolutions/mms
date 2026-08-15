@@ -69,7 +69,7 @@ export const FINANCE_MODULE_MANIFEST = {
   restBasePath: '/api/finance',
   analyticsCategory: 'financial',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['preferences'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

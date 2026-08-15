@@ -48,6 +48,26 @@ describe("buildOptionDefaults", () => {
       defaultPhoneCountryCode: "+92",
     });
   });
+
+  it("falls back gracefully when relationship options are empty", () => {
+    expect(
+      buildOptionDefaults({
+        phoneLabels: [],
+        emailLabels: [],
+        addressLabels: [],
+        socialPlatforms: [],
+        relationshipOptions: [],
+        defaultPhoneCountryCode: "+1",
+      }),
+    ).toEqual({
+      phoneLabel: undefined,
+      emailLabel: undefined,
+      addressLabel: undefined,
+      socialPlatform: undefined,
+      relationship: "",
+      defaultPhoneCountryCode: "+1",
+    });
+  });
 });
 
 describe("buildInitialContactDraft", () => {
@@ -70,9 +90,9 @@ describe("buildInitialContactDraft", () => {
     const draft = buildInitialContactDraft({
       contact: undefined,
       initialDraft: undefined,
-      defaultCity: "",
-      defaultProvince: "",
-      defaultCountry: "",
+      defaultCity: "Lahore",
+      defaultProvince: "Punjab",
+      defaultCountry: "PK",
       optionDefaults,
       fields,
       socialPlatforms: ["Facebook"],
@@ -83,37 +103,14 @@ describe("buildInitialContactDraft", () => {
     expect(draft.relationshipContacts).toEqual([{ relationship: "Parent", contactId: "" }]);
   });
 
-  it("applies DFS custom field defaults into customData for new contacts", () => {
-    const dfsTabs = [
-      {
-        id: "tab-1",
-        key: "custom_tab",
-        label: "Custom Info",
-        enabled: true,
-        required: false,
-        sortOrder: 0,
-        isSystem: false,
-        fields: [
-          {
-            id: "f-1",
-            tabId: "tab-1",
-            key: "bloodGroup",
-            label: "Blood Group",
-            type: "select" as const,
-            enabled: true,
-            required: false,
-            unique: false,
-            defaultValue: "O+",
-            sortOrder: 0,
-            hasData: false,
-            isSystem: false,
-          },
-        ],
-      },
-    ];
-
+  it("preserves existing populated socials and relationships without inserting blanks", () => {
     const draft = buildInitialContactDraft({
-      contact: undefined,
+      contact: {
+        id: 10,
+        firstName: "Fatima",
+        socials: [{ platform: "LinkedIn", url: "https://linkedin.com/in/fatima" }],
+        relationshipContacts: [{ relationship: "Guardian", contactId: "c_999" }],
+      } as unknown as Contact,
       initialDraft: undefined,
       defaultCity: "",
       defaultProvince: "",
@@ -122,10 +119,9 @@ describe("buildInitialContactDraft", () => {
       fields,
       socialPlatforms: ["Facebook"],
       relationshipOptions: ["Parent"],
-      dfsTabs,
     });
-
-    expect((draft.customData as Record<string, unknown>)?.bloodGroup).toBe("O+");
+    expect(draft.socials).toEqual([{ platform: "LinkedIn", url: "https://linkedin.com/in/fatima" }]);
+    expect(draft.relationshipContacts).toEqual([{ relationship: "Guardian", contactId: "c_999" }]);
   });
 
   it("does not apply scalar defaults when editing an existing contact", () => {

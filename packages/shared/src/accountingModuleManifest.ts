@@ -76,7 +76,7 @@ export const ACCOUNTING_MODULE_MANIFEST = {
   restBasePath: '/api/accounting',
   analyticsCategory: 'accounting',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['preferences'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

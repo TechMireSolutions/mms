@@ -13,13 +13,25 @@ import {
 } from "@mms/shared";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
+import type { ContactsColumnConfig } from "@/lib/contacts/contactConfigContextTypes";
 import { useModuleColumnLayout } from "@/hooks/useModuleColumnLayout";
 import {
   useContactColumnPrefs,
   useContactColumnPrefsMutation,
 } from "@/tenant/hooks/collections/contacts";
 import { useAuth } from "@/lib/contexts/AuthContext";
+
+function toContactsColumnConfig(
+  column: ColumnRegistryEntry,
+  translate: (key: Parameters<typeof translateApp>[0]) => string,
+): ContactsColumnConfig {
+  return {
+    id: column.key,
+    label: resolveRegistryLabel(column, translate),
+    sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
+    width: column.width,
+  };
+}
 
 /**
  * Contacts Work column layout: tenant registry (Setup sync + RBAC) + shared
@@ -67,17 +79,14 @@ export function useContactColumnLayout({
 
     const registry = Array.from(baseRegistryMap.values()).sort((a, b) => a.order - b.order);
 
-    const activeFields: Array<{ tabId: string; field: FieldDefinition }> = [];
-    Object.entries(fields).forEach(([tabId, tabFields]) => {
-      const tabEnabled = tabId === "basic" || enabledTabIds.has(tabId);
-      if (tabEnabled) {
-        (tabFields || []).forEach((fieldDefinition) => {
-          if (fieldDefinition.enabled) {
-            activeFields.push({ tabId, field: fieldDefinition });
-          }
+    const activeFieldKeys = new Set<string>();
+    for (const [tabId, tabFields] of Object.entries(fields)) {
+      if (tabId === "basic" || enabledTabIds.has(tabId)) {
+        tabFields?.forEach((field) => {
+          if (field.enabled) activeFieldKeys.add(field.key);
         });
       }
-    });
+    }
 
     const filteredRegistry = registry.filter((column) => {
       const mapping = COLUMN_FIELD_MAPPING[column.key];
@@ -85,7 +94,7 @@ export function useContactColumnLayout({
         const tabActive = mapping.tabId === "basic" || enabledTabIds.has(mapping.tabId);
         return tabActive && isTabFieldEnabled(mapping.tabId, mapping.fieldId);
       }
-      return activeFields.some((activeField) => activeField.field.key === column.key);
+      return activeFieldKeys.has(column.key);
     });
 
     const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
@@ -122,12 +131,7 @@ export function useContactColumnLayout({
   const availableColumns = useMemo((): ContactsColumnConfig[] => {
     const translate = (key: Parameters<typeof translateApp>[0]) =>
       translateApp(key, settings.language);
-    return columnRegistry.map((column) => ({
-      id: column.key,
-      label: resolveRegistryLabel(column, translate),
-      sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
-      width: column.width,
-    }));
+    return columnRegistry.map((col) => toContactsColumnConfig(col, translate));
   }, [columnRegistry, settings.language]);
 
   const visibleColumns = useMemo((): ContactsColumnConfig[] => {
@@ -136,12 +140,7 @@ export function useContactColumnLayout({
     return columnRegistry
       .filter((column) => column.enabled)
       .sort((a, b) => a.order - b.order)
-      .map((column) => ({
-        id: column.key,
-        label: resolveRegistryLabel(column, translate),
-        sortField: column.sortable !== false ? (column.sortField || column.key) : undefined,
-        width: column.width,
-      }));
+      .map((col) => toContactsColumnConfig(col, translate));
   }, [columnRegistry, settings.language]);
 
   const systemSortOptions = useMemo<Array<{ field: string; label: string }>>(

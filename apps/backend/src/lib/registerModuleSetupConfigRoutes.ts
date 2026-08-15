@@ -5,17 +5,20 @@ import { roleHasPermission } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 
-export type RegisterModuleSetupConfigRoutesOptions = {
+export type RegisterModuleSetupConfigRoutesOptions<
+  TConfig = unknown,
+  TPrefs = unknown,
+> = {
   canRead: (user: User) => boolean;
   setupWritePermission: Permission;
   fieldConfigSchema: ZodTypeAny;
   preferencesSchema: ZodTypeAny;
   loadFieldConfig: () => Promise<unknown>;
-  saveFieldConfig: (body: unknown) => Promise<unknown>;
+  saveFieldConfig: (body: TConfig) => Promise<unknown>;
   loadPreferences: () => Promise<unknown>;
   /** Normalize prefs for GET fallback and before save. */
-  normalizePreferences: (partial: unknown) => unknown;
-  savePreferences: (normalized: unknown) => Promise<unknown>;
+  normalizePreferences: (partial: unknown) => TPrefs;
+  savePreferences: (normalized: TPrefs) => Promise<unknown>;
   audit: (
     user: User,
     action: string,
@@ -26,18 +29,21 @@ export type RegisterModuleSetupConfigRoutesOptions = {
   fieldConfigAuditSummary: string;
   preferencesAuditAction: string;
   preferencesAuditSummary: string;
-  loadFieldConfigError: string;
-  saveFieldConfigError: string;
-  loadPreferencesError: string;
-  savePreferencesError: string;
+  loadFieldConfigError?: string;
+  saveFieldConfigError?: string;
+  loadPreferencesError?: string;
+  savePreferencesError?: string;
 };
 
 /**
  * Register GET/PUT `/field-config` + `/preferences` for module Setup.
  */
-export function registerModuleSetupConfigRoutes(
+export function registerModuleSetupConfigRoutes<
+  TConfig = unknown,
+  TPrefs = unknown,
+>(
   fastify: FastifyInstance,
-  options: RegisterModuleSetupConfigRoutesOptions,
+  options: RegisterModuleSetupConfigRoutesOptions<TConfig, TPrefs>,
 ): void {
   const canWriteSetup = (user: User) =>
     roleHasPermission(user.role, options.setupWritePermission);
@@ -49,7 +55,11 @@ export function registerModuleSetupConfigRoutes(
       const config = await options.loadFieldConfig();
       return reply.send({ config });
     } catch (error: unknown) {
-      return sendDatabaseError(reply, options.loadFieldConfigError, error);
+      return sendDatabaseError(
+        reply,
+        options.loadFieldConfigError ?? 'Failed to load field config',
+        error,
+      );
     }
   });
 
@@ -59,16 +69,24 @@ export function registerModuleSetupConfigRoutes(
     const body = parseRequest(options.fieldConfigSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
     try {
-      const saved = await options.saveFieldConfig(body.data);
-      await options.audit(
-        user,
-        options.fieldConfigAuditAction,
-        options.fieldConfigAuditSummary,
-        'field-config',
-      );
+      const saved = await options.saveFieldConfig(body.data as TConfig);
+      try {
+        await options.audit(
+          user,
+          options.fieldConfigAuditAction,
+          options.fieldConfigAuditSummary,
+          'field-config',
+        );
+      } catch (auditError) {
+        fastify.log.warn({ err: auditError }, 'Failed to record field config audit log');
+      }
       return reply.send({ success: true, config: saved });
     } catch (error: unknown) {
-      return sendDatabaseError(reply, options.saveFieldConfigError, error);
+      return sendDatabaseError(
+        reply,
+        options.saveFieldConfigError ?? 'Failed to save field config',
+        error,
+      );
     }
   });
 
@@ -81,7 +99,11 @@ export function registerModuleSetupConfigRoutes(
         preferences: preferences ?? options.normalizePreferences(null),
       });
     } catch (error: unknown) {
-      return sendDatabaseError(reply, options.loadPreferencesError, error);
+      return sendDatabaseError(
+        reply,
+        options.loadPreferencesError ?? 'Failed to load preferences',
+        error,
+      );
     }
   });
 
@@ -94,15 +116,24 @@ export function registerModuleSetupConfigRoutes(
       const saved = await options.savePreferences(
         options.normalizePreferences(body.data),
       );
-      await options.audit(
-        user,
-        options.preferencesAuditAction,
-        options.preferencesAuditSummary,
-        'preferences',
-      );
+      try {
+        await options.audit(
+          user,
+          options.preferencesAuditAction,
+          options.preferencesAuditSummary,
+          'preferences',
+        );
+      } catch (auditError) {
+        fastify.log.warn({ err: auditError }, 'Failed to record preferences audit log');
+      }
       return reply.send({ success: true, preferences: saved });
     } catch (error: unknown) {
-      return sendDatabaseError(reply, options.savePreferencesError, error);
+      return sendDatabaseError(
+        reply,
+        options.savePreferencesError ?? 'Failed to save preferences',
+        error,
+      );
     }
   });
 }
+

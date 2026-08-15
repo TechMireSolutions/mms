@@ -976,26 +976,6 @@ export const auditLogs = pgTable('audit_logs', {
   index('audit_logs_table_record_idx').on(table.tableName, table.recordId),
 ]);
 
-export const customTabs = pgTable('custom_tabs', {
-  id: text('id').notNull(), // e.g. subdomain:moduleId:key
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  moduleId: text('module_id').notNull(),
-  key: text('key').notNull(),
-  label: text('label').notNull(),
-  icon: text('icon'),
-  enabled: boolean('enabled').notNull().default(true),
-  sortOrder: integer('sort_order').notNull().default(0),
-  permissions: jsonb('permissions').$type<string[]>(),
-  description: text('description'),
-  color: text('color'),
-  isSystem: boolean('is_system').notNull().default(false),
-  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  uniqueIndex('custom_tabs_workspace_module_key_idx').on(table.workspaceSubdomain, table.moduleId, table.key),
-  index('custom_tabs_workspace_idx').on(table.workspaceSubdomain),
-]);
-
 /** Report presets — generic modules + Contacts (`category = 'contacts'`). */
 export const savedReports = pgTable('saved_reports', {
   id: text('id').notNull(),
@@ -1060,44 +1040,6 @@ export const messageLogs = pgTable('message_logs', {
     .on(table.workspaceSubdomain, sql`(custom_data->>'sentAt')`)
     .where(sql`${table.deletedAt} is null`),
 ]);
-
-export const customFields = pgTable('custom_fields', {
-  id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  tabId: text('tab_id').notNull(),
-  key: text('key').notNull(),
-  label: text('label').notNull(),
-  type: text('type').notNull(),
-  enabled: boolean('enabled').notNull().default(true),
-  required: boolean('required').notNull().default(false),
-  unique: boolean('unique').notNull().default(false),
-  placeholder: text('placeholder'),
-  description: text('description'),
-  defaultValue: text('default_value'),
-  options: jsonb('options').$type<string[]>(),
-  minValue: integer('min_value'),
-  maxValue: integer('max_value'),
-  mask: text('mask'),
-  allowedExtensions: text('allowed_extensions'),
-  maxFileSize: integer('max_file_size'),
-  sortOrder: integer('sort_order').notNull().default(0),
-  hasData: boolean('has_data').notNull().default(false),
-  isSystem: boolean('is_system').notNull().default(false),
-  deletedAt: timestamp('deleted_at', { mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
-  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('custom_fields_tab_idx').on(table.workspaceSubdomain, table.tabId),
-  index('custom_fields_workspace_idx').on(table.workspaceSubdomain),
-]);
-
-
-
-
-
 
 export const questionBankFieldConfigs = pgTable('question_bank_field_configs', {
   workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),

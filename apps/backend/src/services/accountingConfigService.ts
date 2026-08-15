@@ -1,15 +1,11 @@
 import {
   composeAccountingSettings,
   stripAccountingFieldConfigForPersist,
-  mergeAccountingFormTabsFromApi,
   type FieldDefinition,
   type AccountingSettings,
   type TabDefinition,
 } from '@mms/shared';
-import {
-  createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
-} from '../lib/createModuleFieldConfigService.js';
+import { createModuleFieldConfigService } from '../lib/createModuleFieldConfigService.js';
 import {
   getAccountingFieldConfig,
   setAccountingFieldConfig,
@@ -23,12 +19,9 @@ const accountingFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripAccountingFieldConfigForPersist>
 >({
-  moduleId: 'accounting',
   broadcastKey: 'accounting',
   getByWorkspace: getAccountingFieldConfig,
   upsert: setAccountingFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeAccountingFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getAccountingModulePreferences(tenant);
     return composeAccountingSettings((raw as unknown) as AccountingSettings, (prefs || {}) as any);
@@ -44,3 +37,4 @@ export async function updateAccountingFieldConfigService(
 ): Promise<AccountingSettings> {
   return accountingFieldConfig.save(config as Partial<AccountingSettings> as any);
 }
+

@@ -1,16 +1,12 @@
 import { type FinanceSettings } from "@mms/shared";
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
-import { Save, DollarSign } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
 import {
   FINANCE_TAB_REGISTRY,
-  INITIAL_FINANCE_FIELD_SEED,
   DEFAULT_CURRENCIES,
   FINANCE_MODULE_MANIFEST,
-  isFinanceSystemFormField,
-  isFinanceSeedFormTab,
-  isFinanceLockedEnabledTab,
   type AppTranslationKey,
 } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -19,17 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ToggleRow } from "@/components/ui/ToggleRow";
-import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
-
-const SETUP_TAB_LABEL_KEYS: Record<string, AppTranslationKey> = {
-  fields: "finance.setup.fields",
-  preferences: "finance.setup.preferences",
-};
 
 export function FinanceSettings(): React.ReactElement {
   const { t } = useTranslation();
@@ -38,9 +27,7 @@ export function FinanceSettings(): React.ReactElement {
   const {
     settings,
     settingsDraft,
-    fieldsEditor,
     saved,
-    setSaved,
     upd,
     saveSettingsAsync,
   } = useModuleSettingsEditor<FinanceSettings>({
@@ -48,18 +35,7 @@ export function FinanceSettings(): React.ReactElement {
     tabRegistry: FINANCE_TAB_REGISTRY,
   });
 
-  const wrappedFieldsEditor = useMemo(
-    () =>
-      wrapModuleSetupFieldsEditor({
-        fieldsEditor,
-        handleDeleteField: fieldsEditor.handleDeleteField,
-        handleDeleteTab: fieldsEditor.handleDeleteTab,
-        getSeedTab: (key) => FINANCE_TAB_REGISTRY.find((tab) => tab.key === key),
-        initialFieldSeed: INITIAL_FINANCE_FIELD_SEED,
-        isLockedTab: isFinanceLockedEnabledTab,
-      }),
-    [fieldsEditor],
-  );
+  const isDirty = !saved;
 
   const handleSave = async (): Promise<void> => {
     try {
@@ -72,14 +48,6 @@ export function FinanceSettings(): React.ReactElement {
     }
   };
 
-  const settingsSubTabs = useMemo(() => FINANCE_MODULE_MANIFEST.setupSubTabs.map((key) => ({
-    key,
-    label: t(SETUP_TAB_LABEL_KEYS[key]),
-  })), [t]);
-  const [sub, setSub] = useState<string>("fields");
-  const showPrefs = sub === "preferences";
-  const showFields = sub === "fields";
-
   const ALL_METHODS = ["cash", "bank_transfer", "cheque", "online", "card", "other"];
   const toggleMethod = (method: string) => {
     const paymentMethods = settingsDraft.paymentMethods || [];
@@ -91,22 +59,19 @@ export function FinanceSettings(): React.ReactElement {
 
   return (
     <div className="space-y-4">
-      <SubTabBar tabs={settingsSubTabs} value={sub} onChange={setSub} />
       {!canEditSetup ? (
         <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
           {t("finance.setup.readOnly")}
         </p>
       ) : (
-    <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80" aria-labelledby="finance-settings-title">
-      <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
-        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-          <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-        </div>
-        <h3 id="finance-settings-title" className="text-sm font-bold text-foreground">{t("finance.settings.title")}</h3>
-      </div>
+        <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80" aria-labelledby="finance-settings-title">
+          <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+            </div>
+            <h3 id="finance-settings-title" className="text-sm font-bold text-foreground">{t("finance.settings.title")}</h3>
+          </div>
 
-      {showPrefs && (
-        <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="finance-currency" className={FORM_LABEL}>{t("finance.settings.currency")}</label>
@@ -202,32 +167,18 @@ export function FinanceSettings(): React.ReactElement {
             <ToggleRow label={t("finance.settings.overdueReminders")} description={t("finance.settings.overdueRemindersDescription")} value={settingsDraft.overdueReminder} onChange={(value) => upd("overdueReminder", value)} />
             <ToggleRow label={t("finance.settings.feeReminders")} description={t("finance.settings.feeRemindersDescription")} value={settingsDraft.feeReminders} onChange={(value) => upd("feeReminders", value)} />
           </div>
-        </>
-      )}
 
-      {showFields && (
-        <ModuleFieldsSetup
-          editor={wrappedFieldsEditor}
-          isCoreField={isFinanceSystemFormField}
-          isProtectedTab={isFinanceSeedFormTab}
-          isLockedTab={isFinanceLockedEnabledTab}
-          onStateChange={() => setSaved(false)}
-        />
-      )}
-
-
-
-      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-        <Button
-          type="button"
-          onClick={handleSave}
-          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
-        >
-          <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("settings.savedBadge") : t("common.save")}
-        </Button>
-      </footer>
-    </Card>
+          <ModuleSetupSaveFooter
+            dirty={isDirty}
+            saving={false}
+            saved={saved}
+            saveLabel={t("common.save")}
+            savedLabel={t("settings.savedBadge")}
+            onSave={() => void handleSave()}
+          />
+        </Card>
       )}
     </div>
   );
 }
+

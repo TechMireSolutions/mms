@@ -3,11 +3,7 @@ import { useState, useMemo } from "react";
 import {
   DEFAULT_CURRENCIES,
   ACCOUNTING_TAB_REGISTRY,
-  INITIAL_ACCOUNTING_FIELD_SEED,
   ACCOUNTING_MODULE_MANIFEST,
-  isAccountingSystemFormField,
-  isAccountingSeedFormTab,
-  isAccountingLockedEnabledTab,
 } from "@mms/shared";
 import {
   CheckCircle2, Save, BookOpen
@@ -16,13 +12,10 @@ import { Account, FiscalYear } from '@/lib/data/accountingData';
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { Button } from "@/components/ui/button";
-import { ModuleFieldsSetup } from "@/components/ui/ModuleFieldsSetup";
-import { SubTabBar } from "@/components/ui/SubTabBar";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { wrapModuleSetupFieldsEditor } from "@/lib/setup/wrapModuleSetupFieldsEditor";
 import { notify } from "@/lib/notify";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { AccountingFiscalYearModal } from "./AccountingFiscalYearModal";
@@ -54,9 +47,7 @@ export function AccountingSettings({
   const config = useAccountingConfig();
   const {
     settingsDraft,
-    fieldsEditor,
     saved,
-    setSaved,
     upd,
     saveSettingsAsync,
   } = useModuleSettingsEditor<AccountingSettings>({
@@ -64,29 +55,7 @@ export function AccountingSettings({
     tabRegistry: ACCOUNTING_TAB_REGISTRY,
   });
 
-  const wrappedFieldsEditor = useMemo(
-    () =>
-      wrapModuleSetupFieldsEditor({
-        fieldsEditor,
-        handleDeleteField: fieldsEditor.handleDeleteField,
-        handleDeleteTab: fieldsEditor.handleDeleteTab,
-        getSeedTab: (key) => ACCOUNTING_TAB_REGISTRY.find((tab) => tab.key === key),
-        initialFieldSeed: INITIAL_ACCOUNTING_FIELD_SEED,
-        isLockedTab: isAccountingLockedEnabledTab,
-      }),
-    [fieldsEditor],
-  );
   const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);
-  const settingsSubTabs = useMemo(
-    () => ACCOUNTING_MODULE_MANIFEST.setupSubTabs.map((key) => ({
-      key,
-      label: t(key === "fields" ? "accounting.setup.fields" : "accounting.setup.preferences"),
-    })),
-    [t],
-  );
-  const [sub, setSub] = useState<string>("fields");
-  const showPrefs = sub === "preferences";
-  const showFields = sub === "fields";
 
   const handleSave = async () => {
     try {
@@ -120,61 +89,49 @@ export function AccountingSettings({
 
   return (
     <div className="space-y-4">
-      <SubTabBar tabs={settingsSubTabs} value={sub} onChange={setSub} />
       {!canEditSetup ? (
         <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
           {t("accounting.setup.readOnly")}
         </p>
       ) : (
-    <section className={`${WORK_SURFACE} p-5 space-y-5`} aria-labelledby="accounting-settings-title">
-      <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
-        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-          <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-        </div>
-        <h3 id="accounting-settings-title" className="text-sm font-bold text-foreground">
-          {showFields ? t("accounting.settings.titleFields") : t("accounting.settings.titlePreferences")}
-        </h3>
-      </div>
+        <section className={`${WORK_SURFACE} p-5 space-y-5`} aria-labelledby="accounting-settings-title">
+          <div className="flex items-center gap-2.5 pb-1 border-b border-border/60">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+            </div>
+            <h3 id="accounting-settings-title" className="text-sm font-bold text-foreground">
+              {t("accounting.settings.titlePreferences")}
+            </h3>
+          </div>
 
-      {showPrefs && (
-        <AccountingSettingsPreferences
-          accounts={accounts}
-          fiscalYears={fiscalYears}
-          settingsDraft={settingsDraft}
-          upd={upd}
-          currencies={currencies}
-          activeCurrency={activeCurrency}
-          decimalSeparators={decimalSeparators}
-          fyStatusConfig={fyStatusConfig}
-          canEditSetup={canEditSetup}
-          onEditFiscalYear={setFyModal}
-          onDeleteFiscalYear={(fiscalYearId) => { void handleDeleteFY(fiscalYearId); }}
-        />
-      )}
+          <AccountingSettingsPreferences
+            accounts={accounts}
+            fiscalYears={fiscalYears}
+            settingsDraft={settingsDraft}
+            upd={upd}
+            currencies={currencies}
+            activeCurrency={activeCurrency}
+            decimalSeparators={decimalSeparators}
+            fyStatusConfig={fyStatusConfig}
+            canEditSetup={canEditSetup}
+            onEditFiscalYear={setFyModal}
+            onDeleteFiscalYear={(fiscalYearId) => { void handleDeleteFY(fiscalYearId); }}
+          />
 
-      {showFields && (
-        <ModuleFieldsSetup
-          editor={wrappedFieldsEditor}
-          isCoreField={isAccountingSystemFormField}
-          isProtectedTab={isAccountingSeedFormTab}
-          isLockedTab={isAccountingLockedEnabledTab}
-          onStateChange={() => setSaved(false)}
-        />
-      )}
+          <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
+            <Button
+              type="button"
+              onClick={() => { void handleSave(); }}
+              className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
+            >
+              {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSaved")}</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSave")}</>}
+            </Button>
+          </footer>
 
-      <footer className="flex w-full items-center justify-end gap-3 border-t border-border/40 mt-6 pt-4">
-        <Button
-          type="button"
-          onClick={() => { void handleSave(); }}
-          className={saved ? "bg-success hover:bg-success/90 text-success-foreground ms-auto" : "ms-auto"}
-        >
-          {saved ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSaved")}</> : <><Save className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.settings.btnSave")}</>}
-        </Button>
-      </footer>
-
-      <AccountingFiscalYearModal open={!!fyModal && canEditSetup} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
-    </section>
+          <AccountingFiscalYearModal open={!!fyModal && canEditSetup} initial={fyModal} onSave={handleSaveFY} onClose={() => setFyModal(null)} />
+        </section>
       )}
     </div>
   );
 }
+

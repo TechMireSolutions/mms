@@ -9,14 +9,16 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 
-export type DetailDrawerSize = "sm" | "md" | "lg" | "xl" | "full";
+export type DetailDrawerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 
 const SIZE_MAP: Record<DetailDrawerSize, string> = {
   sm: "sm:max-w-sm",
   md: "sm:max-w-md",
   lg: "sm:max-w-lg",
   xl: "sm:max-w-xl",
-  full: "sm:max-w-2xl",
+  "2xl": "sm:max-w-2xl",
+  "3xl": "sm:max-w-3xl",
+  full: "sm:max-w-4xl",
 };
 
 export interface DetailDrawerShellProps {
@@ -55,7 +57,7 @@ export function DetailDrawerShell({
   ariaLabel,
   className,
   contentClassName,
-}: DetailDrawerShellProps): React.JSX.Element {
+}: DetailDrawerShellProps): React.JSX.Element | null {
   const { t, isRtl } = useTranslation();
   const reducedMotion = useReducedMotion();
   const isDesktop = useMediaQuery("(min-width: 640px)");
@@ -80,7 +82,7 @@ export function DetailDrawerShell({
     : { x: 0, y: 0, opacity: 1 };
 
   const exit = reducedMotion
-    ? undefined
+    ? { opacity: 0 }
     : isDesktop
       ? { x: slideFromX, y: 0, opacity: 0 }
       : { x: 0, y: "100%", opacity: 0 };
@@ -103,15 +105,20 @@ export function DetailDrawerShell({
         dragControls,
       };
 
+  if (typeof document === "undefined") {
+    return null;
+  }
+
   return createPortal(
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-modal flex items-end sm:items-center justify-end">
           {/* Backdrop */}
           <motion.div
+            aria-hidden="true"
             initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={reducedMotion ? undefined : { opacity: 0 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: reducedMotion ? 0 : 0.2 }}
             className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
             onClick={onClose}
@@ -147,19 +154,19 @@ export function DetailDrawerShell({
             </div>
 
             {/* Sticky Header */}
-            <div 
-              className="sticky top-0 z-10 px-5 pt-2 sm:pt-4 pb-3 border-b border-border/30 flex-shrink-0 space-y-3 sm:touch-auto touch-none"
-              onPointerDown={(e) => {
-                const target = e.target as HTMLElement | null;
-                const isInteractive = target?.closest(
-                  'button, input, select, textarea, a, [role="tab"], [data-no-drag]'
-                );
-                if (!isDesktop && !isInteractive) {
-                  dragControls.start(e);
-                }
-              }}
-            >
-              <div className="flex items-center justify-between gap-4">
+            <div className="sticky top-0 z-10 px-5 pt-2 sm:pt-4 pb-3 border-b border-border/30 flex-shrink-0 space-y-3">
+              <div 
+                className="flex items-center justify-between gap-4 touch-none sm:touch-auto select-none"
+                onPointerDown={(e) => {
+                  const target = e.target as HTMLElement | null;
+                  const isInteractive = target?.closest(
+                    'button, input, select, textarea, a, [role="tab"], [data-no-drag]'
+                  );
+                  if (!isDesktop && !isInteractive) {
+                    dragControls.start(e);
+                  }
+                }}
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   {Icon && (
                     <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -181,7 +188,7 @@ export function DetailDrawerShell({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0" data-no-drag>
                   {headerActions}
                   <Button
                     type="button"
@@ -195,7 +202,11 @@ export function DetailDrawerShell({
                   </Button>
                 </div>
               </div>
-              {headerExtra}
+              {headerExtra && (
+                <div className="touch-pan-x" data-no-drag>
+                  {headerExtra}
+                </div>
+              )}
             </div>
 
             {/* Content Area */}

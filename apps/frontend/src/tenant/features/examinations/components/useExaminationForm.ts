@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { notify } from "@/lib/notify";
 import { Exam } from '@/lib/data/examinationData';
-import { toTitleCase, validateDfsCustomFields, applyDfsCustomFieldDefaults } from "@mms/shared";
+import { toTitleCase } from "@mms/shared";
 import { EXAMINATION_FORM_EMPTY } from "./examinationFormConstants";
 
 interface UseExaminationFormOptions {
@@ -19,19 +18,16 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const sessions = useSessionsCollection();
-  const { data: dfsTabs } = useModuleTabs("examinations");
 
   const [examDraft, setExamDraft] = useState<Omit<Exam, "id">>(() => {
-    const base = exam ? { ...exam } : { ...EXAMINATION_FORM_EMPTY };
-    return applyDfsCustomFieldDefaults(base, dfsTabs) as Omit<Exam, "id">;
+    return exam ? { ...exam } : { ...EXAMINATION_FORM_EMPTY };
   });
 
   useEffect(() => {
     if (!open) return;
-    const base = exam ? { ...exam } : { ...EXAMINATION_FORM_EMPTY };
-    setExamDraft(applyDfsCustomFieldDefaults(base, dfsTabs) as Omit<Exam, "id">);
+    setExamDraft(exam ? { ...exam } : { ...EXAMINATION_FORM_EMPTY });
     setErrors({});
-  }, [open, exam, dfsTabs]);
+  }, [open, exam]);
 
   const updateDraft = (patch: Partial<typeof examDraft>) => {
     setExamDraft((prev) => ({ ...prev, ...patch }));
@@ -70,19 +66,6 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
       return;
     }
 
-    // DFS Dynamic Zod schema validation for active custom fields
-    const customData = (examDraft.customData as Record<string, unknown> | undefined) ?? {};
-    const dfsErrors = validateDfsCustomFields(dfsTabs, customData, examDraft as Record<string, unknown>);
-    if (dfsErrors.length > 0) {
-      const errorMap: Record<string, string> = {};
-      for (const err of dfsErrors) {
-        if (!errorMap[err.fieldId]) errorMap[err.fieldId] = err.message;
-      }
-      setErrors({ ...newErrors, ...errorMap });
-      notify.error(t("examinations.form.toast.validationError"));
-      return;
-    }
-
     setSaving(true);
     try {
       await onSave({
@@ -113,7 +96,7 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
     updateDraft,
     handleSave,
     valid,
-    dfsTabs,
     getFieldError,
   };
 }
+

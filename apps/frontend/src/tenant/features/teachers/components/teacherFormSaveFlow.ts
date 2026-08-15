@@ -4,7 +4,6 @@ import type {
   Teacher,
   TeacherDuplicateReason,
   Contact,
-  TabConfig,
   ValidationError,
 } from "@mms/shared";
 import type { FieldDefinition } from "@mms/shared";
@@ -28,7 +27,6 @@ export interface TeacherSaveFlowInput {
   enabledTabs: Set<string>;
   fields: Record<string, FieldDefinition[]>;
   language: string;
-  dfsTabs?: TabConfig[];
   visibleTabKeys: string[];
   t: TranslationFunction;
   onSave: (teacher: Teacher) => void | Promise<void>;
@@ -108,7 +106,6 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<v
     enabledTabs: input.enabledTabs,
     fields: input.fields,
     language: input.language,
-    dfsTabs: input.dfsTabs,
   });
   if (validationErrors) {
     input.setErrors(teacherValidationErrorsByField(validationErrors));

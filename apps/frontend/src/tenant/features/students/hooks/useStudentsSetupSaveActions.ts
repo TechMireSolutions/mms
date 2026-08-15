@@ -20,7 +20,6 @@ import {
   useStudentPreferencesMutation,
 } from "@/tenant/features/students/hooks/useStudentSetupConfig";
 import { useStudentMutations } from "@/tenant/features/students/hooks/useStudentMutations";
-import { syncStudentsCustomTabs } from "@/tenant/features/students/hooks/syncStudentsCustomTabs";
 import { studentsFieldsSetupSnapshot } from "@/tenant/features/students/hooks/studentsSetupPanelSnapshots";
 import { useStudentsSetupFieldDeleteGuard } from "@/tenant/features/students/hooks/useStudentsSetupFieldDeleteGuard";
 import { useStudentsSetupTabDeleteGuard } from "@/tenant/features/students/hooks/useStudentsSetupTabDeleteGuard";
@@ -104,7 +103,6 @@ export function useStudentsSetupSaveActions({
     lockedTabPredicate: isStudentLockedEnabledTab,
     defaultColumnRegistry: DEFAULT_STUDENT_COLUMN_REGISTRY,
     registrySyncFn: syncStudentColumnRegistryWithFields,
-    syncCustomTabs: syncStudentsCustomTabs,
     prefsKeys: STUDENT_MODULE_PREFERENCE_KEYS,
     normalizePrefs: normalizeStudentModulePreferences,
     buildFieldConfigPayload: ({

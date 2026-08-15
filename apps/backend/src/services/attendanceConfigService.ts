@@ -1,15 +1,11 @@
 import {
   composeAttendanceSettings,
-  mergeAttendanceFormTabsFromApi,
   stripAttendanceFieldConfigForPersist,
   type FieldDefinition,
   type AttendanceSettings,
   type TabDefinition,
 } from '@mms/shared';
-import {
-  createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
-} from '../lib/createModuleFieldConfigService.js';
+import { createModuleFieldConfigService } from '../lib/createModuleFieldConfigService.js';
 import {
   getAttendanceFieldConfig,
   setAttendanceFieldConfig,
@@ -23,12 +19,9 @@ const attendanceFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripAttendanceFieldConfigForPersist>
 >({
-  moduleId: 'attendance',
   broadcastKey: 'attendance',
   getByWorkspace: getAttendanceFieldConfig,
   upsert: setAttendanceFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeAttendanceFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getAttendanceModulePreferences(tenant);
     return composeAttendanceSettings((raw as unknown) as AttendanceSettings, (prefs || {}) as any);
@@ -44,3 +37,4 @@ export async function updateAttendanceFieldConfigService(
 ): Promise<AttendanceSettings> {
   return attendanceFieldConfig.save(config as Partial<AttendanceSettings> as any);
 }
+

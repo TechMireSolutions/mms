@@ -1,11 +1,5 @@
 import { getRequestTenant } from './tenantContext.js';
-import {
-  mapCustomTabRowToFormTabFields,
-  mergeFormTabsFromCustomTabs,
-} from '../services/mergeFormTabsFromCustomTabs.js';
 import { broadcastCollection } from './livePush.js';
-
-type CustomTabRow = Parameters<typeof mapCustomTabRowToFormTabFields>[0];
 
 function requireTenant(): string {
   const tenant = getRequestTenant();
@@ -14,35 +8,28 @@ function requireTenant(): string {
 }
 
 /**
- * Shared field-config load/save: tenant → load → merge custom_tabs → strip on save → reload → broadcast.
+ * Shared field-config load/save: tenant → load → strip on save → reload → broadcast.
  */
 export function createModuleFieldConfigService<
   TRaw,
   TDocument extends { formTabs?: TFormTab[]; fields?: unknown },
   TFormTab,
-  TFields,
+  _TFields,
   TPersist,
 >({
-  moduleId,
   broadcastKey,
   getByWorkspace,
   upsert,
-  mapRow,
-  merge,
   toDocument,
   stripForPersist,
   reloadFailedMessage,
 }: {
-  moduleId: string;
+  moduleId?: string;
   broadcastKey: string;
   getByWorkspace: (tenant: string) => Promise<TRaw | null | undefined>;
   upsert: (tenant: string, payload: TPersist) => Promise<unknown>;
-  mapRow: (row: CustomTabRow) => TFormTab;
-  merge: (
-    documentFormTabs: TFormTab[] | undefined,
-    customFormTabs: TFormTab[],
-    fields: TFields,
-  ) => TFormTab[];
+  mapRow?: unknown;
+  merge?: unknown;
   toDocument: (raw: TRaw, tenant: string) => TDocument | Promise<TDocument>;
   stripForPersist: (config: TDocument) => TPersist;
   reloadFailedMessage: string;
@@ -52,14 +39,7 @@ export function createModuleFieldConfigService<
     const raw = await getByWorkspace(tenant);
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
     const document = await toDocument(raw, tenant);
-    const formTabs = await mergeFormTabsFromCustomTabs({
-      moduleId,
-      documentFormTabs: document.formTabs,
-      fields: document.fields as TFields,
-      mapRow,
-      merge,
-    });
-    return { ...document, formTabs };
+    return { ...document, formTabs: ((document.formTabs ?? []) as TFormTab[]) };
   }
 
   async function save(config: TDocument): Promise<TDocument & { formTabs: TFormTab[] }> {
@@ -74,4 +54,5 @@ export function createModuleFieldConfigService<
   return { load, save, requireTenant };
 }
 
-export { mapCustomTabRowToFormTabFields, requireTenant as requireFieldConfigTenant };
+export { requireTenant as requireFieldConfigTenant };
+

@@ -1,12 +1,10 @@
 import type React from "react";
-import type { FieldDefinition, TabConfig, Teacher } from "@mms/shared";
-import { findDfsTab } from "@mms/shared";
+import type { FieldDefinition, Teacher } from "@mms/shared";
 import {
   TeacherBasicSection,
   TeacherEmploymentSection,
   type TeacherStatusOption,
 } from "@/tenant/features/teachers/components/TeacherFormSections";
-import { TeacherCustomFieldsBlock } from "@/tenant/features/teachers/components/TeacherCustomFieldsBlock";
 import { TeacherNotesSection } from "@/tenant/features/teachers/components/TeacherNotesSection";
 
 export interface TeacherFormTabContentProps {
@@ -16,7 +14,6 @@ export interface TeacherFormTabContentProps {
   teacherDraft: Partial<Teacher>;
   errors: Record<string, string>;
   fields: Record<string, FieldDefinition[]>;
-  dfsTabs?: TabConfig[];
   defaultSpecialization: string;
   linkedTeacherContactIds: Array<string | number>;
   specializationOptions: string[];
@@ -32,12 +29,10 @@ export interface TeacherFormTabContentProps {
 
 export function TeacherFormTabContent({
   tab,
-  formInstanceId,
   teacher,
   teacherDraft,
   errors,
   fields,
-  dfsTabs,
   defaultSpecialization,
   linkedTeacherContactIds,
   specializationOptions,
@@ -47,28 +42,8 @@ export function TeacherFormTabContent({
   statusOptions,
   isFieldEnabled,
   isFieldRequired,
-  getFieldError,
   onDraftChange,
 }: TeacherFormTabContentProps): React.JSX.Element {
-  const dfsTab = findDfsTab(dfsTabs, tab);
-
-  if (dfsTab && tab !== "basic" && tab !== "employment") {
-    return (
-      <div className="space-y-6 pb-6">
-        <TeacherCustomFieldsBlock
-          teacherDraft={teacherDraft}
-          formInstanceId={formInstanceId}
-          fields={fields}
-          customFields={dfsTab.fields}
-          tabId={tab}
-          getFieldError={getFieldError}
-          updateDraft={onDraftChange}
-          hideWhenEmpty={false}
-        />
-      </div>
-    );
-  }
-
   if (tab === "employment") {
     return (
       <div className="space-y-6 pb-6">
@@ -92,59 +67,25 @@ export function TeacherFormTabContent({
           isFieldRequired={isFieldRequired}
           onDraftChange={onDraftChange}
         />
-        <TeacherCustomFieldsBlock
-          teacherDraft={teacherDraft}
-          formInstanceId={formInstanceId}
-          fields={fields}
-          customFields={findDfsTab(dfsTabs, "employment")?.fields}
-          tabId="employment"
-          getFieldError={getFieldError}
-          updateDraft={onDraftChange}
-        />
-      </div>
-    );
-  }
-
-  if (tab === "basic") {
-    return (
-      <div className="space-y-6 pb-6">
-        <TeacherBasicSection
-          teacherDraft={teacherDraft}
-          errors={errors}
-          fields={fields}
-          defaultSpecialization={defaultSpecialization}
-          linkedTeacherContactIds={linkedTeacherContactIds}
-          specializationOptions={specializationOptions}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-        />
-        <TeacherCustomFieldsBlock
-          teacherDraft={teacherDraft}
-          formInstanceId={formInstanceId}
-          fields={fields}
-          customFields={findDfsTab(dfsTabs, "basic")?.fields}
-          tabId="basic"
-          getFieldError={getFieldError}
-          updateDraft={onDraftChange}
-        />
       </div>
     );
   }
 
   return (
     <div className="space-y-6 pb-6">
-      <TeacherCustomFieldsBlock
+      <TeacherBasicSection
         teacherDraft={teacherDraft}
-        formInstanceId={formInstanceId}
+        errors={errors}
         fields={fields}
-        customFields={dfsTab?.fields}
-        tabId={tab}
-        getFieldError={getFieldError}
-        updateDraft={onDraftChange}
-        hideWhenEmpty={false}
+        defaultSpecialization={defaultSpecialization}
+        linkedTeacherContactIds={linkedTeacherContactIds}
+        specializationOptions={specializationOptions}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        onDraftChange={onDraftChange}
       />
     </div>
   );
 }
+
 

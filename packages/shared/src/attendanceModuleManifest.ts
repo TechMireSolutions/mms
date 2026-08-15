@@ -41,7 +41,7 @@ export const ATTENDANCE_MODULE_MANIFEST = {
   restBasePath: '/api/attendance',
   analyticsCategory: 'attendance',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['preferences'] as const,
   permissions: {
     read: 'analytics.view',
     write: 'attendance.write',

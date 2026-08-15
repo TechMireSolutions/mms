@@ -35,8 +35,8 @@ describe('CONTACTS_MODULE_MANIFEST', () => {
     expect(CONTACTS_MODULE_MANIFEST.softDelete.workExcludesDeleted).toBe(true);
   });
 
-  it('orders Setup sub-tabs as fields/preferences/sync', () => {
-    expect(CONTACTS_MODULE_MANIFEST.setupSubTabs).toEqual(['fields', 'preferences', 'sync']);
+  it('orders Setup sub-tabs as preferences/sync', () => {
+    expect(CONTACTS_MODULE_MANIFEST.setupSubTabs).toEqual(['preferences', 'sync']);
   });
 });
 

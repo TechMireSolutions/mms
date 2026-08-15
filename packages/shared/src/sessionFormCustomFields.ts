@@ -1,36 +1,35 @@
-/** Helpers for session form custom (non-seed) fields. */
+/**
+ * @file sessionFormCustomFields.ts
+ * @description Helpers for Sessions form custom (non-seed) fields.
+ */
 import { INITIAL_SESSIONS_FIELD_SEED } from './moduleFieldSetupAcademic.js';
-import type { FieldDefinition } from './contactFieldSchemaTypes.js';
-import type { TabConfig } from './schemas/dynamicFormSchemas.js';
-import type { Session } from './sessionTypes.js';
 import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
-import { applyDfsCustomFieldDefaults } from './dynamicFormHelpers.js';
+import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 
 const helpers = createFormCustomFieldHelpers(INITIAL_SESSIONS_FIELD_SEED);
 
-/** Keys owned by static session form chrome (INITIAL_SESSIONS_FIELD_SEED). */
-export const listSessionSystemFormFieldKeys = helpers.listSystemFormFieldKeys;
+/**
+ * Returns keys owned by static session form chrome (`INITIAL_SESSIONS_FIELD_SEED`).
+ */
+export function listSessionSystemFormFieldKeys(): ReadonlySet<string> {
+  return helpers.listSystemFormFieldKeys();
+}
 
 /**
- * Enabled non-seed fields for the session form.
- * When `tabId` is set, only fields stored under that config tab are returned.
- * When omitted, returns enabled non-seed fields from every tab.
+ * Returns enabled non-seed fields for the Sessions form.
+ * When `tabId` is specified, only fields configured under that tab are returned.
+ * When omitted, returns enabled non-seed fields across all tabs.
  */
-export const listEnabledCustomSessionFormFields = helpers.listEnabledCustomFormFields;
-
-/** True when `fieldId` is part of the static form seed for `tabId`. */
-export const isSessionSystemFormField = helpers.isSystemFormField;
+export function listEnabledCustomSessionFormFields<T extends FieldDefinition>(
+  fields: Record<string, T[]>,
+  tabId?: string,
+): T[] {
+  return helpers.listEnabledCustomFormFields(fields, tabId);
+}
 
 /**
- * Seeds DFS custom field defaults into session draft customData for new sessions.
- * Delegates to the shared {@link applyDfsCustomFieldDefaults} helper.
+ * Returns true when `fieldId` is part of the static form seed for `tabId`.
  */
-export function applySessionDfsCustomFieldDefaults(
-  draft: Partial<Session>,
-  dfsTabs?: TabConfig[],
-): Partial<Session> {
-  return applyDfsCustomFieldDefaults(
-    draft as { id?: unknown; customData?: Record<string, unknown> | null },
-    dfsTabs,
-  ) as Partial<Session>;
+export function isSessionSystemFormField(tabId: string, fieldId: string): boolean {
+  return helpers.isSystemFormField(tabId, fieldId);
 }

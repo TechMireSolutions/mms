@@ -14,8 +14,6 @@ import {
   syncContactScalarFields,
   normalizeToE164,
   isContactDeleted,
-  validateDfsCustomFields,
-  type TabConfig,
   type ValidationError,
 } from "@mms/shared";
 
@@ -26,7 +24,6 @@ export function useContactFormSave({
   onSave,
   onClose,
   onValidationTab,
-  dfsTabs,
 }: {
   contact?: Contact;
   contactDraft: Partial<Contact>;
@@ -34,7 +31,6 @@ export function useContactFormSave({
   onSave: (contact: Contact) => void | Promise<void>;
   onClose: () => void;
   onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
-  dfsTabs?: TabConfig[];
 }) {
   const { t } = useTranslation();
   const validate = useContactValidation();
@@ -73,11 +69,6 @@ export function useContactFormSave({
         message: t("contacts.form.avatarMustUpload"),
       });
     }
-
-    // DFS Dynamic Zod schema validation for active custom fields across module tabs
-    const customData = (cleanedDraft.customData as Record<string, unknown> | undefined) || {};
-    const dfsErrors = validateDfsCustomFields(dfsTabs, customData, cleanedDraft as Record<string, unknown>);
-    formErrors.push(...dfsErrors);
 
     if (formErrors.length > 0) {
       setValidationErrors(formErrors);
@@ -159,7 +150,6 @@ export function useContactFormSave({
     contact,
     contactDraft,
     defaultCountryCode,
-    dfsTabs,
     onClose,
     onSave,
     onValidationTab,

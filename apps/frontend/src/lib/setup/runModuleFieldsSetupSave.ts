@@ -22,7 +22,7 @@ export async function runModuleFieldsSetupSave({
   setSaved,
 }: {
   formTabs: TabDefinition[];
-  syncCustomTabs: (formTabs: TabDefinition[]) => Promise<void>;
+  syncCustomTabs?: (formTabs: TabDefinition[]) => Promise<void>;
   persistFieldConfig: () => Promise<void>;
   markDraftPristine?: () => void;
   auditPromise: Promise<unknown>;
@@ -33,8 +33,9 @@ export async function runModuleFieldsSetupSave({
   setSaved: (value: boolean) => void;
 }): Promise<void> {
   try {
-    // Typed custom_tabs via REST — do not dual-write formTabs into field-config.
-    await syncCustomTabs(formTabs);
+    if (syncCustomTabs) {
+      await syncCustomTabs(formTabs);
+    }
     await persistFieldConfig();
     safeAudit(auditPromise, auditChannel);
     markDraftPristine?.();

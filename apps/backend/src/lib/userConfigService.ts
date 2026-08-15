@@ -1,15 +1,11 @@
 import {
   composeUsersSettings,
-  mergeUsersFormTabsFromApi,
   stripUserFieldConfigForPersist,
   type FieldDefinition,
   type UsersSettings,
   type TabDefinition,
 } from '@mms/shared';
-import {
-  createModuleFieldConfigService,
-  mapCustomTabRowToFormTabFields,
-} from './createModuleFieldConfigService.js';
+import { createModuleFieldConfigService } from './createModuleFieldConfigService.js';
 import {
   getUserFieldConfigByWorkspace,
   upsertUserFieldConfig,
@@ -23,12 +19,9 @@ const userFieldConfig = createModuleFieldConfigService<
   Record<string, FieldDefinition[]> | undefined,
   ReturnType<typeof stripUserFieldConfigForPersist>
 >({
-  moduleId: 'users',
   broadcastKey: 'users',
   getByWorkspace: getUserFieldConfigByWorkspace,
   upsert: upsertUserFieldConfig,
-  mapRow: mapCustomTabRowToFormTabFields,
-  merge: mergeUsersFormTabsFromApi,
   toDocument: async (raw, tenant) => {
     const prefs = await getUserModulePreferencesByWorkspace(tenant);
     return composeUsersSettings(raw, prefs);
@@ -44,3 +37,4 @@ export async function saveUserFieldConfig(
 ): Promise<UsersSettings> {
   return userFieldConfig.save(config as UsersSettings);
 }
+

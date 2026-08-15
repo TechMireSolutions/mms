@@ -1,4 +1,4 @@
-import { AppTranslationKey, DEFAULT_CURRENCIES, todayISO, applySessionDfsCustomFieldDefaults, type TabConfig } from '@mms/shared';
+import { AppTranslationKey, DEFAULT_CURRENCIES, todayISO } from '@mms/shared';
 import type { Session } from '@/lib/data/sessionsData';
 
 export const SESSION_STATUSES = ['active', 'upcoming', 'completed', 'cancelled'] as const;
@@ -42,9 +42,8 @@ export function buildSessionDraftFromRecord(
   session: Session | null | undefined,
   defaultType: string,
   defaultCurrency: string,
-  dfsTabs?: TabConfig[],
 ): SessionFormDraft {
-  const draft: SessionFormDraft = {
+  return {
     name: session?.name ?? '',
     type: session?.type ?? defaultType,
     status: session?.status ?? 'active',
@@ -61,7 +60,6 @@ export function buildSessionDraftFromRecord(
     tabarruk: session?.tabarruk ?? [],
     customData: (session as { customData?: Record<string, unknown> } | undefined)?.customData ?? {},
   };
-  return dfsTabs ? applySessionDfsCustomFieldDefaults(draft as unknown as Partial<Session>, dfsTabs) as unknown as SessionFormDraft : draft;
 }
 
 /** Stable snapshot for FormModal dirty detection (editable fields only). */

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import {
-  User, BookOpen, Layers, DollarSign, Clock, ArrowRight, FileText,
+  User, BookOpen, Layers, DollarSign, Clock, ArrowRight,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Enrollment } from '@/lib/data/enrollmentData';
@@ -9,10 +9,9 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { formatDate, formatDateTime, collectActiveDfsFields } from "@mms/shared";
+import { formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModuleTabs } from "@/hooks/useDynamicFormConfig";
 import { EnrollmentArchivedBanner } from "@/tenant/features/enrollments/components/EnrollmentArchivedBanner";
 
 interface SectionProps {
@@ -40,9 +39,9 @@ interface RowProps {
 
 function Row({ label, value }: RowProps): React.ReactElement {
   return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b border-border last:border-0">
+    <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-b-0">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xs font-semibold text-foreground text-end">{value || "—"}</span>
+      <span className="text-xs font-semibold text-foreground text-end">{value}</span>
     </div>
   );
 }
@@ -58,20 +57,7 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
   const { t } = useTranslation();
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
   const { formatCurrency } = useFinanceCurrency();
-  const { data: dfsTabs } = useModuleTabs("enrollments");
   const student = resolvedStudents[0];
-
-  // Collect DFS custom fields for read-only display
-  const dfsCustomFields = useMemo(() => {
-    const { fields } = collectActiveDfsFields(dfsTabs);
-    return fields;
-  }, [dfsTabs]);
-
-  // Legacy customFields map from the enrollment record
-  const legacyCustomFields = useMemo(() => {
-    const customFieldsMap = (enrollment as unknown as { customFields?: Record<string, unknown> }).customFields;
-    return customFieldsMap ?? {};
-  }, [enrollment]);
 
   const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
@@ -88,34 +74,31 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
 
   if (!enrollment) return null;
 
-  const isArchived = Boolean(enrollment.deletedAt);
-
-  const TRANSITIONS: Record<Enrollment["status"], Enrollment["status"][]> = {
-    pending:   ["confirmed", "cancelled"],
-    confirmed: ["completed", "cancelled"],
-    cancelled: [],
-    completed: [],
-  };
-  const nextStatuses = isArchived ? [] : (TRANSITIONS[enrollment.status] || []);
+  const nextStatuses = (
+    enrollment.status === "pending"   ? ["confirmed", "cancelled"] :
+    enrollment.status === "confirmed" ? ["completed", "cancelled"] :
+    []
+  ) as Enrollment["status"][];
 
   return (
     <DetailDrawerShell
+      open={Boolean(enrollment)}
       onClose={onClose}
-      title={enrollment.studentName}
+      title={student?.name || enrollment.studentName}
       subtitle={`${enrollment.sessionName} · #${enrollment.id}`}
       icon={User}
       ariaLabel={t("enrollments.detail.ariaLabel")}
       className="max-w-2xl"
       headerExtra={
         <div className="flex flex-col gap-2 mt-1">
-          <EnrollmentArchivedBanner enrollment={enrollment} />
-          <div className="flex items-center gap-2 flex-wrap">
-            {student?.grNumber && (
-              <span className="bg-primary/5 text-primary text-xs px-2 py-0.5 rounded border border-primary/10 font-bold uppercase">
-                {t("enrollments.detail.grNumber")}: {student.grNumber}
-              </span>
+          {enrollment.deletedAt && (
+             <EnrollmentArchivedBanner enrollment={enrollment} />
+          )}
+          <div className="flex items-center gap-2">
+            <StatusBadge status={enrollment.status} config={statusConfig} />
+            {enrollment.paymentStatus && (
+              <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} />
             )}
-            <StatusBadge status={enrollment.status} config={statusConfig} size="sm" />
           </div>
         </div>
       }
@@ -156,19 +139,6 @@ export function EnrollmentDetail({ enrollment, onClose, onStatusChange, canWrite
               : "—"
           } />
         </Section>
-
-        {/* DFS custom fields — read-only display */}
-        {dfsCustomFields.length > 0 && (
-          <Section icon={FileText} title={t("enrollments.detail.sectionCustomFields")}>
-            {dfsCustomFields.map((field) => {
-              const rawValue = legacyCustomFields[field.key];
-              const displayValue = rawValue != null && String(rawValue) !== "" ? String(rawValue) : null;
-              return (
-                <Row key={field.key} label={field.label} value={displayValue ?? "—"} />
-              );
-            })}
-          </Section>
-        )}
 
         {enrollment.timeline && enrollment.timeline.length > 0 && (
           <Section icon={Clock} title={t("enrollments.detail.sectionTimeline")}>

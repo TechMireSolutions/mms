@@ -1,17 +1,22 @@
+/**
+ * @file examinationsModuleManifest.ts
+ * @description Examinations module manifest, DTO validation schemas, and types.
+ */
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 
+/** Zod schema for single Exam record. */
 export const examRecordSchema = z.object({
   id: z.string(),
   name: z.string(),
   subject: z.string(),
-  totalMarks: z.number(),
-  passingMarks: z.number(),
+  totalMarks: z.number().default(100),
+  passingMarks: z.number().default(50),
   date: z.string(),
-  duration: z.number(),
-  classIds: z.array(z.string()),
-  status: z.enum(["completed", "scheduled", "cancelled", "upcoming", "ongoing"]),
-  description: z.string(),
+  duration: z.number().default(60),
+  classIds: z.array(z.string()).default([]),
+  status: z.enum(["completed", "scheduled", "cancelled", "upcoming", "ongoing"]).default("upcoming"),
+  description: z.string().default(""),
   customData: z.record(z.string(), z.unknown()).default({}),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
@@ -21,6 +26,7 @@ export const examRecordSchema = z.object({
 export type Exam = z.infer<typeof examRecordSchema>;
 export const examListSchema = z.array(examRecordSchema);
 
+/** Zod schema for single Exam Result entry. */
 export const examResultRecordSchema = z.object({
   id: z.string(),
   examId: z.string(),
@@ -31,7 +37,7 @@ export const examResultRecordSchema = z.object({
 export type ExamResult = z.infer<typeof examResultRecordSchema>;
 export const examResultListSchema = z.array(examResultRecordSchema);
 
-/** Examinations module manifest — aligns with globle1 universal module architecture. */
+/** Examinations module manifest — aligns with MMS universal module architecture. */
 export const EXAMINATIONS_MODULE_MANIFEST = {
   moduleId: 'examinations',
   entityType: 'Exam',
@@ -43,7 +49,7 @@ export const EXAMINATIONS_MODULE_MANIFEST = {
   restBasePath: '/api/examinations',
   analyticsCategory: 'examinations',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['fields', 'preferences'] as const,
+  setupSubTabs: ['preferences'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,
@@ -66,4 +72,6 @@ export const EXAMINATIONS_MODULE_MANIFEST = {
   defaultPageSize: 12,
 } as const;
 
+export type ExaminationsModuleManifest = typeof EXAMINATIONS_MODULE_MANIFEST;
 export type ExaminationsModuleTier = (typeof EXAMINATIONS_MODULE_MANIFEST.tiers)[number];
+

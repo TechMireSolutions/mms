@@ -1,14 +1,13 @@
-import React, { ChangeEvent } from "react";
+import type React from "react";
+import type { ChangeEvent } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import type { Contact, CustomFieldConfig } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { ContactBasicAvatarSection } from "@/tenant/features/contacts/components/formTabs/ContactBasicAvatarSection";
 import { ContactBasicIdentityFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicIdentityFields";
-import { ContactCustomFieldsTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomFieldsTab";
 
-interface ContactBasicTabProps {
+export interface ContactBasicTabProps {
   contactDraft: Partial<Contact>;
   formInstanceId: string;
-  customFields?: CustomFieldConfig[];
   isFieldEnabled: (tabId: string, fieldId: string) => boolean;
   isFieldRequired: (tabId: string, fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
@@ -21,10 +20,12 @@ interface ContactBasicTabProps {
   handleAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
+/**
+ * Basic Info form tab: coordinates avatar photo upload/cropping and core personal identity fields.
+ */
 export function ContactBasicTab({
   contactDraft,
   formInstanceId,
-  customFields,
   isFieldEnabled,
   isFieldRequired,
   getFieldError,
@@ -35,7 +36,7 @@ export function ContactBasicTab({
   onUpdateGenders,
   lockGender,
   handleAvatarChange,
-}: ContactBasicTabProps): JSX.Element {
+}: ContactBasicTabProps): React.JSX.Element {
   return (
     <div className="space-y-4 text-start">
       <SectionCard accentColor="primary">
@@ -61,19 +62,10 @@ export function ContactBasicTab({
           onUpdateGenders={onUpdateGenders}
           lockGender={lockGender}
         />
-
-        <ContactCustomFieldsTab
-          contactDraft={contactDraft}
-          formInstanceId={formInstanceId}
-          customFields={customFields}
-          getFieldError={getFieldError}
-          updateDraft={updateDraft}
-          tabId="basic"
-          hideWhenEmpty
-          className="mt-4"
-        />
       </SectionCard>
     </div>
   );
 }
+
+
 

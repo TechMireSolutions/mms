@@ -3,7 +3,6 @@ import { INITIAL_FIELD_SEED } from './contactFieldSeed.js';
 import { REMOVED_FORM_FIELD_KEYS } from './contactTabRegistry.js';
 import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
-import type { CustomFieldConfig } from './schemas/dynamicFormSchemas.js';
 
 const helpers = createFormCustomFieldHelpers(INITIAL_FIELD_SEED);
 const removedKeySet = new Set(REMOVED_FORM_FIELD_KEYS);
@@ -14,7 +13,7 @@ const removedKeySet = new Set(REMOVED_FORM_FIELD_KEYS);
  * (so a field created on Basic stays on Basic).
  * When omitted, returns enabled non-seed fields from every tab (legacy aggregate).
  */
-export function listEnabledCustomContactFormFields<T extends FieldDefinition | CustomFieldConfig>(
+export function listEnabledCustomContactFormFields<T extends FieldDefinition>(
   fields: Record<string, T[]>,
   tabId?: string,
 ): T[] {
@@ -22,3 +21,4 @@ export function listEnabledCustomContactFormFields<T extends FieldDefinition | C
     .listEnabledCustomFormFields(fields, tabId)
     .filter((field) => !removedKeySet.has(field.key));
 }
+

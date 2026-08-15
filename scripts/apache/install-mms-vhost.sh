@@ -12,7 +12,6 @@ ENV_FILE="${1:-apps/backend/.env}"
 TEMPLATE="$ROOT_DIR/scripts/apache/mmsv2-vhost.conf.template"
 # 000- prefix: load before Moodle/default SSL vhosts when SNI matching fails.
 TARGET="/etc/apache2/sites-available/000-mmsv2.conf"
-LEGACY_TARGET="/etc/apache2/sites-available/mmsv2.conf"
 
 read_env_var() {
   local key="$1"
@@ -60,6 +59,8 @@ run_priv() {
 }
 
 TMP="$(mktemp)"
+trap 'rm -f "$TMP"' EXIT
+
 sed \
   -e "s/@@MMS_APP_DOMAIN@@/${APP_DOMAIN}/g" \
   -e "s/@@BACKEND_PORT@@/${BACKEND_PORT}/g" \
@@ -94,15 +95,22 @@ fi
 
 echo "Installing ${TARGET} for ${APP_DOMAIN} → :${BACKEND_PORT}"
 run_priv cp "$TMP" "$TARGET"
-rm -f "$TMP"
 
 run_priv a2dissite mmsv2.conf z-mmsv2.conf 2>/dev/null || true
 run_priv rm -f /etc/apache2/sites-enabled/mmsv2.conf /etc/apache2/sites-enabled/z-mmsv2.conf 2>/dev/null || true
 run_priv rm -f /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null || true
 run_priv a2ensite 000-mmsv2.conf 2>/dev/null || true
-run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite 2>/dev/null || true
+run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite http2 2>/dev/null || true
 run_priv apache2ctl configtest
-run_priv systemctl reload apache2
+
+if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet apache2 2>/dev/null; then
+  run_priv systemctl reload apache2
+elif command -v service >/dev/null 2>&1; then
+  run_priv service apache2 reload
+else
+  run_priv apache2ctl graceful
+fi
+
 if [[ -f /etc/apache2/sites-enabled/000-mmsv2.conf ]] \
   && grep -F -q "ServerAlias *.${APP_DOMAIN}" /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null; then
   echo "MMS vhost enabled — ${APP_DOMAIN} and *.${APP_DOMAIN} → :${BACKEND_PORT}"

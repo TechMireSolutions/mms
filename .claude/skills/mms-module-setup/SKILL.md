@@ -1,36 +1,32 @@
 ---
 name: mms-module-setup
-description: Implements or modifies module Setup tier per mms-module-architecture.md — Fields sub-tab, Preferences sub-tab, field dependency checks, setup audit, prefs cascade. Use when editing ContactsSettingsPanel, CustomFieldsBuilder, module preferences, or Setup sub-tabs.
+description: Implements or modifies module Setup tier per mms-module-architecture.md — Preferences, defaults, setup audit, prefs cascade. Use when editing module settings and preferences.
 ---
 
 # MMS Module Setup Workflow
 
-**Source:** Rules: `mms-module-architecture.md`, `mms-fields.md`, `mms-settings-i18n.md`
+**Source:** Rules: `mms-module-architecture.md`, `mms-settings-i18n.md`
 
 ## When to use
 
-- Adding/editing **Setup → Fields** (tabs, custom fields, column registry)
 - Adding/editing **Setup → Preferences** (defaults, colours, duplicate rules, workflow)
-- Module-specific Setup sub-tabs (e.g. Contacts Sync)
-- Field/tab delete guards, setup audit, config cascade
+- Module-specific Setup sub-tabs (e.g. Contacts Sync, Messaging Templates)
+- Setup audit, config cascade
 
-For full module page shell, use skill **`mms-module-page`**. For field types/registry schema, use **`mms-fields-registry`**.
+For full module page shell, use skill **`mms-module-page`**.
 
 ## Setup tier structure
 
 ```
 Setup (tier id: setup)
-├── SubTabBar
-│   ├── fields       ← Fields Customization
-│   ├── preferences  ← Module Preferences
-│   └── {contract.setupSubTabs extras}
+├── Preferences  ← Module Preferences
+└── {contract.setupSubTabs extras}
 ```
 
-Register sub-tab ids in `{Module}ModuleManifest.setupSubTabs`.
+Register sub-tab ids in `{Module}ModuleManifest.setupSubTabs`. Default is `['preferences']`.
 
-Drive Setup SubTabBar from the manifest (Hasanat / Examinations / Users pattern) — do not hardcode tab ids in the page.
+Gate edits with `canEditSetup`: show settings even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves.
 
-Gate edits with `canEditSetup`: show SubTabBar even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves. Contacts lookup option lists (`genders`, labels, `countryCodes`) use **`/api/contacts/lookups`** Query/mutation — await before claiming saved.
 
 ## Contacts reference map
 
