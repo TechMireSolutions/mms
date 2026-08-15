@@ -28,9 +28,6 @@ export async function runMigration037(): Promise<void> {
       WHERE custom_data ? 'emergencyContacts'
     `);
 
-    await tx.execute(sql`
-      DELETE FROM custom_tabs WHERE key = 'emergency'
-    `);
 
     const fieldConfigRows = await tx.select().from(schema.contactFieldConfigs);
     for (const row of fieldConfigRows) {

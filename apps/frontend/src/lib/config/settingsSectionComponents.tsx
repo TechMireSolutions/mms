@@ -10,7 +10,7 @@ const LlmSettings = lazy(() => import('@/tenant/features/settings/components/Llm
 
 export const SETTINGS_SECTION_COMPONENTS: Record<
   SettingsSection,
-  LazyExoticComponent<() => React.JSX.Element>
+  LazyExoticComponent<React.ComponentType<any>>
 > = {
   global: GlobalSettings,
   modules: SystemModulesSettings,

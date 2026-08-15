@@ -7,6 +7,7 @@ import {
 import { useTeacherFieldConfigQuery } from "@/tenant/features/teachers/hooks/useTeacherSetupConfig";
 import { TeachersPageConfirmDialogs } from "@/tenant/features/teachers/components/TeachersPageConfirmDialogs";
 import type { TeachersPageOverlaysProps } from "@/tenant/features/teachers/hooks/teachersPageOverlaysTypes";
+import React from "react";
 
 const TeacherForm = lazy(() =>
   import("@/tenant/features/teachers/components/TeacherForm").then((m) => ({
@@ -19,89 +20,87 @@ const TeacherDetail = lazy(() =>
     default: m.default,
   })),
 );
+export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
+      showForm,
+      editTeacher,
+      onCloseForm,
+      onSave,
+      viewTeacher,
+      onCloseView,
+      onEditFromDrawer,
+      onRestoreFromDrawer,
+      messagingTarget,
+      onCloseComposer,
+      openComposer,
+      canWriteMessaging,
+      canWrite,
+      canDelete,
+      bulkDeleteOpen,
+      onBulkDeleteOpenChange,
+      selectedCount,
+      onConfirmBulkDelete,
+      deleteTarget,
+      onDeleteTargetOpenChange,
+      onConfirmSingleDelete,
+      bulkRestoreOpen,
+      onBulkRestoreOpenChange,
+      onConfirmBulkRestore,
+    }: TeachersPageOverlaysProps): React.JSX.Element {
+      const { isPending: configPending } = useTeacherFieldConfigQuery();
+      const formNeedsTabs = showForm || Boolean(viewTeacher);
+      const tabsPending = formNeedsTabs && configPending;
 
-/** Page-owned form / drawer / composer / confirms for Teachers (Contacts-shaped). */
-export function TeachersPageOverlays({
-  showForm,
-  editTeacher,
-  onCloseForm,
-  onSave,
-  viewTeacher,
-  onCloseView,
-  onEditFromDrawer,
-  onRestoreFromDrawer,
-  messagingTarget,
-  onCloseComposer,
-  openComposer,
-  canWriteMessaging,
-  canWrite,
-  canDelete,
-  bulkDeleteOpen,
-  onBulkDeleteOpenChange,
-  selectedCount,
-  onConfirmBulkDelete,
-  deleteTarget,
-  onDeleteTargetOpenChange,
-  onConfirmSingleDelete,
-  bulkRestoreOpen,
-  onBulkRestoreOpenChange,
-  onConfirmBulkRestore,
-}: TeachersPageOverlaysProps): React.JSX.Element {
-  const { isPending: configPending } = useTeacherFieldConfigQuery();
-  const formNeedsTabs = showForm || Boolean(viewTeacher);
-  const tabsPending = formNeedsTabs && configPending;
+      return (
+        <>
+          {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
 
-  return (
-    <>
-      {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
+          <Suspense fallback={<ModuleOverlayLoadingFallback />}>
+            <AnimatePresence>
+              {showForm && canWrite && !configPending ? (
+                <TeacherForm
+                  teacher={editTeacher ?? undefined}
+                  onClose={onCloseForm}
+                  onSave={onSave}
+                />
+              ) : null}
+              {messagingTarget ? (
+                <MessageComposer
+                  channel={messagingTarget.channel}
+                  recipients={messagingTarget.recipients}
+                  onClose={onCloseComposer}
+                />
+              ) : null}
+            </AnimatePresence>
+          </Suspense>
 
-      <Suspense fallback={<ModuleOverlayLoadingFallback />}>
-        <AnimatePresence>
-          {showForm && canWrite && !configPending ? (
-            <TeacherForm
-              teacher={editTeacher ?? undefined}
-              onClose={onCloseForm}
-              onSave={onSave}
-            />
-          ) : null}
-          {messagingTarget ? (
-            <MessageComposer
-              channel={messagingTarget.channel}
-              recipients={messagingTarget.recipients}
-              onClose={onCloseComposer}
-            />
-          ) : null}
-        </AnimatePresence>
-      </Suspense>
+          <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
+            <AnimatePresence>
+              {viewTeacher && !configPending ? (
+                <TeacherDetail
+                  teacher={viewTeacher}
+                  canDelete={canDelete}
+                  onClose={onCloseView}
+                  onEdit={canWrite ? onEditFromDrawer : undefined}
+                  onRestore={onRestoreFromDrawer}
+                  openComposer={openComposer}
+                  canWriteMessaging={canWriteMessaging}
+                />
+              ) : null}
+            </AnimatePresence>
+          </Suspense>
 
-      <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
-        <AnimatePresence>
-          {viewTeacher && !configPending ? (
-            <TeacherDetail
-              teacher={viewTeacher}
-              canDelete={canDelete}
-              onClose={onCloseView}
-              onEdit={canWrite ? onEditFromDrawer : undefined}
-              onRestore={onRestoreFromDrawer}
-              openComposer={openComposer}
-              canWriteMessaging={canWriteMessaging}
-            />
-          ) : null}
-        </AnimatePresence>
-      </Suspense>
-
-      <TeachersPageConfirmDialogs
-        bulkDeleteOpen={bulkDeleteOpen}
-        onBulkDeleteOpenChange={onBulkDeleteOpenChange}
-        selectedCount={selectedCount}
-        onConfirmBulkDelete={onConfirmBulkDelete}
-        deleteTarget={deleteTarget}
-        onDeleteTargetOpenChange={onDeleteTargetOpenChange}
-        onConfirmSingleDelete={onConfirmSingleDelete}
-        bulkRestoreOpen={bulkRestoreOpen}
-        onBulkRestoreOpenChange={onBulkRestoreOpenChange}
-        onConfirmBulkRestore={onConfirmBulkRestore}
-      />
-    </>
-  );
-}
+          <TeachersPageConfirmDialogs
+            bulkDeleteOpen={bulkDeleteOpen}
+            onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+            selectedCount={selectedCount}
+            onConfirmBulkDelete={onConfirmBulkDelete}
+            deleteTarget={deleteTarget}
+            onDeleteTargetOpenChange={onDeleteTargetOpenChange}
+            onConfirmSingleDelete={onConfirmSingleDelete}
+            bulkRestoreOpen={bulkRestoreOpen}
+            onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+            onConfirmBulkRestore={onConfirmBulkRestore}
+          />
+        </>
+      );
+    });

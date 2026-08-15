@@ -9,6 +9,7 @@ import {
   ContactsPageConfirmDialogs,
 } from "@/tenant/features/contacts/components/ContactsPageConfirmDialogs";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import React from "react";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
@@ -51,113 +52,112 @@ export interface ContactsPageOverlaysProps {
   onConfirmBulkRestore: () => void;
 }
 
-/** Lazy form/drawer/composer + confirm dialogs for Contacts page. */
-export function ContactsPageOverlays({
-  canWrite,
-  canDelete,
-  showForm,
-  editContact,
-  defaultCountry,
-  defaultCity,
-  defaultProvince,
-  onCloseForm,
-  onSave,
-  showDuplicates,
-  onCloseDuplicates,
-  onMerge,
-  messagingTarget,
-  onCloseComposer,
-  viewContact,
-  onCloseView,
-  onEditFromDrawer,
-  onRestoreFromDrawer,
-  onWhatsApp,
-  onSms,
-  onEmail,
-  allContactsForLinks,
-  onUpdateContact,
-  bulkDeleteOpen,
-  onBulkDeleteOpenChange,
-  selectedCount,
-  onConfirmBulkDelete,
-  deleteTarget,
-  onDeleteTargetOpenChange,
-  onConfirmSingleDelete,
-  bulkRestoreOpen,
-  onBulkRestoreOpenChange,
-  onConfirmBulkRestore,
-}: ContactsPageOverlaysProps): React.JSX.Element {
-  const { formTabsReady } = useContactConfig();
-  const formNeedsTabs = showForm || Boolean(viewContact);
-  const tabsPending = formNeedsTabs && !formTabsReady;
+export const ContactsPageOverlays = React.memo(function ContactsPageOverlays({
+      canWrite,
+      canDelete,
+      showForm,
+      editContact,
+      defaultCountry,
+      defaultCity,
+      defaultProvince,
+      onCloseForm,
+      onSave,
+      showDuplicates,
+      onCloseDuplicates,
+      onMerge,
+      messagingTarget,
+      onCloseComposer,
+      viewContact,
+      onCloseView,
+      onEditFromDrawer,
+      onRestoreFromDrawer,
+      onWhatsApp,
+      onSms,
+      onEmail,
+      allContactsForLinks,
+      onUpdateContact,
+      bulkDeleteOpen,
+      onBulkDeleteOpenChange,
+      selectedCount,
+      onConfirmBulkDelete,
+      deleteTarget,
+      onDeleteTargetOpenChange,
+      onConfirmSingleDelete,
+      bulkRestoreOpen,
+      onBulkRestoreOpenChange,
+      onConfirmBulkRestore,
+    }: ContactsPageOverlaysProps): React.JSX.Element {
+      const { formTabsReady } = useContactConfig();
+      const formNeedsTabs = showForm || Boolean(viewContact);
+      const tabsPending = formNeedsTabs && !formTabsReady;
 
-  return (
-    <>
-      {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
+      return (
+        <>
+          {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
 
-      <Suspense fallback={<ModuleOverlayLoadingFallback />}>
-        <AnimatePresence>
-          {formTabsReady ? (
-            <ContactForm
-              open={showForm}
-              key={editContact?.id || "new"}
-              contact={editContact ?? undefined}
-              defaultCountry={defaultCountry}
-              defaultCity={defaultCity}
-              defaultProvince={defaultProvince}
-              onClose={onCloseForm}
-              onSave={onSave}
-            />
-          ) : null}
-          {showDuplicates && (
-            <DuplicateDetection
-              onClose={onCloseDuplicates}
-              onMerge={onMerge}
-              canWrite={canWrite}
-            />
-          )}
-          {messagingTarget && (
-            <MessageComposer
-              channel={messagingTarget.channel}
-              recipients={messagingTarget.recipients}
-              onClose={onCloseComposer}
-            />
-          )}
-        </AnimatePresence>
-      </Suspense>
+          <Suspense fallback={<ModuleOverlayLoadingFallback />}>
+            <AnimatePresence>
+              {formTabsReady ? (
+                <ContactForm
+                  open={showForm}
+                  key={editContact?.id || "new"}
+                  contact={editContact ?? undefined}
+                  defaultCountry={defaultCountry}
+                  defaultCity={defaultCity}
+                  defaultProvince={defaultProvince}
+                  onClose={onCloseForm}
+                  onSave={onSave}
+                />
+              ) : null}
+              {showDuplicates && (
+                <DuplicateDetection
+                  onClose={onCloseDuplicates}
+                  onMerge={onMerge}
+                  canWrite={canWrite}
+                />
+              )}
+              {messagingTarget && (
+                <MessageComposer
+                  channel={messagingTarget.channel}
+                  recipients={messagingTarget.recipients}
+                  onClose={onCloseComposer}
+                />
+              )}
+            </AnimatePresence>
+          </Suspense>
 
-      <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
-        <AnimatePresence>
-          {viewContact && formTabsReady ? (
-            <ContactDetail
-              contact={viewContact}
-              onClose={onCloseView}
-              onEdit={onEditFromDrawer}
-              onWhatsApp={onWhatsApp}
-              onSms={onSms}
-              onEmail={onEmail}
-              allContacts={allContactsForLinks}
-              onUpdateContact={onUpdateContact}
-              canWrite={canWrite}
-              canDelete={canDelete}
-              onRestore={onRestoreFromDrawer}
-            />
-          ) : null}
-        </AnimatePresence>
-      </Suspense>
+          <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
+            <AnimatePresence>
+              {viewContact && formTabsReady ? (
+                <ContactDetail
+                  contact={viewContact}
+                  onClose={onCloseView}
+                  onEdit={onEditFromDrawer}
+                  onWhatsApp={onWhatsApp}
+                  onSms={onSms}
+                  onEmail={onEmail}
+                  allContacts={allContactsForLinks}
+                  onUpdateContact={onUpdateContact}
+                  canWrite={canWrite}
+                  canDelete={canDelete}
+                  onRestore={onRestoreFromDrawer}
+                />
+              ) : null}
+            </AnimatePresence>
+          </Suspense>
 
-      <ContactsPageConfirmDialogs
-        bulkDeleteOpen={bulkDeleteOpen}
-        onBulkDeleteOpenChange={onBulkDeleteOpenChange}
-        selectedCount={selectedCount}
-        onConfirmBulkDelete={onConfirmBulkDelete}
-        deleteTarget={deleteTarget}
-        onDeleteTargetOpenChange={onDeleteTargetOpenChange}
-        onConfirmSingleDelete={onConfirmSingleDelete}
-        bulkRestoreOpen={bulkRestoreOpen}
-        onBulkRestoreOpenChange={onBulkRestoreOpenChange}
-        onConfirmBulkRestore={onConfirmBulkRestore}
-      />
-    </>
-  );
-}
+          <ContactsPageConfirmDialogs
+            bulkDeleteOpen={bulkDeleteOpen}
+            onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+            selectedCount={selectedCount}
+            onConfirmBulkDelete={onConfirmBulkDelete}
+            deleteTarget={deleteTarget}
+            onDeleteTargetOpenChange={onDeleteTargetOpenChange}
+            onConfirmSingleDelete={onConfirmSingleDelete}
+            bulkRestoreOpen={bulkRestoreOpen}
+            onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+            onConfirmBulkRestore={onConfirmBulkRestore}
+          />
+        </>
+      );
+    });
