@@ -54,13 +54,13 @@ jobs:
           echo "DEPLOY_SHA=${DEPLOY_SHA}"
 
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.DEPLOY_SHA }}
 
       - name: Download CI dist artifact
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: mms-dist
           path: .
@@ -69,11 +69,11 @@ jobs:
 
       - name: Setup pnpm
         if: github.event_name == 'workflow_dispatch'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: 'pnpm'
