@@ -50,7 +50,7 @@ MMS uses a strict `pnpm` workspace monorepo layout:
 | TypeScript Types & Interfaces | `PascalCase` (no `I` prefix) | `Contact`, `StudentCreateInput` |
 | JSON API properties | `camelCase` | `{ firstName, loginEmail }` |
 | DB tables, JSON keys, fields | `snake_case` | `contact_roles`, `global_settings`, `custom_fields`, `sort_order` |
-| URL route paths | `kebab-case` | `/api/students`, `/api/v2/modules/:module/tabs` |
+| URL route paths | `kebab-case` | `/api/students`, `/api/contacts/lookups`, `/api/saved-reports` |
 | Translation & permission keys | `dot.notation` | `students.actions.add`, `students.write` |
 | Script files | `kebab-case.sh` | `sync-skills.sh`, `deploy-on-server.sh` |
 

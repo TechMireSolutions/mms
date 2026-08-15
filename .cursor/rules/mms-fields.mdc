@@ -27,7 +27,7 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 2. **Drizzle** — column or `custom_data` key + forward-only migration when needed (`mms-schema-migrate`)
 3. **REST** — `parseRequest` Zod on BE routes; field values via shared Zod builders driven by registry type — no ad-hoc `typeof` switches in handlers
 4. **UI** — bind via registry / form draft; `labelKey` only (no hardcoded labels)
-5. **Removal** — call `get*FieldRemovalIssues()` before delete (`mms-module-architecture.mdc` §4)
+5. **Removal** — call `getFieldRemovalIssues()` / `get*FieldRemovalIssues()` before delete to check dependency conflicts (`createFieldRemovalIssuesChecker` in `@mms/shared`)
 6. **Validation** — entity save routes validate via shared Zod schemas (`safeParse`) — client validation is UX only
 
 ## 3. Localization

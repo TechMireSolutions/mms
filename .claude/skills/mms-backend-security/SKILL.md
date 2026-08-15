@@ -74,17 +74,20 @@ OTP: `crypto.randomInt()` — never `Math.random()`.
 
 ## Cookies
 
-| Cookie | Purpose |
-|--------|---------|
-| `mms_access` | Tenant JWT, httpOnly, 15 min, `SameSite=Lax` |
-| `mms_refresh` | Tenant opaque refresh; hash in `auth_artifacts` |
-| `mms_platform_access` | Platform JWT (`tokenType: 'platform_access'`), httpOnly **session** cookie (clears on browser close). JWT payload TTL is ~8h. The shorter of the two applies; **no** platform refresh cookie |
+| Cookie | Purpose & Path |
+|--------|----------------|
+| `mms_access` | Tenant JWT, httpOnly, 15 min, `SameSite=Lax`, `Path=/` |
+| `mms_refresh` | Tenant opaque refresh; hash in `auth_artifacts`; `Path=/api/auth/refresh` |
+| `mms_platform_access` | Platform JWT (`tokenType: 'platform_access'`), httpOnly **session** cookie, `Path=/api/platform` |
 
 Mutual exclusion: issuing/clearing a platform session also clears tenant auth cookies (and logout clears both).
 
 CORS: `credentials: true`; production requires explicit `ALLOWED_ORIGIN`.
 
-Cookie-auth mutations: enforce same-origin (`Origin` / `Sec-Fetch-Site`) or equivalent CSRF defense — do not rely on `SameSite=Lax` alone. Reject JSON writes without `application/json`. On `429`, emit `Retry-After` — `mms-auth-security.md`.
+Security Invariants:
+- Constant-time string/hash comparisons (`crypto.timingSafeEqual`) for passwords, tokens, and OTP codes to eliminate side-channel timing attacks.
+- Cookie-auth mutations: enforce same-origin (`Origin` / `Sec-Fetch-Site`) check on all state-changing routes. Reject JSON writes without `application/json`.
+- Rate limiting: on `429`, emit `Retry-After` header — `mms-auth-security.md`.
 
 ## Tenant isolation checklist
 

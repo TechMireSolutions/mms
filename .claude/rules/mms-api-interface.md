@@ -22,13 +22,14 @@ Governs the communications contract between the React SPA frontend and the Fasti
 ## 1. Client-Server Communication Flow
 All frontend requests to backend resources (tenant or platform) must use `apiFetch` or `apiJson` from the `apiClient.ts` wrapper.
 - **Credentials**: Always `credentials: 'include'`. Cookie names, refresh rules, JWT trust → **`mms-auth-security.md`**.
-- **AbortSignal**: Pass Query/`fetch` `signal` into `apiFetch` / `apiJson` — required for cancellation — `mms-data-layer.md`.
+- **AbortSignal**: Pass Query/`fetch` `signal` into `apiFetch` / `apiJson` — required for cancellation (`mms-data-layer.md`). Support composite signals via `AbortSignal.any([userSignal, AbortSignal.timeout(ms)])` for bounded client fetches.
 - **REST Trajectory**: New features must implement resource-specific endpoints (e.g. `GET /api/students`) instead of the generic collections sync API.
 - **Data Types**: DTOs via `@mms/shared` only. Zod `parseRequest` / form schemas are the write boundary — do **not** enable parallel Fastify Ajv/JSON-Schema body validation for the same DTO.
 - **Write DTOs / write-vs-read**: Prefer shared write schemas — norms → **`mms-form-architecture.md`** (`.strict()`, soft-delete strip).
 - **Response shapes**: Derive serializers / type guards from the same `@mms/shared` Zod — still ban hand-forked Fastify JSON Schema DTOs.
 - **Destructive merges**: Atomic server transaction (`POST …/merge`) — ban FE-only dual delete+upsert.
-- **429 handling**: Honor `Retry-After` — `mms-auth-security.md`.
+- **429 handling**: Honor `Retry-After` header — `mms-auth-security.md`.
+- **Request Tracing**: Propagate `X-Request-Id` (or Fastify `req.id`) through API responses for structured error tracing without exposing internal state.
 
 ---
 
@@ -44,7 +45,7 @@ request → route barrel / sub-routes (routes/**) → use cases ({module}/use-ca
 - **Controller Rules**: Route files must never import raw Drizzle pg pool drivers. Validate bodies with Zod via `parseRequest`.
 - **Use-case layer**: Domain orchestration lives in `{module}/use-cases/**` — pure functions/factories that receive the module repository interface as a DI parameter. Import the module **composition root** (e.g. `contactUseCases`) at call sites; route handlers must not reach past it into the DB.
 - **Repository interface = sole storage gateway**: A single repository interface (Contacts: `ContactsRepository`) declares every storage operation; a Drizzle adapter (`{module}/repository/*Adapter.ts`) is the only concrete implementation. Use-case functions take the interface (testable with fakes), never raw `db` / `pg`. Keep stable re-export shims at legacy `services/*.ts` paths for backward compatibility.
-- **Plugin encapsulation**: Register domain routes as Fastify plugins with stable public registration paths; prefer thin barrels + colocated `*Routes.ts` — `mms-structure-naming.md`.
+- **Plugin encapsulation**: Register domain routes as Fastify plugins (`FastifyPluginAsync`) with stable public registration paths; prefer thin barrels + colocated `*Routes.ts` — `mms-structure-naming.md`.
 - **Boot Guards**: Fail fast if `DATABASE_URL` or `JWT_SECRET` is missing.
 - **Request budgets**: Wire Fastify from `serverConfig` — `bodyLimit` (`REQUEST_BODY_LIMIT_BYTES`) and `requestTimeout` (`REQUEST_TIMEOUT_MS`). Oversized sync/upload routes may raise `bodyLimit` explicitly; do not leave unbounded bodies. PG statement budgets → `mms-data-layer.md`.
 - **Outbound HTTP**: Backend fetches to external providers must use `AbortSignal.timeout(...)` (see `outboundUrl.ts`) — do not hang the event loop on provider stalls. FE Query cancellation stays `mms-data-layer.md`.
@@ -55,12 +56,26 @@ Apply `authenticateTenant` / `authenticatePlatform` / subdomain resolution as sp
 
 ---
 
-## 4. API Error Payloads
+## 4. API Error Payloads & Status Codes
 API errors must resolve to a uniform JSON payload format:
 ```json
-{ "type": "validation_error", "message": "Development debug details" }
+{ "type": "validation_error", "message": "Development debug details", "details": {} }
 ```
-- **Error Classifications**: Standard types include `auth_required`, `invalid_credentials`, `forbidden`, `two_factor_required`, `not_found`, `validation_error`, `conflict`, and `server_error`. Platform clients: map against the full `@mms/shared` `PLATFORM_API_ERROR_TYPES` set — never invent ad-hoc platform `type` strings.
+- **HTTP Status Codes**:
+  - `200 OK`: Successful read/update.
+  - `201 Created`: Successful resource creation (POST).
+  - `204 No Content`: Successful deletion / action with empty body.
+  - `400 Bad Request`: Generic malformed request or syntax error.
+  - `401 Unauthorized`: Unauthenticated (`auth_required`, `session_revoked`, `account_disabled`).
+  - `403 Forbidden`: Authenticated user lacks permission (`forbidden`).
+  - `404 Not Found`: Resource does not exist (`not_found`).
+  - `408 Request Timeout`: Transaction / request exceeded budget (`timeout`, `syncTimeout`).
+  - `409 Conflict`: Concurrency conflict, idempotency mismatch, or composite key collision (`conflict`).
+  - `422 Unprocessable Entity`: Zod schema validation failure (`validation_error`).
+  - `429 Too Many Requests`: Rate limit reached (`rate_limit_exceeded`).
+  - `500 Internal Server Error`: Unhandled backend exception (`server_error`).
+  - `503 Service Unavailable`: Database or critical subsystem down (`service_unavailable`).
+- **Error Classifications**: Standard types include `auth_required`, `invalid_credentials`, `forbidden`, `two_factor_required`, `not_found`, `validation_error`, `conflict`, `rate_limit_exceeded`, and `server_error`. Platform clients: map against the full `@mms/shared` `PLATFORM_API_ERROR_TYPES` set — never invent ad-hoc platform `type` strings.
 - **Mask exceptions**: Never leak database exceptions, SQL failures, or raw Node stack traces to the client in production responses.
 - **Client Handling**: Tenant UI maps `type` via `t('errors.{type}')`. Platform UI maps via `mapPlatformAuthError` / `getPlatformErrorMessage` (`platformAuthErrors.ts` → `platform.*` keys).
 
@@ -75,8 +90,8 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 - Frontend mutations: await success before closing forms — **`mms-module-architecture.md` §7**.
 
 ## 6. Pagination, idempotency & concurrency
-- HTTP contract: clients **should send** `page` and `limit` (shared `baseListQuerySchema`); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
-- Target: tighten schemas to required `page` (+ `limit`) when clients are all migrated — do not claim Zod already requires them.
-- **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header or body) when retries are likely. **Bind** the key to a body digest (or equivalent) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload (Messaging target; generalize on new retryable POSTs).
+- **HTTP contract**: clients **should send** `page` and `limit` (shared `baseListQuerySchema`); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
+- **Target**: tighten schemas to required `page` (+ `limit`) when clients are all migrated — do not claim Zod already requires them.
+- **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header `Idempotency-Key` or body `idempotencyKey`) when retries are likely. **Bind** the key to a cryptographic body digest (e.g. SHA-256 hash of normalized payload) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload.
 - **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.md`.
 - Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.

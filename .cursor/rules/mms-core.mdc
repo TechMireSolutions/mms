@@ -7,144 +7,78 @@ alwaysApply: true
 
 Madrasa Management System monorepo — applies on every task across both **tenant** and **platform** boundaries.
 
-**Workflow skills:** orientation → `antigravity-workspace` · install/run → `mms-dev-setup`. Per-topic workflows in the Standards index below (rules = norms; skills = checklists).
+**Workflow skills:** orientation → `antigravity-workspace` · install/run → `mms-dev-setup`. Matrix below (rules = norms; skills = checklists).
 
-## Layout
-
-```
-apps/frontend/     React 19 + Vite 8
-apps/backend/      Fastify 5 + PostgreSQL
-packages/shared/   @mms/shared
-```
-
-- **pnpm** at root: `pnpm dev`, `pnpm build`, `pnpm typecheck`
-- Env: `VITE_API_URL` (frontend); `JWT_SECRET`, `DATABASE_URL` (backend)
-
-## Boundaries
-
-| Rule | Detail |
-|------|--------|
-| Shared logic | `@mms/shared` only |
-| Cross-module FE imports | Banned between feature modules — the ban targets **coupling**, not duplication (FE layering + extraction corollary below) |
-| FE ↔ BE | DTOs via `@mms/shared` only |
-| Inter-module data | Prefer batch `/resolve` + Query; `local-database-update` for settings/legacy local writes — no global singletons |
-| `turbo.json` cache | Immutable |
-
-### FE layering — where shared code lives
+## Monorepo Layout & Stack
 
 ```
-@mms/shared                          Pure domain logic (types, schemas, helpers)
-apps/frontend/src/lib/*              FE-wide logic: query factories, channel resolvers, i18n helpers
-apps/frontend/src/components/ui/*    Prop-driven chrome, zero domain imports
-apps/frontend/src/tenant/features/*  Thin adapters: config + labels + wiring only (applies identically to platform/pages)
+apps/frontend/     React 19 + Vite 8 · Tailwind v4 · Radix/shadcn · TanStack Query v5 · Framer Motion · Lucide · Recharts
+apps/backend/      Fastify 5 + tsx · PostgreSQL + Drizzle ORM (parameterized SQL only; no raw pg in controllers)
+packages/shared/   @mms/shared (SSOT for types, Zod DTOs, schemas, constants, pure utils)
 ```
 
-- `lib/*` and `components/ui/*` are the sanctioned FE-wide shared layers — any feature (tenant or platform) may import them (e.g. `formatContactGenderLabel` from `@/lib/contacts/contactI18n` feeds `components/ui/PersonIdentityMeta` and the Students module).
-- **Extraction corollary:** the cross-module ban forbids *coupling*, not duplication. When 2+ feature components are near-identical, extract the shared 90% — chrome → `components/ui/`, logic → `lib/` or `@mms/shared` — and keep per-module wrappers thin. A per-module adapter must contain only config/labels/wiring, never forked markup; do not fork components to keep them "self-contained" — `mms-dry.mdc`.
-- **Enforcement:** feature modules reach each other's hooks/data only through `@/tenant/hooks/collections/*` facades; the FE ESLint boundary rule (`apps/frontend/eslint.config.js`) flags direct feature→feature imports. Sanctioned cross-cutting targets and facade rules → **`mms-dry.mdc` §3**.
+- **Root commands:** `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm test`.
+- **Environment:** `VITE_API_URL` (FE); `JWT_SECRET`, `DATABASE_URL` (BE).
 
-## Stack (current)
+## Boundaries & Layering
 
-Lists the **current** stack agents should target. Freshness / upgrades → `mms-dependencies.mdc`.
+| Layer | Sanctioned Contents | Constraints |
+|---|---|---|
+| `@mms/shared` | Types, Zod DTOs, configs, manifests, pure utils | Zero DOM, React, Fastify, or DB dependencies. |
+| `apps/frontend/src/lib/*` | FE-wide logic: query factories, i18n, apiClient | Sanctioned shared FE layer across features/platform. |
+| `apps/frontend/src/components/ui/*` | Shared UI primitives & design tokens | Prop-driven chrome only; zero feature domain imports. |
+| `apps/frontend/src/tenant/features/*` | Feature adapters: config + labels + wiring | Banned direct cross-feature imports (`@/tenant/features/{a}` from `{b}`). Route via `@/tenant/hooks/collections/*` facades or extract shared chrome to `components/ui` / `lib/` / `@mms/shared` — `mms-dry.mdc`. |
 
-- **BE:** Fastify + tsx · Drizzle + PostgreSQL · no raw `pg` / ad-hoc query strings in controllers (approved Drizzle `sql` fragments OK for RLS `SET LOCAL` and JSONB merge — `mms-data-layer.mdc`)
-- **FE:** React 19 · Vite 8 · Tailwind v4 · Radix/shadcn · TanStack Query · Framer Motion · Recharts · Lucide
-- **Icons:** Lucide only · **Animations:** Framer Motion only
+- **Extraction Corollary:** Ban targets coupling, not duplication. When 2+ components are near-identical, extract the shared 90% into `components/ui/` or `lib/` and keep wrappers thin.
+- **Inter-module data:** Batch `/resolve` + Query; `local-database-update` only for legacy settings/local drafts.
+- **Validation SSOT:** Shared Zod in `@mms/shared` (`.strict()` write DTOs). Do not fork schemas.
 
-## Real-time & polling
+## Real-time & Data Authority
 
-| Allowed | Banned |
-|---------|--------|
-| `local-database-update` event bus (current FE) | Ad-hoc `setInterval` / repeated `fetch` loops in `useEffect` without Query |
-| Tenant WS via existing `/api/ws` + `broadcastTenantUpdate` → Query invalidation | Parallel/ad-hoc WS protocols |
-| TanStack Query `refetchInterval`, documented job-progress polls, WS heartbeats | Half-polling hybrids that invent a second realtime stack |
-| SSE (optional future) | — |
+| Pattern | Allowed | Banned |
+|---|---|---|
+| **Realtime** | Tenant WS `/api/ws` + `broadcastTenantUpdate` → Query invalidation; Query `refetchInterval` / job polls | Ad-hoc `setInterval` / `fetch` in `useEffect`; parallel WS stacks |
+| **Data Authority** | Server-authoritative REST + TanStack Query; SQL aggregates for KPIs/reports | `useLiveCollection` / `getCollection` / `saveCollection` for REST entities; unpaged client-side dumps (`loadAllFn`) |
 
-Prefer the existing tenant WS channel when wiring live push (`mms-migration-status.mdc`).
+## Tenant & Platform Invariants
 
-## Data authority (trajectory)
+- **Tenant Writes:** `authenticateTenant` + transaction RLS (`SET LOCAL app.current_tenant`) + `can()` / collection check. Never trust client body `workspaceSubdomain` or authz `userId`.
+- **Platform Writes:** `authenticatePlatform` + `platformUserCan` / `requirePlatformPermission` + password re-auth on destructive ops.
+- **Contacts Canonical:** Persons link by `contactId`; profile fields live on contacts. Hydrate on read, strip on write (`mms-fields.mdc`, `mms-form-architecture.mdc`).
+- **Data Standards:** Phone numbers E.164 via `parsePhoneNumber`; WhatsApp number ID via `PuppeteerWhatsAppProvider.getNumberId`; Money as decimal strings (`/^\d+(\.\d{1,2})?$/`).
+- **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs`.
+- **Write Mechanism:** Cookie SPA + `apiClient` only (No React Server Actions).
 
-| Phase | Pattern | Owner |
-|-------|---------|--------|
-| **Current** | Per-entity REST + TanStack Query; report widgets/visualizer Query-first; BE broadcasts on `/api/ws` and FE subscribes → Query invalidation | `mms-data-layer.mdc`, `mms-reports.mdc` |
-| **Target** | localStorage as offline cache only; FE WS → Query invalidation (shipped); remaining niche chart/statement panels on server aggregates | `mms-data-layer.mdc`, `mms-reports.mdc` (gap register → `mms-migration-status.mdc`) |
+## Standards Index (Ownership Matrix)
 
-## Tenant & Platform write invariant
+| Topic | Owner Rule | Workflow Skill |
+|---|---|---|
+| Dependencies & Version Freshness | `mms-dependencies.mdc` | `mms-dependency-upgrade` |
+| File Structure, Naming & Title Case | `mms-structure-naming.mdc` | `mms-frontend` · `mms-shared-package` |
+| DRY, Extractions & Shared Package | `mms-dry.mdc` | `mms-shared-package` |
+| Auth, Sessions, CSRF, RBAC & Isolation | `mms-auth-security.mdc` | `mms-backend-security` |
+| API Contracts, Errors, Pagination & Bulk PUT | `mms-api-interface.mdc` | `mms-frontend` · `mms-backend-api` |
+| Data Layer, Drizzle RLS, PG Timeouts & Query | `mms-data-layer.mdc` | `mms-query-factories` · `mms-schema-migrate` |
+| Backend Architecture & Repository Gateway | `mms-api-interface.mdc` §2 · `mms-structure-naming.mdc` | `mms-backend-api` |
+| Work Directory, Detail Drawer & Trash UX | `mms-module-architecture.mdc` | `mms-module-work` · `mms-module-page` |
+| Background Jobs & Queue Processing | `mms-module-architecture.mdc` §5 | `mms-background-jobs` |
+| React Hook Recipes & Facades | `mms-hooks.mdc` | `mms-query-factories` · `mms-frontend` |
+| FormModal Architecture & Write Schemas | `mms-form-architecture.mdc` | `mms-form-architecture` |
+| UI Design System, Tokens, a11y & §7 Layout | `mms-ui-ux-design.mdc` | `mms-frontend` · `mms-a11y-smoke` |
+| Module Work/Reports/Setup & Gold Standard §7 | `mms-module-architecture.mdc` | `mms-module-page` · `mms-module-work` · `mms-module-setup` |
+| Field & Tab Registries | `mms-fields.mdc` | `mms-fields-registry` · `mms-module-setup` |
+| Settings, i18n (en/ar/ur/fa) & Backup UI | `mms-settings-i18n.mdc` | `mms-settings-i18n` · `mms-backup-restore` |
+| Ops, Health, Ports (5002 prod / 3000 dev) & CI | `mms-ops-infrastructure.mdc` | `mms-dev-setup` · `mms-ops-deploy` · `mms-linux-compatibility` |
+| Testing, Observability & ErrorBoundary | `mms-testing-observability.mdc` | `mms-code-review` · `mms-a11y-smoke` |
+| Reports, Analytics & Exports | `mms-reports.mdc` | `mms-reports-export` |
+| Messaging Campaigns & Logs | `mms-messaging.mdc` | `mms-messaging` |
+| Migration Debt Register | `mms-migration-status.mdc` | `mms-migration-fixes` |
+| Post-Edit Verification Checklist | `mms-completion-review.mdc` | `mms-code-review` |
 
-Any new tenant write path must use **`authenticateTenant`** + transaction-scoped RLS (`SET LOCAL`) + `can()` / collection permission. Never trust client-supplied `workspaceSubdomain` or authz `userId`.
-Any new platform write path must use **`authenticatePlatform`** + explicit platform capability checks (`platformUserCan`).
+## Performance & Edit Discipline
 
-## Validation SSOT
-
-Shared Zod schemas live in `@mms/shared`. FE forms and BE `parseRequest` must consume the same shapes — do not fork request/response schemas per app. Write `.strict()` / write-vs-read shapes → **`mms-form-architecture.mdc`**.
-
-## Standards index (ownership matrix)
-
-Single prose owner per topic — other rules/skills use short pointers only. **Workflow skill** = invoke for how-to; do not re-author norms in skills.
-
-| Topic | Owner (rule) | Workflow skill |
-|-------|--------------|----------------|
-| Dependencies & latest stack (Node/pnpm bumps) | `mms-dependencies.mdc` | `mms-dependency-upgrade` |
-| File structure, naming, Title Case on save | `mms-structure-naming.mdc` | `mms-frontend` / `mms-shared-package` |
-| DRY / extraction / `@mms/shared` exports | `mms-dry.mdc` | `mms-shared-package` |
-| Sessions, cookies, CSRF, RBAC, rate limits | `mms-auth-security.mdc` | `mms-backend-security` |
-| apiClient, error `type`, HTTP pagination, bulk PUT upsert, idempotency↔body | `mms-api-interface.mdc` | `mms-frontend` · `mms-backend-api` |
-| Query policy, Drizzle/RLS, soft-delete **schema/strip/SQL**, PG timeouts, WS invalidate | `mms-data-layer.mdc` | `mms-query-factories` · `mms-schema-migrate` · `mms-data-sync` (legacy) |
-| Backend module layering (use-cases + repository interface + composition root, DI) | `mms-api-interface.mdc` §2 · `mms-structure-naming.mdc` | `mms-backend-api` |
-| Soft-delete **Work trash / drawer / §7** | `mms-module-architecture.mdc` | `mms-module-work` · `mms-module-page` |
-| Await `mutateAsync` before form close | `mms-module-architecture.mdc` §7 | `mms-module-page` |
-| Background jobs (SKIP LOCKED / durable queue) | `mms-module-architecture.mdc` §5 | `mms-background-jobs` |
-| SQL page / `loadAllFn` ban | `mms-data-layer.mdc` | `mms-query-factories` |
-| Query/controller recipes | `mms-hooks.mdc` | `mms-query-factories` · `mms-frontend` |
-| FormModal shell, write Zod `.strict()`, no Server Actions, uploads | `mms-form-architecture.mdc` | `mms-form-architecture` |
-| UI tokens, tabs, a11y, responsive §7 | `mms-ui-ux-design.mdc` | `mms-frontend` · `mms-a11y-smoke` |
-| Module Work/Reports/Setup, §7 gold-standard | `mms-module-architecture.mdc` | `mms-module-page` · `mms-module-work` · `mms-module-setup` · `mms-background-jobs` |
-| Field/tab registry | `mms-fields.mdc` | `mms-fields-registry` · `mms-module-setup` |
-| Module config hook (`createStandardModuleConfigHook`) | `mms-hooks.mdc` | `mms-frontend` · `mms-module-setup` |
-| Settings, i18n, formatters, backup UI | `mms-settings-i18n.mdc` | `mms-settings-i18n` · `mms-backup-restore` |
-| Health, ports, purge/reset, env, CI (match root engines) | `mms-ops-infrastructure.mdc` | `mms-dev-setup` · `mms-ops-deploy` · `mms-linux-compatibility` |
-| Tests, logging, ErrorBoundary, Sentry | `mms-testing-observability.mdc` | `mms-code-review` · `mms-a11y-smoke` |
-| Reports & exports | `mms-reports.mdc` | `mms-reports-export` |
-| Messaging campaigns | `mms-messaging.mdc` | `mms-messaging` |
-| Open migration gaps / fix recipes | `mms-migration-status.mdc` | `mms-migration-fixes` |
-| Post-edit verify / PR checklist | `mms-completion-review.mdc` | `mms-code-review` |
-
-Hardcoding ban (copy, colours, formats, statuses): follow the owner row above — never invent parallel string/colour tables.
-
-## Domain invariants (one-liners)
-
-- **Contacts canonical** for persons; module rows link by `contactId`; hydrate on read, strip profile/guardian dual-write keys on save; Work list identity filter/sort joins `contacts` (Students closed) — `mms-fields.mdc` / `mms-form-architecture.mdc` / `mms-data-layer.mdc`.
-- **`persona` purged** — residual = migration defect.
-- **Phones E.164** on save via `parsePhoneNumber` — `mms-form-architecture.mdc`.
-- **WhatsApp number id** only via `PuppeteerWhatsAppProvider.getNumberId` — `mms-messaging.mdc`.
-- **Module pages:** three tiers only — `mms-module-architecture.mdc` (+ shell components `mms-ui-ux-design.mdc`).
-- **No Server Actions** for tenant writes — cookie SPA + `apiClient` only — `mms-form-architecture.mdc`.
-
-## Performance & Modern Best Practices (agent-checkable)
-
-- Route-lazy heavy deps (charts, PDF, xlsx, editors) — do not grow the initial Work-tier or Platform bundle with report-only libs. Leverage Vite 8 tree-shaking where possible.
-- Declare size on media/charts to avoid CLS — `mms-ui-ux-design.mdc`.
-- React 19: keep route-level `lazy` + `Suspense`. Avoid premature memoization (`useMemo`, `useCallback`) unless strictly necessary for expensive rendering or referential equality in dependency arrays. Prefer TanStack Query for lists/entities. Use `use()` only behind existing Suspense boundaries for promise-backed reads — **ban** inventing a second data stack beside Query (`mms-data-layer.mdc`, `mms-hooks.mdc`).
-
-## MMS edit discipline
-
-1. Read implicated files before editing; validate against `@mms/shared` and `schema.ts`.
-2. New UI must be config-driven (field/tab/column registry).
-3. Remove unused imports/dead code in the change boundary.
-4. Respect file-size bands — hard ~300 / soft ~220; split behind stable barrels — `mms-structure-naming.mdc`, `mms-dry.mdc`.
-5. Run `pnpm typecheck` after non-trivial changes; completion review per `mms-completion-review.mdc`.
-6. Never commit unless the user asks; never commit `.env` or credentials.
-7. Do not expand into migration-status open gaps or “Do not reintroduce” items unless the task requires them.
-
-### Anti-patterns
-
-```tsx
-// ❌ Nested ContactConfigProvider — mount once in TenantScopedProviders only
-<ContactConfigProvider><ContactsPage /></ContactConfigProvider>
-
-// ❌ Frontend importing backend
-import { getCollection } from '../../../backend/src/db/database';
-
-// ✅ Shared types
-import type { Contact } from '@mms/shared';
-```
+1. **Route-Lazy Heavy Deps:** Split charts, PDF, Excel, code editors into deferred chunks. Declare explicit dimensions on media/charts for zero CLS.
+2. **React 19 Hygiene:** Route-level `lazy` + `Suspense`. Avoid premature `useMemo`/`useCallback` (React Compiler ready). Prefer `startTransition` / `useDeferredValue` / `useEffectEvent`.
+3. **File Sizing:** Hard ceiling ~300 lines / soft target ~220 lines. Split by concern behind stable barrels (`mms-structure-naming.mdc`).
+4. **Clean Boundary:** Remove dead code, unused imports, and debug logs. Run `pnpm typecheck` after non-trivial changes.
+5. **Git Safety:** Conventional Commits (`feat`/`fix`/`chore`). Never commit or push unless explicitly requested. Never commit `.env` or credentials.

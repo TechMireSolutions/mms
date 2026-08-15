@@ -74,10 +74,11 @@ Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker
 | `mms-shared-package` | `@mms/shared` |
 | `mms-backend-api` | Fastify backend |
 | `mms-backend-security` | Tenant isolation, RBAC, cookies, CSRF |
-| `mms-ops-deploy` | Hetzner deploy, Apache, PORT 5002 |
+| `mms-finance-accounting` | Invoices, payments, double-entry ledger |
 | `mms-reports-export` | Analytics & export |
 | `mms-messaging` | SMS/WhatsApp campaigns |
 | `mms-migration-fixes` | Tech debt fixes |
+| `mms-testing-e2e` | Vitest, MSW, Playwright E2E & smoke |
 | `mms-code-review` | PR review |
 | `mms-a11y-smoke` | axe + shell a11y verify |
 | `mms-settings-i18n` | Settings + i18n (en/ar/ur/fa) |

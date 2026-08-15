@@ -4,7 +4,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 **Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agent/skills-manifest.json](../skills-manifest.json)
 
-## Skills index (25)
+## Skills index (27)
 
 | Skill | Use when |
 |-------|----------|
@@ -25,9 +25,11 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-shared-package](mms-shared-package/SKILL.md) | `@mms/shared` types and utils |
 | [mms-backend-api](mms-backend-api/SKILL.md) | Fastify routes, middleware, Zod, inject tests |
 | [mms-backend-security](mms-backend-security/SKILL.md) | Tenant isolation, RBAC, cookies, CSRF/Origin, rate limits |
+| [mms-finance-accounting](mms-finance-accounting/SKILL.md) | Invoices, payments, double-entry ledger, accounts, fiscal years |
 | [mms-reports-export](mms-reports-export/SKILL.md) | Analytics, charts, PDF/Excel |
 | [mms-messaging](mms-messaging/SKILL.md) | SMS/WhatsApp campaigns, MessageComposer, logs |
 | [mms-migration-fixes](mms-migration-fixes/SKILL.md) | Known tech debt from migration-status |
+| [mms-testing-e2e](mms-testing-e2e/SKILL.md) | Vitest, MSW network mocking, Playwright E2E, responsive & RTL smoke |
 | [mms-code-review](mms-code-review/SKILL.md) | PR / change review against MMS standards |
 | [mms-a11y-smoke](mms-a11y-smoke/SKILL.md) | axe smoke, focus-return, shell a11y verify |
 | [mms-ops-deploy](mms-ops-deploy/SKILL.md) | Hetzner deploy, Apache isolation, PORT 5002 |

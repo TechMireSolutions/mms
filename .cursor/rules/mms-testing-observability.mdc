@@ -14,10 +14,10 @@ Governs testing patterns, logging hygiene, error reporting, and frontend resilie
 
 ## 1. Testing Strategy & Environments
 `pnpm test` executes Vitest across the monorepo workspaces:
-- **`@mms/shared`**: Unit tests for validation schemas, pure utilities, and permission calculations.
+- **`@mms/shared`**: Unit tests for validation schemas, pure utilities, date/currency formatters, and permission calculations.
 - **`mms-backend`**: Integration tests utilizing Fastify's `inject()`. Cover tenant auth/RBAC/token rotation **and** apex platform auth/settings/workspaces allow+deny (wrong host → `403`, cookie session, `super_user` / permission gates, reset-database validation).
-- **`mms-frontend`**: Client and hook tests run in a **`happy-dom`** environment (configured in `vitest.config.ts`) to support `localStorage` and DOM mocks. Mock the network with **MSW** (or equivalent) at the boundary — ban ad-hoc `fetch` stubs that bypass `apiClient` credentials/error mapping.
-- **E2E Playwright**: Critical UI flows in `e2e/tests/*.spec.ts`: `platform-onboarding.spec.ts` (platform setup → tenant onboard → …); `tenant-settings-navigation.spec.ts`; `messaging-campaign.spec.ts`; `responsive-shell.spec.ts` (public apex + tenant login — overflow, 44px touch, RTL at 375/768/1440); `responsive-authenticated.spec.ts` (tenant bootstrap → AppLayout hamburger `< lg`, dashboard RTL/overflow, Work-route sweep with table wrappers). Run via `pnpm exec playwright test` or `pnpm test:e2e`. Prefer `getByLabel` / role queries; after bumping `@playwright/test`, run `pnpm exec playwright install`. Auth states may be seeded via scripts (e.g. `reset-platform-users.ts`) rather than recreating every login step.
+- **`mms-frontend`**: Client and hook tests run in a **`happy-dom`** environment (configured in `vitest.config.ts`) to support `localStorage` and DOM mocks. Mock network boundaries with **MSW** (Mock Service Worker) — ban ad-hoc `fetch` stubs that bypass `apiClient` credentials/error mapping.
+- **E2E Playwright**: Critical UI flows in `e2e/tests/*.spec.ts`: `platform-onboarding.spec.ts` (platform setup → tenant onboard → …); `tenant-settings-navigation.spec.ts`; `messaging-campaign.spec.ts`; `responsive-shell.spec.ts` (public apex + tenant login — overflow, 44px touch, RTL at 375/768/1440); `responsive-authenticated.spec.ts` (tenant bootstrap → AppLayout hamburger `< lg`, dashboard RTL/overflow, Work-route sweep with table wrappers). Run via `pnpm exec playwright test` or `pnpm test:e2e`. Prefer `getByRole` / `getByLabel` user-centric queries; after bumping `@playwright/test`, run `pnpm exec playwright install`. Auth states may be seeded via scripts (e.g. `reset-platform-users.ts`) rather than recreating every login step.
 
 ### When to Write Tests
 1. **Shared Package**: All new non-trivial pure function exports in `@mms/shared` must include unit tests.
@@ -27,13 +27,13 @@ Governs testing patterns, logging hygiene, error reporting, and frontend resilie
 
 *Banned*: Test runs must not make live calls to external providers (e.g. WhatsApp / Puppeteer) or commit secrets.
 
-### E2E / Playwright
-- Prefer `getByRole` / `getByLabel` — avoid brittle CSS selectors.
+### E2E / Playwright Best Practices
+- Prefer `getByRole`, `getByLabel`, and `getByText` — avoid brittle CSS classes or internal DOM hierarchy selectors.
 - Prefer Playwright project `storageState` / shared auth fixtures over re-running full login in every spec; keep seeding scripts for bootstrap only.
-- Ban fixed `waitForTimeout` sleeps; wait on UI/network assertions instead.
+- Ban fixed `waitForTimeout` sleeps; wait on explicit UI states, network assertions, or TanStack Query settling instead.
 - Backend integration tests that touch tenant tables must set RLS context the same way as production (`withTenantTransaction` / SET LOCAL).
 - Layout/responsiveness: keep specs named in **`mms-ui-ux-design.mdc` §7** green after shell/RTL/touch/table changes.
-- **a11y**: Prefer `@axe-core/playwright` (or equivalent) smoke on shell + one Work directory at 375/1440; fail on serious/critical — when AppLayout / FormModal / Table primitives change.
+- **a11y Smoke**: Prefer `@axe-core/playwright` smoke on shell + one Work directory at 375/1440; fail on serious/critical issues when AppLayout / FormModal / Table primitives change.
 - CI orchestration + trace artifacts → **`mms-ops-infrastructure.mdc`**.
 
 ---
@@ -55,4 +55,4 @@ Assert production-safe JSON `{ type, message }` — never leak SQL/stack traces.
 ## 4. Frontend Resilience
 - **Error Boundaries**: Wrap lazy route modules and heavy Work/Reports/Setup tiers in the central `ErrorBoundary`. Query `isError` handles fetch failures — boundaries catch render crashes.
 - **Graceful Failures**: `notify.error(t('errors.generic'))` — no silent `catch`.
-- **TanStack Query States**: Render from Query `isError` flags.
+- **TanStack Query States**: Render gracefully from Query `isPending`, `isFetching`, and `isError` flags.

@@ -15,8 +15,8 @@ Governs user authentication, sessions, tenant isolation, role-based authorizatio
 ### Session Cookies Shape
 
 **Tenant workspace**
-- **Access Token**: httpOnly cookie `mms_access` (15-minute JWT, `SameSite=Lax`).
-- **Refresh Token**: httpOnly cookie `mms_refresh` (7-day opaque token rotated on refresh).
+- **Access Token**: httpOnly cookie `mms_access` (15-minute JWT, `SameSite=Lax`, `Path=/`).
+- **Refresh Token**: httpOnly cookie `mms_refresh` (7-day opaque token rotated on refresh, `SameSite=Lax`, `Path=/api/auth/refresh`).
 - **Verification Hook**: On tenant hosts, `attachAccessTokenFromCookie` copies `mms_access` to `Authorization` before verification.
 
 **Platform apex** (separate from tenant — do not reuse `mms_access` / `mms_refresh`)
@@ -89,18 +89,18 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 ## 4. Threat Mitigations & Security Checklist
 - **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse (`type: 'rate_limit_exceeded'` where configured). Emit **`Retry-After`** (and `X-RateLimit-*` when the plugin exposes them). FE must not tight-loop retries on `429` — back off / surface `notify`.
 - **Platform `AUTH_RATE_LIMIT`**: Auth-sensitive + destructive platform routes (login/setup/password flows; admin disable/delete; workspace delete; database reset; migrate-and-restart) — do not ship those mutations without the limit + password confirm where already required.
-- **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site`) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations. **Current gap:** no app-wide Origin gate yet — open gap → `mms-migration-status.md` / skill `mms-migration-fixes`; do not invent mid-feature Origin middleware unless the task owns that gap.
+- **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site` header checks against allowed origin) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations.
 - **Content-Type**: JSON mutation routes reject bodies without `application/json` (multipart only on upload routes). Ban empty/`text/plain` bodies on JSON write paths.
-- **Password Security**: Keep `scrypt` + `timingSafeEqual`. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.
-- **OTP Generation**: `crypto.randomInt()` only — `Math.random()` forbidden.
-- **CORS**: Explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` forbidden.
+- **Password Security**: Keep `scrypt` + `crypto.timingSafeEqual` (constant-time check) to prevent timing side-channel attacks. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.
+- **OTP Generation & Verification**: `crypto.randomInt()` only — `Math.random()` strictly forbidden. Verify OTP hashes using constant-time comparison (`timingSafeEqual`).
+- **CORS**: Explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` strictly forbidden with credentials.
 - **Cookies (prod)**: Set `Secure` under HTTPS / `NODE_ENV=production`. Prefer `__Host-` cookie names when `Path=/` and no `Domain` is required; never `SameSite=None` without `Secure` and an explicit cross-site need (tenant/platform stay `SameSite=Lax`).
-- **Headers**: `@fastify/helmet` is registered (frame denial, `X-Content-Type-Options`, HSTS in prod). Remaining gap: enable SPA-safe CSP (currently `contentSecurityPolicy: false`) — prefer nonce- or hash-based script policy compatible with the Vite SPA; do not ship `unsafe-inline` long-term — `mms-migration-status.md` / skill `mms-migration-fixes`.
-- **Identity**: Never trust client body/query for `workspaceSubdomain` or authz `userId` — bind from session + host after `authenticateTenant` / `authenticatePlatform`.
-- **IDOR**: Authorize via permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from session (Messaging log POST pattern).
+- **Security Headers**: `@fastify/helmet` is registered with frame denial (`X-Frame-Options: DENY`), MIME sniffing prevention (`X-Content-Type-Options: nosniff`), and HSTS in production. CSP remains SPA-compatible (hash/nonce-based).
+- **Identity & Authorization**: Never trust client body/query for `workspaceSubdomain` or authz `userId` — bind from session + host after `authenticateTenant` / `authenticatePlatform`.
+- **IDOR Defense**: Authorize via explicit permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from authenticated session.
 - **Secrets storage**: Long-lived OAuth/API secrets in FORCE-RLS tenant tables — never in unscoped `objects` KV. Strip legacy secret object keys from backups (`SERVER_ONLY_OBJECT_KEYS`).
 - **Workspace backup / restore**: Admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`. Envelope/KDF/credential-strip mechanics → **`mms-data-layer.md`**. Settings two-step UI + password step-up → **`mms-settings-i18n.md`**.
-- **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables (e.g. Contacts entity rows; Contacts Setup `contact_field_config` / `contact_preferences` / `contact_user_column_preferences` / lookup kinds).
-- **XSS / exports**: No unsanitized HTML; encode user content in PDF/CSV/Excel cells.
+- **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables.
+- **XSS & Output Encoding**: No unsanitized HTML (`dangerouslySetInnerHTML` forbidden without strict DOMPurify sanitization); encode user content in PDF/CSV/Excel cells to prevent CSV formula injection.
 - **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens.
 - **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes. PG row triggers read `app.current_user_id` + `app.current_tenant` (SET LOCAL in `withTenantTransaction` / `runInTransaction`).

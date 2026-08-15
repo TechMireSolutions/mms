@@ -32,7 +32,7 @@ Do not echo file contents already in context.
 
 ## Output economy
 
-- **Edits:** `search_replace` / small writes — not full-file rewrites.
+- **Edits:** `replace_file_content` / targeted writes — not full-file rewrites.
 - **Tests:** Follow `mms-completion-review.md`. Pure `@mms/shared` helpers need unit tests — `mms-testing-observability.md`.
 - **JSDoc:** Required on **public exports** in `packages/shared` only. Omit elsewhere.
 
@@ -40,14 +40,14 @@ Do not echo file contents already in context.
 
 - **Validation:** Zero-trust DTOs via `@mms/shared` Zod + BE `parseRequest` — `mms-core.md` Validation SSOT, `mms-form-architecture.md`.
 - **State:** Prefer unidirectional flow; pure helpers for transforms — Query policy `mms-data-layer.md`.
-- **Concurrency:** Pass `AbortSignal` into `apiFetch` / Query `queryFn`; clear timers/observers — `mms-data-layer.md`, `mms-api-interface.md`.
-- **Resilience:** Error boundaries on heavy sections — `mms-testing-observability.md`.
-- **Secrets / XSS:** Never log tokens/PII; no unsanitized `dangerouslySetInnerHTML` — `mms-auth-security.md`.
+- **Concurrency & Cancellation:** Pass `AbortSignal` into `apiFetch` / Query `queryFn`; combine signals via `AbortSignal.any()` when combining request and timeout signals; clear timers/observers — `mms-data-layer.md`, `mms-api-interface.md`.
+- **Resilience:** Error boundaries on heavy sections and lazy routes — `mms-testing-observability.md`.
+- **Secrets / XSS:** Never log tokens/PII; no unsanitized `dangerouslySetInnerHTML`; sanitize and encode all dynamic export contents — `mms-auth-security.md`.
 
 ## Standards
 
-- **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`. Prefer `import type`. Dedicated-PR targets (`noUncheckedIndexedAccess`, `verbatimModuleSyntax`) → `mms-dependencies.md`.
-- **Errors:** Handle explicitly; no silent empty `catch`.
-- **A11y / HTML:** Accessible interactive controls + semantic landmarks — `mms-ui-ux-design.md`.
+- **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`. Prefer `import type` and `satisfies` operator for literal/config safety without widening. Dedicated-PR targets (`noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `erasableSyntaxOnly` on TS 5.8+) → `mms-dependencies.md`.
+- **Errors:** Handle explicitly; zero silent empty `catch` blocks; map to localized translation keys via `t()`.
+- **A11y / HTML:** Accessible interactive controls + semantic landmarks (`<main>`, `<nav>`, `<header>`, `<section>`), minimum 44x44px touch targets — `mms-ui-ux-design.md`.
 - **Git:** Conventional Commits (`feat`/`fix`/`chore`). No direct commits to `main`. **Never commit unless the user asks. Never push to any remote — the user always handles pushes.**
 - **Rules:** When changing MMS standards, run `bash .agent/scripts/sync-all.sh` (see `.cursor/rules/README.md`).

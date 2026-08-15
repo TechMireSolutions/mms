@@ -326,6 +326,20 @@
       ]
     },
     {
+      "name": "mms-finance-accounting",
+      "path": "skills/mms-finance-accounting",
+      "keywords": [
+        "finance",
+        "accounting",
+        "invoices",
+        "payments",
+        "ledger",
+        "entries",
+        "fiscal year",
+        "chart of accounts"
+      ]
+    },
+    {
       "name": "mms-shared-package",
       "path": "skills/mms-shared-package",
       "keywords": [
@@ -333,6 +347,20 @@
         "shared package",
         "contactTypes",
         "settingsTypes"
+      ]
+    },
+    {
+      "name": "mms-testing-e2e",
+      "path": "skills/mms-testing-e2e",
+      "keywords": [
+        "vitest",
+        "playwright",
+        "e2e",
+        "msw",
+        "testing",
+        "fixtures",
+        "responsive smoke",
+        "axe-core"
       ]
     }
   ],
