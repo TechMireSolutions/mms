@@ -223,7 +223,7 @@ export default function BackupRestoreConfirmModal({
             onChange={(event) => setTyped(event.target.value)}
             placeholder={t('backup.confirmTypePlaceholder')}
             autoComplete="off"
-            disabled={busy}
+            disabled={busy || !safetyReady}
           />
         </div>
       </div>
