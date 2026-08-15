@@ -154,12 +154,14 @@ export function SessionDetail({
       }
     >
       {!isArchived ? (
-        <div className="flex border-b border-border bg-card/40 flex-shrink-0 -mx-1 px-1 py-1.5 overflow-x-auto">
+        <div className="flex flex-shrink-0 -mx-1 px-1 overflow-x-auto">
           <SubTabBar
             tabs={tabs}
             value={tab}
             onChange={setTab}
+            variant="underline"
             panelIdPrefix="session-detail-subtab"
+            resetScrollOnChange={false}
           />
         </div>
       ) : null}

@@ -12,10 +12,13 @@ export interface SubTab<K extends string = string> {
   badge?: number | string;
 }
 
+export type SubTabBarVariant = "pill" | "underline" | "enclosed";
+
 interface SubTabBarProps<K extends string> {
   tabs: readonly SubTab<K>[];
   value: K;
   onChange: (key: K) => void;
+  variant?: SubTabBarVariant;
   className?: string;
   children?: React.ReactNode;
   panelIdPrefix?: string;
@@ -27,13 +30,13 @@ interface SubTabBarProps<K extends string> {
 }
 
 /**
- * Pill-style segmented control on desktop; stacked full-width triggers under lg.
- * When `children` are provided, mobile uses accordion panels under each heading.
+ * Responsive sub-tab navigation. Supports modern underline, segmented pill, and accordion modes.
  */
 export function SubTabBar<K extends string>({
   tabs,
   value,
   onChange,
+  variant = "pill",
   className = "",
   children,
   panelIdPrefix = "subtab-panel",
@@ -49,6 +52,65 @@ export function SubTabBar<K extends string>({
 
   if (tabs.length <= 1 && !children) {
     return <></>;
+  }
+
+  // Underline variant for modern drawers, headers, and clean panels
+  if (variant === "underline") {
+    return (
+      <div className={cn("w-full space-y-3", className)}>
+        <div className="flex w-full items-center gap-1 border-b border-border/40 overflow-x-auto no-scrollbar">
+          {tabs.map((tab) => {
+            const active = value === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => onChange(tab.key)}
+                className={cn(
+                  "group relative flex min-h-10 shrink-0 cursor-pointer items-center gap-2 rounded-t-lg px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                  active
+                    ? "text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+                )}
+              >
+                {tab.icon && (
+                  <tab.icon
+                    className={cn(
+                      "h-4 w-4 shrink-0 transition-colors",
+                      active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                    )}
+                    aria-hidden
+                  />
+                )}
+                <span>{tab.label}</span>
+                {tab.badge !== undefined && (
+                  <span
+                    className={cn(
+                      "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold transition-colors",
+                      active
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/20",
+                    )}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+                {active && (
+                  <motion.div
+                    layoutId={`${panelIdPrefix}-underline`}
+                    className="absolute -bottom-px inset-x-0 h-0.5 bg-primary rounded-full"
+                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {children}
+      </div>
+    );
   }
 
   if (children) {
@@ -111,23 +173,40 @@ export function SubTabBar<K extends string>({
         </div>
 
         <div className="hidden lg:block space-y-3">
-          <div className="flex w-fit gap-1 rounded-xl bg-muted p-1">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => onChange(t.key)}
-                className={cn(
-                  "flex min-h-11 min-w-11 items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all",
-                  value === t.key
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t.icon && <t.icon className="h-3.5 w-3.5" />}
-                <span>{t.label}</span>
-              </button>
-            ))}
+          <div className="flex w-fit items-center gap-1 rounded-xl bg-muted/60 p-1 border border-border/40 backdrop-blur-xs">
+            {tabs.map((t) => {
+              const active = value === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => onChange(t.key)}
+                  className={cn(
+                    "relative flex min-h-9 min-w-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    active
+                      ? "bg-card text-foreground font-semibold shadow-xs border border-border/60"
+                      : "text-muted-foreground hover:text-foreground hover:bg-card/40",
+                  )}
+                >
+                  {t.icon && (
+                    <t.icon
+                      className={cn("h-3.5 w-3.5 transition-colors", active ? "text-primary" : "text-muted-foreground")}
+                    />
+                  )}
+                  <span>{t.label}</span>
+                  {t.badge !== undefined && (
+                    <span
+                      className={cn(
+                        "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+                        active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {t.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
           {children}
         </div>
@@ -147,9 +226,9 @@ export function SubTabBar<K extends string>({
               onClick={() => onChange(tab.key)}
               aria-pressed={active}
               className={cn(
-                "flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-start text-xs font-semibold transition-colors",
+                "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-start text-xs font-semibold transition-colors",
                 active
-                  ? "border-primary/20 bg-card text-primary shadow-sm"
+                  ? "border-primary/20 bg-card text-primary shadow-xs font-bold"
                   : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground",
               )}
             >
@@ -157,27 +236,54 @@ export function SubTabBar<K extends string>({
                 {tab.icon && <tab.icon className="h-3.5 w-3.5 shrink-0" />}
                 <span className="truncate">{tab.label}</span>
               </span>
+              {tab.badge !== undefined && (
+                <span
+                  className={cn(
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+                    active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {tab.badge}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
-      <div className="hidden w-fit gap-1 overflow-x-auto rounded-xl bg-muted p-1 lg:flex">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => onChange(t.key)}
-            className={cn(
-              "flex min-h-11 min-w-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all",
-              value === t.key
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.icon && <t.icon className="h-3.5 w-3.5" />}
-            <span>{t.label}</span>
-          </button>
-        ))}
+      <div className="hidden w-fit items-center gap-1 overflow-x-auto rounded-xl bg-muted/60 p-1 border border-border/40 backdrop-blur-xs lg:flex">
+        {tabs.map((t) => {
+          const active = value === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => onChange(t.key)}
+              className={cn(
+                "relative flex min-h-9 min-w-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                active
+                  ? "bg-card text-foreground font-semibold shadow-xs border border-border/60"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/40",
+              )}
+            >
+              {t.icon && (
+                <t.icon
+                  className={cn("h-3.5 w-3.5 transition-colors", active ? "text-primary" : "text-muted-foreground")}
+                />
+              )}
+              <span>{t.label}</span>
+              {t.badge !== undefined && (
+                <span
+                  className={cn(
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+                    active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {t.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

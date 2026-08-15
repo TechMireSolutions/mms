@@ -56,9 +56,10 @@ export function ContactDetailDrawerTabBar({
       tabs={detailTabs}
       value={activeTab}
       onChange={onTabChange}
+      variant="underline"
       panelIdPrefix="contact-detail-drawer"
       resetScrollOnChange={false}
-      className="w-full"
+      className="w-full pt-1"
     />
   );
 }
