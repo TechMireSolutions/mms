@@ -37,4 +37,5 @@ alwaysApply: false
 | **Reports** | Full-collection dumps for KPIs when `/metrics` exists; widget state via `saveCollection`. | `mms-reports.mdc` |
 | **Security & RLS** | Secrets in unscoped `objects`; omitting `FORCE ROW LEVEL SECURITY` on tenant tables; unbounded backup KDF. | `mms-auth-security.mdc`, `mms-data-layer.mdc` |
 | **Layout & a11y** | Horizontal page overflow; touch targets < 44px (`min-h-11 min-w-11`); custom sub-tabs instead of `SubTabBar`. | `mms-ui-ux-design.mdc` §7 |
-| **File Structure** | Files > 300 lines without concern split; renaming public barrels during refactors. | `mms-structure-naming.mdc` |t indexed keys | `mms-ops-infrastructure.mdc`, `mms-data-layer.mdc` |
+| **File Structure** | Files > 300 lines without concern split; renaming public barrels during refactors. | `mms-structure-naming.mdc` |
+| **Auth Artifacts** | Unindexed artifact scans instead of indexed lookup/scope keys. | `mms-ops-infrastructure.mdc`, `mms-data-layer.mdc` |

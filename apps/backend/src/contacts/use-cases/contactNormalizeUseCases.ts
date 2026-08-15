@@ -11,7 +11,7 @@ import { loadContactLookupKind } from '../../lib/contactLookupsService.js';
 import { loadContactRuntimeDefaults } from './contactLoadUseCases.js';
 
 export function stripClientSoftDeleteFields(contact: Contact): Contact {
-  return stripContactClientSoftDeleteFields(contact as unknown as Record<string, unknown>) as Contact;
+  return stripContactClientSoftDeleteFields(contact);
 }
 
 export class ContactPermissionError extends Error {
@@ -82,8 +82,8 @@ async function normalizeContactPhones(contact: Contact): Promise<Contact> {
 export async function prepareContactRecord(contact: Contact, id?: string | number): Promise<Contact> {
   const stripped = stripClientSoftDeleteFields(contact);
   const withPhones = await normalizeContactPhones(stripped);
-  const withScalars = syncContactScalarFields(withPhones) as Contact;
+  const withScalars = syncContactScalarFields(withPhones);
   const resolvedId = id ?? withScalars.id ?? `temp-${Date.now()}`;
-  const titled = applyTitleCaseToContact({ ...withScalars, id: resolvedId }) as Contact;
-  return stripContactRetiredClassificationFields({ ...titled }) as Contact;
+  const titled = applyTitleCaseToContact({ ...withScalars, id: resolvedId });
+  return stripContactRetiredClassificationFields({ ...titled });
 }

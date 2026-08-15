@@ -46,7 +46,7 @@ interface ContactDetailDrawerContentProps {
   onRequestDelete: (attachment: { id: string; name: string }) => void;
 }
 
-export const ContactDetailDrawerContent = React.memo(function ContactDetailDrawerContent({
+export function ContactDetailDrawerContent({
   activeTab,
   contactState,
   allContacts,
@@ -168,4 +168,4 @@ export const ContactDetailDrawerContent = React.memo(function ContactDetailDrawe
       </motion.div>
     </AnimatePresence>
   );
-});
+}

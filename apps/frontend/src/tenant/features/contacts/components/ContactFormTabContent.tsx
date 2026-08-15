@@ -41,7 +41,7 @@ function subListBaseProps(draft: ContactFormDraftState): ContactSubListTabBasePr
 /**
  * Dispatches active ContactForm tab view rendering (Basic info vs nested collection lists).
  */
-export const ContactFormTabContent = React.memo(function ContactFormTabContent({
+export function ContactFormTabContent({
   tab,
   draft,
   lockGender,
@@ -137,5 +137,5 @@ export const ContactFormTabContent = React.memo(function ContactFormTabContent({
     default:
       return null;
   }
-});
+}
 

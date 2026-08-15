@@ -23,7 +23,7 @@ export interface ContactBasicTabProps {
 /**
  * Basic Info form tab: coordinates avatar photo upload/cropping and core personal identity fields.
  */
-export const ContactBasicTab = React.memo(function ContactBasicTab({
+export function ContactBasicTab({
   contactDraft,
   formInstanceId,
   isFieldEnabled,
@@ -65,7 +65,7 @@ export const ContactBasicTab = React.memo(function ContactBasicTab({
       </SectionCard>
     </div>
   );
-});
+}
 
 
 

@@ -58,14 +58,23 @@ When the entity supports archives (Contacts / Students / Teachers pattern + Sess
 
 Upsert only (`bulkSave` + `conflictTarget`). **Never** wire `replaceForWorkspace` as route `saveFn` for normal client saves.
 
+## Deliverable Format for Entity & Feature Generation
+When generating backend code for any feature or entity, provide:
+1. **Drizzle Table & Relations Definition** (`apps/backend/src/db/schema/[entity].ts`) with full constraints and indexes.
+2. **Shared Zod Validation Schemas & DTO Types** (`packages/shared/src/schemas/[entity].ts`).
+3. **Database Migration Script / SQL DDL** representing the changes.
+
 ## Add a REST resource
 
-1. Zod schemas — `validation/` or `@mms/shared` (`.strict()` on write bodies)
-2. Domain layer — `{module}/use-cases/**` (orchestration, repo DI) + `{module}/repository/` interface + Drizzle adapter + composition root (`{module}UseCases`) — `mms-api-interface.md` §2
-3. `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection` (or `authenticatePlatform` + `platformUserCan` for platform routes); call the composition root
-4. Register under `/api/{resource}` or `/api/platform/{resource}` in `routes/index.ts`
-5. `inject()` tests with `host: 'tenant.localhost'`
-6. FE Query hooks — **`mms-query-factories`** / **`mms-frontend`**
+1. **Zod Schemas**: Write schemas in `@mms/shared` (`.strict()` on write bodies) + explicit Insert/Update/Response DTO types aligning 1:1 with Drizzle tables.
+2. **Domain & DB Layer**:
+   - Drizzle schema with typed columns (3NF/BCNF, zero semi-structured storage, multi-tenancy `tenantId` FK, bidirectional relations).
+   - Domain use-cases in `{module}/use-cases/**` (orchestration, repo DI) + `{module}/repository/` interface + Drizzle adapter + composition root (`{module}UseCases`) — `mms-api-interface.md` §2.
+3. **Service & Transaction RLS**: Execute tenant writes inside `withTenantTransaction` applying `SET LOCAL app.current_tenant = ?`. Always validate payloads via `@mms/shared` Zod schemas before persistence.
+4. **Fastify Route**: `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection` (or `authenticatePlatform` + `platformUserCan` for platform routes); call the composition root.
+5. **Registration**: Register under `/api/{resource}` or `/api/platform/{resource}` in `routes/index.ts`.
+6. **Tests**: `inject()` tests with `host: 'tenant.localhost'`.
+7. **FE Query Hooks**: **`mms-query-factories`** / **`mms-frontend`**.
 
 Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.ts`, `hasanat.ts`; Contacts Clean Architecture refactor (`contacts/use-cases/` + `contacts/repository/` + `contactUseCases`).
 

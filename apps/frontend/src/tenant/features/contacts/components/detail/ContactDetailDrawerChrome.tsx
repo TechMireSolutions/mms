@@ -18,7 +18,7 @@ export interface ContactDetailDrawerHeaderActionsProps {
   onRestore?: (contactId: string | number) => void | Promise<void>;
 }
 
-export const ContactDetailDrawerHeaderActions = React.memo(function ContactDetailDrawerHeaderActions({
+export function ContactDetailDrawerHeaderActions({
   canWrite,
   canDelete,
   contact,
@@ -39,17 +39,17 @@ export const ContactDetailDrawerHeaderActions = React.memo(function ContactDetai
       onEdit={() => onEdit(contact)}
     />
   );
-});
+}
 
 export interface ContactDetailDrawerArchivedBannerProps {
   contact: Contact;
 }
 
-export const ContactDetailDrawerArchivedBanner = React.memo(function ContactDetailDrawerArchivedBanner({
+export function ContactDetailDrawerArchivedBanner({
   contact,
 }: ContactDetailDrawerArchivedBannerProps): React.JSX.Element | null {
   return <ContactArchivedBanner contact={contact} />;
-});
+}
 
 export interface ContactDetailDrawerTabBarProps {
   detailTabs: readonly SubTab[];
@@ -57,7 +57,7 @@ export interface ContactDetailDrawerTabBarProps {
   onTabChange: (tab: string) => void;
 }
 
-export const ContactDetailDrawerTabBar = React.memo(function ContactDetailDrawerTabBar({
+export function ContactDetailDrawerTabBar({
   detailTabs,
   activeTab,
   onTabChange,
@@ -73,13 +73,13 @@ export const ContactDetailDrawerTabBar = React.memo(function ContactDetailDrawer
       className="w-full pt-1"
     />
   );
-});
+}
 
 export interface ContactDetailDrawerFooterProps {
   contact: Contact;
 }
 
-export const ContactDetailDrawerFooter = React.memo(function ContactDetailDrawerFooter({
+export function ContactDetailDrawerFooter({
   contact,
 }: ContactDetailDrawerFooterProps): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -90,5 +90,5 @@ export const ContactDetailDrawerFooter = React.memo(function ContactDetailDrawer
       label={t("contacts.detail.updatedLabel")}
     />
   );
-});
+}
 

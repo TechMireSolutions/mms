@@ -14,17 +14,17 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 
 | Kind | Where | Notes |
 |------|-------|--------|
-| **System fields** | Typed in `@mms/shared` + Drizzle columns | Preferred for core domain data |
-| **Custom fields** | Tenant `custom_data` JSONB + field config registries | Constrained via field registries — not free-form layout engines |
+| **System fields** | Typed in `@mms/shared` + Drizzle columns | Core domain attributes in dedicated, typed columns |
+| **Custom fields & tabs** | Typed in `@mms/shared` + concrete relational tables / typed columns | Registry-configured and strictly typed — zero untyped JSONB/EAV blobs |
 
-- Free-form dynamic form compilers / visual schema generators are **banned** — forms are strictly registry- and shared-schema-driven.
-- Tenant-created form tabs (`custom_*`, `isContactCustomCollectionTab`) persist as **row arrays** on the contact (like phones/emails). Blank rows strip on save via `cleanContactDraft`; emptied arrays must persist — `mms-form-architecture.mdc` §3.
+- Free-form dynamic form compilers / visual schema generators and generic EAV key/value stores are **banned** — forms are strictly registry- and shared-schema-driven with concrete typed persistence.
+- Tenant-created custom collections persist via **dedicated child/junction tables** (e.g. contact addresses, phones, emails). Blank rows strip on save via `cleanContactDraft`; emptied arrays must persist — `mms-form-architecture.mdc` §3.
 - Column visibility **and width** prefs → **`mms-module-architecture.mdc` §3** (local width wins; clamp with `clampModuleColumnWidth`).
 
 ## 2. New / changed field checklist
 
-1. **Shared** — type + Zod in `@mms/shared` (`FIELD_TYPES_META`, `createFormCustomFieldHelpers`, field config schemas)
-2. **Drizzle** — column or `custom_data` key + forward-only migration when needed (`mms-schema-migrate`)
+1. **Shared** — type + Zod in `@mms/shared` (`FIELD_TYPES_META`, `createFormCustomFieldHelpers`, field config schemas) with `.strict()`
+2. **Drizzle** — dedicated typed column or relational child table + forward-only migration generated via `drizzle-kit generate` (`mms-schema-migrate`)
 3. **REST** — `parseRequest` Zod on BE routes; field values via shared Zod builders driven by registry type — no ad-hoc `typeof` switches in handlers
 4. **UI** — bind via registry / form draft; `labelKey` only (no hardcoded labels)
 5. **Removal** — call `getFieldRemovalIssues()` / `get*FieldRemovalIssues()` before delete to check dependency conflicts (`createFieldRemovalIssuesChecker` in `@mms/shared`)
@@ -42,10 +42,10 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 - Locked always-on tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic` only). Pass a **stable** `readonly` array/const for `lockedEnabledTabs` (module-level or memoized) — never inline `[...CONST]` / new array literals each render (unstable identity → infinite rehydrate). Retired seed `custom` is not locked — omit unless field-config still has fields under `tabId: "custom"`.
 - `DEFAULT_ENABLED_TABS` is the **fallback seed** when `formTabs` are absent — not a permanent override.
 
-## 4b. Contact-linked module Identity (Students)
+## 4b. Contact-linked module Identity (Students & Teachers)
 
-- Identity fields (student contact link, gender, DOB, relationships) are **validation/display** registry config — person data SSOT remains Contacts.
-- Do not treat enabling those fields as permission to dual-write profile keys onto `students.custom_data` when `contactId` is set — strip/hydrate rules → `mms-data-layer.mdc` / `mms-form-architecture.mdc`.
+- Identity fields (student/teacher contact link, gender, DOB, relationships) are **validation/display** registry config — person data SSOT remains Contacts.
+- Do not treat enabling those fields as permission to dual-write profile keys onto `students` or `teachers` domain rows when `contactId` is set — strip/hydrate rules → `mms-data-layer.mdc` / `mms-form-architecture.mdc`.
 
 ## 5. Form & drawer render parity
 

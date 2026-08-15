@@ -15,7 +15,7 @@ interface ContactsCommandMetricsProps {
 }
 
 /** Permission-scoped quick metrics for the Contacts module command centre (globle1 §2.1). */
-export const ContactsCommandMetrics = React.memo(function ContactsCommandMetrics({
+export function ContactsCommandMetrics({
   shown,
   pendingCount,
   conflictCount,
@@ -75,4 +75,4 @@ export const ContactsCommandMetrics = React.memo(function ContactsCommandMetrics
   ]);
 
   return <ModuleCommandMetricsGrid items={items} />;
-});
+}

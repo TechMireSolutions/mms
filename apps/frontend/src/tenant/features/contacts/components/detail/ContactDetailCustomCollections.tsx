@@ -22,7 +22,7 @@ function formatCellValue(value: unknown): string | null {
 
 function formatRowSummary(
   row: Record<string, unknown>,
-  rowFields: FieldDefinition[],
+  rowFields: readonly FieldDefinition[],
   resolveLabel: (field: FieldDefinition) => string,
 ): string {
   return rowFields
@@ -72,56 +72,56 @@ function resolveCustomCollectionTabs(
     .map((tabId) => ({ key: tabId, label: tabId, enabled: true, order: 0 }));
 }
 
-export const ContactDetailCustomCollections = React.memo(function ContactDetailCustomCollections({
-      contact,
-      fields,
-      enabledTabIds,
-      formTabs,
-      onlyTabId,
-    }: {
-      contact: Contact;
-      fields: Record<string, FieldDefinition[]>;
-      enabledTabIds: Set<string>;
-      formTabs?: TabDefinition[];
-      /** When set, only that tab section is rendered (drawer tab panel). */
-      onlyTabId?: string;
-    }): JSX.Element | null {
-      const { t } = useTranslation();
-      const tabs = resolveCustomCollectionTabs(formTabs, fields, enabledTabIds, onlyTabId);
+export function ContactDetailCustomCollections({
+  contact,
+  fields,
+  enabledTabIds,
+  formTabs,
+  onlyTabId,
+}: {
+  contact: Contact;
+  fields: Record<string, FieldDefinition[]>;
+  enabledTabIds: Set<string>;
+  formTabs?: TabDefinition[];
+  /** When set, only that tab section is rendered (drawer tab panel). */
+  onlyTabId?: string;
+}): React.JSX.Element | null {
+  const { t } = useTranslation();
+  const tabs = resolveCustomCollectionTabs(formTabs, fields, enabledTabIds, onlyTabId);
 
-      if (tabs.length === 0) return null;
+  if (tabs.length === 0) return null;
 
-      return (
-        <>
-          {tabs.map((tab) => {
-            const rowFields = listEnabledCustomContactFormFields(fields, tab.key);
-            if (rowFields.length === 0) return null;
+  return (
+    <>
+      {tabs.map((tab) => {
+        const rowFields = listEnabledCustomContactFormFields(fields, tab.key);
+        if (rowFields.length === 0) return null;
 
-            const rows = readContactCustomCollectionRows(contact, tab.key);
-            const title = tab.labelKey ? t(tab.labelKey) : tab.label || tab.key;
+        const rows = readContactCustomCollectionRows(contact, tab.key);
+        const title = tab.labelKey ? t(tab.labelKey) : tab.label || tab.key;
 
-            return (
-              <DetailSection key={tab.key} title={title}>
-                {rows.length === 0 ? (
-                  <DetailCollectionEmpty title={t("contacts.form.noCustomTabEntriesYet")} />
-                ) : (
-                  rows.map((row, rowIndex) => {
-                    const summary = formatRowSummary(row, rowFields as FieldDefinition[], (field) =>
-                      resolveRegistryLabel(field, t),
-                    );
-                    if (!summary) return null;
-                    return (
-                      <CollectionRowItem
-                        key={`${tab.key}-${rowIndex}`}
-                        label={t("contacts.form.customTabEntryLabel", { index: rowIndex + 1 })}
-                        value={summary}
-                      />
-                    );
-                  })
-                )}
-              </DetailSection>
-            );
-          })}
-        </>
-      );
-    }) as any;
+        return (
+          <DetailSection key={tab.key} title={title}>
+            {rows.length === 0 ? (
+              <DetailCollectionEmpty title={t("contacts.form.noCustomTabEntriesYet")} />
+            ) : (
+              rows.map((row, rowIndex) => {
+                const summary = formatRowSummary(row, rowFields, (field) =>
+                  resolveRegistryLabel(field, t),
+                );
+                if (!summary) return null;
+                return (
+                  <CollectionRowItem
+                    key={`${tab.key}-${rowIndex}`}
+                    label={t("contacts.form.customTabEntryLabel", { index: rowIndex + 1 })}
+                    value={summary}
+                  />
+                );
+              })
+            )}
+          </DetailSection>
+        );
+      })}
+    </>
+  );
+}

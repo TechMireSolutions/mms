@@ -12,8 +12,8 @@ Madrasa Management System monorepo — applies on every task across both **tenan
 
 ```
 apps/frontend/     React 19 + Vite 8 · Tailwind v4 · Radix/shadcn · TanStack Query v5 · Framer Motion · Lucide · Recharts
-apps/backend/      Fastify 5 + tsx · PostgreSQL + Drizzle ORM (parameterized SQL only; no raw pg in controllers)
-packages/shared/   @mms/shared (SSOT for types, Zod DTOs, schemas, constants, pure utils)
+apps/backend/      Fastify 5 + tsx · PostgreSQL + Drizzle ORM (strictly normalized 3NF/BCNF, RLS, parameterized SQL only)
+packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, constants, pure utils)
 ```
 
 - **Root commands:** `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm test`.
@@ -23,14 +23,14 @@ packages/shared/   @mms/shared (SSOT for types, Zod DTOs, schemas, constants, pu
 
 | Layer | Sanctioned Contents | Constraints |
 |---|---|---|
-| `@mms/shared` | Types, Zod DTOs, configs, manifests, pure utils | Zero DOM, React, Fastify, or DB dependencies. |
+| `@mms/shared` | Types, strict Zod DTOs, configs, manifests, pure utils | Zero DOM, React, Fastify, or DB dependencies. Write schemas use `.strict()`. Align 1:1 with Drizzle tables. |
 | `apps/frontend/src/lib/*` | FE-wide logic: query factories, i18n, apiClient | Sanctioned shared FE layer across features/platform. |
 | `apps/frontend/src/components/ui/*` | Shared UI primitives & design tokens | Prop-driven chrome only; zero feature domain imports. |
 | `apps/frontend/src/tenant/features/*` | Feature adapters: config + labels + wiring | Banned direct cross-feature imports (`@/tenant/features/{a}` from `{b}`). Route via `@/tenant/hooks/collections/*` facades or extract shared chrome to `components/ui` / `lib/` / `@mms/shared` — `mms-dry.md`. |
 
 - **Extraction Corollary:** Ban targets coupling, not duplication. When 2+ components are near-identical, extract the shared 90% into `components/ui/` or `lib/` and keep wrappers thin.
 - **Inter-module data:** Batch `/resolve` + Query; `local-database-update` only for legacy settings/local drafts.
-- **Validation SSOT:** Shared Zod in `@mms/shared` (`.strict()` write DTOs). Do not fork schemas.
+- **Validation SSOT:** Shared Zod in `@mms/shared` (`.strict()` write DTOs, explicit Insert/Update/Response types). Do not fork schemas.
 
 ## Real-time & Data Authority
 
@@ -38,10 +38,11 @@ packages/shared/   @mms/shared (SSOT for types, Zod DTOs, schemas, constants, pu
 |---|---|---|
 | **Realtime** | Tenant WS `/api/ws` + `broadcastTenantUpdate` → Query invalidation; Query `refetchInterval` / job polls | Ad-hoc `setInterval` / `fetch` in `useEffect`; parallel WS stacks |
 | **Data Authority** | Server-authoritative REST + TanStack Query; SQL aggregates for KPIs/reports | `useLiveCollection` / `getCollection` / `saveCollection` for REST entities; unpaged client-side dumps (`loadAllFn`) |
+| **Database Schema** | Strict 3NF/BCNF normalization, typed PostgreSQL columns, bidirectional `relations(...)` | Semi-structured domain storage (`json()`, `jsonb()`, `array()`, EAV tables, untyped blobs) |
 
 ## Tenant & Platform Invariants
 
-- **Tenant Writes:** `authenticateTenant` + transaction RLS (`SET LOCAL app.current_tenant`) + `can()` / collection check. Never trust client body `workspaceSubdomain` or authz `userId`.
+- **Tenant Writes:** `authenticateTenant` + transaction RLS (`SET LOCAL app.current_tenant`) + `can()` / collection check. Validate with `@mms/shared` Zod before DB persistence. Never trust client body `workspaceSubdomain` or authz `userId`.
 - **Platform Writes:** `authenticatePlatform` + `platformUserCan` / `requirePlatformPermission` + password re-auth on destructive ops.
 - **Contacts Canonical:** Persons link by `contactId`; profile fields live on contacts. Hydrate on read, strip on write (`mms-fields.md`, `mms-form-architecture.md`).
 - **Data Standards:** Phone numbers E.164 via `parsePhoneNumber`; WhatsApp number ID via `PuppeteerWhatsAppProvider.getNumberId`; Money as decimal strings (`/^\d+(\.\d{1,2})?$/`).

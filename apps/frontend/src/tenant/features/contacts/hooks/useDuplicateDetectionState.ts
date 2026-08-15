@@ -94,7 +94,7 @@ export function useDuplicateDetectionState({
     const other = pair.contacts[1 - selectedKeepIndex];
 
     const mergedRaw = mergeContacts(keep, other);
-    const mergedResult = applyTitleCaseToContact(mergedRaw) as Contact;
+    const mergedResult = applyTitleCaseToContact(mergedRaw);
     setConfirming(true);
     try {
       await onMerge(keep.id, other.id, mergedResult);

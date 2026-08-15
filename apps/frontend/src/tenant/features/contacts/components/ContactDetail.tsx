@@ -31,7 +31,7 @@ export interface ContactDetailProps {
  * Contacts Detail Drawer: orchestrates tab state, timeline notes, file uploads,
  * communications actions, and soft-delete/restore operations within {@link DetailDrawerShell}.
  */
-export const ContactDetail = React.memo(function ContactDetail({
+export function ContactDetail({
   contact: initialContact,
   onClose,
   onEdit,
@@ -178,7 +178,7 @@ export const ContactDetail = React.memo(function ContactDetail({
       />
     </DetailDrawerShell>
   );
-});
+}
 
 export default ContactDetail;
 

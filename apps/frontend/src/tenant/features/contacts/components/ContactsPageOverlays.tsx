@@ -52,14 +52,14 @@ export interface ContactsPageOverlaysProps {
   onConfirmBulkRestore: () => void;
 }
 
-export const ContactsPageOverlays = React.memo(function ContactsPageOverlays({
-      canWrite,
-      canDelete,
-      showForm,
-      editContact,
-      defaultCountry,
-      defaultCity,
-      defaultProvince,
+export function ContactsPageOverlays({
+  canWrite,
+  canDelete,
+  showForm,
+  editContact,
+  defaultCountry,
+  defaultCity,
+  defaultProvince,
       onCloseForm,
       onSave,
       showDuplicates,
@@ -146,18 +146,18 @@ export const ContactsPageOverlays = React.memo(function ContactsPageOverlays({
             </AnimatePresence>
           </Suspense>
 
-          <ContactsPageConfirmDialogs
-            bulkDeleteOpen={bulkDeleteOpen}
-            onBulkDeleteOpenChange={onBulkDeleteOpenChange}
-            selectedCount={selectedCount}
-            onConfirmBulkDelete={onConfirmBulkDelete}
-            deleteTarget={deleteTarget}
-            onDeleteTargetOpenChange={onDeleteTargetOpenChange}
-            onConfirmSingleDelete={onConfirmSingleDelete}
-            bulkRestoreOpen={bulkRestoreOpen}
-            onBulkRestoreOpenChange={onBulkRestoreOpenChange}
-            onConfirmBulkRestore={onConfirmBulkRestore}
-          />
-        </>
-      );
-    });
+        <ContactsPageConfirmDialogs
+          bulkDeleteOpen={bulkDeleteOpen}
+          onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+          selectedCount={selectedCount}
+          onConfirmBulkDelete={onConfirmBulkDelete}
+          deleteTarget={deleteTarget}
+          onDeleteTargetOpenChange={onDeleteTargetOpenChange}
+          onConfirmSingleDelete={onConfirmSingleDelete}
+          bulkRestoreOpen={bulkRestoreOpen}
+          onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+          onConfirmBulkRestore={onConfirmBulkRestore}
+        />
+      </>
+    );
+  }

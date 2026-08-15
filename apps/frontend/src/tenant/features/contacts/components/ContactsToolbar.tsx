@@ -8,7 +8,7 @@ import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButt
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
-import { ContactsFilterMenuButton } from "@/tenant/features/contacts/components/ContactsToolbarControls";
+import { ContactsFilterMenuButton } from "@/tenant/features/contacts/components/ContactsFilterMenuButton";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 import { CONTACTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
 

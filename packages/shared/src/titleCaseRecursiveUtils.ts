@@ -133,8 +133,8 @@ export function applyTitleCaseRecursive(data: unknown, key?: string): unknown {
  * @param contact - The contact object.
  * @returns A new contact object with title-cased fields.
  */
-export function applyTitleCaseToContact(contact: Record<string, unknown>): Record<string, unknown> {
-  const result = { ...contact };
+export function applyTitleCaseToContact<T extends Record<string, unknown>>(contact: T): T {
+  const result = { ...contact } as Record<string, unknown>;
 
   const directFields = [
     "firstName",
@@ -248,5 +248,5 @@ export function applyTitleCaseToContact(contact: Record<string, unknown>): Recor
     }
   });
 
-  return result;
+  return result as unknown as T;
 }

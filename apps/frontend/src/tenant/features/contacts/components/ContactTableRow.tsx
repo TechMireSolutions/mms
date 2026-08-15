@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell } from "@/components/ui/table";
@@ -39,7 +39,7 @@ interface ContactTableRowProps {
   onEmail?: (contacts: Contact[]) => void;
 }
 
-export const ContactTableRow = memo(function ContactTableRow({
+export function ContactTableRow({
   contact,
   isSelected,
   columns,
@@ -121,4 +121,4 @@ export const ContactTableRow = memo(function ContactTableRow({
       </TableCell>
     </motion.tr>
   );
-});
+}

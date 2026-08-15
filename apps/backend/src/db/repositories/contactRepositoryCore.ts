@@ -12,7 +12,7 @@ export const contactRepo = createGenericRepository<Contact, typeof contacts>(con
 });
 
 export function hydrateContact(contact: Contact): Contact {
-  return hydrateContactRelationshipFields(contact) as Contact;
+  return hydrateContactRelationshipFields(contact);
 }
 
 export async function listContactsByWorkspace(
