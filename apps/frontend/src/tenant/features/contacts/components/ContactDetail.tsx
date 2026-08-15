@@ -12,7 +12,7 @@ import {
   ContactDetailDrawerTabBar,
 } from "./detail/ContactDetailDrawerChrome";
 
-interface ContactDetailDrawerProps {
+interface ContactDetailProps {
   contact: Contact;
   onClose: () => void;
   onEdit: (contact: Contact) => void;
@@ -26,7 +26,7 @@ interface ContactDetailDrawerProps {
   onRestore?: (contactId: string | number) => void | Promise<void>;
 }
 
-export default function ContactDetailDrawer({
+export default function ContactDetail({
   contact: initialContact,
   onClose,
   onEdit,
@@ -38,7 +38,7 @@ export default function ContactDetailDrawer({
   canWrite = false,
   canDelete = false,
   onRestore,
-}: ContactDetailDrawerProps): JSX.Element {
+}: ContactDetailProps): JSX.Element {
   const { t } = useTranslation();
 
   const {

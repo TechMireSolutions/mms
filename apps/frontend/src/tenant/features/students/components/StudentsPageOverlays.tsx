@@ -11,9 +11,9 @@ import type { StudentsPageOverlaysProps } from "@/tenant/features/students/hooks
 
 const StudentForm = lazy(() => import("@/tenant/features/students/components/StudentForm"));
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
-const StudentDetailDrawer = lazy(() =>
-  import("@/tenant/features/students/components/StudentDetailDrawer").then((m) => ({
-    default: m.StudentDetailDrawer,
+const StudentDetail = lazy(() =>
+  import("@/tenant/features/students/components/StudentDetail").then((m) => ({
+    default: m.default,
   })),
 );
 
@@ -71,20 +71,21 @@ export function StudentsPageOverlays({
         </AnimatePresence>
       </Suspense>
 
-      {viewStudent && !configPending ? (
-        <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
-          <StudentDetailDrawer
-            student={viewStudent}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            onClose={onCloseView}
-            onEdit={onEditFromDrawer}
-            onRestore={onRestoreFromDrawer}
-            openComposer={openComposer}
-            canWriteMessaging={canWriteMessaging}
-          />
-        </Suspense>
-      ) : null}
+      <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
+        <AnimatePresence>
+          {viewStudent && !configPending ? (
+            <StudentDetail
+              student={viewStudent}
+              canDelete={canDelete}
+              onClose={onCloseView}
+              onEdit={canWrite ? onEditFromDrawer : undefined}
+              onRestore={onRestoreFromDrawer}
+              openComposer={openComposer}
+              canWriteMessaging={canWriteMessaging}
+            />
+          ) : null}
+        </AnimatePresence>
+      </Suspense>
 
       <StudentsPageConfirmDialogs
         bulkDeleteOpen={bulkDeleteOpen}

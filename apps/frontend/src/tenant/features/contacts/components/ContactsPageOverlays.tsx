@@ -13,7 +13,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
-const ContactDetailDrawer = lazy(() => import("@/tenant/features/contacts/components/ContactDetailDrawer"));
+const ContactDetail = lazy(() => import("@/tenant/features/contacts/components/ContactDetail"));
 
 export interface ContactsPageOverlaysProps {
   canWrite: boolean;
@@ -126,23 +126,25 @@ export function ContactsPageOverlays({
         </AnimatePresence>
       </Suspense>
 
-      {viewContact && formTabsReady && (
-        <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
-          <ContactDetailDrawer
-            contact={viewContact}
-            onClose={onCloseView}
-            onEdit={onEditFromDrawer}
-            onWhatsApp={onWhatsApp}
-            onSms={onSms}
-            onEmail={onEmail}
-            allContacts={allContactsForLinks}
-            onUpdateContact={onUpdateContact}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            onRestore={onRestoreFromDrawer}
-          />
-        </Suspense>
-      )}
+      <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
+        <AnimatePresence>
+          {viewContact && formTabsReady ? (
+            <ContactDetail
+              contact={viewContact}
+              onClose={onCloseView}
+              onEdit={onEditFromDrawer}
+              onWhatsApp={onWhatsApp}
+              onSms={onSms}
+              onEmail={onEmail}
+              allContacts={allContactsForLinks}
+              onUpdateContact={onUpdateContact}
+              canWrite={canWrite}
+              canDelete={canDelete}
+              onRestore={onRestoreFromDrawer}
+            />
+          ) : null}
+        </AnimatePresence>
+      </Suspense>
 
       <ContactsPageConfirmDialogs
         bulkDeleteOpen={bulkDeleteOpen}
