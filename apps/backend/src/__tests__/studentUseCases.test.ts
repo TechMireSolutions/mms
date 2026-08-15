@@ -85,9 +85,7 @@ function createFakeRepo() {
       bulkSave: vi.fn(async (tenant: string, students: Student[]) => {
         void tenant;
         students.forEach((student) => store.set(String(student.id), student));
-      }),
-      countFieldUsageByKeys: vi.fn(async () => ({})),
-      aggregateCommandMetrics: vi.fn(async () => ({
+      }),      aggregateCommandMetrics: vi.fn(async () => ({
         total: 0,
         active: 0,
         inactive: 0,
@@ -522,25 +520,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     expect(repo.listLinkedContactIds).toHaveBeenCalledWith('demo', 's-exclude');
   });
 
-  it('loadStudentFieldUsageCounts delegates the requested keys', async () => {
-    const { repo } = createFakeRepo();
-    vi.mocked(repo.countFieldUsageByKeys).mockResolvedValue({ cnic: 3, grNumber: 1 });
-    const useCases = createStudentsUseCases(repo);
 
-    const counts = await useCases.loadStudentFieldUsageCounts(['cnic', 'grNumber']);
-
-    expect(counts).toEqual({ cnic: 3, grNumber: 1 });
-    expect(repo.countFieldUsageByKeys).toHaveBeenCalledWith('demo', ['cnic', 'grNumber']);
-  });
-
-  it('loadStudentFieldUsageCount resolves the single-key count', async () => {
-    const { repo } = createFakeRepo();
-    vi.mocked(repo.countFieldUsageByKeys).mockResolvedValue({ cnic: 7 });
-    const useCases = createStudentsUseCases(repo);
-
-    expect(await useCases.loadStudentFieldUsageCount('cnic')).toBe(7);
-    expect(repo.countFieldUsageByKeys).toHaveBeenCalledWith('demo', ['cnic']);
-  });
 
   it('migrateStudentsMissingGrNumbers assigns sequential GR numbers to active rows', async () => {
     const { repo, store } = createFakeRepo();

@@ -52,10 +52,7 @@ export interface StudentsRepository {
   findById(tenant: string, id: string): Promise<Student | null>;
   findByIds(tenant: string, ids: string[]): Promise<Student[]>;
   save(tenant: string, student: Student | StudentRecord): Promise<void>;
-  bulkSave(tenant: string, students: Array<Student | StudentRecord>): Promise<void>;
-
-  countFieldUsageByKeys(tenant: string, fieldKeys: string[]): Promise<Record<string, number>>;
-  aggregateCommandMetrics(
+  bulkSave(tenant: string, students: Array<Student | StudentRecord>): Promise<void>;  aggregateCommandMetrics(
     tenant: string,
     periodDays?: number,
   ): Promise<StudentsCommandMetricsSnapshot>;

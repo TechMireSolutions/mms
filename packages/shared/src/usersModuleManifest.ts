@@ -47,7 +47,6 @@ export const workspaceUserRecordSchema = z.object({
   failedLoginAttempts: z.number(),
   activeSessions: z.number(),
   avatarInitials: z.string(),
-  customData: z.record(z.string(), z.unknown()).optional(),
   deletedAt: z.string().nullable().optional(),
   deletedBy: z.string().nullable().optional(),
 });

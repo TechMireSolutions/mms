@@ -64,7 +64,6 @@ export const obligationCollectionRecordSchema = z.object({
   received_by: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
-  customData: z.record(z.string(), z.unknown()).optional(),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { canDeleteCollection, canReadCollection } from '../../services/rbacService.js';
+import { canDeleteCollection } from '../../services/rbacService.js';
 import {
   STUDENTS_MODULE_MANIFEST,
   studentRecordSchema,
@@ -23,7 +23,6 @@ import {
 } from '../../lib/crudRouter.js';
 import { registerResourceRoutes } from '../../lib/crudResourceRoutes.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
-import { registerFieldUsageRoutes } from '../../lib/registerFieldUsageRoutes.js';
 import { studentSetupConfigRoutes } from './students/studentSetupConfigRoutes.js';
 import { studentLookupRoutes } from './students/studentLookupRoutes.js';
 import { studentExportRoutes } from './students/studentExportRoutes.js';
@@ -53,12 +52,6 @@ export default async function studentsRoutes(
   await fastify.register(studentLookupRoutes);
   await fastify.register(studentExportRoutes);
   await fastify.register(studentOperationRoutes);
-
-  registerFieldUsageRoutes(fastify, {
-    canRead: (user) => canReadCollection(user, 'students'),
-    loadCount: (fieldKey) => studentUseCases.loadStudentFieldUsageCount(fieldKey),
-    loadCounts: (fieldKeys) => studentUseCases.loadStudentFieldUsageCounts(fieldKeys),
-  });
 
   registerPaginatedListRoute(fastify, {
     collection: 'students',

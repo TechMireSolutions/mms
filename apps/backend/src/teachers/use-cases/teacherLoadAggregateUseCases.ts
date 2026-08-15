@@ -24,24 +24,7 @@ export async function loadTeachersCommandMetrics(
   return repo.aggregateCommandMetrics(tenant);
 }
 
-export async function loadTeacherFieldUsageCounts(
-  fieldKeys: string[],
-  repo: TeachersRepository = teachersRepository,
-): Promise<Record<string, number>> {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return Object.fromEntries(fieldKeys.map((key) => [key, 0]));
-  }
-  return repo.countFieldUsageByKeys(tenant, fieldKeys);
-}
 
-export async function loadTeacherFieldUsageCount(
-  fieldKey: string,
-  repo: TeachersRepository = teachersRepository,
-): Promise<number> {
-  const counts = await loadTeacherFieldUsageCounts([fieldKey], repo);
-  return counts[fieldKey] ?? 0;
-}
 
 export async function loadTeachersWidgetAggregates(
   queries: TeachersWidgetQuery[],

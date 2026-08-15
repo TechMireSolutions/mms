@@ -6,7 +6,6 @@ export const SESSION_CURRENCIES = DEFAULT_CURRENCIES.map((currency) => currency.
 
 export type SessionFormDraft = Omit<Partial<Session>, 'baseFee'> & {
   baseFee: string;
-  customData?: Record<string, unknown>;
 };
 
 export const SESSION_TYPE_LABEL_KEYS: Record<string, AppTranslationKey> = {
@@ -34,7 +33,6 @@ export function buildEmptySessionDraft(defaultType: string, defaultCurrency: str
     budget: { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
     events: [],
     tabarruk: [],
-    customData: {},
   };
 }
 
@@ -58,7 +56,6 @@ export function buildSessionDraftFromRecord(
     budget: session?.budget ?? { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
     events: session?.events ?? [],
     tabarruk: session?.tabarruk ?? [],
-    customData: (session as { customData?: Record<string, unknown> } | undefined)?.customData ?? {},
   };
 }
 
@@ -73,6 +70,5 @@ export function sessionFormDraftSnapshot(draft: SessionFormDraft): string {
     baseFee: draft.baseFee ?? '',
     currency: draft.currency ?? '',
     description: draft.description ?? '',
-    customData: draft.customData ?? {},
   });
 }

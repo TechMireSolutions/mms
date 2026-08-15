@@ -87,9 +87,7 @@ function createFakeRepo() {
       bulkSave: vi.fn(async (tenant: string, teachers: Teacher[]) => {
         void tenant;
         teachers.forEach((teacher) => store.set(String(teacher.id), teacher));
-      }),
-      countFieldUsageByKeys: vi.fn(async () => ({})),
-      aggregateCommandMetrics: vi.fn(async () => ({
+      }),      aggregateCommandMetrics: vi.fn(async () => ({
         total: 0,
         active: 0,
         inactive: 0,
@@ -402,25 +400,7 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(repo.listLinkedContactIds).toHaveBeenCalledWith('demo', 't-exclude');
   });
 
-  it('loadTeacherFieldUsageCounts delegates the requested keys', async () => {
-    const { repo } = createFakeRepo();
-    vi.mocked(repo.countFieldUsageByKeys).mockResolvedValue({ qualification: 3, specialization: 1 });
-    const useCases = createTeachersUseCases(repo);
 
-    const counts = await useCases.loadTeacherFieldUsageCounts(['qualification', 'specialization']);
-
-    expect(counts).toEqual({ qualification: 3, specialization: 1 });
-    expect(repo.countFieldUsageByKeys).toHaveBeenCalledWith('demo', ['qualification', 'specialization']);
-  });
-
-  it('loadTeacherFieldUsageCount resolves the single-key count', async () => {
-    const { repo } = createFakeRepo();
-    vi.mocked(repo.countFieldUsageByKeys).mockResolvedValue({ qualification: 7 });
-    const useCases = createTeachersUseCases(repo);
-
-    expect(await useCases.loadTeacherFieldUsageCount('qualification')).toBe(7);
-    expect(repo.countFieldUsageByKeys).toHaveBeenCalledWith('demo', ['qualification']);
-  });
 
   it('checkTeacherRegistrationDuplicate returns the conflict reason from the repo', async () => {
     const { repo } = createFakeRepo();

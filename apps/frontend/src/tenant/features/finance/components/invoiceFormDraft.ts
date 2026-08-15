@@ -9,7 +9,6 @@ export interface InvoiceDraft {
   discountType: string;
   discountValue: string;
   dueDate: string;
-  customData?: Record<string, unknown>;
 }
 
 export function nextInvoiceId(prefix: string): string {
@@ -29,7 +28,6 @@ export function createInitialDraft(dueDays: string): InvoiceDraft {
     discountType: "",
     discountValue: "0",
     dueDate: dueDate.toISOString().slice(0, 10) || todayISO(),
-    customData: {},
   };
 }
 

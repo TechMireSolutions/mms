@@ -30,10 +30,7 @@ export interface TeachersRepository {
   /** Soft-delete probe for restore-on-create re-registration (Contact SSOT). */
   findSoftDeletedByContactId(tenant: string, contactId: string): Promise<Teacher | null>;
   save(tenant: string, teacher: Teacher | TeacherRecord): Promise<void>;
-  bulkSave(tenant: string, teachers: Array<Teacher | TeacherRecord>): Promise<void>;
-
-  countFieldUsageByKeys(tenant: string, fieldKeys: string[]): Promise<Record<string, number>>;
-  aggregateCommandMetrics(
+  bulkSave(tenant: string, teachers: Array<Teacher | TeacherRecord>): Promise<void>;  aggregateCommandMetrics(
     tenant: string,
     periodDays?: number,
   ): Promise<TeachersCommandMetricsSnapshot>;

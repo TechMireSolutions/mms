@@ -108,7 +108,6 @@ export const SessionForm = React.memo(function SessionForm({
             budget: sessionDraft.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
             events: sessionDraft.events || [],
             tabarruk: sessionDraft.tabarruk || [],
-            customData: sessionDraft.customData ?? {},
           };
 
           const parsed = SessionSchema.safeParse(payload);

@@ -140,25 +140,6 @@ export async function loadContactsReportAnalytics(
   return { analytics, monthlyByYear };
 }
 
-export async function loadContactFieldUsageCounts(
-  fieldKeys: string[],
-  repo: ContactsRepository = contactsRepository,
-): Promise<Record<string, number>> {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return Object.fromEntries(fieldKeys.map((key) => [key, 0]));
-  }
-  return repo.countFieldUsageByKeys(tenant, fieldKeys);
-}
-
-export async function loadContactFieldUsageCount(
-  fieldKey: string,
-  repo: ContactsRepository = contactsRepository,
-): Promise<number> {
-  const counts = await loadContactFieldUsageCounts([fieldKey], repo);
-  return counts[fieldKey] ?? 0;
-}
-
 export async function loadContactsWidgetAggregates(
   queries: ContactsWidgetQuery[],
   repo: ContactsRepository = contactsRepository,

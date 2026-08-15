@@ -9,7 +9,6 @@ import {
   findActiveContactsMatchingUniqueValues,
   findContactDuplicateCandidateIds,
   findContactDuplicateBlockedIds,
-  countFieldUsageByKeys,
   listContactsPage,
 } from '../../db/repositories/contactRepository.js';
 import {
@@ -43,7 +42,6 @@ function createContactsRepository(): ContactsRepository {
       findContactDuplicateCandidateIds(tenant, keys, excludeIds),
     findContactDuplicateBlockedIds: (tenant, namePrefixes) =>
       findContactDuplicateBlockedIds(tenant, namePrefixes),
-    countFieldUsageByKeys: (tenant, fieldKeys) => countFieldUsageByKeys(tenant, fieldKeys),
     acquireUniqueValueLocks: async (tenant, lockKeys) => {
       if (lockKeys.length === 0) return;
       const subdomain = tenant.trim().toLowerCase();

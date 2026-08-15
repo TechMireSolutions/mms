@@ -15,7 +15,6 @@ export const attendanceRecordSchema = z
     timeIn: z.string(),
     timeOut: z.string(),
     notes: z.string(),
-    customData: z.record(z.string(), z.unknown()).optional(),
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),

@@ -24,7 +24,5 @@ export const {
   countTeachers,
   loadTeachersCommandMetrics,
   loadTeacherLinkedContactIds,
-  loadTeacherFieldUsageCounts,
-  loadTeacherFieldUsageCount,
   computeNextTeacherEmployeeIdForSettings,
 } = teacherUseCases;

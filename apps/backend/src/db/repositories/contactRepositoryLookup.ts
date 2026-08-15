@@ -5,7 +5,6 @@ import { withTenantTransaction } from '../withTenantTransaction.js';
 import {
   jsonbArrayOrEmpty,
 } from './contactRepositorySql.js';
-import { countJsonbFieldUsageByKeys } from './jsonbFieldUsage.js';
 import { contactRepo, hydrateContact } from './contactRepositoryCore.js';
 
 export interface ContactUniqueLookupValues {
@@ -132,23 +131,5 @@ export async function findActiveContactsMatchingUniqueValues(
       .from(contacts)
       .where(and(...whereParts));
     return rows.map((row) => hydrateContact(contactRepo.rowToRecord(row)));
-  });
-}
-
-/**
- * Counts active contacts with a non-empty value for each field key (SQL, no full-list load).
- * Single-pass `count(*) FILTER` per key. Every requested key is present (default 0).
- */
-export async function countFieldUsageByKeys(
-  tenant: string,
-  fieldKeys: string[],
-): Promise<Record<string, number>> {
-  return countJsonbFieldUsageByKeys({
-    tenant,
-    fieldKeys,
-    table: contacts,
-    customDataCol: contacts.customData,
-    workspaceSubdomainCol: contacts.workspaceSubdomain,
-    deletedAtCol: contacts.deletedAt,
   });
 }

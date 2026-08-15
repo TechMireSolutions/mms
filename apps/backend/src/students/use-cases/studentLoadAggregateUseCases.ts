@@ -23,24 +23,7 @@ export async function loadStudentsCommandMetrics(
   return repo.aggregateCommandMetrics(tenant);
 }
 
-export async function loadStudentFieldUsageCounts(
-  fieldKeys: string[],
-  repo: StudentsRepository = studentsRepository,
-): Promise<Record<string, number>> {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return Object.fromEntries(fieldKeys.map((key) => [key, 0]));
-  }
-  return repo.countFieldUsageByKeys(tenant, fieldKeys);
-}
 
-export async function loadStudentFieldUsageCount(
-  fieldKey: string,
-  repo: StudentsRepository = studentsRepository,
-): Promise<number> {
-  const counts = await loadStudentFieldUsageCounts([fieldKey], repo);
-  return counts[fieldKey] ?? 0;
-}
 
 export async function loadStudentsWidgetAggregates(
   queries: StudentsWidgetQuery[],

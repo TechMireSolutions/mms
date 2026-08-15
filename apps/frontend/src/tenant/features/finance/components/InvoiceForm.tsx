@@ -76,7 +76,6 @@ export const InvoiceForm = React.memo(function InvoiceForm({
             paidDate: null,
             method: null,
             paidAmt: 0,
-            customData: draft.customData ?? {},
           });
           notify.success(t("finance.invoiceSaved"));
           resetAndClose();

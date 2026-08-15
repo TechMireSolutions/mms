@@ -13,7 +13,7 @@ import {
 describe('contactLinkPolicy', () => {
   describe('stripRecordFields', () => {
     it('removes specified profile fields from an object', () => {
-      const input = { id: 1, name: 'John', phone: '+123', customData: { role: 'admin' } };
+      const input = { id: 1, name: 'John', phone: '+123' };
       const stripped = stripRecordFields(input, ['name', 'phone']);
       expect(stripped.id).toBe(1);
       expect(stripped).not.toHaveProperty('name');

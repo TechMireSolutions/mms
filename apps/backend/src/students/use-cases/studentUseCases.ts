@@ -36,12 +36,7 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       loadEntity.loadStudentLinkedContactIds(excludeStudentId, repo),
     loadStudentsCommandMetrics: () => loadAggregate.loadStudentsCommandMetrics(repo),
     loadStudentsWidgetAggregates: (queries: Parameters<typeof loadAggregate.loadStudentsWidgetAggregates>[0]) =>
-      loadAggregate.loadStudentsWidgetAggregates(queries, repo),
-    loadStudentFieldUsageCounts: (fieldKeys: string[]) =>
-      loadAggregate.loadStudentFieldUsageCounts(fieldKeys, repo),
-    loadStudentFieldUsageCount: (fieldKey: string) =>
-      loadAggregate.loadStudentFieldUsageCount(fieldKey, repo),
-    createStudent: (record: Parameters<typeof write.createStudent>[0], options?: Parameters<typeof write.createStudent>[1]) =>
+      loadAggregate.loadStudentsWidgetAggregates(queries, repo),    createStudent: (record: Parameters<typeof write.createStudent>[0], options?: Parameters<typeof write.createStudent>[1]) =>
       write.createStudent(record, options, repo),
     updateStudentById: (id: string, record: Parameters<typeof write.updateStudentById>[1]) =>
       write.updateStudentById(id, record, repo),

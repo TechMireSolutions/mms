@@ -115,9 +115,7 @@ function createFakeRepo() {
             .map((c) => String(c.id));
         },
       ),
-      findContactDuplicateBlockedIds: vi.fn(async () => []),
-      countFieldUsageByKeys: vi.fn(async () => ({})),
-      acquireUniqueValueLocks: vi.fn(async () => undefined),
+      findContactDuplicateBlockedIds: vi.fn(async () => []),      acquireUniqueValueLocks: vi.fn(async () => undefined),
       aggregateCommandMetrics: vi.fn(
         async (
           _tenant: string,
@@ -474,16 +472,6 @@ describe('createContactsUseCases (DI composition root)', () => {
     expect(repo.aggregateWidgetQueries).toHaveBeenCalledWith('demo', [
       { id: 'w1', operation: 'count' },
     ]);
-  });
-
-  it('loadContactFieldUsageCount delegates to countFieldUsageByKeys', async () => {
-    const { repo } = createFakeRepo();
-    vi.mocked(repo.countFieldUsageByKeys).mockResolvedValue({ email: 3 });
-    const useCases = createContactsUseCases(repo);
-
-    expect(await useCases.loadContactFieldUsageCounts(['email'])).toEqual({ email: 3 });
-    expect(repo.countFieldUsageByKeys).toHaveBeenCalledWith('demo', ['email']);
-    expect(await useCases.loadContactFieldUsageCount('email')).toBe(3);
   });
 
   it('matchContactIdentityIndex normalizes inputs and collects matching values', async () => {

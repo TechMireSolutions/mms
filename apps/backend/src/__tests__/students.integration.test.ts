@@ -34,8 +34,6 @@ const mockLoadStudentsPage = vi.fn();
 const mockCreateStudent = vi.fn();
 const mockLoadStudentsCommandMetrics = vi.fn();
 const mockMigrateStudentsMissingGrNumbers = vi.fn();
-const mockLoadStudentFieldUsageCount = vi.fn();
-const mockLoadStudentFieldUsageCounts = vi.fn();
 const mockEnqueueBackgroundJob = vi.fn();
 const mockGetUserBackgroundJob = vi.fn();
 const mockRecordAudit = vi.fn();
@@ -56,8 +54,6 @@ vi.mock('../students/use-cases/studentUseCases.js', async (importOriginal) => {
       updateStudentById: (...args: unknown[]) => mockUpdateStudentById(...args),
       loadStudentsCommandMetrics: (...args: unknown[]) => mockLoadStudentsCommandMetrics(...args),
       migrateStudentsMissingGrNumbers: (...args: unknown[]) => mockMigrateStudentsMissingGrNumbers(...args),
-      loadStudentFieldUsageCount: (...args: unknown[]) => mockLoadStudentFieldUsageCount(...args),
-      loadStudentFieldUsageCounts: (...args: unknown[]) => mockLoadStudentFieldUsageCounts(...args),
       bulkSoftDeleteStudents: (...args: unknown[]) => mockBulkSoftDeleteStudents(...args),
       bulkRestoreStudents: (...args: unknown[]) => mockBulkRestoreStudents(...args),
       softDeleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
@@ -375,74 +371,6 @@ describe('students routes', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockMigrateStudentsMissingGrNumbers).not.toHaveBeenCalled();
-    await app.close();
-  });
-
-  it('GET /api/students/field-usage/:fieldKey returns 403 without read access', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/students/field-usage/customNotes',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${viewerToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(403);
-    expect(mockLoadStudentFieldUsageCount).not.toHaveBeenCalled();
-    await app.close();
-  });
-
-  it('GET /api/students/field-usage/:fieldKey returns count for authorized roles', async () => {
-    mockLoadStudentFieldUsageCount.mockResolvedValueOnce(4);
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/students/field-usage/customNotes',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${adminToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ count: 4 });
-    expect(mockLoadStudentFieldUsageCount).toHaveBeenCalledWith('customNotes');
-    await app.close();
-  });
-
-  it('POST /api/students/field-usage returns 403 without read access', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/students/field-usage',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${viewerToken(app)}`,
-        'content-type': 'application/json',
-      },
-      payload: { fieldKeys: ['customNotes', 'city'] },
-    });
-    expect(res.statusCode).toBe(403);
-    expect(mockLoadStudentFieldUsageCounts).not.toHaveBeenCalled();
-    await app.close();
-  });
-
-  it('POST /api/students/field-usage returns batch counts for authorized roles', async () => {
-    mockLoadStudentFieldUsageCounts.mockResolvedValueOnce({ customNotes: 2, city: 0 });
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/students/field-usage',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${adminToken(app)}`,
-        'content-type': 'application/json',
-      },
-      payload: { fieldKeys: ['customNotes', 'city'] },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ counts: { customNotes: 2, city: 0 } });
-    expect(mockLoadStudentFieldUsageCounts).toHaveBeenCalledWith(['customNotes', 'city']);
     await app.close();
   });
 

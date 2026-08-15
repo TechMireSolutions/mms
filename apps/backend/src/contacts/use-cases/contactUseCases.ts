@@ -34,12 +34,7 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
     loadContactsCommandMetrics: () => loadUseCases.loadContactsCommandMetrics(repo),
     loadContactRuntimeDefaults: () => loadUseCases.loadContactRuntimeDefaults(),
     loadContactsReportAnalytics: (options?: Parameters<typeof loadUseCases.loadContactsReportAnalytics>[0]) =>
-      loadUseCases.loadContactsReportAnalytics(options, repo),
-    loadContactFieldUsageCounts: (fieldKeys: string[]) =>
-      loadUseCases.loadContactFieldUsageCounts(fieldKeys, repo),
-    loadContactFieldUsageCount: (fieldKey: string) =>
-      loadUseCases.loadContactFieldUsageCount(fieldKey, repo),
-    loadContactsWidgetAggregates: (queries: Parameters<typeof loadUseCases.loadContactsWidgetAggregates>[0]) =>
+      loadUseCases.loadContactsReportAnalytics(options, repo),    loadContactsWidgetAggregates: (queries: Parameters<typeof loadUseCases.loadContactsWidgetAggregates>[0]) =>
       loadUseCases.loadContactsWidgetAggregates(queries, repo),
     loadContactsByIds: (ids: string[]) => loadUseCases.loadContactsByIds(ids, repo),
     loadExistingNormalizedContactNames: (names: string[]) =>

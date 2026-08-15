@@ -19,7 +19,6 @@ import {
   findStudentRegistrationConflictSql,
   findSoftDeletedStudentByContactIdSql,
 } from '../../db/repositories/studentRepositoryWidgets.js';
-import { countStudentFieldUsageByKeys } from '../../db/repositories/studentRepositoryFieldUsage.js';
 import type { StudentsRepository } from './studentsRepository.js';
 
 /**
@@ -35,9 +34,7 @@ function createStudentsRepository(): StudentsRepository {
     findById: (tenant, id) => findStudentById(tenant, id),
     findByIds: (tenant, ids) => findStudentsByIds(tenant, ids),
     save: (tenant, student) => saveStudent(tenant, student as Student),
-    bulkSave: (tenant, students) => bulkSaveStudents(tenant, students as Student[]),
-    countFieldUsageByKeys: (tenant, fieldKeys) => countStudentFieldUsageByKeys(tenant, fieldKeys),
-    aggregateCommandMetrics: (tenant, periodDays) =>
+    bulkSave: (tenant, students) => bulkSaveStudents(tenant, students as Student[]),    aggregateCommandMetrics: (tenant, periodDays) =>
       aggregateStudentsCommandMetrics(tenant, periodDays),
     aggregateWidgetQueries: (tenant, queries) => aggregateStudentsWidgetQueries(tenant, queries),
     listLinkedContactIds: (tenant, excludeStudentId) =>

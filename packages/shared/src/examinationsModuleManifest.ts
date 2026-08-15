@@ -17,7 +17,6 @@ export const examRecordSchema = z.object({
   classIds: z.array(z.string()).default([]),
   status: z.enum(["completed", "scheduled", "cancelled", "upcoming", "ongoing"]).default("upcoming"),
   description: z.string().default(""),
-  customData: z.record(z.string(), z.unknown()).default({}),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),

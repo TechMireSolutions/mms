@@ -52,8 +52,6 @@ export interface ContactsRepository {
     excludeIds?: Array<string | number>,
   ): Promise<string[]>;
   findContactDuplicateBlockedIds(tenant: string, namePrefixes: string[]): Promise<string[]>;
-  countFieldUsageByKeys(tenant: string, fieldKeys: string[]): Promise<Record<string, number>>;
-
   /** Take transaction-scoped advisory locks on normalized unique values (TOCTOU guard). */
   acquireUniqueValueLocks(tenant: string, lockKeys: string[]): Promise<void>;
 

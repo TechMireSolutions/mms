@@ -48,8 +48,6 @@ const mockTouchContactsSavedReportRun = vi.fn();
 const mockRecordAudit = vi.fn();
 const mockEnqueueBackgroundJob = vi.fn();
 const mockGetUserBackgroundJob = vi.fn();
-const mockLoadContactFieldUsageCount = vi.fn();
-const mockLoadContactFieldUsageCounts = vi.fn();
 const mockLoadContactsCommandMetrics = vi.fn();
 const mockLoadContactsReportAnalytics = vi.fn();
 const mockLoadContactsWidgetAggregates = vi.fn();
@@ -83,8 +81,6 @@ vi.mock('../contacts/use-cases/contactUseCases.js', async (importOriginal) => {
       loadContactsReportAnalytics: (...args: unknown[]) => mockLoadContactsReportAnalytics(...args),
       loadContactsWidgetAggregates: (...args: unknown[]) => mockLoadContactsWidgetAggregates(...args),
       loadContactsByIds: (...args: unknown[]) => mockLoadContactsByIds(...args),
-      loadContactFieldUsageCount: (...args: unknown[]) => mockLoadContactFieldUsageCount(...args),
-      loadContactFieldUsageCounts: (...args: unknown[]) => mockLoadContactFieldUsageCounts(...args),
       loadContactDuplicatePairsPage: vi.fn(),
       matchContactIdentityIndex: (...args: unknown[]) => mockMatchContactIdentityIndex(...args),
     },
@@ -228,8 +224,6 @@ describe('contacts REST routes', () => {
       emails: [],
       names: [],
     });
-    mockLoadContactFieldUsageCount.mockReset().mockResolvedValue(0);
-    mockLoadContactFieldUsageCounts.mockReset().mockResolvedValue({ customNotes: 0 });
     mockLoadContactsCommandMetrics.mockReset().mockResolvedValue({
       total: 10,
       newThisPeriod: 2,
@@ -1080,72 +1074,6 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockRecordAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'contact.setup' }));
-    await app.close();
-  });
-
-  it('GET /api/contacts/field-usage/:fieldKey returns 403 without read access', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/contacts/field-usage/customNotes',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${viewerToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(403);
-    expect(mockLoadContactFieldUsageCount).not.toHaveBeenCalled();
-    await app.close();
-  });
-
-  it('GET /api/contacts/field-usage/:fieldKey returns count for authorized roles', async () => {
-    mockLoadContactFieldUsageCount.mockResolvedValueOnce(4);
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/contacts/field-usage/customNotes',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ count: 4 });
-    expect(mockLoadContactFieldUsageCount).toHaveBeenCalledWith('customNotes');
-    await app.close();
-  });
-
-  it('POST /api/contacts/field-usage returns 403 without read access', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/contacts/field-usage',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${viewerToken(app)}`,
-      },
-      payload: { fieldKeys: ['customNotes', 'city'] },
-    });
-    expect(res.statusCode).toBe(403);
-    expect(mockLoadContactFieldUsageCounts).not.toHaveBeenCalled();
-    await app.close();
-  });
-
-  it('POST /api/contacts/field-usage returns batch counts for authorized roles', async () => {
-    mockLoadContactFieldUsageCounts.mockResolvedValueOnce({ customNotes: 2, city: 0 });
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/contacts/field-usage',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-      },
-      payload: { fieldKeys: ['customNotes', 'city'] },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ counts: { customNotes: 2, city: 0 } });
-    expect(mockLoadContactFieldUsageCounts).toHaveBeenCalledWith(['customNotes', 'city']);
     await app.close();
   });
 

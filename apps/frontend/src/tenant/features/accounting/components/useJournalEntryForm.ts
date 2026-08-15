@@ -26,7 +26,6 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     return initial
       ? {
           ...initial,
-          customData: initial.customData ?? {},
           lines: initial.lines.map((entryLine) => ({ ...entryLine, debit: entryLine.debit || "", credit: entryLine.credit || "" }))
         }
       : {
@@ -38,7 +37,6 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
           tags: [],
           attachments: [],
           fiscal_year: activeFiscalYear,
-          customData: {},
           lines: [EMPTY_LINE(), EMPTY_LINE()],
           created_by: user?.name ?? ""
         };
@@ -50,7 +48,6 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     const base: DraftForm = initial
       ? {
           ...initial,
-          customData: initial.customData ?? {},
           lines: initial.lines.map((entryLine) => ({ ...entryLine, debit: entryLine.debit || "", credit: entryLine.credit || "" }))
         }
       : {
@@ -62,7 +59,6 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
           tags: [],
           attachments: [],
           fiscal_year: activeFiscalYear,
-          customData: {},
           lines: [EMPTY_LINE(), EMPTY_LINE()],
           created_by: user?.name ?? ""
         };

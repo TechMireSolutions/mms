@@ -157,7 +157,7 @@ export const ContactDetailDrawerContent = React.memo(function ContactDetailDrawe
                   fields={groupFields}
                   formatValue={formatFieldValue}
                   getRawValue={(key) =>
-                    (contactState.customData as Record<string, unknown> | undefined)?.[key] ??
+                    
                     (contactState as Record<string, unknown>)[key]
                   }
                 />

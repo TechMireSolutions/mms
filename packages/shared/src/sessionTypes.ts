@@ -90,7 +90,6 @@ export const SessionSchema = z.object({
   budget: SessionBudgetSchema.optional(),
   events: z.array(SessionEventSchema).default([]),
   tabarruk: z.array(TabarrukItemSchema).default([]),
-  customData: z.record(z.string(), z.unknown()).default({}),
   deletedAt: z.string().nullable().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),

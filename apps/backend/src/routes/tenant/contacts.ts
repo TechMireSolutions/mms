@@ -3,10 +3,8 @@ import type { Contact, ContactsListPageResult, User } from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { canDeleteContacts, canReadContacts } from '../../services/rbacService.js';
+import { canDeleteContacts } from '../../services/rbacService.js';
 import {
-  contactFieldUsageBatchBodySchema,
-  contactFieldUsageParamsSchema,
   contactsListQuerySchema,
   contactsReportAnalyticsQuerySchema,
 } from '../../validation/contactSchemas.js';
@@ -22,7 +20,6 @@ import {
   registerPaginatedListRoute,
 } from '../../lib/crudRouter.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
-import { registerFieldUsageRoutes } from '../../lib/registerFieldUsageRoutes.js';
 import { contactGoogleSyncRoutes } from './contacts/googleSyncRoutes.js';
 import { contactOperationRoutes } from './contacts/contactOperationRoutes.js';
 import { contactCrudRoutes } from './contacts/contactCrudRoutes.js';
@@ -98,14 +95,6 @@ export async function contactRoutes(
     } catch {
       return sendDatabaseError(reply, 'Failed to load contact report analytics');
     }
-  });
-
-  registerFieldUsageRoutes(fastify, {
-    canRead: canReadContacts,
-    loadCount: (fieldKey) => contactUseCases.loadContactFieldUsageCount(fieldKey),
-    loadCounts: (fieldKeys) => contactUseCases.loadContactFieldUsageCounts(fieldKeys),
-    paramsSchema: contactFieldUsageParamsSchema,
-    batchBodySchema: contactFieldUsageBatchBodySchema,
   });
 
   registerWidgetAggregatesRoute(fastify, {

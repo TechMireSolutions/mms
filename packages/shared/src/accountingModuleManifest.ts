@@ -43,7 +43,6 @@ export const journalEntryRecordSchema = z.object({
   transaction_type: z.string().optional(),
   reversed_ref: z.string().nullable().optional(),
   simple_mode: z.boolean().optional(),
-  customData: z.record(z.string(), z.unknown()).optional(),
   deletedAt: z.string().optional(),
   deletedBy: z.string().optional(),
   deletionReason: z.string().optional(),

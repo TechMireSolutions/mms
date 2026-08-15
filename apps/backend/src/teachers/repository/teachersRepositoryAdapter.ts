@@ -17,7 +17,6 @@ import {
   listTeachersPage,
 } from '../../db/repositories/teacherRepositoryList.js';
 import { aggregateTeachersWidgetQueries } from '../../db/repositories/teacherRepositoryWidgets.js';
-import { countTeacherFieldUsageByKeys } from '../../db/repositories/teacherRepositoryFieldUsage.js';
 import type { TeachersRepository } from './teachersRepository.js';
 
 /**
@@ -35,9 +34,7 @@ function createTeachersRepository(): TeachersRepository {
     findSoftDeletedByContactId: (tenant, contactId) =>
       findSoftDeletedTeacherByContactIdSql(tenant, contactId),
     save: (tenant, teacher) => saveTeacher(tenant, teacher as Teacher),
-    bulkSave: (tenant, teachers) => bulkSaveTeachers(tenant, teachers as Teacher[]),
-    countFieldUsageByKeys: (tenant, fieldKeys) => countTeacherFieldUsageByKeys(tenant, fieldKeys),
-    aggregateCommandMetrics: (tenant, periodDays) =>
+    bulkSave: (tenant, teachers) => bulkSaveTeachers(tenant, teachers as Teacher[]),    aggregateCommandMetrics: (tenant, periodDays) =>
       aggregateTeachersCommandMetrics(tenant, periodDays),
     aggregateWidgetQueries: (tenant, queries) => aggregateTeachersWidgetQueries(tenant, queries),
     listLinkedContactIds: (tenant, excludeTeacherId) =>

@@ -99,12 +99,6 @@ export function useContactFormDraftHelpers({
   const updateDraft = useCallback((patch: Partial<Contact>) => {
     setContactDraft((prev) => {
       const next = { ...prev, ...patch };
-      if (patch.customData !== undefined && prev.customData !== undefined) {
-        next.customData = {
-          ...(prev.customData as Record<string, unknown>),
-          ...(patch.customData as Record<string, unknown>),
-        };
-      }
       if (patch.firstName !== undefined || patch.lastName !== undefined) {
         const first = next.firstName || "";
         const last = next.lastName || "";

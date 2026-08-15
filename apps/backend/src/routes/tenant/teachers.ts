@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { canDeleteCollection, canReadCollection } from '../../services/rbacService.js';
+import { canDeleteCollection } from '../../services/rbacService.js';
 import { teacherUseCases } from '../../teachers/use-cases/teacherUseCases.js';
 import { TEACHERS_MODULE_MANIFEST, type Teacher, type User } from '@mms/shared';
 import {
@@ -9,7 +9,6 @@ import {
   teachersListQuerySchema,
 } from '../../validation/teacherSchemas.js';
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
-import { registerFieldUsageRoutes } from '../../lib/registerFieldUsageRoutes.js';
 import { teacherSetupConfigRoutes } from './teachers/teacherSetupConfigRoutes.js';
 import { teacherLookupRoutes } from './teachers/teacherLookupRoutes.js';
 import { teacherExportRoutes } from './teachers/teacherExportRoutes.js';
@@ -37,12 +36,6 @@ export default async function teachersRoutes(
   await fastify.register(teacherExportRoutes);
   await fastify.register(teacherOperationRoutes);
   await fastify.register(teacherSoftDeleteRoutes);
-
-  registerFieldUsageRoutes(fastify, {
-    canRead: (user) => canReadCollection(user, 'teachers'),
-    loadCount: (fieldKey) => teacherUseCases.loadTeacherFieldUsageCount(fieldKey),
-    loadCounts: (fieldKeys) => teacherUseCases.loadTeacherFieldUsageCounts(fieldKeys),
-  });
 
   registerStandardTenantRoutes(fastify, {
     collection: 'teachers',

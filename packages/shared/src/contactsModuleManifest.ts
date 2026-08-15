@@ -58,7 +58,6 @@ export const contactRecordSchema = z
     relationships: z.array(relationshipSchema).optional(),
     activities: z.array(activitySchema).optional(),
     attachments: z.array(attachmentSchema).optional(),
-    customData: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough();
 
