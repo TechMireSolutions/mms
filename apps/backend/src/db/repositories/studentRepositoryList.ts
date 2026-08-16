@@ -6,9 +6,9 @@ import {
   type StudentsListPageResult,
   type StudentsListQuery,
 } from '@mms/shared';
-import { students, sessions } from '../schema.js';
+import { students, studentEnrolledSessions, contacts, sessions, sessionClasses } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { studentRowToRecord } from './studentRepository.js';
+import { hydrateStudentsList } from './studentRepository.js';
 
 const STUDENT_SORT_FIELDS = new Set([
   'name',
@@ -25,11 +25,11 @@ function statusExpr(): SQL {
   return sql`lower(trim(COALESCE(${students.status}, 'active')))`;
 }
 
-/** Gender from linked contact (Contacts SSOT — not students.custom_data). */
+/** Gender from linked contact (Contacts SSOT). */
 function linkedContactGenderExpr(): SQL {
   return sql`lower(trim(COALESCE((
-    SELECT c.custom_data->>'gender'
-    FROM contacts c
+    SELECT c.gender
+    FROM ${contacts} c
     WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
       AND c.id = ${students.contactId}
     LIMIT 1
@@ -39,8 +39,8 @@ function linkedContactGenderExpr(): SQL {
 /** DOB from linked contact (Contacts SSOT). */
 function linkedContactDobExpr(): SQL {
   return sql`NULLIF(trim(COALESCE((
-    SELECT c.custom_data->>'dob'
-    FROM contacts c
+    SELECT c.dob
+    FROM ${contacts} c
     WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
       AND c.id = ${students.contactId}
     LIMIT 1
@@ -51,11 +51,11 @@ function linkedContactDobExpr(): SQL {
 function linkedContactNameSortExpr(): SQL {
   return sql`lower(trim(COALESCE((
     SELECT COALESCE(
-      NULLIF(trim(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')), ''),
-      NULLIF(trim(COALESCE(c.custom_data->>'name', '')), ''),
+      NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''),
+      NULLIF(trim(COALESCE(c.name, '')), ''),
       ''
     )
-    FROM contacts c
+    FROM ${contacts} c
     WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
       AND c.id = ${students.contactId}
     LIMIT 1
@@ -72,17 +72,17 @@ function buildSearchSql(search: string): SQL | null {
   const pattern = `%${normalized}%`;
   return sql`(
     lower(COALESCE(${students.grNumber}, '')) LIKE ${pattern}
-    OR lower(COALESCE(${students.customData}->>'studentId', '')) LIKE ${pattern}
-    OR COALESCE(${students.customData}->>'cnic', '') LIKE ${pattern}
+    OR lower(COALESCE(${students.studentId}, '')) LIKE ${pattern}
     OR EXISTS (
-      SELECT 1 FROM contacts c
+      SELECT 1 FROM ${contacts} c
       WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
         AND c.id = ${students.contactId}
         AND (
-          lower(COALESCE(c.custom_data->>'name', '')) LIKE ${pattern}
-          OR lower(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')) LIKE ${pattern}
-          OR lower(COALESCE(c.custom_data->>'firstName', '')) LIKE ${pattern}
-          OR lower(COALESCE(c.custom_data->>'lastName', '')) LIKE ${pattern}
+          lower(COALESCE(c.name, '')) LIKE ${pattern}
+          OR lower(concat_ws(' ', c.first_name, c.last_name)) LIKE ${pattern}
+          OR lower(COALESCE(c.first_name, '')) LIKE ${pattern}
+          OR lower(COALESCE(c.last_name, '')) LIKE ${pattern}
+          OR COALESCE(c.cnic, '') LIKE ${pattern}
         )
     )
   )`;
@@ -119,9 +119,17 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
     const nameSort = linkedContactNameSortExpr();
     return dir === 'desc' ? sql`${nameSort} desc nulls last` : sql`${nameSort} asc nulls last`;
   }
-  return dir === 'desc'
-    ? sql`${students.customData}->>${field} desc nulls last`
-    : sql`${students.customData}->>${field} asc nulls last`;
+  if (field === 'studentId') {
+    return dir === 'desc'
+      ? sql`lower(COALESCE(${students.studentId}, '')) desc nulls last`
+      : sql`lower(COALESCE(${students.studentId}, '')) asc nulls last`;
+  }
+  if (field === 'registeredDate') {
+    return dir === 'desc'
+      ? sql`lower(COALESCE(${students.registeredDate}, '')) desc nulls last`
+      : sql`lower(COALESCE(${students.registeredDate}, '')) asc nulls last`;
+  }
+  return sql`${students.id} asc`;
 }
 
 function buildListConditions(
@@ -159,8 +167,8 @@ function buildListConditions(
     if (quickFilter === 'new') {
       const since = sql`now() - (${MODULE_METRICS_DEFAULT_PERIOD_DAYS} * interval '1 day')`;
       conditions.push(sql`COALESCE(
-        NULLIF(trim(COALESCE(${students.customData}->>'registeredDate', '')), '')::timestamptz,
-        NULLIF(trim(COALESCE(${students.customData}->>'createdAt', '')), '')::timestamptz
+        NULLIF(trim(COALESCE(${students.registeredDate}, '')), '')::timestamptz,
+        ${students.createdAt}
       ) >= ${since}`);
     } else if (quickFilter === 'missingGr') {
       conditions.push(sql`(${students.grNumber} is null or trim(${students.grNumber}) = '')`);
@@ -176,22 +184,24 @@ function buildListConditions(
   }
 
   if (query.sessionId?.trim()) {
-    conditions.push(
-      sql`${students.customData}->'enrolledSessions' ? ${query.sessionId.trim()}`,
-    );
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${studentEnrolledSessions} ses
+      WHERE ses.workspace_subdomain = ${students.workspaceSubdomain}
+        AND ses.student_id = ${students.id}
+        AND ses.session_id = ${query.sessionId.trim()}
+    )`);
   }
 
   const className = query.className?.trim();
   if (className) {
     conditions.push(sql`EXISTS (
-      SELECT 1 FROM ${sessions} s
-      WHERE s.workspace_subdomain = ${students.workspaceSubdomain}
+      SELECT 1 FROM ${studentEnrolledSessions} ses
+      JOIN ${sessions} s ON s.workspace_subdomain = ses.workspace_subdomain AND s.id = ses.session_id
+      JOIN ${sessionClasses} sc ON sc.workspace_subdomain = s.workspace_subdomain AND sc.session_id = s.id
+      WHERE ses.workspace_subdomain = ${students.workspaceSubdomain}
+        AND ses.student_id = ${students.id}
         AND s.deleted_at IS NULL
-        AND ${students.customData}->'enrolledSessions' ? s.id
-        AND EXISTS (
-          SELECT 1 FROM jsonb_array_elements(s.custom_data->'classes') cls
-          WHERE cls->>'name' = ${className}
-        )
+        AND sc.name = ${className}
     )`);
   }
 
@@ -199,7 +209,7 @@ function buildListConditions(
 }
 
 /**
- * SQL-filtered students Work list page (typed deleted_at + JSONB filters).
+ * SQL-filtered students Work list page (typed deleted_at + relational filters).
  * includeDeleted → deleted-only (Contacts trash parity).
  */
 export async function listStudentsPage(
@@ -230,8 +240,10 @@ export async function listStudentsPage(
       .limit(limit)
       .offset(offset);
 
+    const hydratedStudents = await hydrateStudentsList(tx, subdomain, rows);
+
     return {
-      students: rows.map((row) => studentRowToRecord(row as never)) as Student[],
+      students: hydratedStudents,
       total,
       page,
       limit,
@@ -248,8 +260,8 @@ export async function aggregateStudentsCommandMetrics(
   const subdomain = tenant.trim().toLowerCase();
   return withTenantTransaction(subdomain, async (tx) => {
     const registeredRaw = sql`NULLIF(trim(COALESCE(
-      ${students.customData}->>'registeredDate',
-      ${students.customData}->>'createdAt',
+      ${students.registeredDate},
+      to_char(${students.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
       ''
     )), '')`;
 
@@ -297,12 +309,12 @@ export async function listActiveStudentsMissingGrNumber(
         ),
       )
       .orderBy(asc(students.id));
-    return rows.map(studentRowToRecord);
+    return hydrateStudentsList(tx, subdomain, rows);
   });
 }
 
 /**
- * Set typed `status` + `custom_data.status` for active students in one UPDATE.
+ * Set typed `status` for active students in one UPDATE.
  * Returns how many rows were updated; callers treat missing/deleted ids as failed.
  */
 export async function bulkUpdateStudentsStatusSql(
@@ -320,12 +332,6 @@ export async function bulkUpdateStudentsStatusSql(
       .update(students)
       .set({
         status: normalizedStatus,
-        customData: sql`jsonb_set(
-          COALESCE(${students.customData}, '{}'::jsonb),
-          '{status}',
-          to_jsonb(${normalizedStatus}::text),
-          true
-        )`,
         updatedAt: new Date(),
       })
       .where(

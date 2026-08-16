@@ -1,17 +1,17 @@
-import { and, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL, asc, desc } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNotNull, isNull, or, type SQL, asc, desc, sql } from 'drizzle-orm';
 import type { AttendanceRecord, AttendanceListQuery, AttendanceListPageResult } from '@mms/shared';
 import { attendance } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { mergeCustomData, runListPage } from './listPageHelper.js';
+import { runListPage } from './listPageHelper.js';
 
 function buildAttendanceListConditions(subdomain: string, query: AttendanceListQuery): SQL[] {
   const conditions: SQL[] = [eq(attendance.workspaceSubdomain, subdomain)];
 
   // Manifest softDelete.workExcludesDeleted — Work = active, trash = deleted-only.
   if (query.includeDeleted) {
-    conditions.push(isNotNull(sql`(${attendance.customData}->>'deletedAt')`));
+    conditions.push(isNotNull(attendance.deletedAt));
   } else {
-    conditions.push(isNull(sql`(${attendance.customData}->>'deletedAt')`));
+    conditions.push(isNull(attendance.deletedAt));
   }
 
   const search = query.search?.trim();
@@ -19,27 +19,27 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
     const pattern = `%${search}%`;
     conditions.push(
       or(
-        ilike(sql`(${attendance.customData}->>'studentName')`, pattern),
-        ilike(sql`(${attendance.customData}->>'rollNo')`, pattern),
+        ilike(attendance.studentName, pattern),
+        ilike(attendance.rollNo, pattern),
       ) as SQL,
     );
   }
 
   if (query.classId?.trim()) {
-    conditions.push(eq(sql`(${attendance.customData}->>'classId')`, query.classId.trim()));
+    conditions.push(eq(attendance.classId, query.classId.trim()));
   }
   if (query.date?.trim()) {
-    conditions.push(eq(sql`(${attendance.customData}->>'date')`, query.date.trim()));
+    conditions.push(eq(attendance.date, query.date.trim()));
   }
   if (query.dateFrom?.trim()) {
-    conditions.push(sql`(${attendance.customData}->>'date') >= ${query.dateFrom.trim()}`);
+    conditions.push(sql`${attendance.date} >= ${query.dateFrom.trim()}`);
   }
   if (query.dateTo?.trim()) {
-    conditions.push(sql`(${attendance.customData}->>'date') <= ${query.dateTo.trim()}`);
+    conditions.push(sql`${attendance.date} <= ${query.dateTo.trim()}`);
   }
   const statuses = query.status?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
   if (statuses.length) {
-    conditions.push(inArray(sql`(${attendance.customData}->>'status')`, statuses));
+    conditions.push(inArray(attendance.status, statuses));
   }
 
   return conditions;
@@ -56,16 +56,16 @@ function buildAttendanceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): S
         column = attendance.updatedAt as unknown as SQL;
         break;
       case 'date':
-        column = sql`(${attendance.customData}->>'date')`;
+        column = attendance.date as unknown as SQL;
         break;
       case 'studentName':
-        column = sql`(${attendance.customData}->>'studentName')`;
+        column = attendance.studentName as unknown as SQL;
         break;
       case 'rollNo':
-        column = sql`(${attendance.customData}->>'rollNo')`;
+        column = attendance.rollNo as unknown as SQL;
         break;
       case 'status':
-        column = sql`(${attendance.customData}->>'status')`;
+        column = attendance.status as unknown as SQL;
         break;
       default:
         column = attendance.updatedAt as unknown as SQL;
@@ -77,6 +77,26 @@ function buildAttendanceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): S
 }
 
 type AttendanceRow = typeof attendance.$inferSelect;
+
+function rowToRecord(row: AttendanceRow): AttendanceRecord {
+  return {
+    id: row.id,
+    classId: row.classId,
+    studentId: row.studentId,
+    studentName: row.studentName,
+    rollNo: row.rollNo,
+    date: row.date,
+    status: row.status as AttendanceRecord['status'],
+    timeIn: row.timeIn,
+    timeOut: row.timeOut,
+    notes: row.notes,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
+    deletedBy: row.deletedBy ?? null,
+    deletionReason: row.deletionReason ?? null,
+  };
+}
 
 export async function listAttendancePage(
   tenant: string,
@@ -90,7 +110,7 @@ export async function listAttendancePage(
       page: query.page,
       limit: query.limit,
       defaultPageSize: 15,
-      rowMapper: (row) => mergeCustomData(row) as unknown as AttendanceRecord,
+      rowMapper: rowToRecord,
     });
     return {
       records: result.items,
@@ -112,7 +132,7 @@ export async function countAttendanceActiveByWorkspace(tenant: string): Promise<
       .where(
         and(
           eq(attendance.workspaceSubdomain, subdomain),
-          isNull(sql`(${attendance.customData}->>'deletedAt')`),
+          isNull(attendance.deletedAt),
         ),
       );
     return Number(rows[0]?.count ?? 0);

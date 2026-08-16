@@ -70,15 +70,9 @@ export type SystemUser = WorkspaceUser;
 export const DEFAULT_WORKSPACE_USERS: WorkspaceUser[] = [];
 
 /** Types of actions recorded in the activity log. */
-export type ActivityAction =
-  | 'login'
-  | 'login_failed'
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'role_change';
+import { z } from 'zod';
 
-export const ACTIVITY_ACTION_VALUES: readonly ActivityAction[] = [
+export const ACTIVITY_ACTION_VALUES = [
   'login',
   'login_failed',
   'create',
@@ -87,17 +81,36 @@ export const ACTIVITY_ACTION_VALUES: readonly ActivityAction[] = [
   'role_change',
 ] as const;
 
+export type ActivityAction = (typeof ACTIVITY_ACTION_VALUES)[number];
+
+export const activityLogSchema = z
+  .object({
+    id: z.string(),
+    userId: z.string(),
+    userName: z.string().optional(),
+    action: z.enum(ACTIVITY_ACTION_VALUES),
+    module: z.string(),
+    detail: z.string(),
+    ts: z.string(),
+    ip: z.string(),
+  })
+  .strict();
+
+export const activityLogInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    userId: z.string(),
+    userName: z.string().optional(),
+    action: z.enum(ACTIVITY_ACTION_VALUES),
+    module: z.string(),
+    detail: z.string().default(''),
+    ts: z.string(),
+    ip: z.string().default(''),
+  })
+  .strict();
+
 /** A single activity log entry. */
-export interface ActivityLog {
-  id: string;
-  userId: string;
-  /** Hydrated from `users` on read; not persisted. */
-  userName?: string;
-  action: ActivityAction;
-  module: string;
-  detail: string;
-  ts: string;
-  ip: string;
-}
+export type ActivityLog = z.infer<typeof activityLogSchema>;
+export type ActivityLogInsert = z.infer<typeof activityLogInsertSchema>;
 
 export const DEFAULT_USER_ACTIVITY_LOGS: ActivityLog[] = [];

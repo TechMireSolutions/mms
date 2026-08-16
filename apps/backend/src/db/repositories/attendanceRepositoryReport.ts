@@ -12,16 +12,14 @@ import { getQueryRows } from '../documentStoreKeys.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 
 function activeAttendanceWhere(subdomain: string, alias = 'a'): ReturnType<typeof sql> {
-  const data = sql.raw(`${alias}.custom_data`);
   return sql`
     ${sql.raw(`${alias}.workspace_subdomain`)} = ${subdomain}
-    AND NULLIF(trim(COALESCE(${data}->>'deletedAt', '')), '') IS NULL
+    AND ${sql.raw(`${alias}.deleted_at`)} IS NULL
   `;
 }
 
 function isPresentOrLateSql(alias = 'a'): ReturnType<typeof sql> {
-  const data = sql.raw(`${alias}.custom_data`);
-  return sql`lower(trim(COALESCE(${data}->>'status', ''))) IN ('present', 'late')`;
+  return sql`lower(trim(${sql.raw(`${alias}.status`)})) IN ('present', 'late')`;
 }
 
 /** Attendance report aggregates for ComparisonMode (session attendancePct + dual monthly ranges). */
@@ -85,7 +83,7 @@ export async function loadAttendanceReportAggregatesSql(
         LEFT JOIN attendance a
           ON ${activeAttendanceWhere(subdomain, 'a')}
           AND sc."classId" IS NOT NULL
-          AND trim(COALESCE(a.custom_data->>'classId', '')) = sc."classId"
+          AND a.class_id = sc."classId"
         GROUP BY sc."sessionId"
       `);
 
@@ -109,15 +107,14 @@ export async function loadAttendanceReportAggregatesSql(
       const presentOrLate = isPresentOrLateSql('a');
       const monthResult = await tx.execute(sql`
         SELECT
-          to_char(left(NULLIF(trim(a.custom_data->>'date'), ''), 10)::date, 'YYYY-MM') AS "monthKey",
+          to_char(left(a.date, 10)::date, 'YYYY-MM') AS "monthKey",
           COUNT(*) FILTER (WHERE ${presentOrLate})::int AS "presentCount",
           COUNT(*)::int AS total
         FROM attendance a
         WHERE ${activeAttendanceWhere(subdomain, 'a')}
-          AND NULLIF(trim(a.custom_data->>'date'), '') IS NOT NULL
-          AND NULLIF(trim(a.custom_data->>'date'), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND left(NULLIF(trim(a.custom_data->>'date'), ''), 10) >= ${from}
-          AND left(NULLIF(trim(a.custom_data->>'date'), ''), 10) <= ${to}
+          AND a.date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          AND left(a.date, 10) >= ${from}
+          AND left(a.date, 10) <= ${to}
         GROUP BY 1
         ORDER BY 1 ASC
       `);

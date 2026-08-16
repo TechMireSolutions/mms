@@ -56,10 +56,7 @@ export async function updatePlatformUserProfile(
   name: string,
 ): Promise<PlatformUserProfile> {
   const stored = await getStoredPlatformUserById(userId);
-  if (!stored) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
-
+  if (!stored) throw new PlatformError('user_not_found', 'Platform user not found');
   const updated = await updatePlatformUserName(userId, name);
   return toPlatformUserProfile(updated);
 }
@@ -70,22 +67,16 @@ export async function changePlatformUserPassword(
   newPassword: string,
 ): Promise<StoredPlatformUser> {
   const stored = await findPlatformUserRowById(userId);
-  if (!stored) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!stored) throw new PlatformError('user_not_found', 'Platform user not found');
 
   const ok = await verifyPassword(currentPassword, stored.passwordHash);
-  if (!ok) {
-    throw new PlatformError('invalid_current_password', 'Current password is incorrect');
-  }
+  if (!ok) throw new PlatformError('invalid_current_password', 'Current password is incorrect');
 
   const updated = await updatePlatformUserRow(userId, {
     passwordHash: await hashPassword(newPassword),
     sessionVersion: stored.sessionVersion + 1,
   });
-  if (!updated) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
   return updated;
 }
 
@@ -97,9 +88,7 @@ export async function createVerifiedPlatformUser(input: {
   permissions?: PlatformAdminPermissions;
 }): Promise<StoredPlatformUser> {
   const existing = await findPlatformUserByEmail(input.email);
-  if (existing) {
-    throw new PlatformError('user_exists', 'Platform user already exists');
-  }
+  if (existing) throw new PlatformError('user_exists', 'Platform user already exists');
 
   const count = await countPlatformUsers();
   if (input.role === undefined && count > 0) {
@@ -129,7 +118,6 @@ export async function createVerifiedPlatformUser(input: {
   try {
     await insertPlatformUser(user);
   } catch (error: unknown) {
-    // Unique index platform_users_single_super_user_idx blocks concurrent dual super_users.
     if (isUniqueViolation(error) && role === 'super_user') {
       throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
     }
@@ -143,9 +131,7 @@ export async function setPlatformAdminPermissions(
   permissions: PlatformAdminPermissions,
 ): Promise<PlatformUserProfile> {
   const stored = await getStoredPlatformUserById(userId);
-  if (!stored) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!stored) throw new PlatformError('user_not_found', 'Platform user not found');
   if (stored.role === 'super_user') {
     throw new PlatformError('forbidden', 'Cannot change permissions for a platform super-user');
   }
@@ -154,9 +140,7 @@ export async function setPlatformAdminPermissions(
     userId,
     normalizePlatformAdminPermissions(permissions),
   );
-  if (!updated) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
   return toPlatformUserProfile(updated);
 }
 
@@ -166,38 +150,29 @@ export async function setPlatformAdminDisabled(
   disabled: boolean,
 ): Promise<PlatformUserProfile> {
   const stored = await getStoredPlatformUserById(userId);
-  if (!stored) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!stored) throw new PlatformError('user_not_found', 'Platform user not found');
   if (stored.role === 'super_user') {
     throw new PlatformError('forbidden', 'Cannot disable a platform super-user');
   }
 
   const updated = await updatePlatformUserRow(userId, {
     disabledAt: disabled ? new Date().toISOString() : null,
-    // Revoke any active sessions when disabling.
     sessionVersion: disabled ? stored.sessionVersion + 1 : stored.sessionVersion,
   });
-  if (!updated) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
   return toPlatformUserProfile(updated);
 }
 
 /** Permanently remove a platform admin. Super-users cannot be deleted. */
 export async function deletePlatformAdmin(userId: string): Promise<void> {
   const stored = await getStoredPlatformUserById(userId);
-  if (!stored) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!stored) throw new PlatformError('user_not_found', 'Platform user not found');
   if (stored.role === 'super_user') {
     throw new PlatformError('forbidden', 'Cannot delete a platform super-user');
   }
 
   const removed = await deletePlatformUserRow(userId);
-  if (!removed) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!removed) throw new PlatformError('user_not_found', 'Platform user not found');
 }
 
 export async function updatePlatformUserPassword(
@@ -205,16 +180,12 @@ export async function updatePlatformUserPassword(
   passwordHash: string,
 ): Promise<StoredPlatformUser> {
   const existing = await findPlatformUserRowById(userId);
-  if (!existing) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!existing) throw new PlatformError('user_not_found', 'Platform user not found');
   const updated = await updatePlatformUserRow(userId, {
     passwordHash,
     sessionVersion: existing.sessionVersion + 1,
   });
-  if (!updated) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
   return updated;
 }
 
@@ -231,9 +202,7 @@ export async function updatePlatformUserName(
   name: string,
 ): Promise<StoredPlatformUser> {
   const updated = await updatePlatformUserRow(userId, { name: name.trim() });
-  if (!updated) {
-    throw new PlatformError('user_not_found', 'Platform user not found');
-  }
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
   return updated;
 }
 
@@ -257,12 +226,9 @@ export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
 /**
  * Optional dev bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
  * Requires explicit PLATFORM_ADMIN_EMAIL + PLATFORM_ADMIN_PASSWORD (or SEED_DEV_PASSWORD).
- * Production / clean first-run presents the interactive setup screen instead.
  */
 export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
-  if (process.env.PLATFORM_ALLOW_ENV_BOOTSTRAP !== 'true') {
-    return;
-  }
+  if (process.env.PLATFORM_ALLOW_ENV_BOOTSTRAP !== 'true') return;
 
   const email = process.env.PLATFORM_ADMIN_EMAIL?.trim();
   const password =
@@ -271,7 +237,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
 
   if (!email || !password) {
     console.warn(
-      '[MMS] PLATFORM_ALLOW_ENV_BOOTSTRAP=true but PLATFORM_ADMIN_EMAIL and PLATFORM_ADMIN_PASSWORD (or SEED_DEV_PASSWORD) are required — skipping bootstrap',
+      '[MMS] PLATFORM_ALLOW_ENV_BOOTSTRAP=true but credentials missing — skipping bootstrap',
     );
     return;
   }
@@ -308,3 +274,4 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     console.log(`Platform super-user seeded from env for ${user.email}`);
   }
 }
+

@@ -20,19 +20,49 @@ export const messageLogCreateSchema = z.object({
   errorMessage: z.string().max(1_000).optional(),
 }).strict();
 
-export const messageRecordSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  contactId: z.union([z.string(), z.number()]),
-  channel: z.enum(['sms', 'whatsapp', 'email']),
-  body: z.string(),
-  sentAt: z.string(),
-  status: messageStatusSchema.optional().default('sent'),
-  subject: z.string().optional(),
-  category: messageCategorySchema.optional().default('general'),
-  errorMessage: z.string().optional(),
-  deletedAt: z.string().optional(),
-});
+export const messageRecordSchema = z
+  .object({
+    id: z.string(),
+    userId: z.string(),
+    contactId: z.union([z.string(), z.number()]),
+    channel: z.enum(['sms', 'whatsapp', 'email']),
+    body: z.string(),
+    sentAt: z.string(),
+    status: messageStatusSchema.optional().default('sent'),
+    subject: z.string().optional(),
+    category: messageCategorySchema.optional().default('general'),
+    errorMessage: z.string().optional(),
+    deletedAt: z.string().optional(),
+    deletedBy: z.string().optional(),
+    deletionReason: z.string().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const messageInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    userId: z.string().optional(),
+    contactId: z.union([z.string(), z.number()]),
+    channel: z.enum(['sms', 'whatsapp', 'email']),
+    body: z.string().min(1),
+    sentAt: z.string().optional(),
+    status: messageStatusSchema.optional().default('sent'),
+    subject: z.string().optional(),
+    category: messageCategorySchema.optional().default('general'),
+    errorMessage: z.string().optional(),
+    deletedAt: z.string().optional(),
+    deletedBy: z.string().optional(),
+    deletionReason: z.string().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export type MessageInsert = z.infer<typeof messageInsertSchema>;
+export const messageUpdateSchema = messageInsertSchema.partial();
+export type MessageUpdate = z.infer<typeof messageUpdateSchema>;
 
 export const recordMessageLogsSchema = z.object({
   logs: z.array(messageLogCreateSchema).min(1).max(MESSAGE_LOG_RECORD_BATCH_MAX),

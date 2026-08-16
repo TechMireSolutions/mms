@@ -1,13 +1,12 @@
-import { and, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL, desc, asc } from 'drizzle-orm';
 import {
-  type Session,
   type SessionsCommandMetricsSnapshot,
   type SessionsListPageResult,
   type SessionsListQuery,
 } from '@mms/shared';
 import { sessions } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { sessionRowToRecord } from './sessionRepository.js';
+import { findSessionsByIds } from './sessionRepository.js';
 
 const SESSION_SORT_FIELDS = new Set([
   'name',
@@ -19,35 +18,15 @@ const SESSION_SORT_FIELDS = new Set([
   'updatedAt',
 ]);
 
-function statusExpr(): SQL {
-  return sql`lower(trim(COALESCE(${sessions.customData}->>'status', '')))`;
-}
-
-function typeExpr(): SQL {
-  return sql`lower(trim(COALESCE(${sessions.customData}->>'type', '')))`;
-}
-
-function nameExpr(): SQL {
-  return sql`lower(trim(COALESCE(${sessions.customData}->>'name', '')))`;
-}
-
-function baseFeeExpr(): SQL {
-  return sql`COALESCE((${sessions.customData}->>'baseFee')::numeric, 0)`;
-}
-
-function startDateExpr(): SQL {
-  return sql`NULLIF(trim(COALESCE(${sessions.customData}->>'startDate', '')), '')`;
-}
-
 function buildSearchSql(search: string): SQL | null {
-  const normalized = search.trim().toLowerCase();
+  const normalized = search.trim();
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
-  return sql`(
-    ${nameExpr()} LIKE ${pattern}
-    OR ${typeExpr()} LIKE ${pattern}
-    OR lower(COALESCE(${sessions.customData}->>'description', '')) LIKE ${pattern}
-  )`;
+  return or(
+    ilike(sessions.name, pattern),
+    ilike(sessions.type, pattern),
+    ilike(sessions.description, pattern),
+  )!;
 }
 
 function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
@@ -62,28 +41,24 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
       : sql`${sessions.updatedAt} asc nulls last`;
   }
   if (field === 'name') {
-    const nameSort = nameExpr();
-    return dir === 'desc' ? sql`${nameSort} desc nulls last` : sql`${nameSort} asc nulls last`;
+    return dir === 'desc' ? desc(sessions.name) : asc(sessions.name);
   }
   if (field === 'status') {
-    const statusSort = statusExpr();
-    return dir === 'desc' ? sql`${statusSort} desc nulls last` : sql`${statusSort} asc nulls last`;
+    return dir === 'desc' ? desc(sessions.status) : asc(sessions.status);
   }
   if (field === 'type') {
-    const typeSort = typeExpr();
-    return dir === 'desc' ? sql`${typeSort} desc nulls last` : sql`${typeSort} asc nulls last`;
+    return dir === 'desc' ? desc(sessions.type) : asc(sessions.type);
   }
   if (field === 'baseFee') {
-    const feeSort = baseFeeExpr();
-    return dir === 'desc' ? sql`${feeSort} desc nulls last` : sql`${feeSort} asc nulls last`;
+    return dir === 'desc' ? desc(sessions.baseFee) : asc(sessions.baseFee);
   }
-  if (field === 'startDate' || field === 'endDate') {
-    const dateSort = sql`NULLIF(trim(COALESCE(${sessions.customData}->>${field}, '')), '')`;
-    return dir === 'desc' ? sql`${dateSort} desc nulls last` : sql`${dateSort} asc nulls last`;
+  if (field === 'startDate') {
+    return dir === 'desc' ? desc(sessions.startDate) : asc(sessions.startDate);
   }
-  return dir === 'desc'
-    ? sql`${sessions.customData}->>${field} desc nulls last`
-    : sql`${sessions.customData}->>${field} asc nulls last`;
+  if (field === 'endDate') {
+    return dir === 'desc' ? desc(sessions.endDate) : asc(sessions.endDate);
+  }
+  return sql`${sessions.id} asc`;
 }
 
 function buildListConditions(subdomain: string, query: SessionsListQuery): SQL[] {
@@ -101,10 +76,7 @@ function buildListConditions(subdomain: string, query: SessionsListQuery): SQL[]
       .map((status) => status.trim().toLowerCase())
       .filter(Boolean);
     if (statuses.length > 0) {
-      conditions.push(sql`${statusExpr()} IN (${sql.join(
-        statuses.map((status) => sql`${status}`),
-        sql`, `,
-      )})`);
+      conditions.push(inArray(sql`lower(${sessions.status})`, statuses));
     }
   }
 
@@ -114,10 +86,7 @@ function buildListConditions(subdomain: string, query: SessionsListQuery): SQL[]
       .map((type) => type.trim().toLowerCase())
       .filter(Boolean);
     if (types.length > 0) {
-      conditions.push(sql`${typeExpr()} IN (${sql.join(
-        types.map((type) => sql`${type}`),
-        sql`, `,
-      )})`);
+      conditions.push(inArray(sql`lower(${sessions.type})`, types));
     }
   }
 
@@ -131,7 +100,7 @@ function buildListConditions(subdomain: string, query: SessionsListQuery): SQL[]
 }
 
 /**
- * SQL-filtered sessions Work list page (typed deleted_at + JSONB filters).
+ * SQL-filtered sessions Work list page (typed columns & relations).
  * includeDeleted → deleted-only (Work trash parity).
  */
 export async function listSessionsPage(
@@ -155,15 +124,22 @@ export async function listSessionsPage(
     const total = Number(countRows[0]?.count ?? 0);
 
     const rows = await tx
-      .select()
+      .select({ id: sessions.id })
       .from(sessions)
       .where(whereClause)
       .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
 
+    const ids = rows.map((r) => r.id);
+    const hydratedSessions = await findSessionsByIds(subdomain, ids);
+
+    // Preserve order from pagination query
+    const sessionMap = new Map(hydratedSessions.map((s) => [s.id, s]));
+    const ordered = ids.map((id) => sessionMap.get(id)!).filter(Boolean);
+
     return {
-      sessions: rows.map((row) => sessionRowToRecord(row as never)) as Session[],
+      sessions: ordered,
       total,
       page,
       limit,
@@ -183,66 +159,62 @@ export async function countSessionsActive(tenant: string): Promise<number> {
   });
 }
 
-const classesArrayExpr = sql`COALESCE(${sessions.customData}->'classes', '[]'::jsonb)`;
-
-const enrolledSumExpr = sql<number>`coalesce((
-  SELECT sum(coalesce((elem->>'enrolled')::int, 0))
-  FROM jsonb_array_elements(${classesArrayExpr}) AS elem
-), 0)::int`;
-
-const capacitySumExpr = sql<number>`coalesce((
-  SELECT sum(coalesce((elem->>'capacity')::int, 0))
-  FROM jsonb_array_elements(${classesArrayExpr}) AS elem
-), 0)::int`;
-
-const classCountExpr = sql<number>`coalesce(jsonb_array_length(${classesArrayExpr}), 0)::int`;
-
 /** SQL aggregates for Sessions command-centre metrics (active rows only). */
 export async function aggregateSessionsCommandMetrics(
   tenant: string,
 ): Promise<SessionsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantTransaction(subdomain, async (tx) => {
-    const startDateRaw = startDateExpr();
+    const result = await tx.execute(sql`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE lower(s.status) = 'active')::int AS active,
+        COUNT(*) FILTER (WHERE lower(s.status) = 'upcoming')::int AS upcoming,
+        COUNT(*) FILTER (WHERE lower(s.status) = 'completed')::int AS completed,
+        COUNT(*) FILTER (WHERE lower(s.status) = 'cancelled')::int AS cancelled,
+        COALESCE(SUM(cls.total_enrolled), 0)::int AS total_enrolled,
+        COALESCE(SUM(cls.total_capacity), 0)::int AS total_capacity,
+        COALESCE(SUM(cls.class_count), 0)::int AS total_classes,
+        COUNT(*) FILTER (WHERE
+          s.start_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          AND (s.start_date)::date >= (CURRENT_DATE - INTERVAL '6 days')
+          AND (s.start_date)::date <= CURRENT_DATE
+        )::int AS sessions_this_week,
+        COUNT(*) FILTER (WHERE
+          s.start_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          AND (s.start_date)::date >= (CURRENT_DATE - INTERVAL '13 days')
+          AND (s.start_date)::date <= (CURRENT_DATE - INTERVAL '7 days')
+        )::int AS sessions_last_week
+      FROM sessions s
+      LEFT JOIN LATERAL (
+        SELECT
+          SUM(c.enrolled)::int AS total_enrolled,
+          SUM(c.capacity)::int AS total_capacity,
+          COUNT(*)::int AS class_count
+        FROM session_classes c
+        WHERE c.workspace_subdomain = s.workspace_subdomain
+          AND c.session_id = s.id
+      ) cls ON true
+      WHERE s.workspace_subdomain = ${subdomain}
+        AND s.deleted_at IS NULL
+    `);
 
-    const rows = await tx
-      .select({
-        total: sql<number>`count(*)::int`,
-        active: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'active')::int`,
-        upcoming: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'upcoming')::int`,
-        completed: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'completed')::int`,
-        cancelled: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'cancelled')::int`,
-        totalEnrolled: sql<number>`coalesce(sum(${enrolledSumExpr}), 0)::int`,
-        totalCapacity: sql<number>`coalesce(sum(${capacitySumExpr}), 0)::int`,
-        totalClasses: sql<number>`coalesce(sum(${classCountExpr}), 0)::int`,
-        sessionsThisWeek: sql<number>`count(*) FILTER (WHERE
-          ${startDateRaw} IS NOT NULL
-          AND ${startDateRaw} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND (${startDateRaw})::date >= (CURRENT_DATE - INTERVAL '6 days')
-          AND (${startDateRaw})::date <= CURRENT_DATE
-        )::int`,
-        sessionsLastWeek: sql<number>`count(*) FILTER (WHERE
-          ${startDateRaw} IS NOT NULL
-          AND ${startDateRaw} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND (${startDateRaw})::date >= (CURRENT_DATE - INTERVAL '13 days')
-          AND (${startDateRaw})::date <= (CURRENT_DATE - INTERVAL '7 days')
-        )::int`,
-      })
-      .from(sessions)
-      .where(and(eq(sessions.workspaceSubdomain, subdomain), isNull(sessions.deletedAt)));
+    const rows = (result as unknown as { rows: Record<string, unknown>[] }).rows ?? result;
+    const row = (Array.isArray(rows) ? rows[0] : {}) ?? {};
 
-    const row = rows[0];
+    const num = (k: string): number => Number(row[k] ?? 0) || 0;
+
     return {
-      total: Number(row?.total ?? 0),
-      active: Number(row?.active ?? 0),
-      upcoming: Number(row?.upcoming ?? 0),
-      completed: Number(row?.completed ?? 0),
-      cancelled: Number(row?.cancelled ?? 0),
-      totalEnrolled: Number(row?.totalEnrolled ?? 0),
-      totalCapacity: Number(row?.totalCapacity ?? 0),
-      totalClasses: Number(row?.totalClasses ?? 0),
-      sessionsThisWeek: Number(row?.sessionsThisWeek ?? 0),
-      sessionsLastWeek: Number(row?.sessionsLastWeek ?? 0),
+      total: num('total'),
+      active: num('active'),
+      upcoming: num('upcoming'),
+      completed: num('completed'),
+      cancelled: num('cancelled'),
+      totalEnrolled: num('total_enrolled'),
+      totalCapacity: num('total_capacity'),
+      totalClasses: num('total_classes'),
+      sessionsThisWeek: num('sessions_this_week'),
+      sessionsLastWeek: num('sessions_last_week'),
     };
   });
 }

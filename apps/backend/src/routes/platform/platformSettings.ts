@@ -50,7 +50,7 @@ export default async function platformSettingsRoutes(
         userId: platformUser.id,
         userEmail: platformUser.email,
         action: 'update_settings',
-        details: parsed.data,
+        targetResource: 'settings',
         ipAddress: request.ip,
       });
 

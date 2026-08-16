@@ -1,12 +1,11 @@
-import { and, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import {
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
-  type Enrollment,
   type EnrollmentsCommandMetricsSnapshot,
   type EnrollmentsListPageResult,
   type EnrollmentsListQuery,
 } from '@mms/shared';
-import { enrollments } from '../schema.js';
+import { enrollments, enrollmentTimelineEvents } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { enrollmentRowToRecord } from './enrollmentRepository.js';
 
@@ -20,79 +19,39 @@ const ENROLLMENT_SORT_FIELDS = new Set([
   'updatedAt',
 ]);
 
-function statusExpr(): SQL {
-  return sql`lower(trim(COALESCE(${enrollments.customData}->>'status', '')))`;
-}
-
-function studentNameExpr(): SQL {
-  return sql`lower(trim(COALESCE(${enrollments.customData}->>'studentName', '')))`;
-}
-
-function sessionNameExpr(): SQL {
-  return sql`lower(trim(COALESCE(${enrollments.customData}->>'sessionName', '')))`;
-}
-
-function classNameExpr(): SQL {
-  return sql`lower(trim(COALESCE(${enrollments.customData}->>'className', '')))`;
-}
-
-function enrolledDateExpr(): SQL {
-  return sql`NULLIF(trim(COALESCE(${enrollments.customData}->>'enrolledDate', '')), '')`;
-}
-
-function finalFeeExpr(): SQL {
-  return sql`COALESCE((${enrollments.customData}->>'finalFee')::numeric, 0)`;
-}
-
-function buildSearchSql(search: string): SQL | null {
-  const normalized = search.trim().toLowerCase();
-  if (!normalized) return null;
-  const pattern = `%${normalized}%`;
-  return sql`(
-    ${studentNameExpr()} LIKE ${pattern}
-    OR ${sessionNameExpr()} LIKE ${pattern}
-    OR ${classNameExpr()} LIKE ${pattern}
-  )`;
-}
-
 function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
   if (!field || !ENROLLMENT_SORT_FIELDS.has(field)) {
     return sql`${enrollments.id} asc`;
   }
-  if (field === 'updatedAt') {
-    return dir === 'desc'
-      ? sql`${enrollments.updatedAt} desc nulls last`
-      : sql`${enrollments.updatedAt} asc nulls last`;
+  let column: SQL;
+  switch (field) {
+    case 'updatedAt':
+      column = enrollments.updatedAt as unknown as SQL;
+      break;
+    case 'studentName':
+      column = enrollments.studentName as unknown as SQL;
+      break;
+    case 'sessionName':
+      column = enrollments.sessionName as unknown as SQL;
+      break;
+    case 'className':
+      column = enrollments.className as unknown as SQL;
+      break;
+    case 'status':
+      column = enrollments.status as unknown as SQL;
+      break;
+    case 'enrolledDate':
+      column = enrollments.enrolledDate as unknown as SQL;
+      break;
+    case 'finalFee':
+      column = enrollments.finalFee as unknown as SQL;
+      break;
+    default:
+      column = enrollments.updatedAt as unknown as SQL;
   }
-  if (field === 'studentName') {
-    const sort = studentNameExpr();
-    return dir === 'desc' ? sql`${sort} desc nulls last` : sql`${sort} asc nulls last`;
-  }
-  if (field === 'sessionName') {
-    const sort = sessionNameExpr();
-    return dir === 'desc' ? sql`${sort} desc nulls last` : sql`${sort} asc nulls last`;
-  }
-  if (field === 'className') {
-    const sort = classNameExpr();
-    return dir === 'desc' ? sql`${sort} desc nulls last` : sql`${sort} asc nulls last`;
-  }
-  if (field === 'status') {
-    const sort = statusExpr();
-    return dir === 'desc' ? sql`${sort} desc nulls last` : sql`${sort} asc nulls last`;
-  }
-  if (field === 'enrolledDate') {
-    const sort = enrolledDateExpr();
-    return dir === 'desc' ? sql`${sort} desc nulls last` : sql`${sort} asc nulls last`;
-  }
-  if (field === 'finalFee') {
-    const sort = finalFeeExpr();
-    return dir === 'desc' ? sql`${sort} desc nulls last` : sql`${sort} asc nulls last`;
-  }
-  return dir === 'desc'
-    ? sql`${enrollments.customData}->>${field} desc nulls last`
-    : sql`${enrollments.customData}->>${field} asc nulls last`;
+  return dir === 'desc' ? desc(column) : asc(column);
 }
 
 function buildListConditions(subdomain: string, query: EnrollmentsListQuery): SQL[] {
@@ -107,32 +66,34 @@ function buildListConditions(subdomain: string, query: EnrollmentsListQuery): SQ
   if (query.status?.trim() && query.status !== 'all') {
     const statuses = query.status
       .split(',')
-      .map((status) => status.trim().toLowerCase())
+      .map((status) => status.trim())
       .filter(Boolean);
     if (statuses.length > 0) {
-      conditions.push(sql`${statusExpr()} IN (${sql.join(
-        statuses.map((status) => sql`${status}`),
-        sql`, `,
-      )})`);
+      conditions.push(inArray(enrollments.status, statuses));
     }
   }
 
   if (query.sessionId?.trim() && query.sessionId !== 'all') {
-    const sessionId = query.sessionId.trim();
-    conditions.push(sql`trim(COALESCE(${enrollments.customData}->>'sessionId', '')) = ${sessionId}`);
+    conditions.push(eq(enrollments.sessionId, query.sessionId.trim()));
   }
 
   const search = query.search?.trim();
   if (search) {
-    const searchSql = buildSearchSql(search);
-    if (searchSql) conditions.push(searchSql);
+    const pattern = `%${search}%`;
+    conditions.push(
+      or(
+        ilike(enrollments.studentName, pattern),
+        ilike(enrollments.sessionName, pattern),
+        ilike(enrollments.className, pattern),
+      ) as SQL,
+    );
   }
 
   return conditions;
 }
 
 /**
- * SQL-filtered enrollments Work list page (typed deleted_at + JSONB filters).
+ * SQL-filtered enrollments Work list page (typed 3NF columns).
  * includeDeleted → deleted-only (Work trash parity).
  */
 export async function listEnrollmentsPage(
@@ -163,8 +124,35 @@ export async function listEnrollmentsPage(
       .limit(limit)
       .offset(offset);
 
+    if (rows.length === 0) {
+      return {
+        enrollments: [],
+        total,
+        page,
+        limit,
+        hasMore: false,
+      };
+    }
+
+    const timelineRows = (await tx
+      .select()
+      .from(enrollmentTimelineEvents)
+      .where(
+        and(
+          eq(enrollmentTimelineEvents.workspaceSubdomain, subdomain),
+          inArray(enrollmentTimelineEvents.enrollmentId, rows.map((r) => r.id)),
+        ),
+      )) ?? [];
+
+    const timelineMap = new Map<string, typeof enrollmentTimelineEvents.$inferSelect[]>();
+    for (const t of timelineRows) {
+      const arr = timelineMap.get(t.enrollmentId) ?? [];
+      arr.push(t);
+      timelineMap.set(t.enrollmentId, arr);
+    }
+
     return {
-      enrollments: rows.map((row) => enrollmentRowToRecord(row as never)) as Enrollment[],
+      enrollments: rows.map((row) => enrollmentRowToRecord(row, timelineMap.get(row.id) ?? [])),
       total,
       page,
       limit,
@@ -192,20 +180,18 @@ export async function aggregateEnrollmentsCommandMetrics(
   const subdomain = tenant.trim().toLowerCase();
   const days = Math.max(1, periodDays);
   return withTenantTransaction(subdomain, async (tx) => {
-    const enrolledDateRaw = enrolledDateExpr();
-
     const rows = await tx
       .select({
         total: sql<number>`count(*)::int`,
-        confirmed: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'confirmed')::int`,
-        pending: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'pending')::int`,
-        cancelled: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'cancelled')::int`,
-        completed: sql<number>`count(*) FILTER (WHERE ${statusExpr()} = 'completed')::int`,
-        revenue: sql<number>`coalesce(sum(${finalFeeExpr()}) FILTER (WHERE ${statusExpr()} <> 'cancelled'), 0)::float8`,
+        confirmed: sql<number>`count(*) FILTER (WHERE ${enrollments.status} = 'confirmed')::int`,
+        pending: sql<number>`count(*) FILTER (WHERE ${enrollments.status} = 'pending')::int`,
+        cancelled: sql<number>`count(*) FILTER (WHERE ${enrollments.status} = 'cancelled')::int`,
+        completed: sql<number>`count(*) FILTER (WHERE ${enrollments.status} = 'completed')::int`,
+        revenue: sql<number>`coalesce(sum(${enrollments.finalFee}::float8) FILTER (WHERE ${enrollments.status} <> 'cancelled'), 0)::float8`,
         newThisPeriod: sql<number>`count(*) FILTER (WHERE
-          ${enrolledDateRaw} IS NOT NULL
-          AND ${enrolledDateRaw} ~ '^[0-9]{4}'
-          AND (${enrolledDateRaw})::timestamptz >= (CURRENT_TIMESTAMP - (${days}::int * INTERVAL '1 day'))
+          ${enrollments.enrolledDate} IS NOT NULL
+          AND ${enrollments.enrolledDate} ~ '^[0-9]{4}'
+          AND (${enrollments.enrolledDate})::timestamptz >= (CURRENT_TIMESTAMP - (${days}::int * INTERVAL '1 day'))
         )::int`,
       })
       .from(enrollments)

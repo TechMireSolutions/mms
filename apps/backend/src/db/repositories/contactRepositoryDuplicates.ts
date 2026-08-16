@@ -1,19 +1,9 @@
 import { and, notInArray, sql, type SQL } from 'drizzle-orm';
 import { buildNamePrefixRegex } from '@mms/shared';
-import { contacts } from '../schema.js';
+import { contacts, contactPhones, contactEmails } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { activeWorkspaceWhere } from './contactRepositoryAggregateHelpers.js';
-import { jsonbArrayOrEmpty } from './contactRepositorySql.js';
 
-/**
- * Normalized duplicate keys for SQL blocking.
- *
- * Mirrors the JS key space produced by `getContactDuplicateCandidateKeys` in
- * `@mms/shared` — `phones` are digits-only (last 10 when long enough), `emails`
- * are lower/trim, and `name` is lower/trim with prefix stripping + whitespace
- * collapse. `namePrefixes` lets SQL rebuild the same prefix regex via
- * `buildNamePrefixRegex` so JS and SQL never drift.
- */
 export interface ContactDuplicateCandidateKeys {
   phones: string[];
   emails: string[];
@@ -37,7 +27,7 @@ function emailKeySql(addressExpr: SQL): SQL {
 
 /** Lower/trim + prefix-strip (first match, like JS) + whitespace-collapse name key — `cleanName`. */
 function nameKeySql(prefixRegex: string): SQL {
-  const nameExpr = sql`COALESCE(NULLIF(${contacts.customData}->>'name', ''), ${contacts.customData}->>'firstName')`;
+  const nameExpr = sql`COALESCE(NULLIF(${contacts.name}, ''), ${contacts.firstName})`;
   const stripped = prefixRegex
     ? sql`regexp_replace(lower(trim(COALESCE(${nameExpr}, ''))), ${prefixRegex}, '')`
     : sql`lower(trim(COALESCE(${nameExpr}, '')))`;
@@ -67,19 +57,25 @@ export async function findContactDuplicateCandidateIds(
   if (phones.length > 0) {
     matchClauses.push(sql`EXISTS (
       SELECT 1
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-      WHERE ${phoneComparisonKeySql(sql`phone.value->>'number'`)}
-        IN (${sql.join(phones.map((p) => sql`${p}`), sql`, `)})
+      FROM ${contactPhones} p
+      WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain}
+        AND p.contact_id = ${contacts.id}
+        AND ${phoneComparisonKeySql(sql`p.number`)}
+          IN (${sql.join(phones.map((p) => sql`${p}`), sql`, `)})
     )`);
+    matchClauses.push(sql`${phoneComparisonKeySql(sql`${contacts.phone}`)} IN (${sql.join(phones.map((p) => sql`${p}`), sql`, `)})`);
   }
 
   if (emails.length > 0) {
     matchClauses.push(sql`EXISTS (
       SELECT 1
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
-      WHERE ${emailKeySql(sql`email.value->>'address'`)}
-        IN (${sql.join(emails.map((e) => sql`${e}`), sql`, `)})
+      FROM ${contactEmails} e
+      WHERE e.workspace_subdomain = ${contacts.workspaceSubdomain}
+        AND e.contact_id = ${contacts.id}
+        AND ${emailKeySql(sql`e.address`)}
+          IN (${sql.join(emails.map((e) => sql`${e}`), sql`, `)})
     )`);
+    matchClauses.push(sql`${emailKeySql(sql`${contacts.email}`)} IN (${sql.join(emails.map((e) => sql`${e}`), sql`, `)})`);
   }
 
   if (name) {
@@ -120,19 +116,37 @@ export async function findContactDuplicateBlockedIds(
   return withTenantTransaction(subdomain, async (tx) => {
     const result = await tx.execute(sql`
       WITH keyed AS (
-        SELECT ${contacts.id} AS id,
-               ${phoneComparisonKeySql(sql`phone.value->>'number'`)} AS k
-        FROM ${contacts}
-        CROSS JOIN LATERAL jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-        WHERE ${activeWorkspaceWhere(subdomain)}
-          AND ${phoneComparisonKeySql(sql`phone.value->>'number'`)} <> ''
+        SELECT p.contact_id AS id,
+               ${phoneComparisonKeySql(sql`p.number`)} AS k
+        FROM ${contactPhones} p
+        JOIN ${contacts} c ON c.workspace_subdomain = p.workspace_subdomain AND c.id = p.contact_id
+        WHERE p.workspace_subdomain = ${subdomain}
+          AND c.deleted_at IS NULL
+          AND ${phoneComparisonKeySql(sql`p.number`)} <> ''
         UNION ALL
-        SELECT ${contacts.id} AS id,
-               ${emailKeySql(sql`email.value->>'address'`)} AS k
-        FROM ${contacts}
-        CROSS JOIN LATERAL jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
-        WHERE ${activeWorkspaceWhere(subdomain)}
-          AND ${emailKeySql(sql`email.value->>'address'`)} <> ''
+        SELECT c.id AS id,
+               ${phoneComparisonKeySql(sql`c.phone`)} AS k
+        FROM ${contacts} c
+        WHERE c.workspace_subdomain = ${subdomain}
+          AND c.deleted_at IS NULL
+          AND NULLIF(trim(c.phone), '') IS NOT NULL
+          AND ${phoneComparisonKeySql(sql`c.phone`)} <> ''
+        UNION ALL
+        SELECT e.contact_id AS id,
+               ${emailKeySql(sql`e.address`)} AS k
+        FROM ${contactEmails} e
+        JOIN ${contacts} c ON c.workspace_subdomain = e.workspace_subdomain AND c.id = e.contact_id
+        WHERE e.workspace_subdomain = ${subdomain}
+          AND c.deleted_at IS NULL
+          AND ${emailKeySql(sql`e.address`)} <> ''
+        UNION ALL
+        SELECT c.id AS id,
+               ${emailKeySql(sql`c.email`)} AS k
+        FROM ${contacts} c
+        WHERE c.workspace_subdomain = ${subdomain}
+          AND c.deleted_at IS NULL
+          AND NULLIF(trim(c.email), '') IS NOT NULL
+          AND ${emailKeySql(sql`c.email`)} <> ''
         UNION ALL
         SELECT ${contacts.id} AS id,
                ${nameKeySql(prefixRegex)} AS k

@@ -12,7 +12,7 @@ export const platformSettingsUpdateSchema = z.object({
   syncTlsOnCreate: z.boolean().optional(),
   tlsExtraSans: z.string().optional(),
   certbotEmail: z.string().email('Valid email address required').or(z.literal('')).optional(),
-});
+}).strict();
 
 export type PlatformSettingsUpdateInput = z.infer<typeof platformSettingsUpdateSchema>;
 

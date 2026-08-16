@@ -84,10 +84,8 @@ export default async function platformAdminSystemRoutes(
           userId: platformUser.id,
           userEmail: platformUser.email,
           action: 'migrate_and_restart',
-          details: {
-            delayMs: MIGRATE_RESTART_DELAY_MS,
-            scheduledAt: new Date().toISOString(),
-          },
+          targetResource: 'system',
+          metadataMessage: `Scheduled migrate-and-restart (delay=${MIGRATE_RESTART_DELAY_MS}ms)`,
           ipAddress: request.ip,
         });
 

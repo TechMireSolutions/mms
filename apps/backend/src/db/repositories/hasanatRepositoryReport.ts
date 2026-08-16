@@ -12,58 +12,30 @@ import { getQueryRows } from '../documentStoreKeys.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 
 function activeDistributionWhere(subdomain: string, alias = 'hd'): ReturnType<typeof sql> {
-  const data = sql.raw(`${alias}.custom_data`);
   return sql`
     ${sql.raw(`${alias}.workspace_subdomain`)} = ${subdomain}
-    AND NULLIF(trim(COALESCE(${data}->>'deletedAt', '')), '') IS NULL
+    AND ${sql.raw(`${alias}.deleted_at`)} IS NULL
   `;
 }
 
-/**
- * Points per distribution — mirrors `getDenominationPoints`:
- * configured denom points → legacy den1–den5 → name heuristics → 50; missing id → 0.
- */
 function denominationPointsSql(hdAlias = 'hd', denAlias = 'den'): ReturnType<typeof sql> {
-  const hd = sql.raw(`${hdAlias}.custom_data`);
-  const den = sql.raw(`${denAlias}.custom_data`);
   return sql`
-    CASE
-      WHEN NULLIF(trim(COALESCE(${hd}->>'denominationId', '')), '') IS NULL THEN 0
-      WHEN NULLIF(trim(COALESCE(${den}->>'points', '')), '') IS NOT NULL
-        THEN COALESCE(NULLIF(trim(${den}->>'points'), '')::numeric, 0)
-      WHEN trim(COALESCE(${hd}->>'denominationId', '')) = 'den1' THEN 50
-      WHEN trim(COALESCE(${hd}->>'denominationId', '')) = 'den2' THEN 150
-      WHEN trim(COALESCE(${hd}->>'denominationId', '')) = 'den3' THEN 500
-      WHEN trim(COALESCE(${hd}->>'denominationId', '')) = 'den4' THEN 1000
-      WHEN trim(COALESCE(${hd}->>'denominationId', '')) = 'den5' THEN 2500
-      WHEN lower(trim(COALESCE(
-        NULLIF(trim(${hd}->>'denominationName'), ''),
-        NULLIF(trim(${den}->>'name'), ''),
-        ''
-      ))) LIKE '%silver%' THEN 150
-      WHEN lower(trim(COALESCE(
-        NULLIF(trim(${hd}->>'denominationName'), ''),
-        NULLIF(trim(${den}->>'name'), ''),
-        ''
-      ))) LIKE '%gold%' THEN 500
-      WHEN lower(trim(COALESCE(
-        NULLIF(trim(${hd}->>'denominationName'), ''),
-        NULLIF(trim(${den}->>'name'), ''),
-        ''
-      ))) LIKE '%platinum%' THEN 1000
-      WHEN lower(trim(COALESCE(
-        NULLIF(trim(${hd}->>'denominationName'), ''),
-        NULLIF(trim(${den}->>'name'), ''),
-        ''
-      ))) LIKE '%diamond%' THEN 2500
-      ELSE 50
-    END
+    COALESCE(
+      ${sql.raw(`${denAlias}.points`)},
+      CASE
+        WHEN ${sql.raw(`${hdAlias}.denomination_id`)} = 'den1' THEN 50
+        WHEN ${sql.raw(`${hdAlias}.denomination_id`)} = 'den2' THEN 150
+        WHEN ${sql.raw(`${hdAlias}.denomination_id`)} = 'den3' THEN 500
+        WHEN ${sql.raw(`${hdAlias}.denomination_id`)} = 'den4' THEN 1000
+        WHEN ${sql.raw(`${hdAlias}.denomination_id`)} = 'den5' THEN 2500
+        WHEN lower(trim(${sql.raw(`${hdAlias}.denomination_name`)})) LIKE '%silver%' THEN 150
+        WHEN lower(trim(${sql.raw(`${hdAlias}.denomination_name`)})) LIKE '%gold%' THEN 500
+        WHEN lower(trim(${sql.raw(`${hdAlias}.denomination_name`)})) LIKE '%platinum%' THEN 1000
+        WHEN lower(trim(${sql.raw(`${hdAlias}.denomination_name`)})) LIKE '%diamond%' THEN 2500
+        ELSE 50
+      END
+    )
   `;
-}
-
-function distributionQuantitySql(alias = 'hd'): ReturnType<typeof sql> {
-  const data = sql.raw(`${alias}.custom_data`);
-  return sql`COALESCE(NULLIF(trim(${data}->>'quantity'), '')::numeric, 1)`;
 }
 
 /** Hasanat report aggregates for ComparisonMode (session points + dual monthly ranges). */
@@ -88,7 +60,6 @@ export async function loadHasanatReportAggregatesSql(
     const sessionIds = comparisonQuery.sessionIds ?? [];
     if (sessionIds.length > 0) {
       const pointsExpr = denominationPointsSql('hd', 'den');
-      const quantityExpr = distributionQuantitySql('hd');
       const compareSessionResult = await tx.execute(sql`
         WITH selected AS (
           SELECT s.id AS "sessionId"
@@ -103,25 +74,25 @@ export async function loadHasanatReportAggregatesSql(
         session_students AS (
           SELECT DISTINCT
             sel."sessionId",
-            NULLIF(trim(COALESCE(e.custom_data->>'studentId', '')), '') AS "studentId"
+            e.student_id AS "studentId"
           FROM selected sel
           INNER JOIN enrollments e
             ON e.workspace_subdomain = ${subdomain}
             AND e.deleted_at IS NULL
-            AND lower(trim(COALESCE(e.custom_data->>'status', ''))) <> 'cancelled'
-            AND trim(COALESCE(e.custom_data->>'sessionId', '')) = sel."sessionId"
+            AND lower(trim(e.status)) <> 'cancelled'
+            AND e.session_id = sel."sessionId"
         )
         SELECT
           ss."sessionId" AS "sessionId",
-          COALESCE(SUM(${quantityExpr} * ${pointsExpr}), 0)::float8 AS hasanat
+          COALESCE(SUM(hd.quantity * ${pointsExpr}), 0)::float8 AS hasanat
         FROM session_students ss
         LEFT JOIN hasanat_distributions hd
           ON ${activeDistributionWhere(subdomain, 'hd')}
           AND ss."studentId" IS NOT NULL
-          AND trim(COALESCE(hd.custom_data->>'recipientStudentId', '')) = ss."studentId"
+          AND hd.recipient_student_id = ss."studentId"
         LEFT JOIN hasanat_denoms den
           ON den.workspace_subdomain = ${subdomain}
-          AND den.id = NULLIF(trim(COALESCE(hd.custom_data->>'denominationId', '')), '')
+          AND den.id = hd.denomination_id
         GROUP BY ss."sessionId"
       `);
 
@@ -143,20 +114,18 @@ export async function loadHasanatReportAggregatesSql(
     ): Promise<HasanatReportComparisonMonth[]> => {
       if (!from || !to) return [];
       const pointsExpr = denominationPointsSql('hd', 'den');
-      const quantityExpr = distributionQuantitySql('hd');
       const monthResult = await tx.execute(sql`
         SELECT
-          to_char(left(NULLIF(trim(hd.custom_data->>'issuedDate'), ''), 10)::date, 'YYYY-MM') AS "monthKey",
-          COALESCE(SUM(${quantityExpr} * ${pointsExpr}), 0)::float8 AS points
+          to_char(left(hd.issued_date, 10)::date, 'YYYY-MM') AS "monthKey",
+          COALESCE(SUM(hd.quantity * ${pointsExpr}), 0)::float8 AS points
         FROM hasanat_distributions hd
         LEFT JOIN hasanat_denoms den
           ON den.workspace_subdomain = ${subdomain}
-          AND den.id = NULLIF(trim(COALESCE(hd.custom_data->>'denominationId', '')), '')
+          AND den.id = hd.denomination_id
         WHERE ${activeDistributionWhere(subdomain, 'hd')}
-          AND NULLIF(trim(hd.custom_data->>'issuedDate'), '') IS NOT NULL
-          AND NULLIF(trim(hd.custom_data->>'issuedDate'), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND left(NULLIF(trim(hd.custom_data->>'issuedDate'), ''), 10) >= ${from}
-          AND left(NULLIF(trim(hd.custom_data->>'issuedDate'), ''), 10) <= ${to}
+          AND hd.issued_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          AND left(hd.issued_date, 10) >= ${from}
+          AND left(hd.issued_date, 10) <= ${to}
         GROUP BY 1
         ORDER BY 1 ASC
       `);

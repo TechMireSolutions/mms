@@ -3,16 +3,15 @@ import {
   isContactLockedEnabledTab,
   type FieldConfig,
 } from '@mms/shared';
-import { contacts } from '../schema.js';
+import {
+  contacts,
+  contactPhones,
+  contactEmails,
+  contactAddresses,
+  contactSocials,
+  contactRelationships,
+} from '../schema.js';
 import { contactFieldNonEmptySql } from './contactRepositorySql.js';
-
-const LIST_TAB_DATA_KEYS: Record<string, string> = {
-  phones: 'phones',
-  emails: 'emails',
-  addresses: 'addresses',
-  socials: 'socials',
-  relationship: 'relationshipContacts',
-};
 
 const COMPLETENESS_SKIP_TYPES = new Set(['boolean', 'ai_summary']);
 
@@ -21,7 +20,24 @@ export function activeWorkspaceWhere(subdomain: string): SQL {
 }
 
 export function createdAtRawSql(): SQL {
-  return sql`NULLIF(trim(COALESCE(${contacts.customData}->>'createdAt', '')), '')`;
+  return sql`${contacts.createdAt}::text`;
+}
+
+function listTabHasRecordsSql(tabKey: string): SQL {
+  switch (tabKey) {
+    case 'phones':
+      return sql`EXISTS (SELECT 1 FROM ${contactPhones} p WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain} AND p.contact_id = ${contacts.id})`;
+    case 'emails':
+      return sql`EXISTS (SELECT 1 FROM ${contactEmails} e WHERE e.workspace_subdomain = ${contacts.workspaceSubdomain} AND e.contact_id = ${contacts.id})`;
+    case 'addresses':
+      return sql`EXISTS (SELECT 1 FROM ${contactAddresses} a WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain} AND a.contact_id = ${contacts.id})`;
+    case 'socials':
+      return sql`EXISTS (SELECT 1 FROM ${contactSocials} s WHERE s.workspace_subdomain = ${contacts.workspaceSubdomain} AND s.contact_id = ${contacts.id})`;
+    case 'relationship':
+      return sql`EXISTS (SELECT 1 FROM ${contactRelationships} r WHERE r.workspace_subdomain = ${contacts.workspaceSubdomain} AND r.contact_id = ${contacts.id})`;
+    default:
+      return sql`true`;
+  }
 }
 
 /** True when required Setup fields/tabs are missing (SQL mirror of JS profile-completeness semantics). */
@@ -34,13 +50,9 @@ export function buildProfileIncompleteSql(fieldConfig: FieldConfig): SQL | null 
   const missingClauses: SQL[] = [];
 
   for (const tab of formTabs) {
-    const listKey = LIST_TAB_DATA_KEYS[tab.key];
-    if (listKey) {
+    if (['phones', 'emails', 'addresses', 'socials', 'relationship'].includes(tab.key)) {
       if (!requiredTabs.has(tab.key)) continue;
-      missingClauses.push(sql`(
-        jsonb_typeof(${contacts.customData}->${listKey}) IS DISTINCT FROM 'array'
-        OR jsonb_array_length(${contacts.customData}->${listKey}) = 0
-      )`);
+      missingClauses.push(sql`(NOT ${listTabHasRecordsSql(tab.key)})`);
       continue;
     }
     const tabFields = (fields[tab.key] || []).filter(

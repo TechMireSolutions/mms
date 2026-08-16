@@ -52,7 +52,9 @@ export default async function platformWorkspaceRoutes(
       userId: platformUser.id,
       userEmail: platformUser.email,
       action: 'toggle_workspace',
-      details: { subdomain: params.data.subdomain, enabled: body.data.enabled },
+      targetResource: 'workspace',
+      targetId: params.data.subdomain,
+      metadataMessage: `Set enabled=${body.data.enabled}`,
       ipAddress: request.ip,
     });
 
@@ -83,7 +85,9 @@ export default async function platformWorkspaceRoutes(
       userId: platformUser.id,
       userEmail: platformUser.email,
       action: 'update_workspace_modules',
-      details: { subdomain: params.data.subdomain, modules: body.data.modules },
+      targetResource: 'workspace',
+      targetId: params.data.subdomain,
+      metadataMessage: `modules=[${body.data.modules.join(',')}]`,
       ipAddress: request.ip,
     });
 
@@ -121,7 +125,8 @@ export default async function platformWorkspaceRoutes(
         userId: platformUser.id,
         userEmail: platformUser.email,
         action: 'delete_workspace',
-        details: { subdomain: params.data.subdomain },
+        targetResource: 'workspace',
+        targetId: params.data.subdomain,
         ipAddress: request.ip,
       });
 

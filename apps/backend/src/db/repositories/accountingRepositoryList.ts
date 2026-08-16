@@ -1,21 +1,32 @@
-import { and, eq, ilike, or, sql, isNull, type SQL, desc, asc } from 'drizzle-orm';
+import { and, eq, ilike, or, isNull, isNotNull, type SQL, desc, asc, sql, inArray } from 'drizzle-orm';
 import type {
-  Account,
-  JournalEntry,
-  FiscalYear,
   AccountingListQuery,
   AccountingAccountsListPageResult,
   AccountingEntriesListPageResult,
   AccountingFiscalYearsListPageResult,
 } from '@mms/shared';
-import { accountingAccounts, accountingEntries, accountingFiscalYears } from '../schema.js';
+import {
+  accountingAccounts,
+  accountingEntries,
+  accountingFiscalYears,
+  accountingJournalLines,
+  accountingEntryTags,
+  accountingEntryAttachments,
+} from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import {
+  accountRowToRecord,
+  fiscalYearRowToRecord,
+  entryRowToRecord,
+} from './accountingRepository.js';
 
 function buildAccountListConditions(subdomain: string, query: AccountingListQuery): SQL[] {
   const conditions: SQL[] = [eq(accountingAccounts.workspaceSubdomain, subdomain)];
   
-  if (!query.includeDeleted) {
-    conditions.push(isNull(sql`(${accountingAccounts.customData}->>'deletedAt')`));
+  if (query.includeDeleted) {
+    conditions.push(isNotNull(accountingAccounts.deletedAt));
+  } else {
+    conditions.push(isNull(accountingAccounts.deletedAt));
   }
   
   const search = query.search?.trim();
@@ -24,9 +35,11 @@ function buildAccountListConditions(subdomain: string, query: AccountingListQuer
     conditions.push(
       or(
         ilike(accountingAccounts.id, searchPattern),
-        ilike(sql`(${accountingAccounts.customData}->>'name')`, searchPattern),
-        ilike(sql`(${accountingAccounts.customData}->>'category')`, searchPattern)
-      ) as SQL
+        ilike(accountingAccounts.code, searchPattern),
+        ilike(accountingAccounts.name, searchPattern),
+        ilike(accountingAccounts.type, searchPattern),
+        ilike(accountingAccounts.subtype, searchPattern),
+      ) as SQL,
     );
   }
   
@@ -36,8 +49,10 @@ function buildAccountListConditions(subdomain: string, query: AccountingListQuer
 function buildEntryListConditions(subdomain: string, query: AccountingListQuery): SQL[] {
   const conditions: SQL[] = [eq(accountingEntries.workspaceSubdomain, subdomain)];
   
-  if (!query.includeDeleted) {
-    conditions.push(isNull(sql`(${accountingEntries.customData}->>'deletedAt')`));
+  if (query.includeDeleted) {
+    conditions.push(isNotNull(accountingEntries.deletedAt));
+  } else {
+    conditions.push(isNull(accountingEntries.deletedAt));
   }
   
   const search = query.search?.trim();
@@ -46,9 +61,10 @@ function buildEntryListConditions(subdomain: string, query: AccountingListQuery)
     conditions.push(
       or(
         ilike(accountingEntries.id, searchPattern),
-        ilike(sql`(${accountingEntries.customData}->>'reference')`, searchPattern),
-        ilike(sql`(${accountingEntries.customData}->>'description')`, searchPattern)
-      ) as SQL
+        ilike(accountingEntries.ref, searchPattern),
+        ilike(accountingEntries.description, searchPattern),
+        ilike(accountingEntries.fiscalYear, searchPattern),
+      ) as SQL,
     );
   }
   
@@ -58,8 +74,10 @@ function buildEntryListConditions(subdomain: string, query: AccountingListQuery)
 function buildFiscalYearListConditions(subdomain: string, query: AccountingListQuery): SQL[] {
   const conditions: SQL[] = [eq(accountingFiscalYears.workspaceSubdomain, subdomain)];
   
-  if (!query.includeDeleted) {
-    conditions.push(isNull(sql`(${accountingFiscalYears.customData}->>'deletedAt')`));
+  if (query.includeDeleted) {
+    conditions.push(isNotNull(accountingFiscalYears.deletedAt));
+  } else {
+    conditions.push(isNull(accountingFiscalYears.deletedAt));
   }
   
   const search = query.search?.trim();
@@ -68,8 +86,8 @@ function buildFiscalYearListConditions(subdomain: string, query: AccountingListQ
     conditions.push(
       or(
         ilike(accountingFiscalYears.id, searchPattern),
-        ilike(sql`(${accountingFiscalYears.customData}->>'name')`, searchPattern)
-      ) as SQL
+        ilike(accountingFiscalYears.label, searchPattern),
+      ) as SQL,
     );
   }
   
@@ -81,22 +99,22 @@ function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL 
   let column: SQL;
   switch (field) {
     case 'createdAt':
-      column = sql`(${accountingAccounts.customData}->>'createdAt')::timestamp`;
+      column = accountingAccounts.createdAt as unknown as SQL;
       break;
     case 'id':
       column = accountingAccounts.id as unknown as SQL;
       break;
+    case 'code':
+      column = accountingAccounts.code as unknown as SQL;
+      break;
     case 'name':
-      column = sql`(${accountingAccounts.customData}->>'name')`;
+      column = accountingAccounts.name as unknown as SQL;
       break;
-    case 'category':
-      column = sql`(${accountingAccounts.customData}->>'category')`;
-      break;
-    case 'balance':
-      column = sql`(${accountingAccounts.customData}->>'balance')::numeric`;
+    case 'type':
+      column = accountingAccounts.type as unknown as SQL;
       break;
     default:
-      column = sql`(${accountingAccounts.customData}->>'createdAt')::timestamp`;
+      column = accountingAccounts.createdAt as unknown as SQL;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
@@ -106,22 +124,23 @@ function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
   let column: SQL;
   switch (field) {
     case 'createdAt':
-      column = sql`(${accountingEntries.customData}->>'createdAt')::timestamp`;
+      column = accountingEntries.createdAt as unknown as SQL;
       break;
     case 'id':
       column = accountingEntries.id as unknown as SQL;
       break;
     case 'date':
-      column = sql`(${accountingEntries.customData}->>'date')`;
+      column = accountingEntries.date as unknown as SQL;
       break;
+    case 'ref':
     case 'reference':
-      column = sql`(${accountingEntries.customData}->>'reference')`;
+      column = accountingEntries.ref as unknown as SQL;
       break;
-    case 'totalAmount':
-      column = sql`(${accountingEntries.customData}->>'totalAmount')::numeric`;
+    case 'status':
+      column = accountingEntries.status as unknown as SQL;
       break;
     default:
-      column = sql`(${accountingEntries.customData}->>'createdAt')::timestamp`;
+      column = accountingEntries.createdAt as unknown as SQL;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
@@ -131,26 +150,29 @@ function buildFiscalYearOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): S
   let column: SQL;
   switch (field) {
     case 'createdAt':
-      column = sql`(${accountingFiscalYears.customData}->>'createdAt')::timestamp`;
+      column = accountingFiscalYears.createdAt as unknown as SQL;
       break;
     case 'id':
       column = accountingFiscalYears.id as unknown as SQL;
       break;
+    case 'label':
     case 'name':
-      column = sql`(${accountingFiscalYears.customData}->>'name')`;
+      column = accountingFiscalYears.label as unknown as SQL;
       break;
     case 'startDate':
-      column = sql`(${accountingFiscalYears.customData}->>'startDate')`;
+      column = accountingFiscalYears.startDate as unknown as SQL;
       break;
     case 'endDate':
-      column = sql`(${accountingFiscalYears.customData}->>'endDate')`;
+      column = accountingFiscalYears.endDate as unknown as SQL;
+      break;
+    case 'status':
+      column = accountingFiscalYears.status as unknown as SQL;
       break;
     default:
-      column = sql`(${accountingFiscalYears.customData}->>'createdAt')::timestamp`;
+      column = accountingFiscalYears.createdAt as unknown as SQL;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
-
 
 export async function listAccountsPage(
   tenant: string,
@@ -180,10 +202,7 @@ export async function listAccountsPage(
       .limit(limit)
       .offset(offset);
 
-    const items = rows.map((row) => ({
-      ...row,
-      ...(row.customData as any || {}),
-    })) as Account[];
+    const items = rows.map(accountRowToRecord);
 
     return {
       accounts: items,
@@ -223,10 +242,76 @@ export async function listEntriesPage(
       .limit(limit)
       .offset(offset);
 
-    const items = rows.map((row) => ({
-      ...row,
-      ...(row.customData as any || {}),
-    })) as JournalEntry[];
+    if (rows.length === 0) {
+      return {
+        entries: [],
+        total,
+        page,
+        limit,
+        hasMore: false,
+      };
+    }
+
+    const entryIds = rows.map((r) => r.id);
+    const [allLines, allTags, allAttachments] = await Promise.all([
+      tx
+        .select()
+        .from(accountingJournalLines)
+        .where(
+          and(
+            eq(accountingJournalLines.workspaceSubdomain, subdomain),
+            inArray(accountingJournalLines.entryId, entryIds),
+          ),
+        ),
+      tx
+        .select()
+        .from(accountingEntryTags)
+        .where(
+          and(
+            eq(accountingEntryTags.workspaceSubdomain, subdomain),
+            inArray(accountingEntryTags.entryId, entryIds),
+          ),
+        ),
+      tx
+        .select()
+        .from(accountingEntryAttachments)
+        .where(
+          and(
+            eq(accountingEntryAttachments.workspaceSubdomain, subdomain),
+            inArray(accountingEntryAttachments.entryId, entryIds),
+          ),
+        ),
+    ]);
+
+    const linesByEntry = new Map<string, Array<typeof accountingJournalLines.$inferSelect>>();
+    for (const line of allLines) {
+      const arr = linesByEntry.get(line.entryId) ?? [];
+      arr.push(line);
+      linesByEntry.set(line.entryId, arr);
+    }
+
+    const tagsByEntry = new Map<string, string[]>();
+    for (const t of allTags) {
+      const arr = tagsByEntry.get(t.entryId) ?? [];
+      arr.push(t.tag);
+      tagsByEntry.set(t.entryId, arr);
+    }
+
+    const attachmentsByEntry = new Map<string, string[]>();
+    for (const a of allAttachments) {
+      const arr = attachmentsByEntry.get(a.entryId) ?? [];
+      arr.push(a.url);
+      attachmentsByEntry.set(a.entryId, arr);
+    }
+
+    const items = rows.map((r) =>
+      entryRowToRecord(
+        r,
+        linesByEntry.get(r.id) ?? [],
+        tagsByEntry.get(r.id) ?? [],
+        attachmentsByEntry.get(r.id) ?? [],
+      ),
+    );
 
     return {
       entries: items,
@@ -266,10 +351,7 @@ export async function listFiscalYearsPage(
       .limit(limit)
       .offset(offset);
 
-    const items = rows.map((row) => ({
-      ...row,
-      ...(row.customData as any || {}),
-    })) as FiscalYear[];
+    const items = rows.map(fiscalYearRowToRecord);
 
     return {
       fiscalYears: items,

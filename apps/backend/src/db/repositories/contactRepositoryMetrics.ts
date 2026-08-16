@@ -17,7 +17,6 @@ import {
 import {
   activeWorkspaceWhere,
   buildProfileIncompleteSql,
-  createdAtRawSql,
 } from './contactRepositoryAggregateHelpers.js';
 
 export async function aggregateContactsCommandMetrics(
@@ -34,9 +33,7 @@ export async function aggregateContactsCommandMetrics(
       .select({
         total: sql<number>`count(*)::int`,
         newThisPeriod: sql<number>`count(*) FILTER (WHERE
-          ${createdAtRawSql()} IS NOT NULL
-          AND (${contacts.customData}->>'createdAt')::timestamptz
-            >= (NOW() - (${periodDays} * INTERVAL '1 day'))
+          ${contacts.createdAt} >= (NOW() - (${periodDays} * INTERVAL '1 day'))
         )::int`,
         whatsappCount: sql<number>`count(*) FILTER (WHERE ${hasWhatsAppSql()})::int`,
         incompleteCount: incompleteSql
@@ -73,24 +70,17 @@ export async function aggregateContactsReportAnalytics(
         whatsappCount: sql<number>`count(*) FILTER (WHERE ${hasWhatsAppSql()})::int`,
         missingInfoCount: sql<number>`count(*) FILTER (WHERE NOT ${hasPhoneSql()} OR NOT ${hasEmailSql()})::int`,
         newLast30Days: sql<number>`count(*) FILTER (WHERE
-          ${createdAtRawSql()} IS NOT NULL
-          AND (${contacts.customData}->>'createdAt')::timestamptz
-            >= ((${refIso}::timestamptz) - INTERVAL '30 days')
+          ${contacts.createdAt} >= ((${refIso}::timestamptz) - INTERVAL '30 days')
         )::int`,
         newPrior30Days: sql<number>`count(*) FILTER (WHERE
-          ${createdAtRawSql()} IS NOT NULL
-          AND (${contacts.customData}->>'createdAt')::timestamptz
-            >= ((${refIso}::timestamptz) - INTERVAL '60 days')
-          AND (${contacts.customData}->>'createdAt')::timestamptz
-            < ((${refIso}::timestamptz) - INTERVAL '30 days')
+          ${contacts.createdAt} >= ((${refIso}::timestamptz) - INTERVAL '60 days')
+          AND ${contacts.createdAt} < ((${refIso}::timestamptz) - INTERVAL '30 days')
         )::int`,
         newThisPeriod: sql<number>`count(*) FILTER (WHERE
-          ${createdAtRawSql()} IS NOT NULL
-          AND (${contacts.customData}->>'createdAt')::timestamptz
-            >= ((${refIso}::timestamptz) - (${periodDays} * INTERVAL '1 day'))
+          ${contacts.createdAt} >= ((${refIso}::timestamptz) - (${periodDays} * INTERVAL '1 day'))
         )::int`,
-        maxCreatedAt: sql<string | null>`max(NULLIF(trim(${contacts.customData}->>'createdAt'), ''))`,
-        signupCount: sql<number>`count(*) FILTER (WHERE ${createdAtRawSql()} IS NOT NULL)::int`,
+        maxCreatedAt: sql<string | null>`max(${contacts.createdAt})::text`,
+        signupCount: sql<number>`count(*)::int`,
       })
       .from(contacts)
       .where(activeWorkspaceWhere(subdomain));
@@ -107,17 +97,12 @@ export async function aggregateContactsReportAnalytics(
       const growthRows = await tx
         .select({
           recent: sql<number>`count(*) FILTER (WHERE
-            ${createdAtRawSql()} IS NOT NULL
-            AND (${contacts.customData}->>'createdAt')::timestamptz
-              >= ((${maxIso}::timestamptz) - INTERVAL '30 days')
-            AND (${contacts.customData}->>'createdAt')::timestamptz <= ${maxIso}::timestamptz
+            ${contacts.createdAt} >= ((${maxIso}::timestamptz) - INTERVAL '30 days')
+            AND ${contacts.createdAt} <= ${maxIso}::timestamptz
           )::int`,
           prior: sql<number>`count(*) FILTER (WHERE
-            ${createdAtRawSql()} IS NOT NULL
-            AND (${contacts.customData}->>'createdAt')::timestamptz
-              >= ((${maxIso}::timestamptz) - INTERVAL '60 days')
-            AND (${contacts.customData}->>'createdAt')::timestamptz
-              < ((${maxIso}::timestamptz) - INTERVAL '30 days')
+            ${contacts.createdAt} >= ((${maxIso}::timestamptz) - INTERVAL '60 days')
+            AND ${contacts.createdAt} < ((${maxIso}::timestamptz) - INTERVAL '30 days')
           )::int`,
         })
         .from(contacts)
@@ -155,21 +140,19 @@ export async function aggregateContactsMonthlyCreatedCounts(
   return withTenantTransaction(subdomain, async (tx) => {
     const results: ContactsMonthlyYearCounts[] = [];
     for (const year of years) {
-      const yearStr = String(year);
       const rows = await tx
         .select({
-          month: sql<string>`substring(${contacts.customData}->>'createdAt' from 6 for 2)`,
+          month: sql<string>`to_char(${contacts.createdAt}, 'MM')`,
           count: sql<number>`count(*)::int`,
         })
         .from(contacts)
         .where(
           and(
             activeWorkspaceWhere(subdomain),
-            sql`${createdAtRawSql()} IS NOT NULL`,
-            sql`${contacts.customData}->>'createdAt' LIKE ${`${yearStr}-%`}`,
+            sql`extract(year from ${contacts.createdAt}) = ${year}`,
           ),
         )
-        .groupBy(sql`substring(${contacts.customData}->>'createdAt' from 6 for 2)`);
+        .groupBy(sql`to_char(${contacts.createdAt}, 'MM')`);
 
       const byMonth = new Map(
         rows.map((row) => [row.month, Number(row.count ?? 0)] as const),

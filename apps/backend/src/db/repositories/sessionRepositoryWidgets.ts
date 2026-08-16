@@ -5,12 +5,32 @@ import type {
 } from '@mms/shared';
 import { sessions } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { jsonbFieldKeyLiteral } from './jsonbFieldUsage.js';
-
-const customDataSql = sql.raw('"sessions"."custom_data"');
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(sessions.workspaceSubdomain, subdomain), isNull(sessions.deletedAt))!;
+}
+
+function resolveSessionColumnSql(field: string): SQL {
+  switch (field) {
+    case 'name':
+      return sql`${sessions.name}`;
+    case 'type':
+      return sql`${sessions.type}`;
+    case 'status':
+      return sql`${sessions.status}`;
+    case 'startDate':
+      return sql`${sessions.startDate}`;
+    case 'endDate':
+      return sql`${sessions.endDate}`;
+    case 'baseFee':
+      return sql`${sessions.baseFee}`;
+    case 'currency':
+      return sql`${sessions.currency}`;
+    case 'description':
+      return sql`${sessions.description}`;
+    default:
+      return sql`${sessions.status}`;
+  }
 }
 
 function singleFilterSql(
@@ -20,19 +40,19 @@ function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
-  const safeField = jsonbFieldKeyLiteral(trimmedField);
+  const colSql = resolveSessionColumnSql(trimmedField);
   const op = operator ?? 'equals';
   if (op === 'equals') {
-    return sql`lower(trim(COALESCE(${customDataSql}->>${safeField}, ''))) = ${value.trim().toLowerCase()}`;
+    return sql`lower(trim(COALESCE(${colSql}, ''))) = ${value.trim().toLowerCase()}`;
   }
   if (op === 'contains') {
-    return sql`lower(COALESCE(${customDataSql}->>${safeField}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
+    return sql`lower(COALESCE(${colSql}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric > ${Number(value)}`;
+    return sql`NULLIF(${colSql}, '')::numeric > ${Number(value)}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric < ${Number(value)}`;
+    return sql`NULLIF(${colSql}, '')::numeric < ${Number(value)}`;
   }
   return null;
 }
@@ -41,7 +61,7 @@ function widgetFilterSql(query: SessionsWidgetQuery): SQL | null {
   return singleFilterSql(query.filterField, query.filterOperator, query.filterValue);
 }
 
-/** SQL widget aggregates for sessions (Teachers parity — no full-collection dump). */
+/** SQL widget aggregates for sessions (parses typed columns). */
 export async function aggregateSessionsWidgetQueries(
   tenant: string,
   queries: SessionsWidgetQuery[],
@@ -80,11 +100,11 @@ export async function aggregateSessionsWidgetQueries(
       } else if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const colSql = resolveSessionColumnSql(target);
           const aggRows = await tx
             .select({
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(NULLIF(${colSql}, '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(${colSql}, '') IS NOT NULL)::int`,
             })
             .from(sessions)
             .where(whereClause);
@@ -95,8 +115,8 @@ export async function aggregateSessionsWidgetQueries(
       }
 
       const xAxis = query.xAxisField?.trim() || 'status';
-      const safeXAxis = jsonbFieldKeyLiteral(xAxis);
-      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${customDataSql}->>${safeXAxis}), ''), 'Unknown')`;
+      const colSql = resolveSessionColumnSql(xAxis);
+      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${colSql}), ''), 'Unknown')`;
 
       const chartRows = await tx
         .select({
@@ -117,12 +137,12 @@ export async function aggregateSessionsWidgetQueries(
       if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const targetColSql = resolveSessionColumnSql(target);
           const numericChart = await tx
             .select({
               name: groupExpr,
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(NULLIF(${targetColSql}, '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(${targetColSql}, '') IS NOT NULL)::int`,
             })
             .from(sessions)
             .where(whereClause)

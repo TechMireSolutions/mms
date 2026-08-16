@@ -3,19 +3,58 @@ import {
   type StoredPlatformUser,
   type PlatformRole,
   type PlatformAdminPermissions,
+  type PlatformAdminPermissionKey,
   applyTitleCaseRecursive,
   normalizePlatformAdminPermissions,
   FULL_PLATFORM_ADMIN_PERMISSIONS,
 } from '@mms/shared';
 import { getDb } from '../dbClient.js';
-import { platformUsers } from '../schema.js';
+import { platformUsers, platformUserPermissions } from '../schema.js';
 
-function rowToStored(row: typeof platformUsers.$inferSelect): StoredPlatformUser {
+// ---------------------------------------------------------------------------
+// Internal: Hydrate permissions from child table rows
+// ---------------------------------------------------------------------------
+
+const PERMISSION_KEYS: PlatformAdminPermissionKey[] = ['workspaces', 'onboard'];
+
+async function loadPermissions(userId: string): Promise<PlatformAdminPermissions> {
+  const rows = await getDb()
+    .select({ permissionKey: platformUserPermissions.permissionKey, isGranted: platformUserPermissions.isGranted })
+    .from(platformUserPermissions)
+    .where(eq(platformUserPermissions.platformUserId, userId));
+
+  const perms: Record<string, boolean> = {};
+  for (const row of rows) {
+    perms[row.permissionKey] = row.isGranted;
+  }
+  return normalizePlatformAdminPermissions(perms);
+}
+
+async function writePermissions(userId: string, permissions: PlatformAdminPermissions): Promise<void> {
+  // Delete existing then insert — simple and correct for ≤10 keys.
+  await getDb().delete(platformUserPermissions).where(eq(platformUserPermissions.platformUserId, userId));
+
+  const rows = PERMISSION_KEYS.map((key) => ({
+    platformUserId: userId,
+    permissionKey: key,
+    isGranted: Boolean(permissions[key]),
+  }));
+  if (rows.length > 0) {
+    await getDb().insert(platformUserPermissions).values(rows);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Row mapper
+// ---------------------------------------------------------------------------
+
+function rowToStored(
+  row: typeof platformUsers.$inferSelect,
+  permissions: PlatformAdminPermissions,
+): StoredPlatformUser {
   const role = row.role as PlatformRole;
-  const permissions =
-    role === 'super_user'
-      ? FULL_PLATFORM_ADMIN_PERMISSIONS
-      : normalizePlatformAdminPermissions(row.permissions);
+  const effectivePerms =
+    role === 'super_user' ? FULL_PLATFORM_ADMIN_PERMISSIONS : permissions;
 
   return {
     id: row.id,
@@ -23,13 +62,17 @@ function rowToStored(row: typeof platformUsers.$inferSelect): StoredPlatformUser
     name: row.name,
     passwordHash: row.passwordHash,
     role,
-    permissions,
+    permissions: effectivePerms,
     sessionVersion: row.sessionVersion ?? 0,
     createdAt: row.createdAt.toISOString(),
     emailVerifiedAt: row.emailVerifiedAt?.toISOString(),
     disabledAt: row.disabledAt?.toISOString() ?? null,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Queries
+// ---------------------------------------------------------------------------
 
 export async function countPlatformUserRows(): Promise<number> {
   const rows = await getDb().select({ value: count() }).from(platformUsers);
@@ -38,7 +81,12 @@ export async function countPlatformUserRows(): Promise<number> {
 
 export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
   const rows = await getDb().select().from(platformUsers).orderBy(asc(platformUsers.createdAt));
-  return rows.map(rowToStored);
+  return Promise.all(
+    rows.map(async (row) => {
+      const perms = await loadPermissions(row.id);
+      return rowToStored(row, perms);
+    }),
+  );
 }
 
 export async function findPlatformUserRowByEmail(email: string): Promise<StoredPlatformUser | null> {
@@ -48,14 +96,22 @@ export async function findPlatformUserRowByEmail(email: string): Promise<StoredP
     .from(platformUsers)
     .where(eq(platformUsers.email, normalized));
   const row = rows[0];
-  return row ? rowToStored(row) : null;
+  if (!row) return null;
+  const perms = await loadPermissions(row.id);
+  return rowToStored(row, perms);
 }
 
 export async function findPlatformUserRowById(id: string): Promise<StoredPlatformUser | null> {
   const rows = await getDb().select().from(platformUsers).where(eq(platformUsers.id, id));
   const row = rows[0];
-  return row ? rowToStored(row) : null;
+  if (!row) return null;
+  const perms = await loadPermissions(row.id);
+  return rowToStored(row, perms);
 }
+
+// ---------------------------------------------------------------------------
+// Writes
+// ---------------------------------------------------------------------------
 
 export async function insertPlatformUser(user: StoredPlatformUser): Promise<void> {
   const processedUser = applyTitleCaseRecursive(user) as StoredPlatformUser;
@@ -70,12 +126,13 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
     name: processedUser.name,
     passwordHash: processedUser.passwordHash,
     role: processedUser.role,
-    permissions,
     sessionVersion: processedUser.sessionVersion ?? 0,
     emailVerifiedAt: processedUser.emailVerifiedAt ? new Date(processedUser.emailVerifiedAt) : null,
     disabledAt: processedUser.disabledAt ? new Date(processedUser.disabledAt) : null,
     createdAt: new Date(processedUser.createdAt),
   });
+
+  await writePermissions(processedUser.id, permissions);
 }
 
 export async function updatePlatformUserRow(
@@ -122,13 +179,17 @@ export async function updatePlatformUserRow(
       name: next.name,
       passwordHash: next.passwordHash,
       role: next.role,
-      permissions: next.permissions,
       sessionVersion: next.sessionVersion,
       emailVerifiedAt: next.emailVerifiedAt ? new Date(next.emailVerifiedAt) : null,
       disabledAt: next.disabledAt ? new Date(next.disabledAt) : null,
       updatedAt: new Date(),
     })
     .where(eq(platformUsers.id, userId));
+
+  // Write permissions to child table if they changed.
+  if (processedPatch.permissions !== undefined || processedPatch.role !== undefined) {
+    await writePermissions(userId, next.permissions);
+  }
 
   return next;
 }
@@ -145,6 +206,7 @@ export async function updatePlatformUserPermissions(
 export async function deletePlatformUserRow(userId: string): Promise<boolean> {
   const existing = await findPlatformUserRowById(userId);
   if (!existing) return false;
+  // Child rows cascade-deleted by FK constraint.
   await getDb().delete(platformUsers).where(eq(platformUsers.id, userId));
   return true;
 }

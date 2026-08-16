@@ -3,14 +3,37 @@ import type {
   TeachersWidgetAggregateResult,
   TeachersWidgetQuery,
 } from '@mms/shared';
-import { teachers } from '../schema.js';
+import { teachers, contacts } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { jsonbFieldKeyLiteral } from './jsonbFieldUsage.js';
-
-const customDataSql = sql.raw('"teachers"."custom_data"');
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(teachers.workspaceSubdomain, subdomain), isNull(teachers.deletedAt))!;
+}
+
+function resolveTeacherFieldExpr(field: string): SQL {
+  const f = field.trim();
+  if (f === 'status') return sql`COALESCE(${teachers.status}, 'active')`;
+  if (f === 'employeeId' || f === 'employee_id') return sql`COALESCE(${teachers.employeeId}, '')`;
+  if (f === 'specialization') return sql`COALESCE(${teachers.specialization}, '')`;
+  if (f === 'qualification') return sql`COALESCE(${teachers.qualification}, '')`;
+  if (f === 'joinDate' || f === 'join_date') return sql`COALESCE(${teachers.joinDate}, '')`;
+  if (f === 'notes') return sql`COALESCE(${teachers.notes}, '')`;
+
+  // Linked contact fields
+  if (f === 'gender') {
+    return sql`COALESCE((SELECT c.gender FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;
+  }
+  if (f === 'dob') {
+    return sql`COALESCE((SELECT c.dob FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;
+  }
+  if (f === 'city') {
+    return sql`COALESCE((SELECT c.city FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;
+  }
+  if (f === 'name') {
+    return sql`COALESCE((SELECT COALESCE(NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''), c.name) FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;
+  }
+
+  return sql`''`;
 }
 
 function singleFilterSql(
@@ -20,19 +43,21 @@ function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
-  const safeField = jsonbFieldKeyLiteral(trimmedField);
+  const fieldExpr = resolveTeacherFieldExpr(trimmedField);
   const op = operator ?? 'equals';
+  const valNormalized = value.trim().toLowerCase();
+
   if (op === 'equals') {
-    return sql`lower(trim(COALESCE(${customDataSql}->>${safeField}, ''))) = ${value.trim().toLowerCase()}`;
+    return sql`lower(trim(${fieldExpr}::text)) = ${valNormalized}`;
   }
   if (op === 'contains') {
-    return sql`lower(COALESCE(${customDataSql}->>${safeField}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
+    return sql`lower(${fieldExpr}::text) LIKE ${`%${valNormalized}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric > ${Number(value)}`;
+    return sql`NULLIF(trim(${fieldExpr}::text), '')::numeric > ${Number(value)}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric < ${Number(value)}`;
+    return sql`NULLIF(trim(${fieldExpr}::text), '')::numeric < ${Number(value)}`;
   }
   return null;
 }
@@ -94,11 +119,11 @@ export async function aggregateTeachersWidgetQueries(
       } else if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const targetExpr = resolveTeacherFieldExpr(target);
           const aggRows = await tx
             .select({
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int`,
             })
             .from(teachers)
             .where(whereClause);
@@ -109,8 +134,8 @@ export async function aggregateTeachersWidgetQueries(
       }
 
       const xAxis = query.xAxisField?.trim() || 'status';
-      const safeXAxis = jsonbFieldKeyLiteral(xAxis);
-      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${customDataSql}->>${safeXAxis}), ''), 'Unknown')`;
+      const xAxisExpr = resolveTeacherFieldExpr(xAxis);
+      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisExpr}::text), ''), 'Unknown')`;
 
       const chartRows = await tx
         .select({
@@ -131,12 +156,12 @@ export async function aggregateTeachersWidgetQueries(
       if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const targetExpr = resolveTeacherFieldExpr(target);
           const numericChart = await tx
             .select({
               name: groupExpr,
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int`,
             })
             .from(teachers)
             .where(whereClause)

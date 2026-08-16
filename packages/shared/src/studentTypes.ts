@@ -45,5 +45,9 @@ export interface Student {
   deletedAt?: string;
   deletedBy?: string;
   deletionReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
   [key: string]: unknown;
 }

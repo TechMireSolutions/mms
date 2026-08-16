@@ -74,7 +74,10 @@ export interface Teacher {
   deletedAt?: string;
   deletedBy?: string;
   deletionReason?: string;
+  createdAt?: string;
   updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
   /** Custom Setup fields and other extension keys. */
   [key: string]: unknown;
 }

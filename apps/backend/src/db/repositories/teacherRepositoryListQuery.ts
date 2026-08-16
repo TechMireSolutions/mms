@@ -8,43 +8,43 @@ import {
   type TeachersListPageResult,
   type TeachersListQuery,
 } from '@mms/shared';
-import { teachers } from '../schema.js';
+import { teachers, contacts } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { teacherRowToRecord } from './teacherRepository.js';
 
 /** Shared status expression for Teachers list filters + metrics. */
 export function teacherStatusExpr(): SQL {
-  return sql`lower(trim(COALESCE(${teachers.customData}->>'status', ${DEFAULT_TEACHER_STATUS})))`;
+  return sql`lower(trim(COALESCE(${teachers.status}, ${DEFAULT_TEACHER_STATUS})))`;
 }
 
 function specializationExpr(): SQL {
-  return sql`trim(COALESCE(${teachers.customData}->>'specialization', ''))`;
+  return sql`trim(COALESCE(${teachers.specialization}, ''))`;
 }
 
 function employeeIdExpr(): SQL {
-  return sql`lower(trim(COALESCE(${teachers.customData}->>'employeeId', '')))`;
+  return sql`lower(trim(COALESCE(${teachers.employeeId}, '')))`;
 }
 
 /** Display name from linked contact for Work sort (Contacts SSOT). */
 function linkedContactNameSortExpr(): SQL {
   return sql`lower(trim(COALESCE((
     SELECT COALESCE(
-      NULLIF(trim(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')), ''),
-      NULLIF(trim(COALESCE(c.custom_data->>'name', '')), ''),
+      NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''),
+      NULLIF(trim(COALESCE(c.name, '')), ''),
       ''
     )
-    FROM contacts c
+    FROM ${contacts} c
     WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
       AND c.id = ${teachers.contactId}
     LIMIT 1
   ), '')))`;
 }
 
-/** Gender from linked contact (Contacts SSOT — not teachers custom_data). */
+/** Gender from linked contact (Contacts SSOT). */
 function linkedContactGenderExpr(): SQL {
   return sql`lower(trim(COALESCE((
-    SELECT c.custom_data->>'gender'
-    FROM contacts c
+    SELECT c.gender
+    FROM ${contacts} c
     WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
       AND c.id = ${teachers.contactId}
     LIMIT 1
@@ -56,17 +56,18 @@ function buildSearchSql(search: string): SQL | null {
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
   return sql`(
-    lower(COALESCE(${teachers.customData}->>'employeeId', '')) LIKE ${pattern}
-    OR lower(COALESCE(${teachers.customData}->>'specialization', '')) LIKE ${pattern}
+    lower(COALESCE(${teachers.employeeId}, '')) LIKE ${pattern}
+    OR lower(COALESCE(${teachers.specialization}, '')) LIKE ${pattern}
+    OR lower(COALESCE(${teachers.qualification}, '')) LIKE ${pattern}
     OR EXISTS (
-      SELECT 1 FROM contacts c
+      SELECT 1 FROM ${contacts} c
       WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
         AND c.id = ${teachers.contactId}
         AND (
-          lower(COALESCE(c.custom_data->>'name', '')) LIKE ${pattern}
-          OR lower(concat_ws(' ', c.custom_data->>'firstName', c.custom_data->>'lastName')) LIKE ${pattern}
-          OR lower(COALESCE(c.custom_data->>'firstName', '')) LIKE ${pattern}
-          OR lower(COALESCE(c.custom_data->>'lastName', '')) LIKE ${pattern}
+          lower(COALESCE(c.name, '')) LIKE ${pattern}
+          OR lower(concat_ws(' ', c.first_name, c.last_name)) LIKE ${pattern}
+          OR lower(COALESCE(c.first_name, '')) LIKE ${pattern}
+          OR lower(COALESCE(c.last_name, '')) LIKE ${pattern}
         )
     )
   )`;
@@ -99,9 +100,12 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
     const specSort = specializationExpr();
     return dir === 'desc' ? sql`${specSort} desc nulls last` : sql`${specSort} asc nulls last`;
   }
-  return dir === 'desc'
-    ? sql`${teachers.customData}->>${field} desc nulls last`
-    : sql`${teachers.customData}->>${field} asc nulls last`;
+  if (field === 'joinDate') {
+    return dir === 'desc'
+      ? sql`${teachers.joinDate} desc nulls last`
+      : sql`${teachers.joinDate} asc nulls last`;
+  }
+  return sql`${teachers.id} asc`;
 }
 
 function buildListConditions(subdomain: string, query: TeachersListQuery & { includeDeleted?: boolean }): SQL[] {
@@ -138,7 +142,7 @@ function buildListConditions(subdomain: string, query: TeachersListQuery & { inc
   const quickFilter = query.quickFilter;
   if (quickFilter && quickFilter !== 'all') {
     if (quickFilter === 'missingEmployeeId') {
-      conditions.push(sql`NULLIF(trim(COALESCE(${teachers.customData}->>'employeeId', '')), '') IS NULL`);
+      conditions.push(sql`NULLIF(trim(COALESCE(${teachers.employeeId}, '')), '') IS NULL`);
     } else {
       const statusValue = teachersQuickFilterStatusValue(quickFilter);
       if (statusValue) conditions.push(sql`${teacherStatusExpr()} = ${statusValue}`);
@@ -190,7 +194,7 @@ export async function listTeachersPage(
       .offset(offset);
 
     return {
-      teachers: rows.map((row) => teacherRowToRecord(row as never)) as Teacher[],
+      teachers: rows.map(teacherRowToRecord),
       total,
       page,
       limit,
@@ -234,7 +238,7 @@ export async function listActiveTeachersMissingEmployeeId(
         and(
           eq(teachers.workspaceSubdomain, subdomain),
           isNull(teachers.deletedAt),
-          sql`NULLIF(trim(COALESCE(${teachers.customData}->>'employeeId', '')), '') IS NULL`,
+          sql`NULLIF(trim(COALESCE(${teachers.employeeId}, '')), '') IS NULL`,
         ),
       )
       .orderBy(asc(teachers.id));
@@ -293,7 +297,7 @@ export async function findSoftDeletedTeacherByContactIdSql(
       )
       .limit(1);
     const row = rows[0];
-    return row ? teacherRowToRecord(row as never) : null;
+    return row ? teacherRowToRecord(row) : null;
   });
 }
 

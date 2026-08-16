@@ -39,12 +39,12 @@ export async function loadEnrollmentsReportAggregatesSql(
         ) AS d
       ),
       active AS (
-        SELECT NULLIF(trim(e.custom_data->>'enrolledDate'), '') AS enrolled_date
+        SELECT e.enrolled_date AS enrolled_date
         FROM enrollments e
         WHERE e.workspace_subdomain = ${subdomain}
           AND e.deleted_at IS NULL
-          AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') IS NOT NULL
-          AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') ~ '^[0-9]{4}'
+          AND e.enrolled_date IS NOT NULL
+          AND e.enrolled_date ~ '^[0-9]{4}'
       )
       SELECT
         m."monthKey",
@@ -66,7 +66,7 @@ export async function loadEnrollmentsReportAggregatesSql(
 
     const statusResult = await tx.execute(sql`
       SELECT
-        lower(trim(COALESCE(e.custom_data->>'status', ''))) AS status,
+        lower(trim(e.status)) AS status,
         count(*)::int AS count
       FROM enrollments e
       WHERE e.workspace_subdomain = ${subdomain}
@@ -96,8 +96,8 @@ export async function loadEnrollmentsReportAggregatesSql(
         COALESCE(
           sum(
             CASE
-              WHEN lower(trim(COALESCE(e.custom_data->>'status', ''))) <> 'cancelled'
-              THEN COALESCE((e.custom_data->>'finalFee')::numeric, 0)
+              WHEN lower(trim(e.status)) <> 'cancelled'
+              THEN e.final_fee::numeric
               ELSE 0
             END
           ),
@@ -106,8 +106,8 @@ export async function loadEnrollmentsReportAggregatesSql(
         COALESCE(
           sum(
             CASE
-              WHEN lower(trim(COALESCE(e.custom_data->>'paymentStatus', ''))) = 'paid'
-              THEN COALESCE((e.custom_data->>'finalFee')::numeric, 0)
+              WHEN lower(trim(e.payment_status)) = 'paid'
+              THEN e.final_fee::numeric
               ELSE 0
             END
           ),
@@ -126,14 +126,14 @@ export async function loadEnrollmentsReportAggregatesSql(
 
     const sessionResult = await tx.execute(sql`
       SELECT
-        trim(COALESCE(e.custom_data->>'sessionId', '')) AS "sessionId",
-        trim(COALESCE(e.custom_data->>'sessionName', '')) AS name,
+        e.session_id AS "sessionId",
+        e.session_name AS name,
         count(*)::int AS count,
         COALESCE(
           sum(
             CASE
-              WHEN lower(trim(COALESCE(e.custom_data->>'status', ''))) <> 'cancelled'
-              THEN COALESCE((e.custom_data->>'finalFee')::numeric, 0)
+              WHEN lower(trim(e.status)) <> 'cancelled'
+              THEN e.final_fee::numeric
               ELSE 0
             END
           ),
@@ -172,21 +172,21 @@ export async function loadEnrollmentsReportAggregatesSql(
       if (sessionIds.length > 0) {
         const compareSessionResult = await tx.execute(sql`
           SELECT
-            trim(COALESCE(e.custom_data->>'sessionId', '')) AS "sessionId",
+            e.session_id AS "sessionId",
             count(*)::int AS "enrollmentCount",
             coalesce(
-              array_agg(DISTINCT NULLIF(trim(e.custom_data->>'studentId'), ''))
-                FILTER (WHERE NULLIF(trim(e.custom_data->>'studentId'), '') IS NOT NULL),
+              array_agg(DISTINCT e.student_id)
+                FILTER (WHERE e.student_id IS NOT NULL AND e.student_id <> ''),
               '{}'::text[]
             ) AS "studentIds"
           FROM enrollments e
           WHERE e.workspace_subdomain = ${subdomain}
             AND e.deleted_at IS NULL
-            AND trim(COALESCE(e.custom_data->>'sessionId', '')) IN (${sql.join(
+            AND e.session_id IN (${sql.join(
               sessionIds.map((id) => sql`${id}`),
               sql`, `,
             )})
-            AND lower(trim(COALESCE(e.custom_data->>'status', ''))) <> 'cancelled'
+            AND lower(trim(e.status)) <> 'cancelled'
           GROUP BY 1
         `);
 
@@ -218,15 +218,15 @@ export async function loadEnrollmentsReportAggregatesSql(
         if (!from || !to) return [];
         const monthResult = await tx.execute(sql`
           SELECT
-            to_char(left(NULLIF(trim(e.custom_data->>'enrolledDate'), ''), 10)::date, 'YYYY-MM') AS "monthKey",
+            to_char(left(e.enrolled_date, 10)::date, 'YYYY-MM') AS "monthKey",
             count(*)::int AS count
           FROM enrollments e
           WHERE e.workspace_subdomain = ${subdomain}
             AND e.deleted_at IS NULL
-            AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') IS NOT NULL
-            AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-            AND left(NULLIF(trim(e.custom_data->>'enrolledDate'), ''), 10) >= ${from}
-            AND left(NULLIF(trim(e.custom_data->>'enrolledDate'), ''), 10) <= ${to}
+            AND e.enrolled_date IS NOT NULL
+            AND e.enrolled_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+            AND left(e.enrolled_date, 10) >= ${from}
+            AND left(e.enrolled_date, 10) <= ${to}
           GROUP BY 1
           ORDER BY 1 ASC
         `);

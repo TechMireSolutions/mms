@@ -5,7 +5,6 @@ import {
   isNotNull,
   isNull,
   or,
-  sql,
   asc,
   desc,
   type SQL,
@@ -17,7 +16,8 @@ import type {
 } from '@mms/shared';
 import { hasanatDistributions } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { mergeCustomData, runListPage } from './listPageHelper.js';
+import { runListPage } from './listPageHelper.js';
+import { distributionRowToRecord } from './hasanatRepository.js';
 
 function buildDistributionsListConditions(
   subdomain: string,
@@ -27,9 +27,9 @@ function buildDistributionsListConditions(
 
   // Manifest softDelete.workExcludesDeleted — Work = active, trash = deleted-only.
   if (query.includeDeleted) {
-    conditions.push(isNotNull(sql`(${hasanatDistributions.customData}->>'deletedAt')`));
+    conditions.push(isNotNull(hasanatDistributions.deletedAt));
   } else {
-    conditions.push(isNull(sql`(${hasanatDistributions.customData}->>'deletedAt')`));
+    conditions.push(isNull(hasanatDistributions.deletedAt));
   }
 
   const search = query.search?.trim();
@@ -37,16 +37,16 @@ function buildDistributionsListConditions(
     const pattern = `%${search}%`;
     conditions.push(
       or(
-        ilike(sql`(${hasanatDistributions.customData}->>'recipientName')`, pattern),
-        ilike(sql`(${hasanatDistributions.customData}->>'denominationName')`, pattern),
-        ilike(sql`(${hasanatDistributions.customData}->>'reason')`, pattern),
+        ilike(hasanatDistributions.recipientName, pattern),
+        ilike(hasanatDistributions.denominationName, pattern),
+        ilike(hasanatDistributions.reason, pattern),
       ) as SQL,
     );
   }
 
   const statuses = query.status?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
   if (statuses.length) {
-    conditions.push(inArray(sql`(${hasanatDistributions.customData}->>'status')`, statuses));
+    conditions.push(inArray(hasanatDistributions.status, statuses));
   }
 
   return conditions;
@@ -70,19 +70,19 @@ function buildDistributionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc')
         column = hasanatDistributions.updatedAt as unknown as SQL;
         break;
       case 'recipientName':
-        column = sql`(${hasanatDistributions.customData}->>'recipientName')`;
+        column = hasanatDistributions.recipientName as unknown as SQL;
         break;
       case 'denominationName':
-        column = sql`(${hasanatDistributions.customData}->>'denominationName')`;
+        column = hasanatDistributions.denominationName as unknown as SQL;
         break;
       case 'reason':
-        column = sql`(${hasanatDistributions.customData}->>'reason')`;
+        column = hasanatDistributions.reason as unknown as SQL;
         break;
       case 'status':
-        column = sql`(${hasanatDistributions.customData}->>'status')`;
+        column = hasanatDistributions.status as unknown as SQL;
         break;
       case 'issuedDate':
-        column = sql`(${hasanatDistributions.customData}->>'issuedDate')`;
+        column = hasanatDistributions.issuedDate as unknown as SQL;
         break;
       default:
         column = hasanatDistributions.updatedAt as unknown as SQL;
@@ -107,7 +107,7 @@ export async function listDistributionsPage(
       page: query.page,
       limit: query.limit,
       defaultPageSize: 15,
-      rowMapper: (row) => mergeCustomData(row) as unknown as Distribution,
+      rowMapper: distributionRowToRecord,
     });
     return {
       distributions: result.items,

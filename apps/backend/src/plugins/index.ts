@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ServerConfig } from '../config/serverConfig.js';
 import { registerErrorHandlers } from '../lib/errorHandler.js';
+import { registerCsrfOriginGuard } from './csrfOriginGuard.js';
 import { registerHttpPlugins } from './http.js';
 import { registerProductionHostGuard } from './productionHostGuard.js';
 import { registerRequestHooks } from './requestHooks.js';
@@ -13,6 +14,7 @@ export async function registerPlugins(
 ): Promise<void> {
   registerErrorHandlers(app, config.isProd);
   await registerSecurityPlugins(app);
+  registerCsrfOriginGuard(app, config);
   await registerHttpPlugins(app, config);
   registerProductionHostGuard(app, config);
   await registerStaticAssets(app);

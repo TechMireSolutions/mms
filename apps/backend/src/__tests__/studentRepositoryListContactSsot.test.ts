@@ -8,24 +8,20 @@ const listSrc = readFileSync(
 );
 
 describe('studentRepositoryList Contacts SSOT', () => {
-  it('filters and sorts gender/dob/name from linked contacts, not student custom_data', () => {
+  it('filters and sorts gender/dob/name from linked contacts, not student columns', () => {
     expect(listSrc).toContain('linkedContactGenderExpr');
     expect(listSrc).toContain('linkedContactDobExpr');
     expect(listSrc).toContain('linkedContactNameSortExpr');
-    expect(listSrc).toMatch(/SELECT c\.custom_data->>'gender'/);
-    expect(listSrc).toMatch(/SELECT c\.custom_data->>'dob'/);
-    expect(listSrc).toContain('FROM contacts c');
-    expect(listSrc).not.toMatch(/customData}->>'gender'/);
-    expect(listSrc).not.toMatch(/customData}->>'dob'/);
-    expect(listSrc).not.toMatch(/customData}->>'name'/);
+    expect(listSrc).toContain('SELECT c.gender');
+    expect(listSrc).toContain('SELECT c.dob');
+    expect(listSrc).toContain('FROM ${contacts} c');
+    expect(listSrc).not.toMatch(/students\.(gender|dob)/);
   });
 
-  it('searches contact display name and keeps student GR / studentId / cnic only', () => {
-    expect(listSrc).toContain("c.custom_data->>'name'");
+  it('searches contact display name and keeps student GR / studentId / cnic', () => {
+    expect(listSrc).toContain('lower(COALESCE(c.name, \'\'))');
     expect(listSrc).toContain("COALESCE(${students.grNumber}, '')");
-    expect(listSrc).toContain("customData}->>'studentId'");
-    expect(listSrc).toContain("customData}->>'cnic'");
-    expect(listSrc).not.toContain("customData}->>'fatherName'");
-    expect(listSrc).not.toContain("customData}->>'guardianName'");
+    expect(listSrc).toContain("COALESCE(${students.studentId}, '')");
+    expect(listSrc).toContain("COALESCE(c.cnic, '')");
   });
 });

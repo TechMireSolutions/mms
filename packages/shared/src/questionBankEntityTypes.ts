@@ -70,6 +70,9 @@ export interface QuestionBankTest {
   instructions?: string;
   /** Manual paper-builder sections and their selected question order. */
   sections?: QuestionBankPaperSection[];
+  deletedAt?: string | null;
+  deletedBy?: string | null;
+  deletionReason?: string | null;
 }
 
 export interface QuestionBankPaperSection {
@@ -87,4 +90,7 @@ export interface QuestionBankResult {
   submittedAt: string;
   answers: Record<string, string>;
   scores: Record<string, number>;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
+  deletionReason?: string | null;
 }

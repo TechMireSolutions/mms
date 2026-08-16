@@ -40,26 +40,50 @@ export const questionBookCitationSchema = z.object({
   citation: questionSourceReferenceSchema.partial(),
 });
 
-export const questionBankQuestionRecordSchema = z.object({
-  id: z.string(),
-  categoryIds: z.array(z.string()),
-  categoryId: z.string().optional(),
-  type: questionTypeSchema,
-  difficulty: questionDifficultySchema,
-  questionLanguage: z.enum(['en', 'ar', 'ur', 'fa']),
-  text: z.string(),
-  options: z.array(z.string()),
-  answer: z.string(),
-  marks: z.number().optional(),
-  tags: z.array(z.string()).optional(),
-  sourceCitations: z.array(questionBookCitationSchema).optional(),
-  sources: z.array(questionSourceReferenceSchema).optional(),
-  source: questionSourceReferenceSchema.optional(),
-  deletedAt: z.string().nullable().optional(),
-  deletedBy: z.string().nullable().optional(),
-  deletionReason: z.string().nullable().optional(),
-});
+export const questionBankQuestionRecordSchema = z
+  .object({
+    id: z.string(),
+    categoryIds: z.array(z.string()),
+    categoryId: z.string().optional(),
+    type: questionTypeSchema,
+    difficulty: questionDifficultySchema,
+    questionLanguage: z.enum(['en', 'ar', 'ur', 'fa']),
+    text: z.string(),
+    options: z.array(z.string()),
+    answer: z.string(),
+    marks: z.number().optional(),
+    tags: z.array(z.string()).optional(),
+    sourceCitations: z.array(questionBookCitationSchema).optional(),
+    sources: z.array(questionSourceReferenceSchema).optional(),
+    source: questionSourceReferenceSchema.optional(),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+    deletionReason: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
 
+export const questionBankQuestionInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    categoryIds: z.array(z.string()).min(1),
+    type: questionTypeSchema,
+    difficulty: questionDifficultySchema,
+    questionLanguage: z.enum(['en', 'ar', 'ur', 'fa']).default('en'),
+    text: z.string().min(1),
+    options: z.array(z.string()).default([]),
+    answer: z.string(),
+    marks: z.number().optional().default(1),
+    tags: z.array(z.string()).optional(),
+    sourceCitations: z.array(questionBookCitationSchema).optional(),
+  })
+  .strict();
+
+export const questionBankQuestionUpdateSchema = questionBankQuestionInsertSchema.partial().strict();
+
+export type QuestionBankQuestionInsert = z.infer<typeof questionBankQuestionInsertSchema>;
+export type QuestionBankQuestionUpdate = z.infer<typeof questionBankQuestionUpdateSchema>;
 export const questionBankQuestionListSchema = z.array(questionBankQuestionRecordSchema);
 
 /**
@@ -100,37 +124,98 @@ export const questionBankQuestionWriteSchema = z
     }
   });
 
-export const questionBankTestRecordSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  categoryId: z.string().nullable(),
-  questionIds: z.array(z.string()),
-  difficulty: z.enum(['easy', 'medium', 'hard', 'mixed']),
-  duration: z.number(),
-  createdAt: z.string(),
-  examClass: z.string().optional(),
-  totalMarks: z.number().optional(),
-  instructions: z.string().optional(),
-  sections: z.array(z.object({
+export const questionBankTestRecordSchema = z
+  .object({
     id: z.string(),
-    title: z.string(),
-    instructions: z.string(),
+    name: z.string(),
+    categoryId: z.string().nullable(),
     questionIds: z.array(z.string()),
-  })).optional(),
-});
+    difficulty: z.enum(['easy', 'medium', 'hard', 'mixed']),
+    duration: z.number(),
+    createdAt: z.string(),
+    updatedAt: z.string().optional(),
+    examClass: z.string().optional(),
+    totalMarks: z.number().optional(),
+    instructions: z.string().optional(),
+    sections: z
+      .array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          instructions: z.string(),
+          questionIds: z.array(z.string()),
+        }),
+      )
+      .optional(),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+    deletionReason: z.string().nullable().optional(),
+  })
+  .strict();
 
+export const questionBankTestInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(1),
+    categoryId: z.string().nullable().optional(),
+    questionIds: z.array(z.string()).default([]),
+    difficulty: z.enum(['easy', 'medium', 'hard', 'mixed']).default('mixed'),
+    duration: z.number().default(60),
+    examClass: z.string().optional(),
+    totalMarks: z.number().optional(),
+    instructions: z.string().optional(),
+    sections: z
+      .array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          instructions: z.string(),
+          questionIds: z.array(z.string()),
+        }),
+      )
+      .optional(),
+  })
+  .strict();
+
+export const questionBankTestUpdateSchema = questionBankTestInsertSchema.partial().strict();
+
+export type QuestionBankTestInsert = z.infer<typeof questionBankTestInsertSchema>;
+export type QuestionBankTestUpdate = z.infer<typeof questionBankTestUpdateSchema>;
 export const questionBankTestListSchema = z.array(questionBankTestRecordSchema);
 
-export const questionBankResultRecordSchema = z.object({
-  id: z.string(),
-  testId: z.string(),
-  studentId: z.string(),
-  studentName: z.string(),
-  submittedAt: z.string(),
-  answers: z.record(z.string(), z.string()),
-  scores: z.record(z.string(), z.number()),
-});
+export const questionBankResultRecordSchema = z
+  .object({
+    id: z.string(),
+    testId: z.string(),
+    studentId: z.string(),
+    studentName: z.string(),
+    submittedAt: z.string(),
+    answers: z.record(z.string(), z.string()).default({}),
+    scores: z.record(z.string(), z.number()).default({}),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+    deletionReason: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
 
+export const questionBankResultInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    testId: z.string(),
+    studentId: z.string(),
+    studentName: z.string().default(''),
+    submittedAt: z.string(),
+    answers: z.record(z.string(), z.string()).default({}),
+    scores: z.record(z.string(), z.number()).default({}),
+  })
+  .strict();
+
+export const questionBankResultUpdateSchema = questionBankResultInsertSchema.partial().strict();
+
+export type QuestionBankResultInsert = z.infer<typeof questionBankResultInsertSchema>;
+export type QuestionBankResultUpdate = z.infer<typeof questionBankResultUpdateSchema>;
 export const questionBankResultListSchema = z.array(questionBankResultRecordSchema);
 
 

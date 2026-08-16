@@ -1,70 +1,152 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 
-export const denomRecordSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  points: z.number(),
-  color: z.string(),
-  description: z.string(),
-  icon: z.string(),
-  active: z.boolean(),
-});
+export const denomRecordSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    points: z.number().default(0),
+    color: z.string().default('emerald'),
+    description: z.string().default(''),
+    icon: z.string().default('Star'),
+    active: z.boolean().default(true),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const denomRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(1, 'Name is required'),
+    points: z.number().nonnegative(),
+    color: z.string().optional().default('emerald'),
+    description: z.string().optional().default(''),
+    icon: z.string().optional().default('Star'),
+    active: z.boolean().optional().default(true),
+  })
+  .strict();
 
 export type Denomination = z.infer<typeof denomRecordSchema>;
+export type DenominationInsert = z.infer<typeof denomRecordInsertSchema>;
 export const denomListSchema = z.array(denomRecordSchema);
 
-export const batchRecordSchema = z.object({
-  id: z.string(),
-  denominationId: z.string(),
-  denominationName: z.string(),
-  quantity: z.number(),
-  remaining: z.number(),
-  addedDate: z.string(),
-  addedByUserId: z.string().optional(),
-  addedBy: z.string().optional(),
-  note: z.string(),
-});
+export const batchRecordSchema = z
+  .object({
+    id: z.string(),
+    denominationId: z.string(),
+    denominationName: z.string().default(''),
+    quantity: z.number().default(0),
+    remaining: z.number().default(0),
+    addedDate: z.string(),
+    addedByUserId: z.string().nullable().optional(),
+    addedBy: z.string().nullable().optional(),
+    note: z.string().default(''),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const batchRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    denominationId: z.string().min(1, 'Denomination is required'),
+    denominationName: z.string().optional().default(''),
+    quantity: z.number().positive('Quantity must be greater than 0'),
+    remaining: z.number().nonnegative().optional(),
+    addedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    addedByUserId: z.string().nullable().optional(),
+    addedBy: z.string().nullable().optional(),
+    note: z.string().optional().default(''),
+  })
+  .strict();
 
 export type StockBatch = z.infer<typeof batchRecordSchema>;
+export type StockBatchInsert = z.infer<typeof batchRecordInsertSchema>;
 export const batchListSchema = z.array(batchRecordSchema);
 
-export const distributionRecordSchema = z.object({
-  id: z.string(),
-  batchId: z.string(),
-  denominationId: z.string(),
-  denominationName: z.string(),
-  recipientType: z.enum(['student', 'faculty']),
-  recipientStudentId: z.string().optional(),
-  recipientTeacherId: z.string().optional(),
-  recipientName: z.string().optional(),
-  recipientClass: z.string(),
-  quantity: z.number(),
-  reason: z.string(),
-  issuedDate: z.string(),
-  issuedByUserId: z.string().optional(),
-  issuedBy: z.string().optional(),
-  status: z.enum(['active', 'redeemed', 'returned']),
-  deletedAt: z.string().optional(),
-  deletedBy: z.string().optional(),
-  deletionReason: z.string().optional(),
-});
+export const distributionRecordSchema = z
+  .object({
+    id: z.string(),
+    batchId: z.string(),
+    denominationId: z.string(),
+    denominationName: z.string().default(''),
+    recipientType: z.enum(['student', 'faculty']).default('student'),
+    recipientStudentId: z.string().nullable().optional(),
+    recipientTeacherId: z.string().nullable().optional(),
+    recipientName: z.string().optional().default(''),
+    recipientClass: z.string().default(''),
+    quantity: z.number().default(1),
+    reason: z.string().default(''),
+    issuedDate: z.string(),
+    issuedByUserId: z.string().nullable().optional(),
+    issuedBy: z.string().nullable().optional(),
+    status: z.enum(['active', 'redeemed', 'returned']).default('active'),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+    deletionReason: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const distributionRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    batchId: z.string().min(1, 'Batch is required'),
+    denominationId: z.string().min(1, 'Denomination is required'),
+    denominationName: z.string().optional().default(''),
+    recipientType: z.enum(['student', 'faculty']).default('student'),
+    recipientStudentId: z.string().nullable().optional(),
+    recipientTeacherId: z.string().nullable().optional(),
+    recipientName: z.string().optional().default(''),
+    recipientClass: z.string().optional().default(''),
+    quantity: z.number().positive().default(1),
+    reason: z.string().optional().default(''),
+    issuedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Issued date must be YYYY-MM-DD'),
+    issuedByUserId: z.string().nullable().optional(),
+    issuedBy: z.string().nullable().optional(),
+    status: z.enum(['active', 'redeemed', 'returned']).optional().default('active'),
+  })
+  .strict();
+
+export const distributionRecordUpdateSchema = distributionRecordInsertSchema.partial().strict();
 
 export type Distribution = z.infer<typeof distributionRecordSchema>;
+export type DistributionInsert = z.infer<typeof distributionRecordInsertSchema>;
+export type DistributionUpdate = z.infer<typeof distributionRecordUpdateSchema>;
 export const distributionListSchema = z.array(distributionRecordSchema);
 
-export const redemptionRecordSchema = z.object({
-  id: z.string(),
-  distributionId: z.string(),
-  studentName: z.string().optional(),
-  reward: z.string(),
-  pointsUsed: z.number(),
-  date: z.string(),
-  approvedByUserId: z.string().optional(),
-  approvedBy: z.string().optional(),
-});
+export const redemptionRecordSchema = z
+  .object({
+    id: z.string(),
+    distributionId: z.string(),
+    studentName: z.string().optional().default(''),
+    reward: z.string().default(''),
+    pointsUsed: z.number().default(0),
+    date: z.string(),
+    approvedByUserId: z.string().nullable().optional(),
+    approvedBy: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const redemptionRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    distributionId: z.string().min(1, 'Distribution is required'),
+    studentName: z.string().optional().default(''),
+    reward: z.string().min(1, 'Reward is required'),
+    pointsUsed: z.number().nonnegative().default(0),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    approvedByUserId: z.string().nullable().optional(),
+    approvedBy: z.string().nullable().optional(),
+  })
+  .strict();
 
 export type Redemption = z.infer<typeof redemptionRecordSchema>;
+export type RedemptionInsert = z.infer<typeof redemptionRecordInsertSchema>;
 export const redemptionListSchema = z.array(redemptionRecordSchema);
 
 /** Hasanat Cards module manifest — aligns with globle1 universal module architecture. */

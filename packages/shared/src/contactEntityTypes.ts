@@ -97,6 +97,7 @@ export interface Contact {
   cnic?: string;
   isSyed?: boolean;
   avatar?: string | null;
+  notes?: string;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
@@ -109,6 +110,15 @@ export interface Contact {
   preferredLanguage?: 'en' | 'ur' | 'ar' | 'fa';
   preferredContactMethod?: 'whatsapp' | 'sms' | 'email' | 'phone_call';
   doNotContact?: boolean;
+  whatsappStatus?: WhatsAppStatus | 'unknown';
+  lastCheckedAt?: string | null;
+  phone?: string;
+  email?: string;
+  line1?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
 
   phones?: PhoneNumber[];
   emails?: EmailAddress[];

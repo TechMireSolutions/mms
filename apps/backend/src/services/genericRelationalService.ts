@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import type { ZodType } from 'zod';
-import type { ListByWorkspaceOptions } from '../db/repositories/genericRepository.js';
+
+export type SoftDeleteListFilter = 'active' | 'deleted' | 'all';
+
+export interface ListByWorkspaceOptions {
+  deleted?: SoftDeleteListFilter;
+  includeDeleted?: boolean;
+}
 
 interface SoftDeleteFields {
   deletedAt?: string | null;

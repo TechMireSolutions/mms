@@ -6,8 +6,6 @@ import {
   Terminal,
   Calendar,
   Search,
-  ChevronDown,
-  ChevronRight,
   Trash2,
   PlusCircle,
   RefreshCw,
@@ -22,7 +20,6 @@ import { WidgetCardHeader } from '@/components/ui/WidgetCardHeader';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { cn } from '@/lib/utils';
@@ -50,7 +47,6 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
   const { t } = useTranslation();
   const { data: logs, isLoading, isError, refetch } = usePlatformActivityLogs();
   const [filterQuery, setFilterQuery] = useState('');
-  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
   const items = useMemo(() => {
     const raw = logs ?? [];
@@ -60,6 +56,9 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
       (l) =>
         l.action.toLowerCase().includes(q) ||
         l.userEmail.toLowerCase().includes(q) ||
+        (l.targetResource && l.targetResource.toLowerCase().includes(q)) ||
+        (l.targetId && l.targetId.toLowerCase().includes(q)) ||
+        (l.metadataMessage && l.metadataMessage.toLowerCase().includes(q)) ||
         (l.ipAddress && l.ipAddress.toLowerCase().includes(q))
     );
   }, [logs, filterQuery]);
@@ -113,8 +112,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
             {items.map((log) => {
               const { tone, Icon } = getActionMeta(log.action);
               const formattedDate = formatDate(log.createdAt);
-              const isExpanded = expandedLogId === log.id;
-              const hasDetails = log.details && Object.keys(log.details).length > 0;
+              const hasMetadata = Boolean(log.metadataMessage || log.targetResource || log.targetId);
 
               return (
                 <div key={log.id} className="relative group">
@@ -129,6 +127,12 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
                         <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase tracking-wider', tone)}>
                           {log.action.replace(/_/g, ' ')}
                         </span>
+
+                        {log.targetResource && (
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-muted text-muted-foreground border border-border/40">
+                            {log.targetResource}{log.targetId ? `: ${log.targetId}` : ''}
+                          </span>
+                        )}
 
                         <span className="text-xs font-bold text-foreground flex items-center gap-1">
                           <User className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
@@ -150,24 +154,11 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
                       </div>
                     </div>
 
-                    {hasDetails && (
+                    {hasMetadata && log.metadataMessage && (
                       <div className="pt-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
-                          className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground gap-1"
-                        >
-                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                          {isExpanded ? t('common.close') : t('common.readMore')}
-                        </Button>
-
-                        {isExpanded && (
-                          <pre className="mt-2 p-3 rounded-lg bg-muted/70 border border-border/50 text-[11px] font-mono text-foreground overflow-x-auto">
-                            {JSON.stringify(log.details, null, 2)}
-                          </pre>
-                        )}
+                        <p className="text-xs text-muted-foreground bg-muted/40 rounded-lg p-2 border border-border/30 font-mono">
+                          {log.metadataMessage}
+                        </p>
                       </div>
                     )}
                   </div>

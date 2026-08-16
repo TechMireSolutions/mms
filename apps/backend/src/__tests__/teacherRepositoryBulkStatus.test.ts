@@ -34,7 +34,7 @@ describe('bulkUpdateTeachersStatusSql', () => {
     expect(update).toHaveBeenCalledTimes(1);
     expect(set).toHaveBeenCalledWith(
       expect.objectContaining({
-        customData: expect.anything(),
+        status: 'inactive',
         updatedAt: expect.any(Date),
       }),
     );

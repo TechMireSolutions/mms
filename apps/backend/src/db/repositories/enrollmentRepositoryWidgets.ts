@@ -5,12 +5,34 @@ import type {
 } from '@mms/shared';
 import { enrollments } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { jsonbFieldKeyLiteral } from './jsonbFieldUsage.js';
-
-const customDataSql = sql.raw('"enrollments"."custom_data"');
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(enrollments.workspaceSubdomain, subdomain), isNull(enrollments.deletedAt))!;
+}
+
+const FIELD_TO_SQL_COLUMN: Record<string, string> = {
+  studentName: 'student_name',
+  studentId: 'student_id',
+  sessionName: 'session_name',
+  sessionId: 'session_id',
+  className: 'class_name',
+  classId: 'class_id',
+  status: 'status',
+  paymentStatus: 'payment_status',
+  enrolledDate: 'enrolled_date',
+  baseFee: 'base_fee',
+  discountType: 'discount_type',
+  discountLabel: 'discount_label',
+  discountPct: 'discount_pct',
+  discountAmt: 'discount_amt',
+  finalFee: 'final_fee',
+  invoiceId: 'invoice_id',
+  notes: 'notes',
+};
+
+function resolveSqlColumn(field: string): SQL {
+  const col = FIELD_TO_SQL_COLUMN[field] ?? 'status';
+  return sql.raw(`"enrollments"."${col}"`);
 }
 
 function singleFilterSql(
@@ -20,19 +42,19 @@ function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
-  const safeField = jsonbFieldKeyLiteral(trimmedField);
+  const colSql = resolveSqlColumn(trimmedField);
   const op = operator ?? 'equals';
   if (op === 'equals') {
-    return sql`lower(trim(COALESCE(${customDataSql}->>${safeField}, ''))) = ${value.trim().toLowerCase()}`;
+    return sql`lower(trim(${colSql}::text)) = ${value.trim().toLowerCase()}`;
   }
   if (op === 'contains') {
-    return sql`lower(COALESCE(${customDataSql}->>${safeField}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
+    return sql`lower(${colSql}::text) LIKE ${`%${value.trim().toLowerCase()}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric > ${Number(value)}`;
+    return sql`${colSql}::numeric > ${Number(value)}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric < ${Number(value)}`;
+    return sql`${colSql}::numeric < ${Number(value)}`;
   }
   return null;
 }
@@ -80,11 +102,11 @@ export async function aggregateEnrollmentsWidgetQueries(
       } else if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const targetColSql = resolveSqlColumn(target);
           const aggRows = await tx
             .select({
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(${targetColSql}::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE ${targetColSql} IS NOT NULL)::int`,
             })
             .from(enrollments)
             .where(whereClause);
@@ -95,8 +117,8 @@ export async function aggregateEnrollmentsWidgetQueries(
       }
 
       const xAxis = query.xAxisField?.trim() || 'status';
-      const safeXAxis = jsonbFieldKeyLiteral(xAxis);
-      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${customDataSql}->>${safeXAxis}), ''), 'Unknown')`;
+      const xAxisColSql = resolveSqlColumn(xAxis);
+      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisColSql}::text), ''), 'Unknown')`;
 
       const chartRows = await tx
         .select({
@@ -117,12 +139,12 @@ export async function aggregateEnrollmentsWidgetQueries(
       if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const targetColSql = resolveSqlColumn(target);
           const numericChart = await tx
             .select({
               name: groupExpr,
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(${targetColSql}::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE ${targetColSql} IS NOT NULL)::int`,
             })
             .from(enrollments)
             .where(whereClause)

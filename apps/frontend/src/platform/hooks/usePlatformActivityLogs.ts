@@ -7,8 +7,10 @@ export interface PlatformActivityLogItem {
   userId: string | null;
   userEmail: string;
   action: string;
-  details: Record<string, unknown>;
+  targetResource: string | null;
+  targetId: string | null;
   ipAddress: string | null;
+  metadataMessage: string | null;
   createdAt: string;
 }
 

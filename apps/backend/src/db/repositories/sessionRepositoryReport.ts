@@ -18,27 +18,24 @@ export async function loadSessionsReportAggregatesSql(
     const capacityResult = await tx.execute(sql`
       SELECT
         s.id AS "sessionId",
-        COALESCE(cls.value->>'id', '') AS "classId",
-        COALESCE(s.custom_data->>'name', '') AS session,
-        COALESCE(cls.value->>'name', '') AS class,
-        COALESCE((cls.value->>'enrolled')::int, 0) AS enrolled,
-        COALESCE((cls.value->>'capacity')::int, 0) AS capacity,
+        c.id AS "classId",
+        s.name AS session,
+        c.name AS class,
+        c.enrolled AS enrolled,
+        c.capacity AS capacity,
         CASE
-          WHEN COALESCE((cls.value->>'capacity')::int, 0) > 0
-            THEN ROUND(
-              (COALESCE((cls.value->>'enrolled')::int, 0)::numeric
-                / COALESCE((cls.value->>'capacity')::int, 0)::numeric) * 100
-            )::int
+          WHEN c.capacity > 0
+            THEN ROUND((c.enrolled::numeric / c.capacity::numeric) * 100)::int
           ELSE 0
         END AS rate,
-        COALESCE(s.custom_data->>'status', '') AS status
+        s.status AS status
       FROM sessions s
-      CROSS JOIN LATERAL jsonb_array_elements(
-        COALESCE(s.custom_data->'classes', '[]'::jsonb)
-      ) AS cls(value)
+      INNER JOIN session_classes c
+        ON c.workspace_subdomain = s.workspace_subdomain
+        AND c.session_id = s.id
       WHERE s.workspace_subdomain = ${subdomain}
         AND s.deleted_at IS NULL
-      ORDER BY session ASC, class ASC
+      ORDER BY s.name ASC, c.name ASC
     `);
 
     const trendResult = await tx.execute(sql`
@@ -47,20 +44,21 @@ export async function loadSessionsReportAggregatesSql(
           to_char(
             date_trunc(
               'month',
-              (NULLIF(trim(e.custom_data->>'enrolledDate'), ''))::timestamp
+              (NULLIF(trim(e.enrolled_date), ''))::timestamp
             ),
             'YYYY-MM'
           ) AS "monthKey",
-          NULLIF(trim(COALESCE(s.custom_data->>'name', '')), '') AS "sessionName",
+          NULLIF(trim(s.name), '') AS "sessionName",
           count(*)::int AS cnt
         FROM enrollments e
         LEFT JOIN sessions s
           ON s.workspace_subdomain = e.workspace_subdomain
-          AND s.id = e.custom_data->>'sessionId'
+          AND s.id = e.session_id
           AND s.deleted_at IS NULL
         WHERE e.workspace_subdomain = ${subdomain}
-          AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') IS NOT NULL
-          AND NULLIF(trim(e.custom_data->>'enrolledDate'), '') ~ '^[0-9]{4}'
+          AND e.deleted_at IS NULL
+          AND NULLIF(trim(e.enrolled_date), '') IS NOT NULL
+          AND NULLIF(trim(e.enrolled_date), '') ~ '^[0-9]{4}'
         GROUP BY 1, 2
       ),
       totals AS (
@@ -88,39 +86,33 @@ export async function loadSessionsReportAggregatesSql(
 
     const todayResult = await tx.execute(sql`
       SELECT
-        (s.id || '-' || COALESCE(cls.value->>'id', cls.ordinality::text)) AS id,
-        (
-          COALESCE(s.custom_data->>'name', '')
-          || ' – '
-          || COALESCE(cls.value->>'name', '')
-        ) AS name,
-        COALESCE(NULLIF(trim(cls.value->>'teacherName'), ''), '') AS teacher,
+        (s.id || '-' || c.id) AS id,
+        (s.name || ' – ' || c.name) AS name,
+        COALESCE(NULLIF(trim(c.teacher_name), ''), '') AS teacher,
         CASE
-          WHEN match_tt.tt IS NOT NULL
-            THEN COALESCE(match_tt.tt->>'startTime', '')
-              || ' - '
-              || COALESCE(match_tt.tt->>'endTime', '')
+          WHEN tt.id IS NOT NULL
+            THEN tt.start_time || ' - ' || tt.end_time
           ELSE ''
         END AS time,
-        COALESCE(cls.value->>'room', '') AS room,
-        COALESCE((cls.value->>'enrolled')::int, 0) AS students,
-        CASE WHEN match_tt.tt IS NOT NULL THEN 'live' ELSE 'upcoming' END AS status
+        COALESCE(c.room, '') AS room,
+        c.enrolled AS students,
+        CASE WHEN tt.id IS NOT NULL THEN 'live' ELSE 'upcoming' END AS status
       FROM sessions s
-      CROSS JOIN LATERAL jsonb_array_elements(
-        COALESCE(s.custom_data->'classes', '[]'::jsonb)
-      ) WITH ORDINALITY AS cls(value, ordinality)
+      INNER JOIN session_classes c
+        ON c.workspace_subdomain = s.workspace_subdomain
+        AND c.session_id = s.id
       LEFT JOIN LATERAL (
-        SELECT tt.value AS tt
-        FROM jsonb_array_elements(
-          COALESCE(s.custom_data->'timetable', '[]'::jsonb)
-        ) AS tt(value)
-        WHERE tt.value->>'day' = ${todayKey}
-          AND tt.value->>'location' = COALESCE(cls.value->>'room', '')
+        SELECT t.id, t.start_time, t.end_time
+        FROM session_timetable t
+        WHERE t.workspace_subdomain = s.workspace_subdomain
+          AND t.session_id = s.id
+          AND t.day = ${todayKey}
+          AND (t.location = c.room OR c.room IS NULL OR c.room = '')
         LIMIT 1
-      ) AS match_tt ON true
+      ) AS tt ON true
       WHERE s.workspace_subdomain = ${subdomain}
         AND s.deleted_at IS NULL
-        AND lower(trim(COALESCE(s.custom_data->>'status', ''))) = 'active'
+        AND lower(trim(s.status)) = 'active'
       ORDER BY name ASC
     `);
 

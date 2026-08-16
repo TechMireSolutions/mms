@@ -1,40 +1,81 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 
-export const enrollmentTimelineItemSchema = z.object({
-  ts: z.string(),
-  event: z.string(),
-  by: z.string(),
-});
+export const ENROLLMENT_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed'] as const;
+export type EnrollmentStatus = (typeof ENROLLMENT_STATUSES)[number];
+
+export const ENROLLMENT_PAYMENT_STATUSES = ['paid', 'pending', 'none'] as const;
+export type EnrollmentPaymentStatus = (typeof ENROLLMENT_PAYMENT_STATUSES)[number];
+
+export const enrollmentTimelineItemSchema = z
+  .object({
+    id: z.number().optional(),
+    ts: z.string(),
+    event: z.string(),
+    by: z.string(),
+  })
+  .strict();
 
 export type EnrollmentTimelineItem = z.infer<typeof enrollmentTimelineItemSchema>;
 
-export const enrollmentRecordSchema = z.object({
-  id: z.string(),
-  studentId: z.string(),
-  studentName: z.string(),
-  sessionId: z.string(),
-  sessionName: z.string(),
-  classId: z.string(),
-  className: z.string(),
-  enrolledDate: z.string(),
-  baseFee: z.number(),
-  discountType: z.string(),
-  discountLabel: z.string(),
-  discountPct: z.number(),
-  discountAmt: z.number(),
-  finalFee: z.number(),
-  status: z.enum(["pending", "confirmed", "cancelled", "completed"]),
-  invoiceId: z.string().nullable(),
-  paymentStatus: z.enum(["paid", "pending", "none"]),
-  notes: z.string(),
-  timeline: z.array(enrollmentTimelineItemSchema),
-  deletedAt: z.string().optional(),
-  deletedBy: z.string().optional(),
-  deletionReason: z.string().optional(),
-});
+export const enrollmentRecordSchema = z
+  .object({
+    id: z.string(),
+    studentId: z.string(),
+    studentName: z.string().optional().default(''),
+    sessionId: z.string(),
+    sessionName: z.string().optional().default(''),
+    classId: z.string(),
+    className: z.string().optional().default(''),
+    enrolledDate: z.string(),
+    baseFee: z.number().default(0),
+    discountType: z.string().optional().default('none'),
+    discountLabel: z.string().optional().default(''),
+    discountPct: z.number().default(0),
+    discountAmt: z.number().default(0),
+    finalFee: z.number().default(0),
+    status: z.enum(ENROLLMENT_STATUSES).default('pending'),
+    invoiceId: z.string().nullable().optional(),
+    paymentStatus: z.enum(ENROLLMENT_PAYMENT_STATUSES).default('none'),
+    notes: z.string().optional().default(''),
+    timeline: z.array(enrollmentTimelineItemSchema).optional().default([]),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+    deletionReason: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const enrollmentRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    studentId: z.string().min(1, 'Student is required'),
+    studentName: z.string().optional().default(''),
+    sessionId: z.string().min(1, 'Session is required'),
+    sessionName: z.string().optional().default(''),
+    classId: z.string().min(1, 'Class is required'),
+    className: z.string().optional().default(''),
+    enrolledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enrolled date must be YYYY-MM-DD'),
+    baseFee: z.number().nonnegative().optional().default(0),
+    discountType: z.string().optional().default('none'),
+    discountLabel: z.string().optional().default(''),
+    discountPct: z.number().min(0).max(100).optional().default(0),
+    discountAmt: z.number().nonnegative().optional().default(0),
+    finalFee: z.number().nonnegative().optional().default(0),
+    status: z.enum(ENROLLMENT_STATUSES).optional().default('pending'),
+    invoiceId: z.string().nullable().optional(),
+    paymentStatus: z.enum(ENROLLMENT_PAYMENT_STATUSES).optional().default('none'),
+    notes: z.string().optional().default(''),
+    timeline: z.array(enrollmentTimelineItemSchema).optional().default([]),
+  })
+  .strict();
+
+export const enrollmentRecordUpdateSchema = enrollmentRecordInsertSchema.partial().strict();
 
 export type Enrollment = z.infer<typeof enrollmentRecordSchema>;
+export type EnrollmentInsert = z.infer<typeof enrollmentRecordInsertSchema>;
+export type EnrollmentUpdate = z.infer<typeof enrollmentRecordUpdateSchema>;
 export const enrollmentListSchema = z.array(enrollmentRecordSchema);
 
 /** Enrollments module manifest — aligns with globle1 universal module architecture. */

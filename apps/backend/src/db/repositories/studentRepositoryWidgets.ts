@@ -1,17 +1,46 @@
-import { and, eq, isNull, ne, sql, type SQL } from 'drizzle-orm';
+import { and, eq, isNull, isNotNull, ne, sql, type SQL } from 'drizzle-orm';
 import type {
   StudentsWidgetAggregateResult,
   StudentsWidgetQuery,
 } from '@mms/shared';
-import { students } from '../schema.js';
+import { students, contacts, contactEmails } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { studentRowToRecord } from './studentRepository.js';
-import { jsonbFieldKeyLiteral } from './jsonbFieldUsage.js';
-
-const customDataSql = sql.raw('"students"."custom_data"');
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt))!;
+}
+
+function resolveStudentFieldExpr(field: string): SQL {
+  const f = field.trim();
+  if (f === 'status') return sql`COALESCE(${students.status}, 'active')`;
+  if (f === 'grNumber' || f === 'gr_number') return sql`COALESCE(${students.grNumber}, '')`;
+  if (f === 'studentId' || f === 'student_id') return sql`COALESCE(${students.studentId}, '')`;
+  if (f === 'registeredDate' || f === 'registered_date') return sql`COALESCE(${students.registeredDate}, '')`;
+  if (f === 'enrollmentDate' || f === 'enrollment_date') return sql`COALESCE(${students.enrollmentDate}, '')`;
+  if (f === 'discountType' || f === 'discount_type') return sql`COALESCE(${students.discountType}, '')`;
+  if (f === 'discountPct' || f === 'discount_pct') return sql`COALESCE(${students.discountPct}, 0)`;
+  if (f === 'registrationType' || f === 'registration_type') return sql`COALESCE(${students.registrationType}, '')`;
+  if (f === 'notes') return sql`COALESCE(${students.notes}, '')`;
+  if (f === 'fatherName' || f === 'father_name') return sql`COALESCE(${students.fatherName}, '')`;
+  if (f === 'motherName' || f === 'mother_name') return sql`COALESCE(${students.motherName}, '')`;
+  if (f === 'guardianName' || f === 'guardian_name') return sql`COALESCE(${students.guardianName}, '')`;
+
+  // Linked contact fields
+  if (f === 'gender') {
+    return sql`COALESCE((SELECT c.gender FROM ${contacts} c WHERE c.workspace_subdomain = ${students.workspaceSubdomain} AND c.id = ${students.contactId} LIMIT 1), '')`;
+  }
+  if (f === 'dob') {
+    return sql`COALESCE((SELECT c.dob FROM ${contacts} c WHERE c.workspace_subdomain = ${students.workspaceSubdomain} AND c.id = ${students.contactId} LIMIT 1), '')`;
+  }
+  if (f === 'city') {
+    return sql`COALESCE((SELECT c.city FROM ${contacts} c WHERE c.workspace_subdomain = ${students.workspaceSubdomain} AND c.id = ${students.contactId} LIMIT 1), '')`;
+  }
+  if (f === 'name') {
+    return sql`COALESCE((SELECT COALESCE(NULLIF(trim(concat_ws(' ', c.first_name, c.last_name)), ''), c.name) FROM ${contacts} c WHERE c.workspace_subdomain = ${students.workspaceSubdomain} AND c.id = ${students.contactId} LIMIT 1), '')`;
+  }
+
+  return sql`''`;
 }
 
 function singleFilterSql(
@@ -21,19 +50,21 @@ function singleFilterSql(
 ): SQL | null {
   const trimmedField = field?.trim();
   if (!trimmedField || value == null || value === '') return null;
-  const safeField = jsonbFieldKeyLiteral(trimmedField);
+  const fieldExpr = resolveStudentFieldExpr(trimmedField);
   const op = operator ?? 'equals';
+  const valNormalized = value.trim().toLowerCase();
+
   if (op === 'equals') {
-    return sql`lower(trim(COALESCE(${customDataSql}->>${safeField}, ''))) = ${value.trim().toLowerCase()}`;
+    return sql`lower(trim(${fieldExpr}::text)) = ${valNormalized}`;
   }
   if (op === 'contains') {
-    return sql`lower(COALESCE(${customDataSql}->>${safeField}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
+    return sql`lower(${fieldExpr}::text) LIKE ${`%${valNormalized}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric > ${Number(value)}`;
+    return sql`NULLIF(${fieldExpr}::text, '')::numeric > ${Number(value)}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(${customDataSql}->>${safeField}, '')::numeric < ${Number(value)}`;
+    return sql`NULLIF(${fieldExpr}::text, '')::numeric < ${Number(value)}`;
   }
   return null;
 }
@@ -95,11 +126,11 @@ export async function aggregateStudentsWidgetQueries(
       } else if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const targetExpr = resolveStudentFieldExpr(target);
           const aggRows = await tx
             .select({
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(NULLIF(${targetExpr}::text, '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(${targetExpr}::text, '') IS NOT NULL)::int`,
             })
             .from(students)
             .where(whereClause);
@@ -110,8 +141,8 @@ export async function aggregateStudentsWidgetQueries(
       }
 
       const xAxis = query.xAxisField?.trim() || 'status';
-      const safeXAxis = jsonbFieldKeyLiteral(xAxis);
-      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${customDataSql}->>${safeXAxis}), ''), 'Unknown')`;
+      const xAxisExpr = resolveStudentFieldExpr(xAxis);
+      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisExpr}::text), ''), 'Unknown')`;
 
       const chartRows = await tx
         .select({
@@ -132,12 +163,12 @@ export async function aggregateStudentsWidgetQueries(
       if (query.operation === 'sum' || query.operation === 'avg') {
         const target = query.targetField?.trim() || '';
         if (target) {
-          const safeTarget = jsonbFieldKeyLiteral(target);
+          const targetExpr = resolveStudentFieldExpr(target);
           const numericChart = await tx
             .select({
               name: groupExpr,
-              sum: sql<number>`coalesce(sum(NULLIF(${customDataSql}->>${safeTarget}, '')::numeric), 0)`,
-              count: sql<number>`count(*) FILTER (WHERE NULLIF(${customDataSql}->>${safeTarget}, '') IS NOT NULL)::int`,
+              sum: sql<number>`coalesce(sum(NULLIF(${targetExpr}::text, '')::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE NULLIF(${targetExpr}::text, '') IS NOT NULL)::int`,
             })
             .from(students)
             .where(whereClause)
@@ -210,7 +241,7 @@ export async function countStudentsForNextGrNumber(
         and(
           base,
           sql`(
-            COALESCE(${students.customData}->>'registeredDate', '') LIKE ${`${yearStr}%`}
+            COALESCE(${students.registeredDate}, '') LIKE ${`${yearStr}%`}
             OR COALESCE(${students.grNumber}, '') LIKE ${`%${yearStr}%`}
           )`,
         ),
@@ -262,7 +293,16 @@ export async function findStudentRegistrationConflictSql(
         .where(
           and(
             ...baseConditions,
-            sql`lower(trim(COALESCE(${students.customData}->>'email', ''))) = ${email}`,
+            sql`EXISTS (
+              SELECT 1 FROM ${contacts} c
+              LEFT JOIN ${contactEmails} ce ON ce.workspace_subdomain = c.workspace_subdomain AND ce.contact_id = c.id
+              WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
+                AND c.id = ${students.contactId}
+                AND (
+                  lower(trim(COALESCE(c.email, ''))) = ${email}
+                  OR lower(trim(COALESCE(ce.address, ''))) = ${email}
+                )
+            )`,
           ),
         )
         .limit(1);
@@ -293,8 +333,16 @@ export async function findStudentRegistrationConflictSql(
         .where(
           and(
             ...baseConditions,
-            sql`lower(trim(COALESCE(${students.customData}->>'name', ''))) = ${name}`,
-            sql`NULLIF(trim(${students.customData}->>'dob'), '') = ${dob}`,
+            sql`EXISTS (
+              SELECT 1 FROM ${contacts} c
+              WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
+                AND c.id = ${students.contactId}
+                AND (
+                  lower(trim(COALESCE(c.name, ''))) = ${name}
+                  OR lower(trim(concat_ws(' ', c.first_name, c.last_name))) = ${name}
+                )
+                AND NULLIF(trim(c.dob), '') = ${dob}
+            )`,
           ),
         )
         .limit(1);
@@ -325,7 +373,7 @@ export async function findSoftDeletedStudentByContactIdSql(
         and(
           eq(students.workspaceSubdomain, subdomain),
           eq(students.contactId, trimmedContactId),
-          sql`${students.deletedAt} is not null`,
+          isNotNull(students.deletedAt),
         ),
       )
       .limit(1);

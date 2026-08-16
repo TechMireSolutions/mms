@@ -59,11 +59,9 @@ export default async function platformUsersRoutes(
       userId: platformUser.id,
       userEmail: platformUser.email,
       action: 'create_admin',
-      details: {
-        adminEmail: email,
-        adminName: name.trim(),
-        permissions,
-      },
+      targetResource: 'admin',
+      targetId: stored.id,
+      metadataMessage: `Created admin ${email}`,
       ipAddress: request.ip,
     });
 
@@ -83,11 +81,9 @@ export default async function platformUsersRoutes(
       userId: platformUser.id,
       userEmail: platformUser.email,
       action: 'update_admin_permissions',
-      details: {
-        adminId: params.data.id,
-        adminEmail: user.email,
-        permissions: parsed.data.permissions,
-      },
+      targetResource: 'admin',
+      targetId: params.data.id,
+      metadataMessage: `Updated permissions for ${user.email}`,
       ipAddress: request.ip,
     });
 
@@ -119,11 +115,9 @@ export default async function platformUsersRoutes(
         userId: platformUser.id,
         userEmail: platformUser.email,
         action: parsed.data.disabled ? 'disable_admin' : 'enable_admin',
-        details: {
-          adminId: params.data.id,
-          adminEmail: user.email,
-          disabled: parsed.data.disabled,
-        },
+        targetResource: 'admin',
+        targetId: params.data.id,
+        metadataMessage: `${parsed.data.disabled ? 'Disabled' : 'Enabled'} admin ${user.email}`,
         ipAddress: request.ip,
       });
 
@@ -152,7 +146,8 @@ export default async function platformUsersRoutes(
         userId: platformUser.id,
         userEmail: platformUser.email,
         action: 'delete_admin',
-        details: { adminId: params.data.id },
+        targetResource: 'admin',
+        targetId: params.data.id,
         ipAddress: request.ip,
       });
 

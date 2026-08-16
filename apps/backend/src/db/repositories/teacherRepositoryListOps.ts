@@ -10,7 +10,7 @@ import { withTenantTransaction } from '../withTenantTransaction.js';
 import { teacherStatusExpr } from './teacherRepositoryListQuery.js';
 
 /**
- * Set `custom_data.status` for active teachers in one UPDATE.
+ * Set typed `status` for active teachers in one UPDATE.
  * Returns how many rows were updated; callers treat missing/deleted ids as failed.
  */
 export async function bulkUpdateTeachersStatusSql(
@@ -27,12 +27,7 @@ export async function bulkUpdateTeachersStatusSql(
     const updated = await tx
       .update(teachers)
       .set({
-        customData: sql`jsonb_set(
-          COALESCE(${teachers.customData}, '{}'::jsonb),
-          '{status}',
-          to_jsonb(${normalizedStatus}::text),
-          true
-        )`,
+        status: normalizedStatus,
         updatedAt: new Date(),
       })
       .where(
@@ -55,8 +50,8 @@ export async function aggregateTeachersCommandMetrics(
   const subdomain = tenant.trim().toLowerCase();
   return withTenantTransaction(subdomain, async (tx) => {
     const joinDateRaw = sql`NULLIF(trim(COALESCE(
-      ${teachers.customData}->>'joinDate',
-      ${teachers.customData}->>'createdAt',
+      ${teachers.joinDate},
+      to_char(${teachers.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
       ''
     )), '')`;
     const status = teacherStatusExpr();

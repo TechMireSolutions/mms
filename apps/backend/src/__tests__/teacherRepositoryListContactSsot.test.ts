@@ -19,15 +19,14 @@ describe('teacherRepositoryList Contacts SSOT', () => {
   it('sorts and searches display name from linked contacts via typed contactId', () => {
     expect(listQuerySrc).toContain('linkedContactNameSortExpr');
     expect(listQuerySrc).toContain('buildSearchSql');
-    expect(listQuerySrc).toMatch(/FROM contacts c/);
+    expect(listQuerySrc).toContain('FROM ${contacts} c');
     expect(listQuerySrc).toContain('teachers.contactId');
-    expect(listQuerySrc).toContain("c.custom_data->>'name'");
-    expect(listQuerySrc).not.toMatch(/customData}->>'name'/);
-    expect(listQuerySrc).not.toMatch(/customData}->>'contactId'/);
+    expect(listQuerySrc).toContain('c.name');
+    expect(listQuerySrc).not.toMatch(/teachers\.(name|gender)/);
   });
 
-  it('filters employeeId and specialization from teacher row JSONB', () => {
-    expect(listQuerySrc).toContain("customData}->>'employeeId'");
+  it('filters employeeId and specialization from typed teacher columns', () => {
+    expect(listQuerySrc).toContain('COALESCE(${teachers.employeeId}');
     expect(listQuerySrc).toContain('specializationExpr');
     expect(listOpsSrc).toContain('aggregateTeachersCommandMetrics');
     expect(listBarrelSrc).toContain('aggregateTeachersCommandMetrics');
@@ -35,9 +34,8 @@ describe('teacherRepositoryList Contacts SSOT', () => {
 
   it('filters gender from the linked contact and supports quickFilter presets', () => {
     expect(listQuerySrc).toContain('linkedContactGenderExpr');
-    expect(listQuerySrc).toMatch(/FROM contacts c/);
-    expect(listQuerySrc).toContain("c.custom_data->>'gender'");
-    expect(listQuerySrc).not.toMatch(/customData}->>'gender'/);
+    expect(listQuerySrc).toContain('FROM ${contacts} c');
+    expect(listQuerySrc).toContain('c.gender');
     expect(listQuerySrc).toContain('missingEmployeeId');
     expect(listQuerySrc).toContain('teacherStatusExpr()');
     expect(listQuerySrc).toContain('teachersQuickFilterStatusValue');
@@ -46,7 +44,7 @@ describe('teacherRepositoryList Contacts SSOT', () => {
 
   it('lists active teachers missing an employee id for backfill', () => {
     expect(listQuerySrc).toContain('listActiveTeachersMissingEmployeeId');
-    expect(listQuerySrc).toMatch(/NULLIF\(trim\(COALESCE\(\$\{teachers\.customData\}->>'employeeId', ''\)\), ''\) IS NULL/);
+    expect(listQuerySrc).toContain('NULLIF(trim(COALESCE(${teachers.employeeId}, \'\')), \'\') IS NULL');
     expect(listBarrelSrc).toContain('listActiveTeachersMissingEmployeeId');
   });
 });

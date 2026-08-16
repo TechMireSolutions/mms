@@ -25,15 +25,12 @@ async function main() {
   const demoContacts = rows.filter(r => r.workspaceSubdomain === 'demo');
   
   demoContacts.forEach((r, idx) => {
-    const d = (r.customData || {}) as Record<string, any>;
     console.log(`[#${idx + 1}] ID: ${r.id}`);
-    console.log(`  Name: ${d.name || 'N/A'} (First: "${d.firstName || ''}", Last: "${d.lastName || ''}")`);
-    console.log(`  Gender: ${d.gender || 'N/A'} | DOB: ${d.dob || 'N/A'} | Syed Lineage: ${d.isSyed ? 'Yes' : 'No'}`);
-    console.log(`  Phones: ${JSON.stringify(d.phones || [])}`);
-    console.log(`  Emails: ${JSON.stringify(d.emails || [])}`);
-    console.log(`  Addresses: ${JSON.stringify(d.addresses || [])}`);
-    console.log(`  Location: City="${d.city || ''}", State="${d.state || ''}", Country="${d.country || ''}"`);
-    console.log(`  Notes: ${d.notes || 'None'}`);
+    console.log(`  Name: ${r.name} (First: "${r.firstName}", Last: "${r.lastName || ''}")`);
+    console.log(`  Gender: ${r.gender || 'N/A'} | DOB: ${r.dob || 'N/A'} | Syed Lineage: ${r.isSyed ? 'Yes' : 'No'}`);
+    console.log(`  Phone: ${r.phone || 'N/A'} | Email: ${r.email || 'N/A'}`);
+    console.log(`  Location: City="${r.city || ''}", State="${r.state || ''}", Country="${r.country || ''}"`);
+    console.log(`  Notes: ${r.notes || 'None'}`);
     console.log(`  Soft Deleted: ${r.deletedAt ? `Yes (${r.deletedAt})` : 'No'}`);
     console.log('----------------------------------------------------');
   });

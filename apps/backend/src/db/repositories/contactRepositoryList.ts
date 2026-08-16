@@ -1,19 +1,18 @@
-import { and, eq, inArray, isNotNull, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
+import { and, desc, asc, eq, inArray, isNotNull, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
 import {
   normalizeSearchString,
   type ContactsListPageResult,
   type ContactsListQuery,
 } from '@mms/shared';
-import { contacts, students, teachers, tenantUsers } from '../schema.js';
+import { contacts, students, teachers, tenantUsers, contactEmails, contactAddresses } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import {
   hasEmailSql,
   hasPhoneSql,
   hasWhatsAppSql,
-  jsonbArrayOrEmpty,
   primaryPhoneDigitsSql,
 } from './contactRepositorySql.js';
-import { contactRepo, hydrateContact } from './contactRepositoryCore.js';
+import { hydrateContactsList } from './contactRepositoryCore.js';
 
 const TEACHER_USER_ROLES_SQL = sql`('teacher', 'assistant_teacher')`;
 
@@ -56,7 +55,7 @@ const CONTACT_SORT_FIELDS = new Set([
 ]);
 
 function isSyedSql(): SQL {
-  return sql`COALESCE((${contacts.customData}->>'isSyed')::boolean, false) = true`;
+  return sql`${contacts.isSyed} IS TRUE`;
 }
 
 /**
@@ -90,28 +89,32 @@ function buildSearchSql(search: string): SQL | null {
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
   const haystack = sql`concat_ws(' ',
-      COALESCE(${contacts.customData}->>'name', ''),
-      COALESCE(${contacts.customData}->>'firstName', ''),
-      COALESCE(${contacts.customData}->>'lastName', ''),
-      COALESCE(${contacts.customData}->>'city', ''),
-      COALESCE(${contacts.customData}->>'phone', ''),
-      COALESCE(${contacts.customData}->>'email', ''),
+      COALESCE(${contacts.name}, ''),
+      COALESCE(${contacts.firstName}, ''),
+      COALESCE(${contacts.lastName}, ''),
+      COALESCE(${contacts.city}, ''),
+      COALESCE(${contacts.phone}, ''),
+      COALESCE(${contacts.email}, ''),
       NULLIF(${primaryPhoneDigitsSql()}, ''),
       COALESCE((
-        SELECT string_agg(NULLIF(trim(email.value->>'address'), ''), ' ')
-        FROM jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
+        SELECT string_agg(NULLIF(trim(e.address), ''), ' ')
+        FROM ${contactEmails} e
+        WHERE e.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND e.contact_id = ${contacts.id}
       ), ''),
       COALESCE((
         SELECT string_agg(
           concat_ws(' ',
-            NULLIF(trim(addr.value->>'city'), ''),
-            NULLIF(trim(addr.value->>'state'), ''),
-            NULLIF(trim(addr.value->>'country'), ''),
-            NULLIF(trim(addr.value->>'line1'), '')
+            NULLIF(trim(a.city), ''),
+            NULLIF(trim(a.state), ''),
+            NULLIF(trim(a.country), ''),
+            NULLIF(trim(a.line1), '')
           ),
           ' '
         )
-        FROM jsonb_array_elements(${jsonbArrayOrEmpty('addresses')}) AS addr(value)
+        FROM ${contactAddresses} a
+        WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND a.contact_id = ${contacts.id}
       ), '')
     )`;
   return sql`(${sqlNormalizeSearchExpr(haystack)} LIKE ${pattern})`;
@@ -124,12 +127,27 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
     return sql`${contacts.id} asc`;
   }
   if (field === 'updatedAt') {
-    return dir === 'desc' ? sql`${contacts.updatedAt} desc nulls last` : sql`${contacts.updatedAt} asc nulls last`;
+    return dir === 'desc' ? desc(contacts.updatedAt) : asc(contacts.updatedAt);
   }
-  const jsonKey = field;
-  return dir === 'desc'
-    ? sql`${contacts.customData}->>${jsonKey} desc nulls last`
-    : sql`${contacts.customData}->>${jsonKey} asc nulls last`;
+  if (field === 'createdAt') {
+    return dir === 'desc' ? desc(contacts.createdAt) : asc(contacts.createdAt);
+  }
+  if (field === 'name') {
+    return dir === 'desc' ? desc(contacts.name) : asc(contacts.name);
+  }
+  if (field === 'firstName') {
+    return dir === 'desc' ? desc(contacts.firstName) : asc(contacts.firstName);
+  }
+  if (field === 'lastName') {
+    return dir === 'desc' ? desc(contacts.lastName) : asc(contacts.lastName);
+  }
+  if (field === 'city') {
+    return dir === 'desc' ? desc(contacts.city) : asc(contacts.city);
+  }
+  if (field === 'gender') {
+    return dir === 'desc' ? desc(contacts.gender) : asc(contacts.gender);
+  }
+  return sql`${contacts.id} asc`;
 }
 
 function buildListConditions(
@@ -150,11 +168,11 @@ function buildListConditions(
     const genderFilter = query.gender.trim().toLowerCase();
     if (genderFilter === 'unspecified') {
       conditions.push(sql`(
-        NULLIF(trim(lower(COALESCE(${contacts.customData}->>'gender', ''))), '') IS NULL
-        OR lower(trim(${contacts.customData}->>'gender')) = 'unspecified'
+        NULLIF(trim(lower(COALESCE(${contacts.gender}, ''))), '') IS NULL
+        OR lower(trim(${contacts.gender})) = 'unspecified'
       )`);
     } else {
-      conditions.push(sql`lower(trim(COALESCE(${contacts.customData}->>'gender', ''))) = ${genderFilter}`);
+      conditions.push(sql`lower(trim(COALESCE(${contacts.gender}, ''))) = ${genderFilter}`);
     }
   }
 
@@ -175,10 +193,7 @@ function buildListConditions(
     else if (quick === 'missingInfo') {
       conditions.push(sql`(NOT ${hasPhoneSql()} OR NOT ${hasEmailSql()})`);
     } else if (quick === 'recent') {
-      conditions.push(sql`(
-        NULLIF(trim(COALESCE(${contacts.customData}->>'createdAt', '')), '') IS NOT NULL
-        AND (${contacts.customData}->>'createdAt')::timestamptz >= (NOW() - INTERVAL '30 days')
-      )`);
+      conditions.push(sql`${contacts.createdAt} >= (NOW() - INTERVAL '30 days')`);
     }
   }
 
@@ -218,7 +233,7 @@ function buildListConditions(
 }
 
 /**
- * SQL-filtered contacts Work list page (soft-delete column + JSONB person filters).
+ * SQL-filtered contacts Work list page (typed columns & relational search/joins).
  * Search approximates normalizeSearchString (NFD + Yeh/Kaf + harakat) via SQL.
  */
 export async function listContactsPage(
@@ -258,7 +273,7 @@ export async function listContactsPage(
       .limit(limit)
       .offset(offset);
 
-    const pageContacts = rows.map((row) => hydrateContact(contactRepo.rowToRecord(row)));
+    const pageContacts = await hydrateContactsList(tx, subdomain, rows);
     return {
       contacts: pageContacts,
       total,

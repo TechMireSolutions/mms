@@ -6,34 +6,79 @@ import type { Permission } from './permissions.js';
 import { z } from 'zod';
 
 /** Zod schema for single Exam record. */
-export const examRecordSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  subject: z.string(),
-  totalMarks: z.number().default(100),
-  passingMarks: z.number().default(50),
-  date: z.string(),
-  duration: z.number().default(60),
-  classIds: z.array(z.string()).default([]),
-  status: z.enum(["completed", "scheduled", "cancelled", "upcoming", "ongoing"]).default("upcoming"),
-  description: z.string().default(""),
-  deletedAt: z.string().optional(),
-  deletedBy: z.string().optional(),
-  deletionReason: z.string().optional(),
-}).strict();
+export const examRecordSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    subject: z.string().default(''),
+    totalMarks: z.number().default(100),
+    passingMarks: z.number().default(50),
+    date: z.string(),
+    duration: z.number().default(60),
+    classIds: z.array(z.string()).default([]),
+    status: z
+      .enum(['completed', 'scheduled', 'cancelled', 'upcoming', 'ongoing'])
+      .default('upcoming'),
+    description: z.string().default(''),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+    deletionReason: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const examRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(1, 'Exam name is required'),
+    subject: z.string().optional().default(''),
+    totalMarks: z.number().positive().default(100),
+    passingMarks: z.number().nonnegative().default(50),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    duration: z.number().positive().default(60),
+    classIds: z.array(z.string()).optional().default([]),
+    status: z
+      .enum(['completed', 'scheduled', 'cancelled', 'upcoming', 'ongoing'])
+      .optional()
+      .default('upcoming'),
+    description: z.string().optional().default(''),
+  })
+  .strict();
+
+export const examRecordUpdateSchema = examRecordInsertSchema.partial().strict();
 
 export type Exam = z.infer<typeof examRecordSchema>;
+export type ExamInsert = z.infer<typeof examRecordInsertSchema>;
+export type ExamUpdate = z.infer<typeof examRecordUpdateSchema>;
 export const examListSchema = z.array(examRecordSchema);
 
 /** Zod schema for single Exam Result entry. */
-export const examResultRecordSchema = z.object({
-  id: z.string(),
-  examId: z.string(),
-  studentId: z.string(),
-  marksObtained: z.number(),
-}).strict();
+export const examResultRecordSchema = z
+  .object({
+    id: z.string(),
+    examId: z.string(),
+    studentId: z.string(),
+    marksObtained: z.number().default(0),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const examResultRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    examId: z.string().min(1, 'Exam ID is required'),
+    studentId: z.string().min(1, 'Student ID is required'),
+    marksObtained: z.number().nonnegative().default(0),
+  })
+  .strict();
+
+export const examResultRecordUpdateSchema = examResultRecordInsertSchema.partial().strict();
 
 export type ExamResult = z.infer<typeof examResultRecordSchema>;
+export type ExamResultInsert = z.infer<typeof examResultRecordInsertSchema>;
+export type ExamResultUpdate = z.infer<typeof examResultRecordUpdateSchema>;
 export const examResultListSchema = z.array(examResultRecordSchema);
 
 /** Examinations module manifest — aligns with MMS universal module architecture. */

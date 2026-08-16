@@ -1,7 +1,10 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 
-const attendanceStatusSchema = z.enum(['present', 'absent', 'late', 'excused']);
+export const ATTENDANCE_RECORD_STATUSES = ['present', 'absent', 'late', 'excused'] as const;
+export type AttendanceRecordStatus = (typeof ATTENDANCE_RECORD_STATUSES)[number];
+
+export const attendanceRecordStatusSchema = z.enum(ATTENDANCE_RECORD_STATUSES);
 
 export const attendanceRecordSchema = z
   .object({
@@ -10,24 +13,79 @@ export const attendanceRecordSchema = z
     date: z.string(),
     studentId: z.string(),
     studentName: z.string().optional().default(''),
-    rollNo: z.string(),
-    status: attendanceStatusSchema,
-    timeIn: z.string(),
-    timeOut: z.string(),
-    notes: z.string(),
+    rollNo: z.string().optional().default(''),
+    status: attendanceRecordStatusSchema,
+    timeIn: z.string().optional().default(''),
+    timeOut: z.string().optional().default(''),
+    notes: z.string().optional().default(''),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
   })
-  .passthrough();
+  .strict();
+
+export const attendanceRecordInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    classId: z.string().min(1, 'Class / Session is required'),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    studentId: z.string().min(1, 'Student is required'),
+    studentName: z.string().optional().default(''),
+    rollNo: z.string().optional().default(''),
+    status: attendanceRecordStatusSchema.default('present'),
+    timeIn: z.string().optional().default(''),
+    timeOut: z.string().optional().default(''),
+    notes: z.string().optional().default(''),
+  })
+  .strict();
+
+export const attendanceRecordUpdateSchema = attendanceRecordInsertSchema.partial().strict();
 
 export const attendanceListSchema = z.array(attendanceRecordSchema);
 
-export const attendanceBulkSchema = z.object({
-  records: attendanceListSchema,
-});
+export const attendanceBulkSchema = z
+  .object({
+    records: attendanceListSchema,
+  })
+  .strict();
+
+export const ATTENDANCE_LEAVE_STATUSES = ['pending', 'approved', 'rejected'] as const;
+export type AttendanceLeaveStatus = (typeof ATTENDANCE_LEAVE_STATUSES)[number];
+
+export const attendanceLeaveSchema = z
+  .object({
+    id: z.string(),
+    studentId: z.string().min(1),
+    fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    reason: z.string().min(1),
+    status: z.enum(ATTENDANCE_LEAVE_STATUSES).default('pending'),
+    approvedBy: z.string().nullable().optional(),
+    approvedAt: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .strict();
+
+export const attendanceLeaveInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    studentId: z.string().min(1, 'Student is required'),
+    fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'From date must be YYYY-MM-DD'),
+    toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'To date must be YYYY-MM-DD'),
+    reason: z.string().min(1, 'Reason is required'),
+    notes: z.string().optional().default(''),
+  })
+  .strict();
 
 export type AttendanceRecord = z.infer<typeof attendanceRecordSchema>;
+export type AttendanceRecordInsert = z.infer<typeof attendanceRecordInsertSchema>;
+export type AttendanceRecordUpdate = z.infer<typeof attendanceRecordUpdateSchema>;
+export type AttendanceLeave = z.infer<typeof attendanceLeaveSchema>;
+export type AttendanceLeaveInsert = z.infer<typeof attendanceLeaveInsertSchema>;
 
 
 /** Attendance module manifest — aligns with globle1 universal module architecture. */

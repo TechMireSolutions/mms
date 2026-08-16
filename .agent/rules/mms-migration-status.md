@@ -16,7 +16,7 @@ trigger: model_decision
 | **Live Push & Aggregates** | Closed: Contacts/Students/Teachers/Sessions/Enrollments WS invalidate + SQL aggregates. Residual: other module emit/subscribe, comparison mode dumps. | WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`). |
 | **PG Statement Budgets** | Tenant budgets shipped on `withTenantTransaction` + `runInTransaction`. | Route-level tighter budgets for hot paths (`mms-data-layer.md`). |
 | **Contacts Full Loads** | Closed: SQL metrics, candidate match, blocked duplicate scans. Residual: niche chart dumps. | SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`). |
-| **CSRF / Origin Gate** | Mutations rely on `SameSite=Lax` + CORS. | Strict Origin / `Sec-Fetch-Site` header checks on all cookie writes (`mms-auth-security.md`). |
+| **CSRF / Origin Gate** | Closed: `registerCsrfOriginGuard` enforces `Sec-Fetch-Site: same-origin|same-site|none`, origin validation, and `application/json` mutation media types. | Strict Origin / `Sec-Fetch-Site` header checks on all cookie writes (`mms-auth-security.md`). |
 | **SQL Pagination** | Closed: Teachers, Users, Sessions, Enrollments, Finance, Accounting SQL-page. Residual: remaining in-memory paged lists. | Server SQL `LIMIT`/`OFFSET` via `contactsListQuerySchema` (`mms-data-layer.md`). |
 
 ## Regressions: Do Not Reintroduce

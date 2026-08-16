@@ -1,64 +1,60 @@
 import { sql, type SQL } from 'drizzle-orm';
-import { contacts } from '../schema.js';
-import { jsonbCustomDataFieldNonEmptySql } from './jsonbFieldUsage.js';
+import { contacts, contactPhones, contactEmails } from '../schema.js';
 
-/** JSONB array path, or empty array when missing/non-array (avoids jsonb_array_elements errors). */
-export function jsonbArrayOrEmpty(field: 'phones' | 'emails' | 'addresses'): SQL {
-  return sql`(CASE
-    WHEN jsonb_typeof(${contacts.customData}->${field}) = 'array'
-    THEN ${contacts.customData}->${field}
-    ELSE '[]'::jsonb
-  END)`;
-}
-
-/** Primary dialable phone digits: phones[] (isPrimary first) then scalar phone. */
+/** Primary dialable phone digits: contact_phones (isPrimary first) then scalar phone. */
 export function primaryPhoneDigitsSql(): SQL {
   return sql`COALESCE(
     NULLIF((
       SELECT regexp_replace(
         CASE
-          WHEN NULLIF(trim(phone.value->>'number'), '') LIKE '+%'
-            THEN trim(phone.value->>'number')
+          WHEN NULLIF(trim(p.number), '') LIKE '+%'
+            THEN trim(p.number)
           ELSE concat_ws(
             '',
-            NULLIF(trim(phone.value->>'countryCode'), ''),
-            NULLIF(trim(phone.value->>'number'), '')
+            NULLIF(trim(p.country_code), ''),
+            NULLIF(trim(p.number), '')
           )
         END,
         '[^0-9]',
         '',
         'g'
       )
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-      WHERE NULLIF(trim(phone.value->>'number'), '') IS NOT NULL
-      ORDER BY CASE WHEN COALESCE((phone.value->>'isPrimary')::boolean, false) THEN 0 ELSE 1 END
+      FROM ${contactPhones} p
+      WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain}
+        AND p.contact_id = ${contacts.id}
+        AND NULLIF(trim(p.number), '') IS NOT NULL
+      ORDER BY CASE WHEN p.is_primary THEN 0 ELSE 1 END, p.sort_order ASC
       LIMIT 1
     ), ''),
-    NULLIF(regexp_replace(COALESCE(${contacts.customData}->>'phone', ''), '[^0-9]', '', 'g'), ''),
+    NULLIF(regexp_replace(COALESCE(${contacts.phone}, ''), '[^0-9]', '', 'g'), ''),
     ''
   )`;
 }
 
-/** True when contact has a non-empty primary/legacy phone number in JSONB. */
+/** True when contact has a non-empty primary/legacy phone number. */
 export function hasPhoneSql(): SQL {
   return sql`(
-    NULLIF(trim(COALESCE(${contacts.customData}->>'phone', '')), '') IS NOT NULL
+    NULLIF(trim(COALESCE(${contacts.phone}, '')), '') IS NOT NULL
     OR EXISTS (
       SELECT 1
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-      WHERE NULLIF(trim(phone.value->>'number'), '') IS NOT NULL
+      FROM ${contactPhones} p
+      WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain}
+        AND p.contact_id = ${contacts.id}
+        AND NULLIF(trim(p.number), '') IS NOT NULL
     )
   )`;
 }
 
-/** True when contact has a non-empty primary/legacy email in JSONB. */
+/** True when contact has a non-empty primary/legacy email. */
 export function hasEmailSql(): SQL {
   return sql`(
-    NULLIF(trim(COALESCE(${contacts.customData}->>'email', '')), '') IS NOT NULL
+    NULLIF(trim(COALESCE(${contacts.email}, '')), '') IS NOT NULL
     OR EXISTS (
       SELECT 1
-      FROM jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
-      WHERE NULLIF(trim(email.value->>'address'), '') IS NOT NULL
+      FROM ${contactEmails} e
+      WHERE e.workspace_subdomain = ${contacts.workspaceSubdomain}
+        AND e.contact_id = ${contacts.id}
+        AND NULLIF(trim(e.address), '') IS NOT NULL
     )
   )`;
 }
@@ -72,9 +68,45 @@ export function hasWhatsAppSql(): SQL {
 }
 
 /**
- * Non-empty custom_data value for a field key — mirrors
- * `@mms/shared` `countContactsWithFieldValue` (string trim, array length, other types count).
+ * Non-empty value for a field key on typed contacts table.
  */
 export function contactFieldNonEmptySql(fieldKey: string): SQL {
-  return jsonbCustomDataFieldNonEmptySql(contacts.customData, fieldKey);
+  switch (fieldKey) {
+    case 'firstName':
+      return sql`NULLIF(trim(${contacts.firstName}), '') IS NOT NULL`;
+    case 'lastName':
+      return sql`NULLIF(trim(${contacts.lastName}), '') IS NOT NULL`;
+    case 'name':
+      return sql`NULLIF(trim(${contacts.name}), '') IS NOT NULL`;
+    case 'gender':
+      return sql`NULLIF(trim(${contacts.gender}), '') IS NOT NULL`;
+    case 'dob':
+      return sql`NULLIF(trim(${contacts.dob}), '') IS NOT NULL`;
+    case 'cnic':
+      return sql`NULLIF(trim(${contacts.cnic}), '') IS NOT NULL`;
+    case 'isSyed':
+      return sql`${contacts.isSyed} IS TRUE`;
+    case 'avatar':
+      return sql`NULLIF(trim(${contacts.avatar}), '') IS NOT NULL`;
+    case 'notes':
+      return sql`NULLIF(trim(${contacts.notes}), '') IS NOT NULL`;
+    case 'phone':
+    case 'phones':
+      return hasPhoneSql();
+    case 'email':
+    case 'emails':
+      return hasEmailSql();
+    case 'address':
+    case 'addresses':
+    case 'line1':
+      return sql`NULLIF(trim(${contacts.line1}), '') IS NOT NULL`;
+    case 'city':
+      return sql`NULLIF(trim(${contacts.city}), '') IS NOT NULL`;
+    case 'state':
+      return sql`NULLIF(trim(${contacts.state}), '') IS NOT NULL`;
+    case 'country':
+      return sql`NULLIF(trim(${contacts.country}), '') IS NOT NULL`;
+    default:
+      return sql`true`;
+  }
 }

@@ -1,18 +1,15 @@
-import { and, eq, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
 import type { Contact } from '@mms/shared';
-import { contacts } from '../schema.js';
+import { contacts, contactPhones, contactEmails } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import {
-  jsonbArrayOrEmpty,
-} from './contactRepositorySql.js';
-import { contactRepo, hydrateContact } from './contactRepositoryCore.js';
+import { hydrateContactsList } from './contactRepositoryCore.js';
 
 export interface ContactUniqueLookupValues {
-  /** Digits-only phone numbers to match against phones[] / scalar phone. */
+  /** Digits-only phone numbers to match against contact_phones / scalar phone. */
   phoneDigits: string[];
-  /** Lowercased email addresses to match against emails[] / scalar email. */
+  /** Lowercased email addresses to match against contact_emails / scalar email. */
   emails: string[];
-  /** Scalar unique fields: JSONB text equality after lower(trim). */
+  /** Scalar unique fields: typed column text equality after lower(trim). */
   scalars: Array<{ fieldKey: string; normalized: string }>;
 }
 
@@ -33,21 +30,35 @@ export async function findExistingNormalizedContactNames(
   return withTenantTransaction(subdomain, async (tx) => {
     const rows = await tx
       .select({
-        name: sql<string>`lower(trim(COALESCE(${contacts.customData}->>'name', '')))`,
+        name: sql<string>`lower(trim(${contacts.name}))`,
       })
       .from(contacts)
       .where(
         and(
           eq(contacts.workspaceSubdomain, subdomain),
           isNull(contacts.deletedAt),
-          sql`lower(trim(COALESCE(${contacts.customData}->>'name', ''))) IN (${sql.join(
-            normalized.map((name) => sql`${name}`),
-            sql`, `,
-          )})`,
+          inArray(sql`lower(trim(${contacts.name}))`, normalized),
         ),
       );
     return new Set(rows.map((row) => row.name).filter(Boolean));
   });
+}
+
+function scalarFieldSql(fieldKey: string): SQL {
+  switch (fieldKey) {
+    case 'firstName':
+      return sql`lower(trim(COALESCE(${contacts.firstName}, '')))`;
+    case 'lastName':
+      return sql`lower(trim(COALESCE(${contacts.lastName}, '')))`;
+    case 'cnic':
+      return sql`lower(trim(COALESCE(${contacts.cnic}, '')))`;
+    case 'dob':
+      return sql`lower(trim(COALESCE(${contacts.dob}, '')))`;
+    case 'city':
+      return sql`lower(trim(COALESCE(${contacts.city}, '')))`;
+    default:
+      return sql`lower(trim(COALESCE(${contacts.name}, '')))`;
+  }
 }
 
 /**
@@ -76,23 +87,25 @@ export async function findActiveContactsMatchingUniqueValues(
     matchClauses.push(sql`(
       EXISTS (
         SELECT 1
-        FROM jsonb_array_elements(${jsonbArrayOrEmpty('phones')}) AS phone(value)
-        WHERE regexp_replace(
-          CASE
-            WHEN NULLIF(trim(phone.value->>'number'), '') LIKE '+%'
-              THEN trim(phone.value->>'number')
-            ELSE concat_ws(
-              '',
-              NULLIF(trim(phone.value->>'countryCode'), ''),
-              NULLIF(trim(phone.value->>'number'), '')
-            )
-          END,
-          '[^0-9]',
-          '',
-          'g'
-        ) IN (${sql.join(phoneDigits.map((digit) => sql`${digit}`), sql`, `)})
+        FROM ${contactPhones} p
+        WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND p.contact_id = ${contacts.id}
+          AND regexp_replace(
+            CASE
+              WHEN NULLIF(trim(p.number), '') LIKE '+%'
+                THEN trim(p.number)
+              ELSE concat_ws(
+                '',
+                NULLIF(trim(p.country_code), ''),
+                NULLIF(trim(p.number), '')
+              )
+            END,
+            '[^0-9]',
+            '',
+            'g'
+          ) IN (${sql.join(phoneDigits.map((digit) => sql`${digit}`), sql`, `)})
       )
-      OR regexp_replace(COALESCE(${contacts.customData}->>'phone', ''), '[^0-9]', '', 'g')
+      OR regexp_replace(COALESCE(${contacts.phone}, ''), '[^0-9]', '', 'g')
         IN (${sql.join(phoneDigits.map((digit) => sql`${digit}`), sql`, `)})
     )`);
   }
@@ -101,19 +114,19 @@ export async function findActiveContactsMatchingUniqueValues(
     matchClauses.push(sql`(
       EXISTS (
         SELECT 1
-        FROM jsonb_array_elements(${jsonbArrayOrEmpty('emails')}) AS email(value)
-        WHERE lower(trim(COALESCE(email.value->>'address', '')))
-          IN (${sql.join(emails.map((email) => sql`${email}`), sql`, `)})
+        FROM ${contactEmails} e
+        WHERE e.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND e.contact_id = ${contacts.id}
+          AND lower(trim(COALESCE(e.address, '')))
+            IN (${sql.join(emails.map((email) => sql`${email}`), sql`, `)})
       )
-      OR lower(trim(COALESCE(${contacts.customData}->>'email', '')))
+      OR lower(trim(COALESCE(${contacts.email}, '')))
         IN (${sql.join(emails.map((email) => sql`${email}`), sql`, `)})
     )`);
   }
 
   for (const scalar of scalars) {
-    matchClauses.push(sql`(
-      lower(trim(COALESCE(${contacts.customData}->>${scalar.fieldKey}, ''))) = ${scalar.normalized}
-    )`);
+    matchClauses.push(sql`(${scalarFieldSql(scalar.fieldKey)} = ${scalar.normalized})`);
   }
 
   const whereParts: SQL[] = [
@@ -130,6 +143,6 @@ export async function findActiveContactsMatchingUniqueValues(
       .select()
       .from(contacts)
       .where(and(...whereParts));
-    return rows.map((row) => hydrateContact(contactRepo.rowToRecord(row)));
+    return hydrateContactsList(tx, subdomain, rows);
   });
 }

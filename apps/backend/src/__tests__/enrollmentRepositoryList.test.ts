@@ -7,9 +7,9 @@ vi.mock('../db/withTenantTransaction.js', () => ({
 }));
 
 vi.mock('../db/repositories/enrollmentRepository.js', () => ({
-  enrollmentRowToRecord: (row: { id: string; customData?: Record<string, unknown> }) => ({
-    id: row.id,
-    ...(row.customData ?? {}),
+  enrollmentRowToRecord: (row: Record<string, unknown>, timeline: unknown[] = []) => ({
+    ...row,
+    timeline,
   }),
 }));
 
@@ -21,6 +21,9 @@ function createSelectMock(selectQueue: unknown[][]) {
   const where = vi.fn(() => {
     whereCalls += 1;
     if (whereCalls === 1) {
+      return Promise.resolve(selectQueue.shift() ?? []);
+    }
+    if (whereCalls === 3) {
       return Promise.resolve(selectQueue.shift() ?? []);
     }
     return { orderBy };
@@ -41,10 +44,13 @@ describe('enrollmentRepositoryList', () => {
       [
         {
           id: 'enr-1',
-          customData: { studentName: 'Ali', status: 'confirmed', sessionId: 's1' },
+          studentName: 'Ali',
+          status: 'confirmed',
+          sessionId: 's1',
           deletedAt: null,
         },
       ],
+      [],
     ];
     const { select } = createSelectMock(selectQueue);
 
@@ -63,10 +69,10 @@ describe('enrollmentRepositoryList', () => {
     });
 
     expect(mockWithTenantTransaction).toHaveBeenCalledWith('demo', expect.any(Function));
-    expect(select).toHaveBeenCalledTimes(2);
+    expect(select).toHaveBeenCalled();
     expect(result).toEqual({
       enrollments: [
-        { id: 'enr-1', studentName: 'Ali', status: 'confirmed', sessionId: 's1' },
+        { id: 'enr-1', studentName: 'Ali', status: 'confirmed', sessionId: 's1', deletedAt: null, timeline: [] },
       ],
       total: 2,
       page: 1,

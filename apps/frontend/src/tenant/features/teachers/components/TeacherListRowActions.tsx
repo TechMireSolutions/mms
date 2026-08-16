@@ -72,7 +72,7 @@ export function TeacherListRowActions({
         <PersonMessagingRowActionsExtras
           phone={phone}
           email={email}
-          hasWhatsApp={hasWhatsApp({ phone })}
+          hasWhatsApp={hasWhatsApp({ phone: phone ?? undefined })}
           hideMessagingItems={hideMessagingItems || showDeleted}
           onWhatsApp={() => onWhatsApp?.([teacher])}
           onSms={() => onSms?.([teacher])}

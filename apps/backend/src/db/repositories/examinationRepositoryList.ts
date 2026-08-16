@@ -1,11 +1,11 @@
 import {
+  and,
   eq,
   ilike,
   inArray,
   isNotNull,
   isNull,
   or,
-  sql,
   asc,
   desc,
   type SQL,
@@ -15,18 +15,19 @@ import type {
   ExaminationsListQuery,
   ExaminationsListPageResult,
 } from '@mms/shared';
-import { exams } from '../schema.js';
+import { exams, examClasses } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
-import { mergeCustomData, runListPage } from './listPageHelper.js';
+import { runListPage } from './listPageHelper.js';
+import { examRowToRecord } from './examinationRepository.js';
 
 function buildExamsListConditions(subdomain: string, query: ExaminationsListQuery): SQL[] {
   const conditions: SQL[] = [eq(exams.workspaceSubdomain, subdomain)];
 
   // Manifest softDelete.workExcludesDeleted — Work = active, trash = deleted-only.
   if (query.includeDeleted) {
-    conditions.push(isNotNull(sql`(${exams.customData}->>'deletedAt')`));
+    conditions.push(isNotNull(exams.deletedAt));
   } else {
-    conditions.push(isNull(sql`(${exams.customData}->>'deletedAt')`));
+    conditions.push(isNull(exams.deletedAt));
   }
 
   const search = query.search?.trim();
@@ -34,15 +35,15 @@ function buildExamsListConditions(subdomain: string, query: ExaminationsListQuer
     const pattern = `%${search}%`;
     conditions.push(
       or(
-        ilike(sql`(${exams.customData}->>'name')`, pattern),
-        ilike(sql`(${exams.customData}->>'subject')`, pattern),
+        ilike(exams.name, pattern),
+        ilike(exams.subject, pattern),
       ) as SQL,
     );
   }
 
   const statuses = query.status?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
   if (statuses.length) {
-    conditions.push(inArray(sql`(${exams.customData}->>'status')`, statuses));
+    conditions.push(inArray(exams.status, statuses));
   }
 
   return conditions;
@@ -59,16 +60,16 @@ function buildExamsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
         column = exams.updatedAt as unknown as SQL;
         break;
       case 'name':
-        column = sql`(${exams.customData}->>'name')`;
+        column = exams.name as unknown as SQL;
         break;
       case 'subject':
-        column = sql`(${exams.customData}->>'subject')`;
+        column = exams.subject as unknown as SQL;
         break;
       case 'status':
-        column = sql`(${exams.customData}->>'status')`;
+        column = exams.status as unknown as SQL;
         break;
       case 'date':
-        column = sql`(${exams.customData}->>'date')`;
+        column = exams.date as unknown as SQL;
         break;
       default:
         column = exams.updatedAt as unknown as SQL;
@@ -87,16 +88,42 @@ export async function listExamsPage(
 ): Promise<ExaminationsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantTransaction(subdomain, async (tx) => {
-    const result = await runListPage<ExamRow, Exam>(tx, exams, {
+    const result = await runListPage<ExamRow, ExamRow>(tx, exams, {
       conditions: buildExamsListConditions(subdomain, query),
       orderBy: buildExamsOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
       defaultPageSize: 12,
-      rowMapper: (row) => mergeCustomData(row) as unknown as Exam,
+      rowMapper: (row) => row,
     });
+
+    const examRows = result.items;
+    let examRecords: Exam[] = [];
+
+    if (examRows.length > 0) {
+      const examIds = examRows.map((e) => e.id);
+      const classRows = await tx
+        .select()
+        .from(examClasses)
+        .where(
+          and(
+            eq(examClasses.workspaceSubdomain, subdomain),
+            inArray(examClasses.examId, examIds),
+          ),
+        );
+
+      const classMap = new Map<string, string[]>();
+      for (const c of classRows) {
+        const list = classMap.get(c.examId) ?? [];
+        list.push(c.classId);
+        classMap.set(c.examId, list);
+      }
+
+      examRecords = examRows.map((row) => examRowToRecord(row, classMap.get(row.id) ?? []));
+    }
+
     return {
-      exams: result.items,
+      exams: examRecords,
       total: result.total,
       page: result.page,
       limit: result.limit,

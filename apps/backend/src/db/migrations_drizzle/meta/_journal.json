@@ -309,6 +309,111 @@
       "when": 1786615200000,
       "tag": "0043_drop_custom_fields_and_tabs",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1786618800000,
+      "tag": "0044_platform_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1786622400000,
+      "tag": "0045_attendance_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1786626000000,
+      "tag": "0046_enrollments_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1786629600000,
+      "tag": "0047_hasanat_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1786633200000,
+      "tag": "0048_examinations_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1786636800000,
+      "tag": "0049_finance_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1786640400000,
+      "tag": "0050_accounting_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1786644000000,
+      "tag": "0051_question_bank_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1786647600000,
+      "tag": "0052_obligations_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1786651200000,
+      "tag": "0053_messaging_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1786654800000,
+      "tag": "0054_sessions_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1786658400000,
+      "tag": "0055_activity_and_audit_logs_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1786662000000,
+      "tag": "0056_contacts_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1786665600000,
+      "tag": "0057_students_3nf_normalization",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1786669200000,
+      "tag": "0058_teachers_3nf_normalization",
+      "breakpoints": true
     }
   ]
 }

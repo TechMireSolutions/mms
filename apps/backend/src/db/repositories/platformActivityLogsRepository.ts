@@ -6,8 +6,10 @@ export interface InsertPlatformActivityLog {
   userId?: string | null;
   userEmail: string;
   action: string;
-  details: Record<string, unknown>;
+  targetResource?: string | null;
+  targetId?: string | null;
   ipAddress?: string | null;
+  metadataMessage?: string | null;
 }
 
 export async function insertPlatformActivityLog(log: InsertPlatformActivityLog): Promise<void> {
@@ -15,8 +17,10 @@ export async function insertPlatformActivityLog(log: InsertPlatformActivityLog):
     userId: log.userId ?? null,
     userEmail: log.userEmail,
     action: log.action,
-    details: log.details,
+    targetResource: log.targetResource || null,
+    targetId: log.targetId || null,
     ipAddress: log.ipAddress || null,
+    metadataMessage: log.metadataMessage || null,
   });
 }
 
@@ -35,8 +39,10 @@ export async function listPlatformActivityLogs(limit = 50, offset = 0) {
     userId: row.userId,
     userEmail: row.userEmail,
     action: row.action,
-    details: row.details,
+    targetResource: row.targetResource,
+    targetId: row.targetId,
     ipAddress: row.ipAddress,
+    metadataMessage: row.metadataMessage,
     createdAt: row.createdAt.toISOString(),
   }));
 }

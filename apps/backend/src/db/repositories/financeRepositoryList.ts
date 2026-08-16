@@ -1,19 +1,20 @@
-import { and, eq, ilike, or, sql, isNull, type SQL, desc, asc } from 'drizzle-orm';
+import { and, eq, ilike, or, isNull, isNotNull, type SQL, desc, asc, sql } from 'drizzle-orm';
 import type {
-  Invoice,
-  Payment,
   FinanceListQuery,
   FinanceInvoicesListPageResult,
   FinancePaymentsListPageResult,
 } from '@mms/shared';
 import { financeInvoices, financePayments } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { invoiceRowToRecord, paymentRowToRecord } from './financeRepository.js';
 
 function buildInvoiceListConditions(subdomain: string, query: FinanceListQuery): SQL[] {
   const conditions: SQL[] = [eq(financeInvoices.workspaceSubdomain, subdomain)];
   
-  if (!query.includeDeleted) {
-    conditions.push(isNull(sql`(${financeInvoices.customData}->>'deletedAt')`));
+  if (query.includeDeleted) {
+    conditions.push(isNotNull(financeInvoices.deletedAt));
+  } else {
+    conditions.push(isNull(financeInvoices.deletedAt));
   }
   
   const search = query.search?.trim();
@@ -22,10 +23,10 @@ function buildInvoiceListConditions(subdomain: string, query: FinanceListQuery):
     conditions.push(
       or(
         ilike(financeInvoices.id, searchPattern),
-        ilike(sql`(${financeInvoices.customData}->>'studentName')`, searchPattern),
-        ilike(sql`(${financeInvoices.customData}->>'class')`, searchPattern),
-        ilike(sql`(${financeInvoices.customData}->>'session')`, searchPattern)
-      ) as SQL
+        ilike(financeInvoices.studentName, searchPattern),
+        ilike(financeInvoices.class, searchPattern),
+        ilike(financeInvoices.session, searchPattern),
+      ) as SQL,
     );
   }
   
@@ -35,8 +36,10 @@ function buildInvoiceListConditions(subdomain: string, query: FinanceListQuery):
 function buildPaymentListConditions(subdomain: string, query: FinanceListQuery): SQL[] {
   const conditions: SQL[] = [eq(financePayments.workspaceSubdomain, subdomain)];
   
-  if (!query.includeDeleted) {
-    conditions.push(isNull(sql`(${financePayments.customData}->>'deletedAt')`));
+  if (query.includeDeleted) {
+    conditions.push(isNotNull(financePayments.deletedAt));
+  } else {
+    conditions.push(isNull(financePayments.deletedAt));
   }
   
   const search = query.search?.trim();
@@ -45,10 +48,10 @@ function buildPaymentListConditions(subdomain: string, query: FinanceListQuery):
     conditions.push(
       or(
         ilike(financePayments.id, searchPattern),
-        ilike(sql`(${financePayments.customData}->>'invoiceId')`, searchPattern),
-        ilike(sql`(${financePayments.customData}->>'studentName')`, searchPattern),
-        ilike(sql`(${financePayments.customData}->>'method')`, searchPattern)
-      ) as SQL
+        ilike(financePayments.invoiceId, searchPattern),
+        ilike(financePayments.studentName, searchPattern),
+        ilike(financePayments.method, searchPattern),
+      ) as SQL,
     );
   }
   
@@ -60,28 +63,28 @@ function buildInvoiceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL 
   let column: SQL;
   switch (field) {
     case 'createdAt':
-      column = sql`(${financeInvoices.customData}->>'createdAt')::timestamp`;
+      column = financeInvoices.createdAt as unknown as SQL;
       break;
     case 'id':
       column = financeInvoices.id as unknown as SQL;
       break;
     case 'studentName':
-      column = sql`(${financeInvoices.customData}->>'studentName')`;
+      column = financeInvoices.studentName as unknown as SQL;
       break;
     case 'class':
-      column = sql`(${financeInvoices.customData}->>'class')`;
+      column = financeInvoices.class as unknown as SQL;
       break;
     case 'session':
-      column = sql`(${financeInvoices.customData}->>'session')`;
+      column = financeInvoices.session as unknown as SQL;
       break;
     case 'totalAmount':
-      column = sql`(${financeInvoices.customData}->>'totalAmount')::numeric`;
+      column = financeInvoices.finalAmt as unknown as SQL;
       break;
     case 'status':
-      column = sql`(${financeInvoices.customData}->>'status')`;
+      column = financeInvoices.status as unknown as SQL;
       break;
     default:
-      column = sql`(${financeInvoices.customData}->>'createdAt')::timestamp`;
+      column = financeInvoices.createdAt as unknown as SQL;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
@@ -91,25 +94,25 @@ function buildPaymentOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL 
   let column: SQL;
   switch (field) {
     case 'createdAt':
-      column = sql`(${financePayments.customData}->>'createdAt')::timestamp`;
+      column = financePayments.createdAt as unknown as SQL;
       break;
     case 'id':
       column = financePayments.id as unknown as SQL;
       break;
     case 'invoiceId':
-      column = sql`(${financePayments.customData}->>'invoiceId')`;
+      column = financePayments.invoiceId as unknown as SQL;
       break;
     case 'studentName':
-      column = sql`(${financePayments.customData}->>'studentName')`;
+      column = financePayments.studentName as unknown as SQL;
       break;
     case 'method':
-      column = sql`(${financePayments.customData}->>'method')`;
+      column = financePayments.method as unknown as SQL;
       break;
     case 'amount':
-      column = sql`(${financePayments.customData}->>'amount')::numeric`;
+      column = financePayments.amount as unknown as SQL;
       break;
     default:
-      column = sql`(${financePayments.customData}->>'createdAt')::timestamp`;
+      column = financePayments.createdAt as unknown as SQL;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
@@ -142,11 +145,7 @@ export async function listInvoicesPage(
       .limit(limit)
       .offset(offset);
 
-    // Simple mapping, assuming the generic repository structure (customData merging)
-    const items = rows.map((row) => ({
-      ...row,
-      ...(row.customData as any || {}),
-    })) as Invoice[];
+    const items = rows.map(invoiceRowToRecord);
 
     return {
       invoices: items,
@@ -186,10 +185,7 @@ export async function listPaymentsPage(
       .limit(limit)
       .offset(offset);
 
-    const items = rows.map((row) => ({
-      ...row,
-      ...(row.customData as any || {}),
-    })) as Payment[];
+    const items = rows.map(paymentRowToRecord);
 
     return {
       payments: items,
