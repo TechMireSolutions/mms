@@ -14,20 +14,31 @@ import { withTenantTransaction } from '../withTenantTransaction.js';
  */
 export async function runMigration037(): Promise<void> {
   const db = getDb();
+  let configCount = 0;
 
   await withTenantTransaction(null, async (tx) => {
-    await tx.execute(sql`
-      UPDATE contacts
-      SET
-        custom_data = (custom_data - 'emergencyContacts')
-          || jsonb_build_object(
-            'relationshipContacts',
-            COALESCE(custom_data->'relationshipContacts', custom_data->'emergencyContacts')
-          ),
-        updated_at = NOW()
-      WHERE custom_data ? 'emergencyContacts'
-    `);
+    const colCheck = (await tx.execute(sql`
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'contacts' AND column_name = 'custom_data'
+    `)) as unknown;
+    const hasCustomData =
+      typeof colCheck === 'object' && colCheck !== null && 'rowCount' in colCheck
+        ? Number((colCheck as { rowCount?: number }).rowCount ?? 0) > 0
+        : Array.isArray(colCheck) && (colCheck as unknown[]).length > 0;
 
+    if (hasCustomData) {
+      await tx.execute(sql`
+        UPDATE contacts
+        SET
+          custom_data = (custom_data - 'emergencyContacts')
+            || jsonb_build_object(
+              'relationshipContacts',
+              COALESCE(custom_data->'relationshipContacts', custom_data->'emergencyContacts')
+            ),
+          updated_at = NOW()
+        WHERE custom_data ? 'emergencyContacts'
+      `);
+    }
 
     const fieldConfigRows = await tx.select().from(schema.contactFieldConfigs);
     for (const row of fieldConfigRows) {
@@ -44,7 +55,6 @@ export async function runMigration037(): Promise<void> {
   });
 
   const objectRows = await db.select().from(schema.objects);
-  let configCount = 0;
 
   for (const row of objectRows) {
     const parsed = parseTenantScopedStorageKey(row.key);

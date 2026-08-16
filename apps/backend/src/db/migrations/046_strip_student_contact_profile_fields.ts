@@ -8,6 +8,20 @@ import { withTenantTransaction } from '../withTenantTransaction.js';
 
 export async function runMigration046(): Promise<void> {
   await withTenantTransaction(null, async (tx) => {
+    const colCheck = (await tx.execute(sql`
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'students' AND column_name = 'custom_data'
+    `)) as unknown;
+    const hasCustomData =
+      typeof colCheck === 'object' && colCheck !== null && 'rowCount' in colCheck
+        ? Number((colCheck as { rowCount?: number }).rowCount ?? 0) > 0
+        : Array.isArray(colCheck) && (colCheck as unknown[]).length > 0;
+
+    if (!hasCustomData) {
+      console.log('[Migration 046] No student custom_data column to strip.');
+      return;
+    }
+
     const result = await tx.execute(sql`
       UPDATE students
       SET
