@@ -34,6 +34,21 @@ function resolveServerMetricValue(
     questionBankMetrics,
   } = data;
 
+  if (widget.collection === 'contacts') {
+    return { value: String(data.contactsTotal) };
+  }
+
+  if (widget.collection === 'students') {
+    if (widget.filterValue === 'active') {
+      return { value: String(data.studentMetricsActive) };
+    }
+    return { value: String(data.studentsTotal) };
+  }
+
+  if (widget.collection === 'teachers') {
+    return { value: String(data.teachersTotal) };
+  }
+
   if (widget.collection === 'sessions') {
     if (widget.filterValue === 'active' || widget.id.includes('sessions')) {
       return {

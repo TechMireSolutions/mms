@@ -53,8 +53,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
   const { user, logout } = useAuth();
   const { t } = useTranslation();
 
-  const initials = getInitials(user?.name, 2) || "AK";
-
+  const initials = (user?.name ? getInitials(user.name, 2) : "") || "U";
 
   const { can } = usePermissions();
   const { formatCurrency } = useFinanceCurrency();
@@ -89,26 +88,15 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
 
   return (
     <div className={cn("flex shrink-0 items-center gap-1 sm:gap-2", className)}>
-      {onOpenCommandPalette && (
+      {compact && onOpenCommandPalette && (
         <Button
           type="button"
           variant="outline"
           onClick={onOpenCommandPalette}
-          aria-label="Search pages (Cmd+K)"
-          className={cn(
-            "relative flex items-center gap-2 rounded-lg text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer",
-            compact ? "h-9 w-9 p-0 justify-center min-h-9 min-w-9" : "h-9 px-3 py-1.5 min-h-9",
-          )}
+          aria-label={t("nav.globalSearchPlaceholder")}
+          className="relative flex items-center justify-center rounded-lg text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer min-h-11 min-w-11 h-11 w-11 p-0"
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-          {!compact && (
-            <>
-              <span className="hidden md:inline font-normal">Search...</span>
-              <kbd className="hidden md:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground select-none">
-                ⌘K
-              </kbd>
-            </>
-          )}
         </Button>
       )}
       <SyncStatusBadge />
@@ -120,7 +108,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
             type="button"
             variant="ghost"
             size="icon"
-            aria-label="Notifications"
+            aria-label={t("notifications.title")}
             className="relative min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted transition-colors"
           >
             <Bell className="h-4.5 w-4.5 text-muted-foreground" />
@@ -134,10 +122,10 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
             <>
               <div className="border-b border-border px-4 py-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Notifications</h3>
+                  <h3 className="text-sm font-semibold">{t("notifications.title")}</h3>
                   {unreadCount > 0 && (
                     <Badge variant="secondary" className="px-1.5 py-0 text-xs">
-                      {unreadCount} new
+                      {unreadCount}
                     </Badge>
                   )}
                 </div>
@@ -145,7 +133,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="px-4 py-6 text-center text-xs text-muted-foreground">
-                    All caught up! No notifications.
+                    {t("notifications.empty")}
                   </div>
                 ) : (
                   notifications.map((notification) => (
@@ -175,7 +163,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
                   }}
                   className="text-xs font-medium text-primary hover:underline min-h-11 px-1"
                 >
-                  View all notifications
+                  {t("notifications.viewAll")}
                 </Button>
               </div>
             </>
@@ -190,7 +178,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
           <Button
             type="button"
             variant="ghost"
-            aria-label="Account menu"
+            aria-label={t("account.title")}
             className={cn(
               "flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto",
               compact ? "min-h-11 min-w-11 gap-1 p-2" : "min-h-11 gap-2.5 py-2 ps-2 pe-3",
@@ -228,7 +216,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
           <DropdownMenuItem asChild>
             <Link to={ROUTES.settings}>
               <Settings className="me-2 h-4 w-4" />
-              Settings
+              {t("nav.settings")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -237,7 +225,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
             onClick={() => logout(true)}
           >
             <LogOut className="me-2 h-4 w-4" />
-            Sign out
+            {t("auth.signOut")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
