@@ -137,9 +137,10 @@ describe("rbacService", () => {
     expect(isAllowedObjectKey("socialPlaceholders")).toBe(false);
     expect(isAllowedObjectKey("attendance_user_column_preferences")).toBe(false);
     expect(isAllowedObjectKey("question_bank_user_column_preferences")).toBe(false);
-    // Doc-store-fallback column prefs remain allowlisted (no typed table yet).
-    expect(isAllowedObjectKey("obligations_user_column_preferences")).toBe(true);
-    expect(isAllowedObjectKey(MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey)).toBe(true);
+    expect(isAllowedObjectKey("obligations_user_column_preferences")).toBe(false);
+    expect(isAllowedObjectKey(MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey)).toBe(false);
+    expect(isAllowedObjectKey(MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey)).toBe(false);
+    expect(isAllowedObjectKey(MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey)).toBe(false);
   });
 
   it("restricts tenant reset to admin", () => {

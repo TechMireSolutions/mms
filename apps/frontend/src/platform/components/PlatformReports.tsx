@@ -1,13 +1,13 @@
 import React from "react";
 import { Globe, ShieldCheck, BarChart3, TrendingUp, CheckCircle2, ShieldAlert, Award } from "lucide-react";
 import {
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
   Tooltip,
   Legend,
 } from "recharts";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -91,7 +91,7 @@ export function PlatformReports(): React.JSX.Element {
               {totalWorkspaces === 0 ? (
                 <p className="text-xs text-muted-foreground">{t("apex.noMadrasasYet")}</p>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <SafeResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={chartData}
@@ -123,7 +123,7 @@ export function PlatformReports(): React.JSX.Element {
                       )}
                     />
                   </PieChart>
-                </ResponsiveContainer>
+                </SafeResponsiveContainer>
               )}
             </div>
           </WidgetCard>

@@ -139,7 +139,7 @@ export function PlatformAdminTable({
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="min-h-9 rounded-lg font-bold"
+                        className="min-h-11 rounded-lg font-bold"
                         onClick={() => onEditAccess(admin)}
                       >
                         {t('platform.editAdminAccess')}
@@ -148,7 +148,7 @@ export function PlatformAdminTable({
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="min-h-9 rounded-lg font-bold"
+                        className="min-h-11 rounded-lg font-bold"
                         onClick={() => onToggleStatus(admin, isDisabled ? 'enable' : 'disable')}
                       >
                         {t(isDisabled ? 'platform.enableAdmin' : 'platform.disableAdmin')}
@@ -157,7 +157,7 @@ export function PlatformAdminTable({
                         type="button"
                         variant="destructive"
                         size="sm"
-                        className="min-h-9 rounded-lg font-bold"
+                        className="min-h-11 rounded-lg font-bold"
                         onClick={() => onDelete(admin)}
                       >
                         {t('platform.deleteAdmin')}

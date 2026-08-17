@@ -99,20 +99,12 @@ export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   platform_settings: 'configuration.view',
   branding: 'configuration.view',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey]: OBLIGATIONS_MODULE_MANIFEST.permissions.read,
-  [MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
-  [MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
-  [MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
 };
 
 export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
   global_settings: 'settings.global.write',
   branding: 'settings.branding.write',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
-  [OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey]: OBLIGATIONS_MODULE_MANIFEST.permissions.read,
-  [MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
-  [MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
-  [MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey]: MESSAGING_MODULE_MANIFEST.permissions.read,
 };
 
 export const ALLOWED_COLLECTIONS = new Set([
@@ -125,14 +117,6 @@ export const ALLOWED_OBJECTS = new Set([
   'platform_settings',
   'branding',
   EMAIL_INTEGRATION_OBJECT_KEY,
-  // Doc-store-fallback column prefs (no typed table yet): keep allowlisted so backup restore
-  // (stripUnwritableObjects) preserves them. Typed-module column-prefs keys were removed after
-  // their typed tables became authority (FE uses /api/:module/column-preferences, not the
-  // generic object route).
-  OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
-  MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey,
-  MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
-  MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey,
   DASHBOARD_PREFERENCES_KEY,
   INVOICE_TEMPLATE_OBJECT_KEY,
   'kpi_custom_widgets',

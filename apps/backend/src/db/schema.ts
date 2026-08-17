@@ -1318,6 +1318,50 @@ export const hasanatRedemptionUserColumnPrefs = pgTable('hasanat_redemption_user
   index('hasanat_redemp_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
 ]);
 
+/** Per-user Obligations Work column layout (was document-store `obligations_user_column_preferences`). */
+export const obligationsUserColumnPrefs = pgTable('obligations_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('obligations_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Per-user Messaging recipients Work column layout (was document-store `messaging_recipients_user_column_preferences`). */
+export const messagingRecipientsUserColumnPrefs = pgTable('messaging_recipients_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('messaging_recipients_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Per-user Messaging history Work column layout (was document-store `messaging_history_user_column_preferences`). */
+export const messagingHistoryUserColumnPrefs = pgTable('messaging_history_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('messaging_history_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/** Per-user Messaging templates Work column layout (was document-store `messaging_templates_user_column_preferences`). */
+export const messagingTemplatesUserColumnPrefs = pgTable('messaging_templates_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  index('messaging_templates_user_column_prefs_workspace_idx').on(table.workspaceSubdomain),
+]);
+
 export const exams = pgTable('exams', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),

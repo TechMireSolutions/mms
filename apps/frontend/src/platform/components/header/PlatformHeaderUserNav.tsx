@@ -43,8 +43,8 @@ export function PlatformHeaderUserNav({
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const notifications = useMemo(() => {
-    return buildPlatformNotifications(workspaces, isSuperUser);
-  }, [workspaces, isSuperUser]);
+    return buildPlatformNotifications(workspaces, isSuperUser, t);
+  }, [workspaces, isSuperUser, t]);
 
   const unreadCount = notifications.length;
   const initials = getInitials(platformUser?.name, 2) || 'OP';
@@ -59,7 +59,7 @@ export function PlatformHeaderUserNav({
           aria-label={t('platform.openSearchAria')}
           className={cn(
             'relative flex items-center gap-2 rounded-lg text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer',
-            compact ? 'h-9 w-9 p-0 justify-center min-h-9 min-w-9' : 'h-9 px-3 py-1.5 min-h-9',
+            compact ? 'h-11 w-11 p-0 justify-center min-h-11 min-w-11' : 'h-11 px-3 py-1.5 min-h-11',
           )}
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />

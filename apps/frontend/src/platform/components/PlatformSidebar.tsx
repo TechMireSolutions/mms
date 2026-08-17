@@ -120,7 +120,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             variant="ghost"
             size="icon"
             onClick={() => closeMobileSidebar()}
-            className="h-8 w-8 text-sidebar-muted-foreground hover:text-sidebar-foreground shrink-0 rounded-lg"
+            className="h-11 w-11 min-h-11 min-w-11 text-sidebar-muted-foreground hover:text-sidebar-foreground shrink-0 rounded-lg"
             aria-label={t('nav.closeSidebar')}
           >
             <X className="w-4 h-4" />

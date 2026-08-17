@@ -428,6 +428,13 @@
       "when": 1786676400000,
       "tag": "0060_contact_emails_is_verified",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1786680000000,
+      "tag": "0061_obligations_messaging_column_prefs_tables",
+      "breakpoints": true
     }
   ]
 }

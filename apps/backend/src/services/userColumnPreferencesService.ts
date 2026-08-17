@@ -12,6 +12,8 @@ import {
   ACCOUNTING_MODULE_MANIFEST,
   EXAMINATIONS_MODULE_MANIFEST,
   HASANAT_MODULE_MANIFEST,
+  OBLIGATIONS_MODULE_MANIFEST,
+  MESSAGING_MODULE_MANIFEST,
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
@@ -78,6 +80,22 @@ import {
   getHasanatRedemptionUserColumnPrefs,
   setHasanatRedemptionUserColumnPrefs,
 } from '../db/repositories/hasanatRedemptionUserColumnPrefsRepository.js';
+import {
+  getObligationsUserColumnPrefs,
+  setObligationsUserColumnPrefs,
+} from '../db/repositories/obligationsUserColumnPrefsRepository.js';
+import {
+  getMessagingRecipientsUserColumnPrefs,
+  setMessagingRecipientsUserColumnPrefs,
+} from '../db/repositories/messagingRecipientsUserColumnPrefsRepository.js';
+import {
+  getMessagingHistoryUserColumnPrefs,
+  setMessagingHistoryUserColumnPrefs,
+} from '../db/repositories/messagingHistoryUserColumnPrefsRepository.js';
+import {
+  getMessagingTemplatesUserColumnPrefs,
+  setMessagingTemplatesUserColumnPrefs,
+} from '../db/repositories/messagingTemplatesUserColumnPrefsRepository.js';
 import { fetchObject, persistObject } from './dbSyncService.js';
 
 async function loadUserColumnPreferencesMap(objectKey: string): Promise<UserModuleColumnPreferencesMap> {
@@ -171,6 +189,22 @@ function isHasanatRedemptionColumnKey(objectKey: string): boolean {
   return objectKey === HASANAT_MODULE_MANIFEST.redemptionColumnPreferencesObjectKey;
 }
 
+function isObligationsColumnKey(objectKey: string): boolean {
+  return objectKey === OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey;
+}
+
+function isMessagingRecipientsColumnKey(objectKey: string): boolean {
+  return objectKey === MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey;
+}
+
+function isMessagingHistoryColumnKey(objectKey: string): boolean {
+  return objectKey === MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey;
+}
+
+function isMessagingTemplatesColumnKey(objectKey: string): boolean {
+  return objectKey === MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey;
+}
+
 function requireTenant(): string {
   const tenant = getRequestTenant();
   if (!tenant) throw new Error('Tenant context required');
@@ -243,6 +277,22 @@ export async function getUserColumnPreferencesForModule(
   }
   if (isHasanatRedemptionColumnKey(objectKey)) {
     const prefs = await getHasanatRedemptionUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isObligationsColumnKey(objectKey)) {
+    const prefs = await getObligationsUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isMessagingRecipientsColumnKey(objectKey)) {
+    const prefs = await getMessagingRecipientsUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isMessagingHistoryColumnKey(objectKey)) {
+    const prefs = await getMessagingHistoryUserColumnPrefs(requireTenant(), userId);
+    return filterPreferences(prefs);
+  }
+  if (isMessagingTemplatesColumnKey(objectKey)) {
+    const prefs = await getMessagingTemplatesUserColumnPrefs(requireTenant(), userId);
     return filterPreferences(prefs);
   }
   const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);
@@ -318,6 +368,22 @@ export async function setUserColumnPreferencesForModule(
   }
   if (isHasanatRedemptionColumnKey(objectKey)) {
     await setHasanatRedemptionUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isObligationsColumnKey(objectKey)) {
+    await setObligationsUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isMessagingRecipientsColumnKey(objectKey)) {
+    await setMessagingRecipientsUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isMessagingHistoryColumnKey(objectKey)) {
+    await setMessagingHistoryUserColumnPrefs(requireTenant(), userId, preferences);
+    return;
+  }
+  if (isMessagingTemplatesColumnKey(objectKey)) {
+    await setMessagingTemplatesUserColumnPrefs(requireTenant(), userId, preferences);
     return;
   }
   const preferencesByUser = await loadUserColumnPreferencesMap(objectKey);

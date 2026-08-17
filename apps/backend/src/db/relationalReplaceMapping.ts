@@ -69,6 +69,10 @@ export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   examination_exam_user_column_prefs: 918,
   examination_results_user_column_prefs: 919,
   question_bank_user_column_prefs: 920,
+  obligations_user_column_prefs: 921,
+  messaging_recipients_user_column_prefs: 922,
+  messaging_history_user_column_prefs: 923,
+  messaging_templates_user_column_prefs: 924,
   audit_log: 950,
 };
 
@@ -361,6 +365,26 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/questionBankUserColumnPrefsRepository.js',
     fnName: 'replaceQuestionBankUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllQuestionBankUserColumnPrefsByWorkspace',
+  },
+  obligations_user_column_prefs: {
+    importPath: './repositories/obligationsUserColumnPrefsRepository.js',
+    fnName: 'replaceObligationsUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllObligationsUserColumnPrefsByWorkspace',
+  },
+  messaging_recipients_user_column_prefs: {
+    importPath: './repositories/messagingRecipientsUserColumnPrefsRepository.js',
+    fnName: 'replaceMessagingRecipientsUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllMessagingRecipientsUserColumnPrefsByWorkspace',
+  },
+  messaging_history_user_column_prefs: {
+    importPath: './repositories/messagingHistoryUserColumnPrefsRepository.js',
+    fnName: 'replaceMessagingHistoryUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllMessagingHistoryUserColumnPrefsByWorkspace',
+  },
+  messaging_templates_user_column_prefs: {
+    importPath: './repositories/messagingTemplatesUserColumnPrefsRepository.js',
+    fnName: 'replaceMessagingTemplatesUserColumnPrefsForWorkspace',
+    snapshotFnName: 'listAllMessagingTemplatesUserColumnPrefsByWorkspace',
   },
   user_activity_logs: {
     importPath: './repositories/logsRepository.js',

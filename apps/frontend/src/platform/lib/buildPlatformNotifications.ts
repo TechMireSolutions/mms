@@ -1,4 +1,5 @@
 import type { PlatformWorkspaceRow } from '@mms/shared';
+import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 
 export interface PlatformNotificationItem {
   id: string;
@@ -13,6 +14,7 @@ export interface PlatformNotificationItem {
 export function buildPlatformNotifications(
   workspaces: PlatformWorkspaceRow[] | undefined,
   isSuperUser: boolean,
+  t: TranslationFunction,
 ): PlatformNotificationItem[] {
   const notifications: PlatformNotificationItem[] = [];
 
@@ -28,9 +30,9 @@ export function buildPlatformNotifications(
     notifications.push({
       id: 'disabled-workspaces',
       type: 'workspace',
-      title: 'Inactive Madrasa Alert',
-      desc: `${disabledCount} out of ${total} madrasas currently disabled or pending activation.`,
-      time: 'Now',
+      title: t('platform.notificationDisabledTitle'),
+      desc: t('platform.notificationDisabledDesc', { disabled: disabledCount, total }),
+      time: t('platform.notificationTimeNow'),
       urgent: true,
     });
   }
@@ -39,9 +41,9 @@ export function buildPlatformNotifications(
     notifications.push({
       id: 'active-workspaces-status',
       type: 'workspace',
-      title: 'Ecosystem Active',
-      desc: `${activeCount} madrasa tenant workspace(s) actively provisioned.`,
-      time: 'Today',
+      title: t('platform.notificationActiveTitle'),
+      desc: t('platform.notificationActiveDesc', { active: activeCount }),
+      time: t('platform.notificationTimeToday'),
       urgent: false,
     });
   }
@@ -50,9 +52,9 @@ export function buildPlatformNotifications(
     notifications.push({
       id: 'super-user-privilege',
       type: 'security',
-      title: 'Super-User Privilege Active',
-      desc: 'Authenticated with super-user root rights across all workspace tenants.',
-      time: 'Active',
+      title: t('platform.notificationSuperUserTitle'),
+      desc: t('platform.notificationSuperUserDesc'),
+      time: t('platform.notificationTimeActive'),
       urgent: false,
     });
   }
@@ -60,9 +62,9 @@ export function buildPlatformNotifications(
   notifications.push({
     id: 'system-health',
     type: 'system',
-    title: 'System Health Operational',
-    desc: 'PostgreSQL database cluster and RLS policies running smoothly.',
-    time: 'Today',
+    title: t('platform.notificationSystemHealthTitle'),
+    desc: t('platform.notificationSystemHealthDesc'),
+    time: t('platform.notificationTimeToday'),
     urgent: false,
   });
 
