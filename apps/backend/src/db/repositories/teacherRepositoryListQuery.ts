@@ -1,5 +1,6 @@
 import { and, asc, eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import {
+  isQueryFlagTrue,
   DEFAULT_TEACHER_STATUS,
   TEACHERS_MODULE_MANIFEST,
   TEACHER_SORT_FIELD_SET,
@@ -10,6 +11,7 @@ import {
 } from '@mms/shared';
 import { teachers, contacts } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import { teacherRowToRecord } from './teacherRepository.js';
 
 /** Shared status expression for Teachers list filters + metrics. */
@@ -111,7 +113,7 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
 function buildListConditions(subdomain: string, query: TeachersListQuery & { includeDeleted?: boolean }): SQL[] {
   const conditions: SQL[] = [eq(teachers.workspaceSubdomain, subdomain)];
 
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(teachers.deletedAt));
   } else {
     conditions.push(isNull(teachers.deletedAt));
@@ -167,38 +169,23 @@ export async function listTeachersPage(
   query: TeachersListQuery & { includeDeleted?: boolean },
 ): Promise<TeachersListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(
-    Math.max(1, query.limit ?? TEACHERS_MODULE_MANIFEST.defaultPageSize),
-    TEACHERS_MODULE_MANIFEST.maxPageSize,
-  );
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildOrderBy(query.sortField, query.sortDir);
-
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(teachers)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(teachers)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
+    const result = await runListPage(tx, teachers, {
+      conditions: buildListConditions(subdomain, query),
+      orderBy: buildOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: TEACHERS_MODULE_MANIFEST.defaultPageSize,
+      rowMapper: (row) => teacherRowToRecord(row as typeof teachers.$inferSelect),
+    });
 
     return {
-      teachers: rows.map(teacherRowToRecord),
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      teachers: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

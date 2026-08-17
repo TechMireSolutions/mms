@@ -42,26 +42,25 @@ export const ModuleTableHeaderCell = memo(function ModuleTableHeaderCell({
       width={width}
       onResize={onResize}
       aria-sort={ariaSort}
-      className={cn(
-        MODULE_TABLE_HEAD_CLASS,
-        sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
-        className,
-      )}
-      onClick={sortable && onSort ? () => onSort(sortKey as string) : undefined}
+      className={cn(MODULE_TABLE_HEAD_CLASS, className)}
     >
-      {sortable ? (
-        <div className="flex items-center gap-1">
+      {sortable && onSort ? (
+        <button
+          type="button"
+          onClick={() => onSort(sortKey as string)}
+          className="flex w-full items-center gap-1 text-start cursor-pointer select-none hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+        >
           {children}
           {isSorted ? (
             sortDir === "asc" ? (
-              <ChevronUp className="w-3 h-3 text-primary" />
+              <ChevronUp className="w-3 h-3 text-primary" aria-hidden="true" />
             ) : (
-              <ChevronDown className="w-3 h-3 text-primary" />
+              <ChevronDown className="w-3 h-3 text-primary" aria-hidden="true" />
             )
           ) : (
-            <ChevronUp className="w-3 h-3 opacity-20" />
+            <ChevronUp className="w-3 h-3 opacity-20" aria-hidden="true" />
           )}
-        </div>
+        </button>
       ) : (
         children
       )}

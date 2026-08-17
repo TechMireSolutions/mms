@@ -36,7 +36,7 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
           onClick={onOpenCommandPalette}
           aria-label={t("nav.globalSearchPlaceholder")}
           aria-keyshortcuts="Control+K Meta+K"
-          className="relative flex w-full items-center rounded-lg border border-border/50 bg-muted/50 ps-10 pe-14 h-10 text-sm text-muted-foreground text-start transition-colors hover:bg-muted cursor-pointer"
+          className="relative flex w-full items-center rounded-lg border border-border/50 bg-muted/50 ps-10 pe-14 min-h-11 h-11 text-sm text-muted-foreground text-start transition-colors hover:bg-muted cursor-pointer"
         >
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <span className="truncate">{t("nav.globalSearchPlaceholder")}</span>

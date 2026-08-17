@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FieldDefinition, TabDefinition } from './contactTypes.js';
+import type { FieldDefinition } from './contactTypes.js';
 import {
   DEFAULT_QUESTION_BANK_SETTINGS,
   type QuestionBankSettings,

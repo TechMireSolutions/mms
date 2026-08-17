@@ -8,8 +8,6 @@ export interface SmsSegmentResult {
 
 /** GSM 7-bit basic character set regex */
 const GSM_7BIT_BASIC_REGEX = /^[A-Za-z0-9 @£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ!"#%&'()*+,\-./:;<=>?¡¿\r\n\t]*$/;
-/** GSM 7-bit extended characters: [ ] { } \ ~ ^ | € */
-const GSM_7BIT_EXT_REGEX = /[^{}\[\]~^|€]/g;
 
 /**
  * Calculates SMS character length, detects Unicode vs GSM 7-bit encoding,
@@ -26,8 +24,6 @@ export function calculateSmsSegments(text: string): SmsSegmentResult {
     };
   }
 
-  // Remove GSM extension characters to test if the rest is basic GSM 7-bit
-  const stripped = text.replace(/[^{}\[\]~^|€]/g, '');
   // A string is GSM 7-bit if all characters without extension chars match the basic set
   const nonExtText = text.replace(/[{}[\]~^|€]/g, '');
   const isUnicode = !GSM_7BIT_BASIC_REGEX.test(nonExtText);

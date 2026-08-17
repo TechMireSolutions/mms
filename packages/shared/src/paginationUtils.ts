@@ -46,3 +46,16 @@ export function paginateArray<T>(items: T[], page = 1, limit = 50, maxLimit = 50
     hasMore: start + slice.length < total,
   };
 }
+
+/**
+ * Evaluates whether an unparsed query parameter value represents boolean true.
+ * Recognizes boolean `true`, numeric `1`, and string `'true'`, `'1'`, `'yes'`.
+ */
+export function isQueryFlagTrue(value: unknown): boolean {
+  if (value === true || value === 1) return true;
+  if (typeof value === 'string') {
+    const trimmed = value.trim().toLowerCase();
+    return trimmed === 'true' || trimmed === '1' || trimmed === 'yes';
+  }
+  return false;
+}

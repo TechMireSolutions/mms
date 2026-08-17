@@ -57,7 +57,6 @@ export * from './brandingChartPalette.js';
 export * from './brandingColorUtils.js';
 export * from './brandingCornerStyle.js';
 export * from './brandingCssVariables.js';
-export * from './brandingTheme.js';
 export * from './brandingTypes.js';
 export * from './chartPalettes.js';
 export * from './dashboardPreferencesTypes.js';
@@ -72,7 +71,6 @@ export * from './llmSettingsTypes.js';
 export * from './logoBrandColors.js';
 export * from './logoPaletteSampling.js';
 export * from './settingsDateFormatters.js';
-export * from './settingsTypes.js';
 export * from './timezoneUtils.js';
 
 // ---------------------------------------------------------------------------
@@ -90,7 +88,6 @@ export * from './moduleFieldConfigPutBodySchema.js';
 export * from './moduleFieldConfigUtils.js';
 export * from './moduleFieldSchema.js';
 export * from './moduleFieldSetupDefaults.js';
-export * from './moduleSettingsTypes.js';
 export * from './moduleTierTabs.js';
 
 // ---------------------------------------------------------------------------
@@ -164,7 +161,6 @@ export {
 // ---------------------------------------------------------------------------
 // 7. Teachers Feature Module
 // ---------------------------------------------------------------------------
-export * from './demoTeachers.js';
 export * from './teacherColumnRegistrySync.js';
 export * from './teacherDirectoryColumns.js';
 export * from './teacherEnabledTabs.js';
@@ -279,7 +275,6 @@ export * from './whatsappProvider.js';
 export * from './ageUtils.js';
 export * from './blueprintVersionUtils.js';
 export * from './csvUtils.js';
-export * from './demoSeedBuilders.js';
 export * from './gradeUtils.js';
 export * from './identityFormatUtils.js';
 export * from './moneyFormatUtils.js';
@@ -287,7 +282,6 @@ export * from './numberUtils.js';
 export * from './paginationUtils.js';
 export * from './phoneUtils.js';
 export * from './titleCaseUtils.js';
-export * from './utils.js';
 export * from './vcardUtils.js';
 export * from './widgetFilterUtils.js';
 

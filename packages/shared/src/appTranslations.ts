@@ -1,24 +1,11 @@
 import { APP_TRANSLATIONS_EN } from "./appTranslationsEn.js";
-import { normalizeAppLanguage, type AppLanguageCode, getIntlLocaleForLanguage } from "./languageUtils.js";
+import { normalizeAppLanguage, getIntlLocaleForLanguage } from "./languageUtils.js";
 import { normalizeModuleTierTabId } from "./moduleTierTabs.js";
 
 export { APP_TRANSLATIONS_EN };
 
 /** App-wide UI string keys (navigation, settings shell, auth, module tiers). */
 export type AppTranslationKey = keyof typeof APP_TRANSLATIONS_EN;
-
-/** Keys that have not been localized yet and require English fallback. */
-export type SessionDetailTranslationKey = Extract<
-  AppTranslationKey,
-  `sessions.${"classes" | "timetable" | "discounts" | "budget" | "events" | "tabarruk"}.${string}`
->;
-
-/** Centralized fallback object to satisfy TS strictness for un-translated modules. */
-export const FALLBACK_SESSION_DETAIL_TRANSLATIONS = Object.fromEntries(
-  Object.entries(APP_TRANSLATIONS_EN).filter(([key]) =>
-    ["sessions.classes.", "sessions.timetable.", "sessions.discounts.", "sessions.budget.", "sessions.events.", "sessions.tabarruk."]
-      .some((prefix) => key.startsWith(prefix))),
-) as Record<SessionDetailTranslationKey, string>;
 
 /** Dynamic sub-blocks to ignore in ICU plural selects. */
 export type ExcludedPlaceholders =

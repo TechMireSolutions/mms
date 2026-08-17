@@ -1,11 +1,13 @@
 import { and, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
+  isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type UsersCommandMetricsSnapshot,
   type UsersListQuery,
 } from '@mms/shared';
 import { tenantUsers } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import { rowToTenantUser, type TenantUserRow } from './tenantUserRepository.js';
 
 const USER_SORT_FIELDS = new Set([
@@ -72,7 +74,7 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
 function buildListConditions(subdomain: string, query: UsersListQuery & { includeDeleted?: boolean }): SQL[] {
   const conditions: SQL[] = [eq(tenantUsers.workspaceSubdomain, subdomain)];
 
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(tenantUsers.deletedAt));
   } else {
     conditions.push(isNull(tenantUsers.deletedAt));
@@ -113,35 +115,23 @@ export async function listTenantUsersPage(
   query: UsersListQuery & { includeDeleted?: boolean },
 ): Promise<{ rows: TenantUserRow[]; total: number; page: number; limit: number; hasMore: boolean }> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildOrderBy(query.sortField, query.sortDir);
-
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(tenantUsers)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(tenantUsers)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
+    const result = await runListPage(tx, tenantUsers, {
+      conditions: buildListConditions(subdomain, query),
+      orderBy: buildOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 50,
+      rowMapper: (row) => rowToTenantUser(row as typeof tenantUsers.$inferSelect),
+    });
 
     return {
-      rows: rows.map((row) => rowToTenantUser(row)),
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      rows: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

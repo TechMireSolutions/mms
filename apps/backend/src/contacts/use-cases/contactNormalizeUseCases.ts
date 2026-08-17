@@ -1,5 +1,6 @@
 import {
   applyTitleCaseToContact,
+  cleanContactDraft,
   normalizeToE164,
   parsePhoneNumber,
   stripContactClientSoftDeleteFields,
@@ -80,8 +81,8 @@ async function normalizeContactPhones(contact: Contact): Promise<Contact> {
 }
 
 export async function prepareContactRecord(contact: Contact, id?: string | number): Promise<Contact> {
-  const stripped = stripClientSoftDeleteFields(contact);
-  const withPhones = await normalizeContactPhones(stripped);
+  const cleaned = cleanContactDraft(contact);
+  const withPhones = await normalizeContactPhones(cleaned as Contact);
   const withScalars = syncContactScalarFields(withPhones);
   const resolvedId = id ?? withScalars.id ?? `temp-${Date.now()}`;
   const titled = applyTitleCaseToContact({ ...withScalars, id: resolvedId });

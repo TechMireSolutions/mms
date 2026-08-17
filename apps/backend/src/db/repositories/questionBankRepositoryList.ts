@@ -10,9 +10,10 @@ import {
   desc,
   sql,
 } from 'drizzle-orm';
-import type {
-  QuestionBankListQuery,
-  QuestionBankListPageResult,
+import {
+  isQueryFlagTrue,
+  type QuestionBankListQuery,
+  type QuestionBankListPageResult,
 } from '@mms/shared';
 import {
   questions,
@@ -22,12 +23,13 @@ import {
   questionCitations,
 } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import { questionRowToRecord } from './questionBankRepository.js';
 
 function buildQuestionsListConditions(subdomain: string, query: QuestionBankListQuery): SQL[] {
   const conditions: SQL[] = [eq(questions.workspaceSubdomain, subdomain)];
 
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(questions.deletedAt));
   } else {
     conditions.push(isNull(questions.deletedAt));
@@ -104,40 +106,28 @@ export async function listQuestionsPage(
   query: QuestionBankListQuery,
 ): Promise<QuestionBankListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 15), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildQuestionsListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildQuestionsOrderBy(query.sortField, query.sortDir);
+    const result = await runListPage(tx, questions, {
+      conditions: buildQuestionsListConditions(subdomain, query),
+      orderBy: buildQuestionsOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 15,
+      rowMapper: (row) => row as typeof questions.$inferSelect,
+    });
 
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(questions)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(questions)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    if (rows.length === 0) {
+    if (result.items.length === 0) {
       return {
         questions: [],
-        total,
-        page,
-        limit,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
         hasMore: false,
       };
     }
 
-    const qIds = rows.map((r) => r.id);
+    const qIds = result.items.map((r) => r.id);
     const [allCats, allOpts, allTags, allCits] = await Promise.all([
       tx
         .select()
@@ -211,7 +201,7 @@ export async function listQuestionsPage(
       citsByQ.set(ci.questionId, arr);
     }
 
-    const items = rows.map((r) => {
+    const items = result.items.map((r) => {
       const sortedOpts = (optsByQ.get(r.id) ?? [])
         .sort((a, b) => a.index - b.index)
         .map((o) => o.text);
@@ -226,10 +216,10 @@ export async function listQuestionsPage(
 
     return {
       questions: items,
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

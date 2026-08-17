@@ -64,16 +64,6 @@ export function mergeServerBackgroundJobs(serverJobs: BackgroundJob[]): Backgrou
   return [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function hydrateBackgroundJobsFromServer(serverJobs: BackgroundJob[]): void {
-  const store: JobStore = {};
-  for (const job of serverJobs) {
-    const list = store[job.moduleId] ?? [];
-    list.push(job);
-    store[job.moduleId] = list.slice(0, MAX_JOBS_PER_MODULE);
-  }
-  writeStore(store);
-}
-
 export function upsertLocalBackgroundJob(job: BackgroundJob): void {
   const store = readStore();
   const list = store[job.moduleId] ?? [];
@@ -92,14 +82,6 @@ export function getAllBackgroundJobs(): BackgroundJob[] {
   return Object.values(store)
     .flat()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-}
-
-export function getModuleBackgroundJobs(moduleId: string): BackgroundJob[] {
-  return readStore()[moduleId] ?? [];
-}
-
-export function getActiveBackgroundJobs(): BackgroundJob[] {
-  return getAllBackgroundJobs().filter((job) => job.status === 'running');
 }
 
 export function startBackgroundJob(
@@ -124,19 +106,6 @@ export function startBackgroundJob(
   writeStore(store);
   syncRemote(job);
   return id;
-}
-
-export function updateBackgroundJobProgress(id: string, current: number, total: number): void {
-  const store = readStore();
-  for (const moduleId of Object.keys(store)) {
-    const jobIndex = store[moduleId].findIndex((storedJob) => storedJob.id === id);
-    if (jobIndex < 0) continue;
-    const job = { ...store[moduleId][jobIndex], progress: { current, total } };
-    store[moduleId][jobIndex] = job;
-    writeStore(store);
-    syncRemote(job);
-    return;
-  }
 }
 
 export function completeBackgroundJob(id: string): void {

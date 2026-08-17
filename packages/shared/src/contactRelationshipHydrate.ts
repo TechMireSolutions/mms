@@ -11,11 +11,17 @@ export function hydrateContactRelationshipFields<T extends Partial<Contact> | Re
 
   const record = { ...contact } as T & {
     relationshipContacts?: RelationshipContact[];
+    relationships?: RelationshipContact[];
     emergencyContacts?: RelationshipContact[];
   };
 
-  if (!Array.isArray(record.relationshipContacts) && Array.isArray(record.emergencyContacts)) {
-    record.relationshipContacts = record.emergencyContacts;
+  const hasExplicitRelationshipContacts = Array.isArray(record.relationshipContacts) && record.relationshipContacts.length > 0;
+  if (!hasExplicitRelationshipContacts) {
+    if (Array.isArray(record.relationships) && record.relationships.length > 0) {
+      record.relationshipContacts = record.relationships;
+    } else if (Array.isArray(record.emergencyContacts) && !Array.isArray(record.relationshipContacts)) {
+      record.relationshipContacts = record.emergencyContacts;
+    }
   }
 
   delete record.emergencyContacts;

@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import {
+  isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type EnrollmentsCommandMetricsSnapshot,
   type EnrollmentsListPageResult,
@@ -7,6 +8,7 @@ import {
 } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import { enrollmentRowToRecord } from './enrollmentRepository.js';
 
 const ENROLLMENT_SORT_FIELDS = new Set([
@@ -57,7 +59,7 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
 function buildListConditions(subdomain: string, query: EnrollmentsListQuery): SQL[] {
   const conditions: SQL[] = [eq(enrollments.workspaceSubdomain, subdomain)];
 
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(enrollments.deletedAt));
   } else {
     conditions.push(isNull(enrollments.deletedAt));
@@ -101,35 +103,23 @@ export async function listEnrollmentsPage(
   query: EnrollmentsListQuery,
 ): Promise<EnrollmentsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildOrderBy(query.sortField, query.sortDir);
+    const result = await runListPage(tx, enrollments, {
+      conditions: buildListConditions(subdomain, query),
+      orderBy: buildOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 12,
+      rowMapper: (row) => row as typeof enrollments.$inferSelect,
+    });
 
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(enrollments)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(enrollments)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    if (rows.length === 0) {
+    if (result.items.length === 0) {
       return {
         enrollments: [],
-        total,
-        page,
-        limit,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
         hasMore: false,
       };
     }
@@ -140,7 +130,7 @@ export async function listEnrollmentsPage(
       .where(
         and(
           eq(enrollmentTimelineEvents.workspaceSubdomain, subdomain),
-          inArray(enrollmentTimelineEvents.enrollmentId, rows.map((r) => r.id)),
+          inArray(enrollmentTimelineEvents.enrollmentId, result.items.map((r) => r.id)),
         ),
       )) ?? [];
 
@@ -152,11 +142,11 @@ export async function listEnrollmentsPage(
     }
 
     return {
-      enrollments: rows.map((row) => enrollmentRowToRecord(row, timelineMap.get(row.id) ?? [])),
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      enrollments: result.items.map((row) => enrollmentRowToRecord(row, timelineMap.get(row.id) ?? [])),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

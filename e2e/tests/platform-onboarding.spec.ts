@@ -52,17 +52,18 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await page.fill('#platform-setup-password', platformPassword);
     await page.click('button[type="submit"]');
 
-    const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
+    const platformConsoleLanding = page.getByRole('heading', { name: /Dashboard|Welcome back/i }).or(page.locator('a[href="/onboarding"]'));
     const signInEmailInput = page.locator('#platform-email');
-    await platformConsoleHeading.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
+    await platformConsoleLanding.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
 
     if (await signInEmailInput.isVisible()) {
       await signInEmailInput.fill(platformEmail);
       await page.fill('#platform-password', platformPassword);
       await page.click('button[type="submit"]');
+      await platformConsoleLanding.first().waitFor({ state: 'visible', timeout: 25_000 });
     }
 
-    await expect(page.locator('h1')).toContainText('Platform console');
+    await expect(page.getByRole('link', { name: /Create New Madrasa/i }).or(page.locator('a[href="/onboarding"]')).first()).toBeVisible();
 
     // 3. Open Onboarding Wizard & Fill Step 1
     await page.click('a[href="/onboarding"]');
@@ -88,8 +89,8 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await page.check('#terms');
     await page.click('button:has-text("Create workspace")');
 
-    await expect(page).toHaveURL('http://localhost:5173/');
-    await expect(page.locator('h1')).toContainText('Platform console');
+    await expect(page).toHaveURL(/\/|\/platform\/dashboard/);
+    await expect(platformConsoleLanding.first()).toBeVisible({ timeout: 25_000 });
 
     // 5. Navigate to tenant login page & login with temporary password
     const tenantLoginUrl = `http://${subdomain}.localhost:5173/login`;

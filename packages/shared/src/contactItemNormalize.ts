@@ -91,7 +91,7 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
       (address) =>
         !isBlankContactListRow(
           address,
-          ["line1", "city", "state", "country"],
+          ["line1", "city", "state"],
           ADDRESS_SYSTEM_KEYS,
         ),
     );

@@ -1,9 +1,7 @@
 import { z } from 'zod';
-import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 import { stripStudentClientSoftDeleteFields } from './studentUtils.js';
 import {
   STUDENT_WRITE_SYSTEM_KEYS,
-  collectStudentWriteExtraFieldKeys,
 } from './studentValidation.js';
 
 const STUDENT_WRITE_SYSTEM_KEY_SET = new Set<string>(STUDENT_WRITE_SYSTEM_KEYS);

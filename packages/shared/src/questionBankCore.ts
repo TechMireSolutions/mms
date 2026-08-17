@@ -1,6 +1,5 @@
 import {
   APP_LANGUAGES,
-  normalizeAppLanguage,
   type AppLanguageCode,
 } from './languageUtils.js';
 

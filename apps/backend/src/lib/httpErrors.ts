@@ -30,9 +30,13 @@ export function sendDatabaseError(
   cause?: unknown,
 ): ReturnType<FastifyReply['status']> {
   if (cause !== undefined) {
+    // Log full cause server-side only — never echo DB internals to the client.
     console.error('[database_error]', message, cause);
   }
-  return reply.status(500).send({ type: 'database_error', message });
+  return reply.status(500).send({
+    type: 'database_error',
+    message,
+  });
 }
 
 export function sendConflict(

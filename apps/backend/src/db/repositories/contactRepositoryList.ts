@@ -1,11 +1,13 @@
-import { and, desc, asc, eq, inArray, isNotNull, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
+import { desc, asc, eq, inArray, isNotNull, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
 import {
+  isQueryFlagTrue,
   normalizeSearchString,
   type ContactsListPageResult,
   type ContactsListQuery,
 } from '@mms/shared';
 import { contacts, students, teachers, tenantUsers, contactEmails, contactAddresses } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import {
   hasEmailSql,
   hasPhoneSql,
@@ -158,7 +160,7 @@ function buildListConditions(
 ): SQL[] {
   const conditions: SQL[] = [eq(contacts.workspaceSubdomain, subdomain)];
 
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(contacts.deletedAt));
   } else {
     conditions.push(isNull(contacts.deletedAt));
@@ -241,9 +243,6 @@ export async function listContactsPage(
   query: ContactsListQuery,
 ): Promise<ContactsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
-  const offset = (page - 1) * limit;
   const excludeIds = (query.excludeIds ?? []).map(String).filter(Boolean);
   const includeIds =
     query.includeIds === undefined
@@ -251,35 +250,28 @@ export async function listContactsPage(
       : [...new Set(query.includeIds.map(String).filter(Boolean))];
 
   if (includeIds && includeIds.length === 0) {
+    const page = Math.max(1, query.page ?? 1);
+    const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
     return { contacts: [], total: 0, page, limit, hasMore: false };
   }
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildListConditions(subdomain, query, excludeIds, includeIds);
-    const whereClause = and(...conditions);
-    const orderBy = buildOrderBy(query.sortField, query.sortDir);
+    const result = await runListPage(tx, contacts, {
+      conditions: buildListConditions(subdomain, query, excludeIds, includeIds),
+      orderBy: buildOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 50,
+      rowMapper: (row) => row as typeof contacts.$inferSelect,
+    });
 
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(contacts)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(contacts)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    const pageContacts = await hydrateContactsList(tx, subdomain, rows);
+    const pageContacts = await hydrateContactsList(tx, subdomain, result.items);
     return {
       contacts: pageContacts,
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

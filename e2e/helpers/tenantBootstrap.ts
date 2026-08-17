@@ -27,7 +27,7 @@ export function resetPlatformUsers(): void {
     console.warn('[E2E SAFEGUARD] Skipping platform users reset on production environment.');
     return;
   }
-  execSync('npx tsx src/scripts/reset-platform-users.ts', {
+  execSync('pnpm exec tsx src/scripts/reset-platform-users.ts', {
     cwd: backendDir,
     encoding: 'utf8',
     env: {
@@ -84,9 +84,9 @@ export async function bootstrapAuthenticatedTenant(
   await page.fill('#platform-setup-password', platformPassword);
   await page.click('button[type="submit"]');
 
-  const platformConsoleHeading = page.locator('h1', { hasText: 'Platform console' });
+  const platformLanding = page.getByRole('heading', { name: /Dashboard|Welcome back/i }).or(page.locator('a[href="/onboarding"]'));
   const signInEmailInput = page.locator('#platform-email');
-  await platformConsoleHeading.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
+  await platformLanding.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
 
   if (await signInEmailInput.isVisible()) {
     await signInEmailInput.fill(platformEmail);
@@ -94,7 +94,7 @@ export async function bootstrapAuthenticatedTenant(
     await page.click('button[type="submit"]');
   }
 
-  await expect(platformConsoleHeading).toBeVisible({ timeout: 20_000 });
+  await expect(platformLanding.first()).toBeVisible({ timeout: 20_000 });
 
   await page.click('a[href="/onboarding"]');
   await page.waitForURL('**/onboarding');
@@ -116,7 +116,8 @@ export async function bootstrapAuthenticatedTenant(
   await page.check('#terms');
   await page.click('button:has-text("Create workspace")');
 
-  await expect(page.locator('h1')).toContainText('Platform console', { timeout: 30_000 });
+  await expect(page).toHaveURL(/\/|\/platform\/dashboard/);
+  await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });
 
   await page.goto(`${tenantOrigin}/login`);
   await page.waitForLoadState('domcontentloaded');

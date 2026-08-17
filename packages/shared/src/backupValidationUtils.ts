@@ -4,7 +4,6 @@ import {
   BACKUP_FORMAT_VERSION,
   type WorkspaceBackupDataSource,
   type WorkspaceBackupEnvelope,
-  type WorkspaceBackupSummary,
   type WorkspaceBackupSummaryResult,
 } from './backupSchemas.js';
 import {

@@ -1,5 +1,6 @@
 import { and, asc, eq, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
+  isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type Student,
   type StudentsCommandMetricsSnapshot,
@@ -138,7 +139,7 @@ function buildListConditions(
 ): SQL[] {
   const conditions: SQL[] = [eq(students.workspaceSubdomain, subdomain)];
 
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(students.deletedAt));
   } else {
     conditions.push(isNull(students.deletedAt));

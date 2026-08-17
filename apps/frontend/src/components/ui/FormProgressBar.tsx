@@ -30,7 +30,14 @@ export function FormProgressBar({
           {Math.round(clamped)}%
         </span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+      <div
+        className="h-1.5 overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-valuenow={Math.round(clamped)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={typeof label === 'string' ? label : undefined}
+      >
         <div
           className={cn(
             'h-full rounded-full transition-all duration-500',

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { BrandingChartPaletteHex } from '@mms/shared';
 import { SETTINGS_PREVIEW_EVENT } from '@/lib/settingsPreview';
 import { getBrandingChartPalette } from '@/lib/brandingChartPalette';
@@ -24,10 +24,8 @@ export function BrandingPaletteProvider({ children }: { children: React.ReactNod
     };
   }, []);
 
-  const value = useMemo(() => palette, [palette]);
-
   return (
-    <BrandingPaletteContext.Provider value={value}>
+    <BrandingPaletteContext.Provider value={palette}>
       {children}
     </BrandingPaletteContext.Provider>
   );

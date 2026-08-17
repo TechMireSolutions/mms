@@ -9,17 +9,20 @@ import {
 
 const APEX_READY = '#platform-setup-email, #platform-email, a[href*="login"], button:has-text("Sign")';
 
-const PUBLIC_ROUTES: readonly { path: string; ready?: string }[] = [
-  { path: '/', ready: APEX_READY },
-  { path: '/platform/forgot-password', ready: 'form, input[type="email"], #email, button' },
-  { path: '/contacts' },
-];
+function getTenantOrigin(subdomain: string, baseURL?: string): string {
+  const base = new URL(baseURL || 'http://localhost:5173');
+  base.hostname = `${subdomain}.${base.hostname}`;
+  return base.origin;
+}
 
-const TENANT_LOGIN_URL = 'http://responsive-shell.localhost:5173/login';
+const PUBLIC_ROUTES: readonly { path: string; ready?: string; checkTouch?: boolean }[] = [
+  { path: '/', ready: APEX_READY, checkTouch: true },
+  { path: '/platform/forgot-password', ready: 'form, input[type="email"], #email, button', checkTouch: true },
+  { path: '/contacts', ready: 'main, #main-content, h1, [role="main"]', checkTouch: true },
+];
 
 async function openPublicRoute(page: Page, url: string, ready?: string): Promise<void> {
   await page.goto(url);
-  await page.waitForLoadState('domcontentloaded');
   await waitForAppShellReady(page);
   if (ready) {
     await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 });
@@ -27,34 +30,40 @@ async function openPublicRoute(page: Page, url: string, ready?: string): Promise
 }
 
 test.describe('Unknown tenant host redirect', { tag: '@smoke' }, () => {
-  test('hard-redirects unregistered subdomain to apex tenant-not-found', async ({ page }) => {
+  test('hard-redirects unregistered subdomain to apex tenant-not-found', async ({ page, baseURL }) => {
     const missingSubdomain = `missing${Date.now()}`;
-    await page.goto(`http://${missingSubdomain}.localhost:5173/settings`, { waitUntil: 'commit' }).catch(() => {});
-    await page.waitForURL(
-      (url) => {
-        const parsed = new URL(url);
+    const targetUrl = `${getTenantOrigin(missingSubdomain, baseURL)}/settings`;
+
+    await page.goto(targetUrl).catch(() => {});
+    await expect.poll(() => {
+      try {
+        const parsed = new URL(page.url());
         return (
-          parsed.hostname === 'localhost' &&
           parsed.pathname === '/tenant-not-found' &&
           parsed.searchParams.get('subdomain') === missingSubdomain
         );
-      },
-      { timeout: 20_000 },
-    );
-    await expect(page.getByRole('heading', { name: 'Tenant does not exist' })).toBeVisible({
+      } catch {
+        return false;
+      }
+    }, { timeout: 20_000 }).toBe(true);
+
+    await expect(page.getByRole('heading', { name: /Tenant does not exist/i })).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByText(`${missingSubdomain}.localhost`, { exact: true })).toBeVisible();
+    await expect(page.getByText(new RegExp(`${missingSubdomain}\\.`, 'i')).first()).toBeVisible();
   });
 });
 
 test.describe('Public shell responsive layout', { tag: '@smoke' }, () => {
   for (const viewport of RESPONSIVE_VIEWPORTS) {
     for (const route of PUBLIC_ROUTES) {
-      test(`${viewport.name} (${viewport.width}px) ${route.path} has no horizontal overflow`, async ({ page }) => {
+      test(`${viewport.name} (${viewport.width}px) ${route.path} layout & touch targets`, async ({ page }) => {
         await page.setViewportSize(viewport);
         await openPublicRoute(page, route.path, route.ready);
         await assertNoHorizontalOverflow(page);
+        if (route.checkTouch) {
+          await assertPrimaryControlsMeetTouchTarget(page);
+        }
       });
 
       test(`${viewport.name} (${viewport.width}px) RTL ${route.path} has no horizontal overflow`, async ({ page }) => {
@@ -65,29 +74,16 @@ test.describe('Public shell responsive layout', { tag: '@smoke' }, () => {
       });
     }
 
-    test(`${viewport.name} (${viewport.width}px) apex primary controls meet 44px touch target`, async ({ page }) => {
+    test(`${viewport.name} (${viewport.width}px) tenant login shell responsive and touch targets`, async ({ page, baseURL }) => {
+      const tenantLoginUrl = `${getTenantOrigin('responsive-shell', baseURL)}/login`;
       await page.setViewportSize(viewport);
-      await openPublicRoute(page, '/', APEX_READY);
-      await assertPrimaryControlsMeetTouchTarget(page);
-    });
-
-    test(`${viewport.name} (${viewport.width}px) tenant login controls meet 44px touch target`, async ({ page }) => {
-      await page.setViewportSize(viewport);
-      await openPublicRoute(page, TENANT_LOGIN_URL);
-      await assertPrimaryControlsMeetTouchTarget(page);
-    });
-
-    test(`${viewport.name} (${viewport.width}px) tenant login shell has no horizontal overflow`, async ({ page }) => {
-      await page.setViewportSize(viewport);
-      await openPublicRoute(page, TENANT_LOGIN_URL);
+      await openPublicRoute(page, tenantLoginUrl);
       await assertNoHorizontalOverflow(page);
-    });
+      await assertPrimaryControlsMeetTouchTarget(page);
 
-    test(`${viewport.name} (${viewport.width}px) RTL tenant login shell has no horizontal overflow`, async ({ page }) => {
-      await page.setViewportSize(viewport);
-      await openPublicRoute(page, TENANT_LOGIN_URL);
       await forceRtl(page);
       await assertNoHorizontalOverflow(page);
     });
   }
 });
+

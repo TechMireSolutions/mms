@@ -1,17 +1,19 @@
-import { and, eq, ilike, or, isNull, isNotNull, type SQL, desc, asc, sql } from 'drizzle-orm';
-import type {
-  FinanceListQuery,
-  FinanceInvoicesListPageResult,
-  FinancePaymentsListPageResult,
+import { eq, ilike, or, isNull, isNotNull, type SQL, desc, asc } from 'drizzle-orm';
+import {
+  isQueryFlagTrue,
+  type FinanceListQuery,
+  type FinanceInvoicesListPageResult,
+  type FinancePaymentsListPageResult,
 } from '@mms/shared';
 import { financeInvoices, financePayments } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import { invoiceRowToRecord, paymentRowToRecord } from './financeRepository.js';
 
 function buildInvoiceListConditions(subdomain: string, query: FinanceListQuery): SQL[] {
   const conditions: SQL[] = [eq(financeInvoices.workspaceSubdomain, subdomain)];
   
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(financeInvoices.deletedAt));
   } else {
     conditions.push(isNull(financeInvoices.deletedAt));
@@ -36,7 +38,7 @@ function buildInvoiceListConditions(subdomain: string, query: FinanceListQuery):
 function buildPaymentListConditions(subdomain: string, query: FinanceListQuery): SQL[] {
   const conditions: SQL[] = [eq(financePayments.workspaceSubdomain, subdomain)];
   
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(financePayments.deletedAt));
   } else {
     conditions.push(isNull(financePayments.deletedAt));
@@ -122,37 +124,23 @@ export async function listInvoicesPage(
   query: FinanceListQuery,
 ): Promise<FinanceInvoicesListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildInvoiceListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildInvoiceOrderBy(query.sortField, query.sortDir);
-
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(financeInvoices)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(financeInvoices)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    const items = rows.map(invoiceRowToRecord);
+    const result = await runListPage(tx, financeInvoices, {
+      conditions: buildInvoiceListConditions(subdomain, query),
+      orderBy: buildInvoiceOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 12,
+      rowMapper: invoiceRowToRecord,
+    });
 
     return {
-      invoices: items,
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      invoices: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }
@@ -162,37 +150,23 @@ export async function listPaymentsPage(
   query: FinanceListQuery,
 ): Promise<FinancePaymentsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildPaymentListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildPaymentOrderBy(query.sortField, query.sortDir);
-
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(financePayments)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(financePayments)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    const items = rows.map(paymentRowToRecord);
+    const result = await runListPage(tx, financePayments, {
+      conditions: buildPaymentListConditions(subdomain, query),
+      orderBy: buildPaymentOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 12,
+      rowMapper: paymentRowToRecord,
+    });
 
     return {
-      payments: items,
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      payments: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

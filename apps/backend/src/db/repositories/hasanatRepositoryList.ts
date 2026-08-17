@@ -9,10 +9,11 @@ import {
   desc,
   type SQL,
 } from 'drizzle-orm';
-import type {
-  Distribution,
-  HasanatListQuery,
-  HasanatDistributionsListPageResult,
+import {
+  isQueryFlagTrue,
+  type Distribution,
+  type HasanatListQuery,
+  type HasanatDistributionsListPageResult,
 } from '@mms/shared';
 import { hasanatDistributions } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
@@ -26,7 +27,7 @@ function buildDistributionsListConditions(
   const conditions: SQL[] = [eq(hasanatDistributions.workspaceSubdomain, subdomain)];
 
   // Manifest softDelete.workExcludesDeleted — Work = active, trash = deleted-only.
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(hasanatDistributions.deletedAt));
   } else {
     conditions.push(isNull(hasanatDistributions.deletedAt));

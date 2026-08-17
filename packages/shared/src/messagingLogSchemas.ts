@@ -61,7 +61,7 @@ export const messageInsertSchema = z
   .strict();
 
 export type MessageInsert = z.infer<typeof messageInsertSchema>;
-export const messageUpdateSchema = messageInsertSchema.partial();
+export const messageUpdateSchema = messageInsertSchema.partial().strict();
 export type MessageUpdate = z.infer<typeof messageUpdateSchema>;
 
 export const recordMessageLogsSchema = z.object({

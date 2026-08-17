@@ -1,7 +1,7 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import type { ZodType } from 'zod';
 
-import type { User } from '@mms/shared';
+import { isQueryFlagTrue, type User } from '@mms/shared';
 import { canReadCollection, canWriteCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
@@ -19,7 +19,7 @@ export interface PaginatedListRouteOptions<TQuery, TPageResult, TAllResult = unk
 }
 
 export function registerPaginatedListRoute<
-  TQuery extends { page?: number; limit?: number; includeDeleted?: string },
+  TQuery extends { page?: number; limit?: number; includeDeleted?: string | boolean },
   TPageResult,
   TAllResult = unknown[],
 >(
@@ -41,17 +41,15 @@ export function registerPaginatedListRoute<
   fastify.get(path || '/', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, collection)) {
-      console.log(`[DEBUG 403] canReadCollection returned false for ${collection} as role ${user.role}`);
       return sendForbidden(reply);
     }
     const queryParsed = parseRequest(schema, request.query);
     if (!queryParsed.ok) {
-      console.log(`[DEBUG 400] parseRequest failed: ${queryParsed.message}`);
       return replyValidationError(reply, queryParsed.message);
     }
     try {
       const query = queryParsed.data;
-      const includeDeleted = query.includeDeleted === 'true';
+      const includeDeleted = isQueryFlagTrue(query.includeDeleted);
       if (includeDeleted) {
         const allowed = canWriteDeletedCheck
           ? canWriteDeletedCheck(user)
@@ -59,33 +57,22 @@ export function registerPaginatedListRoute<
         if (!allowed) return sendForbidden(reply);
       }
 
-      if (query.page != null) {
-        const page = await loadPageFn({
-          ...query,
-          limit: query.limit ?? defaultPageSize,
-          includeDeleted,
-        });
-        const responseData = responseTransform ? await responseTransform(page, user) : page;
-        return reply.send(responseData);
-      }
-
-      if (loadAllFn) {
+      if (query.page == null && loadAllFn) {
         const all = await loadAllFn({ includeDeleted });
         const responseData = responseTransform ? await responseTransform(all, user) : all;
         return reply.send({ [errorMessagePrefix]: responseData });
       }
 
-      // If page is null and loadAllFn is not defined, execute page = 1 by default
       const page = await loadPageFn({
         ...query,
-        page: 1,
-        limit: defaultPageSize,
+        page: query.page ?? 1,
+        limit: query.limit ?? defaultPageSize,
         includeDeleted,
       });
       const responseData = responseTransform ? await responseTransform(page, user) : page;
       return reply.send(responseData);
-    } catch {
-      return sendDatabaseError(reply, `Failed to list ${errorMessagePrefix}`);
+    } catch (error: unknown) {
+      return sendDatabaseError(reply, `Failed to list ${errorMessagePrefix}`, error);
     }
   });
 }

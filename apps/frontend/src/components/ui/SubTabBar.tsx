@@ -73,7 +73,7 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
                 aria-selected={active}
                 onClick={() => onChange(tab.key)}
                 className={cn(
-                  "group relative flex min-h-10 shrink-0 cursor-pointer items-center gap-2 rounded-t-lg px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                  "group relative flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-t-lg px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                   active
                     ? "text-primary font-semibold"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
@@ -192,7 +192,7 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
                   aria-selected={active}
                   onClick={() => onChange(t.key)}
                   className={cn(
-                    "relative flex min-h-9 min-w-9 items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    "relative flex min-h-11 min-w-11 items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                     active
                       ? "bg-card text-foreground font-semibold shadow-xs border border-border/60"
                       : "text-muted-foreground hover:text-foreground hover:bg-card/40",
@@ -235,19 +235,19 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
         {tabs.map((tab) => {
           const active = value === tab.key;
           return (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => onChange(tab.key)}
-              className={cn(
-                "flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-start text-xs font-semibold transition-colors",
-                active
-                  ? "border-primary/20 bg-card text-primary shadow-xs font-bold"
-                  : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground",
-              )}
-            >
+              <button
+                key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => onChange(tab.key)}
+                className={cn(
+                  "flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-start text-xs font-semibold transition-colors",
+                  active
+                    ? "border-primary/20 bg-card text-primary shadow-xs font-bold"
+                    : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground",
+                )}
+              >
               <span className="flex min-w-0 items-center gap-1.5">
                 {tab.icon && <tab.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
                 <span className="truncate">{tab.label}</span>
@@ -281,7 +281,7 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
               aria-selected={active}
               onClick={() => onChange(t.key)}
               className={cn(
-                "relative flex min-h-9 min-w-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                "relative flex min-h-11 min-w-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                 active
                   ? "bg-card text-foreground font-semibold shadow-xs border border-border/60"
                   : "text-muted-foreground hover:text-foreground hover:bg-card/40",

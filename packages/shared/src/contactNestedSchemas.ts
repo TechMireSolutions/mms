@@ -1,7 +1,18 @@
 import { z } from 'zod';
 import { WHATSAPP_STATUS_VALUES } from './contactEntityTypes.js';
 
-const whatsappStatusSchema = z.enum(WHATSAPP_STATUS_VALUES);
+export const whatsappStatusSchema = z.enum(WHATSAPP_STATUS_VALUES);
+
+export const whatsappStatusOptionalSchema = z
+  .union([
+    whatsappStatusSchema,
+    z.literal('unknown'),
+    z.literal('Unknown'),
+    z.literal(''),
+    z.null(),
+  ])
+  .optional()
+  .transform((val) => (val && val !== 'unknown' && val !== 'Unknown' ? (val as (typeof WHATSAPP_STATUS_VALUES)[number]) : undefined));
 
 export const phoneNumberSchema = z
   .object({
@@ -9,7 +20,7 @@ export const phoneNumberSchema = z
     number: z.string(),
     countryCode: z.string().optional(),
     isPrimary: z.boolean().optional(),
-    whatsappStatus: whatsappStatusSchema.optional(),
+    whatsappStatus: whatsappStatusOptionalSchema,
   })
   .strict();
 

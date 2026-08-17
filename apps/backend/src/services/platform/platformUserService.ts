@@ -15,6 +15,7 @@ import {
   countPlatformUserRows,
   findPlatformUserRowByEmail,
   findPlatformUserRowById,
+  findPlatformUserRowByRole,
   insertPlatformUser,
   updatePlatformUserRow,
   updatePlatformUserPermissions,
@@ -23,6 +24,10 @@ import {
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
 import { PlatformError } from './platformErrorService.js';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
+
+// ---------------------------------------------------------------------------
+// Helpers & DTO Mappers
+// ---------------------------------------------------------------------------
 
 export async function countPlatformUsers(): Promise<number> {
   return countPlatformUserRows();
@@ -45,20 +50,79 @@ export function toPlatformUserProfile(stored: StoredPlatformUser): PlatformUserP
   };
 }
 
+export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    permissions: user.permissions,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Read Queries
+// ---------------------------------------------------------------------------
+
 export async function getPlatformUserProfile(userId: string): Promise<PlatformUserProfile | null> {
   const stored = await getStoredPlatformUserById(userId);
   if (!stored) return null;
   return toPlatformUserProfile(stored);
 }
 
+export async function findPlatformUserByEmail(email: string): Promise<StoredPlatformUser | null> {
+  return findPlatformUserRowByEmail(email.trim().toLowerCase());
+}
+
+export async function getStoredPlatformUserById(id: string): Promise<StoredPlatformUser | null> {
+  return findPlatformUserRowById(id);
+}
+
+// ---------------------------------------------------------------------------
+// Writes & Profile Updates
+// ---------------------------------------------------------------------------
+
+export async function updatePlatformUserName(
+  userId: string,
+  name: string,
+): Promise<StoredPlatformUser> {
+  const trimmedName = name.trim();
+  if (!trimmedName) throw new PlatformError('invalid_name', 'Name cannot be empty');
+  const updated = await updatePlatformUserRow(userId, { name: trimmedName });
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
+  return updated;
+}
+
 export async function updatePlatformUserProfile(
   userId: string,
   name: string,
 ): Promise<PlatformUserProfile> {
-  const stored = await getStoredPlatformUserById(userId);
-  if (!stored) throw new PlatformError('user_not_found', 'Platform user not found');
   const updated = await updatePlatformUserName(userId, name);
   return toPlatformUserProfile(updated);
+}
+
+// ---------------------------------------------------------------------------
+// Authentication & Password Management
+// ---------------------------------------------------------------------------
+
+export async function verifyPlatformUserPassword(userId: string, password: string): Promise<boolean> {
+  const stored = await findPlatformUserRowById(userId);
+  if (!stored) return false;
+  return verifyPassword(password, stored.passwordHash);
+}
+
+export async function updatePlatformUserPassword(
+  userId: string,
+  passwordHash: string,
+): Promise<StoredPlatformUser> {
+  const existing = await findPlatformUserRowById(userId);
+  if (!existing) throw new PlatformError('user_not_found', 'Platform user not found');
+  const updated = await updatePlatformUserRow(userId, {
+    passwordHash,
+    sessionVersion: existing.sessionVersion + 1,
+  });
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
+  return updated;
 }
 
 export async function changePlatformUserPassword(
@@ -80,6 +144,10 @@ export async function changePlatformUserPassword(
   return updated;
 }
 
+// ---------------------------------------------------------------------------
+// Admin User Administration (Creation, Permissions, Disabling, Deletion)
+// ---------------------------------------------------------------------------
+
 export async function createVerifiedPlatformUser(input: {
   email: string;
   name: string;
@@ -87,7 +155,11 @@ export async function createVerifiedPlatformUser(input: {
   role?: PlatformRole;
   permissions?: PlatformAdminPermissions;
 }): Promise<StoredPlatformUser> {
-  const existing = await findPlatformUserByEmail(input.email);
+  const normalizedEmail = input.email.trim().toLowerCase();
+  const trimmedName = input.name.trim();
+  if (!trimmedName) throw new PlatformError('invalid_name', 'Name cannot be empty');
+
+  const existing = await findPlatformUserByEmail(normalizedEmail);
   if (existing) throw new PlatformError('user_exists', 'Platform user already exists');
 
   const count = await countPlatformUsers();
@@ -105,8 +177,8 @@ export async function createVerifiedPlatformUser(input: {
 
   const user: StoredPlatformUser = {
     id: randomBytes(8).toString('hex'),
-    email: input.email.toLowerCase(),
-    name: input.name,
+    email: normalizedEmail,
+    name: trimmedName,
     passwordHash: input.passwordHash,
     role,
     permissions,
@@ -175,56 +247,12 @@ export async function deletePlatformAdmin(userId: string): Promise<void> {
   if (!removed) throw new PlatformError('user_not_found', 'Platform user not found');
 }
 
-export async function updatePlatformUserPassword(
-  userId: string,
-  passwordHash: string,
-): Promise<StoredPlatformUser> {
-  const existing = await findPlatformUserRowById(userId);
-  if (!existing) throw new PlatformError('user_not_found', 'Platform user not found');
-  const updated = await updatePlatformUserRow(userId, {
-    passwordHash,
-    sessionVersion: existing.sessionVersion + 1,
-  });
-  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
-  return updated;
-}
-
-export async function findPlatformUserByEmail(email: string): Promise<StoredPlatformUser | null> {
-  return findPlatformUserRowByEmail(email);
-}
-
-export async function getStoredPlatformUserById(id: string): Promise<StoredPlatformUser | null> {
-  return findPlatformUserRowById(id);
-}
-
-export async function updatePlatformUserName(
-  userId: string,
-  name: string,
-): Promise<StoredPlatformUser> {
-  const updated = await updatePlatformUserRow(userId, { name: name.trim() });
-  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
-  return updated;
-}
-
-/** Verifies the platform super-user password without changing credentials. */
-export async function verifyPlatformUserPassword(userId: string, password: string): Promise<boolean> {
-  const stored = await findPlatformUserRowById(userId);
-  if (!stored) return false;
-  return verifyPassword(password, stored.passwordHash);
-}
-
-export function toPublicPlatformUser(user: StoredPlatformUser): PlatformUser {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    permissions: user.permissions,
-  };
-}
+// ---------------------------------------------------------------------------
+// Development & Environment Bootstrap
+// ---------------------------------------------------------------------------
 
 /**
- * Optional dev bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
+ * Dev/staging bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
  * Requires explicit PLATFORM_ADMIN_EMAIL + PLATFORM_ADMIN_PASSWORD (or SEED_DEV_PASSWORD).
  */
 export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
@@ -258,20 +286,30 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     return;
   }
 
-  if ((await countPlatformUserRows()) === 0) {
-    const user: StoredPlatformUser = {
-      id: randomBytes(8).toString('hex'),
+  const existingSuperUser = await findPlatformUserRowByRole('super_user');
+  if (existingSuperUser) {
+    const newHash = await hashPassword(password);
+    await updatePlatformUserRow(existingSuperUser.id, {
       email: normalizedEmail,
+      passwordHash: newHash,
       name,
-      passwordHash: await hashPassword(password),
-      role: 'super_user',
-      permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
-      sessionVersion: 0,
-      createdAt: new Date().toISOString(),
-      emailVerifiedAt: new Date().toISOString(),
-    };
-    await insertPlatformUser(user);
-    console.log(`Platform super-user seeded from env for ${user.email}`);
+    });
+    console.log(`[MMS] Updated existing super-user email to ${normalizedEmail} from env`);
+    return;
   }
+
+  const user: StoredPlatformUser = {
+    id: randomBytes(8).toString('hex'),
+    email: normalizedEmail,
+    name,
+    passwordHash: await hashPassword(password),
+    role: 'super_user',
+    permissions: FULL_PLATFORM_ADMIN_PERMISSIONS,
+    sessionVersion: 0,
+    createdAt: new Date().toISOString(),
+    emailVerifiedAt: new Date().toISOString(),
+  };
+  await insertPlatformUser(user);
+  console.log(`[MMS] Platform super-user seeded from env for ${user.email}`);
 }
 

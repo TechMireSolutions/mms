@@ -54,13 +54,7 @@ export const genericSavedReportListQuerySchema = z.object({
   category: genericSavedReportCategorySchema,
 });
 
-/** Category query required by generic saved-report operations. */
-export type GenericSavedReportListQuery = z.infer<typeof genericSavedReportListQuerySchema>;
-
 /** Validates route parameters identifying a generic saved-report preset. */
 export const genericSavedReportIdParamsSchema = z.object({
   id: z.string().min(1),
 });
-
-/** Route parameters identifying a generic saved-report preset. */
-export type GenericSavedReportIdParams = z.infer<typeof genericSavedReportIdParamsSchema>;

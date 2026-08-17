@@ -18,6 +18,7 @@ export const attendanceRecordSchema = z
     timeIn: z.string().optional().default(''),
     timeOut: z.string().optional().default(''),
     notes: z.string().optional().default(''),
+    customFields: z.record(z.string(), z.unknown()).optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
     deletedAt: z.string().nullable().optional(),
@@ -38,6 +39,7 @@ export const attendanceRecordInsertSchema = z
     timeIn: z.string().optional().default(''),
     timeOut: z.string().optional().default(''),
     notes: z.string().optional().default(''),
+    customFields: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
 

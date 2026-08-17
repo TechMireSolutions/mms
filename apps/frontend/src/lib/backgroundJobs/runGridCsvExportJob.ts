@@ -1,4 +1,3 @@
-import { buildCsvContent } from '@mms/shared';
 import { runCsvDownloadJob } from '@/lib/backgroundJobs/runCsvDownloadJob';
 
 export interface GridExportColumn {
@@ -24,14 +23,4 @@ export function runGridCsvExportJob(options: {
     filename: options.filename.endsWith('.csv') ? options.filename : `${options.filename}.csv`,
     rows: [header, ...csvRows],
   });
-}
-
-/** Builds CSV content for a grid without triggering download (PDF path, previews). */
-export function buildGridCsvContent(
-  columns: GridExportColumn[],
-  rows: Record<string, unknown>[],
-): string {
-  const header = columns.map((column) => column.header);
-  const csvRows = rows.map((row) => columns.map((column) => row[column.key] ?? ''));
-  return buildCsvContent([header, ...csvRows]);
 }

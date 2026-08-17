@@ -414,6 +414,20 @@
       "when": 1786669200000,
       "tag": "0058_teachers_3nf_normalization",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1786672800000,
+      "tag": "0059_contacts_child_tables_schema_alignment",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1786676400000,
+      "tag": "0060_contact_emails_is_verified",
+      "breakpoints": true
     }
   ]
 }

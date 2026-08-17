@@ -10,10 +10,11 @@ import {
   desc,
   type SQL,
 } from 'drizzle-orm';
-import type {
-  Exam,
-  ExaminationsListQuery,
-  ExaminationsListPageResult,
+import {
+  isQueryFlagTrue,
+  type Exam,
+  type ExaminationsListQuery,
+  type ExaminationsListPageResult,
 } from '@mms/shared';
 import { exams, examClasses } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
@@ -24,7 +25,7 @@ function buildExamsListConditions(subdomain: string, query: ExaminationsListQuer
   const conditions: SQL[] = [eq(exams.workspaceSubdomain, subdomain)];
 
   // Manifest softDelete.workExcludesDeleted — Work = active, trash = deleted-only.
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(exams.deletedAt));
   } else {
     conditions.push(isNull(exams.deletedAt));

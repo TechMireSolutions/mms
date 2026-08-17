@@ -111,6 +111,7 @@ export const FormCustomFieldFileInput = React.memo(function FormCustomFieldFileI
                   name={`${field.key}-avatar-upload`}
                   type="file"
                   accept="image/*"
+                  aria-label={field.label}
                   className="hidden"
                   onChange={(event) => {
                     void handleFile(event);
@@ -150,8 +151,9 @@ export const FormCustomFieldFileInput = React.memo(function FormCustomFieldFileI
                 onClick={() => onChange(null)}
                 className="min-w-11 min-h-11 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
                 type="button"
+                aria-label={`${t("common.delete")} ${file.name}`}
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
               </Button>
             </div>
           ) : (
@@ -162,6 +164,7 @@ export const FormCustomFieldFileInput = React.memo(function FormCustomFieldFileI
                 id={`${field.key}-document-upload`}
                 name={`${field.key}-document-upload`}
                 type="file"
+                aria-label={clickToUploadDocumentLabel}
                 className="hidden"
                 onChange={(event) => {
                   void handleFile(event);

@@ -38,13 +38,21 @@ Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker
 
 See `skills/README.md`. Invoke by task keywords or `@skill-name` if your client supports it.
 
-## Quick start
+## Quick start & validation
 
 ```bash
 pnpm install && pnpm typecheck
+pnpm test
+pnpm run check:i18n                                # Verify i18n translation coverage
 bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
-./restart_servers.sh   # local dev (screen)
+./restart_servers.sh                               # local dev (screen)
 ```
+
+## Architecture blueprints & docs
+
+- [Platform Architecture Blueprint](file:///Users/syedaalin/Documents/mms/docs/platform-architecture-blueprint.md)
+- [Navigation Drawer Guide](file:///Users/syedaalin/Documents/mms/docs/navigation-drawer-guide.md)
+- [Skills Index](file:///Users/syedaalin/Documents/mms/.agent/skills/README.md)
 
 ## Sync policy
 

@@ -1,5 +1,5 @@
 import type { AppTranslationKey } from './appTranslations.js';
-import { getIntlLocaleForLanguage, normalizeAppLanguage } from './languageUtils.js';
+import { getIntlLocaleForLanguage } from './languageUtils.js';
 
 /** Supported global date display format identifiers. */
 export const DATE_FORMAT_PRESET_IDS = [
@@ -120,7 +120,7 @@ export function formatIsoDateToDisplay(iso: string, formatId: string): string {
  * Parses a display-pattern date string into ISO storage form (`YYYY-MM-DD`).
  */
 export function parseDisplayDateToIso(display: string, formatId: string): string {
-  if (!display.trim()) return '';
+  if (!display || typeof display !== 'string' || !display.trim()) return '';
   const id = normalizeDateFormat(formatId);
   const cleaned = display.trim().replace(/\//g, '-').replace(/\./g, '-');
   const segments = cleaned.split('-').map((s) => s.trim());
@@ -130,7 +130,11 @@ export function parseDisplayDateToIso(display: string, formatId: string): string
   let month = 0;
   let day = 0;
 
-  if (id === 'MM/DD/YYYY') {
+  if (segments[0].length === 4) {
+    year = Number(segments[0]);
+    month = Number(segments[1]);
+    day = Number(segments[2]);
+  } else if (id === 'MM/DD/YYYY') {
     month = Number(segments[0]);
     day = Number(segments[1]);
     year = Number(segments[2]);
@@ -144,7 +148,7 @@ export function parseDisplayDateToIso(display: string, formatId: string): string
     year = Number(segments[2]);
   }
 
-  if (!year || !month || !day || month < 1 || month > 12 || day < 1 || day > 31) {
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day) || month < 1 || month > 12 || day < 1 || day > 31) {
     return '';
   }
 

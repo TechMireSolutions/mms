@@ -311,7 +311,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={translate("nav.globalSearchPlaceholder") || "Search modules, pages, or commands... (Cmd+K)"}
+              placeholder={translate("nav.globalSearchPlaceholder")}
               className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
             <kbd className="hidden sm:inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground select-none">
@@ -338,7 +338,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
                     onClick={() => handleSelect(item.path)}
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm transition-colors cursor-pointer",
+                      "flex w-full min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm transition-colors cursor-pointer",
                       isSelected
                         ? "bg-primary text-primary-foreground font-medium shadow-sm"
                         : "text-foreground hover:bg-muted/70",

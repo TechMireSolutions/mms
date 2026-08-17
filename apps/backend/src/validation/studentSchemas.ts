@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { bulkIdsBodySchema } from './commonSchemas.js';
-import { studentsListQuerySchema } from '@mms/shared';
+import { isQueryFlagTrue, studentsListQuerySchema } from '@mms/shared';
 import {
   csvExportBodySchema,
   moduleFieldsPrefsAuditBodySchema,
@@ -15,7 +15,7 @@ export const studentsNextGrNumberQuerySchema = z.object({
   restartAnnually: z
     .enum(['true', 'false'])
     .optional()
-    .transform((v) => (v === undefined ? undefined : v === 'true')),
+    .transform((v) => (v === undefined ? undefined : isQueryFlagTrue(v))),
 });
 
 export const studentsDuplicateCheckBodySchema = z.object({

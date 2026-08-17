@@ -443,7 +443,7 @@ describe('contactService relationship reciprocal mapping', () => {
         id: 'a',
         firstName: 'Ali',
         phones: [expect.objectContaining({ countryCode: '+92', number: '3001234567' })],
-        emails: [{ label: 'Home', address: 'ahmed@example.com' }],
+        emails: [expect.objectContaining({ label: 'Home', address: 'ahmed@example.com' })],
         notes: 'Keep Me',
       }),
     );

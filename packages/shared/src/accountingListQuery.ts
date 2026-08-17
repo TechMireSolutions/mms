@@ -1,5 +1,4 @@
 import type { Account, JournalEntry, FiscalYear } from './accountingModuleManifest.js';
-import { paginateArray } from './utils.js';
 
 export interface AccountingListQuery {
   page?: number;

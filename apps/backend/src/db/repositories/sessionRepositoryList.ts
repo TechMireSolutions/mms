@@ -1,11 +1,13 @@
-import { and, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL, desc, asc } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import {
+  isQueryFlagTrue,
   type SessionsCommandMetricsSnapshot,
   type SessionsListPageResult,
   type SessionsListQuery,
 } from '@mms/shared';
 import { sessions } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import { findSessionsByIds } from './sessionRepository.js';
 
 const SESSION_SORT_FIELDS = new Set([
@@ -64,7 +66,7 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
 function buildListConditions(subdomain: string, query: SessionsListQuery): SQL[] {
   const conditions: SQL[] = [eq(sessions.workspaceSubdomain, subdomain)];
 
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(sessions.deletedAt));
   } else {
     conditions.push(isNull(sessions.deletedAt));
@@ -108,42 +110,42 @@ export async function listSessionsPage(
   query: SessionsListQuery,
 ): Promise<SessionsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildOrderBy(query.sortField, query.sortDir);
+    const result = await runListPage(tx, sessions, {
+      conditions: buildListConditions(subdomain, query),
+      orderBy: buildOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 12,
+      rowMapper: (row) => row as typeof sessions.$inferSelect,
+    });
 
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(sessions)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
+    if (result.items.length === 0) {
+      return {
+        sessions: [],
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+        hasMore: false,
+      };
+    }
 
-    const rows = await tx
-      .select({ id: sessions.id })
-      .from(sessions)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    const ids = rows.map((r) => r.id);
+    const ids = result.items.map((r) => r.id);
     const hydratedSessions = await findSessionsByIds(subdomain, ids);
 
     // Preserve order from pagination query
     const sessionMap = new Map(hydratedSessions.map((s) => [s.id, s]));
-    const ordered = ids.map((id) => sessionMap.get(id)!).filter(Boolean);
+    const ordered = ids
+      .map((id) => sessionMap.get(id))
+      .filter((s): s is NonNullable<typeof s> => Boolean(s));
 
     return {
       sessions: ordered,
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

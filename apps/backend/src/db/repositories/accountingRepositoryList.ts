@@ -1,9 +1,10 @@
 import { and, eq, ilike, or, isNull, isNotNull, type SQL, desc, asc, sql, inArray } from 'drizzle-orm';
-import type {
-  AccountingListQuery,
-  AccountingAccountsListPageResult,
-  AccountingEntriesListPageResult,
-  AccountingFiscalYearsListPageResult,
+import {
+  isQueryFlagTrue,
+  type AccountingListQuery,
+  type AccountingAccountsListPageResult,
+  type AccountingEntriesListPageResult,
+  type AccountingFiscalYearsListPageResult,
 } from '@mms/shared';
 import {
   accountingAccounts,
@@ -14,6 +15,7 @@ import {
   accountingEntryAttachments,
 } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
+import { runListPage } from './listPageHelper.js';
 import {
   accountRowToRecord,
   fiscalYearRowToRecord,
@@ -23,7 +25,7 @@ import {
 function buildAccountListConditions(subdomain: string, query: AccountingListQuery): SQL[] {
   const conditions: SQL[] = [eq(accountingAccounts.workspaceSubdomain, subdomain)];
   
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(accountingAccounts.deletedAt));
   } else {
     conditions.push(isNull(accountingAccounts.deletedAt));
@@ -49,7 +51,7 @@ function buildAccountListConditions(subdomain: string, query: AccountingListQuer
 function buildEntryListConditions(subdomain: string, query: AccountingListQuery): SQL[] {
   const conditions: SQL[] = [eq(accountingEntries.workspaceSubdomain, subdomain)];
   
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(accountingEntries.deletedAt));
   } else {
     conditions.push(isNull(accountingEntries.deletedAt));
@@ -74,7 +76,7 @@ function buildEntryListConditions(subdomain: string, query: AccountingListQuery)
 function buildFiscalYearListConditions(subdomain: string, query: AccountingListQuery): SQL[] {
   const conditions: SQL[] = [eq(accountingFiscalYears.workspaceSubdomain, subdomain)];
   
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(accountingFiscalYears.deletedAt));
   } else {
     conditions.push(isNull(accountingFiscalYears.deletedAt));
@@ -179,37 +181,23 @@ export async function listAccountsPage(
   query: AccountingListQuery,
 ): Promise<AccountingAccountsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildAccountListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildAccountOrderBy(query.sortField, query.sortDir);
-
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(accountingAccounts)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(accountingAccounts)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    const items = rows.map(accountRowToRecord);
+    const result = await runListPage(tx, accountingAccounts, {
+      conditions: buildAccountListConditions(subdomain, query),
+      orderBy: buildAccountOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 12,
+      rowMapper: accountRowToRecord,
+    });
 
     return {
-      accounts: items,
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      accounts: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }
@@ -328,37 +316,23 @@ export async function listFiscalYearsPage(
   query: AccountingListQuery,
 ): Promise<AccountingFiscalYearsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const page = Math.max(1, query.page ?? 1);
-  const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
-  const offset = (page - 1) * limit;
 
   return withTenantTransaction(subdomain, async (tx) => {
-    const conditions = buildFiscalYearListConditions(subdomain, query);
-    const whereClause = and(...conditions);
-    const orderBy = buildFiscalYearOrderBy(query.sortField, query.sortDir);
-
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(accountingFiscalYears)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
-
-    const rows = await tx
-      .select()
-      .from(accountingFiscalYears)
-      .where(whereClause)
-      .orderBy(orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    const items = rows.map(fiscalYearRowToRecord);
+    const result = await runListPage(tx, accountingFiscalYears, {
+      conditions: buildFiscalYearListConditions(subdomain, query),
+      orderBy: buildFiscalYearOrderBy(query.sortField, query.sortDir),
+      page: query.page,
+      limit: query.limit,
+      defaultPageSize: 12,
+      rowMapper: fiscalYearRowToRecord,
+    });
 
     return {
-      fiscalYears: items,
-      total,
-      page,
-      limit,
-      hasMore: page * limit < total,
+      fiscalYears: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     };
   });
 }

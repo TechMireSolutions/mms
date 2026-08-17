@@ -38,15 +38,6 @@ export const ROUTES = {
   tenantNotFound: "/tenant-not-found",
 } as const;
 
-/** Paths that do not require tenant authentication */
-export const PUBLIC_PATHS: readonly string[] = [
-  ROUTES.login,
-  ROUTES.platformLogin,
-  ROUTES.forgotPassword,
-  ROUTES.platformForgotPassword,
-  ROUTES.twoFactor,
-];
-
 /**
  * Platform apex paths reachable without a platform super-user session.
  * Dedicated platform sign-in at `/platform/login`; tenant module URLs show the workspace gate.
@@ -66,31 +57,6 @@ export function tenantNotFoundPath(subdomain: string): string {
   const params = new URLSearchParams({ subdomain });
   return `${ROUTES.tenantNotFound}?${params.toString()}`;
 }
-
-/** Platform paths that require any authenticated platform user. */
-export const PLATFORM_AUTH_PATHS: readonly string[] = [
-  ROUTES.platformAccount,
-  ROUTES.platformDashboard,
-  ROUTES.platformWorkspaces,
-  ROUTES.platformReports,
-];
-
-/** Platform paths that require an authenticated platform super-user. */
-export const PLATFORM_SUPER_USER_PATHS: readonly string[] = [
-  ROUTES.platformAdmins,
-  ROUTES.platformActivityLogs,
-  ROUTES.platformSystem,
-];
-
-/** Platform paths that require the onboard permission (or super-user). */
-export const PLATFORM_ONBOARD_PATHS: readonly string[] = [ROUTES.onboarding];
-
-/** All platform paths that require a platform session (auth and/or elevated access). */
-export const PLATFORM_PROTECTED_PATHS: readonly string[] = [
-  ...PLATFORM_AUTH_PATHS,
-  ...PLATFORM_ONBOARD_PATHS,
-  ...PLATFORM_SUPER_USER_PATHS,
-];
 
 /**
  * Pre-authenticated entry routes — always English/LTR regardless of saved global language.
@@ -121,12 +87,6 @@ export function isPlatformEntryPath(pathname: string): boolean {
     return true;
   }
   return isPlatformWorkspaceGatePath(pathname);
-}
-
-export function isPlatformProtectedPath(pathname: string): boolean {
-  return PLATFORM_PROTECTED_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
 }
 
 /**
@@ -168,12 +128,6 @@ export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
 export function isSettingsSection(value: string): value is SettingsSection {
   return (SETTINGS_SECTIONS as readonly string[]).includes(value);
-}
-
-export function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`)
-  );
 }
 
 /** Active state for sidebar / nav links. */

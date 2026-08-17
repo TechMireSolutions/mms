@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { FieldConfig } from './contactTypes.js';
-import { WHATSAPP_STATUS_VALUES } from './contactEntityTypes.js';
 import { isContactCustomCollectionTab } from './contactEnabledTabs.js';
 import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
 import { hydrateContactRelationshipFields } from './contactRelationshipHydrate.js';
@@ -13,6 +12,7 @@ import {
   relationshipContactSchema,
   relationshipSchema,
   socialLinkSchema,
+  whatsappStatusOptionalSchema,
 } from './contactNestedSchemas.js';
 
 const LIST_TAB_WRITE_KEYS: Record<string, string> = {
@@ -113,7 +113,7 @@ const contactWriteBaseObjectSchema = z
     updatedAt: z.string().optional(),
     createdBy: z.string().optional(),
     updatedBy: z.string().optional(),
-    whatsappStatus: z.enum(WHATSAPP_STATUS_VALUES).optional(),
+    whatsappStatus: whatsappStatusOptionalSchema,
     lastCheckedAt: z.string().nullable().optional(),
     phones: z.array(phoneNumberSchema).optional(),
     emails: z.array(emailAddressSchema).optional(),

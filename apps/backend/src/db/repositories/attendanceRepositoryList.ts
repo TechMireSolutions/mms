@@ -1,5 +1,5 @@
 import { and, eq, ilike, inArray, isNotNull, isNull, or, type SQL, asc, desc, sql } from 'drizzle-orm';
-import type { AttendanceRecord, AttendanceListQuery, AttendanceListPageResult } from '@mms/shared';
+import { isQueryFlagTrue, type AttendanceRecord, type AttendanceListQuery, type AttendanceListPageResult } from '@mms/shared';
 import { attendance } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { runListPage } from './listPageHelper.js';
@@ -8,7 +8,7 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
   const conditions: SQL[] = [eq(attendance.workspaceSubdomain, subdomain)];
 
   // Manifest softDelete.workExcludesDeleted — Work = active, trash = deleted-only.
-  if (query.includeDeleted) {
+  if (isQueryFlagTrue(query.includeDeleted)) {
     conditions.push(isNotNull(attendance.deletedAt));
   } else {
     conditions.push(isNull(attendance.deletedAt));

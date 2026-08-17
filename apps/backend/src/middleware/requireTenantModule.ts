@@ -19,8 +19,8 @@ export function requireTenantModule(moduleId: string) {
       try {
         globalSettings = (await getObject('global_settings')) as Record<string, unknown> || {};
         platformSettings = (await getObject('platform_settings')) as Record<string, unknown> || {};
-      } catch (e: any) {
-        if (e?.message?.includes('[vitest]')) {
+      } catch (e: unknown) {
+        if (e instanceof Error && e.message.includes('[vitest]')) {
           // Swallow vitest missing mock error and proceed with defaults
         } else {
           throw e; // Rethrow actual DB or unexpected errors

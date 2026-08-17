@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream';
-import { buildCsvContent } from '@mms/shared';
+import { buildCsvContent, isQueryFlagTrue } from '@mms/shared';
 
 export type CsvExportMeta = { count: number; filename: string };
 
@@ -28,13 +28,9 @@ export function normalizeIncludeDeletedFlag(
   value: unknown,
   allowDeleted: boolean,
 ): boolean | undefined {
-  const includeDeletedRaw =
-    value === true || value === 'true'
-      ? true
-      : value === false || value === 'false'
-        ? false
-        : undefined;
-  return allowDeleted ? includeDeletedRaw : undefined;
+  if (!allowDeleted) return undefined;
+  if (value === undefined || value === null) return undefined;
+  return isQueryFlagTrue(value);
 }
 
 /**

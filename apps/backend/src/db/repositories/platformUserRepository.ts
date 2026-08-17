@@ -1,4 +1,4 @@
-import { asc, count, eq } from 'drizzle-orm';
+import { asc, count, eq, inArray } from 'drizzle-orm';
 import {
   type StoredPlatformUser,
   type PlatformRole,
@@ -28,6 +28,33 @@ async function loadPermissions(userId: string): Promise<PlatformAdminPermissions
     perms[row.permissionKey] = row.isGranted;
   }
   return normalizePlatformAdminPermissions(perms);
+}
+
+async function loadPermissionsForUsers(
+  userIds: string[],
+): Promise<Map<string, PlatformAdminPermissions>> {
+  const map = new Map<string, PlatformAdminPermissions>();
+  if (userIds.length === 0) return map;
+
+  const rows = await getDb()
+    .select({
+      userId: platformUserPermissions.platformUserId,
+      permissionKey: platformUserPermissions.permissionKey,
+      isGranted: platformUserPermissions.isGranted,
+    })
+    .from(platformUserPermissions)
+    .where(inArray(platformUserPermissions.platformUserId, userIds));
+
+  const perUserRaw: Record<string, Record<string, boolean>> = {};
+  for (const row of rows) {
+    if (!perUserRaw[row.userId]) perUserRaw[row.userId] = {};
+    perUserRaw[row.userId][row.permissionKey] = row.isGranted;
+  }
+
+  for (const id of userIds) {
+    map.set(id, normalizePlatformAdminPermissions(perUserRaw[id] ?? {}));
+  }
+  return map;
 }
 
 async function writePermissions(userId: string, permissions: PlatformAdminPermissions): Promise<void> {
@@ -81,11 +108,13 @@ export async function countPlatformUserRows(): Promise<number> {
 
 export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
   const rows = await getDb().select().from(platformUsers).orderBy(asc(platformUsers.createdAt));
-  return Promise.all(
-    rows.map(async (row) => {
-      const perms = await loadPermissions(row.id);
-      return rowToStored(row, perms);
-    }),
+  if (rows.length === 0) return [];
+
+  const userIds = rows.map((r) => r.id);
+  const permsMap = await loadPermissionsForUsers(userIds);
+
+  return rows.map((row) =>
+    rowToStored(row, permsMap.get(row.id) ?? normalizePlatformAdminPermissions({})),
   );
 }
 
@@ -103,6 +132,14 @@ export async function findPlatformUserRowByEmail(email: string): Promise<StoredP
 
 export async function findPlatformUserRowById(id: string): Promise<StoredPlatformUser | null> {
   const rows = await getDb().select().from(platformUsers).where(eq(platformUsers.id, id));
+  const row = rows[0];
+  if (!row) return null;
+  const perms = await loadPermissions(row.id);
+  return rowToStored(row, perms);
+}
+
+export async function findPlatformUserRowByRole(role: PlatformRole): Promise<StoredPlatformUser | null> {
+  const rows = await getDb().select().from(platformUsers).where(eq(platformUsers.role, role));
   const row = rows[0];
   if (!row) return null;
   const perms = await loadPermissions(row.id);
