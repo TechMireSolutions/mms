@@ -3299,6 +3299,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "nav.examinations": "امتحانات",
   "nav.finance": "مالیات",
   "nav.globalSearchPlaceholder": "طلباء، سیشن تلاش کریں…",
+  "nav.globalSearchNoResults": "\"{query}\" کے لیے کوئی مماثل صفحات نہیں ملے",
   "nav.hasanatCards": "حسنات کارڈز",
   "nav.messaging": "پیغام رسانی",
   "nav.obligations": "ذمہ داریاں",

@@ -1,5 +1,4 @@
 import React from 'react';
-import type { SystemUser } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useUsersCollection } from '@/tenant/hooks/collections/users';
@@ -27,7 +26,7 @@ export function UserActorSelect({
   const selectId = id || generatedId;
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
-  const users = useUsersCollection() as SystemUser[];
+  const users = useUsersCollection();
 
   const selectOptions = users
     .slice()

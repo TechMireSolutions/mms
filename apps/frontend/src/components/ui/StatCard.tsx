@@ -14,8 +14,6 @@ export interface StatCardProps {
   sub?: string | null;
   icon?: LucideIcon | React.ComponentType<{ className?: string; style?: React.CSSProperties }> | null;
   accent?: AccentColor;
-  /** @deprecated Use `accent` instead */
-  color?: AccentColor;
   trend?: number;
   delayIndex?: number;
   onClick?: () => void;
@@ -50,7 +48,6 @@ export const StatCard = React.memo(function StatCard({
   sub = null,
   icon: Icon = null,
   accent,
-  color,
   trend,
   delayIndex = 0,
   onClick,
@@ -58,11 +55,11 @@ export const StatCard = React.memo(function StatCard({
   variant = "default",
   isActive = false,
 }: StatCardProps): React.JSX.Element {
-  const theme = resolveAccent(accent || color);
+  const theme = resolveAccent(accent);
   const Comp = onClick ? motion.button : motion.div;
   const buttonProps = onClick ? { type: "button" as const, "aria-pressed": isActive } : {};
   const isCompact = variant === "compact";
-  const resolvedAccentColor = (accent || color) as React.ComponentProps<typeof Card>["accentColor"];
+  const resolvedAccentColor = accent as React.ComponentProps<typeof Card>["accentColor"];
   const formattedValue = typeof value === "number" ? formatNumber(value) : value;
 
   if (isCompact) {

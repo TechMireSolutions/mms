@@ -3297,6 +3297,7 @@ export const APP_TRANSLATIONS_EN = {
   "nav.examinations": "Examinations",
   "nav.finance": "Finance",
   "nav.globalSearchPlaceholder": "Search students, sessions\u2026",
+  "nav.globalSearchNoResults": "No matching pages found for \"{query}\"",
   "nav.hasanatCards": "Hasanat Cards",
   "nav.messaging": "Messaging",
   "nav.obligations": "Obligations",

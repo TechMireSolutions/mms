@@ -91,5 +91,3 @@ export function PasswordStrengthMeter({
     </div>
   );
 }
-
-export default PasswordStrengthMeter;

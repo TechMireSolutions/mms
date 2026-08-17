@@ -3300,6 +3300,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "nav.examinations": "الامتحانات",
   "nav.finance": "المالية",
   "nav.globalSearchPlaceholder": "ابحث عن الطلاب والجلسات…",
+  "nav.globalSearchNoResults": "لا توجد صفحات مطابقة لـ \"{query}\"",
   "nav.hasanatCards": "بطاقات الحسنات",
   "nav.messaging": "الرسائل",
   "nav.obligations": "الالتزامات",

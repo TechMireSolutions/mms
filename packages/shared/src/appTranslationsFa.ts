@@ -3283,6 +3283,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "nav.expand": "گسترش",
   "nav.finance": "مالی",
   "nav.globalSearchPlaceholder": "جستجوی دانش‌آموزان و جلسات…",
+  "nav.globalSearchNoResults": "هیچ صفحه‌ای برای \"{query}\" یافت نشد",
   "nav.hasanatCards": "کارت‌های حسنات",
   "nav.messaging": "پیام‌رسانی",
   "nav.obligations": "تعهدات",

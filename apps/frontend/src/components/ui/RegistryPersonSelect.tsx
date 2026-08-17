@@ -1,14 +1,13 @@
 import React, { useMemo, useState } from 'react';
-import {
-  STUDENTS_MODULE_MANIFEST,
-  TEACHERS_MODULE_MANIFEST,
-} from '@mms/shared';
 import { useStudentsPaginated } from '@/tenant/hooks/collections/students';
 import { useTeachersPaginated } from '@/tenant/hooks/collections/teachers';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { FormSelect } from '@/components/ui/FormSelect';
+
+/** Dropdown page size — searchable select, not a full dump (refine via search when `hasMore`). */
+const PERSON_SELECT_PAGE_SIZE = 50;
 
 export interface RegistryPersonSelectProps {
   kind: 'student' | 'teacher';
@@ -37,14 +36,14 @@ export function RegistryPersonSelect({
 
   const { data: studentPage } = useStudentsPaginated({
     page: 1,
-    limit: STUDENTS_MODULE_MANIFEST.maxPageSize,
+    limit: PERSON_SELECT_PAGE_SIZE,
     search,
     enabled: studentsEnabled,
   });
 
   const { data: teacherPage } = useTeachersPaginated({
     page: 1,
-    limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
+    limit: PERSON_SELECT_PAGE_SIZE,
     search,
     enabled: teachersEnabled,
   });

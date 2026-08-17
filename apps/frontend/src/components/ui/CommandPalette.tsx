@@ -323,7 +323,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
           <div className="max-h-80 overflow-y-auto p-2">
             {filteredItems.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                No matching pages found for &quot;{query}&quot;
+                {t("nav.globalSearchNoResults", { query })}
               </div>
             ) : (
               filteredItems.map((item, index) => {

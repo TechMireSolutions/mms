@@ -53,5 +53,3 @@ export function SegmentedPillFilter<T extends string>({
     </div>
   );
 }
-
-export default SegmentedPillFilter;
