@@ -253,13 +253,24 @@ export function normalizeDashboardWidget(raw: unknown): DashboardWidgetDto | nul
  * Normalizes an array of raw widgets, filtering out invalid items and coercing types.
  */
 export function normalizeDashboardWidgets(raw: unknown): DashboardWidgetDto[] {
-  if (!Array.isArray(raw)) return [];
-  const widgets: DashboardWidgetDto[] = [];
-  for (const item of raw) {
-    const normalized = normalizeDashboardWidget(item);
-    if (normalized) widgets.push(normalized);
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    const widgets: DashboardWidgetDto[] = [];
+    for (const item of raw) {
+      const normalized = normalizeDashboardWidget(item);
+      if (normalized) widgets.push(normalized);
+    }
+    return widgets;
   }
-  return widgets;
+  if (typeof raw === 'object') {
+    const r = raw as Record<string, unknown>;
+    if (Array.isArray(r.widgets)) {
+      return normalizeDashboardWidgets(r.widgets);
+    }
+    const single = normalizeDashboardWidget(raw);
+    return single ? [single] : [];
+  }
+  return [];
 }
 
 /** PUT /api/dashboard/widgets — bulk upsert (insert + update; no wipe). */
