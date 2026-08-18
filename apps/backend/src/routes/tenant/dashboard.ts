@@ -84,7 +84,10 @@ export default async function dashboardRoutes(
     const user = request.user as User;
     if (!canWriteDashboard(user)) return sendForbidden(reply);
     const body = parseRequest(dashboardWidgetsPutBodySchema, request.body);
-    if (!body.ok) return replyValidationError(reply, body.message);
+    if (!body.ok) {
+      fastify.log.warn({ err: body.message, body: request.body }, 'Dashboard widgets PUT validation failed');
+      return replyValidationError(reply, body.message);
+    }
     try {
       const widgets = await upsertDashboardWidgets(body.data as DashboardWidgetDto[]);
       try {

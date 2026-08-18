@@ -111,7 +111,7 @@ export const customWidgetSchema: z.ZodType<DashboardWidgetDto> = z
     isPinnedToDashboard: z.boolean(),
     /** Stable pin order within the dashboard layout (BE defaults to array index). */
     sortOrder: z.number().optional(),
-  });
+  }).passthrough() as unknown as z.ZodType<DashboardWidgetDto>;
 
 /**
  * Pure helper for normalizing arbitrary raw widget records (e.g. from local storage,
@@ -124,40 +124,28 @@ export function normalizeDashboardWidget(raw: unknown): DashboardWidgetDto | nul
   const id = typeof r.id === "string" && r.id.trim() ? r.id.trim() : null;
   if (!id) return null;
 
-  const rawWidgetType = (r.widgetType ?? r.type) as string | undefined;
-  const widgetType =
-    typeof rawWidgetType === "string" && rawWidgetType.trim().length > 0
-      ? (rawWidgetType.trim() as DashboardWidgetDto["widgetType"])
-      : undefined;
-
-  const operation =
-    typeof r.operation === "string" && r.operation.trim().length > 0
-      ? (r.operation.trim() as DashboardWidgetDto["operation"])
-      : "count";
-
-  const sanitizeOptionalEnum = <T extends string>(val: unknown): T | undefined => {
+  const sanitizeOptionalEnum = <T extends string>(
+    val: unknown,
+    allowedValues: readonly T[],
+  ): T | undefined => {
     if (typeof val === "string") {
       const trimmed = val.trim();
-      return trimmed.length > 0 ? (trimmed as T) : undefined;
+      if ((allowedValues as readonly string[]).includes(trimmed)) {
+        return trimmed as T;
+      }
     }
     return undefined;
   };
 
-  const subTextType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["subTextType"]>>(r.subTextType);
-  const trendType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["trendType"]>>(r.trendType);
-  const switchActionType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["switchActionType"]>>(
-    r.switchActionType,
-  );
-  const thresholdCondition = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["thresholdCondition"]>>(
-    r.thresholdCondition,
-  );
-  const thresholdColor = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["thresholdColor"]>>(
-    r.thresholdColor,
-  );
-  const filterOperator = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["filterOperator"]>>(
-    r.filterOperator,
-  );
-  const chartType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["chartType"]>>(r.chartType);
+  const widgetType = sanitizeOptionalEnum(r.widgetType ?? r.type, WIDGET_TYPES);
+  const operation = sanitizeOptionalEnum(r.operation, OPERATIONS) ?? "count";
+  const subTextType = sanitizeOptionalEnum(r.subTextType, SUB_TEXT_TYPES);
+  const trendType = sanitizeOptionalEnum(r.trendType, TREND_TYPES);
+  const switchActionType = sanitizeOptionalEnum(r.switchActionType, SWITCH_ACTION_TYPES);
+  const thresholdCondition = sanitizeOptionalEnum(r.thresholdCondition, THRESHOLD_CONDITIONS);
+  const thresholdColor = sanitizeOptionalEnum(r.thresholdColor, THRESHOLD_COLORS);
+  const filterOperator = sanitizeOptionalEnum(r.filterOperator, FILTER_OPERATORS);
+  const chartType = sanitizeOptionalEnum(r.chartType, CHART_TYPES);
 
   const sanitizeString = (val: unknown): string | undefined => {
     if (typeof val === "string" && val.trim().length > 0) return val.trim();
