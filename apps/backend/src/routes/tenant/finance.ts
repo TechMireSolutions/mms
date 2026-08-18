@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { FINANCE_MODULE_MANIFEST, computeFinanceCommandMetrics, type User } from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST, type User } from '@mms/shared';
 import { registerStandardTenantRoutes, registerMetricsRoute } from '../../lib/crudRouter.js';
 import {
   financeBulkIdsSchema,
@@ -29,6 +29,7 @@ import {
   restorePaymentById,
   bulkSoftDeletePayments,
   bulkRestorePayments,
+  loadFinanceCommandMetrics,
 } from '../../services/financeService.js';
 import { canDeleteCollection, canWriteCollection } from '../../services/rbacService.js';
 import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
@@ -55,21 +56,7 @@ export default async function financeRoutes(
   // --- Metrics ---
   registerMetricsRoute(fastify, {
     collection: FINANCE_COLLECTION,
-    loadMetricsFn: async () => {
-      const invoices = await loadInvoices();
-      const payments = await loadPayments();
-      return computeFinanceCommandMetrics(
-        invoices as Array<{
-          status?: string;
-          finalAmt?: number;
-          paidAmt?: number;
-          paidDate?: string;
-          dueDate?: string;
-          discountAmt?: number;
-        }>,
-        payments as Array<{ id?: string | number }>,
-      );
-    },
+    loadMetricsFn: loadFinanceCommandMetrics,
     errorMessagePrefix: 'finance',
   });
 

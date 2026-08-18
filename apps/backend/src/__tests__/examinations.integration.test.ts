@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
-import { adminToken, assistantTeacherToken, teacherToken } from './helpers/tokens.js';
+import { adminToken, assistantTeacherToken, guardianToken, teacherToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -25,6 +25,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 const mockLoadExams = vi.fn();
 const mockLoadExamsPage = vi.fn();
+const mockLoadExaminationsCommandMetrics = vi.fn();
 
 vi.mock('../services/examinationService.js', () => ({
   loadExams: (...args: unknown[]) => mockLoadExams(...args),
@@ -38,6 +39,7 @@ vi.mock('../services/examinationService.js', () => ({
   restoreExamById: vi.fn(),
   bulkSoftDeleteExams: vi.fn(),
   bulkRestoreExams: vi.fn(),
+  loadExaminationsCommandMetrics: (...args: unknown[]) => mockLoadExaminationsCommandMetrics(...args),
 }));
 
 describe('examinations REST routes integration', () => {
@@ -165,6 +167,74 @@ describe('examinations exams pagination', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockLoadExamsPage).not.toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('examinations metrics REST', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockLoadExaminationsCommandMetrics.mockReset().mockResolvedValue({
+      total: 3,
+      upcoming: 1,
+      ongoing: 1,
+      completed: 1,
+      scheduled: 0,
+      cancelled: 0,
+      totalResults: 5,
+      examsWithResults: 2,
+      passRate: 80,
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('GET /api/examinations/metrics loads SQL metrics for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/examinations/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app, { name: 'Teacher User' })}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      metrics: {
+        total: 3,
+        upcoming: 1,
+        ongoing: 1,
+        completed: 1,
+        scheduled: 0,
+        cancelled: 0,
+        totalResults: 5,
+        examsWithResults: 2,
+        passRate: 80,
+      },
+    });
+    expect(mockLoadExaminationsCommandMetrics).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/examinations/metrics returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/examinations/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${guardianToken(app, {
+          id: 'u-unauthorized',
+          email: 'unauth@test.com',
+          name: 'Unauthorized',
+        })}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadExaminationsCommandMetrics).not.toHaveBeenCalled();
     await app.close();
   });
 });

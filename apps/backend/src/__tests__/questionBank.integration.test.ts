@@ -144,7 +144,15 @@ describe('question bank REST routes', () => {
     mockBulkRestoreQuestions.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
-    mockLoadQuestionBankCommandMetrics.mockReset().mockResolvedValue({ totalQuestions: 1, totalTests: 1 });
+    mockLoadQuestionBankCommandMetrics.mockReset().mockResolvedValue({
+      total: 1,
+      easy: 1,
+      medium: 0,
+      hard: 0,
+      totalTests: 1,
+      totalResults: 0,
+      categories: 0,
+    });
   });
 
   afterEach(() => {
@@ -357,7 +365,17 @@ describe('question bank REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ metrics: { totalQuestions: 1, totalTests: 1 } });
+    expect(res.json()).toEqual({
+      metrics: {
+        total: 1,
+        easy: 1,
+        medium: 0,
+        hard: 0,
+        totalTests: 1,
+        totalResults: 0,
+        categories: 0,
+      },
+    });
     expect(mockLoadQuestionBankCommandMetrics).toHaveBeenCalled();
     await app.close();
   });

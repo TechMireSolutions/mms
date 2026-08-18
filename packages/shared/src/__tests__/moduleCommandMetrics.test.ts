@@ -2,15 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   computeStudentsCommandMetrics,
   computeTeachersCommandMetrics,
-  computeFinanceCommandMetrics,
   computeSessionsCommandMetrics,
   computeEnrollmentsCommandMetrics,
-  computeObligationsCommandMetrics,
-  computeAccountingCommandMetrics,
-  computeHasanatCommandMetrics,
-  computeAttendanceCommandMetrics,
-  computeExaminationsCommandMetrics,
-  computeQuestionBankCommandMetrics,
   computeUsersCommandMetrics,
 } from '../moduleCommandMetrics.js';
 
@@ -46,26 +39,6 @@ describe('moduleCommandMetrics', () => {
     expect(metrics.inactive).toBe(1);
     expect(metrics.other).toBe(1);
     expect(metrics.newThisPeriod).toBe(1);
-  });
-
-  it('computes finance metrics breakdown correctly', () => {
-    const invoices = [
-      { status: 'paid', finalAmt: 100, paidAmt: 100, paidDate: '2026-08-01', discountAmt: 5 },
-      { status: 'overdue', finalAmt: 50, dueDate: '2026-07-01' },
-      { status: 'pending', finalAmt: 25, dueDate: '2026-08-15' },
-      { status: 'partial', finalAmt: 40, paidAmt: 10, paidDate: '2026-08-02', dueDate: '2026-08-20' },
-    ];
-    const payments = [{ id: 'p-1' }, { id: 'p-2' }];
-
-    const metrics = computeFinanceCommandMetrics(invoices, payments);
-    expect(metrics.totalInvoices).toBe(4);
-    expect(metrics.paid).toBe(1);
-    expect(metrics.overdue).toBe(1);
-    expect(metrics.outstanding).toBe(3); // pending, overdue, partial
-    expect(metrics.totalPayments).toBe(2);
-    expect(metrics.collectedTotal).toBe(110); // 100 + 10
-    expect(metrics.outstandingBalance).toBe(105); // 50 + 25 + 30
-    expect(metrics.discountTotal).toBe(5);
   });
 
   it('computes sessions metrics and total capacity/enrollments', () => {
@@ -106,26 +79,6 @@ describe('moduleCommandMetrics', () => {
     expect(metrics.cancelled).toBe(1);
     expect(metrics.revenue).toBe(3500); // 1500 + 2000 (cancelled excluded)
     expect(metrics.newThisPeriod).toBe(1);
-  });
-
-  it('computes accounting metrics and volume', () => {
-    const entries = [
-      {
-        status: 'posted',
-        date: new Date().toISOString(),
-        lines: [{ debit: 500 }, { debit: 500 }],
-      },
-      { status: 'draft', date: '2024-01-01' },
-    ];
-    const accounts = [{ isActive: true }, { isActive: true }, { isActive: false }];
-
-    const metrics = computeAccountingCommandMetrics(entries, accounts);
-    expect(metrics.totalEntries).toBe(2);
-    expect(metrics.posted).toBe(1);
-    expect(metrics.draft).toBe(1);
-    expect(metrics.activeAccounts).toBe(2);
-    expect(metrics.inactiveAccounts).toBe(1);
-    expect(metrics.postedVolume).toBe(1000);
   });
 
   it('computes users metrics breakdown correctly', () => {

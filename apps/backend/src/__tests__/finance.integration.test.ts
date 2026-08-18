@@ -31,6 +31,7 @@ const mockBulkRestoreInvoices = vi.fn();
 const mockBulkDeletePayments = vi.fn();
 const mockBulkRestorePayments = vi.fn();
 const mockLoadFinanceReportAggregates = vi.fn();
+const mockLoadFinanceCommandMetrics = vi.fn();
 
 vi.mock('../services/financeService.js', () => ({
   loadInvoices: (...args: unknown[]) => mockLoadInvoices(...args),
@@ -50,6 +51,7 @@ vi.mock('../services/financeService.js', () => ({
   bulkSoftDeletePayments: (...args: unknown[]) => mockBulkDeletePayments(...args),
   bulkRestorePayments: (...args: unknown[]) => mockBulkRestorePayments(...args),
   loadFinanceReportAggregates: (...args: unknown[]) => mockLoadFinanceReportAggregates(...args),
+  loadFinanceCommandMetrics: (...args: unknown[]) => mockLoadFinanceCommandMetrics(...args),
 }));
 
 describe('finance REST routes integration', () => {
@@ -250,6 +252,78 @@ describe('finance REST routes integration', () => {
       },
     });
     expect(res.statusCode).toBe(403);
+    await app.close();
+  });
+});
+
+describe('finance metrics REST', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockLoadFinanceCommandMetrics.mockReset().mockResolvedValue({
+      totalInvoices: 5,
+      outstanding: 2,
+      overdue: 1,
+      paid: 2,
+      partial: 1,
+      totalPayments: 3,
+      collectedTotal: 500,
+      outstandingBalance: 250,
+      discountTotal: 50,
+      collectedThisMonth: 200,
+      collectedPrevMonth: 150,
+      outstandingThisMonth: 100,
+      outstandingPrevMonth: 75,
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('GET /api/finance/metrics loads SQL metrics for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/finance/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app, { email: 'finance@test.com', name: 'Finance User' })}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      metrics: {
+        totalInvoices: 5,
+        outstanding: 2,
+        overdue: 1,
+        paid: 2,
+        partial: 1,
+        totalPayments: 3,
+        collectedTotal: 500,
+        outstandingBalance: 250,
+        discountTotal: 50,
+        collectedThisMonth: 200,
+        collectedPrevMonth: 150,
+        outstandingThisMonth: 100,
+        outstandingPrevMonth: 75,
+      },
+    });
+    expect(mockLoadFinanceCommandMetrics).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/finance/metrics returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/finance/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadFinanceCommandMetrics).not.toHaveBeenCalled();
     await app.close();
   });
 });

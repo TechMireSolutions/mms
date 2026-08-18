@@ -5,7 +5,6 @@ import {
   EXAMINATIONS_MODULE_MANIFEST,
   examListSchema,
   examResultListSchema,
-  computeExaminationsCommandMetrics,
 } from '@mms/shared';
 import {
   registerBulkRoutes,
@@ -22,6 +21,7 @@ import {
   restoreExamById,
   bulkSoftDeleteExams,
   bulkRestoreExams,
+  loadExaminationsCommandMetrics,
 } from '../../services/examinationService.js';
 
 import { examinationSetupConfigRoutes } from './examinationSetupConfigRoutes.js';
@@ -44,14 +44,7 @@ export default async function examinationsRoutes(
 
   registerMetricsRoute(fastify, {
     collection: EXAMS_COLLECTION,
-    loadMetricsFn: async () => {
-      const exams = await loadExams();
-      const results = await loadExamResults();
-      return computeExaminationsCommandMetrics(
-        exams as Array<{ status?: string }>,
-        results as Array<{ examId?: string }>,
-      );
-    },
+    loadMetricsFn: loadExaminationsCommandMetrics,
     errorMessagePrefix: 'examination',
   });
 

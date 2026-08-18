@@ -8,7 +8,6 @@ import {
   wakalaTypeListSchema,
   obligationDistributionListSchema,
   obligationCollectionListSchema,
-  computeObligationsCommandMetrics,
 } from '@mms/shared';
 import {
   registerBulkRoutes,
@@ -34,6 +33,7 @@ import {
   restoreObligationCollectionById,
   bulkSoftDeleteObligationCollections,
   bulkRestoreObligationCollections,
+  loadObligationsCommandMetrics,
 } from '../../services/obligationService.js';
 
 const OBLIGATIONS_COLLECTION = OBLIGATIONS_MODULE_MANIFEST.collectionKey;
@@ -120,14 +120,7 @@ export default async function obligationsRoutes(
 
   registerMetricsRoute(fastify, {
     collection: OBLIGATIONS_COLLECTION,
-    loadMetricsFn: async () => {
-      const collections = await loadObligationCollections();
-      const types = await loadObligationTypes();
-      return computeObligationsCommandMetrics(
-        collections as Array<{ amount?: number; payment_mode?: string; received_date?: string }>,
-        types.length,
-      );
-    },
+    loadMetricsFn: loadObligationsCommandMetrics,
     errorMessagePrefix: 'obligation',
   });
 }

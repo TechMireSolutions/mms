@@ -25,6 +25,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 const mockLoadHasanatReportAggregates = vi.fn();
 const mockLoadDistributionsPage = vi.fn();
+const mockLoadHasanatCommandMetrics = vi.fn();
 
 vi.mock('../services/hasanatService.js', () => ({
   loadDenoms: vi.fn().mockResolvedValue([]),
@@ -41,6 +42,7 @@ vi.mock('../services/hasanatService.js', () => ({
   bulkRestoreDistributions: vi.fn(),
   loadDistributionsPage: (...args: unknown[]) => mockLoadDistributionsPage(...args),
   loadHasanatReportAggregates: (...args: unknown[]) => mockLoadHasanatReportAggregates(...args),
+  loadHasanatCommandMetrics: (...args: unknown[]) => mockLoadHasanatCommandMetrics(...args),
 }));
 
 describe('hasanat report-aggregates REST', () => {
@@ -190,6 +192,72 @@ describe('hasanat distributions pagination', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockLoadDistributionsPage).not.toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('hasanat metrics REST', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockLoadHasanatCommandMetrics.mockReset().mockResolvedValue({
+      totalStock: 100,
+      available: 40,
+      distributed: 60,
+      redeemed: 20,
+      active: 30,
+      returned: 10,
+      denominations: 5,
+      totalPointsDistributed: 300,
+      pointsThisWeek: 120,
+      pointsLastWeek: 80,
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('GET /api/hasanat/metrics loads SQL metrics for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/hasanat/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      metrics: {
+        totalStock: 100,
+        available: 40,
+        distributed: 60,
+        redeemed: 20,
+        active: 30,
+        returned: 10,
+        denominations: 5,
+        totalPointsDistributed: 300,
+        pointsThisWeek: 120,
+        pointsLastWeek: 80,
+      },
+    });
+    expect(mockLoadHasanatCommandMetrics).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/hasanat/metrics returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/hasanat/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadHasanatCommandMetrics).not.toHaveBeenCalled();
     await app.close();
   });
 });

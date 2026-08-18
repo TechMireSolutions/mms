@@ -5,6 +5,7 @@ import {
   type WakalaType,
   type ObligationDistribution,
   type ObligationCollection,
+  type ObligationsCommandMetricsSnapshot,
   obligationTypeListSchema,
   mujtahidListSchema,
   mujtahidRepListSchema,
@@ -35,12 +36,14 @@ import {
   bulkSaveObligationCollections,
   replaceObligationCollectionsForWorkspace,
 } from '../db/repositories/obligationRepository.js';
+import { aggregateObligationsCommandMetrics } from '../db/repositories/obligationRepositoryMetrics.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
   upsertWithBroadcast,
 } from './tenantBulkService.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 
 const obligationTypeService = defineTenantBulkCollectionService<ObligationType>(
   { listByWorkspace: listObligationTypesByWorkspace, replaceForWorkspace: replaceObligationTypesForWorkspace },
@@ -145,3 +148,18 @@ export const deleteObligationCollectionById = collectionCrud.deleteById;
 export const restoreObligationCollectionById = collectionCrud.restoreById;
 export const bulkSoftDeleteObligationCollections = collectionCrud.bulkDeleteByIds;
 export const bulkRestoreObligationCollections = collectionCrud.bulkRestoreByIds;
+
+const EMPTY_OBLIGATIONS_METRICS: ObligationsCommandMetricsSnapshot = {
+  total: 0,
+  totalAmount: 0,
+  cash: 0,
+  online: 0,
+  newThisPeriod: 0,
+  obligationTypes: 0,
+};
+
+export async function loadObligationsCommandMetrics(): Promise<ObligationsCommandMetricsSnapshot> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_OBLIGATIONS_METRICS;
+  return aggregateObligationsCommandMetrics(tenant);
+}

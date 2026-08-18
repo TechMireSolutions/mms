@@ -3,6 +3,7 @@ import {
   type StockBatch,
   type Distribution,
   type Redemption,
+  type HasanatCommandMetricsSnapshot,
   type HasanatReportComparisonQuery,
   type HasanatListQuery,
   denomListSchema,
@@ -12,7 +13,7 @@ import {
   distributionRecordSchema,
   normalizeHasanatReportComparisonQuery,
 } from '@mms/shared';
-import { listDistributionsPage } from '../db/repositories/hasanatRepositoryList.js';
+import { listDistributionsPage, aggregateHasanatCommandMetrics } from '../db/repositories/hasanatRepositoryList.js';
 import {
   listDenomsByWorkspace,
   bulkSaveDenoms,
@@ -142,4 +143,24 @@ export async function loadHasanatReportAggregates(
   }
   const normalized = normalizeHasanatReportComparisonQuery(comparisonQuery);
   return loadHasanatReportAggregatesSql(tenant, normalized);
+}
+
+const EMPTY_HASANAT_METRICS: HasanatCommandMetricsSnapshot = {
+  totalStock: 0,
+  available: 0,
+  distributed: 0,
+  redeemed: 0,
+  active: 0,
+  returned: 0,
+  denominations: 0,
+  totalPointsDistributed: 0,
+  pointsThisWeek: 0,
+  pointsLastWeek: 0,
+};
+
+/** Command-centre hasanat metrics via SQL aggregates (no full-row load). */
+export async function loadHasanatCommandMetrics(): Promise<HasanatCommandMetricsSnapshot> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_HASANAT_METRICS;
+  return aggregateHasanatCommandMetrics(tenant);
 }

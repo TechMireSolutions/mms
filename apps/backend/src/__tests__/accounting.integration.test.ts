@@ -51,6 +51,7 @@ const mockDeleteJournalEntryById = vi.fn();
 const mockRestoreJournalEntryById = vi.fn();
 const mockBulkSoftDeleteJournalEntries = vi.fn();
 const mockBulkRestoreJournalEntries = vi.fn();
+const mockLoadAccountingCommandMetrics = vi.fn();
 
 vi.mock('../services/accountingService.js', () => ({
   loadAccounts: (...args: unknown[]) => mockLoadAccounts(...args),
@@ -66,6 +67,7 @@ vi.mock('../services/accountingService.js', () => ({
   restoreJournalEntryById: (...args: unknown[]) => mockRestoreJournalEntryById(...args),
   bulkSoftDeleteJournalEntries: (...args: unknown[]) => mockBulkSoftDeleteJournalEntries(...args),
   bulkRestoreJournalEntries: (...args: unknown[]) => mockBulkRestoreJournalEntries(...args),
+  loadAccountingCommandMetrics: (...args: unknown[]) => mockLoadAccountingCommandMetrics(...args),
 }));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -137,6 +139,20 @@ describe('accounting REST routes', () => {
     mockBulkRestoreJournalEntries.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
+    mockLoadAccountingCommandMetrics.mockReset().mockResolvedValue({
+      totalEntries: 1,
+      posted: 1,
+      draft: 0,
+      activeAccounts: 1,
+      inactiveAccounts: 0,
+      newThisPeriod: 1,
+      postedVolume: 100,
+      revenue: 0,
+      expenses: 0,
+      surplus: 0,
+      assets: 100,
+      liabilities: 0,
+    });
   });
 
   afterEach(() => {
@@ -274,7 +290,7 @@ describe('accounting REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/accounting/metrics loads metrics', async () => {
+  it('GET /api/accounting/metrics loads SQL metrics for authorized roles', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
@@ -287,22 +303,40 @@ describe('accounting REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({
       metrics: {
-        activeAccounts: 1,
-        assets: 100,
-        draft: 0,
-        expenses: 0,
-        inactiveAccounts: 0,
-        liabilities: 0,
-        newThisPeriod: 1,
+        totalEntries: 1,
         posted: 1,
+        draft: 0,
+        activeAccounts: 1,
+        inactiveAccounts: 0,
+        newThisPeriod: 1,
         postedVolume: 100,
         revenue: 0,
+        expenses: 0,
         surplus: 0,
-        totalEntries: 1,
+        assets: 100,
+        liabilities: 0,
       },
     });
-    expect(mockLoadEntries).toHaveBeenCalled();
-    expect(mockLoadAccounts).toHaveBeenCalled();
+    expect(mockLoadAccountingCommandMetrics).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/accounting/metrics returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/accounting/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${guardianToken(app, {
+          id: 'u-unauthorized',
+          email: 'unauth@test.com',
+          name: 'Unauthorized',
+        })}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadAccountingCommandMetrics).not.toHaveBeenCalled();
     await app.close();
   });
 

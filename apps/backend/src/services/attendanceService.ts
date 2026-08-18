@@ -2,6 +2,7 @@ import {
   attendanceRecordSchema,
   attendanceListSchema,
   normalizeAttendanceReportComparisonQuery,
+  type AttendanceCommandMetricsSnapshot,
   type AttendanceRecord,
   type AttendanceReportComparisonQuery,
 } from '@mms/shared';
@@ -13,7 +14,11 @@ import {
   replaceAttendanceRecordsForWorkspace,
 } from '../db/repositories/attendanceRepository.js';
 import { loadAttendanceReportAggregatesSql } from '../db/repositories/attendanceRepositoryReport.js';
-import { listAttendancePage, countAttendanceActiveByWorkspace } from '../db/repositories/attendanceRepositoryList.js';
+import {
+  listAttendancePage,
+  countAttendanceActiveByWorkspace,
+  aggregateAttendanceCommandMetrics,
+} from '../db/repositories/attendanceRepositoryList.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
@@ -21,6 +26,7 @@ import { broadcastCollection } from './websocketService.js';
 import {
   type AttendanceListQuery,
 } from '@mms/shared';
+import type { FastifyRequest } from 'fastify';
 
 const crud = createGenericRelationalService<AttendanceRecord>({
   repo: {
@@ -90,4 +96,30 @@ export async function loadAttendanceReportAggregates(
   }
   const normalized = normalizeAttendanceReportComparisonQuery(comparisonQuery);
   return loadAttendanceReportAggregatesSql(tenant, normalized);
+}
+
+const EMPTY_ATTENDANCE_METRICS: AttendanceCommandMetricsSnapshot = {
+  total: 0,
+  selectedDatePresent: 0,
+  selectedDateAbsent: 0,
+  selectedDateLate: 0,
+  selectedDateExcused: 0,
+  periodTotal: 0,
+  selectedDatePresentRate: 0,
+  priorDatePresentRate: 0,
+  overallPresentRate: 0,
+};
+
+/** Command-centre attendance metrics via SQL aggregates (no full-row load). */
+export async function loadAttendanceCommandMetrics(
+  request: FastifyRequest,
+): Promise<AttendanceCommandMetricsSnapshot> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_ATTENDANCE_METRICS;
+  const dateParam = (request.query as { date?: string }).date;
+  const selectedDate =
+    typeof dateParam === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
+      ? dateParam
+      : undefined;
+  return aggregateAttendanceCommandMetrics(tenant, { selectedDate });
 }

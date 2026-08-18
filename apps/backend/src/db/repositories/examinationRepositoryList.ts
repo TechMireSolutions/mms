@@ -8,15 +8,17 @@ import {
   or,
   asc,
   desc,
+  sql,
   type SQL,
 } from 'drizzle-orm';
 import {
   isQueryFlagTrue,
   type Exam,
+  type ExaminationsCommandMetricsSnapshot,
   type ExaminationsListQuery,
   type ExaminationsListPageResult,
 } from '@mms/shared';
-import { exams, examClasses } from '../schema.js';
+import { examResults, exams, examClasses } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { runListPage } from './listPageHelper.js';
 import { examRowToRecord } from './examinationRepository.js';
@@ -129,6 +131,60 @@ export async function listExamsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+    };
+  });
+}
+
+/** SQL aggregates for Examinations command-centre metrics (active exams only). */
+export async function aggregateExaminationsCommandMetrics(
+  tenant: string,
+): Promise<ExaminationsCommandMetricsSnapshot> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    const [examRow] = await tx
+      .select({
+        total: sql<number>`count(*)::int`,
+        upcoming: sql<number>`count(*) FILTER (WHERE ${exams.status} = 'upcoming')::int`,
+        ongoing: sql<number>`count(*) FILTER (WHERE ${exams.status} = 'ongoing')::int`,
+        completed: sql<number>`count(*) FILTER (WHERE ${exams.status} = 'completed')::int`,
+        scheduled: sql<number>`count(*) FILTER (WHERE ${exams.status} = 'scheduled')::int`,
+        cancelled: sql<number>`count(*) FILTER (WHERE ${exams.status} = 'cancelled')::int`,
+      })
+      .from(exams)
+      .where(and(eq(exams.workspaceSubdomain, subdomain), isNull(exams.deletedAt)));
+
+    // LEFT JOIN to active exams so orphan/deleted-exam results still count toward
+    // totalResults/examsWithResults but not toward the pass-rate denominator (scored).
+    const [resultRow] = await tx
+      .select({
+        totalResults: sql<number>`count(*)::int`,
+        examsWithResults: sql<number>`count(DISTINCT ${examResults.examId})::int`,
+        scored: sql<number>`count(${exams.id})::int`,
+        passed: sql<number>`count(*) FILTER (WHERE ${exams.id} IS NOT NULL AND ${examResults.marksObtained} >= ${exams.passingMarks})::int`,
+      })
+      .from(examResults)
+      .leftJoin(
+        exams,
+        and(
+          eq(examResults.workspaceSubdomain, exams.workspaceSubdomain),
+          eq(examResults.examId, exams.id),
+          isNull(exams.deletedAt),
+        ),
+      )
+      .where(eq(examResults.workspaceSubdomain, subdomain));
+
+    const scored = Number(resultRow?.scored ?? 0);
+    const passed = Number(resultRow?.passed ?? 0);
+    return {
+      total: Number(examRow?.total ?? 0),
+      upcoming: Number(examRow?.upcoming ?? 0),
+      ongoing: Number(examRow?.ongoing ?? 0),
+      completed: Number(examRow?.completed ?? 0),
+      scheduled: Number(examRow?.scheduled ?? 0),
+      cancelled: Number(examRow?.cancelled ?? 0),
+      totalResults: Number(resultRow?.totalResults ?? 0),
+      examsWithResults: Number(resultRow?.examsWithResults ?? 0),
+      passRate: scored > 0 ? Math.round((passed / scored) * 100) : 0,
     };
   });
 }

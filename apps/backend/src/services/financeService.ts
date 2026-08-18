@@ -1,5 +1,6 @@
 import {
   normalizeFinanceReportComparisonQuery,
+  type FinanceCommandMetricsSnapshot,
   type FinanceListQuery,
   type FinanceReportComparisonQuery,
   type Invoice,
@@ -12,6 +13,7 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   listInvoicesPage,
   listPaymentsPage,
+  aggregateFinanceCommandMetrics,
 } from '../db/repositories/financeRepositoryList.js';
 import {
   listInvoicesByWorkspace,
@@ -144,4 +146,27 @@ export async function loadFinanceReportAggregates(
   }
   const normalized = normalizeFinanceReportComparisonQuery(comparisonQuery);
   return loadFinanceReportAggregatesSql(tenant, normalized);
+}
+
+const EMPTY_FINANCE_METRICS: FinanceCommandMetricsSnapshot = {
+  totalInvoices: 0,
+  outstanding: 0,
+  overdue: 0,
+  paid: 0,
+  partial: 0,
+  totalPayments: 0,
+  collectedTotal: 0,
+  outstandingBalance: 0,
+  discountTotal: 0,
+  collectedThisMonth: 0,
+  collectedPrevMonth: 0,
+  outstandingThisMonth: 0,
+  outstandingPrevMonth: 0,
+};
+
+/** Command-centre finance metrics via SQL aggregates (no full-row load). */
+export async function loadFinanceCommandMetrics(): Promise<FinanceCommandMetricsSnapshot> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_FINANCE_METRICS;
+  return aggregateFinanceCommandMetrics(tenant);
 }

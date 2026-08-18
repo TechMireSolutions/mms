@@ -9,13 +9,13 @@ import {
   restoreAttendanceRecordById,
   bulkSoftDeleteAttendance,
   bulkRestoreAttendance,
-  loadAttendanceRecords,
   loadAttendancePage,
   countAttendanceRecords,
+  loadAttendanceCommandMetrics,
   upsertAttendanceRecords,
   updateAttendanceRecordById,
 } from '../../services/attendanceService.js';
-import { computeAttendanceCommandMetrics, ATTENDANCE_MODULE_MANIFEST, type User } from '@mms/shared';
+import { ATTENDANCE_MODULE_MANIFEST, type User } from '@mms/shared';
 import { registerStandardTenantRoutes, registerBulkPutRoute } from '../../lib/crudRouter.js';
 import {
   attendanceBulkSchema,
@@ -55,8 +55,8 @@ export default async function attendanceRoutes(
     errorMessagePrefix: 'attendance',
     loadPageFn: loadAttendancePage,
     canWriteDeletedCheck: (user) => canDeleteCollection(user, COLLECTION),
-    loadAllFn: loadAttendanceRecords,
     loadCountFn: countAttendanceRecords,
+    loadMetricsFn: loadAttendanceCommandMetrics,
     createFn: createAttendanceRecord,
     updateFn: updateAttendanceRecordById,
     deleteFn: deleteAttendanceRecordById,
@@ -64,14 +64,6 @@ export default async function attendanceRoutes(
     nameSingular: 'record',
     namePlural: 'records',
     columnPreferencesObjectKey: ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey,
-    computeMetricsFn: (records, request) => {
-      const dateParam = (request.query as { date?: string }).date;
-      const selectedDate =
-        typeof dateParam === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
-          ? dateParam
-          : undefined;
-      return computeAttendanceCommandMetrics(records, { selectedDate });
-    },
   });
 
   registerBulkPutRoute(fastify, {

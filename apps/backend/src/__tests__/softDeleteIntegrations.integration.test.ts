@@ -54,6 +54,7 @@ vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: vi.fn().mockResolvedValue([]),
   loadAttendancePage: vi.fn().mockResolvedValue({ records: [], total: 0, page: 1, limit: 15, hasMore: false }),
   countAttendanceRecords: vi.fn().mockResolvedValue(0),
+  loadAttendanceCommandMetrics: vi.fn().mockResolvedValue({}),
   createAttendanceRecord: vi.fn(),
   updateAttendanceRecordById: vi.fn(),
   replaceAttendanceRecords: vi.fn(),
@@ -81,6 +82,7 @@ vi.mock('../services/financeService.js', () => ({
   restorePaymentById: (...args: unknown[]) => mockRestorePaymentById(...args),
   bulkSoftDeletePayments: vi.fn(),
   bulkRestorePayments: vi.fn(),
+  loadFinanceCommandMetrics: vi.fn().mockResolvedValue({}),
 }));
 
 const mockDeleteObligationCollectionById = vi.fn();
@@ -105,6 +107,7 @@ vi.mock('../services/obligationService.js', () => ({
   restoreObligationCollectionById: (...args: unknown[]) => mockRestoreObligationCollectionById(...args),
   bulkSoftDeleteObligationCollections: vi.fn(),
   bulkRestoreObligationCollections: vi.fn(),
+  loadObligationsCommandMetrics: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock('../services/hasanatService.js', () => ({
@@ -124,6 +127,7 @@ vi.mock('../services/hasanatService.js', () => ({
   loadHasanatReportAggregates: vi.fn().mockResolvedValue({
     comparison: { sessions: [], monthly: { a: [], b: [] } },
   }),
+  loadHasanatCommandMetrics: vi.fn().mockResolvedValue({}),
 }));
 
 const mockDeleteExamById = vi.fn();
@@ -139,6 +143,7 @@ vi.mock('../services/examinationService.js', () => ({
   restoreExamById: (...args: unknown[]) => mockRestoreExamById(...args),
   bulkSoftDeleteExams: vi.fn(),
   bulkRestoreExams: vi.fn(),
+  loadExaminationsCommandMetrics: vi.fn().mockResolvedValue({}),
 }));
 
 const mockDeleteUserById = vi.fn();

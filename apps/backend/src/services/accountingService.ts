@@ -1,9 +1,11 @@
 import { listAccountsPage, listEntriesPage, listFiscalYearsPage } from "../db/repositories/accountingRepositoryList.js";
+import { aggregateAccountingCommandMetrics } from "../db/repositories/accountingRepositoryMetrics.js";
 import type { AccountingListQuery } from "@mms/shared";
 import {
   type Account,
   type JournalEntry,
   type FiscalYear,
+  type AccountingCommandMetricsSnapshot,
   accountListSchema,
   journalEntryListSchema,
   fiscalYearListSchema,
@@ -168,4 +170,26 @@ export async function loadFiscalYearsPage(query: AccountingListQuery & { include
     return { fiscalYears: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 12, hasMore: false };
   }
   return listFiscalYearsPage(tenant, query);
+}
+
+const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
+  totalEntries: 0,
+  posted: 0,
+  draft: 0,
+  activeAccounts: 0,
+  inactiveAccounts: 0,
+  newThisPeriod: 0,
+  postedVolume: 0,
+  revenue: 0,
+  expenses: 0,
+  surplus: 0,
+  assets: 0,
+  liabilities: 0,
+};
+
+/** Command-centre accounting metrics via SQL aggregates (no full-row load). */
+export async function loadAccountingCommandMetrics(): Promise<AccountingCommandMetricsSnapshot> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_ACCOUNTING_METRICS;
+  return aggregateAccountingCommandMetrics(tenant);
 }

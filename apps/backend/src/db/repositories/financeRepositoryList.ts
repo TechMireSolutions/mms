@@ -1,6 +1,8 @@
-import { eq, ilike, or, isNull, isNotNull, type SQL, desc, asc } from 'drizzle-orm';
+import { and, eq, ilike, or, isNull, isNotNull, type SQL, desc, asc, sql } from 'drizzle-orm';
 import {
   isQueryFlagTrue,
+  OPEN_INVOICE_STATUSES,
+  type FinanceCommandMetricsSnapshot,
   type FinanceListQuery,
   type FinanceInvoicesListPageResult,
   type FinancePaymentsListPageResult,
@@ -167,6 +169,85 @@ export async function listPaymentsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+    };
+  });
+}
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * SQL aggregates for Finance command-centre metrics. Month buckets are computed
+ * in JS (local-time `new Date()`, matching the prior JS reducer) and passed as
+ * params to avoid DB-timezone drift at month boundaries. Money columns are
+ * `numeric`; sums cast to `float8` to mirror JS `Number` math on loaded records.
+ */
+export async function aggregateFinanceCommandMetrics(
+  tenant: string,
+): Promise<FinanceCommandMetricsSnapshot> {
+  const subdomain = tenant.trim().toLowerCase();
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`;
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonth = `${prev.getFullYear()}-${pad2(prev.getMonth() + 1)}`;
+
+  return withTenantTransaction(subdomain, async (tx) => {
+    const activeInvoices = and(
+      eq(financeInvoices.workspaceSubdomain, subdomain),
+      isNull(financeInvoices.deletedAt),
+    );
+    const openStatuses = OPEN_INVOICE_STATUSES as readonly string[];
+
+    // Per-invoice collected / outstanding amounts, mirroring the JS reducer.
+    const collectedExpr = sql<number>`case
+      when ${financeInvoices.status} = 'paid' then ${financeInvoices.finalAmt}::numeric
+      when ${financeInvoices.status} = 'partial' then coalesce(${financeInvoices.paidAmt}, round(${financeInvoices.finalAmt} / 2, 0))
+      else 0
+    end`;
+    const outstandingExpr = sql<number>`case
+      when ${financeInvoices.status} in ('cancelled','paid') then 0
+      when ${financeInvoices.status} = 'partial' then greatest(0, ${financeInvoices.finalAmt} - coalesce(${financeInvoices.paidAmt}, round(${financeInvoices.finalAmt} / 2, 0)))
+      else ${financeInvoices.finalAmt}
+    end`;
+    // paid_date || due_date — empty paid_date falls back to due_date (JS falsy '' ).
+    const collectDate = sql<string>`coalesce(nullif(${financeInvoices.paidDate}, ''), ${financeInvoices.dueDate})`;
+
+    const [row] = await tx
+      .select({
+        totalInvoices: sql<number>`count(*)::int`,
+        outstanding: sql<number>`count(*) filter (where ${financeInvoices.status} in (${sql.join(openStatuses.map((s) => sql`${s}`), sql`, `)}))::int`,
+        overdue: sql<number>`count(*) filter (where ${financeInvoices.status} = 'overdue')::int`,
+        paid: sql<number>`count(*) filter (where ${financeInvoices.status} = 'paid')::int`,
+        partial: sql<number>`count(*) filter (where ${financeInvoices.status} = 'partial')::int`,
+        collectedTotal: sql<number>`coalesce(sum(${collectedExpr}) filter (where ${financeInvoices.status} <> 'cancelled'), 0)::float8`,
+        outstandingBalance: sql<number>`coalesce(sum(${outstandingExpr}) filter (where ${financeInvoices.status} <> 'cancelled'), 0)::float8`,
+        discountTotal: sql<number>`coalesce(sum(${financeInvoices.discountAmt}) filter (where ${financeInvoices.status} <> 'cancelled'), 0)::float8`,
+        collectedThisMonth: sql<number>`coalesce(sum(${collectedExpr}) filter (where ${financeInvoices.status} <> 'cancelled' and left(${collectDate}, 7) = ${thisMonth}), 0)::float8`,
+        collectedPrevMonth: sql<number>`coalesce(sum(${collectedExpr}) filter (where ${financeInvoices.status} <> 'cancelled' and left(${collectDate}, 7) = ${prevMonth}), 0)::float8`,
+        outstandingThisMonth: sql<number>`coalesce(sum(${outstandingExpr}) filter (where ${financeInvoices.status} <> 'cancelled' and left(${financeInvoices.dueDate}, 7) = ${thisMonth}), 0)::float8`,
+        outstandingPrevMonth: sql<number>`coalesce(sum(${outstandingExpr}) filter (where ${financeInvoices.status} <> 'cancelled' and left(${financeInvoices.dueDate}, 7) = ${prevMonth}), 0)::float8`,
+      })
+      .from(financeInvoices)
+      .where(activeInvoices);
+
+    const [paymentRow] = await tx
+      .select({ totalPayments: sql<number>`count(*)::int` })
+      .from(financePayments)
+      .where(and(eq(financePayments.workspaceSubdomain, subdomain), isNull(financePayments.deletedAt)));
+
+    return {
+      totalInvoices: Number(row?.totalInvoices ?? 0),
+      outstanding: Number(row?.outstanding ?? 0),
+      overdue: Number(row?.overdue ?? 0),
+      paid: Number(row?.paid ?? 0),
+      partial: Number(row?.partial ?? 0),
+      totalPayments: Number(paymentRow?.totalPayments ?? 0),
+      collectedTotal: Number(row?.collectedTotal ?? 0),
+      outstandingBalance: Number(row?.outstandingBalance ?? 0),
+      discountTotal: Number(row?.discountTotal ?? 0),
+      collectedThisMonth: Number(row?.collectedThisMonth ?? 0),
+      collectedPrevMonth: Number(row?.collectedPrevMonth ?? 0),
+      outstandingThisMonth: Number(row?.outstandingThisMonth ?? 0),
+      outstandingPrevMonth: Number(row?.outstandingPrevMonth ?? 0),
     };
   });
 }

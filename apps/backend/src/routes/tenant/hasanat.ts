@@ -7,7 +7,6 @@ import {
   batchListSchema,
   distributionListSchema,
   redemptionListSchema,
-  computeHasanatCommandMetrics,
 } from '@mms/shared';
 import {
   registerBulkRoutes,
@@ -28,6 +27,7 @@ import {
   restoreDistributionById,
   bulkSoftDeleteDistributions,
   bulkRestoreDistributions,
+  loadHasanatCommandMetrics,
 } from '../../services/hasanatService.js';
 import { hasanatReportRoutes } from './hasanat/hasanatReportRoutes.js';
 import { hasanatSetupConfigRoutes } from './hasanatSetupConfigRoutes.js';
@@ -53,22 +53,7 @@ export default async function hasanatRoutes(
 
   registerMetricsRoute(fastify, {
     collection: HASANAT_DISTRIBUTIONS_COLLECTION,
-    loadMetricsFn: async () => {
-      const batches = await loadBatches();
-      const distributions = await loadDistributions();
-      const denoms = await loadDenoms();
-      return computeHasanatCommandMetrics(
-        batches as Array<{ quantity?: number; remaining?: number }>,
-        distributions as Array<{
-          status?: string;
-          quantity?: number;
-          denominationId?: string;
-          date?: string;
-          distributedAt?: string;
-        }>,
-        denoms as Array<{ id?: string; active?: boolean; points?: number }>,
-      );
-    },
+    loadMetricsFn: loadHasanatCommandMetrics,
     errorMessagePrefix: 'hasanat',
   });
 

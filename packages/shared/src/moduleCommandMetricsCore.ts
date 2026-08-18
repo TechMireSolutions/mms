@@ -1,4 +1,3 @@
-import { isOpenInvoiceStatus } from './financeModuleManifest.js';
 import { resolveTeacherStatusRoles, TEACHER_STATUS_VALUES } from './teacherTypes.js';
 
 /** Default rolling window for "new records" command-centre metrics (globle1 §2.1). */
@@ -50,15 +49,6 @@ export interface UsersCommandMetricsSnapshot {
 type StatusRecord = { status?: string };
 type RegisteredRecord = StatusRecord & { registeredDate?: string; createdAt?: string };
 type JoinDateRecord = StatusRecord & { joinDate?: string; createdAt?: string };
-type InvoiceRecord = {
-  status?: string;
-  finalAmt?: number;
-  paidAmt?: number;
-  paidDate?: string;
-  dueDate?: string;
-  discountAmt?: number;
-};
-type PaymentRecord = { id?: string | number };
 type WorkspaceUserMetricRecord = StatusRecord & {
   role?: string;
   twoFactorEnabled?: boolean;
@@ -131,77 +121,6 @@ export function computeTeachersCommandMetrics(
       (t) => t.joinDate ?? t.createdAt,
       periodDays,
     ),
-  };
-}
-
-export function computeFinanceCommandMetrics(
-  invoices: InvoiceRecord[],
-  payments: PaymentRecord[],
-): FinanceCommandMetricsSnapshot {
-  const now = new Date();
-  const thisYear = now.getFullYear();
-  const thisMonth = now.getMonth();
-  const prev = new Date(thisYear, thisMonth - 1, 1);
-  const prevYear = prev.getFullYear();
-  const prevMonth = prev.getMonth();
-
-  const collectedForInvoice = (invoice: InvoiceRecord): number => {
-    if (invoice.status === 'paid') return invoice.finalAmt ?? 0;
-    if (invoice.status === 'partial') {
-      return invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round((invoice.finalAmt ?? 0) / 2);
-    }
-    return 0;
-  };
-  const outstandingForInvoice = (invoice: InvoiceRecord): number => {
-    if (invoice.status === 'cancelled' || invoice.status === 'paid') return 0;
-    if (invoice.status === 'partial') {
-      const paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round((invoice.finalAmt ?? 0) / 2);
-      return Math.max(0, (invoice.finalAmt ?? 0) - paid);
-    }
-    return invoice.finalAmt ?? 0;
-  };
-  const inMonth = (dateStr: string | undefined, year: number, month: number): boolean => {
-    if (!dateStr) return false;
-    return Number(dateStr.slice(0, 4)) === year && Number(dateStr.slice(5, 7)) - 1 === month;
-  };
-
-  let collectedTotal = 0;
-  let outstandingBalance = 0;
-  let discountTotal = 0;
-  let collectedThisMonth = 0;
-  let collectedPrevMonth = 0;
-  let outstandingThisMonth = 0;
-  let outstandingPrevMonth = 0;
-
-  for (const invoice of invoices) {
-    if (invoice.status === 'cancelled') continue;
-    const collected = collectedForInvoice(invoice);
-    const outstanding = outstandingForInvoice(invoice);
-    collectedTotal += collected;
-    outstandingBalance += outstanding;
-    discountTotal += invoice.discountAmt ?? 0;
-
-    const collectDate = invoice.paidDate || invoice.dueDate;
-    if (inMonth(collectDate, thisYear, thisMonth)) collectedThisMonth += collected;
-    if (inMonth(collectDate, prevYear, prevMonth)) collectedPrevMonth += collected;
-    if (inMonth(invoice.dueDate, thisYear, thisMonth)) outstandingThisMonth += outstanding;
-    if (inMonth(invoice.dueDate, prevYear, prevMonth)) outstandingPrevMonth += outstanding;
-  }
-
-  return {
-    totalInvoices: invoices.length,
-    outstanding: invoices.filter((inv) => isOpenInvoiceStatus(inv.status)).length,
-    overdue: countRecordsWithStatus(invoices, 'overdue'),
-    paid: countRecordsWithStatus(invoices, 'paid'),
-    partial: countRecordsWithStatus(invoices, 'partial'),
-    totalPayments: payments.length,
-    collectedTotal,
-    outstandingBalance,
-    discountTotal,
-    collectedThisMonth,
-    collectedPrevMonth,
-    outstandingThisMonth,
-    outstandingPrevMonth,
   };
 }
 

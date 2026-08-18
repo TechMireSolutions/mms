@@ -6,7 +6,6 @@ import {
   accountListSchema,
   journalEntryListSchema,
   fiscalYearListSchema,
-  computeAccountingCommandMetrics,
 } from '@mms/shared';
 import {
   registerBulkRoutes,
@@ -29,6 +28,7 @@ import {
   loadAccountsPage,
   loadEntriesPage,
   loadFiscalYearsPage,
+  loadAccountingCommandMetrics,
 } from '../../services/accountingService.js';
 import { accountingSetupConfigRoutes } from './accountingSetupConfigRoutes.js';
 
@@ -97,18 +97,7 @@ export default async function accountingRoutes(
 
   registerMetricsRoute(fastify, {
     collection: ACCOUNTING_ENTRIES_COLLECTION,
-    loadMetricsFn: async () => {
-      const entries = await loadEntries();
-      const accounts = await loadAccounts();
-      return computeAccountingCommandMetrics(
-        entries as Array<{
-          status?: string;
-          date?: string;
-          lines?: Array<{ debit?: number; credit?: number; account_id?: string }>;
-        }>,
-        accounts as Array<{ id?: string; isActive?: boolean; type?: string }>,
-      );
-    },
+    loadMetricsFn: loadAccountingCommandMetrics,
     errorMessagePrefix: 'accounting',
   });
 }

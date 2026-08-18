@@ -31,6 +31,7 @@ const mockRestoreAttendanceRecordById = vi.fn();
 const mockBulkSoftDeleteAttendance = vi.fn();
 const mockBulkRestoreAttendance = vi.fn();
 const mockLoadAttendanceReportAggregates = vi.fn();
+const mockLoadAttendanceCommandMetrics = vi.fn();
 
 vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: (...args: unknown[]) => mockLoadAttendanceRecords(...args),
@@ -45,6 +46,7 @@ vi.mock('../services/attendanceService.js', () => ({
   upsertAttendanceRecords: (...args: unknown[]) => mockUpsertAttendanceRecords(...args),
   replaceAttendanceRecords: vi.fn(),
   loadAttendanceReportAggregates: (...args: unknown[]) => mockLoadAttendanceReportAggregates(...args),
+  loadAttendanceCommandMetrics: (...args: unknown[]) => mockLoadAttendanceCommandMetrics(...args),
 }));
 
 const attendanceRecord = {
@@ -271,6 +273,70 @@ describe('attendance REST routes integration', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockLoadAttendanceReportAggregates).not.toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('attendance metrics REST', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockLoadAttendanceCommandMetrics.mockReset().mockResolvedValue({
+      total: 10,
+      selectedDatePresent: 4,
+      selectedDateAbsent: 1,
+      selectedDateLate: 1,
+      selectedDateExcused: 0,
+      periodTotal: 8,
+      selectedDatePresentRate: 83,
+      priorDatePresentRate: 75,
+      overallPresentRate: 80,
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('GET /api/attendance/metrics loads SQL metrics for authorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance/metrics?date=2026-08-18',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      metrics: {
+        total: 10,
+        selectedDatePresent: 4,
+        selectedDateAbsent: 1,
+        selectedDateLate: 1,
+        selectedDateExcused: 0,
+        periodTotal: 8,
+        selectedDatePresentRate: 83,
+        priorDatePresentRate: 75,
+        overallPresentRate: 80,
+      },
+    });
+    expect(mockLoadAttendanceCommandMetrics).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/attendance/metrics returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance/metrics',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadAttendanceCommandMetrics).not.toHaveBeenCalled();
     await app.close();
   });
 });

@@ -1,6 +1,7 @@
 import {
   type Exam,
   type ExamResult,
+  type ExaminationsCommandMetricsSnapshot,
   type ExaminationsListQuery,
   examListSchema,
   examResultListSchema,
@@ -16,7 +17,10 @@ import {
   bulkSaveExamResults,
   replaceExamResultsForWorkspace,
 } from '../db/repositories/examinationRepository.js';
-import { listExamsPage } from '../db/repositories/examinationRepositoryList.js';
+import {
+  aggregateExaminationsCommandMetrics,
+  listExamsPage,
+} from '../db/repositories/examinationRepositoryList.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
@@ -92,3 +96,21 @@ export const deleteExamById = examCrud.deleteById;
 export const restoreExamById = examCrud.restoreById;
 export const bulkSoftDeleteExams = examCrud.bulkDeleteByIds;
 export const bulkRestoreExams = examCrud.bulkRestoreByIds;
+
+const EMPTY_EXAMINATIONS_METRICS: ExaminationsCommandMetricsSnapshot = {
+  total: 0,
+  upcoming: 0,
+  ongoing: 0,
+  completed: 0,
+  scheduled: 0,
+  cancelled: 0,
+  totalResults: 0,
+  examsWithResults: 0,
+  passRate: 0,
+};
+
+export async function loadExaminationsCommandMetrics(): Promise<ExaminationsCommandMetricsSnapshot> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_EXAMINATIONS_METRICS;
+  return aggregateExaminationsCommandMetrics(tenant);
+}
