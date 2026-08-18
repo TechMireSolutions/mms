@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "worker": "tsx watch src/worker.ts",
-    "build": "tsc && cp src/db/seeds.json.gz dist/db/seeds.json.gz && (cp src/db/seeds.json dist/db/seeds.json || true)",
+    "build": "tsc && cp -r src/db/migrations_drizzle dist/db/migrations_drizzle && cp src/db/seeds.json.gz dist/db/seeds.json.gz && (cp src/db/seeds.json dist/db/seeds.json || true)",
     "start": "node dist/index.js",
     "worker:start": "node dist/worker.js",
     "db:reset": "tsx src/scripts/resetDb.ts",
