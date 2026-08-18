@@ -74,6 +74,7 @@ playwright/.cache/
 
 # Tool & Model Overrides
 .claude/settings.local.json
+.claude/worktrees/
 .wwebjs_auth/
 .wwebjs_cache/
 
