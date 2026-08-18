@@ -72,9 +72,13 @@ export function useDashboardPageController() {
   );
 
   const handleSaveWidget = useCallback(
-    (savedWidget: CustomWidget) => {
-      saveWidget(savedWidget);
-      closeBuilder();
+    async (savedWidget: CustomWidget) => {
+      try {
+        await saveWidget(savedWidget);
+        closeBuilder();
+      } catch {
+        // onError already toasted; keep builder open for retry.
+      }
     },
     [closeBuilder, saveWidget],
   );

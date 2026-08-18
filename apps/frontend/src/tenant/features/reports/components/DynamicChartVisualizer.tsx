@@ -71,6 +71,7 @@ export default function DynamicChartVisualizer({
         legendFontSize={visualizer.legendFontSize}
         tickGap={visualizer.tickGap}
         isPinned={visualizer.isPinned}
+        canPin={visualizer.canPin}
         onSaveVisual={visualizer.handleSaveVisual}
         onClose={onClose}
         onTogglePin={visualizer.handleTogglePin}

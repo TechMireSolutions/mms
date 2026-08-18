@@ -77,11 +77,9 @@ export function useDashboardConfig() {
     [prefs.disabledCardIds, updatePref],
   );
 
-  /** Upsert only the affected widget (inserts new, updates existing; leaves others untouched). */
+  /** Upsert only the affected widget (inserts new, updates existing; leaves others untouched). Resolves on success so builder flows can await before closing (§7). */
   const saveWidget = useCallback(
-    (savedWidget: CustomWidget) => {
-      widgetsMutation.mutate([savedWidget]);
-    },
+    (savedWidget: CustomWidget) => widgetsMutation.mutateAsync([savedWidget]),
     [widgetsMutation],
   );
 
@@ -131,5 +129,6 @@ export function useDashboardConfig() {
     deleteWidget,
     saveWidget,
     updatePref,
+    canPin: canWriteDashboard,
   };
 }

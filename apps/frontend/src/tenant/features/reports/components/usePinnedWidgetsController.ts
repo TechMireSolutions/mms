@@ -114,10 +114,14 @@ export function usePinnedWidgetsController(category: string) {
     setEditingWidgetId(null);
   };
 
-  const handleSaveWidget = (savedWidget: CustomWidget) => {
-    saveWidget(savedWidget);
-    setIsBuilderOpen(false);
-    setEditingWidgetId(null);
+  const handleSaveWidget = async (savedWidget: CustomWidget) => {
+    try {
+      await saveWidget(savedWidget);
+      setIsBuilderOpen(false);
+      setEditingWidgetId(null);
+    } catch {
+      // onError already toasted; keep builder open for retry.
+    }
   };
 
   const handleToggleSwitchStateLocal = (widget: CustomWidget) => {

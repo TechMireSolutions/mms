@@ -62,7 +62,11 @@ export function toggleVisualizerWidgetPin(input: {
   );
 
   if (matchingIndex > -1) {
-    nextWidgets[matchingIndex].isPinnedToDashboard = !nextWidgets[matchingIndex].isPinnedToDashboard;
+    // Immutable update — the input array is React Query cache data; never mutate in place.
+    nextWidgets[matchingIndex] = {
+      ...nextWidgets[matchingIndex],
+      isPinnedToDashboard: !nextWidgets[matchingIndex].isPinnedToDashboard,
+    };
   } else {
     const newWidget: CustomWidget = {
       id: 'widget-' + crypto.randomUUID(),

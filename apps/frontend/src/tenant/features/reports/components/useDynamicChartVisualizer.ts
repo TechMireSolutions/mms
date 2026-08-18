@@ -74,7 +74,7 @@ export function useDynamicChartVisualizer({
   const [pdfFormat, setPdfFormat] = useState<string>('a4');
   const [showPdfSettings, setShowPdfSettings] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterRule[]>([]);
-  const { customWidgets: dashboardWidgets, updateCustomWidgets } = useDashboardConfig();
+  const { customWidgets: dashboardWidgets, updateCustomWidgets, canPin } = useDashboardConfig();
   // The visualizer narrows to chart-type widgets; the dashboard store holds the canonical set.
   const visualizerWidgets = dashboardWidgets as CustomWidget[];
 
@@ -269,6 +269,7 @@ export function useDynamicChartVisualizer({
     processedData,
     currentColors,
     isPinned,
+    canPin,
     handleTogglePin,
     handleAddFilter,
     handleUpdateFilter,

@@ -36,6 +36,7 @@ export interface DynamicChartVisualizerPreviewProps {
   legendFontSize: number;
   tickGap: number;
   isPinned: boolean;
+  canPin: boolean;
   onSaveVisual?: () => void;
   onClose?: () => void;
   onTogglePin: () => void;
@@ -71,6 +72,7 @@ export function DynamicChartVisualizerPreview({
   legendFontSize,
   tickGap,
   isPinned,
+  canPin,
   onSaveVisual,
   onClose,
   onTogglePin,
@@ -95,6 +97,7 @@ export function DynamicChartVisualizerPreview({
           pdfOrientation={pdfOrientation}
           pdfFormat={pdfFormat}
           isPinned={isPinned}
+          canPin={canPin}
           onSaveVisual={onSaveVisual}
           onClose={onClose}
           onTogglePin={onTogglePin}

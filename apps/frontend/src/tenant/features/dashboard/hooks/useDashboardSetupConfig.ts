@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useTranslation } from '@/hooks/useTranslation';
+import { notify } from '@/lib/notify';
 import {
   DEFAULT_DASHBOARD_PREFERENCES,
   normalizeDashboardPreferences,
@@ -42,12 +44,14 @@ export function useDashboardPreferencesQuery() {
 
 export function useDashboardPreferencesMutation() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: (prefs: DashboardPreferencesPutBody) => saveDashboardPreferencesAsync(prefs),
     onSuccess: (saved) => {
       queryClient.setQueryData(DASHBOARD_PREFERENCES_QUERY_KEY, normalizeDashboardPreferences(saved));
       queryClient.invalidateQueries({ queryKey: DASHBOARD_PREFERENCES_QUERY_KEY });
     },
+    onError: () => notify.error(t('dashboard.toast.prefSaveFailed')),
   });
 }
 
@@ -65,6 +69,7 @@ export function useDashboardWidgetsQuery() {
 
 export function useDashboardWidgetsMutation() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: (widgets: CustomWidget[]) =>
       saveDashboardWidgetsAsync(widgets as DashboardWidgetsPutBody),
@@ -72,11 +77,13 @@ export function useDashboardWidgetsMutation() {
       queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, saved as CustomWidget[]);
       queryClient.invalidateQueries({ queryKey: DASHBOARD_WIDGETS_QUERY_KEY });
     },
+    onError: () => notify.error(t('dashboard.toast.saveFailed')),
   });
 }
 
 export function useDashboardWidgetDeleteMutation() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   return useMutation({
     mutationFn: (id: string) => deleteDashboardWidgetAsync(id),
     onSuccess: (_data, id) => {
@@ -85,5 +92,6 @@ export function useDashboardWidgetDeleteMutation() {
       );
       queryClient.invalidateQueries({ queryKey: DASHBOARD_WIDGETS_QUERY_KEY });
     },
+    onError: () => notify.error(t('dashboard.toast.deleteFailed')),
   });
 }

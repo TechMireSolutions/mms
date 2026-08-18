@@ -47,7 +47,7 @@ export default function DynamicCardBuilder({
 
   const { saveWidget } = useDashboardConfig();
 
-  const handleSaveWidget = useCallback((savedWidget: CustomWidget) => {
+  const handleSaveWidget = useCallback(async (savedWidget: CustomWidget) => {
     // Convert CustomWidget to CustomCard
     const newCard: CustomCard = {
       id: savedWidget.id,
@@ -78,7 +78,12 @@ export default function DynamicCardBuilder({
       saveObject(`kpi_custom_cards_${category}`, updatedCards);
     } else {
       // Persist to the server-authoritative dashboard widgets store (upsert affected widget).
-      saveWidget(savedWidget);
+      // Await so the builder closes only on success (§7); onError toasts on failure.
+      try {
+        await saveWidget(savedWidget);
+      } catch {
+        return;
+      }
     }
 
     if (onCancelEdit) {

@@ -25,6 +25,7 @@ interface VisualizerPreviewHeaderProps {
   pdfOrientation: "p" | "l";
   pdfFormat: string;
   isPinned: boolean;
+  canPin: boolean;
   onSaveVisual?: () => void;
   onClose?: () => void;
   onTogglePin: () => void;
@@ -46,6 +47,7 @@ export function VisualizerPreviewHeader({
   pdfOrientation,
   pdfFormat,
   isPinned,
+  canPin,
   onSaveVisual,
   onClose,
   onTogglePin,
@@ -96,16 +98,18 @@ export function VisualizerPreviewHeader({
           </Button>
         )}
 
-        <Button
-          type="button"
-          variant={isPinned ? "capsSuccess" : "capsOutline"}
-          size="caps"
-          onClick={onTogglePin}
-          className={isPinned ? "shadow-md shadow-success/5" : undefined}
-        >
-          {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-          {isPinned ? t("reports.visualizer.pinnedToHome") : t("reports.visualizer.pinToDashboard")}
-        </Button>
+        {canPin && (
+          <Button
+            type="button"
+            variant={isPinned ? "capsSuccess" : "capsOutline"}
+            size="caps"
+            onClick={onTogglePin}
+            className={isPinned ? "shadow-md shadow-success/5" : undefined}
+          >
+            {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+            {isPinned ? t("reports.visualizer.pinnedToHome") : t("reports.visualizer.pinToDashboard")}
+          </Button>
+        )}
 
         <div className="flex items-center gap-1.5 relative">
           {showPdfSettings && (
