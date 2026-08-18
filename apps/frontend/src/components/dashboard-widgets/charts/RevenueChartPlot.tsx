@@ -9,6 +9,7 @@ import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { ROUTES } from "@/lib/config/routes";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { RevenueChartTooltip } from "@/components/dashboard-widgets/charts/RevenueChartTooltip";
+import { ChartAreaGradient, CHART_AXIS_LINE_PROPS } from "@/components/dashboard-widgets/charts/chartPrimitives";
 import type { RevenuePoint } from "@/components/dashboard-widgets/charts/useRevenueChartData";
 
 interface RevenueChartPlotProps {
@@ -50,18 +51,12 @@ export function RevenueChartPlot({
         className={isEditMode ? "cursor-default" : "cursor-pointer"}
       >
         <defs>
-          <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={activeColors.revenue} stopOpacity={0.2} />
-            <stop offset="95%" stopColor={activeColors.revenue} stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={activeColors.expenses} stopOpacity={0.15} />
-            <stop offset="95%" stopColor={activeColors.expenses} stopOpacity={0} />
-          </linearGradient>
+          <ChartAreaGradient id="revGrad" color={activeColors.revenue} opacity={0.2} />
+          <ChartAreaGradient id="expGrad" color={activeColors.expenses} opacity={0.15} />
         </defs>
         <ChartGrid vertical={false} />
-        <XAxis dataKey="month" tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} />
-        <YAxis tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} tickFormatter={formatYAxisTick} />
+        <XAxis dataKey="month" tick={chartAxisTick(11, true)} {...CHART_AXIS_LINE_PROPS} />
+        <YAxis tick={chartAxisTick(11, true)} {...CHART_AXIS_LINE_PROPS} tickFormatter={formatYAxisTick} />
         <Tooltip content={<RevenueChartTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }} />
 
         {chartType === "area" && (

@@ -1,29 +1,14 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import {
-  Trash2, Plus, Pencil, DollarSign
-} from "lucide-react";
+import { Trash2, Plus, Pencil } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { StatCardBody } from "@/components/ui/StatCardBody";
-import { ICONS_LIST as ICONS } from "@/lib/reports/pinnedWidgetTypes";
-import {
-  getWidgetColorTheme,
-  widgetColorToAccent,
-} from "@/lib/dashboardWidgetColors";
+import { resolveCardVisuals } from "@/lib/dashboardWidgetColors";
 import { WidgetCard } from "@/components/ui/WidgetCard";
+import type { StatItem } from "@/lib/dashboardWidgets";
 
 const MotionWidgetCard = motion.create(WidgetCard);
-
-export interface StatItem {
-  id: string;
-  icon: string;
-  color: string;
-  trend: number;
-  value: string | number;
-  title: string;
-  sub: string;
-}
 
 interface StatsGridProps {
   statItems: StatItem[];
@@ -43,15 +28,14 @@ export default function StatsGrid({
   onAddCardClick
 }: StatsGridProps): React.JSX.Element {
   const { t } = useTranslation();
+  const customCardSet = useMemo(() => new Set(customCardIds), [customCardIds]);
 
   return (
     <section aria-label={t("dashboard.statsSectionLabel")} className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 font-sans">
       {statItems.map((statItem, statIndex) => {
-        const Icon = ICONS[statItem.icon] || DollarSign;
-        const colorTheme = getWidgetColorTheme(statItem.color);
+        const { IconComponent: Icon, colorTheme, accent } = resolveCardVisuals(statItem);
         const hasPositiveTrend = statItem.trend >= 0;
-        const isCustomCard = customCardIds.includes(statItem.id);
-        const accent = widgetColorToAccent(statItem.color);
+        const isCustomCard = customCardSet.has(statItem.id);
 
         return (
           <MotionWidgetCard
@@ -90,6 +74,7 @@ export default function StatsGrid({
                         }}
                         className="rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all cursor-pointer border border-transparent hover:border-primary/10"
                         title={t("dashboard.editCardConfig")}
+                        aria-label={t("dashboard.editCardConfig")}
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
@@ -104,6 +89,7 @@ export default function StatsGrid({
                         }}
                         className="rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all cursor-pointer border border-transparent hover:border-destructive/10"
                         title={t("dashboard.deleteCard")}
+                        aria-label={t("dashboard.deleteCard")}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>

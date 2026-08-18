@@ -435,6 +435,13 @@
       "when": 1786680000000,
       "tag": "0061_obligations_messaging_column_prefs_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1786683600000,
+      "tag": "0062_dashboard_preferences_widgets",
+      "breakpoints": true
     }
   ]
 }

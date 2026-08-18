@@ -8,6 +8,7 @@ import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMonthYear, formatMonthName, getCollectedAmountForMonth, getOutstandingAmountForMonth } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { percentChange } from "@/tenant/features/dashboard/hooks/dashboardMetricTrends";
 
 /**
  * FeeCollectionSummary Component
@@ -92,12 +93,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
     [invoices, prevYear, prevMonth]
   );
 
-  const changePct = useMemo(() => {
-    if (prevCollected > 0) {
-      return Math.round(((totalCollected - prevCollected) / prevCollected) * 100);
-    }
-    return totalCollected > 0 ? 100 : 0;
-  }, [totalCollected, prevCollected]);
+  const changePct = useMemo(() => percentChange(totalCollected, prevCollected), [totalCollected, prevCollected]);
 
   const displayTrendPct = Math.abs(changePct);
   const isPositiveTrend = changePct >= 0;

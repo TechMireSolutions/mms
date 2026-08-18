@@ -1,85 +1,94 @@
-import { useCallback, useEffect } from 'react';
-import { getObject, saveObject } from '@/lib/db';
-import { getOrInitializeCustomWidgets } from '@/lib/reports/widgetDefaults';
+import { useCallback } from 'react';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
-import { useLiveObject } from '@/hooks/useLiveObject';
 import {
   DEFAULT_DASHBOARD_PREFERENCES,
   type DashboardPreferences,
-  DASHBOARD_WIDGETS_KEY,
-  DASHBOARD_PREFERENCES_KEY,
-  DASHBOARD_DISABLED_CARDS_KEY,
-  PINNED_WIDGETS_GRID_MODE_KEY,
-  ENROLLMENT_CHART_TYPE_KEY,
-  ENROLLMENT_CHART_COLOR_KEY,
-  ENROLLMENT_CHART_PERIOD_KEY,
-  REVENUE_CHART_TYPE_KEY,
-  REVENUE_CHART_COLOR_KEY,
-  ATTENDANCE_CHART_TYPE_KEY,
-  ATTENDANCE_CHART_COLOR_KEY,
-  HASANAT_CHART_TYPE_KEY,
-  HASANAT_CHART_COLOR_KEY,
+  type DashboardWidgetDto,
 } from '@mms/shared';
+import {
+  useDashboardPreferencesQuery,
+  useDashboardPreferencesMutation,
+  useDashboardWidgetsQuery,
+  useDashboardWidgetsMutation,
+  useDashboardWidgetDeleteMutation,
+} from '@/tenant/hooks/collections/dashboard';
 
 export function loadDashboardPreferences(): DashboardPreferences {
-  const unified = getObject<DashboardPreferences | null>(DASHBOARD_PREFERENCES_KEY, null);
-  if (unified) {
-    return { ...DEFAULT_DASHBOARD_PREFERENCES, ...unified };
-  }
-
-  // Fallback and migrate from legacy keys on first load
-  return {
-    disabledCardIds: getObject<string[]>(DASHBOARD_DISABLED_CARDS_KEY, DEFAULT_DASHBOARD_PREFERENCES.disabledCardIds),
-    gridMode: getObject<'comfortable' | 'compact'>(PINNED_WIDGETS_GRID_MODE_KEY, DEFAULT_DASHBOARD_PREFERENCES.gridMode),
-    enrollmentChartType: getObject<'area' | 'bar' | 'line'>(ENROLLMENT_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.enrollmentChartType),
-    enrollmentChartColor: getObject<'emerald' | 'blue' | 'violet' | 'amber' | 'red'>(ENROLLMENT_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.enrollmentChartColor),
-    enrollmentChartPeriod: Number(getObject(ENROLLMENT_CHART_PERIOD_KEY, DEFAULT_DASHBOARD_PREFERENCES.enrollmentChartPeriod)),
-    revenueChartType: getObject<'bar' | 'line' | 'area'>(REVENUE_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.revenueChartType),
-    revenueChartColor: getObject<string>(REVENUE_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.revenueChartColor),
-    attendanceChartType: getObject<'bar' | 'line' | 'area'>(ATTENDANCE_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.attendanceChartType),
-    attendanceChartColor: getObject<string>(ATTENDANCE_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.attendanceChartColor),
-    hasanatChartType: getObject<'pie' | 'bar' | 'radar'>(HASANAT_CHART_TYPE_KEY, DEFAULT_DASHBOARD_PREFERENCES.hasanatChartType),
-    hasanatChartColor: getObject<string>(HASANAT_CHART_COLOR_KEY, DEFAULT_DASHBOARD_PREFERENCES.hasanatChartColor),
-  };
+  return DEFAULT_DASHBOARD_PREFERENCES;
 }
 
 export function useDashboardConfig() {
-  const prefs = useLiveObject<DashboardPreferences>(
-    DASHBOARD_PREFERENCES_KEY,
-    DEFAULT_DASHBOARD_PREFERENCES,
-    { loadFn: loadDashboardPreferences }
+  const prefsQuery = useDashboardPreferencesQuery();
+  const widgetsQuery = useDashboardWidgetsQuery();
+  const prefsMutation = useDashboardPreferencesMutation();
+  const widgetsMutation = useDashboardWidgetsMutation();
+  const widgetDeleteMutation = useDashboardWidgetDeleteMutation();
+
+  const prefs = prefsQuery.data ?? DEFAULT_DASHBOARD_PREFERENCES;
+  const customWidgets: CustomWidget[] = widgetsQuery.data ?? [];
+
+  const updateCustomWidgets = useCallback(
+    (customWidgetsDraft: CustomWidget[]) => {
+      widgetsMutation.mutate(customWidgetsDraft as DashboardWidgetDto[]);
+    },
+    [widgetsMutation],
   );
 
-  const customWidgets = useLiveObject<CustomWidget[]>(
-    DASHBOARD_WIDGETS_KEY,
-    [],
-    { loadFn: () => getOrInitializeCustomWidgets() },
+  const updatePref = useCallback(
+    <K extends keyof DashboardPreferences>(key: K, value: DashboardPreferences[K]) => {
+      prefsMutation.mutate({ ...prefs, [key]: value });
+    },
+    [prefs, prefsMutation],
   );
 
-  useEffect(() => {
-    const unified = getObject<DashboardPreferences | null>(DASHBOARD_PREFERENCES_KEY, null);
-    if (!unified) {
-      const legacy = loadDashboardPreferences();
-      saveObject(DASHBOARD_PREFERENCES_KEY, legacy);
-    }
-  }, []);
+  const toggleCardVisibility = useCallback(
+    (cardId: string) => {
+      const disabledCardIds = prefs.disabledCardIds;
+      const updated = disabledCardIds.includes(cardId)
+        ? disabledCardIds.filter((id) => id !== cardId)
+        : [...disabledCardIds, cardId];
+      updatePref('disabledCardIds', updated);
+    },
+    [prefs.disabledCardIds, updatePref],
+  );
 
-  const updateCustomWidgets = useCallback((customWidgetsDraft: CustomWidget[]) => {
-    saveObject(DASHBOARD_WIDGETS_KEY, customWidgetsDraft);
-  }, []);
+  const toggleWidgetPin = useCallback(
+    (widgetId: string) => {
+      const updated = customWidgets.map((widget) =>
+        widget.id === widgetId ? { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard } : widget,
+      );
+      updateCustomWidgets(updated);
+    },
+    [customWidgets, updateCustomWidgets],
+  );
 
-  const updatePref = useCallback(<K extends keyof DashboardPreferences>(key: K, value: DashboardPreferences[K]) => {
-    const current = loadDashboardPreferences();
-    saveObject(DASHBOARD_PREFERENCES_KEY, { ...current, [key]: value });
-  }, []);
+  const unpinWidget = useCallback(
+    (widgetId: string) => {
+      const updated = customWidgets.map((widget) =>
+        widget.id === widgetId ? { ...widget, isPinnedToDashboard: false } : widget,
+      );
+      updateCustomWidgets(updated);
+    },
+    [customWidgets, updateCustomWidgets],
+  );
 
-  const toggleCardVisibility = useCallback((cardId: string) => {
-    const disabledCardIds = prefs.disabledCardIds;
-    const updated = disabledCardIds.includes(cardId)
-      ? disabledCardIds.filter((id) => id !== cardId)
-      : [...disabledCardIds, cardId];
-    updatePref('disabledCardIds', updated);
-  }, [prefs.disabledCardIds, updatePref]);
+  const deleteWidget = useCallback(
+    (widgetId: string) => {
+      widgetDeleteMutation.mutate(widgetId);
+    },
+    [widgetDeleteMutation],
+  );
+
+  const saveWidget = useCallback(
+    (savedWidget: CustomWidget) => {
+      const exists = customWidgets.some((widget) => widget.id === savedWidget.id);
+      const updated = exists
+        ? customWidgets.map((widget) => (widget.id === savedWidget.id ? savedWidget : widget))
+        : [...customWidgets, savedWidget];
+      updateCustomWidgets(updated);
+    },
+    [customWidgets, updateCustomWidgets],
+  );
 
   return {
     disabledCardIds: prefs.disabledCardIds,
@@ -96,6 +105,10 @@ export function useDashboardConfig() {
     hasanatChartColor: prefs.hasanatChartColor,
     updateCustomWidgets,
     toggleCardVisibility,
+    toggleWidgetPin,
+    unpinWidget,
+    deleteWidget,
+    saveWidget,
     updatePref,
   };
 }

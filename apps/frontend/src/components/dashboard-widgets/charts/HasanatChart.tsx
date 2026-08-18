@@ -3,15 +3,14 @@ import { WidgetCard } from '@/components/ui/WidgetCard';
 import { WidgetChartHeader } from '@/components/ui/WidgetChartHeader';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { formatNumber } from '@mms/shared';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { ChartPrefsControlGroup } from '@/components/dashboard-widgets/charts/ChartPrefsControlGroup';
 import { HasanatChartPlot } from '@/components/dashboard-widgets/charts/HasanatChartPlot';
 import { useHasanatChartData } from '@/components/dashboard-widgets/charts/useHasanatChartData';
+import {
+  DASHBOARD_HASANAT_CHART_TYPE_OPTIONS,
+  HASANAT_CHART_COLOR_OPTIONS,
+  type HasanatChartType,
+} from '@mms/shared';
 
 export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }): React.JSX.Element {
   const {
@@ -33,40 +32,18 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }): 
         actions={
           <>
             {isEditMode && (
-              <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
-                <Select
-                  value={chartType}
-                  onValueChange={(value) => {
-                    updatePref('hasanatChartType', value as 'pie' | 'bar' | 'radar');
-                  }}
-                >
-                  <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-xs font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
-                    <SelectValue placeholder={t('reports.visualizer.chartType')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pie">{t('dashboard.charts.hasanat.pieDonut')}</SelectItem>
-                    <SelectItem value="bar">{t('dashboard.charts.hasanat.barChart')}</SelectItem>
-                    <SelectItem value="radar">{t('dashboard.charts.hasanat.radarChart')}</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={colorTheme}
-                  onValueChange={(value) => {
-                    updatePref('hasanatChartColor', value);
-                  }}
-                >
-                  <SelectTrigger className="min-h-11 min-w-11 px-1.5 rounded text-xs font-bold bg-card border-none text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none [&_svg]:hidden [&>span]:line-clamp-none">
-                    <SelectValue placeholder={t('reports.visualizer.colorPalette')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mixed">{t('dashboard.charts.hasanat.mixed')}</SelectItem>
-                    <SelectItem value="emerald">{t('dashboard.charts.attendance.emerald')}</SelectItem>
-                    <SelectItem value="blue">{t('dashboard.charts.attendance.blue')}</SelectItem>
-                    <SelectItem value="violet">{t('dashboard.charts.attendance.violet')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <ChartPrefsControlGroup
+                chartTypeValue={chartType}
+                chartTypeOptions={DASHBOARD_HASANAT_CHART_TYPE_OPTIONS}
+                onChartTypeChange={(value) => {
+                  updatePref('hasanatChartType', value as HasanatChartType);
+                }}
+                colorValue={colorTheme}
+                colorOptions={HASANAT_CHART_COLOR_OPTIONS}
+                onColorChange={(value) => {
+                  updatePref('hasanatChartColor', value);
+                }}
+              />
             )}
             <p className="text-lg font-black text-foreground m-0 select-none tabular-nums">{formatNumber(total)}</p>
           </>

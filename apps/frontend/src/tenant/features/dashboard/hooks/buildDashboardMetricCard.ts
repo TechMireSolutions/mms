@@ -5,9 +5,16 @@ import {
   computeStudentsCustomCardValue,
   computeTeachersCustomCardValue,
 } from '@/lib/reports/widgetDataUtils';
-import { resolveWidgetTitle, resolveWidgetSubText } from '@/lib/dashboardWidgets';
-import { resolveDashboardTrendMetric } from '@/lib/dashboardCollections';
-import type { StatItem } from '@/tenant/features/dashboard/components/StatisticsGrid';
+import {
+  resolveWidgetTitle,
+  resolveWidgetSubText,
+  type StatItem,
+} from '@/lib/dashboardWidgets';
+import {
+  resolveDashboardTrendMetric,
+  TREND_METRIC_KEY_MAP,
+} from '@/lib/dashboardCollections';
+import { resolveCardVisuals } from '@/lib/dashboardWidgetColors';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { DashboardMetricTrends } from '@/tenant/features/dashboard/hooks/dashboardMetricTrends';
 import type { useDashboardData } from '@/tenant/features/dashboard/hooks/useDashboardData';
@@ -21,60 +28,88 @@ interface BuildDashboardMetricCardArgs {
   t: TranslationFunction;
 }
 
-function resolveServerMetricValue(
+const CUSTOM_CARD_EVALUATORS = {
+  contacts: { computeFn: computeContactsCustomCardValue, totalKey: 'contactsTotal', trendKey: 'contactTrend' },
+  students: { computeFn: computeStudentsCustomCardValue, totalKey: 'studentsTotal', trendKey: 'studentTrend' },
+  teachers: { computeFn: computeTeachersCustomCardValue, totalKey: 'teachersTotal', trendKey: 'teacherTrend' },
+} as const;
+
+function tryCustomCollectionCardValue(
+  widget: CustomWidget,
+  computeFn: (args: {
+    id: string;
+    operation: NonNullable<CustomWidget['operation']>;
+    targetField?: string;
+    filterField?: string;
+    filterOperator?: CustomWidget['filterOperator'];
+    filterValue?: string;
+  }) => { finalValue: string | number } | null,
+  totalCount: number,
+  t: TranslationFunction,
+): { value: string; sub: string } | null {
+  const aggregateValue = computeFn({
+    id: widget.id,
+    operation: widget.operation || 'count',
+    targetField: widget.targetField,
+    filterField: widget.filterField,
+    filterOperator: widget.filterOperator,
+    filterValue: widget.filterValue,
+  });
+  if (!aggregateValue) return null;
+
+  return {
+    value: String(aggregateValue.finalValue),
+    sub: resolveWidgetSubText(widget, t) || t('reports.widgets.totalCountText', { count: totalCount }),
+  };
+}
+
+type CollectionMetricResolver = (
   widget: CustomWidget,
   data: DashboardData,
-): { value: string; sub?: string } | null {
-  const {
-    sessionsMetrics,
-    attendanceMetrics,
-    financeMetrics,
-    hasanatMetrics,
-    accountingMetrics,
-    questionBankMetrics,
-  } = data;
+) => { value: string; sub?: string } | null;
 
-  if (widget.collection === 'contacts') {
-    return { value: String(data.contactsTotal) };
-  }
+function resolveQuestionBankMetric(
+  widget: CustomWidget,
+  data: DashboardData,
+): { value: string } {
+  const { questionBankMetrics } = data;
+  if (widget.collection === 'tests') return { value: String(questionBankMetrics?.totalTests ?? 0) };
+  if (widget.collection === 'assessment_results') return { value: String(questionBankMetrics?.totalResults ?? 0) };
+  return { value: String(questionBankMetrics?.total ?? 0) };
+}
 
-  if (widget.collection === 'students') {
+const COLLECTION_METRIC_RESOLVERS: Record<string, CollectionMetricResolver> = {
+  contacts: (_widget, data) => ({ value: String(data.contactsTotal) }),
+  students: (widget, data) => {
     if (widget.filterValue === 'active') {
       return { value: String(data.studentMetricsActive) };
     }
     return { value: String(data.studentsTotal) };
-  }
-
-  if (widget.collection === 'teachers') {
-    return { value: String(data.teachersTotal) };
-  }
-
-  if (widget.collection === 'sessions') {
+  },
+  teachers: (_widget, data) => ({ value: String(data.teachersTotal) }),
+  sessions: (widget, data) => {
+    const { sessionsMetrics } = data;
     if (widget.filterValue === 'active' || widget.id.includes('sessions')) {
-      return {
-        value: String(sessionsMetrics?.active ?? 0),
-        sub: undefined,
-      };
+      return { value: String(sessionsMetrics?.active ?? 0), sub: undefined };
     }
     if (widget.id.includes('classes')) {
-      return {
-        value: String(sessionsMetrics?.totalClasses ?? 0),
-      };
+      return { value: String(sessionsMetrics?.totalClasses ?? 0) };
     }
     return { value: String(sessionsMetrics?.total ?? 0) };
-  }
-
-  if (widget.collection === 'attendance_records') {
-    const rate = attendanceMetrics?.overallPresentRate
-      ?? attendanceMetrics?.selectedDatePresentRate
-      ?? 0;
+  },
+  attendance_records: (widget, data) => {
+    const { attendanceMetrics } = data;
+    const rate =
+      attendanceMetrics?.overallPresentRate ??
+      attendanceMetrics?.selectedDatePresentRate ??
+      0;
     if (widget.operation === 'percentage') {
       return { value: `${rate}%` };
     }
     return { value: String(attendanceMetrics?.total ?? 0) };
-  }
-
-  if (widget.collection === 'finance_invoices') {
+  },
+  finance_invoices: (widget, data) => {
+    const { financeMetrics, accountingMetrics } = data;
     if (widget.id.includes('revenue') || widget.id.includes('expenses')) {
       if (widget.id.includes('revenue')) {
         return { value: formatMoney(accountingMetrics?.revenue ?? 0) };
@@ -84,7 +119,10 @@ function resolveServerMetricValue(
     if (widget.targetField === 'paidAmt' || widget.filterValue === 'paid') {
       return { value: formatMoney(financeMetrics?.collectedTotal ?? 0) };
     }
-    if (widget.targetField === 'finalAmt' && (widget.filterValue === 'unpaid' || widget.id.includes('outstanding'))) {
+    if (
+      widget.targetField === 'finalAmt' &&
+      (widget.filterValue === 'unpaid' || widget.id.includes('outstanding'))
+    ) {
       return { value: formatMoney(financeMetrics?.outstandingBalance ?? 0) };
     }
     if (widget.targetField === 'discountAmt') {
@@ -99,19 +137,21 @@ function resolveServerMetricValue(
       return { value: String(financeMetrics?.totalInvoices ?? 0) };
     }
     return { value: formatMoney(financeMetrics?.collectedTotal ?? 0) };
-  }
+  },
+  hasanat_distributions: (_widget, data) => ({
+    value: String(data.hasanatMetrics?.totalPointsDistributed ?? 0),
+  }),
+  questions: resolveQuestionBankMetric,
+  tests: resolveQuestionBankMetric,
+  assessment_results: resolveQuestionBankMetric,
+};
 
-  if (widget.collection === 'hasanat_distributions') {
-    return { value: String(hasanatMetrics?.totalPointsDistributed ?? 0) };
-  }
-
-  if (widget.collection === 'questions' || widget.collection === 'tests' || widget.collection === 'assessment_results') {
-    if (widget.collection === 'tests') return { value: String(questionBankMetrics?.totalTests ?? 0) };
-    if (widget.collection === 'assessment_results') return { value: String(questionBankMetrics?.totalResults ?? 0) };
-    return { value: String(questionBankMetrics?.total ?? 0) };
-  }
-
-  return null;
+function resolveServerMetricValue(
+  widget: CustomWidget,
+  data: DashboardData,
+): { value: string; sub?: string } | null {
+  const resolver = COLLECTION_METRIC_RESOLVERS[widget.collection];
+  return resolver ? resolver(widget, data) : null;
 }
 
 export function buildDashboardMetricCard({
@@ -120,111 +160,48 @@ export function buildDashboardMetricCard({
   trends,
   t,
 }: BuildDashboardMetricCardArgs): StatItem {
-  const {
-    studentsTotal,
-    teachersTotal,
-    contactsTotal,
-  } = data;
+  let resolvedMetric: { value: string; sub?: string } | null = null;
+  let customTrend: number | undefined;
 
-  const {
-    studentTrend,
-    teacherTrend,
-    contactTrend,
-    attendanceTrend,
-    feesTrend,
-    outstandingTrend,
-    hasanatTrend,
-    sessionsTrend,
-  } = trends;
-
-  if (widget.collection === 'contacts') {
-    const aggregateValue = computeContactsCustomCardValue({
-      id: widget.id,
-      operation: widget.operation || 'count',
-      targetField: widget.targetField,
-      filterField: widget.filterField,
-      filterOperator: widget.filterOperator,
-      filterValue: widget.filterValue,
-    });
-    if (aggregateValue) {
-      return {
-        id: widget.id,
-        title: resolveWidgetTitle(widget, t),
-        value: String(aggregateValue.finalValue),
-        sub: resolveWidgetSubText(widget, t) || t('reports.widgets.totalCountText', { count: contactsTotal }),
-        icon: widget.icon || 'Users',
-        color: widget.color || 'blue',
-        trend: contactTrend,
-      };
+  const customEvaluator = CUSTOM_CARD_EVALUATORS[widget.collection as keyof typeof CUSTOM_CARD_EVALUATORS];
+  if (customEvaluator) {
+    resolvedMetric = tryCustomCollectionCardValue(
+      widget,
+      customEvaluator.computeFn,
+      data[customEvaluator.totalKey],
+      t,
+    );
+    if (resolvedMetric) {
+      customTrend = trends[customEvaluator.trendKey];
     }
   }
 
-  if (widget.collection === 'students') {
-    const aggregateValue = computeStudentsCustomCardValue({
-      id: widget.id,
-      operation: widget.operation || 'count',
-      targetField: widget.targetField,
-      filterField: widget.filterField,
-      filterOperator: widget.filterOperator,
-      filterValue: widget.filterValue,
-    });
-    if (aggregateValue) {
-      return {
-        id: widget.id,
-        title: resolveWidgetTitle(widget, t),
-        value: String(aggregateValue.finalValue),
-        sub: resolveWidgetSubText(widget, t) || t('reports.widgets.totalCountText', { count: studentsTotal }),
-        icon: widget.icon || 'GraduationCap',
-        color: widget.color || 'emerald',
-        trend: studentTrend,
-      };
-    }
+  if (!resolvedMetric) {
+    resolvedMetric = resolveServerMetricValue(widget, data);
   }
 
-  if (widget.collection === 'teachers') {
-    const aggregateValue = computeTeachersCustomCardValue({
-      id: widget.id,
-      operation: widget.operation || 'count',
-      targetField: widget.targetField,
-      filterField: widget.filterField,
-      filterOperator: widget.filterOperator,
-      filterValue: widget.filterValue,
-    });
-    if (aggregateValue) {
-      return {
-        id: widget.id,
-        title: resolveWidgetTitle(widget, t),
-        value: String(aggregateValue.finalValue),
-        sub: resolveWidgetSubText(widget, t) || t('reports.widgets.totalCountText', { count: teachersTotal }),
-        icon: widget.icon || 'School',
-        color: widget.color || 'blue',
-        trend: teacherTrend,
-      };
-    }
-  }
+  const value = resolvedMetric?.value ?? '0';
+  const sub = resolvedMetric?.sub ?? resolveWidgetSubText(widget, t);
 
-  const serverValue = resolveServerMetricValue(widget, data);
-  const value = serverValue?.value ?? '0';
-  const sub = resolveWidgetSubText(widget, t) || serverValue?.sub || '';
-
-  let resolvedTrend = typeof widget.trend === 'number' ? widget.trend : 0;
   const trendMetric = resolveDashboardTrendMetric(widget.id);
-  if (trendMetric === 'attendance') resolvedTrend = attendanceTrend;
-  else if (trendMetric === 'fees') resolvedTrend = feesTrend;
-  else if (trendMetric === 'outstanding') resolvedTrend = outstandingTrend;
-  else if (trendMetric === 'hasanat') resolvedTrend = hasanatTrend;
-  else if (trendMetric === 'sessions') resolvedTrend = sessionsTrend;
-  else if (trendMetric === 'contacts') resolvedTrend = contactTrend;
-  else if (trendMetric === 'students') resolvedTrend = studentTrend;
-  else if (trendMetric === 'teachers') resolvedTrend = teacherTrend;
+  const trendKey = trendMetric ? TREND_METRIC_KEY_MAP[trendMetric] : undefined;
+  const resolvedTrend =
+    customTrend ??
+    (trendKey && typeof trends[trendKey] === 'number'
+      ? trends[trendKey]
+      : typeof widget.trend === 'number'
+        ? widget.trend
+        : 0);
+
+  const { icon, color } = resolveCardVisuals(widget);
 
   return {
     id: widget.id,
     title: resolveWidgetTitle(widget, t),
     value,
     sub,
-    icon: widget.icon || 'GraduationCap',
-    color: widget.color || 'emerald',
+    icon,
+    color,
     trend: resolvedTrend,
   };
 }

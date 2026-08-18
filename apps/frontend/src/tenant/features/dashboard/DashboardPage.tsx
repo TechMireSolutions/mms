@@ -28,11 +28,12 @@ export default function Dashboard() {
     closeBuilder,
     handleSaveWidget,
     handleEditWidget,
+    handleEditCustomCard,
     handleDeleteWidget,
     handleUnpinWidget,
     toggleWidgetPin,
     openWidgetBuilder,
-    activeCustomCards,
+    activeCustomCardIds,
     dashboardMetricCards,
     selectedDashboardCardCount,
     visibleDashboardMetricCards,
@@ -110,12 +111,9 @@ export default function Dashboard() {
           <ErrorBoundary>
             <StatsGrid
               statItems={visibleDashboardMetricCards}
-              customCardIds={activeCustomCards.map((customCard) => customCard.id)}
+              customCardIds={activeCustomCardIds}
               onDeleteCustomCard={handleDeleteWidget}
-              onEditCustomCard={(customCardId) => {
-                const widget = customWidgets.find((dashboardWidget) => dashboardWidget.id === customCardId);
-                if (widget) openWidgetBuilder('card', widget);
-              }}
+              onEditCustomCard={handleEditCustomCard}
               isEditMode={isEditMode}
               onAddCardClick={isEditMode ? () => openWidgetBuilder('card', null) : undefined}
             />

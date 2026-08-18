@@ -1,5 +1,5 @@
 import React from "react";
-import { HasanatChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
+import { HasanatChart } from "@/components/dashboard-widgets/charts/HasanatChart";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
 

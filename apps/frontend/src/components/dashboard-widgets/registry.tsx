@@ -1,5 +1,4 @@
 import React from 'react';
-import type { AppTranslationKey } from '@mms/shared';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -16,7 +15,7 @@ const AttendanceChart = React.lazy(() =>
   })),
 );
 const HasanatChart = React.lazy(() =>
-  import('@/components/dashboard-widgets/charts/AttendanceChart').then((module) => ({
+  import('@/components/dashboard-widgets/charts/HasanatChart').then((module) => ({
     default: module.HasanatChart,
   })),
 );
@@ -53,13 +52,8 @@ export function isListSummaryWidgetType(type: string | undefined): boolean {
   return Boolean(type && (LIST_SUMMARY_WIDGET_TYPES as readonly string[]).includes(type));
 }
 
-const TITLE_WIDGETS = new Set<ComposedWidgetType>([
-  'sessions-list',
-  'attendance-summary',
-  'fee-summary',
-  'outstanding-list',
-  'overdue-obligations',
-]);
+/** Title-bearing list/summary widgets — same set as LIST_SUMMARY_WIDGET_TYPES. */
+const TITLE_WIDGETS = new Set<ComposedWidgetType>(LIST_SUMMARY_WIDGET_TYPES);
 
 const FALLBACK_CLASS = {
   compact: 'min-h-[8.75rem] rounded-3xl',
@@ -125,9 +119,3 @@ export function ComposedDashboardWidget({
     </ErrorBoundary>
   );
 }
-
-export type BuilderWidgetTypeOption = {
-  id: ComposedWidgetType | 'kpi' | 'progress' | 'switch' | 'chart' | 'card';
-  labelKey: AppTranslationKey;
-  descKey: AppTranslationKey;
-};

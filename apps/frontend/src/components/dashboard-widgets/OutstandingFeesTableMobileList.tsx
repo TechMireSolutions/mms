@@ -6,20 +6,9 @@ import {
   OutstandingFeeMessagingActions,
   OutstandingFeeOverdueBadge,
   type OpenComposer,
+  type OutstandingFeeRow,
 } from "@/components/dashboard-widgets/OutstandingFeesTableParts";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-
-export interface OutstandingFeeRow {
-  id: string;
-  studentId: string;
-  student: string;
-  class: string;
-  amount: number;
-  months: number;
-  contact: string;
-  email: string;
-  dueDate: string;
-}
 
 interface OutstandingFeesTableMobileListProps {
   rows: OutstandingFeeRow[];

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { DASHBOARD_MODULE_MANIFEST } from '@mms/shared';
-import { resolveDashboardRole, widgetMatchesDashboardRole } from '@/lib/dashboardRole';
+import { resolveDashboardRole } from '@/lib/dashboardRole';
+import { getActiveCustomCardIds, getPinnedDashboardWidgetCount } from '@/lib/dashboardCollections';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useDashboardData } from '@/tenant/features/dashboard/hooks/useDashboardData';
@@ -9,7 +10,6 @@ import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
-import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { scrollDocumentToTop } from '@/lib/routing/scrollDocumentToTop';
 
@@ -19,13 +19,16 @@ export function useDashboardPageController() {
   const { can } = usePermissions();
   const dashboardRole = useMemo(() => resolveDashboardRole(can), [can]);
   const globalSettings = useGlobalSettings();
-  const enabledModules = useMemo(() => globalSettings.enabledModules || {}, [globalSettings.enabledModules]);
+  const enabledModules = globalSettings.enabledModules || {};
 
   const {
     disabledCardIds,
     customWidgets,
-    updateCustomWidgets,
     toggleCardVisibility,
+    toggleWidgetPin,
+    unpinWidget,
+    deleteWidget,
+    saveWidget,
   } = useDashboardConfig();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -61,50 +64,23 @@ export function useDashboardPageController() {
     [canCustomize, isEditMode],
   );
 
-  const handleUnpinWidget = (widgetId: string) => {
-    updateCustomWidgets(
-      customWidgets.map((widget) =>
-        widget.id === widgetId ? { ...widget, isPinnedToDashboard: false } : widget,
-      ),
-    );
-  };
-
-  const handleDeleteWidget = (widgetId: string) => {
-    updateCustomWidgets(customWidgets.filter((widget) => widget.id !== widgetId));
-  };
-
-  const handleEditWidget = (widget: CustomWidget) => {
-    openWidgetBuilder(widget.widgetType || 'kpi', widget);
-  };
-
-  const toggleWidgetPin = (widgetId: string) => {
-    updateCustomWidgets(
-      customWidgets.map((widget) =>
-        widget.id === widgetId ? { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard } : widget,
-      ),
-    );
-  };
+  const handleEditWidget = useCallback(
+    (widget: CustomWidget) => {
+      openWidgetBuilder(widget.widgetType || 'kpi', widget);
+    },
+    [openWidgetBuilder],
+  );
 
   const handleSaveWidget = useCallback(
     (savedWidget: CustomWidget) => {
-      const widgetAlreadyExists = customWidgets.some((widget) => widget.id === savedWidget.id);
-      const nextWidgets = widgetAlreadyExists
-        ? customWidgets.map((widget) => (widget.id === savedWidget.id ? savedWidget : widget))
-        : [...customWidgets, savedWidget];
-      updateCustomWidgets(nextWidgets);
+      saveWidget(savedWidget);
       closeBuilder();
     },
-    [closeBuilder, customWidgets, updateCustomWidgets],
+    [closeBuilder, saveWidget],
   );
 
-  const activeCustomCards = useMemo(
-    () =>
-      customWidgets.filter(
-        (widget) =>
-          widget.widgetType === 'card' &&
-          widgetMatchesDashboardRole(widget.role, dashboardRole) &&
-          !isSeededDashboardWidget(widget.id),
-      ),
+  const activeCustomCardIds = useMemo(
+    () => getActiveCustomCardIds(customWidgets, dashboardRole),
     [customWidgets, dashboardRole],
   );
 
@@ -116,11 +92,12 @@ export function useDashboardPageController() {
     t,
   });
 
-  const selectedDashboardCardCount = useMemo(
-    () =>
-      dashboardMetricCards.filter((dashboardCard) => !disabledCardIds.includes(dashboardCard.id))
-        .length,
-    [dashboardMetricCards, disabledCardIds],
+  const handleEditCustomCard = useCallback(
+    (customCardId: string) => {
+      const widget = customWidgets.find((dashboardWidget) => dashboardWidget.id === customCardId);
+      if (widget) handleEditWidget(widget);
+    },
+    [customWidgets, handleEditWidget],
   );
 
   const visibleDashboardMetricCards = useMemo(
@@ -128,7 +105,12 @@ export function useDashboardPageController() {
     [dashboardMetricCards, disabledCardIds],
   );
 
-  const pinnedDashboardWidgetCount = customWidgets.filter((widget) => widget.isPinnedToDashboard).length;
+  const selectedDashboardCardCount = visibleDashboardMetricCards.length;
+
+  const pinnedDashboardWidgetCount = useMemo(
+    () => getPinnedDashboardWidgetCount(customWidgets),
+    [customWidgets],
+  );
 
   const notifications = useMemo(
     () =>
@@ -166,11 +148,12 @@ export function useDashboardPageController() {
     closeBuilder,
     handleSaveWidget,
     handleEditWidget,
-    handleDeleteWidget,
-    handleUnpinWidget,
+    handleEditCustomCard,
+    handleDeleteWidget: deleteWidget,
+    handleUnpinWidget: unpinWidget,
     toggleWidgetPin,
     openWidgetBuilder,
-    activeCustomCards,
+    activeCustomCardIds,
     dashboardMetricCards,
     selectedDashboardCardCount,
     visibleDashboardMetricCards,

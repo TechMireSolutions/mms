@@ -1,9 +1,17 @@
 import { useMemo } from 'react';
-import type { ReportCollection } from '@/lib/reports/reportMetadata';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
-import type { DashboardRole } from '@/lib/dashboardRole';
-import { widgetMatchesDashboardRole } from '@/lib/dashboardRole';
-import { getRequiredDashboardCollections } from '@/lib/dashboardCollections';
+import {
+  isDashboardAdmin,
+  isDashboardAdminOrAccountant,
+  isDashboardTeacher,
+  type DashboardRole,
+} from '@/lib/dashboardRole';
+import {
+  getRequiredDashboardCollections,
+  filterDashboardWidgetsByCollection,
+  isWidgetActiveForDashboard,
+  DASHBOARD_ACCOUNTING_WIDGET_IDS,
+} from '@/lib/dashboardCollections';
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
@@ -13,7 +21,19 @@ import { useFinanceMetrics } from '@/tenant/hooks/collections/finance';
 import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
 import { useQuestionBankMetrics } from '@/tenant/hooks/collections/questionBank';
 import { useAccountingMetrics } from '@/tenant/hooks/collections/accounting';
-import { todayISO, type StudentsCommandMetricsSnapshot, type TeachersCommandMetricsSnapshot, type ContactsCommandMetricsSnapshot, type SessionsCommandMetricsSnapshot, type AttendanceCommandMetricsSnapshot, type FinanceCommandMetricsSnapshot, type HasanatCommandMetricsSnapshot, type QuestionBankCommandMetricsSnapshot, type AccountingCommandMetricsSnapshot } from '@mms/shared';
+import {
+  todayISO,
+  ACCOUNTING_MODULE_MANIFEST,
+  type StudentsCommandMetricsSnapshot,
+  type TeachersCommandMetricsSnapshot,
+  type ContactsCommandMetricsSnapshot,
+  type SessionsCommandMetricsSnapshot,
+  type AttendanceCommandMetricsSnapshot,
+  type FinanceCommandMetricsSnapshot,
+  type HasanatCommandMetricsSnapshot,
+  type QuestionBankCommandMetricsSnapshot,
+  type AccountingCommandMetricsSnapshot,
+} from '@mms/shared';
 
 export interface DashboardCollectionData {
   studentsTotal: number;
@@ -24,7 +44,6 @@ export interface DashboardCollectionData {
   studentMetricsNew: number;
   teacherMetricsNew: number;
   contactMetricsNew: number;
-  dataVolume: number;
   studentMetrics?: StudentsCommandMetricsSnapshot;
   teacherMetrics?: TeachersCommandMetricsSnapshot;
   contactMetrics?: ContactsCommandMetricsSnapshot;
@@ -34,18 +53,6 @@ export interface DashboardCollectionData {
   hasanatMetrics?: HasanatCommandMetricsSnapshot;
   questionBankMetrics?: QuestionBankCommandMetricsSnapshot;
   accountingMetrics?: AccountingCommandMetricsSnapshot;
-}
-
-function filterDashboardWidgetsByCollection(
-  widgets: CustomWidget[],
-  collection: ReportCollection,
-  dashboardRole: DashboardRole,
-): CustomWidget[] {
-  return widgets.filter(
-    (widget) =>
-      widget.collection === collection &&
-      (widget.isPinnedToDashboard || (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))),
-  );
 }
 
 /** Loads server metrics for dashboard cards — no full collection dumps for KPI values. */
@@ -58,53 +65,46 @@ export function useDashboardData(
     [widgets, dashboardRole],
   );
 
-  const requiresCollection = (collection: ReportCollection): boolean =>
-    requiredDashboardCollections.has(collection);
-  const shouldLoadContacts = requiresCollection('contacts');
-  const shouldLoadStudents = requiresCollection('students') || dashboardRole === 'admin';
-  const shouldLoadTeachers = requiresCollection('teachers');
+  const shouldLoadContacts = requiredDashboardCollections.has('contacts');
+  const shouldLoadStudents = requiredDashboardCollections.has('students') || isDashboardAdmin(dashboardRole);
+  const shouldLoadTeachers = requiredDashboardCollections.has('teachers');
   // Role shell needs: teacher banner (sessions), admin/accountant notifications (finance + attendance).
   const shouldLoadSessions =
-    requiresCollection('sessions') || dashboardRole === 'teacher';
+    requiredDashboardCollections.has('sessions') || isDashboardTeacher(dashboardRole);
   const shouldLoadAttendance =
-    requiresCollection('attendance_records') ||
-    dashboardRole === 'admin' ||
-    dashboardRole === 'accountant' ||
-    dashboardRole === 'teacher';
+    requiredDashboardCollections.has('attendance_records') ||
+    isDashboardAdminOrAccountant(dashboardRole) ||
+    isDashboardTeacher(dashboardRole);
+
   const shouldLoadFinance =
-    requiresCollection('finance_invoices') ||
-    dashboardRole === 'admin' ||
-    dashboardRole === 'accountant';
-  const shouldLoadHasanat = requiresCollection('hasanat_distributions');
+    requiredDashboardCollections.has('finance_invoices') || isDashboardAdminOrAccountant(dashboardRole);
+  const shouldLoadHasanat = requiredDashboardCollections.has('hasanat_distributions');
   const shouldLoadQuestionBank =
-    requiresCollection('questions') ||
-    requiresCollection('tests') ||
-    requiresCollection('assessment_results');
-  const shouldLoadAccounting = widgets.some(
-    (widget) =>
-      (widget.widgetType === 'card' &&
-        widgetMatchesDashboardRole(widget.role, dashboardRole) &&
-        widget.category === 'accounting') ||
-      widget.id.includes('accountant-revenue') ||
-      widget.id.includes('accountant-expenses'),
-  );
-
-  const contactWidgets = useMemo(
-    () => filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole),
-    [widgets, dashboardRole],
-  );
-  const studentWidgets = useMemo(
-    () => filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole),
-    [widgets, dashboardRole],
-  );
-  const teacherWidgets = useMemo(
-    () => filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole),
+    requiredDashboardCollections.has('questions') ||
+    requiredDashboardCollections.has('tests') ||
+    requiredDashboardCollections.has('assessment_results');
+  const shouldLoadAccounting = useMemo(
+    () =>
+      widgets.some(
+        (widget) =>
+          isWidgetActiveForDashboard(widget, dashboardRole) &&
+          (widget.category === ACCOUNTING_MODULE_MANIFEST.moduleId || DASHBOARD_ACCOUNTING_WIDGET_IDS.has(widget.id)),
+      ),
     [widgets, dashboardRole],
   );
 
-  useContactsWidgetAggregates(contactWidgets, { enabled: shouldLoadContacts });
-  useStudentsWidgetAggregates(studentWidgets, { enabled: shouldLoadStudents });
-  useTeachersWidgetAggregates(teacherWidgets, { enabled: shouldLoadTeachers });
+  const collectionWidgets = useMemo(
+    () => ({
+      contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole),
+      students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole),
+      teachers: filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole),
+    }),
+    [widgets, dashboardRole],
+  );
+
+  useContactsWidgetAggregates(collectionWidgets.contacts, { enabled: shouldLoadContacts });
+  useStudentsWidgetAggregates(collectionWidgets.students, { enabled: shouldLoadStudents });
+  useTeachersWidgetAggregates(collectionWidgets.teachers, { enabled: shouldLoadTeachers });
 
   const { data: studentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents });
   const { data: teacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers });
@@ -120,18 +120,6 @@ export function useDashboardData(
   const teachersTotal = teacherMetrics?.total ?? 0;
   const contactsTotal = contactMetrics?.total ?? 0;
 
-  const dataVolume = useMemo(
-    () =>
-      studentsTotal +
-      teachersTotal +
-      contactsTotal +
-      (sessionsMetrics?.total ?? 0) +
-      (financeMetrics?.totalInvoices ?? 0) +
-      (attendanceMetrics?.total ?? 0) +
-      (hasanatMetrics?.distributed ?? 0),
-    [studentsTotal, teachersTotal, contactsTotal, sessionsMetrics, financeMetrics, attendanceMetrics, hasanatMetrics],
-  );
-
   return {
     studentsTotal,
     teachersTotal,
@@ -141,7 +129,6 @@ export function useDashboardData(
     studentMetricsNew: studentMetrics?.newThisPeriod ?? 0,
     teacherMetricsNew: teacherMetrics?.newThisPeriod ?? 0,
     contactMetricsNew: contactMetrics?.newThisPeriod ?? 0,
-    dataVolume,
     studentMetrics,
     teacherMetrics,
     contactMetrics,

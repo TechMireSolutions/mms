@@ -14,7 +14,7 @@ import {
   OutstandingFeeOverdueBadge,
   type OpenComposer,
 } from "@/components/dashboard-widgets/OutstandingFeesTableParts";
-import type { OutstandingFeeRow } from "@/components/dashboard-widgets/OutstandingFeesTableMobileList";
+import type { OutstandingFeeRow } from "@/components/dashboard-widgets/OutstandingFeesTableParts";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface OutstandingFeesTableDesktopBodyProps {

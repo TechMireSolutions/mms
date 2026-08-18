@@ -1,28 +1,33 @@
 import {
   type AppTranslationKey,
   type Permission,
-  formatMoney,
   FINANCE_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
   ATTENDANCE_MODULE_MANIFEST,
+  DASHBOARD_LOW_ATTENDANCE_THRESHOLD,
+  DASHBOARD_URGENT_ATTENDANCE_THRESHOLD,
 } from '@mms/shared';
-import type { DashboardRole } from '@/lib/dashboardRole';
+import {
+  isDashboardAdmin,
+  isDashboardAdminOrAccountant,
+  isDashboardAccountant,
+  type DashboardRole,
+} from '@/lib/dashboardRole';
+
+export type DashboardNotificationType = 'fee' | 'event' | 'student' | 'attendance';
 
 export interface DashboardNotificationItem {
   id: string;
-  type: 'fee' | 'event' | 'student' | 'attendance' | string;
+  type: DashboardNotificationType;
   title: string;
   desc: string;
   time: string;
   urgent?: boolean;
 }
 
-type Translate = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
+export const MAX_DASHBOARD_NOTIFICATIONS = 8;
 
-/** Alert when attendance rate drops below this percent. */
-export const DASHBOARD_LOW_ATTENDANCE_THRESHOLD = 75;
-/** Mark low-attendance notification urgent below this percent. */
-export const DASHBOARD_URGENT_ATTENDANCE_THRESHOLD = 60;
+type Translate = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
 export interface DashboardNotificationMetrics {
   outstandingInvoiceCount: number;
@@ -35,7 +40,7 @@ export function buildDashboardNotifications(
   dashboardRole: DashboardRole,
   dashboardNotificationInput: DashboardNotificationMetrics,
   t: Translate,
-  formatCurrency?: (amount: number | string | null | undefined) => string,
+  formatCurrency: (amount: number | string | null | undefined) => string,
   can?: (permission: Permission) => boolean,
 ): DashboardNotificationItem[] {
   const dashboardNotifications: DashboardNotificationItem[] = [];
@@ -49,14 +54,14 @@ export function buildDashboardNotifications(
     ? can(ATTENDANCE_MODULE_MANIFEST.permissions.write) || can(ATTENDANCE_MODULE_MANIFEST.permissions.read)
     : true;
 
-  if ((dashboardRole === 'admin' || dashboardRole === 'accountant') && canFinance) {
+  if (isDashboardAdminOrAccountant(dashboardRole) && canFinance) {
     if (unpaidCount > 0) {
       dashboardNotifications.push({
         id: 'unpaid-invoices',
         type: 'fee',
         title: t('notifications.unpaidInvoicesTitle', { count: unpaidCount }),
         desc: t('notifications.unpaidInvoicesDesc', {
-          amount: formatCurrency ? formatCurrency(outstandingTotal) : formatMoney(outstandingTotal),
+          amount: formatCurrency(outstandingTotal),
         }),
         time: t('notifications.timeNow'),
         urgent: outstandingTotal > 0,
@@ -64,7 +69,7 @@ export function buildDashboardNotifications(
     }
   }
 
-  if (dashboardRole === 'admin' && canStudents) {
+  if (isDashboardAdmin(dashboardRole) && canStudents) {
     if (dashboardNotificationInput.inactiveStudents > 0) {
       dashboardNotifications.push({
         id: 'inactive-students',
@@ -94,7 +99,7 @@ export function buildDashboardNotifications(
     });
   }
 
-  if (dashboardRole === 'accountant' && canFinance && unpaidCount === 0) {
+  if (isDashboardAccountant(dashboardRole) && canFinance && unpaidCount === 0) {
     dashboardNotifications.push({
       id: 'fees-clear',
       type: 'fee',
@@ -105,5 +110,6 @@ export function buildDashboardNotifications(
     });
   }
 
-  return dashboardNotifications.slice(0, 8);
+  return dashboardNotifications.slice(0, MAX_DASHBOARD_NOTIFICATIONS);
 }
+

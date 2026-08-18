@@ -1,27 +1,20 @@
 import React from 'react';
 import {
-  Cell, PieChart, Pie, Tooltip, TooltipContentProps,
+  Cell, PieChart, Pie, Tooltip,
   BarChart, Bar, XAxis, YAxis,
   RadarChart, PolarAngleAxis, PolarRadiusAxis, Radar,
 } from 'recharts';
 import { SafeResponsiveContainer } from '@/components/ui/SafeResponsiveContainer';
-import { ChartTooltip } from '@/components/ui/ChartTooltip';
 import { ChartGrid, ChartPolarGrid, chartAxisTick } from '@/components/ui/ChartGrid';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatNumber } from '@mms/shared';
+import { buildChartTooltip, CHART_AXIS_LINE_PROPS } from '@/components/dashboard-widgets/charts/chartPrimitives';
 import type { HasanatPoint } from './useHasanatChartData';
 
-const HasanatTooltip = ({ active = false, payload = [] }: Partial<TooltipContentProps>) => {
-  const { t } = useTranslation();
-  return (
-    <ChartTooltip
-      active={active}
-      payload={payload}
-      title={payload?.[0]?.name}
-      value={t("hasanat.dashboard.pts", { count: formatNumber(payload?.[0]?.value) })}
-    />
-  );
-};
+const HasanatTooltip = buildChartTooltip({
+  valueFormatter: (value, { t }) => t("hasanat.dashboard.pts", { count: formatNumber(value) }),
+  titleFromName: true,
+});
 
 interface HasanatChartPlotProps {
   chartType: 'pie' | 'bar' | 'radar';
@@ -53,8 +46,8 @@ export function HasanatChartPlot({ chartType, hasanatData, activeColors }: Hasan
         <SafeResponsiveContainer height={120}>
           <BarChart data={hasanatData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
             <ChartGrid vertical={false} />
-            <XAxis dataKey="name" tick={chartAxisTick(9, true)} axisLine={false} tickLine={false} />
-            <YAxis tick={chartAxisTick(9, true)} axisLine={false} tickLine={false} />
+            <XAxis dataKey="name" tick={chartAxisTick(9, true)} {...CHART_AXIS_LINE_PROPS} />
+            <YAxis tick={chartAxisTick(9, true)} {...CHART_AXIS_LINE_PROPS} />
             <Tooltip content={<HasanatTooltip />} />
             <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={32}>
               {hasanatData.map((hasanatPoint, index) => (

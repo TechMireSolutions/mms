@@ -2,7 +2,6 @@ import type { AppTranslationKey, Permission } from '@mms/shared';
 import {
   ACCOUNTING_MODULE_MANIFEST,
   ATTENDANCE_MODULE_MANIFEST,
-  DASHBOARD_MODULE_MANIFEST,
   ENROLLMENTS_MODULE_MANIFEST,
   FINANCE_MODULE_MANIFEST,
   HASANAT_MODULE_MANIFEST,
@@ -132,14 +131,6 @@ export const DASHBOARD_QUICK_ACTIONS: readonly DashboardQuickAction[] = [
   },
 ] as const;
 
-/** @deprecated Prefer `DASHBOARD_QUICK_ACTIONS[].route` — kept for any legacy key lookups. */
-export const QUICK_ACTION_ROUTE_KEYS: Partial<Record<AppTranslationKey, string>> =
-  Object.fromEntries(
-    DASHBOARD_QUICK_ACTIONS.map((action) => [action.labelKey, action.route]),
-  ) as Partial<Record<AppTranslationKey, string>>;
-
 export function getQuickActionsForRole(dashboardRole: DashboardRole): DashboardQuickAction[] {
   return DASHBOARD_QUICK_ACTIONS.filter((action) => action.roles.includes(dashboardRole));
 }
-
-void DASHBOARD_MODULE_MANIFEST;

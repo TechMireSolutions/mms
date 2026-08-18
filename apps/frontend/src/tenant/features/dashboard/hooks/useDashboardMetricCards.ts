@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
-import { widgetMatchesDashboardRole, type DashboardRole } from '@/lib/dashboardRole';
+import type { DashboardRole } from '@/lib/dashboardRole';
 import {
   isDashboardWidgetModuleEnabled,
+  filterDashboardCardWidgets,
 } from '@/lib/dashboardCollections';
-import type { StatItem } from '@/tenant/features/dashboard/components/StatisticsGrid';
+import type { StatItem } from '@/lib/dashboardWidgets';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { useDashboardData } from '@/tenant/features/dashboard/hooks/useDashboardData';
 import { computeDashboardMetricTrends } from '@/tenant/features/dashboard/hooks/dashboardMetricTrends';
@@ -33,10 +34,7 @@ export function useDashboardMetricCards({
   return useMemo(() => {
     const trends = computeDashboardMetricTrends(data);
 
-    const dashboardCardWidgets = customWidgets.filter(
-      (widget) => widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole),
-    );
-
+    const dashboardCardWidgets = filterDashboardCardWidgets(customWidgets, dashboardRole);
     const enabledDashboardCardWidgets = dashboardCardWidgets.filter((widget) =>
       isDashboardWidgetModuleEnabled(widget, enabledModules),
     );

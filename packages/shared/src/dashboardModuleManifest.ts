@@ -8,6 +8,9 @@ import { DASHBOARD_PREFERENCES_KEY, DASHBOARD_WIDGETS_KEY } from './settingsType
 export const DASHBOARD_MODULE_MANIFEST = {
   moduleId: 'dashboard',
   entityType: 'Dashboard',
+  /** Broadcast / Query-key prefix / route mount key for server-authoritative dashboard config. */
+  collectionKey: 'dashboard',
+  restBasePath: '/api/dashboard',
   preferencesObjectKey: DASHBOARD_PREFERENCES_KEY,
   widgetsObjectKey: DASHBOARD_WIDGETS_KEY,
   tiers: [] as const,
@@ -21,4 +24,8 @@ export const DASHBOARD_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
 } as const;
 
+export const DASHBOARD_ROLES = ['admin', 'teacher', 'accountant'] as const;
+export type DashboardRole = (typeof DASHBOARD_ROLES)[number];
+
 export type DashboardModulePermission = keyof typeof DASHBOARD_MODULE_MANIFEST.permissions;
+

@@ -1,6 +1,22 @@
 import type { ReportCollection } from '@/lib/reports/reportMetadata';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { widgetMatchesDashboardRole, type DashboardRole } from '@/lib/dashboardRole';
+import { isSeededDashboardWidget, DASHBOARD_WIDGET_REGISTRY } from '@/lib/dashboardWidgets';
+import {
+  type DashboardTrendMetric,
+  type DashboardMetricTrends,
+  SESSIONS_MODULE_MANIFEST,
+  ATTENDANCE_MODULE_MANIFEST,
+  HASANAT_MODULE_MANIFEST,
+  FINANCE_MODULE_MANIFEST,
+  STUDENTS_MODULE_MANIFEST,
+  TEACHERS_MODULE_MANIFEST,
+  CONTACTS_MODULE_MANIFEST,
+  QUESTION_BANK_MODULE_MANIFEST,
+  ACCOUNTING_MODULE_MANIFEST,
+} from '@mms/shared';
+
+export type { DashboardTrendMetric };
 
 const REVENUE_WIDGET_TYPES = new Set(['revenue-expenses']);
 
@@ -9,16 +25,16 @@ const REVENUE_WIDGET_TYPES = new Set(['revenue-expenses']);
  * Single source for dashboard card visibility vs enabledModules.
  */
 export const DASHBOARD_COLLECTION_MODULE_ID: Partial<Record<ReportCollection, string>> = {
-  sessions: 'sessions',
-  attendance_records: 'attendance',
-  hasanat_distributions: 'hasanat',
-  finance_invoices: 'finance',
-  students: 'students',
-  teachers: 'teachers',
-  contacts: 'contacts',
-  questions: 'questionBank',
-  tests: 'questionBank',
-  assessment_results: 'questionBank',
+  sessions: SESSIONS_MODULE_MANIFEST.moduleId,
+  attendance_records: ATTENDANCE_MODULE_MANIFEST.moduleId,
+  hasanat_distributions: HASANAT_MODULE_MANIFEST.moduleId,
+  finance_invoices: FINANCE_MODULE_MANIFEST.moduleId,
+  students: STUDENTS_MODULE_MANIFEST.moduleId,
+  teachers: TEACHERS_MODULE_MANIFEST.moduleId,
+  contacts: CONTACTS_MODULE_MANIFEST.moduleId,
+  questions: QUESTION_BANK_MODULE_MANIFEST.moduleId,
+  tests: QUESTION_BANK_MODULE_MANIFEST.moduleId,
+  assessment_results: QUESTION_BANK_MODULE_MANIFEST.moduleId,
 };
 
 /** Widget ids that require the accounting module (not finance alone). */
@@ -29,40 +45,28 @@ export const DASHBOARD_ACCOUNTING_WIDGET_IDS = new Set([
   'def-finance-toggle-rev',
 ]);
 
-export type DashboardTrendMetric =
-  | 'attendance'
-  | 'fees'
-  | 'outstanding'
-  | 'hasanat'
-  | 'sessions'
-  | 'contacts'
-  | 'students'
-  | 'teachers';
-
-/** Explicit trend source for seeded metric cards (avoids id.includes heuristics). */
-export const DASHBOARD_WIDGET_TREND_METRIC: Partial<Record<string, DashboardTrendMetric>> = {
-  'def-card-admin-attendance': 'attendance',
-  'def-card-teacher-attendance': 'attendance',
-  'def-attendance-rate': 'attendance',
-  'def-card-admin-fees': 'fees',
-  'def-card-accountant-fees': 'fees',
-  'def-fee-summary': 'fees',
-  'def-card-admin-outstanding': 'outstanding',
-  'def-card-accountant-outstanding': 'outstanding',
-  'def-finance-outstanding': 'outstanding',
-  'def-outstanding-list': 'outstanding',
-  'def-card-admin-hasanat': 'hasanat',
-  'def-card-teacher-hasanat': 'hasanat',
-  'def-hasanat-points': 'hasanat',
-  'def-card-admin-sessions': 'sessions',
-  'def-card-teacher-sessions': 'sessions',
-  'def-sessions-count': 'sessions',
-  'def-card-admin-contacts': 'contacts',
-  'def-card-accountant-contacts': 'contacts',
-  'def-contacts-total': 'contacts',
-  'def-card-admin-students': 'students',
-  'def-students-kpi': 'students',
+export const TREND_METRIC_KEY_MAP: Record<DashboardTrendMetric, keyof DashboardMetricTrends> = {
+  attendance: 'attendanceTrend',
+  fees: 'feesTrend',
+  outstanding: 'outstandingTrend',
+  hasanat: 'hasanatTrend',
+  sessions: 'sessionsTrend',
+  contacts: 'contactTrend',
+  students: 'studentTrend',
+  teachers: 'teacherTrend',
 };
+
+
+/** Filters custom widgets to active card-type widgets matching the dashboard role. */
+export function filterDashboardCardWidgets(
+  widgets: CustomWidget[],
+  dashboardRole: DashboardRole,
+): CustomWidget[] {
+  return widgets.filter(
+    (widget) => widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole),
+  );
+}
+
 
 /**
  * Whether a dashboard card/widget should show given enabledModules.
@@ -78,11 +82,11 @@ export function isDashboardWidgetModuleEnabled(
   if (collection === 'finance_invoices') {
     if (
       DASHBOARD_ACCOUNTING_WIDGET_IDS.has(widget.id) ||
-      widget.category === 'accounting'
+      widget.category === ACCOUNTING_MODULE_MANIFEST.moduleId
     ) {
-      return isModuleEnabled('accounting');
+      return isModuleEnabled(ACCOUNTING_MODULE_MANIFEST.moduleId);
     }
-    return isModuleEnabled('finance');
+    return isModuleEnabled(FINANCE_MODULE_MANIFEST.moduleId);
   }
 
   const moduleId = DASHBOARD_COLLECTION_MODULE_ID[collection];
@@ -90,10 +94,13 @@ export function isDashboardWidgetModuleEnabled(
   return isModuleEnabled(moduleId);
 }
 
+/** Explicit trend source for seeded metric cards — sourced from
+ *  `DASHBOARD_WIDGET_REGISTRY` (see `dashboardWidgets.ts`). Custom cards
+ *  fall back to id heuristics below. */
 export function resolveDashboardTrendMetric(
   widgetId: string,
 ): DashboardTrendMetric | undefined {
-  const mapped = DASHBOARD_WIDGET_TREND_METRIC[widgetId];
+  const mapped = DASHBOARD_WIDGET_REGISTRY[widgetId]?.trendMetric;
   if (mapped) return mapped;
 
   // Custom (non-seeded) cards: best-effort id heuristics.
@@ -104,6 +111,28 @@ export function resolveDashboardTrendMetric(
   if (id.includes('hasanat') || id.includes('points')) return 'hasanat';
   if (id.includes('sessions') || id.includes('classes')) return 'sessions';
   return undefined;
+}
+
+/** Predicate checking if a widget is active (pinned or role-scoped metric card) on the dashboard layout. */
+export function isWidgetActiveForDashboard(
+  widget: Pick<CustomWidget, 'role' | 'widgetType' | 'isPinnedToDashboard'>,
+  dashboardRole: DashboardRole,
+): boolean {
+  return (
+    Boolean(widget.isPinnedToDashboard) ||
+    (widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole))
+  );
+}
+
+/** Filters widgets matching a specific collection that are active for the active dashboard role. */
+export function filterDashboardWidgetsByCollection(
+  widgets: CustomWidget[],
+  collection: ReportCollection,
+  dashboardRole: DashboardRole,
+): CustomWidget[] {
+  return widgets.filter(
+    (widget) => widget.collection === collection && isWidgetActiveForDashboard(widget, dashboardRole),
+  );
 }
 
 /**
@@ -117,11 +146,10 @@ export function getRequiredDashboardCollections(
   const required = new Set<ReportCollection>();
 
   for (const widget of widgets) {
-    const cardForDashboardRole =
-      widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole);
-    const isPinnedWidget = widget.isPinnedToDashboard;
+    const isActive = isWidgetActiveForDashboard(widget, dashboardRole);
+    const isPinnedWidget = Boolean(widget.isPinnedToDashboard);
 
-    if (cardForDashboardRole || isPinnedWidget) {
+    if (isActive) {
       required.add(widget.collection);
     }
 
@@ -132,3 +160,20 @@ export function getRequiredDashboardCollections(
 
   return required;
 }
+
+/** Returns custom (user-created, non-seeded) card widget IDs active for the active dashboard role. */
+export function getActiveCustomCardIds(
+  widgets: CustomWidget[],
+  dashboardRole: DashboardRole,
+): string[] {
+  return filterDashboardCardWidgets(widgets, dashboardRole)
+    .filter((widget) => !isSeededDashboardWidget(widget.id))
+    .map((widget) => widget.id);
+}
+
+/** Count of widgets pinned to the dashboard layout. */
+export function getPinnedDashboardWidgetCount(widgets: CustomWidget[]): number {
+  return widgets.filter((widget) => widget.isPinnedToDashboard).length;
+}
+
+

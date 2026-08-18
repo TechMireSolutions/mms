@@ -1,35 +1,32 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { AlertTriangle, Bell, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDateToIso, getOutstandingAmountForInvoice } from "@mms/shared";
-import { useStudentsByIds } from "@/tenant/hooks/collections/students";
-import { uniqueRegistryIds } from "@/lib/registryResolve";
-import MessageComposer from "@/components/ui/MessageComposer";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useLocalPagination } from "@/hooks/useLocalPagination";
-import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import {
   daysBetweenUtc,
   type OverdueStudent,
 } from "@/components/dashboard-widgets/OverdueObligationsWidgetParts";
 import { OverdueObligationsWidgetList } from "@/components/dashboard-widgets/OverdueObligationsWidgetList";
+import { useUnpaidInvoiceStudents } from "@/components/dashboard-widgets/useUnpaidInvoiceStudents";
+import { MessageComposerLauncher } from "@/components/dashboard-widgets/MessageComposerLauncher";
 
 /** Overdue fee obligations follow-up widget — derived from finance invoices (Query). */
 export default function OverdueObligationsWidget({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const invoices = useFinanceInvoicesCollection();
+  const { unpaidInvoices, students, studentMap } = useUnpaidInvoiceStudents();
   const { activeCurrency, formatCurrency } = useFinanceCurrency();
 
   const overdueStudents = useMemo(() => {
     const todayIso = formatDateToIso(new Date());
     const rows: OverdueStudent[] = [];
 
-    invoices.forEach((invoice) => {
-      if (invoice.status === "paid" || invoice.status === "cancelled") return;
+    unpaidInvoices.forEach((invoice) => {
       if (!invoice.dueDate || invoice.dueDate.slice(0, 10) >= todayIso) return;
       const amount = getOutstandingAmountForInvoice(invoice);
       if (amount <= 0) return;
@@ -46,7 +43,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     });
 
     return rows.sort((a, b) => b.daysOverdue - a.daysOverdue);
-  }, [invoices, activeCurrency.code, t]);
+  }, [unpaidInvoices, activeCurrency.code, t]);
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<string>>(new Set());
@@ -66,19 +63,13 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     searchFields: (overdueStudent) => [overdueStudent.name, overdueStudent.obligationType],
   });
 
-  const studentIds = useMemo(
-    () => uniqueRegistryIds(overdueStudents.map((overdueStudent) => overdueStudent.id)),
-    [overdueStudents],
-  );
-  const { data: students = [] } = useStudentsByIds(studentIds);
-
   const totalOverdue = useMemo(
     () => overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0),
     [overdueStudents],
   );
 
   const handleRemind = (overdueStudent: OverdueStudent) => {
-    const student = students.find((entry) => String(entry.id) === String(overdueStudent.id));
+    const student = studentMap.get(String(overdueStudent.id));
     const phone = student?.phone || "";
     if (!phone) return;
     openComposer("sms", [{
@@ -99,7 +90,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   const handleRemindAll = () => {
     const recipients = filteredStudents
       .map((overdueStudent) => {
-        const student = students.find((entry) => String(entry.id) === String(overdueStudent.id));
+        const student = studentMap.get(String(overdueStudent.id));
         return {
           id: overdueStudent.id,
           name: overdueStudent.name,
@@ -174,13 +165,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
         onRemind={handleRemind}
       />
 
-      {messagingTarget && (
-        <MessageComposer
-          channel={messagingTarget.channel}
-          recipients={messagingTarget.recipients}
-          onClose={closeComposer}
-        />
-      )}
+      <MessageComposerLauncher messagingTarget={messagingTarget} onClose={closeComposer} />
     </WidgetCard>
   );
 }

@@ -29,6 +29,7 @@ import aiRoutes from "./common/ai.js";
 import websocketRoutes from "./common/websocket.js";
 import messagingRoutes from "./tenant/messaging.js";
 import savedReportsRoutes from "./tenant/savedReports.js";
+import dashboardRoutes from "./tenant/dashboard.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(healthRoutes);
@@ -58,6 +59,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(sessionsRoutes, { prefix: '/api/sessions' });
   await app.register(messagingRoutes, { prefix: '/api/messaging' });
   await app.register(savedReportsRoutes, { prefix: '/api/saved-reports' });
+  await app.register(dashboardRoutes, { prefix: '/api/dashboard' });
   await app.register(backgroundJobRoutes, { prefix: '/api/background-jobs' });
   await app.register(aiRoutes, { prefix: '/api/ai' });
   await app.register(websocketRoutes, { prefix: '/api' });

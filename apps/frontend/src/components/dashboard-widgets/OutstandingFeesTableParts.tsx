@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, Send } from "lucide-react";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -24,25 +23,36 @@ export interface OutstandingFeeRow {
 
 export type OpenComposer = ReturnType<typeof useMessageComposerState>["openComposer"];
 
-export function OutstandingFeeMessagingActions({
-  row,
-  openComposer,
-  t,
-  className,
-}: {
-  row: Pick<OutstandingFeeRow, "studentId" | "student" | "contact" | "email" | "amount" | "dueDate">;
-  openComposer: OpenComposer;
-  t: TranslationFunction;
-  className?: string;
-}) {
-  const recipient = [{
+export type OutstandingFeeRecipientRow = Pick<
+  OutstandingFeeRow,
+  "studentId" | "student" | "contact" | "email" | "amount" | "dueDate"
+>;
+
+/** Build a messaging recipient from an outstanding-fee row. Shared by the
+ *  row messaging actions and the "send all reminders" bulk action. */
+export function buildOutstandingFeeRecipient(row: OutstandingFeeRecipientRow) {
+  return {
     id: row.studentId,
     name: row.student,
     phone: row.contact,
     email: row.email,
     amount: row.amount,
     dueDate: row.dueDate,
-  }];
+  };
+}
+
+export function OutstandingFeeMessagingActions({
+  row,
+  openComposer,
+  t,
+  className,
+}: {
+  row: OutstandingFeeRecipientRow;
+  openComposer: OpenComposer;
+  t: TranslationFunction;
+  className?: string;
+}) {
+  const recipient = [buildOutstandingFeeRecipient(row)];
 
   return (
     <div className={className ?? "flex items-center justify-end gap-1.5"}>
@@ -96,7 +106,3 @@ export function OutstandingFeeOverdueBadge({
     />
   );
 }
-
-/**
- * Outstanding fees table widget with optional messaging CTAs.
- */

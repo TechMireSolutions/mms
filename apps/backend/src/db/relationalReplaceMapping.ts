@@ -39,6 +39,8 @@ export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
   finance_module_preferences: 37,
   hasanat_field_configs: 39,
   hasanat_module_preferences: 40,
+  dashboard_preferences: 41,
+  dashboard_widgets: 42,
   accounting_field_configs: 43,
   accounting_module_preferences: 44,
   enrollment_field_configs: 45,
@@ -515,6 +517,16 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     importPath: './repositories/savedReportsRepository.js',
     fnName: 'replaceSavedReportsForWorkspace',
     snapshotFnName: 'listAllSavedReportsByWorkspace',
+  },
+  dashboard_preferences: {
+    importPath: './repositories/dashboardPreferencesRepository.js',
+    fnName: 'replaceDashboardPreferencesForWorkspace',
+    snapshotFnName: 'listAllDashboardPreferencesByWorkspace',
+  },
+  dashboard_widgets: {
+    importPath: './repositories/dashboardWidgetsRepository.js',
+    fnName: 'replaceDashboardWidgetsForWorkspace',
+    snapshotFnName: 'listAllDashboardWidgetsByWorkspace',
   },
   audit_log: {
     importPath: './repositories/logsRepository.js',

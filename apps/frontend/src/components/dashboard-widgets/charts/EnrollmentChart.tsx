@@ -1,20 +1,25 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
 import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis,
-  Tooltip, TooltipContentProps
+  Tooltip,
 } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { Badge } from "@/components/ui/badge";
-import { ChartTooltip } from "@/components/ui/ChartTooltip";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
 import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
 import { TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
-import { formatMonthName, getRecentMonthsList } from "@/lib/utils";
+import { formatMonthName, getRecentMonthsList, buildBucketedSeries } from "@mms/shared";
+import { ChartPrefsControlGroup } from "@/components/dashboard-widgets/charts/ChartPrefsControlGroup";
+import {
+  buildChartTooltip,
+  ChartAreaGradient,
+  CHART_AXIS_LINE_PROPS,
+} from "@/components/dashboard-widgets/charts/chartPrimitives";
 import {
   Select,
   SelectContent,
@@ -23,27 +28,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
+import {
+  DASHBOARD_CHART_TYPE_OPTIONS,
+  ENROLLMENT_CHART_COLOR_OPTIONS,
+  type DashboardChartType,
+  type DashboardPreferences,
+} from "@mms/shared";
 
 interface EnrollmentPoint {
   month: string;
   students: number;
 }
 
-/**
- * CustomTooltip for Enrollment Chart.
- */
-const CustomTooltip = ({ active = false, payload = [], label = "" }: Partial<TooltipContentProps>) => {
-  const { t } = useTranslation();
-  return (
-    <ChartTooltip
-      active={active}
-      payload={payload}
-      label={label}
-      labelClassName="text-muted-foreground/80 mb-0.5 font-medium"
-      value={t("dashboard.widgets.studentsCount", { count: Number(payload?.[0]?.value) })}
-    />
-  );
-};
+const CustomTooltip = buildChartTooltip({
+  valueFormatter: (value, { t }) => t("dashboard.widgets.studentsCount", { count: value }),
+  labelClassName: "text-muted-foreground/80 mb-0.5 font-medium",
+});
 
 /**
  * Enrollment Chart — cumulative student growth from report-aggregates.
@@ -67,9 +67,9 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     const byKey = new Map(
       (reportAggregates?.cumulativeTrends ?? []).map((trend) => [trend.monthKey, trend.students]),
     );
-    return activeMonths.map((month) => ({
+    return buildBucketedSeries(activeMonths, byKey, (month, students) => ({
       month: month.label || formatMonthName(`${month.key}-01`),
-      students: byKey.get(month.key) ?? 0,
+      students: students ?? 0,
     }));
   }, [activeMonths, reportAggregates?.cumulativeTrends]);
 
@@ -88,41 +88,18 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
         actions={
           <>
             {isEditMode && (
-              <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
-                <Select
-                  value={chartType}
-                  onValueChange={(value) => {
-                    updatePref("enrollmentChartType", value as "area" | "bar" | "line");
-                  }}
-                >
-                  <SelectTrigger className={FORM_SELECT_MINI}>
-                    <SelectValue placeholder={t("reports.visualizer.chartType")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="area">{t("dashboard.charts.enrollment.area")}</SelectItem>
-                    <SelectItem value="bar">{t("dashboard.charts.enrollment.bar")}</SelectItem>
-                    <SelectItem value="line">{t("dashboard.charts.enrollment.line")}</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={colorTheme}
-                  onValueChange={(value) => {
-                    updatePref("enrollmentChartColor", value as "emerald" | "blue" | "violet" | "amber" | "red");
-                  }}
-                >
-                  <SelectTrigger className={FORM_SELECT_MINI}>
-                    <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
-                    <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
-                    <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
-                    <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
-                    <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
-                  </SelectContent>
-                </Select>
-
+              <ChartPrefsControlGroup
+                chartTypeValue={chartType}
+                chartTypeOptions={DASHBOARD_CHART_TYPE_OPTIONS}
+                onChartTypeChange={(value) => {
+                  updatePref("enrollmentChartType", value as DashboardChartType);
+                }}
+                colorValue={colorTheme}
+                colorOptions={ENROLLMENT_CHART_COLOR_OPTIONS}
+                onColorChange={(value) => {
+                  updatePref("enrollmentChartColor", value as DashboardPreferences["enrollmentChartColor"]);
+                }}
+              >
                 <Select
                   value={String(monthsCount)}
                   onValueChange={(value) => {
@@ -138,7 +115,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                     <SelectItem value="10">{t("dashboard.charts.monthsRange", { count: 10 })}</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </ChartPrefsControlGroup>
             )}
             <Badge pill variant="outline" className={`gap-1.5 px-2.5 py-1 ${activeColor.bg} ${activeColor.text}`} aria-label={`Growth: ${growth}%`}>
               <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
@@ -152,15 +129,12 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
         <ComposedChart data={enrollmentData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
           <defs>
             {Object.entries(COLOR_MAP).map(([key, config]) => (
-              <linearGradient key={key} id={`enrollGrad-${key}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={config.stop} stopOpacity={0.18} />
-                <stop offset="95%" stopColor={config.stop} stopOpacity={0} />
-              </linearGradient>
+              <ChartAreaGradient key={key} id={`enrollGrad-${key}`} color={config.stop} />
             ))}
           </defs>
           <ChartGrid vertical={false} />
-          <XAxis dataKey="month" tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} />
-          <YAxis tick={chartAxisTick(11, true)} axisLine={false} tickLine={false} domain={["dataMin - 20", "dataMax + 10"]} />
+          <XAxis dataKey="month" tick={chartAxisTick(11, true)} {...CHART_AXIS_LINE_PROPS} />
+          <YAxis tick={chartAxisTick(11, true)} {...CHART_AXIS_LINE_PROPS} domain={["dataMin - 20", "dataMax + 10"]} />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: activeColor.stroke, strokeWidth: 1, strokeDasharray: "4 4" }} />
 
           {chartType === "area" && (

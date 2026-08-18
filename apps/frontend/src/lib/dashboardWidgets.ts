@@ -1,4 +1,4 @@
-import type { AppTranslationKey } from '@mms/shared';
+import type { AppTranslationKey, DashboardTrendMetric } from '@mms/shared';
 
 /** Prefix for seeded default dashboard/report widgets (`widgetDefaults`). */
 export const SEED_WIDGET_ID_PREFIX = 'def-';
@@ -17,95 +17,98 @@ export type WidgetI18nSource = {
   fixedSubTextKey?: AppTranslationKey;
 };
 
-/** i18n keys for seeded default widgets (user-created widgets keep custom `title`). */
-export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey>> = {
-  'def-card-admin-students': 'widget.title.totalStudents',
-  'def-card-admin-attendance': 'widget.title.attendanceToday',
-  'def-card-admin-fees': 'widget.title.feeCollection',
-  'def-card-admin-outstanding': 'widget.title.outstandingPayments',
-  'def-card-admin-hasanat': 'widget.title.hasanatAwarded',
-  'def-card-admin-sessions': 'widget.title.activeSessions',
-  'def-card-admin-classes': 'widget.title.activeClasses',
-  'def-card-teacher-attendance': 'widget.title.attendanceToday',
-  'def-card-teacher-hasanat': 'widget.title.hasanatAwarded',
-  'def-card-teacher-classes': 'widget.title.myClasses',
-  'def-card-teacher-sessions': 'widget.title.sessionsToday',
-  'def-card-accountant-fees': 'widget.title.feeCollection',
-  'def-card-accountant-outstanding': 'widget.title.outstandingPayments',
-  'def-card-accountant-revenue': 'widget.title.totalRevenueYtd',
-  'def-card-accountant-expenses': 'widget.title.totalExpensesYtd',
-  'def-card-admin-contacts': 'widget.title.totalContacts',
-  'def-card-accountant-contacts': 'widget.title.totalContacts',
-  'def-contacts-total': 'widget.title.totalContacts',
-  'def-contacts-whatsapp': 'widget.title.whatsappVerifiedRate',
-  'def-students-kpi': 'widget.title.activeStudents',
-  'def-students-lock': 'widget.title.attendanceLocking',
-  'def-attendance-summary': 'widget.title.todaysAttendanceSummary',
-  'def-enrollment-trends': 'widget.title.enrollmentTrends',
-  'def-attendance-rate': 'widget.title.attendanceRate',
-  'def-finance-outstanding': 'widget.title.overduePayments',
-  'def-finance-paid-rate': 'widget.title.paidInvoicesRatio',
-  'def-finance-toggle-rev': 'widget.title.showRevenueGraph',
-  'def-fee-summary': 'widget.title.feeCollectionSummary',
-  'def-outstanding-list': 'widget.title.outstandingInvoicesList',
-  'def-overdue-obligations': 'widget.title.overdueObligations',
-  'def-revenue-expenses': 'widget.title.revenueExpenses',
-  'def-hasanat-points': 'widget.title.totalPointsIssued',
-  'def-hasanat-distribution': 'widget.title.hasanatDistribution',
-  'def-sessions-count': 'widget.title.activeSessions',
-  'def-sessions-list': 'widget.title.activeSessionsList',
-  'def-sessions-toggle-grid': 'widget.title.dashboardSessionList',
+/** Dashboard metric stat item shape for grid and card rendering. */
+export interface StatItem {
+  id: string;
+  title: string;
+  value: string;
+  sub: string;
+  icon: string;
+  color: string;
+  trend: number;
+}
+
+/** Per-widget metadata for a seeded dashboard widget. SSOT for title/subtitle
+ *  i18n keys and the explicit trend-metric source — replaces the former
+ *  `DEFAULT_WIDGET_TITLE_KEYS` / `DEFAULT_WIDGET_SUBTEXT_KEYS` /
+ *  `DASHBOARD_WIDGET_TREND_METRIC` parallel maps. */
+export interface DashboardWidgetRegistryEntry {
+  titleKey?: AppTranslationKey;
+  subTextKey?: AppTranslationKey;
+  trendMetric?: DashboardTrendMetric;
+}
+
+/** Seeded widget metadata registry — the single authority for seeded widget
+ *  i18n keys and trend-metric mapping. Add new seeded widgets here once. */
+export const DASHBOARD_WIDGET_REGISTRY: Record<string, DashboardWidgetRegistryEntry> = {
+  'def-card-admin-students': { titleKey: 'widget.title.totalStudents', subTextKey: 'widget.subtitle.registeredStudents', trendMetric: 'students' },
+  'def-card-admin-attendance': { titleKey: 'widget.title.attendanceToday', subTextKey: 'widget.subtitle.attendanceRateToday', trendMetric: 'attendance' },
+  'def-card-admin-fees': { titleKey: 'widget.title.feeCollection', subTextKey: 'widget.subtitle.thisMonth', trendMetric: 'fees' },
+  'def-card-admin-outstanding': { titleKey: 'widget.title.outstandingPayments', subTextKey: 'widget.subtitle.unpaidInvoices', trendMetric: 'outstanding' },
+  'def-card-admin-hasanat': { titleKey: 'widget.title.hasanatAwarded', subTextKey: 'widget.subtitle.allTimePoints', trendMetric: 'hasanat' },
+  'def-card-admin-sessions': { titleKey: 'widget.title.activeSessions', subTextKey: 'widget.subtitle.activeSessions', trendMetric: 'sessions' },
+  'def-card-admin-classes': { titleKey: 'widget.title.activeClasses', subTextKey: 'widget.subtitle.allActiveClasses' },
+  'def-card-admin-contacts': { titleKey: 'widget.title.totalContacts', subTextKey: 'widget.subtitle.totalContacts', trendMetric: 'contacts' },
+  'def-card-teacher-attendance': { titleKey: 'widget.title.attendanceToday', subTextKey: 'widget.subtitle.averagePresentRate', trendMetric: 'attendance' },
+  'def-card-teacher-hasanat': { titleKey: 'widget.title.hasanatAwarded', subTextKey: 'widget.subtitle.awardedByMe', trendMetric: 'hasanat' },
+  'def-card-teacher-classes': { titleKey: 'widget.title.myClasses', subTextKey: 'widget.subtitle.activeClassesCount' },
+  'def-card-teacher-sessions': { titleKey: 'widget.title.sessionsToday', subTextKey: 'widget.subtitle.fromActiveSessions', trendMetric: 'sessions' },
+  'def-card-accountant-fees': { titleKey: 'widget.title.feeCollection', subTextKey: 'widget.subtitle.thisMonth', trendMetric: 'fees' },
+  'def-card-accountant-outstanding': { titleKey: 'widget.title.outstandingPayments', subTextKey: 'widget.subtitle.unpaidInvoices', trendMetric: 'outstanding' },
+  'def-card-accountant-revenue': { titleKey: 'widget.title.totalRevenueYtd', subTextKey: 'widget.subtitle.fromInvoices' },
+  'def-card-accountant-expenses': { titleKey: 'widget.title.totalExpensesYtd', subTextKey: 'widget.subtitle.totalDiscountOffset' },
+  'def-card-accountant-contacts': { titleKey: 'widget.title.totalContacts', subTextKey: 'widget.subtitle.totalContacts', trendMetric: 'contacts' },
+  'def-contacts-total': { titleKey: 'widget.title.totalContacts', trendMetric: 'contacts' },
+  'def-contacts-whatsapp': { titleKey: 'widget.title.whatsappVerifiedRate' },
+  'def-students-kpi': { titleKey: 'widget.title.activeStudents', trendMetric: 'students' },
+  'def-students-lock': { titleKey: 'widget.title.attendanceLocking' },
+  'def-attendance-summary': { titleKey: 'widget.title.todaysAttendanceSummary' },
+  'def-attendance-rate': { titleKey: 'widget.title.attendanceRate', trendMetric: 'attendance' },
+  'def-enrollment-trends': { titleKey: 'widget.title.enrollmentTrends' },
+  'def-finance-outstanding': { titleKey: 'widget.title.overduePayments', trendMetric: 'outstanding' },
+  'def-finance-paid-rate': { titleKey: 'widget.title.paidInvoicesRatio' },
+  'def-finance-toggle-rev': { titleKey: 'widget.title.showRevenueGraph' },
+  'def-fee-summary': { titleKey: 'widget.title.feeCollectionSummary', trendMetric: 'fees' },
+  'def-outstanding-list': { titleKey: 'widget.title.outstandingInvoicesList', trendMetric: 'outstanding' },
+  'def-overdue-obligations': { titleKey: 'widget.title.overdueObligations' },
+  'def-revenue-expenses': { titleKey: 'widget.title.revenueExpenses' },
+  'def-hasanat-points': { titleKey: 'widget.title.totalPointsIssued', trendMetric: 'hasanat' },
+  'def-hasanat-distribution': { titleKey: 'widget.title.hasanatDistribution' },
+  'def-sessions-count': { titleKey: 'widget.title.activeSessions', trendMetric: 'sessions' },
+  'def-sessions-list': { titleKey: 'widget.title.activeSessionsList' },
+  'def-sessions-toggle-grid': { titleKey: 'widget.title.dashboardSessionList' },
 };
 
-/** i18n keys for seeded default card subtitles (user-created widgets keep custom `fixedSubText`). */
-export const DEFAULT_WIDGET_SUBTEXT_KEYS: Partial<Record<string, AppTranslationKey>> = {
-  'def-card-admin-contacts': 'widget.subtitle.totalContacts',
-  'def-card-accountant-contacts': 'widget.subtitle.totalContacts',
-  'def-card-admin-students': 'widget.subtitle.registeredStudents',
-  'def-card-admin-attendance': 'widget.subtitle.attendanceRateToday',
-  'def-card-teacher-attendance': 'widget.subtitle.averagePresentRate',
-  'def-card-admin-fees': 'widget.subtitle.thisMonth',
-  'def-card-accountant-fees': 'widget.subtitle.thisMonth',
-  'def-card-admin-outstanding': 'widget.subtitle.unpaidInvoices',
-  'def-card-accountant-outstanding': 'widget.subtitle.unpaidInvoices',
-  'def-card-accountant-revenue': 'widget.subtitle.fromInvoices',
-  'def-card-accountant-expenses': 'widget.subtitle.totalDiscountOffset',
-  'def-card-admin-hasanat': 'widget.subtitle.allTimePoints',
-  'def-card-teacher-hasanat': 'widget.subtitle.awardedByMe',
-  'def-card-admin-sessions': 'widget.subtitle.activeSessions',
-  'def-card-teacher-sessions': 'widget.subtitle.fromActiveSessions',
-  'def-card-admin-classes': 'widget.subtitle.allActiveClasses',
-  'def-card-teacher-classes': 'widget.subtitle.activeClassesCount',
-};
+/** i18n title keys for seeded widgets (derived from the registry). */
+export const DEFAULT_WIDGET_TITLE_KEYS: Partial<Record<string, AppTranslationKey>> = Object.fromEntries(
+  Object.entries(DASHBOARD_WIDGET_REGISTRY)
+    .map(([id, entry]) => (entry.titleKey ? [id, entry.titleKey] : null))
+    .filter((entry): entry is [string, AppTranslationKey] => entry !== null),
+);
 
-const LOWERCASE_KEYS = Object.values(DEFAULT_WIDGET_TITLE_KEYS).reduce<Record<string, AppTranslationKey>>((acc, key) => {
-  if (key) {
-    acc[key.toLowerCase()] = key;
-  }
-  return acc;
-}, {});
+/** i18n subtitle keys for seeded widgets (derived from the registry). */
+export const DEFAULT_WIDGET_SUBTEXT_KEYS: Partial<Record<string, AppTranslationKey>> = Object.fromEntries(
+  Object.entries(DASHBOARD_WIDGET_REGISTRY)
+    .map(([id, entry]) => (entry.subTextKey ? [id, entry.subTextKey] : null))
+    .filter((entry): entry is [string, AppTranslationKey] => entry !== null),
+);
 
 export function resolveWidgetTitle(
   widget: WidgetI18nSource,
   t: (key: AppTranslationKey) => string,
 ): string {
-  const rawKey = widget.titleKey ?? DEFAULT_WIDGET_TITLE_KEYS[widget.id];
-  if (rawKey) {
-    const normalized = rawKey.toLowerCase();
-    const key = LOWERCASE_KEYS[normalized] ?? (rawKey.startsWith('Widget.title.')
-      ? (`widget.title.${rawKey.substring(13)}` as AppTranslationKey)
-      : rawKey);
-    return t(key);
-  }
+  const key = widget.titleKey ?? DASHBOARD_WIDGET_REGISTRY[widget.id]?.titleKey;
+  if (key) return t(key);
   return widget.title;
 }
+
 
 /** Resolve card subtitle: keyed defaults first, then user fixed text. Empty string if neither. */
 export function resolveWidgetSubText(
   widget: WidgetI18nSource,
   t: (key: AppTranslationKey) => string,
 ): string {
-  const key = widget.fixedSubTextKey ?? DEFAULT_WIDGET_SUBTEXT_KEYS[widget.id];
+  const key = widget.fixedSubTextKey ?? DASHBOARD_WIDGET_REGISTRY[widget.id]?.subTextKey;
   if (key) return t(key);
   return widget.fixedSubText ?? '';
 }

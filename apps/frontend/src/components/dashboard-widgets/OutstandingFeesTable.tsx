@@ -1,15 +1,11 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { getOutstandingAmountForInvoice } from "@mms/shared";
 import { AlertCircle } from "lucide-react";
-import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
-import { useStudentsByIds } from "@/tenant/hooks/collections/students";
-import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import MessageComposer from "@/components/ui/MessageComposer";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -19,32 +15,29 @@ import { ROUTES } from "@/lib/config/routes";
 import { Badge } from "@/components/ui/badge";
 import { OutstandingFeesTableMobileList } from "@/components/dashboard-widgets/OutstandingFeesTableMobileList";
 import { OutstandingFeesTableDesktopBody } from "@/components/dashboard-widgets/OutstandingFeesTableDesktopBody";
+import { useUnpaidInvoiceStudents } from "@/components/dashboard-widgets/useUnpaidInvoiceStudents";
+import { MessageComposerLauncher } from "@/components/dashboard-widgets/MessageComposerLauncher";
+import { buildOutstandingFeeRecipient } from "@/components/dashboard-widgets/OutstandingFeesTableParts";
 
 export default function OutstandingFeesTable({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const invoices = useFinanceInvoicesCollection();
+  const { unpaidInvoices, studentMap } = useUnpaidInvoiceStudents();
   const { formatCurrency } = useFinanceCurrency();
-  const unpaidInvoices = useMemo(
-    () => invoices.filter((invoice) => invoice.status !== "paid" && invoice.status !== "cancelled"),
-    [invoices],
-  );
-  const studentIds = useMemo(
-    () => uniqueRegistryIds(unpaidInvoices.map((invoice) => invoice.studentId)),
-    [unpaidInvoices],
-  );
-  const { data: students = [] } = useStudentsByIds(studentIds);
 
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
   const mappedRows = useMemo(() => {
+    const now = new Date();
+    const nowYear = now.getFullYear();
+    const nowMonth = now.getMonth();
+
     return unpaidInvoices.map((invoice) => {
-      const student = students.find((studentOption) => String(studentOption.id) === String(invoice.studentId));
+      const student = studentMap.get(String(invoice.studentId));
       const contact = student?.phone || "";
       const amount = getOutstandingAmountForInvoice(invoice);
 
       const due = new Date(invoice.dueDate);
-      const now = new Date();
-      const diffMonths = Math.max(1, (now.getFullYear() - due.getFullYear()) * 12 + (now.getMonth() - due.getMonth()));
+      const diffMonths = Math.max(1, (nowYear - due.getFullYear()) * 12 + (nowMonth - due.getMonth()));
 
       return {
         id: invoice.id,
@@ -58,7 +51,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         dueDate: invoice.dueDate,
       };
     });
-  }, [unpaidInvoices, students]);
+  }, [unpaidInvoices, studentMap]);
 
   const {
     searchQuery,
@@ -107,14 +100,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
               onClick={() => {
                 if (filteredRows.length === 0) return;
                 const recipients = filteredRows
-                  .map((row) => ({
-                    id: row.studentId,
-                    name: row.student,
-                    phone: row.contact,
-                    email: row.email,
-                    amount: row.amount,
-                    dueDate: row.dueDate,
-                  }))
+                  .map(buildOutstandingFeeRecipient)
                   .filter((recipient) => Boolean(recipient.phone));
                 if (recipients.length > 0) {
                   openComposer("sms", recipients);
@@ -153,13 +139,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         />
       </footer>
 
-      {messagingTarget && (
-        <MessageComposer
-          channel={messagingTarget.channel}
-          recipients={messagingTarget.recipients}
-          onClose={closeComposer}
-        />
-      )}
+      <MessageComposerLauncher messagingTarget={messagingTarget} onClose={closeComposer} />
     </WidgetCard>
   );
 }

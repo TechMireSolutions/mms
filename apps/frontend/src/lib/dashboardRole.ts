@@ -1,12 +1,50 @@
 import {
+  STUDENTS_MODULE_MANIFEST,
   ATTENDANCE_MODULE_MANIFEST,
   FINANCE_MODULE_MANIFEST,
   USERS_MODULE_MANIFEST,
   DASHBOARD_MODULE_MANIFEST,
   type Permission,
+  type DashboardRole,
+  type AppTranslationKey,
 } from '@mms/shared';
+import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 
-export type DashboardRole = 'admin' | 'teacher' | 'accountant';
+export type { DashboardRole };
+
+export const DASHBOARD_ROLE_GREETING_KEYS: Record<DashboardRole, AppTranslationKey> = {
+  teacher: 'dashboard.greeting.teacher',
+  accountant: 'dashboard.greeting.accountant',
+  admin: 'dashboard.greeting.admin',
+};
+
+export const DASHBOARD_ROLE_BADGE_KEYS: Record<DashboardRole, AppTranslationKey> = {
+  teacher: 'dashboard.badge.teacher',
+  accountant: 'dashboard.badge.accountant',
+  admin: 'dashboard.badge.admin',
+};
+
+/** Resolve the role-specific WelcomeBanner subtitle copy. Co-located with the
+ *  greeting/badge key SSOT so all role→copy decisions live in one place. */
+export function resolveDashboardWelcomeSubtitle(
+  role: DashboardRole,
+  counts: { activeSessionsCount: number; activeStudentCount: number },
+  t: TranslationFunction,
+): string {
+  if (isDashboardTeacher(role)) {
+    return counts.activeSessionsCount === 1
+      ? t('dashboard.sessionsTodayOne')
+      : t('dashboard.sessionsToday', { count: counts.activeSessionsCount });
+  }
+  if (isDashboardAdmin(role) && counts.activeStudentCount > 0) {
+    return t('dashboard.overviewActiveStudents', { count: counts.activeStudentCount });
+  }
+  if (isDashboardAccountant(role)) {
+    return t('dashboard.accountantOverview');
+  }
+  return t('dashboard.overview');
+}
+
 
 /** Resolve dashboard layout role from RBAC without inline `role ===` checks. */
 export function resolveDashboardRole(can: (permission: Permission) => boolean): DashboardRole {
@@ -25,10 +63,41 @@ export function resolveDashboardRole(can: (permission: Permission) => boolean): 
   return 'teacher';
 }
 
+/** Default initial widget scope based on viewer permissions. */
+export function resolveDefaultDashboardWidgetScope(can: (permission: Permission) => boolean): {
+  collection: 'students' | 'sessions' | 'finance_invoices';
+  category: string;
+} {
+  if (can(STUDENTS_MODULE_MANIFEST.permissions.write) || can(USERS_MODULE_MANIFEST.permissions.write)) {
+    return { collection: 'students', category: 'students' };
+  }
+  if (can(ATTENDANCE_MODULE_MANIFEST.permissions.write)) {
+    return { collection: 'sessions', category: 'sessions' };
+  }
+  return { collection: 'finance_invoices', category: 'financial' };
+}
+
 /** Whether a widget/card tagged for a role should render for the active viewer. */
 export function widgetMatchesDashboardRole(
   widgetRole: string | undefined,
   dashboardRole: DashboardRole,
 ): boolean {
   return (widgetRole ?? 'admin') === dashboardRole;
+}
+
+/** Centralized role capability helpers for dashboard scope logic. */
+export function isDashboardAdminOrAccountant(role: DashboardRole): boolean {
+  return role === 'admin' || role === 'accountant';
+}
+
+export function isDashboardTeacher(role: DashboardRole): boolean {
+  return role === 'teacher';
+}
+
+export function isDashboardAdmin(role: DashboardRole): boolean {
+  return role === 'admin';
+}
+
+export function isDashboardAccountant(role: DashboardRole): boolean {
+  return role === 'accountant';
 }

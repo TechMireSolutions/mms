@@ -43,6 +43,8 @@ function mapTodayRows(
   }));
 }
 
+const SESSION_SEARCH_FIELDS = (session: UpcomingSessionItem) => [session.name, session.teacher, session.room];
+
 /**
  * Today's scheduled sessions widget — rows from report-aggregates (or parent `items`).
  */
@@ -68,7 +70,7 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
   } = useLocalPagination({
     items: sessions,
     pageSize: 5,
-    searchFields: (session) => [session.name, session.teacher, session.room],
+    searchFields: SESSION_SEARCH_FIELDS,
   });
 
   return (

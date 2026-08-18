@@ -44,10 +44,16 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const attendanceRecords = useAttendanceRecordsCollection();
   const sessions = useSessionsCollection();
 
-  const allClasses = useMemo(() => {
-    return sessions.flatMap((session) =>
-      (session.classes || []).map((classInfo) => ({ ...classInfo, sessionId: session.id, sessionName: session.name }))
-    );
+  const classNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    sessions.forEach((session) => {
+      (session.classes || []).forEach((classInfo) => {
+        if (classInfo.id && classInfo.name) {
+          map.set(classInfo.id, classInfo.name);
+        }
+      });
+    });
+    return map;
   }, [sessions]);
 
   const today = todayISO();
@@ -88,7 +94,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
     });
     return Object.entries(attendanceByClassId).map(([classId, statusCounts]) => ({
       classId,
-      name: allClasses.find((classInfo) => classInfo.id === classId)?.name || classId,
+      name: classNameMap.get(classId) || classId,
       present: statusCounts.present || 0,
       absent: statusCounts.absent || 0,
       late: statusCounts.late || 0,
@@ -96,7 +102,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
       total: statusCounts.total,
       rate: statusCounts.total ? Math.round((((statusCounts.present || 0) + (statusCounts.late || 0)) / statusCounts.total) * 100) : 0,
     })) as ClassBreakdown[];
-  }, [displayRecords, allClasses]);
+  }, [displayRecords, classNameMap]);
 
   const { text: rateColor, bar: rateBarColor } = rateToneClass(rate);
 

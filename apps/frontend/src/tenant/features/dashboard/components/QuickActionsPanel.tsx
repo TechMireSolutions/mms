@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { WidgetCard } from '@/components/ui/WidgetCard';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -25,11 +25,15 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const { can } = usePermissions();
-  const enabledModules = settings.enabledModules || {};
+  const enabledModules = useMemo(() => settings.enabledModules || {}, [settings.enabledModules]);
 
-  const actions = getQuickActionsForRole(dashboardRole).filter(
-    (quickAction) =>
-      enabledModules[quickAction.moduleId] !== false && can(quickAction.permission),
+  const actions = useMemo(
+    () =>
+      getQuickActionsForRole(dashboardRole).filter(
+        (quickAction) =>
+          enabledModules[quickAction.moduleId] !== false && can(quickAction.permission),
+      ),
+    [dashboardRole, enabledModules, can],
   );
 
   if (actions.length === 0) return null;
@@ -68,7 +72,7 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
                   className={`w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover/item:scale-110 duration-300 ${getQuickActionIconClasses(quickAction.color)}`}
                   aria-hidden="true"
                 >
-                  <Icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
+                  <Icon className="w-4.5 h-4.5" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors m-0 leading-tight">

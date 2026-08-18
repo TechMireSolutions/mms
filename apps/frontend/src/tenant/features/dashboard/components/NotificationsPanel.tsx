@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, AlertTriangle, Calendar, User, DollarSign, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
+import type { DashboardNotificationItem, DashboardNotificationType } from '@/lib/buildDashboardNotifications';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ interface NotificationsPanelProps {
   items: DashboardNotificationItem[];
 }
 
-const ICONS: Record<string, { icon: React.ElementType; bg: string; text: string }> = {
+const ICONS: Record<DashboardNotificationType, { icon: React.ElementType; bg: string; text: string }> = {
   fee: { icon: DollarSign, bg: 'bg-destructive/10', text: 'text-destructive' },
   event: { icon: Calendar, bg: 'bg-info/10', text: 'text-info' },
   student: { icon: User, bg: 'bg-success/10', text: 'text-success' },
@@ -23,8 +23,26 @@ const ICONS: Record<string, { icon: React.ElementType; bg: string; text: string 
 export default function NotificationsPanel({ items }: NotificationsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState<Array<string | number>>([]);
-  const visible = items.filter((n) => !dismissed.includes(n.id));
-  const urgent = visible.filter((n) => n.urgent).length;
+
+  const dismissedSet = useMemo(() => new Set(dismissed), [dismissed]);
+
+  const { visible, urgent } = useMemo(() => {
+    let urgentCount = 0;
+    const filtered = items.filter((item) => {
+      if (dismissedSet.has(item.id)) return false;
+      if (item.urgent) urgentCount += 1;
+      return true;
+    });
+    return { visible: filtered, urgent: urgentCount };
+  }, [items, dismissedSet]);
+
+  const handleDismiss = useCallback((id: string | number) => {
+    setDismissed((prev) => [...prev, id]);
+  }, []);
+
+  const handleRestoreAll = useCallback(() => {
+    setDismissed([]);
+  }, []);
 
   return (
     <WidgetCard ariaLabelledby="notifications-heading" accentColor="warning">
@@ -46,7 +64,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
           dismissed.length > 0 && (
             <Button
               variant="link"
-              onClick={() => setDismissed([])}
+              onClick={handleRestoreAll}
               className="text-xs font-bold shrink-0 min-h-11 px-2 text-primary hover:text-primary/80 transition-colors"
             >
               {t('notifications.restoreAll')}
@@ -67,7 +85,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
             />
           ) : (
             visible.map((notif) => {
-              const meta = ICONS[notif.type] || ICONS.event;
+              const meta = ICONS[notif.type] || ICONS.fee;
               const Icon = meta.icon;
               return (
                 <motion.article
@@ -103,7 +121,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setDismissed((d) => [...d, notif.id])}
+                    onClick={() => handleDismiss(notif.id)}
                     className="text-muted-foreground/30 hover:text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors flex-shrink-0 mt-0.5 shadow-none"
                     aria-label={t('notifications.dismiss', { title: notif.title })}
                   >

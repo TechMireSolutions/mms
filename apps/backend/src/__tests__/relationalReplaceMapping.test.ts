@@ -32,6 +32,8 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'contact_module_preferences',
       'contact_user_column_prefs',
       'contacts',
+      'dashboard_preferences',
+      'dashboard_widgets',
       'enrollment_field_configs',
       'enrollment_module_preferences',
       'enrollment_user_column_prefs',
@@ -195,6 +197,8 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
       'assessment_results',
       'user_activity_logs',
       'saved_reports',
+      'dashboard_preferences',
+      'dashboard_widgets',
       'message_templates',
       'message_logs',
     ];

@@ -3,18 +3,16 @@ import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
 import { CompactSegmentedControl } from "@/components/ui/CompactSegmentedControl";
 import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FORM_SELECT_MINI } from "@/components/ui/formStyles";
+import { ChartPrefsControlGroup } from "@/components/dashboard-widgets/charts/ChartPrefsControlGroup";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { useRevenueChartData } from "@/components/dashboard-widgets/charts/useRevenueChartData";
 import { RevenueChartPlot } from "@/components/dashboard-widgets/charts/RevenueChartPlot";
+import {
+  DASHBOARD_CHART_TYPE_OPTIONS,
+  REVENUE_CHART_COLOR_OPTIONS,
+  type DashboardChartType,
+} from "@mms/shared";
 
 export default function RevenueChart({ isEditMode = false }: { isEditMode?: boolean }) {
   const { t } = useTranslation();
@@ -40,41 +38,18 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
         actions={
           <>
             {isEditMode && (
-              <div className="flex items-center gap-1 bg-muted/65 p-0.5 rounded-lg border border-border/50">
-                <Select
-                  value={chartType}
-                  onValueChange={(chartTypeValue) => {
-                    updatePref("revenueChartType", chartTypeValue as "bar" | "line" | "area");
-                  }}
-                >
-                  <SelectTrigger className={FORM_SELECT_MINI}>
-                    <SelectValue placeholder={t("reports.visualizer.chartType")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bar">{t("dashboard.charts.attendance.barChart")}</SelectItem>
-                    <SelectItem value="line">{t("dashboard.charts.attendance.lineChart")}</SelectItem>
-                    <SelectItem value="area">{t("dashboard.charts.attendance.areaChart")}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={colorTheme}
-                  onValueChange={(selectedColorTheme) => {
-                    updatePref("revenueChartColor", selectedColorTheme);
-                  }}
-                >
-                  <SelectTrigger className={FORM_SELECT_MINI}>
-                    <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mixed">{t("dashboard.charts.hasanat.mixed")}</SelectItem>
-                    <SelectItem value="emerald">{t("dashboard.charts.attendance.emerald")}</SelectItem>
-                    <SelectItem value="violet">{t("dashboard.charts.attendance.violet")}</SelectItem>
-                    <SelectItem value="blue">{t("dashboard.charts.attendance.blue")}</SelectItem>
-                    <SelectItem value="amber">{t("dashboard.charts.attendance.amber")}</SelectItem>
-                    <SelectItem value="red">{t("dashboard.charts.attendance.red")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <ChartPrefsControlGroup
+                chartTypeValue={chartType}
+                chartTypeOptions={DASHBOARD_CHART_TYPE_OPTIONS}
+                onChartTypeChange={(chartTypeValue) => {
+                  updatePref("revenueChartType", chartTypeValue as DashboardChartType);
+                }}
+                colorValue={colorTheme}
+                colorOptions={REVENUE_CHART_COLOR_OPTIONS}
+                onColorChange={(selectedColorTheme) => {
+                  updatePref("revenueChartColor", selectedColorTheme);
+                }}
+              />
             )}
             <CompactSegmentedControl
               tone="card"

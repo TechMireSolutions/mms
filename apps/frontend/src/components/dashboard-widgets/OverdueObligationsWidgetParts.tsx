@@ -1,4 +1,3 @@
-import React from "react";
 import { Bell } from "lucide-react";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";

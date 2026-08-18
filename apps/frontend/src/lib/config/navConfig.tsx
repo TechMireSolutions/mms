@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
-import { QUICK_ACTION_ROUTE_KEYS as QUICK_ACTION_ROUTES } from "@/lib/dashboardQuickActions";
 
 export interface NavSubItem {
   labelKey: AppTranslationKey;
@@ -62,6 +61,3 @@ export const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.users", icon: UserCog, path: ROUTES.users, moduleId: "users" },
   { labelKey: "nav.settings", icon: Settings, path: ROUTES.settings, moduleId: "settings" },
 ];
-
-/** @deprecated Use `DASHBOARD_QUICK_ACTIONS` from `@/lib/dashboardQuickActions`. */
-export const QUICK_ACTION_ROUTE_KEYS = QUICK_ACTION_ROUTES;

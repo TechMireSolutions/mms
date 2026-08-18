@@ -2,11 +2,15 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
-import type { AppTranslationKey } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SectionLabel } from '@/components/ui/SectionLabel';
-import type { DashboardRole } from '@/lib/dashboardRole';
+import {
+  DASHBOARD_ROLE_GREETING_KEYS,
+  DASHBOARD_ROLE_BADGE_KEYS,
+  resolveDashboardWelcomeSubtitle,
+  type DashboardRole,
+} from '@/lib/dashboardRole';
 
 interface WelcomeBannerProps {
   dashboardRole: DashboardRole;
@@ -15,18 +19,6 @@ interface WelcomeBannerProps {
   /** Active student count from student metrics (admin subtitle). */
   activeStudentCount: number;
 }
-
-const GREETING_BY_ROLE: Record<DashboardRole, AppTranslationKey> = {
-  teacher: 'dashboard.greeting.teacher',
-  accountant: 'dashboard.greeting.accountant',
-  admin: 'dashboard.greeting.admin',
-};
-
-const BADGE_BY_ROLE: Record<DashboardRole, AppTranslationKey> = {
-  teacher: 'dashboard.badge.teacher',
-  accountant: 'dashboard.badge.accountant',
-  admin: 'dashboard.badge.admin',
-};
 
 const DATE_CHIP_CLASS =
   'surface-glass bg-primary-foreground/10 hover:bg-primary-foreground/15 border-primary-foreground/20 rounded-xl px-4 py-2.5 transition-all duration-300 flex items-center gap-2 shadow-sm';
@@ -40,26 +32,22 @@ export default function WelcomeBanner({
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const dayName = useMemo(() => formatDayName(new Date()), []);
-  const gregDate = useMemo(() => formatLongDate(new Date()), []);
-  const hijriDate = useMemo(() => formatHijriDate(new Date()), []);
+  const now = useMemo(() => new Date(), []);
+  const dayName = useMemo(() => formatDayName(now), [now]);
+  const gregDate = useMemo(() => formatLongDate(now), [now]);
+  const hijriDate = useMemo(() => formatHijriDate(now), [now]);
 
   const userName = user?.name ?? '';
 
-  const subtitle = useMemo(() => {
-    if (dashboardRole === 'teacher') {
-      return activeSessionsCount === 1
-        ? t('dashboard.sessionsTodayOne')
-        : t('dashboard.sessionsToday', { count: activeSessionsCount });
-    }
-    if (dashboardRole === 'admin' && activeStudentCount > 0) {
-      return t('dashboard.overviewActiveStudents', { count: activeStudentCount });
-    }
-    if (dashboardRole === 'accountant') {
-      return t('dashboard.accountantOverview');
-    }
-    return t('dashboard.overview');
-  }, [dashboardRole, activeSessionsCount, activeStudentCount, t]);
+  const subtitle = useMemo(
+    () =>
+      resolveDashboardWelcomeSubtitle(
+        dashboardRole,
+        { activeSessionsCount, activeStudentCount },
+        t,
+      ),
+    [dashboardRole, activeSessionsCount, activeStudentCount, t],
+  );
 
   return (
     <motion.header
@@ -77,11 +65,11 @@ export default function WelcomeBanner({
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-warning animate-pulse" aria-hidden="true" />
             <SectionLabel toneClassName="text-primary-foreground/70">
-              {t(BADGE_BY_ROLE[dashboardRole])}
+              {t(DASHBOARD_ROLE_BADGE_KEYS[dashboardRole])}
             </SectionLabel>
           </div>
           <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight m-0 text-primary-foreground">
-            {userName ? t('dashboard.greeting.personal', { name: userName }) : t(GREETING_BY_ROLE[dashboardRole])}
+            {userName ? t('dashboard.greeting.personal', { name: userName }) : t(DASHBOARD_ROLE_GREETING_KEYS[dashboardRole])}
           </h1>
           <p className="text-xs md:text-sm text-primary-foreground/75 mt-2 max-w-lg mb-0 font-medium leading-relaxed">{subtitle}</p>
         </div>

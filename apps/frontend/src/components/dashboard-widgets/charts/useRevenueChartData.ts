@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { getCollectedAmountForInvoice, getRecentMonthsList } from "@mms/shared";
+import { getCollectedAmountForInvoice, getRecentMonthsList, buildBucketedSeries } from "@mms/shared";
 import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
 import { useAccountingEntriesCollection, useAccountingAccountsCollection } from "@/tenant/hooks/collections/accounting";
 
@@ -18,40 +18,50 @@ export function useRevenueChartData() {
   const revenueData: RevenuePoint[] = useMemo(() => {
     const postedEntries = entries.filter((journalEntry) => journalEntry.status === "posted");
     const hasAccountingData = postedEntries.length > 0 && accounts.length > 0;
+    const accountMap = new Map(accounts.map((acc) => [acc.id, acc]));
 
-    return months.map((monthDefinition) => {
-      let revenue = 0;
-      let expenses = 0;
-
-      if (hasAccountingData) {
-        postedEntries.forEach((journalEntry) => {
-          const entryMonth = journalEntry.date.slice(0, 7);
-          if (entryMonth === monthDefinition.key) {
-            journalEntry.lines.forEach((journalLine) => {
-              const account = accounts.find((accountOption) => accountOption.id === journalLine.account_id);
-              if (account?.type === "Revenue") {
-                revenue += (journalLine.credit - journalLine.debit);
-              }
-              if (account?.type === "Expense") {
-                expenses += (journalLine.debit - journalLine.credit);
-              }
-            });
+    if (hasAccountingData) {
+      const monthTotalsMap = new Map<string, { revenue: number; expenses: number }>();
+      postedEntries.forEach((journalEntry) => {
+        const entryMonth = journalEntry.date.slice(0, 7);
+        let totals = monthTotalsMap.get(entryMonth);
+        if (!totals) {
+          totals = { revenue: 0, expenses: 0 };
+          monthTotalsMap.set(entryMonth, totals);
+        }
+        journalEntry.lines.forEach((journalLine) => {
+          const account = accountMap.get(journalLine.account_id);
+          if (account?.type === "Revenue") {
+            totals!.revenue += (journalLine.credit - journalLine.debit);
+          } else if (account?.type === "Expense") {
+            totals!.expenses += (journalLine.debit - journalLine.credit);
           }
         });
-      } else {
-        invoices.forEach((invoice) => {
-          if (!invoice || invoice.status === "cancelled") return;
-          const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
-          if (invoiceMonth === monthDefinition.key) {
-            revenue += getCollectedAmountForInvoice(invoice);
-          }
-        });
-        expenses = invoices.length > 0 ? Math.round(revenue * 0.6) : 0;
+      });
+
+      return buildBucketedSeries(months, monthTotalsMap, (monthDefinition, totals) => ({
+        month: monthDefinition.label,
+        revenue: totals?.revenue ?? 0,
+        expenses: totals?.expenses ?? 0,
+      }));
+    }
+
+    const monthInvoiceRevenueMap = new Map<string, number>();
+    invoices.forEach((invoice) => {
+      if (!invoice || invoice.status === "cancelled") return;
+      const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
+      if (invoiceMonth) {
+        const currentRev = monthInvoiceRevenueMap.get(invoiceMonth) ?? 0;
+        monthInvoiceRevenueMap.set(invoiceMonth, currentRev + getCollectedAmountForInvoice(invoice));
       }
+    });
 
+    return buildBucketedSeries(months, monthInvoiceRevenueMap, (monthDefinition, revenue) => {
+      const revenueValue = revenue ?? 0;
+      const expenses = invoices.length > 0 ? Math.round(revenueValue * 0.6) : 0;
       return {
         month: monthDefinition.label,
-        revenue,
+        revenue: revenueValue,
         expenses,
       };
     });

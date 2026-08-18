@@ -60,6 +60,8 @@ export * from './brandingCssVariables.js';
 export * from './brandingTypes.js';
 export * from './chartPalettes.js';
 export * from './dashboardPreferencesTypes.js';
+export * from './dashboardWidgetSchema.js';
+export * from './dashboardSeriesUtils.js';
 export * from './dateFormatUtils.js';
 export * from './emailIntegrationTypes.js';
 export * from './emailProviderRegistry.js';
