@@ -1,4 +1,5 @@
 import {
+  isBackupExcludedObjectKey,
   isServerOnlyObjectKey,
   BACKUP_EPHEMERAL_OBJECT_KEYS,
   type TenantDatabaseSnapshot,
@@ -146,6 +147,9 @@ export async function synchronizeData(
       for (const [key, objectValue] of Object.entries(objects)) {
         throwIfSyncAborted(signal);
         if (isServerOnlyObjectKey(key)) continue;
+        // Defense-in-depth: validation already strips these. Never overwrite
+        // platform-authoritative grants from a (possibly stale/crafted) payload.
+        if (isBackupExcludedObjectKey(key)) continue;
         if (skipLegacySetupObjects.has(key)) continue;
         await dbSaveObject(key, objectValue);
         restoredKeys.add(key);

@@ -1,5 +1,5 @@
 import type { AppTranslationKey } from './appTranslations.js';
-import { isServerOnlyObjectKey } from './emailIntegrationTypes.js';
+import { isBackupExcludedObjectKey, isServerOnlyObjectKey } from './emailIntegrationTypes.js';
 import type { TenantDatabaseSnapshot } from './backupSchemas.js';
 
 /** Detects prototype pollution keys recursively in any parsed value. */
@@ -70,20 +70,28 @@ export function validateAndNormalizeSnapshot(
     return { ok: false, errorKey: 'backup.securityViolation' };
   }
 
-  const restrictedKey = findRestrictedKeyInSnapshot(snapshot);
+  // Strip backup-excluded keys (e.g. platform_settings) before the restricted-key
+  // guard: they carry a `platform_*` prefix the guard would reject, but they are
+  // platform-authoritative tenant data that must be dropped, not rejected, so older
+  // backups still restore. Server-only (secret/ephemeral) keys are dropped here too.
+  const objects: Record<string, unknown> = {};
+  if (snapshot.objects) {
+    for (const [key, value] of Object.entries(snapshot.objects)) {
+      if (isBackupExcludedObjectKey(key)) continue;
+      if (isServerOnlyObjectKey(key)) continue;
+      objects[key] = value;
+    }
+  }
+
+  const restrictedKey = findRestrictedKeyInSnapshot({
+    collections: snapshot.collections,
+    objects,
+  });
   if (restrictedKey) {
     return { ok: false, errorKey: 'backup.securityViolation' };
   }
 
   const collections = snapshot.collections ? { ...snapshot.collections } : {};
-  const objects: Record<string, unknown> = {};
-  if (snapshot.objects) {
-    for (const [key, value] of Object.entries(snapshot.objects)) {
-      // Older backups may still carry ephemeral/secret keys — drop, don't reject.
-      if (isServerOnlyObjectKey(key)) continue;
-      objects[key] = value;
-    }
-  }
 
   for (const [colName, rows] of Object.entries(collections)) {
     if (Array.isArray(rows)) {

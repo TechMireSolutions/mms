@@ -451,6 +451,27 @@ describe('backupTypes', () => {
       }
     });
 
+    it('strips backup-excluded platform_* object keys instead of rejecting the restore', () => {
+      // platform_settings carries a platform_* prefix the restricted-key guard rejects,
+      // but it is platform-authoritative and must be dropped — not rejected — so a backup
+      // that still carries it (e.g. exported before this fix) restores cleanly.
+      const snapshot = {
+        collections: {
+          users: [{ id: 'u-1', role: 'admin' }],
+        },
+        objects: {
+          branding: { madrasaName: 'Test' },
+          platform_settings: { grantedModules: { students: true } },
+        },
+      };
+      const result = validateAndNormalizeSnapshot(snapshot);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.data.objects).toEqual({ branding: { madrasaName: 'Test' } });
+        expect(result.data.objects?.platform_settings).toBeUndefined();
+      }
+    });
+
     it('deduplicates collection items by id', () => {
       const snapshot = {
         collections: {

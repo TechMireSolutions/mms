@@ -41,6 +41,25 @@ export function isServerOnlyObjectKey(key: string): boolean {
   return SERVER_ONLY_OBJECT_KEYS.includes(key);
 }
 
+/**
+ * Object keys that stay browser-accessible but are excluded from backup
+ * export/restore and preserved across a full restore (never pruned, never written).
+ *
+ * `platform_settings` is platform-authoritative — the platform writes the module
+ * grants for a tenant and the tenant only reads them. A tenant backup must not
+ * round-trip this key: an exported snapshot could be stale or crafted to resurrect
+ * revoked modules. It is also caught by the `platform_*` restricted-key guard, so
+ * it is stripped (not rejected) before that guard runs. Unlike `SERVER_ONLY_OBJECT_KEYS`
+ * it is NOT withheld from the browser (`useLiveObject('platform_settings')` reads it).
+ */
+export const BACKUP_EXCLUDED_OBJECT_KEYS: readonly string[] = [
+  'platform_settings',
+] as const;
+
+export function isBackupExcludedObjectKey(key: string): boolean {
+  return BACKUP_EXCLUDED_OBJECT_KEYS.includes(key);
+}
+
 const EMAIL_PROVIDERS = [
   'gmail',
   'microsoft365',

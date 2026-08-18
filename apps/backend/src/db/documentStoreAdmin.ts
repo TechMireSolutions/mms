@@ -1,5 +1,6 @@
 import {
   WORKSPACES_COLLECTION,
+  isBackupExcludedObjectKey,
   isServerOnlyObjectKey,
   parseTenantScopedStorageKey,
 } from '@mms/shared';
@@ -30,6 +31,8 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
       const parsed = parseTenantScopedStorageKey(row.key);
       const logicalKey = parsed?.logicalKey ?? row.key;
       if (isServerOnlyObjectKey(logicalKey)) continue;
+      // platform_settings is platform-authoritative — never round-trip via backup.
+      if (isBackupExcludedObjectKey(logicalKey)) continue;
 
       if (tenant) {
         if (!parsed || parsed.subdomain !== tenant) continue;
@@ -89,6 +92,9 @@ export async function listTenantObjectLogicalKeys(): Promise<string[]> {
     const parsed = parseTenantScopedStorageKey(row.key);
     if (!parsed || parsed.subdomain !== tenant) continue;
     if (isServerOnlyObjectKey(parsed.logicalKey)) continue;
+    // Backup-excluded keys are not exported, so they must not be pruned on a
+    // full restore either — the platform's current grants survive the wipe.
+    if (isBackupExcludedObjectKey(parsed.logicalKey)) continue;
     logicalKeys.push(parsed.logicalKey);
   }
   return logicalKeys;
