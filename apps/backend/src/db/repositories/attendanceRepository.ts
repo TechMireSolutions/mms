@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { activeDb } from '../dbConnection.js';
-import { attendance } from '../schema.js';
+import { attendance, attendanceLeaves } from '../schema.js';
 import type { AttendanceRecord } from '@mms/shared';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 
@@ -192,6 +192,7 @@ export async function replaceAttendanceRecordsForWorkspace(
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenantTransaction(subdomain, async (tx) => {
+    await tx.delete(attendanceLeaves).where(eq(attendanceLeaves.workspaceSubdomain, subdomain));
     await tx.delete(attendance).where(eq(attendance.workspaceSubdomain, subdomain));
     if (records.length > 0) {
       for (const record of records) {
@@ -205,5 +206,6 @@ export async function replaceAttendanceRecordsForWorkspace(
 export async function deleteAttendanceRecordsByWorkspace(tenant: string): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   const db = activeDb();
+  await db.delete(attendanceLeaves).where(eq(attendanceLeaves.workspaceSubdomain, subdomain));
   await db.delete(attendance).where(eq(attendance.workspaceSubdomain, subdomain));
 }

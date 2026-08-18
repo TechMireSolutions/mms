@@ -17,6 +17,7 @@ import {
   MODULE_TO_SETTINGS_KEY,
   validateAndNormalizeSnapshot,
 } from './backupTypes.js';
+import { decryptWorkspaceBackup, encryptWorkspaceBackup } from './backupCrypto.js';
 
 const PREFIX = 'mms_t:demo:';
 
@@ -532,6 +533,107 @@ describe('backupTypes', () => {
         expect(summaryResult.summary.checksum).toBeDefined();
         expect(summaryResult.summary.version).toBe(1);
       }
+    });
+
+    it('executes full-system multi-module backup envelope encryption, decryption, validation, and restoration pipeline', async () => {
+      const fullSystemSnapshot = {
+        collections: {
+          users: [{ id: 'u-1', email: 'admin@madrasa.app', role: 'admin', name: 'Admin' }],
+          contacts: [{ id: 'c-1', firstName: 'Ali', lastName: 'Khan', name: 'Ali Khan', phones: [{ number: '+1234567890' }] }],
+          students: [{ id: 's-1', contactId: 'c-1', status: 'active', enrolledSessions: ['sess-1'] }],
+          teachers: [{ id: 't-1', contactId: 'c-1', status: 'active', employeeId: 'EMP-001' }],
+          sessions: [{ id: 'sess-1', name: 'Semester Fall 2026', type: 'regular', status: 'active' }],
+          attendance_records: [{ id: 'att-1', studentId: 's-1', date: '2026-08-18', status: 'present' }],
+          enrollments: [{ id: 'enr-1', studentId: 's-1', sessionId: 'sess-1', status: 'active' }],
+          finance_invoices: [{ id: 'inv-1', invoiceNumber: 'INV-1001', studentId: 's-1', total: '150.00', status: 'paid' }],
+          finance_payments: [{ id: 'pay-1', invoiceId: 'inv-1', amount: '150.00', method: 'cash' }],
+          accounting_accounts: [{ id: 'acc-1', code: '1000', name: 'Cash', type: 'asset', isActive: true }],
+          accounting_fiscal_years: [{ id: 'fy-2026', label: '2026-2027', startDate: '2026-01-01', endDate: '2026-12-31' }],
+          accounting_entries: [{ id: 'je-1', date: '2026-08-18', ref: 'JE-001', description: 'Tuition Income' }],
+          obligation_types: [{ id: 'ot-1', name: 'Khums', category: 'religious' }],
+          mujtahids: [{ id: 'm-1', name: 'Ayatollah Sistani' }],
+          mujtahid_reps: [{ id: 'mr-1', mujtahidId: 'm-1', name: 'Representative' }],
+          wakala_types: [{ id: 'wt-1', name: 'General Agency' }],
+          obligation_distributions: [{ id: 'od-1', mujtahidId: 'm-1', amount: '500.00' }],
+          obligation_collections: [{ id: 'oc-1', donorContactId: 'c-1', amount: '500.00' }],
+          exams: [{ id: 'ex-1', name: 'Midterm 2026', subject: 'Quranic Studies' }],
+          exam_results: [{ id: 'er-1', examId: 'ex-1', studentId: 's-1', marksObtained: 95 }],
+          hasanat_denoms: [{ id: 'hd-1', name: 'Silver Star', points: 10 }],
+          hasanat_batches: [{ id: 'hb-1', batchNumber: 'B-001' }],
+          hasanat_distributions: [{ id: 'hdist-1', studentId: 's-1', denomId: 'hd-1', count: 5 }],
+          hasanat_redemptions: [{ id: 'hred-1', studentId: 's-1', pointsRedeemed: 50 }],
+          questions: [{ id: 'q-1', text: 'Define Tajweed rules', type: 'long_answer' }],
+          tests: [{ id: 'test-1', name: 'Tajweed Evaluation' }],
+          assessment_results: [{ id: 'ar-1', testId: 'test-1', studentId: 's-1', score: 92 }],
+          message_templates: [{ id: 'mt-1', name: 'Welcome SMS', body: 'Welcome {studentName}' }],
+          message_logs: [{ id: 'ml-1', recipient: '+1234567890', status: 'delivered' }],
+          saved_reports: [{ id: 'rep-1', name: 'Annual Enrollment Report', category: 'students' }],
+          user_activity_logs: [{ id: 'log-1', action: 'user.login', userId: 'u-1' }],
+          contact_lookups: [{ id: 'cl-1', type: 'tags', label: 'VIP' }],
+          contact_field_configs: [{ id: 'cfc-1', section: 'profile', key: 'customField' }],
+          contact_module_preferences: [{ id: 'cmp-1', viewMode: 'table' }],
+          contact_user_column_prefs: [{ userId: 'u-1', columns: ['name', 'phone'] }],
+          dashboard_preferences: [{ id: 'dp-1', layout: 'grid' }],
+          dashboard_widgets: [{ id: 'dw-1', widgetId: 'attendance_summary', enabled: true }],
+        },
+        objects: {
+          branding: { madrasaName: 'Al-Huda Academy', logoUrl: '/logo.png' },
+          global_settings: { defaultLanguage: 'en', timeZone: 'UTC' },
+        },
+      };
+
+      // 1. Build local storage keys from full system snapshot
+      const rawStorageKeys = buildStorageKeysFromSnapshot(fullSystemSnapshot, PREFIX);
+      expect(Object.keys(rawStorageKeys).length).toBe(39);
+
+      // 2. Wrap into cryptographic versioned envelope with checksum
+      const envelopeJson = await buildWorkspaceBackupEnvelopeAsync(rawStorageKeys, {
+        subdomain: 'demo',
+        dataSource: 'server',
+      });
+      const parsedEnvelope = JSON.parse(envelopeJson);
+      expect(parsedEnvelope.format).toBe(BACKUP_FORMAT_ID);
+      expect(parsedEnvelope.subdomain).toBe('demo');
+      expect(parsedEnvelope.stats.collectionCount).toBe(37);
+      expect(parsedEnvelope.stats.objectCount).toBe(2);
+      expect(parsedEnvelope.checksum).toMatch(/^[a-f0-9]{64}$/i);
+
+      // 3. Encrypt envelope with admin credentials using AES-256-GCM + PBKDF2
+      const credentials = { adminEmail: 'admin@madrasa.app', password: 'SecretPassword123!' };
+      const encryptedPayload = await encryptWorkspaceBackup(envelopeJson, credentials, {
+        subdomain: 'demo',
+        tenantLabel: 'Al-Huda Academy',
+      });
+      expect(encryptedPayload).toContain('"version":1');
+
+      // 4. Decrypt backup file
+      const decryptResult = await decryptWorkspaceBackup(encryptedPayload, credentials);
+      expect(decryptResult.ok).toBe(true);
+      if (!decryptResult.ok) return;
+
+      // 5. Validate decrypted JSON for destination workspace
+      const validationResult = await validateWorkspaceBackupJsonAsync(
+        decryptResult.plaintext,
+        PREFIX,
+        'demo',
+      );
+      expect(validationResult.ok).toBe(true);
+      if (!validationResult.ok) return;
+
+      // 6. Parse back to normalized tenant snapshot
+      const restoredSnapshot = parseStorageKeysToSnapshot(validationResult.data, PREFIX);
+      const normalizedResult = validateAndNormalizeSnapshot(restoredSnapshot);
+      expect(normalizedResult.ok).toBe(true);
+      if (!normalizedResult.ok) return;
+
+      // Verify all module collections are faithfully reconstructed
+      expect(normalizedResult.data.collections?.users).toHaveLength(1);
+      expect(normalizedResult.data.collections?.contacts).toHaveLength(1);
+      expect(normalizedResult.data.collections?.students).toHaveLength(1);
+      expect(normalizedResult.data.collections?.accounting_accounts).toHaveLength(1);
+      expect(normalizedResult.data.collections?.questions).toHaveLength(1);
+      expect(normalizedResult.data.collections?.finance_invoices).toHaveLength(1);
+      expect(normalizedResult.data.objects?.branding).toEqual({ madrasaName: 'Al-Huda Academy', logoUrl: '/logo.png' });
     });
   });
 });
