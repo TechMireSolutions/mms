@@ -36,7 +36,8 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
     await saveAuditLogEntry(tenant, entry);
     await broadcastCollection(AUDIT_LOG_COLLECTION);
   } catch (error) {
-    console.error('audit_log append failed:', error);
+    // Log only a safe message — audit entries carry userEmail; never dump the raw object.
+    console.error('audit_log append failed:', error instanceof Error ? error.message : 'non-error');
   }
 }
 

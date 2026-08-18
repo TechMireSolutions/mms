@@ -30,7 +30,7 @@ export function buildBackupFileName(
 }
 
 /** Extracts logical storage key from an exported localStorage key. */
-export function extractLogicalStorageKey(key: string): string | null {
+function extractLogicalStorageKey(key: string): string | null {
   if (!key.startsWith('mms_')) return null;
   const stripped = key.slice(4);
   const tenantParsed = parseTenantScopedStorageKey(stripped);
@@ -53,7 +53,7 @@ export function remapBackupKeysToPrefix(
 }
 
 /** Computes standard SHA-256 hex string from UTF-8 string input. */
-export async function computeSha256Hex(data: string): Promise<string> {
+async function computeSha256Hex(data: string): Promise<string> {
   const subtle = globalThis.crypto?.subtle;
   if (!subtle) {
     throw new Error('backup.cryptoUnavailable');

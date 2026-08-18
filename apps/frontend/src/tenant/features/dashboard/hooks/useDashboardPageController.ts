@@ -24,11 +24,16 @@ export function useDashboardPageController() {
   const {
     disabledCardIds,
     customWidgets,
+    gridMode,
+    lowAttendanceThreshold,
+    urgentAttendanceThreshold,
     toggleCardVisibility,
     toggleWidgetPin,
     unpinWidget,
     deleteWidget,
     saveWidget,
+    updatePref,
+    updateCustomWidgets,
   } = useDashboardConfig();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -83,6 +88,27 @@ export function useDashboardPageController() {
     [closeBuilder, saveWidget],
   );
 
+  const handleReorderWidgets = useCallback(
+    (reorderedWidgets: CustomWidget[]) => {
+      updateCustomWidgets(reorderedWidgets);
+    },
+    [updateCustomWidgets],
+  );
+
+  const handleUpdateThreshold = useCallback(
+    (key: 'lowAttendanceThreshold' | 'urgentAttendanceThreshold', value: number) => {
+      updatePref(key, value);
+    },
+    [updatePref],
+  );
+
+  const handleUpdateGridMode = useCallback(
+    (mode: 'comfortable' | 'compact') => {
+      updatePref('gridMode', mode);
+    },
+    [updatePref],
+  );
+
   const activeCustomCardIds = useMemo(
     () => getActiveCustomCardIds(customWidgets, dashboardRole),
     [customWidgets, dashboardRole],
@@ -132,8 +158,19 @@ export function useDashboardPageController() {
         t,
         formatCurrency,
         can,
+        { lowAttendanceThreshold, urgentAttendanceThreshold },
       ),
-    [dashboardRole, financeMetrics, attendanceMetrics, studentMetricsInactive, t, formatCurrency, can],
+    [
+      dashboardRole,
+      financeMetrics,
+      attendanceMetrics,
+      studentMetricsInactive,
+      t,
+      formatCurrency,
+      can,
+      lowAttendanceThreshold,
+      urgentAttendanceThreshold,
+    ],
   );
 
   return {
@@ -145,6 +182,12 @@ export function useDashboardPageController() {
     setIsEditMode,
     customWidgets,
     disabledCardIds,
+    gridMode,
+    lowAttendanceThreshold,
+    urgentAttendanceThreshold,
+    handleUpdateThreshold,
+    handleUpdateGridMode,
+    handleReorderWidgets,
     toggleCardVisibility,
     isWidgetBuilderOpen,
     editingWidget,

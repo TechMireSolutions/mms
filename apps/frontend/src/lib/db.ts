@@ -10,11 +10,7 @@ export {
   type ServerSyncResult,
 } from "@/lib/dbStorageCore.js";
 export {
-  fetchTenantSnapshot,
-  fetchTenantBackupSnapshot,
-  applySnapshotToLocalCache,
   syncDatabase,
-  exportTenantBackup,
   importDatabase,
   exportEncryptedTenantBackup,
 } from "@/lib/dbBackupSync.js";

@@ -32,6 +32,7 @@ import {
 } from '../db/hydrateTeachersSetupFromLegacyBackup.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { throwIfSyncAborted } from '../lib/syncLimits.js';
+import { acquireTenantRestoreLock, RestoreInProgressError } from '../lib/restoreLock.js';
 import { clearTenantBackgroundJobs } from './backgroundJobService.js';
 
 /**
@@ -109,6 +110,13 @@ export async function synchronizeData(
   const restoredCollectionKeys = new Set<string>();
 
   await runInTransaction(async () => {
+    // Block concurrent restores for the same tenant. The lock is transaction-scoped,
+    // so it releases on commit/rollback — a timed-out or failed restore never wedges it.
+    const tenant = getRequestTenant();
+    if (tenant && !(await acquireTenantRestoreLock(tenant))) {
+      throw new RestoreInProgressError();
+    }
+
     if (fullRestore) {
       // Jobs race mid-restore and export artifacts are not in the envelope.
       await clearTenantBackgroundJobs();
@@ -233,10 +241,4 @@ export async function fetchObject(key: string): Promise<unknown | null> {
  */
 export async function persistObject(key: string, objectValue: unknown): Promise<void> {
   await dbSaveObject(key, objectValue);
-}
-
-/** Removes a tenant-scoped object by logical key. */
-export async function deletePersistedObject(key: string): Promise<void> {
-  const { deleteObject } = await import('../db/database.js');
-  await deleteObject(key);
 }

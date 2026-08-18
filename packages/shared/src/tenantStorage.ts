@@ -12,7 +12,7 @@ export function tenantObjectKey(subdomain: string, key: string): string {
 }
 
 /** Whether a storage key is tenant-scoped. */
-export function isTenantScopedStorageKey(key: string): boolean {
+function isTenantScopedStorageKey(key: string): boolean {
   return key.startsWith("t:") && key.split(":").length >= 3;
 }
 

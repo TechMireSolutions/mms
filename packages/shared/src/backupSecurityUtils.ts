@@ -32,7 +32,7 @@ export function hasPrototypePollution(value: unknown): boolean {
 }
 
 /** Checks if a logical key represents a restricted platform-level resource. */
-export function isRestrictedKey(logicalKey: string): boolean {
+function isRestrictedKey(logicalKey: string): boolean {
   const lower = logicalKey.toLowerCase();
   return (
     lower === 'workspaces' ||
@@ -107,14 +107,19 @@ export function validateAndNormalizeSnapshot(
   }
 
   if (collections.users) {
-    const hasAdmin = collections.users.some(
-      (u: unknown) =>
-        u &&
-        typeof u === 'object' &&
-        (('role' in u && u.role === 'admin') ||
-          ('roles' in u && Array.isArray(u.roles) && (u.roles as string[]).includes('admin'))),
-    );
-    if (!hasAdmin) {
+    const hasActiveAdmin = collections.users.some((u: unknown) => {
+      if (!u || typeof u !== 'object') return false;
+      const record = u as Record<string, unknown>;
+      const isAdmin =
+        ('role' in record && record.role === 'admin') ||
+        ('roles' in record && Array.isArray(record.roles) && (record.roles as string[]).includes('admin'));
+      if (!isAdmin) return false;
+      // A soft-deleted admin cannot log in to recover the workspace. Only enforce
+      // when the field is present so legacy backups without `deletedAt` still restore.
+      if ('deletedAt' in record && record.deletedAt != null) return false;
+      return true;
+    });
+    if (!hasActiveAdmin) {
       return { ok: false, errorKey: 'backup.missingAdminUser' };
     }
   }

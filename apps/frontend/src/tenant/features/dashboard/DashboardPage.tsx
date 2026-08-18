@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings } from 'lucide-react';
+import { Settings, Printer } from 'lucide-react';
 import StatsGrid from '@/tenant/features/dashboard/components/StatisticsGrid';
 import DashboardRolePanel from '@/tenant/features/dashboard/components/DashboardRolePanel';
 import DashboardCustomizePanel from '@/tenant/features/dashboard/components/DashboardCustomizePanel';
@@ -21,6 +21,12 @@ export default function Dashboard() {
     setIsEditMode,
     customWidgets,
     disabledCardIds,
+    gridMode,
+    lowAttendanceThreshold,
+    urgentAttendanceThreshold,
+    handleUpdateThreshold,
+    handleUpdateGridMode,
+    handleReorderWidgets,
     toggleCardVisibility,
     isWidgetBuilderOpen,
     editingWidget,
@@ -54,8 +60,19 @@ export default function Dashboard() {
         activeStudentCount={studentMetricsActive}
       />
 
-      {canCustomize && (
-        <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 select-none">
+      <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 select-none print:hidden">
+        <Button
+          onClick={() => window.print()}
+          variant="capsOutline"
+          size="caps"
+          className="flex items-center justify-center px-4 py-2 transition-all duration-300 cursor-pointer"
+          title={t('dashboard.printSnapshot')}
+        >
+          <Printer className="w-4 h-4" />
+          {t('dashboard.printSnapshot')}
+        </Button>
+
+        {canCustomize && (
           <Button
             onClick={() => setIsEditMode(!isEditMode)}
             variant={isEditMode ? "capsPrimary" : "capsOutline"}
@@ -67,8 +84,8 @@ export default function Dashboard() {
             <Settings className="w-4 h-4" />
             {isEditMode ? t('dashboard.exitCustomization') : t('dashboard.customizeCards')}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       <AnimatePresence>
         {canCustomize && isEditMode && (
@@ -82,6 +99,11 @@ export default function Dashboard() {
               can={can}
               customWidgets={customWidgets}
               disabledCardIds={disabledCardIds}
+              gridMode={gridMode}
+              lowAttendanceThreshold={lowAttendanceThreshold}
+              urgentAttendanceThreshold={urgentAttendanceThreshold}
+              onUpdateThreshold={handleUpdateThreshold}
+              onUpdateGridMode={handleUpdateGridMode}
               toggleCardVisibility={toggleCardVisibility}
               dashboardMetricCards={dashboardMetricCards}
               selectedDashboardCardCount={selectedDashboardCardCount}
@@ -95,6 +117,7 @@ export default function Dashboard() {
               onDeleteWidget={handleDeleteWidget}
               onToggleWidgetPin={toggleWidgetPin}
               onOpenWidgetBuilder={openWidgetBuilder}
+              onReorderWidgets={handleReorderWidgets}
             />
           </motion.div>
         )}

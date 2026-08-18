@@ -31,7 +31,7 @@ export type ParseAndValidateResult =
   | { ok: false; errorKey: AppTranslationKey };
 
 /** Verifies cryptographic SHA-256 checksum if present in envelope. */
-export async function validateBackupPayloadChecksum(
+async function validateBackupPayloadChecksum(
   parsed: unknown,
   raw: Record<string, string>,
 ): Promise<boolean> {
@@ -54,7 +54,7 @@ export async function validateBackupPayloadChecksum(
  * Common internal logic for validating and parsing a workspace backup payload.
  * Enforces prototype pollution prevention, restricted key detection, version compatibility, and admin user verification.
  */
-export function parseAndValidateBackupPayload(
+function parseAndValidateBackupPayload(
   jsonString: string,
   targetPrefix: string,
 ): ParseAndValidateResult {
@@ -118,7 +118,7 @@ export function parseAndValidateBackupPayload(
 }
 
 /** Asynchronously validates and parses payload with full SHA-256 checksum verification. */
-export async function parseAndValidateBackupPayloadAsync(
+async function parseAndValidateBackupPayloadAsync(
   jsonString: string,
   targetPrefix: string,
 ): Promise<ParseAndValidateResult> {

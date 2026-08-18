@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
+import { buildDashboardNotifications, type DashboardNotificationItem } from '@/lib/buildDashboardNotifications';
 
 describe('NotificationsPanel item filtering logic', () => {
   const sampleNotifications: DashboardNotificationItem[] = [
@@ -55,5 +55,43 @@ describe('NotificationsPanel item filtering logic', () => {
     // Simulate restore all
     dismissedIds = new Set();
     expect(sampleNotifications.filter((item) => !dismissedIds.has(item.id))).toHaveLength(3);
+  });
+});
+
+describe('buildDashboardNotifications with custom thresholds', () => {
+  const mockT = ((key: string, params?: Record<string, string | number>) => {
+    if (params?.rate) return `${key}:${params.rate}`;
+    return key;
+  }) as unknown as Parameters<typeof buildDashboardNotifications>[2];
+  const mockFormatCurrency = (amt: unknown) => `$${amt}`;
+
+  it('triggers low attendance notification based on custom threshold', () => {
+    const notifs = buildDashboardNotifications(
+      'admin',
+      { outstandingInvoiceCount: 0, outstandingBalance: 0, attendanceRate: 80, inactiveStudents: 0 },
+      mockT,
+      mockFormatCurrency,
+      () => true,
+      { lowAttendanceThreshold: 85, urgentAttendanceThreshold: 70 },
+    );
+
+    const attendanceNotif = notifs.find((n) => n.id === 'low-attendance');
+    expect(attendanceNotif).toBeDefined();
+    expect(attendanceNotif?.urgent).toBe(false);
+  });
+
+  it('marks attendance notification as urgent when below custom urgent threshold', () => {
+    const notifs = buildDashboardNotifications(
+      'admin',
+      { outstandingInvoiceCount: 0, outstandingBalance: 0, attendanceRate: 65, inactiveStudents: 0 },
+      mockT,
+      mockFormatCurrency,
+      () => true,
+      { lowAttendanceThreshold: 85, urgentAttendanceThreshold: 70 },
+    );
+
+    const attendanceNotif = notifs.find((n) => n.id === 'low-attendance');
+    expect(attendanceNotif).toBeDefined();
+    expect(attendanceNotif?.urgent).toBe(true);
   });
 });

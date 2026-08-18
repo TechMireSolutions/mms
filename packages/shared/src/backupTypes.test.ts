@@ -249,6 +249,41 @@ describe('backupTypes', () => {
     expect(res.ok).toBe(true);
   });
 
+  it('rejects backup whose only admin is soft-deleted', () => {
+    const backupDataDeletedAdmin = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 1, objectCount: 0, byteSize: 100 },
+      keys: {
+        'mms_t:demo:users':
+          '[{"id":"1","name":"A","role":"teacher"},{"id":"2","name":"B","role":"admin","deletedAt":"2026-06-20T00:00:00Z"}]',
+      },
+    });
+    const res = validateWorkspaceBackupJson(backupDataDeletedAdmin, PREFIX);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.errorKey).toBe('backup.missingAdminUser');
+    }
+  });
+
+  it('accepts backup with a deleted admin as long as one active admin remains', () => {
+    const backupDataMixedAdmin = JSON.stringify({
+      format: BACKUP_FORMAT_ID,
+      version: 1,
+      exportedAt: '2026-06-23T00:00:00Z',
+      subdomain: 'demo',
+      stats: { keyCount: 1, collectionCount: 1, objectCount: 0, byteSize: 100 },
+      keys: {
+        'mms_t:demo:users':
+          '[{"id":"2","name":"B","role":"admin","deletedAt":"2026-06-20T00:00:00Z"},{"id":"3","name":"C","role":"admin","deletedAt":null}]',
+      },
+    });
+    const res = validateWorkspaceBackupJson(backupDataMixedAdmin, PREFIX);
+    expect(res.ok).toBe(true);
+  });
+
   describe('isBackupErrorKey', () => {
     it('returns true if string starts with backup.', () => {
       expect(isBackupErrorKey('backup.invalidFormat')).toBe(true);

@@ -7,6 +7,7 @@ import {
 import { notify } from '@/lib/notify';
 import type { UseBackupRestoreImportOptions } from './backupRestoreImportTypes';
 import { useBackupRestoreImportActions } from './useBackupRestoreImportActions';
+import { compareBackupSubdomains } from './backupRestoreUtils';
 
 export function useBackupRestoreImport({
   subdomain,
@@ -36,15 +37,14 @@ export function useBackupRestoreImport({
         notify.error(t('backup.restoreFailed'), { description: t(preview.errorKey) });
         return;
       }
-      const sourceSubdomain = preview.summary.subdomain?.trim().toLowerCase();
-      const targetSubdomain = subdomain?.trim().toLowerCase();
-      if (!sourceSubdomain || !targetSubdomain) {
+      const compare = compareBackupSubdomains(preview.summary.subdomain, subdomain);
+      if (compare === 'unidentified') {
         notify.error(t('backup.restoreFailed'), {
           description: t('backup.workspaceUnidentified'),
         });
         return;
       }
-      if (sourceSubdomain !== targetSubdomain) {
+      if (compare === 'mismatch') {
         notify.error(t('backup.restoreFailed'), {
           description: t('backup.workspaceMismatch'),
         });

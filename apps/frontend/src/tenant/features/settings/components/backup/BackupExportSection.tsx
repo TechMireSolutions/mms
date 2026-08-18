@@ -4,15 +4,12 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StatCard } from '@/components/ui/StatCard';
+import type { WorkspaceExportStats } from '@/tenant/features/settings/hooks/backupRestoreTypes';
 
 interface BackupExportSectionProps {
   adminEmail: string;
   isCreating: boolean;
-  lastExportStats: {
-    collections: number;
-    objects: number;
-    size: string;
-  } | null;
+  lastExportStats: WorkspaceExportStats | null;
   onStartExport: () => void;
 }
 

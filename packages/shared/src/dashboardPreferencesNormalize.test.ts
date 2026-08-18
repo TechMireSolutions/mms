@@ -55,6 +55,22 @@ describe("normalizeDashboardPreferences", () => {
     ).toEqual(["a", "b"]);
     expect(normalizeDashboardPreferences({ disabledCardIds: [1, 2] }).disabledCardIds).toEqual([]);
   });
+
+  it("normalizes and bounds attendance threshold values", () => {
+    const valid = normalizeDashboardPreferences({
+      lowAttendanceThreshold: 80,
+      urgentAttendanceThreshold: 55,
+    });
+    expect(valid.lowAttendanceThreshold).toBe(80);
+    expect(valid.urgentAttendanceThreshold).toBe(55);
+
+    const outOfBounds = normalizeDashboardPreferences({
+      lowAttendanceThreshold: 150,
+      urgentAttendanceThreshold: -10,
+    });
+    expect(outOfBounds.lowAttendanceThreshold).toBe(DEFAULT_DASHBOARD_PREFERENCES.lowAttendanceThreshold);
+    expect(outOfBounds.urgentAttendanceThreshold).toBe(DEFAULT_DASHBOARD_PREFERENCES.urgentAttendanceThreshold);
+  });
 });
 
 describe("dashboardPreferencesPutBodySchema", () => {

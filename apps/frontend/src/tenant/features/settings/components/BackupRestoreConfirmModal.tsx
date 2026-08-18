@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SettingsCallout, SettingsMetaBadge } from '@/components/ui/SettingsShell';
+import { compareBackupSubdomains } from '../hooks/backupRestoreUtils';
 
 export interface BackupRestoreConfirmModalProps {
   open: boolean;
@@ -54,8 +55,7 @@ const BackupRestoreConfirmModal = React.memo(function BackupRestoreConfirmModal(
 
       const phraseOk = typed.trim().toLowerCase() === confirmPhrase.trim().toLowerCase();
       const workspaceMatches =
-        Boolean(summary?.subdomain) &&
-        summary?.subdomain?.trim().toLowerCase() === targetSubdomain.trim().toLowerCase();
+        compareBackupSubdomains(summary?.subdomain, targetSubdomain) === 'match';
       const busy = restoring || safetyStep;
       const exportedLabel = useMemo(
         () => formatExportedAt(summary?.exportedAt ?? null),

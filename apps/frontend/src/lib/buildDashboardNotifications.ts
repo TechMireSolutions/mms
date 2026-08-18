@@ -36,17 +36,26 @@ export interface DashboardNotificationMetrics {
   inactiveStudents: number;
 }
 
+export interface DashboardThresholdConfig {
+  lowAttendanceThreshold?: number;
+  urgentAttendanceThreshold?: number;
+}
+
 export function buildDashboardNotifications(
   dashboardRole: DashboardRole,
   dashboardNotificationInput: DashboardNotificationMetrics,
   t: Translate,
   formatCurrency: (amount: number | string | null | undefined) => string,
   can?: (permission: Permission) => boolean,
+  thresholds?: DashboardThresholdConfig,
 ): DashboardNotificationItem[] {
   const dashboardNotifications: DashboardNotificationItem[] = [];
   const unpaidCount = dashboardNotificationInput.outstandingInvoiceCount;
   const outstandingTotal = dashboardNotificationInput.outstandingBalance;
   const attendanceRate = dashboardNotificationInput.attendanceRate;
+
+  const lowThreshold = thresholds?.lowAttendanceThreshold ?? DASHBOARD_LOW_ATTENDANCE_THRESHOLD;
+  const urgentThreshold = thresholds?.urgentAttendanceThreshold ?? DASHBOARD_URGENT_ATTENDANCE_THRESHOLD;
 
   const canFinance = can ? can(FINANCE_MODULE_MANIFEST.permissions.write) : true;
   const canStudents = can ? can(STUDENTS_MODULE_MANIFEST.permissions.read) : true;
@@ -87,7 +96,7 @@ export function buildDashboardNotifications(
   if (
     canAttendance &&
     attendanceRate !== null &&
-    attendanceRate < DASHBOARD_LOW_ATTENDANCE_THRESHOLD
+    attendanceRate < lowThreshold
   ) {
     dashboardNotifications.push({
       id: 'low-attendance',
@@ -95,7 +104,7 @@ export function buildDashboardNotifications(
       title: t('notifications.lowAttendanceTitle'),
       desc: t('notifications.lowAttendanceDesc', { rate: attendanceRate }),
       time: t('notifications.timeToday'),
-      urgent: attendanceRate < DASHBOARD_URGENT_ATTENDANCE_THRESHOLD,
+      urgent: attendanceRate < urgentThreshold,
     });
   }
 

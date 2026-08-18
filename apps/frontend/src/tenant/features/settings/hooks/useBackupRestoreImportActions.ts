@@ -92,7 +92,12 @@ export function useBackupRestoreImportActions({
         notify.success(t('backup.restoreSuccess'), { description: t('backup.restoreSuccessDesc') });
         setPendingRestore(null);
         setSelectedFileName(null);
-        window.location.reload();
+        // A full restore can change the signed-in admin's role/soft-delete status,
+        // enabled modules, and branding — none of which are TanStack Queries
+        // (session + public settings live in AuthContext). Only a full re-bootstrap
+        // reapplies all of them, so we reload rather than just invalidate the cache.
+        // Defer briefly so the success confirmation above is visible before reload.
+        setTimeout(() => window.location.reload(), 1200);
       } catch (err) {
         const error = err as Error;
         notify.error(t('backup.restoreFailed'), { description: errorDescription(error.message) });

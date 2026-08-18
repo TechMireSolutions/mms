@@ -7,6 +7,7 @@ import {
 } from '@mms/shared';
 import { notify } from '@/lib/notify';
 import type { TranslateFn } from './backupRestoreImportTypes';
+import { compareBackupSubdomains } from './backupRestoreUtils';
 
 export function processBackupImportFile(
   file: File,
@@ -42,13 +43,12 @@ export function processBackupImportFile(
     const encryptedFile = parseEncryptedBackupFile(text);
     if (encryptedFile) {
       // The wrapper names its source workspace — reject early, before asking for a password.
-      const source = encryptedFile.subdomain?.trim().toLowerCase();
-      const target = targetSubdomain?.trim().toLowerCase();
-      if (!source || !target) {
+      const compare = compareBackupSubdomains(encryptedFile.subdomain, targetSubdomain);
+      if (compare === 'unidentified') {
         fail('backup.workspaceUnidentified');
         return;
       }
-      if (source !== target) {
+      if (compare === 'mismatch') {
         fail('backup.workspaceMismatch');
         return;
       }

@@ -43,6 +43,24 @@ vi.mock('../services/backgroundJobService.js', () => ({
   clearTenantBackgroundJobs: () => clearTenantBackgroundJobs(),
 }));
 
+const listAllTenantUsersByWorkspace = vi.fn(async (_subdomain?: string) => [] as unknown[]);
+vi.mock('../db/repositories/tenantUserRepository.js', () => ({
+  listAllTenantUsersByWorkspace: (subdomain: string) => listAllTenantUsersByWorkspace(subdomain),
+}));
+
+const acquireTenantRestoreLock = vi.fn(async () => true);
+vi.mock('../lib/restoreLock.js', () => ({
+  acquireTenantRestoreLock: () => acquireTenantRestoreLock(),
+  RestoreInProgressError: class RestoreInProgressError extends Error {
+    readonly statusCode = 409;
+    readonly type = 'conflict';
+    constructor() {
+      super('backup.restoreInProgress');
+      this.name = 'RestoreInProgressError';
+    }
+  },
+}));
+
 describe('dbSyncService collection persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -212,6 +230,61 @@ describe('dbSyncService collection persistence', () => {
 
     expect(dbDeleteObject).not.toHaveBeenCalled();
     expect(dbDeleteCollection).not.toHaveBeenCalled();
+  });
+
+  it('rejects a concurrent restore that cannot acquire the tenant lock before writing', async () => {
+    getRequestTenant.mockReturnValue('demo');
+    acquireTenantRestoreLock.mockResolvedValue(false);
+    const { synchronizeData } = await import('../services/dbSyncService.js');
+
+    await expect(
+      synchronizeData(
+        {
+          collections: { users: [{ id: 'u-1', role: 'admin' }], contacts: [{ id: 'c-1' }] },
+          objects: { branding: {} },
+        },
+        undefined,
+        true,
+      ),
+    ).rejects.toThrow('backup.restoreInProgress');
+
+    expect(acquireTenantRestoreLock).toHaveBeenCalledTimes(1);
+    // The lock check runs before any write, so nothing is persisted.
+    expect(dbSaveCollection).not.toHaveBeenCalled();
+    expect(dbSaveObject).not.toHaveBeenCalled();
+    expect(dbDeleteCollection).not.toHaveBeenCalled();
+    getRequestTenant.mockReset();
+    acquireTenantRestoreLock.mockResolvedValue(true);
+  });
+
+  it('rolls back a full restore that would leave only a soft-deleted admin', async () => {
+    getRequestTenant.mockReturnValue('demo');
+    dbSaveCollection.mockResolvedValue(undefined);
+    dbSaveObject.mockResolvedValue(undefined);
+    dbDeleteObject.mockResolvedValue(undefined);
+    dbListTenantCollectionLogicalKeys.mockResolvedValue([]);
+    dbListTenantObjectLogicalKeys.mockResolvedValue([]);
+    // Post-restore state: the only admin is soft-deleted, so the workspace would lock out.
+    listAllTenantUsersByWorkspace.mockResolvedValue([
+      { id: 'u-1', role: 'admin', deletedAt: '2026-06-20T00:00:00Z' },
+    ]);
+
+    const { synchronizeData } = await import('../services/dbSyncService.js');
+    await expect(
+      synchronizeData(
+        {
+          collections: { users: [{ id: 'u-1', role: 'admin' }] },
+          objects: {},
+        },
+        undefined,
+        true,
+      ),
+    ).rejects.toThrow('backup.missingAdminUser');
+
+    expect(listAllTenantUsersByWorkspace).toHaveBeenCalledWith('demo');
+    getRequestTenant.mockReset();
+    listAllTenantUsersByWorkspace.mockReset();
+    listAllTenantUsersByWorkspace.mockResolvedValue([]);
   });
 });
 

@@ -7,7 +7,7 @@ export const ENCRYPTED_BACKUP_FORMAT_ID = 'mms-encrypted-workspace-backup' as co
 
 export const ENCRYPTED_BACKUP_VERSION = 1;
 
-export const BACKUP_KDF_ITERATIONS = 310_000;
+const BACKUP_KDF_ITERATIONS = 310_000;
 
 /** Accepted PBKDF2 work factor range — floor keeps brute force costly, ceiling stops a DoS envelope. */
 export const BACKUP_KDF_MIN_ITERATIONS = 100_000;
@@ -32,7 +32,7 @@ export interface EncryptedWorkspaceBackupFile {
   ciphertext: string;
 }
 
-export const encryptedWorkspaceBackupFileSchema = z.object({
+const encryptedWorkspaceBackupFileSchema = z.object({
   format: z.literal(ENCRYPTED_BACKUP_FORMAT_ID),
   version: z.number().int().min(1).max(ENCRYPTED_BACKUP_VERSION),
   subdomain: z.string().nullable(),
@@ -92,7 +92,7 @@ function asArrayBuffer(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
 }
 
 /** Normalizes admin email + password into KDF input (never persisted). */
-export function normalizeBackupPrincipal(email: string, password: string): string {
+function normalizeBackupPrincipal(email: string, password: string): string {
   return `${email.trim().toLowerCase()}\0${password}`;
 }
 

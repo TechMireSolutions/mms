@@ -39,9 +39,6 @@ export const BACKUP_FORMAT_ID = 'mms-workspace-backup' as const;
 /** Current envelope schema version. */
 export const BACKUP_FORMAT_VERSION = 1;
 
-/** Minimum compatible envelope schema version this build can restore. */
-export const BACKUP_MIN_COMPATIBLE_VERSION = 1;
-
 /** Max upload size for restore file picker (bytes). */
 export const BACKUP_UPLOAD_MAX_BYTES = 50 * 1024 * 1024;
 
@@ -108,7 +105,7 @@ export interface WorkspaceBackupStats {
   entityBreakdown?: Record<string, number>;
 }
 
-export const workspaceBackupStatsSchema = z.object({
+const workspaceBackupStatsSchema = z.object({
   keyCount: z.number(),
   collectionCount: z.number(),
   objectCount: z.number(),

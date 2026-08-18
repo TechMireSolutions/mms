@@ -93,9 +93,12 @@ export async function exportTenantBackup(): Promise<string> {
 export async function importDatabase(jsonString: string): Promise<void> {
   try {
     const prefix = getStoragePrefix();
+    // Enforce workspace match at the API boundary so a foreign workspace's
+    // payload can never be restored into the current tenant, regardless of caller.
     const validated = await validateWorkspaceBackupJsonAsync(
       jsonString,
       prefix,
+      getCurrentSubdomain(),
     );
     if (!validated.ok) {
       throw new Error(validated.errorKey);

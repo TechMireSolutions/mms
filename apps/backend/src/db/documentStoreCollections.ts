@@ -86,7 +86,8 @@ export async function saveCollection(
       broadcastTenantUpdate(tenant, 'collection', name);
     }
   } catch (error) {
-    console.error(`Error saving collection "${name}":`, error);
+    // Log only a safe message — the raw error/row payload must not reach logs (PII).
+    console.error(`Error saving collection "${name}":`, error instanceof Error ? error.message : 'non-error');
     throw error;
   }
 }

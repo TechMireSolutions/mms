@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { getCollectionLabel } from '@/lib/reports/reportMetadata';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,6 +16,7 @@ export interface DashboardCustomizeWidgetsSectionProps {
   onDeleteWidget: (widgetId: string) => void;
   onToggleWidgetPin: (widgetId: string) => void;
   onOpenWidgetBuilder: (type: CustomWidget['widgetType'], widget?: CustomWidget | null) => void;
+  onReorderWidgets?: (reorderedWidgets: CustomWidget[]) => void;
 }
 
 export function DashboardCustomizeWidgetsSection({
@@ -25,8 +26,22 @@ export function DashboardCustomizeWidgetsSection({
   onDeleteWidget,
   onToggleWidgetPin,
   onOpenWidgetBuilder,
+  onReorderWidgets,
 }: DashboardCustomizeWidgetsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    if (!onReorderWidgets) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= customWidgets.length) return;
+
+    const nextWidgets = [...customWidgets];
+    const [removed] = nextWidgets.splice(index, 1);
+    nextWidgets.splice(targetIndex, 0, removed);
+
+    const reordered = nextWidgets.map((w, idx) => ({ ...w, sortOrder: idx }));
+    onReorderWidgets(reordered);
+  };
 
   return (
     <CustomizeSectionCard
@@ -58,7 +73,7 @@ export function DashboardCustomizeWidgetsSection({
       {customWidgets.length === 0 ? (
         <EmptyState title={t('dashboard.noWidgets')} compact icon={null} className="italic" />
       ) : (
-        customWidgets.map((widget) => (
+        customWidgets.map((widget, index) => (
           <CustomizeItemRow
             key={widget.id}
             id={`widget-pin-${widget.id}`}
@@ -68,6 +83,32 @@ export function DashboardCustomizeWidgetsSection({
             subtitle={getCollectionLabel(widget.collection, widget.collection, t)}
             actions={
               <>
+                {onReorderWidgets && (
+                  <div className="flex items-center gap-0.5">
+                    <Button
+                      onClick={() => handleMove(index, 'up')}
+                      disabled={index === 0}
+                      variant="ghost"
+                      size="icon"
+                      className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={t('dashboard.moveWidgetUp')}
+                      aria-label={t('dashboard.moveWidgetUp')}
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      onClick={() => handleMove(index, 'down')}
+                      disabled={index === customWidgets.length - 1}
+                      variant="ghost"
+                      size="icon"
+                      className="border border-border/60 hover:border-primary/30 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors shadow-none cursor-pointer rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={t('dashboard.moveWidgetDown')}
+                      aria-label={t('dashboard.moveWidgetDown')}
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
                 <Button
                   onClick={() => onEditWidget(widget)}
                   variant="ghost"

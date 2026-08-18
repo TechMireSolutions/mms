@@ -15,7 +15,7 @@ import { useBackupRestoreImport } from '@/tenant/features/settings/hooks/useBack
 
 import type { UseBackupRestoreOptions } from '@/tenant/features/settings/hooks/backupRestoreTypes';
 
-export type { UseBackupRestoreOptions, UseBackupRestoreResult } from '@/tenant/features/settings/hooks/backupRestoreTypes';
+export type { UseBackupRestoreOptions } from '@/tenant/features/settings/hooks/backupRestoreTypes';
 
 export function useBackupRestore({
   subdomain,

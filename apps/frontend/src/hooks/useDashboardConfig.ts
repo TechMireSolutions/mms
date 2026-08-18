@@ -113,6 +113,8 @@ export function useDashboardConfig() {
     disabledCardIds: prefs.disabledCardIds,
     customWidgets,
     gridMode: prefs.gridMode,
+    lowAttendanceThreshold: prefs.lowAttendanceThreshold,
+    urgentAttendanceThreshold: prefs.urgentAttendanceThreshold,
     enrollmentChartType: prefs.enrollmentChartType,
     enrollmentChartColor: prefs.enrollmentChartColor,
     enrollmentChartPeriod: prefs.enrollmentChartPeriod,

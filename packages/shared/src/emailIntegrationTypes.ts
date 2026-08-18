@@ -21,7 +21,7 @@ export const CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY = 'contact_google_sync_by_us
  * Object keys withheld from backup export and browser object reads.
  * Inbound sync strips these instead of rejecting the whole restore.
  */
-export const SERVER_ONLY_OBJECT_KEYS: readonly string[] = [
+const SERVER_ONLY_OBJECT_KEYS: readonly string[] = [
   EMAIL_INTEGRATION_SECRETS_KEY,
   USER_EXPORT_ARTIFACTS_OBJECT_KEY,
   CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY,
@@ -41,7 +41,7 @@ export function isServerOnlyObjectKey(key: string): boolean {
   return SERVER_ONLY_OBJECT_KEYS.includes(key);
 }
 
-export const EMAIL_PROVIDERS = [
+const EMAIL_PROVIDERS = [
   'gmail',
   'microsoft365',
   'outlook',

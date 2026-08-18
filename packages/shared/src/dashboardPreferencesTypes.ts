@@ -13,6 +13,8 @@ export const DASHBOARD_URGENT_ATTENDANCE_THRESHOLD = 60;
 export interface DashboardPreferences {
   disabledCardIds: string[];
   gridMode: "comfortable" | "compact";
+  lowAttendanceThreshold: number;
+  urgentAttendanceThreshold: number;
   enrollmentChartType: "area" | "bar" | "line";
   enrollmentChartColor: "emerald" | "blue" | "violet" | "amber" | "red";
   enrollmentChartPeriod: number;
@@ -46,6 +48,8 @@ export const HASANAT_CHART_COLOR_KEY = "db_chart_color_hasanat";
 export const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
   disabledCardIds: [],
   gridMode: "comfortable",
+  lowAttendanceThreshold: DASHBOARD_LOW_ATTENDANCE_THRESHOLD,
+  urgentAttendanceThreshold: DASHBOARD_URGENT_ATTENDANCE_THRESHOLD,
   enrollmentChartType: "area",
   enrollmentChartColor: "emerald",
   enrollmentChartPeriod: 10,
@@ -72,6 +76,8 @@ export const dashboardPreferencesPutBodySchema = z
   .object({
     disabledCardIds: z.array(z.string()).optional(),
     gridMode: z.enum(GRID_MODES).optional(),
+    lowAttendanceThreshold: z.number().min(1).max(100).optional(),
+    urgentAttendanceThreshold: z.number().min(1).max(100).optional(),
     enrollmentChartType: z.enum(ENROLLMENT_CHART_TYPES).optional(),
     enrollmentChartColor: z.enum(ENROLLMENT_COLORS).optional(),
     enrollmentChartPeriod: z.number().optional(),
@@ -89,6 +95,8 @@ export type DashboardPreferencesPutBody = z.infer<typeof dashboardPreferencesPut
 const DASHBOARD_PREFERENCE_KEYS = [
   "disabledCardIds",
   "gridMode",
+  "lowAttendanceThreshold",
+  "urgentAttendanceThreshold",
   "enrollmentChartType",
   "enrollmentChartColor",
   "enrollmentChartPeriod",
@@ -121,11 +129,29 @@ export function normalizeDashboardPreferences(
   }
   const src = partial as Record<string, unknown>;
 
+  const lowAttendanceThreshold =
+    typeof src.lowAttendanceThreshold === "number" &&
+    Number.isFinite(src.lowAttendanceThreshold) &&
+    src.lowAttendanceThreshold >= 1 &&
+    src.lowAttendanceThreshold <= 100
+      ? Math.round(src.lowAttendanceThreshold)
+      : defaults.lowAttendanceThreshold;
+
+  const urgentAttendanceThreshold =
+    typeof src.urgentAttendanceThreshold === "number" &&
+    Number.isFinite(src.urgentAttendanceThreshold) &&
+    src.urgentAttendanceThreshold >= 1 &&
+    src.urgentAttendanceThreshold <= 100
+      ? Math.round(src.urgentAttendanceThreshold)
+      : defaults.urgentAttendanceThreshold;
+
   return {
     disabledCardIds: isStringArray(src.disabledCardIds)
       ? src.disabledCardIds
       : defaults.disabledCardIds,
     gridMode: isOneOf(src.gridMode, GRID_MODES) ? src.gridMode : defaults.gridMode,
+    lowAttendanceThreshold,
+    urgentAttendanceThreshold,
     enrollmentChartType: isOneOf(src.enrollmentChartType, ENROLLMENT_CHART_TYPES)
       ? src.enrollmentChartType
       : defaults.enrollmentChartType,

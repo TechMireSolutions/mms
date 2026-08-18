@@ -20,9 +20,34 @@ const ICONS: Record<DashboardNotificationType, { icon: React.ElementType; bg: st
   attendance: { icon: AlertTriangle, bg: 'bg-warning/10', text: 'text-warning' },
 };
 
+const SESSION_STORAGE_KEY = 'mms_dashboard_dismissed_notifs';
+
+function getInitialDismissed(): Array<string | number> {
+  try {
+    const raw = typeof window !== 'undefined' ? window.sessionStorage?.getItem(SESSION_STORAGE_KEY) : null;
+    return raw ? (JSON.parse(raw) as Array<string | number>) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveDismissedToSession(ids: Array<string | number>): void {
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      if (ids.length === 0) {
+        window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      } else {
+        window.sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(ids));
+      }
+    }
+  } catch {
+    // Gracefully ignore storage quota / sandbox restrictions
+  }
+}
+
 export default function NotificationsPanel({ items }: NotificationsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
-  const [dismissed, setDismissed] = useState<Array<string | number>>([]);
+  const [dismissed, setDismissed] = useState<Array<string | number>>(getInitialDismissed);
 
   const dismissedSet = useMemo(() => new Set(dismissed), [dismissed]);
 
@@ -37,11 +62,16 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
   }, [items, dismissedSet]);
 
   const handleDismiss = useCallback((id: string | number) => {
-    setDismissed((prev) => [...prev, id]);
+    setDismissed((prev) => {
+      const next = [...prev, id];
+      saveDismissedToSession(next);
+      return next;
+    });
   }, []);
 
   const handleRestoreAll = useCallback(() => {
     setDismissed([]);
+    saveDismissedToSession([]);
   }, []);
 
   return (

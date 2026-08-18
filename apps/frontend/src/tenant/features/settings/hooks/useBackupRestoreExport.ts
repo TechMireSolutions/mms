@@ -12,6 +12,7 @@ import { verifyAdminBackupPassword } from '@/lib/backupAuth';
 import { triggerFileDownload } from '@/lib/download';
 import { notify } from '@/lib/notify';
 import type { useTranslation } from '@/hooks/useTranslation';
+import type { WorkspaceExportStats } from './backupRestoreTypes';
 
 type TranslateFn = ReturnType<typeof useTranslation>['t'];
 
@@ -32,11 +33,7 @@ export function useBackupRestoreExport({
 }: UseBackupRestoreExportOptions) {
   const [isCreating, setIsCreating] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [lastExportStats, setLastExportStats] = useState<{
-    collections: number;
-    objects: number;
-    size: string;
-  } | null>(null);
+  const [lastExportStats, setLastExportStats] = useState<WorkspaceExportStats | null>(null);
 
   const downloadSafetyBackup = useCallback(
     async (credentials: { adminEmail: string; password: string }): Promise<void> => {

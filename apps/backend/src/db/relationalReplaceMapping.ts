@@ -1,4 +1,6 @@
 export interface RelationalCollectionMapping {
+  /** Restore order: lower runs first (unmapped defaults to 100). FK-safe ordering. */
+  priority?: number;
   importPath: string;
   /** Repository helper that wipes and reinserts every workspace row (admin restore). */
   fnName: string;
@@ -10,79 +12,15 @@ export interface RelationalCollectionMapping {
 }
 
 /**
- * Maps REST-migrated collection logical keys to repository helpers.
- * Used by admin sync/restore (`mirrorRelationalReplace: true`) and backup snapshots.
- *
- * Restore order: lower priority runs first. Contacts must precede users because
- * `tenant_users.contact_id` is an FK with ON DELETE SET NULL — replacing contacts
- * after users would null out restored contact links.
+ * Stable collection restore order for FK-safe admin backup restore.
+ * Lower priority runs first; unmapped collections default to 100. Contacts must precede
+ * users because `tenant_users.contact_id` is an FK with ON DELETE SET NULL — replacing
+ * contacts after users would null out restored contact links.
  */
-export const RELATIONAL_RESTORE_PRIORITY: Record<string, number> = {
-  contacts: 10,
-  students: 15,
-  contact_lookups: 25,
-  contact_field_configs: 26,
-  contact_module_preferences: 27,
-  student_lookups: 28,
-  student_field_configs: 29,
-  student_module_preferences: 30,
-  teacher_lookups: 32,
-  teacher_field_configs: 33,
-  teacher_module_preferences: 34,
-  session_lookups: 35,
-  session_field_configs: 35,
-  session_module_preferences: 35,
-  attendance_lookups: 36,
-  attendance_field_configs: 36,
-  attendance_module_preferences: 36,
-  finance_field_configs: 36,
-  finance_module_preferences: 37,
-  hasanat_field_configs: 39,
-  hasanat_module_preferences: 40,
-  dashboard_preferences: 41,
-  dashboard_widgets: 42,
-  accounting_field_configs: 43,
-  accounting_module_preferences: 44,
-  enrollment_field_configs: 45,
-  enrollment_module_preferences: 46,
-  user_field_configs: 47,
-  user_module_preferences: 48,
-  examinations_field_configs: 49,
-  examinations_module_preferences: 50,
-  question_bank_field_configs: 51,
-  question_bank_module_preferences: 52,
-  users: 900,
-  // Per-user column prefs restore after `users` because the hasanat
-  // distribution/redemption tables have `user_id → tenant_users.id` FKs.
-  // The no-FK column-prefs tables join them here for a single consistent group.
-  contact_user_column_prefs: 905,
-  student_user_column_prefs: 906,
-  teacher_user_column_prefs: 907,
-  session_user_column_prefs: 908,
-  attendance_user_column_prefs: 909,
-  enrollment_user_column_prefs: 910,
-  user_user_column_prefs: 911,
-  hasanat_distribution_user_column_prefs: 912,
-  hasanat_redemption_user_column_prefs: 913,
-  finance_user_column_prefs: 914,
-  finance_payment_user_column_prefs: 915,
-  accounting_account_user_column_prefs: 916,
-  accounting_journal_user_column_prefs: 917,
-  examination_exam_user_column_prefs: 918,
-  examination_results_user_column_prefs: 919,
-  question_bank_user_column_prefs: 920,
-  obligations_user_column_prefs: 921,
-  messaging_recipients_user_column_prefs: 922,
-  messaging_history_user_column_prefs: 923,
-  messaging_templates_user_column_prefs: 924,
-  audit_log: 950,
-};
-
-/** Stable collection restore order for FK-safe admin backup restore. */
 export function sortCollectionNamesForRestore(names: string[]): string[] {
   return [...names].sort((a, b) => {
-    const priorityA = RELATIONAL_RESTORE_PRIORITY[a] ?? 100;
-    const priorityB = RELATIONAL_RESTORE_PRIORITY[b] ?? 100;
+    const priorityA = RELATIONAL_REPLACE_MAPPING[a]?.priority ?? 100;
+    const priorityB = RELATIONAL_REPLACE_MAPPING[b]?.priority ?? 100;
     if (priorityA !== priorityB) return priorityA - priorityB;
     return a.localeCompare(b);
   });
@@ -119,16 +57,19 @@ export function withCompleteRelationalRestoreCollections(
 
 export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapping> = {
   users: {
+    priority: 900,
     importPath: './repositories/tenantUserRepository.js',
     fnName: 'replaceTenantUsersForWorkspace',
     snapshotFnName: 'listAllTenantUsersByWorkspace',
   },
   contacts: {
+    priority: 10,
     importPath: './repositories/contactRepository.js',
     fnName: 'replaceContactsForWorkspace',
     snapshotFnName: 'listContactsByWorkspace',
   },
   students: {
+    priority: 15,
     importPath: './repositories/studentRepository.js',
     fnName: 'replaceStudentsForWorkspace',
     snapshotFnName: 'listStudentsByWorkspace',
@@ -144,31 +85,37 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listSessionsByWorkspace',
   },
   attendance_lookups: {
+    priority: 36,
     importPath: './repositories/attendanceLookupsRepository.js',
     fnName: 'replaceAttendanceLookupsForWorkspace',
     snapshotFnName: 'listAllAttendanceLookupsByWorkspace',
   },
   attendance_field_configs: {
+    priority: 36,
     importPath: './repositories/attendanceFieldConfigRepository.js',
     fnName: 'replaceAttendanceFieldConfigsForWorkspace',
     snapshotFnName: 'listAllAttendanceFieldConfigsByWorkspace',
   },
   accounting_field_configs: {
+    priority: 43,
     importPath: './repositories/accountingFieldConfigRepository.js',
     fnName: 'replaceAccountingFieldConfigsForWorkspace',
     snapshotFnName: 'listAllAccountingFieldConfigsByWorkspace',
   },
   accounting_module_preferences: {
+    priority: 44,
     importPath: './repositories/accountingModulePreferencesRepository.js',
     fnName: 'replaceAccountingModulePreferencesForWorkspace',
     snapshotFnName: 'listAllAccountingModulePreferencesByWorkspace',
   },
   attendance_module_preferences: {
+    priority: 36,
     importPath: './repositories/attendanceModulePreferencesRepository.js',
     fnName: 'replaceAttendanceModulePreferencesForWorkspace',
     snapshotFnName: 'listAllAttendanceModulePreferencesByWorkspace',
   },
   attendance_user_column_prefs: {
+    priority: 909,
     importPath: './repositories/attendanceUserColumnPrefsRepository.js',
     fnName: 'replaceAttendanceUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllAttendanceUserColumnPrefsByWorkspace',
@@ -224,21 +171,25 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listPaymentsByWorkspace',
   },
   finance_field_configs: {
+    priority: 36,
     importPath: './repositories/financeFieldConfigRepository.js',
     fnName: 'replaceFinanceFieldConfigsForWorkspace',
     snapshotFnName: 'listAllFinanceFieldConfigsByWorkspace',
   },
   finance_module_preferences: {
+    priority: 37,
     importPath: './repositories/financeModulePreferencesRepository.js',
     fnName: 'replaceFinanceModulePreferencesForWorkspace',
     snapshotFnName: 'listAllFinanceModulePreferencesByWorkspace',
   },
   finance_user_column_prefs: {
+    priority: 914,
     importPath: './repositories/financeUserColumnPrefsRepository.js',
     fnName: 'replaceFinanceUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllFinanceUserColumnPrefsByWorkspace',
   },
   finance_payment_user_column_prefs: {
+    priority: 915,
     importPath: './repositories/financePaymentUserColumnPrefsRepository.js',
     fnName: 'replaceFinancePaymentUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllFinancePaymentUserColumnPrefsByWorkspace',
@@ -254,21 +205,25 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listExamResultsByWorkspace',
   },
   examinations_field_configs: {
+    priority: 49,
     importPath: './repositories/examinationFieldConfigRepository.js',
     fnName: 'replaceExaminationFieldConfigsForWorkspace',
     snapshotFnName: 'listAllExaminationFieldConfigsByWorkspace',
   },
   examinations_module_preferences: {
+    priority: 50,
     importPath: './repositories/examinationModulePreferencesRepository.js',
     fnName: 'replaceExaminationModulePreferencesForWorkspace',
     snapshotFnName: 'listAllExaminationModulePreferencesByWorkspace',
   },
   examination_exam_user_column_prefs: {
+    priority: 918,
     importPath: './repositories/examinationExamUserColumnPrefsRepository.js',
     fnName: 'replaceExaminationExamUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllExaminationExamUserColumnPrefsByWorkspace',
   },
   examination_results_user_column_prefs: {
+    priority: 919,
     importPath: './repositories/examinationResultsUserColumnPrefsRepository.js',
     fnName: 'replaceExaminationResultsUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllExaminationResultsUserColumnPrefsByWorkspace',
@@ -294,21 +249,25 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listRedemptionsByWorkspace',
   },
   hasanat_field_configs: {
+    priority: 39,
     importPath: './repositories/hasanatFieldConfigRepository.js',
     fnName: 'replaceHasanatFieldConfigsForWorkspace',
     snapshotFnName: 'listAllHasanatFieldConfigsByWorkspace',
   },
   hasanat_module_preferences: {
+    priority: 40,
     importPath: './repositories/hasanatModulePreferencesRepository.js',
     fnName: 'replaceHasanatModulePreferencesForWorkspace',
     snapshotFnName: 'listAllHasanatModulePreferencesByWorkspace',
   },
   hasanat_distribution_user_column_prefs: {
+    priority: 912,
     importPath: './repositories/hasanatDistributionUserColumnPrefsRepository.js',
     fnName: 'replaceHasanatDistributionUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllHasanatDistributionUserColumnPrefsByWorkspace',
   },
   hasanat_redemption_user_column_prefs: {
+    priority: 913,
     importPath: './repositories/hasanatRedemptionUserColumnPrefsRepository.js',
     fnName: 'replaceHasanatRedemptionUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllHasanatRedemptionUserColumnPrefsByWorkspace',
@@ -329,11 +288,13 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listFiscalYearsByWorkspace',
   },
   accounting_account_user_column_prefs: {
+    priority: 916,
     importPath: './repositories/accountingAccountUserColumnPrefsRepository.js',
     fnName: 'replaceAccountingAccountUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllAccountingAccountUserColumnPrefsByWorkspace',
   },
   accounting_journal_user_column_prefs: {
+    priority: 917,
     importPath: './repositories/accountingJournalUserColumnPrefsRepository.js',
     fnName: 'replaceAccountingJournalUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllAccountingJournalUserColumnPrefsByWorkspace',
@@ -354,36 +315,43 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listResultsByWorkspace',
   },
   question_bank_field_configs: {
+    priority: 51,
     importPath: './repositories/questionBankFieldConfigRepository.js',
     fnName: 'replaceQuestionBankFieldConfigsForWorkspace',
     snapshotFnName: 'listAllQuestionBankFieldConfigsByWorkspace',
   },
   question_bank_module_preferences: {
+    priority: 52,
     importPath: './repositories/questionBankModulePreferencesRepository.js',
     fnName: 'replaceQuestionBankModulePreferencesForWorkspace',
     snapshotFnName: 'listAllQuestionBankModulePreferencesByWorkspace',
   },
   question_bank_user_column_prefs: {
+    priority: 920,
     importPath: './repositories/questionBankUserColumnPrefsRepository.js',
     fnName: 'replaceQuestionBankUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllQuestionBankUserColumnPrefsByWorkspace',
   },
   obligations_user_column_prefs: {
+    priority: 921,
     importPath: './repositories/obligationsUserColumnPrefsRepository.js',
     fnName: 'replaceObligationsUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllObligationsUserColumnPrefsByWorkspace',
   },
   messaging_recipients_user_column_prefs: {
+    priority: 922,
     importPath: './repositories/messagingRecipientsUserColumnPrefsRepository.js',
     fnName: 'replaceMessagingRecipientsUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllMessagingRecipientsUserColumnPrefsByWorkspace',
   },
   messaging_history_user_column_prefs: {
+    priority: 923,
     importPath: './repositories/messagingHistoryUserColumnPrefsRepository.js',
     fnName: 'replaceMessagingHistoryUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllMessagingHistoryUserColumnPrefsByWorkspace',
   },
   messaging_templates_user_column_prefs: {
+    priority: 924,
     importPath: './repositories/messagingTemplatesUserColumnPrefsRepository.js',
     fnName: 'replaceMessagingTemplatesUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllMessagingTemplatesUserColumnPrefsByWorkspace',
@@ -404,111 +372,133 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listMessageLogsByWorkspace',
   },
   contact_lookups: {
+    priority: 25,
     importPath: './repositories/contactLookupsRepository.js',
     fnName: 'replaceContactLookupsForWorkspace',
     snapshotFnName: 'listAllContactLookupsByWorkspace',
   },
   student_lookups: {
+    priority: 28,
     importPath: './repositories/studentLookupsRepository.js',
     fnName: 'replaceStudentLookupsForWorkspace',
     snapshotFnName: 'listAllStudentLookupsByWorkspace',
   },
   contact_field_configs: {
+    priority: 26,
     importPath: './repositories/contactFieldConfigRepository.js',
     fnName: 'replaceContactFieldConfigsForWorkspace',
     snapshotFnName: 'listAllContactFieldConfigsByWorkspace',
   },
   contact_module_preferences: {
+    priority: 27,
     importPath: './repositories/contactModulePreferencesRepository.js',
     fnName: 'replaceContactModulePreferencesForWorkspace',
     snapshotFnName: 'listAllContactModulePreferencesByWorkspace',
   },
   contact_user_column_prefs: {
+    priority: 905,
     importPath: './repositories/contactUserColumnPrefsRepository.js',
     fnName: 'replaceContactUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllContactUserColumnPrefsByWorkspace',
   },
   student_field_configs: {
+    priority: 29,
     importPath: './repositories/studentFieldConfigRepository.js',
     fnName: 'replaceStudentFieldConfigsForWorkspace',
     snapshotFnName: 'listAllStudentFieldConfigsByWorkspace',
   },
   student_module_preferences: {
+    priority: 30,
     importPath: './repositories/studentModulePreferencesRepository.js',
     fnName: 'replaceStudentModulePreferencesForWorkspace',
     snapshotFnName: 'listAllStudentModulePreferencesByWorkspace',
   },
   student_user_column_prefs: {
+    priority: 906,
     importPath: './repositories/studentUserColumnPrefsRepository.js',
     fnName: 'replaceStudentUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllStudentUserColumnPrefsByWorkspace',
   },
   teacher_lookups: {
+    priority: 32,
     importPath: './repositories/teacherLookupsRepository.js',
     fnName: 'replaceTeacherLookupsForWorkspace',
     snapshotFnName: 'listAllTeacherLookupsByWorkspace',
   },
   teacher_field_configs: {
+    priority: 33,
     importPath: './repositories/teacherFieldConfigRepository.js',
     fnName: 'replaceTeacherFieldConfigsForWorkspace',
     snapshotFnName: 'listAllTeacherFieldConfigsByWorkspace',
   },
   teacher_module_preferences: {
+    priority: 34,
     importPath: './repositories/teacherModulePreferencesRepository.js',
     fnName: 'replaceTeacherModulePreferencesForWorkspace',
     snapshotFnName: 'listAllTeacherModulePreferencesByWorkspace',
   },
   teacher_user_column_prefs: {
+    priority: 907,
     importPath: './repositories/teacherUserColumnPrefsRepository.js',
     fnName: 'replaceTeacherUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllTeacherUserColumnPrefsByWorkspace',
   },
   session_lookups: {
+    priority: 35,
     importPath: './repositories/sessionLookupsRepository.js',
     fnName: 'replaceSessionLookupsForWorkspace',
     snapshotFnName: 'listAllSessionLookupsByWorkspace',
   },
   session_field_configs: {
+    priority: 35,
     importPath: './repositories/sessionFieldConfigRepository.js',
     fnName: 'replaceSessionFieldConfigsForWorkspace',
     snapshotFnName: 'listAllSessionFieldConfigsByWorkspace',
   },
   session_module_preferences: {
+    priority: 35,
     importPath: './repositories/sessionModulePreferencesRepository.js',
     fnName: 'replaceSessionModulePreferencesForWorkspace',
     snapshotFnName: 'listAllSessionModulePreferencesByWorkspace',
   },
   session_user_column_prefs: {
+    priority: 908,
     importPath: './repositories/sessionUserColumnPrefsRepository.js',
     fnName: 'replaceSessionUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllSessionUserColumnPrefsByWorkspace',
   },
   enrollment_field_configs: {
+    priority: 45,
     importPath: './repositories/enrollmentFieldConfigRepository.js',
     fnName: 'replaceEnrollmentFieldConfigsForWorkspace',
     snapshotFnName: 'listAllEnrollmentFieldConfigsByWorkspace',
   },
   enrollment_module_preferences: {
+    priority: 46,
     importPath: './repositories/enrollmentModulePreferencesRepository.js',
     fnName: 'replaceEnrollmentModulePreferencesForWorkspace',
     snapshotFnName: 'listAllEnrollmentModulePreferencesByWorkspace',
   },
   enrollment_user_column_prefs: {
+    priority: 910,
     importPath: './repositories/enrollmentUserColumnPrefsRepository.js',
     fnName: 'replaceEnrollmentUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllEnrollmentUserColumnPrefsByWorkspace',
   },
   user_field_configs: {
+    priority: 47,
     importPath: './repositories/userFieldConfigRepository.js',
     fnName: 'replaceUserFieldConfigsForWorkspace',
     snapshotFnName: 'listAllUserFieldConfigsByWorkspace',
   },
   user_module_preferences: {
+    priority: 48,
     importPath: './repositories/userModulePreferencesRepository.js',
     fnName: 'replaceUserModulePreferencesForWorkspace',
     snapshotFnName: 'listAllUserModulePreferencesByWorkspace',
   },
   user_user_column_prefs: {
+    priority: 911,
     importPath: './repositories/userUserColumnPrefsRepository.js',
     fnName: 'replaceUserUserColumnPrefsForWorkspace',
     snapshotFnName: 'listAllUserUserColumnPrefsByWorkspace',
@@ -519,16 +509,19 @@ export const RELATIONAL_REPLACE_MAPPING: Record<string, RelationalCollectionMapp
     snapshotFnName: 'listAllSavedReportsByWorkspace',
   },
   dashboard_preferences: {
+    priority: 41,
     importPath: './repositories/dashboardPreferencesRepository.js',
     fnName: 'replaceDashboardPreferencesForWorkspace',
     snapshotFnName: 'listAllDashboardPreferencesByWorkspace',
   },
   dashboard_widgets: {
+    priority: 42,
     importPath: './repositories/dashboardWidgetsRepository.js',
     fnName: 'replaceDashboardWidgetsForWorkspace',
     snapshotFnName: 'listAllDashboardWidgetsByWorkspace',
   },
   audit_log: {
+    priority: 950,
     importPath: './repositories/logsRepository.js',
     fnName: 'replaceAuditLogEntriesForWorkspace',
   },
