@@ -3,20 +3,26 @@ import { DASHBOARD_WIDGETS_KEY } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 import { getDefaultCustomWidgets, withDefaultI18nKeys } from "./widgetDefaultSeeds.js";
 
+/** Pure union of all seeded default widgets across categories (no localStorage I/O). */
+export function buildDefaultCustomWidgets(): CustomWidget[] {
+  return [
+    ...getDefaultCustomWidgets("contacts"),
+    ...getDefaultCustomWidgets("students"),
+    ...getDefaultCustomWidgets("financial"),
+    ...getDefaultCustomWidgets("hasanat"),
+    ...getDefaultCustomWidgets("sessions"),
+  ].map(withDefaultI18nKeys);
+}
+
 /**
  * Loads, merges, and initializes the custom widgets database in local storage.
- * Synchronizes new defaults dynamically.
+ * Synchronizes new defaults dynamically. Used only for the one-time local→server
+ * seed migration in `useDashboardConfig`; server-authoritative Query is the primary path.
  */
 export function getOrInitializeCustomWidgets(): CustomWidget[] {
   try {
     const saved = getObject<CustomWidget[] | null>(DASHBOARD_WIDGETS_KEY, null);
-    const defaults = [
-      ...getDefaultCustomWidgets("contacts"),
-      ...getDefaultCustomWidgets("students"),
-      ...getDefaultCustomWidgets("financial"),
-      ...getDefaultCustomWidgets("hasanat"),
-      ...getDefaultCustomWidgets("sessions"),
-    ].map(withDefaultI18nKeys);
+    const defaults = buildDefaultCustomWidgets();
     if (!saved) {
       saveObject(DASHBOARD_WIDGETS_KEY, defaults);
       return defaults;

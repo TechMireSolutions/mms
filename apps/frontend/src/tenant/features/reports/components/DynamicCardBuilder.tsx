@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import { WidgetBuilder, CustomWidget } from "@/tenant/features/reports/components/PinnedWidgets";
 import { CustomCard } from "@/tenant/features/reports/components/reportMetadata";
 import { getObject, saveObject } from "@/lib/db";
+import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 
 interface DynamicCardBuilderProps {
   initialCollection?: CustomCard["collection"];
@@ -44,6 +45,8 @@ export default function DynamicCardBuilder({
     };
   }, [category, editCardConfig]);
 
+  const { saveWidget } = useDashboardConfig();
+
   const handleSaveWidget = useCallback((savedWidget: CustomWidget) => {
     // Convert CustomWidget to CustomCard
     const newCard: CustomCard = {
@@ -74,22 +77,17 @@ export default function DynamicCardBuilder({
       }
       saveObject(`kpi_custom_cards_${category}`, updatedCards);
     } else {
-      // Save directly to the unified kpi_custom_widgets local storage
-      const existingWidgets = getObject<CustomWidget[]>("kpi_custom_widgets", []);
-      let updatedWidgets: CustomWidget[];
-      if (editCardConfig) {
-        updatedWidgets = existingWidgets.map((widget: CustomWidget) => widget.id === editCardConfig.id ? savedWidget : widget);
-      } else {
-        updatedWidgets = [...existingWidgets, savedWidget];
-      }
-      saveObject("kpi_custom_widgets", updatedWidgets);
+      // Persist to the server-authoritative dashboard widgets store (upsert affected widget).
+      saveWidget(savedWidget);
     }
 
     if (onCancelEdit) {
       onCancelEdit();
     }
-    window.dispatchEvent(new Event("local-database-update"));
-  }, [category, editCardConfig, mode, onCancelEdit]);
+    if (mode === "kpi") {
+      window.dispatchEvent(new Event("local-database-update"));
+    }
+  }, [category, editCardConfig, mode, onCancelEdit, saveWidget]);
 
   const handleCancelEdit = useCallback(() => {
     onCancelEdit?.();

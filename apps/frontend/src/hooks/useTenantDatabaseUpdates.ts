@@ -100,11 +100,7 @@ export function useTenantDatabaseUpdates(): void {
           invalidateObligationsQueries(queryClient);
           return;
         }
-        if (
-          message.key === 'dashboard' ||
-          message.key === 'kpi_custom_widgets' ||
-          message.key === 'mms_dashboard_preferences'
-        ) {
+        if (message.key === 'dashboard') {
           invalidateDashboardQueries(queryClient);
           return;
         }

@@ -5,7 +5,6 @@ import {
   createFilterRule,
   deleteFilterRule,
   getDefaultCollectionField,
-  persistDashboardWidgets,
   toggleVisualizerWidgetPin,
   updateFilterRules,
 } from '@/tenant/features/reports/components/dynamicChartVisualizerPin';
@@ -30,7 +29,7 @@ interface BuildVisualizerHandlersOptions {
   filters: FilterRule[];
   setFilters: (filters: FilterRule[]) => void;
   dashboardWidgets: CustomWidget[];
-  setDashboardWidgets: (widgets: CustomWidget[]) => void;
+  persistWidgets: (widgets: CustomWidget[]) => void;
   processedData: AggregatedItem[];
   pdfFormat: string;
   pdfOrientation: 'p' | 'l';
@@ -52,7 +51,7 @@ export function buildDynamicChartVisualizerHandlers({
   filters,
   setFilters,
   dashboardWidgets,
-  setDashboardWidgets,
+  persistWidgets,
   processedData,
   pdfFormat,
   pdfOrientation,
@@ -71,8 +70,7 @@ export function buildDynamicChartVisualizerHandlers({
       targetField,
       activePalette,
     });
-    setDashboardWidgets(nextWidgets);
-    persistDashboardWidgets(nextWidgets);
+    persistWidgets(nextWidgets);
   };
 
   const handleAddFilter = () => {

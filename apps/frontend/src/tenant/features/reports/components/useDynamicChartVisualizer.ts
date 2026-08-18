@@ -7,8 +7,8 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
-import { getObject } from '@/lib/db';
 import { useReportCollectionRows } from '@/lib/reports/useReportCollections';
+import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { METADATA_FIELDS, type VisualizerConfig } from '@/tenant/features/reports/components/reportMetadata';
@@ -74,9 +74,9 @@ export function useDynamicChartVisualizer({
   const [pdfFormat, setPdfFormat] = useState<string>('a4');
   const [showPdfSettings, setShowPdfSettings] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterRule[]>([]);
-  const [dashboardWidgets, setDashboardWidgets] = useState<CustomWidget[]>(() =>
-    getObject<CustomWidget[]>('kpi_custom_widgets', []),
-  );
+  const { customWidgets: dashboardWidgets, updateCustomWidgets } = useDashboardConfig();
+  // The visualizer narrows to chart-type widgets; the dashboard store holds the canonical set.
+  const visualizerWidgets = dashboardWidgets as CustomWidget[];
 
   const { containerWidth, axisFontSize, legendFontSize, tickGap } = useDynamicChartVisualizerContainer(chartRef);
   const activeMeta = METADATA_CONFIGS[collectionKey];
@@ -193,8 +193,8 @@ export function useDynamicChartVisualizer({
   ]);
 
   const isPinned = useMemo(
-    () => isVisualizerWidgetPinned(dashboardWidgets, collectionKey, xAxisField, operation, chartType),
-    [dashboardWidgets, collectionKey, xAxisField, operation, chartType],
+    () => isVisualizerWidgetPinned(visualizerWidgets, collectionKey, xAxisField, operation, chartType),
+    [visualizerWidgets, collectionKey, xAxisField, operation, chartType],
   );
 
   const {
@@ -218,8 +218,8 @@ export function useDynamicChartVisualizer({
     activeMeta,
     filters,
     setFilters,
-    dashboardWidgets,
-    setDashboardWidgets,
+    dashboardWidgets: visualizerWidgets,
+    persistWidgets: updateCustomWidgets,
     processedData,
     pdfFormat,
     pdfOrientation,

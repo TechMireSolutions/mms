@@ -1,4 +1,3 @@
-import { saveObject } from '@/lib/db';
 import type { ChartOperation, ChartType, CustomWidget, FilterRule } from './dynamicChartVisualizerTypes';
 import { resolveWidgetPinColor } from './dynamicChartVisualizerHelpers';
 import type { CollectionMeta } from './dynamicChartVisualizerTypes';
@@ -82,11 +81,6 @@ export function toggleVisualizerWidgetPin(input: {
   }
 
   return nextWidgets;
-}
-
-export function persistDashboardWidgets(widgets: CustomWidget[]): void {
-  saveObject('kpi_custom_widgets', widgets);
-  window.dispatchEvent(new Event('local-database-update'));
 }
 
 export function createFilterRule(defaultField: string): FilterRule {

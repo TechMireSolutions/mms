@@ -33,7 +33,9 @@ export function usePinnedWidgetsController(category: string) {
     disabledCardIds,
     toggleCardVisibility,
     customWidgets: widgets,
-    updateCustomWidgets,
+    deleteWidget,
+    toggleWidgetPin,
+    saveWidget,
   } = useDashboardConfig();
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -81,15 +83,11 @@ export function usePinnedWidgetsController(category: string) {
   };
 
   const handleDeleteWidget = (id: string) => {
-    updateCustomWidgets(widgets.filter((widget) => widget.id !== id));
+    deleteWidget(id);
   };
 
   const handleTogglePin = (id: string) => {
-    updateCustomWidgets(
-      widgets.map((widget) =>
-        widget.id === id ? { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard } : widget
-      )
-    );
+    toggleWidgetPin(id);
   };
 
   const handleEditClick = (widget: CustomWidget) => {
@@ -117,11 +115,7 @@ export function usePinnedWidgetsController(category: string) {
   };
 
   const handleSaveWidget = (savedWidget: CustomWidget) => {
-    const widgetAlreadyExists = widgets.some((widget) => widget.id === savedWidget.id);
-    const nextWidgets = widgetAlreadyExists
-      ? widgets.map((widget) => widget.id === savedWidget.id ? savedWidget : widget)
-      : [...widgets, savedWidget];
-    updateCustomWidgets(nextWidgets);
+    saveWidget(savedWidget);
     setIsBuilderOpen(false);
     setEditingWidgetId(null);
   };

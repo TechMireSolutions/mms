@@ -1,10 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { DASHBOARD_MODULE_MANIFEST, DEFAULT_DASHBOARD_PREFERENCES, type DashboardPreferences } from '@mms/shared';
+import { getOrInitializeCustomWidgets } from '@/lib/reports/widgetDefaults';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
-import {
-  DEFAULT_DASHBOARD_PREFERENCES,
-  type DashboardPreferences,
-  type DashboardWidgetDto,
-} from '@mms/shared';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import {
   useDashboardPreferencesQuery,
   useDashboardPreferencesMutation,
@@ -13,8 +11,16 @@ import {
   useDashboardWidgetDeleteMutation,
 } from '@/tenant/hooks/collections/dashboard';
 
-export function loadDashboardPreferences(): DashboardPreferences {
-  return DEFAULT_DASHBOARD_PREFERENCES;
+/**
+ * One-time local→server seed: reads the legacy browser `kpi_custom_widgets` store once
+ * (lazily, cached) so existing pin customizations migrate to the server on first load,
+ * and brand-new workspaces seed the server with the default widget set. Server is SSOT
+ * after migration; localStorage is no longer read for display once the server has rows.
+ */
+let cachedMigrationSeed: CustomWidget[] | null = null;
+function getMigrationSeedWidgets(): CustomWidget[] {
+  if (cachedMigrationSeed === null) cachedMigrationSeed = getOrInitializeCustomWidgets();
+  return cachedMigrationSeed;
 }
 
 export function useDashboardConfig() {
@@ -23,13 +29,32 @@ export function useDashboardConfig() {
   const prefsMutation = useDashboardPreferencesMutation();
   const widgetsMutation = useDashboardWidgetsMutation();
   const widgetDeleteMutation = useDashboardWidgetDeleteMutation();
+  const { can } = usePermissions();
+  const canWriteDashboard = can(DASHBOARD_MODULE_MANIFEST.permissions.setupWrite);
 
-  const prefs = prefsQuery.data ?? DEFAULT_DASHBOARD_PREFERENCES;
-  const customWidgets: CustomWidget[] = widgetsQuery.data ?? [];
+  const prefs: DashboardPreferences = prefsQuery.data ?? DEFAULT_DASHBOARD_PREFERENCES;
+  const serverWidgets = widgetsQuery.data ?? [];
+  const customWidgets: CustomWidget[] =
+    serverWidgets.length > 0 ? serverWidgets : getMigrationSeedWidgets();
 
+  // One-time local→server widget seed. Runs only when the server query has settled
+  // empty AND the user may write — viewers keep the local fallback (read-only display).
+  const migratedRef = useRef(false);
+  useEffect(() => {
+    if (migratedRef.current) return;
+    if (widgetsQuery.status !== 'success') return;
+    if (serverWidgets.length > 0 || !canWriteDashboard) {
+      migratedRef.current = true;
+      return;
+    }
+    migratedRef.current = true;
+    widgetsMutation.mutate(getMigrationSeedWidgets());
+  }, [widgetsQuery.status, serverWidgets.length, canWriteDashboard, widgetsMutation]);
+
+  /** Full-array upsert (visualizer pin set + bulk flows). Upsert-only — never wipes absent rows. */
   const updateCustomWidgets = useCallback(
     (customWidgetsDraft: CustomWidget[]) => {
-      widgetsMutation.mutate(customWidgetsDraft as DashboardWidgetDto[]);
+      widgetsMutation.mutate(customWidgetsDraft);
     },
     [widgetsMutation],
   );
@@ -52,42 +77,38 @@ export function useDashboardConfig() {
     [prefs.disabledCardIds, updatePref],
   );
 
+  /** Upsert only the affected widget (inserts new, updates existing; leaves others untouched). */
+  const saveWidget = useCallback(
+    (savedWidget: CustomWidget) => {
+      widgetsMutation.mutate([savedWidget]);
+    },
+    [widgetsMutation],
+  );
+
   const toggleWidgetPin = useCallback(
     (widgetId: string) => {
-      const updated = customWidgets.map((widget) =>
-        widget.id === widgetId ? { ...widget, isPinnedToDashboard: !widget.isPinnedToDashboard } : widget,
-      );
-      updateCustomWidgets(updated);
+      const target = customWidgets.find((widget) => widget.id === widgetId);
+      if (!target) return;
+      widgetsMutation.mutate([{ ...target, isPinnedToDashboard: !target.isPinnedToDashboard }]);
     },
-    [customWidgets, updateCustomWidgets],
+    [customWidgets, widgetsMutation],
   );
 
   const unpinWidget = useCallback(
     (widgetId: string) => {
-      const updated = customWidgets.map((widget) =>
-        widget.id === widgetId ? { ...widget, isPinnedToDashboard: false } : widget,
-      );
-      updateCustomWidgets(updated);
+      const target = customWidgets.find((widget) => widget.id === widgetId);
+      if (!target) return;
+      widgetsMutation.mutate([{ ...target, isPinnedToDashboard: false }]);
     },
-    [customWidgets, updateCustomWidgets],
+    [customWidgets, widgetsMutation],
   );
 
+  /** Hard delete via `DELETE /:id` (never bulk-wipe PUT). */
   const deleteWidget = useCallback(
     (widgetId: string) => {
       widgetDeleteMutation.mutate(widgetId);
     },
     [widgetDeleteMutation],
-  );
-
-  const saveWidget = useCallback(
-    (savedWidget: CustomWidget) => {
-      const exists = customWidgets.some((widget) => widget.id === savedWidget.id);
-      const updated = exists
-        ? customWidgets.map((widget) => (widget.id === savedWidget.id ? savedWidget : widget))
-        : [...customWidgets, savedWidget];
-      updateCustomWidgets(updated);
-    },
-    [customWidgets, updateCustomWidgets],
   );
 
   return {

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { getObject, saveObject } from '@/lib/db';
 import {
@@ -31,6 +31,7 @@ interface DashboardWidgetsProps {
 
 /**
  * Pinned Custom Dashboard Widgets Section. Displays widgets with size controls.
+ * Widgets + handlers are supplied by the caller (DashboardPage) from `useDashboardConfig`.
  */
 export function DashboardWidgets({
   widgets,
@@ -41,34 +42,9 @@ export function DashboardWidgets({
 }: DashboardWidgetsProps = {}): React.JSX.Element | null {
   const { t } = useTranslation();
   const { gridMode, updatePref } = useDashboardConfig();
-  const [localWidgets, setLocalWidgets] = useState<CustomWidget[]>([]);
-
   const [drilldownWidget, setDrilldownWidget] = useState<CustomWidget | null>(null);
 
-  useEffect(() => {
-    const handleUpdate = () => {
-      if (widgets) return;
-      try {
-        const savedWidgets = getObject<CustomWidget[] | null>('kpi_custom_widgets', null);
-        if (savedWidgets) {
-          setLocalWidgets(savedWidgets.filter((widget) => widget.isPinnedToDashboard));
-        }
-      } catch (error) {
-        console.error('Failed to load pinned widgets on dashboard', error);
-        notify.error(t('reports.widgets.errorLoadFailed'));
-      }
-    };
-
-    handleUpdate();
-    window.addEventListener('local-database-update', handleUpdate);
-    window.addEventListener('storage', handleUpdate);
-    return () => {
-      window.removeEventListener('local-database-update', handleUpdate);
-      window.removeEventListener('storage', handleUpdate);
-    };
-  }, [widgets, t]);
-
-  const activeWidgets = widgets ?? localWidgets;
+  const activeWidgets = widgets ?? [];
   const requiredCollections = useMemo(() => {
     const required = new Set<ReportCollection>();
     for (const widget of activeWidgets) {
@@ -93,27 +69,7 @@ export function DashboardWidgets({
   }, []);
 
   const handleLocalUnpin = (id: string) => {
-    if (onUnpin) {
-      onUnpin(id);
-      return;
-    }
-    try {
-      const savedWidgets = getObject<CustomWidget[] | null>('kpi_custom_widgets', null);
-      if (savedWidgets) {
-        const updatedWidgets = savedWidgets.map((widget) => {
-          if (widget.id === id) {
-            return { ...widget, isPinnedToDashboard: false };
-          }
-          return widget;
-        });
-        saveObject('kpi_custom_widgets', updatedWidgets);
-        setLocalWidgets(updatedWidgets.filter((widget) => widget.isPinnedToDashboard));
-        window.dispatchEvent(new Event('local-database-update'));
-      }
-    } catch (error) {
-      console.error('Failed to unpin widget', error);
-      notify.error(t('reports.widgets.errorUnpinFailed'));
-    }
+    onUnpin?.(id);
   };
 
   const handleToggleSwitchState = (widget: CustomWidget) => {

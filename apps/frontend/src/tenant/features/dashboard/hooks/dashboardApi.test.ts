@@ -13,6 +13,8 @@ vi.mock('@/lib/apiClient', () => ({
   apiJson: (...args: unknown[]) => mockApiJson(...args),
 }));
 
+const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
+
 describe('dashboardApi', () => {
   beforeEach(() => {
     mockApiJson.mockReset();
@@ -24,7 +26,7 @@ describe('dashboardApi', () => {
     });
 
     const res = await fetchDashboardPreferences();
-    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/preferences');
+    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/preferences', { signal: undefined });
     expect(res?.gridMode).toBe('comfortable');
   });
 
@@ -36,7 +38,9 @@ describe('dashboardApi', () => {
     const res = await saveDashboardPreferencesAsync({ gridMode: 'compact' });
     expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/preferences', {
       method: 'PUT',
+      headers: JSON_HEADERS,
       body: JSON.stringify({ gridMode: 'compact' }),
+      signal: undefined,
     });
     expect(res.gridMode).toBe('compact');
   });
@@ -45,17 +49,19 @@ describe('dashboardApi', () => {
     mockApiJson.mockResolvedValueOnce({ widgets: [{ id: 'w1' }] });
 
     const res = await fetchDashboardWidgets();
-    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets');
+    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets', { signal: undefined });
     expect(res).toEqual([{ id: 'w1' }]);
   });
 
   it('saveDashboardWidgetsAsync calls PUT /api/dashboard/widgets', async () => {
     mockApiJson.mockResolvedValueOnce({ widgets: [{ id: 'w1' }] });
 
-    const res = await saveDashboardWidgetsAsync([{ id: 'w1' } as any]);
+    const res = await saveDashboardWidgetsAsync([{ id: 'w1' } as never]);
     expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets', {
       method: 'PUT',
+      headers: JSON_HEADERS,
       body: JSON.stringify([{ id: 'w1' }]),
+      signal: undefined,
     });
     expect(res).toEqual([{ id: 'w1' }]);
   });
@@ -66,6 +72,7 @@ describe('dashboardApi', () => {
     await deleteDashboardWidgetAsync('w1');
     expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets/w1', {
       method: 'DELETE',
+      signal: undefined,
     });
   });
 });
