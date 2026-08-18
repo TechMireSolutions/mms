@@ -46,25 +46,26 @@ export function useRevenueChartData() {
       }));
     }
 
-    const monthInvoiceRevenueMap = new Map<string, number>();
+    const monthInvoiceTotalsMap = new Map<string, { revenue: number; expenses: number }>();
     invoices.forEach((invoice) => {
       if (!invoice || invoice.status === "cancelled") return;
       const invoiceMonth = (invoice.paidDate || invoice.dueDate || "").slice(0, 7);
       if (invoiceMonth) {
-        const currentRev = monthInvoiceRevenueMap.get(invoiceMonth) ?? 0;
-        monthInvoiceRevenueMap.set(invoiceMonth, currentRev + getCollectedAmountForInvoice(invoice));
+        let totals = monthInvoiceTotalsMap.get(invoiceMonth);
+        if (!totals) {
+          totals = { revenue: 0, expenses: 0 };
+          monthInvoiceTotalsMap.set(invoiceMonth, totals);
+        }
+        totals.revenue += getCollectedAmountForInvoice(invoice);
+        totals.expenses += Number(invoice.discountAmt || 0);
       }
     });
 
-    return buildBucketedSeries(months, monthInvoiceRevenueMap, (monthDefinition, revenue) => {
-      const revenueValue = revenue ?? 0;
-      const expenses = invoices.length > 0 ? Math.round(revenueValue * 0.6) : 0;
-      return {
-        month: monthDefinition.label,
-        revenue: revenueValue,
-        expenses,
-      };
-    });
+    return buildBucketedSeries(months, monthInvoiceTotalsMap, (monthDefinition, totals) => ({
+      month: monthDefinition.label,
+      revenue: totals?.revenue ?? 0,
+      expenses: totals?.expenses ?? 0,
+    }));
   }, [months, invoices, entries, accounts]);
 
   return { revenueData };

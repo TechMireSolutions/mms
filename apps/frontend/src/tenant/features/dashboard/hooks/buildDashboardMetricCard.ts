@@ -191,9 +191,11 @@ export function buildDashboardMetricCard({
     customTrend ??
     (trendKey && typeof trends[trendKey] === 'number'
       ? trends[trendKey]
-      : typeof widget.trend === 'number'
-        ? widget.trend
-        : 0);
+      : widget.trendType === 'database'
+        ? 0
+        : typeof widget.trend === 'number'
+          ? widget.trend
+          : 0);
 
   const { icon, color } = resolveCardVisuals(widget);
 
