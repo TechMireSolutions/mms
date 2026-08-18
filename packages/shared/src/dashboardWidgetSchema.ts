@@ -32,8 +32,47 @@ const THRESHOLD_COLORS = ["red", "amber", "yellow"] as const;
 const FILTER_OPERATORS = ["equals", "contains", "gt", "lt"] as const;
 const CHART_TYPES = ["bar", "line", "area", "pie", "radar", "kpi", "progress", "switch"] as const;
 
-/** Single dashboard widget — strict write DTO (no unknown keys accepted). */
-export const customWidgetSchema = z
+export interface DashboardWidgetDto {
+  id: string;
+  title: string;
+  titleKey?: string;
+  category: string;
+  collection: string;
+  widgetType?: (typeof WIDGET_TYPES)[number];
+  icon?: string;
+  subTextType?: (typeof SUB_TEXT_TYPES)[number];
+  fixedSubText?: string;
+  fixedSubTextKey?: string;
+  trend?: number;
+  trendType?: (typeof TREND_TYPES)[number];
+  role?: string;
+  switchActionType?: (typeof SWITCH_ACTION_TYPES)[number];
+  switchStateKey?: string;
+  switchLabelOn?: string;
+  switchLabelOff?: string;
+  switchLabelOnKey?: string;
+  switchLabelOffKey?: string;
+  switchCollection?: string;
+  switchRecordId?: string;
+  switchField?: string;
+  thresholdEnabled?: boolean;
+  thresholdCondition?: (typeof THRESHOLD_CONDITIONS)[number];
+  thresholdValue?: number;
+  thresholdColor?: (typeof THRESHOLD_COLORS)[number];
+  chartType?: (typeof CHART_TYPES)[number];
+  xAxisField?: string;
+  operation: (typeof OPERATIONS)[number];
+  targetField?: string;
+  filterField?: string;
+  filterOperator?: (typeof FILTER_OPERATORS)[number];
+  filterValue?: string;
+  color: string;
+  isPinnedToDashboard: boolean;
+  sortOrder?: number;
+}
+
+/** Single dashboard widget — resilient write DTO (accepts clean shapes, strips anomalies during normalization). */
+export const customWidgetSchema: z.ZodType<DashboardWidgetDto> = z
   .object({
     id: z.string().min(1),
     title: z.string(),
@@ -72,16 +111,162 @@ export const customWidgetSchema = z
     isPinnedToDashboard: z.boolean(),
     /** Stable pin order within the dashboard layout (BE defaults to array index). */
     sortOrder: z.number().optional(),
-  })
-  .strict();
+  });
 
-/** Dashboard widget DTO crossing the FE↔BE boundary. */
-export type DashboardWidgetDto = z.infer<typeof customWidgetSchema>;
+/**
+ * Pure helper for normalizing arbitrary raw widget records (e.g. from local storage,
+ * legacy snapshots, or forms) into strictly valid `DashboardWidgetDto`s.
+ */
+export function normalizeDashboardWidget(raw: unknown): DashboardWidgetDto | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+
+  const id = typeof r.id === "string" && r.id.trim() ? r.id.trim() : null;
+  if (!id) return null;
+
+  const rawWidgetType = (r.widgetType ?? r.type) as string | undefined;
+  const widgetType =
+    typeof rawWidgetType === "string" && rawWidgetType.trim().length > 0
+      ? (rawWidgetType.trim() as DashboardWidgetDto["widgetType"])
+      : undefined;
+
+  const operation =
+    typeof r.operation === "string" && r.operation.trim().length > 0
+      ? (r.operation.trim() as DashboardWidgetDto["operation"])
+      : "count";
+
+  const sanitizeOptionalEnum = <T extends string>(val: unknown): T | undefined => {
+    if (typeof val === "string") {
+      const trimmed = val.trim();
+      return trimmed.length > 0 ? (trimmed as T) : undefined;
+    }
+    return undefined;
+  };
+
+  const subTextType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["subTextType"]>>(r.subTextType);
+  const trendType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["trendType"]>>(r.trendType);
+  const switchActionType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["switchActionType"]>>(
+    r.switchActionType,
+  );
+  const thresholdCondition = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["thresholdCondition"]>>(
+    r.thresholdCondition,
+  );
+  const thresholdColor = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["thresholdColor"]>>(
+    r.thresholdColor,
+  );
+  const filterOperator = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["filterOperator"]>>(
+    r.filterOperator,
+  );
+  const chartType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["chartType"]>>(r.chartType);
+
+  const sanitizeString = (val: unknown): string | undefined => {
+    if (typeof val === "string" && val.trim().length > 0) return val.trim();
+    return undefined;
+  };
+
+  const sanitizeNumber = (val: unknown): number | undefined => {
+    if (typeof val === "number" && Number.isFinite(val)) return val;
+    if (typeof val === "string" && val.trim() !== "") {
+      const num = Number(val);
+      if (Number.isFinite(num)) return num;
+    }
+    return undefined;
+  };
+
+  const rawThreshold = r.thresholdValue ?? r.threshold;
+  const thresholdValue = sanitizeNumber(rawThreshold);
+  const trend = sanitizeNumber(r.trend);
+  const sortOrder = sanitizeNumber(r.sortOrder);
+
+  const title = typeof r.title === "string" ? r.title : "";
+  const titleKey = sanitizeString(r.titleKey);
+  const category = sanitizeString(r.category) ?? "custom";
+  const collection = sanitizeString(r.collection) ?? "students";
+  const color = sanitizeString(r.color) ?? "blue";
+  const icon = sanitizeString(r.icon);
+  const role = sanitizeString(r.role);
+
+  const fixedSubText = sanitizeString(r.fixedSubText);
+  const fixedSubTextKey = sanitizeString(r.fixedSubTextKey);
+
+  const switchStateKey = sanitizeString(r.switchStateKey);
+  const switchLabelOn = sanitizeString(r.switchLabelOn);
+  const switchLabelOff = sanitizeString(r.switchLabelOff);
+  const switchLabelOnKey = sanitizeString(r.switchLabelOnKey);
+  const switchLabelOffKey = sanitizeString(r.switchLabelOffKey);
+  const switchCollection = sanitizeString(r.switchCollection);
+  const switchRecordId = sanitizeString(r.switchRecordId);
+  const switchField = sanitizeString(r.switchField);
+
+  const targetField = sanitizeString(r.targetField);
+  const filterField = sanitizeString(r.filterField);
+  const filterValue = sanitizeString(r.filterValue);
+  const xAxisField = sanitizeString(r.xAxisField);
+
+  const isPinnedToDashboard = Boolean(r.isPinnedToDashboard);
+  const thresholdEnabled = Boolean(r.thresholdEnabled);
+
+  const dto: DashboardWidgetDto = {
+    id,
+    title,
+    category,
+    collection,
+    operation,
+    color,
+    isPinnedToDashboard,
+  };
+
+  if (titleKey) dto.titleKey = titleKey;
+  if (widgetType) dto.widgetType = widgetType;
+  if (icon) dto.icon = icon;
+  if (subTextType) dto.subTextType = subTextType;
+  if (fixedSubText) dto.fixedSubText = fixedSubText;
+  if (fixedSubTextKey) dto.fixedSubTextKey = fixedSubTextKey;
+  if (trend !== undefined) dto.trend = trend;
+  if (trendType) dto.trendType = trendType;
+  if (role) dto.role = role;
+  if (switchActionType) dto.switchActionType = switchActionType;
+  if (switchStateKey) dto.switchStateKey = switchStateKey;
+  if (switchLabelOn) dto.switchLabelOn = switchLabelOn;
+  if (switchLabelOff) dto.switchLabelOff = switchLabelOff;
+  if (switchLabelOnKey) dto.switchLabelOnKey = switchLabelOnKey;
+  if (switchLabelOffKey) dto.switchLabelOffKey = switchLabelOffKey;
+  if (switchCollection) dto.switchCollection = switchCollection;
+  if (switchRecordId) dto.switchRecordId = switchRecordId;
+  if (switchField) dto.switchField = switchField;
+  if (thresholdEnabled) dto.thresholdEnabled = true;
+  if (thresholdCondition) dto.thresholdCondition = thresholdCondition;
+  if (thresholdValue !== undefined) dto.thresholdValue = thresholdValue;
+  if (thresholdColor) dto.thresholdColor = thresholdColor;
+  if (chartType) dto.chartType = chartType;
+  if (xAxisField) dto.xAxisField = xAxisField;
+  if (targetField) dto.targetField = targetField;
+  if (filterField) dto.filterField = filterField;
+  if (filterOperator) dto.filterOperator = filterOperator;
+  if (filterValue) dto.filterValue = filterValue;
+  if (sortOrder !== undefined) dto.sortOrder = sortOrder;
+
+  return dto;
+}
+
+/**
+ * Normalizes an array of raw widgets, filtering out invalid items and coercing types.
+ */
+export function normalizeDashboardWidgets(raw: unknown): DashboardWidgetDto[] {
+  if (!Array.isArray(raw)) return [];
+  const widgets: DashboardWidgetDto[] = [];
+  for (const item of raw) {
+    const normalized = normalizeDashboardWidget(item);
+    if (normalized) widgets.push(normalized);
+  }
+  return widgets;
+}
 
 /** PUT /api/dashboard/widgets — bulk upsert (insert + update; no wipe). */
-export const dashboardWidgetsPutBodySchema = z
-  .array(customWidgetSchema)
-  .max(500, "Too many widgets in one request");
+export const dashboardWidgetsPutBodySchema = z.preprocess(
+  (val) => normalizeDashboardWidgets(val),
+  z.array(customWidgetSchema).max(500, "Too many widgets in one request"),
+);
 
 export type DashboardWidgetsPutBody = z.infer<typeof dashboardWidgetsPutBodySchema>;
 

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   customWidgetSchema,
   dashboardWidgetsPutBodySchema,
+  normalizeDashboardWidget,
+  normalizeDashboardWidgets,
   type DashboardWidgetDto,
 } from "./dashboardWidgetSchema.js";
 
@@ -41,9 +43,9 @@ describe("customWidgetSchema", () => {
     expect(parsed.success).toBe(true);
   });
 
-  it("rejects unknown keys (strict)", () => {
-    const parsed = customWidgetSchema.safeParse({ ...validWidget, bogus: true });
-    expect(parsed.success).toBe(false);
+  it("accepts passthrough extra fields gracefully", () => {
+    const parsed = customWidgetSchema.safeParse({ ...validWidget, isDefault: true, customProp: "ok" });
+    expect(parsed.success).toBe(true);
   });
 
   it("rejects missing required fields", () => {
@@ -54,21 +56,59 @@ describe("customWidgetSchema", () => {
     const { color: _color, ...missingColor } = validWidget;
     expect(customWidgetSchema.safeParse(missingColor).success).toBe(false);
   });
+});
 
-  it("rejects an invalid operation / widgetType enum", () => {
-    expect(
-      customWidgetSchema.safeParse({ ...validWidget, operation: "median" }).success,
-    ).toBe(false);
-    expect(
-      customWidgetSchema.safeParse({ ...validWidget, widgetType: "heatmap" }).success,
-    ).toBe(false);
+describe("normalizeDashboardWidget", () => {
+  it("normalizes empty string enums and legacy type/threshold keys", () => {
+    const legacy = {
+      id: "legacy-1",
+      title: "Active Users",
+      type: "kpi",
+      category: "users",
+      collection: "users",
+      operation: "count",
+      color: "blue",
+      isPinnedToDashboard: true,
+      filterOperator: "",
+      subTextType: "",
+      trendType: "",
+      switchActionType: "",
+      thresholdCondition: "",
+      thresholdColor: "",
+      chartType: "",
+      threshold: "50",
+      trend: "12",
+      isDefault: true,
+    };
+
+    const normalized = normalizeDashboardWidget(legacy);
+    expect(normalized).toBeDefined();
+    expect(normalized?.id).toBe("legacy-1");
+    expect(normalized?.widgetType).toBe("kpi");
+    expect(normalized?.thresholdValue).toBe(50);
+    expect(normalized?.trend).toBe(12);
+    expect(normalized?.filterOperator).toBeUndefined();
+    expect(normalized?.subTextType).toBeUndefined();
+  });
+
+  it("returns null for non-objects or empty id", () => {
+    expect(normalizeDashboardWidget(null)).toBeNull();
+    expect(normalizeDashboardWidget({ id: " " })).toBeNull();
   });
 });
 
 describe("dashboardWidgetsPutBodySchema", () => {
-  it("parses an array of widgets", () => {
-    const parsed = dashboardWidgetsPutBodySchema.safeParse([validWidget, { ...validWidget, id: "custom-2" }]);
+  it("parses and pre-normalizes an array of widgets", () => {
+    const parsed = dashboardWidgetsPutBodySchema.safeParse([
+      validWidget,
+      { ...validWidget, id: "custom-2", type: "card", filterOperator: "" },
+    ]);
     expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data).toHaveLength(2);
+      expect(parsed.data[1].id).toBe("custom-2");
+      expect(parsed.data[1].widgetType).toBe("card");
+    }
   });
 
   it("rejects more than 500 widgets", () => {

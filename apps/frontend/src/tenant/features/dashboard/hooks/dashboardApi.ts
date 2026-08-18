@@ -1,9 +1,10 @@
 import { apiJson } from '@/lib/apiClient';
-import type {
-  DashboardPreferences,
-  DashboardPreferencesPutBody,
-  DashboardWidgetDto,
-  DashboardWidgetsPutBody,
+import {
+  normalizeDashboardWidgets,
+  type DashboardPreferences,
+  type DashboardPreferencesPutBody,
+  type DashboardWidgetDto,
+  type DashboardWidgetsPutBody,
 } from '@mms/shared';
 
 const PREFERENCES_API = '/api/dashboard/preferences';
@@ -42,10 +43,11 @@ export async function saveDashboardWidgetsAsync(
   widgets: DashboardWidgetsPutBody,
   signal?: AbortSignal,
 ): Promise<DashboardWidgetDto[]> {
+  const sanitizedWidgets = normalizeDashboardWidgets(widgets);
   const res = await apiJson<{ success: boolean; widgets: DashboardWidgetDto[] }>(WIDGETS_API, {
     method: 'PUT',
     headers: JSON_HEADERS,
-    body: JSON.stringify(widgets),
+    body: JSON.stringify(sanitizedWidgets),
     signal,
   });
   return res.widgets;

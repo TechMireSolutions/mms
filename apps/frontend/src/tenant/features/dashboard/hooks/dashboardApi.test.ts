@@ -54,16 +54,25 @@ describe('dashboardApi', () => {
   });
 
   it('saveDashboardWidgetsAsync calls PUT /api/dashboard/widgets', async () => {
-    mockApiJson.mockResolvedValueOnce({ widgets: [{ id: 'w1' }] });
+    const sampleWidget = {
+      id: 'w1',
+      title: 'Total Students',
+      category: 'students',
+      collection: 'students',
+      operation: 'count' as const,
+      color: 'emerald',
+      isPinnedToDashboard: true,
+    };
+    mockApiJson.mockResolvedValueOnce({ widgets: [sampleWidget] });
 
-    const res = await saveDashboardWidgetsAsync([{ id: 'w1' } as never]);
+    const res = await saveDashboardWidgetsAsync([sampleWidget]);
     expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets', {
       method: 'PUT',
       headers: JSON_HEADERS,
-      body: JSON.stringify([{ id: 'w1' }]),
+      body: JSON.stringify([sampleWidget]),
       signal: undefined,
     });
-    expect(res).toEqual([{ id: 'w1' }]);
+    expect(res).toEqual([sampleWidget]);
   });
 
   it('deleteDashboardWidgetAsync calls DELETE /api/dashboard/widgets/:id', async () => {
