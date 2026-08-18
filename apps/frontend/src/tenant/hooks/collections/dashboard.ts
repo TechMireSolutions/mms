@@ -5,6 +5,7 @@
 export {
   DASHBOARD_PREFERENCES_QUERY_KEY,
   DASHBOARD_WIDGETS_QUERY_KEY,
+  invalidateDashboardQueries,
   useDashboardPreferencesQuery,
   useDashboardPreferencesMutation,
   useDashboardWidgetsQuery,

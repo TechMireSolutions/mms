@@ -15,7 +15,7 @@ import {
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
-import { useSessionsMetrics } from '@/tenant/hooks/collections/sessions';
+import { useSessionsMetrics, useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
 import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';
 import { useFinanceMetrics } from '@/tenant/hooks/collections/finance';
 import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
@@ -39,6 +39,7 @@ export interface DashboardCollectionData {
   studentsTotal: number;
   teachersTotal: number;
   contactsTotal: number;
+  sessionsTotal: number;
   studentMetricsInactive: number;
   studentMetricsActive: number;
   studentMetricsNew: number;
@@ -98,6 +99,7 @@ export function useDashboardData(
       contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole),
       students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole),
       teachers: filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole),
+      sessions: filterDashboardWidgetsByCollection(widgets, 'sessions', dashboardRole),
     }),
     [widgets, dashboardRole],
   );
@@ -105,6 +107,7 @@ export function useDashboardData(
   useContactsWidgetAggregates(collectionWidgets.contacts, { enabled: shouldLoadContacts });
   useStudentsWidgetAggregates(collectionWidgets.students, { enabled: shouldLoadStudents });
   useTeachersWidgetAggregates(collectionWidgets.teachers, { enabled: shouldLoadTeachers });
+  useSessionsWidgetAggregates(collectionWidgets.sessions, { enabled: shouldLoadSessions });
 
   const { data: studentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents });
   const { data: teacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers });
@@ -119,11 +122,13 @@ export function useDashboardData(
   const studentsTotal = studentMetrics?.total ?? 0;
   const teachersTotal = teacherMetrics?.total ?? 0;
   const contactsTotal = contactMetrics?.total ?? 0;
+  const sessionsTotal = sessionsMetrics?.total ?? 0;
 
   return {
     studentsTotal,
     teachersTotal,
     contactsTotal,
+    sessionsTotal,
     studentMetricsInactive: studentMetrics?.inactive ?? 0,
     studentMetricsActive: studentMetrics?.active ?? 0,
     studentMetricsNew: studentMetrics?.newThisPeriod ?? 0,

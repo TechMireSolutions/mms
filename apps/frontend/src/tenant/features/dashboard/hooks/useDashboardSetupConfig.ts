@@ -16,8 +16,15 @@ import {
   deleteDashboardWidgetAsync,
 } from './dashboardApi';
 
+import type { QueryClient } from '@tanstack/react-query';
+
 export const DASHBOARD_PREFERENCES_QUERY_KEY = ['dashboard', 'preferences'] as const;
 export const DASHBOARD_WIDGETS_QUERY_KEY = ['dashboard', 'widgets'] as const;
+
+export function invalidateDashboardQueries(queryClient: QueryClient): void {
+  queryClient.invalidateQueries({ queryKey: DASHBOARD_PREFERENCES_QUERY_KEY });
+  queryClient.invalidateQueries({ queryKey: DASHBOARD_WIDGETS_QUERY_KEY });
+}
 
 export function useDashboardPreferencesQuery() {
   return useQuery({

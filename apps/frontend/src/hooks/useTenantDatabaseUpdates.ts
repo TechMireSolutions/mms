@@ -16,6 +16,7 @@ import { invalidateExaminationsQueries } from '@/tenant/hooks/collections/examin
 import { invalidateQuestionBankQueries } from '@/tenant/hooks/collections/questionBank';
 import { invalidateAccountingQueries } from '@/tenant/hooks/collections/accounting';
 import { invalidateObligationsQueries } from '@/tenant/hooks/collections/obligations';
+import { invalidateDashboardQueries } from '@/tenant/hooks/collections/dashboard';
 
 /**
  * Subscribes to tenant `/api/ws` and invalidates Query keys for live collection updates.
@@ -97,6 +98,14 @@ export function useTenantDatabaseUpdates(): void {
           message.key === 'obligation_distributions'
         ) {
           invalidateObligationsQueries(queryClient);
+          return;
+        }
+        if (
+          message.key === 'dashboard' ||
+          message.key === 'kpi_custom_widgets' ||
+          message.key === 'mms_dashboard_preferences'
+        ) {
+          invalidateDashboardQueries(queryClient);
           return;
         }
         if (message.key === 'message_logs' || message.key === 'message_templates') {

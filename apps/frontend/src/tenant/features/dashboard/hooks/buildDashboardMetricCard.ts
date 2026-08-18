@@ -4,6 +4,7 @@ import {
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
   computeTeachersCustomCardValue,
+  computeSessionsCustomCardValue,
 } from '@/lib/reports/widgetDataUtils';
 import {
   resolveWidgetTitle,
@@ -32,6 +33,7 @@ const CUSTOM_CARD_EVALUATORS = {
   contacts: { computeFn: computeContactsCustomCardValue, totalKey: 'contactsTotal', trendKey: 'contactTrend' },
   students: { computeFn: computeStudentsCustomCardValue, totalKey: 'studentsTotal', trendKey: 'studentTrend' },
   teachers: { computeFn: computeTeachersCustomCardValue, totalKey: 'teachersTotal', trendKey: 'teacherTrend' },
+  sessions: { computeFn: computeSessionsCustomCardValue, totalKey: 'sessionsTotal', trendKey: 'sessionsTrend' },
 } as const;
 
 function tryCustomCollectionCardValue(

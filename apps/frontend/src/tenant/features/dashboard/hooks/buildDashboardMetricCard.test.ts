@@ -14,6 +14,7 @@ describe('buildDashboardMetricCard', () => {
     studentsTotal: 120,
     teachersTotal: 15,
     contactsTotal: 45,
+    sessionsTotal: 24,
     studentMetricsInactive: 5,
     studentMetricsActive: 115,
     studentMetricsNew: 8,
