@@ -13,7 +13,15 @@ export function hasPrototypePollution(value: unknown): boolean {
   }
   const recordValue = value as Record<string, unknown>;
   for (const key of Object.keys(recordValue)) {
-    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+    if (key === '__proto__') {
+      return true;
+    }
+    if (
+      key === 'constructor' &&
+      recordValue.constructor &&
+      typeof recordValue.constructor === 'object' &&
+      'prototype' in (recordValue.constructor as Record<string, unknown>)
+    ) {
       return true;
     }
     if (hasPrototypePollution(recordValue[key])) {
@@ -32,8 +40,6 @@ export function isRestrictedKey(logicalKey: string): boolean {
     lower === 'platform_users' ||
     lower === 'auth_artifacts' ||
     lower === '__proto__' ||
-    lower === 'constructor' ||
-    lower === 'prototype' ||
     lower.startsWith('platform_')
   );
 }
