@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/apiClient';
 export async function verifyAdminBackupPassword(
   email: string,
   password: string,
-): Promise<{ ok: true } | { ok: false; errorKey: 'backup.invalidAdminPassword' | 'backup.serverFetchFailed' }> {
+): Promise<{ ok: true } | { ok: false; errorKey: 'backup.invalidAdminPassword' | 'backup.serverForbidden' | 'backup.serverFetchFailed' }> {
   try {
     const response = await apiFetch('/api/auth/verify-password', {
       method: 'POST',
@@ -16,6 +16,9 @@ export async function verifyAdminBackupPassword(
     }
     if (response.status === 401) {
       return { ok: false, errorKey: 'backup.invalidAdminPassword' };
+    }
+    if (response.status === 403) {
+      return { ok: false, errorKey: 'backup.serverForbidden' };
     }
     return { ok: false, errorKey: 'backup.serverFetchFailed' };
   } catch {
