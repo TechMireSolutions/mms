@@ -1,11 +1,10 @@
 import { AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
-import { MergePreview } from "@/tenant/features/contacts/components/DuplicateDetectionParts";
+import { MergePreview } from "@/tenant/features/contacts/components/DuplicateMergePreview";
 import { DuplicateDetectionModal } from "@/tenant/features/contacts/components/DuplicateDetectionModal";
 import { useDuplicateDetectionState } from "@/tenant/features/contacts/hooks/useDuplicateDetectionState";
 
 interface DuplicateDetectionProps {
-  contacts?: Contact[];
   onClose: () => void;
   onMerge: (keepId: string | number, deleteId: string | number, mergedData: Contact) => Promise<void>;
   canWrite?: boolean;
@@ -16,7 +15,6 @@ interface DuplicateDetectionProps {
  * and allows the user to merge them.
  */
 export default function DuplicateDetection({
-  contacts = [],
   onClose,
   onMerge,
   canWrite = false,
@@ -39,7 +37,7 @@ export default function DuplicateDetection({
     handleMergeConfirm,
     handleDismiss,
     setKeepIndexForPair,
-  } = useDuplicateDetectionState({ contacts, onMerge });
+  } = useDuplicateDetectionState({ onMerge });
 
   return (
     <>

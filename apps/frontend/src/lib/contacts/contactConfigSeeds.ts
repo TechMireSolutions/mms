@@ -4,6 +4,10 @@ import {
   DEFAULT_PHONE_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_ADDRESS_LABELS,
+  DEFAULT_EDUCATION_DEGREE_LABELS,
+  DEFAULT_EMPLOYMENT_TYPE_LABELS,
+  DEFAULT_SKILL_CATEGORY_LABELS,
+  DEFAULT_SKILL_PROFICIENCY_LABELS,
   COUNTRY_CODES,
   RELATIONSHIPS,
 } from "@mms/shared";
@@ -17,6 +21,10 @@ export function getContactConfigCollectionDefaults(): {
   emailLabels: string[];
   addressLabels: string[];
   countryCodes: Array<{ country: string; code: string }>;
+  educationDegrees: string[];
+  employmentTypes: string[];
+  skillCategories: string[];
+  skillProficiencies: string[];
 } {
   return {
     genders: [...GENDERS],
@@ -26,5 +34,9 @@ export function getContactConfigCollectionDefaults(): {
     emailLabels: [...DEFAULT_EMAIL_LABELS],
     addressLabels: [...DEFAULT_ADDRESS_LABELS],
     countryCodes: COUNTRY_CODES.map((entry) => ({ ...entry })),
+    educationDegrees: [...DEFAULT_EDUCATION_DEGREE_LABELS],
+    employmentTypes: [...DEFAULT_EMPLOYMENT_TYPE_LABELS],
+    skillCategories: [...DEFAULT_SKILL_CATEGORY_LABELS],
+    skillProficiencies: [...DEFAULT_SKILL_PROFICIENCY_LABELS],
   };
 }

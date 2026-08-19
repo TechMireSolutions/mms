@@ -10,6 +10,9 @@ import {
   EMAIL_SYSTEM_KEYS,
   ADDRESS_SYSTEM_KEYS,
   SOCIAL_SYSTEM_KEYS,
+  EDUCATION_SYSTEM_KEYS,
+  EXPERIENCE_SYSTEM_KEYS,
+  SKILL_SYSTEM_KEYS,
   RELATIONSHIP_SYSTEM_KEYS,
 } from "./contactItemNormalizeKeys.js";
 
@@ -19,6 +22,9 @@ const CONTACT_ENTITY_ARRAY_KEYS = new Set([
   "emails",
   "addresses",
   "socials",
+  "education",
+  "experience",
+  "skills",
   "relationshipContacts",
   "relationships",
   "activities",
@@ -99,6 +105,36 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   if (Array.isArray(result.socials)) {
     result.socials = result.socials.filter(
       (social) => !isBlankContactListRow(social, ["url"], SOCIAL_SYSTEM_KEYS),
+    );
+  }
+  if (Array.isArray(result.education)) {
+    result.education = result.education.filter(
+      (edu) =>
+        !isBlankContactListRow(
+          edu,
+          ["institution", "fieldOfStudy"],
+          EDUCATION_SYSTEM_KEYS,
+        ),
+    );
+  }
+  if (Array.isArray(result.experience)) {
+    result.experience = result.experience.filter(
+      (exp) =>
+        !isBlankContactListRow(
+          exp,
+          ["title", "organization"],
+          EXPERIENCE_SYSTEM_KEYS,
+        ),
+    );
+  }
+  if (Array.isArray(result.skills)) {
+    result.skills = result.skills.filter(
+      (skill) =>
+        !isBlankContactListRow(
+          skill,
+          ["name"],
+          SKILL_SYSTEM_KEYS,
+        ),
     );
   }
   if (Array.isArray(result.relationshipContacts)) {

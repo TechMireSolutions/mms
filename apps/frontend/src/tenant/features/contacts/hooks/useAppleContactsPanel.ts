@@ -5,7 +5,7 @@ import {
   type ChangeEvent,
   type RefObject,
 } from "react";
-import { Contact, parseVCard } from "@mms/shared";
+import { type Contact, parseVCard } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { notify } from "@/lib/notify";

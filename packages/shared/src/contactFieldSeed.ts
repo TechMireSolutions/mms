@@ -2,8 +2,12 @@
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 import {
   DEFAULT_ADDRESS_LABELS,
+  DEFAULT_EDUCATION_DEGREE_LABELS,
   DEFAULT_EMAIL_LABELS,
+  DEFAULT_EMPLOYMENT_TYPE_LABELS,
   DEFAULT_PHONE_LABELS,
+  DEFAULT_SKILL_CATEGORY_LABELS,
+  DEFAULT_SKILL_PROFICIENCY_LABELS,
   GENDERS,
   RELATIONSHIPS,
   SOCIAL_PLATFORMS,
@@ -42,6 +46,32 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   socials: [
     { key: "platform", label: "Platform Selection",  labelKey: "contacts.fields.platform",  type: "select", description: "Platform selection (Facebook, X, etc.)", descriptionKey: "contacts.fields.platformDesc", options: SOCIAL_PLATFORMS, defaultValue: SOCIAL_PLATFORMS[0], permissions: [], enabled: true, order: 0, required: false },
     { key: "url",      label: "Social URL / Handle", labelKey: "contacts.fields.socialUrl", type: "text",   description: "URL or handle input. Enables social media engagement & verification.", descriptionKey: "contacts.fields.socialUrlDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+  ],
+  education: [
+    { key: "degree",       label: "Degree / Qualification Level", labelKey: "contacts.fields.educationDegree",       type: "select", description: "Academic, Islamic, or vocational degree level.", descriptionKey: "contacts.fields.educationDegreeDesc", options: DEFAULT_EDUCATION_DEGREE_LABELS, defaultValue: DEFAULT_EDUCATION_DEGREE_LABELS[0], permissions: [], enabled: true, order: 0, required: false },
+    { key: "institution",  label: "Institution / School / Jamia", labelKey: "contacts.fields.educationInstitution",  type: "text",   description: "Name of the school, college, university, or hawza.", descriptionKey: "contacts.fields.educationInstitutionDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: true },
+    { key: "fieldOfStudy", label: "Field of Study / Major",       labelKey: "contacts.fields.educationFieldOfStudy", type: "text",   description: "Specialization or major subject area.", descriptionKey: "contacts.fields.educationFieldOfStudyDesc", defaultValue: "", permissions: [], enabled: true, order: 2, required: false },
+    { key: "year",         label: "Graduation / Passing Year",    labelKey: "contacts.fields.educationYear",         type: "text",   description: "Graduation or completion year.", descriptionKey: "contacts.fields.educationYearDesc", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
+    { key: "grade",        label: "Grade / Division / Score",     labelKey: "contacts.fields.educationGrade",        type: "text",   description: "Grade, division, GPA, or Mumtaz distinction.", descriptionKey: "contacts.fields.educationGradeDesc", defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
+  ],
+  experience: [
+    { key: "title",          label: "Job Title / Role",             labelKey: "contacts.fields.experienceTitle",          type: "text",     description: "Designation or role held (e.g. Senior Instructor, Administrator).", descriptionKey: "contacts.fields.experienceTitleDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
+    { key: "organization",   label: "Organization / Company",       labelKey: "contacts.fields.experienceOrganization",   type: "text",     description: "Employer, madrasa, school, or company name.", descriptionKey: "contacts.fields.experienceOrganizationDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: true },
+    { key: "employmentType", label: "Employment Type",              labelKey: "contacts.fields.experienceEmploymentType",  type: "select",   description: "Employment classification (Full-time, Part-time, Contract, etc.).", descriptionKey: "contacts.fields.experienceEmploymentTypeDesc", options: DEFAULT_EMPLOYMENT_TYPE_LABELS, defaultValue: DEFAULT_EMPLOYMENT_TYPE_LABELS[0], permissions: [], enabled: true, order: 2, required: false },
+    { key: "location",       label: "Location",                     labelKey: "contacts.fields.experienceLocation",        type: "text",     description: "Workplace location or city.", descriptionKey: "contacts.fields.experienceLocationDesc", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
+    { key: "startDate",      label: "Start Date / Period",          labelKey: "contacts.fields.experienceStartDate",       type: "text",     description: "Start month/year or date.", descriptionKey: "contacts.fields.experienceStartDateDesc", defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
+    { key: "endDate",        label: "End Date / Period",            labelKey: "contacts.fields.experienceEndDate",         type: "text",     description: "End month/year or date (blank if currently working).", descriptionKey: "contacts.fields.experienceEndDateDesc", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
+    { key: "isCurrent",      label: "Currently Working Here",       labelKey: "contacts.fields.experienceIsCurrent",       type: "boolean",  description: "Mark true if this is an ongoing employment role.", descriptionKey: "contacts.fields.experienceIsCurrentDesc", defaultValue: false, permissions: [], enabled: true, order: 6, required: false },
+    { key: "description",    label: "Role Description / Summary",   labelKey: "contacts.fields.experienceDescription",     type: "textarea", description: "Responsibilities, achievements, or department details.", descriptionKey: "contacts.fields.experienceDescriptionDesc", defaultValue: "", permissions: [], enabled: true, order: 7, required: false },
+  ],
+  skills: [
+    { key: "name",              label: "Skill / Subject Name",         labelKey: "contacts.fields.skillName",             type: "text",     description: "Name of the skill, expertise, or subject.", descriptionKey: "contacts.fields.skillNameDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
+    { key: "category",          label: "Skill Category",               labelKey: "contacts.fields.skillCategory",         type: "select",   description: "Classification area (Islamic Studies, Languages, IT, etc.).", descriptionKey: "contacts.fields.skillCategoryDesc", options: DEFAULT_SKILL_CATEGORY_LABELS, defaultValue: DEFAULT_SKILL_CATEGORY_LABELS[0], permissions: [], enabled: true, order: 1, required: false },
+    { key: "proficiency",       label: "Proficiency Level",            labelKey: "contacts.fields.skillProficiency",      type: "select",   description: "Skill level or competency rating.", descriptionKey: "contacts.fields.skillProficiencyDesc", options: DEFAULT_SKILL_PROFICIENCY_LABELS, defaultValue: "Intermediate", permissions: [], enabled: true, order: 2, required: false },
+    { key: "yearsOfExperience", label: "Years of Experience",          labelKey: "contacts.fields.skillYears",            type: "text",     description: "Number of years practicing or teaching this skill.", descriptionKey: "contacts.fields.skillYearsDesc", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
+    { key: "isCertified",       label: "Certified / Ijazah Holder",    labelKey: "contacts.fields.skillIsCertified",      type: "boolean",  description: "Check if formal certification or Sanad/Ijazah is held.", descriptionKey: "contacts.fields.skillIsCertifiedDesc", defaultValue: false, permissions: [], enabled: true, order: 4, required: false },
+    { key: "issuer",            label: "Certifying Body / Issuer",     labelKey: "contacts.fields.skillIssuer",           type: "text",     description: "Institution, scholar, or board that issued the certificate/Sanad.", descriptionKey: "contacts.fields.skillIssuerDesc", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
+    { key: "description",       label: "Notes / Details",              labelKey: "contacts.fields.skillDescription",      type: "textarea", description: "Specific achievements, syllabus covered, or focus areas.", descriptionKey: "contacts.fields.skillDescriptionDesc", defaultValue: "", permissions: [], enabled: true, order: 6, required: false },
   ],
   relationship: [
     { key: "contactId",    label: "Contact",      labelKey: "contacts.fields.linkedContact", type: "text",   description: "Contact picker — links an existing contact in this relationship.", descriptionKey: "contacts.fields.linkedContactDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },

@@ -2,7 +2,7 @@
 
 export const CONFIG_VERSION = 2;
 
-export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "relationship"];
+export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "education", "experience", "skills", "relationship"];
 export const DEFAULT_REQUIRED_TABS: string[] = [];
 
 export const GENDERS = ["male", "female"];
@@ -27,6 +27,47 @@ export const COLOR_PALETTES = {
 export const DEFAULT_PHONE_LABELS = ["Mobile", "Home", "Work", "WhatsApp", "Other"];
 export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
 export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
+export const DEFAULT_EDUCATION_DEGREE_LABELS = [
+  "Matric / Secondary",
+  "Intermediate / Higher Secondary",
+  "Bachelors",
+  "Masters",
+  "Doctorate / PhD",
+  "Dars-e-Nizami / Alimiyyah",
+  "Hawza",
+  "Hifz-ul-Quran",
+  "Tajweed & Qiraat",
+  "Diploma / Certificate",
+  "Other",
+];
+export const DEFAULT_EMPLOYMENT_TYPE_LABELS = [
+  "Full-time",
+  "Part-time",
+  "Contract",
+  "Self-employed",
+  "Freelance",
+  "Internship",
+  "Volunteer",
+  "Other",
+];
+export const DEFAULT_SKILL_CATEGORY_LABELS = [
+  "Islamic Studies & Qira'at",
+  "Languages & Translation",
+  "Teaching & Pedagogy",
+  "Administration & Management",
+  "Accounting & Finance",
+  "Information Technology & Software",
+  "Design & Media",
+  "Vocational & Practical",
+  "Other",
+];
+export const DEFAULT_SKILL_PROFICIENCY_LABELS = [
+  "Beginner",
+  "Intermediate",
+  "Advanced",
+  "Expert",
+  "Master / Ijazah",
+];
 
 export const SOCIAL_PLATFORMS = [
   "Facebook", "Twitter / X", "Instagram", "LinkedIn", "TikTok", "YouTube",

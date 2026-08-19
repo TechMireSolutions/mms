@@ -51,6 +51,50 @@ export const socialLinkSchema = z
   })
   .strict();
 
+export const contactEducationSchema = z
+  .object({
+    id: z.string().optional(),
+    degree: z.string().optional(),
+    institution: z.string(),
+    fieldOfStudy: z.string().optional(),
+    year: z.string().optional(),
+    grade: z.string().optional(),
+    label: z.string().optional(),
+    sortOrder: z.number().optional(),
+  })
+  .strict();
+
+export const contactExperienceSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string(),
+    organization: z.string(),
+    employmentType: z.string().optional(),
+    location: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    isCurrent: z.boolean().optional(),
+    description: z.string().optional(),
+    label: z.string().optional(),
+    sortOrder: z.number().optional(),
+  })
+  .strict();
+
+export const contactSkillSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string(),
+    category: z.string().optional(),
+    proficiency: z.string().optional(),
+    yearsOfExperience: z.string().optional(),
+    isCertified: z.boolean().optional(),
+    issuer: z.string().optional(),
+    description: z.string().optional(),
+    label: z.string().optional(),
+    sortOrder: z.number().optional(),
+  })
+  .strict();
+
 export const relationshipContactSchema = z
   .object({
     name: z.string().optional(),

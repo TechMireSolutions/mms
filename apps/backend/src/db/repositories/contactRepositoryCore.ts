@@ -6,6 +6,9 @@ import {
   type EmailAddress,
   type Address,
   type SocialLink,
+  type ContactEducation,
+  type ContactExperience,
+  type ContactSkill,
   type RelationshipContact,
   type ContactActivity,
   type ContactAttachment,
@@ -16,6 +19,9 @@ import {
   contactEmails,
   contactAddresses,
   contactSocials,
+  contactEducations,
+  contactExperiences,
+  contactSkills,
   contactRelationships,
   contactActivities,
   contactAttachments,
@@ -29,6 +35,9 @@ type PhoneRow = typeof contactPhones.$inferSelect;
 type EmailRow = typeof contactEmails.$inferSelect;
 type AddressRow = typeof contactAddresses.$inferSelect;
 type SocialRow = typeof contactSocials.$inferSelect;
+type EducationRow = typeof contactEducations.$inferSelect;
+type ExperienceRow = typeof contactExperiences.$inferSelect;
+type SkillRow = typeof contactSkills.$inferSelect;
 type RelationshipRow = typeof contactRelationships.$inferSelect;
 type ActivityRow = typeof contactActivities.$inferSelect;
 type AttachmentRow = typeof contactAttachments.$inferSelect;
@@ -39,6 +48,9 @@ export function contactRowToRecord(
   emails: EmailRow[] = [],
   addresses: AddressRow[] = [],
   socials: SocialRow[] = [],
+  educations: EducationRow[] = [],
+  experiences: ExperienceRow[] = [],
+  skills: SkillRow[] = [],
   relationships: RelationshipRow[] = [],
   activities: ActivityRow[] = [],
   attachments: AttachmentRow[] = [],
@@ -70,6 +82,42 @@ export function contactRowToRecord(
   const mappedSocials: SocialLink[] = socials.map((s) => ({
     platform: s.platform,
     url: s.url,
+  }));
+
+  const mappedEducations: ContactEducation[] = educations.map((edu) => ({
+    id: edu.id,
+    degree: edu.degree ?? undefined,
+    institution: edu.institution,
+    fieldOfStudy: edu.fieldOfStudy ?? undefined,
+    year: edu.year ?? undefined,
+    grade: edu.grade ?? undefined,
+    label: edu.label ?? undefined,
+    sortOrder: edu.sortOrder,
+  }));
+
+  const mappedExperiences: ContactExperience[] = experiences.map((exp) => ({
+    id: exp.id,
+    title: exp.title,
+    organization: exp.organization,
+    employmentType: exp.employmentType ?? undefined,
+    location: exp.location ?? undefined,
+    startDate: exp.startDate ?? undefined,
+    endDate: exp.endDate ?? undefined,
+    isCurrent: exp.isCurrent,
+    description: exp.description ?? undefined,
+    sortOrder: exp.sortOrder,
+  }));
+
+  const mappedSkills: ContactSkill[] = skills.map((s) => ({
+    id: s.id,
+    name: s.name,
+    category: s.category ?? undefined,
+    proficiency: s.proficiency ?? undefined,
+    yearsOfExperience: s.yearsOfExperience ?? undefined,
+    isCertified: s.isCertified,
+    issuer: s.issuer ?? undefined,
+    description: s.description ?? undefined,
+    sortOrder: s.sortOrder,
   }));
 
   const mappedRelationships: RelationshipContact[] = relationships.map((r) => ({
@@ -127,6 +175,9 @@ export function contactRowToRecord(
     emails: mappedEmails,
     addresses: mappedAddresses,
     socials: mappedSocials,
+    education: mappedEducations,
+    experience: mappedExperiences,
+    skills: mappedSkills,
     relationshipContacts: mappedRelationships,
     activities: mappedActivities,
     attachments: mappedAttachments,
@@ -159,6 +210,9 @@ export async function hydrateContactsList(
     emailsRows,
     addressesRows,
     socialsRows,
+    educationsRows,
+    experiencesRows,
+    skillsRows,
     relationshipsRows,
     activitiesRows,
     attachmentsRows,
@@ -203,6 +257,36 @@ export async function hydrateContactsList(
         ),
       )
       .orderBy(contactSocials.sortOrder),
+    tx
+      .select()
+      .from(contactEducations)
+      .where(
+        and(
+          eq(contactEducations.workspaceSubdomain, subdomain),
+          inArray(contactEducations.contactId, contactIds),
+        ),
+      )
+      .orderBy(contactEducations.sortOrder),
+    tx
+      .select()
+      .from(contactExperiences)
+      .where(
+        and(
+          eq(contactExperiences.workspaceSubdomain, subdomain),
+          inArray(contactExperiences.contactId, contactIds),
+        ),
+      )
+      .orderBy(contactExperiences.sortOrder),
+    tx
+      .select()
+      .from(contactSkills)
+      .where(
+        and(
+          eq(contactSkills.workspaceSubdomain, subdomain),
+          inArray(contactSkills.contactId, contactIds),
+        ),
+      )
+      .orderBy(contactSkills.sortOrder),
     tx
       .select()
       .from(contactRelationships)
@@ -263,6 +347,27 @@ export async function hydrateContactsList(
     socialsMap.set(s.contactId, list);
   }
 
+  const educationsMap = new Map<string, EducationRow[]>();
+  for (const edu of educationsRows) {
+    const list = educationsMap.get(edu.contactId) ?? [];
+    list.push(edu);
+    educationsMap.set(edu.contactId, list);
+  }
+
+  const experiencesMap = new Map<string, ExperienceRow[]>();
+  for (const exp of experiencesRows) {
+    const list = experiencesMap.get(exp.contactId) ?? [];
+    list.push(exp);
+    experiencesMap.set(exp.contactId, list);
+  }
+
+  const skillsMap = new Map<string, SkillRow[]>();
+  for (const s of skillsRows) {
+    const list = skillsMap.get(s.contactId) ?? [];
+    list.push(s);
+    skillsMap.set(s.contactId, list);
+  }
+
   const relationshipsMap = new Map<string, RelationshipRow[]>();
   for (const r of relationshipsRows) {
     const list = relationshipsMap.get(r.contactId) ?? [];
@@ -291,6 +396,9 @@ export async function hydrateContactsList(
       emailsMap.get(row.id) ?? [],
       addressesMap.get(row.id) ?? [],
       socialsMap.get(row.id) ?? [],
+      educationsMap.get(row.id) ?? [],
+      experiencesMap.get(row.id) ?? [],
+      skillsMap.get(row.id) ?? [],
       relationshipsMap.get(row.id) ?? [],
       activitiesMap.get(row.id) ?? [],
       attachmentsMap.get(row.id) ?? [],
@@ -531,6 +639,69 @@ export async function persistContactTx(
         platform: s.platform,
         url: s.url,
         sortOrder: idx,
+      })),
+    );
+  }
+
+  await tx
+    .delete(contactEducations)
+    .where(and(eq(contactEducations.workspaceSubdomain, subdomain), eq(contactEducations.contactId, contactId)));
+  if (contact.education && contact.education.length > 0) {
+    await tx.insert(contactEducations).values(
+      contact.education.map((e, idx) => ({
+        id: e.id || `edu-${idx + 1}`,
+        workspaceSubdomain: subdomain,
+        contactId,
+        degree: e.degree ?? null,
+        institution: e.institution,
+        fieldOfStudy: e.fieldOfStudy ?? null,
+        year: e.year ?? null,
+        grade: e.grade ?? null,
+        label: e.label ?? null,
+        sortOrder: e.sortOrder ?? idx,
+      })),
+    );
+  }
+
+  await tx
+    .delete(contactExperiences)
+    .where(and(eq(contactExperiences.workspaceSubdomain, subdomain), eq(contactExperiences.contactId, contactId)));
+  if (contact.experience && contact.experience.length > 0) {
+    await tx.insert(contactExperiences).values(
+      contact.experience.map((exp, idx) => ({
+        id: exp.id || `exp-${idx + 1}`,
+        workspaceSubdomain: subdomain,
+        contactId,
+        title: exp.title,
+        organization: exp.organization,
+        employmentType: exp.employmentType ?? null,
+        location: exp.location ?? null,
+        startDate: exp.startDate ?? null,
+        endDate: exp.endDate ?? null,
+        isCurrent: exp.isCurrent ?? false,
+        description: exp.description ?? null,
+        sortOrder: exp.sortOrder ?? idx,
+      })),
+    );
+  }
+
+  await tx
+    .delete(contactSkills)
+    .where(and(eq(contactSkills.workspaceSubdomain, subdomain), eq(contactSkills.contactId, contactId)));
+  if (contact.skills && contact.skills.length > 0) {
+    await tx.insert(contactSkills).values(
+      contact.skills.map((s, idx) => ({
+        id: s.id || `skl-${idx + 1}`,
+        workspaceSubdomain: subdomain,
+        contactId,
+        name: s.name,
+        category: s.category ?? null,
+        proficiency: s.proficiency ?? null,
+        yearsOfExperience: s.yearsOfExperience ?? null,
+        isCertified: s.isCertified ?? false,
+        issuer: s.issuer ?? null,
+        description: s.description ?? null,
+        sortOrder: s.sortOrder ?? idx,
       })),
     );
   }

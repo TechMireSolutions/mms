@@ -43,8 +43,11 @@ describe('mergeContactsFormTabsFromApi', () => {
     expect(merged.map((tab) => tab.key)).toContain('emails');
     expect(merged.map((tab) => tab.key)).toContain('addresses');
     expect(merged.map((tab) => tab.key)).toContain('socials');
+    expect(merged.map((tab) => tab.key)).toContain('education');
+    expect(merged.map((tab) => tab.key)).toContain('experience');
+    expect(merged.map((tab) => tab.key)).toContain('skills');
     expect(merged.map((tab) => tab.key)).toContain('relationship');
-    expect(merged.map((tab) => tab.key)).toHaveLength(6);
+    expect(merged.map((tab) => tab.key)).toHaveLength(DEFAULT_FORM_TABS.length);
     // API tab preserves its custom label; seed tab falls back to default seed label.
     expect(merged.find((tab) => tab.key === 'phones')?.label).toBe('Contact Numbers');
     expect(merged.find((tab) => tab.key === 'basic')?.label).toBe(
@@ -58,7 +61,7 @@ describe('mergeContactsFormTabsFromApi', () => {
 
     const basicCount = merged.filter((tab) => tab.key === 'basic').length;
     expect(basicCount).toBe(1);
-    expect(merged).toHaveLength(6);
+    expect(merged).toHaveLength(DEFAULT_FORM_TABS.length);
   });
 
   it('normalizes a legacy emergency tab to relationship (key and label)', () => {

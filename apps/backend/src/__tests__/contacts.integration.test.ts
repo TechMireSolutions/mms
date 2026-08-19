@@ -1272,6 +1272,10 @@ describe('contacts REST routes', () => {
       emailLabels: [],
       addressLabels: [],
       countryCodes: [{ country: 'Pakistan', code: '+92' }],
+      educationDegrees: ['Bachelors'],
+      employmentTypes: ['Full-time'],
+      skillCategories: ['Teaching & Pedagogy'],
+      skillProficiencies: ['Intermediate'],
     });
     mockReplaceContactLookupKind.mockResolvedValue(['male', 'female', 'other']);
 

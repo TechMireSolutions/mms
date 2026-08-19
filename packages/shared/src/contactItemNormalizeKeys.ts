@@ -39,6 +39,48 @@ export const ADDRESS_SYSTEM_KEYS = new Set([
   "isPrimary",
 ]);
 export const SOCIAL_SYSTEM_KEYS = new Set(["platform", "type", "url", "link", "value"]);
+export const EDUCATION_SYSTEM_KEYS = new Set([
+  "degree",
+  "institution",
+  "fieldOfStudy",
+  "year",
+  "grade",
+  "label",
+  "type",
+  "value",
+]);
+export const EXPERIENCE_SYSTEM_KEYS = new Set([
+  "title",
+  "organization",
+  "company",
+  "employmentType",
+  "location",
+  "startDate",
+  "endDate",
+  "isCurrent",
+  "description",
+  "label",
+  "type",
+  "value",
+]);
+export const SKILL_SYSTEM_KEYS = new Set([
+  "name",
+  "skill",
+  "title",
+  "category",
+  "proficiency",
+  "level",
+  "yearsOfExperience",
+  "years",
+  "isCertified",
+  "certified",
+  "issuer",
+  "institution",
+  "description",
+  "label",
+  "type",
+  "value",
+]);
 export const RELATIONSHIP_SYSTEM_KEYS = new Set([
   "relationship",
   "relation",

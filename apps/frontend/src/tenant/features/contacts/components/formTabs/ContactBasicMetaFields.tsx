@@ -6,7 +6,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Contact, formatCnic } from "@mms/shared";
+import { type Contact, formatCnic } from "@mms/shared";
 
 export function ContactBasicMetaFields({
   contactDraft,

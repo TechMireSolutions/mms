@@ -15,6 +15,9 @@ const REQUIRED_TAB_I18N: Partial<Record<string, AppTranslationKey>> = {
   emails: "contacts.form.atLeastOneEmailRequired",
   addresses: "contacts.form.atLeastOneAddressRequired",
   socials: "contacts.form.atLeastOneSocialRequired",
+  education: "contacts.form.atLeastOneEducationRequired",
+  experience: "contacts.form.atLeastOneExperienceRequired",
+  skills: "contacts.form.atLeastOneSkillRequired",
   relationship: "contacts.form.atLeastOneRelationshipRequired",
 };
 
@@ -23,6 +26,9 @@ const LIST_TABS_PROP_MAP: Record<string, string> = {
   emails: "emails",
   addresses: "addresses",
   socials: "socials",
+  education: "education",
+  experience: "experience",
+  skills: "skills",
   relationship: "relationshipContacts",
 };
 

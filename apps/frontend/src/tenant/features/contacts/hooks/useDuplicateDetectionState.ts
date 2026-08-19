@@ -11,7 +11,7 @@ import { useContactsDuplicatePairs } from "@/tenant/features/contacts/hooks/useC
 import { DUPLICATE_REASON_I18N } from "@/lib/contacts/contactI18n";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
-import type { DuplicatePair } from "@/tenant/features/contacts/components/DuplicateDetectionParts";
+import type { DuplicatePair } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 
 function mapPairToViewModel(
   pair: {
@@ -34,7 +34,6 @@ function mapPairToViewModel(
 export function useDuplicateDetectionState({
   onMerge,
 }: {
-  contacts?: Contact[];
   onMerge: (keepId: string | number, deleteId: string | number, mergedData: Contact) => Promise<void>;
 }) {
   const { prefs } = useContactConfig();

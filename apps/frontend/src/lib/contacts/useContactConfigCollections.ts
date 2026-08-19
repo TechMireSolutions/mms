@@ -2,6 +2,16 @@ import { useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   CONTACT_LOOKUP_FIELD_TARGETS,
+  DEFAULT_ADDRESS_LABELS,
+  DEFAULT_EDUCATION_DEGREE_LABELS,
+  DEFAULT_EMAIL_LABELS,
+  DEFAULT_EMPLOYMENT_TYPE_LABELS,
+  DEFAULT_PHONE_LABELS,
+  DEFAULT_SKILL_CATEGORY_LABELS,
+  DEFAULT_SKILL_PROFICIENCY_LABELS,
+  GENDERS,
+  RELATIONSHIPS,
+  SOCIAL_PLATFORMS,
   type ContactLookupStringKind,
   type FieldConfig,
 } from "@mms/shared";
@@ -33,13 +43,17 @@ export function useContactConfigCollections({
   const lookupsQuery = useContactLookupsQuery();
   const lookupMutation = useContactLookupMutation();
 
-  const genders = lookupsQuery.data?.genders ?? [];
-  const socialPlatforms = lookupsQuery.data?.socialPlatforms ?? [];
-  const relationships = lookupsQuery.data?.relationships ?? [];
-  const phoneLabels = lookupsQuery.data?.phoneLabels ?? [];
-  const emailLabels = lookupsQuery.data?.emailLabels ?? [];
-  const addressLabels = lookupsQuery.data?.addressLabels ?? [];
+  const genders = lookupsQuery.data?.genders ?? GENDERS;
+  const socialPlatforms = lookupsQuery.data?.socialPlatforms ?? SOCIAL_PLATFORMS;
+  const relationships = lookupsQuery.data?.relationships ?? RELATIONSHIPS;
+  const phoneLabels = lookupsQuery.data?.phoneLabels ?? DEFAULT_PHONE_LABELS;
+  const emailLabels = lookupsQuery.data?.emailLabels ?? DEFAULT_EMAIL_LABELS;
+  const addressLabels = lookupsQuery.data?.addressLabels ?? DEFAULT_ADDRESS_LABELS;
   const countryCodes = (lookupsQuery.data?.countryCodes ?? []) as CountryCodeEntry[];
+  const educationDegrees = lookupsQuery.data?.educationDegrees ?? DEFAULT_EDUCATION_DEGREE_LABELS;
+  const employmentTypes = lookupsQuery.data?.employmentTypes ?? DEFAULT_EMPLOYMENT_TYPE_LABELS;
+  const skillCategories = lookupsQuery.data?.skillCategories ?? DEFAULT_SKILL_CATEGORY_LABELS;
+  const skillProficiencies = lookupsQuery.data?.skillProficiencies ?? DEFAULT_SKILL_PROFICIENCY_LABELS;
 
   // Prefer invalidate over query.refetch() — refetch() ignores `enabled: false` and
   // can storm /api/contacts/lookups + /api/auth/refresh on the login screen.
@@ -95,6 +109,22 @@ export function useContactConfigCollections({
     (options: string[]) => persistStringKind("addressLabels", options),
     [persistStringKind],
   );
+  const updateEducationDegrees = useCallback(
+    (options: string[]) => persistStringKind("educationDegrees", options),
+    [persistStringKind],
+  );
+  const updateEmploymentTypes = useCallback(
+    (options: string[]) => persistStringKind("employmentTypes", options),
+    [persistStringKind],
+  );
+  const updateSkillCategories = useCallback(
+    (options: string[]) => persistStringKind("skillCategories", options),
+    [persistStringKind],
+  );
+  const updateSkillProficiencies = useCallback(
+    (options: string[]) => persistStringKind("skillProficiencies", options),
+    [persistStringKind],
+  );
   const updateCountryCodes = useCallback(
     async (countryCodeOptions: CountryCodeEntry[]) => {
       await lookupMutation.mutateAsync({ kind: "countryCodes", items: countryCodeOptions });
@@ -119,6 +149,10 @@ export function useContactConfigCollections({
     addressLabels,
     countryCodes,
     countryCodesMap,
+    educationDegrees,
+    employmentTypes,
+    skillCategories,
+    skillProficiencies,
     reloadCollections,
     updateGenders,
     updateSocialPlatforms,
@@ -126,7 +160,13 @@ export function useContactConfigCollections({
     updatePhoneLabels,
     updateEmailLabels,
     updateAddressLabels,
+    updateEducationDegrees,
+    updateEmploymentTypes,
+    updateSkillCategories,
+    updateSkillProficiencies,
     updateCountryCodes,
     lookupsReady: lookupsQuery.isSuccess || lookupsQuery.isError,
+    lookupsLoading: lookupsQuery.isLoading,
+    lookupsError: (lookupsQuery.error as Error | null) ?? null,
   };
 }

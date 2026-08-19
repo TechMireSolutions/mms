@@ -116,7 +116,7 @@ export async function bootstrapAuthenticatedTenant(
   await page.check('#terms');
   await page.click('button:has-text("Create workspace")');
 
-  await expect(page).toHaveURL(/\/|\/platform\/dashboard/);
+  await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
   await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });
 
   await page.goto(`${tenantOrigin}/login`);

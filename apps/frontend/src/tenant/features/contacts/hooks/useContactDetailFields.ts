@@ -73,6 +73,9 @@ export function useContactDetailFields({
       emails: filterVisibleCollection(fields.emails, viewerRole),
       addresses: filterVisibleCollection(fields.addresses, viewerRole),
       socials: filterVisibleCollection(fields.socials, viewerRole),
+      education: filterVisibleCollection(fields.education, viewerRole),
+      experience: filterVisibleCollection(fields.experience, viewerRole),
+      skills: filterVisibleCollection(fields.skills, viewerRole),
       relationship: filterVisibleCollection(fields[relationshipTabId], viewerRole),
     };
   }, [fields, viewerRole]);

@@ -47,6 +47,10 @@ export function useContactValidation(): (contactDraft: unknown) => ValidationErr
     addressLabels,
     socialPlatforms,
     genders,
+    educationDegrees,
+    employmentTypes,
+    skillCategories,
+    skillProficiencies,
   } = useContactConfig();
   const settings = useGlobalSettings();
   const { role } = usePermissions();
@@ -61,8 +65,24 @@ export function useContactValidation(): (contactDraft: unknown) => ValidationErr
         phoneLabels,
         emailLabels,
         addressLabels,
+        educationDegrees,
+        employmentTypes,
+        skillCategories,
+        skillProficiencies,
       }),
-    [fields, genders, socialPlatforms, relationships, phoneLabels, emailLabels, addressLabels],
+    [
+      fields,
+      genders,
+      socialPlatforms,
+      relationships,
+      phoneLabels,
+      emailLabels,
+      addressLabels,
+      educationDegrees,
+      employmentTypes,
+      skillCategories,
+      skillProficiencies,
+    ],
   );
 
   return useCallback(

@@ -1,7 +1,7 @@
 import { ChangeEvent, FormEvent } from "react";
 import { motion } from "framer-motion";
 import { History, Send } from "lucide-react";
-import { ContactActivity, formatDate } from "@mms/shared";
+import { type ContactActivity, formatDate } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACTIVITY_TYPE_I18N } from "@/lib/contacts/contactI18n";

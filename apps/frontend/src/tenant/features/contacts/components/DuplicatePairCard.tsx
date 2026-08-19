@@ -2,10 +2,10 @@ import { GitMerge, X } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import type { DuplicatePair } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 import {
   ConfidenceBadge,
   DuplicateContactCard,
-  type DuplicatePair,
 } from "@/tenant/features/contacts/components/DuplicateDetectionParts";
 
 export function DuplicatePairCard({

@@ -203,6 +203,60 @@ export const contactSocials = pgTable('contact_socials', {
   index('contact_socials_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
 ]);
 
+export const contactEducations = pgTable('contact_educations', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  contactId: text('contact_id').notNull(),
+  degree: varchar('degree', { length: 150 }),
+  institution: varchar('institution', { length: 255 }).notNull(),
+  fieldOfStudy: varchar('field_of_study', { length: 255 }),
+  year: varchar('year', { length: 50 }),
+  grade: varchar('grade', { length: 50 }),
+  label: varchar('label', { length: 100 }),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
+  index('contact_educations_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+]);
+
+export const contactExperiences = pgTable('contact_experiences', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  contactId: text('contact_id').notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  organization: varchar('organization', { length: 255 }).notNull(),
+  employmentType: varchar('employment_type', { length: 100 }),
+  location: varchar('location', { length: 255 }),
+  startDate: varchar('start_date', { length: 50 }),
+  endDate: varchar('end_date', { length: 50 }),
+  isCurrent: boolean('is_current').notNull().default(false),
+  description: text('description'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
+  index('contact_experiences_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+]);
+
+export const contactSkills = pgTable('contact_skills', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  contactId: text('contact_id').notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  category: varchar('category', { length: 100 }),
+  proficiency: varchar('proficiency', { length: 50 }),
+  yearsOfExperience: varchar('years_of_experience', { length: 50 }),
+  isCertified: boolean('is_certified').notNull().default(false),
+  issuer: varchar('issuer', { length: 255 }),
+  description: text('description'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
+  index('contact_skills_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+]);
+
 export const contactRelationships = pgTable('contact_relationships', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -2146,6 +2200,9 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   emails: many(contactEmails),
   addresses: many(contactAddresses),
   socials: many(contactSocials),
+  educations: many(contactEducations),
+  experiences: many(contactExperiences),
+  skills: many(contactSkills),
   relationships: many(contactRelationships),
   activities: many(contactActivities),
   attachments: many(contactAttachments),
@@ -2175,6 +2232,27 @@ export const contactAddressesRelations = relations(contactAddresses, ({ one }) =
 export const contactSocialsRelations = relations(contactSocials, ({ one }) => ({
   contact: one(contacts, {
     fields: [contactSocials.workspaceSubdomain, contactSocials.contactId],
+    references: [contacts.workspaceSubdomain, contacts.id],
+  }),
+}));
+
+export const contactEducationsRelations = relations(contactEducations, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactEducations.workspaceSubdomain, contactEducations.contactId],
+    references: [contacts.workspaceSubdomain, contacts.id],
+  }),
+}));
+
+export const contactExperiencesRelations = relations(contactExperiences, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactExperiences.workspaceSubdomain, contactExperiences.contactId],
+    references: [contacts.workspaceSubdomain, contacts.id],
+  }),
+}));
+
+export const contactSkillsRelations = relations(contactSkills, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactSkills.workspaceSubdomain, contactSkills.contactId],
     references: [contacts.workspaceSubdomain, contacts.id],
   }),
 }));

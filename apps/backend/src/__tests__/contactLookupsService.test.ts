@@ -40,6 +40,10 @@ describe('contactLookupsService', () => {
     const map = await loadContactLookupsMap('demo');
     expect(map.genders.length).toBeGreaterThan(0);
     expect(map.phoneLabels.length).toBeGreaterThan(0);
+    expect(map.educationDegrees.length).toBeGreaterThan(0);
+    expect(map.employmentTypes.length).toBeGreaterThan(0);
+    expect(map.skillCategories.length).toBeGreaterThan(0);
+    expect(map.skillProficiencies.length).toBeGreaterThan(0);
     expect(map.countryCodes[0]).toMatchObject({ country: expect.any(String), code: expect.any(String) });
   });
 

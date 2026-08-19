@@ -25,6 +25,9 @@ interface ContactDetailOverviewProps {
     emails: { enabled?: boolean }[];
     addresses: { enabled?: boolean }[];
     socials: { enabled?: boolean }[];
+    education: { enabled?: boolean }[];
+    experience: { enabled?: boolean }[];
+    skills: { enabled?: boolean }[];
     relationship: { enabled?: boolean }[];
   };
   primaryPhone: string | null;

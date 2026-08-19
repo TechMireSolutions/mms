@@ -10,6 +10,9 @@ import { buildContactsMap, formatContactCellValue } from "@/lib/contacts/contact
 import {
   renderSocialMetadata,
   renderRelationshipMetadata,
+  renderEducationMetadata,
+  renderExperienceMetadata,
+  renderSkillsMetadata,
 } from "@/tenant/features/contacts/components/contactMetadataCollections";
 import {
   renderLunarDobMetadata,
@@ -102,7 +105,7 @@ export function ContactMetadataCell({
           emptyNode: renderDash(),
         });
       case "whatsapp":
-        return renderWhatsAppMetadata({ contact, t });
+        return renderWhatsAppMetadata({ contact });
       case "socials":
       case "socials_platform":
       case "socials_url":
@@ -111,6 +114,47 @@ export function ContactMetadataCell({
           emptyNode: renderDash(),
           t,
         });
+      case "education":
+        return renderEducationMetadata({
+          contact,
+          emptyNode: renderDash(),
+        });
+      case "educationDegree": {
+        const degrees = (contact.education || []).map((e) => e.degree?.trim()).filter(Boolean);
+        return renderJoinedList(degrees, true);
+      }
+      case "educationInstitution": {
+        const institutions = (contact.education || []).map((e) => e.institution?.trim()).filter(Boolean);
+        return renderJoinedList(institutions, true);
+      }
+      case "experience":
+        return renderExperienceMetadata({
+          contact,
+          emptyNode: renderDash(),
+        });
+      case "experienceTitle": {
+        const titles = (contact.experience || []).map((e) => e.title?.trim()).filter(Boolean);
+        return renderJoinedList(titles, true);
+      }
+      case "experienceOrganization": {
+        const orgs = (contact.experience || []).map((e) => e.organization?.trim()).filter(Boolean);
+        return renderJoinedList(orgs, true);
+      }
+      case "skills":
+        return renderSkillsMetadata({
+          contact,
+          emptyNode: renderDash(),
+        });
+      case "skills_name":
+      case "skillsName": {
+        const names = (contact.skills || []).map((s) => s.name?.trim()).filter(Boolean);
+        return renderJoinedList(names, true);
+      }
+      case "skills_category":
+      case "skillsCategory": {
+        const categories = (contact.skills || []).map((s) => s.category?.trim()).filter(Boolean);
+        return renderJoinedList(categories, true);
+      }
       default: {
         if (isRelationshipWorkColumnKey(colId)) {
           return renderRelationshipMetadata({

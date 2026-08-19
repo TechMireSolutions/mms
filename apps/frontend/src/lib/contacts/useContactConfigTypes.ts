@@ -33,7 +33,13 @@ export type ContactConfigExtras = {
   addressLabels: string[];
   countryCodes: Array<{ country: string; code: string }>;
   countryCodesMap: Record<string, string>;
+  educationDegrees: string[];
+  employmentTypes: string[];
+  skillCategories: string[];
+  skillProficiencies: string[];
   lookupsReady: boolean;
+  lookupsLoading: boolean;
+  lookupsError: Error | null;
   reloadCollections: () => void;
   updateGenders: (genderOptions: string[]) => void | Promise<void>;
   updateSocialPlatforms: (socialPlatformOptions: string[]) => void | Promise<void>;
@@ -44,6 +50,10 @@ export type ContactConfigExtras = {
   updateCountryCodes: (
     countryCodeOptions: Array<{ country: string; code: string }>,
   ) => void | Promise<void>;
+  updateEducationDegrees: (educationDegreeOptions: string[]) => void | Promise<void>;
+  updateEmploymentTypes: (employmentTypeOptions: string[]) => void | Promise<void>;
+  updateSkillCategories: (skillCategoryOptions: string[]) => void | Promise<void>;
+  updateSkillProficiencies: (skillProficiencyOptions: string[]) => void | Promise<void>;
 
   // ── Column Layout & Visibility ──────────────────────────────────────────────
   columnRegistry: ColumnRegistryEntry[];

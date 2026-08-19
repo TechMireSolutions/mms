@@ -1,15 +1,12 @@
 import { useState, useMemo, useEffect, type ComponentType } from "react";
-import { User, Phone, Mail, MapPin, Share2, Heart } from "lucide-react";
+import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { type Contact, DEFAULT_FORM_TABS } from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
-import {
-  ContactFormTabContent,
-  ContactFormFooterStart,
-} from "@/tenant/features/contacts/components/ContactFormTabContent";
-import React from "react";
+import { ContactFormTabContent } from "@/tenant/features/contacts/components/ContactFormTabContent";
+import { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
 interface ContactFormProps {
   open?: boolean;
@@ -26,7 +23,7 @@ interface ContactFormProps {
 }
 
 /**
- * Icon map for the six system form tabs. The tab definitions (key, labelKey,
+ * Icon map for the system form tabs. The tab definitions (key, labelKey,
  * order) come from the shared `DEFAULT_FORM_TABS` SSOT in `@mms/shared`
  * (`contactTabRegistry.ts`); only the Lucide icon components are local because
  * Lucide React icons are a frontend concern.
@@ -37,6 +34,10 @@ const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
   emails: Mail,
   addresses: MapPin,
   social: Share2,
+  socials: Share2,
+  education: GraduationCap,
+  experience: Briefcase,
+  skills: Award,
   relationship: Heart,
 };
 export function ContactForm({
@@ -78,6 +79,10 @@ export function ContactForm({
       emails: draft.collectionCounts.filledEmails,
       addresses: draft.collectionCounts.filledAddresses,
       social: draft.collectionCounts.filledSocials,
+      socials: draft.collectionCounts.filledSocials,
+      education: draft.collectionCounts.filledEducation,
+      experience: draft.collectionCounts.filledExperience,
+      skills: draft.collectionCounts.filledSkills,
       relationship: draft.collectionCounts.filledRelationships,
     };
 
@@ -106,6 +111,7 @@ export function ContactForm({
       icon={User}
       tall
       priority={priority}
+      error={draft.lookupsError ? t("contacts.form.lookupsLoadFailed") : undefined}
       tabs={visibleTabs}
       activeTab={tab}
       onTabChange={setTab}

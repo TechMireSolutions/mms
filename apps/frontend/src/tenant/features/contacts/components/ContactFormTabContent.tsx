@@ -4,12 +4,13 @@ import { ContactPhonesTab } from "@/tenant/features/contacts/components/formTabs
 import { ContactEmailsTab } from "@/tenant/features/contacts/components/formTabs/ContactEmailsTab";
 import { ContactAddressesTab } from "@/tenant/features/contacts/components/formTabs/ContactAddressesTab";
 import { ContactSocialsTab } from "@/tenant/features/contacts/components/formTabs/ContactSocialsTab";
+import { ContactEducationTab } from "@/tenant/features/contacts/components/formTabs/ContactEducationTab";
+import { ContactExperienceTab } from "@/tenant/features/contacts/components/formTabs/ContactExperienceTab";
+import { ContactSkillsTab } from "@/tenant/features/contacts/components/formTabs/ContactSkillsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
 import type { ContactSubListTabBaseProps } from "@/tenant/features/contacts/components/formTabs/types";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { normalizeContactFormTabId } from "@mms/shared";
-
-export { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
 export type ContactFormDraftState = ReturnType<typeof useContactFormDraft>;
 
@@ -126,12 +127,36 @@ export function ContactFormTabContent({
           onUpdateSocialPlatforms={draft.updateSocialPlatforms}
         />
       );
+    case "education":
+      return (
+        <ContactEducationTab
+          {...listBase}
+          degreeOptions={draft.educationDegrees}
+          onUpdateDegreeOptions={draft.updateEducationDegrees}
+        />
+      );
+    case "experience":
+      return (
+        <ContactExperienceTab
+          {...listBase}
+          employmentTypeOptions={draft.employmentTypes}
+          onUpdateEmploymentTypeOptions={draft.updateEmploymentTypes}
+        />
+      );
+    case "skills":
+      return (
+        <ContactSkillsTab
+          {...listBase}
+          categoryOptions={draft.skillCategories}
+          onUpdateCategoryOptions={draft.updateSkillCategories}
+          proficiencyOptions={draft.skillProficiencies}
+          onUpdateProficiencyOptions={draft.updateSkillProficiencies}
+        />
+      );
     case "relationship":
       return (
         <ContactRelationshipTab
           {...listBase}
-          relationshipOptions={draft.relationshipOptions}
-          onUpdateRelationships={draft.updateRelationships}
         />
       );
     default:

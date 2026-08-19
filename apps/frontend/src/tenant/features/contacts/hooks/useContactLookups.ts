@@ -23,6 +23,10 @@ const defaults = (): ContactLookupsMap => {
     emailLabels: seeded.emailLabels,
     addressLabels: seeded.addressLabels,
     countryCodes: seeded.countryCodes,
+    educationDegrees: seeded.educationDegrees,
+    employmentTypes: seeded.employmentTypes,
+    skillCategories: seeded.skillCategories,
+    skillProficiencies: seeded.skillProficiencies,
   };
 };
 

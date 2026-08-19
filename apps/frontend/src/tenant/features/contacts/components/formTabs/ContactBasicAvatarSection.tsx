@@ -4,7 +4,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { AvatarCropper } from "@/components/ui/AvatarCropper";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
-import { Contact, getDisplayName } from "@mms/shared";
+import { type Contact, getDisplayName } from "@mms/shared";
 import { GenderIcon } from "@/components/ui/GenderIcon";
 import { Badge } from "@/components/ui/badge";
 import { genderBadgeClass } from "@/lib/semanticTone";

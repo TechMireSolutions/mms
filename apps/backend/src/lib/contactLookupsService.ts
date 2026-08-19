@@ -2,8 +2,12 @@ import {
   CONTACT_LOOKUP_KINDS,
   COUNTRY_CODES,
   DEFAULT_ADDRESS_LABELS,
+  DEFAULT_EDUCATION_DEGREE_LABELS,
   DEFAULT_EMAIL_LABELS,
+  DEFAULT_EMPLOYMENT_TYPE_LABELS,
   DEFAULT_PHONE_LABELS,
+  DEFAULT_SKILL_CATEGORY_LABELS,
+  DEFAULT_SKILL_PROFICIENCY_LABELS,
   GENDERS,
   RELATIONSHIPS,
   SOCIAL_PLATFORMS,
@@ -44,6 +48,14 @@ function defaultStringItems(kind: ContactStringLookupKind): string[] {
       return [...DEFAULT_EMAIL_LABELS];
     case 'addressLabels':
       return [...DEFAULT_ADDRESS_LABELS];
+    case 'educationDegrees':
+      return [...DEFAULT_EDUCATION_DEGREE_LABELS];
+    case 'employmentTypes':
+      return [...DEFAULT_EMPLOYMENT_TYPE_LABELS];
+    case 'skillCategories':
+      return [...DEFAULT_SKILL_CATEGORY_LABELS];
+    case 'skillProficiencies':
+      return [...DEFAULT_SKILL_PROFICIENCY_LABELS];
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;
@@ -63,6 +75,10 @@ function emptyStringLookupsMap(): Record<ContactStringLookupKind, string[]> {
     phoneLabels: defaultStringItems('phoneLabels'),
     emailLabels: defaultStringItems('emailLabels'),
     addressLabels: defaultStringItems('addressLabels'),
+    educationDegrees: defaultStringItems('educationDegrees'),
+    employmentTypes: defaultStringItems('employmentTypes'),
+    skillCategories: defaultStringItems('skillCategories'),
+    skillProficiencies: defaultStringItems('skillProficiencies'),
   };
 }
 

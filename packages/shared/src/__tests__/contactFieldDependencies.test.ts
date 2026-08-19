@@ -18,8 +18,10 @@ describe('contactFieldDependencies', () => {
 
   it('blocks removal when field is an enabled column', () => {
     const issues = getContactFieldRemovalIssues({
-      fieldKey: 'name',
-      columnRegistry: DEFAULT_COLUMN_REGISTRY,
+      fieldKey: 'customField',
+      columnRegistry: [
+        { key: 'custom:customField', label: 'Custom Field', enabled: true, order: 10 },
+      ],
       preferences: { duplicateDetectionFields: [] },
     });
     expect(issues.some((i) => i.area === 'column')).toBe(true);

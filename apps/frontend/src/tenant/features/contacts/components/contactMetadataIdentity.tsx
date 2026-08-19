@@ -1,6 +1,6 @@
 import { CheckCircle2, MapPin } from "lucide-react";
 import {
-  Contact,
+  type Contact,
   hasWhatsApp,
   getPrimaryAddress,
   type AppTranslationKey,
@@ -75,7 +75,6 @@ export function renderWhatsAppMetadata({
   contact,
 }: {
   contact: Contact;
-  t: Translate;
 }): React.ReactNode {
   return <StatusBadge status={hasWhatsApp(contact) ? "success" : "none"} size="sm" />;
 }

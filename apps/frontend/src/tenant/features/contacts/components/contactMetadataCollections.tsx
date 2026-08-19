@@ -100,3 +100,92 @@ export function renderRelationshipMetadata({
 
   return renderJoinedList(items.filter(Boolean));
 }
+
+export function renderEducationMetadata({
+  contact,
+  emptyNode,
+}: {
+  contact: Contact;
+  emptyNode: React.ReactNode;
+}): React.ReactNode {
+  const educations = (contact.education || []).filter(
+    (edu) => (edu.degree || "").trim() || (edu.institution || "").trim(),
+  );
+  if (educations.length === 0) return emptyNode;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+      {educations.map((edu, idx) => (
+        <span
+          key={edu.id || idx}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium"
+        >
+          {edu.degree ? <span className="font-semibold">{edu.degree}</span> : null}
+          {edu.degree && edu.institution ? <span className="opacity-60">·</span> : null}
+          <span className="truncate max-w-[10rem]">{edu.institution}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function renderExperienceMetadata({
+  contact,
+  emptyNode,
+}: {
+  contact: Contact;
+  emptyNode: React.ReactNode;
+}): React.ReactNode {
+  const experiences = (contact.experience || []).filter(
+    (exp) => (exp.title || "").trim() || (exp.organization || "").trim(),
+  );
+  if (experiences.length === 0) return emptyNode;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+      {experiences.map((exp, idx) => (
+        <span
+          key={exp.id || idx}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium"
+        >
+          {exp.title ? <span className="font-semibold">{exp.title}</span> : null}
+          {exp.title && exp.organization ? <span className="opacity-60">·</span> : null}
+          <span className="truncate max-w-[10rem]">{exp.organization}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function renderSkillsMetadata({
+  contact,
+  emptyNode,
+}: {
+  contact: Contact;
+  emptyNode: React.ReactNode;
+}): React.ReactNode {
+  const skills = (contact.skills || []).filter(
+    (s) => (s.name || "").trim(),
+  );
+  if (skills.length === 0) return emptyNode;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+      {skills.map((s, idx) => (
+        <span
+          key={s.id || idx}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium"
+        >
+          <span className="font-semibold">{s.name}</span>
+          {s.proficiency ? (
+            <>
+              <span className="opacity-60">·</span>
+              <span className="text-[11px] opacity-85">{s.proficiency}</span>
+            </>
+          ) : null}
+        </span>
+      ))}
+    </div>
+  );
+}
+

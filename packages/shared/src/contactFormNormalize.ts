@@ -3,18 +3,26 @@ import {
   DEFAULT_ADDRESS_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_PHONE_LABELS,
+  DEFAULT_SKILL_CATEGORY_LABELS,
+  DEFAULT_SKILL_PROFICIENCY_LABELS,
   SOCIAL_PLATFORMS,
   type Contact,
   type PhoneNumber as ContactPhone,
   type EmailAddress as ContactEmail,
   type Address as ContactAddress,
   type SocialLink as ContactSocial,
+  type ContactEducation,
+  type ContactExperience,
+  type ContactSkill,
   type RelationshipContact,
 } from "./contactTypes.js";
 import { getPrimaryPhone, normalizeToE164 } from "./phoneUtils.js";
 import { getPrimaryEmail } from "./contactDisplayUtils.js";
 import {
   normalizeAddressItem,
+  normalizeEducationItem,
+  normalizeExperienceItem,
+  normalizeSkillItem,
   normalizeEmailItem,
   normalizeRelationshipContactItem,
   normalizePhoneItem,
@@ -61,6 +69,9 @@ export function normalizeContactForEdit(
     emails: [],
     addresses: [],
     socials: [],
+    education: [],
+    experience: [],
+    skills: [],
     relationshipContacts: [],
     relationships: [],
     ...initialDraft,
@@ -183,6 +194,47 @@ export function normalizeContactForEdit(
     socials = [{ platform: defaults.socialPlatform || "Facebook", url: "" }];
   }
 
+  let education: ContactEducation[] = Array.isArray(merged.education)
+    ? merged.education.map((item) => normalizeEducationItem(item, defaults))
+    : [];
+
+  if (education.length === 0) {
+    education = [{ degree: defaults.educationDegree || "Matric / Secondary", institution: "", fieldOfStudy: "", year: "", grade: "" }];
+  }
+
+  let experience: ContactExperience[] = Array.isArray(merged.experience)
+    ? merged.experience.map((item) => normalizeExperienceItem(item, defaults))
+    : [];
+
+  if (experience.length === 0) {
+    experience = [{
+      title: "",
+      organization: "",
+      employmentType: defaults.employmentType || "Full-time",
+      location: "",
+      startDate: "",
+      endDate: "",
+      isCurrent: false,
+      description: "",
+    }];
+  }
+
+  let skills: ContactSkill[] = Array.isArray(merged.skills)
+    ? merged.skills.map((item) => normalizeSkillItem(item, defaults))
+    : [];
+
+  if (skills.length === 0) {
+    skills = [{
+      name: "",
+      category: defaults.skillCategory || DEFAULT_SKILL_CATEGORY_LABELS[0] || "Islamic Studies & Qira'at",
+      proficiency: defaults.skillProficiency || DEFAULT_SKILL_PROFICIENCY_LABELS[1] || "Intermediate",
+      yearsOfExperience: "",
+      isCertified: false,
+      issuer: "",
+      description: "",
+    }];
+  }
+
   let relationshipContacts: RelationshipContact[] = Array.isArray(merged.relationshipContacts)
     ? merged.relationshipContacts.map((item) => normalizeRelationshipContactItem(item, defaults))
     : [];
@@ -200,6 +252,9 @@ export function normalizeContactForEdit(
     emails,
     addresses,
     socials,
+    education,
+    experience,
+    skills,
     relationshipContacts,
   } as Partial<Contact>;
 }
@@ -259,6 +314,9 @@ export function mergeContactEditSavePayload(
     emails: draft.emails ?? [],
     addresses: draft.addresses ?? [],
     socials: draft.socials ?? [],
+    education: draft.education ?? [],
+    experience: draft.experience ?? [],
+    skills: draft.skills ?? [],
     relationshipContacts: draft.relationshipContacts ?? [],
   };
   const synced = syncContactScalarFields(withCollections);

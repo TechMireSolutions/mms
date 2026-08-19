@@ -37,6 +37,10 @@ export function buildOptionDefaults({
   addressLabels,
   socialPlatforms,
   relationshipOptions,
+  educationDegrees,
+  employmentTypes,
+  skillCategories,
+  skillProficiencies,
   defaultPhoneCountryCode,
 }: {
   phoneLabels: string[];
@@ -44,6 +48,10 @@ export function buildOptionDefaults({
   addressLabels: string[];
   socialPlatforms: string[];
   relationshipOptions: string[];
+  educationDegrees?: string[];
+  employmentTypes?: string[];
+  skillCategories?: string[];
+  skillProficiencies?: string[];
   defaultPhoneCountryCode: string;
 }): ContactItemNormalizeDefaults {
   return {
@@ -51,6 +59,10 @@ export function buildOptionDefaults({
     emailLabel: emailLabels[0],
     addressLabel: addressLabels[0],
     socialPlatform: socialPlatforms[0],
+    educationDegree: educationDegrees?.[0],
+    employmentType: employmentTypes?.[0],
+    skillCategory: skillCategories?.[0],
+    skillProficiency: skillProficiencies?.[0],
     relationship: relationshipOptions[0] ?? "",
     defaultPhoneCountryCode,
   };

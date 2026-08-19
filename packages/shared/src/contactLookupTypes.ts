@@ -9,6 +9,10 @@ export const CONTACT_LOOKUP_KINDS = [
   'emailLabels',
   'addressLabels',
   'countryCodes',
+  'educationDegrees',
+  'employmentTypes',
+  'skillCategories',
+  'skillProficiencies',
 ] as const;
 
 export type ContactLookupKind = (typeof CONTACT_LOOKUP_KINDS)[number];
@@ -34,6 +38,10 @@ const contactLookupsMapSchema = z.object({
   emailLabels: contactLookupStringItemsSchema,
   addressLabels: contactLookupStringItemsSchema,
   countryCodes: contactLookupCountryItemsSchema,
+  educationDegrees: contactLookupStringItemsSchema,
+  employmentTypes: contactLookupStringItemsSchema,
+  skillCategories: contactLookupStringItemsSchema,
+  skillProficiencies: contactLookupStringItemsSchema,
 });
 
 export type ContactLookupsMap = z.infer<typeof contactLookupsMapSchema>;
@@ -65,6 +73,10 @@ export const CONTACT_LOOKUP_FIELD_TARGETS = {
   phoneLabels: { tabId: 'phones', fieldId: 'label' },
   emailLabels: { tabId: 'emails', fieldId: 'label' },
   addressLabels: { tabId: 'addresses', fieldId: 'label' },
+  educationDegrees: { tabId: 'education', fieldId: 'degree' },
+  employmentTypes: { tabId: 'experience', fieldId: 'employmentType' },
+  skillCategories: { tabId: 'skills', fieldId: 'category' },
+  skillProficiencies: { tabId: 'skills', fieldId: 'proficiency' },
 } as const satisfies Record<
   Exclude<ContactLookupKind, 'countryCodes'>,
   { tabId: string; fieldId: string }

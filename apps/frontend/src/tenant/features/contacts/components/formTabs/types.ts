@@ -1,6 +1,6 @@
 import type { Contact, FieldDefinition } from "@mms/shared";
 
-export type ContactSubListKey = "phones" | "emails" | "addresses" | "socials" | "relationshipContacts";
+export type ContactSubListKey = "phones" | "emails" | "addresses" | "socials" | "education" | "experience" | "skills" | "relationshipContacts";
 
 export type AddSubListItem = <K extends ContactSubListKey>(
   fieldKey: K,

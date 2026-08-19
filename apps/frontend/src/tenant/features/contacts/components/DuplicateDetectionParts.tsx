@@ -10,11 +10,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
-export {
-  type DuplicatePair,
-} from "@/tenant/features/contacts/components/duplicateDetectionTypes";
-export { MergePreview } from "@/tenant/features/contacts/components/DuplicateMergePreview";
-
 export function ConfidenceBadge({
   score,
   prefs,

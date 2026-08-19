@@ -71,6 +71,84 @@ describe("hasContactCardColumnData", () => {
     ).toBe(true);
   });
 
+  it("detects education columns by institution and degree", () => {
+    expect(
+      hasContactCardColumnData(
+        { id: 1, education: [{ institution: "University of Karachi", degree: "BSc" }] } as Contact,
+        "education",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, education: [{ institution: "", degree: "BSc" }] } as Contact,
+        "educationDegree",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, education: [{ institution: "NED University", degree: "" }] } as Contact,
+        "educationInstitution",
+      ),
+    ).toBe(true);
+    expect(hasContactCardColumnData({ id: 1 } as Contact, "education")).toBe(false);
+  });
+
+  it("detects experience columns by organization and title", () => {
+    expect(
+      hasContactCardColumnData(
+        { id: 1, experience: [{ organization: "TechMire Solutions", title: "Senior Engineer" }] } as Contact,
+        "experience",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, experience: [{ organization: "", title: "Senior Engineer" }] } as Contact,
+        "experienceTitle",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, experience: [{ organization: "TechMire Solutions", title: "" }] } as Contact,
+        "experienceOrganization",
+      ),
+    ).toBe(true);
+    expect(hasContactCardColumnData({ id: 1 } as Contact, "experience")).toBe(false);
+  });
+
+  it("detects skills columns by name and category", () => {
+    expect(
+      hasContactCardColumnData(
+        { id: 1, skills: [{ name: "Tajweed", category: "Islamic Studies & Qira'at" }] } as Contact,
+        "skills",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, skills: [{ name: "Tajweed", category: "" }] } as Contact,
+        "skills_name",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, skills: [{ name: "Tajweed", category: "" }] } as Contact,
+        "skillsName",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, skills: [{ name: "", category: "Languages & Translation" }] } as Contact,
+        "skills_category",
+      ),
+    ).toBe(true);
+    expect(
+      hasContactCardColumnData(
+        { id: 1, skills: [{ name: "", category: "Languages & Translation" }] } as Contact,
+        "skillsCategory",
+      ),
+    ).toBe(true);
+    expect(hasContactCardColumnData({ id: 1 } as Contact, "skills")).toBe(false);
+  });
+
   it("handles booleans, numbers, and arrays in the default branch", () => {
     const contact = { id: 1, customBoolean: true, childrenCount: 3, customTags: ["a"] } as unknown as Contact;
     expect(hasContactCardColumnData(contact, "customBoolean")).toBe(true);

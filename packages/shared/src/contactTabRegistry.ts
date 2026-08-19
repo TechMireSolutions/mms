@@ -53,7 +53,10 @@ export const DEFAULT_FORM_TABS: TabDefinition[] = [
   { key: "emails",    label: "Emails",     labelKey: "contacts.form.tabEmails",    enabled: true, order: 2, isSystem: true },
   { key: "addresses", label: "Addresses",  labelKey: "contacts.form.tabAddresses", enabled: true, order: 3, isSystem: true },
   { key: "socials",   label: "Socials",    labelKey: "contacts.form.tabSocials",   enabled: true, order: 4, isSystem: true },
-  { key: "relationship", label: "Relationship", labelKey: "contacts.form.tabRelationship", enabled: true, order: 5, isSystem: true },
+  { key: "education", label: "Education",  labelKey: "contacts.form.tabEducation", enabled: true, order: 5, isSystem: true },
+  { key: "experience", label: "Experience", labelKey: "contacts.form.tabExperience", enabled: true, order: 6, isSystem: true },
+  { key: "skills",    label: "Skills",     labelKey: "contacts.form.tabSkills",     enabled: true, order: 7, isSystem: true },
+  { key: "relationship", label: "Relationship", labelKey: "contacts.form.tabRelationship", enabled: true, order: 8, isSystem: true },
 ];
 
 /** Seed form tab definition when present in defaults or legacy `custom`. */
@@ -129,8 +132,15 @@ export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "country",                label: "Country",                labelKey: "contacts.columns.country",                enabled: false, order: 12, sortable: true,  width: 110 },
   { key: "socials_platform",       label: "Social Platforms",       labelKey: "contacts.columns.socialPlatforms",        enabled: false, order: 13, sortable: false, width: 130 },
   { key: "socials_url",            label: "Social Links",           labelKey: "contacts.columns.socialLinks",            enabled: false, order: 14, sortable: false, width: 150 },
-  { key: "relationship_contact", label: "Relationship Contact", labelKey: "contacts.columns.relationshipContact", enabled: false, order: 15, sortable: false, width: 150 },
-  { key: "relationship_type",    label: "Relationship Type",    labelKey: "contacts.columns.relationshipType",    enabled: false, order: 16, sortable: false, width: 140 },
+  { key: "education_degree",       label: "Degree",                 labelKey: "contacts.columns.educationDegree",       enabled: false, order: 15, sortable: false, width: 140 },
+  { key: "education_institution",  label: "Institution",            labelKey: "contacts.columns.educationInstitution",  enabled: false, order: 16, sortable: false, width: 160 },
+  { key: "experience_title",       label: "Job Title",               labelKey: "contacts.columns.experienceTitle",        enabled: false, order: 17, sortable: false, width: 150 },
+  { key: "experience_organization", label: "Organization",           labelKey: "contacts.columns.experienceOrganization", enabled: false, order: 18, sortable: false, width: 160 },
+  { key: "skills",                 label: "Skills",                 labelKey: "contacts.columns.skills",                 enabled: false, order: 19, sortable: false, width: 160 },
+  { key: "skills_name",            label: "Skill Name",             labelKey: "contacts.columns.skillsName",             enabled: false, order: 20, sortable: false, width: 140 },
+  { key: "skills_category",        label: "Skill Category",         labelKey: "contacts.columns.skillsCategory",         enabled: false, order: 21, sortable: false, width: 150 },
+  { key: "relationship_contact",   label: "Relationship Contact",   labelKey: "contacts.columns.relationshipContact",   enabled: false, order: 22, sortable: false, width: 150 },
+  { key: "relationship_type",      label: "Relationship Type",      labelKey: "contacts.columns.relationshipType",      enabled: false, order: 23, sortable: false, width: 140 },
 ];
 
 export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: string }> = {
@@ -149,6 +159,13 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   country: { tabId: "addresses", fieldId: "country" },
   socials_platform: { tabId: "socials", fieldId: "platform" },
   socials_url: { tabId: "socials", fieldId: "url" },
+  education_degree: { tabId: "education", fieldId: "degree" },
+  education_institution: { tabId: "education", fieldId: "institution" },
+  experience_title: { tabId: "experience", fieldId: "title" },
+  experience_organization: { tabId: "experience", fieldId: "organization" },
+  skills: { tabId: "skills", fieldId: "name" },
+  skills_name: { tabId: "skills", fieldId: "name" },
+  skills_category: { tabId: "skills", fieldId: "category" },
   relationship_contact: { tabId: "relationship", fieldId: "contactId" },
   relationship_type: { tabId: "relationship", fieldId: "relationship" },
 };

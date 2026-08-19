@@ -45,18 +45,30 @@ export function useContactFormDraftHelpers({
     const filledPhones = (contactDraft.phones || []).filter((phone) => (phone.number || "").trim()).length;
     const filledEmails = (contactDraft.emails || []).filter((email) => (email.address || "").trim()).length;
     const filledAddresses = (contactDraft.addresses || []).filter(
-      (address) => (address.line1 || address.city || "").trim(),
+      (address) => (address.line1 || "").trim(),
     ).length;
     const filledSocials = (contactDraft.socials || []).filter((social) => (social.url || "").trim()).length;
+    const filledEducation = (contactDraft.education || []).filter(
+      (edu) => (edu.institution || edu.fieldOfStudy || "").trim(),
+    ).length;
+    const filledExperience = (contactDraft.experience || []).filter(
+      (exp) => (exp.title || exp.organization || "").trim(),
+    ).length;
+    const filledSkills = (contactDraft.skills || []).filter(
+      (skill) => (skill.name || "").trim(),
+    ).length;
     const filledRelationships = (contactDraft.relationshipContacts || []).filter(
       (link) => link.contactId,
     ).length;
-    return { filledPhones, filledEmails, filledAddresses, filledSocials, filledRelationships };
+    return { filledPhones, filledEmails, filledAddresses, filledSocials, filledEducation, filledExperience, filledSkills, filledRelationships };
   }, [
     contactDraft.phones,
     contactDraft.emails,
     contactDraft.addresses,
     contactDraft.socials,
+    contactDraft.education,
+    contactDraft.experience,
+    contactDraft.skills,
     contactDraft.relationshipContacts,
   ]);
 

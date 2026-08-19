@@ -23,6 +23,25 @@ export function hasContactCardColumnData(contact: Contact, colId: string): boole
       return Boolean(contact.socials && contact.socials.some((s) => s.platform && s.platform.trim().length > 0));
     case "socials_url":
       return Boolean(contact.socials && contact.socials.some((s) => s.url && s.url.trim().length > 0));
+    case "education":
+      return Boolean(contact.education && contact.education.some((e) => e.institution?.trim() || e.degree?.trim()));
+    case "educationDegree":
+      return Boolean(contact.education && contact.education.some((e) => e.degree?.trim()));
+    case "educationInstitution":
+      return Boolean(contact.education && contact.education.some((e) => e.institution?.trim()));
+    case "experience":
+      return Boolean(contact.experience && contact.experience.some((e) => e.organization?.trim() || e.title?.trim()));
+    case "experienceTitle":
+      return Boolean(contact.experience && contact.experience.some((e) => e.title?.trim()));
+    case "experienceOrganization":
+      return Boolean(contact.experience && contact.experience.some((e) => e.organization?.trim()));
+    case "skills":
+    case "skills_name":
+    case "skillsName":
+      return Boolean(contact.skills && contact.skills.some((s) => s.name?.trim()));
+    case "skills_category":
+    case "skillsCategory":
+      return Boolean(contact.skills && contact.skills.some((s) => s.category?.trim()));
     case "line1":
     case "city":
     case "state":

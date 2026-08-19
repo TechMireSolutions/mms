@@ -1,26 +1,26 @@
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { RELATIONSHIPS } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { Field, FieldErrorMessage, EditableSelect } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 
+/** Fixed static frontend enum list for Relationship Type dropdown per requirements. */
+export const STATIC_RELATIONSHIP_OPTIONS: readonly string[] = [...RELATIONSHIPS];
+
 interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
-  relationshipOptions: string[];
+  relationshipOptions?: string[];
   onUpdateRelationships?: (options: string[]) => void;
 }
 
 export function ContactRelationshipTab({
   contactDraft,
   getLocalId,
-  relationshipOptions,
-  onUpdateRelationships,
   isFieldEnabled,
   isFieldRequired,
   getListItemError,
-  fields,
-  formInstanceId,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
@@ -34,7 +34,7 @@ export function ContactRelationshipTab({
   const contactIdRequired = isFieldRequired("relationship", "contactId");
 
   const emptyLink = () => ({
-    relationship: relationshipOptions[0] || "",
+    relationship: STATIC_RELATIONSHIP_OPTIONS[0] || "",
     contactId: "",
   });
 
@@ -65,7 +65,7 @@ export function ContactRelationshipTab({
           {links.map((link, idx) => {
             const pickerError = getListItemError("relationship", "contactId", idx);
             const typeError = getListItemError("relationship", "relationship", idx);
-            const typeValue = link.relationship || relationshipOptions[0] || "";
+            const typeValue = link.relationship || STATIC_RELATIONSHIP_OPTIONS[0] || "";
             return (
               <ListFieldCard
                 key={getLocalId("relationship", idx)}
@@ -108,12 +108,11 @@ export function ContactRelationshipTab({
                       error={typeError}
                     >
                       <EditableSelect
-                        options={relationshipOptions}
+                        options={STATIC_RELATIONSHIP_OPTIONS as string[]}
                         value={typeValue}
                         onChange={(val) =>
                           updateSubListItem("relationshipContacts", idx, { relationship: val })
                         }
-                        onUpdateOptions={onUpdateRelationships}
                         placeholder={t("common.selectPlaceholder")}
                         className="w-full min-w-0"
                         id={`relationship-type-${idx}`}

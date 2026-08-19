@@ -1,10 +1,12 @@
-/** Contact merge helpers for duplicate resolution. */
 import {
   type Contact,
   type PhoneNumber as ContactPhone,
   type EmailAddress as ContactEmail,
   type Address as ContactAddress,
   type SocialLink as ContactSocial,
+  type ContactEducation,
+  type ContactExperience,
+  type ContactSkill,
   type RelationshipContact,
 } from "./contactTypes.js";
 
@@ -25,6 +27,8 @@ export const mergeContacts = (
       key === "emails" ||
       key === "addresses" ||
       key === "socials" ||
+      key === "education" ||
+      key === "experience" ||
       key === "relationshipContacts" ||
       key === "notes" ||
       key === "createdAt" ||
@@ -114,6 +118,66 @@ export const mergeContacts = (
   (keep.socials || []).forEach(addSocial);
   (other.socials || []).forEach(addSocial);
   merged.socials = mergedSocials;
+
+  // Merge education list: match by degree & institution & year
+  const seenEducation = new Set<string>();
+  const mergedEducation: ContactEducation[] = [];
+
+  const addEducation = (edu: ContactEducation | undefined): void => {
+    if (!edu || !edu.institution) return;
+    const key = [edu.degree, edu.institution, edu.fieldOfStudy, edu.year]
+      .filter(Boolean)
+      .map((seg) => seg!.trim().toLowerCase())
+      .join("|");
+    if (!seenEducation.has(key)) {
+      seenEducation.add(key);
+      mergedEducation.push({ ...edu });
+    }
+  };
+
+  (keep.education || []).forEach(addEducation);
+  (other.education || []).forEach(addEducation);
+  merged.education = mergedEducation;
+
+  // Merge experience list: match by title & organization & startDate
+  const seenExperience = new Set<string>();
+  const mergedExperience: ContactExperience[] = [];
+
+  const addExperience = (exp: ContactExperience | undefined): void => {
+    if (!exp || !exp.organization || !exp.title) return;
+    const key = [exp.title, exp.organization, exp.startDate]
+      .filter(Boolean)
+      .map((seg) => seg!.trim().toLowerCase())
+      .join("|");
+    if (!seenExperience.has(key)) {
+      seenExperience.add(key);
+      mergedExperience.push({ ...exp });
+    }
+  };
+
+  (keep.experience || []).forEach(addExperience);
+  (other.experience || []).forEach(addExperience);
+  merged.experience = mergedExperience;
+
+  // Merge skills list: match by name & category
+  const seenSkills = new Set<string>();
+  const mergedSkills: ContactSkill[] = [];
+
+  const addSkill = (skill: ContactSkill | undefined): void => {
+    if (!skill || !skill.name) return;
+    const key = [skill.name, skill.category]
+      .filter(Boolean)
+      .map((seg) => seg!.trim().toLowerCase())
+      .join("|");
+    if (!seenSkills.has(key)) {
+      seenSkills.add(key);
+      mergedSkills.push({ ...skill });
+    }
+  };
+
+  (keep.skills || []).forEach(addSkill);
+  (other.skills || []).forEach(addSkill);
+  merged.skills = mergedSkills;
 
   // Merge relationship contacts: match by contact ID & relationship
   const seenRelationship = new Set<string>();

@@ -442,6 +442,27 @@
       "when": 1786683600000,
       "tag": "0062_dashboard_preferences_widgets",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1786687200000,
+      "tag": "0063_contact_educations",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1786690800000,
+      "tag": "0064_contact_experiences",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1786694400000,
+      "tag": "0065_contact_skills",
+      "breakpoints": true
     }
   ]
 }

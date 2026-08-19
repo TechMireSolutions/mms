@@ -1,5 +1,5 @@
 import { BrainCircuit } from "lucide-react";
-import { Contact, getDisplayName } from "@mms/shared";
+import { type Contact, getDisplayName } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactIdentityMeta } from "../ContactIdentityMeta";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";

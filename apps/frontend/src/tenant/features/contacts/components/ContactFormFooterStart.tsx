@@ -39,6 +39,21 @@ export function ContactFormFooterStart({
             {collectionCounts.filledEmails} {t("contacts.form.emailsLabel")}
           </FormFooterBadge>
         )}
+        {collectionCounts.filledEducation > 0 && (
+          <FormFooterBadge tone="info">
+            {collectionCounts.filledEducation} {t("contacts.form.tabEducation")}
+          </FormFooterBadge>
+        )}
+        {collectionCounts.filledExperience > 0 && (
+          <FormFooterBadge tone="muted">
+            {collectionCounts.filledExperience} {t("contacts.form.tabExperience")}
+          </FormFooterBadge>
+        )}
+        {collectionCounts.filledSkills > 0 && (
+          <FormFooterBadge tone="success">
+            {collectionCounts.filledSkills} {t("contacts.form.tabSkills")}
+          </FormFooterBadge>
+        )}
         {collectionCounts.filledRelationships > 0 && (
           <FormFooterBadge tone="destructive">
             {collectionCounts.filledRelationships} {t("contacts.detail.relationships")}

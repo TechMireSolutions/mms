@@ -13,6 +13,10 @@ export function useContactFormDraftOptions({
   addressLabels,
   socialPlatforms,
   relationshipOptions,
+  educationDegrees,
+  employmentTypes,
+  skillCategories,
+  skillProficiencies,
   defaultCountryCode,
   countryCodes,
   defaultCountry,
@@ -23,6 +27,10 @@ export function useContactFormDraftOptions({
   addressLabels: string[];
   socialPlatforms: string[];
   relationshipOptions: string[];
+  educationDegrees?: string[];
+  employmentTypes?: string[];
+  skillCategories?: string[];
+  skillProficiencies?: string[];
   defaultCountryCode: string;
   countryCodes: CountryCodeEntry[];
   defaultCountry: string;
@@ -36,6 +44,10 @@ export function useContactFormDraftOptions({
         addressLabels,
         socialPlatforms,
         relationshipOptions,
+        educationDegrees,
+        employmentTypes,
+        skillCategories,
+        skillProficiencies,
         defaultPhoneCountryCode: defaultCountryCode,
       }),
     [
@@ -44,6 +56,10 @@ export function useContactFormDraftOptions({
       addressLabels,
       socialPlatforms,
       relationshipOptions,
+      educationDegrees,
+      employmentTypes,
+      skillCategories,
+      skillProficiencies,
       defaultCountryCode,
     ],
   );

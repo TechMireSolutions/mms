@@ -39,6 +39,47 @@ export interface SocialLink {
   url: string;
 }
 
+/** Educational qualification / degree record for contacts. */
+export interface ContactEducation {
+  id?: string;
+  degree?: string;
+  institution: string;
+  fieldOfStudy?: string;
+  year?: string;
+  grade?: string;
+  label?: string;
+  sortOrder?: number;
+}
+
+/** Professional work / employment experience record for contacts. */
+export interface ContactExperience {
+  id?: string;
+  title: string;
+  organization: string;
+  employmentType?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  isCurrent?: boolean;
+  description?: string;
+  label?: string;
+  sortOrder?: number;
+}
+
+/** Skills, expertise, qualifications, and Sanad/Ijazah records for contacts. */
+export interface ContactSkill {
+  id?: string;
+  name: string;
+  category?: string;
+  proficiency?: string;
+  yearsOfExperience?: string;
+  isCertified?: boolean;
+  issuer?: string;
+  description?: string;
+  label?: string;
+  sortOrder?: number;
+}
+
 /** Linked contact entry for the Relationship form tab (reciprocal graph). */
 export interface RelationshipContact {
   name?: string;
@@ -124,6 +165,9 @@ export interface Contact {
   emails?: EmailAddress[];
   addresses?: Address[];
   socials?: SocialLink[];
+  education?: ContactEducation[];
+  experience?: ContactExperience[];
+  skills?: ContactSkill[];
   relationshipContacts?: RelationshipContact[];
   relationships?: ContactRelationship[];
   activities?: ContactActivity[];
