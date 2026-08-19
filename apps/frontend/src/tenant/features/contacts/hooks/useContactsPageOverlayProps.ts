@@ -49,6 +49,14 @@ export function useContactsPageOverlayProps({
   const defaultCity = prefs.defaultCity || "";
   const defaultProvince = prefs.defaultProvince || "";
 
+  const currentViewContact = useMemo(() => {
+    if (!overlay.viewContact) return null;
+    const fresh = allContactsForLinks.find(
+      (c) => String(c.id) === String(overlay.viewContact?.id),
+    );
+    return fresh ?? overlay.viewContact;
+  }, [overlay.viewContact, allContactsForLinks]);
+
   return useMemo(
     () => ({
       canWrite,
@@ -68,7 +76,7 @@ export function useContactsPageOverlayProps({
       onMerge: actions.handleMerge,
       messagingTarget: messaging.messagingTarget,
       onCloseComposer: messaging.closeComposer,
-      viewContact: overlay.viewContact,
+      viewContact: currentViewContact,
       onCloseView: () => overlay.setViewContact(null),
       onEditFromDrawer: (contactToEdit: Contact) => {
         overlay.setViewContact(null);

@@ -6,7 +6,7 @@ import {
 import { useGoogleContactsOAuth } from "@/tenant/features/contacts/hooks/useGoogleContactsOAuth";
 import { useInvalidateContactsQueries } from "@/tenant/features/contacts/hooks/useContactMutations";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type AppTranslationKey, type ContactGoogleSyncConfigClient } from "@mms/shared";
+import { type AppTranslationKey, type ContactGoogleSyncConfigClient, type GoogleContactsSyncRunResult } from "@mms/shared";
 import { isApiError } from "@/lib/apiClient";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { notify } from "@/lib/notify";
@@ -38,13 +38,7 @@ export function useGoogleContactsSync({
   const [showSetup, setShowSetup] = useState(false);
   const [form, setForm] = useState({ clientId: "", clientSecret: "" });
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<{
-    total: number;
-    imported: number;
-    skipped: number;
-    skippedName: number;
-    skippedUnique: number;
-  } | null>(null);
+  const [syncResult, setSyncResult] = useState<GoogleContactsSyncRunResult | null>(null);
   const [error, setError] = useState("");
   const [showAuthCode, setShowAuthCode] = useState(false);
   const [authCode, setAuthCode] = useState("");
@@ -116,6 +110,7 @@ export function useGoogleContactsSync({
       setSyncResult({
         total: result.total,
         imported: result.imported,
+        updated: result.updated ?? 0,
         skipped: result.skipped,
         skippedName: result.skippedName ?? 0,
         skippedUnique: result.skippedUnique ?? 0,

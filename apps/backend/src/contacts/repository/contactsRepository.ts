@@ -52,6 +52,7 @@ export interface ContactsRepository {
     excludeIds?: Array<string | number>,
   ): Promise<string[]>;
   findContactDuplicateBlockedIds(tenant: string, namePrefixes: string[]): Promise<string[]>;
+  reparentContactReferences(tenant: string, keepId: string, deleteId: string): Promise<void>;
   /** Take transaction-scoped advisory locks on normalized unique values (TOCTOU guard). */
   acquireUniqueValueLocks(tenant: string, lockKeys: string[]): Promise<void>;
 

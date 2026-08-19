@@ -59,6 +59,7 @@ export const contactEducationSchema = z
     fieldOfStudy: z.string().optional(),
     year: z.string().optional(),
     grade: z.string().optional(),
+    isCurrentlyEnrolled: z.boolean().optional(),
     label: z.string().optional(),
     sortOrder: z.number().optional(),
   })

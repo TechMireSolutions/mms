@@ -49,6 +49,7 @@ describe('getContactDuplicateCandidateKeys', () => {
       phones: ['3001234567'],
       emails: ['ali@example.com'],
       name: 'ahmed',
+      cnic: '',
     });
   });
 
@@ -89,4 +90,23 @@ describe('findContactDuplicatePairs (indexed)', () => {
     expect(pairs).toHaveLength(1);
     expect(pairs[0]?.reasonKey).toBe('email');
   });
+
+  it('finds CNIC matches with high confidence', () => {
+    const c1: Contact = { ...contact('1', 'Ali Khan'), cnic: '42101-1234567-1' };
+    const c2: Contact = { ...contact('2', 'Muhammad Ali'), cnic: '4210112345671' };
+    const pairs = findContactDuplicatePairs([c1, c2]);
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0]?.reasonKey).toBe('cnic');
+    expect(pairs[0]?.confidence).toBe(99);
+  });
+
+  it('finds CNIC + Name matches with 100% confidence', () => {
+    const c1: Contact = { ...contact('1', 'Ali Khan'), cnic: '42101-1234567-1' };
+    const c2: Contact = { ...contact('2', 'Ali Khan'), cnic: '4210112345671' };
+    const pairs = findContactDuplicatePairs([c1, c2]);
+    expect(pairs).toHaveLength(1);
+    expect(pairs[0]?.reasonKey).toBe('cnicName');
+    expect(pairs[0]?.confidence).toBe(100);
+  });
 });
+

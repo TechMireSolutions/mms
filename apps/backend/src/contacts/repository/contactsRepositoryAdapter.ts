@@ -9,6 +9,7 @@ import {
   findActiveContactsMatchingUniqueValues,
   findContactDuplicateCandidateIds,
   findContactDuplicateBlockedIds,
+  reparentContactReferences,
   listContactsPage,
 } from '../../db/repositories/contactRepository.js';
 import {
@@ -42,6 +43,8 @@ function createContactsRepository(): ContactsRepository {
       findContactDuplicateCandidateIds(tenant, keys, excludeIds),
     findContactDuplicateBlockedIds: (tenant, namePrefixes) =>
       findContactDuplicateBlockedIds(tenant, namePrefixes),
+    reparentContactReferences: (tenant, keepId, deleteId) =>
+      reparentContactReferences(tenant, keepId, deleteId),
     acquireUniqueValueLocks: async (tenant, lockKeys) => {
       if (lockKeys.length === 0) return;
       const subdomain = tenant.trim().toLowerCase();

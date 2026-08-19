@@ -4,6 +4,7 @@ const mockFindCredentials = vi.fn();
 const mockUpsertCredentials = vi.fn();
 const mockGetRequestTenant = vi.fn();
 const mockFindExistingNormalizedContactNames = vi.fn();
+const mockFindContactsMatchingUniqueValues = vi.fn();
 const mockLoadContactRuntimeDefaults = vi.fn();
 const mockBulkSaveContacts = vi.fn();
 const mockInvalidateDuplicateScanCache = vi.fn();
@@ -21,6 +22,8 @@ vi.mock('../services/contactService.js', () => ({
   loadContactRuntimeDefaults: (...args: unknown[]) => mockLoadContactRuntimeDefaults(...args),
   loadExistingNormalizedContactNames: (...args: unknown[]) =>
     mockFindExistingNormalizedContactNames(...args),
+  findContactsMatchingUniqueValues: (...args: unknown[]) =>
+    mockFindContactsMatchingUniqueValues(...args),
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
   prepareContactRecord: async (contact: unknown) => contact,
 }));
@@ -29,6 +32,8 @@ vi.mock('../db/repositories/contactRepository.js', () => ({
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
   findExistingNormalizedContactNames: (...args: unknown[]) =>
     mockFindExistingNormalizedContactNames(...args),
+  findActiveContactsMatchingUniqueValues: (...args: unknown[]) =>
+    mockFindContactsMatchingUniqueValues(...args),
 }));
 
 vi.mock('../db/database.js', () => ({
@@ -66,6 +71,7 @@ describe('contactGoogleSyncService', () => {
       }),
     );
     mockFindExistingNormalizedContactNames.mockReset().mockResolvedValue(new Set());
+    mockFindContactsMatchingUniqueValues.mockReset().mockResolvedValue([]);
     mockBulkSaveContacts.mockReset().mockResolvedValue(undefined);
     mockInvalidateDuplicateScanCache.mockReset().mockResolvedValue(undefined);
     mockLoadContactRuntimeDefaults.mockReset().mockResolvedValue({
@@ -139,7 +145,7 @@ describe('contactGoogleSyncService', () => {
     ).rejects.toMatchObject({ message: 'Code expired', code: 'invalid_grant' });
   });
 
-  it('syncs Google contacts and skips existing names', async () => {
+  it('syncs Google contacts, imports fresh contacts with all phones and enriches existing peers', async () => {
     mockFindCredentials.mockResolvedValue({
       clientId: 'client-id',
       clientSecret: 'client-secret',
@@ -153,7 +159,15 @@ describe('contactGoogleSyncService', () => {
       refreshToken: 'refresh-1',
     });
 
-    mockFindExistingNormalizedContactNames.mockResolvedValue(new Set(['ali khan']));
+    // Existing contact in database with ID 'c-1'
+    mockFindContactsMatchingUniqueValues.mockResolvedValue([
+      {
+        id: 'c-1',
+        name: 'Ali Khan',
+        phones: [{ label: 'Work', countryCode: '+92', number: '3001112233' }],
+        emails: [],
+      },
+    ]);
 
     vi.mocked(fetch).mockResolvedValue({
       status: 200,
@@ -161,10 +175,13 @@ describe('contactGoogleSyncService', () => {
         connections: [
           {
             names: [{ displayName: 'Ali Khan', givenName: 'Ali', familyName: 'Khan' }],
+            emailAddresses: [{ value: 'ali@example.com' }],
+            organizations: [{ name: 'Tech Solutions', title: 'Director' }],
           },
           {
             names: [{ displayName: 'Sara Ahmed', givenName: 'Sara', familyName: 'Ahmed' }],
-            phoneNumbers: [{ value: '+92 300 1112233' }],
+            phoneNumbers: [{ value: '+92 300 4445566' }, { value: '+92 300 7778899' }],
+            emailAddresses: [{ value: 'sara@example.com' }],
           },
         ],
       }),
@@ -174,12 +191,9 @@ describe('contactGoogleSyncService', () => {
 
     expect(result.total).toBe(2);
     expect(result.imported).toBe(1);
-    expect(result.skippedName).toBe(1);
-    expect(result.skippedUnique).toBe(0);
-    expect(result.skipped).toBe(1);
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ name: 'Sara Ahmed' })]),
-    );
+    expect(result.updated).toBe(1);
+    expect(result.skipped).toBe(0);
+    expect(mockBulkSaveContacts).toHaveBeenCalledTimes(2); // One for inserts, one for updates
     expect(mockInvalidateDuplicateScanCache).toHaveBeenCalled();
   });
 
@@ -197,7 +211,7 @@ describe('contactGoogleSyncService', () => {
       refreshToken: 'refresh-1',
     });
 
-    mockFindExistingNormalizedContactNames.mockResolvedValue(new Set());
+    mockFindContactsMatchingUniqueValues.mockResolvedValue([]);
 
     vi.mocked(fetch)
       .mockResolvedValueOnce({
@@ -217,6 +231,7 @@ describe('contactGoogleSyncService', () => {
     const result = await runGoogleContactsSync('u1');
 
     expect(result.imported).toBe(1);
+    expect(result.updated).toBe(0);
     expect(result.skippedName).toBe(0);
     expect(result.skippedUnique).toBe(0);
     expect(mockBulkSaveContacts).toHaveBeenCalled();

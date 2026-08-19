@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -8,20 +9,31 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { getDuplicateFieldLabel } from "@/lib/contacts/contactI18n";
 
 /** Toggleable duplicate-detection fields (subset of the canonical field-id set). */
-const DUPLICATE_DETECTION_FIELD_IDS = ["name", "phone", "email"] as const;
+const DUPLICATE_DETECTION_FIELD_IDS = ["name", "phone", "email", "cnic"] as const;
 
 export function ContactsPreferencesDuplicateSection({
   prefs,
+  isPrefsDirty,
   onUpdatePreference,
 }: {
   prefs: ContactPreferences;
+  isPrefsDirty?: boolean;
   onUpdatePreference: <K extends keyof ContactPreferences>(
     key: K,
     value: ContactPreferences[K],
   ) => void;
 }): JSX.Element {
   const { t } = useTranslation();
-  const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email"];
+  const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email", "cnic"];
+
+  const [namePrefixesDraft, setNamePrefixesDraft] = useState(
+    () => (prefs.namePrefixesToIgnore ?? []).join(", "),
+  );
+
+  useEffect(() => {
+    if (isPrefsDirty) return;
+    setNamePrefixesDraft((prefs.namePrefixesToIgnore ?? []).join(", "));
+  }, [prefs.namePrefixesToIgnore, isPrefsDirty]);
 
   const toggleDetectionField = (fieldId: string, enabled: boolean) => {
     const next = enabled
@@ -57,6 +69,30 @@ export function ContactsPreferencesDuplicateSection({
             })}
           </div>
         </fieldset>
+
+        <div>
+          <label className={FORM_LABEL} htmlFor="namePrefixesToIgnore">
+            {t("contacts.setup.namePrefixesToIgnore")}
+          </label>
+          <p className="mb-2 text-xs text-muted-foreground">
+            {t("contacts.setup.namePrefixesToIgnoreDesc")}
+          </p>
+          <Input
+            id="namePrefixesToIgnore"
+            value={namePrefixesDraft}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setNamePrefixesDraft(raw);
+              const next = raw
+                .split(",")
+                .map((prefix) => prefix.trim())
+                .filter(Boolean);
+              onUpdatePreference("namePrefixesToIgnore", next);
+            }}
+            placeholder={t("contacts.setup.namePrefixesToIgnorePlaceholder")}
+          />
+        </div>
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={FORM_LABEL} htmlFor="dupThresholdHigh">

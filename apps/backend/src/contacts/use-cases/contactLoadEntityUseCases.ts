@@ -79,6 +79,29 @@ export async function loadExistingNormalizedContactNames(
   return repo.findExistingNormalizedContactNames(tenant, names);
 }
 
+/** Active contacts matching candidate phone numbers, emails, or scalar fields (for dedupe & sync). */
+export async function findContactsMatchingUniqueValues(
+  values: {
+    phoneDigits?: string[];
+    emails?: string[];
+    scalars?: Array<{ fieldKey: string; normalized: string }>;
+  },
+  excludeIds: Array<string | number> = [],
+  repo: ContactsRepository = contactsRepository,
+): Promise<Contact[]> {
+  const tenant = getRequestTenant();
+  if (!tenant) return [];
+  return repo.findActiveContactsMatchingUniqueValues(
+    tenant,
+    {
+      phoneDigits: values.phoneDigits ?? [],
+      emails: values.emails ?? [],
+      scalars: values.scalars ?? [],
+    },
+    excludeIds,
+  );
+}
+
 export async function getContactById(
   id: string,
   includeDeleted = false,

@@ -1,10 +1,8 @@
 import React from "react";
 import { FileText } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Field } from "@/components/ui/FormPrimitives";
+import { Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type Contact, formatCnic } from "@mms/shared";
 
@@ -67,27 +65,16 @@ export function ContactBasicMetaFields({
       )}
 
       {isFieldEnabled("basic", "isSyed") && (
-        <div className="flex flex-col justify-end min-h-11">
-          <label
-            htmlFor={isSyedId}
-            className={cn(
-              "flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none",
-              contactDraft.isSyed
-                ? "bg-primary/10 border-primary/40 text-primary font-bold shadow-sm"
-                : "bg-muted/30 border-border/70 hover:bg-muted/50 text-muted-foreground",
-            )}
-          >
-            <Checkbox
-              id={isSyedId}
-              name="isSyed"
-              checked={Boolean(contactDraft.isSyed)}
-              onCheckedChange={(checked) => updateDraft({ isSyed: Boolean(checked) })}
-              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-            />
-            <span className="text-xs font-semibold">{t("contacts.fields.isSyed")}</span>
-          </label>
-        </div>
+        <FormCheckboxCard
+          id={isSyedId}
+          name="isSyed"
+          checked={Boolean(contactDraft.isSyed)}
+          onCheckedChange={(checked) => updateDraft({ isSyed: checked })}
+          label={t("contacts.fields.isSyed")}
+          error={getFieldError("isSyed")}
+        />
       )}
     </>
   );
 }
+

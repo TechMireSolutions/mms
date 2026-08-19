@@ -1,15 +1,19 @@
-import { Award, Clock, Building2 } from "lucide-react";
+import { Award, Tag, Clock, Building2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactSkill } from "@mms/shared";
+
+
+/**
+ * TypeScript type representing an individual skill/qualification entry.
+ */
+export type SkillEntry = ContactSkill;
 
 interface ContactSkillsTabProps extends ContactSubListTabBaseProps {
   categoryOptions: string[];
@@ -105,32 +109,24 @@ export function ContactSkillsTab({
               id={getLocalId("skills", idx)}
               index={idx}
               icon={Award}
-              accentClass="bg-primary/60 group-hover:bg-primary"
-              iconClass="text-primary/70 group-hover:text-primary"
-              label={`${t("contacts.fields.skillCategory")}:`}
-              typeSelect={
-                showCategory ? (
-                  <EditableSelect
-                    options={categoryOptions}
-                    value={skill.category || ""}
-                    onChange={(val) => updateSkill(idx, { category: val })}
-                    onUpdateOptions={onUpdateCategoryOptions}
-                    className={TYPE_SELECT_WIDTH}
-                    id={`skill-category-${idx}`}
-                    name={`skill-category-${idx}`}
-                    placeholder={t("contacts.fields.skillCategory")}
-                  />
-                ) : undefined
-              }
+              accentClass="bg-purple-500/80 group-hover:bg-purple-500"
+              iconClass="text-purple-600 dark:text-purple-400 group-hover:text-purple-500"
+              label={t("contacts.form.skillNumber", { index: idx + 1 })}
               onRemove={() => removeSkill(idx)}
               removeLabel={t("contacts.form.removeSkill", { index: idx + 1 })}
             >
               <div className="space-y-3">
-                <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-2">
+                {/* Row 1: Skill / Subject Name & Category */}
+                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
                   {showName ? (
-                    <div>
+                    <Field
+                      label={t("contacts.fields.skillName")}
+                      required={isFieldRequired("skills", "name")}
+                      error={nameError}
+                      id={`skill-name-${idx}`}
+                    >
                       <LeadingIconInput
-                        icon={Award}
+                        icon={Tag}
                         id={`skill-name-${idx}`}
                         name={`skill-name-${idx}`}
                         value={skill.name || ""}
@@ -139,12 +135,39 @@ export function ContactSkillsTab({
                         placeholder={t("contacts.form.skillNamePlaceholder")}
                         className={cn(nameError && "border-destructive focus-visible:ring-destructive")}
                       />
-                      <FieldErrorMessage message={nameError} />
-                    </div>
+                    </Field>
                   ) : null}
 
+                  {showCategory ? (
+                    <Field
+                      label={t("contacts.fields.skillCategory")}
+                      required={isFieldRequired("skills", "category")}
+                      error={categoryError}
+                      id={`skill-category-${idx}`}
+                    >
+                      <EditableSelect
+                        options={categoryOptions}
+                        value={skill.category || ""}
+                        onChange={(val) => updateSkill(idx, { category: val })}
+                        onUpdateOptions={onUpdateCategoryOptions}
+                        className="w-full"
+                        id={`skill-category-${idx}`}
+                        name={`skill-category-${idx}`}
+                        placeholder={t("contacts.form.skillCategoryPlaceholder")}
+                      />
+                    </Field>
+                  ) : null}
+                </div>
+
+                {/* Row 2: Proficiency Level & Experience (Years) */}
+                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
                   {showProficiency ? (
-                    <div>
+                    <Field
+                      label={t("contacts.fields.skillProficiency")}
+                      required={isFieldRequired("skills", "proficiency")}
+                      error={proficiencyError}
+                      id={`skill-proficiency-${idx}`}
+                    >
                       <EditableSelect
                         options={proficiencyOptions}
                         value={skill.proficiency || ""}
@@ -153,16 +176,18 @@ export function ContactSkillsTab({
                         className="w-full"
                         id={`skill-proficiency-${idx}`}
                         name={`skill-proficiency-${idx}`}
-                        placeholder={t("contacts.fields.skillProficiency")}
+                        placeholder={t("contacts.form.skillProficiencyPlaceholder")}
                       />
-                      <FieldErrorMessage message={proficiencyError} />
-                    </div>
+                    </Field>
                   ) : null}
-                </div>
 
-                <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-2">
                   {showYears ? (
-                    <div>
+                    <Field
+                      label={t("contacts.fields.skillYears")}
+                      required={isFieldRequired("skills", "yearsOfExperience")}
+                      error={yearsError}
+                      id={`skill-years-${idx}`}
+                    >
                       <LeadingIconInput
                         icon={Clock}
                         id={`skill-years-${idx}`}
@@ -173,50 +198,56 @@ export function ContactSkillsTab({
                         placeholder={t("contacts.form.skillYearsPlaceholder")}
                         className={cn(yearsError && "border-destructive focus-visible:ring-destructive")}
                       />
-                      <FieldErrorMessage message={yearsError} />
-                    </div>
-                  ) : null}
-
-                  {showIssuer ? (
-                    <div>
-                      <LeadingIconInput
-                        icon={Building2}
-                        id={`skill-issuer-${idx}`}
-                        name={`skill-issuer-${idx}`}
-                        value={skill.issuer || ""}
-                        required={isFieldRequired("skills", "issuer")}
-                        onChange={(e) => updateSkill(idx, { issuer: e.target.value })}
-                        placeholder={t("contacts.form.skillIssuerPlaceholder")}
-                        className={cn(issuerError && "border-destructive focus-visible:ring-destructive")}
-                      />
-                      <FieldErrorMessage message={issuerError} />
-                    </div>
+                    </Field>
                   ) : null}
                 </div>
 
+                {/* Inline Checkbox: Certified / Ijazah Holder */}
                 {showIsCertified ? (
-                  <div className="flex items-center gap-2 pt-0.5">
-                    <Checkbox
-                      id={`skill-certified-${idx}`}
-                      checked={Boolean(skill.isCertified)}
-                      onCheckedChange={(checked) =>
-                        updateSkill(idx, {
-                          isCertified: Boolean(checked),
-                        })
-                      }
-                    />
-                    <Label
-                      htmlFor={`skill-certified-${idx}`}
-                      className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground transition-colors select-none"
-                    >
-                      {t("contacts.fields.skillIsCertified")}
-                    </Label>
-                    <FieldErrorMessage message={certifiedError} />
-                  </div>
+                  <FormCheckboxCard
+                    id={`skill-certified-${idx}`}
+                    name={`skill-certified-${idx}`}
+                    checked={Boolean(skill.isCertified)}
+                    onCheckedChange={(checked) =>
+                      updateSkill(idx, {
+                        isCertified: checked,
+                      })
+                    }
+                    label={t("contacts.fields.skillIsCertified")}
+                    error={certifiedError}
+                  />
                 ) : null}
 
+
+                {/* Row 3: Issued By / Sanad Source */}
+                {showIssuer ? (
+                  <Field
+                    label={t("contacts.fields.skillIssuer")}
+                    required={isFieldRequired("skills", "issuer")}
+                    error={issuerError}
+                    id={`skill-issuer-${idx}`}
+                  >
+                    <LeadingIconInput
+                      icon={Building2}
+                      id={`skill-issuer-${idx}`}
+                      name={`skill-issuer-${idx}`}
+                      value={skill.issuer || ""}
+                      required={isFieldRequired("skills", "issuer")}
+                      onChange={(e) => updateSkill(idx, { issuer: e.target.value })}
+                      placeholder={t("contacts.form.skillIssuerPlaceholder")}
+                      className={cn(issuerError && "border-destructive focus-visible:ring-destructive")}
+                    />
+                  </Field>
+                ) : null}
+
+                {/* Row 4: Notes / Specialization */}
                 {showDescription ? (
-                  <div>
+                  <Field
+                    label={t("contacts.fields.skillDescription")}
+                    required={isFieldRequired("skills", "description")}
+                    error={descriptionError}
+                    id={`skill-desc-${idx}`}
+                  >
                     <Textarea
                       id={`skill-desc-${idx}`}
                       name={`skill-desc-${idx}`}
@@ -225,13 +256,10 @@ export function ContactSkillsTab({
                       required={isFieldRequired("skills", "description")}
                       onChange={(e) => updateSkill(idx, { description: e.target.value })}
                       placeholder={t("contacts.form.skillDescriptionPlaceholder")}
-                      className={cn("text-xs resize-y", descriptionError && "border-destructive focus-visible:ring-destructive")}
+                      className={cn("text-xs resize-y min-h-[64px]", descriptionError && "border-destructive focus-visible:ring-destructive")}
                     />
-                    <FieldErrorMessage message={descriptionError} />
-                  </div>
+                  </Field>
                 ) : null}
-
-                {categoryError ? <FieldErrorMessage message={categoryError} /> : null}
               </div>
             </ListFieldCard>
           );

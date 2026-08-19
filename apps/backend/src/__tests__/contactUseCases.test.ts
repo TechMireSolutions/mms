@@ -115,7 +115,9 @@ function createFakeRepo() {
             .map((c) => String(c.id));
         },
       ),
-      findContactDuplicateBlockedIds: vi.fn(async () => []),      acquireUniqueValueLocks: vi.fn(async () => undefined),
+      findContactDuplicateBlockedIds: vi.fn(async () => []),
+      reparentContactReferences: vi.fn(async () => undefined),
+      acquireUniqueValueLocks: vi.fn(async () => undefined),
       aggregateCommandMetrics: vi.fn(
         async (
           _tenant: string,

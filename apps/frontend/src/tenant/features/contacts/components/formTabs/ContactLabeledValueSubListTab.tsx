@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { AppTranslationKey } from "@mms/shared";
 import type { Contact } from "@mms/shared";
-import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { EditableSelect, Field, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListKey, ContactSubListTabBaseProps } from "./types";
@@ -23,6 +23,7 @@ interface ContactLabeledValueSubListTabProps extends ContactSubListTabBaseProps 
   listKey: Extract<ContactSubListKey, "emails" | "socials" | "phones">;
   labelFieldKey: string;
   valueFieldKey: string;
+  valueLabel?: string;
   options: string[];
   onUpdateOptions: (options: string[]) => void;
   resolveLabel: (raw: unknown, options: string[], t: TranslateFn) => string;
@@ -55,6 +56,7 @@ export function ContactLabeledValueSubListTab({
   listKey,
   labelFieldKey,
   valueFieldKey,
+  valueLabel,
   options,
   onUpdateOptions,
   resolveLabel,
@@ -169,7 +171,12 @@ export function ContactLabeledValueSubListTab({
             >
               <div className="space-y-3">
                 {showValue ? (
-                  <>
+                  <Field
+                    label={valueLabel || valuePlaceholder}
+                    required={isFieldRequired(listKey, valueFieldKey)}
+                    error={valueError}
+                    id={`${valueInputIdPrefix}-${idx}`}
+                  >
                     {valueLeadingAddon ? (
                       <div className="flex w-full items-center gap-2">
                         {valueLeadingAddon(fieldCtx)}
@@ -178,8 +185,7 @@ export function ContactLabeledValueSubListTab({
                     ) : (
                       valueInput
                     )}
-                    <FieldErrorMessage message={valueError} />
-                  </>
+                  </Field>
                 ) : null}
               </div>
             </ListFieldCard>

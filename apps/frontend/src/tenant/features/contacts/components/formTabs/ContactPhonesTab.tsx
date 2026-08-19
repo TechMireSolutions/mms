@@ -37,6 +37,7 @@ export function ContactPhonesTab({
       listKey="phones"
       labelFieldKey="label"
       valueFieldKey="number"
+      valueLabel={t("contacts.fields.phoneNumber")}
       options={phoneLabels}
       onUpdateOptions={onUpdatePhoneLabels}
       resolveLabel={(raw, options, translate) =>
@@ -67,6 +68,7 @@ export function ContactPhonesTab({
           className="w-[5.625rem] shrink-0"
           id={`phone-country-${index}`}
           name={`phone-country-${index}`}
+          aria-label={t("contacts.form.dialCode") || "Country dial code"}
         />
       )}
       onValueChange={({ value, item, index, updateItem }) => {

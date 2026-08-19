@@ -8,6 +8,8 @@ import { cleanName, getEmails, getPhoneNumbers } from './utils.js';
 import { filterActiveContacts } from './contactSoftDelete.js';
 
 export type ContactDuplicateReasonKey =
+  | 'cnic'
+  | 'cnicName'
   | 'phoneEmail'
   | 'namePhone'
   | 'phone'
@@ -24,6 +26,8 @@ export interface ContactDuplicatePair {
 
 const DEFAULT_DUPLICATE_SCORES = {
   default: 70,
+  cnic: 99,
+  cnicName: 100,
   phoneEmail: 99,
   namePhone: 95,
   phone: 80,
@@ -59,8 +63,14 @@ function getContactCleanName(contact: Contact, namePrefixesToIgnore?: string[]):
   return cleanName(contact.name || contact.firstName, namePrefixesToIgnore);
 }
 
+function getContactCleanCnic(contact: Contact): string {
+  if (!contact.cnic) return '';
+  const digits = contact.cnic.replace(/\D/g, '');
+  return digits.length === 13 ? digits : '';
+}
+
 /**
- * Normalized duplicate keys (phones / emails / name) for a contact.
+ * Normalized duplicate keys (phones / emails / name / cnic) for a contact.
  *
  * Single source shared by JS pair-finding (`findContactDuplicatePairs`) and the
  * backend's SQL blocking queries, so the key space can never drift.
@@ -68,11 +78,12 @@ function getContactCleanName(contact: Contact, namePrefixesToIgnore?: string[]):
 export function getContactDuplicateCandidateKeys(
   contact: Contact,
   preferences: DuplicatePreferences = {},
-): { phones: string[]; emails: string[]; name: string } {
+): { phones: string[]; emails: string[]; name: string; cnic: string } {
   return {
     phones: getPhoneNumbers(contact),
     emails: getEmails(contact),
     name: getContactCleanName(contact, preferences.namePrefixesToIgnore),
+    cnic: getContactCleanCnic(contact),
   };
 }
 
@@ -85,12 +96,16 @@ function scorePair(
   phoneMatch: boolean,
   emailMatch: boolean,
   nameMatch: boolean,
+  cnicMatch: boolean,
   preferences: DuplicatePreferences,
 ): { confidence: number; reasonKey: ContactDuplicateReasonKey } {
   let confidence = preferences.duplicateDetectionScoreDefault ?? DEFAULT_DUPLICATE_SCORES.default;
   let reasonKey: ContactDuplicateReasonKey = 'name';
 
-  if (phoneMatch && emailMatch) {
+  if (cnicMatch) {
+    confidence = nameMatch ? DEFAULT_DUPLICATE_SCORES.cnicName : DEFAULT_DUPLICATE_SCORES.cnic;
+    reasonKey = nameMatch ? 'cnicName' : 'cnic';
+  } else if (phoneMatch && emailMatch) {
     confidence = preferences.duplicateDetectionScorePhoneEmail ?? DEFAULT_DUPLICATE_SCORES.phoneEmail;
     reasonKey = 'phoneEmail';
   } else if (phoneMatch) {
@@ -122,14 +137,23 @@ function evaluatePair(
   const phones2 = getPhoneNumbers(contact2);
   const emails1 = getEmails(contact1);
   const emails2 = getEmails(contact2);
+  const cnic1 = getContactCleanCnic(contact1);
+  const cnic2 = getContactCleanCnic(contact2);
 
   const phoneMatch = hasOverlap(phones1, phones2);
   const emailMatch = hasOverlap(emails1, emails2);
   const nameMatch = Boolean(name1 && name2 && name1 === name2);
+  const cnicMatch = Boolean(cnic1 && cnic2 && cnic1 === cnic2);
 
-  if (!phoneMatch && !emailMatch && !nameMatch) return null;
+  if (!phoneMatch && !emailMatch && !nameMatch && !cnicMatch) return null;
 
-  const { confidence, reasonKey } = scorePair(phoneMatch, emailMatch, nameMatch, preferences);
+  const { confidence, reasonKey } = scorePair(
+    phoneMatch,
+    emailMatch,
+    nameMatch,
+    cnicMatch,
+    preferences,
+  );
   return {
     id: pairKey(contact1, contact2),
     confidence,
@@ -164,12 +188,14 @@ export function findContactDuplicatePairs(
   const phoneIndex = new Map<string, Contact[]>();
   const emailIndex = new Map<string, Contact[]>();
   const nameIndex = new Map<string, Contact[]>();
+  const cnicIndex = new Map<string, Contact[]>();
 
   for (const contact of pool) {
     const keys = getContactDuplicateCandidateKeys(contact, preferences);
     for (const phone of keys.phones) addToIndex(phoneIndex, phone, contact);
     for (const email of keys.emails) addToIndex(emailIndex, email, contact);
     if (keys.name) addToIndex(nameIndex, keys.name, contact);
+    if (keys.cnic) addToIndex(cnicIndex, keys.cnic, contact);
   }
 
   const matchedPairs = new Set<string>();
@@ -182,6 +208,9 @@ export function findContactDuplicatePairs(
     collectCandidatesFromKeys(emailIndex, keys.emails, candidates);
     if (keys.name) {
       collectCandidatesFromKeys(nameIndex, [keys.name], candidates);
+    }
+    if (keys.cnic) {
+      collectCandidatesFromKeys(cnicIndex, [keys.cnic], candidates);
     }
 
     for (const contact2 of candidates.values()) {

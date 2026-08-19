@@ -22,6 +22,7 @@ export function ContactEmailsTab({
       listKey="emails"
       labelFieldKey="label"
       valueFieldKey="address"
+      valueLabel={t("contacts.fields.emailAddress")}
       options={emailLabels}
       onUpdateOptions={onUpdateEmailLabels}
       resolveLabel={(raw, options, translate) => resolveEmailLabel(raw as string | undefined, options, translate)}

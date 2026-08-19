@@ -28,15 +28,25 @@ export function ContactFormFooterStart({
   return (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
       <FormFooterEntityChip>{getDisplayName(contactDraft)}</FormFooterEntityChip>
-      <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
         {collectionCounts.filledPhones > 0 && (
           <FormFooterBadge tone="primary">
-            {collectionCounts.filledPhones} {t("contacts.form.phonesLabel")}
+            {collectionCounts.filledPhones} {t("contacts.form.tabPhones")}
           </FormFooterBadge>
         )}
         {collectionCounts.filledEmails > 0 && (
           <FormFooterBadge tone="warning">
-            {collectionCounts.filledEmails} {t("contacts.form.emailsLabel")}
+            {collectionCounts.filledEmails} {t("contacts.form.tabEmails")}
+          </FormFooterBadge>
+        )}
+        {collectionCounts.filledAddresses > 0 && (
+          <FormFooterBadge tone="success">
+            {collectionCounts.filledAddresses} {t("contacts.form.tabAddresses")}
+          </FormFooterBadge>
+        )}
+        {collectionCounts.filledSocials > 0 && (
+          <FormFooterBadge tone="info">
+            {collectionCounts.filledSocials} {t("contacts.form.tabSocials")}
           </FormFooterBadge>
         )}
         {collectionCounts.filledEducation > 0 && (
@@ -63,4 +73,5 @@ export function ContactFormFooterStart({
     </div>
   );
 }
+
 

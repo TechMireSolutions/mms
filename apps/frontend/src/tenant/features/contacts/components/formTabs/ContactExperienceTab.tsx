@@ -1,15 +1,20 @@
-import { Briefcase, Building2, MapPin, Calendar } from "lucide-react";
+import { Briefcase, Building2, MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactExperience } from "@mms/shared";
+
+
+/**
+ * TypeScript type representing an individual experience entry.
+ */
+export type ExperienceEntry = ContactExperience;
 
 interface ContactExperienceTabProps extends ContactSubListTabBaseProps {
   employmentTypeOptions: string[];
@@ -103,30 +108,22 @@ export function ContactExperienceTab({
               id={getLocalId("experience", idx)}
               index={idx}
               icon={Briefcase}
-              accentClass="bg-primary/60 group-hover:bg-primary"
-              iconClass="text-primary/70 group-hover:text-primary"
-              label={`${t("contacts.fields.experienceEmploymentType")}:`}
-              typeSelect={
-                showEmploymentType ? (
-                  <EditableSelect
-                    options={employmentTypeOptions}
-                    value={exp.employmentType || ""}
-                    onChange={(val) => updateExperience(idx, { employmentType: val })}
-                    onUpdateOptions={onUpdateEmploymentTypeOptions}
-                    className={TYPE_SELECT_WIDTH}
-                    id={`experience-type-${idx}`}
-                    name={`experience-type-${idx}`}
-                    placeholder={t("contacts.fields.experienceEmploymentType")}
-                  />
-                ) : undefined
-              }
+              accentClass="bg-teal-500/80 group-hover:bg-teal-500"
+              iconClass="text-teal-600 dark:text-teal-400 group-hover:text-teal-500"
+              label={t("contacts.form.experienceNumber", { index: idx + 1 })}
               onRemove={() => removeExperience(idx)}
               removeLabel={t("contacts.form.removeExperience", { index: idx + 1 })}
             >
               <div className="space-y-3">
-                <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-2">
+                {/* Row 1: Job Title & Organization */}
+                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
                   {showTitle ? (
-                    <div>
+                    <Field
+                      label={t("contacts.fields.experienceTitle")}
+                      required={isFieldRequired("experience", "title")}
+                      error={titleError}
+                      id={`experience-title-${idx}`}
+                    >
                       <LeadingIconInput
                         icon={Briefcase}
                         id={`experience-title-${idx}`}
@@ -137,12 +134,16 @@ export function ContactExperienceTab({
                         placeholder={t("contacts.form.jobTitlePlaceholder")}
                         className={cn(titleError && "border-destructive focus-visible:ring-destructive")}
                       />
-                      <FieldErrorMessage message={titleError} />
-                    </div>
+                    </Field>
                   ) : null}
 
                   {showOrganization ? (
-                    <div>
+                    <Field
+                      label={t("contacts.fields.experienceOrganization")}
+                      required={isFieldRequired("experience", "organization")}
+                      error={orgError}
+                      id={`experience-org-${idx}`}
+                    >
                       <LeadingIconInput
                         icon={Building2}
                         id={`experience-org-${idx}`}
@@ -153,14 +154,39 @@ export function ContactExperienceTab({
                         placeholder={t("contacts.form.organizationPlaceholder")}
                         className={cn(orgError && "border-destructive focus-visible:ring-destructive")}
                       />
-                      <FieldErrorMessage message={orgError} />
-                    </div>
+                    </Field>
                   ) : null}
                 </div>
 
-                <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-3">
+                {/* Row 2: Employment Type & Location */}
+                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+                  {showEmploymentType ? (
+                    <Field
+                      label={t("contacts.fields.experienceEmploymentType")}
+                      required={isFieldRequired("experience", "employmentType")}
+                      error={typeError}
+                      id={`experience-type-${idx}`}
+                    >
+                      <EditableSelect
+                        options={employmentTypeOptions}
+                        value={exp.employmentType || ""}
+                        onChange={(val) => updateExperience(idx, { employmentType: val })}
+                        onUpdateOptions={onUpdateEmploymentTypeOptions}
+                        id={`experience-type-${idx}`}
+                        name={`experience-type-${idx}`}
+                        placeholder={t("contacts.form.employmentTypePlaceholder")}
+                        className="w-full"
+                      />
+                    </Field>
+                  ) : null}
+
                   {showLocation ? (
-                    <div>
+                    <Field
+                      label={t("contacts.fields.experienceLocation")}
+                      required={isFieldRequired("experience", "location")}
+                      error={locationError}
+                      id={`experience-location-${idx}`}
+                    >
                       <LeadingIconInput
                         icon={MapPin}
                         id={`experience-location-${idx}`}
@@ -171,68 +197,76 @@ export function ContactExperienceTab({
                         placeholder={t("contacts.form.locationPlaceholder")}
                         className={cn(locationError && "border-destructive focus-visible:ring-destructive")}
                       />
-                      <FieldErrorMessage message={locationError} />
-                    </div>
-                  ) : null}
-
-                  {showStartDate ? (
-                    <div>
-                      <LeadingIconInput
-                        icon={Calendar}
-                        id={`experience-start-${idx}`}
-                        name={`experience-start-${idx}`}
-                        value={exp.startDate || ""}
-                        required={isFieldRequired("experience", "startDate")}
-                        onChange={(e) => updateExperience(idx, { startDate: e.target.value })}
-                        placeholder={t("contacts.form.startDatePlaceholder")}
-                        className={cn(startDateError && "border-destructive focus-visible:ring-destructive")}
-                      />
-                      <FieldErrorMessage message={startDateError} />
-                    </div>
-                  ) : null}
-
-                  {showEndDate ? (
-                    <div>
-                      <LeadingIconInput
-                        icon={Calendar}
-                        id={`experience-end-${idx}`}
-                        name={`experience-end-${idx}`}
-                        value={exp.isCurrent ? t("contacts.form.present") : exp.endDate || ""}
-                        disabled={exp.isCurrent}
-                        required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
-                        onChange={(e) => updateExperience(idx, { endDate: e.target.value })}
-                        placeholder={t("contacts.form.endDatePlaceholder")}
-                        className={cn(endDateError && "border-destructive focus-visible:ring-destructive")}
-                      />
-                      <FieldErrorMessage message={endDateError} />
-                    </div>
+                    </Field>
                   ) : null}
                 </div>
 
-                {showIsCurrent ? (
-                  <div className="flex items-center gap-2 pt-0.5">
-                    <Checkbox
-                      id={`experience-current-${idx}`}
-                      checked={Boolean(exp.isCurrent)}
-                      onCheckedChange={(checked) =>
-                        updateExperience(idx, {
-                          isCurrent: Boolean(checked),
-                          endDate: checked ? "" : exp.endDate,
-                        })
-                      }
-                    />
-                    <Label
-                      htmlFor={`experience-current-${idx}`}
-                      className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground transition-colors select-none"
+                {/* Row 3: Start Date & End Date */}
+                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+                  {showStartDate ? (
+                    <Field
+                      label={t("contacts.fields.experienceStartDate")}
+                      required={isFieldRequired("experience", "startDate")}
+                      error={startDateError}
+                      id={`experience-start-${idx}`}
                     >
-                      {t("contacts.form.currentlyWorkingHere")}
-                    </Label>
-                    <FieldErrorMessage message={isCurrentError} />
-                  </div>
+                      <DatePicker
+                        id={`experience-start-${idx}`}
+                        name={`experience-start-${idx}`}
+                        value={exp.startDate || undefined}
+                        required={isFieldRequired("experience", "startDate")}
+                        onChange={(dateStr) => updateExperience(idx, { startDate: dateStr })}
+                        placeholder={t("contacts.form.startDatePlaceholder")}
+                      />
+                    </Field>
+                  ) : null}
+
+                  {showEndDate ? (
+                    <Field
+                      label={t("contacts.fields.experienceEndDate")}
+                      required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
+                      error={endDateError}
+                      id={`experience-end-${idx}`}
+                    >
+                      <DatePicker
+                        id={`experience-end-${idx}`}
+                        name={`experience-end-${idx}`}
+                        value={exp.isCurrent ? undefined : exp.endDate || undefined}
+                        disabled={Boolean(exp.isCurrent)}
+                        required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
+                        onChange={(dateStr) => updateExperience(idx, { endDate: dateStr })}
+                        placeholder={exp.isCurrent ? t("contacts.form.present") : t("contacts.form.endDatePlaceholder")}
+                      />
+                    </Field>
+                  ) : null}
+                </div>
+
+                {/* Inline Checkbox: Currently Working Here */}
+                {showIsCurrent ? (
+                  <FormCheckboxCard
+                    id={`experience-current-${idx}`}
+                    name={`experience-current-${idx}`}
+                    checked={Boolean(exp.isCurrent)}
+                    onCheckedChange={(checked) =>
+                      updateExperience(idx, {
+                        isCurrent: checked,
+                        endDate: checked ? "" : exp.endDate,
+                      })
+                    }
+                    label={t("contacts.form.currentlyWorkingHere")}
+                    error={isCurrentError}
+                  />
                 ) : null}
 
+
+                {/* Row 4: Description */}
                 {showDescription ? (
-                  <div>
+                  <Field
+                    label={t("contacts.fields.experienceDescription")}
+                    required={isFieldRequired("experience", "description")}
+                    error={descriptionError}
+                    id={`experience-desc-${idx}`}
+                  >
                     <Textarea
                       id={`experience-desc-${idx}`}
                       name={`experience-desc-${idx}`}
@@ -241,13 +275,10 @@ export function ContactExperienceTab({
                       required={isFieldRequired("experience", "description")}
                       onChange={(e) => updateExperience(idx, { description: e.target.value })}
                       placeholder={t("contacts.form.jobDescriptionPlaceholder")}
-                      className={cn("text-xs resize-y", descriptionError && "border-destructive focus-visible:ring-destructive")}
+                      className={cn("text-xs resize-y min-h-[64px]", descriptionError && "border-destructive focus-visible:ring-destructive")}
                     />
-                    <FieldErrorMessage message={descriptionError} />
-                  </div>
+                  </Field>
                 ) : null}
-
-                {typeError ? <FieldErrorMessage message={typeError} /> : null}
               </div>
             </ListFieldCard>
           );

@@ -26,8 +26,6 @@ export function ContactsSetupPanel({
     isSaving,
     isPrefsDirty,
     countryOptions,
-    countryCodes,
-    updateCountryCodes,
     updatePreference,
     handleSave,
   } = useContactsSetupPanelState({
@@ -50,9 +48,7 @@ export function ContactsSetupPanel({
         prefs={prefs}
         isPrefsDirty={isPrefsDirty}
         countryOptions={countryOptions}
-        countryCodes={countryCodes}
         onUpdatePreference={updatePreference}
-        onUpdateCountryCodes={updateCountryCodes}
       />
 
       <ModuleSetupSaveFooter

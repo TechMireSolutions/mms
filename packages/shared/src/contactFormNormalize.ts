@@ -226,7 +226,7 @@ export function normalizeContactForEdit(
   if (skills.length === 0) {
     skills = [{
       name: "",
-      category: defaults.skillCategory || DEFAULT_SKILL_CATEGORY_LABELS[0] || "Islamic Studies & Qira'at",
+      category: defaults.skillCategory || DEFAULT_SKILL_CATEGORY_LABELS[0] || "Islamic Studies",
       proficiency: defaults.skillProficiency || DEFAULT_SKILL_PROFICIENCY_LABELS[1] || "Intermediate",
       yearsOfExperience: "",
       isCertified: false,

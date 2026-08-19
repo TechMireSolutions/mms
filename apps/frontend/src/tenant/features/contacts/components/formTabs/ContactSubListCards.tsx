@@ -43,9 +43,11 @@ export function ListFieldCard({
       className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
     >
       <div className={cn("absolute start-0 top-0 bottom-0 w-1.5 transition-colors", accentClass)} />
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-border/40">
-        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-          <Icon className={cn("w-4 h-4 shrink-0 transition-colors", iconClass)} />
+      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-border/50">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-muted/70", iconClass)}>
+            <Icon className="w-3.5 h-3.5" aria-hidden />
+          </div>
           <span className="min-w-0 truncate text-xs font-semibold text-foreground/80">
             {label}
           </span>
@@ -104,11 +106,11 @@ export function ContactSubListShell({
       {allowAdd ? (
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           onClick={onAdd}
-          className="flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 hover:bg-transparent transition-colors px-0 py-2 justify-start mt-2 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 border-dashed border-border/80 hover:border-primary/50 hover:bg-primary/5 font-semibold text-xs py-2.5 rounded-xl transition-all min-h-10 text-primary cursor-pointer"
         >
-          <Plus className="w-4 h-4" aria-hidden />
+          <Plus className="w-3.5 h-3.5" aria-hidden />
           <span>{addLabel}</span>
         </Button>
       ) : null}

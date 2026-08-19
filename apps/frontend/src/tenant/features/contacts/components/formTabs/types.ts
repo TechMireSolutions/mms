@@ -1,22 +1,31 @@
 import type { Contact, FieldDefinition } from "@mms/shared";
 
-export type ContactSubListKey = "phones" | "emails" | "addresses" | "socials" | "education" | "experience" | "skills" | "relationshipContacts";
+export type ContactSubListKey =
+  | "phones"
+  | "emails"
+  | "addresses"
+  | "socials"
+  | "education"
+  | "experience"
+  | "skills"
+  | "relationshipContacts"
+  | (string & {});
 
-export type AddSubListItem = <K extends ContactSubListKey>(
-  fieldKey: K,
-  newItem: NonNullable<Contact[K]>[number],
+export type AddSubListItem = <T extends object = Record<string, unknown>>(
+  fieldKey: ContactSubListKey,
+  newItem: T,
 ) => void;
 
-export type EnsureSubListItem = <K extends ContactSubListKey>(
-  fieldKey: K,
-  newItem: NonNullable<Contact[K]>[number],
+export type EnsureSubListItem = <T extends object = Record<string, unknown>>(
+  fieldKey: ContactSubListKey,
+  newItem: T,
 ) => void;
 
 /** Patch may include Setup custom field keys beyond the typed system shape. */
-export type UpdateSubListItem = <K extends ContactSubListKey>(
-  fieldKey: K,
+export type UpdateSubListItem = <T extends object = Record<string, unknown>>(
+  fieldKey: ContactSubListKey,
   idx: number,
-  patch: Partial<NonNullable<Contact[K]>[number]> & Record<string, unknown>,
+  patch: Partial<T> & Record<string, unknown>,
 ) => void;
 
 export type RemoveSubListItem = (fieldKey: ContactSubListKey, idx: number) => void;

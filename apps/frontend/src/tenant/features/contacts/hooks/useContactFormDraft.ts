@@ -9,6 +9,7 @@ import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useCont
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
 import { useContactFormDraftOptions } from "@/tenant/features/contacts/hooks/useContactFormDraftOptions";
+import { apiJson } from "@/lib/apiClient";
 
 export function useContactFormDraft({
   open,
@@ -34,6 +35,8 @@ export function useContactFormDraft({
   const {
     isTabFieldEnabled,
     isTabFieldRequired,
+    enabledTabIds,
+    fieldConfig,
     fields,
     phoneLabels,
     emailLabels,
@@ -61,6 +64,7 @@ export function useContactFormDraft({
     updateSkillProficiencies,
     updateCountryCodes,
   } = useContactConfig();
+
   const formInstanceId = String(contact?.id ?? "new");
   const defaultCountryCode = defaultPhoneCountryCode;
 
@@ -139,6 +143,8 @@ export function useContactFormDraft({
     setContactDraft,
   });
 
+  const [duplicateCount, setDuplicateCount] = useState(0);
+
   useEffect(() => {
     if (!open) return;
     const nextDraft = buildInitialContactDraft({
@@ -155,12 +161,58 @@ export function useContactFormDraft({
     setContactDraft(nextDraft);
     setBaselineSnapshot(contactDraftSnapshot(nextDraft));
     setValidationErrors([]);
+    setDuplicateCount(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, contact?.id]);
+
+  useEffect(() => {
+    if (!open || contact?.id) {
+      setDuplicateCount(0);
+      return;
+    }
+    const hasCandidateKey = Boolean(
+      contactDraft.name?.trim() ||
+      contactDraft.firstName?.trim() ||
+      contactDraft.phone?.trim() ||
+      (contactDraft.phones && contactDraft.phones.some((p) => p.number?.trim())) ||
+      contactDraft.email?.trim() ||
+      (contactDraft.emails && contactDraft.emails.some((e) => e.address?.trim())) ||
+      contactDraft.cnic?.trim()
+    );
+    if (!hasCandidateKey) {
+      setDuplicateCount(0);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiJson<{ matchCount: number }>('/api/contacts/duplicate-check', {
+          method: 'POST',
+          body: JSON.stringify({ contact: contactDraft }),
+        });
+        setDuplicateCount(res.matchCount ?? 0);
+      } catch {
+        // Non-blocking duplicate check: ignore gracefully
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [
+    open,
+    contact?.id,
+    contactDraft.name,
+    contactDraft.firstName,
+    contactDraft.phone,
+    contactDraft.email,
+    contactDraft.cnic,
+    contactDraft.phones,
+    contactDraft.emails,
+  ]);
 
   return {
     formInstanceId,
     defaultCountryCode,
+    duplicateCount,
     countryCodeOptions,
     countryOptions,
     updateCountryOptions,
@@ -206,6 +258,10 @@ export function useContactFormDraft({
     updateSubListItem,
     removeSubListItem,
     handleSave,
+    validationErrors,
+    enabledTabIds,
+    fieldConfig,
     fields,
   };
 }
+

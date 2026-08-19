@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect, type ComponentType } from "react";
-import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart } from "lucide-react";
+import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, Sparkles, FolderKanban } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { type Contact, DEFAULT_FORM_TABS } from "@mms/shared";
+import { type Contact, DEFAULT_FORM_TABS, isContactLockedEnabledTab } from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { ContactFormTabContent } from "@/tenant/features/contacts/components/ContactFormTabContent";
 import { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
@@ -39,6 +40,7 @@ const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
   experience: Briefcase,
   skills: Award,
   relationship: Heart,
+  custom: Sparkles,
 };
 export function ContactForm({
   open = true,
@@ -55,6 +57,7 @@ export function ContactForm({
   const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
   const [tab, setTab] = useState("basic");
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   const draft = useContactFormDraft({
     open,
@@ -71,7 +74,16 @@ export function ContactForm({
   useEffect(() => {
     if (!open) return;
     setTab("basic");
+    setConfirmDiscardOpen(false);
   }, [open, contact, initialDraft]);
+
+  const handleRequestClose = () => {
+    if (draft.isDirty) {
+      setConfirmDiscardOpen(true);
+      return;
+    }
+    onClose();
+  };
 
   const visibleTabs = useMemo(() => {
     const countMap: Record<string, number> = {
@@ -84,66 +96,105 @@ export function ContactForm({
       experience: draft.collectionCounts.filledExperience,
       skills: draft.collectionCounts.filledSkills,
       relationship: draft.collectionCounts.filledRelationships,
+      ...draft.collectionCounts,
     };
 
-    // System tabs from shared SSOT (DEFAULT_FORM_TABS) — always shown; "basic" is mandatory
-    return DEFAULT_FORM_TABS.map((sys) => {
-      const count = countMap[sys.key];
-      return {
-        key: sys.key,
-        icon: SYSTEM_TAB_ICONS[sys.key] ?? User,
-        label: t(sys.labelKey!),
-        badge: count && count > 0 ? count : undefined,
-      };
-    });
-  }, [draft.collectionCounts, t]);
+    // System tabs from shared SSOT (DEFAULT_FORM_TABS) filtered by enabledTabIds (with basic locked on)
+    const baseTabs = draft.fieldConfig?.formTabs && draft.fieldConfig.formTabs.length > 0
+      ? draft.fieldConfig.formTabs
+      : DEFAULT_FORM_TABS;
+
+    return baseTabs
+      .filter((sys) => isContactLockedEnabledTab(sys.key) || draft.enabledTabIds.has(sys.key.toLowerCase()))
+      .map((sys) => {
+        const count = countMap[sys.key];
+        const label = sys.labelKey ? t(sys.labelKey) : (sys.label || sys.key);
+        return {
+          key: sys.key,
+          icon: SYSTEM_TAB_ICONS[sys.key] ?? FolderKanban,
+          label,
+          badge: count && count > 0 ? count : undefined,
+        };
+      });
+  }, [draft.collectionCounts, draft.enabledTabIds, draft.fieldConfig?.formTabs, t]);
+
+  useEffect(() => {
+    if (!visibleTabs.some((tabItem) => tabItem.key === tab)) {
+      setTab(visibleTabs[0]?.key ?? "basic");
+    }
+  }, [tab, visibleTabs]);
+
+  const validationErrorSummary = useMemo(() => {
+    if (draft.lookupsError) return t("contacts.form.lookupsLoadFailed");
+    if (!draft.validationErrors || draft.validationErrors.length === 0) return undefined;
+    const messages = draft.validationErrors
+      .map((err) => err.message)
+      .filter((msg): msg is string => Boolean(msg));
+    return messages.length > 0 ? Array.from(new Set(messages)) : undefined;
+  }, [draft.lookupsError, draft.validationErrors, t]);
 
   return (
-    <FormModal
-      open={open}
-      onClose={onClose}
-      title={contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")}
-      subtitle={
-        contact
-          ? t("contacts.form.editing", { name: contact.name || "" })
-          : t("contacts.form.createNewContact")
-      }
-      icon={User}
-      tall
-      priority={priority}
-      error={draft.lookupsError ? t("contacts.form.lookupsLoadFailed") : undefined}
-      tabs={visibleTabs}
-      activeTab={tab}
-      onTabChange={setTab}
-      tabPanelIdPrefix="contact-form-tab"
-      lang={language}
-      dir={dir}
-      cancelLabel={t("common.cancel")}
-      saveLabel={t("contacts.form.saveContact")}
-      onSave={() => {
-        void draft.handleSave();
-      }}
-      saving={draft.saving}
-      saveDisabled={
-        !draft.contactDraft.firstName?.trim() || (Boolean(contact) && !draft.isDirty)
-      }
-      footerStart={
-        <ContactFormFooterStart
-          contactDraft={draft.contactDraft}
-          collectionCounts={draft.collectionCounts}
-          t={t}
+    <>
+      <FormModal
+        open={open}
+        onClose={handleRequestClose}
+        title={contact ? t("contacts.form.editTitle") : t("contacts.form.addTitle")}
+        subtitle={
+          contact
+            ? t("contacts.form.editing", { name: contact.name || "" })
+            : t("contacts.form.createNewContact")
+        }
+        icon={User}
+        tall
+        priority={priority}
+        error={validationErrorSummary}
+        tabs={visibleTabs}
+        activeTab={tab}
+        onTabChange={setTab}
+        tabPanelIdPrefix="contact-form-tab"
+        lang={language}
+        dir={dir}
+        cancelLabel={t("common.cancel")}
+        saveLabel={t("contacts.form.saveContact")}
+        onSave={() => {
+          void draft.handleSave();
+        }}
+        saving={draft.saving}
+        saveDisabled={
+          !draft.contactDraft.firstName?.trim() || (Boolean(contact) && !draft.isDirty)
+        }
+
+        footerStart={
+          <ContactFormFooterStart
+            contactDraft={draft.contactDraft}
+            collectionCounts={draft.collectionCounts}
+            t={t}
+          />
+        }
+      >
+        <ContactFormTabContent
+          tab={tab}
+          draft={draft}
+          lockGender={lockGender}
+          defaultCountry={defaultCountry}
+          defaultCity={defaultCity}
+          defaultProvince={defaultProvince}
         />
-      }
-    >
-      <ContactFormTabContent
-        tab={tab}
-        draft={draft}
-        lockGender={lockGender}
-        defaultCountry={defaultCountry}
-        defaultCity={defaultCity}
-        defaultProvince={defaultProvince}
+      </FormModal>
+
+      <ConfirmAlertDialog
+        open={confirmDiscardOpen}
+        onOpenChange={setConfirmDiscardOpen}
+        title={t("contacts.form.discardUnsavedTitle")}
+        description={t("contacts.form.discardUnsavedDescription")}
+        confirmLabel={t("contacts.form.discardChanges")}
+        cancelLabel={t("contacts.form.keepEditing")}
+        destructive
+        onConfirm={() => {
+          onClose();
+        }}
       />
-    </FormModal>
+    </>
   );
 }
 

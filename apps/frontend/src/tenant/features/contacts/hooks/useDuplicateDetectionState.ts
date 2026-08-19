@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   applyTitleCaseToContact,
+  getDuplicateConfidenceBadgeStyle,
   mergeContacts,
   type AppTranslationKey,
   type Contact,
@@ -31,6 +32,8 @@ function mapPairToViewModel(
   };
 }
 
+export type DuplicateTierFilter = "all" | "high" | "medium" | "low";
+
 export function useDuplicateDetectionState({
   onMerge,
 }: {
@@ -39,6 +42,9 @@ export function useDuplicateDetectionState({
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
   const [dupPage, setDupPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tierFilter, setTierFilter] = useState<DuplicateTierFilter>("all");
+
   const {
     data: serverPairs,
     isLoading: pairsLoading,
@@ -78,21 +84,57 @@ export function useDuplicateDetectionState({
     if (serverPairs?.hasMore) setDupPage((currentPage) => currentPage + 1);
   }, [serverPairs?.hasMore]);
 
-  const activePairs = useMemo<DuplicatePair[]>(
+  const unhandledPairs = useMemo<DuplicatePair[]>(
     () => detectedPairs.filter((pair) => !dismissedPairIds.has(pair.id) && !mergedPairIds.has(pair.id)),
     [detectedPairs, dismissedPairIds, mergedPairIds],
   );
 
+  const tierCounts = useMemo(() => {
+    let high = 0;
+    let medium = 0;
+    let low = 0;
+    for (const pair of unhandledPairs) {
+      const { labelTier } = getDuplicateConfidenceBadgeStyle(pair.confidence, prefs);
+      if (labelTier === "high") high++;
+      else if (labelTier === "medium") medium++;
+      else low++;
+    }
+    return { all: unhandledPairs.length, high, medium, low };
+  }, [unhandledPairs, prefs]);
+
+  const activePairs = useMemo<DuplicatePair[]>(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return unhandledPairs.filter((pair) => {
+      if (tierFilter !== "all") {
+        const { labelTier } = getDuplicateConfidenceBadgeStyle(pair.confidence, prefs);
+        if (labelTier !== tierFilter) return false;
+      }
+      if (!query) return true;
+
+      return pair.contacts.some((contact) => {
+        const name = `${contact.name || ""} ${contact.firstName || ""} ${contact.lastName || ""}`.toLowerCase();
+        if (name.includes(query)) return true;
+        const cnic = (contact.cnic || "").toLowerCase();
+        if (cnic.includes(query)) return true;
+        const phones = (contact.phones || []).map((p) => p.number).join(" ");
+        if (phones.includes(query)) return true;
+        const emails = (contact.emails || []).map((e) => e.address).join(" ").toLowerCase();
+        if (emails.includes(query)) return true;
+        return false;
+      });
+    });
+  }, [unhandledPairs, tierFilter, searchQuery, prefs]);
+
   const totalPairs = serverPairs?.total ?? detectedPairs.length;
 
-  const handleMergeConfirm = async (): Promise<void> => {
+  const handleMergeConfirm = async (customMerged?: Contact): Promise<void> => {
     if (!merging || confirming) return;
     const pair = merging;
     const selectedKeepIndex = keepIndex[pair.id] ?? 0;
     const keep = pair.contacts[selectedKeepIndex];
     const other = pair.contacts[1 - selectedKeepIndex];
 
-    const mergedRaw = mergeContacts(keep, other);
+    const mergedRaw = customMerged ?? mergeContacts(keep, other);
     const mergedResult = applyTitleCaseToContact(mergedRaw);
     setConfirming(true);
     try {
@@ -124,6 +166,11 @@ export function useDuplicateDetectionState({
     hasMore: Boolean(serverPairs?.hasMore),
     activePairs,
     totalPairs,
+    tierCounts,
+    searchQuery,
+    setSearchQuery,
+    tierFilter,
+    setTierFilter,
     keepIndex,
     merging,
     confirming,

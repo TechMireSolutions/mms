@@ -28,6 +28,11 @@ export default function DuplicateDetection({
     hasMore,
     activePairs,
     totalPairs,
+    tierCounts,
+    searchQuery,
+    setSearchQuery,
+    tierFilter,
+    setTierFilter,
     keepIndex,
     merging,
     confirming,
@@ -49,6 +54,11 @@ export default function DuplicateDetection({
         hasMore={hasMore}
         activePairs={activePairs}
         totalPairs={totalPairs}
+        tierCounts={tierCounts}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        tierFilter={tierFilter}
+        setTierFilter={setTierFilter}
         keepIndex={keepIndex}
         totalMerged={totalMerged}
         canWrite={canWrite}

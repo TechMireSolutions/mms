@@ -176,6 +176,8 @@ export async function mergeContactsById(
       updatedAt: now,
     });
 
+    await repo.reparentContactReferences(tenant, keepId, deleteId);
+
     await invalidateDuplicateScanCache();
     return next;
   });

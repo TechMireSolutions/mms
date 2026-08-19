@@ -17,6 +17,7 @@ export const {
   loadContactRuntimeDefaults,
   loadContactsByIds,
   loadExistingNormalizedContactNames,
+  findContactsMatchingUniqueValues,
   getContactById,
   updateContactById,
   bulkSaveContacts,

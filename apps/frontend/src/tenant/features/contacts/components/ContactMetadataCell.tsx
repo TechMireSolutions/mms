@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
 import {
-  Contact,
-  ContactPreferences,
+  formatCnic,
   isRelationshipWorkColumnKey,
+  type Contact,
+  type ContactPreferences,
 } from "@mms/shared";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { TableCell } from "@/components/ui/table";
 import { buildContactsMap, formatContactCellValue } from "@/lib/contacts/contactI18n";
@@ -114,31 +116,90 @@ export function ContactMetadataCell({
           emptyNode: renderDash(),
           t,
         });
+      case "cnic": {
+        if (!contact.cnic) return renderDash();
+        return <span className="font-mono">{formatCnic(contact.cnic) || contact.cnic}</span>;
+      }
+      case "notes": {
+        if (!contact.notes) return renderDash();
+        return (
+          <span className="truncate max-w-[200px] block" title={contact.notes}>
+            {contact.notes}
+          </span>
+        );
+      }
+      case "preferredLanguage": {
+        if (!contact.preferredLanguage) return renderDash();
+        return <span>{contact.preferredLanguage}</span>;
+      }
+      case "preferredContactMethod": {
+        if (!contact.preferredContactMethod) return renderDash();
+        return <span>{contact.preferredContactMethod}</span>;
+      }
+      case "doNotContact": {
+        if (contact.doNotContact) {
+          return (
+            <Badge pill variant="outline" className="px-2 font-medium border-destructive/40 text-destructive bg-destructive/10">
+              {t("contacts.columns.doNotContact") || "Do Not Contact"}
+            </Badge>
+          );
+        }
+        return renderDash();
+      }
       case "education":
         return renderEducationMetadata({
           contact,
           emptyNode: renderDash(),
         });
+      case "education_degree":
       case "educationDegree": {
         const degrees = (contact.education || []).map((e) => e.degree?.trim()).filter(Boolean);
         return renderJoinedList(degrees, true);
       }
+      case "education_institution":
       case "educationInstitution": {
         const institutions = (contact.education || []).map((e) => e.institution?.trim()).filter(Boolean);
         return renderJoinedList(institutions, true);
+      }
+      case "education_fieldOfStudy":
+      case "educationFieldOfStudy": {
+        const fieldsOfStudy = (contact.education || []).map((e) => e.fieldOfStudy?.trim()).filter(Boolean);
+        return renderJoinedList(fieldsOfStudy, true);
+      }
+      case "education_year":
+      case "educationYear": {
+        const years = (contact.education || []).map((e) => e.year?.trim()).filter(Boolean);
+        return renderJoinedList(years, true);
+      }
+      case "education_grade":
+      case "educationGrade": {
+        const grades = (contact.education || []).map((e) => e.grade?.trim()).filter(Boolean);
+        return renderJoinedList(grades, true);
       }
       case "experience":
         return renderExperienceMetadata({
           contact,
           emptyNode: renderDash(),
         });
+      case "experience_title":
       case "experienceTitle": {
         const titles = (contact.experience || []).map((e) => e.title?.trim()).filter(Boolean);
         return renderJoinedList(titles, true);
       }
+      case "experience_organization":
       case "experienceOrganization": {
         const orgs = (contact.experience || []).map((e) => e.organization?.trim()).filter(Boolean);
         return renderJoinedList(orgs, true);
+      }
+      case "experience_employmentType":
+      case "experienceEmploymentType": {
+        const types = (contact.experience || []).map((e) => e.employmentType?.trim()).filter(Boolean);
+        return renderJoinedList(types, true);
+      }
+      case "experience_location":
+      case "experienceLocation": {
+        const locations = (contact.experience || []).map((e) => e.location?.trim()).filter(Boolean);
+        return renderJoinedList(locations, true);
       }
       case "skills":
         return renderSkillsMetadata({
@@ -154,6 +215,32 @@ export function ContactMetadataCell({
       case "skillsCategory": {
         const categories = (contact.skills || []).map((s) => s.category?.trim()).filter(Boolean);
         return renderJoinedList(categories, true);
+      }
+      case "skills_proficiency":
+      case "skillsProficiency": {
+        const proficiencies = (contact.skills || []).map((s) => s.proficiency?.trim()).filter(Boolean);
+        return renderJoinedList(proficiencies, true);
+      }
+      case "skills_yearsOfExperience":
+      case "skillsYearsOfExperience": {
+        const years = (contact.skills || []).map((s) => s.yearsOfExperience?.trim()).filter(Boolean);
+        return renderJoinedList(years, true);
+      }
+      case "skills_isCertified":
+      case "skillsIsCertified": {
+        const certified = (contact.skills || []).some((s) => s.isCertified);
+        return certified ? (
+          <Badge pill tone="success" className="px-2 font-medium">
+            {t("contacts.columns.skillsIsCertified") || "Certified"}
+          </Badge>
+        ) : (
+          renderDash()
+        );
+      }
+      case "skills_issuer":
+      case "skillsIssuer": {
+        const issuers = (contact.skills || []).map((s) => s.issuer?.trim()).filter(Boolean);
+        return renderJoinedList(issuers, true);
       }
       default: {
         if (isRelationshipWorkColumnKey(colId)) {

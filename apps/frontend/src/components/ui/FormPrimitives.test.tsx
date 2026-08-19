@@ -6,6 +6,7 @@ import {
   CardTypeLabel,
   CardRemoveButton,
   Field,
+  FormCheckboxCard,
   INPUT,
   SELECT,
   TEXTAREA,
@@ -14,6 +15,7 @@ import {
   COLLECTION_BODY,
   TYPE_SELECT_WIDTH,
 } from './FormPrimitives';
+
 
 describe('FormPrimitives', () => {
   describe('CardTypeLabel', () => {
@@ -50,6 +52,43 @@ describe('FormPrimitives', () => {
     });
   });
 
+  describe('FormCheckboxCard', () => {
+    it('renders with label and htmlFor linked to id', () => {
+      const markup = renderToStaticMarkup(
+        <FormCheckboxCard
+          id="test-checkbox"
+          name="testCheckbox"
+          checked={true}
+          onCheckedChange={() => {}}
+          label="Test Option"
+          description="Test description"
+        />,
+      );
+
+      expect(markup).toContain('for="test-checkbox"');
+      expect(markup).toContain('id="test-checkbox"');
+      expect(markup).toContain('name="testCheckbox"');
+      expect(markup).toContain('Test Option');
+      expect(markup).toContain('Test description');
+      expect(markup).toContain('bg-primary/10');
+    });
+
+    it('renders error message when error is provided', () => {
+      const markup = renderToStaticMarkup(
+        <FormCheckboxCard
+          id="error-checkbox"
+          checked={false}
+          onCheckedChange={() => {}}
+          label="Error Option"
+          error="This is a required field"
+        />,
+      );
+
+      expect(markup).toContain('This is a required field');
+      expect(markup).toContain('text-destructive');
+    });
+  });
+
   describe('Design System Constants', () => {
     it('exports non-empty CSS utility strings', () => {
       expect(INPUT).toBeDefined();
@@ -62,3 +101,4 @@ describe('FormPrimitives', () => {
     });
   });
 });
+

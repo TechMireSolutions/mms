@@ -1,6 +1,8 @@
 import type { AppTranslationKey, ContactDuplicateReasonKey } from "@mms/shared";
 
 export const DUPLICATE_REASON_I18N: Record<ContactDuplicateReasonKey, AppTranslationKey> = {
+  cnic: "contacts.duplicates.reason.cnic",
+  cnicName: "contacts.duplicates.reason.cnicName",
   phoneEmail: "contacts.duplicates.reason.phoneEmail",
   namePhone: "contacts.duplicates.reason.namePhone",
   phone: "contacts.duplicates.reason.phone",
@@ -15,6 +17,7 @@ export const DUPLICATE_FIELD_I18N: Record<string, AppTranslationKey> = {
   email: "contacts.duplicates.field.email",
   gender: "contacts.duplicates.field.gender",
   dob: "contacts.duplicates.field.dob",
+  cnic: "contacts.duplicates.field.cnic",
 };
 
 export const ACTIVITY_TYPE_I18N: Record<string, AppTranslationKey> = {

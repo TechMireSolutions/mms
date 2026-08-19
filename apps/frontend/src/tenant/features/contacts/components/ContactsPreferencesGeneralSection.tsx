@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Users } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -10,12 +9,11 @@ import { FormSelect } from "@/components/ui/FormSelect";
 
 export function ContactsPreferencesGeneralSection({
   prefs,
-  isPrefsDirty,
   countryOptions,
   onUpdatePreference,
 }: {
   prefs: ContactPreferences;
-  isPrefsDirty: boolean;
+  isPrefsDirty?: boolean;
   countryOptions: Array<{ value: string; label: string }>;
   onUpdatePreference: <K extends keyof ContactPreferences>(
     key: K,
@@ -23,14 +21,6 @@ export function ContactsPreferencesGeneralSection({
   ) => void;
 }): JSX.Element {
   const { t } = useTranslation();
-  const [namePrefixesDraft, setNamePrefixesDraft] = useState(
-    () => (prefs.namePrefixesToIgnore ?? []).join(", "),
-  );
-
-  useEffect(() => {
-    if (isPrefsDirty) return;
-    setNamePrefixesDraft((prefs.namePrefixesToIgnore ?? []).join(", "));
-  }, [prefs.namePrefixesToIgnore, isPrefsDirty]);
 
   return (
     <SectionCard title={t("contacts.setup.generalPreferences")} icon={Users}>
@@ -84,29 +74,6 @@ export function ContactsPreferencesGeneralSection({
             description={t("contacts.setup.showDetailedLunarAgeDesc")}
             value={!!prefs.showDetailedLunarAge}
             onChange={(val) => onUpdatePreference("showDetailedLunarAge", val)}
-          />
-        </div>
-
-        <div className="mt-3 border-t border-border/60 pt-3">
-          <label className={FORM_LABEL} htmlFor="namePrefixesToIgnore">
-            {t("contacts.setup.namePrefixesToIgnore")}
-          </label>
-          <p className="mb-2 text-xs text-muted-foreground">
-            {t("contacts.setup.namePrefixesToIgnoreDesc")}
-          </p>
-          <Input
-            id="namePrefixesToIgnore"
-            value={namePrefixesDraft}
-            onChange={(e) => {
-              const raw = e.target.value;
-              setNamePrefixesDraft(raw);
-              const next = raw
-                .split(",")
-                .map((prefix) => prefix.trim())
-                .filter(Boolean);
-              onUpdatePreference("namePrefixesToIgnore", next);
-            }}
-            placeholder={t("contacts.setup.namePrefixesToIgnorePlaceholder")}
           />
         </div>
       </div>

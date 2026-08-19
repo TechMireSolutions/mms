@@ -1,7 +1,6 @@
-import { MapPin } from "lucide-react";
+import { MapPin, Building, Landmark } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { EditableSelect, FieldErrorMessage, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { EditableSelect, Field, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
@@ -108,7 +107,12 @@ export function ContactAddressesTab({
             >
               <div className="space-y-3">
                 {showLine1 ? (
-                  <div>
+                  <Field
+                    label={t("contacts.fields.streetAddress")}
+                    required={isFieldRequired("addresses", "line1")}
+                    error={line1Error}
+                    id={`address-line1-${idx}`}
+                  >
                     <LeadingIconInput
                       icon={MapPin}
                       id={`address-line1-${idx}`}
@@ -119,14 +123,19 @@ export function ContactAddressesTab({
                       placeholder={t("contacts.fields.streetAddress")}
                       className={cn(line1Error && "border-destructive focus-visible:ring-destructive")}
                     />
-                    <FieldErrorMessage message={line1Error} />
-                  </div>
+                  </Field>
                 ) : null}
                 {showCity || showState || showCountry ? (
                   <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-3">
                     {showCity ? (
-                      <div>
-                        <Input
+                      <Field
+                        label={t("contacts.fields.city")}
+                        required={isFieldRequired("addresses", "city")}
+                        error={cityError}
+                        id={`address-city-${idx}`}
+                      >
+                        <LeadingIconInput
+                          icon={Building}
                           id={`address-city-${idx}`}
                           name={`address-city-${idx}`}
                           value={addr.city || ""}
@@ -137,12 +146,17 @@ export function ContactAddressesTab({
                             cityError && "border-destructive focus-visible:ring-destructive",
                           )}
                         />
-                        <FieldErrorMessage message={cityError} />
-                      </div>
+                      </Field>
                     ) : null}
                     {showState ? (
-                      <div>
-                        <Input
+                      <Field
+                        label={t("contacts.fields.state")}
+                        required={isFieldRequired("addresses", "state")}
+                        error={stateError}
+                        id={`address-state-${idx}`}
+                      >
+                        <LeadingIconInput
+                          icon={Landmark}
                           id={`address-state-${idx}`}
                           name={`address-state-${idx}`}
                           value={addr.state || ""}
@@ -153,11 +167,15 @@ export function ContactAddressesTab({
                             stateError && "border-destructive focus-visible:ring-destructive",
                           )}
                         />
-                        <FieldErrorMessage message={stateError} />
-                      </div>
+                      </Field>
                     ) : null}
                     {showCountry ? (
-                      <div>
+                      <Field
+                        label={t("contacts.fields.country")}
+                        required={isFieldRequired("addresses", "country")}
+                        error={countryError}
+                        id={`address-country-${idx}`}
+                      >
                         <EditableSelect
                           options={countryOptions}
                           value={addr.country || defaultCountry || countryOptions[0] || ""}
@@ -168,8 +186,7 @@ export function ContactAddressesTab({
                           name={`address-country-${idx}`}
                           placeholder={t("contacts.fields.country")}
                         />
-                        <FieldErrorMessage message={countryError} />
-                      </div>
+                      </Field>
                     ) : null}
                   </div>
                 ) : null}

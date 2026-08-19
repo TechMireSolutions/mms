@@ -29,44 +29,37 @@ export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
 export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
 export const DEFAULT_EDUCATION_DEGREE_LABELS = [
   "Matric / Secondary",
-  "Intermediate / Higher Secondary",
-  "Bachelors",
-  "Masters",
-  "Doctorate / PhD",
-  "Dars-e-Nizami / Alimiyyah",
-  "Hawza",
-  "Hifz-ul-Quran",
-  "Tajweed & Qiraat",
-  "Diploma / Certificate",
+  "Intermediate / HSSC",
+  "Bachelor's",
+  "Master's",
+  "MPhil / PhD",
+  "Dars-e-Nizami / Shahadat-ul-Alimiyyah",
+  "Diploma / Certification",
   "Other",
 ];
 export const DEFAULT_EMPLOYMENT_TYPE_LABELS = [
   "Full-time",
   "Part-time",
   "Contract",
-  "Self-employed",
-  "Freelance",
-  "Internship",
+  "Visiting",
   "Volunteer",
+  "Internship",
   "Other",
 ];
 export const DEFAULT_SKILL_CATEGORY_LABELS = [
-  "Islamic Studies & Qira'at",
-  "Languages & Translation",
+  "Islamic Studies",
+  "Quranic Sciences & Tajweed",
+  "Arabic Language",
   "Teaching & Pedagogy",
-  "Administration & Management",
-  "Accounting & Finance",
-  "Information Technology & Software",
-  "Design & Media",
-  "Vocational & Practical",
+  "IT & Development",
+  "Administration",
   "Other",
 ];
 export const DEFAULT_SKILL_PROFICIENCY_LABELS = [
   "Beginner",
   "Intermediate",
   "Advanced",
-  "Expert",
-  "Master / Ijazah",
+  "Master / Expert",
 ];
 
 export const SOCIAL_PLATFORMS = [

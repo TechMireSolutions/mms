@@ -18,6 +18,8 @@ interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
 export function ContactRelationshipTab({
   contactDraft,
   getLocalId,
+  relationshipOptions,
+  onUpdateRelationships,
   isFieldEnabled,
   isFieldRequired,
   getListItemError,
@@ -27,6 +29,10 @@ export function ContactRelationshipTab({
   removeSubListItem,
 }: ContactRelationshipTabProps): JSX.Element {
   const { t } = useTranslation();
+  const options =
+    relationshipOptions && relationshipOptions.length > 0
+      ? relationshipOptions
+      : (STATIC_RELATIONSHIP_OPTIONS as string[]);
   const links = contactDraft.relationshipContacts || [];
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
@@ -34,7 +40,7 @@ export function ContactRelationshipTab({
   const contactIdRequired = isFieldRequired("relationship", "contactId");
 
   const emptyLink = () => ({
-    relationship: STATIC_RELATIONSHIP_OPTIONS[0] || "",
+    relationship: options[0] || "",
     contactId: "",
   });
 
@@ -65,22 +71,22 @@ export function ContactRelationshipTab({
           {links.map((link, idx) => {
             const pickerError = getListItemError("relationship", "contactId", idx);
             const typeError = getListItemError("relationship", "relationship", idx);
-            const typeValue = link.relationship || STATIC_RELATIONSHIP_OPTIONS[0] || "";
+            const typeValue = link.relationship || options[0] || "";
             return (
               <ListFieldCard
                 key={getLocalId("relationship", idx)}
                 id={getLocalId("relationship", idx)}
                 index={idx}
                 icon={Heart}
-                accentClass="bg-primary/60 group-hover:bg-primary"
-                iconClass="text-primary/70 group-hover:text-primary"
-                label={`${t("contacts.form.contact")} ${idx + 1}`}
+                accentClass="bg-rose-500/80 group-hover:bg-rose-500"
+                iconClass="text-rose-500/90 group-hover:text-rose-500"
+                label={t("contacts.form.relationshipNumber", { index: idx + 1 })}
                 onRemove={() => removeSubListItem("relationshipContacts", idx)}
                 removeLabel={t("contacts.form.removeRelationship", { index: idx + 1 })}
               >
                 <div className="space-y-3">
                   {showLinkedContact ? (
-                    <>
+                    <div>
                       <ContactPicker
                         label={t("contacts.form.linkContact")}
                         required={contactIdRequired}
@@ -98,7 +104,7 @@ export function ContactRelationshipTab({
                         error={Boolean(pickerError)}
                       />
                       <FieldErrorMessage message={pickerError} />
-                    </>
+                    </div>
                   ) : null}
 
                   {showRelationshipType ? (
@@ -106,13 +112,15 @@ export function ContactRelationshipTab({
                       label={t("contacts.form.relationshipType")}
                       required={isFieldRequired("relationship", "relationship")}
                       error={typeError}
+                      id={`relationship-type-${idx}`}
                     >
                       <EditableSelect
-                        options={STATIC_RELATIONSHIP_OPTIONS as string[]}
+                        options={options}
                         value={typeValue}
                         onChange={(val) =>
                           updateSubListItem("relationshipContacts", idx, { relationship: val })
                         }
+                        onUpdateOptions={onUpdateRelationships}
                         placeholder={t("common.selectPlaceholder")}
                         className="w-full min-w-0"
                         id={`relationship-type-${idx}`}

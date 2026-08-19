@@ -12,6 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   IMAGE_UPLOAD_MAX_INPUT_BYTES,
   REMOVED_FORM_FIELD_KEYS,
+  isContactCustomCollectionTab,
   type Contact,
   type ValidationError,
 } from "@mms/shared";
@@ -60,17 +61,24 @@ export function useContactFormDraftHelpers({
     const filledRelationships = (contactDraft.relationshipContacts || []).filter(
       (link) => link.contactId,
     ).length;
-    return { filledPhones, filledEmails, filledAddresses, filledSocials, filledEducation, filledExperience, filledSkills, filledRelationships };
-  }, [
-    contactDraft.phones,
-    contactDraft.emails,
-    contactDraft.addresses,
-    contactDraft.socials,
-    contactDraft.education,
-    contactDraft.experience,
-    contactDraft.skills,
-    contactDraft.relationshipContacts,
-  ]);
+    const customCounts: Record<string, number> = {};
+    for (const [key, value] of Object.entries(contactDraft)) {
+      if (isContactCustomCollectionTab(key) && Array.isArray(value)) {
+        customCounts[key] = value.length;
+      }
+    }
+    return {
+      filledPhones,
+      filledEmails,
+      filledAddresses,
+      filledSocials,
+      filledEducation,
+      filledExperience,
+      filledSkills,
+      filledRelationships,
+      ...customCounts,
+    };
+  }, [contactDraft]);
 
   const isFieldEnabled = useCallback(
     (tabId: string, fieldId: string) => {

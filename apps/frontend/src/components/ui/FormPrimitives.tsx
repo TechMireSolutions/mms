@@ -13,3 +13,5 @@ export { Field, FieldErrorMessage, RequiredMark } from "@/components/ui/FormFiel
 export { RequiredBanner } from "@/components/ui/RequiredBanner";
 export { CustomFieldInput, type CustomFieldConfig } from "@/components/ui/FormCustomFieldInput";
 export { FormSelect, type FormSelectOption } from "@/components/ui/FormSelect";
+export { FormCheckboxCard, type FormCheckboxCardProps } from "@/components/ui/FormCheckboxCard";
+

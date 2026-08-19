@@ -1,6 +1,5 @@
 import { Globe, ExternalLink } from "lucide-react";
-import type { AppTranslationKey, Contact } from "@mms/shared";
-import { mergeStoredAndDerivedSiblingLinks } from "@mms/shared";
+import { formatSocialPlatformUrl, mergeStoredAndDerivedSiblingLinks, type AppTranslationKey, type Contact } from "@mms/shared";
 import { formatLocalizedRelationshipLabel } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 
 export function renderSocialMetadata({
@@ -23,7 +22,7 @@ export function renderSocialMetadata({
       {socials.map((social, index) => {
         const platform = (social.platform || "").trim();
         const url = (social.url || "").trim();
-        const href = url ? (url.startsWith("http") ? url : `https://${url}`) : undefined;
+        const href = url ? formatSocialPlatformUrl(platform, url) : undefined;
         const displayUrl = url ? url.replace(/^https?:\/\//i, "").replace(/\/$/, "") : "";
         const label = platform && displayUrl ? `${platform}: ${displayUrl}` : (platform || displayUrl);
 

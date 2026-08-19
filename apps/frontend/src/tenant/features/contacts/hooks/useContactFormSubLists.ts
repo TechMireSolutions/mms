@@ -22,7 +22,8 @@ export function useContactFormSubLists(
   const addSubListItem = useCallback<AddSubListItem>(
     (fieldKey, newItem) => {
       setContactDraft((prev) => {
-        const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
+        const rawList = (prev as Record<string, unknown>)[fieldKey];
+        const currentList = Array.isArray(rawList) ? rawList : [];
         return {
           ...prev,
           [fieldKey]: withHealedPrimary(fieldKey, [...currentList, newItem]),
@@ -36,7 +37,8 @@ export function useContactFormSubLists(
   const ensureSubListItem = useCallback<EnsureSubListItem>(
     (fieldKey, newItem) => {
       setContactDraft((prev) => {
-        const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
+        const rawList = (prev as Record<string, unknown>)[fieldKey];
+        const currentList = Array.isArray(rawList) ? rawList : [];
         if (currentList.length > 0) return prev;
         return { ...prev, [fieldKey]: withHealedPrimary(fieldKey, [newItem]) };
       });
@@ -47,11 +49,12 @@ export function useContactFormSubLists(
   const updateSubListItem = useCallback<UpdateSubListItem>(
     (fieldKey, idx, patch) => {
       setContactDraft((prev) => {
-        const currentList = (prev[fieldKey] as NonNullable<Contact[typeof fieldKey]>) || [];
+        const rawList = (prev as Record<string, unknown>)[fieldKey];
+        const currentList = Array.isArray(rawList) ? (rawList as Record<string, unknown>[]) : [];
         const nextList = currentList.map((item, i) => {
           if (i !== idx) return item;
           if (fieldKey === "phones" && "number" in patch) {
-            const phone = item as PhoneNumber;
+            const phone = item as unknown as PhoneNumber;
             const { whatsappStatus: _cleared, ...rest } = phone;
             void _cleared;
             return { ...rest, ...patch };
@@ -67,7 +70,8 @@ export function useContactFormSubLists(
   const removeSubListItem = useCallback<RemoveSubListItem>(
     (fieldKey: ContactSubListKey, idx: number) => {
       setContactDraft((prev) => {
-        const currentList = (prev[fieldKey] as unknown[]) || [];
+        const rawList = (prev as Record<string, unknown>)[fieldKey];
+        const currentList = Array.isArray(rawList) ? rawList : [];
         return {
           ...prev,
           [fieldKey]: withHealedPrimary(

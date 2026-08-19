@@ -17,4 +17,5 @@ export type { ContactDuplicateCandidateKeys } from './contactRepositoryDuplicate
 export {
   findContactDuplicateCandidateIds,
   findContactDuplicateBlockedIds,
+  reparentContactReferences,
 } from './contactRepositoryDuplicates.js';

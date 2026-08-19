@@ -260,7 +260,11 @@ export function normalizeEducationItem(
     const degree = String(obj.degree || obj.label || obj.type || defaultDegree).trim() || defaultDegree;
     const institution = String(obj.institution || obj.school || obj.college || obj.university || obj.value || "").trim();
     const fieldOfStudy = String(obj.fieldOfStudy || obj.major || obj.subject || "").trim();
-    const year = String(obj.year || obj.passingYear || obj.graduationYear || "").trim();
+    const isCurrentlyEnrolled =
+      typeof obj.isCurrentlyEnrolled === "boolean"
+        ? obj.isCurrentlyEnrolled
+        : obj.isCurrent === true || obj.enrolled === true;
+    const year = isCurrentlyEnrolled ? "" : String(obj.year || obj.passingYear || obj.graduationYear || "").trim();
     const grade = String(obj.grade || obj.division || obj.score || obj.marks || "").trim();
     return {
       ...retainExtraKeys(obj, EDUCATION_SYSTEM_KEYS),
@@ -269,6 +273,7 @@ export function normalizeEducationItem(
       fieldOfStudy,
       year,
       grade,
+      ...(isCurrentlyEnrolled ? { isCurrentlyEnrolled: true } : {}),
     };
   }
   return {
@@ -355,7 +360,7 @@ export function normalizeSkillItem(
   defaults: ContactItemNormalizeDefaults = {},
 ): ContactSkill {
   const defaultCategory =
-    defaults.skillCategory || DEFAULT_SKILL_CATEGORY_LABELS[0] || "Islamic Studies & Qira'at";
+    defaults.skillCategory || DEFAULT_SKILL_CATEGORY_LABELS[0] || "Islamic Studies";
   const defaultProficiency =
     defaults.skillProficiency || DEFAULT_SKILL_PROFICIENCY_LABELS[1] || "Intermediate";
   if (!item) {

@@ -5,6 +5,7 @@ import { FieldErrorMessage } from "@/components/ui/FormField";
 import { FORM_ERROR_BOX } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import type { GoogleContactsSyncRunResult } from "@mms/shared";
 
 export function GoogleContactsConnectedState({
   canWrite,
@@ -17,13 +18,7 @@ export function GoogleContactsConnectedState({
 }: {
   canWrite: boolean;
   error: string;
-  syncResult: {
-    total: number;
-    imported: number;
-    skipped: number;
-    skippedName: number;
-    skippedUnique: number;
-  } | null;
+  syncResult: GoogleContactsSyncRunResult | null;
   syncing: boolean;
   onDisconnect: () => void;
   onSync: () => void;
@@ -66,6 +61,7 @@ export function GoogleContactsConnectedState({
             <>
               {t("contacts.sync.syncCompleteDesc", {
                 imported: syncResult.imported,
+                updated: syncResult.updated ?? 0,
                 skipped: syncResult.skipped,
               })}
               {syncResult.skippedUnique > 0

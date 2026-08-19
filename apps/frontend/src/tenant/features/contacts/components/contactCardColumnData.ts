@@ -23,25 +23,67 @@ export function hasContactCardColumnData(contact: Contact, colId: string): boole
       return Boolean(contact.socials && contact.socials.some((s) => s.platform && s.platform.trim().length > 0));
     case "socials_url":
       return Boolean(contact.socials && contact.socials.some((s) => s.url && s.url.trim().length > 0));
+    case "cnic":
+      return Boolean(contact.cnic && contact.cnic.trim().length > 0);
+    case "notes":
+      return Boolean(contact.notes && contact.notes.trim().length > 0);
+    case "preferredLanguage":
+      return Boolean(contact.preferredLanguage && contact.preferredLanguage.trim().length > 0);
+    case "preferredContactMethod":
+      return Boolean(contact.preferredContactMethod && contact.preferredContactMethod.trim().length > 0);
+    case "doNotContact":
+      return Boolean(contact.doNotContact);
     case "education":
       return Boolean(contact.education && contact.education.some((e) => e.institution?.trim() || e.degree?.trim()));
+    case "education_degree":
     case "educationDegree":
       return Boolean(contact.education && contact.education.some((e) => e.degree?.trim()));
+    case "education_institution":
     case "educationInstitution":
       return Boolean(contact.education && contact.education.some((e) => e.institution?.trim()));
+    case "education_fieldOfStudy":
+    case "educationFieldOfStudy":
+      return Boolean(contact.education && contact.education.some((e) => e.fieldOfStudy?.trim()));
+    case "education_year":
+    case "educationYear":
+      return Boolean(contact.education && contact.education.some((e) => e.year?.trim()));
+    case "education_grade":
+    case "educationGrade":
+      return Boolean(contact.education && contact.education.some((e) => e.grade?.trim()));
     case "experience":
       return Boolean(contact.experience && contact.experience.some((e) => e.organization?.trim() || e.title?.trim()));
+    case "experience_title":
     case "experienceTitle":
       return Boolean(contact.experience && contact.experience.some((e) => e.title?.trim()));
+    case "experience_organization":
     case "experienceOrganization":
       return Boolean(contact.experience && contact.experience.some((e) => e.organization?.trim()));
+    case "experience_employmentType":
+    case "experienceEmploymentType":
+      return Boolean(contact.experience && contact.experience.some((e) => e.employmentType?.trim()));
+    case "experience_location":
+    case "experienceLocation":
+      return Boolean(contact.experience && contact.experience.some((e) => e.location?.trim()));
     case "skills":
+      return Boolean(contact.skills && contact.skills.some((s) => s.name?.trim()));
     case "skills_name":
     case "skillsName":
       return Boolean(contact.skills && contact.skills.some((s) => s.name?.trim()));
     case "skills_category":
     case "skillsCategory":
       return Boolean(contact.skills && contact.skills.some((s) => s.category?.trim()));
+    case "skills_proficiency":
+    case "skillsProficiency":
+      return Boolean(contact.skills && contact.skills.some((s) => s.proficiency?.trim()));
+    case "skills_yearsOfExperience":
+    case "skillsYearsOfExperience":
+      return Boolean(contact.skills && contact.skills.some((s) => s.yearsOfExperience?.trim()));
+    case "skills_isCertified":
+    case "skillsIsCertified":
+      return Boolean(contact.skills && contact.skills.some((s) => s.isCertified));
+    case "skills_issuer":
+    case "skillsIssuer":
+      return Boolean(contact.skills && contact.skills.some((s) => s.issuer?.trim()));
     case "line1":
     case "city":
     case "state":

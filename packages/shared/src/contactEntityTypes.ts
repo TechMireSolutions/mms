@@ -47,6 +47,7 @@ export interface ContactEducation {
   fieldOfStudy?: string;
   year?: string;
   grade?: string;
+  isCurrentlyEnrolled?: boolean;
   label?: string;
   sortOrder?: number;
 }

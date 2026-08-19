@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react";
-import type { Contact } from "@mms/shared";
+import { formatSocialPlatformUrl, type Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveSocialPlatformLabel } from "@/lib/contacts/contactI18n";
 import { ContactDetailExternalLinkSection } from "./ContactDetailExternalLinkSection";
@@ -23,12 +23,12 @@ export function ContactDetailSocialsSection({
       actionTitle={t("contacts.detail.visitSocialProfile")}
       rows={socials.map((social, socialIndex) => {
         const handle = String(social.url || "");
-        const url = handle.startsWith("http") ? handle : `https://${handle}`;
+        const url = handle ? formatSocialPlatformUrl(social.platform, handle) : "";
         return {
           key: `social-${socialIndex}`,
           label: resolveSocialPlatformLabel(social.platform, socialPlatforms, t),
           value: handle,
-          href: handle ? url : undefined,
+          href: url || undefined,
         };
       })}
     />

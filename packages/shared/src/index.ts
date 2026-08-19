@@ -132,6 +132,8 @@ export {
   canViewContactsSavedReport,
   validateContactsSavedReportDrillDown,
 } from './contactsSavedReportUtils.js';
+export * from './socialPlatformUtils.js';
+
 
 // ---------------------------------------------------------------------------
 // 6. Students Feature Module

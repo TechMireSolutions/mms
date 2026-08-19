@@ -39,6 +39,10 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
     loadContactsByIds: (ids: string[]) => loadUseCases.loadContactsByIds(ids, repo),
     loadExistingNormalizedContactNames: (names: string[]) =>
       loadUseCases.loadExistingNormalizedContactNames(names, repo),
+    findContactsMatchingUniqueValues: (
+      values: Parameters<typeof loadUseCases.findContactsMatchingUniqueValues>[0],
+      excludeIds?: Parameters<typeof loadUseCases.findContactsMatchingUniqueValues>[1],
+    ) => loadUseCases.findContactsMatchingUniqueValues(values, excludeIds, repo),
     loadContactDuplicatePairsPage: (query: { page?: number; limit?: number }) =>
       loadUseCases.loadContactDuplicatePairsPage(query, repo),
     getContactById: (id: string, includeDeleted?: boolean) =>

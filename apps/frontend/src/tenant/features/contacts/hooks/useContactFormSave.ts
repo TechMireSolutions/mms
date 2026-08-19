@@ -18,6 +18,8 @@ import {
   isContactDeleted,
   findContactUniqueFieldConflicts,
   type ValidationError,
+  formatSocialPlatformUrl,
+  isChronologicalDateRangeValid,
 } from "@mms/shared";
 
 export function useContactFormSave({
@@ -72,6 +74,21 @@ export function useContactFormSave({
         fieldId: "avatar",
         tabId: "basic",
         message: t("contacts.form.avatarMustUpload"),
+      });
+    }
+
+    if (Array.isArray(cleanedDraft.experience)) {
+      cleanedDraft.experience.forEach((exp, idx) => {
+        if (!exp.isCurrent && exp.startDate && exp.endDate) {
+          if (!isChronologicalDateRangeValid(exp.startDate, exp.endDate)) {
+            formErrors.push({
+              fieldId: "endDate",
+              tabId: "experience",
+              index: idx,
+              message: t("contacts.form.startDateBeforeEndDate"),
+            });
+          }
+        }
       });
     }
 
@@ -136,6 +153,11 @@ export function useContactFormSave({
         };
       });
 
+      const normalizedSocials = (cleanedDraft.socials || []).map((social) => ({
+        ...social,
+        url: formatSocialPlatformUrl(social.platform, social.url),
+      }));
+
       const contactRaw: Contact = {
         ...cleanedDraft,
         id: cleanedDraft.id || contact?.id || crypto.randomUUID(),
@@ -143,6 +165,7 @@ export function useContactFormSave({
         lastName,
         name: composeContactName(firstName, lastName),
         phones: normalizedPhones,
+        socials: normalizedSocials,
         updatedAt: todayISO(),
         createdAt: cleanedDraft.createdAt || todayISO(),
       } as Contact;
