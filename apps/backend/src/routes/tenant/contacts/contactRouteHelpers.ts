@@ -17,13 +17,54 @@ import {
 } from '../../../services/rbacService.js';
 import { enqueueBackgroundJob, getUserBackgroundJob } from '../../../services/backgroundJobWorkerService.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
-import { sendForbidden } from '../../../lib/httpErrors.js';
+import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { loadContactFieldConfig } from '../../../services/contactConfigService.js';
-import { parseRequest } from '../../../lib/zodRequest.js';
+import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
+import { ContactPermissionError, ContactUniqueFieldError } from '../../../services/contactService.js';
 
 type ContactWriteZod = ZodType<unknown>;
 
 export type ContactPermission = 'read' | 'write' | 'delete';
+
+export function handleContactWriteError(
+  reply: FastifyReply,
+  error: unknown,
+  fallbackMessage = 'Failed to save contact record',
+): ReturnType<FastifyReply['status']> {
+  if (error instanceof ContactPermissionError) {
+    return sendForbidden(reply, error.message);
+  }
+  if (error instanceof ContactUniqueFieldError) {
+    return replyValidationError(reply, error.message, { errors: error.errors });
+  }
+
+  const pgCode = (error as { code?: string })?.code;
+  const pgDetail = (error as { detail?: string })?.detail || '';
+  const constraintName = (error as { constraint?: string })?.constraint || '';
+  if (pgCode === '23505') {
+    let fieldId = 'cnic';
+    let tabId = 'basic';
+    let message = 'Value must be unique per contact';
+    if (constraintName.includes('cnic') || pgDetail.includes('cnic')) {
+      fieldId = 'cnic';
+      tabId = 'basic';
+      message = 'CNIC must be unique per contact';
+    } else if (constraintName.includes('phone') || pgDetail.includes('phone')) {
+      fieldId = 'number';
+      tabId = 'phones';
+      message = 'Phone number must be unique per contact';
+    } else if (constraintName.includes('email') || pgDetail.includes('email')) {
+      fieldId = 'address';
+      tabId = 'emails';
+      message = 'Email address must be unique per contact';
+    }
+    return replyValidationError(reply, message, {
+      errors: [{ fieldId, tabId, message }],
+    });
+  }
+
+  return sendDatabaseError(reply, fallbackMessage, error);
+}
 
 /** Contacts permission gate: sends a 403 reply and returns false when not granted. */
 export function requireContactPermission(

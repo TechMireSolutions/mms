@@ -138,6 +138,30 @@ export const contacts = pgTable('contacts', {
   index('contacts_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  uniqueIndex('contacts_workspace_cnic_active_uidx')
+    .on(
+      table.workspaceSubdomain,
+      sql`(regexp_replace(${table.cnic}, '[^0-9]', '', 'g'))`,
+    )
+    .where(
+      sql`${table.deletedAt} is null and nullif(regexp_replace(${table.cnic}, '[^0-9]', '', 'g'), '') is not null`,
+    ),
+  uniqueIndex('contacts_workspace_phone_active_uidx')
+    .on(
+      table.workspaceSubdomain,
+      sql`(regexp_replace(${table.phone}, '[^0-9]', '', 'g'))`,
+    )
+    .where(
+      sql`${table.deletedAt} is null and nullif(regexp_replace(${table.phone}, '[^0-9]', '', 'g'), '') is not null`,
+    ),
+  uniqueIndex('contacts_workspace_email_active_uidx')
+    .on(
+      table.workspaceSubdomain,
+      sql`(lower(trim(${table.email})))`,
+    )
+    .where(
+      sql`${table.deletedAt} is null and nullif(trim(${table.email}), '') is not null`,
+    ),
 ]);
 
 export const contactPhones = pgTable('contact_phones', {

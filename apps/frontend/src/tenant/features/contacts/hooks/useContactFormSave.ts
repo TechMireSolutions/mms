@@ -10,7 +10,7 @@ import {
   toTitleCase,
   applyTitleCaseToContact,
   composeContactName,
-  Contact,
+  type Contact,
   todayISO,
   cleanContactDraft,
   syncContactScalarFields,

@@ -3,7 +3,6 @@ import type { Contact, User } from '@mms/shared';
 import { summarizeContactFieldChanges } from '@mms/shared';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
-import { ContactPermissionError, ContactUniqueFieldError } from '../../../services/contactService.js';
 import { validateContactDynamic } from '../../../services/contactValidationService.js';
 import { canWriteContacts } from '../../../services/rbacService.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
@@ -11,6 +10,7 @@ import { executeDynamicValidation, parseRequest, replyValidationError } from '..
 import { resourceIdParamsSchema } from '../../../validation/commonSchemas.js';
 import {
   auditContact,
+  handleContactWriteError,
   parseContactWriteBody,
   requireContactPermission,
   sanitizeOneForUser,
@@ -80,13 +80,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         .status(created ? 201 : 200)
         .send({ success: true, contact: await sanitizeOneForUser(contact, user) });
     } catch (error: unknown) {
-      if (error instanceof ContactPermissionError) {
-        return sendForbidden(reply, error.message);
-      }
-      if (error instanceof ContactUniqueFieldError) {
-        return replyValidationError(reply, error.message, { errors: error.errors });
-      }
-      return sendDatabaseError(reply, 'Failed to save contact record', error);
+      return handleContactWriteError(reply, error, 'Failed to save contact record');
     }
   });
 
@@ -168,10 +162,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       await auditContact(user, 'contact.update', diff, params.data.id);
       return reply.send({ success: true, contact: await sanitizeOneForUser(updated, user) });
     } catch (error: unknown) {
-      if (error instanceof ContactUniqueFieldError) {
-        return replyValidationError(reply, error.message, { errors: error.errors });
-      }
-      return sendDatabaseError(reply, 'Failed to update contact', error);
+      return handleContactWriteError(reply, error, 'Failed to update contact');
     }
   });
 };

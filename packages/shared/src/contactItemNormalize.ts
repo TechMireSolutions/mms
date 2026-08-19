@@ -5,6 +5,7 @@ import {
 import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 import { hydrateContactRelationshipFields } from "./contactRelationshipHydrate.js";
+import { formatCnic } from "./identityFormatUtils.js";
 import {
   PHONE_SYSTEM_KEYS,
   EMAIL_SYSTEM_KEYS,
@@ -33,26 +34,27 @@ const CONTACT_ENTITY_ARRAY_KEYS = new Set([
 ]);
 
 function valueHasContent(value: unknown): boolean {
-  if (value == null) return false;
-  if (typeof value === "boolean") return false;
-  if (typeof value === "number") return !Number.isNaN(value);
+  if (value === null || value === undefined) return false;
   if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return true;
+  if (typeof value === "boolean") return value;
   if (Array.isArray(value)) return value.length > 0;
-  return false;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return true;
 }
 
-/** True when a list row has no primary content and no custom field values. */
 function isBlankContactListRow(
   row: unknown,
-  primaryKeys: readonly string[],
+  requiredContentKeys: readonly string[],
   systemKeys: ReadonlySet<string>,
 ): boolean {
   if (!row || typeof row !== "object" || Array.isArray(row)) return true;
   const obj = row as Record<string, unknown>;
-  if (primaryKeys.some((key) => valueHasContent(obj[key]))) return false;
-  for (const [key, value] of Object.entries(obj)) {
-    if (systemKeys.has(key)) continue;
-    if (valueHasContent(value)) return false;
+  const hasContent = requiredContentKeys.some((k) => valueHasContent(obj[k]));
+  if (hasContent) return false;
+  for (const [k, v] of Object.entries(obj)) {
+    if (systemKeys.has(k)) continue;
+    if (valueHasContent(v)) return false;
   }
   return true;
 }
@@ -65,8 +67,8 @@ function isBlankCustomCollectionRow(row: unknown): boolean {
 /** Ensures exactly one `isPrimary` flag among list items (first when none set). */
 export function ensureSinglePrimaryFlag<T extends { isPrimary?: boolean }>(items: T[]): T[] {
   if (items.length === 0) return items;
-  const primaryIndex = items.findIndex((item) => item.isPrimary === true);
-  const keepIndex = primaryIndex >= 0 ? primaryIndex : 0;
+  const primaryIdx = items.findIndex((i) => i.isPrimary);
+  const keepIndex = primaryIdx >= 0 ? primaryIdx : 0;
   return items.map((item, index) => ({ ...item, isPrimary: index === keepIndex }));
 }
 
@@ -78,18 +80,44 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
     stripContactClientSoftDeleteFields({ ...draft } as Record<string, unknown>) as Partial<Contact>,
   );
 
+  if (typeof result.cnic === "string") {
+    const trimmed = result.cnic.trim();
+    result.cnic = trimmed ? formatCnic(trimmed) : "";
+  }
+  if (typeof (result as Record<string, unknown>).email === "string") {
+    (result as Record<string, unknown>).email = String(
+      (result as Record<string, unknown>).email,
+    )
+      .trim()
+      .toLowerCase();
+  }
+
   if (Array.isArray(result.phones)) {
     result.phones = ensureSinglePrimaryFlag(
-      result.phones.filter(
-        (phone) => !isBlankContactListRow(phone, ["number"], PHONE_SYSTEM_KEYS),
-      ),
+      result.phones
+        .filter(
+          (phone) => !isBlankContactListRow(phone, ["number"], PHONE_SYSTEM_KEYS),
+        )
+        .map((phone) => ({
+          ...phone,
+          number: (phone.number || "").trim(),
+          countryCode:
+            typeof phone.countryCode === "string"
+              ? phone.countryCode.trim()
+              : phone.countryCode,
+        })),
     );
   }
   if (Array.isArray(result.emails)) {
     result.emails = ensureSinglePrimaryFlag(
-      result.emails.filter(
-        (email) => !isBlankContactListRow(email, ["address"], EMAIL_SYSTEM_KEYS),
-      ),
+      result.emails
+        .filter(
+          (email) => !isBlankContactListRow(email, ["address"], EMAIL_SYSTEM_KEYS),
+        )
+        .map((email) => ({
+          ...email,
+          address: (email.address || "").trim().toLowerCase(),
+        })),
     );
   }
   if (Array.isArray(result.addresses)) {
