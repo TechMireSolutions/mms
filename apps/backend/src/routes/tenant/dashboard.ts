@@ -25,9 +25,14 @@ import {
 
 const auditDashboard = createCollectionAuditHelper('dashboard');
 
-/** Dashboard is the always-on home — any authenticated tenant may read; setupWrite gates mutations. */
 function canWriteDashboard(user: User): boolean {
-  return roleHasPermission(user.role, DASHBOARD_MODULE_MANIFEST.permissions.setupWrite);
+  if (!user || !user.role) return false;
+  const role = String(user.role).toLowerCase();
+  if (role === 'admin' || role === 'owner') return true;
+  return (
+    roleHasPermission(role, DASHBOARD_MODULE_MANIFEST.permissions.setupWrite) ||
+    roleHasPermission(role, DASHBOARD_MODULE_MANIFEST.permissions.customize)
+  );
 }
 
 /**
@@ -67,6 +72,7 @@ export default async function dashboardRoutes(
       }
       return reply.send({ success: true, preferences: saved });
     } catch (error: unknown) {
+      fastify.log.error({ err: error }, 'Failed to save dashboard preferences in database');
       return sendDatabaseError(reply, 'Failed to save dashboard preferences', error);
     }
   });
@@ -97,6 +103,7 @@ export default async function dashboardRoutes(
       }
       return reply.send({ success: true, widgets });
     } catch (error: unknown) {
+      fastify.log.error({ err: error }, 'Failed to save dashboard widgets in database');
       return sendDatabaseError(reply, 'Failed to save dashboard widgets', error);
     }
   });

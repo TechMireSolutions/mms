@@ -127,37 +127,34 @@ export function normalizeDashboardWidget(raw: unknown): DashboardWidgetDto | nul
   const rawWidgetType = (r.widgetType ?? r.type) as string | undefined;
   const widgetType =
     typeof rawWidgetType === "string" && rawWidgetType.trim().length > 0
-      ? (rawWidgetType.trim() as DashboardWidgetDto["widgetType"])
+      ? (rawWidgetType.trim().toLowerCase() as DashboardWidgetDto["widgetType"])
       : undefined;
 
-  const operation =
-    typeof r.operation === "string" && r.operation.trim().length > 0
-      ? (r.operation.trim() as DashboardWidgetDto["operation"])
-      : "count";
+  const rawOp = typeof r.operation === "string" ? r.operation.trim().toLowerCase() : "";
+  const operation = (OPERATIONS as readonly string[]).includes(rawOp)
+    ? (rawOp as DashboardWidgetDto["operation"])
+    : (typeof r.operation === "string" ? (r.operation.trim() as DashboardWidgetDto["operation"]) : "count");
 
-  const sanitizeOptionalEnum = <T extends string>(val: unknown): T | undefined => {
+  const sanitizeOptionalEnum = <T extends string>(
+    val: unknown,
+    allowedValues: readonly T[],
+  ): T | undefined => {
     if (typeof val === "string") {
-      const trimmed = val.trim();
-      return trimmed.length > 0 ? (trimmed as T) : undefined;
+      const lower = val.trim().toLowerCase();
+      if ((allowedValues as readonly string[]).includes(lower)) {
+        return lower as T;
+      }
     }
     return undefined;
   };
 
-  const subTextType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["subTextType"]>>(r.subTextType);
-  const trendType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["trendType"]>>(r.trendType);
-  const switchActionType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["switchActionType"]>>(
-    r.switchActionType,
-  );
-  const thresholdCondition = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["thresholdCondition"]>>(
-    r.thresholdCondition,
-  );
-  const thresholdColor = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["thresholdColor"]>>(
-    r.thresholdColor,
-  );
-  const filterOperator = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["filterOperator"]>>(
-    r.filterOperator,
-  );
-  const chartType = sanitizeOptionalEnum<NonNullable<DashboardWidgetDto["chartType"]>>(r.chartType);
+  const subTextType = sanitizeOptionalEnum(r.subTextType, SUB_TEXT_TYPES);
+  const trendType = sanitizeOptionalEnum(r.trendType, TREND_TYPES);
+  const switchActionType = sanitizeOptionalEnum(r.switchActionType, SWITCH_ACTION_TYPES);
+  const thresholdCondition = sanitizeOptionalEnum(r.thresholdCondition, THRESHOLD_CONDITIONS);
+  const thresholdColor = sanitizeOptionalEnum(r.thresholdColor, THRESHOLD_COLORS);
+  const filterOperator = sanitizeOptionalEnum(r.filterOperator, FILTER_OPERATORS);
+  const chartType = sanitizeOptionalEnum(r.chartType, CHART_TYPES);
 
   const sanitizeString = (val: unknown): string | undefined => {
     if (typeof val === "string" && val.trim().length > 0) return val.trim();
@@ -180,11 +177,11 @@ export function normalizeDashboardWidget(raw: unknown): DashboardWidgetDto | nul
 
   const title = typeof r.title === "string" ? r.title : "";
   const titleKey = sanitizeString(r.titleKey);
-  const category = sanitizeString(r.category) ?? "custom";
-  const collection = sanitizeString(r.collection) ?? "students";
-  const color = sanitizeString(r.color) ?? "blue";
+  const category = (sanitizeString(r.category) ?? "custom").toLowerCase();
+  const collection = (sanitizeString(r.collection) ?? "students").toLowerCase();
+  const color = (sanitizeString(r.color) ?? "blue").toLowerCase();
   const icon = sanitizeString(r.icon);
-  const role = sanitizeString(r.role);
+  const role = sanitizeString(r.role)?.toLowerCase();
 
   const fixedSubText = sanitizeString(r.fixedSubText);
   const fixedSubTextKey = sanitizeString(r.fixedSubTextKey);

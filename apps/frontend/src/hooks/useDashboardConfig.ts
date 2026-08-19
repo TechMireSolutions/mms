@@ -30,7 +30,9 @@ export function useDashboardConfig() {
   const widgetsMutation = useDashboardWidgetsMutation();
   const widgetDeleteMutation = useDashboardWidgetDeleteMutation();
   const { can } = usePermissions();
-  const canWriteDashboard = can(DASHBOARD_MODULE_MANIFEST.permissions.setupWrite);
+  const canWriteDashboard =
+    can(DASHBOARD_MODULE_MANIFEST.permissions.setupWrite) ||
+    can(DASHBOARD_MODULE_MANIFEST.permissions.customize);
 
   const prefs: DashboardPreferences = prefsQuery.data ?? DEFAULT_DASHBOARD_PREFERENCES;
   const serverWidgets = widgetsQuery.data ?? [];

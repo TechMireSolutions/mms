@@ -111,6 +111,27 @@ describe("dashboardWidgetsPutBodySchema", () => {
     }
   });
 
+  it("parses and normalizes TitleCase operations and collections", () => {
+    const parsed = dashboardWidgetsPutBodySchema.safeParse([
+      {
+        id: "def-contacts-total",
+        title: "",
+        category: "contacts",
+        collection: "Contacts",
+        operation: "Count",
+        color: "blue",
+        isPinnedToDashboard: false,
+        titleKey: "widget.title.totalContacts",
+        widgetType: "kpi",
+      },
+    ]);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data[0].operation).toBe("count");
+      expect(parsed.data[0].collection).toBe("contacts");
+    }
+  });
+
   it("rejects more than 500 widgets", () => {
     const tooMany = Array.from({ length: 501 }, (_, i) => ({ ...validWidget, id: `w-${i}` }));
     expect(dashboardWidgetsPutBodySchema.safeParse(tooMany).success).toBe(false);
