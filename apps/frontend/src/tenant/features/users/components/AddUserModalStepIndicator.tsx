@@ -29,7 +29,7 @@ export function StepIndicator({ step }: StepIndicatorProps): JSX.Element {
         const Icon = stepDefinition.icon;
         return (
           <React.Fragment key={stepDefinition.id}>
-            <div className="flex min-w-[5rem] flex-col items-center gap-1">
+            <div className="flex min-w-20 flex-col items-center gap-1">
               <div className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all ${
                 done ? "bg-primary border-primary text-primary-foreground" :
                 active ? "border-primary bg-primary/10 text-primary" :

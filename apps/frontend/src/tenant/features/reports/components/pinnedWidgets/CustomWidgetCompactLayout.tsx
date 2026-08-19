@@ -58,7 +58,7 @@ export function CustomWidgetCompactLayout({
         whileTap={{ scale: 0.96 }}
         transition={{ type: "spring", stiffness: 450, damping: 20 }}
         onClick={() => onMetricClick(widget)}
-        className={`w-[6.25rem] h-[6.25rem] p-2.5 text-center flex flex-col justify-between items-center cursor-pointer outline-none select-none relative overflow-hidden ${WORK_SURFACE} hover:border-primary/20 hover:shadow-md`}
+        className={`size-widget-compact p-2.5 text-center flex flex-col justify-between items-center cursor-pointer outline-none select-none relative overflow-hidden ${WORK_SURFACE} hover:border-primary/20 hover:shadow-md`}
         type="button"
       >
         <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
@@ -117,7 +117,7 @@ export function CustomWidgetCompactLayout({
 
   if (resolvedWidgetType === "switch") {
     return (
-      <div className={`w-[6.25rem] h-[6.25rem] p-2 text-center flex flex-col justify-between items-center ${WORK_SURFACE} overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md`}>
+      <div className={`size-widget-compact p-2 text-center flex flex-col justify-between items-center ${WORK_SURFACE} overflow-hidden relative transition-all duration-300 hover:border-primary/20 hover:shadow-md`}>
         <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
           {resolveWidgetTitle(widget, t)}
         </span>
@@ -131,7 +131,7 @@ export function CustomWidgetCompactLayout({
 
         <SectionLabel
           className="mb-0.5"
-          style={{ color: isSwitchOn ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
+          tone={isSwitchOn ? "primary" : "muted"}
         >
           {switchLabel}
         </SectionLabel>
@@ -165,7 +165,7 @@ function CompactMetricButton({
       whileTap={{ scale: 0.96 }}
       transition={{ type: "spring", stiffness: 450, damping: 20 }}
       onClick={() => onMetricClick(widget)}
-      className={`w-[6.25rem] h-[6.25rem] ${isProgress ? "p-1.5" : "p-2"} text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
+      className={`size-widget-compact ${isProgress ? "p-1.5" : "p-2"} text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
         alertScheme
           ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse`
           : `${WORK_SURFACE} hover:border-primary/20 hover:shadow-md`

@@ -18,6 +18,14 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { SubTabBar } from '@/components/ui/SubTabBar';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -206,30 +214,30 @@ export function MessagingSetupPanel({
                   <EmptyState title={t('messaging.noTemplates')} compact />
                 )}
               </div>
-              <div className="hidden overflow-x-auto md:block">
-                <table className="w-full table-fixed text-start text-xs">
-                  <thead className="bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
-                    <tr className="border-b border-border/60">
+              <div className="hidden md:block">
+                <Table className="table-fixed text-start text-xs">
+                  <TableHeader className="bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
+                    <TableRow className="border-b border-border/60">
                       {(['label', 'category', 'body'] as const).map((column) => <ResizableTableHead key={column} columnKey={column} width={getColumnWidth(column)} onResize={setColumnWidth} className="px-4 py-2.5">{column === 'label' ? t('messaging.templateLabel') : column === 'category' ? t('messaging.category') : t('messaging.templateCopy')}</ResizableTableHead>)}
-                      <th className="w-32 px-4 py-2.5 text-center">{t('common.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/60">
+                      <TableHead className="w-32 px-4 py-2.5 text-center">{t('common.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border/60">
                     {filteredTemplates.map((template) => (
-                      <tr key={template.id} className="transition-colors hover:bg-muted/5">
-                        <td className="flex items-center gap-1.5 px-4 py-3 font-semibold text-foreground"><span>{template.labelKey ? t(template.labelKey as Parameters<typeof t>[0]) : template.label}</span>{template.channel && template.channel !== 'all' && <ChannelBadge channel={template.channel} className="text-xs" />}</td>
-                        <td className="px-4 py-3"><StatusBadge status={template.category || 'general'} config={categoryBadgeConfig} size="sm" /></td>
-                        <td className="max-w-sm truncate px-4 py-3 text-muted-foreground" title={template.body}>{template.body}</td>
-                        <td className="px-4 py-3 text-center"><div className="flex items-center justify-center gap-1">
+                      <TableRow key={template.id} className="transition-colors hover:bg-muted/5">
+                        <TableCell className="flex items-center gap-1.5 px-4 py-3 font-semibold text-foreground"><span>{template.labelKey ? t(template.labelKey as Parameters<typeof t>[0]) : template.label}</span>{template.channel && template.channel !== 'all' && <ChannelBadge channel={template.channel} className="text-xs" />}</TableCell>
+                        <TableCell className="px-4 py-3"><StatusBadge status={template.category || 'general'} config={categoryBadgeConfig} size="sm" /></TableCell>
+                        <TableCell className="max-w-sm truncate px-4 py-3 text-muted-foreground" title={template.body}>{template.body}</TableCell>
+                        <TableCell className="px-4 py-3 text-center"><div className="flex items-center justify-center gap-1">
                           <Button variant="outline" size="icon" onClick={() => void copyBody(template.body)} className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-muted-foreground/30 bg-muted-foreground/5 text-muted-foreground hover:text-foreground hover:bg-muted-foreground/15 hover:border-muted-foreground/40 shadow-none" title={t('messaging.copyTemplate')} aria-label={t('messaging.copyTemplate')}><Copy className="h-3.5 w-3.5" /></Button>
                           {canWrite && <Button variant="outline" size="icon" onClick={() => void duplicate(template)} className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/15 hover:border-primary/40 shadow-none" title={t('messaging.duplicateTemplate')} aria-label={t('messaging.duplicateTemplate')}><Files className="h-3.5 w-3.5" /></Button>}
                           {canWrite && template.id.startsWith('custom_') ? <><Button variant="outline" size="icon" onClick={() => edit(template)} className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none" title={t('common.edit')} aria-label={t('common.edit')}><Edit3 className="h-3.5 w-3.5" /></Button><Button variant="outline" size="icon" onClick={() => onDeleteRequest(template.id)} className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none" title={t('common.delete')} aria-label={t('common.delete')}><Trash2 className="h-3.5 w-3.5" /></Button></> : <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground/60">{t('messaging.tagSystem')}</span>}
-                        </div></td>
-                      </tr>
+                        </div></TableCell>
+                      </TableRow>
                     ))}
-                    {filteredTemplates.length === 0 && <tr><td colSpan={4} className="py-4"><EmptyState title={t('messaging.noTemplates')} compact /></td></tr>}
-                  </tbody>
-                </table>
+                    {filteredTemplates.length === 0 && <TableRow><TableCell colSpan={4} className="py-4"><EmptyState title={t('messaging.noTemplates')} compact /></TableCell></TableRow>}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </div>

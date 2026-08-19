@@ -28,7 +28,7 @@ export function CustomReportBuilderPreviewVisualizer({
   const { t } = useTranslation();
 
   return (
-    <div className={`${WORK_SURFACE} overflow-hidden flex-1 min-h-[13.75rem]`}>
+    <div className={`${WORK_SURFACE} overflow-hidden flex-1 min-h-panel-sm`}>
       {previewData.length === 0 ? (
         <EmptyState
           title={t("reports.builder.waitingData")}

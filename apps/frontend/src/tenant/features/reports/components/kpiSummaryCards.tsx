@@ -62,7 +62,7 @@ export function KPICardsGrid({ cards, onAddCustom }: KPICardsGridProps): JSX.Ele
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.04 }}
-            className="group flex min-h-[7.5rem] flex-col justify-between rounded-2xl border border-border bg-card/60 p-3.5 text-start shadow-sm backdrop-blur-md transition-all hover:border-primary/20 hover:shadow-md"
+            className="group flex min-h-card-sm flex-col justify-between rounded-2xl border border-border bg-card/60 p-3.5 text-start shadow-sm backdrop-blur-md transition-all hover:border-primary/20 hover:shadow-md"
           >
             <header className="flex select-none items-center justify-between gap-1.5">
               <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-115 ${kpiColor.bg}`}>
@@ -87,7 +87,7 @@ export function KPICardsGrid({ cards, onAddCustom }: KPICardsGridProps): JSX.Ele
         type="button"
         variant="ghost"
         onClick={onAddCustom}
-        className="flex min-h-[6.25rem] h-auto flex-col items-center justify-center rounded-2xl border border-dashed border-border/85 bg-card/25 p-3 text-center text-muted-foreground transition-all duration-300 hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+        className="flex min-h-card-mini h-auto flex-col items-center justify-center rounded-2xl border border-dashed border-border/85 bg-card/25 p-3 text-center text-muted-foreground transition-all duration-300 hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
       >
         <Plus className="mb-1 h-5 w-5" aria-hidden="true" />
         <span className="text-xs font-bold">{t('reports.kpiAddCustom')}</span>

@@ -47,7 +47,7 @@ export const FormModalTabs = React.memo(function FormModalTabs<K extends string 
       dir={dir}
       className="flex h-full flex-col items-stretch gap-6 @md:flex-row"
     >
-      <TabsPrimitive.List className="flex h-auto w-full shrink-0 flex-row gap-0.5 overflow-x-auto rounded-xl border border-border bg-muted/20 p-1 @md:w-auto @md:min-w-[11.25rem] @md:flex-col @md:gap-1 @md:overflow-x-visible @md:border-e @md:border-s-0 @md:border-t-0 @md:border-b-0 @md:pe-4">
+      <TabsPrimitive.List className="flex h-auto w-full shrink-0 flex-row gap-0.5 overflow-x-auto rounded-xl border border-border bg-muted/20 p-1 @md:w-auto @md:min-w-tab-list @md:flex-col @md:gap-1 @md:overflow-x-visible @md:border-e @md:border-s-0 @md:border-t-0 @md:border-b-0 @md:pe-4">
         {tabs.map((tab) => {
           const active = activeTab === tab.key;
           const Icon = tab.icon;

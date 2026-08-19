@@ -3,7 +3,6 @@ import { APP_LANGUAGES, formatLanguageSelectLabel, type AppLanguageCode, type Ap
 import { Card } from "@/components/ui/card";
 import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_SELECT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { CategorySelector } from "@/tenant/features/question-bank/components/CategorySelector";
 
@@ -37,7 +36,6 @@ export function QuestionFormClassificationSection({
         <Field label={t("questionBank.form.questionLanguage")}>
           <FormSelect
             id="qb-question-language"
-            className={FORM_SELECT}
             value={questionDraft.questionLanguage}
             onChange={(val) => updateDraft({ questionLanguage: val as AppLanguageCode })}
             options={APP_LANGUAGES.map((appLanguage) => ({ value: appLanguage.code, label: formatLanguageSelectLabel(appLanguage) }))}
@@ -47,7 +45,6 @@ export function QuestionFormClassificationSection({
         <Field label={t("questionBank.form.difficulty")}>
           <FormSelect
             id="qb-difficulty"
-            className={FORM_SELECT}
             value={questionDraft.difficulty}
             onChange={(val) => updateDraft({ difficulty: val as QuestionDifficulty })}
             options={[

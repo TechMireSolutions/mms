@@ -74,7 +74,7 @@ export function QuestionBankTableRow({
         </TableCell>
       )}
       {isColumnVisible('text') && (
-        <TableCell className="max-w-[17.5rem] px-4 py-3 text-sm font-semibold text-foreground">
+        <TableCell className="max-w-sidebar-mobile px-4 py-3 text-sm font-semibold text-foreground">
           <p className="m-0 line-clamp-2">{question.text}</p>
         </TableCell>
       )}
@@ -107,7 +107,7 @@ export function QuestionBankTableRow({
         </TableCell>
       )}
       {showSource && (
-        <TableCell className="max-w-[12.5rem] truncate px-4 py-3 text-xs text-muted-foreground">
+        <TableCell className="max-w-cell-lg truncate px-4 py-3 text-xs text-muted-foreground">
           {citation || '—'}
         </TableCell>
       )}

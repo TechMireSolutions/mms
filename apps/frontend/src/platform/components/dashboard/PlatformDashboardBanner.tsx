@@ -79,7 +79,7 @@ export function PlatformDashboardBanner({
               <Button
                 asChild
                 size="sm"
-                className="rounded-xl font-bold gap-1.5 shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[44px]"
+                className="rounded-xl font-bold gap-1.5 shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all min-h-11"
               >
                 <Link to={ROUTES.onboarding}>
                   <Building2 className="w-4 h-4" aria-hidden />
@@ -93,7 +93,7 @@ export function PlatformDashboardBanner({
                 asChild
                 variant="outline"
                 size="sm"
-                className="rounded-xl font-bold gap-1.5 hover:bg-muted transition-all min-h-[44px]"
+                className="rounded-xl font-bold gap-1.5 hover:bg-muted transition-all min-h-11"
               >
                 <Link to={ROUTES.platformWorkspaces}>
                   <Globe className="w-4 h-4 text-primary" aria-hidden />

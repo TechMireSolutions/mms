@@ -75,7 +75,7 @@ export function ContactNetworkLinkCard({
       </div>
 
       {hasActions ? (
-        <div className="flex flex-wrap items-center gap-1.5 ps-[3.25rem]">
+        <div className="flex flex-wrap items-center gap-1.5 ps-13">
           {showTargetMessaging && target ? (
             <ContactCardMessagingButtons
               contact={target}

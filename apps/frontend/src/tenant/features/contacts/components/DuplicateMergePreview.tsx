@@ -147,36 +147,40 @@ export function MergePreview({
                   </div>
 
                   {hasConflict && (
-                    <div className="mt-2 flex items-center gap-1.5 pt-2 border-t border-border/40 text-xs">
-                      <span className="text-muted-foreground text-[11px]">Select:</span>
-                      <button
+                    <div className="mt-2 flex flex-wrap items-center gap-2 pt-2 border-t border-border/40 text-xs">
+                      <span className="text-muted-foreground text-xs font-semibold">Select:</span>
+                      <Button
                         type="button"
+                        variant={selectedIndex === 0 ? "default" : "secondary"}
+                        aria-pressed={selectedIndex === 0}
                         onClick={() =>
                           setFieldOverrides((prev) => ({ ...prev, [field]: 0 }))
                         }
-                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs transition-colors ${
+                        className={`min-h-11 rounded-lg px-3 py-2 text-xs gap-1.5 shadow-none ${
                           selectedIndex === 0
-                            ? "bg-primary text-primary-foreground font-semibold"
-                            : "bg-muted text-muted-foreground hover:text-foreground"
+                            ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                            : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
                       >
-                        {selectedIndex === 0 && <Check className="w-3 h-3" />}
+                        {selectedIndex === 0 && <Check className="w-3.5 h-3.5" />}
                         <span>{t("contacts.duplicates.fieldFromA")}: {keepValue}</span>
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant={selectedIndex === 1 ? "default" : "secondary"}
+                        aria-pressed={selectedIndex === 1}
                         onClick={() =>
                           setFieldOverrides((prev) => ({ ...prev, [field]: 1 }))
                         }
-                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs transition-colors ${
+                        className={`min-h-11 rounded-lg px-3 py-2 text-xs gap-1.5 shadow-none ${
                           selectedIndex === 1
-                            ? "bg-primary text-primary-foreground font-semibold"
-                            : "bg-muted text-muted-foreground hover:text-foreground"
+                            ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                            : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                         }`}
                       >
-                        {selectedIndex === 1 && <Check className="w-3 h-3" />}
+                        {selectedIndex === 1 && <Check className="w-3.5 h-3.5" />}
                         <span>{t("contacts.duplicates.fieldFromB")}: {otherValue}</span>
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>

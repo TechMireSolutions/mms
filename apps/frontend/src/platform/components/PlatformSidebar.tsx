@@ -60,7 +60,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             {isActive && (
               <motion.div
                 layoutId="platform-sidebar-indicator"
-                className="absolute start-0 top-1/2 -translate-y-1/2 w-[0.1875rem] h-5 bg-sidebar-primary rounded-e-full"
+                className="absolute start-0 top-1/2 -translate-y-1/2 w-0.75 h-5 bg-sidebar-primary rounded-e-full"
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               />
             )}
@@ -106,7 +106,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
                 <span className="text-sidebar-foreground font-semibold text-sm tracking-wide leading-tight">
                   {t('entry.productName')}
                 </span>
-                <span className="text-[10px] font-mono text-sidebar-muted-foreground uppercase tracking-wider leading-tight mt-0.5">
+                <span className="text-2xs font-mono text-sidebar-muted-foreground uppercase tracking-wider leading-tight mt-0.5">
                   {t('platform.consoleTitle')}
                 </span>
               </motion.div>
@@ -212,7 +212,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.openMenu')}
-            className="relative w-[min(17.5rem,85vw)] bg-sidebar h-full shadow-2xl flex flex-col z-10 border-e border-sidebar-border"
+            className="relative w-sidebar-mobile max-w-[85vw] bg-sidebar h-full shadow-2xl flex flex-col z-10 border-e border-sidebar-border"
           >
             {sidebarContent(true)}
           </div>
@@ -223,7 +223,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
       <aside
         className={cn(
           'hidden md:flex sticky top-0 h-screen shrink-0 border-e border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out flex-col justify-between select-none z-40',
-          collapsed ? 'w-[4.5rem]' : 'w-[16.25rem]',
+          collapsed ? 'w-sidebar-collapsed' : 'w-sidebar',
         )}
         aria-label={t('platform.navAria')}
       >

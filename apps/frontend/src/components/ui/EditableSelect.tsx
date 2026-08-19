@@ -98,7 +98,7 @@ export function EditableSelect({
           : ({ close }) => (
               <div className="p-2 space-y-2 bg-muted/20 flex-shrink-0">
                 {addHint ? (
-                  <p className="px-0.5 text-[11px] leading-snug text-muted-foreground">{addHint}</p>
+                  <p className="px-0.5 text-3xs leading-snug text-muted-foreground">{addHint}</p>
                 ) : null}
                 <div className="flex gap-1.5">
                   <Input

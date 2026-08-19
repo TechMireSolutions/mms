@@ -4,6 +4,7 @@ import { RELATIONSHIPS } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { Field, FieldErrorMessage, EditableSelect } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
+import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 
@@ -78,8 +79,8 @@ export function ContactRelationshipTab({
                 id={getLocalId("relationship", idx)}
                 index={idx}
                 icon={Heart}
-                accentClass="bg-rose-500/80 group-hover:bg-rose-500"
-                iconClass="text-rose-500/90 group-hover:text-rose-500"
+                accentClass={SUB_LIST_CARD_ACCENTS.relationships.accent}
+                iconClass={SUB_LIST_CARD_ACCENTS.relationships.icon}
                 label={t("contacts.form.relationshipNumber", { index: idx + 1 })}
                 onRemove={() => removeSubListItem("relationshipContacts", idx)}
                 removeLabel={t("contacts.form.removeRelationship", { index: idx + 1 })}

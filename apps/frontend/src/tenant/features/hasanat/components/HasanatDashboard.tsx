@@ -91,7 +91,7 @@ export function HasanatDashboard({
         <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t("hasanat.dashboard.cardDistribution")}</h3>
           <div className="flex flex-col items-stretch gap-6 sm:flex-row sm:items-center">
-            <div className="mx-auto h-[8.125rem] w-full max-w-[10rem] shrink-0 sm:mx-0">
+            <div className="mx-auto h-32.5 w-full max-w-cell-sm shrink-0 sm:mx-0">
               <SafeResponsiveContainer height={130}>
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={38} outerRadius={58} dataKey="value" paddingAngle={3}>

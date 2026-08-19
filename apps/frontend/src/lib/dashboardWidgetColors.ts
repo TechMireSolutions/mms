@@ -41,10 +41,10 @@ export function getQuickActionIconClasses(color: QuickActionColor): string {
 }
 
 const QUICK_ACTION_GLOW_CLASSES: Record<QuickActionColor, string> = {
-  emerald: 'bg-emerald-500/15',
-  blue: 'bg-blue-500/15',
-  violet: 'bg-violet-500/15',
-  amber: 'bg-amber-500/15',
+  emerald: 'bg-success/15',
+  blue: 'bg-info/15',
+  violet: 'bg-primary/15',
+  amber: 'bg-warning/15',
   slate: 'bg-muted-foreground/15',
 };
 

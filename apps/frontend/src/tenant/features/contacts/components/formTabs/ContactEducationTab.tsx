@@ -9,6 +9,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactEducation } from "@mms/shared";
 
 
+import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
+
 /**
  * TypeScript interface representing an individual education entry.
  */
@@ -88,8 +90,8 @@ export function ContactEducationTab({
               id={getLocalId("education", idx)}
               index={idx}
               icon={GraduationCap}
-              accentClass="bg-indigo-500/80 group-hover:bg-indigo-500"
-              iconClass="text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-500"
+              accentClass={SUB_LIST_CARD_ACCENTS.education.accent}
+              iconClass={SUB_LIST_CARD_ACCENTS.education.icon}
               label={t("contacts.form.educationNumber", { index: idx + 1 })}
               onRemove={() => removeEducation(idx)}
               removeLabel={t("contacts.form.removeEducation", { index: idx + 1 })}

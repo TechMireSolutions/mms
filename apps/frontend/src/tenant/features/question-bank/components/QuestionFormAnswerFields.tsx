@@ -51,7 +51,7 @@ export function QuestionFormAnswerFields({
                   checked={questionDraft.answer === optionValue && !!optionValue}
                   onChange={() => updateDraft({ answer: optionValue })}
                   aria-label={t("questionBank.markChoiceCorrect", { n: optionIndex + 1 })}
-                  className="h-4 w-4 shrink-0 accent-primary"
+                  className="h-4 w-4 shrink-0 accent-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 />
               </label>
               <div className="relative flex items-center w-full">

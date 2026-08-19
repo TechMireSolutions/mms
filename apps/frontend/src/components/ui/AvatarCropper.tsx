@@ -63,7 +63,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
       size="sm"
     >
       <div className="space-y-4">
-        <div className="flex items-center justify-center bg-neutral-900 py-6 rounded-xl overflow-hidden">
+        <div className="flex items-center justify-center bg-sidebar/90 py-6 rounded-xl overflow-hidden">
           <canvas
             ref={canvasRef}
             width={previewSize}

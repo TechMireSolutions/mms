@@ -195,7 +195,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
               className="flex-1 bg-transparent text-sm font-semibold border-0 shadow-none focus-visible:ring-0 px-0 h-9"
               aria-label={t('platform.searchConsolePlaceholder')}
             />
-            <kbd className="hidden sm:inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-mono font-bold text-muted-foreground select-none">
+            <kbd className="hidden sm:inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2 py-0.5 text-2xs font-mono font-bold text-muted-foreground select-none">
               ESC
             </kbd>
           </div>
@@ -239,14 +239,14 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
           </div>
 
           {/* Footer Shortcuts Bar */}
-          <div className="border-t border-border/50 px-4 py-2 bg-muted/30 flex items-center justify-between text-[11px] text-muted-foreground font-medium select-none">
+          <div className="border-t border-border/50 px-4 py-2 bg-muted/30 flex items-center justify-between text-3xs text-muted-foreground font-medium select-none">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↑</kbd>
-                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↓</kbd>
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-2xs">↑</kbd>
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-2xs">↓</kbd>
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-[10px]">↵</kbd>
+                <kbd className="rounded border border-border bg-background px-1 py-0.2 font-mono text-2xs">↵</kbd>
               </span>
             </div>
             <span className="hidden sm:inline font-semibold">{t('platform.consoleTitle')}</span>

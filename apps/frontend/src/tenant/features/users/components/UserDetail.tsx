@@ -117,11 +117,12 @@ export const UserDetail = React.memo(function UserDetail({
                       variant="outline"
                       type="button"
                       size="icon"
-                      className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-secondary/30 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/15 hover:border-secondary/40 transition-colors shadow-none"
+                      className="rounded-lg border-secondary/30 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/15 hover:border-secondary/40 transition-colors shadow-none"
                       onClick={() => setMessagingTarget({ channel: 'email', recipients: recipient })}
                       title={t('users.sendEmail')}
+                      aria-label={t('users.sendEmail')}
                     >
-                      <Mail className="h-3.5 w-3.5" />
+                      <Mail className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 ) : (
@@ -146,21 +147,23 @@ export const UserDetail = React.memo(function UserDetail({
                       variant="outline"
                       type="button"
                       size="icon"
-                      className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-success/30 bg-success/5 text-success hover:text-success hover:bg-success/15 hover:border-success/40 transition-colors shadow-none"
+                      className="rounded-lg border-success/30 bg-success/5 text-success hover:text-success hover:bg-success/15 hover:border-success/40 transition-colors shadow-none"
                       onClick={() => setMessagingTarget({ channel: 'whatsapp', recipients: recipient })}
                       title={t('contacts.detail.call')}
+                      aria-label={t('contacts.detail.call')}
                     >
-                      <Phone className="h-3.5 w-3.5" />
+                      <Phone className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="outline"
                       type="button"
                       size="icon"
-                      className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/15 hover:border-primary/40 transition-colors shadow-none"
+                      className="rounded-lg border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/15 hover:border-primary/40 transition-colors shadow-none"
                       onClick={() => setMessagingTarget({ channel: 'sms', recipients: recipient })}
                       title={t('users.sendSms')}
+                      aria-label={t('users.sendSms')}
                     >
-                      <Send className="h-3.5 w-3.5" />
+                      <Send className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 ) : (

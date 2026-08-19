@@ -1,8 +1,9 @@
 import React from "react";
-import { Loader2, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { TableSkeleton } from "@/components/ui/LoadingState";
 import {
   Table,
   TableBody,
@@ -30,12 +31,7 @@ export const StudentReportTables = React.memo(function StudentReportTables({
 
   const loading = activeSubTab === "list" ? listLoading : historyLoading;
   if (loading) {
-    return (
-      <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
-        <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
-        <span className="text-sm">{t("common.loading")}</span>
-      </div>
-    );
+    return <TableSkeleton rows={5} cols={6} />;
   }
 
   if (activeSubTab === "list") {
@@ -102,7 +98,7 @@ export const StudentReportTables = React.memo(function StudentReportTables({
                   <TableCell className="px-3 py-2.5 font-medium text-foreground">{student.name}</TableCell>
                   <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{toTitleCase(student.gender)}</TableCell>
                   <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{student.class}</TableCell>
-                  <TableCell className="px-3 py-2.5 text-muted-foreground max-w-[10rem] truncate hidden md:table-cell">{student.session}</TableCell>
+                  <TableCell className="px-3 py-2.5 text-muted-foreground max-w-cell-sm truncate hidden md:table-cell">{student.session}</TableCell>
                   <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.city}</TableCell>
                   <TableCell className="px-3 py-2.5 text-muted-foreground hidden md:table-cell">{student.age}</TableCell>
                   <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{student.registered}</TableCell>

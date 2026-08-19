@@ -58,7 +58,7 @@ export function UsersListFilters({
         value={search}
         onChange={onSearchChange}
         placeholder={t('users.searchPlaceholder')}
-        className="min-w-[11.25rem] flex-1"
+        className="min-w-cell-md flex-1"
       />
       <FormSelect
         id="role-filter"

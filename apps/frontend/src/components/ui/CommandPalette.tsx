@@ -314,7 +314,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
               placeholder={translate("nav.globalSearchPlaceholder")}
               className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
-            <kbd className="hidden sm:inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground select-none">
+            <kbd className="hidden sm:inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-2xs font-medium text-muted-foreground select-none">
               ESC
             </kbd>
           </div>

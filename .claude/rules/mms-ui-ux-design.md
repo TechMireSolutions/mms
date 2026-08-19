@@ -43,8 +43,11 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 
 ## 2. Design Tokens & Surface Styling
 
-- **Semantic Tokens Only:** Define design tokens exclusively in `index.css` `@theme` (Tailwind v4). Zero raw hex colors or ad-hoc Tailwind classes (`bg-gray-100`, `rounded-[2rem]`).
-- **Surface Tokens (`formStyles.ts`):** `WORK_SURFACE` / `WORK_SURFACE_INNER` for directory/detail/report panels; `FORM_CARD` / `FORM_INPUT_BUILDER` for forms.
+- **Semantic Tokens Only:** Define design tokens exclusively in `index.css` `@theme` (Tailwind v4). Zero raw hex colors, hardcoded typography brackets (`text-[10px]`, `text-[11px]`), or ad-hoc Tailwind bracket classes (`bg-gray-100`, `rounded-[2rem]`).
+- **Micro-Typography Tokens:** Use `text-2xs` (10px / `0.625rem`) for compact badges/meta and `text-3xs` (11px / `0.6875rem`) for subheadings/pills. Never write arbitrary font-size bracket classes.
+- **Touch Target Dimensions:** All interactive triggers, form inputs, buttons, and action icons must satisfy the `44×44px` touch floor via `min-h-11 min-w-11` (never `min-h-[44px]`).
+- **Z-Index Layering Hierarchy:** Always use semantic z-index tokens (`z-modal: 50`, `z-modal-priority: 60`, `z-popover: 70`, `z-toast: 100`) rather than arbitrary `z-[100]`.
+- **Surface Tokens (`formStyles.ts`):** `WORK_SURFACE` / `WORK_SURFACE_INNER` for directory/detail/report panels; `FORM_CARD` / `FORM_INPUT_BUILDER` for forms; `bg-sidebar/90` for overlay backdrops.
 - **Rule of Three (Layout Sizes):** When a layout size appears ≥ 3 times, promote to `@theme` (`h-chart-sm|md|lg`, `max-w-toast`, `max-w-filter-sm`, `z-modal`, `z-toast`).
 - **Notifications:** All user feedback via `notify.success()`, `notify.error()`, `notify.warning()` from `lib/notify.ts` with `t()` localized copy.
 

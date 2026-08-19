@@ -45,7 +45,7 @@ export function ContactPickerMenu({
       ref={menuRef}
       id={`${resolvedId}-listbox`}
       style={menuStyle}
-      className="overflow-y-auto rounded-xl border border-border bg-card shadow-xl divide-y divide-border/60 z-[100]"
+      className="overflow-y-auto rounded-xl border border-border bg-card shadow-xl divide-y divide-border/60 z-toast"
       role="listbox"
       aria-label={label}
     >

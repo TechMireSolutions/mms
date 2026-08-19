@@ -5,6 +5,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -119,14 +120,15 @@ export function WidgetBuilderCardTextOptions({
                 {trend > 0 ? "+" : ""}{trend}%
               </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="-100"
-                max="100"
-                value={trend}
-                onChange={(event) => setTrend(Number(event.target.value))}
-                className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary"
+            <div className="flex items-center gap-3 pt-1">
+              <Slider
+                min={-100}
+                max={100}
+                step={1}
+                value={[trend]}
+                onValueChange={(val) => setTrend(val[0] ?? 0)}
+                className="flex-1 py-2"
+                aria-label={t("reports.widgets.builder.manualTrend")}
               />
               <Button
                 type="button"

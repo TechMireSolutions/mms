@@ -1,7 +1,6 @@
 import React from "react";
 import { TrendingUp, Layers, Activity } from "lucide-react";
 import {
-  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
@@ -13,6 +12,7 @@ import {
   Area,
 } from "recharts";
 import { useTranslation } from "@/hooks/useTranslation";
+import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 
@@ -31,12 +31,12 @@ export function PlatformDashboardCharts({
     {
       name: t("platform.workspaceActive"),
       count: activeWorkspaces,
-      color: "var(--color-success, #10b981)",
+      color: "hsl(var(--success))",
     },
     {
       name: t("platform.workspaceInactive"),
       count: disabledWorkspaces,
-      color: "var(--color-destructive, #ef4444)",
+      color: "hsl(var(--destructive))",
     },
   ];
 
@@ -61,7 +61,7 @@ export function PlatformDashboardCharts({
           <p className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-primary" /> Active vs Inactive
           </p>
-          <ResponsiveContainer width="100%" height="100%">
+          <SafeResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
               <XAxis
@@ -79,7 +79,7 @@ export function PlatformDashboardCharts({
                   backgroundColor: "hsl(var(--card))",
                   borderColor: "hsl(var(--border))",
                   borderRadius: "0.75rem",
-                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  boxShadow: "var(--shadow-surface)",
                 }}
               />
               <Bar dataKey="count" radius={[8, 8, 0, 0]}>
@@ -88,19 +88,19 @@ export function PlatformDashboardCharts({
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
 
         <div className="h-60 w-full">
           <p className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5 text-success" /> 5-Month Activity Trend
           </p>
-          <ResponsiveContainer width="100%" height="100%">
+          <SafeResponsiveContainer width="100%" height="100%">
             <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorOps" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-primary, #3b82f6)" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="var(--color-primary, #3b82f6)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
@@ -115,19 +115,19 @@ export function PlatformDashboardCharts({
                   backgroundColor: "hsl(var(--card))",
                   borderColor: "hsl(var(--border))",
                   borderRadius: "0.75rem",
-                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                  boxShadow: "var(--shadow-surface)",
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="ops"
-                stroke="var(--color-primary, #3b82f6)"
+                stroke="hsl(var(--primary))"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorOps)"
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       </div>
     </WidgetCard>

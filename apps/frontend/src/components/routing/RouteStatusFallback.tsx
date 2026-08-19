@@ -15,7 +15,7 @@ export default function RouteStatusFallback({
 
   return (
     <div
-      className={`flex items-center justify-center bg-background ${fullScreen ? 'min-h-screen' : 'min-h-[50vh] w-full'}`}
+      className={`flex items-center justify-center bg-background ${fullScreen ? 'min-h-screen' : 'min-h-viewport-half w-full'}`}
       role="status"
       aria-live="polite"
     >

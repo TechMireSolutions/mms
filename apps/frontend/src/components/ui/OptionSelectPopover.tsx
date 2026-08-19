@@ -101,7 +101,7 @@ export function OptionSelectPopover({
         align="start"
         sideOffset={6}
         collisionPadding={8}
-        className="p-0 w-[var(--radix-popover-trigger-width)] min-w-[13rem] max-h-[var(--radix-popover-content-available-height)] flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl divide-y divide-border/60"
+        className="p-0 w-[var(--radix-popover-trigger-width)] min-w-popover-lg max-h-[var(--radix-popover-content-available-height)] flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl divide-y divide-border/60"
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();

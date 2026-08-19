@@ -8,6 +8,7 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactSkill } from "@mms/shared";
+import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 
 
 /**
@@ -64,7 +65,7 @@ export function ContactSkillsTab({
   const emptySkill = (): ContactSkill => ({
     name: "",
     category: defaultCategory || categoryOptions[0] || "",
-    proficiency: defaultProficiency || proficiencyOptions[1] || "Intermediate",
+    proficiency: defaultProficiency || (proficiencyOptions ? proficiencyOptions[0] : "") || "",
     yearsOfExperience: "",
     isCertified: false,
     issuer: "",
@@ -109,8 +110,8 @@ export function ContactSkillsTab({
               id={getLocalId("skills", idx)}
               index={idx}
               icon={Award}
-              accentClass="bg-purple-500/80 group-hover:bg-purple-500"
-              iconClass="text-purple-600 dark:text-purple-400 group-hover:text-purple-500"
+              accentClass={SUB_LIST_CARD_ACCENTS.skills.accent}
+              iconClass={SUB_LIST_CARD_ACCENTS.skills.icon}
               label={t("contacts.form.skillNumber", { index: idx + 1 })}
               onRemove={() => removeSkill(idx)}
               removeLabel={t("contacts.form.removeSkill", { index: idx + 1 })}
@@ -256,7 +257,7 @@ export function ContactSkillsTab({
                       required={isFieldRequired("skills", "description")}
                       onChange={(e) => updateSkill(idx, { description: e.target.value })}
                       placeholder={t("contacts.form.skillDescriptionPlaceholder")}
-                      className={cn("text-xs resize-y min-h-[64px]", descriptionError && "border-destructive focus-visible:ring-destructive")}
+                      className={cn("text-xs resize-y min-h-16", descriptionError && "border-destructive focus-visible:ring-destructive")}
                     />
                   </Field>
                 ) : null}

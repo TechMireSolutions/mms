@@ -20,7 +20,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps): React.JS
     <aside
       className={cn(
         "fixed start-0 top-0 z-40 flex h-screen flex-col bg-sidebar transition-all duration-300 ease-in-out",
-        collapsed ? "w-[4.5rem]" : "w-[16.25rem]",
+        collapsed ? "w-sidebar-collapsed" : "w-sidebar",
       )}
     >
       <SidebarBrand collapsed={collapsed} />

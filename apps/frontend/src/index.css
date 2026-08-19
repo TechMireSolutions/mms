@@ -11,6 +11,8 @@
 @theme inline {
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
+  --font-size-3xs: 0.6875rem;
+  --font-size-2xs: 0.625rem;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -65,16 +67,53 @@
   --shadow-surface-lg:
     0 4px 6px -2px hsl(var(--foreground) / 0.06),
     0 12px 32px -8px hsl(var(--foreground) / 0.12);
+  --shadow-glow-destructive:
+    0 0 15px hsl(var(--destructive) / 0.15);
+  --shadow-glow-warning:
+    0 0 15px hsl(var(--warning) / 0.15);
+  --shadow-glow-primary:
+    0 0 15px hsl(var(--primary) / 0.15);
+  --shadow-glow-success:
+    0 0 15px hsl(var(--success) / 0.15);
+  --shadow-glow-info:
+    0 0 15px hsl(var(--info) / 0.15);
 
   /* Repeated layout sizes (Rule of Three) */
+  --width-sidebar: 16.25rem;
+  --width-sidebar-collapsed: 4.5rem;
+  --width-sidebar-mobile: 17.5rem;
+  --width-chart-thumb: 9.375rem;
+  --height-chart-xs: 7.5rem;
   --height-chart-sm: 11.25rem;
   --height-chart-md: 12.5rem;
   --height-chart-lg: 15rem;
+  --height-panel-sm: 13.75rem;
+  --height-card-compact: 8.75rem;
+  --min-height-viewport-half: 50dvh;
   --min-height-chart-sm: 11.25rem;
   --min-height-chart-md: 12.5rem;
   --min-height-chart-lg: 15rem;
+  --min-height-panel-sm: 13.75rem;
+  --min-height-card-compact: 8.75rem;
+  --min-height-card-mini: 6.25rem;
+  --min-height-card-sm: 7.5rem;
+  --min-height-stat-compact: 5.125rem;
+  --min-height-preview: 21.875rem;
+  --min-width-tab-list: 11.25rem;
+  --min-width-popover-md: 12.5rem;
+  --min-width-popover-lg: 13rem;
+  --min-width-input-filter: 8.75rem;
+  --max-height-modal: 90dvh;
+  --max-height-drawer: 85dvh;
+  --max-height-panel-sm: 13.75rem;
+  --max-height-scroll-lg: 20rem;
+  --max-height-list-lg: 23.75rem;
   --max-width-toast: 26.25rem;
   --max-width-filter-sm: 9.375rem;
+  --max-width-cell-sm: 10rem;
+  --max-width-cell-md: 11.25rem;
+  --max-width-cell-lg: 12rem;
+  --size-widget-compact: 6.25rem;
   --z-index-modal: 50;
   --z-index-modal-priority: 60;
   --z-index-popover: 70;

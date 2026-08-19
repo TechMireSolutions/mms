@@ -61,12 +61,12 @@ export function ContactDetailExperienceSection({
                   <span className="truncate">{exp.title}</span>
                 </span>
                 {exp.employmentType ? (
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                  <span className="text-3xs font-medium px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                     {exp.employmentType}
                   </span>
                 ) : null}
                 {exp.isCurrent ? (
-                  <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded">
+                  <span className="text-2xs font-semibold uppercase tracking-wider px-1.5 py-0.5 bg-success/10 text-success border border-success/20 rounded">
                     {t("contacts.form.present")}
                   </span>
                 ) : null}

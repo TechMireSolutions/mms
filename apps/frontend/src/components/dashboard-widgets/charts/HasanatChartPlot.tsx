@@ -61,7 +61,7 @@ export function HasanatChartPlot({ chartType, hasanatData, activeColors }: Hasan
   }
 
   return (
-    <div className="flex-shrink-0 w-full sm:w-[9.375rem] h-[7.5rem]" aria-hidden="true">
+    <div className="flex-shrink-0 w-full sm:w-chart-thumb h-chart-xs" aria-hidden="true">
       <SafeResponsiveContainer height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="75%" data={hasanatData}>
           <ChartPolarGrid />

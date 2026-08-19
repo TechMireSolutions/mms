@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { WarningCallout } from "@/components/ui/WarningCallout";
-import { Input } from "@/components/ui/input";
+import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
@@ -106,42 +106,42 @@ export function DuplicateDetectionModal({
 
         {/* Filter Toolbar: Search & Confidence Tier Tabs */}
         <div className="space-y-2.5 pb-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("contacts.duplicates.searchPlaceholder")}
-              className="pl-9 min-h-10 text-sm"
-            />
-          </div>
+          <LeadingIconInput
+            icon={Search}
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("contacts.duplicates.searchPlaceholder")}
+            aria-label={t("contacts.duplicates.searchPlaceholder")}
+          />
 
-          <div className="flex flex-wrap gap-1.5 border-b border-border/60 pb-2">
+          <div className="flex flex-wrap gap-2 border-b border-border/60 pb-2.5">
             {filterTabs.map((tab) => {
               const active = tierFilter === tab.id;
               return (
-                <button
+                <Button
                   key={tab.id}
                   type="button"
+                  variant={active ? "default" : "secondary"}
+                  aria-pressed={active}
                   onClick={() => setTierFilter(tab.id)}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`min-h-11 rounded-xl px-3.5 py-2 text-xs font-semibold gap-1.5 shadow-none ${
                     active
                       ? "bg-primary text-primary-foreground shadow-xs"
-                      : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <span>{tab.label}</span>
                   <Badge
                     pill
                     variant="outline"
-                    className={`px-1.5 py-0 text-[10px] font-bold ${
+                    className={`px-1.5 py-0 text-xs font-bold ${
                       active ? "bg-primary-foreground/20 text-primary-foreground border-transparent" : "border-border/60"
                     }`}
                   >
                     {tab.count}
                   </Badge>
-                </button>
+                </Button>
               );
             })}
           </div>

@@ -129,7 +129,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
                         </span>
 
                         {log.targetResource && (
-                          <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-muted text-muted-foreground border border-border/40">
+                          <span className="px-2 py-0.5 rounded-md text-3xs font-medium bg-muted text-muted-foreground border border-border/40">
                             {log.targetResource}{log.targetId ? `: ${log.targetId}` : ''}
                           </span>
                         )}
@@ -142,12 +142,12 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
 
                       <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
                         {log.ipAddress && (
-                          <span className="font-mono bg-muted/60 border border-border/40 px-2 py-0.5 rounded text-[11px] font-semibold">
+                          <span className="font-mono bg-muted/60 border border-border/40 px-2 py-0.5 rounded text-3xs font-semibold">
                             {log.ipAddress}
                           </span>
                         )}
 
-                        <span className="flex items-center gap-1 font-medium text-[11px]">
+                        <span className="flex items-center gap-1 font-medium text-3xs">
                           <Calendar className="w-3 h-3 text-muted-foreground" aria-hidden />
                           {formattedDate}
                         </span>

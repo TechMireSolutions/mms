@@ -41,7 +41,7 @@ export function WidgetBuilderIconPicker({
           {t("reports.widgets.builder.iconSelector")}
         </SectionLabel>
         <div className="relative max-w-xs w-full">
-          <Search className="absolute start-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground pointer-events-none" style={{ width: 14, height: 14 }} />
+          <Search className="absolute start-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
             placeholder={t("reports.widgets.builder.searchIcons")}

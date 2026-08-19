@@ -1,8 +1,9 @@
 import React from "react";
-import { Loader2, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { TableSkeleton } from "@/components/ui/LoadingState";
 import {
   Table,
   TableBody,
@@ -51,12 +52,7 @@ export const FacultyReportTables = React.memo(function FacultyReportTables({
   }
 
   if (listLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
-        <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
-        <span className="text-sm">{t("common.loading")}</span>
-      </div>
-    );
+    return <TableSkeleton rows={5} cols={6} />;
   }
 
   return teachers.length === 0 ? (
@@ -120,7 +116,7 @@ export const FacultyReportTables = React.memo(function FacultyReportTables({
                 <TableCell className="px-3 py-2.5 font-medium text-foreground">{teacher.name}</TableCell>
                 <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{teacher.employeeId}</TableCell>
                 <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{teacher.specialization}</TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground max-w-[12rem] truncate hidden md:table-cell">{teacher.qualification}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground max-w-cell-lg truncate hidden md:table-cell">{teacher.qualification}</TableCell>
                 <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{toTitleCase(teacher.gender)}</TableCell>
                 <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{teacher.joinDate}</TableCell>
                 <TableCell className="px-3 py-2.5">

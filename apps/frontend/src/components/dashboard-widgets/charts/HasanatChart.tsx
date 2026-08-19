@@ -50,7 +50,7 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }): 
         }
       />
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 min-h-[7.5rem]">
+      <div className="flex flex-col sm:flex-row items-center gap-4 min-h-card-sm">
         <HasanatChartPlot chartType={chartType} hasanatData={hasanatData} activeColors={activeColors} />
 
         <div className="flex-1 w-full space-y-2 text-start">

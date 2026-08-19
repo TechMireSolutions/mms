@@ -62,19 +62,19 @@ const ALERT_COLOR_MAP: Record<string, { bg: string; text: string; border: string
     bg: "bg-destructive/10 dark:bg-destructive/20",
     text: "text-destructive dark:text-destructive",
     border: "border-destructive/30 dark:border-destructive/20",
-    glow: "shadow-[0_0_15px_rgba(239,68,68,0.15)]",
+    glow: "shadow-glow-destructive",
   },
   amber: {
     bg: "bg-warning/10 dark:bg-warning/20",
     text: "text-warning dark:text-warning",
     border: "border-warning/30 dark:border-warning/20",
-    glow: "shadow-[0_0_15px_rgba(245,158,11,0.15)]",
+    glow: "shadow-glow-warning",
   },
   yellow: {
     bg: "bg-warning/10 dark:bg-warning/20",
     text: "text-warning",
     border: "border-warning/30 dark:border-warning/20",
-    glow: "shadow-[0_0_15px_rgba(234,179,8,0.15)]",
+    glow: "shadow-glow-warning",
   }
 };
 

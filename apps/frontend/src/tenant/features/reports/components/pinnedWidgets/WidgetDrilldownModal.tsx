@@ -42,7 +42,7 @@ export function WidgetDrilldownModal({
       size="lg"
       title={t("reports.widgets.records", { title: resolveWidgetTitle(widget, t) })}
       subtitle={t("reports.widgets.drilldownTitle")}
-      panelClassName="max-h-[85vh] flex flex-col"
+      panelClassName="max-h-drawer flex flex-col"
       headerExtra={
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
           <SearchBar

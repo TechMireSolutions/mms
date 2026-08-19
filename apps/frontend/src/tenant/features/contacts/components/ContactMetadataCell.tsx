@@ -123,7 +123,7 @@ export function ContactMetadataCell({
       case "notes": {
         if (!contact.notes) return renderDash();
         return (
-          <span className="truncate max-w-[200px] block" title={contact.notes}>
+          <span className="truncate max-w-50 block" title={contact.notes}>
             {contact.notes}
           </span>
         );

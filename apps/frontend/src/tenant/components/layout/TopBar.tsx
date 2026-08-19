@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Search } from "lucide-react";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 
@@ -31,12 +32,13 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
       )}
     >
       <div className="hidden min-w-0 flex-1 md:flex md:max-w-md md:mx-auto">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onOpenCommandPalette}
           aria-label={t("nav.globalSearchPlaceholder")}
           aria-keyshortcuts="Control+K Meta+K"
-          className="relative flex w-full items-center rounded-lg border border-border/50 bg-muted/50 ps-10 pe-14 min-h-11 h-11 text-sm text-muted-foreground text-start transition-colors hover:bg-muted cursor-pointer"
+          className="relative flex w-full items-center justify-start rounded-lg border-border/50 bg-muted/50 ps-10 pe-14 min-h-11 h-11 text-sm font-normal text-muted-foreground text-start hover:bg-muted hover:text-foreground cursor-pointer shadow-none"
         >
           <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <span className="truncate">{t("nav.globalSearchPlaceholder")}</span>
@@ -46,7 +48,7 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
           >
             {shortcutText}
           </kbd>
-        </button>
+        </Button>
       </div>
 
       <TopBarActions className="ms-auto" />

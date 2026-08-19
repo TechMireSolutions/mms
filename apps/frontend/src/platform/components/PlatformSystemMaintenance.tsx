@@ -53,7 +53,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
             <span className="font-bold text-foreground">Maintenance Preflight Check:</span>
             <span className="text-muted-foreground">All systems operational and ready for maintenance.</span>
           </div>
-          <div className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 font-mono text-3xs text-muted-foreground">
             <span className="bg-card px-2 py-0.5 rounded border border-border/50">DB Conns: Healthy</span>
             <span className="bg-card px-2 py-0.5 rounded border border-border/50">PM2: Active</span>
           </div>

@@ -24,7 +24,7 @@ export function MarkAttendanceFacePlaceholder({ onClose }: MarkAttendanceFacePla
         <p className="text-xs text-muted-foreground mt-1">{t("attendance.mark.facialRecognitionDesc")}</p>
         <Badge pill tone="warning" className="mt-2 px-2.5 py-1 font-bold bg-warning/15">{t("attendance.mark.comingSoon")}</Badge>
       </div>
-      <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center" style={{ height: 160 }}>
+      <div className="h-40 rounded-xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center">
         <div className="text-center space-y-2">
           <div className="w-16 h-20 border-2 border-primary/30 rounded-lg mx-auto flex items-center justify-center">
             <div className="w-8 h-10 border border-primary/20 rounded-sm" />

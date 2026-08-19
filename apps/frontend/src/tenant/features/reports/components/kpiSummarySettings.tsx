@@ -104,7 +104,7 @@ export function KPISummarySettings({
                     <h4 className="text-xs font-black uppercase leading-none tracking-widest text-foreground">{t('reports.kpiVisibility')}</h4>
                   </div>
                   <p className="mt-1.5 text-xs text-muted-foreground">{t('reports.kpiVisibilityDesc')}</p>
-                  <div className="mt-3 max-h-[20rem] space-y-1.5 overflow-y-auto pe-1">
+                  <div className="mt-3 max-h-scroll-lg space-y-1.5 overflow-y-auto pe-1">
                     {cards.map((kpi) => {
                       const isSelected = selectedCardIds.includes(kpi.id);
                       const isCustom = customCards.some((card) => card.id === kpi.id);

@@ -119,8 +119,8 @@ export const SessionReportTable = React.memo(function SessionReportTable({
               <TableBody className="divide-y divide-border/50">
                 {sessionCapacityData.map((sessionCapacity) => (
                   <TableRow key={`${sessionCapacity.sessionId}-${sessionCapacity.classId}`} className="hover:bg-muted/20 transition-colors">
-                    <TableCell className="px-3 py-2.5 font-medium max-w-[11.25rem] truncate">
-                      <TableCellLink onClick={() => onToggleSessionFilter(sessionCapacity.session)} className="max-w-[11.25rem] truncate font-medium">
+                    <TableCell className="px-3 py-2.5 font-medium max-w-cell-md truncate">
+                      <TableCellLink onClick={() => onToggleSessionFilter(sessionCapacity.session)} className="max-w-cell-md truncate font-medium">
                         {sessionCapacity.session}
                       </TableCellLink>
                     </TableCell>

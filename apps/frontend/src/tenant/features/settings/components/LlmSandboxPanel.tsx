@@ -97,12 +97,12 @@ export function LlmSandboxPanel({
           </div>
 
           {/* Messages Panel */}
-          <div className="flex-1 min-h-[13.75rem] max-h-[22.5rem] overflow-y-auto p-4 space-y-4 scroll-smooth">
+          <div className="flex-1 min-h-panel-sm max-h-90 overflow-y-auto p-4 space-y-4 scroll-smooth">
             {sandboxMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 my-6 opacity-60">
                 <Sparkles className="h-8 w-8 text-primary mb-2.5 animate-pulse" />
                 <p className="font-semibold text-xs text-foreground">{t('settings.llmSandboxReady')}</p>
-                <p className="text-xs text-muted-foreground max-w-[17.5rem] mt-1">
+                <p className="text-xs text-muted-foreground max-w-sidebar-mobile mt-1">
                   {t('settings.llmSandboxReadyDesc')}
                 </p>
               </div>

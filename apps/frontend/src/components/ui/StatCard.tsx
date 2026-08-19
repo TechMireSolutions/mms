@@ -119,7 +119,7 @@ export const StatCard = React.memo(function StatCard({
       <Card
         accentColor={resolvedAccentColor}
         className={cn(
-          "flex items-center justify-between p-4 ps-5.5 min-h-[5.125rem] w-full",
+          "flex items-center justify-between p-4 ps-5.5 min-h-stat-compact w-full",
           onClick && "hover:border-primary/40 hover:bg-card/75",
           isActive && "ring-2 ring-primary/60 border-primary/60 bg-primary/5",
           className

@@ -124,7 +124,7 @@ const BackupRestoreConfirmModal = React.memo(function BackupRestoreConfirmModal(
                         .map(([name, count]) => (
                           <span
                             key={name}
-                            className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-background border border-border text-foreground/90 capitalize"
+                            className="inline-flex items-center px-2 py-0.5 rounded text-3xs font-medium bg-background border border-border text-foreground/90 capitalize"
                           >
                             {name.replace(/_/g, ' ')}: {count}
                           </span>

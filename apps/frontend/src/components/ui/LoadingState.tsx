@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  */
 export const PageLoader = React.memo(function PageLoader(): React.ReactElement {
   return (
-    <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="flex items-center justify-center min-h-viewport-half">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <span className="text-primary font-display text-xl font-bold">م</span>
@@ -90,7 +90,7 @@ export const TableSkeleton = React.memo(function TableSkeleton({ rows = 5, cols 
           <div key={i} className="px-4 py-3.5 flex gap-4 items-center">
             <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
             {Array.from({ length: cols - 1 }).map((_, j) => (
-              <Skeleton key={j} className="h-3.5 rounded flex-1 max-w-[140px]" />
+              <Skeleton key={j} className="h-3.5 rounded flex-1 max-w-36" />
             ))}
           </div>
         ))}
@@ -111,7 +111,7 @@ export const ModuleViewSkeleton = React.memo(function ModuleViewSkeleton(): Reac
           <Skeleton className="h-7 w-48 rounded-lg" />
           <Skeleton className="h-4 w-72 rounded-md" />
         </div>
-        <Skeleton className="h-[44px] w-36 rounded-xl" />
+        <Skeleton className="h-11 w-36 rounded-xl" />
       </div>
 
       {/* KPI Stats Grid Skeleton */}

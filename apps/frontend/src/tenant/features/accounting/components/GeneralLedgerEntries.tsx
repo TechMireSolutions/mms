@@ -133,7 +133,7 @@ export function GeneralLedgerEntries({
                   {formatDate(line.date)}
                 </TableCell>
                 <TableCell className="px-3 py-2.5 font-mono text-xs font-bold text-primary">{line.ref}</TableCell>
-                <TableCell className="px-3 py-2.5 text-foreground max-w-[11.25rem] truncate">{line.description}</TableCell>
+                <TableCell className="px-3 py-2.5 text-foreground max-w-cell-md truncate">{line.description}</TableCell>
                 <TableCell className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell">{line.lineDesc || "—"}</TableCell>
                 <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-info">
                   {line.debit > 0 ? formatCurrency(line.debit) : "—"}

@@ -97,7 +97,7 @@ export function SidebarNav({
                           {isSubActive && (
                             <motion.div
                               layoutId="sidebar-indicator-sub"
-                              className="absolute start-0 top-1/2 h-3 w-[0.1875rem] -translate-x-full -translate-y-1/2 rounded-e-full bg-sidebar-primary rtl:translate-x-full"
+                              className="absolute start-0 top-1/2 h-3 w-0.75 -translate-x-full -translate-y-1/2 rounded-e-full bg-sidebar-primary rtl:translate-x-full"
                               transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             />
                           )}
@@ -133,7 +133,7 @@ export function SidebarNav({
             {isActive && (
               <motion.div
                 layoutId="sidebar-indicator"
-                className="absolute start-0 top-1/2 -translate-y-1/2 w-[0.1875rem] h-5 bg-sidebar-primary rounded-e-full"
+                className="absolute start-0 top-1/2 -translate-y-1/2 w-0.75 h-5 bg-sidebar-primary rounded-e-full"
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               />
             )}

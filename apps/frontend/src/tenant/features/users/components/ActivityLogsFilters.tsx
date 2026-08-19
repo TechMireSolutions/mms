@@ -50,7 +50,7 @@ export function ActivityLogsFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-[11.25rem] flex-1">
+      <div className="relative min-w-cell-md flex-1">
         <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -64,14 +64,14 @@ export function ActivityLogsFilters({
         onChange={onUserFilterChange}
         options={userOptions}
         aria-label={t('users.activityFilterUser')}
-        className="w-auto min-w-[8.75rem]"
+        className="w-auto min-w-input-filter"
       />
       <FormSelect
         value={actionFilter}
         onChange={onActionFilterChange}
         options={actionOptions}
         aria-label={t('users.activityFilterAction')}
-        className="w-auto min-w-[10rem]"
+        className="w-auto min-w-cell-sm"
       />
       <DateRangeFilterBar
         idPrefix="activity-logs"

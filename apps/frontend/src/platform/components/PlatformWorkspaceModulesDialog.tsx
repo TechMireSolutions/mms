@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CardSkeleton } from '@/components/ui/LoadingState';
 import { useUpdateWorkspaceModules, useWorkspaceModules } from '@/platform/hooks/usePlatformWorkspaces';
 import { Loader2 } from 'lucide-react';
 
@@ -78,9 +79,7 @@ export function PlatformWorkspaceModulesDialog({
     >
       <div className="flex-1 overflow-y-auto px-1 py-2 text-start">
         {isLoading ? (
-          <div className="flex items-center justify-center p-8 text-muted-foreground">
-            <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
-          </div>
+          <CardSkeleton count={3} />
         ) : (
           <div className="grid grid-cols-1 gap-4 pb-4">
             {SYSTEM_MODULES.map((module) => (

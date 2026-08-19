@@ -145,7 +145,7 @@ export function PaymentTrackerListTable({
               {isColumnVisible("amount") && <TableCell className="px-3 py-2.5 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</TableCell>}
               {isColumnVisible("method") && <TableCell className="px-3 py-2.5"><StatusBadge status={payment.method} config={methodConfig} size="sm" /></TableCell>}
               {isColumnVisible("receivedBy") && <TableCell className="px-3 py-2.5 text-sm text-muted-foreground">{payment.receivedBy || '—'}</TableCell>}
-              {isColumnVisible("note") && <TableCell className="max-w-[10rem] truncate px-3 py-2.5 text-sm text-muted-foreground">{payment.note || '—'}</TableCell>}
+              {isColumnVisible("note") && <TableCell className="max-w-cell-sm truncate px-3 py-2.5 text-sm text-muted-foreground">{payment.note || '—'}</TableCell>}
               {canDelete && <TableCell className="px-3 py-2.5">{renderRowAction(payment.id)}</TableCell>}
             </motion.tr>
           ))

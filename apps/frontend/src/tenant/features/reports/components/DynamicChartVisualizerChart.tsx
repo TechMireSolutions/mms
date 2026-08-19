@@ -75,7 +75,7 @@ export function DynamicChartVisualizerChart({
         description={t('reports.visualizer.noDataSubtitle')}
         icon={Info}
         variant="dashed"
-        className="h-[15.625rem] border-border/50 bg-card/20 rounded-3xl"
+        className="h-64 border-border/50 bg-card/20 rounded-3xl"
       />
     );
   }
@@ -86,6 +86,7 @@ export function DynamicChartVisualizerChart({
     background: 'hsl(var(--card))',
     border: '1px solid hsl(var(--border))',
     borderRadius: '12px',
+    boxShadow: 'var(--shadow-surface)',
     fontSize: `${axisFontSize}px`,
   };
   const axisTick = chartAxisTick(axisFontSize, true);

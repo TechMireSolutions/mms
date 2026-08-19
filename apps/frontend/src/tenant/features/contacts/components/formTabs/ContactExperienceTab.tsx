@@ -9,6 +9,7 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactExperience } from "@mms/shared";
+import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 
 
 /**
@@ -108,8 +109,8 @@ export function ContactExperienceTab({
               id={getLocalId("experience", idx)}
               index={idx}
               icon={Briefcase}
-              accentClass="bg-teal-500/80 group-hover:bg-teal-500"
-              iconClass="text-teal-600 dark:text-teal-400 group-hover:text-teal-500"
+              accentClass={SUB_LIST_CARD_ACCENTS.experience.accent}
+              iconClass={SUB_LIST_CARD_ACCENTS.experience.icon}
               label={t("contacts.form.experienceNumber", { index: idx + 1 })}
               onRemove={() => removeExperience(idx)}
               removeLabel={t("contacts.form.removeExperience", { index: idx + 1 })}
@@ -275,7 +276,7 @@ export function ContactExperienceTab({
                       required={isFieldRequired("experience", "description")}
                       onChange={(e) => updateExperience(idx, { description: e.target.value })}
                       placeholder={t("contacts.form.jobDescriptionPlaceholder")}
-                      className={cn("text-xs resize-y min-h-[64px]", descriptionError && "border-destructive focus-visible:ring-destructive")}
+                      className={cn("text-xs resize-y min-h-16", descriptionError && "border-destructive focus-visible:ring-destructive")}
                     />
                   </Field>
                 ) : null}

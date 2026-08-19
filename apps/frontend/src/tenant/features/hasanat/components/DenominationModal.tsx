@@ -3,7 +3,7 @@ import { CreditCard } from 'lucide-react';
 import { Denomination } from '@/lib/data/hasanatData';
 import { FormModal } from '@/components/ui/FormModal';
 import { RequiredMark } from '@/components/ui/FormPrimitives';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 import { DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors } from '@/lib/denominationColors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,16 +64,16 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="denom-name" className={FORM_LABEL}>{t('hasanat.denominations.cardName')}<RequiredMark /></label>
-            <Input id="denom-name" className={FORM_INPUT} value={data.name} onChange={(event) => updateField('name', event.target.value)} placeholder={t('hasanat.denominations.cardNamePlaceholder')} />
+            <Input id="denom-name" value={data.name} onChange={(event) => updateField('name', event.target.value)} placeholder={t('hasanat.denominations.cardNamePlaceholder')} />
           </div>
           <div>
             <label htmlFor="denom-pts" className={FORM_LABEL}>{t('hasanat.denominations.pointsValue')}<RequiredMark /></label>
-            <Input id="denom-pts" type="number" className={FORM_INPUT} value={data.points} onChange={(event) => updateField('points', +event.target.value)} min={1} />
+            <Input id="denom-pts" type="number" value={data.points} onChange={(event) => updateField('points', +event.target.value)} min={1} />
           </div>
         </div>
         <div>
           <label htmlFor="denom-desc" className={FORM_LABEL}>{t('hasanat.denominations.description')}</label>
-          <Input id="denom-desc" className={FORM_INPUT} value={data.description} onChange={(event) => updateField('description', event.target.value)} placeholder={t('hasanat.denominations.descriptionPlaceholder')} />
+          <Input id="denom-desc" value={data.description} onChange={(event) => updateField('description', event.target.value)} placeholder={t('hasanat.denominations.descriptionPlaceholder')} />
         </div>
 
         <fieldset>

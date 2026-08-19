@@ -36,7 +36,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
       <header className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10" aria-hidden="true">
-            <GraduationCap className="h-4.5 w-4.5 text-primary" style={{ width: 18, height: 18 }} />
+            <GraduationCap className="h-4.5 w-4.5 text-primary" />
           </div>
           <div className="min-w-0">
             <h4 className="m-0 truncate text-sm font-bold text-foreground">{sessionClass.name}</h4>

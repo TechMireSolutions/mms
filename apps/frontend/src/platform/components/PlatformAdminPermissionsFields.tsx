@@ -52,11 +52,11 @@ export function PlatformAdminPermissionsFields({
           <div className="flex items-center gap-2">
             <Building2 className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
             <span className="text-xs font-bold text-foreground">{t('platform.permWorkspaces')}</span>
-            <span className={cn('ms-auto text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.workspaces ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
+            <span className={cn('ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.workspaces ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
               {value.workspaces ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
             </span>
           </div>
-          <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
+          <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
             {t('platform.permWorkspacesDesc')}
           </p>
         </div>
@@ -85,11 +85,11 @@ export function PlatformAdminPermissionsFields({
           <div className="flex items-center gap-2">
             <UserPlus className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
             <span className="text-xs font-bold text-foreground">{t('platform.permOnboard')}</span>
-            <span className={cn('ms-auto text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.onboard ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
+            <span className={cn('ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.onboard ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
               {value.onboard ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
             </span>
           </div>
-          <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
+          <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
             {t('platform.permOnboardDesc')}
           </p>
         </div>

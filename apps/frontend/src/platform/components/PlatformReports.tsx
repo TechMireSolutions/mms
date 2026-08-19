@@ -35,8 +35,8 @@ export function PlatformReports(): React.JSX.Element {
   const metricsReady = !workspacesLoading && !workspacesError && workspaces !== undefined;
 
   const chartData = [
-    { name: t("platform.workspaceActive"), value: activeWorkspaces, color: "var(--color-success, #10b981)" },
-    { name: t("platform.workspaceInactive"), value: disabledWorkspaces, color: "var(--color-destructive, #ef4444)" },
+    { name: t("platform.workspaceActive"), value: activeWorkspaces, color: "hsl(var(--success))" },
+    { name: t("platform.workspaceInactive"), value: disabledWorkspaces, color: "hsl(var(--destructive))" },
   ];
 
   return (
@@ -112,7 +112,7 @@ export function PlatformReports(): React.JSX.Element {
                         backgroundColor: "hsl(var(--card))",
                         borderColor: "hsl(var(--border))",
                         borderRadius: "0.75rem",
-                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                        boxShadow: "var(--shadow-surface)",
                       }}
                     />
                     <Legend
@@ -165,23 +165,23 @@ export function PlatformReports(): React.JSX.Element {
 
               {/* Granted Capabilities Badges */}
               <div className="pt-3 border-t border-border/40 space-y-2">
-                <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                <span className="text-3xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                   <Award className="w-3.5 h-3.5 text-primary" />
                   {t("platform.capabilitiesLabel")}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {canWorkspaces && (
-                    <span className={cn(SEMANTIC_BADGE.primary, "px-2.5 py-0.5 rounded-full text-[11px] font-bold")}>
+                    <span className={cn(SEMANTIC_BADGE.primary, "px-2.5 py-0.5 rounded-full text-3xs font-bold")}>
                       {t("platform.manageMadrasas")}
                     </span>
                   )}
                   {canOnboard && (
-                    <span className={cn(SEMANTIC_BADGE.success, "px-2.5 py-0.5 rounded-full text-[11px] font-bold")}>
+                    <span className={cn(SEMANTIC_BADGE.success, "px-2.5 py-0.5 rounded-full text-3xs font-bold")}>
                       {t("platform.onboardCapability")}
                     </span>
                   )}
                   {isSuperUser && (
-                    <span className={cn(SEMANTIC_BADGE.warning, "px-2.5 py-0.5 rounded-full text-[11px] font-bold")}>
+                    <span className={cn(SEMANTIC_BADGE.warning, "px-2.5 py-0.5 rounded-full text-3xs font-bold")}>
                       {t("platform.roleSuperUser")}
                     </span>
                   )}

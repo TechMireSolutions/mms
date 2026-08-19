@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { Slider } from "@/components/ui/slider";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
@@ -34,26 +35,27 @@ export function WidgetBuilderPreview({
   const { t } = useTranslation();
 
   return (
-    <div className={cn(WORK_SURFACE, "p-4 flex flex-col justify-between relative min-h-[21.875rem]")}>
+    <div className={cn(WORK_SURFACE, "p-4 flex flex-col justify-between relative min-h-preview")}>
       <div className="space-y-4">
         <div className="flex items-center justify-between text-start">
           <SectionLabel className="block">{t("reports.widgets.builder.testerPreview")}</SectionLabel>
           <span className="text-xs text-primary font-bold">{scalerSize}x{scalerSize}px</span>
         </div>
 
-        <div className="space-y-1 bg-card/30 p-2.5 rounded-xl border border-border/50">
+        <div className="space-y-2 bg-card/30 p-2.5 rounded-xl border border-border/50">
           <SectionLabel as="label" tracking="wider" className="block">{t("reports.widgets.builder.dragToScale")}</SectionLabel>
-          <input
-            type="range"
+          <Slider
             min={100}
             max={250}
-            value={scalerSize}
-            onChange={(event) => setScalerSize(Number(event.target.value))}
-            className="w-full accent-primary cursor-pointer"
+            step={1}
+            value={[scalerSize]}
+            onValueChange={(val) => setScalerSize(val[0] ?? 100)}
+            className="py-1"
+            aria-label={t("reports.widgets.builder.dragToScale")}
           />
         </div>
 
-        <div className="flex items-center justify-center py-4 bg-muted/10 rounded-2xl border border-dashed border-border/60 min-h-[13.75rem]">
+        <div className="flex items-center justify-center py-4 bg-muted/10 rounded-2xl border border-dashed border-border/60 min-h-panel-sm">
           <div
             className={cn(WORK_SURFACE_INNER, "overflow-hidden shadow-lg rounded-3xl transition-all duration-100 flex items-center justify-center animate-fade-in")}
             style={{ width: scalerSize, height: scalerSize }}

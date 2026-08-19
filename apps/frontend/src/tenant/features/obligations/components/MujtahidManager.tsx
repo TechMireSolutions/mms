@@ -96,14 +96,14 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                   <Button type="button" aria-label={t("obligations.mujtahids.editAria", { name: mujtahid.name })} onClick={() => setModal({ mode: "edit", data: { ...mujtahid } })}
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
-                    <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                    className="rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
+                    <Pencil className="w-4 h-4" aria-hidden="true" />
                   </Button>
                   <Button type="button" aria-label={t("obligations.mujtahids.deleteAria", { name: mujtahid.name })} onClick={() => handleDeleteMujtahid(mujtahid.id)}
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    className="rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </Button>
                 </div>
               </header>
@@ -119,14 +119,14 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                           <Button type="button" aria-label={t("obligations.mujtahids.repEditAria", { name: representative.name })} onClick={() => setModal({ mode: "edit-rep", data: { ...representative } })}
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
-                            <Pencil className="w-3 h-3" aria-hidden="true" />
+                            className="rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
+                            <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
                           <Button type="button" aria-label={t("obligations.mujtahids.repDeleteAria", { name: representative.name })} onClick={() => handleDeleteRep(representative.id)}
                             variant="outline"
                             size="icon"
-                            className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
-                            <Trash2 className="w-3 h-3" aria-hidden="true" />
+                            className="rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
                         </div>
                       </div>

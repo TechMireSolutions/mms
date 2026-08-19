@@ -152,7 +152,7 @@ export function DistributionManagerListTable(props: DistributionManagerListTable
                 </TableCell>
               )}
               {isColumnVisible("reason") && (
-                <TableCell className="px-4 py-3 max-w-[10rem]">
+                <TableCell className="px-4 py-3 max-w-cell-sm">
                   <p className="text-sm text-muted-foreground truncate m-0">{distribution.reason}</p>
                 </TableCell>
               )}

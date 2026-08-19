@@ -34,7 +34,7 @@ export function PlatformDashboardQuickActions({
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start min-h-[44px] rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
+              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Link to={ROUTES.platformWorkspaces}>
                 <Building2 className="w-4 h-4 text-primary shrink-0" aria-hidden />
@@ -47,7 +47,7 @@ export function PlatformDashboardQuickActions({
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start min-h-[44px] rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
+              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Link to={ROUTES.platformReports}>
                 <BarChart3 className="w-4 h-4 text-primary shrink-0" aria-hidden />
@@ -60,10 +60,10 @@ export function PlatformDashboardQuickActions({
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start min-h-[44px] rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
+              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Link to={ROUTES.platformActivityLogs}>
-                <Activity className="w-4 h-4 text-purple-500 shrink-0" aria-hidden />
+                <Activity className="w-4 h-4 text-secondary shrink-0" aria-hidden />
                 {t("platform.activityLogsTitle")}
               </Link>
             </Button>
@@ -73,7 +73,7 @@ export function PlatformDashboardQuickActions({
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start min-h-[44px] rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
+              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Link to={ROUTES.platformSystem}>
                 <Server className="w-4 h-4 text-destructive shrink-0" aria-hidden />
@@ -86,7 +86,7 @@ export function PlatformDashboardQuickActions({
             <Button
               asChild
               variant="outline"
-              className="w-full justify-start min-h-[44px] rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
+              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
             >
               <Link to={ROUTES.platformAdmins}>
                 <UserPlus className="w-4 h-4 text-success shrink-0" aria-hidden />
@@ -98,7 +98,7 @@ export function PlatformDashboardQuickActions({
           <Button
             asChild
             variant="outline"
-            className="w-full justify-start min-h-[44px] rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
+            className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
           >
             <Link to={ROUTES.platformAccount}>
               <Settings className="w-4 h-4 text-warning shrink-0" aria-hidden />

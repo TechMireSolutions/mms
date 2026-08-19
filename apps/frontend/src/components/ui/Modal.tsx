@@ -78,7 +78,7 @@ export function Modal({
             aria-modal="true"
             aria-labelledby={titleId}
             className={cn(
-              "relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full z-10 max-h-[90vh] flex flex-col backdrop-blur-xl min-w-0",
+              "relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full z-10 max-h-modal flex flex-col backdrop-blur-xl min-w-0",
               SIZE[size],
               panelClassName
             )}

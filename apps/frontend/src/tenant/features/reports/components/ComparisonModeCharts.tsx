@@ -67,7 +67,7 @@ export function ComparisonModeCharts({
         <p className="text-xs text-muted-foreground mb-3">
           {t("reports.comparison.comparing")} <span className="font-semibold text-primary">{labelA}</span> {t("reports.comparison.vs")} <span className="font-semibold text-warning">{labelB}</span>
         </p>
-        <div className="h-[13.75rem] w-full">
+        <div className="h-panel-sm w-full">
           <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
             <BarChart data={translatedData} barSize={22}>
               <ChartGrid />

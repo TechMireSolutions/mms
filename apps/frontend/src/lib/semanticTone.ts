@@ -189,3 +189,43 @@ export const CARD_STRIPE_COLORS: Record<string, string> = {
   violet: "bg-primary/45 group-hover/card:bg-primary",
 };
 
+/** Sub-list form tab card accent styles (Education, Experience, Skills, Relationships). */
+export const SUB_LIST_CARD_ACCENTS = {
+  education: {
+    accent: "bg-info/70 group-hover:bg-info",
+    icon: "text-info group-hover:text-info",
+  },
+  experience: {
+    accent: "bg-primary/70 group-hover:bg-primary",
+    icon: "text-primary group-hover:text-primary",
+  },
+  skills: {
+    accent: "bg-secondary/70 group-hover:bg-secondary",
+    icon: "text-secondary group-hover:text-secondary",
+  },
+  relationships: {
+    accent: "bg-warning/70 group-hover:bg-warning",
+    icon: "text-warning group-hover:text-warning",
+  },
+} as const;
+
+/** Grade badge class mapping by grade tone. */
+export function gradeBadgeClass(tone: string = 'primary'): string {
+  switch (tone) {
+    case 'success':
+      return SEMANTIC_BADGE.success;
+    case 'info':
+      return SEMANTIC_BADGE.info;
+    case 'warning':
+      return SEMANTIC_BADGE.warning;
+    case 'secondary':
+      return SEMANTIC_BADGE.secondary;
+    case 'destructive':
+      return SEMANTIC_BADGE.destructive;
+    case 'primary':
+    default:
+      return SEMANTIC_BADGE.primary;
+  }
+}
+
+

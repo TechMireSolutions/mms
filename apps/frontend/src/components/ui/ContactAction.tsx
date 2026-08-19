@@ -600,7 +600,7 @@ export const ContactLocationAction = React.memo(function ContactLocationAction({
             />
             <span className="font-semibold tracking-tight truncate select-all">{displayText}</span>
             {label ? (
-              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground shrink-0">
+              <span className="text-2xs uppercase font-bold px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground shrink-0">
                 {label}
               </span>
             ) : null}
@@ -747,7 +747,7 @@ export const ContactLinkAction = React.memo(function ContactLinkAction({
             />
             <span className="font-semibold tracking-tight truncate select-all">{displayText}</span>
             {label ? (
-              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground shrink-0">
+              <span className="text-2xs uppercase font-bold px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground shrink-0">
                 {label}
               </span>
             ) : null}

@@ -90,7 +90,7 @@ export function VisualizerDataMatrix({
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-[13.75rem] overflow-y-auto">
+            <div className="border border-border/60 bg-card/25 rounded-2xl overflow-hidden mt-1 max-h-panel-sm overflow-y-auto">
               <div className="space-y-3 p-3 md:hidden">
                 {processedData.map((processedRow, index) => (
                   <article key={index} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>

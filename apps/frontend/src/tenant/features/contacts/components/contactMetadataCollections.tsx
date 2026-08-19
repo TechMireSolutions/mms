@@ -121,7 +121,7 @@ export function renderEducationMetadata({
         >
           {edu.degree ? <span className="font-semibold">{edu.degree}</span> : null}
           {edu.degree && edu.institution ? <span className="opacity-60">·</span> : null}
-          <span className="truncate max-w-[10rem]">{edu.institution}</span>
+          <span className="truncate max-w-cell-sm">{edu.institution}</span>
         </span>
       ))}
     </div>
@@ -149,7 +149,7 @@ export function renderExperienceMetadata({
         >
           {exp.title ? <span className="font-semibold">{exp.title}</span> : null}
           {exp.title && exp.organization ? <span className="opacity-60">·</span> : null}
-          <span className="truncate max-w-[10rem]">{exp.organization}</span>
+          <span className="truncate max-w-cell-sm">{exp.organization}</span>
         </span>
       ))}
     </div>
@@ -179,7 +179,7 @@ export function renderSkillsMetadata({
           {s.proficiency ? (
             <>
               <span className="opacity-60">·</span>
-              <span className="text-[11px] opacity-85">{s.proficiency}</span>
+              <span className="text-3xs opacity-85">{s.proficiency}</span>
             </>
           ) : null}
         </span>

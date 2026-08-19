@@ -64,7 +64,7 @@ export function PlatformAdminTable({
                       {admin.email}
                     </div>
                     {admin.createdAt ? (
-                      <p className="text-[10px] text-muted-foreground/60 font-semibold mt-1">
+                      <p className="text-2xs text-muted-foreground/60 font-semibold mt-1">
                         {t('platform.profileMemberSince')}: {formatDate(admin.createdAt)}
                       </p>
                     ) : null}

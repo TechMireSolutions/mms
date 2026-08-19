@@ -65,7 +65,7 @@ export function ResponsiveAccordionTabsDesktop({
     <div className="hidden gap-5 lg:flex lg:items-start">
       <nav
         aria-label={sectionAriaLabel}
-        className="sticky top-[4.75rem] w-[17.5rem] shrink-0 space-y-0.5 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
+        className="sticky top-[4.75rem] w-sidebar-mobile shrink-0 space-y-0.5 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;

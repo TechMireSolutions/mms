@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
-import { Users, MessageCircle, UserPlus, AlertCircle, Loader2 } from "lucide-react";
+import { Users, MessageCircle, UserPlus, AlertCircle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsReportAnalytics } from "@/tenant/hooks/collections/contacts";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
+import { StatsSkeleton } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { applyContactsWorkDrillDown } from "@/lib/contacts/contactsWorkDrillDown";
 
@@ -70,9 +71,8 @@ const ContactReport = React.memo(function ContactReport(props: ContactReportProp
 
   if (isLoading && !analytics) {
     return (
-      <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
-        <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
-        <span className="text-sm">{t("common.loading")}</span>
+      <div className="p-4">
+        <StatsSkeleton count={4} />
       </div>
     );
   }

@@ -112,7 +112,7 @@ export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModules
                 >
                   {module.label}{' '}
                   {module.required && (
-                    <span className="text-[11px] font-semibold text-muted-foreground">
+                    <span className="text-3xs font-semibold text-muted-foreground">
                       {t("platform.moduleRequired")}
                     </span>
                   )}

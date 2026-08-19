@@ -143,14 +143,14 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
             aria-label={ariaLabel}
             {...dragProps}
             className={cn(
-              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-[0_8px_40px_rgb(0,0,0,0.12)] backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-[85vh] sm:max-h-full rounded-t-[1.5rem] sm:rounded-none",
+              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-[0_8px_40px_rgb(0,0,0,0.12)] backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-drawer sm:max-h-full rounded-t-[1.5rem] sm:rounded-none",
               SIZE_MAP[size],
               className
             )}
           >
             {/* Mobile Drag Handle Indicator */}
             <div 
-              className="sm:hidden flex items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none min-h-[20px]"
+              className="sm:hidden flex items-center justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none min-h-5"
               aria-hidden="true"
               onPointerDown={(e) => {
                 if (!isDesktop) dragControls.start(e);
@@ -187,7 +187,7 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
                       {badge}
                     </div>
                     {subtitle && (
-                      <span className="text-[11px] text-muted-foreground/80 uppercase tracking-wider font-bold block truncate mt-0.5">
+                      <span className="text-3xs text-muted-foreground/80 uppercase tracking-wider font-bold block truncate mt-0.5">
                         {subtitle}
                       </span>
                     )}
@@ -201,10 +201,10 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
                     variant="outline"
                     size="icon"
                     onClick={onClose}
-                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border border-border/50 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
+                    className="rounded-lg border border-border/50 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
                     aria-label={t("common.close")}
                   >
-                    <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                    <X className="w-4 h-4" />
                   </Button>
                 </div>
               </div>

@@ -1,8 +1,9 @@
 import type { JSX } from 'react';
-import { Loader2, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { AvatarCropper } from '@/components/ui/AvatarCropper';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { PageLoader } from '@/components/ui/LoadingState';
 import { AccountProfileHeaderCard } from '@/tenant/features/profile/AccountProfileHeaderCard';
 import { AccountProfileSettingsTabs } from '@/tenant/features/profile/AccountProfileSettingsTabs';
 import { useAccountProfilePageController } from '@/tenant/features/profile/hooks/useAccountProfilePageController';
@@ -19,9 +20,7 @@ export default function AccountProfile(): JSX.Element {
       headerSubtitle={c.t('account.subtitle')}
     >
       {c.isLoading ? (
-        <div className="flex justify-center py-16" role="status" aria-live="polite">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+        <PageLoader />
       ) : c.isError ? (
         <ErrorState
           title={c.t('account.loadFailed')}

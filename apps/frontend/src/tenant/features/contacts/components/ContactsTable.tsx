@@ -88,7 +88,7 @@ export default function ContactsTable({
     <div className={cn(WORK_SURFACE, "shadow-xs")}>
       <div
         ref={parentRef}
-        className={cn("w-full overflow-x-auto", isVirtualized && "max-h-[600px] overflow-y-auto")}
+        className={cn("w-full overflow-x-auto", isVirtualized && "max-h-150 overflow-y-auto")}
       >
         <Table className="table-fixed">
           <ContactsTableHeader

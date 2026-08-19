@@ -95,8 +95,8 @@ export function DiscountsTab({ session, onUpdate, canWrite }: DiscountsTabProps)
               transition={{ delay: index * 0.05 }}
               className={`flex flex-col gap-3 rounded-xl border p-4 transition-all sm:flex-row sm:items-start sm:gap-4 ${discountItem.active ? "bg-card border-border" : "bg-muted/30 border-border opacity-60"}`}
             >
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${discountItem.active ? "bg-primary/10" : "bg-muted"}`} aria-hidden="true">
-                <Tag className={`w-4.5 h-4.5 ${discountItem.active ? "text-primary" : "text-muted-foreground"}`} style={{ width: 18, height: 18 }} />
+              <div className="w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
+                <Tag className={`w-4.5 h-4.5 ${discountItem.active ? "text-primary" : "text-muted-foreground"}`} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-0.5 flex flex-wrap items-center gap-2">

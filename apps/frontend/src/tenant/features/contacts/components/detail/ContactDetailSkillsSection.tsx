@@ -55,18 +55,18 @@ export function ContactDetailSkillsSection({
                   <span className="truncate">{skill.name}</span>
                 </span>
                 {skill.category ? (
-                  <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                  <span className="text-3xs font-medium px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                     {skill.category}
                   </span>
                 ) : null}
                 {skill.proficiency ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                  <span className="inline-flex items-center gap-1 text-3xs font-medium px-2 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
                     <Sparkles className="h-2.5 w-2.5 shrink-0" />
                     <span>{skill.proficiency}</span>
                   </span>
                 ) : null}
                 {skill.isCertified ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded">
+                  <span className="inline-flex items-center gap-1 text-2xs font-semibold uppercase tracking-wider px-1.5 py-0.5 bg-success/10 text-success border border-success/20 rounded">
                     <CheckCircle2 className="h-2.5 w-2.5 shrink-0" />
                     <span>{t("contacts.fields.skillIsCertified")}</span>
                   </span>

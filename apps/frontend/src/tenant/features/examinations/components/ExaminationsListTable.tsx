@@ -146,7 +146,7 @@ export function ExaminationsListTable(props: ExaminationsListTableProps): React.
                 <TableCell className="px-4 py-3 text-sm text-foreground">{exam.passingMarks}</TableCell>
               )}
               {isColumnVisible("classes") && (
-                <TableCell className="px-4 py-3 text-xs text-muted-foreground max-w-[10rem] truncate">
+                <TableCell className="px-4 py-3 text-xs text-muted-foreground max-w-cell-sm truncate">
                   {assignedClasses.map((sessionClass) => sessionClass.name).join(", ") || "—"}
                 </TableCell>
               )}

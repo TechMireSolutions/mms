@@ -78,7 +78,7 @@ export function PasswordStrengthMeter({
             <div
               key={item.label}
               className={cn(
-                'flex items-center gap-1.5 text-[11px] transition-colors',
+                'flex items-center gap-1.5 text-3xs transition-colors',
                 item.pass ? 'text-success font-semibold' : 'text-muted-foreground/75',
               )}
             >

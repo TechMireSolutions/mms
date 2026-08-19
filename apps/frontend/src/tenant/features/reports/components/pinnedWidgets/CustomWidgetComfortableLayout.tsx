@@ -88,11 +88,11 @@ export function CustomWidgetComfortableLayout({
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       className={`p-5 flex flex-col justify-between shadow-sm relative group hover:shadow-surface-lg transition-all overflow-hidden ${
         alertScheme
-          ? `rounded-2xl ${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-[1.5px]`
+          ? `rounded-2xl ${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} border-2`
           : WORK_SURFACE
       }`}
     >
-      <div className={`absolute start-0 top-0 bottom-0 w-[3.5px] rounded-e-[2px] transition-colors duration-300 ${
+      <div className={`absolute start-0 top-0 bottom-0 w-1 rounded-e-sm transition-colors duration-300 ${
         isAlert
           ? "bg-destructive/60 group-hover:bg-destructive"
           : `${colorTheme.bar}/60`
@@ -117,7 +117,7 @@ export function CustomWidgetComfortableLayout({
         )}
       </div>
 
-      <div className="py-4 flex items-center justify-between min-h-[4.375rem]">
+      <div className="py-4 flex items-center justify-between min-h-18">
         {resolvedWidgetType === "kpi" && (
           <Button
             onClick={() => onMetricClick(widget)}
@@ -180,7 +180,7 @@ export function CustomWidgetComfortableLayout({
         )}
 
         {resolvedWidgetType === "chart" && (
-          <div className="w-full h-[5rem] -mb-2">
+          <div className="w-full h-20 -mb-2">
             <React.Suspense fallback={<div className="w-full h-full bg-muted/20 animate-pulse rounded-xl" />}>
               <CustomWidgetChartFallback widget={widget} collections={collections} />
             </React.Suspense>

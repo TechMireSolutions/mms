@@ -1,8 +1,8 @@
 import React from 'react';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
-import { Loader2 } from 'lucide-react';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
+import { StatsSkeleton } from '@/components/ui/LoadingState';
 import { ExportToolbar } from '@/components/ui/ExportToolbar';
 import { ListPagination } from '@/components/ui/ListPagination';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -40,10 +40,7 @@ const FacultyReport = React.memo(function FacultyReport({ filters }: TeacherRepo
   return (
     <div className="space-y-4">
       {report.metricsLoading && !report.metrics ? (
-        <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground" role="status">
-          <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
-          <span className="text-sm">{report.t("common.loading")}</span>
-        </div>
+        <StatsSkeleton count={4} />
       ) : (
         <ModuleCommandMetricsGrid items={report.metricItems} />
       )}

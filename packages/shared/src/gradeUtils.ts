@@ -1,20 +1,23 @@
+export type GradeTone = 'success' | 'info' | 'primary' | 'warning' | 'secondary' | 'destructive';
+
 export interface GradeInfo {
   label: string;
   color: string;
   bg: string;
   border: string;
+  tone?: GradeTone;
 }
 
 /**
- * Resolves score percentage to appropriate Grade metadata (label, colors).
+ * Resolves score percentage to appropriate Grade metadata (label, semantic colors).
  */
 export function getGrade(pct: number): GradeInfo {
-  if (pct >= 90) return { label: 'A+', color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' };
-  if (pct >= 80) return { label: 'A', color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4' };
-  if (pct >= 70) return { label: 'B', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' };
-  if (pct >= 60) return { label: 'C', color: '#d97706', bg: '#fffbeb', border: '#fde68a' };
-  if (pct >= 50) return { label: 'D', color: '#ea580c', bg: '#fff7ed', border: '#fed7aa' };
-  return { label: 'F', color: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
+  if (pct >= 90) return { label: 'A+', tone: 'success', color: 'hsl(var(--success))', bg: 'hsl(var(--success) / 0.1)', border: 'hsl(var(--success) / 0.2)' };
+  if (pct >= 80) return { label: 'A', tone: 'info', color: 'hsl(var(--info))', bg: 'hsl(var(--info) / 0.1)', border: 'hsl(var(--info) / 0.2)' };
+  if (pct >= 70) return { label: 'B', tone: 'primary', color: 'hsl(var(--primary))', bg: 'hsl(var(--primary) / 0.1)', border: 'hsl(var(--primary) / 0.2)' };
+  if (pct >= 60) return { label: 'C', tone: 'warning', color: 'hsl(var(--warning))', bg: 'hsl(var(--warning) / 0.1)', border: 'hsl(var(--warning) / 0.2)' };
+  if (pct >= 50) return { label: 'D', tone: 'secondary', color: 'hsl(var(--secondary))', bg: 'hsl(var(--secondary) / 0.1)', border: 'hsl(var(--secondary) / 0.2)' };
+  return { label: 'F', tone: 'destructive', color: 'hsl(var(--destructive))', bg: 'hsl(var(--destructive) / 0.1)', border: 'hsl(var(--destructive) / 0.2)' };
 }
 
 /**

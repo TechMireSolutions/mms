@@ -101,7 +101,7 @@ export function WidgetDrilldownModalRecords({
 
               return (
                 <TableRow key={recordId} className="hover:bg-muted/10">
-                  <TableCell className="py-3.5 pe-2 font-bold text-foreground max-w-[11.25rem] truncate">{name}</TableCell>
+                  <TableCell className="py-3.5 pe-2 font-bold text-foreground max-w-cell-md truncate">{name}</TableCell>
                   <TableCell className="py-3.5 text-muted-foreground font-semibold">{detailText}</TableCell>
                   <TableCell className="py-3.5">
                     <StatusBadge status={status.toLowerCase()} size="sm" config={statusConfig} />

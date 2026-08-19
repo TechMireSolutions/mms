@@ -41,7 +41,7 @@ export function DynamicChartVisualizerFiltersPanel({
         </Button>
       </div>
 
-      <div className="space-y-2.5 max-h-[13.75rem] overflow-y-auto pe-1">
+      <div className="space-y-2.5 max-h-panel-sm overflow-y-auto pe-1">
         {filters.length === 0 ? (
           <EmptyState
             title={t("reports.visualizer.noFilters")}

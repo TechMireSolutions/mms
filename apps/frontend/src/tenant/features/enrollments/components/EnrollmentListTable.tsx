@@ -129,7 +129,7 @@ export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.
                 </TableCell>
               )}
               {isColumnVisible("session") && (
-                <TableCell className="px-3 py-2.5 text-xs text-foreground max-w-[10rem] truncate">
+                <TableCell className="px-3 py-2.5 text-xs text-foreground max-w-cell-sm truncate">
                   {renderEnrollmentWorkColumnValue(enrollment, "session", columnOptions)}
                 </TableCell>
               )}

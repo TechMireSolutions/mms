@@ -59,7 +59,7 @@ export function FormCheckboxCard({
         <div className="flex flex-col min-w-0 flex-1">
           <span className="text-xs font-semibold leading-tight">{label}</span>
           {description && (
-            <span className="mt-0.5 text-[11px] text-muted-foreground font-normal leading-tight">
+            <span className="mt-0.5 text-3xs text-muted-foreground font-normal leading-tight">
               {description}
             </span>
           )}

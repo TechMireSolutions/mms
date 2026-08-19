@@ -66,7 +66,7 @@ export function PlatformHeaderUserNav({
           {!compact && (
             <>
               <span className="hidden md:inline font-normal">{t('platform.searchConsolePlaceholder')}</span>
-              <kbd className="hidden md:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground select-none font-mono">
+              <kbd className="hidden md:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-2xs font-semibold text-muted-foreground select-none font-mono">
                 ⌘K
               </kbd>
             </>
@@ -124,7 +124,7 @@ export function PlatformHeaderUserNav({
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-foreground truncate">{notification.title}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{notification.desc}</p>
-                          <p className="mt-1 text-[10px] font-mono text-muted-foreground/70">{notification.time}</p>
+                          <p className="mt-1 text-2xs font-mono text-muted-foreground/70">{notification.time}</p>
                         </div>
                       </div>
                     </div>
@@ -153,15 +153,15 @@ export function PlatformHeaderUserNav({
 
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}
 
+      {/* User Profile Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             type="button"
             variant="ghost"
-            aria-label={t('platform.myAccount')}
             className={cn(
-              'flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto',
-              compact ? 'min-h-11 min-w-11 gap-1 p-2' : 'min-h-11 gap-2.5 py-1.5 ps-2 pe-3',
+              'flex items-center gap-2.5 p-1 rounded-xl hover:bg-muted transition-colors text-start',
+              compact && 'p-1',
             )}
           >
             <Avatar className={compact ? 'h-7 w-7' : 'h-8 w-8 border border-primary/20 shadow-xs'}>
@@ -172,10 +172,10 @@ export function PlatformHeaderUserNav({
             {!compact ? (
               <>
                 <div className="hidden sm:flex flex-col text-start">
-                  <span className="text-xs font-bold text-foreground leading-tight truncate max-w-[120px]">
+                  <span className="text-xs font-bold text-foreground leading-tight truncate max-w-30">
                     {platformUser?.name ?? t('platform.operatorRole')}
                   </span>
-                  <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1 leading-tight">
+                  <span className="text-2xs font-semibold text-muted-foreground flex items-center gap-1 leading-tight">
                     {isSuperUser ? (
                       <>
                         <ShieldAlert className="w-2.5 h-2.5 text-primary shrink-0" aria-hidden />

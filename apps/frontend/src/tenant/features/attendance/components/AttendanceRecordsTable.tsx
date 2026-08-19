@@ -184,7 +184,7 @@ export function AttendanceRecordsTable({
                 </TableCell>
               )}
               {isColumnVisible("notes") && (
-                <TableCell className="px-3 py-2.5 max-w-[10rem] truncate text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</TableCell>
+                <TableCell className="px-3 py-2.5 max-w-cell-sm truncate text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</TableCell>
               )}
               <TableCell className="px-3 py-2.5 text-end">
                 {renderRowActions(attendanceRecord)}

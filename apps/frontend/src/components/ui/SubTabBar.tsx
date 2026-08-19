@@ -92,7 +92,7 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
                 {tab.badge !== undefined && (
                   <span
                     className={cn(
-                      "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold transition-colors",
+                      "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-2xs font-bold transition-colors",
                       active
                         ? "bg-primary/15 text-primary"
                         : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/20",
@@ -208,7 +208,7 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
                   {t.badge !== undefined && (
                     <span
                       className={cn(
-                        "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+                        "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-2xs font-bold",
                         active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
                       )}
                     >
@@ -255,7 +255,7 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
               {tab.badge !== undefined && (
                 <span
                   className={cn(
-                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-2xs font-bold",
                     active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
                   )}
                 >
@@ -297,7 +297,7 @@ export const SubTabBar = React.memo(function SubTabBar<K extends string>({
               {t.badge !== undefined && (
                 <span
                   className={cn(
-                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1.5 text-2xs font-bold",
                     active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
                   )}
                 >

@@ -10,6 +10,7 @@ import { CustomizeItemRow } from '@/tenant/features/dashboard/components/Customi
 import { DashboardCustomizeWidgetsSection } from '@/tenant/features/dashboard/components/DashboardCustomizeWidgetsSection';
 import { CustomizeSectionCard } from '@/tenant/features/dashboard/components/CustomizeSectionCard';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface DashboardCustomizePanelProps {
   can: (permission: Permission) => boolean;
@@ -154,7 +155,7 @@ export default function DashboardCustomizePanel({
                   <label htmlFor="pref-low-att" className="text-xs font-bold text-foreground">
                     {t('dashboard.lowAttendanceThresholdLabel')}
                   </label>
-                  <input
+                  <Input
                     id="pref-low-att"
                     type="number"
                     min={1}
@@ -166,14 +167,14 @@ export default function DashboardCustomizePanel({
                         onUpdateThreshold('lowAttendanceThreshold', val);
                       }
                     }}
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                    className="min-h-10 text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label htmlFor="pref-urgent-att" className="text-xs font-bold text-foreground">
                     {t('dashboard.urgentAttendanceThresholdLabel')}
                   </label>
-                  <input
+                  <Input
                     id="pref-urgent-att"
                     type="number"
                     min={1}
@@ -185,7 +186,7 @@ export default function DashboardCustomizePanel({
                         onUpdateThreshold('urgentAttendanceThreshold', val);
                       }
                     }}
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                    className="min-h-10 text-sm"
                   />
                 </div>
               </div>
