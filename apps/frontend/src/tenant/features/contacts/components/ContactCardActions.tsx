@@ -3,10 +3,6 @@ import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directory
 import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
-import {
-  ContactCardMessagingButtons,
-  hasContactCardFaceChannels,
-} from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface ContactCardActionsProps {
@@ -30,8 +26,6 @@ interface ContactCardActionsProps {
 export function ContactCardActions({
   contact,
   displayName,
-  phone,
-  email,
   showArchived,
   canWrite,
   canDelete,
@@ -44,32 +38,9 @@ export function ContactCardActions({
   onEmail,
 }: ContactCardActionsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const hasFaceChannels = hasContactCardFaceChannels({
-    contact,
-    phone,
-    email,
-    showArchived,
-    onWhatsApp,
-    onSms,
-    onEmail,
-  });
 
   return (
     <DirectoryCardFooter
-      leading={
-        hasFaceChannels ? (
-          <ContactCardMessagingButtons
-            contact={contact}
-            displayName={displayName}
-            phone={phone}
-            email={email}
-            showArchived={showArchived}
-            onWhatsApp={onWhatsApp}
-            onSms={onSms}
-            onEmail={onEmail}
-          />
-        ) : undefined
-      }
       trailing={
         <>
           <DirectoryCardViewButton
@@ -90,7 +61,6 @@ export function ContactCardActions({
             canWrite={canWrite}
             canDelete={canDelete}
             hideViewItem={Boolean(onView)}
-            hideMessagingItems={hasFaceChannels}
             triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
           />
         </>

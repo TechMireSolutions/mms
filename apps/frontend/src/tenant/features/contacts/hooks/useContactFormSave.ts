@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { formatContactPhoneDisplay } from "@/lib/contacts/contactI18n";
 import { useContactValidation } from "@/lib/contacts/useContactValidation";
 import { getApiValidationErrors, getApiValidationMessage } from "@/lib/apiValidationMessage";
@@ -14,6 +16,7 @@ import {
   syncContactScalarFields,
   normalizeToE164,
   isContactDeleted,
+  findContactUniqueFieldConflicts,
   type ValidationError,
 } from "@mms/shared";
 
@@ -33,6 +36,8 @@ export function useContactFormSave({
   onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
 }) {
   const { t } = useTranslation();
+  const { fields } = useContactConfig();
+  const { language } = useGlobalSettings();
   const validate = useContactValidation();
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
@@ -68,6 +73,29 @@ export function useContactFormSave({
         tabId: "basic",
         message: t("contacts.form.avatarMustUpload"),
       });
+    }
+
+    // Check unique fields (phone number, email address, CNIC, etc.) within the candidate draft
+    if (fields) {
+      const uniqueErrors = findContactUniqueFieldConflicts(
+        cleanedDraft,
+        [],
+        fields,
+        language,
+        {
+          defaultPhoneCountryCode: defaultCountryCode,
+          excludeContactIds: contact?.id ? [contact.id] : [],
+        },
+      );
+      for (const err of uniqueErrors) {
+        if (
+          !formErrors.some(
+            (e) => e.tabId === err.tabId && e.fieldId === err.fieldId && e.index === err.index,
+          )
+        ) {
+          formErrors.push(err);
+        }
+      }
     }
 
     if (formErrors.length > 0) {

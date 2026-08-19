@@ -93,8 +93,13 @@ export function TeacherListCards(props: TeacherListCardsProps): React.JSX.Elemen
                 phone={phone}
                 phoneDisplay={phone}
                 email={email}
+                displayName={displayName}
                 showPhone={faceVisible("phone")}
                 showEmail={faceVisible("email")}
+                showArchived={showDeleted}
+                onWhatsApp={onWhatsApp ? () => onWhatsApp([teacher]) : undefined}
+                onSms={onSms ? () => onSms([teacher]) : undefined}
+                onEmail={onEmail ? () => onEmail([teacher]) : undefined}
               />
               <TeacherCardMetadata
                 teacher={teacher}

@@ -37,7 +37,7 @@ export const QuickActionButton = React.memo(function QuickActionButton({
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       disabled={disabled}
       onClick={onClick}
       aria-label={ariaLabel || label}

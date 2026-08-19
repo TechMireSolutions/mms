@@ -114,10 +114,10 @@ export const UserDetail = React.memo(function UserDetail({
                   <div className="flex items-center gap-1.5 justify-end">
                     <span>{user.email}</span>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       type="button"
                       size="icon"
-                      className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                      className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-secondary/30 bg-secondary/5 text-secondary hover:text-secondary hover:bg-secondary/15 hover:border-secondary/40 transition-colors shadow-none"
                       onClick={() => setMessagingTarget({ channel: 'email', recipients: recipient })}
                       title={t('users.sendEmail')}
                     >
@@ -143,20 +143,20 @@ export const UserDetail = React.memo(function UserDetail({
                   <div className="flex items-center gap-1.5 justify-end">
                     <span>{user.phone}</span>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       type="button"
                       size="icon"
-                      className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                      className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-success/30 bg-success/5 text-success hover:text-success hover:bg-success/15 hover:border-success/40 transition-colors shadow-none"
                       onClick={() => setMessagingTarget({ channel: 'whatsapp', recipients: recipient })}
                       title={t('contacts.detail.call')}
                     >
                       <Phone className="h-3.5 w-3.5" />
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       type="button"
                       size="icon"
-                      className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-primary transition-colors hover:bg-muted"
+                      className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-primary/30 bg-primary/5 text-primary hover:text-primary hover:bg-primary/15 hover:border-primary/40 transition-colors shadow-none"
                       onClick={() => setMessagingTarget({ channel: 'sms', recipients: recipient })}
                       title={t('users.sendSms')}
                     >

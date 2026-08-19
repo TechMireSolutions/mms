@@ -3,6 +3,11 @@ import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
+import { cn } from "@/lib/utils";
 
 interface CopyBtnProps {
   text: string;
@@ -16,8 +21,8 @@ interface CopyBtnProps {
  */
 export const CopyBtn = React.memo(function CopyBtn({
   text,
-  className = "min-h-11 min-w-11 h-11 w-11 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity rounded text-muted-foreground hover:text-foreground",
-  variant = "ghost",
+  className,
+  variant,
   showToast = false,
 }: CopyBtnProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -45,10 +50,14 @@ export const CopyBtn = React.memo(function CopyBtn({
       variant={variant}
       title={copied ? t("contacts.table.copied") : t("contacts.table.copy")}
       aria-label={copied ? t("contacts.table.copied") : t("contacts.table.copy")}
-      className={className}
+      className={cn(
+        MESSAGING_ICON_BTN,
+        MESSAGING_ICON_BTN_TONES.copy,
+        "opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity",
+        className,
+      )}
     >
-      {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
+      {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
     </Button>
   );
 });
-

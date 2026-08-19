@@ -42,15 +42,15 @@ export function WakalaDistributionList({
               <p className="text-sm font-medium text-foreground">{distribution.name}</p>
               <div className="flex shrink-0 items-center gap-1">
                 <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => onEdit(distribution)}
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  className="rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                  className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
                   <Pencil className="w-3 h-3" aria-hidden="true" />
                 </Button>
                 <Button type="button" aria-label={t("obligations.wakala.distDeleteAria", { name: distribution.name })} onClick={() => onDelete(distribution.id)}
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  className="rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                  className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
                   <Trash2 className="w-3 h-3" aria-hidden="true" />
                 </Button>
               </div>
@@ -91,15 +91,15 @@ export function WakalaDistributionList({
                 <TableCell className="px-3 py-2.5 text-end">
                   <div className="flex items-center justify-end gap-1">
                     <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => onEdit(distribution)}
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="rounded hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+                      className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
                       <Pencil className="w-3 h-3" aria-hidden="true" />
                     </Button>
                     <Button type="button" aria-label={t("obligations.wakala.distDeleteAria", { name: distribution.name })} onClick={() => onDelete(distribution.id)}
-                      variant="ghost"
+                      variant="outline"
                       size="icon"
-                      className="rounded hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+                      className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
                       <Trash2 className="w-3 h-3" aria-hidden="true" />
                     </Button>
                   </div>

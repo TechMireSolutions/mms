@@ -66,15 +66,15 @@ export function WakalaTypeCard({
             />
           </span>
           <Button type="button" aria-label={t("obligations.wakala.editAria", { name: typeName })} onClick={onEdit}
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+            className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
             <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
           <Button type="button" aria-label={t("obligations.wakala.deleteAria", { name: typeName })} onClick={onDelete}
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+            className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
         </div>

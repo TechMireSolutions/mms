@@ -11,7 +11,7 @@ import {
 
 /** Hover-reveal trigger styling shared by Work table/card row action menus. */
 export const MODULE_ROW_ACTIONS_TRIGGER_CLASS =
-  "rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100";
+  "min-w-11 min-h-11 rounded-lg border border-border/50 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 shadow-none";
 
 export interface ModuleRowActionsMenuProps {
   /** Trigger aria-label (translated by the module). */
@@ -68,12 +68,12 @@ export const ModuleRowActionsMenu = React.memo(function ModuleRowActionsMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           type="button"
           aria-label={triggerLabel}
           className={
             triggerClassName ??
-            'min-w-11 min-h-11 p-0 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors'
+            'min-w-11 min-h-11 p-0 flex items-center justify-center rounded-lg border border-border/50 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none'
           }
         >
           <MoreHorizontal className={iconClassName} />

@@ -1,80 +1,135 @@
 import React, { type JSX } from "react";
-import { Mail, Phone, type LucideIcon } from "lucide-react";
-import { CopyBtn } from "@/components/ui/CopyBtn";
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
-
-export interface DirectoryCardInfoPillProps {
-  icon: LucideIcon;
-  text: string;
-  copyText: string;
-}
-
-/** Single phone/email face pill for Work directory entity cards. */
-export const DirectoryCardInfoPill = React.memo(function DirectoryCardInfoPill({
-  icon: Icon,
-  text,
-  copyText,
-}: DirectoryCardInfoPillProps): JSX.Element {
-  return (
-    <div
-      className={cn(
-        WORK_SURFACE_INNER,
-        "w-full flex items-center justify-between text-xs font-normal text-muted-foreground hover:bg-muted/65 hover:text-foreground px-3 py-1.5 rounded-xl group/pill min-w-0",
-      )}
-    >
-      <div className="flex items-center gap-2 min-w-0 flex-1 pe-2">
-        <Icon
-          aria-hidden="true"
-          className="w-3.5 h-3.5 text-primary/80 flex-shrink-0 group-hover/pill:text-primary transition-colors"
-        />
-        <span className="font-semibold tracking-tight truncate select-all">{text}</span>
-      </div>
-      <CopyBtn
-        text={copyText}
-        showToast
-        className="min-h-11 min-w-11 opacity-60 transition-opacity text-muted-foreground hover:text-foreground group-hover/pill:opacity-100"
-      />
-    </div>
-  );
-});
+import {
+  ContactEmailAction,
+  ContactPhoneAction,
+} from "@/components/ui/ContactAction";
+import type {
+  ContactResolvedPhone,
+  ContactResolvedEmail,
+} from "@/lib/contacts/contactPhoneDisplay";
 
 export interface DirectoryCardInfoPillsProps {
+  /** List of all resolved phones for multi-phone contacts. */
+  phones?: ContactResolvedPhone[] | Array<{ number?: string; phone?: string; countryCode?: string; phoneDisplay?: string; label?: string }>;
+  /** List of all resolved emails for multi-email contacts. */
+  emails?: ContactResolvedEmail[] | Array<{ address?: string; email?: string; label?: string }>;
+  /** Scalar fallback phone string. */
   phone?: string | null;
   phoneDisplay?: string | null;
   countryCode?: string | null;
+  /** Scalar fallback email string. */
   email?: string | null;
+  displayName?: string;
   showPhone?: boolean;
   showEmail?: boolean;
+  showArchived?: boolean;
+  onWhatsApp?: (phone?: string) => void;
+  onSms?: (phone?: string) => void;
+  onCall?: (phone?: string) => void;
+  onEmail?: (email?: string) => void;
 }
 
-/** Phone/email face pills stack for Work directory entity cards. */
+/** Phone/email face pills stack for Work directory entity cards with inline contact actions (supports multiple channels). */
 export const DirectoryCardInfoPills = React.memo(function DirectoryCardInfoPills({
+  phones: phonesProp,
+  emails: emailsProp,
   phone,
   phoneDisplay,
   countryCode,
   email,
+  displayName,
   showPhone = true,
   showEmail = true,
+  showArchived = false,
+  onWhatsApp,
+  onSms,
+  onCall,
+  onEmail,
 }: DirectoryCardInfoPillsProps): JSX.Element | null {
-  const phoneText = phone
-    ? countryCode
-      ? `${countryCode} ${phoneDisplay || phone}`
-      : phoneDisplay || phone
-    : null;
-  const showPhonePill = showPhone && Boolean(phone);
-  const showEmailPill = showEmail && Boolean(email);
-  if (!showPhonePill && !showEmailPill) return null;
+  const effectivePhones: Array<{ phone: string; countryCode?: string; phoneDisplay?: string; label?: string }> = React.useMemo(() => {
+    if (Array.isArray(phonesProp) && phonesProp.length > 0) {
+      return phonesProp
+        .map((p) => {
+          const rec = p as Record<string, unknown>;
+          const rawPhone = String(rec.phone || rec.number || "").trim();
+          const cc = typeof rec.countryCode === "string" ? rec.countryCode : undefined;
+          const disp = typeof rec.phoneDisplay === "string" ? rec.phoneDisplay : (rawPhone || undefined);
+          const lbl = typeof rec.label === "string" ? rec.label : undefined;
+          return {
+            phone: rawPhone,
+            countryCode: cc,
+            phoneDisplay: disp,
+            label: lbl,
+          };
+        })
+        .filter((p) => Boolean(p.phone));
+    }
+    if (phone && phone.trim()) {
+      return [
+        {
+          phone: phone.trim(),
+          countryCode: countryCode || undefined,
+          phoneDisplay: phoneDisplay || phone.trim(),
+        },
+      ];
+    }
+    return [];
+  }, [phonesProp, phone, countryCode, phoneDisplay]);
+
+  const effectiveEmails: Array<{ email: string; label?: string }> = React.useMemo(() => {
+    if (Array.isArray(emailsProp) && emailsProp.length > 0) {
+      return emailsProp
+        .map((e) => {
+          const rec = e as Record<string, unknown>;
+          const rawEmail = String(rec.email || rec.address || "").trim();
+          const lbl = typeof rec.label === "string" ? rec.label : undefined;
+          return {
+            email: rawEmail,
+            label: lbl,
+          };
+        })
+        .filter((e) => Boolean(e.email));
+    }
+    if (email && email.trim()) {
+      return [{ email: email.trim() }];
+    }
+    return [];
+  }, [emailsProp, email]);
+
+  const showPhones = showPhone && effectivePhones.length > 0;
+  const showEmails = showEmail && effectiveEmails.length > 0;
+  if (!showPhones && !showEmails) return null;
 
   return (
     <div className="space-y-2 py-0.5 ms-1">
-      {showPhonePill && phone && phoneText ? (
-        <DirectoryCardInfoPill icon={Phone} text={phoneText} copyText={phone} />
-      ) : null}
-      {showEmailPill && email ? (
-        <DirectoryCardInfoPill icon={Mail} text={email} copyText={email} />
-      ) : null}
+      {showPhones
+        ? effectivePhones.map((p, idx) => (
+            <ContactPhoneAction
+              key={`phone-${p.phone}-${idx}`}
+              phone={p.phone}
+              phoneDisplay={p.phoneDisplay}
+              countryCode={p.countryCode}
+              name={displayName}
+              variant="pill"
+              disabled={showArchived}
+              onWhatsApp={onWhatsApp ? () => onWhatsApp(p.phone) : undefined}
+              onSms={onSms ? () => onSms(p.phone) : undefined}
+              onCall={onCall ? () => onCall(p.phone) : undefined}
+            />
+          ))
+        : null}
+      {showEmails
+        ? effectiveEmails.map((e, idx) => (
+            <ContactEmailAction
+              key={`email-${e.email}-${idx}`}
+              email={e.email}
+              name={displayName}
+              variant="pill"
+              disabled={showArchived}
+              onEmail={onEmail ? () => onEmail(e.email) : undefined}
+            />
+          ))
+        : null}
     </div>
   );
 });
-

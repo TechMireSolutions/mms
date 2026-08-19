@@ -13,6 +13,7 @@ import {
 import {
   TEACHERS_TAB_REGISTRY,
   teacherFieldLabelKey,
+  type Contact,
   type Teacher,
   type TeachersSettings,
 } from "@mms/shared";
@@ -20,14 +21,20 @@ import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
+import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactAction";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
+import {
+  resolveRegistryLabel,
+  resolveAllContactPhones,
+  resolveAllContactEmails,
+} from "@/lib/contacts/contactI18n";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18nFormat";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
+import { teacherMessagingLabels } from "@/lib/teachers/teacherMessagingLabels";
 import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/TeacherArchivedBanner";
 import { TeacherDetailAttributeRow } from "@/tenant/features/teachers/components/TeacherDetailAttributeRow";
 import { TeacherDetailHero } from "@/tenant/features/teachers/components/TeacherDetailHero";
@@ -168,27 +175,62 @@ export const TeacherDetail = React.memo(function TeacherDetail({
         value={teacher.gender ? formatContactGenderLabel(teacher.gender, t) : emptyDash}
       />,
     );
-    if (primaryPhone) {
-      contactRows.push(
-        <TeacherDetailAttributeRow
-          key="phone"
-          variant="inset"
-          icon={Phone}
-          label={t(teacherFieldLabelKey("phone"))}
-          value={primaryPhone}
-        />,
-      );
+    const messagingLabels = teacherMessagingLabels(t);
+    const allPhones = resolveAllContactPhones(teacher as unknown as Contact);
+    const allEmails = resolveAllContactEmails(teacher as unknown as Contact);
+
+    if (allPhones.length > 0) {
+      allPhones.forEach((p, idx) => {
+        contactRows.push(
+          <TeacherDetailAttributeRow
+            key={`phone-${p.phone}-${idx}`}
+            variant="inset"
+            icon={Phone}
+            label={p.label || t(teacherFieldLabelKey("phone"))}
+            value={
+              <ContactPhoneAction
+                phone={p.phone}
+                phoneDisplay={p.phoneDisplay}
+                countryCode={p.countryCode}
+                name={displayName}
+                variant="inline"
+                labels={{
+                  call: messagingLabels.call,
+                  sms: messagingLabels.sms,
+                  whatsapp: messagingLabels.whatsapp,
+                  copy: t("contacts.table.copy"),
+                  copied: t("contacts.table.copied"),
+                }}
+              />
+            }
+          />,
+        );
+      });
     }
-    if (primaryEmail) {
-      contactRows.push(
-        <TeacherDetailAttributeRow
-          key="email"
-          variant="inset"
-          icon={Mail}
-          label={t(teacherFieldLabelKey("email"))}
-          value={primaryEmail}
-        />,
-      );
+
+    if (allEmails.length > 0) {
+      allEmails.forEach((e, idx) => {
+        contactRows.push(
+          <TeacherDetailAttributeRow
+            key={`email-${e.email}-${idx}`}
+            variant="inset"
+            icon={Mail}
+            label={e.label || t(teacherFieldLabelKey("email"))}
+            value={
+              <ContactEmailAction
+                email={e.email}
+                name={displayName}
+                variant="inline"
+                labels={{
+                  mail: messagingLabels.email,
+                  copy: t("contacts.table.copy"),
+                  copied: t("contacts.table.copied"),
+                }}
+              />
+            }
+          />,
+        );
+      });
     }
 
     const byTab = new Map<string, TeacherDetailFieldRow[]>();

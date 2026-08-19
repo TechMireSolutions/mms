@@ -198,10 +198,10 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
                   {headerActions}
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     onClick={onClose}
-                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-full sm:rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
+                    className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border border-border/50 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
                     aria-label={t("common.close")}
                   >
                     <X className="w-4 h-4 sm:w-4.5 sm:h-4.5" />

@@ -1,15 +1,12 @@
 import { Button } from "@/components/ui/button";
+import type { Contact, ContactPreferences } from "@mms/shared";
 import {
-  getPrimaryEmail,
-  hasWhatsApp,
-  type Contact,
-  type ContactPreferences,
-} from "@mms/shared";
-import { resolveContactPhoneDisplay } from "@/lib/contacts/contactI18n";
+  resolveAllContactPhones,
+  resolveAllContactEmails,
+} from "@/lib/contacts/contactI18n";
 import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { CopyBtn } from "@/components/ui/CopyBtn";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactAction";
 import { TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { useTranslation } from "@/hooks/useTranslation";
@@ -90,41 +87,40 @@ export function renderContactPhoneCell({
   t: Translate;
   onWhatsApp?: (contacts: Contact[]) => void;
 }): React.JSX.Element {
-  const { phone: primaryPhone, countryCode, phoneDisplay: formattedNumber } = resolveContactPhoneDisplay(
-    contact,
-    prefs,
-    countryCodesMap,
-    countryCodes,
-  );
-  const hasWa = hasWhatsApp(contact);
+  const allPhones = resolveAllContactPhones(contact, prefs, countryCodesMap, countryCodes);
+  const displayName = contact.name || "";
+  const emptyDash = <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>;
+
+  if (allPhones.length === 0) {
+    return (
+      <TableCell key="phone" className="px-4 py-3" style={widthStyle}>
+        {emptyDash}
+      </TableCell>
+    );
+  }
 
   return (
     <TableCell key="phone" className="px-4 py-3" style={widthStyle}>
-      <div className="flex flex-col items-start gap-1 group/phone">
-        {primaryPhone ? (
-          <>
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
-              {countryCode && <span className="text-xs font-semibold text-muted-foreground">{countryCode}</span>}
-              <span className="text-sm font-mono text-foreground font-medium tracking-wide">
-                {formattedNumber}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              {onWhatsApp && hasWa ? (
-                <EntityMessagingIconActions
-                  primaryPhone={primaryPhone}
-                  showCall={false}
-                  labels={{ whatsapp: t("contacts.whatsapp") }}
-                  onWhatsApp={() => onWhatsApp([contact])}
-                  className="gap-1"
-                />
-              ) : null}
-              <CopyBtn text={primaryPhone} />
-            </div>
-          </>
-        ) : (
-          <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>
-        )}
+      <div className="space-y-2 min-w-0">
+        {allPhones.map((p, idx) => (
+          <ContactPhoneAction
+            key={`phone-${p.phone}-${idx}`}
+            phone={p.phone}
+            countryCode={p.countryCode}
+            phoneDisplay={p.phoneDisplay}
+            name={displayName}
+            emptyFallback={emptyDash}
+            copyToast={t("contacts.table.copied")}
+            labels={{
+              call: t("contacts.detail.call"),
+              sms: t("contacts.sms"),
+              whatsapp: t("contacts.whatsapp"),
+              copy: t("contacts.table.copy"),
+              copied: t("contacts.table.copied"),
+            }}
+            onWhatsApp={onWhatsApp ? () => onWhatsApp([contact]) : undefined}
+          />
+        ))}
       </div>
     </TableCell>
   );
@@ -139,18 +135,35 @@ export function renderContactEmailCell({
   widthStyle: CSSProperties | undefined;
   t: Translate;
 }): React.JSX.Element {
-  const primaryEmail = getPrimaryEmail(contact);
+  const allEmails = resolveAllContactEmails(contact);
+  const displayName = contact.name || "";
+  const emptyDash = <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>;
+
+  if (allEmails.length === 0) {
+    return (
+      <TableCell key="email" className="px-4 py-3" style={widthStyle}>
+        {emptyDash}
+      </TableCell>
+    );
+  }
+
   return (
     <TableCell key="email" className="px-4 py-3" style={widthStyle}>
-      <div className="flex min-w-0 flex-col items-start gap-1 group/email">
-        <span className="max-w-full truncate text-sm text-muted-foreground" title={primaryEmail || undefined}>
-          {primaryEmail || t("contacts.table.emptyDash")}
-        </span>
-        {primaryEmail && (
-          <div className="flex items-center gap-1">
-            <CopyBtn text={primaryEmail} />
-          </div>
-        )}
+      <div className="space-y-2 min-w-0">
+        {allEmails.map((e, idx) => (
+          <ContactEmailAction
+            key={`email-${e.email}-${idx}`}
+            email={e.email}
+            name={displayName}
+            emptyFallback={emptyDash}
+            copyToast={t("contacts.table.copied")}
+            labels={{
+              mail: t("contacts.detail.emailAction"),
+              copy: t("contacts.table.copy"),
+              copied: t("contacts.table.copied"),
+            }}
+          />
+        ))}
       </div>
     </TableCell>
   );

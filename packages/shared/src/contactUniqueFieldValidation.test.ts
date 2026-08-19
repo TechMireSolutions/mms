@@ -73,6 +73,18 @@ describe("normalizeUniqueContactFieldValue", () => {
       "a@b.com",
     );
   });
+
+  it("normalizes cnic to digits only", () => {
+    expect(normalizeUniqueContactFieldValue("basic", "cnic", "42101-1234567-1")).toBe(
+      "4210112345671",
+    );
+    expect(normalizeUniqueContactFieldValue("basic", "cnic", "42101 1234567 1")).toBe(
+      "4210112345671",
+    );
+    expect(normalizeUniqueContactFieldValue("basic", "cnic", "4210112345671")).toBe(
+      "4210112345671",
+    );
+  });
 });
 
 describe("findContactUniqueFieldConflicts", () => {
@@ -141,6 +153,45 @@ describe("findContactUniqueFieldConflicts", () => {
       "basic.cnic",
       "emails.address",
     ]);
+  });
+
+  it("flags duplicate cnic across contacts regardless of hyphens or spaces", () => {
+    const candidate: Partial<Contact> = {
+      id: "c2",
+      cnic: "4210112345671",
+    };
+    const peers: Contact[] = [
+      {
+        id: "c1",
+        firstName: "Ali",
+        cnic: "42101-1234567-1",
+      } as Contact,
+    ];
+
+    const errors = findContactUniqueFieldConflicts(candidate, peers, fields, "en");
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      tabId: "basic",
+      fieldId: "cnic",
+    });
+  });
+
+  it("flags duplicate emails within the same contact", () => {
+    const candidate: Partial<Contact> = {
+      id: "c1",
+      emails: [
+        { label: "Personal", address: "user@example.com" },
+        { label: "Work", address: "USER@EXAMPLE.COM" },
+      ],
+    };
+
+    const errors = findContactUniqueFieldConflicts(candidate, [], fields, "en");
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      tabId: "emails",
+      fieldId: "address",
+      index: 1,
+    });
   });
 
   it("flags duplicate phones within the same contact", () => {

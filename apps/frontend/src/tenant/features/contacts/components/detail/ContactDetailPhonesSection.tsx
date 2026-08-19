@@ -27,7 +27,12 @@ export function ContactDetailPhonesSection({
   onSms?: (contacts: Contact[]) => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const phones = contact.phones ?? [];
+  const phones =
+    contact.phones && contact.phones.length > 0
+      ? contact.phones
+      : contact.phone
+        ? [{ number: contact.phone, countryCode: defaultPhoneCountryCode, label: "Mobile" }]
+        : [];
 
   return (
     <DetailSection title={t("contacts.form.phonesLabel")}>

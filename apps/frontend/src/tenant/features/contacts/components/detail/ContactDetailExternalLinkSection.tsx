@@ -1,10 +1,15 @@
-import type { LucideIcon } from "lucide-react";
+import { MapPin, type LucideIcon } from "lucide-react";
 import {
   CollectionRowItem,
   type CollectionRowAction,
   DetailSection,
 } from "./ContactDetailShared";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
+import { cn } from "@/lib/utils";
 
 interface ContactDetailExternalLinkRow {
   key: string;
@@ -13,7 +18,7 @@ interface ContactDetailExternalLinkRow {
   href?: string;
 }
 
-/** Shared Addresses / Socials detail section: empty hint + external-link collection rows. */
+/** Shared Addresses / Socials detail section: empty hint + external-link collection rows with outlined action buttons. */
 export function ContactDetailExternalLinkSection({
   title,
   emptyMessage,
@@ -35,6 +40,10 @@ export function ContactDetailExternalLinkSection({
         <DetailCollectionEmpty title={emptyMessage} />
       ) : (
         rows.map((row) => {
+          const tone =
+            actionIcon === MapPin
+              ? MESSAGING_ICON_BTN_TONES.location
+              : MESSAGING_ICON_BTN_TONES.link;
           const actions: CollectionRowAction[] = row.href
             ? [
                 {
@@ -43,7 +52,7 @@ export function ContactDetailExternalLinkSection({
                   title: actionTitle,
                   href: row.href,
                   external: true,
-                  className: "text-primary hover:bg-primary/10",
+                  className: cn(MESSAGING_ICON_BTN, tone),
                 },
               ]
             : [];

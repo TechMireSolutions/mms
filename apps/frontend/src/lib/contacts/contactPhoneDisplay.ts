@@ -2,6 +2,10 @@ import {
   formatPhoneWithCountryCode,
   parsePhoneNumber,
   getPrimaryPhone,
+  sanitizePhoneForTel,
+  sanitizePhoneForSms,
+  sanitizePhoneForWhatsApp,
+  sanitizeEmailForMailto,
   type Contact,
   type ContactPreferences,
 } from "@mms/shared";
@@ -28,11 +32,22 @@ export function formatContactPhoneFull(
 
 /** Formats tel: link href for telephone actions. */
 export function formatTelHref(phoneStr: string | undefined | null): string {
-  if (!phoneStr) return "#";
-  const formatted = formatPhoneWithCountryCode(phoneStr);
-  const p = parsePhoneNumber(formatted || phoneStr);
-  const num = `${p.countryCode}${p.number.replace(/\s+/g, "")}`;
-  return `tel:${num || phoneStr}`;
+  return sanitizePhoneForTel(phoneStr) || "#";
+}
+
+/** Formats sms: link href for SMS actions. */
+export function formatSmsHref(phoneStr: string | undefined | null): string {
+  return sanitizePhoneForSms(phoneStr) || "#";
+}
+
+/** Formats WhatsApp wa.me link href. */
+export function formatWhatsAppHref(phoneStr: string | undefined | null): string | null {
+  return sanitizePhoneForWhatsApp(phoneStr);
+}
+
+/** Formats mailto: link href for email actions. */
+export function formatMailtoHref(emailStr: string | undefined | null): string {
+  return sanitizeEmailForMailto(emailStr) || "#";
 }
 
 /** Resolves fallback country code from prefs → mapped code → first configured code (no hardcoded dial). */
@@ -71,3 +86,103 @@ export function resolveContactPhoneDisplay(
     phoneDisplay,
   };
 }
+
+export interface ContactResolvedPhone {
+  phone: string;
+  countryCode: string;
+  phoneDisplay: string;
+  label?: string;
+  isPrimary?: boolean;
+}
+
+export interface ContactResolvedEmail {
+  email: string;
+  label?: string;
+  isPrimary?: boolean;
+}
+
+/** Resolves all phone numbers from a contact, preserving labels and country codes. */
+export function resolveAllContactPhones(
+  contact: Partial<Contact> | undefined | null,
+  prefs?: Partial<ContactPreferences>,
+  countryCodesMap?: Record<string, string>,
+  countryCodes?: Array<{ country: string; code: string }>,
+): ContactResolvedPhone[] {
+  if (!contact) return [];
+  const defaultCountryCode = getFallbackCountryCode(prefs, countryCodesMap, countryCodes);
+  const result: ContactResolvedPhone[] = [];
+  const seen = new Set<string>();
+
+  if (Array.isArray(contact.phones) && contact.phones.length > 0) {
+    for (const p of contact.phones) {
+      const num = (p.number || "").trim();
+      if (!num || seen.has(num)) continue;
+      seen.add(num);
+      const effectiveCc = p.countryCode || defaultCountryCode;
+      const { countryCode, formattedNumber: phoneDisplay } = formatContactPhoneDisplay(
+        num,
+        effectiveCc,
+      );
+      result.push({
+        phone: num,
+        countryCode,
+        phoneDisplay,
+        label: p.label,
+        isPrimary: p.isPrimary,
+      });
+    }
+  }
+
+  if (result.length === 0) {
+    const scalarPhone = typeof contact.phone === "string" ? contact.phone.trim() : "";
+    if (scalarPhone && !seen.has(scalarPhone)) {
+      const { countryCode, formattedNumber: phoneDisplay } = formatContactPhoneDisplay(
+        scalarPhone,
+        defaultCountryCode,
+      );
+      result.push({
+        phone: scalarPhone,
+        countryCode,
+        phoneDisplay,
+        isPrimary: true,
+      });
+    }
+  }
+
+  return result;
+}
+
+/** Resolves all email addresses from a contact, preserving labels. */
+export function resolveAllContactEmails(
+  contact: Partial<Contact> | undefined | null,
+): ContactResolvedEmail[] {
+  if (!contact) return [];
+  const result: ContactResolvedEmail[] = [];
+  const seen = new Set<string>();
+
+  if (Array.isArray(contact.emails) && contact.emails.length > 0) {
+    for (const e of contact.emails) {
+      const addr = (e.address || (e as unknown as Record<string, unknown>).email || "").toString().trim();
+      if (!addr || seen.has(addr.toLowerCase())) continue;
+      seen.add(addr.toLowerCase());
+      result.push({
+        email: addr,
+        label: e.label,
+        isPrimary: e.isPrimary,
+      });
+    }
+  }
+
+  if (result.length === 0) {
+    const scalarEmail = typeof contact.email === "string" ? contact.email.trim() : "";
+    if (scalarEmail && !seen.has(scalarEmail.toLowerCase())) {
+      result.push({
+        email: scalarEmail,
+        isPrimary: true,
+      });
+    }
+  }
+
+  return result;
+}
+

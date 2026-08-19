@@ -7,6 +7,11 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { ContactCardMessagingButtons } from "@/tenant/features/contacts/components/ContactCardMessagingButtons";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
+import { cn } from "@/lib/utils";
 import { DETAIL_STYLES } from "./contactDetailStyles";
 
 interface ContactNetworkLinkCardProps {
@@ -94,7 +99,7 @@ export function ContactNetworkLinkCard({
 
           {canNavigate && linkedId != null ? (
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               aria-label={
                 displayName
@@ -102,7 +107,12 @@ export function ContactNetworkLinkCard({
                   : t("contacts.fields.linkedContact")
               }
               onClick={() => onNavigateToContact(linkedId)}
-              className={`min-h-11 min-w-11 rounded-xl border border-border/50 transition-all shadow-none ${DETAIL_STYLES.networkItemAction}`}
+              className={cn(
+                MESSAGING_ICON_BTN,
+                MESSAGING_ICON_BTN_TONES.link,
+                "flex items-center justify-center shadow-none",
+                DETAIL_STYLES.networkItemAction,
+              )}
               type="button"
             >
               <ArrowUpRight className="w-4 h-4" />

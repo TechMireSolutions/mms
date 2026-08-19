@@ -6,6 +6,8 @@ import {
   formatTelHref,
   getFallbackCountryCode,
   resolveContactPhoneDisplay,
+  resolveAllContactPhones,
+  resolveAllContactEmails,
 } from "@/lib/contacts/contactPhoneDisplay";
 
 describe("formatContactPhoneDisplay", () => {
@@ -111,5 +113,85 @@ describe("resolveContactPhoneDisplay", () => {
       countryCode: "+92",
       phoneDisplay: "",
     });
+  });
+});
+
+describe("resolveAllContactPhones", () => {
+  it("resolves all phone entries with proper formatting and labels", () => {
+    const contact: Contact = {
+      id: "c1",
+      name: "Ali",
+      firstName: "Ali",
+      phones: [
+        { label: "Mobile", number: "+923001234567", countryCode: "+92", isPrimary: true },
+        { label: "Office", number: "+15551234567", countryCode: "+1" },
+      ],
+    };
+    const phones = resolveAllContactPhones(contact);
+    expect(phones).toHaveLength(2);
+    expect(phones[0]).toEqual({
+      phone: "+923001234567",
+      countryCode: "+92",
+      phoneDisplay: "3001234567",
+      label: "Mobile",
+      isPrimary: true,
+    });
+    expect(phones[1]).toEqual({
+      phone: "+15551234567",
+      countryCode: "+1",
+      phoneDisplay: "5551234567",
+      label: "Office",
+      isPrimary: undefined,
+    });
+  });
+
+  it("falls back to scalar phone if phones array is missing", () => {
+    const contact: Contact = {
+      id: "c2",
+      name: "Omar",
+      firstName: "Omar",
+      phone: "+923442241024",
+    };
+    const phones = resolveAllContactPhones(contact, undefined, { PK: "+92" });
+    expect(phones).toHaveLength(1);
+    expect(phones[0]?.phone).toBe("+923442241024");
+  });
+});
+
+describe("resolveAllContactEmails", () => {
+  it("resolves all email entries with labels", () => {
+    const contact: Contact = {
+      id: "c1",
+      name: "Ali",
+      firstName: "Ali",
+      emails: [
+        { label: "Personal", address: "ali@gmail.com", isPrimary: true },
+        { label: "Work", address: "ali@work.org" },
+      ],
+    };
+    const emails = resolveAllContactEmails(contact);
+    expect(emails).toHaveLength(2);
+    expect(emails[0]).toEqual({
+      email: "ali@gmail.com",
+      label: "Personal",
+      isPrimary: true,
+    });
+    expect(emails[1]).toEqual({
+      email: "ali@work.org",
+      label: "Work",
+      isPrimary: undefined,
+    });
+  });
+
+  it("falls back to scalar email if emails array is missing", () => {
+    const contact: Contact = {
+      id: "c2",
+      name: "Omar",
+      firstName: "Omar",
+      email: "omar@madrasa.org",
+    };
+    const emails = resolveAllContactEmails(contact);
+    expect(emails).toHaveLength(1);
+    expect(emails[0]?.email).toBe("omar@madrasa.org");
   });
 });

@@ -3,6 +3,10 @@ export {
   formatContactPhoneFull,
   getFallbackCountryCode,
   resolveContactPhoneDisplay,
+  resolveAllContactPhones,
+  resolveAllContactEmails,
+  type ContactResolvedPhone,
+  type ContactResolvedEmail,
 } from "@/lib/contacts/contactPhoneDisplay";
 
 export {

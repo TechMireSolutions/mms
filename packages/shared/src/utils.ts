@@ -1,5 +1,6 @@
 /** Compatibility barrel for shared utility modules. */
 export * from "./phoneUtils.js";
+export * from "./contactSanitization.js";
 export * from "./moneyFormatUtils.js";
 export * from "./titleCaseUtils.js";
 export * from "./paginationUtils.js";

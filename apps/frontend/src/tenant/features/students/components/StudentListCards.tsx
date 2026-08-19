@@ -1,3 +1,4 @@
+import { toMessagingRecipient } from "@mms/shared";
 import { DirectoryCardInfoPills } from "@/components/ui/DirectoryCardInfoPills";
 import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
@@ -87,8 +88,25 @@ export function StudentListCards({
                 phone={phone}
                 phoneDisplay={phone}
                 email={email}
+                displayName={displayName}
                 showPhone={isColumnVisible("phone")}
                 showEmail={isColumnVisible("email")}
+                showArchived={viewingDeleted}
+                onWhatsApp={
+                  canWriteMessaging && onOpenComposer && phone
+                    ? () => onOpenComposer("whatsapp", [toMessagingRecipient(studentCard)])
+                    : undefined
+                }
+                onSms={
+                  canWriteMessaging && onOpenComposer && phone
+                    ? () => onOpenComposer("sms", [toMessagingRecipient(studentCard)])
+                    : undefined
+                }
+                onEmail={
+                  canWriteMessaging && onOpenComposer && email
+                    ? () => onOpenComposer("email", [toMessagingRecipient(studentCard)])
+                    : undefined
+                }
               />
 
               <StudentCardMetadata

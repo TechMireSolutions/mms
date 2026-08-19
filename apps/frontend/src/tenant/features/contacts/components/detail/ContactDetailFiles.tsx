@@ -5,6 +5,11 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DashedFileDropZone } from "@/components/ui/DashedFileDropZone";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
+import { cn } from "@/lib/utils";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 
 interface ContactDetailFilesProps {
@@ -78,19 +83,26 @@ export function ContactDetailFiles({
                   href={file.url}
                   download={file.name}
                   aria-label={t("contacts.detail.downloadFile", { name: file.name })}
-                  className="min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-all"
+                  className={cn(
+                    MESSAGING_ICON_BTN,
+                    MESSAGING_ICON_BTN_TONES.link,
+                    "flex items-center justify-center",
+                  )}
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
                 {canPersistContact && (
                   <Button
                     variant="ghost"
                     aria-label={t("contacts.detail.deleteFile", { name: file.name })}
                     onClick={() => onRequestDelete({ id: file.id, name: file.name })}
-                    className="min-w-11 min-h-11 flex items-center justify-center rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all shadow-none"
+                    className={cn(
+                      MESSAGING_ICON_BTN,
+                      "border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 flex items-center justify-center shadow-none",
+                    )}
                     type="button"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 )}
               </div>

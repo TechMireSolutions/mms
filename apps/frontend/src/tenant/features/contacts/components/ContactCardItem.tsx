@@ -92,11 +92,20 @@ export function ContactCardItem({
       />
 
       <ContactCardInfoPills
+        contact={contact}
+        prefs={prefs}
+        countryCodesMap={countryCodesMap}
+        countryCodes={countryCodes}
         phone={phone}
         countryCode={countryCode}
         phoneDisplay={phoneDisplay}
         email={email}
+        displayName={displayName}
+        showArchived={showArchived}
         isColumnVisible={isColumnVisible}
+        onWhatsApp={onWhatsApp}
+        onSms={onSms}
+        onEmail={onEmail}
       />
 
       <ContactCardMetadataGrid

@@ -1,12 +1,10 @@
 import {
-  hasWhatsApp,
   toMessagingRecipient,
   type ModuleColumnRegistryEntry,
   type Student,
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-import { CopyBtn } from "@/components/ui/CopyBtn";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
+import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactAction";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -108,53 +106,51 @@ export function renderStudentListDesktopTableCell({
       );
     case "phone": {
       const phone = studentRow.phone?.trim() || null;
-      const hasWa = hasWhatsApp(studentRow);
       return (
-        <div className="flex flex-col items-start gap-1 group/phone">
-          {phone ? (
-            <>
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
-                <span className="max-w-full truncate text-sm font-mono text-foreground font-medium tracking-wide" title={phone}>
-                  {phone}
-                </span>
-              </div>
-              <div
-                className="flex items-center gap-1"
-                onClick={(event) => event.stopPropagation()}
-              >
-                {canWriteMessaging && hasWa ? (
-                  <EntityMessagingIconActions
-                    primaryPhone={phone}
-                    showCall={false}
-                    labels={{ whatsapp: t("students.list.actionWhatsApp") }}
-                    onWhatsApp={() =>
-                      onOpenComposer("whatsapp", [toMessagingRecipient(studentRow)])
-                    }
-                    className="gap-1"
-                  />
-                ) : null}
-                <CopyBtn text={phone} />
-              </div>
-            </>
-          ) : (
-            <span className="text-sm text-muted-foreground">{emptyDash}</span>
-          )}
-        </div>
+        <ContactPhoneAction
+          phone={phone}
+          name={displayName}
+          disabled={viewingDeleted}
+          emptyFallback={<span className="text-sm text-muted-foreground">{emptyDash}</span>}
+          labels={{
+            call: t("students.detail.call"),
+            sms: t("students.list.actionSms"),
+            whatsapp: t("students.list.actionWhatsApp"),
+            copy: t("contacts.table.copy"),
+            copied: t("contacts.table.copied"),
+          }}
+          onWhatsApp={
+            canWriteMessaging && phone
+              ? () => onOpenComposer("whatsapp", [toMessagingRecipient(studentRow)])
+              : undefined
+          }
+          onSms={
+            canWriteMessaging && phone
+              ? () => onOpenComposer("sms", [toMessagingRecipient(studentRow)])
+              : undefined
+          }
+        />
       );
     }
     case "email": {
       const email = studentRow.email?.trim() || null;
       return (
-        <div className="flex min-w-0 flex-col items-start gap-1 group/email">
-          <span className="max-w-full truncate text-sm text-muted-foreground" title={email || undefined}>
-            {email || emptyDash}
-          </span>
-          {email ? (
-            <div className="flex items-center gap-1">
-              <CopyBtn text={email} />
-            </div>
-          ) : null}
-        </div>
+        <ContactEmailAction
+          email={email}
+          name={displayName}
+          disabled={viewingDeleted}
+          emptyFallback={<span className="text-sm text-muted-foreground">{emptyDash}</span>}
+          labels={{
+            mail: t("students.list.actionEmail"),
+            copy: t("contacts.table.copy"),
+            copied: t("contacts.table.copied"),
+          }}
+          onEmail={
+            canWriteMessaging && email
+              ? () => onOpenComposer("email", [toMessagingRecipient(studentRow)])
+              : undefined
+          }
+        />
       );
     }
     case "dob":

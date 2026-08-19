@@ -60,6 +60,7 @@ describe("buildDetailPhoneMessagingActions", () => {
       onSms: vi.fn(),
     });
     expect(actions.map((a) => a.key)).toEqual(["call", "whatsapp", "sms"]);
+    expect(actions[0]?.className).toContain("border-info");
     expect(actions[1]?.className).toContain("border-success");
     expect(actions[2]?.className).toContain("border-primary");
   });

@@ -1,6 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import {
+  MESSAGING_ICON_BTN,
+  MESSAGING_ICON_BTN_TONES,
+} from "@/components/ui/messagingActionStyles";
 import { cn } from "@/lib/utils";
 
 export interface CollectionRowAction {
@@ -24,7 +28,11 @@ function RowActionButton({ action }: { action: CollectionRowAction }): JSX.Eleme
   const Icon = action.icon;
   const className = action.className
     ? cn("inline-flex items-center justify-center", action.className)
-    : "min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10";
+    : cn(
+        MESSAGING_ICON_BTN,
+        MESSAGING_ICON_BTN_TONES.link,
+        "inline-flex items-center justify-center",
+      );
 
   if (action.href) {
     return (
@@ -44,7 +52,7 @@ function RowActionButton({ action }: { action: CollectionRowAction }): JSX.Eleme
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="outline"
       size="icon"
       onClick={action.onClick}
       aria-label={action.title}
@@ -78,7 +86,11 @@ export function CollectionRowItem({
             <CopyBtn
               text={value}
               showToast
-              className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-foreground flex items-center justify-center opacity-100"
+              className={cn(
+                MESSAGING_ICON_BTN,
+                MESSAGING_ICON_BTN_TONES.copy,
+                "flex items-center justify-center opacity-100",
+              )}
             />
           )}
           {(actions ?? []).map((action) => (

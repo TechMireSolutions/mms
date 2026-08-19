@@ -276,6 +276,7 @@ export * from './whatsappProvider.js';
 // ---------------------------------------------------------------------------
 export * from './ageUtils.js';
 export * from './blueprintVersionUtils.js';
+export * from './contactSanitization.js';
 export * from './csvUtils.js';
 export * from './gradeUtils.js';
 export * from './identityFormatUtils.js';

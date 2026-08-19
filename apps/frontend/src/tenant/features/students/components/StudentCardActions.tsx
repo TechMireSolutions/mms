@@ -1,8 +1,7 @@
-import { toMessagingRecipient, type Student } from "@mms/shared";
+import type { Student } from "@mms/shared";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
 import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentListActionsMenu } from "@/tenant/features/students/components/StudentListActionsMenu";
 import type { StudentListMessagingRecipient } from "@/tenant/features/students/components/StudentListContentTypes";
@@ -33,7 +32,6 @@ export function StudentCardActions({
   viewingDeleted,
   canWrite,
   canDelete,
-  canWriteMessaging,
   onViewStudent,
   onEdit,
   onDelete,
@@ -42,50 +40,8 @@ export function StudentCardActions({
 }: StudentCardActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const phone = student.phone?.trim() || null;
-  const email = student.email?.trim() || null;
-  const messagingEnabled = canWriteMessaging && !viewingDeleted && Boolean(onOpenComposer);
-  const hasFaceChannels = messagingEnabled && (Boolean(phone) || Boolean(email));
-
   return (
     <DirectoryCardFooter
-      leading={
-        hasFaceChannels ? (
-          <EntityMessagingIconActions
-            primaryPhone={phone}
-            primaryEmail={email}
-            showArchived={viewingDeleted}
-            messagingEnabled={messagingEnabled}
-            labels={{
-              call: t("students.detail.call"),
-              whatsapp: t("students.list.actionWhatsApp"),
-              sms: t("students.list.actionSms"),
-              email: t("students.list.actionEmail"),
-            }}
-            callAriaLabel={
-              phone ? t("students.detail.callPhone", { phone }) : t("students.detail.call")
-            }
-            whatsappAriaLabel={t("students.list.actionWhatsApp")}
-            smsAriaLabel={t("students.list.actionSms")}
-            emailAriaLabel={t("students.list.actionEmail")}
-            onWhatsApp={
-              onOpenComposer && phone
-                ? () => onOpenComposer("whatsapp", [toMessagingRecipient(student)])
-                : undefined
-            }
-            onSms={
-              onOpenComposer && phone
-                ? () => onOpenComposer("sms", [toMessagingRecipient(student)])
-                : undefined
-            }
-            onEmail={
-              onOpenComposer && email
-                ? () => onOpenComposer("email", [toMessagingRecipient(student)])
-                : undefined
-            }
-          />
-        ) : undefined
-      }
       trailing={
         <>
           <DirectoryCardViewButton
@@ -99,7 +55,7 @@ export function StudentCardActions({
             viewingDeleted={viewingDeleted}
             canWrite={canWrite}
             canDelete={canDelete}
-            includeMessaging={messagingEnabled && !hasFaceChannels}
+            includeMessaging={Boolean(onOpenComposer) && !viewingDeleted}
             hideViewItem
             triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
             contentClassName="w-40"

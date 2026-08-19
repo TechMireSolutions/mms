@@ -82,6 +82,10 @@ export function normalizeUniqueContactFieldValue(
     return String(raw).trim().toLowerCase();
   }
 
+  if (fieldKey === "cnic" || (tabId === "basic" && fieldKey === "cnic") || fieldKey.toLowerCase().includes("cnic")) {
+    return String(raw).replace(/\D/g, "");
+  }
+
   if (typeof raw === "boolean") {
     return raw ? "true" : "false";
   }
