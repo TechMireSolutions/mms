@@ -12,6 +12,10 @@ export interface RegistryDateFieldProps {
   min?: string;
   max?: string;
   placeholder?: string;
+  error?: boolean;
+  "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
 /** Thin DatePicker wrapper for module registry / custom fields (ModuleFieldDef). */
@@ -26,6 +30,10 @@ export function RegistryDateField({
   min,
   max,
   placeholder,
+  error,
+  "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
 }: RegistryDateFieldProps): React.JSX.Element {
   return (
     <DatePicker
@@ -39,6 +47,9 @@ export function RegistryDateField({
       min={min}
       max={max}
       placeholder={placeholder}
+      aria-label={ariaLabel}
+      aria-invalid={ariaInvalid ?? error}
+      aria-describedby={ariaDescribedBy}
     />
   );
 }

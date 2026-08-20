@@ -218,6 +218,12 @@ export function ContactExperienceTab({
                         required={isFieldRequired("experience", "startDate")}
                         onChange={(dateStr) => updateExperience(idx, { startDate: dateStr })}
                         placeholder={t("contacts.form.startDatePlaceholder")}
+                        max={exp.endDate || undefined}
+                        aria-invalid={Boolean(startDateError)}
+                        className={cn(
+                          startDateError &&
+                            "border-destructive focus-within:border-destructive focus-within:ring-destructive",
+                        )}
                       />
                     </Field>
                   ) : null}
@@ -236,7 +242,17 @@ export function ContactExperienceTab({
                         disabled={Boolean(exp.isCurrent)}
                         required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
                         onChange={(dateStr) => updateExperience(idx, { endDate: dateStr })}
-                        placeholder={exp.isCurrent ? t("contacts.form.present") : t("contacts.form.endDatePlaceholder")}
+                        placeholder={
+                          exp.isCurrent
+                            ? t("contacts.form.present")
+                            : t("contacts.form.endDatePlaceholder")
+                        }
+                        min={exp.startDate || undefined}
+                        aria-invalid={Boolean(endDateError)}
+                        className={cn(
+                          endDateError &&
+                            "border-destructive focus-within:border-destructive focus-within:ring-destructive",
+                        )}
                       />
                     </Field>
                   ) : null}

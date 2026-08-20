@@ -123,8 +123,20 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
     setInputValue(formatIsoDateToDisplay(value || "", dateFormat))
   }
 
-  const handleClear = (event: React.MouseEvent) => {
-    event.stopPropagation()
+  const isTodayAllowed = React.useMemo(() => {
+    return isDateWithinIsoBounds(new Date(), min, max)
+  }, [min, max])
+
+  const handleSelectToday = () => {
+    const today = new Date()
+    if (isTodayAllowed) {
+      commitIso(formatDateToIso(today), today)
+      setOpen(false)
+    }
+  }
+
+  const handleClear = (event?: React.MouseEvent | React.SyntheticEvent) => {
+    event?.stopPropagation()
     clearValue()
   }
 
@@ -140,7 +152,9 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
     disabledDays,
     startMonth,
     endMonth,
+    isTodayAllowed,
     handleSelect,
+    handleSelectToday,
     handleInputChange,
     handleBlur,
     handleClear,

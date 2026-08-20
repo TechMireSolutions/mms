@@ -98,6 +98,7 @@ export function AccountingFiscalYearModal({
               name="startDate"
               value={form.startDate || ""}
               onChange={(startDateValue) => setForm({ ...form, startDate: startDateValue })}
+              max={form.endDate || undefined}
               required
             />
           </div>
@@ -108,6 +109,7 @@ export function AccountingFiscalYearModal({
               name="endDate"
               value={form.endDate || ""}
               onChange={(endDateValue) => setForm({ ...form, endDate: endDateValue })}
+              min={form.startDate || undefined}
               required
             />
           </div>

@@ -82,6 +82,7 @@ export function SessionDetailsSection({
               name="startDate"
               value={sessionDraft.startDate || undefined}
               onChange={(dateStr) => onDraftChange({ startDate: dateStr })}
+              max={sessionDraft.endDate || undefined}
               required
             />
           </Field>
@@ -92,6 +93,7 @@ export function SessionDetailsSection({
               name="endDate"
               value={sessionDraft.endDate || undefined}
               onChange={(dateStr) => onDraftChange({ endDate: dateStr })}
+              min={sessionDraft.startDate || undefined}
               required
             />
           </Field>

@@ -217,6 +217,7 @@ export const CustomFieldInput = React.memo(function CustomFieldInput({
         onChange={(dateVal) => onChange(dateVal)}
         required={Boolean(field.required)}
         disabled={disabled}
+        error={error}
         className={
           error
             ? "border-destructive focus-within:border-destructive focus-within:ring-destructive"

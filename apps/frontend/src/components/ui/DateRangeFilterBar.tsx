@@ -64,6 +64,7 @@ export function DateRangeFilterBar({
             onChange={onDateFromChange}
             placeholder={fromPlaceholder}
             className={pickerClassName}
+            max={dateTo || undefined}
           />
         </div>
       ) : null}
@@ -84,6 +85,7 @@ export function DateRangeFilterBar({
             onChange={onDateToChange}
             placeholder={toPlaceholder}
             className={pickerClassName}
+            min={dateFrom || undefined}
           />
         </div>
       ) : null}

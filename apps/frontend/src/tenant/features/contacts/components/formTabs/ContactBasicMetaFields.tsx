@@ -4,7 +4,8 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type Contact, formatCnic } from "@mms/shared";
+import { type Contact, formatCnic, todayISO } from "@mms/shared";
+import { cn } from "@/lib/utils";
 
 export function ContactBasicMetaFields({
   contactDraft,
@@ -23,6 +24,7 @@ export function ContactBasicMetaFields({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const isSyedId = `cf-${formInstanceId}-isSyed`;
+  const dobError = getFieldError("dob");
 
   return (
     <>
@@ -30,7 +32,7 @@ export function ContactBasicMetaFields({
         <Field
           label={t("contacts.fields.dob")}
           required={isFieldRequired("basic", "dob")}
-          error={getFieldError("dob")}
+          error={dobError}
           id={`cf-${formInstanceId}-dob`}
         >
           <DatePicker
@@ -39,6 +41,12 @@ export function ContactBasicMetaFields({
             value={contactDraft.dob || undefined}
             onChange={(dateStr) => updateDraft({ dob: dateStr })}
             required={isFieldRequired("basic", "dob")}
+            max={todayISO()}
+            aria-invalid={Boolean(dobError)}
+            className={cn(
+              dobError &&
+                "border-destructive focus-within:border-destructive focus-within:ring-destructive",
+            )}
           />
         </Field>
       )}
