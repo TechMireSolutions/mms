@@ -43,7 +43,7 @@ export function ListFieldCard({
       style={{ zIndex: 100 - index }}
       className={cn(FORM_CARD, "p-4.5 space-y-4", CARD_STRIPE_INSET)}
     >
-      <div className={cn(CARD_STRIPE_BASE, "transition-colors", accentClass)} />
+      <div aria-hidden="true" className={cn(CARD_STRIPE_BASE, "transition-colors", accentClass)} />
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-border/50">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-muted/70", iconClass)}>

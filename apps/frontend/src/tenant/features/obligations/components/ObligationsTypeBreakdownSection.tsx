@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BarChart2 } from "lucide-react";
@@ -59,7 +61,7 @@ export function ObligationsTypeBreakdownSection({
           const sharePercent = totalAmount ? (typeBreakdownItem.total / totalAmount) * 100 : 0;
 
           return (
-            <Card key={typeBreakdownItem.name} accentColor="primary" className="p-4 space-y-1.5 transition-all">
+            <Card key={typeBreakdownItem.name} accentColor="primary" className={cn("p-4 space-y-1.5 transition-all", CARD_STRIPE_INSET)}>
               <header className="flex min-w-0 items-center justify-between gap-2">
                 <h3 className="min-w-0 truncate text-xs font-bold text-foreground m-0">{typeBreakdownItem.name}</h3>
                 <Badge pill variant="outline" className="shrink-0 px-1.5 font-bold text-white border-transparent" style={{ background: colors[index % colors.length] }}>

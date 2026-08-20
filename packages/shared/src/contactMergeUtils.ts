@@ -8,6 +8,9 @@ import {
   type ContactExperience,
   type ContactSkill,
   type RelationshipContact,
+  type ContactActivity,
+  type ContactAttachment,
+  getContactTags,
 } from "./contactTypes.js";
 
 // ── Merging Logic ──────────────────────────────────────────────────────────
@@ -29,7 +32,13 @@ export const mergeContacts = (
       key === "socials" ||
       key === "education" ||
       key === "experience" ||
+      key === "skills" ||
       key === "relationshipContacts" ||
+      key === "relationships" ||
+      key === "activities" ||
+      key === "attachments" ||
+      key === "tag" ||
+      key === "tags" ||
       key === "notes" ||
       key === "createdAt" ||
       key === "updatedAt"
@@ -46,7 +55,12 @@ export const mergeContacts = (
   const last = (merged.lastName as string | undefined) || "";
   merged.name = [first, last].filter(Boolean).join(" ") || merged.name;
 
-
+  // Merge tags: union unique tags
+  const combinedTags = [...new Set([...getContactTags(keep), ...getContactTags(other)])];
+  if (combinedTags.length > 0) {
+    merged.tags = combinedTags;
+    merged.tag = combinedTags.join(", ");
+  }
 
   // Merge phones list: match by normalized number
   const seenNumbers = new Set<string>();
@@ -195,6 +209,44 @@ export const mergeContacts = (
   (keep.relationshipContacts || []).forEach(addRelationshipContact);
   (other.relationshipContacts || []).forEach(addRelationshipContact);
   merged.relationshipContacts = mergedRelationshipContacts;
+
+  // Merge activities / timeline notes: match by id & content
+  const seenActivities = new Set<string>();
+  const mergedActivities: ContactActivity[] = [];
+
+  const addActivity = (act: ContactActivity | undefined): void => {
+    if (!act || !act.content) return;
+    const key = `${act.id || ""}|${act.type || ""}|${act.date || ""}|${act.content.trim()}`;
+    if (!seenActivities.has(key)) {
+      seenActivities.add(key);
+      mergedActivities.push({ ...act });
+    }
+  };
+
+  (keep.activities || []).forEach(addActivity);
+  (other.activities || []).forEach(addActivity);
+  if (mergedActivities.length > 0) {
+    merged.activities = mergedActivities;
+  }
+
+  // Merge attachments / uploaded files: match by URL or name+size
+  const seenAttachments = new Set<string>();
+  const mergedAttachments: ContactAttachment[] = [];
+
+  const addAttachment = (att: ContactAttachment | undefined): void => {
+    if (!att || (!att.url && !att.name)) return;
+    const key = (att.url ? att.url.trim().toLowerCase() : `${att.name.trim().toLowerCase()}|${att.size || 0}`);
+    if (!seenAttachments.has(key)) {
+      seenAttachments.add(key);
+      mergedAttachments.push({ ...att });
+    }
+  };
+
+  (keep.attachments || []).forEach(addAttachment);
+  (other.attachments || []).forEach(addAttachment);
+  if (mergedAttachments.length > 0) {
+    merged.attachments = mergedAttachments;
+  }
 
   return merged;
 };

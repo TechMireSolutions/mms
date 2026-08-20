@@ -5,7 +5,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { EXAMINATION_SUBJECT_OPTIONS } from "./examinationFormConstants";
@@ -28,11 +28,12 @@ export const ExaminationFormFields = React.memo(function ExaminationFormFields({
 
       return (
         <div className="space-y-5 text-start">
-          <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
-            <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
-              <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("examinations.form.section.parameters")}</h3>
-            </div>
+          <SectionCard
+            accentColor="primary"
+            icon={BookOpen}
+            title={t("examinations.form.section.parameters")}
+            className="shadow-sm"
+          >
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
@@ -177,7 +178,7 @@ export const ExaminationFormFields = React.memo(function ExaminationFormFields({
                 </Field>
               </div>
             </div>
-          </Card>
+          </SectionCard>
         </div>
       );
     });

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_CARD } from '@/components/ui/formStyles';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import {
@@ -55,23 +55,24 @@ export function JournalEntryLinesEditor({
   const { t } = useTranslation();
 
   return (
-    <div className={FORM_CARD}>
-      <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
-        <div className="flex items-center justify-between pb-1.5 border-b border-border/40 mb-2">
-          <div className="flex items-center gap-2.5">
-            <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.linesTitle")}</h3>
-          </div>
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            onClick={onAddLine}
-            className="flex items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.form.addLine")}
-          </Button>
-        </div>
+    <SectionCard
+      accentColor="primary"
+      icon={BookOpen}
+      title={t("accounting.journal.form.linesTitle")}
+      actions={
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          onClick={onAddLine}
+          className="flex items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.form.addLine")}
+        </Button>
+      }
+      className="shadow-sm text-start space-y-4"
+    >
+      <div className="space-y-4">
 
         <div className="rounded-xl border border-border overflow-hidden">
           <JournalEntryLinesEditorMobile
@@ -185,7 +186,7 @@ export function JournalEntryLinesEditor({
         </div>
         <FieldErrorMessage message={errors.lines} />
         <FieldErrorMessage message={errors.balance} />
-      </fieldset>
-    </div>
+      </div>
+    </SectionCard>
   );
 }

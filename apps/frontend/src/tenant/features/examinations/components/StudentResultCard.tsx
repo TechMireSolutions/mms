@@ -5,8 +5,10 @@ import { Exam } from '@/lib/data/examinationData';
 import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
+import { Card } from "@/components/ui/card";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface StudentResultItem {
@@ -130,21 +132,22 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
         </div>
 
         {/* Exam info */}
-        <section className="relative overflow-hidden group/examinfo px-5.5 py-4 space-y-2 border-t border-border/60 text-sm text-muted-foreground" aria-label={t("examinations.resultCard.examDetailsAria")}>
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/examinfo:bg-primary" />
-          <div className="flex justify-between ms-1">
-            <span>{t("examinations.resultCard.exam")}</span>
-            <span className="font-semibold text-foreground">{exam.name}</span>
+        <Card accentColor="primary" className="p-4 space-y-2 text-sm text-muted-foreground" aria-label={t("examinations.resultCard.examDetailsAria")}>
+          <div className={cn("space-y-2", CARD_STRIPE_INSET)}>
+            <div className="flex justify-between">
+              <span>{t("examinations.resultCard.exam")}</span>
+              <span className="font-semibold text-foreground">{exam.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>{t("examinations.resultCard.subject")}</span>
+              <span className="font-semibold text-foreground">{exam.subject}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>{t("examinations.resultCard.date")}</span>
+              <span className="font-semibold text-foreground">{formatDate(exam.date, true)}</span>
+            </div>
           </div>
-          <div className="flex justify-between ms-1">
-            <span>{t("examinations.resultCard.subject")}</span>
-            <span className="font-semibold text-foreground">{exam.subject}</span>
-          </div>
-          <div className="flex justify-between ms-1">
-            <span>{t("examinations.resultCard.date")}</span>
-            <span className="font-semibold text-foreground">{formatDate(exam.date, true)}</span>
-          </div>
-        </section>
+        </Card>
 
       </div>
     </Modal>

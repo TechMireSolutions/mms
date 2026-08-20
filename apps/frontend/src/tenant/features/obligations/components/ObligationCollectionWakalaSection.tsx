@@ -4,7 +4,7 @@ import { Mujtahid, MujtahidRep, ObligationType } from '@/lib/data/obligationsDat
 import { type AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { Card } from '@/components/ui/card';
+import { SectionCard } from '@/components/ui/SectionCard';
 import type { ObligationCollectionFormState } from './ObligationCollectionFormFields';
 
 interface ObligationCollectionWakalaSectionProps {
@@ -38,12 +38,13 @@ export function ObligationCollectionWakalaSection({
   const { t } = useTranslation();
 
   return (
-    <Card accentColor="primary" className="p-0">
-      <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
-        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
-          <User className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('obligations.form.section.wakala')}</h3>
-        </div>
+    <SectionCard
+      accentColor="primary"
+      icon={User}
+      title={t('obligations.form.section.wakala')}
+      className="p-0 text-start"
+    >
+      <fieldset className="space-y-4 border-0 m-0 p-0 text-start">
         <div className="space-y-4">
           {formField('obligation_type_id', t('obligations.form.obligationType'), true,
             <FormSelect
@@ -93,6 +94,6 @@ export function ObligationCollectionWakalaSection({
           )}
         </div>
       </fieldset>
-    </Card>
+    </SectionCard>
   );
 }

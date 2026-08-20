@@ -4,9 +4,10 @@ import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { Card } from "@/components/ui/card";
+import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { cn } from "@/lib/utils";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET, SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDate } from "@mms/shared";
@@ -92,12 +93,13 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
         </div>
 
         {/* Fee breakdown */}
-        <article className={cn(WORK_SURFACE_INNER, "relative overflow-hidden group/breakdown rounded-xl")}>
-          <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/60" />
-          <header className="px-4 py-2 bg-muted/30 border-b border-border ps-5">
-            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("finance.detail.breakdown")}</h4>
-          </header>
-          <div className="divide-y divide-border/50">
+        <Card accentColor="primary" className="p-0 overflow-hidden">
+          <CardTitleBar
+            headingLevel={3}
+            inset
+            title={t("finance.detail.breakdown")}
+          />
+          <div className={cn("divide-y divide-border/50", CARD_STRIPE_INSET)}>
             {rows.map((row) => (
               <div key={row.label} className={`flex items-center justify-between px-4 py-2.5 ${row.highlight ? "bg-primary/5" : ""}`}>
                 <span className={`text-sm ${row.highlight ? "font-bold text-foreground" : "text-muted-foreground"}`}>{row.label}</span>
@@ -105,7 +107,7 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
               </div>
             ))}
           </div>
-        </article>
+        </Card>
 
         {/* Payment info */}
         {invoice.paidDate && (

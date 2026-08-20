@@ -7,6 +7,8 @@ import {
   contactRelationships,
   students,
   teachers,
+  tenantUsers,
+  messageLogs,
 } from '../schema.js';
 import { withTenantTransaction } from '../withTenantTransaction.js';
 import { activeWorkspaceWhere } from './contactRepositoryAggregateHelpers.js';
@@ -203,7 +205,7 @@ export async function findContactDuplicateBlockedIds(
   });
 }
 
-/** Re-parents relationships and student/teacher foreign keys when merging deleteId into keepId. */
+/** Re-parents relationships and student/teacher/user/message foreign keys when merging deleteId into keepId. */
 export async function reparentContactReferences(
   tenant: string,
   keepId: string,
@@ -211,15 +213,18 @@ export async function reparentContactReferences(
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenantTransaction(subdomain, async (tx) => {
-    // 1. Remove relationship links that would create a self-loop (contactId = keepId and relatedContactId = deleteId)
+    // 1. Remove relationship links that would create a self-loop (keepId <-> deleteId or deleteId <-> deleteId)
     await tx.execute(sql`
       DELETE FROM ${contactRelationships}
       WHERE workspace_subdomain = ${subdomain}
-        AND contact_id = ${keepId}
-        AND related_contact_id = ${deleteId}
+        AND (
+          (contact_id = ${keepId} AND related_contact_id = ${deleteId})
+          OR (contact_id = ${deleteId} AND related_contact_id = ${keepId})
+          OR (contact_id = ${deleteId} AND related_contact_id = ${deleteId})
+        )
     `);
 
-    // 2. Remove relationship links that would become duplicate tuples upon re-parenting
+    // 2. Remove relationship links where related_contact_id is deleteId that would become duplicate tuples upon re-parenting
     await tx.execute(sql`
       DELETE FROM ${contactRelationships} cr_delete
       WHERE workspace_subdomain = ${subdomain}
@@ -233,27 +238,64 @@ export async function reparentContactReferences(
         )
     `);
 
-    // 3. Re-point remaining contact_relationships relatedContactId: deleteId -> keepId
+    // 2b. Remove relationship links where contact_id is deleteId that would become duplicate tuples upon re-parenting to keepId
+    await tx.execute(sql`
+      DELETE FROM ${contactRelationships} cr_delete
+      WHERE workspace_subdomain = ${subdomain}
+        AND contact_id = ${deleteId}
+        AND EXISTS (
+          SELECT 1 FROM ${contactRelationships} cr_keep
+          WHERE cr_keep.workspace_subdomain = cr_delete.workspace_subdomain
+            AND cr_keep.contact_id = ${keepId}
+            AND cr_keep.related_contact_id = cr_delete.related_contact_id
+            AND cr_keep.relationship = cr_delete.relationship
+        )
+    `);
+
+    // 3. Re-point remaining contact_relationships relatedContactId & contactId: deleteId -> keepId
     await tx.execute(sql`
       UPDATE ${contactRelationships}
       SET related_contact_id = ${keepId}
       WHERE workspace_subdomain = ${subdomain}
         AND related_contact_id = ${deleteId}
     `);
+    await tx.execute(sql`
+      UPDATE ${contactRelationships}
+      SET contact_id = ${keepId}
+      WHERE workspace_subdomain = ${subdomain}
+        AND contact_id = ${deleteId}
+    `);
 
-    // 4. Re-parent student guardian / father / mother contact links
+    // 4. Re-parent student contact links (student contactId, guardian, father, mother)
     await tx.execute(sql`
       UPDATE ${students}
-      SET guardian_contact_id = CASE WHEN guardian_contact_id = ${deleteId} THEN ${keepId} ELSE guardian_contact_id END,
+      SET contact_id = CASE WHEN contact_id = ${deleteId} THEN ${keepId} ELSE contact_id END,
+          guardian_contact_id = CASE WHEN guardian_contact_id = ${deleteId} THEN ${keepId} ELSE guardian_contact_id END,
           father_contact_id = CASE WHEN father_contact_id = ${deleteId} THEN ${keepId} ELSE father_contact_id END,
           mother_contact_id = CASE WHEN mother_contact_id = ${deleteId} THEN ${keepId} ELSE mother_contact_id END
       WHERE workspace_subdomain = ${subdomain}
-        AND (${deleteId} IN (guardian_contact_id, father_contact_id, mother_contact_id))
+        AND (${deleteId} IN (contact_id, guardian_contact_id, father_contact_id, mother_contact_id))
     `);
 
     // 5. Re-parent teacher contact link if applicable
     await tx.execute(sql`
       UPDATE ${teachers}
+      SET contact_id = ${keepId}
+      WHERE workspace_subdomain = ${subdomain}
+        AND contact_id = ${deleteId}
+    `);
+
+    // 6. Re-parent tenant user contact link if applicable
+    await tx.execute(sql`
+      UPDATE ${tenantUsers}
+      SET contact_id = ${keepId}
+      WHERE workspace_subdomain = ${subdomain}
+        AND contact_id = ${deleteId}
+    `);
+
+    // 7. Re-parent message_logs contact link if applicable
+    await tx.execute(sql`
+      UPDATE ${messageLogs}
       SET contact_id = ${keepId}
       WHERE workspace_subdomain = ${subdomain}
         AND contact_id = ${deleteId}

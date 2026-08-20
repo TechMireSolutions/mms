@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { CARD_STRIPE_BASE, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import { METADATA_FIELDS, getCollectionLabel } from "@/tenant/features/reports/components/reportMetadata";
 import { ProgressRing } from "@/tenant/features/reports/components/pinnedWidgets/WidgetProgressRing";
 import { COLOR_MAP, type CustomWidget } from "@/tenant/features/reports/components/pinnedWidgets/types";
@@ -92,11 +93,16 @@ export function CustomWidgetComfortableLayout({
           : WORK_SURFACE
       }`}
     >
-      <div className={`absolute start-0 top-0 bottom-0 w-1 rounded-e-sm transition-colors duration-300 ${
-        isAlert
-          ? "bg-destructive/60 group-hover:bg-destructive"
-          : `${colorTheme.bar}/60`
-      }`} />
+      <div
+        aria-hidden="true"
+        className={cn(
+          CARD_STRIPE_BASE,
+          "transition-colors duration-300",
+          isAlert
+            ? "bg-destructive/60 group-hover:bg-destructive"
+            : `${colorTheme.bar}/60`
+        )}
+      />
       <div className={`absolute -end-8 -top-8 w-24 h-24 rounded-full ${colorTheme.glow} transition-all duration-500`} />
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="min-w-0 space-y-0.5 text-start">

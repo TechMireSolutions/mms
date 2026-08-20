@@ -17,6 +17,8 @@ import {
   questionAccuracyTextClass,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import type { CategoryPerformance, StudentStatItem } from "./performanceAnalyticsUtils";
 
 export interface PerformanceAnalyticsPanelsProps {
@@ -149,7 +151,7 @@ export function PerformanceAnalyticsPanels({
       </div>
 
       <SectionCard accentColor="info" title={t("questionBank.analytics.categoryBreakdown")} padding={false}>
-        <div className="divide-y divide-border/50 ps-6.5" role="list">
+        <div className={cn("divide-y divide-border/50", CARD_STRIPE_INSET)} role="list">
           {catPerformance.sort((a, b) => a.accuracy - b.accuracy).map((categoryResult) => (
             <div key={categoryResult.name} className="flex items-center gap-4 px-4 py-3" role="listitem">
               <span className="flex-shrink-0 text-xl" aria-hidden>{categoryResult.icon}</span>

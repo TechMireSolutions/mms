@@ -11,6 +11,9 @@ import { PAYMENT_METHODS, Invoice } from '@/lib/data/financeData';
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type PaymentCreateInput } from "@mms/shared";
@@ -114,7 +117,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     >
       <div className="space-y-5 text-start">
         {invoice && (
-          <Card accentColor="primary" className="p-5 px-6 space-y-2 shadow-sm">
+          <Card accentColor="primary" className={cn("p-5 space-y-2 shadow-sm", CARD_STRIPE_INSET)}>
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <h4 className="truncate text-sm font-bold text-foreground m-0">{invoice.studentName}</h4>
@@ -128,12 +131,12 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
           </Card>
         )}
 
-        <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-            <Coins className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("finance.paymentDetails")}</h3>
-          </div>
-
+        <SectionCard
+          accentColor="primary"
+          icon={Coins}
+          title={t("finance.paymentDetails")}
+          className="shadow-sm"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Field label={`${t("finance.columns.amount")} (${activeCurrency.code})`} required error={errors.amount}>
@@ -143,11 +146,11 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                     id="payment-amount-input"
                     name="amount"
                     type="number"
-                    className="ps-10"
+                    min={1}
+                    max={balance}
+                    className={`${FORM_INPUT} ps-10`}
                     value={paymentDraft.amount}
                     onChange={(event) => updateDraft({ amount: event.target.value })}
-                    max={balance}
-                    min={1}
                     required
                   />
                 </div>
@@ -159,22 +162,24 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               </Field>
             </div>
 
-            <Field label={t("finance.columns.method")} required error={errors.method}>
+            <Field label={t("finance.columns.method")} required>
               <FormSelect
-                id="payment-method"
-                name="method"
-                value={paymentDraft.method || "Cash"}
-                onChange={(val) => updateDraft({ method: val })}
-                options={paymentMethodOptions}
+                id="payment-method-select"
+                value={paymentDraft.method}
+                onChange={(value) => updateDraft({ method: value })}
+                options={PAYMENT_METHODS.map((paymentMethod) => ({
+                  value: paymentMethod,
+                  label: t(PAYMENT_METHOD_LABEL_KEYS[paymentMethod] ?? "finance.paymentMethods.other"),
+                }))}
               />
             </Field>
 
-            <Field label={t("finance.columns.paymentDate")} required error={errors.date} id="payment-date">
+            <Field label={t("finance.columns.paymentDate")} required>
               <DatePicker
-                id="payment-date"
+                id="payment-date-input"
                 name="date"
-                value={paymentDraft.date || ""}
-                onChange={(val) => updateDraft({ date: val })}
+                value={paymentDraft.date}
+                onChange={(value) => updateDraft({ date: value })}
                 required
               />
             </Field>
@@ -205,7 +210,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               </Field>
             </div>
           </div>
-        </Card>
+        </SectionCard>
       </div>
     </FormModal>
   );

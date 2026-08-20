@@ -15,6 +15,8 @@ import { StatCard } from '@/components/ui/StatCard';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { CARD_STRIPE_INSET } from '@/lib/semanticTone';
+import { cn } from '@/lib/utils';
 import { useAccountingDashboardModel } from '@/tenant/features/accounting/components/useAccountingDashboardModel';
 import { useAccountingMetrics } from '@/tenant/features/accounting/hooks/useAccountingApi';
 
@@ -88,7 +90,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         transition={{ delay: 0.3, duration: 0.4 }}
         className="grid grid-cols-1 lg:grid-cols-3 gap-4"
       >
-        <Card accentColor="primary" className="lg:col-span-2 p-5 ps-6.5">
+        <Card accentColor="primary" className={cn("lg:col-span-2 p-5", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.revenueVsExpenses')}</h3>
           {monthlyData.length === 0 ? (
             <EmptyState title={t('accounting.dashboard.noPostedData')} compact icon={null} className="h-48" />
@@ -108,7 +110,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
           )}
         </Card>
 
-        <Card accentColor="info" className="p-5 ps-6.5">
+        <Card accentColor="info" className={cn("p-5", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.expenseBreakdown')}</h3>
           {expenseBreakdown.length === 0 ? (
             <EmptyState title={t('accounting.dashboard.noExpenseData')} compact icon={null} className="h-48" />
@@ -147,7 +149,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         transition={{ delay: 0.4, duration: 0.4 }}
         className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
-        <Card accentColor="primary" className="p-5 ps-6.5">
+        <Card accentColor="primary" className={cn("p-5", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.balanceSheetSnapshot')}</h3>
           <div className="space-y-3">
             {bsData.map((balanceSheetItem) => {
@@ -178,7 +180,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
           </div>
         </Card>
 
-        <Card accentColor="warning" className="p-5 ps-6.5">
+        <Card accentColor="warning" className={cn("p-5", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.recentEntries')}</h3>
           <div className="space-y-2">
             {recentEntries.map((journalEntry) => {

@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { motion } from "framer-motion";
@@ -46,7 +48,7 @@ export function AttendanceAnalyticsInsights({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.45, ease: "easeOut" }}
       >
-        <Card accentColor="success" className="p-4">
+        <Card accentColor="success" className={cn("p-4", CARD_STRIPE_INSET)}>
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.topPerformersTitle")}</h2>
           <div className="space-y-2">
             {topStudents.map((studentRate, index) => (

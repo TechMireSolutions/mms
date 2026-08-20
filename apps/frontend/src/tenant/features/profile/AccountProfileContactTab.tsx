@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 export interface AccountProfileContactTabProps {
   profile: TenantUserProfile;
@@ -34,9 +36,9 @@ export function AccountProfileContactTab({
 }: AccountProfileContactTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const originalName = profile.contact?.name ?? '';
-  const originalPhone = profile.contact ? (getPrimaryPhone(profile.contact) ?? '') : '';
-  const originalEmail = profile.contact ? (getPrimaryEmail(profile.contact) ?? '') : '';
+  const originalName = profile.contact?.name ?? "";
+  const originalPhone = profile.contact ? (getPrimaryPhone(profile.contact) ?? "") : "";
+  const originalEmail = profile.contact ? (getPrimaryEmail(profile.contact) ?? "") : "";
   const contactDirty =
     name !== originalName || phone !== originalPhone || contactEmail !== originalEmail;
 
@@ -48,7 +50,7 @@ export function AccountProfileContactTab({
         title={t("account.contactSection")}
         subtitle={t("account.contactSectionDesc")}
       />
-      <CardContent className="pt-5 space-y-4 ps-6">
+      <CardContent className={cn("pt-5 space-y-4", CARD_STRIPE_INSET)}>
         {!profile.contact ? (
           <WarningCallout
             icon={ShieldCheck}

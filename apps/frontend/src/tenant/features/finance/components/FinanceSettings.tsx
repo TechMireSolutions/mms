@@ -1,6 +1,6 @@
 import { type FinanceSettings as FinanceSettingsType } from "@mms/shared";
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { DollarSign } from "lucide-react";
 import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
 import {
@@ -21,70 +21,68 @@ import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { notify } from "@/lib/notify";
 
 export const FinanceSettings = React.memo(function FinanceSettings(): React.ReactElement {
-      const { t } = useTranslation();
-      const { canEditSetup } = useModulePermissions(FINANCE_MODULE_MANIFEST);
-      const config = useFinanceConfig();
-      const {
-        settings,
-        settingsDraft,
-        saved,
-        upd,
-        saveSettingsAsync,
-      } = useModuleSettingsEditor<FinanceSettingsType>({
-        config,
-        tabRegistry: FINANCE_TAB_REGISTRY,
+  const { t } = useTranslation();
+  const { canEditSetup } = useModulePermissions(FINANCE_MODULE_MANIFEST);
+  const config = useFinanceConfig();
+  const {
+    settings,
+    settingsDraft,
+    saved,
+    upd,
+    saveSettingsAsync,
+  } = useModuleSettingsEditor<FinanceSettingsType>({
+    config,
+    tabRegistry: FINANCE_TAB_REGISTRY,
+  });
+
+  const isDirty = !saved;
+
+  const handleSave = async (): Promise<void> => {
+    try {
+      await saveSettingsAsync();
+      notify.success(t("finance.settings.saved"));
+    } catch (error: unknown) {
+      notify.error(t("finance.settings.saveFailed"), {
+        description: error instanceof Error ? error.message : String(error),
       });
+    }
+  };
 
-      const isDirty = !saved;
+  const ALL_METHODS = ["cash", "bank_transfer", "cheque", "online", "card", "other"];
+  const toggleMethod = (method: string) => {
+    const paymentMethods = settingsDraft.paymentMethods || [];
+    const nextMethods = paymentMethods.includes(method)
+      ? paymentMethods.filter((selectedMethod) => selectedMethod !== method)
+      : [...paymentMethods, method];
+    upd("paymentMethods", nextMethods);
+  };
 
-      const handleSave = async (): Promise<void> => {
-        try {
-          await saveSettingsAsync();
-          notify.success(t("finance.settings.saved"));
-        } catch (error: unknown) {
-          notify.error(t("finance.settings.saveFailed"), {
-            description: error instanceof Error ? error.message : String(error),
-          });
-        }
-      };
-
-      const ALL_METHODS = ["cash", "bank_transfer", "cheque", "online", "card", "other"];
-      const toggleMethod = (method: string) => {
-        const paymentMethods = settingsDraft.paymentMethods || [];
-        const nextMethods = paymentMethods.includes(method)
-          ? paymentMethods.filter((selectedMethod) => selectedMethod !== method)
-          : [...paymentMethods, method];
-        upd("paymentMethods", nextMethods);
-      };
-
-      return (
-        <div className="space-y-4">
-          {!canEditSetup ? (
-            <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
-              {t("finance.setup.readOnly")}
-            </p>
-          ) : (
-            <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80" aria-labelledby="finance-settings-title">
-              <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <DollarSign className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-                </div>
-                <h3 id="finance-settings-title" className="text-sm font-bold text-foreground">{t("finance.settings.title")}</h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="finance-currency" className={FORM_LABEL}>{t("finance.settings.currency")}</label>
-                  <FormSelect
-                    id="finance-currency"
-                    value={settingsDraft.currency}
-                    onChange={(value) => upd("currency", value)}
-                    options={DEFAULT_CURRENCIES.map((c) => ({
-                      value: c.code,
-                      label: `${c.code} — ${c.name}`,
-                    }))}
-                  />
-                </div>
+  return (
+    <div className="space-y-4">
+      {!canEditSetup ? (
+        <p className="text-sm text-muted-foreground rounded-xl border border-border bg-muted/20 px-4 py-6">
+          {t("finance.setup.readOnly")}
+        </p>
+      ) : (
+        <SectionCard
+          accentColor="primary"
+          icon={DollarSign}
+          title={t("finance.settings.title")}
+          className="shadow-sm hover:shadow-md border-border/80"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="finance-currency" className={FORM_LABEL}>{t("finance.settings.currency")}</label>
+              <FormSelect
+                id="finance-currency"
+                value={settingsDraft.currency}
+                onChange={(value) => upd("currency", value)}
+                options={DEFAULT_CURRENCIES.map((c) => ({
+                  value: c.code,
+                  label: `${c.code} — ${c.name}`,
+                }))}
+              />
+            </div>
                 <div>
                   <label htmlFor="inv-prefix" className={FORM_LABEL}>{t("finance.settings.invoicePrefix")}</label>
                   <Input
@@ -176,7 +174,7 @@ export const FinanceSettings = React.memo(function FinanceSettings(): React.Reac
                 savedLabel={t("settings.savedBadge")}
                 onSave={() => void handleSave()}
               />
-            </Card>
+            </SectionCard>
           )}
         </div>
       );

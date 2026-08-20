@@ -7,6 +7,8 @@ import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/hooks/useTranslation";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 export interface AccountProfileLoginEmailCardProps {
   profile: TenantUserProfile;
@@ -57,7 +59,7 @@ export function AccountProfileLoginEmailCard({
         title={t("account.loginSection")}
         subtitle={t("account.loginSectionDesc")}
       />
-      <CardContent className="pt-5 space-y-4 ps-6">
+      <CardContent className={cn("pt-5 space-y-4", CARD_STRIPE_INSET)}>
         <div className="flex items-center gap-3 p-3 bg-muted/30 border border-border/30 rounded-xl text-sm">
           <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
           <div className="text-start">

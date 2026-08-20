@@ -1,6 +1,6 @@
 import { type HasanatSettings as HasanatSettingsType } from "@mms/shared";
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Save, Star } from "lucide-react";
 import { HASANAT_TAB_REGISTRY } from "@mms/shared";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
@@ -37,16 +37,12 @@ export const HasanatSettings = React.memo(function HasanatSettings(): React.Reac
       };
 
       return (
-        <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
-          <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Star className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-            </div>
-            <h3 id="hasanat-settings-title" className="text-sm font-bold text-foreground">
-              {t("hasanat.settings.titlePreferences")}
-            </h3>
-          </div>
-
+        <SectionCard
+          accentColor="primary"
+          icon={Star}
+          title={t("hasanat.settings.titlePreferences")}
+          className="shadow-sm hover:shadow-md border-border/80"
+        >
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -79,6 +75,6 @@ export const HasanatSettings = React.memo(function HasanatSettings(): React.Reac
               <Save className="w-3.5 h-3.5" aria-hidden="true" /> {saved ? t("hasanat.settings.btnSaved") : t("hasanat.settings.btnSave")}
             </Button>
           </footer>
-        </Card>
+        </SectionCard>
       );
     });

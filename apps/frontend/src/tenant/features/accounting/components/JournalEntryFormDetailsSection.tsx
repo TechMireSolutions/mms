@@ -1,7 +1,7 @@
 import React from "react";
 import { BookOpen } from "lucide-react";
 import { type FiscalYear } from '@/lib/data/accountingData';
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FieldErrorMessage } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/input";
@@ -20,12 +20,12 @@ interface JournalEntryFormDetailsSectionProps {
 
 export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fiscalYears }: JournalEntryFormDetailsSectionProps): React.JSX.Element {
   return (
-    <Card accentColor="primary" className="p-0">
-      <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
-        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
-          <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("accounting.journal.form.entryDetails")}</h3>
-        </div>
+    <SectionCard
+      accentColor="primary"
+      icon={BookOpen}
+      title={t("accounting.journal.form.entryDetails")}
+      className="shadow-sm text-start"
+    >
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -65,7 +65,6 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
             <FieldErrorMessage message={errors.description} />
           </div>
         </div>
-      </fieldset>
-    </Card>
+    </SectionCard>
   );
 }

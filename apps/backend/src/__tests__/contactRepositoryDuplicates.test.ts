@@ -17,6 +17,7 @@ function createSelectMock(rows: Array<{ id: string }>) {
 import {
   findContactDuplicateBlockedIds,
   findContactDuplicateCandidateIds,
+  reparentContactReferences,
 } from '../db/repositories/contactRepositoryDuplicates.js';
 
 describe('contactRepositoryDuplicates (SQL)', () => {
@@ -82,5 +83,25 @@ describe('contactRepositoryDuplicates (SQL)', () => {
 
     expect(ids).toEqual(['peer-1', 'peer-2']);
     expect(mockTxExecute).not.toHaveBeenCalled();
+  });
+
+  it('reparentContactReferences executes SQL statements across relationships, students, teachers, users, and message logs', async () => {
+    mockWithTenantTransaction.mockImplementation(
+      async (_tenant: unknown, fn: (tx: { execute: typeof mockTxExecute }) => Promise<unknown>) =>
+        fn({ execute: mockTxExecute }),
+    );
+
+    await reparentContactReferences('Demo', 'c-keep', 'c-delete');
+
+    // 1. delete self-loops
+    // 2. delete duplicate tuples (related_contact_id)
+    // 2b. delete duplicate tuples (contact_id)
+    // 3. update related_contact_id
+    // 3b. update contact_id
+    // 4. update students
+    // 5. update teachers
+    // 6. update tenant_users
+    // 7. update message_logs
+    expect(mockTxExecute).toHaveBeenCalledTimes(9);
   });
 });

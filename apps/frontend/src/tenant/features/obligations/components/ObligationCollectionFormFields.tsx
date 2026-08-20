@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Field } from '@/components/ui/FormPrimitives';
 import { Card } from '@/components/ui/card';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { ObligationCollectionWakalaSection } from '@/tenant/features/obligations/components/ObligationCollectionWakalaSection';
 import { cn } from '@/lib/utils';
-import { CARD_STRIPE_WIDTH } from '@/lib/semanticTone';
+import { CARD_STRIPE_INSET } from '@/lib/semanticTone';
 
 export interface ObligationCollectionFormState {
   receipt_no: string;
@@ -35,6 +36,7 @@ export interface ObligationCollectionFormFieldsProps {
   getMujtahid: (repId: string) => Mujtahid | null | undefined;
   selectedMujtahid: Mujtahid | null | undefined;
   users: Array<{ id: string; name: string }>;
+  currencies?: Array<{ id: string; code: string; name: string; symbol: string }>;
 }
 
 export function ObligationCollectionFormFields({
@@ -46,33 +48,38 @@ export function ObligationCollectionFormFields({
   getMujtahid,
   selectedMujtahid,
   users,
-}: ObligationCollectionFormFieldsProps): React.ReactElement {
+  currencies = DEFAULT_CURRENCIES,
+}: ObligationCollectionFormFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const currencies = DEFAULT_CURRENCIES;
 
-  const formField = (key: keyof ObligationCollectionFormState, label: string, required: boolean, children: React.ReactNode) => (
-    <Field id={`form-${key}`} label={label} required={required} error={errors[key] ? t(errors[key]!) : undefined}>
+  const formField = (
+    key: keyof ObligationCollectionFormState,
+    label: string,
+    required: boolean,
+    children: React.ReactNode,
+  ) => (
+    <Field label={label} required={required} error={errors[key] ? t(errors[key]!) : undefined}>
       {children}
     </Field>
   );
 
   return (
     <div className="space-y-6">
-      <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
-        <div className={cn("absolute start-0 top-0 bottom-0 bg-primary/70", CARD_STRIPE_WIDTH)} />
+      <Card accentColor="primary" className={cn("p-4 flex items-center gap-3.5 bg-primary/5 border-primary/25", CARD_STRIPE_INSET)}>
         <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
         <div>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{t('obligations.form.receiptAuto')}</h3>
           <p className="text-lg font-bold text-primary font-mono m-0">{form.receipt_no}</p>
         </div>
-      </header>
+      </Card>
 
-      <Card accentColor="primary" className="p-0">
-        <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
-            <Receipt className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('obligations.form.section.metadata')}</h3>
-          </div>
+      <SectionCard
+        accentColor="primary"
+        icon={Receipt}
+        title={t('obligations.form.section.metadata')}
+        className="p-0 text-start"
+      >
+        <fieldset className="space-y-4 border-0 m-0 p-0 text-start">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {formField('received_date', t('obligations.form.receivedDate'), true,
               <DatePicker
@@ -96,14 +103,15 @@ export function ObligationCollectionFormFields({
             )}
           </div>
         </fieldset>
-      </Card>
+      </SectionCard>
 
-      <Card accentColor="primary" className="p-0 z-20">
-        <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
-            <Users className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('obligations.form.section.sender')}</h3>
-          </div>
+      <SectionCard
+        accentColor="primary"
+        icon={Users}
+        title={t('obligations.form.section.sender')}
+        className="p-0 text-start z-20"
+      >
+        <fieldset className="space-y-4 border-0 m-0 p-0 text-start">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {formField('sender_id', t('obligations.form.sender'), true,
               <ContactPicker
@@ -124,14 +132,15 @@ export function ObligationCollectionFormFields({
             )}
           </div>
         </fieldset>
-      </Card>
+      </SectionCard>
 
-      <Card accentColor="primary" className="p-0 z-10">
-        <fieldset className="p-5.5 px-6.5 pb-6 space-y-4 border-0 m-0 text-start">
-          <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-2">
-            <Coins className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t('obligations.form.section.financial')}</h3>
-          </div>
+      <SectionCard
+        accentColor="primary"
+        icon={Coins}
+        title={t('obligations.form.section.financial')}
+        className="p-0 text-start z-10"
+      >
+        <fieldset className="space-y-4 border-0 m-0 p-0 text-start">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {formField('amount', t('obligations.form.amount'), true,
               <div className="relative flex items-center group/input w-full">
@@ -157,7 +166,7 @@ export function ObligationCollectionFormFields({
             )}
           </div>
         </fieldset>
-      </Card>
+      </SectionCard>
 
       <ObligationCollectionWakalaSection
         form={form}

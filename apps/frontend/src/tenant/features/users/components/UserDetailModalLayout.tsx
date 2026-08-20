@@ -1,8 +1,8 @@
 import React from 'react';
-import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
-import { SectionLabel } from '@/components/ui/SectionLabel';
+import { Card } from '@/components/ui/card';
+import { CardTitleBar } from '@/components/ui/CardTitleBar';
 import { cn } from '@/lib/utils';
-import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from '@/lib/semanticTone';
+import { CARD_STRIPE_INSET } from '@/lib/semanticTone';
 
 export function UserDetailModalRow({
   label,
@@ -29,13 +29,14 @@ export function UserDetailModalSection({
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className={cn(WORK_SURFACE_INNER, 'relative overflow-hidden group/card transition-all duration-300')}>
-      <div className={cn(CARD_STRIPE_BASE, "bg-primary/60 transition-colors group-hover/card:bg-primary")} />
-      <div className={cn("flex items-center gap-2 border-b border-border/40 bg-muted/20 px-4 py-2.5", CARD_STRIPE_INSET)}>
-        <Icon className="h-3.5 w-3.5 text-primary/70 group-hover/card:text-primary transition-colors" aria-hidden />
-        <SectionLabel as="p" tone="foreground" tracking="wider" className="m-0">{title}</SectionLabel>
-      </div>
-      <div className="px-5 pb-1">{children}</div>
-    </div>
+    <Card accentColor="primary" className="p-0 overflow-hidden">
+      <CardTitleBar
+        headingLevel={3}
+        inset
+        icon={<Icon className="h-3.5 w-3.5 text-primary/70 group-hover/card:text-primary transition-colors" aria-hidden />}
+        title={title}
+      />
+      <div className={cn("px-5 pb-1", CARD_STRIPE_INSET)}>{children}</div>
+    </Card>
   );
 }

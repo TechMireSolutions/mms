@@ -128,7 +128,7 @@ export function trendTextClass(delta: number): string {
 export const PAYMENT_METHOD_BADGE: Record<string, string> = {
   Cash: SEMANTIC_BADGE.success,
   'Bank Transfer': SEMANTIC_BADGE.info,
-  Online: 'bg-primary/10 text-primary border-primary/20',
+  Online: SEMANTIC_BADGE.primary,
   Cheque: SEMANTIC_BADGE.warning,
   Other: SEMANTIC_BADGE.muted,
 };
@@ -160,7 +160,7 @@ export const KPI_TONE = {
 
 /** Obligation / wakala type chips */
 export const OBLIGATION_TYPE_BADGE: Record<string, string> = {
-  Syed: 'bg-primary/15 text-primary border-primary/30',
+  Syed: SEMANTIC_BADGE.primaryStrong,
   'Non-Syed': SEMANTIC_BADGE.infoStrong,
   Both: SEMANTIC_BADGE.success,
   None: SEMANTIC_BADGE.muted,
@@ -168,31 +168,40 @@ export const OBLIGATION_TYPE_BADGE: Record<string, string> = {
   Liability: SEMANTIC_BADGE.destructive,
 };
 
-/** SSOT for card and section left accent stripe geometry */
+/** SSOT for card and section start-edge accent stripe geometry */
 export const CARD_STRIPE_WIDTH = "w-1.5";
-export const CARD_STRIPE_INSET = "ps-6";
+export const CARD_STRIPE_INSET = "ps-5 sm:ps-6";
 export const CARD_STRIPE_BASE = "absolute inset-y-0 start-0 w-1.5";
 
-/** Card left-border accent stripe colors (globle1). */
-export const CARD_STRIPE_COLORS: Record<string, string> = {
+/** Card start-edge accent stripe colors (theme tokens). */
+export const CARD_STRIPE_COLORS = {
   primary: "bg-primary/45 group-hover/card:bg-primary",
   success: "bg-success/45 group-hover/card:bg-success",
   warning: "bg-warning/45 group-hover/card:bg-warning",
   destructive: "bg-destructive/45 group-hover/card:bg-destructive",
   info: "bg-info/45 group-hover/card:bg-info",
+  secondary: "bg-secondary/45 group-hover/card:bg-secondary",
+  muted: "bg-muted-foreground/35 group-hover/card:bg-muted-foreground",
+  // Aliases for chart & entity palettes
   emerald: "bg-success/45 group-hover/card:bg-success",
   indigo: "bg-info/45 group-hover/card:bg-info",
   rose: "bg-destructive/45 group-hover/card:bg-destructive",
   amber: "bg-warning/45 group-hover/card:bg-warning",
   teal: "bg-info/45 group-hover/card:bg-info",
   purple: "bg-secondary/45 group-hover/card:bg-secondary",
-  secondary: "bg-secondary/45 group-hover/card:bg-secondary",
-  muted: "bg-muted-foreground/35 group-hover/card:bg-muted-foreground",
   green: "bg-success/45 group-hover/card:bg-success",
   red: "bg-destructive/45 group-hover/card:bg-destructive",
   blue: "bg-info/45 group-hover/card:bg-info",
   violet: "bg-primary/45 group-hover/card:bg-primary",
-};
+} as const satisfies Record<string, string>;
+
+export type CardAccentColor = keyof typeof CARD_STRIPE_COLORS;
+
+/** Returns the matching CSS class for a card accent stripe with safe primary fallback. */
+export function getCardStripeClass(accent?: CardAccentColor | string): string {
+  if (!accent) return "";
+  return CARD_STRIPE_COLORS[accent as CardAccentColor] ?? CARD_STRIPE_COLORS.primary;
+}
 
 /** Sub-list form tab card accent styles (Education, Experience, Skills, Relationships, Emails, Phones, Socials, Addresses). */
 export const SUB_LIST_CARD_ACCENTS = {

@@ -70,7 +70,7 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
             transition={{ delay: index * 0.06 }}
             className={cn("p-4 group", CARD_STRIPE_INSET, !denomination.active && "opacity-60")}
           >
-            <div className={cn(CARD_STRIPE_BASE, "transition-colors duration-300")} style={{ backgroundColor: denomination.active ? denomination.color : 'hsl(var(--muted-foreground))' }} />
+            <div aria-hidden="true" className={cn(CARD_STRIPE_BASE, "transition-colors duration-300")} style={{ backgroundColor: denomination.active ? denomination.color : 'hsl(var(--muted-foreground))' }} />
             <header className="relative mb-3 flex h-16 items-center gap-3 overflow-hidden rounded-xl px-4 text-primary-foreground shadow-md" style={{ background: `linear-gradient(135deg, ${denomination.color}, color-mix(in srgb, ${denomination.color} 60%, transparent))` }}>
               <span className="shrink-0 text-3xl" aria-hidden="true">{denomination.icon}</span>
               <div className="min-w-0">

@@ -94,7 +94,7 @@ export const CONTACTS_MODULE_MANIFEST = {
   setupSubTabs: DEFAULT_SETTINGS_SUB_TABS
     .slice()
     .sort((left, right) => left.order - right.order)
-    .map((tab) => tab.key) as ['fields', 'preferences', 'sync'],
+    .map((tab) => tab.key) as ['preferences', 'sync'],
   defaultExportFilename: 'contacts.csv',
   heroFieldKeys: ['avatar', 'firstName', 'lastName', 'dob', 'gender', 'isSyed'] as const,
   searchableFieldKeys: ['name', 'firstName', 'lastName', 'phone', 'email', 'city'] as const,

@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { LegendChip } from "@/components/ui/LegendChip";
 import { motion } from "framer-motion";
 import {
@@ -40,7 +42,7 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.2, ease: "easeOut" }}
       >
-        <Card accentColor="primary" className="p-4">
+        <Card accentColor="primary" className={cn("p-4", CARD_STRIPE_INSET)}>
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.classRateTitle")}</h2>
           <SafeResponsiveContainer height={200}>
             <BarChart data={classStats} barSize={32}>
@@ -60,7 +62,7 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.25, ease: "easeOut" }}
       >
-        <Card accentColor="info" className="p-4">
+        <Card accentColor="info" className={cn("p-4", CARD_STRIPE_INSET)}>
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.monthlyTrendTitle")}</h2>
           <SafeResponsiveContainer height={200}>
             <AreaChart data={monthlyTrend}>
@@ -85,7 +87,7 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.3, ease: "easeOut" }}
       >
-        <Card accentColor="info" className="p-4">
+        <Card accentColor="info" className={cn("p-4", CARD_STRIPE_INSET)}>
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.studentRatesTitle")}</h2>
           <SafeResponsiveContainer height={220}>
             <BarChart data={studentRates} layout="vertical" barSize={12}>
@@ -105,7 +107,7 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.35, ease: "easeOut" }}
       >
-        <Card accentColor="primary" className="p-4">
+        <Card accentColor="primary" className={cn("p-4", CARD_STRIPE_INSET)}>
           <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.statusDistributionTitle")}</h2>
           <div className="flex items-center gap-4">
             <SafeResponsiveContainer width="60%" height={200}>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Shield } from "lucide-react";
 import {
   type UsersSettings,
@@ -32,14 +32,12 @@ export const UsersSettingsPanel = React.memo(function UsersSettingsPanel({
         : undefined;
 
       return (
-        <Card accentColor="primary" className="p-5 space-y-4 shadow-sm hover:shadow-md border-border/80">
-          <div className="flex items-center gap-2.5 pb-1 border-b border-border/40 ps-1">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Shield className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <h3 className="text-sm font-bold text-foreground">{t("users.settingsPrefsTitle")}</h3>
-          </div>
-
+        <SectionCard
+          accentColor="primary"
+          icon={Shield}
+          title={t("users.settingsPrefsTitle")}
+          className="shadow-sm hover:shadow-md border-border/80"
+        >
           <div className="space-y-2 pt-1">
             <ToggleRow
               label={t("users.selfRegistration")}
@@ -64,6 +62,6 @@ export const UsersSettingsPanel = React.memo(function UsersSettingsPanel({
             savedLabel={t("users.settingsSavedShort")}
             onSave={onSave}
           />
-        </Card>
+        </SectionCard>
       );
     });

@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import type { PasswordStrengthResult } from "./passwordStrength";
 
 export interface AccountProfilePasswordCardProps {
@@ -47,7 +49,7 @@ export function AccountProfilePasswordCard({
         title={t("account.changePassword")}
         subtitle={t("account.changePassword")}
       />
-      <CardContent className="pt-5 space-y-4 ps-6">
+      <CardContent className={cn("pt-5 space-y-4", CARD_STRIPE_INSET)}>
         {!showPasswordForm ? (
           <div className="pt-1">
             <Button type="button" variant="outline" onClick={onShowPasswordForm} className="w-full min-h-11">

@@ -1,5 +1,7 @@
 import { Filter, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +50,7 @@ export function ObligationsSummaryFilters({
   const { t } = useTranslation();
 
   return (
-    <Card accentColor="primary" className="p-4 space-y-3">
+    <Card accentColor="primary" className={cn("p-4 space-y-3", CARD_STRIPE_INSET)}>
       <header className="flex items-center gap-2 mb-1 ps-1">
         <Filter className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
         <h2 className="text-sm font-bold text-foreground m-0">{t("obligations.summary.filters.title")}</h2>

@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 export interface WidgetCardHeaderProps {
   title: React.ReactNode;
@@ -29,7 +30,8 @@ export function WidgetCardHeader({
   return (
     <header
       className={cn(
-        "flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 ps-6.5 select-none",
+        "flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 select-none",
+        CARD_STRIPE_INSET,
         variant === "default" && "border-b border-border/45",
         variant === "tinted" && "border-b border-border/45 bg-muted/10",
         variant === "destructive" && "border-b border-destructive/25 bg-destructive/[0.06]",

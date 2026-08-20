@@ -7,6 +7,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { formatNumber } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAccent, type AccentColor } from "@/components/ui/statCardAccent";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 export interface StatCardProps {
   label: string;
@@ -75,7 +76,8 @@ export const StatCard = React.memo(function StatCard({
         <Card
           accentColor={resolvedAccentColor}
           className={cn(
-            "flex items-center justify-between gap-3 px-4 py-3 ps-5.5 min-h-11 w-full",
+            "flex items-center justify-between gap-3 px-4 py-3 min-h-11 w-full",
+            CARD_STRIPE_INSET,
             onClick && "hover:border-primary/40 hover:bg-card/75",
             isActive && "ring-2 ring-primary/60 border-primary/60 bg-primary/5",
             className
@@ -119,7 +121,8 @@ export const StatCard = React.memo(function StatCard({
       <Card
         accentColor={resolvedAccentColor}
         className={cn(
-          "flex items-center justify-between p-4 ps-5.5 min-h-stat-compact w-full",
+          "flex items-center justify-between p-4 min-h-stat-compact w-full",
+          CARD_STRIPE_INSET,
           onClick && "hover:border-primary/40 hover:bg-card/75",
           isActive && "ring-2 ring-primary/60 border-primary/60 bg-primary/5",
           className

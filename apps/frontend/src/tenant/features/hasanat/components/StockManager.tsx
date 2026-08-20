@@ -9,6 +9,8 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StockAddBatchModal } from '@/tenant/features/hasanat/components/StockAddBatchModal';
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from '@/lib/semanticTone';
+import { cn } from '@/lib/utils';
 
 export interface StockManagerProps {
   batches: StockBatch[];
@@ -56,8 +58,8 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
         const pct = totalStock > 0 ? Math.round((totalRemaining / totalStock) * 100) : 0;
 
         return (
-          <Card key={den.id} className="ps-5.5">
-            <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: den.color }} />
+          <Card key={den.id} className={CARD_STRIPE_INSET}>
+            <div aria-hidden="true" className={cn(CARD_STRIPE_BASE, "transition-colors duration-300")} style={{ backgroundColor: den.color }} />
             <header className="flex items-center gap-3 border-b border-border/40 bg-muted/20 px-4 py-3 ps-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg" style={{ background: den.color }} aria-hidden="true">
                 {den.icon}

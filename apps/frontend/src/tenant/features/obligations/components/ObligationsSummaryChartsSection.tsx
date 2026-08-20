@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { BarChart2, Layers, TrendingUp } from "lucide-react";
@@ -43,7 +45,7 @@ export function ObligationsSummaryChartsSection({
 
   return (
     <section aria-label={t("obligations.summary.charts.aria")} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card accentColor="primary" className="p-4">
+      <Card accentColor="primary" className={cn("p-4", CARD_STRIPE_INSET)}>
         <SectionHeader icon={<BarChart2 className="w-3.5 h-3.5 text-primary" aria-hidden="true" />} title={t("obligations.summary.charts.byTypeTitle")} subtitle={t("obligations.summary.charts.byTypeSubtitle")} />
         <SafeResponsiveContainer height={200}>
           <BarChart data={typeBreakdown} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -58,7 +60,7 @@ export function ObligationsSummaryChartsSection({
       </Card>
 
       {monthlyTrend.length > 1 ? (
-        <Card accentColor="info" className="p-4">
+        <Card accentColor="info" className={cn("p-4", CARD_STRIPE_INSET)}>
           <SectionHeader icon={<TrendingUp className="w-3.5 h-3.5 text-primary" aria-hidden="true" />} title={t("obligations.summary.charts.monthlyTrendTitle")} subtitle={t("obligations.summary.charts.monthlyTrendSubtitle")} />
           <SafeResponsiveContainer height={200}>
             <BarChart data={monthlyTrend} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -70,7 +72,7 @@ export function ObligationsSummaryChartsSection({
           </SafeResponsiveContainer>
         </Card>
       ) : (
-        <Card accentColor="success" className="p-4">
+        <Card accentColor="success" className={cn("p-4", CARD_STRIPE_INSET)}>
           <SectionHeader icon={<Layers className="w-3.5 h-3.5 text-primary" aria-hidden="true" />} title={t("obligations.summary.charts.distributionTitle")} subtitle={t("obligations.summary.charts.distributionSubtitle")} />
           <SafeResponsiveContainer height={200}>
             <PieChart>

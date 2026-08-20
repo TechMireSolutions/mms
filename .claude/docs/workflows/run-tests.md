@@ -4,13 +4,15 @@ description: Run all unit, integration, typecheck, lint, and E2E tests across MM
 
 # Workflow: Run Tests & Resolve Diagnostics
 
+**Workflow skills:** execution & diagnosis index → `mms-testing-e2e` · post-edit verification → `mms-completion-review.md` · testing observability standards → `mms-testing-observability.md`.
+
 This workflow provides a comprehensive, systematic procedure for executing test suites, type checking, and linting across the MMS monorepo (`apps/frontend`, `apps/backend`, `packages/shared`), diagnosing any failures, and applying root-cause fixes until all checks pass cleanly.
 
 ---
 
 ## Phase 1: Environment & Verification Command SSOT
 
-The MMS monorepo uses **pnpm** and **Turbo** to manage dependencies and execution across packages.
+The MMS monorepo uses **pnpm** and **Turbo** to manage dependencies and execution across packages. All commands can be run directly from the workspace root.
 
 ### Verification Matrix
 
@@ -18,11 +20,13 @@ The MMS monorepo uses **pnpm** and **Turbo** to manage dependencies and executio
 |---|---|---|
 | **Monorepo Typecheck** | `pnpm typecheck` | Strict TypeScript check across `@mms/shared`, `mms-backend`, `mms-frontend`, `e2e-tests` |
 | **Full Unit & Integration Suite** | `pnpm test` | Vitest execution for shared helpers, backend services, and frontend components |
-| **Frontend Lint** | `cd apps/frontend && pnpm lint` | ESLint + React 19 rules + cross-feature import boundary checks |
-| **Backend Lint** | `cd apps/backend && pnpm lint` | ESLint + Fastify 5 / Node rules |
+| **Frontend Lint** | `pnpm --filter mms-frontend lint` | ESLint + React 19 rules + cross-feature import boundary checks |
+| **Backend Lint** | `pnpm --filter mms-backend lint` | ESLint + Fastify 5 / Node rules |
 | **Targeted Frontend Test** | `pnpm --filter mms-frontend test <file>` | Rapid isolated test run on specific frontend file |
 | **Targeted Backend Test** | `pnpm --filter mms-backend test <file>` | Rapid isolated test run on specific backend service/route file |
 | **Targeted Shared Test** | `pnpm --filter @mms/shared test <file>` | Rapid test run for shared schemas and helpers |
+| **E2E Playwright Suite** | `pnpm --filter e2e-tests test` | Full browser integration and user journey tests |
+| **All-in-One Verification** | `pnpm typecheck && pnpm test && pnpm --filter mms-frontend lint && pnpm --filter mms-backend lint` | Complete single-command monorepo validation pass |
 
 ---
 
@@ -38,8 +42,8 @@ pnpm typecheck
 pnpm test
 
 # Step 3: Lint Diagnostics (Frontend & Backend)
-cd apps/frontend && pnpm lint
-cd apps/backend && pnpm lint
+pnpm --filter mms-frontend lint
+pnpm --filter mms-backend lint
 ```
 
 > [!IMPORTANT]
@@ -89,9 +93,7 @@ For any failed test or diagnostic error:
 Re-run full verification suite to guarantee zero regressions across the monorepo:
 
 ```bash
-pnpm typecheck && pnpm test
-cd apps/frontend && pnpm lint
-cd apps/backend && pnpm lint
+pnpm typecheck && pnpm test && pnpm --filter mms-frontend lint && pnpm --filter mms-backend lint
 ```
 
 ---

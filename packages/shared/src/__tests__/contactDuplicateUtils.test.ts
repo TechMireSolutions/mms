@@ -110,3 +110,54 @@ describe('findContactDuplicatePairs (indexed)', () => {
   });
 });
 
+describe('mergeContacts', () => {
+  it('merges basic properties, arrays, activities, attachments, and union of tags', async () => {
+    const { mergeContacts } = await import('../contactMergeUtils.js');
+    const keep: Contact = {
+      id: 'c-1',
+      name: 'Ali Khan',
+      firstName: 'Ali',
+      lastName: 'Khan',
+      gender: 'male',
+      tags: ['Alumni'],
+      phones: [{ label: 'mobile', number: '+923001234567' }],
+      emails: [{ label: 'personal', address: 'ali@example.com' }],
+      activities: [{ id: 'act-1', type: 'note', content: 'Note from keep', date: '2026-01-01' }],
+      attachments: [{ id: 'att-1', name: 'id_card.pdf', type: 'application/pdf', size: 1024, url: '/uploads/id.pdf', date: '2026-01-01' }],
+    };
+
+    const other: Contact = {
+      id: 'c-2',
+      name: 'Ali K',
+      firstName: 'Ali',
+      city: 'Karachi',
+      dob: '1995-05-15',
+      tags: ['VIP', 'Alumni'],
+      phones: [{ label: 'home', number: '+923001234567' }, { label: 'work', number: '+923009876543' }],
+      emails: [{ label: 'work', address: 'ali.work@example.com' }],
+      activities: [{ id: 'act-2', type: 'note', content: 'Admissions interview note', date: '2026-02-01' }],
+      attachments: [{ id: 'att-2', name: 'transcript.pdf', type: 'application/pdf', size: 2048, url: '/uploads/transcript.pdf', date: '2026-02-01' }],
+    };
+
+    const merged = mergeContacts(keep, other);
+
+    expect(merged.id).toBe('c-1');
+    expect(merged.firstName).toBe('Ali');
+    expect(merged.lastName).toBe('Khan');
+    expect(merged.city).toBe('Karachi');
+    expect(merged.dob).toBe('1995-05-15');
+    expect(merged.tags).toEqual(['Alumni', 'VIP']);
+    expect(merged.tag).toBe('Alumni, VIP');
+
+    expect(merged.phones).toHaveLength(2);
+    expect(merged.emails).toHaveLength(2);
+
+    expect(merged.activities).toHaveLength(2);
+    expect(merged.activities?.map((a) => a.content)).toEqual(['Note from keep', 'Admissions interview note']);
+
+    expect(merged.attachments).toHaveLength(2);
+    expect(merged.attachments?.map((a) => a.name)).toEqual(['id_card.pdf', 'transcript.pdf']);
+  });
+});
+
+

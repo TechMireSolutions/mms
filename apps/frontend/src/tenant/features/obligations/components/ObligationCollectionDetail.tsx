@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
-import { CARD_STRIPE_WIDTH } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
@@ -132,8 +132,7 @@ export const ObligationCollectionDetail = React.memo(function ObligationCollecti
   return (
     <DetailDrawerShell open onClose={onClose} title={t("obligations.detail.title")} icon={Receipt} className="max-w-2xl">
       <div className="space-y-5">
-        <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
-          <div className={cn("absolute start-0 top-0 bottom-0 bg-primary/70", CARD_STRIPE_WIDTH)} />
+        <Card accentColor="primary" className={cn("p-4 flex items-center gap-3.5 bg-primary/5 border-primary/25", CARD_STRIPE_INSET)}>
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.columns.receiptNo")}</h3>
@@ -143,9 +142,9 @@ export const ObligationCollectionDetail = React.memo(function ObligationCollecti
             <h3 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("obligations.columns.receivedDate")}</h3>
             <p className="text-sm font-semibold text-foreground m-0">{formatDate(collection.received_date)}</p>
           </div>
-        </header>
+        </Card>
 
-        <Card accentColor="info" className="divide-y divide-border px-5.5 pb-2.5">
+        <Card accentColor="info" className={cn("divide-y divide-border px-5 pb-2.5", CARD_STRIPE_INSET)}>
           <Row label={t("obligations.columns.sender")} value={sender?.name} />
           {reference && <Row label={t("obligations.form.reference")} value={reference?.name} />}
           <Row label={t("obligations.columns.obligationType")} value={obType?.name} />

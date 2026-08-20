@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface GuardianContactCardProps {
@@ -31,7 +32,7 @@ export function GuardianContactCard({
   const { t } = useTranslation();
 
   return (
-    <Card accentColor="info" className="p-3">
+    <Card accentColor="info" className={cn("p-3", CARD_STRIPE_INSET)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3 text-start ms-1">
           <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0", badgeTone)}>

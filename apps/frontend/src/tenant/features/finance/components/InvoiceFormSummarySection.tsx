@@ -1,5 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface InvoiceFormSummarySectionProps {
@@ -18,7 +20,7 @@ export function InvoiceFormSummarySection({
   formatCurrency,
 }: InvoiceFormSummarySectionProps): React.ReactElement {
   return (
-    <Card accentColor="primary" className="p-5 px-6 shadow-sm">
+    <Card accentColor="primary" className={cn("p-5 shadow-sm", CARD_STRIPE_INSET)}>
       <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
         <div>
           <p className="m-0 text-xs font-bold uppercase text-muted-foreground">{t("finance.columns.baseFee")}</p>

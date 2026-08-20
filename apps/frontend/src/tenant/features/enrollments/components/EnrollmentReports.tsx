@@ -10,6 +10,8 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslation } from "@/hooks/useTranslation";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import type { EnrollmentsReportAggregates } from "@mms/shared";
 import { EMPTY_ENROLLMENTS_REPORT_AGGREGATES } from "@mms/shared";
 
@@ -90,7 +92,7 @@ export function EnrollmentReports({
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card accentColor="primary" className="p-4">
+        <Card accentColor="primary" className={cn("p-4", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-3">{t("enrollments.reports.byStatus")}</h3>
           <div className="h-chart-md" aria-hidden="true">
             <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
@@ -105,7 +107,7 @@ export function EnrollmentReports({
           </div>
         </Card>
 
-        <Card accentColor="info" className="p-4">
+        <Card accentColor="info" className={cn("p-4", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-3">{t("enrollments.reports.bySession")}</h3>
           {bySession.length === 0 ? (
             <EmptyState title={t("enrollments.reports.noData")} compact icon={null} className="h-chart-md" />
@@ -125,10 +127,10 @@ export function EnrollmentReports({
       </div>
 
       <Card accentColor="success" className="p-0 overflow-hidden">
-        <div className="px-4 py-2.5 bg-muted/20 border-b border-border/40 ps-6.5">
+        <div className={cn("px-4 py-2.5 bg-muted/20 border-b border-border/40", CARD_STRIPE_INSET)}>
           <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">{t("enrollments.reports.revenueBySession")}</h3>
         </div>
-        <div className="divide-y divide-border/50 ps-6.5" role="list">
+        <div className={cn("divide-y divide-border/50", CARD_STRIPE_INSET)} role="list">
           {bySession.length === 0 ? (
             <EmptyState title={t("enrollments.reports.noData")} compact icon={null} />
           ) : (

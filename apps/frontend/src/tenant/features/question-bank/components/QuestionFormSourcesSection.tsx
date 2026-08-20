@@ -1,6 +1,6 @@
 import { BookOpen } from "lucide-react";
 import { type AppTranslationKey, type ModuleFieldDef, type QuestionSourceBook, type QuestionSourceFieldId } from "@mms/shared";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { QuestionSourcesTab } from "@/tenant/features/question-bank/components/QuestionSourcesTab";
 
@@ -33,11 +33,12 @@ export function QuestionFormSourcesSection({
 
   return (
     <div className="space-y-5 text-start">
-      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
-          <BookOpen className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("questionBank.formTab.sources")}</h3>
-        </div>
+      <SectionCard
+        accentColor="primary"
+        icon={BookOpen}
+        title={t("questionBank.formTab.sources")}
+        className="shadow-sm"
+      >
         <QuestionSourcesTab
           sourceBooks={sourceBooks}
           citations={questionDraft.sourceCitations}
@@ -49,7 +50,7 @@ export function QuestionFormSourcesSection({
           fieldLabel={(id, fallback) => fallback ?? String(id)}
           translate={(key) => t(key as AppTranslationKey)}
         />
-      </Card>
+      </SectionCard>
     </div>
   );
 }

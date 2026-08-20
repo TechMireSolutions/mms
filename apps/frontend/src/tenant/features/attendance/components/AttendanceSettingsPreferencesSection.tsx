@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { Badge } from "@/components/ui/badge";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import type { AttendanceSettings } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -32,7 +32,7 @@ export function AttendanceSettingsPreferencesSection({
           icon={<Clock className="w-4 h-4 text-primary" />}
           title={t("attendance.settings.timingRules")}
         />
-        <div className="px-5 ps-6.5 pb-2">
+        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
           <AttendanceSettingRow label={t("attendance.settings.lateThreshold")} sub={t("attendance.settings.lateThresholdDesc")}>
             <div className="flex items-center gap-2">
               <label htmlFor="setting-late-threshold" className="sr-only">{t("attendance.settings.lateThresholdMinutes")}</label>
@@ -78,7 +78,7 @@ export function AttendanceSettingsPreferencesSection({
           icon={<QrCode className="w-4 h-4 text-primary" />}
           title={t("attendance.settings.qrAttendance")}
         />
-        <div className="px-5 ps-6.5 pb-2">
+        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
           <AttendanceSettingRow label={t("attendance.settings.enableQr")} sub={t("attendance.settings.enableQrDesc")}>
             <Switch checked={Boolean(settingsDraft.qrEnabled)} onCheckedChange={(value) => upd("qrEnabled", value)} />
           </AttendanceSettingRow>
@@ -92,7 +92,7 @@ export function AttendanceSettingsPreferencesSection({
           icon={<Bell className="w-4 h-4 text-primary" />}
           title={t("attendance.settings.alerts")}
         />
-        <div className="px-5 ps-6.5 pb-2">
+        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
           <AttendanceSettingRow label={t("attendance.settings.lowThreshold")} sub={t("attendance.settings.lowThresholdDesc")}>
             <div className="flex items-center gap-2">
               <label htmlFor="setting-low-attendance" className="sr-only">{t("attendance.settings.lowThresholdPercent")}</label>
@@ -125,7 +125,7 @@ export function AttendanceSettingsPreferencesSection({
           icon={<Scan className="w-4 h-4 text-primary" />}
           title={t("attendance.settings.advanced")}
         />
-        <div className="px-5 ps-6.5 pb-2">
+        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
           <AttendanceSettingRow label={t("attendance.settings.offlineMode")} sub={t("attendance.settings.offlineModeDesc")}>
             <Switch checked={Boolean(settingsDraft.offlineEnabled)} onCheckedChange={(value) => upd("offlineEnabled", value)} />
           </AttendanceSettingRow>

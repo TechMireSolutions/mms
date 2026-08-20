@@ -7,6 +7,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NameFormModal } from "@/tenant/features/obligations/components/MujtahidNameFormModal";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import type {
   Mujtahid,
   MujtahidManagerProps,
@@ -78,7 +80,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
           const isOpen = expanded[mujtahid.id];
           return (
             <Card key={mujtahid.id} accentColor="primary" className="group/mujtahid">
-              <header className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 ps-5.5">
+              <header className={cn("flex flex-wrap items-center justify-between gap-2 px-5 py-3", CARD_STRIPE_INSET)}>
                 <Button type="button" onClick={() => setExpanded((expandedById) => ({ ...expandedById, [mujtahid.id]: !expandedById[mujtahid.id] }))}
                   aria-expanded={isOpen}
                   variant="ghost"

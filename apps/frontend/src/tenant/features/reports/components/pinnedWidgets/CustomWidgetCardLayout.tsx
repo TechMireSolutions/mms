@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { StatCardBody } from "@/components/ui/StatCardBody";
 import { COLOR_MAP, ICONS_LIST } from "@/tenant/features/reports/components/pinnedWidgets/types";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import type { computeCustomCard } from "@/tenant/features/reports/components/reportMetadata";
 
 type ComputedCustomCard = ReturnType<typeof computeCustomCard>;
@@ -21,9 +23,13 @@ export function CustomWidgetCardLayout({ computedCard }: CustomWidgetCardLayoutP
       layout
       whileHover={{ y: -4, scale: 1.015 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className={`${WORK_SURFACE} p-5 hover:shadow-surface-lg transition-all relative text-start flex flex-col justify-between min-h-card-compact font-sans overflow-hidden group`}
+      className={cn(
+        WORK_SURFACE,
+        CARD_STRIPE_INSET,
+        "p-5 hover:shadow-surface-lg transition-all relative text-start flex flex-col justify-between min-h-card-compact font-sans overflow-hidden group"
+      )}
     >
-      <div className={`absolute start-0 top-0 bottom-0 w-1 rounded-e-sm ${colorClasses.bar}/60 group-hover:${colorClasses.bar} transition-colors duration-300`} />
+      <div aria-hidden="true" className={cn(CARD_STRIPE_BASE, `${colorClasses.bar}/60 group-hover:${colorClasses.bar} transition-colors duration-300`)} />
       <StatCardBody
         colorTheme={colorClasses}
         icon={<Icon className={`w-4.5 h-4.5 ${colorClasses.text}`} />}

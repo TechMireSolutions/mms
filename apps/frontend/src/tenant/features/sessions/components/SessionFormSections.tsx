@@ -3,7 +3,7 @@ import { Calendar, DollarSign } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,12 +39,12 @@ export function SessionDetailsSection({
 
   return (
     <div className="space-y-4 text-start">
-      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm text-start">
-        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-          <Calendar className="w-4 h-4 text-primary/70 transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("sessions.form.sectionDetails")}</h3>
-        </div>
-
+      <SectionCard
+        accentColor="primary"
+        icon={Calendar}
+        title={t("sessions.form.sectionDetails")}
+        className="shadow-sm text-start"
+      >
         <Field label={t("sessions.form.name")} required error={errors.name}>
           <div className="relative flex items-center group/input">
             <Calendar className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
@@ -107,7 +107,7 @@ export function SessionDetailsSection({
             className="min-h-textarea-lg"
           />
         </Field>
-      </Card>
+      </SectionCard>
     </div>
   );
 }
@@ -127,12 +127,12 @@ export function SessionFinancialSection({
 
   return (
     <div className="space-y-4 text-start">
-      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm text-start">
-        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40">
-          <DollarSign className="w-4 h-4 text-primary/70 transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("sessions.form.sectionFinancial")}</h3>
-        </div>
-
+      <SectionCard
+        accentColor="primary"
+        icon={DollarSign}
+        title={t("sessions.form.sectionFinancial")}
+        className="shadow-sm text-start"
+      >
         <Field label={t("sessions.form.baseFee")}>
           <div className="relative flex items-center group/input">
             <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
@@ -152,7 +152,7 @@ export function SessionFinancialSection({
             options={currencyOptions}
           />
         </Field>
-      </Card>
+      </SectionCard>
     </div>
   );
 }

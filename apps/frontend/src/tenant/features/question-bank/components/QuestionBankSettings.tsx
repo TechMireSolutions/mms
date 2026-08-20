@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Library } from 'lucide-react';
 import {
   type QuestionBankSettings as QuestionBankSettingsData,
@@ -38,7 +38,7 @@ export const QuestionBankSettings = React.memo(function QuestionBankSettings(): 
         [updateSettingsAsync, t],
       );
 
-      const { data: questionBankSettings, dirty, saving, upd, handleSave } = useSettingsDraft({
+      const { data: questionBankSettings, dirty, saving, upd, handleSave } = useSettingsDraft<QuestionBankSettingsData>({
         load,
         onPreview: () => {},
         onSave,
@@ -77,12 +77,12 @@ export const QuestionBankSettings = React.memo(function QuestionBankSettings(): 
         >
           <SettingsCallout>{t('questionBank.settingsNote')}</SettingsCallout>
 
-          <Card accentColor="primary" className="space-y-4 p-5">
-            <div className="flex items-center gap-2 border-b border-border/40 pb-2 ps-1">
-              <Library className="h-3.5 w-3.5 text-primary" aria-hidden />
-              <h3 className="text-sm font-bold text-foreground">{t('questionBank.settingsPrefsTitle')}</h3>
-            </div>
-
+          <SectionCard
+            accentColor="primary"
+            icon={Library}
+            title={t('questionBank.settingsPrefsTitle')}
+            className="space-y-4 shadow-sm hover:shadow-md border-border/80"
+          >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">{t('questionBank.aiGrading')}</p>
@@ -151,7 +151,7 @@ export const QuestionBankSettings = React.memo(function QuestionBankSettings(): 
                 ))}
               </div>
             </div>
-          </Card>
+          </SectionCard>
         </SettingsPanel>
       );
     });

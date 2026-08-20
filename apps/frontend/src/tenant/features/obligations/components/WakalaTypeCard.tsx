@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { WarningCallout } from "@/components/ui/WarningCallout";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import { WakalaDistributionList } from "@/tenant/features/obligations/components/WakalaDistributionList";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -45,7 +46,7 @@ export function WakalaTypeCard({
 }: WakalaTypeCardProps): React.JSX.Element {
   return (
     <Card key={wakalaType.id} accentColor="primary" className="group/wakala">
-      <header className="flex flex-col gap-2 border-b border-border/40 px-5 py-3 ps-5.5 sm:flex-row sm:items-start sm:justify-between">
+      <header className={cn("flex flex-col gap-2 border-b border-border/40 px-5 py-3 sm:flex-row sm:items-start sm:justify-between", CARD_STRIPE_INSET)}>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{typeName}</h3>

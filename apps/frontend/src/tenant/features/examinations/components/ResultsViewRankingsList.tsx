@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { getInitials } from "@mms/shared";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { Exam } from '@/lib/data/examinationData';
 import { RANK_ICONS, type RankedResult } from "@/tenant/features/examinations/components/resultsViewTypes";
@@ -36,14 +38,14 @@ export function ResultsViewRankingsList({
 
   return (
     <Card accentColor="warning" className="p-0 overflow-hidden" aria-label={t("examinations.rankings")}>
-      <div className="px-4 py-3 border-b border-border/40 flex min-w-0 items-center gap-2 ps-6.5 bg-muted/20">
+      <div className={cn("px-4 py-3 border-b border-border/40 flex min-w-0 items-center gap-2 bg-muted/20", CARD_STRIPE_INSET)}>
         <Trophy className="w-4 h-4 shrink-0 text-warning" aria-hidden="true" />
         <h3 className="min-w-0 truncate text-sm font-bold text-foreground m-0">{t("examinations.rankingsTitle", { name: exam.name })}</h3>
       </div>
       {rankedResults.length === 0 ? (
         <EmptyState variant="dashed" title={t("examinations.empty.results")} compact />
       ) : (
-        <div className="divide-y divide-border/50 ps-6.5" role="list">
+        <div className={cn("divide-y divide-border/50", CARD_STRIPE_INSET)} role="list">
           {rankedResults.map((rankedResult) => (
             <motion.div
               key={rankedResult.id}

@@ -3,7 +3,8 @@ import { Check, Edit3, Plus } from 'lucide-react';
 import type { MessageCategory } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL, WORK_SURFACE } from '@/components/ui/formStyles';
+import { FORM_LABEL } from '@/components/ui/formStyles';
+import { SectionCard } from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
 import { SetupReadOnlyMessage } from '@/components/ui/SetupReadOnlyMessage';
@@ -44,21 +45,26 @@ export function MessagingSetupTemplateForm({
 }: MessagingSetupTemplateFormProps): React.JSX.Element {
   const { t } = useTranslation();
 
+  if (!canEditSetup) {
+    return <SetupReadOnlyMessage title={t('messaging.setup.readOnly')} />;
+  }
+
   return (
-    <div className={`${WORK_SURFACE} space-y-4 p-4`}>
-      {canEditSetup ? (
-        <>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0 space-y-1">
-              <h4 className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-foreground">
-                {editingId ? <Edit3 className="h-4 w-4 shrink-0 text-primary" /> : <Plus className="h-4 w-4 shrink-0 text-primary" />}
-                <span className="min-w-0 truncate">{editingId ? t('messaging.editPreset') : t('messaging.createPreset')}</span>
-              </h4>
-              <p className="text-xs text-muted-foreground">{t('messaging.createPresetDesc')}</p>
-            </div>
-            {editingId && <Button variant="ghost" size="sm" onClick={onReset} className="shrink-0 self-start text-xs">{t('common.cancel')}</Button>}
-          </div>
-          <form onSubmit={onSave} className="space-y-3">
+    <SectionCard
+      accentColor="primary"
+      icon={editingId ? Edit3 : Plus}
+      title={editingId ? t('messaging.editPreset') : t('messaging.createPreset')}
+      subtitle={t('messaging.createPresetDesc')}
+      actions={
+        editingId ? (
+          <Button variant="ghost" size="sm" onClick={onReset} className="shrink-0 self-start text-xs min-h-11">
+            {t('common.cancel')}
+          </Button>
+        ) : undefined
+      }
+      className="space-y-4 shadow-sm text-start"
+    >
+      <form onSubmit={onSave} className="space-y-3">
             <div>
               <label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label>
               <Input
@@ -102,10 +108,6 @@ export function MessagingSetupTemplateForm({
               {editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
             </Button>
           </form>
-        </>
-      ) : (
-        <SetupReadOnlyMessage title={t('messaging.setup.readOnly')} />
-      )}
-    </div>
+    </SectionCard>
   );
 }

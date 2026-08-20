@@ -4,7 +4,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { InvoiceDraft } from "@/tenant/features/finance/components/invoiceFormDraft";
 
@@ -22,11 +22,12 @@ export const InvoiceFormFieldsSection = React.memo(function InvoiceFormFieldsSec
 
       return (
         <div className="space-y-4">
-          <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 shadow-sm">
-            <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
-              <ReceiptText className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("finance.form.information")}</h3>
-            </div>
+          <SectionCard
+            accentColor="primary"
+            icon={ReceiptText}
+            title={t("finance.form.information")}
+            className="shadow-sm"
+          >
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -160,7 +161,7 @@ export const InvoiceFormFieldsSection = React.memo(function InvoiceFormFieldsSec
                 </div>
               </div>
             </div>
-          </Card>
+          </SectionCard>
         </div>
       );
     });

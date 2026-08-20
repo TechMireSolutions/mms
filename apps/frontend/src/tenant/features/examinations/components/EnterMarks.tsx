@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 interface EnterMarksProps {
   exams: Exam[];
@@ -140,11 +141,11 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
 
           {/* Marks entry table */}
           <Card accentColor="primary" className="p-0 overflow-hidden">
-            <div className="px-4 py-3 border-b border-border/40 flex items-center gap-2 ps-6.5 bg-muted/20">
+            <div className={cn("px-4 py-3 border-b border-border/40 flex items-center gap-2 bg-muted/20", CARD_STRIPE_INSET)}>
               <Users className="w-4 h-4 text-primary" aria-hidden="true" />
               <h3 className="text-sm font-bold text-foreground">{t("examinations.marks")}</h3>
             </div>
-            <div className="divide-y divide-border/50 ps-6.5" role="list">
+            <div className={cn("divide-y divide-border/50", CARD_STRIPE_INSET)} role="list">
               {students.map((student, index) => {
                 const markValue = marks[String(student.id)] ?? "";
                 const percentage = exam.totalMarks > 0 && markValue !== "" ? Math.round((Number(markValue) / exam.totalMarks) * 100) : null;

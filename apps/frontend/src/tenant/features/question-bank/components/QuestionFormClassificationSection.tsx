@@ -1,6 +1,6 @@
 import { Tag } from "lucide-react";
 import { APP_LANGUAGES, formatLanguageSelectLabel, type AppLanguageCode, type AppTranslationKey, type QuestionCategory, type QuestionDifficulty } from "@mms/shared";
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -27,11 +27,12 @@ export function QuestionFormClassificationSection({
 
   return (
     <div className="space-y-5 text-start">
-      <Card accentColor="primary" className="p-5.5 px-6.5 pb-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-2.5 pb-1.5 border-b border-border/40 mb-4">
-          <Tag className="w-4 h-4 text-primary/70 group-hover:text-primary transition-colors" />
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">{t("questionBank.form.classification")}</h3>
-        </div>
+      <SectionCard
+        accentColor="primary"
+        icon={Tag}
+        title={t("questionBank.form.classification")}
+        className="shadow-sm"
+      >
 
         <Field label={t("questionBank.form.questionLanguage")}>
           <FormSelect
@@ -68,7 +69,7 @@ export function QuestionFormClassificationSection({
           translate={(key) => t(key as AppTranslationKey)}
         />
         <FieldErrorMessage message={errors.categoryIds} />
-      </Card>
+      </SectionCard>
     </div>
   );
 }
